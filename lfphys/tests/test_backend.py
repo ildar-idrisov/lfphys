@@ -257,3 +257,11 @@ def test_a_hot_gpu_is_not_chosen(monkeypatch):
     finally:
         B.set_temperature_reader(None)
         B.configure(None)
+
+
+def test_pci_bus_ids_of_different_tools_compare_equal():
+    """LFPHYS_GPU_PCI may be written as nvidia-smi prints it (8-digit domain) or as CuPy reports it (4-digit): both are
+    the same device; another bus is not (negative control); text that is no bus id gives None."""
+    assert B.pci_key("00000000:01:00.0") == B.pci_key("0000:01:00.0") == B.pci_key("01:00.0") == (0, 1, 0, 0)
+    assert B.pci_key("0000:02:00.0") != B.pci_key("0000:01:00.0")
+    assert B.pci_key("") is None and B.pci_key("gpu0") is None

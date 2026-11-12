@@ -158,7 +158,7 @@ def _cupy():
             props = cp.cuda.runtime.getDeviceProperties(0)
             pci = cp.cuda.Device(0).pci_bus_id
             want = os.environ.get("LFPHYS_GPU_PCI", "").strip()
-            if want and want.lower() != pci.lower():
+            if want and pci_key(want) != pci_key(pci):
                 raise RuntimeError(f"устройство 0 на шине {pci}, а разрешено только {want} (LFPHYS_GPU_PCI)")
             free, total = cp.cuda.runtime.memGetInfo()
             # a trivial kernel and an FFT: the runtime, NVRTC and cuFFT really work with this driver
@@ -256,6 +256,22 @@ THERMAL = {"pause_c": 82.0, "resume_c": 70.0, "period_s": 2.0}
 _THERMAL = {"hot": False, "temp": None, "last_temp": None, "read_at": float("-inf"), "error": ""}
 
 
+def pci_key(bus_id: str) -> tuple | None:
+    """A PCI bus id as numbers (domain, bus, device, function), so the forms of different tools compare equal:
+    CuPy's ``0000:01:00.0`` and nvidia-smi's ``00000000:01:00.0`` (hex fields; an omitted domain is 0). None when the
+    text is not a bus id."""
+    t = (bus_id or "").strip().lower()
+    try:
+        head, fn = t.rsplit(".", 1)
+        parts = head.split(":")
+        if len(parts) == 2:
+            parts = ["0"] + parts
+        dom, bus, dev = (int(x, 16) for x in parts)
+        return dom, bus, dev, int(fn, 16)
+    except ValueError:
+        return None
+
+
 def _nvml_temperature() -> float | None:
     """GPU 0's temperature in °C through NVML (read only): the device on the bus LFPHYS_GPU_PCI if set, else NVML's
     index 0 (in the container the only GPU given). None when NVML is not there."""
@@ -268,7 +284,8 @@ def _nvml_temperature() -> float | None:
         return None
     try:
         h = ctypes.c_void_p()
-        pci = os.environ.get("LFPHYS_GPU_PCI", "").strip()
+        key = pci_key(os.environ.get("LFPHYS_GPU_PCI", ""))
+        pci = f"{key[0]:08x}:{key[1]:02x}:{key[2]:02x}.{key[3]:x}" if key else ""  # NVML's own form
         rc = (lib.nvmlDeviceGetHandleByPciBusId_v2(pci.encode(), ctypes.byref(h)) if pci
               else lib.nvmlDeviceGetHandleByIndex_v2(0, ctypes.byref(h)))
         if rc != 0:
