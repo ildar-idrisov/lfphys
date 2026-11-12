@@ -131,8 +131,9 @@ lfphys Research Licence 1.0; the Licensor is the owner as an individual (residen
    использовать». The audit and its test: `lfphys/sources/dependencies.md`,
    `lfphys/tests/test_licences.py`.
 9. **Docker only.** Build, run and test in Docker (`visualizations/docker/`, commands in `visualizations/README.md`),
-   from `engine/` as the root. CPU now; GPU work (plan item P11) only on GPU 0 (GPU 1 of this host is faulty), with a
-   lowered power limit for long runs (the host overheats under full load). Never touch the host's CUDA or git config.
+   from the repository root. On the owner's development host GPU work (plan item P11) runs only on GPU 0 (its GPU 1 is
+   faulty; pinned by `LFPHYS_GPU_PCI` in the git-ignored `visualizations/docker/.env`), with a lowered power limit for
+   long runs (that host overheats under full load). Never touch the host's CUDA or git config.
    Run records stay in `visualizations/runs/` (git-ignored).
 10. **Working mode for the plan.** `lfphys/PLAN.md` is done in batches of three items: implementation with tests, an
     independent review and its processing, a report to the owner and a discussion; the next batch starts only on the
