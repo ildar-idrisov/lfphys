@@ -1,0 +1,5 @@
+params: {'source': 'double', 'a': 0.2, 'd': 2.0, 'L': 8.0, 'lam': 1.5, 'n': 128, 'zmax': 80.0} | pad used: 4 | half-window: 24.0 um
+z = z_max plane: max|I - I_ref| / max I_ref = 3.15e-01; peak drawn / true = 1.166
+y = 0 slice: max|I - I_ref| / max I_ref = 2.34e-03
+check slice_route: ok=True info=False value=1.1842378929334989e-15
+check device: ok=None info=True value=None

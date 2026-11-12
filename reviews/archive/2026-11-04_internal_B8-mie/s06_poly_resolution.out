@@ -1,0 +1,11 @@
+supernumerary 100 um +-0.5 %, 550 nm: v17 nodes 139 (dx 0.248, coarse False), reference nodes 3429 (dx 0.0100); max |error|/max = 7.45e-03 (bow 2.14e-03, glory 7.45e-03); max 'err'/max = 5.02e-03; error > err at 37 % of angles (largest error/err 102.4); C_sca rel err 3.1e-07 vs err_C_sca rel 3.3e-06  (2 s)
+   cut at 3 sigma against 6 sigma (same fine dx): max |diff|/max = 6.13e-05, at the glory (theta > 170) 4.71e-05; C_sca rel 6.1e-06
+rainbow 150 um +-2 %, 550 nm: v17 nodes 825 (dx 0.250, coarse False), reference nodes 4115 (dx 0.0500); max |error|/max = 1.05e-02 (bow 6.99e-04, glory 1.05e-02); max 'err'/max = 3.82e-03; error > err at 44 % of angles (largest error/err 901282.4); C_sca rel err 2.4e-06 vs err_C_sca rel 2.4e-05  (3 s)
+   cut at 3 sigma against 6 sigma (same fine dx): max |diff|/max = 1.09e-02, at the glory (theta > 170) 1.09e-02; C_sca rel 7.3e-05
+glory 8 um +-10 %, 550 nm: v17 nodes 221 (dx 0.249, coarse False), reference nodes 10969 (dx 0.0050); max |error|/max = 1.89e-02 (bow 4.37e-03, glory 1.89e-02); max 'err'/max = 4.85e-02; error > err at 35 % of angles (largest error/err 254.6); C_sca rel err 7.2e-05 vs err_C_sca rel 4.1e-04  (0 s)
+   cut at 3 sigma against 6 sigma (same fine dx): max |diff|/max = 2.56e-03, at the glory (theta > 170) 2.56e-03; C_sca rel 1.9e-03
+fogbow 15 um +-15 %, 450 nm: v17 nodes 755 (dx 0.250, coarse False), reference nodes 37701 (dx 0.0050); max |error|/max = 9.21e-03 (bow 1.35e-03, glory 9.21e-03); max 'err'/max = 1.10e-02; error > err at 51 % of angles (largest error/err 464.9); C_sca rel err 1.2e-05 vs err_C_sca rel 1.1e-05  (3 s)
+   cut at 3 sigma against 6 sigma (same fine dx): max |diff|/max = 4.66e-03, at the glory (theta > 170) 4.66e-03; C_sca rel 4.3e-03
+
+big_drops (300 um +-10 %) at 550 nm: the 1200-node cap (coarse) against dx = 0.25
+  v17 nodes 1199 dx 1.72 (coarse True); reference nodes 8227; max |error|/max 4.12e-03; max 'err'/max 3.06e-02; error > err at 42 % of angles  (11 s)

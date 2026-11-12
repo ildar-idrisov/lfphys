@@ -1,0 +1,34 @@
+== M5_mirror_alpha
+FAILED tests/test_kerr_null.py::test_total_mino_time_against_quadrature - Ass...
+FAILED tests/test_kerr_null.py::test_screen_ray_path_for_drawing - assert np....
+2 failed, 111 passed, 1 skipped in 20.51s
+== M2_no_heaviside
+FAILED tests/test_kerr_null.py::test_screen_crossings_against_quadrature[pt0]
+FAILED tests/test_kerr_null.py::test_screen_crossings_against_quadrature[pt1]
+FAILED tests/test_kerr_null.py::test_screen_crossings_against_quadrature[pt3]
+FAILED tests/test_kerr_null.py::test_screen_crossings_against_quadrature[pt6]
+FAILED tests/test_kerr_null.py::test_screen_crossings_against_quadrature[pt8]
+FAILED tests/test_kerr_null.py::test_screen_crossings_against_quadrature[pt10]
+FAILED tests/test_kerr_null.py::test_screen_rays_match_the_hamiltonian_route_from_far_away
+FAILED tests/test_kerr_null.py::test_reflection_symmetry_of_the_screen - Asse...
+== M3_redshift_radial_sign
+FAILED tests/test_kerr_shadow.py::test_redshift_against_the_four_momentum_route
+1 failed, 112 passed, 1 skipped in 21.56s
+== M7_keplerian_inside_isco
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[True-0.0]
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[True-0.5]
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[True-0.9]
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[True-0.998]
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[False-0.0]
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[False-0.5]
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[False-0.9]
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[False-0.998]
+== M9_plunge_wrong_constants
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[True-0.0]
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[True-0.5]
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[True-0.9]
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[True-0.998]
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[False-0.0]
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[False-0.5]
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[False-0.9]
+FAILED tests/test_kerr_shadow.py::test_emitter_four_velocities_are_unit_timelike[False-0.998]

@@ -1,0 +1,39 @@
+{
+ "run": "20261111-192645-p97-18bc",
+ "A_thread": [
+  {
+   "csv_bytes": 2092330,
+   "csv_s_mean": 0.244,
+   "health_max_s": 0.1815,
+   "health_p95_s": 0.1105,
+   "polls": 63,
+   "ids": 82
+  },
+  {
+   "csv_bytes": 2092330,
+   "csv_s_mean": 0.249,
+   "health_max_s": 0.1284,
+   "health_p95_s": 0.0782,
+   "polls": 64,
+   "ids": 82
+  }
+ ],
+ "B_in_loop": [
+  {
+   "csv_bytes": 2092330,
+   "csv_s_mean": 0.209,
+   "health_max_s": 0.2068,
+   "health_p95_s": 0.1872,
+   "polls": 51,
+   "ids": 82
+  },
+  {
+   "csv_bytes": 2092330,
+   "csv_s_mean": 0.221,
+   "health_max_s": 0.2427,
+   "health_p95_s": 0.1885,
+   "polls": 51,
+   "ids": 82
+  }
+ ]
+}

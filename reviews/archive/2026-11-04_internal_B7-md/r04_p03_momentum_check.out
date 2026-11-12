@@ -1,0 +1,7 @@
+before: {'momentum': (True, 4.9754378943135067e-17)}
+atom added at (0.30, 1.12) nm with vx = 400 m/s; P = [2.53315644e+00 3.33066907e-14]
+momentum check after: {'ok': False, 'value': 0.0030706725175521405, 'tol': 1e-10}
+P during the run (NVE, periodic: conserved): ['2.533156435809', '2.533156435809', '2.533156435809', '2.533156435809', '2.533156435809', '2.533156435809']
+max |P(t) - P(add)| = 7.460698725481052e-14
+momentum_conserved(): True ; errors: ["Сцена: overlap: an inserted particle's potential energy 3.939e+07 exceeds max_insert_energy = 50", "Сцена: overlap: an inserted particle's potential energy 6.078e+07 exceeds max_insert_energy = 50"]
+exit 0

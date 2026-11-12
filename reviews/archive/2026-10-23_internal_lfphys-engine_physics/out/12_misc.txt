@@ -1,0 +1,14 @@
+=== periapsis_advance(e, l) near a circular orbit (r_peri = 10 M (1 - eps), r_apo = 10 M (1 + eps)) ===
+eps = 0.01: periapsis_advance 3.6521948069 (circular limit 3.6514029586); elements ok; advance_from_turning 3.6521948069
+eps = 0.0001: periapsis_advance 3.6514030378 (circular limit 3.6514029586); elements ok; advance_from_turning 3.6514030378
+eps = 1e-06: periapsis_advance 3.6514029586 (circular limit 3.6514029586); elements ok; advance_from_turning 3.6514029586
+eps = 1e-08: periapsis_advance RAISES ValueError: not a bound orbit with two turning points; elements RAISES ValueError; advance_from_turning 3.6514029586
+
+=== dirac_level for states that do not exist ===
+n=1, j=1.5: returns -2.179843e-18 J (no error; j must be <= n - 1/2)
+n=2, j=2.5: returns -5.449675e-19 J (no error; j must be <= n - 1/2)
+
+=== Bohm slit trajectories: start distribution vs |Psi(x, 2a)|^2 inside one slit ===
+a = 5 um (Fresnel number a^2/(lam z0) = 3.9): KS distance uniform vs |Psi|^2 = 0.081; |Psi|^2 outside +-0.48a: 10.7%; max/min of |Psi|^2 inside = 7.94
+a = 20 um (Fresnel number a^2/(lam z0) = 15.8): KS distance uniform vs |Psi|^2 = 0.045; |Psi|^2 outside +-0.48a: 6.2%; max/min of |Psi|^2 inside = 4.34
+a = 100 um (Fresnel number a^2/(lam z0) = 79.0): KS distance uniform vs |Psi|^2 = 0.014; |Psi|^2 outside +-0.48a: 3.7%; max/min of |Psi|^2 inside = 3.62

@@ -1,0 +1,49 @@
+# Outputs of the engine checks (run with run.sh.txt: docker, CPU, the engine read-only at /lf), copied verbatim.
+
+## e1_tube_segment.py — schrodinger_nd.flux_tube_segment against Gauss-Legendre (400 nodes) of the tube's A
+flux 3.141592653589793, R 0.8, s (3.0, 1.5): max |chi - GL400| = 1.34e-14 (max |chi| 0.911; points compared 4077 of 4096)
+flux -2.0, R 1.5, s (-1.2, 4.0): max |chi - GL400| = 4.66e-15 (max |chi| 0.458; points compared 4051 of 4096)
+flux 1.0, R 0.5, s (0.0, -6.0): max |chi - GL400| = 1.09e-14 (max |chi| 0.405; points compared 4078 of 4096)
+
+## e2_move_physics.py — the move after the fix (the reviewer's cases, a shielded tube, the second method)
+== A1 uniform field everywhere, evolved a quarter period, move (3, 4)
+  move (3, 4): TAKEN gauge eps 3.77e-28; T 2.251724 -> 2.251724
+== A2 field in x in [-6, 6] (B = 0.5, edge 1.5), wave inside moved out by (12, 0); control B = 0
+  B = 0.5: move (12, 0): REFUSED what=gauge eps=0.098 dT=-0.0966 tubes={} fields=[1]
+  B = 0.5: move (0, 3) inside the field strip: TAKEN gauge eps 4.23e-30; T 1.378396 -> 1.378396
+  B = 0.0: move (12, 0): TAKEN gauge eps 0.00e+00; T 1.236111 -> 1.236111
+  B = 0.0: move (0, 3) inside the field strip: TAKEN gauge eps 0.00e+00; T 1.236111 -> 1.236111
+== A3 AB tube (h/2e) with a soft post, the wave gone round both sides, moved (0, 6); control flux 0
+  flux 0.5: move (0, 6): REFUSED what=gauge eps=0.103 dT=-0.0146 tubes={1: 0.17655816154193363} fields=[]
+  flux 0.0: move (0, 6): TAKEN gauge eps 5.12e-30; T 1.982260 -> 1.982260
+== B shielded tube: post radius 3, V = 60, tube radius 0.5 at its centre; packet scattered round it; move by s
+ move [0.0, 0.6]: wave's probability within r < 2.4 of the post's centre 5.10e-08
+  move [0.0, 0.6]: TAKEN gauge eps 5.69e-10; T 2.485694 -> 2.485694
+   second method (tube at c0 - s, evolved, translated): ||moved - e^(i phi) ref|| / ||ref|| = 3.74e-04
+   negative control (old factor from <r>): ||old - e^(i phi) ref|| / ||ref|| = 3.34e-02
+ move [0.5, -0.4]: (same probability)
+  move [0.5, -0.4]: TAKEN gauge eps 1.21e-09; T 2.485694 -> 2.485694
+   second method: 3.30e-04; negative control (old factor): 8.84e-03
+ move [0.0, 2.5]:
+  move [0.0, 2.5]: TAKEN gauge eps 1.80e-09; T 2.485694 -> 2.485694
+   second method: 8.53e-04; negative control (old factor): 2.37e-01
+
+## e2b_post_height.py — the second method against the post's height (move (0, 0.6))
+V = 20:  second method 8.78e-04, old factor 5.07e-02
+V = 60:  second method 3.74e-04, old factor 3.34e-02
+V = 200: second method 5.35e-04, old factor 2.34e-02
+
+## e2c_where.py / e2d_thick_post.py — where the second method's residual sits (it is not the move: see e2f)
+V 60.0 steps 1500 grid 256x0.2: total 3.69e-04; in r<4: 2.12e-04; in the layers: 1.30e-04; elsewhere: 2.73e-04
+V 60.0 steps 750 grid 256x0.2: total 1.17e-03; in r<4: 3.85e-04; in the layers: 4.16e-04; elsewhere: 1.03e-03
+V 60.0 steps 1500 grid 384x0.2: total 5.34e-04
+thick post (radius 5): 1500 steps 1.56e-04; 2000 steps 1.19e-04
+
+## e2e_far_tube.py — a packet passing 12 nm from a tube: its spread tail reaches the core (2.7e-3 of the amplitude)
+tube y 8.0, move [ 0. -2.], 1500 steps: eps 4.16e-08; second method 2.36e-04
+tube y 8, move (0, 2) and tube y 6, move (0, 3): REFUSED (eps 1.14e-06, 5.31e-06: the tail at the tube's path)
+
+## e2f_covariance.py — the second method's floor: the two scenes' own evolution, no move at all
+post 5.0, n 256, edges open, step 0: ||psi_A - e^(i phi) e^(i q chi) psi_B|| = 7.70e-08
+post 5.0, n 256, edges open, step 750: 2.66e-04
+post 5.0, n 256, edges open, step 1500: 1.56e-04

@@ -1,0 +1,21 @@
+case: star 1 Msun at the origin, a second star of mass m at x = 1 au, vmode = circular
+  m2 =        1: relative orbit a = 0.666667 au, e = 0.500000 (circular needs e = 0); expected e = m2/(M+m2) = 0.500000; centre-of-mass velocity 14.89 km/s
+  m2 =      0.1: relative orbit a = 0.916667 au, e = 0.090909 (circular needs e = 0); expected e = m2/(M+m2) = 0.090909; centre-of-mass velocity 2.708 km/s
+  m2 =    0.001: relative orbit a = 0.999002 au, e = 0.000999 (circular needs e = 0); expected e = m2/(M+m2) = 0.000999; centre-of-mass velocity 0.02975 km/s
+  m2 =   0.0001: relative orbit a = 0.999900 au, e = 0.000100 (circular needs e = 0); expected e = m2/(M+m2) = 0.000100; centre-of-mass velocity 0.002978 km/s
+
+preset 'inner': Jupiter's relative orbit about the Sun and the centre-of-mass drift
+  Меркурий  : a = 0.387000 au, e(Sun-planet) = 1.656e-07
+  Венера    : a = 0.722999 au, e(Sun-planet) = 1.739e-06
+  Земля     : a = 1.000008 au, e(Sun-planet) = 7.736e-06
+  Марс      : a = 1.524036 au, e(Sun-planet) = 2.365e-05
+  Юпитер    : a = 5.198231 au, e(Sun-planet) = 9.174e-04
+  centre-of-mass velocity of the whole system: 12.643 m/s = 2.667e-03 au/yr: the scene drifts 2.667 au per 1000 yr
+
+preset 'hole_stars': star 2 (2 Msun, x = -3.5) about the hole (1000 Msun) + star 1
+  o2: e(hole-star) = 9.990e-04
+  o3: e(hole-star) = 4.205e-03
+
+off the xy plane: star B at (1, 0, 1) au around A, vmode circular (r used = cylindrical 1 au, true 1.414 au)
+  planet at z = 1 au: e = 0.4142 (a = 2.4142 au)
+exit 0

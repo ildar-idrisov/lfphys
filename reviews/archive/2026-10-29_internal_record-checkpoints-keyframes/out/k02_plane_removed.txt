@@ -1,0 +1,6 @@
+run 20261029-122837-v09-00bc
+t_add 34087337.95277546 t_remove 133045724.80570239
+frames 463 cursor frame 152 t 83566635.89888002
+at the end: {"planes":{"1":{"hasImage":true,"origin":[0,0,-0.2]}},"wins":[{"id":"1","pix":39009635,"text":"1 Срез 1: βz = -0.2 линейно логарифм CSV"}]}
+{"t":83566635.89888002,"how":{"fromKey":5,"full":1,"keyFailed":0,"lastMs":22.5,"lastFed":2,"keys":143,"t":83566635.89888002,"frames":463},"key_frame":{"planes":{"1":{"hasImage":true,"origin":[0,0,5.551115123125783e-17]},"2":{"hasImage":false,"origin":[0,0,0]}},"wins":[{"id":"1","pix":35732796,"text":"1 Срез 1: βz = 5.55112e-17 линейно логар"},{"id":"2","pix":14371632,"text":"2 Срез 2: βx = 0 амплитуда интенсивность"}]},"rebuilt":{"planes":{"1":{"hasImage":true,"origin":[0,0,5.551115123125783e-17]},"2":{"hasImage":true,"origin":[0,0,0]}},"wins":[{"id":"1","pix":35732796,"text":"1 Срез 1: βz = 5.55112e-17 линейно логар"},{"id":"2","pix":48354861,"text":"2 Срез 2: βx = 0 линейно логарифм CSV ✕ "}]},"same":false}
+errors []

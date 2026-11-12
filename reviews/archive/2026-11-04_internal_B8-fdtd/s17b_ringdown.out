@@ -1,0 +1,9 @@
+  tm eps 6, 40 cells/unit, run to pulse end +  30: Q/Q_exact - 1 = [-0.00879 -0.15151]; |field| in the last 5 time units / peak = 1.0e-01
+  tm eps 6, 40 cells/unit, run to pulse end +  60: Q/Q_exact - 1 = [-0.00303 -0.06386]; |field| in the last 5 time units / peak = 2.6e-02
+  tm eps 6, 40 cells/unit, run to pulse end + 120: Q/Q_exact - 1 = [-0.00242 -0.07134]; |field| in the last 5 time units / peak = 2.3e-03
+  tm eps 6, 40 cells/unit, run to pulse end + 240: Q/Q_exact - 1 = [-0.00246 -0.07316]; |field| in the last 5 time units / peak = 3.5e-04
+  te eps 6, 40 cells/unit, run to pulse end +  30: Q/Q_exact - 1 = [ 0.00065 -0.0012 ]; |field| in the last 5 time units / peak = 7.3e-03
+  te eps 6, 40 cells/unit, run to pulse end +  60: Q/Q_exact - 1 = [ 0.00055 -0.00178]; |field| in the last 5 time units / peak = 4.4e-04
+  te eps 6, 40 cells/unit, run to pulse end + 120: Q/Q_exact - 1 = [ 0.00056 -0.00177]; |field| in the last 5 time units / peak = 2.1e-05
+  te eps 6, 40 cells/unit, run to pulse end + 240: Q/Q_exact - 1 = [ 0.00056 -0.00177]; |field| in the last 5 time units / peak = 2.8e-06
+rc=0

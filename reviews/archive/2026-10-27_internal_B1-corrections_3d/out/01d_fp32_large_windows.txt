@@ -1,0 +1,4 @@
+gpu: window 1024 points per axis (k z up to 1005 rad): fp32 vs fp64 / peak: plane 5.63e-08, transverse plane z = 80 2.80e-07, current 2.66e-07, power 1.29e-07 (declared bound 1e-5)
+gpu: window 2048 points per axis (k z up to 1005 rad): fp32 vs fp64 / peak: plane 4.57e-08, transverse plane z = 80 2.81e-07, current 2.69e-07, power 1.25e-07 (declared bound 1e-5)
+gpu: window 4096 points per axis (k z up to 1005 rad): fp32 vs fp64 / peak: plane 4.57e-08, transverse plane z = 80 3.46e-07, current 2.73e-07, power 1.30e-07 (declared bound 1e-5)
+done

@@ -1,0 +1,27 @@
+python 3.11.17 numpy 2.4.6 scipy 1.17.1
+python-flint 0.9.0 mpmath 1.3.0
+
+constant | scipy | rel. diff vs CODATA 2018 | rel. diff vs CODATA 2022
+fine-structure constant              7.297352564300e-03  6.85e-10  0.00e+00
+electron mass                        9.109383713900e-31  1.36e-09  0.00e+00
+proton mass                          1.672621925950e-27  1.35e-09  0.00e+00
+neutron mass                         1.674927500560e-27  1.50e-09  0.00e+00
+atomic mass constant                 1.660539068920e-27  1.40e-09  0.00e+00
+classical electron radius            2.817940320500e-15  2.02e-09  0.00e+00
+Rydberg constant                     1.097373156816e+07  2.73e-13  0.00e+00
+Newtonian constant of gravitation    6.674300000000e-11  0.00e+00  0.00e+00
+Thomson cross section                6.652458705100e-29  4.06e-09  0.00e+00
+
+lfphys.core.constants:
+  C            299792458.0
+  G            6.6743e-11
+  AU           149597870700.0
+  GM_SUN       1.3271244e+20
+  R_SUN        695700000.0
+  GM_EARTH     398600400000000.0
+  R_EARTH      6378100.0
+  M_SUN        1.988409870698051e+30
+  LIGHT_YEAR   9460730472580800.0
+  YEAR_JULIAN  31557600.0
+IAU 2015 B3 nominal values: match
+AU exact (IAU 2012 B2): True

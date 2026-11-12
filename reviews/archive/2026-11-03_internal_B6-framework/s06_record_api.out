@@ -1,0 +1,7 @@
+on: true                -> (200, '{"window_s": 600, "window_mb": 1024, "recording": true, "kept_from_t": 0.0, "trimmed": false, "protected": [[0, null]], ', True)
+only window_s: 300      -> (200, '{"window_s": 300.0, "window_mb": 1024, "recording": false, "kept_from_t": 0.0, "trimmed": false, "protected": [[0, 0]], ', False)  (recording switched off)
+on: 'false' (a string)  -> (200, '{"window_s": 300.0, "window_mb": 1024, "recording": true, "kept_from_t": 0.0, "trimmed": false, "protected": [[0, 0], [0', True)  (recording switched on)
+a JSON list             -> (500, '500 Internal Server Error\n\nServer got itself in trouble', True)
+window_s: [60]          -> (500, '500 Internal Server Error\n\nServer got itself in trouble', True)
+window_s: 'NaN'         -> (400, '{"error": "окно записи: от 30 с до суток"}', True)
+window_mb: 1e9          -> (400, '{"error": "окно записи: от 16 МБ до 64 ГБ"}', True)

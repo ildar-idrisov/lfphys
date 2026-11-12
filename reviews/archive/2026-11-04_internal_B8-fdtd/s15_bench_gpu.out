@@ -1,0 +1,9 @@
+  2-D 64^2: cpu:    0.064 ms (table    0.063, ratio 1.02)  gpu:    0.059 ms (table    0.064, ratio 0.92)
+  2-D 128^2: cpu:    0.143 ms (table    0.139, ratio 1.03)  gpu:    0.060 ms (table    0.059, ratio 1.01)
+  2-D 256^2: cpu:    0.432 ms (table    0.456, ratio 0.95)  gpu:    0.060 ms (table    0.060, ratio 1.01)
+  2-D 1024^2: cpu:   11.685 ms (table   10.400, ratio 1.12)  gpu:    0.183 ms (table    0.181, ratio 1.01)
+  3-D 32^3: cpu:    0.827 ms (table    0.753, ratio 1.10)  gpu:    0.115 ms (table    0.122, ratio 0.94)
+  3-D 64^3: cpu:    3.800 ms (table    3.210, ratio 1.18)  gpu:    0.128 ms (table    0.129, ratio 0.99)
+  3-D 128^3: cpu:   67.696 ms (table   67.600, ratio 1.00)  gpu:    0.843 ms (table    0.844, ratio 1.00)
+  complex 256^2 world (CPU): measured 0.960 ms, estimate 0.912 ms, 'other device' estimate 0.060 ms (no complex factor)
+rc=0

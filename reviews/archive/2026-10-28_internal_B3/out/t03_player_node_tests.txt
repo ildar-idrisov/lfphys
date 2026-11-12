@@ -1,0 +1,24 @@
+# (1) node --test visualizations/player/js/tests/decode.test.mjs
+✔ decode a message written by the Python codec (1.221358ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 44.262609
+
+# (2) the guide's command: node --test visualizations/player/js/tests/   (node v24.13.0)
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 29.617059
+
+✖ failing tests:
+
+test at visualizations/player/js/tests:1:1
+✖ visualizations/player/js/tests (21.524375ms)
+  'test failed'

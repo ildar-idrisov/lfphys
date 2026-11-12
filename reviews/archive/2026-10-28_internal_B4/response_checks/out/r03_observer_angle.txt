@@ -1,0 +1,7 @@
+# measurement plane 1 lambda behind the plate, half x > 0 (first version)
+theta 180.0: b0 9.023 (first order 9.870) E_perp 0.163 c_x 0.986; visibility 0.1394 ref 0.3187; measured theta_eff 142.8; failed []
+theta 150.0: b0 7.594 (first order 8.225) E_perp 0.163 c_x 0.986; visibility 0.1376 ref 0.3532; measured theta_eff 138.6; failed []
+theta 200.0: b0 9.942 (first order 10.966) E_perp 0.163 c_x 0.986; visibility 0.2675 ref 0.3866; measured theta_eff 134.5; failed []
+# measurement plane 0.5 lambda behind the plate, slit B's opening +-0.5 lambda (as delivered after processing)
+theta 180.0: b0 9.023 (first order 9.870) E_perp 0.163 c_x 0.986; visibility 0.1394 ref 0.2698; measured theta_eff 148.7; failed []
+theta 165.0: b0 8.315 (first order 9.047) E_perp 0.163 c_x 0.986; visibility 0.0816 ref 0.2635; measured theta_eff 149.4; failed []

@@ -1,0 +1,8 @@
+(a) scalar exact (RS) vs paraxial LG_{1,2} at z = z_R
+  w0 =  1.5: max|exact - paraxial|/peak = 1.0417e-01   (engine RS vs own quad: 4.9e-09)
+  w0 =  3.0: max|exact - paraxial|/peak = 2.5108e-02   (engine RS vs own quad: 1.2e-14)   ratio to previous = 4.149
+  w0 =  6.0: max|exact - paraxial|/peak = 6.2098e-03   (engine RS vs own quad: 5.7e-14)   ratio to previous = 4.043
+(b) vector beam (sigma = +1) vs LG_{0,3} e_sigma at the waist z = 0 (v16's check 'parax')
+  w0 =  1.5: all components 2.8030e-01, transverse only 4.7006e-02, max|E_z|/peak 2.8030e-01
+  w0 =  3.0: all components 1.4015e-01, transverse only 1.1371e-02, max|E_z|/peak 1.4015e-01   ratios: all 2.00, transverse 4.13
+  w0 =  6.0: all components 7.0075e-02, transverse only 2.8214e-03, max|E_z|/peak 7.0075e-02   ratios: all 2.00, transverse 4.03

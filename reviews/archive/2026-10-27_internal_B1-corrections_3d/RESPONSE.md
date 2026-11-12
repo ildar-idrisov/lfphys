@@ -1,0 +1,37 @@
+# Response to the internal review of the B1 corrections (the 3-D environment), delivered 2026-10-27
+
+Processed by the coordinating session, which did not write the review (`../../README.md`, rule 1). Every finding was
+reproduced with the reviewer's scripts or numbers before it was fixed. Decision for all 11 findings: **fixed**. The
+reviewer's scripts are kept as delivered; the responder's checks are in `response_checks/` (the reviewer's
+`03b_error_vs_depth.py` and `03c_bandlimit_depth_sweep.py` copied unchanged but for their output file and run on the
+processed code; the browser checks of C2, C5, C10, C11; the recalibrated window table).
+
+| ID | decision | files | verified by |
+|---|---|---|---|
+| C1 [error in earlier] | fixed: the window is measured where it is used — on z_max and on the central planes y = 0, x = 0 at 12 depths beyond z_near, for both sums; the relative estimate is taken for each plane against its own peak (what a window or the target shows; while fixing, a global peak was found to hide the error of deep, dim planes 4–7× in four worlds of the reviewer's sweep), and an absolute estimate (field units) is the tolerance of every check at points; turned planes measured the same way; SAFETY = 1.5 recalibrated over depth: true error ≤ 1.12 × the difference over twelve worlds, both sums, pads 2–16 | `v08_wave_3d/engine/apparatus.py` (`check_depths`, `_measured`, `_diff`, `choose_window`, `window_for_plane`, `Window.abs_err`), `viz.py`, `tests/window_estimate_table.py`, README | `test_v08_wave3d.py::test_window_estimate_bounds_the_true_error[3]` (points on z_max and on the central planes over depth), `::test_the_circle_preset_is_within_its_estimate_at_every_depth`; `response_checks/window_estimate_table_after.md`; the reviewer's sweep re-run: max over depths / estimate 0.65–0.89 in all ten worlds (was up to 4.5), the circle preset 8.99e-4 against 1.65e-3, 0 % of depths above (was 3.79e-3, 41 %) |
+| C2 | fixed: the windows' axes are physical coordinates (x, y or z when the plane's axis runs along one, drawn increasing to the right and upwards; otherwise «от центра плоскости вдоль (…)»); the run fixes a plane's centre (C3), so in-plane moves cannot shift them | `player/js/slices.js` | `response_checks/rc_browser.txt`: z = 15 with the requested centre x = 5 → x −16 … 15.875; normal −z → y increasing upwards |
+| C3 | fixed: never clipped; a plane is fixed by its normal and distance d = o·n (clamped to the region), its centre is its point closest to (0, 0, z_max/2) (the box's own centre is dx/2 off the axis, which would have moved slices off the grid nodes and the circle's axis); "auto" moves d uniformly | `viz.py` (`_canonical`, `_depth_range`, `advance`), `scene3d.js` (the gizmo's pose not clamped) | `test_v08_wave3d.py::test_a_tilted_plane_moves_uniformly_with_auto_and_an_outside_centre_keeps_its_plane` (normal (1, 0, 1)/√2: steps equal within 35 % with the rate cap, the requested d kept) |
+| C4 | fixed: a local check `flux_exact` — j at the reference points of z_max against Im(U*∇U)/k of the exact field (closed-form derivatives for the Gaussian and the circle's axis; five-point differences of the exact field for rectangles), tolerance the window's absolute error × (\|U\| + \|∇U\|/k); the power identity is information, labelled as a check of the code | `apparatus.py` (`reference_current`), `viz.py` (`_check_flux`), README | `test_v08_wave3d.py::test_the_current_is_checked_against_the_exact_current` (double, circle, gauss); presets: double 7.5e-7 ≤ 1.5e-5, circle 1.0e-3 ≤ 3.6e-3, gauss 6.5e-15 |
+| C5 | fixed: the next plane is perpendicular to the planes there, turned ones included (one plane: its default if perpendicular, else n₁ × the axis least along n₁; two: n₁ × n₂) | `v08_wave_3d/web/view.js` (`nextNormal`) | `response_checks/rc_browser.txt`: after plane 1 turned to (0.5, −0.866, 0): \|n_i·n_j\| = 0, 0, 0 (was 0.5) |
+| C6 | fixed: an auto-moving slice is coarse (64 rows), not checked, without its phase in the record, at most twice per world second and after a move of 1/24 of the range (≈50 kB per message at n = 256, was 0.53 MB at ~1.5 per s); the full checked slice returns when "auto" is switched off | `viz.py` (`AUTO_NT`, `advance`, `_send_slice`), `slices.js` (label) | `test_v08_wave3d.py::test_auto_moving_slices_are_coarse_and_rate_limited_and_the_full_slice_returns` |
+| C7 | fixed: the runner hands the view's state to a new world (`Simulation.view_state` / `adopt_view`); v08 keeps its planes (pose, auto, speed); «по умолчанию» (`view {op: "reset"}`) returns one plane y = 0 | `server/lfviz/sim.py`, `viz.py`, `view.js`, RULES §2.10 | `test_v08_wave3d.py::test_planes_carry_over_to_a_new_world_and_reset_restores_the_default` |
+| C8 | fixed: one check per plane, `plane_exact_N`; a removed plane's row says «убран» | `viz.py` | `test_v08_wave3d.py::test_each_plane_has_its_own_check_and_labels_follow_the_normal` |
+| C9 | fixed: the route of a turned plane reads «точно для этой плоскости; источник повёрнут, окно измерено для повёрнутого источника»; `propagate_plane`'s docstring: identical to the volume when u is along ±x, ±y, else another periodisation within the window's error | `viz.py` (`ROUTES`), `angular_spectrum.py` | reading; the route shown under the window (`out/` of the browser checks) |
+| C10 | fixed: the gizmo offers only what changes the plane — in move mode the arrow along the normal, in tilt mode the two rings about the in-plane axes (the roll and the free rotation hidden); the buttons and the hint say «Двигать» (along the normal) and «Наклонять»; the keys W / E act on the whole page (after a click in a window too) | `scene3d.js` (`gizmoHandles`, keys), `view.js` | `response_checks/rc_browser.txt`: translate X/Y hidden, Z shown; rotate X/Y shown, Z hidden |
+| C11 | fixed: a plane with the normal ±x, ±y, ±z is labelled «x = c», «y = c», «z = c» whatever its in-plane axes; an approximate slice is red on its plane in 3-D; the run list follows the world's approximations from any message (not only the header); one log-scale floor ((3 × the window's error)²) for the windows and the 3-D scene; the zone next to the aperture hatched in every window that reaches it (along the depth's axis) | `geometry.py` (`_label`), `scene3d.js`, `slices.js`, `runs.py`, `view.js` | `test_v08_wave3d.py::test_each_plane_has_its_own_check_and_labels_follow_the_normal`; `tests/test_server.py::test_run_list_follows_the_worlds_approximations`; `response_checks/rc_browser.txt` (red outline) |
+
+## What else changed while processing
+
+* The stricter estimate refuses a few more deep wide-angle worlds (e.g. the narrow double slit a = 0.4 µm on the grid
+  128 at z_max = 12 µm: 2.2e-3 > 2e-3) and widens some windows (the circle preset: plain sum ×8 instead of the
+  band-limited ×4 that had hidden its mid-depth error). Times grow on the CPU: the default world ~79 s (GPU 0: 6.7 s),
+  the first slice at a new azimuth up to ~49 s (GPU 0: 1.3 s) — `../../../STATUS.md` V24 (f).
+* The gizmo's free-move handle is gone with C10, so the earlier browser drag of the centre handle no longer applies;
+  a plane is moved along its normal.
+
+## Tests (Docker image, GPU 0)
+
+* `lfphys/tests`: 451 passed;
+* `visualizations/` (all visualizations and the server): 344 passed + the corrected window test → `v08_wave_3d/tests`
+  24 passed after the last change; `tests/test_server.py` 11 passed;
+* the player's changed modules pass `node --check`; the browser checks above: no page errors.

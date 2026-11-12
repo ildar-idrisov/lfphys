@@ -1,0 +1,36 @@
+2000 random stacks x 2 polarisations, max |difference| stack vs boundary-value solve:
+   {'r': '3.9e-13', 't': '8.5e-14', 'R': '6.7e-13', 'T': '8.0e-14'}
+
+B&W sign at normal incidence (n 1 -> 1.5): r_s, r_p = (-0.2+0j) (0.2-0j)
+
+thick evanescent gap (n 1.5 | 1.0, d | 1.5) at 60 deg, s and p (the reference solver's own floor is ~1e-31:
+lstsq conditioning; only the d = 1000 row compares values; the rest checks that the engine returns at all):
+  d=1000 nm (kappa d = 8) s: stack T=2.812e-07 R=0.999999718810350; ftir_T=2.812e-07
+  d=1000 nm (kappa d = 8) p: stack T=1.361e-07 R=0.999999863923326; ftir_T=1.361e-07
+  d=10000 nm (kappa d = 82) s: stack T=1.290e-71 R=1.000000000000000; ftir_T=1.290e-71
+  d=10000 nm (kappa d = 82) p: stack T=6.245e-72 R=1.000000000000000; ftir_T=6.245e-72
+  d=30000 nm (kappa d = 247) s: stack T=1.370e-214 R=1.000000000000000; ftir_T=1.370e-214
+  d=30000 nm (kappa d = 247) p: stack T=6.631e-215 R=1.000000000000001; ftir_T=6.631e-215
+/lf/lfphys/lfphys/core/optics/interfaces.py:120: RuntimeWarning: overflow encountered in scalar power
+  T = 4 * e0.real * es.real / abs(den) ** 2
+  d=80000 nm (kappa d = 658) s: stack T=0.000e+00 R=1.000000000000000; ftir_T=0.000e+00
+/lf/lfphys/lfphys/core/optics/interfaces.py:126: RuntimeWarning: overflow encountered in scalar power
+  T = 4 * (n0 * c0.conjugate()).real * (nsub * cs.conjugate()).real / abs(den) ** 2
+  d=80000 nm (kappa d = 658) p: stack T=0.000e+00 R=1.000000000000000; ftir_T=0.000e+00
+  d=100000 nm (kappa d = 823) s: stack RAISES OverflowError: math range error; ftir_T RAISES OverflowError: math range error
+  d=100000 nm (kappa d = 823) p: stack RAISES OverflowError: math range error; ftir_T RAISES OverflowError: math range error
+  d=300000 nm (kappa d = 2469) s: stack RAISES OverflowError: math range error; ftir_T RAISES OverflowError: math range error
+  d=300000 nm (kappa d = 2469) p: stack RAISES OverflowError: math range error; ftir_T RAISES OverflowError: math range error
+
+ftir_T across the critical angle (n1 = 1.5, gap 1.0, d = 300 nm), relative difference to the reference:
+  dtheta=-1e-02 s: 2.8e-15  dtheta=-1e-02 p: 1.3e-14
+  dtheta=-1e-06 s: 2.2e-14  dtheta=-1e-06 p: 2.4e-13
+  dtheta=-1e-12 s: 9.5e-12  dtheta=-1e-12 p: 4.4e-11
+  dtheta=+0e+00 s: 1.4e-01  dtheta=+0e+00 p: 4.5e-01
+  dtheta=+1e-12 s: 3.4e-11  dtheta=+1e-12 p: 1.2e-10
+  dtheta=+1e-06 s: 1.3e-14  dtheta=+1e-06 p: 2.6e-13
+  dtheta=+1e-02 s: 4.4e-15  dtheta=+1e-02 p: 2.1e-15
+(at dtheta = 0 the plane-wave basis of the reference degenerates (k_z = 0 in the gap: the field is linear in z),
+ so the reference is invalid there; compare ftir_T with stack instead:)
+  theta_c s: ftir_T 0.265177915502342  stack 0.265177915502342  rel 0.0e+00
+  theta_c p: ftir_T 0.646258464852599  stack 0.646258464852599  rel 0.0e+00

@@ -1,0 +1,6 @@
+live changes applied: 300
+uncaught exceptions: 0
+bookkeeping violations: 0 []
+non-finite blobs: 0 []
+failed checks by kind (count over all new segments) and one example set-up:
+   joule: 2   e.g. {'lam_nm': 300.0, 'theta_deg': 70.24196268579806, 'pol': 's', 'rate': 3364346061.825951, 'n0': 4.0, 'ns': 1.0706409274531206, 'structure': 'metal', 'lam0_nm': 550.0, 'ar_n': 2.031855228578144, 'nH': 1.73902314817343, 'nL': 3.806972264262558, 'pairs': 30, 'fp_n': 2.4970630679558874, 'fp_d_nm': 7.346265030259327, 'metal_n': 0.2, 'metal_k': 20.0, 'metal_d_nm': 500.0, 'tir_gap_nm': 200.0}

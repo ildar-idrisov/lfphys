@@ -1,0 +1,2 @@
+wall    3 eV (dt 0.0078125): |X(4) - X(2)| max 3.31e-02 median 9.9e-05 nm; |X(8) - X(2)| max 7.25e-02 median 1.4e-04 nm; points > 0.5 nm apart (8 vs 2): 0/300; fringe spacing at the screen ~ 5.8 nm
+wall   30 eV (dt 0.0078125): |X(4) - X(2)| max 1.41e-02 median 9.8e-05 nm; |X(8) - X(2)| max 2.75e-02 median 1.6e-04 nm; points > 0.5 nm apart (8 vs 2): 0/300; fringe spacing at the screen ~ 5.8 nm

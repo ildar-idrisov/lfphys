@@ -1,0 +1,14 @@
+eta  w = -0.100 (alpha = -0.30, error-after-halving/d =  1.60): actual rel 1.19e-14, stated rel 2.07e-14, actual/stated   0.58
+eta  w = -0.150 (alpha = -0.45, error-after-halving/d =  2.15): actual rel 2.13e-14, stated rel 2.49e-14, actual/stated   0.85
+eta  w = -0.200 (alpha = -0.60, error-after-halving/d =  3.13): actual rel 2.22e-14, stated rel 2.59e-14, actual/stated   0.86
+eta  w = -0.220 (alpha = -0.66, error-after-halving/d =  3.76): actual rel 3.03e-14, stated rel 2.86e-14, actual/stated   1.06  BOUND FAILS
+eta  w = -0.240: FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+eta  w = -0.260: FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+eta  w = -0.280: FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+t    w = -0.700 (alpha = -0.10, error-after-halving/d =  1.15): actual rel 6.52e-15, stated rel 1.71e-14, actual/stated   0.38
+t    w = -0.750 (alpha = -0.25, error-after-halving/d =  1.47): actual rel 8.97e-15, stated rel 1.88e-14, actual/stated   0.48
+t    w = -0.800 (alpha = -0.40, error-after-halving/d =  1.94): actual rel 1.37e-14, stated rel 2.16e-14, actual/stated   0.64
+t    w = -0.820 (alpha = -0.46, error-after-halving/d =  2.20): actual rel 1.77e-14, stated rel 2.34e-14, actual/stated   0.76
+t    w = -0.840 (alpha = -0.52, error-after-halving/d =  2.53): actual rel 2.32e-14, stated rel 2.55e-14, actual/stated   0.91
+t    w = -0.860 (alpha = -0.58, error-after-halving/d =  2.96): actual rel 2.73e-14, stated rel 2.70e-14, actual/stated   1.01  BOUND FAILS
+t    w = -0.880 (alpha = -0.64, error-after-halving/d =  3.53): actual rel 2.69e-14, stated rel 2.75e-14, actual/stated   0.98

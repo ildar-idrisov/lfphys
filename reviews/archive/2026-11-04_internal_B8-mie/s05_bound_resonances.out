@@ -1,0 +1,21 @@
+(a) m = 1.333, TE resonances of orders n in (x, N] between x = 1000 and 1001
+  17 TE resonances located; checking up to 10 of them
+  n = 1001, x = np.float64(1000.0894181868676): |b_n| = 1.000000, |dB/dx| = 2.70e+00; engine error at b_n 1.85e-13, over all orders 1.85e-13 of the largest  -> within 2e-11: True  (0 s)
+  n = 1002, x = np.float64(1000.9078269714581): |b_n| = 1.000000, |dB/dx| = 2.74e+00; engine error at b_n 5.95e-13, over all orders 5.95e-13 of the largest  -> within 2e-11: True  (0 s)
+  n = 1006, x = np.float64(1000.6067968738959): |b_n| = 1.000000, |dB/dx| = 3.88e+00; engine error at b_n 1.50e-12, over all orders 1.50e-12 of the largest  -> within 2e-11: True  (0 s)
+  n = 1010, x = np.float64(1000.3121655704547): |b_n| = 1.000000, |dB/dx| = 5.92e+00; engine error at b_n 1.49e-12, over all orders 1.49e-12 of the largest  -> within 2e-11: True  (0 s)
+  n = 1014, x = np.float64(1000.0013082318477): |b_n| = 1.000000, |dB/dx| = 1.04e+01; engine error at b_n 7.25e-12, over all orders 7.25e-12 of the largest  -> within 2e-11: True  (0 s)
+  n = 1015, x = np.float64(1000.8193348210258): |b_n| = 1.000000, |dB/dx| = 1.06e+01; engine error at b_n 4.18e-12, over all orders 4.18e-12 of the largest  -> within 2e-11: True  (0 s)
+  n = 1019, x = np.float64(1000.4783774055487): |b_n| = 1.000000, |dB/dx| = 2.16e+01; engine error at b_n 4.59e-12, over all orders 4.59e-12 of the largest  -> within 2e-11: True  (0 s)
+  n = 1023, x = np.float64(1000.1056989418499): |b_n| = 1.000000, |dB/dx| = 4.97e+01; engine error at b_n 1.77e-10, over all orders 1.77e-10 of the largest  -> within 2e-11: False  (0 s)
+  n = 1024, x = np.float64(1000.9211872743491): |b_n| = 1.000000, |dB/dx| = 5.15e+01; engine error at b_n 2.89e-10, over all orders 2.89e-10 of the largest  -> within 2e-11: False  (0 s)
+  n = 1028, x = np.float64(1000.5164436990466): |b_n| = 1.000000, |dB/dx| = 1.33e+02; engine error at b_n 3.84e-10, over all orders 3.84e-10 of the largest  -> within 2e-11: False  (0 s)
+  worst over the resonances checked: 3.84e-10
+
+(b) large |m| and strong absorption at large x (all orders against 40 digits)
+  m = (10+10j), x = 1000: max error 1.20e-14 of the largest coefficient -> within 2e-11: True (0 s)
+  m = (1.5+1j), x = 3000: max error 9.94e-15 of the largest coefficient -> within 2e-11: True (0 s)
+  m = (4+0.01j), x = 1000: max error 1.05e-14 of the largest coefficient -> within 2e-11: True (0 s)
+  m = (1.5+0.0001j), x = 3000: max error 3.65e-13 of the largest coefficient -> within 2e-11: True (0 s)
+  m = 0.5, x = 3000: max error 1.13e-14 of the largest coefficient -> within 2e-11: True (0 s)
+  m = 1.05, x = 3000: max error 2.44e-13 of the largest coefficient -> within 2e-11: True (0 s)

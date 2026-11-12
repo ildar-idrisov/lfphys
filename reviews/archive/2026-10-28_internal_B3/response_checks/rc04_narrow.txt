@@ -1,0 +1,5 @@
+rtol 1e-07, max_disp 1 step, cap 16384: 689 s, max sub 61, screen 87
+rtol 0.0001, max_disp 1 step, cap 4096: 114 s, max sub 24, screen 87
+  rtol 0.0001: fates differ 0; |dx| median 6.2e-04, 95% 7.9e-03, max 6.83e-01 lambda (period 6.12)
+rtol 1e-05, max_disp 1 step, cap 4096: 146 s, max sub 32, screen 87
+  rtol 1e-05: fates differ 0; |dx| median 1.5e-04, 95% 2.5e-03, max 6.64e-02 lambda (period 6.12)

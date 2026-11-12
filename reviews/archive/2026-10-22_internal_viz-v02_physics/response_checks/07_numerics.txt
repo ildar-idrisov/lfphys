@@ -1,0 +1,51 @@
+== 1. screen grid resolution ==
+  photon_young           Nx =  2048, points per finest fringe   56.8, bins  288, rs check 1.93e-03
+  photon_pol_marks       Nx =  2048, points per finest fringe   56.8, bins  288, rs check 4.13e-04
+  photon_eraser          Nx =  2048, points per finest fringe   56.8, bins  288, rs check 1.93e-03
+  photon_eraser_minus    Nx =  2048, points per finest fringe   56.8, bins  288, rs check 2.06e-03
+  photon_partial         Nx =  2048, points per finest fringe   56.8, bins  288, rs check 1.93e-03
+  photon_qubit           Nx =  2048, points per finest fringe   56.8, bins  288, rs check 4.13e-04
+  electron               Nx =  2048, points per finest fringe   56.8, bins  289, rs check 1.76e-05
+  electron_qubit         Nx =  2048, points per finest fringe   56.8, bins  289, rs check 1.95e-05
+  electron_weak          Nx =  2048, points per finest fringe   56.8, bins  289, rs check 1.77e-05
+  electron_eraser        Nx =  2048, points per finest fringe   56.8, bins  289, rs check 1.95e-05
+  electron_microscope    Nx =  2048, points per finest fringe   56.8, bins  289, rs check 1.76e-05
+  electron_ab            Nx =  2048, points per finest fringe   56.8, bins  289, rs check 1.76e-05
+  neutron                Nx =  2048, points per finest fringe   56.7, bins  289, rs check 3.26e-07
+  c60                    Nx =  2048, points per finest fringe   17.9, bins  914, rs check 1.56e-05
+  c60_grw                Nx =  2048, points per finest fringe  113.7, bins  144, rs check 6.44e-05
+  triple                 Nx =  2048, points per finest fringe   31.0, bins  529, rs check 2.98e-03
+  triple_mod             Nx =  2048, points per finest fringe   31.0, bins  529, rs check 2.98e-03
+  slit_collapse          Nx =  2048, points per finest fringe   56.8, bins  288, rs check 4.13e-04
+
+  stress geometries (photon 632.8 nm, L2 = 1 m):
+  n=12 a= 10.0 um d= 200.0 um: Nx = 18672 (cap 16384), points per finest fringe 14.00, bins 4000, max rel. error of bin probabilities 0.045; rs check 3.58e-02
+  n=12 a=  5.0 um d= 500.0 um: Nx = 32768 (cap 16384), points per finest fringe  4.92, bins 4000, max rel. error of bin probabilities 0.123; rs check 5.74e-01
+  n=12 a=  2.0 um d=1000.0 um: Nx = 32768 (cap 16384), points per finest fringe  0.99, bins 4000, max rel. error of bin probabilities 0.335; rs check 9.33e-01
+  n= 2 a=  1.0 um d=2000.0 um: Nx = 32768 (cap 16384), points per finest fringe  2.73, bins 4000, max rel. error of bin probabilities 0.010; rs check 9.95e-01
+
+== 2. RS-check quadrature size (rs.slit_fields formula), numpy leggauss is O(n^3) time, O(n^2) memory ==
+  photon a=20um L=1m (default)              : phase        19 rad ->   103 nodes per slit; leggauss ~    0.0 s, matrix 0.00 GB
+  photon a=1mm d=3mm, screen 0.1 m          : phase      1004 rad ->  3866 nodes per slit; leggauss ~    4.2 s, matrix 0.12 GB
+  photon a=1mm d=3mm, screen 1 m            : phase      7027 rad -> 20000 nodes per slit; leggauss ~  586.2 s, matrix 3.20 GB
+  photon a=1mm d=3mm, L2=1mm (near field)   : phase     10789 rad -> 20000 nodes per slit; leggauss ~  586.2 s, matrix 3.20 GB
+  electron a=0.1um d=0.5um, screen 1 cm     : phase      1173 rad ->  4513 nodes per slit; leggauss ~    6.7 s, matrix 0.16 GB
+
+== 3. near-field map: paraxial vs exact RS at the first columns (z = 2a ... ) ==
+  photon a=20um: z =   2 a: max|P_RS - P_F|/max P_F = 0.098
+  photon a=20um: z =   5 a: max|P_RS - P_F|/max P_F = 0.044
+  photon a=20um: z =  20 a: max|P_RS - P_F|/max P_F = 0.106
+  photon a=20um: z = 100 a: max|P_RS - P_F|/max P_F = 0.004
+  photon a=3um: z =   2 a: max|P_RS - P_F|/max P_F = 0.070
+  photon a=3um: z =   5 a: max|P_RS - P_F|/max P_F = 0.183
+  photon a=3um: z =  20 a: max|P_RS - P_F|/max P_F = 0.180
+  photon a=3um: z = 100 a: max|P_RS - P_F|/max P_F = 0.009
+  photon a=1um: z =   2 a: max|P_RS - P_F|/max P_F = 0.225
+  photon a=1um: z =   5 a: max|P_RS - P_F|/max P_F = 0.383
+  photon a=1um: z =  20 a: max|P_RS - P_F|/max P_F = 0.144
+  photon a=1um: z = 100 a: max|P_RS - P_F|/max P_F = 0.002
+
+== 4. segment cost, many slits with a Monte-Carlo ensemble ==
+  electron microscope n=12 a=0.1um d=1um: Nx = 9646, first segment 3.8 s, 500 particles 8.0 s, peak RSS so far 609 MB
+  photon partial coherence n=12 a=10um d=200um: Nx = 18672, first segment 0.5 s, 500 particles 15.0 s, peak RSS so far 609 MB
+exit 0

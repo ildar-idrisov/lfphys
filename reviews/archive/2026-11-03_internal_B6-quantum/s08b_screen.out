@@ -1,0 +1,6 @@
+screen edge 3.0 nm, W0 0.381 eV: k = 2.742: R = 7.16e-08, T = 1.47e-06
+screen edge 3.0 nm, W0 0.381 eV: k = 3.142: R = 1.13e-09, T = 5.74e-06
+screen edge 3.0 nm, W0 0.381 eV: k = 3.542: R = 1.23e-11, T = 1.85e-05
+screen edge 1.0 nm, W0 0.381 eV: k = 2.742: R = 2.97e-03, T = 2.56e-06
+screen edge 1.0 nm, W0 0.381 eV: k = 3.142: R = 7.77e-04, T = 8.14e-06
+screen edge 1.0 nm, W0 0.381 eV: k = 3.542: R = 1.78e-04, T = 2.30e-05

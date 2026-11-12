@@ -1,0 +1,4 @@
+marker True: absorbed {'detector 3': 0.16807857462309533, 'edges': 0.8319213306109455}; transmitted wave at t = 14.5: marker P(1) = 0.246, |coherence| 0.178
+marker False: absorbed {'detector 2': 0.1844358340055877, 'edges': 0.8155640827361382}; 
+marker True: visibility near the centre (|y| < 6 nm) 0.613
+marker False: visibility near the centre (|y| < 6 nm) 0.953

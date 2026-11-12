@@ -1,0 +1,31 @@
+== (c) histogram coherence fit: run's estimator vs a constrained Poisson-ML alternative ==
+  electron_weak: true |gamma| = 0.8660; correlation of the basis functions b11, b22 = 0.999828
+    N =    100: run's fit: None in 184/200, mean 1.258 (bias +0.392), median 0.986, scatter 0.657, median reported err 6.920, fraction > 1: 0.50 | constrained ML (60 samples): mean 0.888 (bias +0.022), scatter 0.092
+    N =    300: run's fit: None in 163/200, mean 2.418 (bias +1.552), median 1.171, scatter 6.613, median reported err 5.781, fraction > 1: 0.70 | constrained ML (60 samples): mean 0.877 (bias +0.011), scatter 0.055
+    N =   1000: run's fit: None in 119/200, mean 1.301 (bias +0.435), median 1.034, scatter 0.661, median reported err 1.476, fraction > 1: 0.59 | constrained ML (60 samples): mean 0.862 (bias -0.004), scatter 0.029
+    N =   5000: run's fit: None in 59/200, mean 1.289 (bias +0.423), median 0.973, scatter 1.053, median reported err 0.382, fraction > 1: 0.47 | constrained ML (60 samples): mean 0.869 (bias +0.003), scatter 0.012
+    N =  20000: run's fit: None in 1/200, mean 0.930 (bias +0.064), median 0.897, scatter 0.090, median reported err 0.070, fraction > 1: 0.14 | constrained ML (60 samples): mean 0.866 (bias +0.000), scatter 0.007
+    N = 100000: run's fit: None in 0/200, mean 0.882 (bias +0.016), median 0.876, scatter 0.021, median reported err 0.015, fraction > 1: 0.00 | constrained ML (60 samples): mean 0.866 (bias -0.000), scatter 0.003
+  electron_qubit: true |gamma| = 0.0000; correlation of the basis functions b11, b22 = 0.999828
+    N =    100: run's fit: None in 184/200, mean 0.341 (bias +0.341), median 0.281, scatter 0.194, median reported err 1.926, fraction > 1: 0.00 | constrained ML (60 samples): mean 0.168 (bias +0.168), scatter 0.089
+    N =    300: run's fit: None in 156/200, mean 0.240 (bias +0.240), median 0.147, scatter 0.333, median reported err 0.481, fraction > 1: 0.05 | constrained ML (60 samples): mean 0.104 (bias +0.104), scatter 0.055
+    N =   1000: run's fit: None in 139/200, mean 0.173 (bias +0.173), median 0.086, scatter 0.523, median reported err 0.126, fraction > 1: 0.02 | constrained ML (60 samples): mean 0.064 (bias +0.064), scatter 0.031
+    N =   5000: run's fit: None in 60/200, mean 0.040 (bias +0.040), median 0.032, scatter 0.030, median reported err 0.028, fraction > 1: 0.00 | constrained ML (60 samples): mean 0.026 (bias +0.026), scatter 0.010
+    N =  20000: run's fit: None in 11/200, mean 0.016 (bias +0.016), median 0.014, scatter 0.016, median reported err 0.011, fraction > 1: 0.00 | constrained ML (60 samples): mean 0.013 (bias +0.013), scatter 0.007
+    N = 100000: run's fit: None in 0/200, mean 0.006 (bias +0.006), median 0.005, scatter 0.003, median reported err 0.005, fraction > 1: 0.00 | constrained ML (60 samples): mean 0.005 (bias +0.005), scatter 0.003
+  photon_young: true |gamma| = 1.0000; correlation of the basis functions b11, b22 = 0.999980
+    N =    100: run's fit: None in 194/200, mean 1.374 (bias +0.374), median 1.083, scatter 0.687, median reported err 12.381, fraction > 1: 0.67 | constrained ML (60 samples): mean 1.032 (bias +0.032), scatter 0.084
+    N =    300: run's fit: None in 188/200, mean 1.212 (bias +0.212), median 1.109, scatter 0.261, median reported err 4.178, fraction > 1: 0.83 | constrained ML (60 samples): mean 1.013 (bias +0.013), scatter 0.043
+    N =   1000: run's fit: None in 170/200, mean 1.595 (bias +0.595), median 1.205, scatter 1.297, median reported err 4.482, fraction > 1: 0.97 | constrained ML (60 samples): mean 1.001 (bias +0.001), scatter 0.016
+    N =   5000: run's fit: None in 107/200, mean 1.666 (bias +0.666), median 1.203, scatter 1.394, median reported err 1.408, fraction > 1: 1.00 | constrained ML (60 samples): mean 1.001 (bias +0.001), scatter 0.007
+    N =  20000: run's fit: None in 20/200, mean 1.268 (bias +0.268), median 1.088, scatter 0.492, median reported err 0.323, fraction > 1: 0.98 | constrained ML (60 samples): mean 1.000 (bias -0.000), scatter 0.004
+    N = 100000: run's fit: None in 0/200, mean 1.058 (bias +0.058), median 1.026, scatter 0.097, median reported err 0.058, fraction > 1: 0.98 | constrained ML (60 samples): mean 1.000 (bias +0.000), scatter 0.002
+
+== (d) dark counts: histogram includes them, expectation does not ==
+  photon_young, rate 1000/s, dark     0/s, 30 s: detections 28957, dark 0; chi2 = 197.9 / 173 dof, p = 9.44e-02; |gamma| hist 1.004 +- 0.014 vs expected 1.000
+  photon_young, rate 1000/s, dark    50/s, 30 s: detections 30523, dark 1531; chi2 = 376.5 / 177 dof, p = 1.79e-16; |gamma| hist 0.991 +- 0.062 vs expected 1.000
+Traceback (most recent call last):
+  File "/lf/reviews/2026-10-22_internal_viz-v02_physics/05b_statistics_fit.py", line 92, in <module>
+    print(f"  photon_young, rate 1000/s, dark {dr:5.0f}/s, 30 s: detections {h.sim.hist['n']}, dark {h.sim.counts['dark']}; "
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: unsupported format string passed to NoneType.__format__

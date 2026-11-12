@@ -1,0 +1,32 @@
+== 1. lambda from the kinetic energy: engine vs 50-digit reference ==
+  neutron  E_k = 0.0002045 eV: lambda = 1.999445e-09 m, rel. error vs 50 digits = -3.03e-04
+  neutron  E_k = 0.025 eV: lambda = 1.808914e-10 m, rel. error vs 50 digits = +3.50e-08
+  c60      E_k = 0.1498 eV: lambda = 2.766435e-12 m, rel. error vs 50 digits = +1.75e-04
+  he4      E_k = 0.02 eV: lambda = 1.015250e-10 m, rel. error vs 50 digits = -4.92e-06
+  electron E_k = 5e+04 eV: lambda = 5.355307e-12 m, rel. error vs 50 digits = -4.74e-16
+  electron E_k = 1 eV: lambda = 1.226425e-09 m, rel. error vs 50 digits = -2.44e-11
+
+== 2. the run's own wavelength check for a slow neutron given by kinetic energy ==
+  check 'lam': value 1.99944543 nm, ref 2.00005147 nm, rel -3.03e-04, tol 1e-09  -> FAILS (|rel| > tol)
+  C60 by E_k: rel +1.75e-04 vs tol 1e-09
+
+== 3. Aharonov-Bohm phase: engine vs q Phi / hbar ==
+  q = -1 e, Phi = 0.5 h/e: engine phase -3.1416 rad, q Phi/hbar = -3.1416 rad  OK
+  q = -1 e, Phi = 0.25 h/e: engine phase -1.5708 rad, q Phi/hbar = -1.5708 rad  OK
+  q = +2 e, Phi = 0.25 h/e: engine phase +1.5708 rad, q Phi/hbar = -3.1416 rad  MISMATCH
+  q = -3 e, Phi = 0.1667 h/e: engine phase -1.0472 rad, q Phi/hbar = -3.1416 rad  MISMATCH
+  q = +0.5 e, Phi = 1 h/e: engine phase +0.0000 rad, q Phi/hbar = -3.1416 rad  MISMATCH
+
+== 4. probe photon polarised along its own propagation direction is accepted ==
+  mic_dir=z, mic_pol=z: accepted (no error); scattered fraction 1.0; header errors: []
+  mic_dir=y, mic_pol=y: accepted (no error); scattered fraction 1.0; header errors: []
+  mic_dir=x, mic_pol=x: accepted (no error); scattered fraction 1.0; header errors: []
+
+== 5. GRW nucleon count of light custom particles and of electrons ==
+  custom mass 0.3 u -> nucleons used for the GRW rate: 0
+  custom mass 0.6 u -> nucleons used for the GRW rate: 1
+  custom mass 1.0 u -> nucleons used for the GRW rate: 1
+  electron -> 0 (mass-proportional CSL/GRW would give m_e/m_N = 5.49e-04 nucleon equivalents)
+
+== 6. spectral width: per-particle wavelength but common time of flight ==
+  neutron 2 nm, sigma_lambda/lambda = 0.2: velocity spread of the particles 20 % (197.8 m/s +- 39.6); time of flight used for every particle 25.278 ms (one value)

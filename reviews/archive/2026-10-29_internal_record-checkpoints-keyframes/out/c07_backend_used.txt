@@ -1,0 +1,5 @@
+v08_wave_3d after header: {'optics.angular_spectrum': ['check', 'drawn']}  after 40 frames: {'optics.angular_spectrum': ['check', 'drawn']}  same: True
+v09_thomas_3d after header: {}  after 40 frames: {}  same: True
+v10_fast_observer after header: {'relativity.raytrace': ['aux', 'check', 'drawn']}  after 40 frames: {'relativity.raytrace': ['aux', 'check', 'drawn']}  same: True
+v11_double_slit_2d after header: {'quantum.split_operator': ['drawn']}  after 40 frames: {'quantum.split_operator': ['drawn']}  same: True
+v12_arrival_times_2d after header: {'quantum.split_operator': ['drawn']}  after 40 frames: {'quantum.split_operator': ['drawn']}  same: True

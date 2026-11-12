@@ -1,0 +1,23 @@
+estimate: 200 False | 2 знач. × 1 замер(ов): цену шага этого мира запись ещё не измерила (мир не считался); свип начнётся и остановится сам, если первое значение покажет, что он дороже предела 20 с
+start: 200 1 starting
+after 45 s (budget 20 s, self-stop at 30 s): state=running active=True progress={'done': 0, 'total': 2, 'frac': 0.0, 'elapsed_s': 0.34434919338673353, 'eta_s': None}
+DELETE run: 200 {'ok': True}
+cancel the deleted run's sweep: 404 {'error': 'нет такого запуска'}
+health: running workers 0 runs 0
+another run's sweep: 200 1
+a third run's sweep: 409 {'error': 'на сервере уже идут 2 свипа (больше 2 сразу нельзя): дождитесь одного из них'}
+--- processes in lf-lbrf-srv2 after the script:
+OCI runtime exec failed: exec failed: unable to start container process: exec: "ps": executable file not found in $PATH: unknown
+1 ppid 0 nice 0 oom_adj 0 rss_MB 56 python3 server/serve.py --host 0.0.0.0 --port 8479 --max-workers 3 
+15 ppid 1 nice 10 oom_adj 0 rss_MB 88 /usr/local/bin/python3 -m lfviz.sweep --file /lf/visualizations/runs/20261111-175435-p97-3340/sweeps/1.json 
+19 ppid 1 nice 0 oom_adj 0 rss_MB 74 /usr/local/bin/python3 -m lfviz.worker --viz p97_osc 
+24 ppid 1 nice 0 oom_adj 0 rss_MB 74 /usr/local/bin/python3 -m lfviz.worker --viz p97_osc 
+38 ppid 0 nice 0 oom_adj 0 rss_MB 7 python3 -c 
+import os,time
+for p in sorted(os.listdir('/proc'), key=lambda s: int(s) if s.isdigit() else 0):
+    if not p.isdigit(): continue
+    try:
+17:55:45
+pid 15 (sweep of the deleted run): alive, cpu 68.58 s, age 68 s
+18:01:24
+pid 15 gone

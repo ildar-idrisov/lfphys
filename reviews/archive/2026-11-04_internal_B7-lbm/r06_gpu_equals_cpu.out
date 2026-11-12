@@ -1,0 +1,11 @@
+GPU available: True
+periodic_box devices: cpu gpu
+  after 400 steps: populations equal True, dye equal True, link records equal True, forces equal True
+  after 800 steps: populations equal True, dye equal True, link records equal True, forces equal True
+  balance residuals cpu / gpu: 5.643633708511212e-16 5.643633708511212e-16
+lid_channel devices: cpu gpu
+  after 400 steps: populations equal True, dye equal True, link records equal True, forces equal True
+  after 800 steps: populations equal True, dye equal True, link records equal True, forces equal True
+  balance residuals cpu / gpu: 3.552713678800501e-16 4.736951571734001e-16
+.                                                                        [100%]
+1 passed, 37 deselected in 1.26s

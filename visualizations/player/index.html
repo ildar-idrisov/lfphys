@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
+     SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0 -->
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Light-funnel · визуализации</title>
+<link rel="stylesheet" href="/static/assets/chrome.css">
+<style id="ux-framework">
+/* refused starts and values said where they were set (reviews 2026-11-04 UX-params P1, P2) */
+.start-err:empty { display: none; }
+.start-err { margin-top: 8px; padding: 6px 8px; border-left: 4px solid var(--bad); background: color-mix(in srgb, var(--bad) 8%, transparent); color: var(--ink); font-size: 12px; }
+.field-err:empty { display: none; }
+.field-err { grid-column: 1 / -1; color: var(--bad); font-size: 11px; }
+.field.bad input, .field.bad select { border-color: var(--bad); }
+.start-why { max-width: 32em; font-size: 12px; font-weight: 400; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="title">Light-funnel · визуализации следствий гипотез</span>
+  <span class="grow"></span>
+  <span id="health" class="muted"></span>
+  <a href="/settings" title="Где считать (CPU / GPU) и с какой точностью">⚙ Устройства</a>
+  <a href="/legal" title="Лицензия, цитирование, сторонний код и отказ от гарантий">Лицензия</a>
+  <button id="theme" title="Тема (T)">◐</button>
+  <button id="help" title="Справка (?)">?</button>
+</div>
+<div class="page">
+  <div class="modes" id="modes"></div>
+  <div id="mode-help" class="help" style="margin-bottom:8px"></div>
+  <div id="cards" class="cards"></div>
+  <h2>Запуски <span class="muted" style="font-weight:400">(идущие и записанные; записи хранятся на сервере)</span></h2>
+  <div id="retention" class="row" style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:8px"></div>
+  <div id="runs"></div>
+  <p class="muted" style="margin-top:24px">Исследовательский инструмент: модели и результаты могут содержать ошибки, гарантий нет —
+    проверяйте результаты сами. Только некоммерческие исследования, учёба и преподавание; если программа посчитала или
+    проверила то, о чём сообщает ваша публикация, ссылка на lfphys с версией обязательна. <a href="/legal">Лицензия,
+    версия для ссылки и условия</a>.</p>
+</div>
+<script type="module" src="/static/js/catalog.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+grid (745, 640), x in [-62.00, 62.00], z in [-50.50, 56.00], screen_half 56.00, packet centre z = -24.50, sigma_z = 5.0; source-side layer z < -44.50
+initial packet: probability inside the source-side absorber 2.94e-05; |psi|^2 at the first z row / peak 1.34e-06, at the last z row 5.17e-57
+tau =  0.50: flux into the screen so far: sum -1.85e-14, max |P| 1.54e-16 at x = +0.00 (-1.5e-16), +0.17 (-1.5e-16), -0.17 (-1.5e-16), +0.33 (-1.5e-16); absorbed so far 7.40e-06; 'screen' messages sent 1, the last one's peak 1.00e+00 (the view draws P / peak)
+tau =  0.99: flux into the screen so far: sum -1.84e-14, max |P| 1.53e-16 at x = +0.17 (-1.5e-16), -0.17 (-1.5e-16), +0.00 (-1.5e-16), +0.33 (-1.5e-16); absorbed so far 7.40e-06; 'screen' messages sent 3, the last one's peak 1.00e+00 (the view draws P / peak)
+tau =  2.44: flux into the screen so far: sum -8.14e-15, max |P| 1.21e-16 at x = +2.17 (-1.2e-16), -2.17 (-1.2e-16), -2.00 (-1.2e-16), +2.00 (-1.2e-16); absorbed so far 7.40e-06; 'screen' messages sent 9, the last one's peak 1.65e-26 (the view draws P / peak)
+tau =  3.99: flux into the screen so far: sum +5.47e-07, max |P| 8.08e-09 at x = +0.00 (+8.1e-09), +0.17 (+8.0e-09), -0.17 (+8.0e-09), -0.33 (+7.7e-09); absorbed so far 7.95e-06; 'screen' messages sent 15, the last one's peak 6.38e-09 (the view draws P / peak)
+tau =  6.00: flux into the screen so far: sum +6.86e-07, max |P| 9.16e-09 at x = +0.00 (+9.2e-09), +0.17 (+9.0e-09), -0.17 (+9.0e-09), -0.33 (+8.7e-09); absorbed so far 8.53e-06; 'screen' messages sent 23, the last one's peak 9.15e-09 (the view draws P / peak)
+end: tau = 18.49, peak of the final pattern 1.26e-03

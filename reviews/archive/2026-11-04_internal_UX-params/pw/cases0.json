@@ -1,0 +1,2 @@
+[{"name": "v13_l_eq_n_start", "start": {"viz": "v13_hydrogen_3d", "params": {"n": 2, "l": 2}}, "wait": 7000},
+ {"name": "v04_r0_inside_body", "start": {"viz": "v04_orbits", "params": {"radius_km": 1000, "r0": 2.1}}, "wait": 7000}]

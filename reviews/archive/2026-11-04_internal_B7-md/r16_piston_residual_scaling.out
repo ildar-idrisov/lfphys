@@ -1,0 +1,4 @@
+dt = 10.0 fs: piston-preset residuals [24.851, -3.145, -14.125] (mean |.| 14.040); NVE gas without piston: energy change [-0.1166, 0.3559, 0.8093]
+dt =  5.0 fs: piston-preset residuals [-2.583, 1.922, 1.27] (mean |.| 1.925); NVE gas without piston: energy change [0.0138, 0.0636, 0.306]
+dt =  2.5 fs: piston-preset residuals [2.408, -1.186, 0.052] (mean |.| 1.215); NVE gas without piston: energy change [0.0038, -0.0166, 0.0713]
+exit 0

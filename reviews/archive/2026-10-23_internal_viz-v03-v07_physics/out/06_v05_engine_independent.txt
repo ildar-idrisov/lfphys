@@ -1,0 +1,51 @@
+A. interfaces.stack vs Rouard recursion, 4000 random stacks (1-6 layers, 25 % absorbing, 0-89.9 deg), s and p:
+   max relative |difference| of r: 3.30e-14
+   max relative |difference| of t: 1.69e-13
+   max relative |difference| of R: 5.46e-14
+   max relative |difference| of T: 1.43e-14
+
+B. grazing inside an inner lossless layer (n0 sin th = n_j), exact and +-1e-12 rad: stack vs Rouard
+   n0=1.5, n_j=1.0, n_s=1.5, d=200.0, th_g+0e+00, s: stack R=0.551886834154734 T=4.481e-01 | Rouard R=nan T=nan | R+T-1 (stack) = -2.2e-16
+   n0=1.5, n_j=1.0, n_s=1.5, d=200.0, th_g+0e+00, p: stack R=0.195672651186013 T=8.043e-01 | Rouard R=nan T=nan | R+T-1 (stack) = 0.0e+00
+   n0=1.5, n_j=1.0, n_s=1.5, d=200.0, th_g+1e-12, s: stack R=0.551886834155903 T=4.481e-01 | Rouard R=0.551886834151174 T=4.481e-01 | R+T-1 (stack) = 2.2e-16
+   n0=1.5, n_j=1.0, n_s=1.5, d=200.0, th_g+1e-12, p: stack R=0.195672651189044 T=8.043e-01 | Rouard R=0.195672651174903 T=8.043e-01 | R+T-1 (stack) = 0.0e+00
+   n0=1.5, n_j=1.0, n_s=1.5, d=200.0, th_g-1e-12, s: stack R=0.551886834153565 T=4.481e-01 | Rouard R=0.551886834194040 T=4.481e-01 | R+T-1 (stack) = -4.4e-16
+   n0=1.5, n_j=1.0, n_s=1.5, d=200.0, th_g-1e-12, p: stack R=0.195672651182981 T=8.043e-01 | Rouard R=0.195672651188649 T=8.043e-01 | R+T-1 (stack) = 2.2e-16
+   n0=1.5, n_j=1.0, n_s=1.5, d=200.0, th_g+1e-09, s: stack R=0.551886835323595 T=4.481e-01 | Rouard R=0.551886835322311 T=4.481e-01 | R+T-1 (stack) = 2.2e-16
+   n0=1.5, n_j=1.0, n_s=1.5, d=200.0, th_g+1e-09, p: stack R=0.195672654217368 T=8.043e-01 | Rouard R=0.195672654217809 T=8.043e-01 | R+T-1 (stack) = -2.2e-16
+   n0=1.5, n_j=1.0, n_s=1.5, d=200.0, th_g+1e-06, s: stack R=0.551888003015814 T=4.481e-01 | Rouard R=0.551888003015812 T=4.481e-01 | R+T-1 (stack) = 2.2e-16
+   n0=1.5, n_j=1.0, n_s=1.5, d=200.0, th_g+1e-06, p: stack R=0.195675682551797 T=8.043e-01 | Rouard R=0.195675682551801 T=8.043e-01 | R+T-1 (stack) = 0.0e+00
+   n0=2.0, n_j=1.5, n_s=1.0, d=300.0, th_g+0e+00, s: stack R=1.000000000000000 T=0.000e+00 | Rouard R=nan T=nan | R+T-1 (stack) = -4.4e-16
+   n0=2.0, n_j=1.5, n_s=1.0, d=300.0, th_g+0e+00, p: stack R=1.000000000000000 T=0.000e+00 | Rouard R=nan T=nan | R+T-1 (stack) = -2.2e-16
+   n0=2.0, n_j=1.5, n_s=1.0, d=300.0, th_g+1e-12, s: stack R=1.000000000000000 T=0.000e+00 | Rouard R=1.000000000000000 T=0.000e+00 | R+T-1 (stack) = -2.2e-16
+   n0=2.0, n_j=1.5, n_s=1.0, d=300.0, th_g+1e-12, p: stack R=1.000000000000000 T=0.000e+00 | Rouard R=1.000000000000000 T=0.000e+00 | R+T-1 (stack) = 0.0e+00
+   n0=2.0, n_j=1.5, n_s=1.0, d=300.0, th_g-1e-12, s: stack R=1.000000000000000 T=0.000e+00 | Rouard R=0.999999999998723 T=0.000e+00 | R+T-1 (stack) = 0.0e+00
+   n0=2.0, n_j=1.5, n_s=1.0, d=300.0, th_g-1e-12, p: stack R=1.000000000000000 T=0.000e+00 | Rouard R=0.999999999994745 T=0.000e+00 | R+T-1 (stack) = 0.0e+00
+   n0=2.0, n_j=1.5, n_s=1.0, d=300.0, th_g+1e-09, s: stack R=1.000000000000000 T=0.000e+00 | Rouard R=1.000000000000000 T=0.000e+00 | R+T-1 (stack) = 0.0e+00
+   n0=2.0, n_j=1.5, n_s=1.0, d=300.0, th_g+1e-09, p: stack R=1.000000000000000 T=0.000e+00 | Rouard R=1.000000000000000 T=0.000e+00 | R+T-1 (stack) = -2.2e-16
+   n0=2.0, n_j=1.5, n_s=1.0, d=300.0, th_g+1e-06, s: stack R=1.000000000000000 T=0.000e+00 | Rouard R=1.000000000000000 T=0.000e+00 | R+T-1 (stack) = 0.0e+00
+   n0=2.0, n_j=1.5, n_s=1.0, d=300.0, th_g+1e-06, p: stack R=1.000000000000000 T=0.000e+00 | Rouard R=1.000000000000000 T=0.000e+00 | R+T-1 (stack) = -2.2e-16
+   n0=3.0, n_j=1.2, n_s=2.0, d=1000.0, th_g+0e+00, s: stack R=0.990862251253377 T=9.138e-03 | Rouard R=nan T=nan | R+T-1 (stack) = 0.0e+00
+   n0=3.0, n_j=1.2, n_s=2.0, d=1000.0, th_g+0e+00, p: stack R=0.862256372575087 T=1.377e-01 | Rouard R=nan T=nan | R+T-1 (stack) = 0.0e+00
+   n0=3.0, n_j=1.2, n_s=2.0, d=1000.0, th_g+1e-12, s: stack R=0.990862251255353 T=9.138e-03 | Rouard R=0.990862251255278 T=9.138e-03 | R+T-1 (stack) = -3.3e-16
+   n0=3.0, n_j=1.2, n_s=2.0, d=1000.0, th_g+1e-12, p: stack R=0.862256372606938 T=1.377e-01 | Rouard R=0.862256372606148 T=1.377e-01 | R+T-1 (stack) = -3.3e-16
+   n0=3.0, n_j=1.2, n_s=2.0, d=1000.0, th_g-1e-12, s: stack R=0.990862251251401 T=9.138e-03 | Rouard R=0.990862251251347 T=9.138e-03 | R+T-1 (stack) = 6.7e-16
+   n0=3.0, n_j=1.2, n_s=2.0, d=1000.0, th_g-1e-12, p: stack R=0.862256372543235 T=1.377e-01 | Rouard R=0.862256372542969 T=1.377e-01 | R+T-1 (stack) = 2.2e-16
+   n0=3.0, n_j=1.2, n_s=2.0, d=1000.0, th_g+1e-09, s: stack R=0.990862253229904 T=9.138e-03 | Rouard R=0.990862253229904 T=9.138e-03 | R+T-1 (stack) = 2.2e-16
+   n0=3.0, n_j=1.2, n_s=2.0, d=1000.0, th_g+1e-09, p: stack R=0.862256404426848 T=1.377e-01 | Rouard R=0.862256404426887 T=1.377e-01 | R+T-1 (stack) = 4.4e-16
+   n0=3.0, n_j=1.2, n_s=2.0, d=1000.0, th_g+1e-06, s: stack R=0.990864227528901 T=9.136e-03 | Rouard R=0.990864227528901 T=9.136e-03 | R+T-1 (stack) = -2.2e-16
+   n0=3.0, n_j=1.2, n_s=2.0, d=1000.0, th_g+1e-06, p: stack R=0.862288220649176 T=1.377e-01 | Rouard R=0.862288220649175 T=1.377e-01 | R+T-1 (stack) = 2.2e-16
+
+C. closed forms of thin_films against Rouard
+   Bragg N=1: Rouard (H L)^N: 1-R = 6.572593e-01, closed form (A=H): 6.572593e-01; Rouard (L H)^N: 1-R = 9.390953e-01, closed form (A=L): 9.390953e-01
+   Bragg N=4: Rouard (H L)^N: 1-R = 6.356154e-02, closed form (A=H): 6.356154e-02; Rouard (L H)^N: 1-R = 1.408283e-01, closed form (A=L): 1.408283e-01
+   Bragg N=8: Rouard (H L)^N: 1-R = 1.637206e-03, closed form (A=H): 1.637206e-03; Rouard (L H)^N: 1-R = 3.778545e-03, closed form (A=L): 3.778545e-03
+   Bragg N=15: Rouard (H L)^N: 1-R = 2.566970e-06, closed form (A=H): 2.566970e-06; Rouard (L H)^N: 1-R = 5.930718e-06, closed form (A=L): 5.930718e-06
+   FTIR s: closed form = Rouard to 1e-12 relative at 15 angle/gap pairs unless a mismatch is printed
+   FTIR p: closed form = Rouard to 1e-12 relative at 15 angle/gap pairs unless a mismatch is printed
+   Airy intensity formula (n0 != ns allowed) vs Rouard: max |dT| = 1.08e-14
+   Brewster: interfaces.brewster(1,1.5) = 56.309932474020 deg; |r_p| there (Rouard) = 6.7e-17
+   critical: interfaces.critical(1.5,1) = 41.810314895779 deg = asin(2/3)
+   B&W sign: r_s(0) = -0.200000+0.000000j, r_p(0) = 0.200000+0.000000j (B&W: r_p = -r_s at normal incidence, r_p = tan(ti - tt)/tan(ti + tt))
+   r_p(30 deg) engine 0.158899800341064 vs tan form 0.158899800341064
+   r_s(30 deg) engine -0.240408205773457 vs -sin form -0.240408205773457

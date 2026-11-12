@@ -1,0 +1,4 @@
+[{"name": "e_v17_index_matched_nan_check", "start": {"viz": "v17_mie_scattering", "seed": 1, "params": {"index": "custom", "n_re": 1.0, "n_im": 0.0, "n_medium": 1.0}}, "wait": 8000,
+  "cmds": [["play", {}, 4000], ["pause", {}, 1000]]},
+ {"name": "e_v02_crossed_polarizers_gamma", "start": {"viz": "v02_double_slit", "seed": 1, "params": {"el1": "polarizer", "el2": "polarizer", "el1_angle": 0.0, "el2_angle": 90.0}}, "wait": 5000,
+  "cmds": [["play", {}, 4000], ["pause", {}, 1000]]}]

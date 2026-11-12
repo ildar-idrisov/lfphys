@@ -1,0 +1,29 @@
+[sun_earth c x 2] t = 400; mods = ['c_factor']; arrivals 3; checks 4; errors 0; failed checks 0
+[sun_earth c x 0.5] t = 1200; mods = ['c_factor']; arrivals 3; checks 4; errors 0; failed checks 0
+[sun_earth gravity none] t = 600; mods = ['gravity']; arrivals 3; checks 3; errors 0; failed checks 0
+[sun_earth ether] t = 600; mods = ['kinematics', 'gravity']; arrivals 3; checks 3; errors 0; failed checks 0
+[sun_earth emission] t = 600; mods = ['kinematics', 'gravity']; arrivals 3; checks 0; errors 0; failed checks 0
+[sun_earth emission+newton] EXCEPTION at t = 0:
+  File "/usr/local/lib/python3.11/site-packages/scipy/integrate/_quadpack_py.py", line 605, in quad
+    raise ValueError(msg)
+ValueError: If 'epsabs'<=0, 'epsrel' must be greater than both 5e-29 and 50*(machine epsilon).
+
+[sun_earth emission+newton] t = 0; mods = ['kinematics', 'gravity']; arrivals 0; checks 0; errors 0; failed checks 0
+[sun_earth 1e5 Msun (rs ~ 3e8 m), R = 2 rs] t = 700; mods = []; arrivals 3; checks 4; errors 0; failed checks 0
+[measure_c c x 3] t = 0.02; mods = ['c_factor']; arrivals 3; checks 6; errors 0; failed checks 0
+[measure_c v = +-0.99c] t = 0.5; mods = []; arrivals 2; checks 4; errors 0; failed checks 0
+[measure_c emission u=-0.9] t = 0.1; mods = ['kinematics']; arrivals 1; checks 1; errors 0; failed checks 0
+[measure_c lab sync ether] t = 0.04; mods = ['kinematics']; arrivals 3; checks 6; errors 0; failed checks 0
+[measure_c transverse SR] t = 0.04; mods = []; arrivals 3; checks 6; errors 0; failed checks 0
+[measure_c flash at t=0] t = 0.04; mods = []; arrivals 3; checks 6; errors 0; failed checks 0
+[lensing c x 2] t = 0.05; mods = ['c_factor']; arrivals 2; checks 5; errors 0; failed checks 0
+[lensing star R = 4 rs] t = 0.2; mods = []; arrivals 2; checks 5; errors 0; failed checks 0
+[lensing collinear (Einstein ring)] t = 0.2; mods = []; arrivals 2; checks 5; errors 0; failed checks 0
+[lensing near obs 5 rs] t = 0.2; mods = []; arrivals 2; checks 5; errors 0; failed checks 0
+[lensing gravity none] t = 0.2; mods = ['gravity']; arrivals 1; checks 1; errors 0; failed checks 0
+[lensing newton BH R=0] t = 0.2; mods = ['kinematics', 'gravity']; arrivals 2; checks 0; errors 0; failed checks 0
+[andromeda c x 3] t = 1e+14; mods = ['c_factor']; arrivals 4; checks 6; errors 0; failed checks 0
+[andromeda fast] t = 1e+14; mods = []; arrivals 3; checks 5; errors 0; failed checks 0
+[andromeda 1e-9 Mly] t = 1e+06; mods = []; arrivals 4; checks 6; errors 0; failed checks 0
+[andromeda 1e4 Mly] t = 4e+17; mods = []; arrivals 4; checks 6; errors 0; failed checks 0
+[andromeda ether] t = 1e+14; mods = ['kinematics']; arrivals 4; checks 6; errors 0; failed checks 0

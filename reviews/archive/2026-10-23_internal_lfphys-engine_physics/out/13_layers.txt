@@ -1,0 +1,26 @@
+=== (1) core sources mentioning alternative kinematics ===
+lfphys/core/gravity/arrivals.py:3: A flash is an emission event (t0, origin) by a source with lab velocity w. Its front reaches the receiver at t
+lfphys/core/gravity/arrivals.py:6: * flat, SR or ether: |x_R(t) - origin| = c (t - t0)                     (front centred on the emission point);
+lfphys/core/gravity/arrivals.py:7: * flat, emission:    |x_R(t) - origin - w (t - t0)| = c (t - t0)       (front centred on the moving source);
+lfphys/core/gravity/arrivals.py:9: * GR: geodesics connecting the emission point with the receiver's position (``schwarzschild.connect``); for a
+lfphys/core/gravity/arrivals.py:44: Orbit). ``w`` = 0: the front is centred on the emission event (special relativity). Returns dict or None."""
+lfphys/core/gravity/rays.py:1: """Propagation of light for drawing: fans of rays from an emission event, traced under the run's laws.
+lfphys/core/gravity/rays.py:9: * flat (gravity "none"): straight lines; lab velocity from ``Laws.emit_velocities`` (SR aberration, ether,
+lfphys/core/gravity/rays.py:10: emission). Two vertices per ray.
+lfphys/core/gravity/schwarzschild.py:18: directions of emission and arrival (static orthonormal frames) are returned.
+lfphys/core/worldlines.py:11: flat SR:   dtau/dt = sqrt(1 - v^2/c^2);  Galilean: dtau/dt = 1;
+
+=== (2) core modules whose own validity text declares an approximation / omitted physics ===
+core.quantum.compton             kind=law                  validity: свободный покоящийся электрон, неполяризованные фотоны; поправки КЭД высших порядков ~α/π
+core.quantum.hydrogen            kind=exact solution       validity: без лэмбовского сдвига и сверхтонкой структуры (КЭД, ядро): отличие от измерений ~10⁻⁶ отн.
+core.quantum.marks               kind=law                  validity: квантовая механика (правило Борна); поляризация — в параксиальном приближении одинаково для обеих ко
+core.quantum.radial              kind=law                  validity: нерелятивистская частица; ящик много больше состояния, шаг много меньше масштаба потенциала
+core.quantum.scattering          kind=law                  validity: один фотон, дипольное приближение (размер ≪ λ), продольная отдача не учитывается
+core.quantum.schrodinger1d       kind=law                  validity: нерелятивистская частица без спина; на сетке — достаточно мелкий шаг и широкое окно (контроль нормы 
+core.quantum.transfer            kind=exact solution       validity: стационарное рассеяние, нерелятивистская частица
+
+=== (3) declared conflicts of the interpretations and of newton ===
+theories.approx.newton: kind=approximation; conflicts=['lfphys.core.gravity.schwarzschild: ОТО даёт вдвое большее отклонение света и прецессию орбит']; validity=слабое поле и малые скорости для тел; для света — противоречит наблюдениям (отклонение 0.875″ вместо 1.75″ у края Солнца
+theories.interpretations.bohm: kind=interpretation; conflicts=['копенгагенская интерпретация: траекторий нет; многомировая: траекторий нет, есть ветви']; validity=чистое состояние без декогеренции; при смеси — линии усреднённого тока ансамбля
+theories.interpretations.copenhagen: kind=interpretation; conflicts=['интерпретации Бома и Эверетта: нет коллапса; объективный коллапс (GRW) — другая динамика']; validity=те же предсказания, что у ядра, для всех исходов измерений
+theories.interpretations.everett: kind=interpretation; conflicts=['копенгагенская интерпретация: один исход и коллапс; Бом: одна траектория']; validity=те же предсказания для статистики исходов

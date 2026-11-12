@@ -1,0 +1,24 @@
+(a) fp32 error against fp64 (CPU), v08 geometry n = 256, dx = lam/4, pad 4
+  gauss  lam=0.3 z=  1.0 um (k z =      21 rad): fp32 error 6.5e-08
+  gauss  lam=0.3 z= 10.0 um (k z =     209 rad): fp32 error 4.8e-07
+  gauss  lam=0.3 z= 30.0 um (k z =     628 rad): fp32 error 2.2e-06
+  gauss  lam=0.3 z= 80.0 um (k z =    1676 rad): fp32 error 9.0e-06
+  double lam=0.3 z=  1.0 um (k z =      21 rad): fp32 error 9.5e-08
+  double lam=0.3 z= 10.0 um (k z =     209 rad): fp32 error 1.1e-06
+  double lam=0.3 z= 30.0 um (k z =     628 rad): fp32 error 3.3e-06
+  double lam=0.3 z= 80.0 um (k z =    1676 rad): fp32 error 1.2e-05  > declared bound 1e-5
+  double lam=0.5 z=  1.0 um (k z =      13 rad): fp32 error 5.1e-08
+  double lam=0.5 z= 10.0 um (k z =     126 rad): fp32 error 3.1e-07
+  double lam=0.5 z= 30.0 um (k z =     377 rad): fp32 error 1.2e-06
+
+(b) v08 worlds with the angular spectrum set to fp32 (device cpu)
+  preset double: header backend.settings = {'optics.angular_spectrum': {'device': 'cpu', 'precision': 'fp32'}}
+     header backend.used[optics.angular_spectrum] = {'device': 'cpu', 'precision': 'fp64', 'reason': 'выбрано в настройках', 'size': 1048576}
+     check 'device' label: Угловой спектр считался на CPU (fp64)
+     drawn volume dtype: complex64
+     check slice_route: value 4.82e-07, tol 1e-09, ok = False
+  preset gauss: header backend.settings = {'optics.angular_spectrum': {'device': 'cpu', 'precision': 'fp32'}}
+     header backend.used[optics.angular_spectrum] = {'device': 'cpu', 'precision': 'fp64', 'reason': 'выбрано в настройках', 'size': 1048576}
+     check 'device' label: Угловой спектр считался на CPU (fp64)
+     drawn volume dtype: complex64
+     check slice_route: value 2.93e-07, tol 1e-09, ok = False

@@ -1,0 +1,28 @@
+........................................................................ [ 17%]
+........................................................................ [ 34%]
+........................................................................ [ 52%]
+........................................................................ [ 69%]
+........................................................................ [ 86%]
+......................................................                   [100%]
+============================= slowest 20 durations =============================
+32.20s call     v08_wave_3d/tests/test_v08_wave3d.py::test_fp32_drawing_keeps_every_check_passing
+30.72s call     v08_wave_3d/tests/test_v08_wave3d.py::test_the_gpu_gives_the_same_world
+26.02s call     v11_double_slit_2d/tests/test_v11_double_slit_2d.py::test_closing_a_slit_acts_only_from_that_moment
+16.45s call     v02_double_slit/tests/test_v02_physics.py::test_ensemble_matches_monte_carlo_with_shifts
+13.76s call     v11_double_slit_2d/tests/test_v11_double_slit_2d.py::test_path_mark_lets_trajectories_cross_the_axis
+13.45s call     v03_quantum_1d/tests/test_v03_quantum.py::test_review_cases_converge_to_the_stationary_reference[params0]
+9.79s call     v11_double_slit_2d/tests/test_v11_double_slit_2d.py::test_half_flux_quantum_moves_the_fringes_by_half_a_period
+9.58s call     v11_double_slit_2d/tests/test_v11_double_slit_2d.py::test_small_symmetric_experiment_passes_its_checks
+8.64s call     v03_quantum_1d/tests/test_v03_quantum.py::test_presets_run_and_checks_agree[well]
+8.20s call     v02_double_slit/tests/test_v02_physics.py::test_eraser_sorting_restores_fringes
+7.59s call     v02_double_slit/tests/test_v02_physics.py::test_rs_budget_marks_unaffordable_columns_unverified
+7.55s call     v02_double_slit/tests/test_v02_physics.py::test_R6_ab_phase_scales_with_charge[2.0-0.25-3.141592653589793]
+7.53s call     v02_double_slit/tests/test_v02_physics.py::test_R6_ab_phase_scales_with_charge[-3.0-0.16666666666666666--3.141592653589793]
+7.50s call     v02_double_slit/tests/test_v02_physics.py::test_R6_ab_phase_scales_with_charge[0.5-1.0-3.141592653589793]
+6.91s call     v02_double_slit/tests/test_v02_physics.py::test_histogram_agrees_with_expectation_and_coherence
+6.31s call     v02_double_slit/tests/test_v02_physics.py::test_live_particle_change_removes_incompatible_elements
+6.30s call     v02_double_slit/tests/test_v02_physics.py::test_rs_fields_cached_across_segments
+6.26s call     v02_double_slit/tests/test_v02_physics.py::test_apparatus_change_starts_new_segment_and_updates_actions
+6.09s call     v02_double_slit/tests/test_v02_physics.py::test_R2_coherence_estimator_unbiased_on_samples
+6.08s call     v02_double_slit/tests/test_v02_physics.py::test_R7_signalling_under_modified_born_rule_is_reported
+414 passed in 569.87s (0:09:29)

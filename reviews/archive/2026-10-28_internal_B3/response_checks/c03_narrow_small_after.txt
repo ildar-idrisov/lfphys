@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/lf/reviews/2026-10-28_internal_B3/c03_v11_grid_convergence.py", line 44, in <module>
+    out[grid] = (x, dens, res["fractions"], c["time_step"]["value"], vis, s.g.shape)
+                                            ~^^^^^^^^^^^^^
+KeyError: 'time_step'

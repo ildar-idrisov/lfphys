@@ -1,0 +1,9 @@
+measured 1S-2S (hyperfine centroid)        2.466061e+15 Hz
+(a) schrodinger_level, reduced mass        2.466038e+15 Hz   rel. diff -9.322e-06
+(b) dirac_level, infinite mass             2.467412e+15 Hz   rel. diff +5.475e-04
+(c) independent Dirac + recoil (mpmath)    2.466069e+15 Hz   rel. diff +2.890e-06
+
+(c) differs from the measurement by the 1S/2S Lamb shift (~8.2 GHz -> ~3e-6), i.e. the documented ~1e-6 level
+is reachable only with the reduced mass AND the Dirac factor together; neither shipped function does both.
+
+2P3/2-2P1/2: dirac_level (inf. mass) 10949.66 MHz; with recoil 10943.69 MHz (ratio +5.46e-04 ~ m_e/m_p = 5.45e-04)

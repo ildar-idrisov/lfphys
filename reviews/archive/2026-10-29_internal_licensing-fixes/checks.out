@@ -1,0 +1,64 @@
+== 1. copies of the licence files in lfphys/ and visualizations/ against the root
+same  lfphys/LICENSE.md
+same  visualizations/LICENSE.md
+same  lfphys/CLA.md
+same  visualizations/CLA.md
+same  lfphys/COMMERCIAL.md
+same  visualizations/COMMERCIAL.md
+same  lfphys/CONTRIBUTING.md
+same  visualizations/CONTRIBUTING.md
+same  lfphys/PUBLICATIONS.md
+same  visualizations/PUBLICATIONS.md
+same  lfphys/LICENSE-DOCS.txt
+same  visualizations/LICENSE-DOCS.txt
+DIFF  lfphys/NOTICE
+DIFF  visualizations/NOTICE
+DIFF  lfphys/CITATION.cff
+DIFF  visualizations/CITATION.cff
+
+== 2. PolyForm / Required Notice outside review folders and run records
+./STATUS.md:31:| V20 | Licence. The owner, 2026-10-24: code under PolyForm Noncommercial 1.0.0, documentation under CC BY-NC-SA 4.0, commercial licence on reque
+./AGENTS.md:40:`reviews/archive/2026-10-29_internal_licensing/` (PolyForm Noncommercial permitted institutional use for commercial
+./lfphys/tests/test_licences.py:152:    if "noncommercial" in low or "-nc-" in low or low.endswith("-nc") or low.startswith("polyform-") \
+./lfphys/tests/test_licences.py:288:    assert _classify_spdx("PolyForm-Noncommercial-1.0.0") == NONCOMMERCIAL
+./lfphys/sources/dependencies.md:281:`PolyForm-Noncommercial-1.0.0`, replaced on 2026-10-29 by the project's own `LicenseRef-lfphys-Research-1.0`
+
+== 3. source files (py/js/mjs/html/css) without an SPDX licence line (vendor excluded)
+(none listed above = every file carries one)
+
+== 4. the citation condition: where 'substantially' is kept and where summaries drop it
+LICENSE.md:65:If You publish results, data, figures or software obtained substantially with the Software — in articles, preprints,
+PUBLICATIONS.md:16:If You publish results, data, figures or software obtained substantially with lfphys, You must cite it
+NOTICE:9:Citation: publications of results obtained substantially with the software must cite it (LICENSE.md section 5;
+CITATION.cff:2:message: "Publications of results obtained substantially with this software must cite it as below (LICENSE.md section 5: the lfphys Research Lice
+lfphys/README.md:170:* **Your results** are yours; publications of results obtained substantially with the engine **must cite it**
+visualizations/README.md:170:* **Ваши результаты** — ваши; в публикациях результатов, полученных с помощью программы, **ссылка на неё обязательна**
+visualizations/player/legal.html:39:      полученных с помощью программы, <b>ссылка на неё обязательна</b>: автор (Ildar Idrisov), название (lfphys),
+visualizations/player/index.html:29:    обязательна. <a href="/legal">Лицензия и условия</a>.</p>
+46:| your results: numbers, data, figures and images of your runs | yours; publications must cite lfphys (`LICENSE.md` §5, §6; `PUBLICATIONS.md`) |
+
+== 5. the CLA's definition of Licensor (who receives the CLA grants)
+13:3. **Licensor**: Ildar Idrisov, and any person or entity to which he later assigns or licenses his rights in the
+
+== 6. versions a citing user can see
+CITATION.cff:13:version: 0.1.0
+lfphys/CITATION.cff:13:version: 0.1.0
+visualizations/CITATION.cff:13:version: 0.1.0
+lfphys/lfphys/__init__.py:6:__version__ = "0.1.0"
+visualizations/server/lfviz/__init__.py:16:__version__ = "1.0"
+546:    "version": "1.0",
+
+== 7. where the in-player help text lives (code or documentation?)
+viz.py files with in-player help strings: 5
+167:* **Документация и рисунки автора** (описания, справка, рисунки): CC BY-NC-SA 4.0 (`LICENSE-DOCS.txt`); снимки своих
+
+== 8. 'every source file starts with' the owner's copyright line
+41:Every source file of the project starts with the lines
+42-
+43-    SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
+44-    SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
+
+== 9. affirmative accuracy wording next to the disclaimer
+8:* **core**: established physics only. Each law is computed exactly or with a stated and tested error. Each function
+133:`core.certified` evaluates key quantities in ball arithmetic. Each result is an interval that provably contains the
+174:* **No warranty.** A research tool, provided as is (`LICENSE.md` §8). Each function's accuracy is the one stated in

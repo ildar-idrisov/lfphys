@@ -1,0 +1,4 @@
+e=0.3: bound only for a > 12.1 (r_p > 8.4); a=24: 2 a eps = 1.031, e_t = 0.577; a=60: 2 a eps = 1.620, e_t = 0.401; a=603: 2 a eps = 1.962, e_t = 0.309
+e=0.5: bound only for a > 26.7 (r_p > 13.4); a=53: 2 a eps = 1.028, e_t = 0.712; a=134: 2 a eps = 1.618, e_t = 0.578; a=1335: 2 a eps = 1.962, e_t = 0.507
+e=0.7: bound only for a > 81.8 (r_p > 24.6); a=164: 2 a eps = 1.020, e_t = 0.836; a=409: 2 a eps = 1.613, e_t = 0.752; a=4092: 2 a eps = 1.962, e_t = 0.705
+e=0.9: bound only for a > 797.6 (r_p > 79.8); a=1595: 2 a eps = 1.008, e_t = 0.948; a=3988: 2 a eps = 1.605, e_t = 0.919; a=39878: 2 a eps = 1.961, e_t = 0.902

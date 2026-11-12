@@ -1,0 +1,14 @@
+triangle rho=2.6878 turns=3: check ok=True  dR = 1.79e-12  tol = 8 est = 5.05e-11  (est 6.31e-12, a priori bound 2.86e-06)
+   |A_ref - A_exact(float vertices)| = 7.19e-14   |R_engine - R_fly_exact| = 1.81e-12   |R_fly_exact - R(n, -A_exact)| = 2.53e-14   residual |beta| exact 1.0e-15
+polygon rho=3.0000 turns=4: check ok=True  dR = 2.60e-09  tol = 8 est = 4.29e-08  (est 5.37e-09, a priori bound 1.24e-04)
+   |A_ref - A_exact(float vertices)| = 1.89e-11   |R_engine - R_fly_exact| = 2.60e-09   |R_fly_exact - R(n, -A_exact)| = 2.51e-11   residual |beta| exact 4.2e-13
+triangle rho=2.9691 turns=2: check ok=True  dR = 4.09e-12  tol = 8 est = 1.03e-10  (est 1.29e-11, a priori bound 9.09e-06)
+   |A_ref - A_exact(float vertices)| = 1.00e-13   |R_engine - R_fly_exact| = 4.02e-12   |R_fly_exact - R(n, -A_exact)| = 8.27e-14   residual |beta| exact 2.1e-15
+rho = 0.05 corner (tests check only rho = 3): roundoff est against the a priori bound
+   circle   turns=6: est 1.19e-13  bound 4.01e-10  bound/est 3360.54  failed: []
+   thomas   turns=6: est 1.25e-13  bound 4.20e-10  bound/est 3355.78  failed: []
+   polygon  turns=6: est 2.76e-14  bound 1.48e-09  bound/est 53664.84  failed: []
+   crown    turns=6: est 2.51e-14  bound 1.60e-09  bound/est 63652.70  failed: []
+   helix    turns=6: est 1.22e-13  bound 4.59e-09  bound/est 37656.43  failed: []
+   seam     turns=6: est 4.96e-14  bound 5.86e-09  bound/est 118150.87  failed: []
+   triangle turns=6: est 2.66e-15  bound 1.97e-10  bound/est 73939.67  failed: []

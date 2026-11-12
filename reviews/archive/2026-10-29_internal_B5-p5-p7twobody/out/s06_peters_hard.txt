@@ -1,0 +1,21 @@
+(a) coalescence_time against mpmath
+  e0=0.1: T = 6.3512796345e+16 s, mpmath 6.3512796345e+16, relative difference 4.4e-16
+  e0=0.6: T = 1.3570417016e+16 s, mpmath 1.3570417016e+16, relative difference -3.3e-16
+  e0=0.9: T = 2.2447022969e+14 s, mpmath 2.2447022969e+14, relative difference -1.6e-15
+  e0=0.99: T = 1.0993283815e+11 s, mpmath 1.0993283815e+11, relative difference 3.6e-15
+  e0=0.999: T = 3.9923506739e+07 s, mpmath 3.9923506739e+07, relative difference -5.3e-14
+  e0=0.9999: T = 1.3195795772e+04 s, mpmath 1.3195795772e+04, relative difference -1.0e-12
+(b) evolve to a_stop = 1e-3 a0: conserved c0, and t + T(rest) against T(start)
+  e0=0.9: status a_stop, e_end 2.6238e-04, (t + T_rest)/T - 1 = -4.7e-11, c0 drift at T/2 -3.1e-12
+  e0=0.99: status a_stop, e_end 1.0586e-02, (t + T_rest)/T - 1 = -2.4e-11, c0 drift at T/2 -5.0e-13
+  e0=0.999: status a_stop, e_end 3.3078e-01, (t + T_rest)/T - 1 = -7.0e-12, c0 drift at T/2 -1.1e-13
+(c) tiny eccentricity: e after evolving for T/2 against the a(e) relation
+  e0=1e-06: a/a0 = 5.623e-01, e = 4.0195e-07, from the track 4.0195e-07, relative error 5.8e-12
+  e0=1e-08: a/a0 = 5.623e-01, e = 4.0195e-09, from the track 4.0195e-09, relative error 6.1e-12
+  e0=1e-10: a/a0 = 5.623e-01, e = 4.0195e-11, from the track 4.0195e-11, relative error 6.1e-12
+(d) validity of the orbit average: fractional change of a per orbit along the track (e0 = 0.9)
+  a=2e+09 m (GM/(c^2 a) = 2.0e-06), e=0.9: |da/dt| P_b / a = 1.4e-10
+  a=1e+07 m (GM/(c^2 a) = 4.0e-04), e=0.9: |da/dt| P_b / a = 7.9e-05
+  a=1e+06 m (GM/(c^2 a) = 4.0e-03), e=0.9: |da/dt| P_b / a = 2.5e-02
+  a=3e+05 m (GM/(c^2 a) = 1.3e-02), e=0.9: |da/dt| P_b / a = 5.1e-01
+  a=1e+05 m (GM/(c^2 a) = 4.0e-02), e=0.9: |da/dt| P_b / a = 7.9e+00

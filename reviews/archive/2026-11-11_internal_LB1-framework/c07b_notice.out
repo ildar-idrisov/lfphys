@@ -1,0 +1,10 @@
+20261111-180251-p03-d1a7 | carried object has a state: False | values: {"n": 12000, "T": 300.0, "start": "maxwell", "x": 0.0, "y": 0.0, "z": 0.0, "sx": 0.0, "sy": 0.0, "sz": 0.0, "vx": 0.0, "
+   T: last frame of world 1 (t=1e-13) 300.45790508049083 -> first frame of world 2 (t=1e-13) 300.23946794540734
+   e: last frame of world 1 (t=1e-13) 3.6876913835611496 -> first frame of world 2 (t=1e-13) 3.6883385667271917
+   N: last frame of world 1 (t=1e-13) 12000.0 -> first frame of world 2 (t=1e-13) 12000.0
+   notices: ['Сцена перенесена в новый мир: все объекты (1)']
+20261111-180246-p03-fdd4 | carried object has a state: False | values: {"n": 4000, "T": 300.0, "start": "maxwell", "x": 0.0, "y": 0.0, "z": 0.0, "sx": 0.0, "sy": 0.0, "sz": 0.0, "vx": 0.0, "v
+   T: last frame of world 1 (t=1e-13) 299.71868992921185 -> first frame of world 2 (t=1e-13) 299.6427222591051
+   e: last frame of world 1 (t=1e-13) 3.71746526313441 -> first frame of world 2 (t=1e-13) 3.7178685253409123
+   N: last frame of world 1 (t=1e-13) 4000.0 -> first frame of world 2 (t=1e-13) 4000.0
+   notices: ['Сцена перенесена в новый мир: все объекты (1)']

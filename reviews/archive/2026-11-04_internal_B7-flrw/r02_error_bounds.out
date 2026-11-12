@@ -1,0 +1,80 @@
+A. dark energy alone (O_m = 0), constant w
+DE only w=-0.2                             conformal_time z=0     actual rel  2.22e-14  stated rel  2.59e-14  actual/stated     0.86  ok
+DE only w=-0.2                             age z=0                actual rel  6.10e-16  stated rel  1.09e-14  actual/stated     0.06  ok
+DE only w=-0.2                             conformal_time z=1     actual rel  2.40e-14  stated rel  2.59e-14  actual/stated     0.93  ok
+DE only w=-0.2                             age z=1                actual rel  7.01e-16  stated rel  1.09e-14  actual/stated     0.06  ok
+DE only w=-0.2                             conformal_time z=10    actual rel  2.32e-14  stated rel  2.59e-14  actual/stated     0.89  ok
+DE only w=-0.2                             age z=10               actual rel  6.78e-16  stated rel  1.09e-14  actual/stated     0.06  ok
+DE only w=-0.3                                 conformal_time z=0: FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+DE only w=-0.3                             age z=0                actual rel  2.40e-15  stated rel  1.65e-14  actual/stated     0.15  ok
+DE only w=-0.3                                 conformal_time z=1: FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+DE only w=-0.3                             age z=1                actual rel  2.21e-15  stated rel  1.67e-14  actual/stated     0.13  ok
+DE only w=-0.3                                 conformal_time z=10: FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+DE only w=-0.3                             age z=10               actual rel  2.69e-15  stated rel  1.66e-14  actual/stated     0.16  ok
+DE only w=-0.32                                conformal_time z=0: FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+DE only w=-0.32                            age z=0                actual rel  2.33e-15  stated rel  1.58e-14  actual/stated     0.15  ok
+DE only w=-0.32                                conformal_time z=1: FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+DE only w=-0.32                            age z=1                actual rel  1.97e-15  stated rel  1.59e-14  actual/stated     0.12  ok
+DE only w=-0.32                                conformal_time z=10: FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+DE only w=-0.32                            age z=10               actual rel  2.43e-15  stated rel  1.58e-14  actual/stated     0.15  ok
+DE only w=-0.8                             age z=0                actual rel  1.37e-14  stated rel  2.16e-14  actual/stated     0.64  ok
+DE only w=-0.8                             age z=1                actual rel  1.41e-14  stated rel  2.16e-14  actual/stated     0.65  ok
+DE only w=-0.8                             age z=10               actual rel  1.43e-14  stated rel  2.16e-14  actual/stated     0.66  ok
+DE only w=-0.9                                 age z=0: FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+DE only w=-0.9                                 age z=1: FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+DE only w=-0.9                                 age z=10: FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+DE only w=-0.95                                age z=0: FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+DE only w=-0.95                                age z=1: FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+DE only w=-0.95                                age z=10: FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+
+B. closed dust O_m = 2 (a_max = 2): age and conformal time at a = 2 (1 - d)
+   roots(): (None, 2.0)
+closed dust, 1 - a/a_max = 0.01            age                    actual rel  9.27e-16  stated rel  1.49e-14  actual/stated     0.06  ok
+closed dust, 1 - a/a_max = 0.01            conformal_time         actual rel  3.46e-16  stated rel  9.71e-15  actual/stated     0.04  ok
+closed dust, 1 - a/a_max = 0.0001          age                    actual rel  1.64e-15  stated rel  1.26e-13  actual/stated     0.01  ok
+closed dust, 1 - a/a_max = 0.0001          conformal_time         actual rel  8.15e-16  stated rel  6.56e-14  actual/stated     0.01  ok
+closed dust, 1 - a/a_max = 1e-06           age                    actual rel  1.25e-14  stated rel  1.23e-12  actual/stated     0.01  ok
+closed dust, 1 - a/a_max = 1e-06           conformal_time         actual rel  6.16e-15  stated rel  6.18e-13  actual/stated     0.01  ok
+closed dust, 1 - a/a_max = 1e-08           age                    actual rel  9.72e-15  stated rel  1.19e-11  actual/stated     0.00  ok
+closed dust, 1 - a/a_max = 1e-08           conformal_time         actual rel  5.02e-15  stated rel  5.96e-12  actual/stated     0.00  ok
+closed dust, 1 - a/a_max = 1e-10           age                    actual rel  3.52e-12  stated rel  3.23e-10  actual/stated     0.01  ok  >2e-13
+closed dust, 1 - a/a_max = 1e-10           conformal_time         actual rel  1.76e-12  stated rel  1.62e-10  actual/stated     0.01  ok  >2e-13
+closed dust, 1 - a/a_max = 1e-12           age                    actual rel  1.55e-10  stated rel  3.77e-09  actual/stated     0.04  ok  >2e-13
+closed dust, 1 - a/a_max = 1e-12           conformal_time         actual rel  7.74e-11  stated rel  1.88e-09  actual/stated     0.04  ok  >2e-13
+
+C. loitering: O_m = 0.3, O_L = O_L,crit (1 - eps)
+   O_L,crit = 1.7134604028734556, a_L = 0.44402326792849414 (z_L = 1.2521342)
+loitering eps=0.001                        age z=0                actual rel  1.43e-16  stated rel  1.82e-13  actual/stated     0.00  ok
+loitering eps=0.001                        D_C z=5                actual rel  1.11e-15  stated rel  1.95e-13  actual/stated     0.01  ok
+loitering eps=1e-06                        age z=0                actual rel  5.19e-13  stated rel  9.63e-11  actual/stated     0.01  ok  >2e-13
+loitering eps=1e-06                        D_C z=5                actual rel  1.01e-12  stated rel  1.64e-10  actual/stated     0.01  ok  >2e-13
+loitering eps=1e-09                        age z=0                actual rel  2.62e-10  stated rel  1.93e-07  actual/stated     0.00  ok  >2e-13
+loitering eps=1e-09                        D_C z=5                actual rel  1.20e-09  stated rel  7.44e-08  actual/stated     0.02  ok  >2e-13
+
+D. just above the critical value: O_L = O_L,crit (1 + eps) has S < 0 on a band around a_L (no big bang)
+   eps =   1e-02: S<0 on [0.3930901744, 0.496004496] (width 0.233 a_L); roots() = (0.4960044959661662, None); age() -> ValueError: age: this universe has no big bang; it bounced at a = 0.496004 (z = 1.01611) and
+   eps =   1e-04: S<0 on [0.4388556868, 0.4492014268] (width 0.0233 a_L); roots() = (0.4492014267988587, None); age() -> ValueError: age: this universe has no big bang; it bounced at a = 0.449201 (z = 1.22617) and
+   eps =   1e-06: S<0 on [0.4435060064, 0.4445406352] (width 0.00233 a_L); roots() = (None, None); age() -> FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+   eps =   1e-08: S<0 on [0.443971537, 0.4440749999] (width 0.000233 a_L); roots() = (None, None); age() -> FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+   eps =   1e-10: S<0 on [0.4440180948, 0.4440284411] (width 2.33e-5 a_L); roots() = (None, None); age() -> FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+
+E. Planck 2018 (planck2018()), mpmath reference with exact polynomial part
+Planck 2018                                age z=0                actual rel  1.29e-16  stated rel  4.22e-15  actual/stated     0.03  ok
+Planck 2018                                age z=1089.8           actual rel  0.00e+00  stated rel  4.16e-15  actual/stated     0.00  ok
+Planck 2018                                conformal_time z=0     actual rel  0.00e+00  stated rel  6.42e-15  actual/stated     0.00  ok
+Planck 2018                                D_C z=1089.8           actual rel  1.31e-16  stated rel  4.32e-15  actual/stated     0.03  ok
+Planck 2018                                D_C z=0.5              actual rel  1.17e-16  stated rel  4.14e-15  actual/stated     0.03  ok
+Planck 2018                                lookback z=2           actual rel  1.69e-16  stated rel  4.28e-15  actual/stated     0.04  ok
+Planck 2018                                r_s z=1089.8           actual rel  1.97e-16  stated rel  4.46e-15  actual/stated     0.04  ok
+
+summary: worst actual/stated per case
+   40 checks, 0 where the stated error is below the actual error:
+   8 checks with actual relative error above the documented 2e-13:
+   closed dust, 1 - a/a_max = 1e-10           age                    actual rel 3.52e-12 stated rel 3.23e-10
+   closed dust, 1 - a/a_max = 1e-10           conformal_time         actual rel 1.76e-12 stated rel 1.62e-10
+   closed dust, 1 - a/a_max = 1e-12           age                    actual rel 1.55e-10 stated rel 3.77e-09
+   closed dust, 1 - a/a_max = 1e-12           conformal_time         actual rel 7.74e-11 stated rel 1.88e-09
+   loitering eps=1e-06                        age z=0                actual rel 5.19e-13 stated rel 9.63e-11
+   loitering eps=1e-06                        D_C z=5                actual rel 1.01e-12 stated rel 1.64e-10
+   loitering eps=1e-09                        age z=0                actual rel 2.62e-10 stated rel 1.93e-07
+   loitering eps=1e-09                        D_C z=5                actual rel 1.20e-09 stated rel 7.44e-08

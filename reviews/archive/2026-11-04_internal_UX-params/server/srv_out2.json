@@ -1,0 +1,57 @@
+[
+ {
+  "name": "p04_water_from_defaults",
+  "viz": "p04_fluids",
+  "start": {
+   "status": 200,
+   "body": {
+    "id": "20261104-225728-p04-3c81"
+   }
+  },
+  "id": "20261104-225728-p04-3c81",
+  "state": "failed",
+  "errors": [
+   "Мир не создан: неустойчиво: τ = 0.50008 слишком близко к 1/2 (нужно τ − 1/2 ≥ 0.001); увеличьте вязкость или уменьшите dx, или увеличьте dt"
+  ],
+  "returncode": 3,
+  "sim_t": 0.0,
+  "stop_reason": null,
+  "resume_error": null
+ },
+ {
+  "name": "v16_fork_from_defaults",
+  "viz": "v16_optical_vortices",
+  "start": {
+   "status": 200,
+   "body": {
+    "id": "20261104-225735-v16-464c"
+   }
+  },
+  "id": "20261104-225735-v16-464c",
+  "state": "failed",
+  "errors": [
+   "Мир не создан: порядки голограммы не разойдутся: уменьшите период Λ или увеличьте перетяжку w0"
+  ],
+  "returncode": 3,
+  "sim_t": 0.0,
+  "stop_reason": null,
+  "resume_error": null
+ },
+ {
+  "name": "v03_step_from_defaults_timing",
+  "viz": "v03_quantum_1d",
+  "start": {
+   "status": 200,
+   "body": {
+    "id": "20261104-225745-v03-390c"
+   }
+  },
+  "id": "20261104-225745-v03-390c",
+  "state": "running",
+  "errors": null,
+  "returncode": null,
+  "sim_t": 0.0,
+  "stop_reason": null,
+  "resume_error": null
+ }
+]

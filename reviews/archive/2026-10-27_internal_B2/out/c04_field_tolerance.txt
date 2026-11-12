@@ -1,0 +1,10 @@
+eta_u = 1.0: matrix route worst |err|/tol = 0.006 (err -4.44e-16, tol 7.0e-14, |w| = 0.7165)
+             L'Huilier reference worst |err|/tol = 0.126 (err +5.62e-15, tol 4.5e-14, w = [-0.4877  0.0452 -0.0015])
+   w at 179.9 deg, |w|=0.999: exact 1.069780e-03; matrices err -2.46e-16; L'Huilier err +1.09e-13; tol 1.7e-11
+   w at 179.0 deg, |w|=0.999: exact 1.069766e-02; matrices err +1.45e-15; L'Huilier err -2.43e-15; tol 1.7e-11
+   w at 170.0 deg, |w|=0.999: exact 1.068319e-01; matrices err -1.43e-14; L'Huilier err -4.40e-15; tol 1.7e-11
+eta_u = 3.0: matrix route worst |err|/tol = 0.007 (err -3.22e-14, tol 4.5e-12, |w| = 0.8247)
+             L'Huilier reference worst |err|/tol = 0.002 (err +5.51e-15, tol 2.5e-12, w = [ 0.6542  0.02   -0.0685])
+   w at 179.9 deg, |w|=0.999: exact 1.619538e-03; matrices err +1.38e-15; L'Huilier err -5.89e-13; tol 7.2e-10
+   w at 179.0 deg, |w|=0.999: exact 1.619535e-02; matrices err -1.50e-15; L'Huilier err -1.39e-13; tol 7.2e-10
+   w at 170.0 deg, |w|=0.999: exact 1.619219e-01; matrices err -2.19e-13; L'Huilier err +6.27e-15; tol 7.2e-10

@@ -1,0 +1,5 @@
+coarse: grid (215, 214), h = lambda/5, 10 s on gpu; fractions {'screen': 0.2775387431880214, 'back': 0.6102918384031948, 'side': 0.1120998202317981, 'left': 6.959817698576244e-05}; time_step check 2.43e-04; visibility 0.8786
+normal: grid (259, 256), h = lambda/6, 8 s on gpu; fractions {'screen': 0.2873955105714381, 'back': 0.6040173078442324, 'side': 0.10857063530606892, 'left': 1.654627826059743e-05}; time_step check 3.11e-04; visibility 0.8620
+fine: grid (345, 340), h = lambda/8, 9 s on gpu; fractions {'screen': 0.3104255759192509, 'back': 0.5943462889230646, 'side': 0.09519530979129132, 'left': 3.2825366393182475e-05}; time_step check 7.97e-04; visibility 0.8500
+coarse vs fine: max |P - P_fine| / peak = 2.074e-01 (spline), 2.074e-01 at the 31 shared x; fractions differ by screen -3.29e-02, back +1.59e-02, side +1.69e-02; visibility +2.85e-02; the run's time_step estimate: 2.43e-04
+normal vs fine: max |P - P_fine| / peak = 1.670e-01 (spline), 1.670e-01 at the 61 shared x; fractions differ by screen -2.30e-02, back +9.67e-03, side +1.34e-02; visibility +1.20e-02; the run's time_step estimate: 3.11e-04

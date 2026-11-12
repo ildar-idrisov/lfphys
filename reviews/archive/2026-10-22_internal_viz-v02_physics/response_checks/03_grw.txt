@@ -1,0 +1,6 @@
+== (a) per-hit average of the engine's GRW sampler ==
+Traceback (most recent call last):
+  File "/lf/reviews/2026-10-22_internal_viz-v02_physics/03_grw.py", line 35, in <module>
+    c = ex._grw_weights(np.ones(1, complex), nh, rng)
+        ^^^^^^^^^^^^^^^
+AttributeError: 'Experiment' object has no attribute '_grw_weights'

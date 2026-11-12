@@ -1,0 +1,15 @@
+mean jumps per trajectory 0.629; max |balance| 3.1e-15
+  t = T/2  A     : trajectories 0.263071  master eq. 0.261288  z = +0.55
+  t = T/2  F_cat : trajectories 0.176427  master eq. 0.177496  z = -0.56
+  t = T/2  P_left: trajectories 0.483874  master eq. 0.493004  z = -0.99
+  t = T/2  cos   : trajectories 0.024705  master eq. 0.025421  z = -1.04
+  t = T/2  norm  : trajectories 0.736929  master eq. 0.738712  z = -0.55
+  t = T/2  x2    : trajectories 0.043005  master eq. 0.042878  z = +0.30
+  t = T/1  A     : trajectories 0.319922  master eq. 0.317286  z = +0.56
+  t = T/1  F_cat : trajectories 0.002863  master eq. 0.003053  z = -0.80
+  t = T/1  P_left: trajectories 0.324701  master eq. 0.320557  z = +0.96
+  t = T/1  cos   : trajectories 0.160065  master eq. 0.162044  z = -0.55
+  t = T/1  norm  : trajectories 0.680078  master eq. 0.682714  z = -0.56
+  t = T/1  x2    : trajectories 0.012706  master eq. 0.012300  z = +1.39
+max |z| = 1.39
+negative control (master equation with 0.7 W): max |z| = 18.41

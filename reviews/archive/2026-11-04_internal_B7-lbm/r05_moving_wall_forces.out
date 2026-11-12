@@ -1,0 +1,10 @@
+=== (a) Taylor-Couette torque ===
+N = 48 (R1 = 6.0, R2 = 22.0 cells): torque -0.162706, closed form -0.162914, ratio 0.9987; force on the disk (-1.4e-16, -6.9e-16)
+N = 96 (R1 = 12.0, R2 = 46.0 cells): torque -0.32358, closed form -0.323616, ratio 0.9999; force on the disk (-2.4e-15, 8.9e-16)
+
+=== (b) Magnus: a disk turning counter-clockwise in a stream along +x ===
+stream mean ux = 0.002687 (+x); omega = +0.004 (counter-clockwise); mean force (Fx, Fy) = (0.005266, -0.001603); torque -0.1328
+expected: Fy < 0 (Kutta-Joukowski: L = -rho U Gamma, Gamma = 2 pi R^2 omega > 0); torque < 0 (opposes rotation)
+
+=== (c) the momentum booked at a moving lid in steady Couette flow ===
+top: x-momentum into the fluid per step 0.00125; bottom -0.00125; closed form +-nu U/H * nx = 0.00125

@@ -1,0 +1,24 @@
+Part 1: validation of PUT /api/settings (real engine subprocess)
+  not JSON                        : HTTP 400; {"error": "тело запроса не JSON"}
+                                    file now: kernels={'optics.angular_spectrum': {'device': 'cpu', 'precision': 'fp64'}}, crossover=None
+  a list                          : HTTP 400; {"error": "настройки — объект JSON"}
+                                    file now: kernels={'optics.angular_spectrum': {'device': 'cpu', 'precision': 'fp64'}}, crossover=None
+  kernels is a list               : HTTP 200; {"settings": {"kernels": {}, "crossover": {}}, "notes": []}
+                                    file now: kernels={}, crossover={}
+  kernel value is a string        : HTTP 500; {"error": "движок не проверил настройки:  in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/lf/lfphys/lfphys/core/ba
+                                    file now: kernels={'optics.angular_spectrum': {'device': 'cpu', 'precision': 'fp64'}}, crossover=None
+  precision is a list             : HTTP 200; {"settings": {"kernels": {"optics.angular_spectrum": {"device": "cpu", "precision": "fp64"}}, "crossover": {}}, "notes": ["optics.angular_spectrum: то
+                                    file now: kernels={'optics.angular_spectrum': {'device': 'cpu', 'precision': 'fp64'}}, crossover={}
+  crossover true                  : HTTP 200; {"settings": {"kernels": {"optics.angular_spectrum": {"device": "cpu", "precision": "fp64"}}, "crossover": {"optics.angular_spectrum": true}}, "notes"
+                                    file now: kernels={'optics.angular_spectrum': {'device': 'cpu', 'precision': 'fp64'}}, crossover={'optics.angular_spectrum': True}
+  crossover -5 / 'big'            : HTTP 200; {"settings": {"kernels": {"optics.angular_spectrum": {"device": "cpu", "precision": "fp64"}}, "crossover": {}}, "notes": []}
+                                    file now: kernels={'optics.angular_spectrum': {'device': 'cpu', 'precision': 'fp64'}}, crossover={}
+  150 kB of unknown kernel names  : HTTP 500; {"error": "движок не проверил настройки: [Errno 7] Argument list too long: '/usr/local/bin/python3'"}
+                                    file now: kernels={'optics.angular_spectrum': {'device': 'cpu', 'precision': 'fp64'}}, crossover=None
+
+Part 2: concurrent writes (stubbed engine with controlled delays)
+  (a) two quick changes from the settings page: PUT gpu (engine answers in 0.6 s), then PUT cpu (0.1 s)
+      last choice sent: cpu; file now: {'optics.angular_spectrum': {'device': 'gpu'}}
+  (b) 'Measure again' while a change is being validated (PUT 0.6 s, calibration 0.3 s)
+      calibrate answered 200 with crossover {'optics.angular_spectrum': 4096}
+      file now: crossover = {} | calibration kept: False

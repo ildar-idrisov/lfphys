@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/lf/reviews/2026-10-22_internal_viz-v02_physics/02_marks.py", line 15, in <module>
+    from v02_double_slit.engine.experiment import _state_label
+ImportError: cannot import name '_state_label' from 'v02_double_slit.engine.experiment' (/lf/visualizations/v02_double_slit/engine/experiment.py)

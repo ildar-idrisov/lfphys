@@ -1,0 +1,406 @@
+
+### r0_near_2M: ok (wall 1.4 s)
+  errors: ['Изменение не применено: локальная скорость 1.2 c не меньше скорости света']
+  segments: ['0:bound', '1:plunge']
+  events: ['horizon@0.02911']
+  n_checks: 3
+  frame: {'seg': 1, 'r': 2.000002000002, 'alive': False, 'status': 'horizon', 'tau': 2.0580175763365755e-05, 'rate': 1.9974984356012556e-06, 'deficit': 0.9999980025015645, 'v': 0.9999980049980078}
+  t: 2.4906341384125383
+
+### r0_2p1_speed0: ok (wall 0.7 s)
+  segments: ['0:radial_fall']
+  events: ['horizon@0.001217']
+  n_checks: 1
+  frame: {'seg': 0, 'r': 2.000002000002, 'alive': False, 'status': 'horizon', 'tau': 4.588743301544231e-05, 'rate': 4.5825756950876124e-06, 'deficit': 0.9999954174243053, 'v': 0.9999894999448766}
+  t: 0.04925490947641268
+
+### photon_sphere_circular: ok (wall 1.6 s)
+  [3.0001]
+     kind: circular
+     em1: 3332.8889036989553
+     bad_checks: ["s0.rate 'dτ/dt на круговой орбите: Δτ/Δt по орбите ↔ √(1 − 3M/r)' value=0.005773406861678238 ref=0.00577340646926224 rel=6.796957744493535e-08 tol=1e-10"]
+     notices: ['Круговая орбита при r₀ = 3.0001M < ISCO = 6M неустойчива: ошибки округления (~10⁻¹⁶) нарастают, и тело уйдёт с неё.', 'Тело ушло с круговой орбиты (r = 3.87617M после 6 обор.): неустойчивость.']
+     segments: ['0:circular']
+     n_checks: 6
+     frame: {'seg': 0, 'r': 769.1493605319046, 'alive': True, 'status': 'orbit', 'tau': 0.0007128195571726565, 'rate': 0.01727403050731302, 'deficit': 0.982725969492687, 'v': 0.9998504037832381}
+     t: 0.04824521484685027
+  [3.01]
+     kind: circular
+     em1: 32.89036544850571
+     notices: ['Круговая орбита при r₀ = 3.01M < ISCO = 6M неустойчива: ошибки округления (~10⁻¹⁶) нарастают, и тело уйдёт с неё.']
+     segments: ['0:circular']
+     n_checks: 6
+     frame: {'seg': 0, 'r': 3.01, 'alive': True, 'status': 'orbit', 'tau': 0.002794583843463738, 'rate': 0.05763904177042287, 'deficit': 0.9423609582295771, 'v': 0.9950371902099893}
+     t: 0.04848421760019201
+  [3.1]
+     kind: circular
+     em1: 2.903225806451617
+     notices: ['Круговая орбита при r₀ = 3.1M < ISCO = 6M неустойчива: ошибки округления (~10⁻¹⁶) нарастают, и тело уйдёт с неё.']
+     segments: ['0:circular']
+     n_checks: 6
+     frame: {'seg': 0, 'r': 3.1, 'alive': True, 'status': 'orbit', 'tau': 0.009101486770340247, 'rate': 0.1796053020267748, 'deficit': 0.8203946979732252, 'v': 0.9534625892455924}
+     t: 0.05067493368866944
+
+### marginally_bound_circular_4M: ok (wall 1.0 s)
+  kind: circular
+  em1: 2.2204460492503136e-16
+  r_apo: 4.0
+  bad_checks: ["s0.rate 'dτ/dt на круговой орбите: Δτ/Δt по орбите ↔ √(1 − 3M/r)' value=0.5000000001029706 ref=0.5 rel=2.0594126404205326e-10 tol=1e-10", "s0.period 'Период обращения (t) ↔ 2π√(r³/GM) (точно для круговой геодезической)' value=0.002475821788739127 ref=0.0024758217882292536 rel=2.0594107214426145e-10 tol=1e-10"]
+  notices: ['Круговая орбита при r₀ = 4M < ISCO = 6M неустойчива: ошибки округления (~10⁻¹⁶) нарастают, и тело уйдёт с неё.', 'Тело ушло с круговой орбиты (r = 4.00011M после 6 обор.): неустойчивость.']
+  segments: ['0:circular']
+  n_checks: 6
+  frame: {'seg': 0, 'r': 164.01137285277102, 'alive': True, 'status': 'orbit', 'tau': 0.06225819532665172, 'rate': 0.9878057236811536, 'deficit': 0.012194276318846307, 'v': 0.11042769724509854}
+  t: 0.0742746536468776
+
+### isco_exact_and_near: ok (wall 2.7 s)
+  [6.0]
+     kind: circular
+     segments: ['0:circular']
+     n_checks: 6
+     frame: {'seg': 0, 'r': 6.000000000094661, 'alive': True, 'status': 'orbit', 'tau': 0.19297121074696688, 'rate': 0.7071067811921254, 'deficit': 0.2928932188078745, 'v': 0.4999999999940837}
+     t: 0.27290250338519983
+  [5.9999]
+     kind: circular
+     notices: ['Круговая орбита при r₀ = 5.9999M < ISCO = 6M неустойчива: ошибки округления (~10⁻¹⁶) нарастают, и тело уйдёт с неё.']
+     segments: ['0:circular']
+     n_checks: 6
+     frame: {'seg': 0, 'r': 5.9999, 'alive': True, 'status': 'orbit', 'tau': 0.1929647783995695, 'rate': 0.7071008885072735, 'deficit': 0.2928991114927266, 'v': 0.5000062501171899}
+     t: 0.2728956808510426
+  [6.0001]
+     kind: circular
+     segments: ['0:circular']
+     n_checks: 6
+     frame: {'seg': 0, 'r': 6.000099999976673, 'alive': True, 'status': 'orbit', 'tau': 0.19297764314682633, 'rate': 0.7071126736189239, 'deficit': 0.29288732638107606, 'v': 0.4999937501186429}
+     t: 0.27290932597621165
+/lf/lfphys/lfphys/core/gravity/orbit_stream.py:428: IntegrationWarning: The maximum number of subdivisions (400) has been achieved.
+  If increasing the limit yields no improvement it is advised to analyze 
+  the integrand in order to determine the difficulties.  If the position of a 
+  local difficulty can be determined (singularity, discontinuity) one will 
+  probably gain from splitting up the interval and calling the integrator 
+  on the subranges.  Perhaps a special-purpose integrator should be used.
+  val, _ = integrate.quad(g, a, b, epsabs=0.0, epsrel=1e-11, limit=400)
+
+### circular_inside_isco: ok (wall 1.2 s)
+  [5.0]
+     kind: circular
+     bad_checks: ["s0.rate 'dτ/dt на круговой орбите: Δτ/Δt по орбите ↔ √(1 − 3M/r)' value=0.6324555319345116 ref=0.6324555320336759 rel=-1.5679241837324803e-10 tol=1e-10", "s0.period 'Период обращения (t) ↔ 2π√(r³/GM) (точно для круговой геодезической)' value=0.0034600661355747887 ref=0.0034600661366598123 rel=-3.1358463139054646e-10 tol=1e-10", "s0.fall_tau 'Собственное время до r = 2.000002M ↔ квадратура ∫dr/√R(r)' value=0.027033933259870073 ref=0.013029874482092172 rel=1.0747654397611133 tol=1e-09"]
+     notices: ['Круговая орбита при r₀ = 5M < ISCO = 6M неустойчива: ошибки округления (~10⁻¹⁶) нарастают, и тело уйдёт с неё.', 'Тело ушло с круговой орбиты (r = 4.97494M после 11 обор.): неустойчивость.']
+     segments: ['0:circular']
+     events: ['horizon@0.04446']
+     n_checks: 8
+     frame: {'seg': 0, 'r': 2.000002000002, 'alive': False, 'status': 'horizon', 'tau': 0.027033933259870073, 'rate': 1.0540925534197709e-06, 'deficit': 0.9999989459074465, 'v': 0.9999994444443191}
+     t: 0.276805290932785
+  [4.5]
+     kind: circular
+     bad_checks: ["s0.rate 'dτ/dt на круговой орбите: Δτ/Δt по орбите ↔ √(1 − 3M/r)' value=0.5773502657091573 ref=0.5773502691896258 rel=-6.0283484147214406e-09 tol=1e-10", "s0.period 'Период обращения (t) ↔ 2π√(r³/GM) (точно для круговой геодезической)' value=0.0029542562318854715 ref=0.0029542562585993977 rel=-9.042521660823729e-09 tol=1e-10", "s0.fall_tau 'Собственное время до r = 2.000002M ↔ квадратура ∫dr/√R(r)' value=0.01691492116784778 ref=0.008025562657044563 rel=1.1076305663130601 tol=1e-09"]
+     notices: ['Круговая орбита при r₀ = 4.5M < ISCO = 6M неустойчива: ошибки округления (~10⁻¹⁶) нарастают, и тело уйдёт с неё.']
+     segments: ['0:circular']
+     events: ['horizon@0.03091']
+     n_checks: 8
+     frame: {'seg': 0, 'r': 2.000002000002, 'alive': False, 'status': 'horizon', 'tau': 0.01691492116784778, 'rate': 1.0392304845712102e-06, 'deficit': 0.9999989607695154, 'v': 0.9999994599998737}
+     t: 0.23634050068795182
+
+### huge_r0: ok (wall 2.0 s)
+  [1.2]
+     kind: bound
+     wall: 0.37
+     segments: ['0:bound']
+     n_checks: 11
+     frame: {'seg': 0, 'r': 257142868.36713797, 'alive': True, 'status': 'orbit', 'tau': 1846236695.0664046, 'rate': 0.9999999950222226, 'deficit': 4.9777775519757194e-09, 'v': 4.666666538151967e-05}
+     t: 1846236710.5747929
+  [1.0]
+     kind: circular
+     wall: 0.11
+     segments: ['0:circular']
+     n_checks: 6
+     frame: {'seg': 0, 'r': 100000000.00000009, 'alive': True, 'status': 'orbit', 'tau': 773694297.2162267, 'rate': 0.9999999849999998, 'deficit': 1.5000000112499983e-08, 'v': 0.00010000000099999992}
+     t: 773694308.8216417
+  [0.0]
+     kind: radial_fall
+     wall: 0.12
+     segments: ['0:radial_fall']
+     events: ['horizon@5.471e+07']
+     n_checks: 1
+     frame: {'seg': 0, 'r': 1.999737894226052, 'alive': False, 'status': 'horizon', 'tau': 54708449.23325988, 'rate': -0.000131070065395116, 'deficit': 1.0001310700653951, 'v': 1.0000655328864827}
+     t: 55255535.38437664
+  [1.6]
+     kind: escape
+     wall: 0.06
+     segments: ['0:escape']
+     events: ['escape@6.516e+10']
+     n_checks: 0
+     frame: {'seg': 0, 'r': 99999999999.99982, 'alive': False, 'status': 'escape', 'tau': 65163750871.07727, 'rate': 0.9999999971799995, 'deficit': 2.820000315864014e-09, 'v': 7.496666341706782e-05}
+     t: 65815388572.81724
+  [0.3]
+     kind: bound
+     wall: 0.16
+     segments: ['0:bound']
+     n_checks: 11
+     frame: {'seg': 0, 'r': 4712039.891639159, 'alive': True, 'status': 'orbit', 'tau': 293102367.581269, 'rate': 0.999999585105372, 'deficit': 4.148946279001156e-07, 'v': 0.0006366668137463651}
+     t: 293102375.9786467
+
+### boost_unbind: ok (wall 5.3 s)
+  kind: bound
+  segments: ['0:bound', '1:bound']
+  n_checks: 13
+  frame: {'seg': 1, 'r': 104.22294148738648, 'alive': True, 'status': 'orbit', 'tau': 2.6671093953266345, 'rate': 0.9861960712415608, 'deficit': 0.013803928758438935, 'v': 0.09158958008282848}
+  t: 2.712731218530909
+
+### repeated_boosts: ok (wall 0.6 s)
+  log: [(19, 'escape', ''), (20, 'escape', ''), (21, 'escape', ''), (22, 'escape', ''), (23, 'escape', ''), (24, 'escape', '')]
+  segments: ['0:bound', '1:bound', '2:bound', '3:bound', '4:bound', '5:bound', '6:escape', '7:escape', '8:escape', '9:escape', '10:escape', '11:escape', '12:escape', '13:escape', '14:escape', '15:escape', '16:escape', '17:escape', '18:escape', '19:escape', '20:escape', '21:escape', '22:escape', '23:escape', '24:escape', '25:escape']
+  n_checks: 2
+  frame: {'seg': 25, 'r': 1550.7661444794255, 'alive': True, 'status': 'orbit', 'tau': 0.28953140946106515, 'rate': 0.9537088069264712, 'deficit': 0.046291193073528955, 'v': 0.29877240528746934}
+  t: 0.3021271997456311
+
+### repeated_brakes: ok (wall 1.4 s)
+  log: [(7, 'bound', ''), (8, 'plunge', ''), (9, 'plunge', ''), (10, 'plunge', ''), (11, 'plunge', ''), (12, 'plunge', 'Действие boost: тела на орбите нет (падение за горизонт)')]
+  errors: ['Действие boost: тела на орбите нет (падение за горизонт)']
+  segments: ['0:bound', '1:bound', '2:bound', '3:bound', '4:bound', '5:bound', '6:bound', '7:bound', '8:bound', '9:plunge', '10:plunge', '11:plunge', '12:plunge']
+  events: ['horizon@0.03513']
+  n_checks: 5
+  frame: {'seg': 12, 'r': 2.000002000002, 'alive': False, 'status': 'horizon', 'tau': 0.031221060442873007, 'rate': 1.0877112208418216e-06, 'deficit': 0.9999989122887792, 'v': 0.9999994084419759}
+  t: 0.31514190988851987
+
+### boost_stop_body: ok (wall 0.6 s)
+  [GR]
+     kind: radial_fall
+     segments: ['0:bound', '1:radial_fall']
+     events: ['horizon@0.05509']
+     n_checks: 3
+     frame: {'seg': 1, 'r': 2.0000020000019982, 'alive': False, 'status': 'horizon', 'tau': 0.051257270108136244, 'rate': 1.0174185294167616e-06, 'deficit': 0.9999989825814705, 'v': 0.9999994824300037}
+     t: 0.7276211721922934
+  [newton]
+     kind: plunge
+     bad_checks: ["s1.energy 'Энергия E = v²/2 − GM/r: дрейф по орбите' value=6.728805601596832e-07 ref=None rel=None tol=1e-09"]
+     segments: ['0:bound', '1:plunge']
+     events: ['center@0.03653']
+     n_checks: 2
+     frame: {'seg': 1, 'r': 4.536613064037055e-05, 'alive': False, 'status': 'center', 'tau': 0.03653264852148256, 'rate': 1.0, 'deficit': 0.0, 'v': 209.96596927478026}
+     t: 0.18698346767763063
+
+### relaunch_during_plunge: ok (wall 0.6 s)
+  errors: ['Действие boost: после толчка скорость 1.05 c — не меньше c']
+  segments: ['0:radial_fall', '1:radial_fall', '2:radial_fall']
+  events: ['horizon@0.01293', 'horizon@0.03333']
+  n_checks: 2
+  frame: {'seg': 2, 'r': 2.000002000002003, 'alive': False, 'status': 'horizon', 'tau': 0.004825516026850407, 'rate': 1.0540925550581598e-06, 'deficit': 0.999998945907445, 'v': 0.9999994444445124}
+  t: 0.04013263100044897
+
+### ghost_toggles: ok (wall 2.0 s)
+  [default]
+     segments: ['0:bound']
+     n_checks: 10
+     frame: {'seg': 0, 'r': 23.24907587313889, 'alive': True, 'status': 'orbit', 'tau': 0.1972027302075338, 'rate': 0.9240745540535695, 'deficit': 0.07592544594643057, 'v': 0.25634813713496796}
+     t: 0.20451687367396568
+  [newton_ellipse]
+     segments: ['0:bound']
+     n_checks: 4
+     frame: {'seg': 0, 'r': 37.635118439312016, 'alive': True, 'status': 'orbit', 'tau': 0.1453165328658726, 'rate': 1.0, 'deficit': 0.0, 'v': 0.1585618327764756}
+     t: 0.1453165328658726
+  [plunge]
+     segments: ['0:plunge']
+     events: ['horizon@0.006493']
+     n_checks: 2
+     frame: {'seg': 0, 'r': 2.000002000002, 'alive': False, 'status': 'horizon', 'tau': 0.0031920004417641803, 'rate': 1.0615684391904366e-06, 'deficit': 0.999998938431561, 'v': 0.9999994365360881}
+     t: 0.008782054110106192
+  [radial]
+     segments: ['0:radial_fall']
+     events: ['horizon@0.006803', 'ghost@0.004893', 'ghost@0.004893']
+     n_checks: 1
+     frame: {'seg': 0, 'r': 2.000002000002003, 'alive': False, 'status': 'horizon', 'tau': 0.004825516026850407, 'rate': 1.0540925550581598e-06, 'deficit': 0.999998945907445, 'v': 0.9999994444445124}
+     t: 0.0608971640052127
+  [mercury]
+     segments: ['0:bound']
+     n_checks: 13
+     frame: {'seg': 0, 'r': 38333837.04341042, 'alive': True, 'status': 'orbit', 'tau': 16721214.238260072, 'rate': 0.9999999605762624, 'deficit': 3.94237375591921e-08, 'v': 0.0001633225259487417}
+     t: 16721214.890430117
+
+### ghost_superluminal_newton: ok (wall 1.6 s)
+  segments: ['0:escape']
+  events: ['ghost@0.001522', 'ghost@0.001522']
+  n_checks: 0
+  frame: {'seg': 0, 'r': 24.880396548095934, 'alive': True, 'status': 'orbit', 'tau': 0.0024466362285860926, 'rate': 1.0, 'deficit': 0.0, 'v': 0.42471715488941925}
+  t: 0.0024466362285860926
+
+### new_worlds: ok (wall 1.1 s)
+  log: [({'gravity': 'newton', 'radius_km': 100.0}, 'ok', 'bound'), ({'gravity': 'GR', 'radius_km': 0.0, 'mass_msun': 1000000000.0}, 'ok', 'bound'), ({'gravity': 'GR', 'mass_msun': 1.0, 'radius_km': 4.43}, 'ok', 'bound'), ({'gravity': 'GR', 'mass_msun': 1.0, 'radius_km': 2.95}, 'Новый мир не создан: радиус 2.95 км не больше 2M = 2.95325 км: такое тело — чёрная дыра (задайте радиус 0)', 'bound')]
+  errors: ['Новый мир не создан: радиус 2.95 км не больше 2M = 2.95325 км: такое тело — чёрная дыра (задайте радиус 0)']
+  segments: ['0:bound', '0:bound', '0:bound', '0:bound']
+  n_checks: 12
+  frame: {'seg': 0, 'r': 59.754844543923014, 'alive': True, 'status': 'orbit', 'tau': 0.03592604326536859, 'rate': 0.9772101231506864, 'deficit': 0.022789876849313554, 'v': 0.109506379407844}
+  t: 0.03718488612253921
+
+### near_radial_angles: ok (wall 1.1 s)
+  [89.99999]
+     kind: plunge
+     v_phi: 2.0568902501515e-08
+     segments: ['0:plunge']
+     events: ['horizon@0.01076']
+     n_checks: 1
+     frame: {'seg': 0, 'r': 2.0000020000020005, 'alive': False, 'status': 'horizon', 'tau': 0.008588794444551517, 'rate': 1.0467468714523452e-06, 'deficit': 0.9999989532531288, 'v': 0.9999994521603446}
+     t: 0.01086595871089863
+  [-89.99999]
+     kind: plunge
+     v_phi: 2.0568902501515e-08
+     segments: ['0:plunge']
+     events: ['horizon@0.005166']
+     n_checks: 1
+     frame: {'seg': 0, 'r': 2.0000020000020013, 'alive': False, 'status': 'horizon', 'tau': 0.0032692900972452164, 'rate': 1.0467468719171943e-06, 'deficit': 0.9999989532531283, 'v': 0.9999994521603427}
+     t: 0.0052177194629414855
+  [89.9999999999]
+     kind: plunge
+     v_phi: 2.0568932838804315e-13
+     segments: ['0:plunge']
+     events: ['horizon@0.01075']
+     n_checks: 1
+     frame: {'seg': 0, 'r': 2.000002092802812, 'alive': False, 'status': 'horizon', 'tau': 0.008588794439767074, 'rate': 1.0953162516210396e-06, 'deficit': 0.9999989046837486, 'v': 0.9999994267404073}
+     t: 0.010861446007820479
+  [-89.9999999999]
+     kind: plunge
+     v_phi: 2.0568932838804315e-13
+     segments: ['0:plunge']
+     events: ['horizon@0.005163']
+     n_checks: 1
+     frame: {'seg': 0, 'r': 2.0000020659970996, 'alive': False, 'status': 'horizon', 'tau': 0.0032692900938426665, 'rate': 1.0812868830416572e-06, 'deficit': 0.9999989187131172, 'v': 0.9999994340830085}
+     t: 0.005214489376715061
+  [90.0]
+     kind: radial_fall
+     v_phi: 0.0
+     segments: ['0:radial_fall']
+     events: ['horizon@0.01076']
+     n_checks: 1
+     frame: {'seg': 0, 'r': 2.000002000002008, 'alive': False, 'status': 'horizon', 'tau': 0.008588794444552753, 'rate': 1.0467468754035616e-06, 'deficit': 0.9999989532531248, 'v': 0.9999994521606689}
+     t: 0.010865958710568117
+  [-90.0]
+     kind: radial_fall
+     v_phi: 0.0
+     segments: ['0:radial_fall']
+     events: ['horizon@0.005166']
+     n_checks: 1
+     frame: {'seg': 0, 'r': 2.0000020000020022, 'alive': False, 'status': 'horizon', 'tau': 0.0032692900972473207, 'rate': 1.0467468723820433e-06, 'deficit': 0.9999989532531278, 'v': 0.9999994521606499}
+     t: 0.0052177194628839655
+
+### newton_radial_and_eccentric: ok (wall 4.6 s)
+  [(0.0, 0.0)]
+     kind: plunge
+     r_peri: 0.0
+     bad_checks: ["s0.energy 'Энергия E = v²/2 − GM/r: дрейф по орбите' value=9.777722880244255e-07 ref=None rel=None tol=1e-09"]
+     segments: ['0:plunge']
+     events: ['center@0.004893']
+     n_checks: 2
+     frame: {'seg': 0, 'r': 2.000000003631255e-05, 'alive': False, 'status': 'center', 'tau': 0.004893272455096279, 'rate': 1.0, 'deficit': 0.0, 'v': 316.2276076159939}
+     t: 0.03131694372590199
+  [(-89.9, 1.0)]
+     kind: bound
+     r_peri: 3.046173424602229e-05
+     bad_checks: ["s0.adv 'Смещение перицентра за оборот (Ньютон) ↔ 0: эллипс замкнут' value=-1295999.9999999283 ref=0.0 rel=None tol=0.00020626480624709638", "s0.period 'Период (время между перицентрами) ↔ закон Кеплера 2π√(a³/GM)' value=0.027680513660395565 ref=0.0276805290932785 rel=-5.575356916551932e-07 tol=1e-08", "s0.energy 'Энергия E = v²/2 − GM/r: дрейф по орбите' value=6.64469535838208e-07 ref=None rel=None tol=1e-09"]
+     segments: ['0:bound']
+     n_checks: 4
+     frame: {'seg': 0, 'r': 22.177771014730464, 'alive': True, 'status': 'orbit', 'tau': 0.08857769309795374, 'rate': 1.0, 'deficit': 0.0, 'v': 0.20045038038938892}
+     t: 0.08857769309795374
+  [(-89.0, 1.0)]
+     kind: bound
+     r_peri: 0.0030460968721752464
+     bad_checks: ["s0.adv 'Смещение перицентра за оборот (Ньютон) ↔ 0: эллипс замкнут' value=-1295999.9999998752 ref=0.0 rel=None tol=0.00020626480624709638", "s0.energy 'Энергия E = v²/2 − GM/r: дрейф по орбите' value=1.1120383280882606e-08 ref=None rel=None tol=1e-09"]
+     segments: ['0:bound']
+     n_checks: 4
+     frame: {'seg': 0, 'r': 22.17187992466408, 'alive': True, 'status': 'orbit', 'tau': 0.08857769309851904, 'rate': 1.0, 'deficit': 0.0, 'v': 0.20051030571248582}
+     t: 0.08857769309851904
+  [(-80.0, 1.0)]
+     kind: bound
+     r_peri: 0.30384493975583904
+     segments: ['0:bound']
+     n_checks: 4
+     frame: {'seg': 0, 'r': 21.60148014985242, 'alive': True, 'status': 'orbit', 'tau': 0.08857769309849099, 'rate': 1.0, 'deficit': 0.0, 'v': 0.2063643575580903}
+     t: 0.08857769309849099
+
+### bound_beyond_r_far: ok (wall 1.4 s)
+  [GR]
+     kind: bound
+     kind_text: связанная (эллипс с прецессией)
+     r_apo: 296032.40933977446
+     segments: ['0:bound']
+     events: ['escape@67.19']
+     n_checks: 2
+     frame: {'seg': 0, 'r': 19999.99999999991, 'alive': False, 'status': 'escape', 'tau': 67.16789096801986, 'rate': 0.9999033774342959, 'deficit': 9.6622565704099e-05, 'v': 0.00965635127777493}
+     t: 67.25493399417465
+  [newton]
+     kind: bound
+     kind_text: связанная (эллипс Кеплера)
+     r_apo: 124516.87848306588
+     segments: ['0:bound']
+     events: ['escape@69.25']
+     n_checks: 0
+     frame: {'seg': 0, 'r': 19999.99999999964, 'alive': False, 'status': 'escape', 'tau': 69.24897299938122, 'rate': 1.0, 'deficit': 0.0, 'v': 0.009161904826250568}
+     t: 69.3182219723806
+
+### next_event_everywhere: ok (wall 1.5 s)
+  [default]
+     t_M: [1016.647, 2033.294, 3049.94, 4066.587, 5083.234, 6099.881]
+     segments: ['0:bound']
+     n_checks: 10
+     frame: {'seg': 0, 'r': 19.999999999998437, 'alive': True, 'status': 'orbit', 'tau': 0.2900146440026389, 'rate': 0.9099450532861783, 'deficit': 0.09005494671382185, 'v': 0.28284271247463993}
+     t: 0.3004490802418619
+  [mercury]
+     t_M: [771552814241.015, 1543105628482.019, 2314658442723.04, 3086211256964.078, 3857764071205.176, 4629316885446.25]
+     segments: ['0:bound']
+     n_checks: 13
+     frame: {'seg': 0, 'r': 31152981.116269864, 'alive': True, 'status': 'orbit', 'tau': 22801657.540899754, 'rate': 0.9999999485501764, 'deficit': 5.144982370227508e-08, 'v': 0.00019672400407345737}
+     t: 22801658.41302837
+  [bh_isco]
+     t_M: [96.999, 193.998, 290.997, 387.996, 484.995, 581.994]
+     segments: ['0:circular']
+     n_checks: 6
+     frame: {'seg': 0, 'r': 6.200000000000021, 'alive': True, 'status': 'orbit', 'tau': 0.020594313645399556, 'rate': 0.7184212081071006, 'deficit': 0.28157879189289925, 'v': 0.4879500364742655}
+     t: 0.028666071397949806
+  [plunge]
+     t_M: [131.818, 131.818, 131.818, 131.818, 131.818, 131.818]
+     notices: ['Впереди нет запланированных событий', 'Впереди нет запланированных событий', 'Впереди нет запланированных событий', 'Впереди нет запланированных событий', 'Впереди нет запланированных событий']
+     segments: ['0:plunge']
+     events: ['horizon@0.006493']
+     n_checks: 2
+     frame: {'seg': 0, 'r': 2.000002000002, 'alive': False, 'status': 'horizon', 'tau': 0.0031920004417648074, 'rate': 1.0615684391904366e-06, 'deficit': 0.999998938431561, 'v': 0.9999994365360818}
+     t: 0.006492667838349411
+  [radial]
+     t_M: [138.124, 138.124, 138.124, 138.124, 138.124, 138.124]
+     notices: ['Впереди нет запланированных событий', 'Впереди нет запланированных событий', 'Впереди нет запланированных событий', 'Впереди нет запланированных событий', 'Впереди нет запланированных событий']
+     segments: ['0:radial_fall']
+     events: ['horizon@0.006803']
+     n_checks: 1
+     frame: {'seg': 0, 'r': 2.000002000002003, 'alive': False, 'status': 'horizon', 'tau': 0.004825516026850407, 'rate': 1.0540925550581598e-06, 'deficit': 0.999998945907445, 'v': 0.9999994444445124}
+     t: 0.006803293948202911
+  [newton_ellipse]
+     t_M: [np.float64(670.522), np.float64(1341.043), np.float64(2011.565), np.float64(2682.087), np.float64(3352.608), np.float64(4023.13)]
+     segments: ['0:bound']
+     n_checks: 4
+     frame: {'seg': 0, 'r': 19.99999999980612, 'alive': True, 'status': 'orbit', 'tau': 0.19815890845208117, 'rate': 1.0, 'deficit': 0.0, 'v': 0.2683278042164831}
+     t: 0.19815890845208117
+  [neutron_star]
+     t_M: [300.807, 601.613, 902.42, 1203.226, 1504.033, 1804.839]
+     segments: ['0:bound']
+     n_checks: 10
+     frame: {'seg': 0, 'r': 9.99999999999929, 'alive': True, 'status': 'orbit', 'tau': 0.011329801058407182, 'rate': 0.8213160171334638, 'deficit': 0.1786839828665363, 'v': 0.3959797974644913}
+     t: 0.012445606874183486
+
+### neutron_star_grazing: ok (wall 2.1 s)
+  [(5.81, 1.0)]
+     kind: circular
+     notices: ['Круговая орбита при r₀ = 5.81M < ISCO = 6M неустойчива: ошибки округления (~10⁻¹⁶) нарастают, и тело уйдёт с неё.']
+     segments: ['0:circular']
+     n_checks: 6
+     frame: {'seg': 0, 'r': 5.810000000359247, 'alive': True, 'status': 'orbit', 'tau': 0.0042197499976841185, 'rate': 0.6954486906096231, 'deficit': 0.3045513093903769, 'v': 0.5123155195551966}
+     t: 0.006067665457979424
+  [(5.9, 1.05)]
+     kind: bound
+     segments: ['0:bound']
+     n_checks: 10
+     frame: {'seg': 0, 'r': 9.47746740728247, 'alive': True, 'status': 'orbit', 'tau': 0.02288234630311802, 'rate': 0.8218804982253202, 'deficit': 0.17811950177467964, 'v': 0.37926195275037}
+     t: 0.027330137201824596
+  [(5.9, 0.99)]
+     kind: plunge
+     segments: ['0:plunge']
+     events: ['surface@0.0001545']
+     n_checks: 2
+     frame: {'seg': 0, 'r': 5.804742809147469, 'alive': False, 'status': 'surface', 'tau': 0.00010840778801047918, 'rate': 0.6975698645532581, 'deficit': 0.302430135446742, 'v': 0.5075512940383068}
+     t: 0.006209197110834682

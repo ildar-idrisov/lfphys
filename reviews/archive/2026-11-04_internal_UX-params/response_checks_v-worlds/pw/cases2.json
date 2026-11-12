@@ -1,0 +1,83 @@
+[
+ {
+  "name": "v02_crossed_polarisers_played",
+  "title": "Двухщелевой опыт",
+  "set": [
+   [
+    "el1",
+    "polarizer"
+   ],
+   [
+    "el2",
+    "polarizer"
+   ],
+   [
+    "el2_angle",
+    90
+   ],
+   [
+    "rate",
+    100000
+   ]
+  ],
+  "wait": 4000,
+  "cmds": [
+   [
+    "play",
+    {},
+    9000
+   ],
+   [
+    "pause",
+    {},
+    1500
+   ]
+  ]
+ },
+ {
+  "name": "v01_measure_c_flash_inside",
+  "title": "Свет на больших расстояниях",
+  "preset": "measure_c",
+  "wait": 4000,
+  "cmds": [
+   [
+    "step",
+    {
+     "dt": 0.0004
+    },
+    1500
+   ],
+   [
+    "action",
+    {
+     "name": "flash",
+     "args": {
+      "obj": "obs1"
+     }
+    },
+    1500
+   ],
+   [
+    "step",
+    {
+     "dt": 0.004
+    },
+    3000
+   ]
+  ]
+ },
+ {
+  "name": "v17_matched_refused2",
+  "title": "Рассеяние Ми на капле",
+  "set": [
+   [
+    "index",
+    "custom"
+   ],
+   [
+    "n_re",
+    1.0001
+   ]
+  ]
+ }
+]

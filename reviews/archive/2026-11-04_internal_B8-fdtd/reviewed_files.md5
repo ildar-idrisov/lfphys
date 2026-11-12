@@ -1,0 +1,17 @@
+f061e21d18d79a88dbaf17c109c337da  lfphys/core/em/fdtd.py
+e5574db8c1bc13aadb7dee70c001b1a7  lfphys/core/em/fdtd_geometry.py
+4b3c891ece7a02ea7e412aef926de3bf  lfphys/core/em/fdtd_sources.py
+c185bdba7fbf1d206d3843148f00195e  lfphys/core/em/fdtd_tfsf.py
+c4db39f617f08f91ba6b32c288ff4d1b  lfphys/core/em/fdtd_monitors.py
+3be0f175f400f69e2d2d12676629b5c1  lfphys/core/optics/cylinder.py
+f259a7a3af0e4ad7b29537ebdc102166  tests/test_fdtd_api.py
+9926f72124248095a23f04c3ddc7e283  tests/test_fdtd_boundaries.py
+8f26ba96cd07e977c2ade221fb748530  tests/test_fdtd_grid.py
+a745ae5a179bda0023ffdac23fa6353b  tests/test_fdtd_media.py
+bb5297c30f02331cb4ea8790a0be823e  tests/test_fdtd_scattering.py
+5c5500fb472ad22f311a623412de354f  tests/test_cylinder_series.py
+1a114dbb9505e2dbea74bc9873fff737  tests/external/test_ext_fdtd_meep.py
+dab14a9256ded6cc04597aea10120416  tests/external/docker/meep/Dockerfile
+0732aa5851b5704b2bcb8420e7b2fd23  tests/external/docker/meep/meep-explicit.lock
+dc040a28bad7adc78823a70095f1070b  sources/verification_2026-11-04_p1_fdtd.md
+a83489b45fdabadb45985c63e7899d3c  lfphys/core/backend.py

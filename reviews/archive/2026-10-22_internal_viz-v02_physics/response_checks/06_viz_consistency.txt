@@ -1,0 +1,6 @@
+== (a) map / flow lines vs the run's own expectation ==
+Traceback (most recent call last):
+  File "/lf/reviews/2026-10-22_internal_viz-v02_physics/06_viz_consistency.py", line 41, in <module>
+    ops, rho = sim.exp.ensemble_marks()
+               ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Experiment' object has no attribute 'ensemble_marks'

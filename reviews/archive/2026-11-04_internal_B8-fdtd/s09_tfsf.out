@@ -1,0 +1,23 @@
+== (1) Bloch slab wave at oblique incidence: leak into the scattered-field side ==
+  tm k_par = 2 pi x 0.3: leak 7.12e-06; omitted energy 1.24e-17
+  tm k_par = 2 pi x 0.6: leak 2.67e-05; omitted energy 5.80e-09
+  te k_par = 2 pi x 0.3: leak 7.41e-06; omitted energy 1.24e-17
+  te k_par = 2 pi x 0.6: leak 5.50e-05; omitted energy 5.80e-09
+== (2) a plane wave added at a later step: cross sections of a PEC-free dielectric cylinder ==
+  plane wave added at step 100: Q_sca / Q_sca(added at step 0) = [0.959489 1.009815 1.014995]
+  plane wave added at step 400: Q_sca / Q_sca(added at step 0) = [9.13742118e+22 1.23099773e+23 3.13508479e+23]
+== (3) a dielectric slab crossing a TF/SF face: accepted? leak? ==
+  accepted (no refusal, no warning in checks(): {'window_tail': 8.239342078804048e-09, 'omitted_energy': 5.270232163356877e-18} )
+== (4) 3-D: polarization parallel to the direction ==
+  accepted; max|E| in the box after 80 steps: 0.000e+00
+== (5) the flux monitor on the incident grid wave alone (no scatterer), 2-D TM ==
+   0.0 deg,  10 cells/unit: P/(I L cos th) - 1 = [-0.012388 -0.050204]; cos(kx dx/2) cos^2(ky dx/2) - 1 = [-0.012312 -0.048943]
+   0.0 deg,  20 cells/unit: P/(I L cos th) - 1 = [-0.003087 -0.012388]; cos(kx dx/2) cos^2(ky dx/2) - 1 = [-0.003083 -0.012312]
+   0.0 deg,  40 cells/unit: P/(I L cos th) - 1 = [-0.000771 -0.003087]; cos(kx dx/2) cos^2(ky dx/2) - 1 = [-0.000771 -0.003083]
+  30.0 deg,  10 cells/unit: P/(I L cos th) - 1 = [-0.015894 -0.063076]; cos(kx dx/2) cos^2(ky dx/2) - 1 = [-0.015337 -0.060355]
+  30.0 deg,  20 cells/unit: P/(I L cos th) - 1 = [-0.003981 -0.015894]; cos(kx dx/2) cos^2(ky dx/2) - 1 = [-0.00385  -0.015337]
+  30.0 deg,  40 cells/unit: P/(I L cos th) - 1 = [-0.000996 -0.003981]; cos(kx dx/2) cos^2(ky dx/2) - 1 = [-0.000964 -0.00385 ]
+  45.0 deg,  10 cells/unit: P/(I L cos th) - 1 = [-0.018411 -0.072509]; cos(kx dx/2) cos^2(ky dx/2) - 1 = [-0.018373 -0.071922]
+  45.0 deg,  20 cells/unit: P/(I L cos th) - 1 = [-0.00462  -0.018411]; cos(kx dx/2) cos^2(ky dx/2) - 1 = [-0.004618 -0.018373]
+  45.0 deg,  40 cells/unit: P/(I L cos th) - 1 = [-0.001156 -0.00462 ]; cos(kx dx/2) cos^2(ky dx/2) - 1 = [-0.001156 -0.004618]
+rc=0

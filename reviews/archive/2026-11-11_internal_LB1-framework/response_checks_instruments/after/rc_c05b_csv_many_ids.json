@@ -1,0 +1,10 @@
+{
+ "run": "20261111-192645-p97-18bc",
+ "frames": 1298,
+ "ids": 82,
+ "csv_bytes": 2092330,
+ "csv_seconds": 0.17,
+ "health_latency_before_s": 0.0012,
+ "health_max_latency_during_s": 0.1028,
+ "health_polls_during": 17
+}

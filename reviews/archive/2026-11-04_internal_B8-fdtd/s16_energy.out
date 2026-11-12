@@ -1,0 +1,6 @@
+  2-D both pols, PEC/PMC walls, a dielectric-magnetic body: relative drift 3.2e-16
+  2-D Bloch-periodic (complex): relative drift 1.7e-16
+  2-D TE, a PEC cylinder (edge rule) inside a PEC box: relative drift 4.1e-16
+  3-D PMC/PEC/periodic sides, a sphere: relative drift 2.9e-16
+  negative control, a lossy Debye body: relative change 4.5e-01
+rc=0

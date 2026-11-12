@@ -1,0 +1,28 @@
+== P. Poiseuille across a remap: largest deviation over 200 steps from the target grid's own steady state (relative to its peak) ==
+  trt tau=0.8 refine-diffusive  kp=0.2500 km(engine)=0.1250: [engine] 3.0e-12  [km = kp] 2.6e-04  [km = 1] 1.8e-03
+  trt tau=0.8 refine-acoustic   kp=0.6875 km(engine)=0.3611: [engine] 8.0e-13  [km = kp] 7.1e-04  [km = 1] 1.4e-03
+  trt tau=0.8 coarsen           kp=4.0000 km(engine)=8.0000: [engine] 3.4e-13  [km = kp] 5.3e-04  [km = 1] 9.3e-04
+  trt tau=0.8 new-time-step     kp=0.4062 km(engine)=0.3889: [engine] 5.6e-13  [km = kp] 1.4e-04  [km = 1] 5.0e-03
+  trt tau=1.0 refine-diffusive  kp=0.2500 km(engine)=0.1250: [engine] 5.9e-12  [km = kp] 4.4e-04  [km = 1] 3.1e-03
+  trt tau=1.0 refine-acoustic   kp=0.7500 km(engine)=0.3929: [engine] 5.8e-13  [km = kp] 2.0e-03  [km = 1] 3.4e-03
+  trt tau=1.0 coarsen           kp=4.0000 km(engine)=8.0000: [engine] 1.6e-13  [km = kp] 8.8e-04  [km = 1] 1.5e-03
+  trt tau=1.0 new-time-step     kp=0.3750 km(engine)=0.3571: [engine] 8.2e-13  [km = kp] 8.8e-05  [km = 1] 3.2e-03
+  bgk tau=0.8 refine-diffusive  kp=0.2500 km(engine)=0.1250: [engine] 6.9e-03  [km = kp] 6.9e-03  [km = 1] 6.9e-03
+  bgk tau=0.8 refine-acoustic   kp=0.6875 km(engine)=0.6875: [engine] 1.2e-02  [km = kp] 1.2e-02  [km = 1] 1.2e-02
+  bgk tau=0.8 coarsen           kp=4.0000 km(engine)=8.0000: [engine] 6.2e-03  [km = kp] 6.2e-03  [km = 1] 6.2e-03
+  bgk tau=0.8 new-time-step     kp=0.4062 km(engine)=0.2031: [engine] 6.3e-03  [km = kp] 6.8e-03  [km = 1] 8.0e-03
+  bgk tau=1.0 refine-diffusive  kp=0.2500 km(engine)=0.1250: [engine] 4.4e-03  [km = kp] 4.4e-03  [km = 1] 4.4e-03
+  bgk tau=1.0 refine-acoustic   kp=0.7500 km(engine)=0.7500: [engine] 1.2e-02  [km = kp] 1.2e-02  [km = 1] 1.2e-02
+  bgk tau=1.0 coarsen           kp=4.0000 km(engine)=8.0000: [engine] 3.9e-03  [km = kp] 3.9e-03  [km = 1] 3.9e-03
+  bgk tau=1.0 new-time-step     kp=0.3750 km(engine)=0.1875: [engine] 1.7e-02  [km = kp] 1.7e-02  [km = 1] 1.7e-02
+== B. the 'remap' book: a deliberately wrong transfer (velocity x 1.01 along x) passes the balance ==
+  engine         : momentum check ok=True rel.residual 6.4e-13; booked 'remap' momentum 2.000e-05 of now 1.714e-02; parabola error after 200 steps 7.88e-13
+  velocity x1.01 : momentum check ok=True rel.residual 6.4e-13; booked 'remap' momentum 1.910e-04 of now 1.731e-02; parabola error after 200 steps 1.00e-02
+== T. Taylor-Green 32^2 for 300 steps, remapped, then 400 fine steps: error against the exact vortex ==
+  trt refine diffusive: target grid alone 9.143e-04; [engine] just after 3.793e-03, end 3.767e-03; [km = kp] just after 3.793e-03, end 3.767e-03; [km = 1] just after 3.793e-03, end 3.765e-03
+  trt refine acoustic : target grid alone 5.741e-03; [engine] just after 3.793e-03, end 6.415e-03; [km = kp] just after 3.793e-03, end 6.416e-03; [km = 1] just after 3.793e-03, end 6.417e-03
+  trt new dt          : target grid alone 1.244e-03; [engine] just after 3.717e-03, end 9.095e-04; [km = kp] just after 3.717e-03, end 9.091e-04; [km = 1] just after 3.717e-03, end 8.943e-04
+  bgk refine diffusive: target grid alone 1.880e-03; [engine] just after 6.690e-03, end 6.904e-03; [km = kp] just after 6.690e-03, end 6.904e-03; [km = 1] just after 6.690e-03, end 6.906e-03
+  bgk refine acoustic : target grid alone 3.603e-03; [engine] just after 6.690e-03, end 8.456e-03; [km = kp] just after 6.690e-03, end 8.456e-03; [km = 1] just after 6.690e-03, end 8.455e-03
+  bgk new dt          : target grid alone 6.841e-03; [engine] just after 6.594e-03, end 7.014e-03; [km = kp] just after 6.594e-03, end 7.016e-03; [km = 1] just after 6.594e-03, end 7.021e-03
+[exit 0]

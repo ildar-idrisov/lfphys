@@ -1,0 +1,22 @@
+// A select whose options are numbers, changed in the player's «Новый мир» form: what the world answers (v08, n).
+import { chromium } from "playwright";
+const port = process.env.PORT, base = `http://127.0.0.1:${port}`;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const post = async (u, b) => (await fetch(base + u, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b || {}) })).json();
+const b = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
+const r = await post("/api/runs", { viz: "v08_wave_3d", preset: "double", params: { n: 128, zmax: 10.0 } });
+const page = await b.newPage({ viewport: { width: 1600, height: 1000 } });
+await page.goto(`${base}/run?id=${r.id}`);
+await page.waitForFunction(() => window.__lfPlayer && window.__lfPlayer.frames() > 0, null, { timeout: 240000 });
+await page.evaluate(() => { for (const d of document.querySelectorAll("#left .panel.closed")) d.classList.remove("closed"); });
+const sel = await page.$("#left .field[data-pid='n'] select");
+await sel.selectOption("256");
+const sent = await page.evaluate(() => { const s = document.querySelector("#left .field[data-pid='n'] select"); return typeof s.value + ":" + s.value; });
+await page.click("#left button:has-text('Начать новый мир')");
+await sleep(6000);
+const text = await page.evaluate(() => [...document.querySelectorAll(".toast, .error, .ctl-err, .field-err")].map((e) => e.textContent.trim()).filter(Boolean).join(" | "));
+const events = await (await fetch(`${base}/api/runs/${r.id}`)).json();
+console.log(JSON.stringify({ run: r.id, sent, shown: text.slice(0, 400), worlds: (events.worlds || []).length }));
+await page.screenshot({ path: "/pw/shots/found_select_as_text_v08.jpg", type: "jpeg", quality: 70 });
+await post(`/api/runs/${r.id}/stop`, {});
+await b.close();

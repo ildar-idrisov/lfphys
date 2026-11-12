@@ -1,0 +1,11 @@
+Power through a sphere of radius R = 2a around the drop, from the engine's near fields, against the series
+m = 1.33, x = 5.0: Qext series 3.591032923630 flux 3.591032923630 rel 1.6e-14; Qsca rel 8.1e-14; Qabs series 0.000e+00 flux -2.324e-13 (abs diff / Qext 6.5e-14)
+m = (1.5+0.1j), x = 10.0: Qext series 2.459790528456 flux 2.459790528456 rel 3.1e-14; Qsca rel 4.0e-14; Qabs series 1.225e+00 flux 1.225e+00 (abs diff / Qext 1.0e-14)
+m = 0.75, x = 8.0: Qext series 2.350873702984 flux 2.350873702984 rel 4.6e-14; Qsca rel 3.5e-14; Qabs series 0.000e+00 flux -2.658e-14 (abs diff / Qext 1.1e-14)
+m = (2+1j), x = 3.0: Qext series 2.817069536470 flux 2.817069536470 rel 3.4e-14; Qsca rel 5.5e-14; Qabs series 1.434e+00 flux 1.434e+00 (abs diff / Qext 6.6e-15)
+m = pec, x = 6.0: Qext series 2.099096507944 flux 2.099096507944 rel 3.1e-14; Qsca rel 3.0e-14; Qabs series 0.000e+00 flux 1.131e-15 (abs diff / Qext 5.4e-16)
+m = 1.33, x = 30.0: Qext series 1.998409841837 flux 1.998409841837 rel 2.1e-14; Qsca rel 1.6e-13; Qabs series 0.000e+00 flux 3.704e-13 (abs diff / Qext 1.9e-13)
+m = 1.333, x = 11.4: Qext series 1.797505629134 flux 1.797505629134 rel 4.9e-14; Qsca rel 2.5e-13; Qabs series 0.000e+00 flux -5.394e-13 (abs diff / Qext 3.0e-13)
+
+Negative control: the scattered H with the sign of a_n flipped in the magnetic part (a convention error)
+  with the flipped sign: Qext flux 1.998692 against 3.591033 (rel 4.4e-01)

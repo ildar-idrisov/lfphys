@@ -1,0 +1,14 @@
+== (1) v04 black hole (preset default) ==
+default speed 0.01162 s/s, range (1e-10, 1e+18)
+v04 default x1: chosen 0.0116 s/s | measured here over the last 1.5 s: 0.0116 s/s (100.003% of chosen) | frames' rate (last): 0.0116203713 | lag in 0/30 frames | the player shows «факт» if rate < 0.97 chosen: False
+v04 default x10: chosen 0.116 s/s | measured here over the last 1.5 s: 0.116 s/s (99.860% of chosen) | frames' rate (last): 0.1160292122 | lag in 0/30 frames | the player shows «факт» if rate < 0.97 chosen: False
+v04 default x100: chosen 1.16 s/s | measured here over the last 1.5 s: 1.16 s/s (99.995% of chosen) | frames' rate (last): 1.1631922408 | lag in 0/30 frames | the player shows «факт» if rate < 0.97 chosen: False
+v04 default x1000: chosen 11.6 s/s | measured here over the last 1.5 s: 9.45 s/s (81.282% of chosen) | frames' rate (last): 9.4618785285 | lag in 30/30 frames | the player shows «факт» if rate < 0.97 chosen: True
+v04 default x10000: chosen 116 s/s | measured here over the last 1.5 s: 10.1 s/s (8.699% of chosen) | frames' rate (last): 10.131988191 | lag in 30/30 frames | the player shows «факт» if rate < 0.97 chosen: True
+
+== (2) synthetic worlds ==
+cheap world at 1 s/s: first non-null rate 0.9999 at 0.75 s after play; last 1.0000
+cheap world: chosen 1 s/s | measured here over the last 1.5 s: 1 s/s (100.001% of chosen) | frames' rate (last): 0.9999985347 | lag in 0/30 frames | the player shows «факт» if rate < 0.97 chosen: False
+one slow step per frame (max_step None, cost 1 wall s per world s) at 1 s/s: chosen 1 s/s | measured here over the last 1.5 s: 0.998 s/s (99.761% of chosen) | frames' rate (last): 0.9975932628 | lag in 0/26 frames | the player shows «факт» if rate < 0.97 chosen: False
+one slow step per frame (max_step None, cost 2 wall s per world s) at 1 s/s: chosen 1 s/s | measured here over the last 1.5 s: 0.5 s/s (49.986% of chosen) | frames' rate (last): 0.4998634385 | lag in 0/3 frames | the player shows «факт» if rate < 0.97 chosen: True
+pause at 2 s: frames after pause carry rate [] (frames are emitted only while playing or dirty)

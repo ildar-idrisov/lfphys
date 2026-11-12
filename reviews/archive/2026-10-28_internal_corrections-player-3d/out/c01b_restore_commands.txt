@@ -1,0 +1,11 @@
+C1 check 01b — restore: command times and new worlds
+[C] v11 (small): a `step` and a `set` (slit B closed) handled in one batch, then frames; restored from the record's script
+  recorded: set at t = 1.47961e-16 s; frames ['4.227e-17', '8.455e-17', '1.48e-16']
+  restored: set applied at t = 8.45489e-17 s (recorded 1.47961e-16 s)
+    v11 continuation after step+set: DIFFERS at msg[0] tracks blobs.xz: max |diff| 0.496
+
+[D] v08: planes 1 (tilted) and 2 placed in world 1, `new_world` (the planes carry over), frames; the latest world restored as the server does (from its header's params and seed, script after its header)
+  world 2 as it ran: planes {1: [0.5, -0.0, 0.866], 2: [0.0, 1.0, 0.0]}
+  world 2 restored: planes {1: [0.0, -1.0, 0.0]}
+  -> DIFFERENT: the restored world lost the planes handed over by world 1
+  after the same `view plane 2` on both: live answered ['command', 'planes', 'slice', 'check', 'event'], restored answered ['command', 'planes', 'slice', 'check', 'event']

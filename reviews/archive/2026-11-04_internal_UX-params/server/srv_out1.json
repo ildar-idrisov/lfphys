@@ -1,0 +1,105 @@
+[
+ {
+  "name": "v13_super_l2_0_crash",
+  "viz": "v13_hydrogen_3d",
+  "start": {
+   "status": 200,
+   "body": {
+    "id": "20261104-215016-v13-5e21"
+   }
+  },
+  "id": "20261104-215016-v13-5e21",
+  "cmd": [
+   [
+    200,
+    {
+     "ok": true
+    }
+   ]
+  ],
+  "state": "suspended",
+  "errors": [
+   "Мир не восстановлен: float division by zero"
+  ],
+  "returncode": 4,
+  "sim_t": 0.0,
+  "stop_reason": "worker failed (code 4)",
+  "resume_error": "Мир не восстановлен: float division by zero"
+ },
+ {
+  "name": "v13_super_default_refused",
+  "viz": "v13_hydrogen_3d",
+  "start": {
+   "status": 200,
+   "body": {
+    "id": "20261104-215031-v13-965f"
+   }
+  },
+  "id": "20261104-215031-v13-965f",
+  "state": "failed",
+  "errors": [
+   "Мир не создан: второе состояние совпадает с первым"
+  ],
+  "returncode": 3,
+  "sim_t": 0.0,
+  "stop_reason": null,
+  "resume_error": null
+ },
+ {
+  "name": "v06_rg_failed",
+  "viz": "v06_qcd",
+  "start": {
+   "status": 200,
+   "body": {
+    "id": "20261104-215038-v06-c14f"
+   }
+  },
+  "id": "20261104-215038-v06-c14f",
+  "state": "failed",
+  "errors": [
+   "Мир не создан: RG integration failed"
+  ],
+  "returncode": 3,
+  "sim_t": 0.0,
+  "stop_reason": null,
+  "resume_error": null
+ },
+ {
+  "name": "v01_andromeda_walk_faster_than_c",
+  "viz": "v01_light_travel",
+  "start": {
+   "status": 200,
+   "body": {
+    "id": "20261104-215048-v01-83c5"
+   }
+  },
+  "id": "20261104-215048-v01-83c5",
+  "state": "failed",
+  "errors": [
+   "Мир не создан: worldline is not timelike (moves at or faster than local light)"
+  ],
+  "returncode": 3,
+  "sim_t": 0.0,
+  "stop_reason": null,
+  "resume_error": null
+ },
+ {
+  "name": "v01_ether_from_defaults",
+  "viz": "v01_light_travel",
+  "start": {
+   "status": 200,
+   "body": {
+    "id": "20261104-215055-v01-450f"
+   }
+  },
+  "id": "20261104-215055-v01-450f",
+  "state": "failed",
+  "errors": [
+   "Мир не создан: ОТО требует СТО: метрика Шварцшильда локально лоренцева. Для эфира или баллистики выберите «Без гравитации» или «Ньютон» (только баллистика)."
+  ],
+  "returncode": 3,
+  "sim_t": 0.0,
+  "stop_reason": null,
+  "resume_error": null
+ }
+]

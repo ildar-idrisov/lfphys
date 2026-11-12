@@ -1,0 +1,19 @@
+== C. first-order dE against -P dV (virial) for small delta ==
+  periodic LJ (control)              delta 1e-03: dE -2.035651e-01  -P dV -2.035709e-01  (dE - pdv)/dE -2.821e-05
+  periodic LJ (control)              delta 1e-04: dE -2.056651e-02  -P dV -2.056651e-02  (dE - pdv)/dE -2.811e-07
+  periodic LJ (control)              delta 1e-05: dE -2.058761e-03  -P dV -2.058761e-03  (dE - pdv)/dE -2.839e-09
+  walled ideal gas, field g_y = -0.5 delta 1e-03: dE -5.650227e-01  -P dV -9.091130e-01  (dE - pdv)/dE -6.090e-01
+  walled ideal gas, field g_y = -0.5 delta 1e-04: dE -5.662500e-02  -P dV -9.103395e-02  (dE - pdv)/dE -6.077e-01
+  walled ideal gas, field g_y = -0.5 delta 1e-05: dE -5.663729e-03  -P dV -9.104624e-03  (dE - pdv)/dE -6.075e-01
+  walled LJ, soft 9-3 walls on y     delta 1e-03: dE -3.633361e-01  -P dV -2.948627e-01  (dE - pdv)/dE  1.885e-01
+  walled LJ, soft 9-3 walls on y     delta 1e-04: dE -3.662957e-02  -P dV -2.972893e-02  (dE - pdv)/dE  1.884e-01
+  walled LJ, soft 9-3 walls on y     delta 1e-05: dE -3.665931e-03  -P dV -2.975338e-03  (dE - pdv)/dE  1.884e-01
+  walled LJ gas + frozen block       delta 1e-03: dE -8.687428e-02  -P dV -1.183309e-01  (dE - pdv)/dE -3.621e-01
+  walled LJ gas + frozen block       delta 1e-04: dE -8.767570e-03  -P dV -1.191381e-02  (dE - pdv)/dE -3.589e-01
+== E. soft -> hard in walled boxes ==
+  n= 20 L=20: switch possible at 18/200 sampled moments; refused only by the walls at 170/200; (1 - sigma/L)^(2n) = 0.129; accessible area MD L^2 = 400, hard (L - sigma)^2 = 361 (10.8 % denser for the hard bodies)
+  n= 60 L=30: switch possible at 7/200 sampled moments; refused only by the walls at 156/200; (1 - sigma/L)^(2n) = 0.0171; accessible area MD L^2 = 900, hard (L - sigma)^2 = 841 (7.0 % denser for the hard bodies)
+  n=200 L=30: switch possible at 0/200 sampled moments; refused only by the walls at 34/200; (1 - sigma/L)^(2n) = 1.29e-06; accessible area MD L^2 = 900, hard (L - sigma)^2 = 841 (7.0 % denser for the hard bodies)
+== D. Jacobian determinant of the affine step on a conserved axis ==
+  lambda 0.9: det J = 0.900000000000 (canonical point transformation: 1; with P kept: lambda)
+[exit 0]

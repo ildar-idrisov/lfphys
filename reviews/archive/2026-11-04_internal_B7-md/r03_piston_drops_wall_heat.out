@@ -1,0 +1,4 @@
+before: Q = 507.293484  W = 0.000000  residual = -1.137e-13
+after set_piston: Q = 0.000000  W = 0.000000  residual = 507.293484  (the y-hi wall's heat was 507.293484)
+control (set_wall to specular): residual = -1.137e-13
+exit 0

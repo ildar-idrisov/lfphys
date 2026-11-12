@@ -1,0 +1,20 @@
+// The catalogue's run list after refused starts, and a refused run's page opened again later (a reconnection).
+import { chromium } from "playwright";
+import fs from "fs";
+const base = "http://127.0.0.1:8563";
+const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
+const out = {};
+let page = await browser.newPage({ viewport: { width: 1500, height: 1100 } });
+await page.goto(base + "/"); await page.waitForTimeout(2500);
+out.runs = await page.evaluate(() => [...document.querySelectorAll("tr")].map((r) => r.innerText.replace(/\s+/g, " ")).filter((t) => /сбой|приостановлен/.test(t)).slice(0, 8));
+out.failedTitles = await page.evaluate(() => [...document.querySelectorAll("tr")].filter((r) => /сбой/.test(r.innerText)).map((r) => [...r.querySelectorAll("[title]")].map((e) => e.title).join(" | ")).slice(0, 5));
+await page.screenshot({ path: "shots/P1_catalogue_failed_runs.png", fullPage: false });
+await page.close();
+page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
+await page.goto(base + "/run?id=20261104-212609-v13-6085"); await page.waitForTimeout(5000);
+out.reopenStatus = await page.evaluate(() => document.querySelector("#status") ? document.querySelector("#status").innerText : null);
+out.reopenEvents = await page.evaluate(() => document.querySelector(".events") ? document.querySelector(".events").innerText : null);
+await page.screenshot({ path: "shots/P1_v13_refused_reopened.png" });
+fs.writeFileSync("catalogue_out.json", JSON.stringify(out, null, 1));
+console.log(JSON.stringify(out, null, 1));
+await browser.close();

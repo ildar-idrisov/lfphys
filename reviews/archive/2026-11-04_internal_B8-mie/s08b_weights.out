@@ -1,0 +1,3 @@
+numpy 2.4.6 leggauss docstring: ['The results have only been tested up to degree 100, higher degrees may', 'be problematic. The weights are determined by using the fact that']
+scipy 1.17.1 roots_legendre(1120) near mu = 1: weight rel errors ['2.3e-10', '1.9e-10', '5.2e-10', '7.5e-10', '1.7e-09', '7.7e-09'] node errors ['0.0e+00', '0.0e+00', '0.0e+00', '0.0e+00', '0.0e+00', '1.1e-16']
+numpy leggauss(1120) near mu = 1: weight rel errors ['1.3e-11', '2.1e-10', '5.3e-10', '6.5e-10', '1.9e-09', '6.4e-09']

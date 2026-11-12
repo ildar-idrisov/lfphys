@@ -1,0 +1,5 @@
+none  : coefficients off by 0.0e+00 of the largest; theorem residual 0.0e+00 (v17 tol ~1e-11); energy |Re a - |a|^2| 4.4e-16 (tol 1e-10); debye 1.3e-13 (tol 5e-10)
+D     : coefficients off by 5.8e-02 of the largest; theorem residual 4.5e-16 (v17 tol ~1e-11); energy |Re a - |a|^2| 3.3e-16 (tol 1e-10); debye 6.3e-02 (tol 5e-10)
+PSI   : coefficients off by 4.3e-04 of the largest; theorem residual 2.2e-16 (v17 tol ~1e-11); energy |Re a - |a|^2| 4.4e-16 (tol 1e-10); debye 1.1e-03 (tol 5e-10)
+CHI   : coefficients off by 5.0e-04 of the largest; theorem residual 4.3e-16 (v17 tol ~1e-11); energy |Re a - |a|^2| 4.4e-16 (tol 1e-10); debye 5.0e-04 (tol 5e-10)
+D(mx) : coefficients off by 2.3e-03 of the largest; theorem residual 8.7e-16 (v17 tol ~1e-11); energy |Re a - |a|^2| 3.3e-16 (tol 1e-10); debye 5.7e-04 (tol 5e-10)

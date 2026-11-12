@@ -1,0 +1,24 @@
+== (1) sphere vs Mie ==
+  Q_sca/Q_mie - 1 = [0.0166 0.0033 0.012 ];  re-normalised by cos(k dx/2): [0.0197 0.0103 0.0246];  Q_abs = [-0.001  -0.0052 -0.0046]
+  f = 0.4: dsigma/dOmega / Mie - 1 = [0.0169 0.0133 0.0178 0.0326]
+  f = 0.6: dsigma/dOmega / Mie - 1 = [ 0.0178 -0.0044  0.0003 -0.0068]
+  f = 0.8: dsigma/dOmega / Mie - 1 = [ 0.0319 -0.0136  0.059   0.0122]
+== (2) point dipole power, 3-D ==
+  10 cells per unit (per wavelength at f = 1): P / (omega^2 |I l|^2 / 12 pi) - 1 = [0.0172 0.0274 0.0405]
+  20 cells per unit (per wavelength at f = 1): P / (omega^2 |I l|^2 / 12 pi) - 1 = [0.0042 0.0067 0.0096]
+== (3) near-to-far normalisation without a scatterer ==
+  3-D, 10 cells/unit, f = 0.8: |A_theta|/|I l sin th| - 1 = [0.0181 0.0049 0.0066 0.0069]; |A_phi|/|A_theta| = [0.0012 0.0031 0.0003 0.0008]
+  3-D, 10 cells/unit, f = 1.0: |A_theta|/|I l sin th| - 1 = [ 0.0478 -0.0033  0.0014 -0.0077]; |A_phi|/|A_theta| = [0.0013 0.0059 0.0006 0.0017]
+  3-D, 20 cells/unit, f = 0.8: |A_theta|/|I l sin th| - 1 = [0.0041 0.0013 0.0016 0.0015]; |A_phi|/|A_theta| = [0.0003 0.0007 0.     0.0002]
+  3-D, 20 cells/unit, f = 1.0: |A_theta|/|I l sin th| - 1 = [ 0.0116 -0.0009  0.0003 -0.0018]; |A_phi|/|A_theta| = [0.0004 0.0014 0.0001 0.0004]
+  2-D TM, 20 cells/unit, f = 0.8: |A|/exact - 1 = [ 0.009  -0.0007  0.0038 -0.0008]
+  2-D TM, 20 cells/unit, f = 1.0: |A|/exact - 1 = [ 0.0012  0.0056 -0.0005  0.0058]
+  2-D TM, 40 cells/unit, f = 0.8: |A|/exact - 1 = [ 0.0022 -0.0002  0.0009 -0.0002]
+  2-D TM, 40 cells/unit, f = 1.0: |A|/exact - 1 = [ 0.0003  0.0014 -0.0001  0.0014]
+== (4) cylinder series ==
+  TE Rayleigh limit Q_sca / (pi^2 x^3/4 |(m^2-1)/(m^2+1)|^2) - 1, m = 1.5: [4.58e-04 1.41e-04 4.20e-05]
+  TE Rayleigh limit Q_sca / (pi^2 x^3/4 |(m^2-1)/(m^2+1)|^2) - 1, m = 2.0: [8.27e-04 2.48e-04 7.20e-05]
+  TE Rayleigh limit Q_sca / (pi^2 x^3/4 |(m^2-1)/(m^2+1)|^2) - 1, m = (1.5+0.2j): [4.1e-04 1.3e-04 3.9e-05]
+  m = (1.5+0.1j): Q_abs TM 0.8243, TE 0.7429; sphere (mie) Q_abs 0.8952; with conj(m): cylinder TM -3.0997
+  m = (2+1j): Q_abs TM 0.9175, TE 1.1733; sphere (mie) Q_abs 1.4338; with conj(m): cylinder TM -3.2991
+rc=0

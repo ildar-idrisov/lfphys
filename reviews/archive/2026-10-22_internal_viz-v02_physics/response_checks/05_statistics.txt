@@ -1,0 +1,7 @@
+== (a) MC noise of the run's expectation ==
+Traceback (most recent call last):
+  File "/lf/reviews/2026-10-22_internal_viz-v02_physics/05_statistics.py", line 48, in <module>
+    Pref, _ = ex.ensemble(100000, np.random.default_rng(12345), chunk=max(4, int(3e6 // (g.n * len(g.x)))))
+              ^^^^^^^^^^^
+AttributeError: 'Experiment' object has no attribute 'ensemble'
+exit 1

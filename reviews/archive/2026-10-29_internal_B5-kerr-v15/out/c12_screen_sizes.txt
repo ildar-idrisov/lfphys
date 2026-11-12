@@ -1,0 +1,4 @@
+m87 {'res': 'l', 'half': 4.0}: failed []; pixels note: 64892 пикселей дальше √2 пикселя от кривой; несовпадений 0; ...; lit pixels 46562/65536; lyapunov 0.06008839492466452; 3.4 s
+m87 {'res': 'l', 'half': 30.0}: failed []; pixels note: 65160 пикселей дальше √2 пикселя от кривой; несовпадений 0; ...; lit pixels 23968/65536; lyapunov 0.06008839492466452; 2.9 s
+edge_on {'res': 'l', 'half': 30.0}: failed []; pixels note: 65156 пикселей дальше √2 пикселя от кривой; несовпадений 0; ...; lit pixels 5512/65536; lyapunov 0.04316958581711452; 2.6 s
+ring {'res': 's', 'emitter': 'keplerian', 'retro': True, 'chi': 0.9}: failed []; pixels note: 15750 пикселей дальше √2 пикселя от кривой; несовпадений 0; ...; lit pixels 1980/16384; lyapunov 0.045465677907701396; 1.6 s

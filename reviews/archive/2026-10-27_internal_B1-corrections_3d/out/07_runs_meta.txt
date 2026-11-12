@@ -1,0 +1,4 @@
+20261027-174135-v08-64b5 size 21692716 messages 235 worlds 2 approximations [] errors 0
+20261027-174222-v08-645b size 800828 messages 19 worlds 1 approximations ['срез y = 0: щель длиной L = 8 мкм принята бесконечной (упрощённая 2-D модель); размер приближения — в проверках'] errors 0
+20261027-174330-v08-dbe7 size 14303884 messages 33 worlds 2 approximations [] errors 0
+20261027-174709-v08-94fb size 7750416 messages 38 worlds 1 approximations [] errors 0

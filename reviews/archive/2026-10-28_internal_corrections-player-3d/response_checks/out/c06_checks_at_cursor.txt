@@ -1,0 +1,5 @@
+run 20261028-185120-v04-2663 (frames in the record 467; the player may thin them)
+cursor at frame 103/411 (record t = 25.45989228419313; player t = 100,598988 с): checks computed by then 10, rows shown 10; missing: none
+cursor at frame 206/411 (record t = 50.752491513750954; player t = 100,598988 с): checks computed by then 10, rows shown 10; missing: none
+cursor at frame 308/411 (record t = 75.72897807232329; player t = 100,598988 с): checks computed by then 10, rows shown 10; missing: none
+cursor at frame 411/411 (record t = 100.59898761402677; player t = 100,598988 с): checks computed by then 10, rows shown 10; missing: none

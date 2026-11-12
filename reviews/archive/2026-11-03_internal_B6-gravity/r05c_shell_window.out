@@ -1,0 +1,28 @@
+a = 0.9, q = 0.0: captured at t = 91.902 M (r_+ = 1.435890); the shell check fails from t = 90.80 M (r - r_+ = 1.40e-04) until the capture: 1.10 M of world time
+    t =    38.30 M  r - r_+ = 6.696e+00  |dmu2| / tol = 2.41e-08
+    t =    45.95 M  r - r_+ = 4.872e+00  |dmu2| / tol = 4.03e-08
+    t =    53.60 M  r - r_+ = 2.720e+00  |dmu2| / tol = 1.7e-07
+    t =    61.25 M  r - r_+ = 8.009e-01  |dmu2| / tol = 5.84e-07
+    t =    68.90 M  r - r_+ = 1.041e-01  |dmu2| / tol = 6.85e-07
+    t =    76.55 M  r - r_+ = 1.053e-02  |dmu2| / tol = 1.14e-05
+    t =    84.20 M  r - r_+ = 1.036e-03  |dmu2| / tol = 0.021
+    t =    91.85 M  r - r_+ = 1.016e-04  |dmu2| / tol = 1.7
+a = 0.9, q = 0.4: captured at t = 116.701 M (r_+ = 1.173205); the shell check fails from t = 111.40 M (r - r_+ = 2.32e-04) until the capture: 5.30 M of world time
+    t =    48.55 M  r - r_+ = 4.526e+00  |dmu2| / tol = 1.43e-08
+    t =    58.25 M  r - r_+ = 1.796e+00  |dmu2| / tol = 2.93e-08
+    t =    67.95 M  r - r_+ = 3.014e-01  |dmu2| / tol = 6.63e-08
+    t =    77.65 M  r - r_+ = 5.211e-02  |dmu2| / tol = 7.3e-06
+    t =    87.35 M  r - r_+ = 1.062e-02  |dmu2| / tol = 0.000595
+    t =    97.05 M  r - r_+ = 2.257e-03  |dmu2| / tol = 0.013
+    t =   106.75 M  r - r_+ = 4.841e-04  |dmu2| / tol = 0.193
+    t =   116.45 M  r - r_+ = 1.041e-04  |dmu2| / tol = 1.33
+a = 0.0, q = 0.0: captured at t = 76.714 M (r_+ = 2.000000); the shell check fails from t = 74.80 M (r - r_+ = 2.60e-04) until the capture: 1.91 M of world time
+    t =    31.80 M  r - r_+ = 7.251e+00  |dmu2| / tol = 1.76e-08
+    t =    38.15 M  r - r_+ = 5.967e+00  |dmu2| / tol = 4.02e-08
+    t =    44.50 M  r - r_+ = 4.396e+00  |dmu2| / tol = 5.21e-08
+    t =    50.85 M  r - r_+ = 2.565e+00  |dmu2| / tol = 1.39e-08
+    t =    57.20 M  r - r_+ = 8.010e-01  |dmu2| / tol = 4.92e-08
+    t =    63.55 M  r - r_+ = 6.787e-02  |dmu2| / tol = 5.9e-06
+    t =    69.90 M  r - r_+ = 3.009e-03  |dmu2| / tol = 0.000354
+    t =    76.25 M  r - r_+ = 1.261e-04  |dmu2| / tol = 0.103
+exit 0

@@ -1,0 +1,137 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
+     SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0 -->
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Light-funnel · запуск</title>
+<link rel="stylesheet" href="/static/assets/chrome.css">
+<style id="ux-framework">
+/* The player's frame after the UX reviews of 2026-11-04 (UX-ui U9, U14, U16, U20-U24; UX-params P1, P2, P4, P23). */
+/* side columns that fold away, the centre takes the room (U20) */
+.main { --lw: 300px; --rw: 360px; grid-template-columns: var(--lw) minmax(0, 1fr) var(--rw); }
+@media (max-width: 1280px) { .main { --lw: 260px; --rw: 300px; } }
+.run.fold-left .main { --lw: 0px; } .run.fold-right .main { --rw: 0px; }
+#left { grid-column: 1; } #center { grid-column: 2; } #right { grid-column: 3; }  /* a folded column keeps its cell */
+.run.fold-left #left, .run.fold-right #right { display: none; }
+@media (max-width: 1000px) { .main { grid-template-columns: 1fr; } #left, #center, #right { grid-column: auto; } }
+.topbar .fold { padding: 2px 7px; }
+.run.fold-left #fold-left, .run.fold-right #fold-right { background: var(--accent); color: #fff; border-color: var(--accent); }
+.topbar { gap: 8px 10px; }
+.topbar .badge { white-space: nowrap; max-width: 26em; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: middle; }
+#scene { max-width: 28em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 1500px) { #runid { display: none; } #scene { max-width: 12em; } .topbar .badge { max-width: 15em; } }  /* the run's id: in «О запуске» */
+/* one row at every width the player is used at (review LB1-p02-ux X8: the bar wrapped in p01, at 1280 px and after a
+   second world added its selector, and the columns below jumped): the names, the badges and the world selector shrink
+   with an ellipsis (their full text in the tooltip), the buttons never */
+.topbar { flex-wrap: nowrap; overflow: hidden; }
+.topbar > * { flex: none; }
+.topbar > #title { flex: 0 1 auto; min-width: 5em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar > #scene { flex: 0 4 auto; min-width: 0; }
+.topbar > #physics { flex: 0 2 auto; min-width: 3em; display: flex; gap: 4px; overflow: hidden; }
+.topbar > #physics .badge { flex: 0 1 auto; min-width: 2.5em; }
+.topbar > #world { flex: 0 3 auto; min-width: 5.5em; max-width: 18em; text-overflow: ellipsis; }
+.topbar > #busy { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; }
+.topbar > #status { white-space: nowrap; }
+.topbar > .grow { flex: 1 1 0; min-width: 0; }
+/* the bottom bar in one line at 1280 px and 1600 px (U20, U24): narrower minima, a readable speed scale */
+.bottombar { flex-wrap: nowrap; gap: 6px; }
+.bottombar .timeline { min-width: 90px; }
+.bottombar .time { min-width: 0; white-space: nowrap; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; max-width: 17em; }
+.speedbox { width: min(300px, 22vw); min-width: 130px; padding-bottom: 14px; }
+.speedbox .ticks { font-size: 11px; height: 14px; }
+#speedv { min-width: 6.5em !important; white-space: nowrap; }
+.bottombar > span.muted { white-space: nowrap; }
+@media (max-width: 1100px) { .bottombar { flex-wrap: wrap; } }
+/* what the world computes now, with a way out (U9) */
+.busy { display: inline-flex; align-items: center; gap: 6px; }
+.busy button.cancel { font-size: 11px; padding: 1px 6px; border-color: var(--bad); color: var(--bad); }
+/* the checks: one line each, the ✓ column always visible, notes behind ⓘ (U16); an expected failure (P23) */
+.checks table { table-layout: fixed; }
+.checks col.c-val { width: 42%; } .checks col.c-st { width: 22px; }
+.checks td { overflow-wrap: anywhere; }
+.checks td.ck-st { text-align: center; }
+.checks .grp-row { cursor: pointer; }
+.checks .grp-row .fold { color: var(--muted); }
+.checks .grp-sum { float: right; font-weight: 400; color: var(--muted); }
+.checks .grp-sum.st-bad { color: var(--bad); }
+.checks .ck-i { border: 0; background: none; padding: 0 3px; color: var(--muted); cursor: pointer; font-size: 11px; }
+.checks .ck-note { margin-top: 2px; font-size: 11px; }
+.st-exp { color: var(--warn); font-weight: 700; }
+/* «События»: a failure's own text folded (P4) */
+.events .ev-detail { margin: 2px 0 0 0; color: var(--muted); }
+.events .ev-detail summary { cursor: pointer; font-size: 11px; }
+.events .ev-detail .mono { white-space: pre-wrap; font-size: 11px; }
+/* refused values at their fields (P2) */
+.ctl-err:empty, .field-err:empty { display: none; }
+.ctl-err, .field-err { grid-column: 1 / -1; color: var(--bad); font-size: 11px; }
+.field.bad input, .field.bad select { border-color: var(--bad); }
+/* the playground: why a palette button is off (U22), the pre-placement form (U4) */
+.pg-btn { display: inline-flex; flex-direction: column; max-width: 100%; }
+.pg-why { font-size: 10px; color: var(--muted); max-width: 16em; line-height: 1.2; }
+.pg-buttons button.on { outline: 2px solid var(--accent); }
+.pg-place { border: 1px solid var(--accent); border-radius: 8px; padding: 6px 8px; margin: 8px 0; }
+.pg-place .name { font-weight: 600; margin-bottom: 4px; }
+.pg-place .row { display: flex; gap: 6px; margin-top: 6px; }
+/* the camera on an object (UX-3d A6) */
+.pg-cam { display: flex; gap: 6px; margin: 4px 0 6px; }
+.pg-cam button.toggle.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.pg-eye { font-size: 11px; }
+.pg-manip { margin-bottom: 6px; }
+.pg-manip .row { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+.pg-carry { display: flex; gap: 6px; align-items: center; margin: 4px 0; }
+body.picking .s3d-canvas, body.picking .sw-canvas { cursor: crosshair; outline: 2px dashed var(--accent); }
+/* a world without slice planes: no slice tools in the 3-D toolbar (U21) */
+.run.no-slices .s3d-tools button[title^="Двигать выбранный срез"], .run.no-slices .s3d-tools button[title^="Наклонять выбранный срез"] { display: none; }
+.run.no-field .s3d-tools select[title^="Шкала яркости"] { display: none; }
+</style>
+</head>
+<body>
+<div class="run" id="app">
+  <div class="topbar">
+    <a href="/" title="К каталогу визуализаций и запусков">← Каталог</a>
+    <button id="fold-left" class="fold" title="Скрыть / показать левую колонку ([)">⇤</button>
+    <span class="title" id="title">…</span>
+    <span id="scene" class="muted"></span>
+    <span id="physics"></span>
+    <select id="world" title="Миры этого запуска: текущий и прежние (из записи)" style="display:none"></select>
+    <span class="grow"></span>
+    <span id="busy" class="busy" style="display:none"></span>
+    <span id="status"><span class="dot"></span>подключение…</span>
+    <span id="runid" class="muted mono"></span>
+    <button id="keep" title="Хранить запись всегда">☆</button>
+    <a href="/settings" target="_blank" title="Где считать (CPU / GPU) и с какой точностью — для новых запусков">⚙</a>
+    <a href="/legal" target="_blank" title="Лицензия, цитирование, сторонний код и отказ от гарантий">§</a>
+    <button id="theme" title="Тема (T)">◐</button>
+    <button id="help" title="Справка (?)">?</button>
+    <button id="fold-right" class="fold" title="Скрыть / показать правую колонку (])">⇥</button>
+  </div>
+  <div class="main">
+    <div class="side" id="left"></div>
+    <div class="center" id="center"></div>
+    <div class="side right" id="right"></div>
+  </div>
+  <div class="bottombar">
+    <button id="rec" class="rec" title="Запись: мир считается дальше, к записи добавляются кадры; ещё раз — пауза (Пробел)">⏺</button>
+    <button id="tostart" title="В начало записи (Home)">⏮</button>
+    <button id="back" title="Проиграть запись назад (←)">◀</button>
+    <button id="fwd" title="Проиграть запись вперёд (→)">▶</button>
+    <button id="toend" title="В конец записи (End): при записи — вживую">⏭</button>
+    <button id="step" title="На кадр вперёд; в конце записи — посчитать один шаг">|▶</button>
+    <button id="next" title="К следующему событию; в конце записи — посчитать до него (N)">⏭ событие</button>
+    <span class="muted">скорость</span>
+    <span class="speedbox"><input id="speed" type="range" min="0" max="1000" title="Секунд мира за секунду (логарифмическая шкала)"><span id="speedticks" class="ticks"></span></span>
+    <span id="speedv" class="mono"></span>
+    <span id="speedfact" class="mono warn"></span>
+    <button id="rt" title="Реальное время: 1 с мира за 1 с">1:1</button>
+    <input id="timeline" class="timeline" type="range" min="0" max="0" value="0" title="История опыта: всё показанное — на этот момент">
+    <span id="time" class="time mono"></span>
+  </div>
+</div>
+<!-- third-party modules served by this server (player/vendor/README.md): the 3-D environment's three.js -->
+<script type="importmap">{"imports": {"three": "/static/vendor/three-0.185.1/three.module.min.js"}}</script>
+<script type="module" src="/static/js/player.js"></script>
+<script type="module" src="/static/js/instruments.js"></script><!-- [LB1 P16.3 instruments] the «Приборы» panel -->
+</body>
+</html>

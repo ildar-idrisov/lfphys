@@ -1,0 +1,10 @@
+A. Joule absorption (s) vs 1 - R - T
+  n0=1.0, n=0.2+3.3i, d=30.0 nm, lambda=633.0, theta=0.0: |E|^2 decay length 15.3 nm, spacing at 2001 pts 0.015 nm; R+T+A_J-1 at 2001/8001/32001 pts: -2.28e-13, -2.28e-13, -2.28e-13  (check tolerance 1e-8)
+  n0=1.0, n=0.2+20.0i, d=500.0 nm, lambda=300.0, theta=0.0: |E|^2 decay length 1.19 nm, spacing at 2001 pts 0.25 nm; R+T+A_J-1 at 2001/8001/32001 pts: +2.12e-08, +8.24e-11, -5.10e-13  (check tolerance 1e-8)
+  n0=1.0, n=0.2+20.0i, d=50.0 nm, lambda=300.0, theta=0.0: |E|^2 decay length 1.19 nm, spacing at 2001 pts 0.025 nm; R+T+A_J-1 at 2001/8001/32001 pts: +2.05e-12, -7.52e-14, -8.35e-14  (check tolerance 1e-8)
+  n0=1.0, n=0.2+10.0i, d=100.0 nm, lambda=300.0, theta=0.0: |E|^2 decay length 2.39 nm, spacing at 2001 pts 0.05 nm; R+T+A_J-1 at 2001/8001/32001 pts: +8.10e-12, -2.97e-13, -3.30e-13  (check tolerance 1e-8)
+  n0=4.0, n=0.2+20.0i, d=500.0 nm, lambda=300.0, theta=70.24: |E|^2 decay length 1.19 nm, spacing at 2001 pts 0.25 nm; R+T+A_J-1 at 2001/8001/32001 pts: +2.91e-08, +1.13e-10, -6.41e-13  (check tolerance 1e-8)
+  n0=1.0, n=0.2+5.0i, d=200.0 nm, lambda=400.0, theta=0.0: |E|^2 decay length 6.37 nm, spacing at 2001 pts 0.1 nm; R+T+A_J-1 at 2001/8001/32001 pts: +9.28e-12, -9.11e-13, -9.50e-13  (check tolerance 1e-8)
+
+B. the photon stream at rate 1e15 /s (allowed maximum)
+  world time 0.2 ns (0.2 of a flight time): wall 0.0 s, photons in flight 200933

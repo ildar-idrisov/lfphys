@@ -1,0 +1,9 @@
+m87: paused at t=0.49061859224457294 with 24 rows shown; back at t=0.49061859224457294, status «считается: 24 из 192 строк»
+   held data live {"max_all_held":0.01042891200631857,"max_rows_shown":0.01042891200631857}; after going back {"max_all_held":0.01042891200631857,"max_rows_shown":0.01042891200631857}
+   0 of 1056 sampled pixels drawn differently (0 dimmer); player dbg before {"fromKey":0,"full":1,"keyFailed":0,"lastMs":5.099999904632568,"lastFed":0} after {"fromKey":0,"full":2,"keyFailed":0,"lastMs":38.5,"lastFed":31}
+edge_on: paused at t=1.1895740557229146 with 58 rows shown; back at t=1.1895740557229146, status «считается: 58 из 192 строк»
+   held data live {"max_all_held":0.05008954182267189,"max_rows_shown":0.05008954182267189}; after going back {"max_all_held":0.05008954182267189,"max_rows_shown":0.05008954182267189}
+   0 of 2688 sampled pixels drawn differently (0 dimmer); player dbg before {"fromKey":0,"full":1,"keyFailed":0,"lastMs":5,"lastFed":0} after {"fromKey":0,"full":2,"keyFailed":0,"lastMs":38.69999980926514,"lastFed":65}
+ring: paused at t=1.984811934409663 with 96 rows shown; back at t=1.984811934409663, status «считается: 96 из 192 строк»
+   held data live {"max_all_held":2.15985107421875,"max_rows_shown":2.15985107421875}; after going back {"max_all_held":2.15985107421875,"max_rows_shown":2.15985107421875}
+   0 of 4512 sampled pixels drawn differently (0 dimmer); player dbg before {"fromKey":0,"full":1,"keyFailed":0,"lastMs":5.5,"lastFed":0} after {"fromKey":1,"full":1,"keyFailed":0,"lastMs":0.40000009536743164,"lastFed":3}

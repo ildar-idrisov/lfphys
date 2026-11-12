@@ -1,0 +1,5 @@
+snapshots: 601, dt_store = 0.275711 fs, period 82.7134 fs, i_T = 300
+<x>(t) at i = 0, 75, 150, 225, 300, 450, 600: [14.999999, -0.0, -15.0, 1e-06, 14.999999, -15.0, 14.999999]
+<x>(i_T) - <x>(0) = 0.000e+00 nm; max |snap[i_T] - snap[0]| = 1.388e-17 (snap dtype float32, max of snap[0] 4.570e-01)
+run's check per0: value 14.999999026638799, ref 14.999999026638799
+float64 evolution over i_T * sub = 9000 steps: <x>(T) = 14.999999999999833, <x>(0) = 14.999999026638799, difference 9.734e-07 nm (relative 6.5e-08)

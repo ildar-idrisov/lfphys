@@ -1,0 +1,3 @@
+before the change: {'header': 1, 'approx': 2, 'scene': 1, 'state': 1, 'frame': 1}
+2 s after the change (paused world, nobody plays): {'command': 1, 'approx': 1, 'scene': 1, 'event': 1, 'error': 8139, 'state': 8139}
+bytes emitted into the record in those 2 s: 6.8 MB (3.4 MB/s)

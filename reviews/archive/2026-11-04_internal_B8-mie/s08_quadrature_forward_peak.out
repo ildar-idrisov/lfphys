@@ -1,0 +1,10 @@
+x = 100 (N = 136, 292 nodes): Q_ext series 2.119967838881418
+  numpy leggauss nodes, engine amplitudes(theta = arccos mu): rel dev 1.27e-11
+  40-digit nodes and weights rounded to double, same amplitudes: rel dev 3.56e-14
+  40-digit nodes, angular functions evaluated at mu itself:       rel dev 3.59e-14
+  numpy's node errors: largest 1.1e-16, at the 5 nodes nearest mu = 1: ['0.0e+00', '0.0e+00', '0.0e+00', '0.0e+00', '0.0e+00']; weight rel errors there ['9.9e-13', '3.3e-12', '1.5e-11', '2.1e-11', '4.7e-11']; 1/x^2 = 1.0e-04  (2 s)
+x = 500 (N = 550, 1120 nodes): Q_ext series 2.030261366524571
+  numpy leggauss nodes, engine amplitudes(theta = arccos mu): rel dev 2.03e-09
+  40-digit nodes and weights rounded to double, same amplitudes: rel dev 2.23e-12
+  40-digit nodes, angular functions evaluated at mu itself:       rel dev 2.23e-12
+  numpy's node errors: largest 1.1e-16, at the 5 nodes nearest mu = 1: ['0.0e+00', '0.0e+00', '0.0e+00', '0.0e+00', '0.0e+00']; weight rel errors there ['2.1e-10', '5.3e-10', '6.5e-10', '1.9e-09', '6.4e-09']; 1/x^2 = 4.0e-06  (26 s)

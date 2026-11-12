@@ -1,0 +1,8 @@
+p03_molecules: law dt_fs = 10.0, measure e, t0 = 2e-13, T = 3e-13
+   live world after step(T): t = 5e-13  e = 2.111102988195488
+   sweep 'final' (1 reading):  t = 5e-13  e = 2.111102988195488   equal to live: True
+   sweep 'max' (201 readings), its last reading: t = 5e-13  e = 2.111102988195488   equal to 'final': True  (rel. difference 0.00e+00)
+p04_fluids: law nu = 0.001, measure mass_res, t0 = 0.036666666666666674, T = 0.07333333333333335
+   live world after step(T): t = 0.11000000000000001  mass_res = 5.81353147440082e-16
+   sweep 'final' (1 reading):  t = 0.11000000000000001  mass_res = 5.81353147440082e-16   equal to live: True
+   sweep 'max' (201 readings), its last reading: t = 0.11000000000000001  mass_res = 5.81353147440082e-16   equal to 'final': True  (rel. difference 0.00e+00)

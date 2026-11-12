@@ -1,0 +1,18 @@
+...........................................................              [100%]
+============================= slowest 15 durations =============================
+13.93s call     tests/test_em_slit.py::test_modal_convergence_with_modes_and_routes_agree
+7.27s call     tests/test_em_charges.py::test_schott_harmonics_sum_to_lienard_and_integrate_from_the_pattern[0.9]
+5.20s call     tests/test_em_charges.py::test_F_against_mpmath_and_its_integral
+4.77s call     tests/test_em_slit.py::test_thin_te_slit_against_an_independent_hat_basis_spectral_galerkin
+3.38s call     tests/test_em_charges.py::test_schott_harmonics_sum_to_lienard_and_integrate_from_the_pattern[0.5]
+2.56s call     tests/test_em_slit.py::test_wide_slit_limit_transmission_and_far_field
+2.17s call     tests/test_em_slit.py::test_comparison_with_kirchhoff_for_v02
+2.16s call     tests/test_em_slit.py::test_edge_basis_converges_exponentially_and_modal_thin_limit_approaches_it
+1.22s call     tests/test_em_slit.py::test_thin_te_slit_against_libelo_bombardt_table
+0.91s call     tests/test_em_charges.py::test_energy_flux_through_a_large_sphere_is_the_power_at_the_retarded_time
+0.71s call     tests/test_em_slit.py::test_reciprocity[0.0-TE]
+0.63s call     tests/test_em_slit.py::test_reciprocity[0.0-TM]
+0.62s call     tests/test_em_slit.py::test_narrow_thin_slit_rayleigh_limits
+0.53s call     tests/test_em_slit.py::test_power_balance_optical_theorem[TE-cfg0]
+0.46s call     tests/test_em_slit.py::test_power_balance_optical_theorem[TM-cfg0]
+59 passed in 50.41s

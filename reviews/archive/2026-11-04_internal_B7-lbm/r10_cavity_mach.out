@@ -1,0 +1,8 @@
+N =  64, Ma = 0.100 (tau+ = 0.6109): max |u - Ghia| = 0.0049 at y = 0.9531, max |v - Ghia| = 0.0079 at x = 0.8594
+N =  64, Ma = 0.050 (tau+ = 0.5554): max |u - Ghia| = 0.0048 at y = 0.9531, max |v - Ghia| = 0.0081 at x = 0.8594
+N =  64, Ma = 0.025 (tau+ = 0.5277): max |u - Ghia| = 0.0047 at y = 0.9531, max |v - Ghia| = 0.0081 at x = 0.8594
+N = 128, Ma = 0.100 (tau+ = 0.7217): max |u - Ghia| = 0.0052 at y = 0.8516, max |v - Ghia| = 0.0088 at x = 0.8594
+N = 128, Ma = 0.050 (tau+ = 0.6109): max |u - Ghia| = 0.0051 at y = 0.8516, max |v - Ghia| = 0.0089 at x = 0.8594
+N = 64: change of the profiles from Ma 0.1 to 0.05: max |du| = 0.0002, max |dv| = 0.0002
+N = 128: change of the profiles from Ma 0.1 to 0.05: max |du| = 0.0002, max |dv| = 0.0002
+N = 64: change from Ma 0.05 to 0.025: max |du| = 0.0001, max |dv| = 0.0000

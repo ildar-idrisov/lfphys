@@ -1,0 +1,19 @@
+q =  1.00 r0 =   8.0: mean dr/dt = +5.809e-04 (adiabatic -1.837e-03); r range 8.000..9.451; E/mu change +2.08e-03; status running
+q =  1.00 r0 =   9.0: mean dr/dt = +6.858e-05 (adiabatic -1.634e-03); r range 9.000..9.071; E/mu change +1.59e-04; status running
+q =  1.00 r0 =  10.0: mean dr/dt = -4.807e-04 (adiabatic -1.392e-03); r range 9.521..10.000; E/mu change -1.14e-03; status running
+q =  1.00 r0 =  11.0: mean dr/dt = -7.165e-04 (adiabatic -1.170e-03); r range 10.288..11.000; E/mu change -1.68e-03; status running
+q =  1.00 r0 =  12.0: mean dr/dt = -7.468e-04 (adiabatic -9.801e-04); r range 11.255..12.000; E/mu change -1.66e-03; status running
+q =  1.00 r0 =  14.0: mean dr/dt = -6.171e-04 (adiabatic -6.956e-04); r range 13.381..14.000; E/mu change -1.14e-03; status running
+q =  0.25 r0 =   8.0: mean dr/dt = +6.589e-04 (adiabatic -1.254e-03); r range 8.000..8.811; E/mu change +1.74e-03; status running
+q =  0.25 r0 =   9.0: mean dr/dt = +6.417e-05 (adiabatic -1.095e-03); r range 9.000..9.065; E/mu change +1.64e-04; status running
+q =  0.25 r0 =  10.0: mean dr/dt = -3.280e-04 (adiabatic -9.234e-04); r range 9.673..10.000; E/mu change -8.40e-04; status running
+q =  0.25 r0 =  11.0: mean dr/dt = -4.657e-04 (adiabatic -7.706e-04); r range 10.535..11.000; E/mu change -1.14e-03; status running
+q =  0.25 r0 =  12.0: mean dr/dt = -4.768e-04 (adiabatic -6.428e-04); r range 11.524..12.000; E/mu change -1.08e-03; status running
+q =  0.25 r0 =  14.0: mean dr/dt = -3.928e-04 (adiabatic -4.536e-04); r range 13.607..14.000; E/mu change -7.28e-04; status running
+q =  0.05 r0 =   8.0: mean dr/dt = +3.771e-04 (adiabatic -3.840e-04); r range 8.000..8.383; E/mu change +1.08e-03; status running
+q =  0.05 r0 =   9.0: mean dr/dt = +2.418e-05 (adiabatic -3.282e-04); r range 9.000..9.024; E/mu change +7.10e-05; status running
+q =  0.05 r0 =  10.0: mean dr/dt = -1.025e-04 (adiabatic -2.734e-04); r range 9.897..10.000; E/mu change -2.87e-04; status running
+q =  0.05 r0 =  11.0: mean dr/dt = -1.356e-04 (adiabatic -2.264e-04); r range 10.864..11.000; E/mu change -3.48e-04; status running
+q =  0.05 r0 =  12.0: mean dr/dt = -1.356e-04 (adiabatic -1.878e-04); r range 11.864..12.000; E/mu change -3.14e-04; status running
+q =  0.05 r0 =  14.0: mean dr/dt = -1.111e-04 (adiabatic -1.316e-04); r range 13.889..14.000; E/mu change -2.06e-04; status running
+exit 0

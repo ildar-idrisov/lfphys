@@ -1,0 +1,16 @@
+run 20261112-064255-p97-14cb
+GET /sweeps/%C2%B2 -> 404
+GET /sweeps/%D9%A1 -> 404
+GET /sweeps/..%2F..%2Fx -> 404
+GET /sweeps/1 -> 404
+DELETE /sweeps/%C2%B2 -> 404
+DELETE /sweeps/%D9%A1 -> 404
+DELETE /sweeps/..%2F..%2Fx -> 404
+DELETE /sweeps/1 -> 404
+GET /series?ids=E&world=..%2F -> {"error": "«world» — номер мира (целое число)"} 400
+GET /api/runs/..%2F..%2Fetc/series -> 404
+POST /sweeps/%C2%B2/cancel -> 404
+POST /sweeps/%D9%A1/cancel -> 404
+POST /sweeps/..%2F..%2Fx/cancel -> 404
+POST /sweeps/1/cancel -> 404
+POST /sweep with a list as the target id -> {"error": "«target.id» — идентификатор (строка)"} 400

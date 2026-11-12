@@ -1,0 +1,9 @@
+v11_double_slit_2d (default): params defaults; done True after 475 s wall, world t 1.703e-15 s
+  shipped check screen_y: value 4.422e-13, ok True; Σ_y P(x, y) Δy против потока в экран по x; 48 полос по y на ±27.6 λ, |η(y, t)|² свободного гауссова множителя (σy = 3 λ при t = 0); доля пика; цель < 1e-3 (обре
+  shipped check bohm_y: value 0.02377, ok True; 373 попаданий; y траектории — y₀·σy(t)/σy (точное движение Бома в свободном множителе η), старт по |η|²; эталон — распределение по y потока в экран, Σ_t J(x, t)
+  hits n = 373; sigma_y0 = 3 lambda; sigma_y(t_hit)/sigma_y0: mean 1.2185, range 1.1253-1.4416
+  KS D = 0.0238 vs critical 0.1010 -> passes: as shipped (hit_y)
+  KS D = 0.0433 vs critical 0.1010 -> passes: no spreading: y = y0
+  KS D = 0.0238 vs critical 0.1010 -> passes: sigma_y(t) 10 % too small
+  KS D = 0.0264 vs critical 0.1010 -> passes: sigma_y(t) 10 % too large
+  KS D = 0.0704 vs critical 0.1010 -> passes: double spread

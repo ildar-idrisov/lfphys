@@ -1,0 +1,148 @@
+
+====================================================================================================
+A. B's clock reading before the Einstein synchronisation is complete (measure_c)
+  t = 0.0005 s, obs1: synced = False, sync completes at t = 0.00200138 s, tau_B sent to the view = None
+  t = 0.0005 s, obs2: synced = False, sync completes at t = 0.002311 s, tau_B sent to the view = None
+  t = 0.0005 s, obs3: synced = False, sync completes at t = 0.002311 s, tau_B sent to the view = None
+
+====================================================================================================
+B. GR arrivals at moving receivers (lensing, observer boosted along +x = away from the source)
+  beta = 0.3: engine arrivals {-1: 0.017746333777433593, 1: 0.01776902672756525}; independent root {1: 0.01776902672756526, -1: 0.0177463337774336}
+  beta = 0.6: engine arrivals {-1: 0.031188447088491045, 1: 0.0312322020320728}; independent root {1: 0.031232202032072758, -1: 0.031188447088491014}
+  beta = 0.75: engine arrivals {-1: 0.05008470445283848, 1: 0.05015766091305709}; independent root {1: 0.05015766091305708, -1: 0.0500847044528385}
+  beta = 0.9: engine arrivals {-1: 0.12611541513383803, 1: 0.12630475355939422}; independent root {1: 0.12630475355939508, -1: 0.12611541513383806}
+
+====================================================================================================
+C. GR local measurement of c by a static observer: value vs reference and the check's tolerance
+  lensing: c_loc = 299793716.843, ref = 299793716.843, rel = -2.008e-14, tol = 1e-09 -> shown ✓
+     closed form for this rod: 2 ell / (sqrt(f_A) * 2 [Δr + rs ln((r_B - rs)/(r_A - rs))]/c) = 299793716.843; engine vs closed form rel = 1.14e-13
+  sun_earth: c_loc = 299792458.001, ref = 299792458.001, rel = -6.301e-13, tol = 1e-09 -> shown ✓
+     closed form for this rod: 2 ell / (sqrt(f_A) * 2 [Δr + rs ln((r_B - rs)/(r_A - rs))]/c) = 299792458.001; engine vs closed form rel = -6.30e-13
+
+====================================================================================================
+D. Local light cone on the diagram for an observer moving along y (flat SR)
+  obs1 v = (0, 0.8c): cone 'fut' x-slopes = [np.float64(1.0000000000000002), np.float64(-0.9999999999999998)] c, 'past' = [1.0, -1.0] c
+
+====================================================================================================
+E. Doppler check after a boost in the middle of a train (measure_c, SR)
+  t = 0.011007: Частота у «Наблюдатель 1» / частота источника: value 1.000000000, ref 1.000000000, rel +8.88e-16
+  t = 0.012007: Частота у «Наблюдатель 1» / частота источника: value 1.000000000, ref 1.000000000, rel -8.88e-16
+  t = 0.013007: Частота у «Наблюдатель 1» / частота источника: value 1.000000000, ref 1.000000000, rel -8.88e-16
+  t = 0.014007: Частота у «Наблюдатель 1» / частота источника: value 1.000000000, ref 1.000000000, rel +8.88e-16
+  t = 0.015007: Частота у «Наблюдатель 1» / частота источника: value 1.000000000, ref 1.000000000, rel +8.88e-16
+  t = 0.016007: Частота у «Наблюдатель 1» / частота источника: value 1.000000000, ref 1.000000000, rel -8.88e-16
+
+====================================================================================================
+F. Emission theory: flash passes B first, then A; B's reading must travel to A as light
+  measure event revealed at t = 0.009004846 s; flash at B 0.008004154, at A 0.008671282; B's reading can reach A at 0.009004846 s; measured 1.500000 c
+
+====================================================================================================
+G. Boost exactly at an arrival time (does the arrival repeat?)
+  measure_c            obs1 boost +0.2c at its arrival t = 0.0130069228559: arrival revealed 1x [0.013006922855945] -> once
+  measure_c            obs1 boost -0.3c at its arrival t = 0.0130069228559: arrival revealed 1x [0.013006922855945] -> once
+  measure_c            obs1 boost +0.7c at its arrival t = 0.0130069228559: arrival revealed 1x [0.013006922855945] -> once
+  measure_c            obs2 boost +0.2c at its arrival t = 0.0260138457119: arrival revealed 1x [0.026013845711889] -> once
+  measure_c            obs2 boost -0.3c at its arrival t = 0.0260138457119: arrival revealed 1x [0.026013845711889] -> once
+  measure_c            obs2 boost +0.7c at its arrival t = 0.0260138457119: arrival revealed 1x [0.026013845711889] -> once
+  measure_c            obs3 boost +0.2c at its arrival t = 0.00867128190396: arrival revealed 1x [0.008671281903963] -> once
+  measure_c            obs3 boost -0.3c at its arrival t = 0.00867128190396: arrival revealed 1x [0.008671281903963] -> once
+  measure_c            obs3 boost +0.7c at its arrival t = 0.00867128190396: arrival revealed 1x [0.008671281903963] -> once
+  measure_c_ether      obs1 boost +0.2c at its arrival t = 0.0130069228559: arrival revealed 1x [0.013006922855945] -> once
+  measure_c_ether      obs1 boost -0.3c at its arrival t = 0.0130069228559: arrival revealed 1x [0.013006922855945] -> once
+  measure_c_ether      obs1 boost +0.7c at its arrival t = 0.0130069228559: arrival revealed 1x [0.013006922855945] -> once
+  measure_c_ether      obs2 boost +0.2c at its arrival t = 0.0260138457119: arrival revealed 1x [0.026013845711889] -> once
+  measure_c_ether      obs2 boost -0.3c at its arrival t = 0.0260138457119: arrival revealed 1x [0.026013845711889] -> once
+  measure_c_ether      obs2 boost +0.7c at its arrival t = 0.0260138457119: arrival revealed 1x [0.026013845711889] -> once
+  measure_c_ether      obs3 boost +0.2c at its arrival t = 0.00867128190396: arrival revealed 1x [0.008671281903963] -> once
+  measure_c_ether      obs3 boost -0.3c at its arrival t = 0.00867128190396: arrival revealed 1x [0.008671281903963] -> once
+  measure_c_ether      obs3 boost +0.7c at its arrival t = 0.00867128190396: arrival revealed 1x [0.008671281903963] -> once
+  measure_c_emission   obs1 boost +0.2c at its arrival t = 0.0100053252738: arrival revealed 1x [0.010005325273804] -> once
+  measure_c_emission   obs1 boost -0.3c at its arrival t = 0.0100053252738: arrival revealed 1x [0.010005325273804] -> once
+  measure_c_emission   obs1 boost +0.7c at its arrival t = 0.0100053252738: arrival revealed 1x [0.010005325273804] -> once
+  measure_c_emission   obs2 boost +0.2c at its arrival t = 0.0162586535699: arrival revealed 1x [0.016258653569931] -> once
+  measure_c_emission   obs2 boost -0.3c at its arrival t = 0.0162586535699: arrival revealed 1x [0.016258653569931] -> once
+  measure_c_emission   obs2 boost +0.7c at its arrival t = 0.0162586535699: arrival revealed 1x [0.016258653569931] -> once
+  measure_c_emission   obs3 boost +0.2c at its arrival t = 0.0072260682533: arrival revealed 1x [0.007226068253303] -> once
+  measure_c_emission   obs3 boost -0.3c at its arrival t = 0.0072260682533: arrival revealed 1x [0.007226068253303] -> once
+  measure_c_emission   obs3 boost +0.7c at its arrival t = 0.0072260682533: arrival revealed 1x [0.007226068253303] -> once
+  lensing              obs boost +0.2c at its arrival t = 0.0123913843526: arrival revealed 1x [0.012391384352624] -> once
+  lensing              obs boost -0.3c at its arrival t = 0.0123913843526: arrival revealed 1x [0.012391384352624] -> once
+  lensing              obs boost +0.7c at its arrival t = 0.0123913843526: arrival revealed 1x [0.012391384352624] -> once
+  lensing_newton       obs boost +0.2c at its arrival t = 0.0115661896305: arrival revealed 1x [0.011566189630474] -> once
+  lensing_newton       obs boost -0.3c at its arrival t = 0.0115661896305: arrival revealed 1x [0.011566189630474] -> once
+  lensing_newton       obs boost +0.7c at its arrival t = 0.0115661896305: arrival revealed 1x [0.011566189630474] -> once
+  sun_earth            rocket boost +0.2c at its arrival t = 247.181832585: arrival revealed 1x [247.1818325848564] -> once
+  sun_earth            rocket boost -0.3c at its arrival t = 247.181832585: arrival revealed 1x [247.1818325848564] -> once
+  sun_earth            rocket boost +0.7c at its arrival t = 247.181832585: arrival revealed 1x [247.1818325848564] -> once
+
+====================================================================================================
+H. GR: observer boosted towards the black hole at 0.5c (coordinate velocity)
+  boost accepted: errors so far ['Действие boost: при этой скорости «Наблюдатель» влетит в тело (через 11.8212 мс по лаб. времени); выберите другое направление']
+  no exception
+
+====================================================================================================
+I. Sun-Earth: rocket boosted towards the Sun at 0.5c
+  no exception
+
+====================================================================================================
+J. Scenario texts with fixed numbers vs this run's numbers
+  probe probe_J raised:
+Traceback (most recent call last):
+  File "/lf/reviews/2026-10-22_internal_viz-v01_physics/check_causality.py", line 433, in main
+    fn()
+  File "/lf/reviews/2026-10-22_internal_viz-v01_physics/check_causality.py", line 276, in probe_J
+    print(f"  sun_earth, 5 au, c x 0.5: header text says '{txt[txt.index('примерно'):txt.index('примерно') + 22]}'; "
+                                                               ^^^^^^^^^^^^^^^^^^^^^
+ValueError: substring not found
+
+
+====================================================================================================
+K. Andromeda: event at lab t = +2 d; walk_to's 'now' at Andromeda at lab t = 0
+  walk_to's 'now' at Andromeda = lab t +4.2642 d (event at +2 d is on his PAST side); emit events known to the view: 0
+  FINDING: the observer-frame table/diagram cannot show the event that its own slice has passed, because only lab-revealed events reach the browser; worldlines on the slice are extrapolated into the lab future
+
+====================================================================================================
+L. Apparatus rebuild after a boost: end B is relocated at the boost's lab time
+  at lab t = 0.005: A at x = 749.481 km; B before 1009.289 km, after 929.481 km: jump -79.808 km in zero time, at distance 259.8 km from the boost event
+
+====================================================================================================
+M. Passing measurement completed (both passages done) but withdrawn by a boost before the result arrives
+  pending result for obs2 at t_known = 0.028325 (now 0.0279); B's passage already happened: True
+  measure events for obs2 after the run: 1
+
+====================================================================================================
+N. GR: receiver inside the photon sphere
+  radial connection 60 rs -> 1.6 rs: 2 image(s)
+  radial connection 60 rs -> 1.5000001 rs: 2 image(s)
+  radial connection 60 rs -> 1.4 rs: 0 image(s)  <- light does reach it (radial ray, ct = Δr + rs ln(...))
+  radial connection 60 rs -> 1.1 rs: 0 image(s)  <- light does reach it (radial ray, ct = Δr + rs ln(...))
+
+====================================================================================================
+O. Newtonian corpuscles: target on the line source-body (radial)
+  source -100 rs, target [-50.   0.] rs: 1 image(s), dt = [0.004891714902138048]
+  source -100 rs, target [-5.e+01  1.e-06] rs: 1 image(s), dt = [0.004891714902138048]
+  source -100 rs, target [-5.e+01  1.e-03] rs: 1 image(s), dt = [0.00489171490311826]
+  source -100 rs, target [-200.    0.] rs: 1 image(s), dt = [0.009817024552948844]
+  source -100 rs, target [-2.e+02  1.e-03] rs: 1 image(s), dt = [0.00981702455343986]
+  kepler.crossings for a radially inward corpuscle to r = 50 rs: [(0.004891714902138048, array([-1476625.03805012,        0.        ]), False)]  <- the corpuscle does cross r = 50 rs
+
+====================================================================================================
+Q. Transport: 'next event' when a pending event is at the current time
+  pending arrivals after the flash at t = 0: first at t = [0.0, 0.0]
+  after pressing 'next event' 3x: sim t = 0.0010006922855944561, arrivals revealed: 2
+
+====================================================================================================
+R. Where the diagram puts the reflection events (view.js draws every event at wlPos(wls[e.obj], e.t))
+  'Наблюдатель 3: сигнал синхронизации отражён от B' at t = 0.00057775: obj = obs3 -> marker drawn at A x = -86.60 km; the reflection happened at B x = 173.21 km
+  'Наблюдатель 1: сигнал синхронизации отражён от B' at t = 0.00100069: obj = obs1 -> marker drawn at A x = 0.00 km; the reflection happened at B x = 300.00 km
+  'Наблюдатель 2: сигнал синхронизации отражён от B' at t = 0.00173325: obj = obs2 -> marker drawn at A x = 259.81 km; the reflection happened at B x = 519.62 km
+
+====================================================================================================
+S. Lensing: checks about the beam's future (capture boundary, swept angles) are emitted at t = 0
+  check 'bc' emitted at t = 0.0: value None, note: лучи с b < b_c захватываются; граница по пучку появится после его расч
+  the beam's captured rays reach the horizon at lab t in [4.097e-03, 5.002e-03] s (~42-51 rs/c), i.e. after the check was shown
+
+====================================================================================================
+P. Sun-Earth under the declared modification emission + newton (flare and Earth on the x axis)
+  errors: []; arrivals: [('rocket', 247.181763), ('station', 496.684152)]
+  (kepler._radial calls quad(epsabs=0, epsrel=1e-14); scipy requires epsrel > 50*eps = 1.1e-14)

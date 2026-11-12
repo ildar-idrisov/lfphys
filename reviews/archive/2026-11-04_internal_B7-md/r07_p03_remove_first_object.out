@@ -1,0 +1,4 @@
+objects: ['o1', 'o2'] ; errors so far: []
+KS uses species: o1 ; n = 200 of 400
+after removing o1 : exception ValueError zero-size array to reduction operation maximum which has no identity
+exit 0

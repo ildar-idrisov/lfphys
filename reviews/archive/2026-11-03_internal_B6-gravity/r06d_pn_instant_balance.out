@@ -1,0 +1,31 @@
+q = 1.0, nu = 0.2500 (physical 2PN flux coefficient -0.104)
+   r =  3000.0  x = 0.00033  -dE/dt / F_1PN = 0.99999604  (ratio - 1)/x^2 =   -35.620  playground tol 100 x^2 (x = 1/r) = 1.11e-05
+   r =  1000.0  x = 0.00100  -dE/dt / F_1PN = 0.99996421  (ratio - 1)/x^2 =   -35.852  playground tol 100 x^2 (x = 1/r) = 0.0001
+   r =   300.0  x = 0.00332  -dE/dt / F_1PN = 0.99959500  (ratio - 1)/x^2 =   -36.672  playground tol 100 x^2 (x = 1/r) = 0.00111
+   r =   100.0  x = 0.00991  -dE/dt / F_1PN = 0.99615995  (ratio - 1)/x^2 =   -39.098  playground tol 100 x^2 (x = 1/r) = 0.01
+   r =    30.0  x = 0.03240  -dE/dt / F_1PN = 0.94895833  (ratio - 1)/x^2 =   -48.614  playground tol 100 x^2 (x = 1/r) = 0.111
+   r =    20.0  x = 0.04803  -dE/dt / F_1PN = 0.86975270  (ratio - 1)/x^2 =   -56.464  playground tol 100 x^2 (x = 1/r) = 0.25
+   r =    12.0  x = 0.07868  -dE/dt / F_1PN = 0.53445267  (ratio - 1)/x^2 =   -75.201  playground tol 100 x^2 (x = 1/r) = 0.694
+   r =    10.0  x = 0.09401  -dE/dt / F_1PN = 0.23583638  (ratio - 1)/x^2 =   -86.472  playground tol 100 x^2 (x = 1/r) = 1
+   r =     8.0  x = 0.11751  -dE/dt / F_1PN = -0.48038075  (ratio - 1)/x^2 =  -107.213  playground tol 100 x^2 (x = 1/r) = 1.56
+q = 0.25, nu = 0.1600 (physical 2PN flux coefficient -1.893)
+   r =  3000.0  x = 0.00033  -dE/dt / F_1PN = 0.99999609  (ratio - 1)/x^2 =   -35.256  playground tol 100 x^2 (x = 1/r) = 1.11e-05
+   r =  1000.0  x = 0.00100  -dE/dt / F_1PN = 0.99996457  (ratio - 1)/x^2 =   -35.495  playground tol 100 x^2 (x = 1/r) = 0.0001
+   r =   300.0  x = 0.00332  -dE/dt / F_1PN = 0.99959872  (ratio - 1)/x^2 =   -36.343  playground tol 100 x^2 (x = 1/r) = 0.00111
+   r =   100.0  x = 0.00991  -dE/dt / F_1PN = 0.99618660  (ratio - 1)/x^2 =   -38.853  playground tol 100 x^2 (x = 1/r) = 0.01
+   r =    30.0  x = 0.03235  -dE/dt / F_1PN = 0.94897945  (ratio - 1)/x^2 =   -48.744  playground tol 100 x^2 (x = 1/r) = 0.111
+   r =    20.0  x = 0.04789  -dE/dt / F_1PN = 0.86932798  (ratio - 1)/x^2 =   -56.971  playground tol 100 x^2 (x = 1/r) = 0.25
+   r =    12.0  x = 0.07814  -dE/dt / F_1PN = 0.53081590  (ratio - 1)/x^2 =   -76.840  playground tol 100 x^2 (x = 1/r) = 0.694
+   r =    10.0  x = 0.09309  -dE/dt / F_1PN = 0.23009109  (ratio - 1)/x^2 =   -88.847  playground tol 100 x^2 (x = 1/r) = 1
+   r =     8.0  x = 0.11571  -dE/dt / F_1PN = -0.47971605  (ratio - 1)/x^2 =  -110.519  playground tol 100 x^2 (x = 1/r) = 1.56
+q = 0.05, nu = 0.0454 (physical 2PN flux coefficient -4.087)
+   r =  3000.0  x = 0.00033  -dE/dt / F_1PN = 0.99999616  (ratio - 1)/x^2 =   -34.570  playground tol 100 x^2 (x = 1/r) = 1.11e-05
+   r =  1000.0  x = 0.00100  -dE/dt / F_1PN = 0.99996525  (ratio - 1)/x^2 =   -34.821  playground tol 100 x^2 (x = 1/r) = 0.0001
+   r =   300.0  x = 0.00332  -dE/dt / F_1PN = 0.99960583  (ratio - 1)/x^2 =   -35.708  playground tol 100 x^2 (x = 1/r) = 0.00111
+   r =   100.0  x = 0.00990  -dE/dt / F_1PN = 0.99624059  (ratio - 1)/x^2 =   -38.336  playground tol 100 x^2 (x = 1/r) = 0.01
+   r =    30.0  x = 0.03229  -dE/dt / F_1PN = 0.94922009  (ratio - 1)/x^2 =   -48.704  playground tol 100 x^2 (x = 1/r) = 0.111
+   r =    20.0  x = 0.04772  -dE/dt / F_1PN = 0.86936273  (ratio - 1)/x^2 =   -57.364  playground tol 100 x^2 (x = 1/r) = 0.25
+   r =    12.0  x = 0.07747  -dE/dt / F_1PN = 0.52912782  (ratio - 1)/x^2 =   -78.454  playground tol 100 x^2 (x = 1/r) = 0.694
+   r =    10.0  x = 0.09196  -dE/dt / F_1PN = 0.22832128  (ratio - 1)/x^2 =   -91.253  playground tol 100 x^2 (x = 1/r) = 1
+   r =     8.0  x = 0.11351  -dE/dt / F_1PN = -0.46952248  (ratio - 1)/x^2 =  -114.060  playground tol 100 x^2 (x = 1/r) = 1.56
+exit 0

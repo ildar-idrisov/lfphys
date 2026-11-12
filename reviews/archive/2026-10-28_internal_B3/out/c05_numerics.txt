@@ -1,0 +1,39 @@
+(a) centred first-derivative differences on a plane wave e^{ikz}: relative error |D_h e^{ikz} / (ik e^{ikz}) - 1|
+  order  8  dz = lambda/5  k = 1.0 k0  k dz = 1.257:  exact error 6.41e-03   leading term 9.87e-03
+  order  8  dz = lambda/5  k = 1.2 k0  k dz = 1.508:  exact error 2.28e-02   leading term 4.24e-02
+  order  8  dz = lambda/5  k = 1.5 k0  k dz = 1.885:  exact error 9.53e-02   leading term 2.53e-01
+  order  8  dz = lambda/6  k = 1.0 k0  k dz = 1.047:  exact error 1.70e-03   leading term 2.30e-03
+  order  8  dz = lambda/6  k = 1.2 k0  k dz = 1.257:  exact error 6.41e-03   leading term 9.87e-03
+  order  8  dz = lambda/6  k = 1.5 k0  k dz = 1.571:  exact error 2.99e-02   leading term 5.88e-02
+  order  8  dz = lambda/8  k = 1.0 k0  k dz = 0.785:  exact error 1.94e-04   leading term 2.30e-04
+  order  8  dz = lambda/8  k = 1.2 k0  k dz = 0.942:  exact error 7.75e-04   leading term 9.88e-04
+  order  8  dz = lambda/8  k = 1.5 k0  k dz = 1.178:  exact error 4.03e-03   leading term 5.89e-03
+  order 16  dz = lambda/5  k = 1.0 k0  k dz = 1.257:  exact error 6.85e-05   leading term 1.77e-04
+  order 16  dz = lambda/5  k = 1.2 k0  k dz = 1.508:  exact error 8.31e-04   leading term 3.27e-03
+  order 16  dz = lambda/5  k = 1.5 k0  k dz = 1.885:  exact error 1.36e-02   leading term 1.16e-01
+  order 16  dz = lambda/6  k = 1.0 k0  k dz = 1.047:  exact error 4.96e-06   leading term 9.56e-06
+  order 16  dz = lambda/6  k = 1.2 k0  k dz = 1.257:  exact error 6.85e-05   leading term 1.77e-04
+  order 16  dz = lambda/6  k = 1.5 k0  k dz = 1.571:  exact error 1.42e-03   leading term 6.28e-03
+  order 16  dz = lambda/8  k = 1.0 k0  k dz = 0.785:  exact error 6.63e-08   leading term 9.58e-08
+  order 16  dz = lambda/8  k = 1.2 k0  k dz = 0.942:  exact error 1.04e-06   leading term 1.77e-06
+  order 16  dz = lambda/8  k = 1.5 k0  k dz = 1.178:  exact error 2.74e-05   leading term 6.29e-05
+
+(b) v11 absorbing layer W = 2 E0 (s / 6 lambda)^2 (lambda = 1, hbar = m = 1, E0 = 2 pi^2):
+  kn / k0 = 0.050:  R = 5.54e-01  leak T = 5.15e-18
+  kn / k0 = 0.100:  R = 2.97e-01  leak T = 1.99e-17
+  kn / k0 = 0.200:  R = 6.65e-02  leak T = 1.26e-16
+  kn / k0 = 0.300:  R = 7.17e-03  leak T = 7.70e-16
+  kn / k0 = 0.400:  R = 1.32e-04  leak T = 5.19e-15
+  kn / k0 = 0.500:  R = 6.53e-06  leak T = 3.62e-14
+  kn / k0 = 0.600:  R = 1.86e-06  leak T = 2.47e-13
+  kn / k0 = 0.603:  R = 1.78e-06  leak T = 2.62e-13
+  kn / k0 = 0.700:  R = 5.36e-07  leak T = 1.60e-12
+  kn / k0 = 0.800:  R = 1.84e-07  leak T = 9.46e-12
+  kn / k0 = 0.900:  R = 7.19e-08  leak T = 5.04e-11
+  kn / k0 = 1.000:  R = 3.09e-08  leak T = 2.39e-10
+  kn / k0 = 1.100:  R = 1.44e-08  leak T = 1.00e-09
+  kn / k0 = 1.200:  R = 7.20e-09  leak T = 3.72e-09
+  the run's `absorbers` check covers kn in [0.9, 1.1] k0 and [0.9, 1.1] k0 cos(theta_screen) only
+
+(c) the Lagrange stencil of degree 8 about the nearest node (t in [3.5, 4.5]):
+  max |omega| = 193.7988 (doc: 193.8), max |omega'| = 576.0000 at t = 4.0000 (doc: 576)

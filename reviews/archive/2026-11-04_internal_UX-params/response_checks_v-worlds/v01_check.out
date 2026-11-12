@@ -1,0 +1,68 @@
+== P12: law choices from the defaults, per scenario
+  ok sun_earth  SR        GR      -> SR/GR R=0 errors=[] bad=[] notices=[] 1.6s
+  ok sun_earth  SR        newton  -> emission/newton R=0 errors=[] bad=[] notices=['Мир изменил зависимые параметры: Гравитация «Ньютон: свет как корпускулы» задана для корпу'] 2.4s
+  ok sun_earth  SR        none    -> SR/none R=0 errors=[] bad=[] notices=[] 0.0s
+  ok sun_earth  ether     GR      -> ether/none R=0 errors=[] bad=[] notices=['Мир изменил зависимые параметры: Кинематика «Галилей + эфир» с гравитацией по умолчанию (О'] 0.0s
+  REFUSED sun_earth  ether     newton : ньютоново притяжение света задано для корпускул (баллистическая кинематика), а в мире с эфиром свет — волна в эфире: выберите «Кинематика» = баллистическая (Ритц) или «Гравитация» = «Без гравитации»
+  ok sun_earth  ether     none    -> ether/none R=0 errors=[] bad=[] notices=[] 0.0s
+  ok sun_earth  emission  GR      -> emission/newton R=0 errors=[] bad=[] notices=['Мир изменил зависимые параметры: Кинематика «Баллистическая» с гравитацией по умолчанию (О'] 1.9s
+  ok sun_earth  emission  newton  -> emission/newton R=0 errors=[] bad=[] notices=[] 1.6s
+  ok sun_earth  emission  none    -> emission/none R=0 errors=[] bad=[] notices=[] 0.0s
+  ok measure_c  SR        GR      -> SR/GR R=0 errors=[] bad=[] notices=[] 0.0s
+  ok measure_c  SR        newton  -> SR/none R=0 errors=[] bad=[] notices=['Мир изменил зависимые параметры: В этой сцене нет тяготеющего тела, поэтому ньютоново прит'] 0.0s
+  ok measure_c  SR        none    -> SR/none R=0 errors=[] bad=[] notices=[] 0.1s
+  ok measure_c  ether     GR      -> ether/none R=0 errors=[] bad=[] notices=['Мир изменил зависимые параметры: Кинематика «Галилей + эфир» с гравитацией по умолчанию (О'] 0.0s
+  ok measure_c  ether     newton  -> ether/none R=0 errors=[] bad=[] notices=['Мир изменил зависимые параметры: В этой сцене нет тяготеющего тела: гравитация — «Без грав'] 0.0s
+  ok measure_c  ether     none    -> ether/none R=0 errors=[] bad=[] notices=[] 0.0s
+  ok measure_c  emission  GR      -> emission/none R=0 errors=[] bad=[] notices=['Мир изменил зависимые параметры: Кинематика «Баллистическая» с гравитацией по умолчанию (О'] 0.0s
+  ok measure_c  emission  newton  -> emission/newton R=0 errors=[] bad=[] notices=[] 0.0s
+  ok measure_c  emission  none    -> emission/none R=0 errors=[] bad=[] notices=[] 0.0s
+  ok lensing    SR        GR      -> SR/GR R=0 errors=[] bad=[] notices=[] 1.1s
+  ok lensing    SR        newton  -> emission/newton R=29.53 errors=[] bad=[] notices=['Мир изменил зависимые параметры: Гравитация «Ньютон: свет как корпускулы» задана для корпу'] 2.4s
+  ok lensing    SR        none    -> SR/none R=29.53 errors=[] bad=[] notices=['Мир изменил зависимые параметры: Радиус тела 0 (чёрная дыра) имеет смысл только в ОТО; без'] 0.0s
+  ok lensing    ether     GR      -> ether/none R=29.53 errors=[] bad=[] notices=['Мир изменил зависимые параметры: Кинематика «Галилей + эфир» с гравитацией по умолчанию (О'] 0.0s
+  REFUSED lensing    ether     newton : ньютоново притяжение света задано для корпускул (баллистическая кинематика), а в мире с эфиром свет — волна в эфире: выберите «Кинематика» = баллистическая (Ритц) или «Гравитация» = «Без гравитации»
+  ok lensing    ether     none    -> ether/none R=29.53 errors=[] bad=[] notices=['Мир изменил зависимые параметры: Радиус тела 0 (чёрная дыра) имеет смысл только в ОТО; без'] 0.0s
+  ok lensing    emission  GR      -> emission/newton R=29.53 errors=[] bad=[] notices=['Мир изменил зависимые параметры: Кинематика «Баллистическая» с гравитацией по умолчанию (О'] 2.3s
+  ok lensing    emission  newton  -> emission/newton R=29.53 errors=[] bad=[] notices=['Мир изменил зависимые параметры: Радиус тела 0 (чёрная дыра) имеет смысл только в ОТО; без'] 2.8s
+  ok lensing    emission  none    -> emission/none R=29.53 errors=[] bad=[] notices=['Мир изменил зависимые параметры: Радиус тела 0 (чёрная дыра) имеет смысл только в ОТО; без'] 0.0s
+  ok andromeda  SR        GR      -> SR/GR R=0 errors=[] bad=[] notices=[] 0.0s
+  ok andromeda  SR        newton  -> SR/none R=0 errors=[] bad=[] notices=['Мир изменил зависимые параметры: В этой сцене нет тяготеющего тела, поэтому ньютоново прит'] 0.1s
+  ok andromeda  SR        none    -> SR/none R=0 errors=[] bad=[] notices=[] 0.0s
+  ok andromeda  ether     GR      -> ether/none R=0 errors=[] bad=[] notices=['Мир изменил зависимые параметры: Кинематика «Галилей + эфир» с гравитацией по умолчанию (О'] 0.0s
+  ok andromeda  ether     newton  -> ether/none R=0 errors=[] bad=[] notices=['Мир изменил зависимые параметры: В этой сцене нет тяготеющего тела: гравитация — «Без грав'] 0.0s
+  ok andromeda  ether     none    -> ether/none R=0 errors=[] bad=[] notices=[] 0.0s
+  ok andromeda  emission  GR      -> emission/none R=0 errors=[] bad=[] notices=['Мир изменил зависимые параметры: Кинематика «Баллистическая» с гравитацией по умолчанию (О'] 0.0s
+  ok andromeda  emission  newton  -> emission/newton R=0 errors=[] bad=[] notices=[] 0.0s
+  ok andromeda  emission  none    -> emission/none R=0 errors=[] bad=[] notices=[] 0.0s
+== P7: walkers
+  refused {'scenario': 'andromeda', 'c_factor': 0.5, 'an_walk': 200000000.0} пешеходы не быстрее света этого мира: скорость пешеходов 2e+08 м/с ≥ c × 0.5 = 1.499e+08 м/с (в СТО тело не догоняет свет). Уменьшите скорость пешеходов ниже 1.499e+08 м/с или увеличьте множитель «Скорость света, × c» выше 0.6671
+  built {'scenario': 'andromeda', 'c_factor': 0.5, 'an_walk': 200000000.0, 'kinematics': 'ether'} [] []
+== P9/P14: the review's repro
+  preset measure_c_lab, flash by obs1
+     t=0.00257767 Наблюдатель 3: вспышка «Наблюдатель 1» случилась между концами стержня — свет прошёл A и B в разные стороны, скорость по двум концам не измеряется
+     t=0.003111 Наблюдатель 2: свет от «Наблюдатель 1» прошёл стержень A→B, измерено c = 199861639 м/с
+     t=0.00515533 Наблюдатель 3: свет от «Наблюдатель 1» прошёл стержень B→A, измерено c = 199861639 м/с
+     t=0.00746633 Наблюдатель 2: свет от «Наблюдатель 1» прошёл стержень A→B, измерено c = 199861639 м/с
+     t=0.0109823 Наблюдатель 3: свет от «Источник» прошёл стержень A→B, измерено c = 599584916 м/с
+     t=0.0150083 Наблюдатель 1: свет от «Источник» прошёл стержень A→B, измерено c = 299792458 м/с
+     flat checks: 6 max |rel|/tol 0.0
+     failed: []
+  preset measure_c, flash by obs1
+     t=0.00257767 Наблюдатель 3: вспышка «Наблюдатель 1» случилась между концами стержня — свет прошёл A и B в разные стороны, скорость по двум концам не измеряется
+     t=0.00297813 Наблюдатель 3: вспышка «Наблюдатель 1» случилась между концами стержня — свет прошёл A и B в разные стороны, скорость по двум концам не измеряется
+     t=0.003111 Наблюдатель 2: свет от «Наблюдатель 1» прошёл стержень A→B, измерено c = 299792458 м/с
+     t=0.00431238 Наблюдатель 2: свет от «Наблюдатель 1» прошёл стержень A→B, измерено c = 299792458 м/с
+     t=0.0109823 Наблюдатель 3: свет от «Источник» прошёл стержень A→B, измерено c = 299792458 м/с
+     t=0.0150083 Наблюдатель 1: свет от «Источник» прошёл стержень A→B, измерено c = 299792458 м/с
+     flat checks: 6 max |rel|/tol 0.0
+     failed: []
+  preset andromeda, flash by earth
+Traceback (most recent call last):
+  File "/fx/checks/v01_check.py", line 62, in <module>
+    print("     flat checks:", len(flat), "max |rel|/tol", max(abs(c["rel"]) / c["tol"] for c in flat))
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/fx/checks/v01_check.py", line 62, in <genexpr>
+    print("     flat checks:", len(flat), "max |rel|/tol", max(abs(c["rel"]) / c["tol"] for c in flat))
+                                                               ^^^^^^^^^^^^^
+TypeError: bad operand type for abs(): 'NoneType'

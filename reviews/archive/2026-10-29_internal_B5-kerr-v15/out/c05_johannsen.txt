@@ -1,0 +1,64 @@
+== (a) published bounds ==
+M87* |delta| <= 0.17, a = 0: alpha13 in [-3.5572, 5.8878]  (Psaltis 2020: -3.6 < a13 < 5.9)
+M87* as v15 compares it (-0.01 +- 0.17 -> [-0.18, 0.16]): alpha13 in [-3.7114, 5.4632]
+Sgr A* Keck (-0.14, 0.050000000000000044): alpha13 in [-3.0627, 1.4546]
+Sgr A* Keck (-0.14, 0.050000000000000044): alpha12 in [-1.1444, 0.4651]
+module's bounds: {'M87* (|delta| <= 0.17, Psaltis et al. 2020)': (-0.17, 0.17), 'Sgr A* Keck (Paper VI Eq. 12)': (-0.14, 0.050000000000000044), 'Sgr A* VLTI (Paper VI Eq. 13)': (-0.17000000000000004, 0.010000000000000009)}
+Psaltis Eq. 8 at alpha13 = 0.001: module 5.196344862106, series 5.196344862105, diff 9.24e-13 (O(a^3) ~ 5.2e-12)
+Psaltis Eq. 8 at alpha13 = -0.001: module 5.195959961924, series 5.195959961925, diff -9.23e-13 (O(a^3) ~ 5.2e-12)
+Psaltis Eq. 8 at alpha13 = 0.3: module 5.252949444572, series 5.252925199177, diff 2.42e-05 (O(a^3) ~ 1.4e-04)
+
+== (b) spinning shadow edge: independent fate bisection vs shadow_curve ==
+chi=0.9 th=60.0 {}: max rel |edge(fate) - edge(curve)| over 12 directions = 1.75e-06 (fate: grid + refined minimum of R; polygon of 1441 points)
+chi=0.9 th=60.0 {'alpha13': 2.0}: max rel |edge(fate) - edge(curve)| over 12 directions = 2.48e-06 (fate: grid + refined minimum of R; polygon of 1441 points)
+chi=0.6 th=30.0 {'alpha22': 1.5}: max rel |edge(fate) - edge(curve)| over 12 directions = 2.47e-06 (fate: grid + refined minimum of R; polygon of 1441 points)
+chi=0.6 th=80.0 {'alpha12': -0.5, 'alpha13': 1.0}: max rel |edge(fate) - edge(curve)| over 12 directions = 2.60e-06 (fate: grid + refined minimum of R; polygon of 1441 points)
+chi=0.95 th=89.0 {'alpha13': -1.0}: max rel |edge(fate) - edge(curve)| over 12 directions = 3.65e-06 (fate: grid + refined minimum of R; polygon of 1441 points)
+chi=0.3 th=17.0 {'alpha22': -1.0, 'alpha13': 3.0}: max rel |edge(fate) - edge(curve)| over 12 directions = 2.38e-06 (fate: grid + refined minimum of R; polygon of 1441 points)
+
+== (c) regularity: check_regular vs Johannsen 2013a Eqs. 72 and 76 ==
+chi=0.0 {'alpha22': 10.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.0 {'alpha22': 5.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.0 {'alpha22': 2.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.0 {'alpha22': 1.5}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.0 {'alpha12': 10.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.0 {'alpha13': 10.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.0 {'alpha13': -7.6}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.0 {'alpha12': -3.8}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+   chi=0.0: Eq. 72 at alpha12 = alpha13 = 0 needs alpha22 < r+^4/a^2 = inf
+chi=0.6 {'alpha22': 10.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.6 {'alpha22': 5.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.6 {'alpha22': 2.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.6 {'alpha22': 1.5}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.6 {'alpha12': 10.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.6 {'alpha13': 10.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.6 {'alpha13': -5.540400000000001}: check_regular passes; Eq.72 violated: True (min -0.18 at r = 1.8); Eq.76 violated: False; shadow_curve returns a curve, delta = -0.4695
+chi=0.6 {'alpha12': -3.078}: check_regular passes; Eq.72 violated: True (min -0.18 at r = 1.8); Eq.76 violated: False; shadow_curve returns a curve, delta = -0.6070
+   chi=0.6: Eq. 72 at alpha12 = alpha13 = 0 needs alpha22 < r+^4/a^2 = 29.16
+chi=0.9 {'alpha22': 10.0}: check_regular passes; Eq.72 violated: True (min -1.87 at r = 1.436); Eq.76 violated: False; shadow_curve returns a curve, delta = -0.0547
+chi=0.9 {'alpha22': 5.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.9 {'alpha22': 2.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.9 {'alpha22': 1.5}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.9 {'alpha12': 10.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.9 {'alpha13': 10.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.9 {'alpha13': -2.81246432484}: check_regular passes; Eq.72 violated: True (min -0.666 at r = 1.436); Eq.76 violated: False; shadow_curve returns a curve, delta = -0.3127
+chi=0.9 {'alpha12': -1.9586907992727276}: check_regular passes; Eq.72 violated: True (min -0.666 at r = 1.436); Eq.76 violated: False; shadow_curve returns a curve, delta = -0.4219
+   chi=0.9: Eq. 72 at alpha12 = alpha13 = 0 needs alpha22 < r+^4/a^2 = 5.248
+chi=0.998 {'alpha22': 10.0}: check_regular passes; Eq.72 violated: True (min -7.68 at r = 1.063); Eq.76 violated: False; shadow_curve returns a curve, delta = -0.0616
+chi=0.998 {'alpha22': 5.0}: check_regular passes; Eq.72 violated: True (min -3.28 at r = 1.063); Eq.76 violated: False; shadow_curve returns a curve, delta = -0.1056
+chi=0.998 {'alpha22': 2.0}: check_regular passes; Eq.72 violated: True (min -0.632 at r = 1.063); Eq.76 violated: False; shadow_curve returns a curve, delta = -0.1169
+chi=0.998 {'alpha22': 1.5}: check_regular passes; Eq.72 violated: True (min -0.191 at r = 1.063); Eq.76 violated: False; shadow_curve returns a curve, delta = -0.1150
+chi=0.998 {'alpha12': 10.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.998 {'alpha13': 10.0}: check_regular passes; Eq.72 violated: False; Eq.76 violated: False
+chi=0.998 {'alpha13': -1.1417882518664413}: check_regular passes; Eq.72 violated: True (min -0.89 at r = 1.063); Eq.76 violated: False; shadow_curve returns a curve, delta = -0.2497
+chi=0.998 {'alpha12': -1.0739026527825213}: check_regular passes; Eq.72 violated: True (min -0.89 at r = 1.063); Eq.76 violated: False; shadow_curve returns a curve, delta = -0.3110
+   chi=0.998: Eq. 72 at alpha12 = alpha13 = 0 needs alpha22 < r+^4/a^2 = 1.283
+
+== (d) the size measure: module centre vs CHARM centre; Kerr delta range ==
+Kerr chi=0.5 th=30.0: delta module -0.01280 (centre 0.5143); CHARM centre (0.9743, 9.7e-08) delta -0.01484; diff -2.0e-03
+Kerr chi=0.9 th=17.0: delta module -0.05230 (centre 0.6002); CHARM centre (1.2252, -2.2e-10) delta -0.05633; diff -4.0e-03
+Kerr chi=0.9 th=60.0: delta module -0.03804 (centre 1.7468); CHARM centre (3.2122, 1.0e-07) delta -0.06563; diff -2.8e-02
+Kerr chi=0.998 th=60.0: delta module -0.05900 (centre 2.1573); CHARM centre (3.8420, 4.2e-08) delta -0.10565; diff -4.7e-02
+Kerr chi=0.998 th=90.0: delta module -0.05301 (centre 2.4429); CHARM centre (4.2143, 1.7e-10) delta -0.10571; diff -5.3e-02
+Kerr chi=0.9999 th=90.0: delta module -0.05287 (centre 2.4876); CHARM centre (4.2609, -2.3e-10) delta -0.11008; diff -5.7e-02
+Kerr delta over chi in [0, 0.998], theta in [1, 90] deg: [-0.0704, -0.0000] (Paper VI: 'values of delta in the range [-0.075, 0] are consistent with the Kerr predictions')

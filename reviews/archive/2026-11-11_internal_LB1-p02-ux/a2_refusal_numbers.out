@@ -1,0 +1,36 @@
+== coarsening on the same window (96 nm): free packet, k0 = (1.5, -0.5), sigma 3 (sigma_k = 1/6)
+   rule of the regrid: spectrum beyond the new band <= 1e-6; rule of _resolution_reason: |k| + 6 sigma_k <= pi/d2
+  128 pts, d2 = 0.7500, pi/d2 = 4.1888, |k|+6sk = 2.5000: spectrum beyond (measured) 4.67e-31, closed form 7.51e-59 -> taken
+  96 pts, d2 = 1.0000, pi/d2 = 3.1416, |k|+6sk = 2.5000: spectrum beyond (measured) 1.37e-22, closed form 3.44e-23 -> taken
+  84 pts, d2 = 1.1429, pi/d2 = 2.7489, |k|+6sk = 2.5000: spectrum beyond (measured) 1.06e-13, closed form 3.36e-14 -> taken
+  80 pts, d2 = 1.2000, pi/d2 = 2.6180, |k|+6sk = 2.5000: spectrum beyond (measured) 2.84e-11, closed form 9.87e-12 -> taken
+  78 pts, d2 = 1.2308, pi/d2 = 2.5525, |k|+6sk = 2.5000: spectrum beyond (measured) 3.71e-10, closed form 1.35e-10 -> taken
+  77 pts, d2 = 1.2468, pi/d2 = 2.5198, |k|+6sk = 2.5000: spectrum beyond (measured) 3.71e-10, closed form 4.71e-10 -> taken
+  76 pts, d2 = 1.2632, pi/d2 = 2.4871, |k|+6sk = 2.5000: spectrum beyond (measured) 4.16e-09, closed form 1.58e-09 -> REFUSED [resolution rule]: сетка не передаёт волну частицы 1: её волновые числа доходят до 2.5 (|k| + 6σ_k), а сетка передаёт ≤ 2.487 (π/d); сделайте сетку мельче, частицу медленнее или потенциал ниже
+  75 pts, d2 = 1.2800, pi/d2 = 2.4544, |k|+6sk = 2.5000: spectrum beyond (measured) 4.16e-09, closed form 5.13e-09 -> REFUSED [resolution rule]: сетка не передаёт волну частицы 1: её волновые числа доходят до 2.5 (|k| + 6σ_k), а сетка передаёт ≤ 2.454 (π/d); сделайте сетку мельче, частицу медленнее или потенциал ниже
+  74 pts, d2 = 1.2973, pi/d2 = 2.4216, |k|+6sk = 2.5000: spectrum beyond (measured) 4.00e-08, closed form 1.60e-08 -> REFUSED [resolution rule]: сетка не передаёт волну частицы 1: её волновые числа доходят до 2.5 (|k| + 6σ_k), а сетка передаёт ≤ 2.422 (π/d); сделайте сетку мельче, частицу медленнее или потенциал ниже
+  72 pts, d2 = 1.3333, pi/d2 = 2.3562, |k|+6sk = 2.5000: spectrum beyond (measured) 3.31e-07, closed form 1.39e-07 -> REFUSED [resolution rule]: сетка не передаёт волну частицы 1: её волновые числа доходят до 2.5 (|k| + 6σ_k), а сетка передаёт ≤ 2.356 (π/d); сделайте сетку мельче, частицу медленнее или потенциал ниже
+  70 pts, d2 = 1.3714, pi/d2 = 2.2907, |k|+6sk = 2.5000: spectrum beyond (measured) 2.36e-06, closed form 1.05e-06 -> REFUSED [spectrum rule]: частица 1: за полосой новой сетки (|k| ≥ π/шаг = 2.291) — 2.36e-06 нормы её волны, больше допуска 1e-06: огрубление сетки отбросило бы их
+  68 pts, d2 = 1.4118, pi/d2 = 2.2253, |k|+6sk = 2.5000: spectrum beyond (measured) 1.45e-05, closed form 6.75e-06 -> REFUSED [spectrum rule]: частица 1: за полосой новой сетки (|k| ≥ π/шаг = 2.225) — 1.45e-05 нормы её волны, больше допуска 1e-06: огрубление сетки отбросило бы их
+  66 pts, d2 = 1.4545, pi/d2 = 2.1598, |k|+6sk = 2.5000: spectrum beyond (measured) 7.63e-05, closed form 3.76e-05 -> REFUSED [spectrum rule]: частица 1: за полосой новой сетки (|k| ≥ π/шаг = 2.16) — 7.63e-05 нормы её волны, больше допуска 1e-06: огрубление сетки отбросило бы их
+  64 pts, d2 = 1.5000, pi/d2 = 2.0944, |k|+6sk = 2.5000: spectrum beyond (measured) 3.47e-04, closed form 1.81e-04 -> REFUSED [spectrum rule]: частица 1: за полосой новой сетки (|k| ≥ π/шаг = 2.094) — 0.000347 нормы её волны, больше допуска 1e-06: огрубление сетки отбросило бы их
+
+== shrinking the window at the same step: probability outside the new window, measured vs closed form
+  60 pts (window 30.0): outside measured 3.818e-06, closed form 3.916e-06 -> REFUSED: частица 1: вне нового окна — 3.82e-06 её вероятности, больше допуска 1e-06: уменьшение окна отбросило бы её
+  50 pts (window 25.0): outside measured 1.520e-04, closed form 1.547e-04 -> REFUSED: частица 1: вне нового окна — 0.000152 её вероятности, больше допуска 1e-06: уменьшение окна отбросило бы её
+  44 pts (window 22.0): outside measured 1.021e-03, closed form 1.035e-03 -> REFUSED: частица 1: вне нового окна — 0.00102 её вероятности, больше допуска 1e-06: уменьшение окна отбросило бы её
+  40 pts (window 20.0): outside measured 3.205e-03, closed form 3.242e-03 -> REFUSED: частица 1: вне нового окна — 0.00321 её вероятности, больше допуска 1e-06: уменьшение окна отбросило бы её
+  38 pts (window 19.0): outside measured 5.471e-03, closed form 5.528e-03 -> REFUSED: частица 1: вне нового окна — 0.00547 её вероятности, больше допуска 1e-06: уменьшение окна отбросило бы её
+  36 pts (window 18.0): outside measured 9.113e-03, closed form 9.198e-03 -> REFUSED: частица 1: вне нового окна — 0.00911 её вероятности, больше допуска 1e-06: уменьшение окна отбросило бы её
+  34 pts (window 17.0): outside measured 1.481e-02, closed form 1.493e-02 -> REFUSED: частица 1: вне нового окна — 0.0148 её вероятности, больше допуска 1e-06: уменьшение окна отбросило бы её
+  32 pts (window 16.0): outside measured 2.347e-02, closed form 2.365e-02 -> REFUSED: частица 1: вне нового окна — 0.0235 её вероятности, больше допуска 1e-06: уменьшение окна отбросило бы её
+
+== accepted with a raised tolerance: the banked 'regrid' equals the measured fraction x norm
+  outside 1.480705e-02, norm before 0.999999999999997, after 0.985192949108300, dropped 1.480705e-02, banked 1.480705e-02; norm + absorbed - 1 = -3.44e-15
+  coarsening 116: spectrum 5.324236e-31, dropped 3.330669e-16 (dropped/norm = 3.330669e-16)
+
+== enlarging the window while the wave is at the faces (closed window, packet drifting towards +x)
+  t = 10.0: face (4 outer cells) 8.45e-06 -> taken with tol=1; ||psi - free closed form||^2 on the new window = 1.03e-06
+  t = 14.0: face (4 outer cells) 1.02e-02 -> taken with tol=1; ||psi - free closed form||^2 on the new window = 4.65e-03
+  t = 18.0: face (4 outer cells) 2.03e-01 -> taken with tol=1; ||psi - free closed form||^2 on the new window = 2.61e-01
+  t = 22.0: face (4 outer cells) 3.17e-01 -> taken with tol=1; ||psi - free closed form||^2 on the new window = 1.13e+00

@@ -1,0 +1,11 @@
+m = 1.333333, p = 2: Descartes theta = 137.9703 deg, engine |h|/2 = 4.889821, Hovenac-Lock h = 4.889821
+m = 1.333333, p = 3: Descartes theta = 129.0219 deg, engine |h|/2 = 27.860544, Hovenac-Lock h = 27.860544
+m = 1.333000, p = 2: Descartes theta = 137.9219 deg, engine |h|/2 = 4.899194, Hovenac-Lock h = 4.899194
+m = 1.333000, p = 3: Descartes theta = 129.1092 deg, engine |h|/2 = 27.910084, Hovenac-Lock h = 27.910084
+m = 1.335401, p = 2: Descartes theta = 138.2698 deg, engine |h|/2 = 4.832231, Hovenac-Lock h = 4.832231
+m = 1.335401, p = 3: Descartes theta = 128.4819 deg, engine |h|/2 = 27.556128, Hovenac-Lock h = 27.556128
+Alexander band width (m = 1.335401): 9.788 deg
+x = 1000, s (|S1|^2): Debye p=2 peak beyond Descartes 0.9775 deg, Airy 0.9914 deg (diff -1.40 % of the offset); peak Debye/Airy 0.981; maxima offsets (deg) Debye [0.9775, 3.1271, 4.6239, 5.8929] vs Airy [0.9914, 3.1609, 4.6905, 5.9976]
+x = 1000, p (|S2|^2): Debye p=2 peak beyond Descartes 5.2921 deg, Airy 0.9914 deg (diff +433.80 % of the offset); peak Debye/Airy 2.934; maxima offsets (deg) Debye [2.2661, 3.9354, 5.2921] vs Airy [0.9914, 3.1609, 4.6905, 5.9976]
+x = 3000, s (|S1|^2): Debye p=2 peak beyond Descartes 0.4736 deg, Airy 0.4766 deg (diff -0.62 % of the offset); peak Debye/Airy 0.991; maxima offsets (deg) Debye [0.4736, 1.5121, 2.2399, 2.8592] vs Airy [0.4766, 1.5196, 2.255, 2.8833]
+x = 3000, p (|S2|^2): Debye p=2 peak beyond Descartes 2.5643 deg, Airy 0.4766 deg (diff +438.03 % of the offset); peak Debye/Airy 1.518; maxima offsets (deg) Debye [0.4882, 1.0941, 1.9029, 2.5643] vs Airy [0.4766, 1.5196, 2.255, 2.8833]

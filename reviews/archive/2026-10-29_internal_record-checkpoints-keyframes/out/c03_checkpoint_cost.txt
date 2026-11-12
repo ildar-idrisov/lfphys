@@ -1,0 +1,14 @@
+v01_light_travel {"build_s": 0.0, "bytes": 7566, "MB": 0.0, "dump_ms": 0, "write_fsync_ms": 2, "load_ms": 0, "special": {}}
+v02_double_slit {"build_s": 0.51, "bytes": 188771, "MB": 0.2, "dump_ms": 0, "write_fsync_ms": 22, "load_ms": 0, "special": {}}
+v03_quantum_1d {"build_s": 2.16, "bytes": 3551231, "MB": 3.4, "dump_ms": 1, "write_fsync_ms": 61, "load_ms": 1, "special": {"_function:v03_quantum_1d.viz.Simulation._build.<locals>.<lambda>": 1, "_function:v03_quantum_1d.viz.Simulation._build.<locals>.step_fn": 1}}
+v04_orbits {"build_s": 0.02, "bytes": 14623, "MB": 0.0, "dump_ms": 1, "write_fsync_ms": 3, "load_ms": 0, "special": {}}
+v05_optics_bench {"build_s": 0.2, "bytes": 2550, "MB": 0.0, "dump_ms": 0, "write_fsync_ms": 4, "load_ms": 0, "special": {}}
+v06_qcd {"build_s": 2.02, "bytes": 49438, "MB": 0.0, "dump_ms": 0, "write_fsync_ms": 2, "load_ms": 0, "special": {}}
+v07_bell_test {"build_s": 0.0, "bytes": 2010, "MB": 0.0, "dump_ms": 0, "write_fsync_ms": 3, "load_ms": 0, "special": {}}
+v08_wave_3d {"build_s": 95.47, "bytes": 104343830, "MB": 99.5, "dump_ms": 45, "write_fsync_ms": 797, "load_ms": 102, "special": {"_function:lfphys.core.optics.aperture_fields.rect_spectrum.<locals>.<lambda>": 1}}
+v09_thomas_3d {"build_s": 0.83, "bytes": 2853603, "MB": 2.7, "dump_ms": 1, "write_fsync_ms": 57, "load_ms": 2, "special": {}}
+v10_fast_observer {"build_s": 0.12, "bytes": 397261, "MB": 0.4, "dump_ms": 0, "write_fsync_ms": 25, "load_ms": 0, "special": {}}
+v11_double_slit_2d {"build_s": 0.23, "bytes": 76262862, "MB": 72.7, "dump_ms": 38, "write_fsync_ms": 535, "load_ms": 57, "special": {"import_module:numpy": 1}}
+v12_arrival_times_2d {"build_s": 1.08, "bytes": 33678230, "MB": 32.1, "dump_ms": 13, "write_fsync_ms": 266, "load_ms": 30, "special": {"import_module:numpy": 1}}
+v13_hydrogen_3d {"build_s": 0.15, "bytes": 8352123, "MB": 8.0, "dump_ms": 2, "write_fsync_ms": 230, "load_ms": 3, "special": {"_function:lfphys.core.quantum.hydrogen.orbital.<locals>.<lambda>": 1}}
+v14_quarkonium_3d {"build_s": 2.77, "bytes": 8432687, "MB": 8.0, "dump_ms": 2, "write_fsync_ms": 91, "load_ms": 4, "special": {}}

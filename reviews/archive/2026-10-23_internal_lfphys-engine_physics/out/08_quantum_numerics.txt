@@ -1,0 +1,51 @@
+=== split-operator: error at t = 2 vs dt (V = x^4/4, packet x0 = 1.5) ===
+dt = 2/250: ||psi - ref|| = 1.205e-04
+dt = 2/500: ||psi - ref|| = 3.012e-05   ratio 4.00
+dt = 2/1000: ||psi - ref|| = 7.529e-06   ratio 4.00
+dt = 2/2000: ||psi - ref|| = 1.881e-06   ratio 4.00
+dt = 2/4000: ||psi - ref|| = 4.688e-07   ratio 4.01
+
+=== sinc-DVR (Colbert-Miller) on the harmonic oscillator, omega = 1, x in [-L, L) ===
+N=64: max |E_n - (n+1/2)| over n<10 = 1.2e-14
+N=96: max |E_n - (n+1/2)| over n<10 = 2.8e-14
+N=128: max |E_n - (n+1/2)| over n<10 = 3.9e-14
+
+=== radial levels (hbar = mu = 1): Coulomb -1/r and the relative error of E_n ===
+R=100 N=800 l=0: rel. err (Richardson) 2.1e-04   (no Richardson 2.4e-03)
+R=100 N=800 l=1: rel. err (Richardson) 6.6e-06   (no Richardson 5.0e-06)
+R=100 N=800 l=2: rel. err (Richardson) 5.8e-07   (no Richardson 5.8e-07)
+R=100 N=1600 l=0: rel. err (Richardson) 2.6e-05   (no Richardson 6.3e-04)
+R=100 N=1600 l=1: rel. err (Richardson) 8.3e-07   (no Richardson 6.2e-07)
+R=100 N=1600 l=2: rel. err (Richardson) 5.8e-07   (no Richardson 5.8e-07)
+R=60 N=1600 l=0: rel. err (Richardson) 5.5e-06   (no Richardson 2.3e-04)
+R=60 N=1600 l=1: rel. err (Richardson) 4.2e-05   (no Richardson 4.2e-05)
+R=60 N=1600 l=2: rel. err (Richardson) 1.1e-02   (no Richardson 1.1e-02)
+R=100 N=3200 l=0: rel. err (Richardson) 3.2e-06   (no Richardson 1.6e-04)
+R=100 N=3200 l=1: rel. err (Richardson) 1.0e-07   (no Richardson 7.8e-08)
+R=100 N=3200 l=2: rel. err (Richardson) 5.8e-07   (no Richardson 5.8e-07)
+
+=== transfer.transmission: the same barrier (V0 = 1, a = 2, E = 0.5) shifted to x0 ===
+x0 =      0: T = 7.065082485316448e-02  T+R-1 = +0.0e+00;  profile T = 7.065082485316448e-02
+x0 =    100: T = 7.065082485316443e-02  T+R-1 = +0.0e+00;  profile T = 7.065082485316446e-02
+x0 =    300: T = 7.065082485316448e-02  T+R-1 = +0.0e+00;  profile T = 7.065082485316443e-02
+x0 =    600: T = 7.065082485316439e-02  T+R-1 = -4.4e-16;  profile T = 7.065082485316443e-02
+/lf/lfphys/lfphys/core/quantum/transfer.py:82: RuntimeWarning: overflow encountered in exp
+  e2p, e2m = np.exp(1j * k2 * x), np.exp(-1j * k2 * x)
+/lf/lfphys/lfphys/core/quantum/transfer.py:86: RuntimeWarning: invalid value encountered in divide
+  a01 = 0.5 * (1 - r) * e2m / e1p
+/lf/lfphys/lfphys/core/quantum/transfer.py:88: RuntimeWarning: invalid value encountered in divide
+  a11 = 0.5 * (1 + r) * e2m / e1m
+/lf/lfphys/lfphys/core/quantum/transfer.py:89: RuntimeWarning: invalid value encountered in multiply
+  M00, M01, M10, M11 = (M00 * a00 + M01 * a10, M00 * a01 + M01 * a11,
+/lf/lfphys/lfphys/core/quantum/transfer.py:90: RuntimeWarning: invalid value encountered in multiply
+  M10 * a00 + M11 * a10, M10 * a01 + M11 * a11)
+/lf/lfphys/lfphys/core/quantum/transfer.py:81: RuntimeWarning: overflow encountered in exp
+  e1p, e1m = np.exp(1j * k1 * x), np.exp(-1j * k1 * x)
+/lf/lfphys/lfphys/core/quantum/transfer.py:85: RuntimeWarning: divide by zero encountered in divide
+  a00 = 0.5 * (1 + r) * e2p / e1p
+/lf/lfphys/lfphys/core/quantum/transfer.py:86: RuntimeWarning: divide by zero encountered in divide
+  a01 = 0.5 * (1 - r) * e2m / e1p
+/lf/lfphys/lfphys/core/quantum/transfer.py:91: RuntimeWarning: invalid value encountered in divide
+  t = 1.0 / M00
+x0 =   1000: RAISES OverflowError: math range error;  profile T = nan
+closed form: 0.07065082485316446

@@ -1,0 +1,7 @@
+(a) stats messages: 6 ; pressure values p: ['None']
+    engine pressure(): {'pressure': np.float64(1.3573285273234166), 'T': np.float64(2.420631036492218), 'Z': np.float64(1.743603737458122)}
+(b) checks: {'maxwell': ('Скорости против распределения Максвелла (расстояние КС)', None, True, 0.030139743908444427), 'cost': ('Счёт: секунд на шаг (CPU, оценка)', None, True, None)}
+(c) set n = 300: ['Сцена: "species \'o1\' exists"'] ; atoms now 0
+(d) hard crystal 4 x 4 nm at density 0.7 in a 12 x 12 nm box: ['Сцена: overlapping hard particles'] ; atoms 0 ; expected about 97
+    control, the same with LJ: [] ; atoms 97
+exit 0

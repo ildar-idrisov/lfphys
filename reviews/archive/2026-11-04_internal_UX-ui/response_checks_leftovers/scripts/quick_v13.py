@@ -1,0 +1,30 @@
+import sys, time
+sys.path[:0] = ["/lf/visualizations", "/lf/visualizations/server", "/lf/lfphys", "/lf/visualizations/tests"]
+from harness import Harness
+h = Harness("v13_hydrogen_3d", "super_1s2p")
+print("live", h.sim.live_values())
+h.run_to(h.sim.period * 0.5)
+n0 = len(h.msgs)
+t0 = time.time()
+h.set(mode="single", n=3, l=2, m=0)
+print("set took", round(time.time() - t0, 2))
+types = [m.get("type") for m, _ in h.msgs[n0:]]
+print(types[:40])
+print([m["text"] for m in h.of("event")][-1:], h.errors())
+ck = h.checks()
+print({k: (v.get("label"), v.get("ok"), v.get("info")) for k, v in ck.items()})
+print("frame", h.sim.frame()[0], "t", h.sim.t, "t_prep", h.sim.t_prep)
+h.set(ng="64")
+print([m["text"] for m in h.of("event")][-1:], h.errors()[-1:])
+h.set(n=1, l=0, m=0, mode="super", n2=1, l2=0, m2=0)
+print(h.errors()[-1:])
+h.set(mode="super", n2=2, l2=1, m2=0)
+print([m["text"] for m in h.of("event")][-1:], h.errors()[-1:])
+h.run_to(h.sim.t + h.sim.period * 1.01)
+from collections import Counter
+print("failed", [c["id"] for c in h.checks().values() if not c.get("info") and (c.get("ok") is False)])
+g = Harness("v14_quarkonium_3d", None, {"ng": 64})
+g.set(l=1)
+print([m["text"] for m in g.of("event")][-1:], g.errors())
+g.set(system="bottom")
+print(g.errors()[-1:])

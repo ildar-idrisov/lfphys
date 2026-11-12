@@ -1,0 +1,41 @@
+# Quotations used in REVIEW.md, grepped in the downloaded texts (kept outside the review folder: /tmp/claude-1000/-home-ildar-hdd/2d877fb3-83c1-460d-af16-9ddd26aff08b/scratchpad/b8/rev_beams_src)
+## Bliokh, Alonso, Ostrovskaya, Aiello, arXiv:1006.3876v3 (PRA 82, 063825)
+65:correction to the OAM is proportional to σ rather than to
+66:ℓ [3, 7]. This resulted in the conclusion that “in the general non-paraxial case there is no simple separation into
+113:where κ = k/k and the modified OAM and SAM operators L̂′ and Ŝ′ can be regarded as projections of the
+432:ΦB = AB · dk = 2π (1 − cos θ0 )
+472:, Jz = ℓ + σ̄. (25)
+769:characteristic energy of the wave beam is, in fact, the energy per unit z-length which is obtained by the 2D integration of the time-averaged intesity over d2 r⊥ = dxdy:
+921:As it is known, the Bessel beams cannot be normalized and we calculate the finite ratio of the quantities
+## Monteiro, Maia Neto, Nussenzveig, arXiv:0902.3214v1 (PRA 79, 033830 (2009))
+16:as expected by rotational symmetry, but the spin and orbital separate contributions change.
+696:and the total energy per unit length was found not to be
+699:does not coincide with the Barnett-Allen model. The reason is that the angular position phase factor is not simply
+738:field structure [28]. These two contributions provide natural definitions for spin and orbital angular momentum
+## Lavery, Speirits, Barnett, Padgett (accepted manuscript, Glasgow eprints 85025)
+## Courtial thesis (St Andrews 1999), text layer of p. 81 and 87 (scanned; also read on the rendered pages)
+## OpenAlex abstracts (no contact parameter)
+2:We observe the frequency shift, $l\ensuremath{\Omega}$, imparted to a mm-wave beam with an orbital angular momentum of $l\ensuremath{\Elzxh}$ per photon, when the beam is rotated at angular frequency $\ensuremath{\Omega}$. We show that this shift, and those found in a number of experiments on the rotation of circularly polarized beams, are special cases of the rotational frequency shift recently predicted by Bialynicki-Birula and Bialynicka-Birula. The measurement also explicitly confirms a theoretical prediction by Nienhuis.
+4:We explain the rotational frequency shift of a light beam in classical terms and measure it using a mm-wave source. The shift is equal to the total angular momentum per photon multiplied by the angular velocity between the source and observer. This is analogous to the translational Doppler shift, which is equal to the momentum per photon multiplied by the translational velocity. We show that the shifts due to the spin and orbital angular momentum components of the light beam act in an additive way.
+8:We introduce the angular-momentum flux as the natural description of the angular momentum carried by light. We present four main results: (i) angular-momentum flux is the flow of angular momentum across a surface and, in conjunction with the more familiar angular-momentum density, expresses the conservation of angular momentum. (ii) The angular-momentum flux for a light beam about its axis (or propagation direction) can be separated into spin and orbital parts. This separation is gauge invariant and does not rely on the paraxial approximation. (iii) Angular-momentum flux can describe the propagation of angular momentum in other geometries, but the identification of spin and orbital parts is then more problematic. We calculate the flux for a component of angular momentum that is perpendicular to the axis of a light beam and for the field associated with an electric dipole. (iv) The theory can be extended to quantum electrodynamics.
+## Barnett, Babiker, Padgett 2017 (PMC5247487): equations are images (rsta20150444-e3, -e5, -e6), read visually; text around them:
+1017:We obtain the paraxial wave equation by making the substitution
+1042:z R = kw 2 (0)/2 is the Rayleigh range
+## Bliokh, Bekshaev, Nori arXiv:1208.4523 (NJP 15, 033026)
+153:and assume natural units  0  0  c  1 . We will adopt the transverse Coulomb
+## Berry 2009 (berry414.pdf)
+531:Efull (r , t) = Re E3 (r ) exp(−iωt),
+830:the two helicities: there are no cross terms between + and −.
+## Lavery 2013 (whitespace normalised)
+FOUND 'as ℓ𝓁! Δ𝑓 = !!" ×𝑓! !! ! ℓ𝓁! = !! , (3) Note also in eqn. 3 there is no dependence upon polarisation since, even after scattering, the polar'
+FOUND 'es two helically--phased beams of opposite values of of ℓ𝓁, their scattering into a common detection mode gives an intensity modulation of frequency 𝑓!"# = 2 ℓ𝓁 Ω 2𝜋. (4) Even'
+FOUND ' into the single--mode fibre. The SLM and the fibre are now acting as a mode filter to select only the desired superposition from the many modes within the scattere'
+MISSING 'Lavery, M.J.P., Speirits, F.C., Barnett, S.M., and Padgett, M.J. (2013) Detection of a'
+FOUND ' azimuthal reaction force acting on the scattering surface. Doing work against this force is the energy input required to shift the frequency of the light, not dissimilar in origin to the mechan'
+## Monteiro 2009 (whitespace normalised)
+FOUND 'tion of spin and orbital contributions, the ratio between the total angular momentum per unit length and the total energy per unit length was found not to be (ℓ + σ)/ω as in the case of a paraxial beam. The nonparaxia'
+FOUND 'as discussed in the previous paragraph. To our knowledge, a consistent identification of spin and orbital contributions to the local angular momentum or flux densities of nonparaxial beams is not available [27] [28] (this is the reason why we employ the term ‘inter'
+FOUND 'θ) (40) By inspection of (39) and (40), we conclude that r is positive and does not depend on the sign of ℓ nor on the value of σ. Hence the variation of Mspin /F ha'
+## Courtial thesis p. 81 OCR text layer (scanned; sentences read on the rendered page image): CHAPTER 6. Dove ROTATIONAL DOPPLER EFFECT prism in each arm, one rotating, the other 79 one at rest (fig. 6.6). non-rotating Dove prism ensured that the beams in both The had the arms same helicity at
+## Courtial thesis p. 87 OCR text layer (scanned; sentences read on the rendered page image): CHAPTER 6. ROTATIONAL DOPPLER EFFECT Figure 6.13: Rotational Doppler shift of azimuthal 85 circularly polarised beam with a phase factor of the form exp(il<fi). (a) An observer at rest cross-section a
+FOUND (Lavery Fig. 2 caption, hyphen is U+2010 in the PDF text): 'For a given input superposition, shown in green, the light scattered from the positive ℓ beam will be blue-shifted and that from the negative ℓ beam will be red-shifted.'

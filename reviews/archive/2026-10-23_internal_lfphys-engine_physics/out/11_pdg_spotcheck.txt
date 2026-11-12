@@ -1,0 +1,25 @@
+--- quarks (PDG 2024) ---
+m c = 1.2730 ± 0.0046 GeV, CL = 90%                       Charge =        3   e    Charm = +1
+m b −m c = 3.45 ± 0.05 GeV
+m b = 4.183 ± 0.007 GeV, CL = 90%                     Charge = − 31 e             Bottom = −1
+Mass (direct measurements) m = 172.57 ± 0.29 GeV [a,b] (S = 1.5)
+Mass (from cross-section measurements) m = 162.5 + 2.1
+--- Z (PDG 2024) ---
+Mass m = 91.1880 ± 0.0020 GeV [e]
+--- quarkonia (PDG 2024) ---
+Mass m = 2984.1 ± 0.4 MeV (S = 1.2)
+Mass m = 3096.900 ± 0.006 MeV
+Mass m = 3414.71 ± 0.30 MeV
+Mass m = 3510.67 ± 0.05 MeV (S = 1.2)
+Mass m = 3525.37 ± 0.14 MeV (S = 1.2)
+Mass m = 3556.17 ± 0.07 MeV
+Mass m = 3637.7 ± 0.9 MeV (S = 1.2)
+Mass m = 3686.097 ± 0.011 MeV (S = 1.1)
+Mass m = 9398.7 ± 2.0 MeV                     (S = 1.5)
+Mass m = 9460.40 ± 0.10 MeV
+Mass m = 9859.44 ± 0.42 ± 0.31 MeV
+Mass m = 9892.78 ± 0.26 ± 0.31 MeV
+Mass m = 9899.3 ± 0.8 MeV
+Mass m = 9912.21 ± 0.26 ± 0.31 MeV
+Mass m = 10023.4 ± 0.5 MeV
+Mass m = 10355.1 ± 0.5 MeV

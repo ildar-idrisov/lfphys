@@ -1,0 +1,11 @@
+(a) after clicking ⏺ twice: server playing false; focus on #rec
+    one Space with the focus on ⏺: server playing true (expected true); commands logged since: play, pause, play
+    state now: playing false
+(b) ← with the focus on the speed slider: speed 2,78 ч / с -> 2,78 ч / с; ◀ button ◀ -> ◀; timeline 93/93 -> 0/93
+(c) A suspended, B running, C running
+    ⏺ on A: {"rec":"⏺","status":"приостановлен — ⏺ продолжит · история","busy":"продолжение: мир пересчитывается по записи…","fwd":"▶","back":"◀","speed":"2,78 ч / с","timeline":"0/93","toasts":["все 2 вычислителя заняты открытыми запусками: закройте вкладку одного из них (он приостано"]}
+    13 s later: {"rec":"⏺","status":"приостановлен — ⏺ продолжит · история","busy":"продолжение: мир пересчитывается по записи…","fwd":"▶","back":"◀","speed":"2,78 ч / с","timeline":"0/93","toasts":[]}
+    B's tab closed, ⏺ on A again: {"rec":"⏸ запись","status":"запись идёт · история","busy":"","fwd":"▶","back":"◀","speed":"2,78 ч / с","timeline":"0/198","toasts":["Продолжение: мир пересчитывается от начала по записи до t = 0.0530035 с (0 изменений устан","Мир восстановлен: пересчитан от начала по записи (0 изменений установки) и продолжается с "]}; server: A running
+(d) v04 record of 6619 messages (sim_t 178.08506376811084) resumed by ⏺; what the page showed (s since ⏺ | button | status | busy):
+    0.5 s: ⏺|приостановлен — ⏺ продолжит · история|продолжение: мир пересчитывается по записи…
+    13.6 s: ⏸ запись|запись идёт · история|

@@ -1,0 +1,2 @@
+narrow preset: grid (745, 640) on gpu; built in 1.1 s; 17.8 ms per pair (wave, companion, 2000 Bohm particles); ~3244 pairs to the estimated end -> ~1.0 min of computation
+{'a': 0.5, 'd': 8.0, 'L': 200.0, 'sigma_x': 40.0, 'sigma_z': 20.0, 'grid': 'fine'}: grid (3369, 3072) on gpu; built in 1.8 s; 140.2 ms per pair (wave, companion, 2000 Bohm particles); ~12268 pairs to the estimated end -> ~28.7 min of computation

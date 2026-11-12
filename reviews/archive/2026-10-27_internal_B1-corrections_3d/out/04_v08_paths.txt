@@ -1,0 +1,28 @@
+(1) fixed by default: play, step, next_event, new world
+   after play to t = 30, step 5, next_event: planes unchanged True; new slice messages 0; auto flags [False]
+   new world: planes [1] (plane 2 of the previous world not carried over); origin of 1 [0.0, 0.0, 5.0], normal [0.0, -1.0, 0.0]
+(2) auto: a plane along y (the test's case) and a tilted one; distance d = o.n against speed x time
+   normal [0.0, -1.0, 0.0]: d range of the box [-7.88, 8.00] (span 15.88); over t = 0..60 (speed 1): wraps 4, expected ~3.8; mean advance per 0.5 s 0.500 (expected 0.5), min 0.500, slices sent 122, errors 0
+      d(t) samples: [np.float64(0.5), np.float64(5.5), np.float64(-5.38), np.float64(-0.38), np.float64(4.62), np.float64(-6.25), np.float64(-1.25), np.float64(3.75), np.float64(-7.12), np.float64(-2.12), np.float64(2.88), np.float64(7.88)]
+      record: 122 slice messages, 32.1 MB in 60 s of world time at n = 128 -> 1925 MB per hour at speed 1
+   normal [1.0, 0.0, 0.2]: d range of the box [-7.84, 9.68] (span 17.53); over t = 0..60 (speed 1): wraps 3, expected ~3.4; mean advance per 0.5 s 0.445 (expected 0.5), min 0.019, slices sent 122, errors 0
+      d(t) samples: [np.float64(1.48), np.float64(6.48), np.float64(9.11), np.float64(-4.54), np.float64(0.46), np.float64(5.46), np.float64(9.2), np.float64(-2.52), np.float64(2.48), np.float64(7.48), np.float64(-5.02), np.float64(-0.02)]
+   normal [0.6, 0.0, 0.8]: d range of the box [-4.80, 12.72] (span 17.52); over t = 0..60 (speed 1): wraps 3, expected ~3.4; mean advance per 0.5 s 0.419 (expected 0.5), min 0.180, slices sent 122, errors 0
+      d(t) samples: [np.float64(4.5), np.float64(9.5), np.float64(11.78), np.float64(1.19), np.float64(6.19), np.float64(10.87), np.float64(-1.32), np.float64(3.68), np.float64(8.68), np.float64(11.76), np.float64(1.17), np.float64(6.17)]
+(2b) the same at the default grid n = 256 (bytes per slice message)
+   one slice message: 0.53 MB (I and phase, [256, 256])
+(3) at most three planes, ids, removal
+   ids [1, 2, 3]; five bad requests -> 5 errors: ['Просмотр: плоскостей среза не больше трёх', 'Просмотр: плоскостей среза не больше трёх', 'Просмотр: нормаль плоскости не задана', "Просмотр: could not convert string to float: 'x'", 'Просмотр: нормаль плоскости не задана']
+   remove 2, add 2 again (no normal given): ids [1, 2, 3], normal of 2 [1.0, 0.0, 0.0]
+(4) preview: nothing changes but the record
+   planes, slices, checks unchanged: True; messages added to the record: 1 (['slice']); backend 'drawn' record before None after {'device': 'cpu', 'precision': 'fp64', 'reason': 'выбрано в настройках', 'size': 1048576}
+(5) the reduced model: which planes, flags
+   {'[0, -1, 0]': ('reduced', True, 'y = 1'), '[0, 1, 0]': ('reduced', True, 'произвольная плоскость'), '[0, -1, 1e-06]': ('reduced', True, 'произвольная плоскость'), '[0, -1, 0.05]': ('plane', False, 'произвольная плоскость'), '[1, 0, 0]': ('plane', False, 'x = 0')}
+   modelling message: approximations ['срез y = 0: щель длиной L = 8 мкм принята бесконечной (упрощённая 2-D модель); размер приближения — в проверках']; header approximations ['срез y = 0: щель длиной L = 8 мкм принята бесконечной (упрощённая 2-D модель); размер приближения — в проверках']
+(6) origin outside the box: the plane asked for vs the plane computed
+   box x in [-8.00, 7.88], d of the box [-5.66, 12.64]; asked d = o.n = 12.021; computed d = 9.104 (origin clipped to [7.875, 0.0, 5.0])
+(7) the check of a slice: one id for all planes
+   after plane 2: 'Срез 2 (произвольная плоскость): поле в 3 точках против точного'; after plane 3: 'Срез 3 (z = 6): поле в 3 точках против точного'; after removing 3: 'Срез 3 (z = 6): поле в 3 точках против точного'
+(8) timing of one auto step (CPU, n = 256, double, tilted plane)
+   placing a tilted plane (window for its azimuth measured): 20.7 s; one auto step: 12.0 s
+done

@@ -1,0 +1,4 @@
+patches : max |X - exact| = 2.13e-04
+device  : max |X - exact| = 2.13e-04
+patches vs device: 4.44e-16
+spinor through patches: max |X - exact| = 2.13e-04

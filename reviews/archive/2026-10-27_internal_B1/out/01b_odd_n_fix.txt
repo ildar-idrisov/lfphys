@@ -1,0 +1,1 @@
+n = 65, pad 2, fixed offset: |slice(x=0) - ref| at y = +0.333: 9.6e-09

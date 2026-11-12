@@ -1,0 +1,4 @@
+r0=40.0: residual eccentricity with vr=0: 3.60e-04; with Eq.(227a) (k=1): 3.73e-06; minimum 2.61e-07 at k = 0.990 (vr_227a = -4.294e-05, leading-order only would be k = 1.164)
+r0=20.0: residual eccentricity with vr=0: 1.80e-03; with Eq.(227a) (k=1): 9.65e-05; minimum 7.28e-06 at k = 0.950 (vr_227a = -2.870e-04, leading-order only would be k = 1.394)
+r0=12.0: residual eccentricity with vr=0: 2.52e-03; with Eq.(227a) (k=1): 8.49e-04; minimum 1.49e-05 at k = 0.750 (vr_227a = -9.801e-04, leading-order only would be k = 1.889)
+r0=10.0: residual eccentricity with vr=0: 1.88e-03; with Eq.(227a) (k=1): 2.55e-03; minimum 2.47e-05 at k = 0.420 (vr_227a = -1.392e-03, leading-order only would be k = 2.298)

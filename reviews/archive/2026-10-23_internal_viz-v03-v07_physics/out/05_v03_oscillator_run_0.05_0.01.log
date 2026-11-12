@@ -1,0 +1,6 @@
+hw = 0.05 eV, x0 = 0.01 nm: world built in 0.2 s, n_grid = 1024
+  lev0: value 0.02500000000002227, ref 0.025, rel 8.906764215055318e-13, tol 1e-09, ok None
+  lev30: value 0.17500000000001148, ref 0.17500000000000002, rel 6.550315845288424e-14, tol 1e-09, ok None
+  per0: value 0.009999999527047191, ref 0.009999999527047191, rel 0.0, tol 0.0001, ok None
+  norm0: value 1.0000000000003844, ref 1.0, rel 3.843592111252292e-13, tol 1e-10, ok None
+

@@ -1,0 +1,6 @@
+wall edges smoothed over a fixed 0.2 lambda on every grid
+coarse: grid (621, 534), 36 s on gpu; fractions {'screen': 0.17510167981187869, 'back': 0.8090744829658637, 'side': 0.01575144075217, 'left': 7.239647008764626e-05}; visibility 0.2463
+normal: grid (745, 640), 44 s on gpu; fractions {'screen': 0.17506135052433108, 'back': 0.8091204354740968, 'side': 0.015745777005221562, 'left': 7.24369963504716e-05}; visibility 0.2463
+fine: grid (993, 852), 68 s on gpu; fractions {'screen': 0.17506612628775045, 'back': 0.8091149028395161, 'side': 0.01574671417105275, 'left': 7.225670168068963e-05}; visibility 0.2463
+coarse vs fine (fixed wall): max |P - P_fine| / peak = 4.243e-03; fractions differ by screen +3.56e-05, back -4.04e-05, side +4.73e-06
+normal vs fine (fixed wall): max |P - P_fine| / peak = 1.359e-04; fractions differ by screen -4.78e-06, back +5.53e-06, side -9.37e-07

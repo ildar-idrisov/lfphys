@@ -1,0 +1,40 @@
+seed 101
+  t=  0.0: mean 0.000e+00  exact 0.000e+00  stderr 0.00e+00  z   0.00  max over trajectories 0.00e+00
+  t=  5.0: mean 7.242e-02  exact 7.309e-02  stderr 1.24e-03  z   0.54  max over trajectories 2.89e-01
+  t= 10.0: mean 1.616e-02  exact 1.570e-02  stderr 7.35e-04  z   0.64  max over trajectories 2.89e-01
+  t= 15.0: mean 3.257e-03  exact 3.310e-03  stderr 3.33e-04  z   0.16  max over trajectories 2.89e-01
+  t= 20.0: mean 7.822e-04  exact 6.980e-04  stderr 1.64e-04  z   0.51  max over trajectories 2.64e-01
+  t= 25.0: mean 2.729e-04  exact 1.472e-04  stderr 1.09e-04  z   1.15  max over trajectories 2.85e-01
+  t= 30.0: mean 8.108e-05  exact 3.104e-05  stderr 7.09e-05  z   0.71  max over trajectories 2.83e-01
+  t= 35.0: mean 2.186e-06  exact 6.547e-06  stderr 1.90e-06  z   2.29  max over trajectories 7.60e-03
+  t= 40.0: mean 2.064e-08  exact 1.381e-06  stderr 1.46e-08  z  93.39  max over trajectories 5.63e-05
+seed 1
+  t=  0.0: mean 0.000e+00  exact 0.000e+00  stderr 0.00e+00  z   0.00  max over trajectories 0.00e+00
+  t=  5.0: mean 7.168e-02  exact 7.309e-02  stderr 1.23e-03  z   1.15  max over trajectories 2.89e-01
+  t= 10.0: mean 1.557e-02  exact 1.570e-02  stderr 7.13e-04  z   0.17  max over trajectories 2.89e-01
+  t= 15.0: mean 3.524e-03  exact 3.310e-03  stderr 3.65e-04  z   0.59  max over trajectories 2.89e-01
+  t= 20.0: mean 1.043e-03  exact 6.980e-04  stderr 2.14e-04  z   1.61  max over trajectories 2.86e-01
+  t= 25.0: mean 2.005e-04  exact 1.472e-04  stderr 9.42e-05  z   0.57  max over trajectories 2.67e-01
+  t= 30.0: mean 2.933e-05  exact 3.104e-05  stderr 1.70e-05  z   0.10  max over trajectories 5.01e-02
+  t= 35.0: mean 1.025e-06  exact 6.547e-06  stderr 6.10e-07  z   9.05  max over trajectories 2.07e-03
+  t= 40.0: mean 6.604e-08  exact 1.381e-06  stderr 4.75e-08  z  27.71  max over trajectories 1.84e-04
+seed 2
+  t=  0.0: mean 0.000e+00  exact 0.000e+00  stderr 0.00e+00  z   0.00  max over trajectories 0.00e+00
+  t=  5.0: mean 7.252e-02  exact 7.309e-02  stderr 1.25e-03  z   0.45  max over trajectories 2.89e-01
+  t= 10.0: mean 1.566e-02  exact 1.570e-02  stderr 7.25e-04  z   0.05  max over trajectories 2.89e-01
+  t= 15.0: mean 2.532e-03  exact 3.310e-03  stderr 2.66e-04  z   2.92  max over trajectories 2.89e-01
+  t= 20.0: mean 5.436e-04  exact 6.980e-04  stderr 1.27e-04  z   1.21  max over trajectories 2.89e-01
+  t= 25.0: mean 1.057e-04  exact 1.472e-04  stderr 6.58e-05  z   0.63  max over trajectories 2.46e-01
+  t= 30.0: mean 2.082e-05  exact 3.104e-05  stderr 1.81e-05  z   0.57  max over trajectories 7.19e-02
+  t= 35.0: mean 3.624e-07  exact 6.547e-06  stderr 3.17e-07  z  19.50  max over trajectories 1.26e-03
+  t= 40.0: mean 3.003e-09  exact 1.381e-06  stderr 2.33e-09  z 591.78  max over trajectories 9.23e-06
+seed 3
+  t=  0.0: mean 0.000e+00  exact 0.000e+00  stderr 0.00e+00  z   0.00  max over trajectories 0.00e+00
+  t=  5.0: mean 7.047e-02  exact 7.309e-02  stderr 1.20e-03  z   2.18  max over trajectories 2.89e-01
+  t= 10.0: mean 1.559e-02  exact 1.570e-02  stderr 7.26e-04  z   0.14  max over trajectories 2.89e-01
+  t= 15.0: mean 3.174e-03  exact 3.310e-03  stderr 3.34e-04  z   0.41  max over trajectories 2.88e-01
+  t= 20.0: mean 6.936e-04  exact 6.980e-04  stderr 1.57e-04  z   0.03  max over trajectories 2.89e-01
+  t= 25.0: mean 1.965e-04  exact 1.472e-04  stderr 8.52e-05  z   0.58  max over trajectories 2.73e-01
+  t= 30.0: mean 1.449e-05  exact 3.104e-05  stderr 9.31e-06  z   1.78  max over trajectories 3.57e-02
+  t= 35.0: mean 6.873e-05  exact 6.547e-06  stderr 6.85e-05  z   0.91  max over trajectories 2.74e-01
+  t= 40.0: mean 1.473e-06  exact 1.381e-06  stderr 1.45e-06  z   0.06  max over trajectories 5.80e-03

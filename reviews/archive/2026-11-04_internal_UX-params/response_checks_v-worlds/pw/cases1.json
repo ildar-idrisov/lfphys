@@ -1,0 +1,17 @@
+[
+ {"name": "v01_ether_from_defaults", "title": "Свет на больших расстояниях", "set": [["kinematics", "ether"]], "wait": 6000},
+ {"name": "v01_newton_from_defaults", "title": "Свет на больших расстояниях", "set": [["gravity", "newton"]], "wait": 6000},
+ {"name": "v01_ether_newton_refused", "title": "Свет на больших расстояниях", "set": [["kinematics", "ether"], ["gravity", "newton"]]},
+ {"name": "v01_walkers_refused", "title": "Свет на больших расстояниях", "set": [["scenario", "andromeda"], ["c_factor", 0.5], ["an_walk", 200000000]]},
+ {"name": "v13_super_from_defaults", "title": "Атом водорода в 3D", "set": [["mode", "super"]], "wait": 9000, "buildMs": 30000},
+ {"name": "v13_n1_fitted", "title": "Атом водорода в 3D", "set": [["n", 1]], "wait": 6000, "buildMs": 30000},
+ {"name": "v16_fork_from_defaults", "title": "Оптические вихри", "set": [["gen", "fork"]], "wait": 9000, "buildMs": 60000},
+ {"name": "v16_fork_period8_refused", "title": "Оптические вихри", "set": [["gen", "fork"], ["period", 8]]},
+ {"name": "v15_jp_refused", "title": "Тень чёрной дыры Керра", "set": [["metric", "jp"], ["a13", -10]]},
+ {"name": "v02_options_photon", "title": "Двухщелевой опыт", "options": ["el1", "energy_by", "wp_mode"], "formShot": true, "run": false},
+ {"name": "v02_options_electron", "title": "Двухщелевой опыт", "set": [["species", "electron"]], "options": ["el1", "energy_by", "wp_mode"], "formShot": true, "run": false},
+ {"name": "v02_dark_refused", "title": "Двухщелевой опыт", "set": [["dark_rate", 1000000000000]]},
+ {"name": "v02_crossed_polarisers", "title": "Двухщелевой опыт", "set": [["el1", "polarizer"], ["el2", "polarizer"], ["el2_angle", 90]], "wait": 8000},
+ {"name": "v17_matched_refused", "title": "Рассеяние Ми на капле", "set": [["index", "custom"], ["n_re", 1.0]]},
+ {"name": "v06_alpha019", "title": "КХД", "set": [["alpha_mz", 0.19]], "wait": 6000}
+]

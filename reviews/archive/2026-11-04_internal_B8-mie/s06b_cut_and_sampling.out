@@ -1,0 +1,6 @@
+rainbow 150 um +-2 %: the 3-sigma cut on the same grid: max |diff|/max 4.71e-04 (glory 7.48e-05); weight dropped 2.72e-03
+   fine sums at dx = 0.05, 0.0309, 0.0185: largest mutual difference / max 5.47e-03 (glory 5.47e-03)
+glory 8 um +-10 %: the 3-sigma cut on the same grid: max |diff|/max 2.56e-03 (glory 2.56e-03); weight dropped 3.18e-03
+   fine sums at dx = 0.005, 0.00309, 0.00185: largest mutual difference / max 2.44e-03 (glory 2.44e-03)
+fogbow 15 um +-15 %: the 3-sigma cut on the same grid: max |diff|/max 4.64e-03 (glory 4.64e-03); weight dropped 3.76e-03
+   fine sums at dx = 0.005, 0.00309, 0.00185: largest mutual difference / max 1.17e-03 (glory 1.17e-03)

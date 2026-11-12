@@ -1,0 +1,11 @@
+== A. ideal gas: affine deform against the adiabat and against a slow driven piston ==
+  d=2: T V^(2/d) before 959.435519473157 after 959.435519473158 rel 4.44e-16
+  d=3: T V^(2/d) before 926.03186908703 after 926.031869087031 rel 4.44e-16
+  piston w=0.05 (w/v_th=0.05): Ky L^2 piston/initial = 0.99881, affine/initial = 1.000000000000000; piston work 217.536 vs affine W_box 218.044
+  piston w=0.01 (w/v_th=0.01): Ky L^2 piston/initial = 1.00057, affine/initial = 1.000000000000000; piston work 218.288 vs affine W_box 218.044
+  piston w=0.002 (w/v_th=0.002): Ky L^2 piston/initial = 0.99999, affine/initial = 1.000000000000000; piston work 218.042 vs affine W_box 218.044
+== D. Jacobian determinant of the affine step on a conserved axis ==
+  lambda 0.9: det J = 0.900000000000 (canonical point transformation: 1; with P kept: lambda)
+[exit 0]
+
+[exited with code 0]

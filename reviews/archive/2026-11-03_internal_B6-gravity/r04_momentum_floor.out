@@ -1,0 +1,13 @@
+preset inner: N = 6
+  steps    1000  t =     5.4173 yr  |dP|/sum|m v| = 4.719e-17  (fails the playground's 1e-12: False)  wall 1 s
+  steps    3000  t =    16.2519 yr  |dP|/sum|m v| = 1.414e-15  (fails the playground's 1e-12: False)  wall 3 s
+  steps   10000  t =    54.1729 yr  |dP|/sum|m v| = 1.658e-15  (fails the playground's 1e-12: False)  wall 9 s
+  steps   30000  t =   162.5186 yr  |dP|/sum|m v| = 4.329e-15  (fails the playground's 1e-12: False)  wall 25 s
+  steps  100000  t =   541.7287 yr  |dP|/sum|m v| = 8.623e-15  (fails the playground's 1e-12: False)  wall 86 s
+preset hole_stars: N = 4
+  steps    1000  t =     1.5944 yr  |dP|/sum|m v| = 2.359e-15  (fails the playground's 1e-12: False)  wall 1 s
+  steps    3000  t =     5.3362 yr  |dP|/sum|m v| = 2.642e-15  (fails the playground's 1e-12: False)  wall 2 s
+  steps   10000  t =    18.4282 yr  |dP|/sum|m v| = 3.644e-15  (fails the playground's 1e-12: False)  wall 7 s
+  steps   30000  t =    55.8245 yr  |dP|/sum|m v| = 8.930e-15  (fails the playground's 1e-12: False)  wall 22 s
+  steps  100000  t =   186.7218 yr  |dP|/sum|m v| = 1.262e-14  (fails the playground's 1e-12: False)  wall 74 s
+exit 0

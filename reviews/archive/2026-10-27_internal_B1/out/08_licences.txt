@@ -1,0 +1,35 @@
+numpy          2.4.6      License-Expression/License: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
+                          License-File: ['LICENSE.txt', 'numpy/_core/include/numpy/libdivide/LICENSE.txt', 'numpy/_core/src/common/pythoncapi-compat/COPYING', 'numpy/_core/src/highway/LICENSE', 'numpy/_core/src/multiarray/dragon4_LICENSE.txt', 'numpy/_core/src/npysort/x86-simd-sort/LICENSE.md', 'numpy/_core/src/umath/svml/LICENSE', 'numpy/fft/pocketfft/LICENSE.md']
+scipy          1.17.1     License-Expression/License: Copyright (c) 2001-2002 Enthought, Inc. 2003, SciPy Developers.  All rights reserved.   Redistribution and use in source
+                          License-File: None
+python-flint   0.9.0      License-Expression/License: MIT AND LGPL-3.0-or-later
+                          License-File: ['LICENSE', 'python-flint.libs/gmp-6.3.0/COPYING', 'python-flint.libs/gmp-6.3.0/COPYING.LESSERv3', 'python-flint.libs/mpfr-4.2.2/COPYING', 'python-flint.libs/mpfr-4.2.2/COPYING.LESSER', 'python-flint.libs/flint-3.6.0/COPYING', 'python-flint.libs/flint-3.6.0/COPYING.LESSER']
+cupy-cuda12x   14.2.0     License-Expression/License: MIT
+                          License-File: ['LICENSE', 'docs/source/license.rst']
+mpmath         1.3.0      License-Expression/License: BSD
+                          License-File: ['LICENSE']
+cuda-toolkit   12.9.2.0   License-Expression/License: 
+                          License-File: None
+
+site-packages: /usr/local/lib/python3.11/site-packages
+python_flint.libs: ['libflint-6839011d.so.24.0.0', 'libgmp-e0c82b6b.so.10.5.0', 'libmpfr-be332c05.so.6.2.2']
+numpy.libs: ['libgfortran-040039e1-0352e75f.so.5.0.0', 'libquadmath-96973f99-934c22de.so.0.0.0', 'libscipy_openblas64_-32a4b2a6.so']
+cupy .so not CuPy's own (outside cupy/ cupyx/ cupy_backends/): []
+
+NVIDIA License.txt files: 8; distinct MD5: {'298d545d1230fc4d3fb30315701678f6'}
+  FOUND   'Install and use the SDK'
+  FOUND   'material additional functionality, beyond the included portions of the SDK'
+  FOUND   'you may not distribute or sublicense the SDK as a stand-alone product'
+  FOUND   'You may not use the SDK in any manner that would cause it to become subject to an open source software license'
+  FOUND   'Release Date: July 26, 2018'
+  FOUND   'Release date: August 16, 2018'
+  FOUND   'only for use in systems with NVIDIA GPUs'
+  FOUND   'provided that the object code files are not modified in any way'
+  FOUND   'commercially viable'
+  absent  'Open Source Initiative'
+  absent  'libnvJitLink'
+  FOUND   'libcufft.so'
+  absent  'libcusolverMg'
+  FOUND   'libnvrtc'
+
+installed NVIDIA libraries: ['libcublas.so.12', 'libcublasLt.so.12', 'libcudart.so.12', 'libcufft.so.11', 'libcufftw.so.11', 'libcurand.so.10', 'libcusolver.so.11', 'libcusolverMg.so.11', 'libcusparse.so.12', 'libnvJitLink.so.12', 'libnvblas.so.12', 'libnvrtc-builtins.alt.so.12.9', 'libnvrtc-builtins.so.12.9', 'libnvrtc.alt.so.12', 'libnvrtc.so.12']

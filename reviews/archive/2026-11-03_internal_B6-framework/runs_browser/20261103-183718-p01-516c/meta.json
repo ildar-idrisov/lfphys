@@ -1,0 +1,176 @@
+{
+ "id": "20261103-183718-p01-516c",
+ "viz": "p01_gravity",
+ "title": "Космос и гравитация",
+ "version": "0.1",
+ "code": "f32690099dd0",
+ "preset": "sun_earth",
+ "params": {
+  "laws": "newton",
+  "m_total": 20.0,
+  "m_hole": 10.0,
+  "spin": 0.9,
+  "charge": 0.0,
+  "collisions": "merge",
+  "scene": {
+   "format": "lfscene",
+   "version": 1,
+   "objects": [
+    {
+     "type": "star",
+     "label": "Солнце",
+     "values": {
+      "mass": 1.0,
+      "radius": 1.0
+     }
+    },
+    {
+     "type": "planet",
+     "label": "Земля",
+     "values": {
+      "mass": 1.0,
+      "radius": 1.0,
+      "x": 1.0
+     }
+    },
+    {
+     "type": "field",
+     "label": "Датчик у Земли",
+     "values": {
+      "x": 1.02
+     }
+    }
+   ]
+  }
+ },
+ "seed": 3,
+ "label": "",
+ "created": "2026-11-03T18:37:18",
+ "state": "suspended",
+ "keep": false,
+ "modifications": [],
+ "started_from": "172.17.0.1",
+ "python": "3.11.17",
+ "backend_settings": {},
+ "backend_notes": [],
+ "restorable": true,
+ "kind": "playground",
+ "buffer": {
+  "window_s": 900.0,
+  "window_mb": 1024,
+  "recording": true,
+  "protected": [
+   [
+    0,
+    0
+   ],
+   [
+    0,
+    null
+   ]
+  ],
+  "segs": [
+   {
+    "k": 0,
+    "wall0": 1793731039.0006044,
+    "t0": 0.0,
+    "world": 1
+   },
+   {
+    "k": 1,
+    "wall0": 1793731234.033541,
+    "t0": 284909943.977496,
+    "world": 1
+   }
+  ]
+ },
+ "last_action": 1793731234.0330207,
+ "last_action_iso": "2026-11-03T18:40:34",
+ "size": 2516,
+ "n_messages": 285,
+ "pid": 18,
+ "sim_t": 284909943.977496,
+ "approximations": [
+  "ньютоновская гравитация точечных масс"
+ ],
+ "scene": "Плейграунд: ньютоновские N тел",
+ "worlds": [
+  {
+   "n": 1,
+   "wall": "2026-11-03T18:37:19",
+   "scene": "Плейграунд: ньютоновские N тел",
+   "preset": "sun_earth",
+   "seed": 3,
+   "params": {
+    "laws": "newton",
+    "m_total": 20.0,
+    "m_hole": 10.0,
+    "spin": 0.9,
+    "charge": 0.0,
+    "collisions": "merge",
+    "scene": {
+     "format": "lfscene",
+     "version": 1,
+     "objects": [
+      {
+       "type": "star",
+       "label": "Солнце",
+       "values": {
+        "mass": 1.0,
+        "radius": 1.0
+       }
+      },
+      {
+       "type": "planet",
+       "label": "Земля",
+       "values": {
+        "mass": 1.0,
+        "radius": 1.0,
+        "x": 1.0
+       }
+      },
+      {
+       "type": "field",
+       "label": "Датчик у Земли",
+       "values": {
+        "x": 1.02
+       }
+      }
+     ]
+    }
+   },
+   "modifications": [],
+   "approximations": [
+    "ньютоновская гравитация точечных масс"
+   ]
+  }
+ ],
+ "playing": false,
+ "speed": 31557600.0,
+ "commands": [
+  {
+   "wall": "2026-11-03T18:37:20",
+   "from": "172.17.0.1",
+   "cmd": "play",
+   "args": {}
+  },
+  {
+   "wall": "2026-11-03T18:37:29",
+   "from": "172.17.0.1",
+   "cmd": "pause",
+   "args": {}
+  },
+  {
+   "wall": "2026-11-03T18:40:34",
+   "from": "server",
+   "cmd": "stop",
+   "args": {
+    "checkpoint": true
+   }
+  }
+ ],
+ "last_viewed": "2026-11-03T18:37:31",
+ "stop_reason": "room for another run",
+ "ended": "2026-11-03T18:40:34",
+ "returncode": 0
+}

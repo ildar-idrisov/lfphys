@@ -1,0 +1,9 @@
+v12_arrival_times_2d after 15 s of recording (35 frames, 60 messages): one step at 25 %: back 101 ms / forward 32 ms; at 50 %: back 122 ms / forward 21 ms; at 90 %: back 155 ms / forward 31 ms
+v12_arrival_times_2d after 45 s of recording (99 frames, 265 messages): one step at 25 %: back 179 ms / forward 33 ms; at 50 %: back 314 ms / forward 28 ms; at 90 %: back 535 ms / forward 36 ms
+v12_arrival_times_2d after 90 s of recording (207 frames, 645 messages): one step at 25 %: back 323 ms / forward 53 ms; at 50 %: back 623 ms / forward 29 ms; at 90 %: back 1992 ms / forward 3586 ms
+v09_thomas_3d after 15 s of recording (306 frames, 490 messages): one step at 25 %: back 78 ms / forward 25 ms; at 50 %: back 56 ms / forward 24 ms; at 90 %: back 57 ms / forward 24 ms
+v09_thomas_3d after 45 s of recording (921 frames, 1459 messages): one step at 25 %: back 71 ms / forward 26 ms; at 50 %: back 72 ms / forward 22 ms; at 90 %: back 28 ms / forward 28 ms
+v09_thomas_3d after 90 s of recording (1823 frames, 2305 messages): one step at 25 %: back 91 ms / forward 28 ms; at 50 %: back 32 ms / forward 33 ms; at 90 %: back 29 ms / forward 29 ms
+v01_light_travel after 15 s of recording (312 frames, 276 messages): one step at 25 %: back 31 ms / forward 32 ms; at 50 %: back 31 ms / forward 31 ms; at 90 %: back 32 ms / forward 32 ms
+v01_light_travel after 45 s of recording (920 frames, 935 messages): one step at 25 %: back 30 ms / forward 31 ms; at 50 %: back 36 ms / forward 26 ms; at 90 %: back 31 ms / forward 32 ms
+v01_light_travel after 90 s of recording (1821 frames, 1801 messages): one step at 25 %: back 32 ms / forward 35 ms; at 50 %: back 32 ms / forward 32 ms; at 90 %: back 31 ms / forward 32 ms

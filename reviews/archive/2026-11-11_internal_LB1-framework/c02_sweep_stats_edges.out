@@ -1,0 +1,23 @@
+(a) mean over the whole duration, k = 4.0: measured -0.1185765189 exact -0.118577003 rel 4.08e-06 readings 201
+(a) mean over the whole duration, k = 9.0: measured -0.1799009874 exact -0.1799026402 rel 9.19e-06 readings 201
+(a) mean over a window of 1e-6: measured -0.7570129969 exact -0.7570129968 readings 4 trace t0 0.699999
+(b) max of x over 3 s (1.9 periods), n_samples =   1: measured 0.753902, true max 1; stat_text «максимум», readings 2; message «Готово: измерено 1 из 1 значений»
+(b) max of x over 3 s (1.9 periods), n_samples =   4: measured 0.753902, true max 1; stat_text «максимум», readings 5; message «Готово: измерено 1 из 1 значений»
+(b) max of x over 3 s (1.9 periods), n_samples = 200: measured 0.999995, true max 1; stat_text «максимум», readings 201; message «Готово: измерено 1 из 1 значений»
+(c) x_first in an empty scene, final: measured None, note «величина в конце не определена (в сцене нет осцилляторов)», error «None»
+(c) x_first in an empty scene, mean_last: measured None, note «величина не определена в 6 из 6 замеров окна (в сцене нет осцилляторов)», error «None»
+(c) x_first in an empty scene, max: measured None, note «величина не определена ни в одном замере (в сцене нет осцилляторов)», error «None»
+(d) window > duration: HTTP 400: {"error": "окно усреднения длиннее свипа", "hint": "окно — не больше длительности"}
+(d) n_samples 0: HTTP 400: {"error": "«n_samples» — целое от 1 до 2000"}
+(d) value text: HTTP 400: {"error": "«Жёсткость пружины, Н/м»: «abc» — не число; нужно от 1·10⁻⁶ до 10000"}
+(d) value dict: HTTP 400: {"error": "«Жёсткость пружины, Н/м»: «{'a': 1}» — не число; нужно от 1·10⁻⁶ до 10000"}
+(d) target id a list: HTTP 500: 500 Internal Server Error
+
+Server got itself in trouble
+(d) obj id a list: HTTP 500: 500 Internal Server Error
+
+Server got itself in trouble
+(d) measure a list: HTTP 500: 500 Internal Server Error
+
+Server got itself in trouble
+(d) body a list: HTTP 400: {"error": "тело запроса — объект JSON"}

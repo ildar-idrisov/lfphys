@@ -1,0 +1,14 @@
+{"scroller":"right"}
+{"name":"ticking a quantity with the keyboard keeps the focus on it","ok":false,"before":"o10.x","after":"BODY"}
+{"name":"ticking a quantity keeps a folded group folded","ok":false,"active":"BODY","worldOpen":true}
+{"name":"ticking a quantity keeps the column's scroll","ok":false,"before":{"top":1032,"h":1747},"after":{"top":445,"h":1885}}
+{"name":"the sweep form keeps the values typed after folding and opening it","ok":false,"kept":""}
+{"name":"«Сейчас» for the position of o1 shows where it is (not the stored parameter)","ok":false,"shown":"Сейчас: 1 м","position_now":-0.7496062758160886}
+{"estimate":"≈ 14 с счёта: 40 знач. × (восстановление 0,1 с + 300 с мира × 0,714 мс за 1 с + 201 замер(ов) × 0,06 мс); предел 10 мин. Оценка — по цене шага этого мира в записи (65 кадров)"}
+{"name":"a running sweep keeps the column's scroll across its polls","ok":true,"before":{"top":1740,"h":2455},"after":{"top":1740,"h":2902},"state":"Свип № 1: считается ✕ отменить"}
+{"name":"a running sweep updates its table in place (the nodes kept)","ok":false,"table":false,"canvas":false,"state":"Свип № 1: считается ✕ отменить"}
+{"name":"the result states the base moment","ok":true,"head":["закон «Жёсткость пружины» → Полная энергия (максимум); 300 с мира от t = 2,95553","Готово: измерено 40 из 40 значений"],"estimate":"≈ 14 с счёта: 40 знач. × (восстановление 0,1 с + 300 с мира × 0,714 мс за 1 с + 201 замер(ов) × 0,06 мс); предел 10 мин. Оценка — по цене шага этого мира в записи (65 кадров)"}
+{"name":"the result states the sampling (how many readings a «максимум» is taken over)","ok":false,"head":["закон «Жёсткость пружины» → Полная энергия (максимум); 300 с мира от t = 2,95553","Готово: измерено 40 из 40 значений"]}
+{"name":"the CSV of the table states the base moment and the sampling","ok":false,"first_line":"\"Жёсткость пружины, Н/м\",\"Полная энергия (максимум), Дж\",примечание\r"}
+{"name":"no page errors","ok":true,"errs":[]}
+8 failed

@@ -1,0 +1,11 @@
+v09_thomas_3d run 20261028-175346-v09-324e: 403 frames, end t = 6,98534863 лет; middle frame 201: A t = 3,48334322 лет / B t = 3,48334322 лет
+  centre A vs B: 0 px differ (0.00 %), max channel diff 0
+  panels: checks same; events shown 2/2 (future 0/0); set-up same; right panels same
+  ▶ from the start: 3.2 distinct frames/s, 5.8 animation frames/s, longest gap 1173 ms
+  ◀ from the end: 1.6 distinct frames/s, 1.6 animation frames/s, longest gap 1294 ms; GPU objects before {"geometries":58,"textures":17} after {"geometries":54,"textures":17}
+v11_double_slit_2d run 20261028-175514-v11-d225: 42 frames, end t = 0,000135824504 пс; middle frame 20: A t = 6.23067253·10⁻⁵ пс / B t = 6.23067253·10⁻⁵ пс
+  centre A vs B: 0 px differ (0.00 %), max channel diff 0
+  panels: checks same; events shown 0/0 (future 0/0); set-up same; right panels DIFFER
+    first differing line: A «0,6789 ед. (5.86·10⁻¹⁷ с)» / B «0,7194 ед. (6.21·10⁻¹⁷ с)»
+  ▶ from the start: 3.6 distinct frames/s, 8.2 animation frames/s, longest gap 1216 ms
+  ◀ from the end: 2.4 distinct frames/s, 2.4 animation frames/s, longest gap 1113 ms; GPU objects before {"geometries":9,"textures":13} after {"geometries":9,"textures":13}

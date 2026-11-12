@@ -1,0 +1,41 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.17, pytest-9.1.1, pluggy-1.7.0 -- /usr/local/bin/python3
+rootdir: /lf/visualizations
+collecting ... collected 25 items
+
+v03_quantum_1d/tests/test_v03_quantum.py::test_presets_run_and_checks_agree[tunnel] PASSED [  4%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_presets_run_and_checks_agree[tunnel_bohm] PASSED [  8%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_presets_run_and_checks_agree[tunnel_everett] PASSED [ 12%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_presets_run_and_checks_agree[resonant] PASSED [ 16%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_presets_run_and_checks_agree[above] PASSED [ 20%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_presets_run_and_checks_agree[step] PASSED [ 24%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_presets_run_and_checks_agree[well] PASSED [ 28%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_presets_run_and_checks_agree[thick] PASSED [ 32%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_presets_run_and_checks_agree[oscillator] PASSED [ 36%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_packet_transmission_equals_the_stationary_reference PASSED [ 40%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_three_readings_give_the_same_statistics[copenhagen] PASSED [ 44%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_three_readings_give_the_same_statistics[bohm] PASSED [ 48%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_three_readings_give_the_same_statistics[everett] PASSED [ 52%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_clicks_are_revealed_only_when_reached PASSED [ 56%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_live_change_rebuilds_and_reading_change_does_not PASSED [ 60%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_oscillator_levels_and_period PASSED [ 64%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_live_message_carries_the_engine_modules_in_force PASSED [ 68%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_review_cases_converge_to_the_stationary_reference[params0] PASSED [ 72%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_review_cases_converge_to_the_stationary_reference[params1] PASSED [ 76%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_review_cases_converge_to_the_stationary_reference[params2] PASSED [ 80%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_unreachable_set_ups_are_refused_with_the_reason PASSED [ 84%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_heavy_trap_is_refused_and_levels_come_from_a_window PASSED [ 88%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_a_step_above_the_energy_runs_to_its_transmission PASSED [ 92%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_sharp_edges_shorten_the_step_where_the_transmission_is_small PASSED [ 96%]
+v03_quantum_1d/tests/test_v03_quantum.py::test_refusals_name_what_this_scenario_can_change PASSED [100%]
+
+============================= slowest 8 durations ==============================
+44.08s call     v03_quantum_1d/tests/test_v03_quantum.py::test_sharp_edges_shorten_the_step_where_the_transmission_is_small
+16.38s call     v03_quantum_1d/tests/test_v03_quantum.py::test_presets_run_and_checks_agree[well]
+15.49s call     v03_quantum_1d/tests/test_v03_quantum.py::test_a_step_above_the_energy_runs_to_its_transmission
+14.01s call     v03_quantum_1d/tests/test_v03_quantum.py::test_review_cases_converge_to_the_stationary_reference[params0]
+9.90s call     v03_quantum_1d/tests/test_v03_quantum.py::test_unreachable_set_ups_are_refused_with_the_reason
+8.58s call     v03_quantum_1d/tests/test_v03_quantum.py::test_review_cases_converge_to_the_stationary_reference[params1]
+7.52s call     v03_quantum_1d/tests/test_v03_quantum.py::test_presets_run_and_checks_agree[resonant]
+7.25s call     v03_quantum_1d/tests/test_v03_quantum.py::test_review_cases_converge_to_the_stationary_reference[params2]
+======================== 25 passed in 178.59s (0:02:58) ========================

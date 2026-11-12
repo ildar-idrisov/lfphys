@@ -1,0 +1,31 @@
+== [JS] quant-ph/0611067 eq. (22), (24)
+238:                                                                                4k∆t
+245:observable. Let us assume now, for the sake of simplicity,    Each operator A(α) a Gaussian-weighted sum of projec-
+269:           Ωm ρΩ†m           1 X −k(n−m)2 /2                                4k∆t ∞ ∞
+272:   ρf =                  =       e           |nihn|.   (21)         =                     α|ψ(x)|2 e−4k∆t(x−α) dx dα
+284:                                                                            4k∆t ∞
+287:                                                                        =             |ψ(x)|2 e−4k∆t(x−α) dx.
+298:            4k∆t ∞
+301:  P (α) ≈             δ(x −hXi)e−4k∆t(x−α) dx
+== [B] 1204.4325 eqs. (17), (18), (22)
+1227:   In order to appreciate how collapse mod-                        (πrC2 )3/4
+1246:  pn (x)    ≡    kLn (x)ψt (x1 , x2 , . . . xN )k2 ,
+1255:distributed in time like a Poissonian process any act of observation.
+1349:         λGRW [1 − e−(x−y)     C    ]hx|ρ(t)|yi.
+== [CDM] 0805.4002 eqs. (4), (8), (10), (11); publication
+25:                                           Published in AIP Conference Proceedings 275, Thirteenth International Con-
+109:                                  H = HS −          C Cm .                         (4)
+135:                     δpm = δt hφ(t)|Cm Cm |φ(t)i ≥ 0 .                             (8)
+195:                with a probability δpm        |φ(t + δt)i =               .          (10)
+199:     the no-jump case, which occurs then with a probability 1 − δp, we take as
+202:     with a probability 1 − δp = 1 −         δpm      |φ(t + δt)i =                      .
+== [PK] quant-ph/9702007 eqs. (30), (66), (67)
+632:                                     I1 (τ ) ≡ −        ,                               (30)
+1167:                               |ψA (t)i = e−i Hef f t/h̄ |ψA (0)i .                       (66)
+1174:just the delay function
+1177:                                     P0 (t) = hψA (t)|ψA (t)i                              (67)
+== [PDAC] 2209.00480 p. 1
+40:                                            infinitely long and thin solenoid with an associated mag-           the property associated with it is definite, i.e., it is estab-
+42:                                            state acquires an extra relative phase φAB = qΦB /~ after           plained in the next section, although this measure comes
+== [PCM] cond-mat/0506691 flux unit
+101:Φ = πa2 B is the magnetic flux and Φ0 = 2πh̄/|e| the

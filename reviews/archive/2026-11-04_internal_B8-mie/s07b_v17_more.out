@@ -1,0 +1,25 @@
+supernumerary: rel_err per wavelength: [(380, 0.051), (405, 0.013), (431, 0.044), (456, 0.025), (481, 0.029), (507, 0.004), (532, 0.012), (557, 0.036), (583, 0.006), (608, 0.271), (633, 0.013), (659, 0.103), (684, 0.281), (709, 0.212), (735, 0.312), (760, 0.114)]
+  worst wavelength 734.7 nm: nodes 105, dx 0.247; estimate max err/max 0.312 (at 180.0 deg); actual max |error|/max 3.62e-02 (at 180.0 deg)
+
+near: 0.3 s, errors []
+  x = 11.42, m = [1.3354010303999764, 0.0], Q = {'Qext': 1.8327583325384695, 'Qsca': 1.8327583325384695, 'Qabs': 0.0, 'Qback': 1.1233364800752097, 'Qpr': 0.7056766582686058, 'g': 0.614964697887252}
+  check alexander: value 9.787897091030942 ref None tol 1e-09 ok None info True
+  check boundary: value 2.0170048806324877e-09 ref 0.0 tol 4.075464971850851e-08 ok True info False
+  check debye: value 1.6852141391278171e-15 ref 0.0 tol 5e-10 ok True info False
+  check energy: value 1.8327583325384262 ref 1.8327583325384695 tol 2.3322676295501876e-12 ok None info False
+  check mueller: value 9.851859401263567e-16 ref 0.0 tol 1e-10 ok True info False
+  check plane_1: value 8.984340445954026e-10 ref 0.0 tol 4.075464971850851e-08 ok True info False
+  check sky_sum: value 0.0 ref None tol 1e-09 ok None info True
+  check theorem: value 1.8327583325384695 ref 1.8327583325384698 tol 6.661338147750939e-13 ok None info False
+  check water: value 1.3343441982817494 ref 1.334344 tol 7.494319305966077e-07 ok True info False
+
+absorbing: 0.4 s, errors []
+  x = 22.85, m = [1.6, 0.05], Q = {'Qext': 2.2242048965014596, 'Qsca': 1.17328969073646, 'Qabs': 1.0509152057649995, 'Qback': 0.04177726272075731, 'Qpr': 1.135867351737737, 'g': 0.9275949097282071}
+  check boundary: value 5.379464959220415e-09 ref 0.0 tol 1.1710572617925594e-07 ok True info False
+  check debye: value 2.8681430629813936e-15 ref 0.0 tol 5e-10 ok True info False
+  check mueller: value 8.495466978033425e-16 ref 0.0 tol 1e-10 ok True info False
+  check plane_1: value 3.2237386808706314e-09 ref 0.0 tol 1.1710572617925594e-07 ok True info False
+  check sky_sum: value 0.0036309145129621726 ref None tol 1e-09 ok None info True
+  check theorem: value 2.2242048965014596 ref 2.2242048965014605 tol 1.021405182655144e-12 ok None info False
+
+big_drops: build 1.9 s; first three wavelengths [2.1, 1.8, 1.6] s ([380, 405, 431] nm, nodes [1199, 1199, 1199], dx [2.48, 2.33, 2.19], coarse [True, True, True]); 16 wavelengths in all

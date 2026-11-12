@@ -1,0 +1,145 @@
+p01_gravity            start form   m_total      field cleared (sent as 0)  -> параметры: m_total: 0.0 < min 0.1
+p01_gravity            start form   m_total      typed below min            -> параметры: m_total: -0.9 < min 0.1
+p01_gravity            start form   m_total      typed above max            -> параметры: m_total: 100000000001.0 > max 10000000000.0
+p01_gravity            start form   m_hole       field cleared (sent as 0)  -> параметры: m_hole: 0.0 < min 0.1
+p01_gravity            start form   m_hole       typed below min            -> параметры: m_hole: -0.9 < min 0.1
+p01_gravity            start form   m_hole       typed above max            -> параметры: m_hole: 100000000001.0 > max 10000000000.0
+p02_quantum            start form   size         field cleared (sent as 0)  -> параметры: size: 0.0 < min 2.0
+p02_quantum            start form   size         typed below min            -> параметры: size: 1.0 < min 2.0
+p02_quantum            start form   size         typed above max            -> параметры: size: 1000001.0 > max 100000.0
+p03_molecules          start form   cutoff       field cleared (sent as 0)  -> параметры: cutoff: 0.0 < min 1.2
+p03_molecules          start form   cutoff       typed below min            -> параметры: cutoff: 0.19999999999999996 < min 1.2
+p03_molecules          start form   cutoff       typed above max            -> параметры: cutoff: 61.0 > max 6.0
+p03_molecules          start form   Lx           field cleared (sent as 0)  -> параметры: Lx: 0.0 < min 0.5
+p03_molecules          start form   Lx           typed below min            -> параметры: Lx: -0.5 < min 0.5
+p03_molecules          start form   Lx           typed above max            -> параметры: Lx: 10001.0 > max 1000.0
+p04_fluids             start form   rho          field cleared (sent as 0)  -> параметры: rho: 0.0 < min 0.001
+p04_fluids             start form   rho          typed below min            -> параметры: rho: -0.999 < min 0.001
+p04_fluids             start form   rho          typed above max            -> параметры: rho: 1000001.0 > max 100000.0
+p04_fluids             start form   nu           field cleared (sent as 0)  -> параметры: nu: 0.0 < min 1e-09
+p04_fluids             start form   nu           typed below min            -> параметры: nu: -0.999999999 < min 1e-09
+p04_fluids             start form   nu           typed above max            -> параметры: nu: 101.0 > max 10.0
+v01_light_travel       start form   c_factor     field cleared (sent as 0)  -> параметры: c_factor: 0.0 < min 0.001
+v01_light_travel       start form   c_factor     typed below min            -> параметры: c_factor: -0.999 < min 0.001
+v01_light_travel       start form   c_factor     typed above max            -> параметры: c_factor: 10001.0 > max 1000.0
+v01_light_travel       start form   n_rays       field cleared (sent as 0)  -> параметры: n_rays: 0 < min 36
+v01_light_travel       start form   n_rays       typed below min            -> параметры: n_rays: 35 < min 36
+v01_light_travel       start form   n_rays       typed above max            -> параметры: n_rays: 14401 > max 1440
+v02_double_slit        start form   born_p       field cleared (sent as 0)  -> параметры: born_p: 0.0 < min 0.5
+v02_double_slit        start form   born_p       typed below min            -> параметры: born_p: -0.5 < min 0.5
+v02_double_slit        start form   born_p       typed above max            -> параметры: born_p: 61.0 > max 6.0
+v02_double_slit        start form   grw_lambda   field cleared (sent as 0)  -> параметры: grw_lambda: 0.0 < min 1e-30
+v02_double_slit        start form   grw_lambda   typed below min            -> параметры: grw_lambda: -1.0 < min 1e-30
+v02_double_slit        start form   grw_lambda   typed above max            -> параметры: grw_lambda: 10000000000001.0 > max 1000000000000.0
+v02_double_slit        live control lam_nm       typed below min            -> Изменение не применено: lam_nm: -0.999999 < min 1e-06
+v02_double_slit        live control lam_nm       typed above max            -> Изменение не применено: lam_nm: 10000000001.0 > max 1000000000.0
+v02_double_slit        live control ekin_ev      typed below min            -> Изменение не применено: ekin_ev: -0.999999999999 < min 1e-12
+v02_double_slit        live control ekin_ev      typed above max            -> Изменение не применено: ekin_ev: 10000000000001.0 > max 1000000000000.0
+v03_quantum_1d         live control energy       typed below min            -> Изменение не применено: energy: -0.95 < min 0.05
+v03_quantum_1d         live control energy       typed above max            -> Изменение не применено: energy: 201.0 > max 20.0
+v03_quantum_1d         live control sigma        typed below min            -> Изменение не применено: sigma: 0.0 < min 1.0
+v03_quantum_1d         live control sigma        typed above max            -> Изменение не применено: sigma: 151.0 > max 15.0
+v04_orbits             start form   mass_msun    field cleared (sent as 0)  -> параметры: mass_msun: 0.0 < min 1.0
+v04_orbits             start form   mass_msun    typed below min            -> параметры: mass_msun: 0.0 < min 1.0
+v04_orbits             start form   mass_msun    typed above max            -> параметры: mass_msun: 10000000001.0 > max 1000000000.0
+v04_orbits             start form   radius_km    field cleared (sent as 0)  -> (accepted)
+v04_orbits             start form   radius_km    typed below min            -> параметры: radius_km: -1.0 < min 0.0
+v04_orbits             start form   radius_km    typed above max            -> параметры: radius_km: 1000000001.0 > max 100000000.0
+v04_orbits             live control r0           typed below min            -> Изменение не применено: r0: 1.1 < min 2.1
+v04_orbits             live control r0           typed above max            -> Изменение не применено: r0: 1000000001.0 > max 100000000.0
+v04_orbits             live control speed        typed below min            -> Изменение не применено: speed: -1.0 < min 0.0
+v04_orbits             live control speed        typed above max            -> Изменение не применено: speed: 17.0 > max 1.6
+v05_optics_bench       live control lam_nm       typed below min            -> Изменение не применено: lam_nm: 299.0 < min 300.0
+v05_optics_bench       live control lam_nm       typed above max            -> Изменение не применено: lam_nm: 16001.0 > max 1600.0
+v05_optics_bench       live control theta_deg    typed below min            -> Изменение не применено: theta_deg: -1.0 < min 0.0
+v05_optics_bench       live control theta_deg    typed above max            -> Изменение не применено: theta_deg: 900.0 > max 89.9
+v06_qcd                start form   alpha_mz     field cleared (sent as 0)  -> параметры: alpha_mz: 0.0 < min 0.05
+v06_qcd                start form   alpha_mz     typed below min            -> параметры: alpha_mz: -0.95 < min 0.05
+v06_qcd                start form   alpha_mz     typed above max            -> параметры: alpha_mz: 4.0 > max 0.3
+v06_qcd                live control loops        typed below min            -> Изменение не применено: loops: 0 < min 1
+v06_qcd                live control loops        typed above max            -> Изменение не применено: loops: 41 > max 4
+v06_qcd                live control mu           typed below min            -> Изменение не применено: mu: 0.0 < min 1.0
+v06_qcd                live control mu           typed above max            -> Изменение не применено: mu: 100001.0 > max 10000.0
+v07_bell_test          start form   spin_beta    field cleared (sent as 0)  -> параметры: spin_beta: 0.0 < min 0.0001
+v07_bell_test          start form   spin_beta    typed below min            -> параметры: spin_beta: -0.9999 < min 0.0001
+v07_bell_test          start form   spin_beta    typed above max            -> параметры: spin_beta: 10.99 > max 0.999
+v07_bell_test          live control L_m          typed below min            -> Изменение не применено: L_m: -0.99 < min 0.01
+v07_bell_test          live control L_m          typed above max            -> Изменение не применено: L_m: 1000001.0 > max 100000.0
+v07_bell_test          live control rate         typed below min            -> Изменение не применено: rate: -0.999 < min 0.001
+v07_bell_test          live control rate         typed above max            -> Изменение не применено: rate: 10000000001.0 > max 1000000000.0
+v08_wave_3d            start form   lam          field cleared (sent as 0)  -> параметры: lam: 0.0 < min 0.3
+v08_wave_3d            start form   lam          typed below min            -> параметры: lam: -0.7 < min 0.3
+v08_wave_3d            start form   lam          typed above max            -> параметры: lam: 16.0 > max 1.5
+v08_wave_3d            start form   w            field cleared (sent as 0)  -> параметры: w: 0.0 < min 0.5
+v08_wave_3d            start form   w            typed below min            -> параметры: w: -0.5 < min 0.5
+v08_wave_3d            start form   w            typed above max            -> параметры: w: 61.0 > max 6.0
+v09_thomas_3d          start form   rho          field cleared (sent as 0)  -> параметры: rho: 0.0 < min 0.05
+v09_thomas_3d          start form   rho          typed below min            -> параметры: rho: -0.95 < min 0.05
+v09_thomas_3d          start form   rho          typed above max            -> параметры: rho: 31.0 > max 3.0
+v09_thomas_3d          start form   turns        field cleared (sent as 0)  -> параметры: turns: 0 < min 1
+v09_thomas_3d          start form   turns        typed below min            -> параметры: turns: 0 < min 1
+v09_thomas_3d          start form   turns        typed above max            -> параметры: turns: 61 > max 6
+v10_fast_observer      start form   beta         field cleared (sent as 0)  -> (accepted)
+v10_fast_observer      start form   beta         typed below min            -> параметры: beta: -1.0 < min 0.0
+v10_fast_observer      start form   beta         typed above max            -> параметры: beta: 10.9 > max 0.99
+v10_fast_observer      start form   sky_T        field cleared (sent as 0)  -> параметры: sky_T: 0.0 < min 500.0
+v10_fast_observer      start form   sky_T        typed below min            -> параметры: sky_T: 499.0 < min 500.0
+v10_fast_observer      start form   sky_T        typed above max            -> параметры: sky_T: 300001.0 > max 30000.0
+v10_fast_observer      live control obs_beta     typed below min            -> Изменение не применено: obs_beta: -1.0 < min 0.0
+v10_fast_observer      live control obs_beta     typed above max            -> Изменение не применено: obs_beta: 10.9 > max 0.99
+v10_fast_observer      live control obs_theta    typed below min            -> Изменение не применено: obs_theta: -1.0 < min 0.0
+v10_fast_observer      live control obs_theta    typed above max            -> Изменение не применено: obs_theta: 1801.0 > max 180.0
+v11_double_slit_2d     start form   lam_pm       field cleared (sent as 0)  -> параметры: lam_pm: 0.0 < min 20.0
+v11_double_slit_2d     start form   lam_pm       typed below min            -> параметры: lam_pm: 19.0 < min 20.0
+v11_double_slit_2d     start form   lam_pm       typed above max            -> параметры: lam_pm: 50001.0 > max 5000.0
+v11_double_slit_2d     start form   a            field cleared (sent as 0)  -> параметры: a: 0.0 < min 0.5
+v11_double_slit_2d     start form   a            typed below min            -> параметры: a: -0.5 < min 0.5
+v11_double_slit_2d     start form   a            typed above max            -> параметры: a: 201.0 > max 20.0
+v11_double_slit_2d     live control mark_deg     typed below min            -> Изменение не применено: mark_deg: -1.0 < min 0.0
+v11_double_slit_2d     live control mark_deg     typed above max            -> Изменение не применено: mark_deg: 3601.0 > max 360.0
+v11_double_slit_2d     live control flux         typed below min            -> Изменение не применено: flux: -3.0 < min -2.0
+v11_double_slit_2d     live control flux         typed above max            -> Изменение не применено: flux: 21.0 > max 2.0
+v12_arrival_times_2d   start form   lam_pm       field cleared (sent as 0)  -> параметры: lam_pm: 0.0 < min 20.0
+v12_arrival_times_2d   start form   lam_pm       typed below min            -> параметры: lam_pm: 19.0 < min 20.0
+v12_arrival_times_2d   start form   lam_pm       typed above max            -> параметры: lam_pm: 50001.0 > max 5000.0
+v12_arrival_times_2d   start form   L            field cleared (sent as 0)  -> параметры: L: 0.0 < min 2.0
+v12_arrival_times_2d   start form   L            typed below min            -> параметры: L: 1.0 < min 2.0
+v12_arrival_times_2d   start form   L            typed above max            -> параметры: L: 2001.0 > max 200.0
+v13_hydrogen_3d        start form   n            field cleared (sent as 0)  -> параметры: n: 0 < min 1
+v13_hydrogen_3d        start form   n            typed below min            -> параметры: n: 0 < min 1
+v13_hydrogen_3d        start form   n            typed above max            -> параметры: n: 121 > max 12
+v13_hydrogen_3d        start form   l            field cleared (sent as 0)  -> (accepted)
+v13_hydrogen_3d        start form   l            typed below min            -> параметры: l: -1 < min 0
+v13_hydrogen_3d        start form   l            typed above max            -> параметры: l: 111 > max 11
+v14_quarkonium_3d      start form   n            field cleared (sent as 0)  -> параметры: n: 0 < min 1
+v14_quarkonium_3d      start form   n            typed below min            -> параметры: n: 0 < min 1
+v14_quarkonium_3d      start form   n            typed above max            -> параметры: n: 31 > max 3
+v14_quarkonium_3d      start form   l            field cleared (sent as 0)  -> (accepted)
+v14_quarkonium_3d      start form   l            typed below min            -> параметры: l: -1 < min 0
+v14_quarkonium_3d      start form   l            typed above max            -> параметры: l: 21 > max 2
+v15_kerr_shadow        start form   a13          field cleared (sent as 0)  -> (accepted)
+v15_kerr_shadow        start form   a13          typed below min            -> параметры: a13: -11.0 < min -10.0
+v15_kerr_shadow        start form   a13          typed above max            -> параметры: a13: 101.0 > max 10.0
+v15_kerr_shadow        start form   a22          field cleared (sent as 0)  -> (accepted)
+v15_kerr_shadow        start form   a22          typed below min            -> параметры: a22: -4.0 < min -3.0
+v15_kerr_shadow        start form   a22          typed above max            -> параметры: a22: 101.0 > max 10.0
+v15_kerr_shadow        live control incl         typed below min            -> Изменение не применено: incl: 0.0 < min 1.0
+v15_kerr_shadow        live control incl         typed above max            -> Изменение не применено: incl: 1791.0 > max 179.0
+v15_kerr_shadow        live control half         typed below min            -> Изменение не применено: half: 3.0 < min 4.0
+v15_kerr_shadow        live control half         typed above max            -> Изменение не применено: half: 301.0 > max 30.0
+v16_optical_vortices   start form   l            field cleared (sent as 0)  -> (accepted)
+v16_optical_vortices   start form   l            typed below min            -> параметры: l: -7 < min -6
+v16_optical_vortices   start form   l            typed above max            -> параметры: l: 61 > max 6
+v16_optical_vortices   start form   p            field cleared (sent as 0)  -> (accepted)
+v16_optical_vortices   start form   p            typed below min            -> параметры: p: -1 < min 0
+v16_optical_vortices   start form   p            typed above max            -> параметры: p: 31 > max 3
+v16_optical_vortices   live control f_rot        typed below min            -> Изменение не применено: f_rot: -1.0 < min 0.0
+v16_optical_vortices   live control f_rot        typed above max            -> Изменение не применено: f_rot: 401.0 > max 40.0
+v17_mie_scattering     start form   radius_um    field cleared (sent as 0)  -> параметры: radius_um: 0.0 < min 0.05
+v17_mie_scattering     start form   radius_um    typed below min            -> параметры: radius_um: -0.95 < min 0.05
+v17_mie_scattering     start form   radius_um    typed above max            -> параметры: radius_um: 10001.0 > max 1000.0
+v17_mie_scattering     start form   width        field cleared (sent as 0)  -> (accepted)
+v17_mie_scattering     start form   width        typed below min            -> параметры: width: -1.0 < min 0.0
+v17_mie_scattering     start form   width        typed above max            -> параметры: width: 4.0 > max 0.3
+v17_mie_scattering     live control lam_nm       typed below min            -> Изменение не применено: lam_nm: 379.0 < min 380.0
+v17_mie_scattering     live control lam_nm       typed above max            -> Изменение не применено: lam_nm: 7601.0 > max 760.0

@@ -1,0 +1,27 @@
+=== Newton: a star at rest and a test body (total energy exactly 0): the running checks ===
+the frame raised: ZeroDivisionError float division by zero
+
+=== Newton: two stars merge, then the scene is exported and loaded again ===
+merges: ['«A» и «B» столкнулись и слились: масса 1.5 M☉, остался «A»']
+after the merger: keys ['o1', 'o3'], engine mass 1.6 Msun (before 1.6), radius 0.00585922 au
+exported objects: [('A', 1.0, {'x': [0.06675478595102138, 0.0, 0.0], 'v': [0.0008812055738132775, 0.0, 0.0]}), ('C (far, keeps E != 0)', 0.1, {'x': [29.998678210734713, 0.0, 0.0], 'v': [-0.013218083606990595, 0.0, 0.0]})]
+reloaded: keys ['o1', 'o2'], engine mass 1.1 Msun (should be 1.6), radius 0.00465047 au (was 0.00585922)
+colour changed: radius 0.00585922 -> 0.00465047 au; mass 1.6
+duplicate of the merged body: masses [1.5, 0.1, 1.0]
+
+=== Kerr: a body captured, then the scene exported and loaded again ===
+captured: ['«Падает» пересёк горизонт: для далёкого наблюдателя — никогд']
+status: {'o1': 'active', 'o2': 'active', 'o3': 'captured', 'o4': 'active', 'o5': 'active'}
+  На ISCO-близкой орбите: state r = 2.9999999999999947, r_+ + capture_eps = 1.4359898943540672
+  Наклонная орбита: state r = 24.319509355925657, r_+ + capture_eps = 1.4359898943540672
+  Падает: state r = 1.4359898943540668, r_+ + capture_eps = 1.4359898943540672
+reloading the scene FAILED: ValueError start outside the capture radius r_+ + capture_eps
+
+=== Kerr: an observer's clock across a scene file ===
+before export: o6 clock tau = 0.010448544149250283 s; distant t = 0.0147764728429238
+observer entries in the file: [('Неподвижный на r = 4', None), ('На круговой орбите r = 6', None)]
+after reload: clock tau = 7.071067810695202e-10 s; distant t = 0.0147764738429238
+
+=== Kerr: an observer added at t > 0 is drawn where? ===
+observer added at t = 500 M with phi = 0 deg is drawn at phi = 36.76 deg; Omega t = 36.76 deg (mod 360), Omega = 0.064115: it is drawn where it would be had it been placed at t = 0, not at the phi it was given
+exit 0

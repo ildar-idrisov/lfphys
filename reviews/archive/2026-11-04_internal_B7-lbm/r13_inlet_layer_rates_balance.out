@@ -1,0 +1,14 @@
+=== (a) |u_y| / U left by the velocity inlet (steady, 20 000 steps from the exact parabola) ===
+cell Re    1: max |uy|/U in column 0: 3.951e-03, column 2: 2.480e-03, column 5: 1.035e-03, column 20: 6.494e-04; max |ux - parabola|/U in column 0: 1.069e-02, mid-channel: 6.104e-03
+cell Re    2: max |uy|/U in column 0: 8.039e-03, column 2: 5.486e-03, column 5: 2.833e-03, column 20: 1.007e-03; max |ux - parabola|/U in column 0: 5.118e-03, mid-channel: 3.200e-03
+cell Re    5: max |uy|/U in column 0: 1.986e-02, column 2: 1.436e-02, column 5: 8.418e-03, column 20: 1.545e-03; max |ux - parabola|/U in column 0: 2.544e-03, mid-channel: 3.398e-03
+cell Re   10: max |uy|/U in column 0: 3.822e-02, column 2: 2.834e-02, column 5: 1.751e-02, column 20: 1.956e-03; max |ux - parabola|/U in column 0: 4.389e-03, mid-channel: 1.684e-02
+
+=== (b) flow_rates() before and right after an edit ===
+before: {'left': 0.6, 'right': -0.661558, 'bottom': 0.0, 'top': 0.0}
+right after adding a disk (no step yet): {'left': 0.0, 'right': 0.0, 'bottom': 0.0, 'top': 0.0}
+one step later: {'left': 0.6, 'right': -0.661969, 'bottom': 0.0, 'top': 0.0}
+
+=== (c) the balance of an open channel through edits ===
+steps 7500: mass residual 5.916e-15 (relative), momentum 5.617e-15, dye 0.000e+00; booked keys ['body_force', 'bottom', 'dye_sources', 'geometry', 'left', 'obstacle:0', 'obstacle:1', 'right', 'top']
+checks: {'mass': True, 'momentum': True, 'mach': True, 're_cell': True, 'compressibility': True, 'dye': True}

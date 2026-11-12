@@ -1,0 +1,11 @@
+{'source': 'circle', 'a': 3.0, 'zmax': 40.0}                             окно ×8, обычная сумма; оценка ошибки 1.6e-03 пика           max over depths 1.10e-03 at z =  40.0 (z_max 1.10e-03); max/est  0.7  [6.4 s]
+{'source': 'circle', 'a': 1.0, 'zmax': 20.0}                             окно ×8, обычная сумма; оценка ошибки 1.7e-03 пика           max over depths 1.12e-03 at z =  20.0 (z_max 1.12e-03); max/est  0.7  [3.5 s]
+{'source': 'circle', 'a': 5.0, 'zmax': 60.0, 'lam': 0.8}                 окно ×8, обычная сумма; оценка ошибки 7.0e-04 пика           max over depths 5.56e-04 at z =  53.7 (z_max 4.67e-04); max/est  0.8  [3.5 s]
+{'source': 'square', 'a': 3.0, 'zmax': 40.0}                             окно ×8, с ограничением полосы; оценка ошибки 1.3e-03 пика   max over depths 8.49e-04 at z =  40.0 (z_max 8.49e-04); max/est  0.7; plain sum at the same pad: max 1.40e-03 (z_max 1.40e-03)  [6.2 s]
+{'source': 'square', 'a': 1.0, 'zmax': 25.0}                             окно ×8, обычная сумма; оценка ошибки 7.2e-04 пика           max over depths 4.77e-04 at z =  25.0 (z_max 4.77e-04); max/est  0.7  [3.4 s]
+{'source': 'slit', 'a': 2.0, 'L': 12.0, 'zmax': 40.0}                    окно ×8, с ограничением полосы; оценка ошибки 1.5e-03 пика   max over depths 9.83e-04 at z =  40.0 (z_max 9.83e-04); max/est  0.7; plain sum at the same pad: max 2.43e-03 (z_max 2.43e-03)  [5.8 s]
+{'source': 'double', 'a': 1.0, 'd': 6.0, 'L': 12.0, 'zmax': 40.0}        окно ×8, с ограничением полосы; оценка ошибки 8.5e-04 пика   max over depths 7.58e-04 at z =  21.9 (z_max 4.59e-04); max/est  0.9; plain sum at the same pad: max 2.74e-03 (z_max 2.74e-03)  [5.9 s]
+{'source': 'double', 'a': 0.5, 'd': 3.0, 'L': 6.0, 'zmax': 50.0, 'lam': 0.7}: refused (window)
+{'source': 'gauss', 'w': 0.5, 'zmax': 40.0}                              окно ×4, обычная сумма; оценка ошибки 9.6e-05 пика           max over depths 6.47e-05 at z =  39.6 (z_max 6.25e-05); max/est  0.7  [2.5 s]
+{'source': 'gauss', 'w': 1.0, 'zmax': 60.0, 'lam': 1.0}                  окно ×2, обычная сумма; оценка ошибки 6.3e-04 пика           max over depths 4.15e-04 at z =  60.0 (z_max 4.15e-04); max/est  0.7  [0.6 s]
+done

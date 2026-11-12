@@ -1,0 +1,14 @@
+(1) long runs, a = 0.9, q = 0.3: inclined eccentric orbits (wrapper's normalisation and tolerance)
+  t =     1000 M: dK_rel/dmu2 vs tol per body: [('incl', '2.95e-12/5.28e-12 vs 8.12e-09 (66 st)'), ('ecc', '2.36e-11/1.06e-12 vs 8.89e-09 (79 st)'), ('wide', '1.67e-11/4.98e-13 vs 8.37e-09 (70 st)'), ('eq4', '0.00e+00/4.82e-12 vs 1.13e-08 (128 st)')]  status ['active', 'active', 'active', 'active']  any fails: False  wall 1 s
+  t =    10000 M: dK_rel/dmu2 vs tol per body: [('incl', '5.53e-11/9.46e-11 vs 2.64e-08 (697 st)'), ('ecc', '8.49e-11/2.75e-12 vs 2.97e-08 (881 st)'), ('wide', '1.38e-09/5.25e-11 vs 2.62e-08 (684 st)'), ('eq4', '0.00e+00/3.98e-11 vs 3.56e-08 (1267 st)')]  status ['active', 'active', 'active', 'active']  any fails: False  wall 2 s
+  t =    30000 M: dK_rel/dmu2 vs tol per body: [('incl', '8.47e-11/2.66e-10 vs 4.57e-08 (2085 st)'), ('ecc', '6.37e-11/1.36e-11 vs 5.15e-08 (2649 st)'), ('wide', '4.20e-09/3.13e-10 vs 4.53e-08 (2054 st)'), ('eq4', '0.00e+00/1.37e-10 vs 6.16e-08 (3796 st)')]  status ['active', 'active', 'active', 'active']  any fails: False  wall 4 s
+  t =   100000 M: dK_rel/dmu2 vs tol per body: [('incl', '3.86e-10/6.91e-10 vs 8.34e-08 (6950 st)'), ('ecc', '1.15e-11/3.37e-10 vs 9.41e-08 (8852 st)'), ('wide', '1.30e-08/4.56e-10 vs 8.27e-08 (6841 st)'), ('eq4', '0.00e+00/4.41e-10 vs 1.12e-07 (12648 st)')]  status ['active', 'active', 'active', 'active']  any fails: False  wall 11 s
+  t =   300000 M: dK_rel/dmu2 vs tol per body: [('incl', '1.15e-09/7.64e-10 vs 1.44e-07 (20844 st)'), ('ecc', '6.65e-10/1.06e-10 vs 1.63e-07 (26571 st)'), ('wide', '3.99e-08/2.81e-09 vs 1.43e-07 (20519 st)'), ('eq4', '0.00e+00/1.13e-09 vs 1.95e-07 (37937 st)')]  status ['active', 'active', 'active', 'active']  any fails: False  wall 30 s
+  t =  1000000 M: dK_rel/dmu2 vs tol per body: [('incl', '3.45e-09/8.62e-10 vs 2.64e-07 (69451 st)'), ('ecc', '2.11e-09/4.23e-10 vs 2.98e-07 (88606 st)'), ('wide', '1.33e-07/8.67e-09 vs 2.62e-07 (68397 st)'), ('eq4', '0.00e+00/3.82e-09 vs 3.56e-07 (126446 st)')]  status ['active', 'active', 'active', 'active']  any fails: False  wall 98 s
+
+(2) radial and plunging infalls, a = 0.9, q = 0.3: the shell error while still active, close to r_+ + 1e-4
+  v = (-0.0, 0.0, 0.0): status captured; worst (error / tolerance) while active = 58.7 at r - r_+ = 1.133e-04 (dK_rel 1.11e-16, dmu2 7.96e-07, tol 1.36e-08, steps 184)
+  v = (-0.3, 0.0, 0.1): status captured; worst (error / tolerance) while active = 8.18 at r - r_+ = 1.114e-04 (dK_rel 1.94e-16, dmu2 9.71e-08, tol 1.19e-08, steps 141)
+  v = (-0.6, 0.1, 0.3): status escaped; worst (error / tolerance) while active = 5e-07 at r - r_+ = 9.938e+00 (dK_rel 2.04e-16, dmu2 9.99e-16, tol 2.00e-09, steps 4)
+  v = (0.0, 0.0, 0.05): status captured; worst (error / tolerance) while active = 8.33 at r - r_+ = 1.256e-04 (dK_rel 0.00e+00, dmu2 1.14e-07, tol 1.37e-08, steps 187)
+exit 0

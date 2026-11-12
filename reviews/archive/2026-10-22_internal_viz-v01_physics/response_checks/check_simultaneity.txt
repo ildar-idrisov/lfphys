@@ -1,0 +1,4 @@
+andromeda {}: max |now_at - closed form| = 1.562e-02 s (1.81e-07 d); max |seen t_e - closed form| = 0.000e+00 s
+andromeda_fast {}: max |now_at - closed form| = 1.562e-02 s (1.81e-07 d); max |seen t_e - closed form| = 1.562e-02 s
+andromeda {'kinematics': 'ether'}: max |now_at - closed form| = 0.000e+00 s (0.00e+00 d); max |seen t_e - closed form| = 0.000e+00 s
+andromeda {'kinematics': 'emission'}: max |now_at - closed form| = 0.000e+00 s (0.00e+00 d); max |seen t_e - closed form| = 0.000e+00 s

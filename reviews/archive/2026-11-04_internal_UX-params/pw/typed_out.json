@@ -1,0 +1,27 @@
+[
+ {
+  "name": "P2_catalogue_typed_above_max",
+  "path": "catalogue form",
+  "url": "http://127.0.0.1:8563/",
+  "toasts": [
+   "параметры: lam_nm: 2000.0 > max 1600.0"
+  ]
+ },
+ {
+  "name": "P2_catalogue_field_cleared",
+  "path": "catalogue form",
+  "url": "http://127.0.0.1:8563/",
+  "toasts": [
+   "параметры: lam_nm: 0.0 < min 300.0"
+  ]
+ },
+ {
+  "name": "P2_live_typed_above_max",
+  "path": "live control",
+  "id": "20261104-214524-v05-a461",
+  "toasts": [
+   "Изменение не применено: lam_nm: 2000.0 > max 1600.0"
+  ],
+  "after": "633"
+ }
+]

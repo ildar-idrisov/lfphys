@@ -1,0 +1,5 @@
+  32000 steps (t = 30.792 s): momentum |rel.res| 6.594e-12 limit 1.421e-11 ok True; mass |rel.res| 1.743e-13 ok True
+  64000 steps (t = 61.584 s): momentum |rel.res| 3.168e-11 limit 2.842e-11 ok False; mass |rel.res| 1.020e-12 ok True
+  96000 steps (t = 92.376 s): momentum |rel.res| 8.176e-11 limit 4.263e-11 ok False; mass |rel.res| 8.697e-12 ok True
+ 128000 steps (t = 123.168 s): momentum |rel.res| 2.636e-10 limit 5.684e-11 ok False; mass |rel.res| 2.859e-11 ok True
+[exit 0]

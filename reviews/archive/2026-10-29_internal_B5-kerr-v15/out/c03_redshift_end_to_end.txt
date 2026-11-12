@@ -1,0 +1,8 @@
+case chi=0.9 th=17.0 cunningham pro: r_isco(review) 2.32088304203; done
+case chi=0.9 th=60.0 cunningham pro: r_isco(review) 2.32088304203; done
+case chi=0.998 th=89.0 cunningham pro: r_isco(review) 1.23697065638; done
+case chi=0.9 th=163.0 cunningham pro: r_isco(review) 2.32088304203; done
+case chi=0.7 th=45.0 keplerian retro: r_isco(review) 8.14296545184; done
+case chi=0.95 th=75.0 cunningham retro: r_isco(review) 8.85903005112; done
+case chi=0.3 th=30.0 keplerian pro: r_isco(review) 4.97861683063; done
+pixels 98; fate mismatches 0; max rel |r_n engine - ODE| 7.78e-11; max rel |g_n engine - ODE| 4.74e-12; reviewer plunge vs GLM 2020 App. B (max |du|/u^t): 5.67e-10

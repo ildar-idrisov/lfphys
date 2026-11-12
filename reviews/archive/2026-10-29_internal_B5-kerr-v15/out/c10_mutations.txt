@@ -1,0 +1,10 @@
+M1_kr_always_out: engine tests -> 113 passed, 1 skipped in 26.63s | v15 tests -> 12 passed in 21.06s
+M2_no_heaviside: engine tests -> 1 failed, 6 passed in 1.71s | v15 tests -> 12 passed in 21.99s
+M3_redshift_radial_sign: engine tests -> 1 failed, 58 passed in 20.15s | v15 tests -> 12 passed in 20.39s
+M4_lyapunov_x2: engine tests -> 1 failed, 31 passed in 5.46s | v15 tests -> 5 failed, 7 passed in 21.72s
+M5_mirror_alpha: engine tests -> 1 failed, 18 passed in 2.87s | v15 tests -> 12 passed in 22.31s
+M6_screen_rows_flipped: engine tests -> 113 passed, 1 skipped in 24.90s | v15 tests -> 12 passed in 21.03s
+M7_keplerian_inside_isco: engine tests -> 1 failed, 49 passed, 2 warnings in 18.69s | v15 tests -> 12 passed, 8 warnings in 21.70s
+M8_jp_dA2_sign: engine tests -> 1 failed, 64 passed, 1 skipped in 19.11s | v15 tests -> 12 passed in 21.35s
+M9_plunge_wrong_constants: engine tests -> 1 failed, 49 passed in 19.64s | v15 tests -> 12 passed in 21.51s
+M10_tau_turn: engine tests -> 113 passed, 1 skipped in 25.92s | v15 tests -> 12 passed in 18.53s

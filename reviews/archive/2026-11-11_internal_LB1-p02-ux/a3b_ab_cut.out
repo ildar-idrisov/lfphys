@@ -1,0 +1,3 @@
+flux 0.5 h/e: probability on links with a phase step > 1 rad: 2.23e-03 -> 2.24e-03; spectrum in the outer third of the band: 3.23e-11 -> 2.00e-07
+flux 0.0 h/e: probability on links with a phase step > 1 rad: 2.25e-03 -> 2.25e-03; spectrum in the outer third of the band: 2.42e-12 -> 2.42e-12
+a3b_ab_cut.png: left flux 0.5 h/e, right flux 0; window x, y in [-20, 30) nm; phase of the moved wave relative to the plain translation (hue wheel; grey where |psi|^2 < 1e-4 of its peak); black cross: the tube (origin)

@@ -1,0 +1,10 @@
+{"name":"p01_gravity 1600x1000: objects with a position handle report at[id]","ok":true,"types":["star:true:true","planet:true:true"]}
+{"name":"p01_gravity 1600x1000: drag «Солнце» (star) in the 3d: one edit, applied","ok":true,"values":{"x":1.0271000000000001,"y":0.3357,"z":-0.5571},"text":"(0,719; 0,235; −0,39)"}
+{"name":"p01_gravity 1600x1000: throw «Меркурий» (planet) in the 3d: one edit, applied","ok":true,"values":{"x":1.4083,"y":0.33380000000000004,"z":-0.5539000000000001,"tvx":1.587e-8,"tvy":5.189e-9,"tvz":-8.609999999999999e-9},"text":"бросок: v = (2,15·10⁻⁸; 7,03·10⁻⁹; −1,17·10⁻⁸) а.е./с (×0,332, авто)"}
+{"name":"p01_gravity 1600x1000: drag «Венера» (planet) in the 3d: one edit, applied","ok":true,"values":{"x":1.7392,"y":0.3322,"z":-0.5512},"text":"(1,43; 0,233; −0,386)"}
+{"name":"p01_gravity 1600x1000: no page errors","ok":true,"errs":[]}
+{"name":"p04_fluids 1600x1000: objects with a position handle report at[id]","ok":true,"types":["lid:false:false","dye_source:true:true"]}
+{"name":"p04_fluids 1600x1000: the window's selection ring follows «Краситель»","ok":true,"ring":[512.00088,245.00375999999997],"now":[821.00088,321.00375999999994]}
+{"name":"p04_fluids 1600x1000: drag «Краситель» (dye_source) in the window: one edit, applied","ok":true,"values":{"x":0.54673,"y":0.72079},"text":"(0,533; 0,73; 0)"}
+{"name":"p04_fluids 1600x1000: no page errors","ok":true,"errs":[]}
+all passed (9)

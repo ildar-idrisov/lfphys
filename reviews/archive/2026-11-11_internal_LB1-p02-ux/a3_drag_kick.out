@@ -1,0 +1,24 @@
+== 1. free particle, evolved t = 2 (mass 1): move by (5, -3), then throw dk = (-1, 0.5)
+  move: <r> [-2.  1.] -> [ 3. -2.]; <pi> [1.5 0.5] -> [1.5 0.5]; T = <pi^2>/2m 1.312500 -> 1.312500 (dT/T = -3.38e-16); <H> 1.312500 -> 1.312500
+  throw: <r> [ 3. -2.] -> [ 3. -2.]; <pi> [1.5 0.5] -> [0.5 1. ]; T = <pi^2>/2m 1.312500 -> 0.687500 (dT/T = -4.76e-01); <H> 1.312500 -> 0.687500
+
+== 2. uniform field everywhere (B = 0.5, cyclotron period 2 pi m/(|q| B) = 12.57), evolved a quarter period
+  move by (3, 4): <r> [ 4.0e+00 -3.2e-03] -> [7.     3.9968]; <pi> [1.59000e-03 1.99999e+00] -> [1.59000e-03 1.99999e+00]; T = <pi^2>/2m 2.251724 -> 2.251724 (dT/T = +3.94e-16); <H> 2.502014 -> 2.502014
+  move back by (-3, -4): <r> [7.     3.9968] -> [ 4.0e+00 -3.2e-03]; <pi> [1.59000e-03 1.99999e+00] -> [1.59000e-03 1.99999e+00]; T = <pi^2>/2m 2.251724 -> 2.251724 (dT/T = -5.92e-16); <H> 2.502014 -> 2.502014
+
+== 3. field confined to a box x in [-6, 6], y unbounded (B = 0.5 inside, edge 1.5); a wave evolved inside, moved out across the field's edge
+ B = 0.5:
+  move by (12, 0) (out of the field): <r> [ 2.0463 -1.1956] -> [14.0463 -1.1956]; <pi> [1.10167 1.02105] -> [1.10167 1.02291]; T = <pi^2>/2m 1.378396 -> 1.245253 (dT/T = -9.66e-02); <H> 1.626922 -> 1.245253
+ B = 0.0:
+  move by (12, 0) (out of the field): <r> [ 2.25 -2.  ] -> [14.25 -2.  ]; <pi> [ 1.5 -0. ] -> [ 1.5 -0. ]; T = <pi^2>/2m 1.236111 -> 1.236111 (dT/T = -1.80e-16); <H> 1.236111 -> 1.236111
+
+== 4. an AB tube (flux h/2e, radius 0.5) at the origin; a wave that has gone round it (packet started on the tube's line, passed it), moved sideways by (0, 6)
+ flux = 0.5 h/e:
+   wrap fraction for (0, 6) on a 51.2-nm window was refused (1.34e-6 in the layers); here 76.8 nm
+  move by (0, 6): <r> [0.1917 0.0012] -> [0.1917 6.0012]; <pi> [9.7157e-01 3.5000e-04] -> [0.99412 0.04801]; T = <pi^2>/2m 1.982506 -> 2.043079 (dT/T = +3.06e-02); <H> 2.046375 -> 2.221911
+ flux = 0.0 h/e:
+   wrap fraction for (0, 6) on a 51.2-nm window was refused (1.34e-6 in the layers); here 76.8 nm
+  move by (0, 6): <r> [ 0.1947 -0.    ] -> [0.1947 6.    ]; <pi> [ 0.97244 -0.     ] -> [ 0.97244 -0.     ]; T = <pi^2>/2m 1.982260 -> 1.982260 (dT/T = -1.12e-16); <H> 2.046346 -> 2.154803
+
+== 5. a throw in the uniform field: target velocity v -> k0 = m v / hbar (kinetic); Ehrenfest check d<r>/dt
+  observables k (kinetic) after the throw [ 1.2 -0.7] (target [ 1.2 -0.7]); canonical <p> [ 1.2035 -2.2   ]; d<r>/dt over 2 steps [ 1.2017 -0.697 ]

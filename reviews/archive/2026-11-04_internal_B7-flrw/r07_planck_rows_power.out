@@ -1,0 +1,12 @@
+variant                                                                     Omega_m    Omega_L    omega_m Omega_m_h3        age     r_star     r_drag   100theta       z_eq
+budget                                                                      1.8e-04    1.8e-04    1.5e-05    2.7e-05    1.6e-03    1.2e-02    1.2e-02    5.2e-05    7.5e-01
+engine                                                                       -0.27      -0.17      -0.32      -0.20      +0.12      -0.23      +0.30      -0.04      +0.20 
+radiation left out of the closure only                                       -0.27      +0.27      -0.32      -0.20      +0.12      -0.23      +0.30      -0.04      +0.20 
+Astropy/Komatsu nu convention                                                -0.24      -0.20      -0.15      -0.14      +0.08      -0.24      +0.30      +0.08      +0.20 
+massive nu as dust (2 massless + omega_nu in dust)                           -0.27      -0.17      -0.32      -0.20      +0.18    +395.44*   +398.08*   +650.09*   +736.92*
+N_eff = 3.044 (current standard value)                                       -0.28      -0.16      -0.34      -0.21      +0.12      +0.59      +1.13*     +1.29*     +1.41*
+T_cmb = 2.72548 (Fixsen's value, not rounded)                                -0.27      -0.17      -0.32      -0.20      +0.12      -0.18      +0.36      +0.05      +0.33 
+CAMB<=1.3.6 numerics: Gyr 3.1556926e16 s, Mpc 3.085678e22, r_s from a=1e-8     -0.27      -0.17      -0.32      -0.20      +0.30      -0.46      +0.08      -0.41      +0.20 
+no massive neutrino at all (3 massless)                                      -8.10*     +7.60*    -43.33*    -16.37*    +10.70*     +0.30      +0.86     -29.95*     +0.20 
+
+cells: (variant - printed) / budget; * = outside the budget (the row would detect the variant)

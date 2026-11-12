@@ -1,0 +1,5 @@
+150 worlds in 25 s: 150 ran, 0 refused, 0 with failed checks/errors
+smallest bound/est = 2.95 at {"space": "lab", "loop": "circle", "rho": 0.05, "turns": 5, "sides": 23, "alpha": 104.68295333837445, "chi": 48.97200318882982, "nth": 76.4775967399827, "nph": 313.74206264341734, "accel_g": 3.8503269046224924} (est 1.22e-12)
+  circle    n= 50 min bound/est =      2.95  max est = 1.36e-12
+  thomas    n= 50 min bound/est =      4.39  max est = 1.34e-12
+  helix     n= 50 min bound/est =      3.67  max est = 1.86e-12

@@ -1,0 +1,25 @@
+LG_{0,1} w0 = 0.6, lambda = 1.0 (w0/lambda = 0.60): fraction of the waist's power at q > k (dropped by the exact model) = 0.007
+LG_{0,1} w0 = 0.3, lambda = 1.0 (w0/lambda = 0.30): fraction of the waist's power at q > k (dropped by the exact model) = 0.470
+LG_{0,3} w0 = 0.3, lambda = 1.0 (w0/lambda = 0.30): fraction of the waist's power at q > k (dropped by the exact model) = 0.895
+LG_{3,6} w0 = 0.3, lambda = 1.6 (w0/lambda = 0.19): fraction of the waist's power at q > k (dropped by the exact model) = 1.000
+LG_{0,1} w0 = 0.3, lambda = 1.6 (w0/lambda = 0.19): fraction of the waist's power at q > k (dropped by the exact model) = 0.846
+=== {'l': 1, 'w0': 0.3, 'lam': 1.0, 'rot': 'none'}: build 2.2 s; errors []
+  FAILED checks: []
+  information only: ['am_J', 'am_S', 'am_L', 'am_flux', 'am_poynting', 'power', 'ez', 'parax', 'gouy', 'flow']
+  am: J 2.0000855426156603, S 0.6329647258455968 (ref 0.6277622257315189), L 1.3671208167700635, miss 0.009254928964584574, table_err 2.73e-06, header approximations []
+=== {'l': 6, 'p': 3, 'w0': 0.3, 'lam': 1.6, 'rot': 'none'}: build 2.3 s; errors []
+  FAILED checks: []
+  information only: ['am_J', 'am_S', 'am_L', 'am_flux', 'am_poynting', 'power', 'ez', 'parax', 'gouy', 'flow']
+  am: J 6.999581500054148, S 0.3576167072849341 (ref 0.34225334000862023), L 6.6419647927692145, miss 0.05372993655081848, table_err 2.35e-06, header approximations []
+=== {'l': 1, 'w0': 0.3, 'lam': 1.6, 'zspan': 3.0, 'rot': 'none'}: build 2.3 s; errors []
+  FAILED checks: []
+  information only: ['am_J', 'am_S', 'am_L', 'am_flux', 'am_poynting', 'power', 'ez', 'parax', 'gouy', 'flow']
+  am: J 2.0001329906276877, S 0.5767370538092437 (ref 0.5694690371740212), L 1.4233959368184441, miss 0.014374849914442267, table_err 3.32e-06, header approximations []
+=== {'gen': 'spp', 'l': 6, 'w0': 0.3, 'lam': 1.6, 'rot': 'none'}: build 2.3 s; errors []
+  FAILED checks: []
+  information only: ['am_J', 'am_S', 'am_L', 'am_flux', 'am_poynting', 'power', 'ez']
+  am: J 6.999549309337181, S 0.3419089678922421 (ref 0.3247994453616994), L 6.657640341444938, miss 0.06407130291516339, table_err 3.39e-06, header approximations ['спиральная пластинка — тонкая маска exp(ilφ) в плоскости z = 0']
+=== {'gen': 'spp', 'l': 1, 'w0': 0.6, 'lam': 1.0, 'rot': 'none'}: build 2.3 s; errors []
+  FAILED checks: []
+  information only: ['am_J', 'am_S', 'am_L', 'am_flux', 'am_poynting', 'power', 'ez']
+  am: J 2.000086192257771, S 0.7619409968122448 (ref 0.7557986504951072), L 1.2381451954455265, miss 0.009847428992846852, table_err 2.99e-06, header approximations ['спиральная пластинка — тонкая маска exp(ilφ) в плоскости z = 0']

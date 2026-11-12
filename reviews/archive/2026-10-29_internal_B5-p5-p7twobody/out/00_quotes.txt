@@ -1,0 +1,807 @@
+== Weisberg & Huang 2016 (arXiv:1606.02744v1): Table 2, Sec. 3.1, 4.1, 4.3, 5.1
+    1This procedure also absorbs TOA variations induced by DM        constant, T = G M /c3 = 4.925 490 947 µs.
+represent the standard errors from the TEMPO fit (ex-
+                                                                               Parameter                                     Valuea
+cept as noted). This convention differs from our previous
+practice, wherein many uncertainties were instead esti-
+mated from fitted parameter variations across multiple                  T0 (MJD) . . . . . . .              52144.90097849(3)
+                                                                        x ≡ a1 sin i (s). . .               2.341776(2)
+reasonable fits. While the old procedure facilitated the                e ...............                   0.6171340(4)
+incorporation of some systematic uncertainties into the                 Pb (d) . . . . . . . . . . .        0.322997448918(3)
+error budget; the more stable recent instrumental config-               ω0 (deg) . . . . . . . .            292.54450(8)
+urations appear to minimize such effects.                               hω̇i (deg / yr) . . .               4.226585(4)
+                                                                        γ (ms) . . . . . . . . . .          0.004307(4)
+   Some of the fitted parameters shifted by several σ with              Ṗbobs . . . . . . . . . . . .      −2.423(1) ×10−12
+respect to the values reported in Weisberg et al. (2010).               δθobs . . . . . . . . . . . . .     4.0(25) ×10−6
+The shifts can all be attributed to the new incorporation               ẋobs . . . . . . . . . . . . .     −0.014(9) ×10−12
+of a frequency and time offset for each WAPP observ-                    ėobs (s−1 ) . . . . . . .          0.0006(7) ×10−12
+ing session and center frequency in order to account for
+geodetic-precession-induced profile changes (see §2), and               Shapiro Gravitational Propagation Delay Parameters
+                          Derivative
+  The observed orbital period derivative Ṗbobs , must be
+corrected by a term Ṗbgal , resulting from the relative
+galactic accelerations of the solar system and the bi-                   4.3. Best Determination of Component Masses and
+nary system (Damour & Taylor [1991, hereafter DT91],                                          Orbital Inclination
+DT92), in order to yield the intrinsic derivative, Ṗbintr :             The measurement of the first seven quantities in Ta-
+                                                                       ble 2 enables the precise general relativistic determina-
+                     Ṗbintr = Ṗbobs − Ṗbgal .               (15)    tion of the component masses and orbital inclination.
+Using galactic parameters of R0 = 8.34 ± 0.16 kpc and                  Specifically, our measurements of hω̇i and γ, along with
+Θ0 = 240 ± 8 km/s from Reid et al. (2014), a pul-                      the Keplerian elements, leave only the two unknowns
+sar distance estimate from Weisberg et al. (2008), and                 m1;hω̇i,γ and m2;hω̇i,γ in the following two general rel-
+the pulsar proper motion from Table 1, we find that                    ativistic equations:
+Ṗbgal = −(0.025 ± 0.004) × 10−12 . Inserting also Ṗbobs
+from Table 2 into Eq. 15, we calculate that Ṗbintr =
+−(2.398 ± 0.004) × 10−12 . The uncertainty in this result
+is dominated by the error in Ṗbgal , which in turn is set             hω̇i =
+principally by the pulsar distance uncertainty. A VLBA                   3 G2/3 c−2 (Pb /2π)−5/3 (1 − e2 )−1 (m1;hω̇i,γ + m2;hω̇i,γ )2/3
+parallax campaign on the pulsar, currently in progress,
+                    2 −5/2          121 2                         tions of state (Lattimer & Schutz 2005). With the mea-
+             (1 − e )           1+      e
+                                    304                           surement precision of ẋ and ė improving with time t as
+           304
+                           m1 m2       −8/3
+                                        Pb                        t−3/2 , another decade or so of observations are required.
+                    5/3    M M
+      =−         T                              ×  (19)           Unfortunately, geodetic spin axis precession may cause
+   In summary, the first (aberration) and third (spin-              Inserting our measured and derived values and their
+orbit) terms dominate Eq. 13, so all others may be ig-            uncertainties into Eq. 22 6 , we find that ṖbGR =
+nored. However, neither of these two terms is currently           (−2.40263 ± 0.00005) × 10−12 . To verify our estimate of
+accurately determinable. We do have a marginally signif-          the error in ṖbGR that was derived via propagation of un-
+icant measurement of ẋobs (see Table 2). Consequently,           certainty, we also employed a Monte-Carlo method with
+if either of the two terms becomes well-determined in             Cholesky decomposition of the covariance matrix. In this
+the future along with an improved value of ẋobs , then           fashion, we simulated the joint normal distribution of
+the other term will also become accessible. For exam-             measured parameters {γ, ω̇, Pb , e}, and then constructed
+ple, there are two possible paths toward determination of
+                                                                    6 This value may also be calculated directly from the first seven
+  5 The exact value depends on the unknown alignment on the sky   orbital measurables in Table 2 alone, without the use of derived
+of the line of nodes.                                             quantities such as the masses (DT91).
+8                                                  J. M. Weisberg and Y. Huang
+
+                                                                       Each of the two newly measured Shapiro parameters
+                                                                    represents another independent test of relativistic gravi-
+                                                                    tation. As with the Ṗb test of §5.1, the Shapiro tests also
+                                                                    require the complementary measurement of hω̇i and γ in
+                                                                    order to make a testable prediction for the value of the
+                                                                    Shapiro parameters. In this case, unlike the Ṗb test, all
+                                                                    of the post-Keplerian quantities probe quasi-static phe-
+                                                                    nomena in strong fields. While Shapiro parameters have
+                                                                    already been measured in several other binary systems, it
+                                                                    is especially useful to constrain theories via systems such
+                                                                    as this one and PSRs B1534+12 and J0737-3039A, where
+                                                                    at least three “excess” post-Keplerian parameters beyond
+                                                                    hω̇i and γ (one gravitational radiation parameter and
+                                                                    two Shapiro quantities) are measurable. Although the
+                                                                    precision of the binary pulsar Shapiro parameter mea-
+                                                                    surements is well below their measurement precision in
+                                                                    the weak solar gravitational field, it is this simultaneous
+                                                                    determination of several parameters in strong-field con-
+                                                                    ditions in each of these binary pulsar systems that leads
+                                                                    to the important constraints on relativistic theories of
+                                                                    gravitation.
+                                                                       In the DD formulation of the Shapiro delay within gen-
+                                                                    eral relativity, the Shapiro measurables s and r map di-
+Figure 3. The orbital decay of PSR B1913+16 as a function of
+time. The curve represents the orbital phase shift expected from
+                                                                    rectly onto sin i and m2 , respectively. Hence we can test
+gravitational wave emission according to General Relativity. The    General Relativity by comparing the Shapiro determina-
+points, with error bars too small to show, represent our measure-   tion of sin i (≡ s) with that determined from hω̇i and γ
+ments.                                                              (called sin ihω̇i,γ ; see §4.3):
+a histogram of 1000000 derived ṖbGR and inferred the                                          +0.10
+uncertainty therefrom.                                                         s           0.68−0.06          +0.14
+                                                                                      =                 = 0.93−0.07 .      (24)
+== Blanchet 2014 (arXiv:1310.1528v3) Eqs. (219)-(220)
+of-mass expressions (216) – (217), applying as usual the order-reduction of all accelerations where
+necessary. We write the relative acceleration in the center-of-mass frame in the form
+                                                                 
+                            dv      Gm h                 i       1
+                                = − 2 1+A n+Bv +O 8 ,                                         (219)
+                             dt      r                            c
+
+and find that the coefficients A and B are [77]
+
+                   3ṙ2 ν
+                                                                 
+            1                                    Gm
+      A= 2 −              + v 2 + 3νv 2 −              (4 + 2ν)
+           c         2                            r
+           1 15ṙ4 ν         45ṙ4 ν 2     9ṙ2 νv 2
+              
+        + 4              −              −             + 6ṙ2 ν 2 v 2 + 3νv 4 − 4ν 2 v 4
+           c      8              8             2
+                                                              13νv 2                        G2 m2
+                                                                                                             
+                 Gm                                                                                         87ν
+               +          −2ṙ2 − 25ṙ2 ν − 2ṙ2 ν 2 −                    + 2ν 2 v 2 +               9 +
+                   r                                              2                          r2              4
+                           2                       2 2
+                                                         
+           1      24ṙνv Gm 136ṙν G m
+        + 5 −                       −
+           c           5        r         15       r2
+                   35ṙ6 ν       175ṙ6 ν 2      175ṙ6 ν 3     15ṙ4 νv 2        135ṙ4 ν 2 v 2   255ṙ4 ν 3 v 2
+              
+           1
+        + 6 −                +               −                +               −                  +
+           c          16             16              16               2                   4               8
+                      2    4            2 2 4              2 3 4              6            2 6
+                 15ṙ νv          237ṙ ν v          45ṙ ν v           11νv        49ν v
+               −               +                 −                 +             −              + 13ν 3 v 6
+                      2                8                   2               4             4
+                 Gm                    69ṙ4 ν 2                                                                   75νv 4
+               +          79ṙ4 ν −              − 30ṙ4 ν 3 − 121ṙ2 νv 2 + 16ṙ2 ν 2 v 2 + 20ṙ2 ν 3 v 2 +
+                   r                      2                                                                            4
+                                                    
+                          + 8ν 2 v 4 − 10ν 3 v 4
+
+                 G2 m2 2 32573ṙ2 ν                   11ṙ2 ν 2                  615ṙ2 νπ 2      26987νv 2
+                          
+                                                                          2 3
+               +             ṙ  +                +              −  7  ṙ  ν  +                 −               + ν 3 v2
+                    r2                  168                8                           64             840
+                                  123νπ 2 v 2
+                                                                                           
+                                                          2         r                2        r
+                              −                 − 110ṙ ν ln         0      + 22νv ln
+                                       64                           r0                       r00
+                    3 3                                  2            2
+                                                                         
+                 G m                    437ν       71ν         41νπ
+               +      3
+                              −16 −             −           +
+                    r                     4           2          16
+                                                                                                
+           1 Gm           366 4
+        + 7          ṙ         νv + 12ν 2 v 4 − 114v 2 ν ṙ2 − 12ν 2 v 2 ṙ2 + 112ν ṙ4
+           c     r         35
+                 G2 m2
+                                                                                          
+                                692 2 724 2 2 294 2 376 2 2
+               +          ṙ         νv   −        v   ν    +       ν ṙ   +       ν   ṙ
+                    r2           35            15               5              5
+                 G3 m3
+                                                    
+                                3956        184 2
+               +          ṙ           ν+         ν         ,                                                            (220a)
+                    r3            35          5
+
+
+
+                                                              86
+            1
+       B=      {−4ṙ + 2ṙν}
+            c2 
+            1 9ṙ3 ν               15ṙνv 2
+                                                                                         
+                           3 2                      2 2     Gm            41ṙν         2
+          + 4         + 3ṙ ν −             − 2ṙν v +             2ṙ +         + 4ṙν
+           c     2                     2                     r              2
+            1 8νv 2 Gm 24ν G2 m2
+                                          
+          + 5              +
+           c     5     r       5      r2
+                  45ṙ5 ν                15ṙ5 ν 3                111ṙ3 ν 2 v 2                   65ṙνv 4
+              
+            1
+          + 6 −           + 15ṙ5 ν 2 +            + 12ṙ3 νv 2 −                − 12ṙ3 ν 3 v 2 −
+           c         8                      4                           4                             8
+               + 19ṙν 2 v 4 + 6ṙν 3 v 4
+                 Gm 329ṙ3 ν            59ṙ3 ν 2
+                                                                                                     
+               +                      +           + 18ṙ3 ν 3 − 15ṙνv 2 − 27ṙν 2 v 2 − 10ṙν 3 v 2
+                   r          6             2
+                   2 2
+                                                                              123ṙνπ 2
+                                                                                                     
+                 G m                   18169ṙν             2            3                           r
+               +             −4  ṙ −             +  25 ṙν   +    8 ṙν   −            + 44 ṙν ln
+                   r2                     840                                    32                  r00
+                                                                                               
+            1 Gm           626 4 12 2 4 678 2 2 12 2 2 2
+          + 7          −        νv − ν v +                  νv ṙ + ν v ṙ − 120ν ṙ4
+           c     r          35            5            5                   5
+                   2 2
+                                                                                  
+                 G m         164 2 148 2 2 82 2 848 2 2
+               +                    νv  +       ν  v  −       ν ṙ    −       ν ṙ
+                   r2         21            5               3              15
+                   3 3
+                                                   
+                 G m           1060         104 2
+               +             −         ν−        ν        .                                                        (220b)
+                   r3             21          5
+Up to the 2.5PN order the result agrees with Ref. [291]. The 3.5PN term is issued from Refs. [251,
+252, 253, 325, 269, 311, 247]. At the 3PN order we have some gauge-dependent logarithms con-
+taining a constant r00 which is the “logarithmic barycenter” of the two constants r10 and r20 :
+                                             ln r00 = X1 ln r10 + X2 ln r20 .                                        (221)
+== Blanchet 2014 Eqs. (226)-(228), (232)
+of Eqs. (224) to higher order.
+    The relative acceleration a ≡ a1 − a2 of two bodies moving on a circular orbit at the 3.5PN
+order is then given by
+
+                                  32 G3 m3 ν
+                                                                            
+                                                         743 11                   1
+                   a = −Ω2 x −                 1 + γ   −     −     ν    v +  O         ,            (226)
+                                   5 c5 r 4              336    4                 c8
+
+where x ≡ y1 − y2 is the relative separation (in harmonic coordinates) and Ω denotes the angular
+frequency of the circular motion. The second term in Eq. (226), opposite to the velocity v ≡ v1 −v2 ,
+represents the radiation reaction force up to 3.5PN order, which comes from the reduction of the
+coefficients of 1/c5 and 1/c7 in Eqs. (220). The radiation-reaction force is responsible for the
+secular decrease of the separation r and increase of the orbital frequency Ω:
+
+                                   64 G3 m3 ν
+                                                                   
+                                                         1751 7
+                            ṙ = −             1 + γ  −        −   ν     ,                    (227a)
+                                   5 r3 c5               336     4
+                                                                      
+                                 96 Gmν 5/2               2591 11
+                           Ω̇ =           γ     1 + γ   −       −     ν    .                  (227b)
+                                  5 r3                     336    12
+
+   Concerning conservative effects, the main content of the 3PN equations (226) is the relation
+between the frequency Ω and the orbital separation r, which is given by the following generalized
+
+
+
+                                                    89
+version of Kepler’s third law:
+                                            
+            Gm                          41
+      Ω2 = 3 1 + (−3 + ν)γ + 6 + ν + ν 2 γ 2                                      (228)
+             r                           4
+                                                                      
+                              75707 41 2        r       19 2     3    3      1
+               + −10 + −           + π + 22 ln      ν +    ν + ν    γ   + O     .
+                               840   64         r00      2                   c8
+a result, we gladly discover that the logarithms together with their associated gauge constant r00
+have cancelled out. Therefore, our result is
+              µc2 x
+                                                            
+                              3    1           27 19       1
+       E=−            1 + − − ν x + − + ν − ν 2 x2
+                2             4 12              8    8     24
+                                                                           
+                        675     34445 205 2        155 2      35 3               1
+                + −         +        −      π ν−       ν −       ν x3 + O 8 .               (232)
+                        64       576    96          96      5184                 c
+== Blanchet 2014 Sec. 9.4 and Eqs. (322), (323)
+Q = (Qi ) orthogonal to the direction N of the observer; see Eqs. (69).
+    Our convention for the two polarization vectors is that they form with N a right-handed triad,
+and that P and Q lie along the major and minor axis, respectively, of the projection onto the plane
+of the sky of the circular orbit. This means that P is oriented toward the orbit’s ascending node –
+namely the point N at which the orbit intersects the plane of the sky and the bodies are moving
+toward the observer located in the direction N . The ascending node is also chosen for the origin of
+the orbital phase φ. We denote by i the inclination angle between the direction of the detector N
+as seen from the binary’s center-of-mass, and the normal to the orbital plane (we always suppose
+Newtonian contributions as given by Eq. (309). The constant frequency Ω0 can be chosen at will,
+for instance to be the entry frequency of some detector. For the plus polarization we have69
+
+                2                1 2
+H + = −(1 + ci ) cos 2ψ −            s (17 + c2i ) ,                                                        (322a)
+ 0                              96 i
+                                                                  
+                           5 1 2                         9 9 2
+H + = − si ∆ cos ψ           + c − cos 3ψ                    + c           ,                                (322b)
+1/2                        8 8 i                         8 8 i
+                                                                         
+                19 3 2 1 4                         19 11 2
+H + = cos 2ψ         + ci − ci + ν − +                           ci + c4i
+ 1               6       2        3                 6        6
+                                           
+     + ∆ si (1 + ci ) sin 5ψ −               +        ln(5/2) + ν              −         ln(5/2)     .    (322g)
+                                      5376      192                      320       96
+
+For the cross polarizations we obtain
+
+ H × = −2ci sin 2ψ ,                                                                                    (323a)
+  0
+                                     
+                     3          9
+ H × = si ci ∆ − sin ψ + sin 3ψ ,                                                                       (323b)
+ 1/2                 4          4
+                                            
+                     17 4 2           13    2
+ H × = ci sin 2ψ         − ci + ν − + 4 ci
+  1                   3      3         3
+                                  
+                           8
+     + ci s2i sin 4ψ − (1 − 3ν) ,                                                                       (323c)
+== Blanchet 2014 Eqs. (346)-(351), (358)-(359)
+
+                                                        132
+depending on j and the dimensionless reduced mass ratio ν; notice that the parameter j is at
+Newtonian order, j = O(1/c0 ). We have [146]
+
+                               ε3/2 c3
+                                                            
+                                             ε                1
+                         n=              1 + (−15 + ν) + O 4        ,                                            (346a)
+                                Gm           8               c
+                                             
+                                    3ε         1
+                        K    =1+        +O 4 ,                                                                   (346b)
+                                    j         c
+                                                        
+                               Gm          ε              1
+                        ar   =    2
+                                       1 + (−7 + ν) + O 4       ,                                                (346c)
+                               εc          4              c
+                                                                           
+                               p              ε  h                    i    1
+                        er   = 1−j+ √             24 − 4ν + 5j(−3 + ν) + O 4 ,                                   (346d)
+                                           8 1−j                           c
+                                                                           
+                               p              ε  h                    i    1
+                        et   = 1−j+ √             −8 + 8ν + j(17 − 7ν) + O 4 ,                                   (346e)
+                                           8 1−j                           c
+gauge invariant variables ε and j are identical in different coordinate systems like the MH and
+ADM coordinates [166]. Their explicit expressions at 3PN order read
+
+               ε3/2 c3                         ε2
+                                                                                    
+                               ε                                    2    192
+          n=              1 + (−15 + ν) +          555 + 30 ν + 11 ν + 1/2 (−5 + 2 ν)
+                 Gm            8              128                        j
+                 ε3
+                                                                                
+                                                              5760
+            +          −29385 − 4995 ν − 315 ν 2 + 135 ν 3 + 1/2 17 − 9 ν + 2 ν 2
+               3072                                           j
+                                                                           
+                        16                              2            2        1
+                    + 3/2 − 10080 + (13952 − 123π )ν − 1440ν               +O 8      .        (348a)
+                       j                                                      c
+                    3ε ε2 3
+                                                         
+                                               15
+          K =1+         +        (−5 + 2 ν) + 2 (7 − 2 ν)
+                     j      4 j                j
+                ε3 24
+                                                                                  
+                                            1
+            +           (5 − 5ν + 4ν 2 ) + 2 −10080 + (13952 − 123π 2 )ν − 1440ν 2
+               128 j                       j
+                                                                      
+                        5                                                  1
+                    + 3 7392 + (−8000 + 123π 2 )ν + 336ν 2         +O 8 .                     (348b)
+                       j                                                   c
+
+Because of their gauge invariant meaning, it is natural to use n and K as two independent gauge-
+invariant variables in the general orbit case. Actually, instead of working with the mean motion n
+it is often preferable to use the orbital frequency Ω which has been defined for general quasi-elliptic
+orbits in Eq. (338). Moreover we can pose
+                                                 2/3
+                                            GmΩ
+                                   x=                       (with Ω = Kn) ,                               (349)
+                                             c3
+
+which constitutes the obvious generalization of the gauge invariant variable x used in the circular
+orbit case. The use of x as an independent parameter will thus facilitate the straightforward
+reading out and check of the circular orbit limit. The parameter x is related to the energy and
+angular momentum variables ε and j up to 3PN order by
+                                       
+         x               5     1      2
+           =1+ε − + ν+                                                                              (350)
+         ε               4 12         j
+                                                                                         
+                  5      5        1         1               1         7          1 33
+           + ε2     + ν + ν 2 + 1/2 (−5 + 2ν) +                 −5 + ν + 2              − 5ν
+                  2 24           18       j                 j         6         j     2
+                                                                                
+                    235 25            25 2       35 3 1 35 5               25
+           + ε3 −         − ν−            ν +        ν +         − ν + ν2
+                     48     24       576        1296      j 4       3      36
+                                                                                             
+                        1     145 235           29 2       1              472 41 2              2
+                   + 1/2            −      ν + ν + 3/2 −45 +                    − π ν − 5ν
+                      j         8      24       12       j                 9       96
+                                                               
+                       1      565       1903 41 2            95 2
+                   + 2 −            +          − π ν− ν
+                      j         8         24      64         12
+                                                                       
+                      1 529             610 205 2            35 2             1
+                   + 3           + −          +     π ν+ ν            +O 8 .
+                     j       3           3       64           4              c
+
+     Besides the very useful gauge-invariant quantities n, K and x, the other orbital elements ar , er ,
+et , eφ , ft , gt , it , ht , fφ , gφ , iφ , hφ parametrizing Eqs. (341) and (347) are not gauge invariant; their
+expressions in terms of ε and j depend on the coordinate system in use. We refer to Refs. [301, 8]
+for the full expressions of all the orbital elements at 3PN order in both MH and ADM coordinate
+
+
+
+                                                      134
+systems. Here, for future use, we only give the expression of the time eccentricity et (squared) in
+MH coordinates:
+                                           
+                   ε
+  e2t = 1 − j +        −8 + 8ν + j(17 − 7ν)                                                      (351)
+                   4
+        ε2
+           
+   Finally, after implementing all the above integrations, the averaged instantaneous energy flux
+in MH coordinates at the 3PN order is obtained in the form [8]
+
+                                            32c5 2 5                        
+                              h Finst i =       ν x I0 + x I1 + x2 I2 + x3 I3 ,                               (358)
+                                             5G
+where we recall that the post-Newtonian parameter x is defined by (349). The various instantaneous
+post-Newtonian pieces depend on the symmetric mass ratio ν and the time eccentricity et in MH
+coordinates as
+                                              
+                  1              73 2 37 4
+      I0 =                  1+      e +      e ,                                            (359a)
+            (1 − e2t )7/2        24 t 96 t
+                                                                 
+                  1           1247 35             10475 1081
+      I1 =         2  9/2
+                            −       − ν + e2t             −      ν                          (359b)
+            (1 − et )          336     12          672        36
+                                                      
+                10043 311                 2179 851
+         +e4t           −       ν + e6t         −      ν    ,
+== Blanchet 2024 (arXiv:1310.1528v6) Eqs. (358e), (359e)
+          G3 m3                             71 ν 2      41 ν π 2
+                                                                 
+                                  437 ν
+        +              −16    −          −          +                 ,                    (358d)
+             r3                     4          2           16
+          Gmν G2 m2 3956 184                                Gm v 2 692 724
+                                                                                     
+ A3.5PN =         ṙ                      +        ν    +                     −        ν
+             r            r2          35        5              r          35      15
+                                                    2
+                                                                        
+                        366                  Gm ṙ       294 376
+             + v4              + 12ν +                          +        ν
+                          35                    r           5         5
+                                                    
+             − v 2 ṙ2 (114 + 12ν) + 112ṙ4 ,                                              (358e)
+                                                               
+    (0)      315          2205 2 2205 3 2205 4 8
+                               r0
+154                                                                                            Luc Blanchet
+
+              Gmν G2 m2                                           Gmv 2 164 148
+                                                                                            
+                                          1060 104
+B3.5PN      =                         −          −       ν +                       +         ν
+                 r         r2              21        5               r       21          5
+                                                    Gmṙ2
+                                                                              
+                             626 12                                82 848
+                 + v4 −             − ν +                        − −           ν
+                              35          5            r            3     15
+                                                          
+                             678 12
+                 +v 2 ṙ2           + ν − 120ṙ4 ,                                                      (359e)
+                              5          5
+                                                              
+== Kidder 1995 (arXiv:gr-qc/9506022v1) Eqs. (2.2), (2.7), (2.9)
+
+
+                           a = aN + aP N + aSO + a2P N + aSS + aRR ,                       (2.1)
+
+
+where
+
+                                                  m
+                                         aN = −      n̂,                                 (2.2a)
+                                                  r2
+
+                         m                            m 3 2
+                                                                         
+                                         2
+              aP N = −      n̂ (1 + 3η)v   − 2(2 + η)   − η ṙ − 2(2 − η)ṙv ,           (2.2b)
+                         r2                           r  2
+
+                                                  7
+              (                                                                                     )
+           1                    δm                    δm                      δm
+   aSO   = 3 6n̂[(n̂ × v)·(2S +    ∆)] − [v × (7S + 3    ∆)] + 3ṙ[n̂ × (3S +    ∆)] ,
+          r                      m                    m                       m
+                                                                                                    (2.2c)
+
+
+                  m     3             m 2                    15
+                      
+                                                         4
+      a2P N = −      n̂   (12 + 29η)(   ) +   η(3 − 4η)v   +    η(1 − 3η)ṙ 4
+                  r2    4             r                      8
+                        3                   1            m 2                  2 m 2
+                                                                                     
+                                     2 2
+                      − η(3 − 4η)v ṙ − η(13 − 4η) v − (2 + 25η + 2η ) ṙ
+                        2                   2             r                     r
+                        1                                       m
+                                                                                 
+                                          2                  2                  2
+                      − ṙv η(15 + 4η)v − (4 + 41η + 8η ) − 3η(3 + 2η)ṙ ,                          (2.2d)
+                        2                                       r
+
+                    3
+                                                                                               
+         aSS = −        n̂(S1 · S2 ) + S1 (n̂ · S2 ) + S2 (n̂ · S1 ) − 5n̂(n̂ · S1 )(n̂ · S2 ) ,    (2.2e)
+                   µr 4
+
+
+                 8 m2              2m                      m
+                                                                                   
+            aRR = η 3 ṙn̂ 18v 2 +    − 25ṙ 2 − v 6v 2 − 2 − 15ṙ 2                        ,       (2.2f)
+                 5 r               3r                      r
+
+                         E = EN + EP N + ESO + E2P N + ESS ,                               (2.6)
+
+where
+
+                                                1 2 m
+                                                          
+                                   EN = µ         v −   ,                                (2.7a)
+                                                2     r
+
+                                                  10
+                              3              1          m 1 m      1 m
+                                                                                
+               EP N = µ         (1 − 3η)v 4 + (3 + η)v 2 + η ṙ 2 + ( )2 ,                 (2.7b)
+                              8              2          r 2 r      2 r
+
+                                               1            δm
+                                   ESO =         3
+                                                   LN ·(S +    ∆),                         (2.7c)
+                                               r            m
+
+                     5                       3            m   1                   m
+                
+    E2P N = µ          (1 − 7η + 13η 2 )v 6 − η(1 − 3η) ṙ 4 + (21 − 23η − 27η 2 ) v 4
+                    16                       8            r   8                   r
+                                             2                                        3
+                       1                 2   m      2   1        m  2 2   1             m
+                    + (14 − 55η + 4η )           v + η(1 − 15η) v ṙ − (2 + 15η)
+                       8                     r          4         r       4             r
+                                             2 
+                       1                     m
+                    + (4 + 69η + 12η 2)          ṙ 2 ,                                   (2.7d)
+                       8                     r
+
+                                   1
+                          ESS =       {3 (n̂ · S1 ) (n̂ · S2 ) − (S1 · S2 )} ,             (2.7e)
+                                   r3
+and the total angular momentum is given by
+
+                                               J = L + S,                                   (2.8)
+
+where
+
+                                 L = LN + LP N + LSO + L2P N ,                             (2.9a)
+
+                                              1 2                    m
+                                                                         
+                              LP N = LN         v (1 − 3η) + (3 + η)   ,                   (2.9b)
+                                              2                      r
+                                     (           "                   !#
+                                   µ m              δm
+                          LSO    =     n̂× n̂× 3S +    ∆
+                                   m r               m
+                                            "            !#)
+                                        1            δm
+                                     − v× v× S +        ∆   ,                              (2.9c)
+                                        2            m
+
+                                          3                         1       m
+                                      
+                         L2P N = LN         (1 − 7η + 13η 2 )v 4 − η(2 + 5η) ṙ 2
+                                          8                         2       r
+                                             1                   m
+                                          + (7 − 10η − 9η 2 ) v 2
+                                             2                    r
+                                                                    2 
+                                             1                       m
+                                          + (14 − 41η + 4η 2 )            .                (2.9d)
+                                             4                        r
+
+== Steck rev. 0.16.11, (5.25)-(5.27), (5.127), (5.132)-(5.133), (5.556)
+This is revision 0.16.11, 28 October 2026.
+We can then rewrite the equations of motion as
+
+                                                            Ω
+                                                 ∂t cg = −i c̃e
+                                                             2                                                      (5.25)
+                                                                   Ω
+                                                 ∂t c̃e = i∆c̃e − i cg .
+                                                                   2
+In fact, these are the same equations of motion generated by the effective, rotating-frame atomic Hamilto-
+nian
+                                                                                                      (5.26)
+                                             H̃A = −h̄∆|eihe|,
+                                                                             (rotating-frame free evolution)
+where recall that ∆ := ω − ω0 is the detuning of the laser from the atomic resonance, and the effective,
+rotating-frame interaction Hamiltonian
+
+
+                                         H̃AF = −d(+) · Ẽ(−) − d(−) · Ẽ(+)                                        (5.27)
+                                                h̄Ω                                    (rotating-frame dipole interaction)
+                                              =     (σ + σ † ),
+                                                 2
+where again ℘α = Ωδαx − ∆δαz is the precession vector, and γα = γ⊥ (δαx + δαy ) + Γδαz gives the damping
+rates for the three Bloch-vector components as we discussed above (note that there is no implied summation
+in the γα hσα i term. Writing the components out separately gives
+
+                                    ∂t hσx i = ∆hσy i − γ⊥ hσx i
+                                    ∂t hσy i = −∆hσx i − Ωhσz i − γ⊥ hσy i
+                                                                  
+                                    ∂t hσz i = Ωhσy i − Γ hσz i + 1 ,
+                                                   (optical Bloch equations, Bloch-vector form) (5.127)
+where we can see explicitly that the damping terms push the transverse components towards zero, while
+they push the longitudinal component towards the ground-state value hσz i = −1.
+                         ρee (t −→ ∞) = i      (ρ̃eg − ρ̃ge ) = − 2                       ρee −           .                    (5.131)
+                                            2Γ                   γ⊥ + ∆ 2                         2
+
+Solving for ρee , we find the steady-state excitation
+
+                                                         Ω2            1                                                        (5.132)
+                                    ρee (t −→ ∞) =                                    .
+                                                        2γ⊥ Γ        ∆2
+                                                                           Ω     2                            (steady-state excitation)
+                                                                1+    2 + γ Γ
+                                                                     γ⊥    ⊥
+
+
+We can put this result into Eq. (5.128) to obtain the steady-state coherence
+
+                                                                           i∆
+                                                                     1+
+                                                       iΩ                  γ⊥                                                  (5.133)
+                                    ρ̃eg (t −→ ∞) = −                                 .
+                                                      2γ⊥            ∆2
+                                                                           Ω      2                           (steady-state coherence)
+                                                           h̄        2(ω + ω0 )
+
+The shift in the atomic resonance is given to lowest order by setting ω = ω0 in this expression, so that
+
+                                                                    Ω2                                                  (5.556)
+                                                           ∆ωc =        .
+                                                                    4ω0                                    (Bloch–Siegert shift)
+
+== Bassi et al. 2013 (arXiv:1204.4325v3) Eqs. (19), (21), (22)
+parameter of the model.                                     dynamical reduction models which have ap-
+                                                            peared in the literature, has been exten-
+   The standard numerical values for rC and
+                                                            sively studied (see (Bassi and Ghirardi, 2003)
+λGRW are:
+                                                            and (Pearle, 1999a) for a review on this
+of convenience.                                         center-of-mass motion from the internal mo-
+   Though the collapse dynamics is expressed tion (Ghirardi et al., 1986). The reduced den-
+entirely in terms of the wave function, not of sity matrix for the internal motion obeys the
+the density matrix, in order to eliminate any standard Schrödinger equation, while that for
+possible ambiguity about the nature of the the center of mass is equivalent to Eqn. (21),
+collapse, it is nevertheless convenient to look where now the collapse rate entering the def-
+at the collapse dynamics for the density ma- inition of the operator T [·] is N λGRW , with N
+trix, to analyze specific features of the model. the total number of particles making up the
+The 1-particle master equation of the GRW object. This is a manifestation of the am-
+model takes the form (Ghirardi et al., 1986): plification mechanics, perhaps the most im-
+     d          i                                       portant feature of collapse models: the wave
+        ρ(t) = − [H, ρ(t)] − T [ρ(t)],         (21)
+     dt         ~
+                                                        function of an object collapses with a rate
+where H is the standard quantum Hamilto-
+                                                        which is proportional to the size of the sys-
+nian of the particle, and T [·] represents the
+                                                        tem. This is the mathematical reason why
+effect of the spontaneous collapses on the par-
+                                                        collapse models can accommodate both the
+ticle’s wave function. In the position repre-
+                                                        quantum dynamics of microscopic systems
+sentation, this operator becomes:
+                                                        (negligible collapse rate) and the classical dy-
+                                                        namics of macroscopic systems (fast collapse)
+    hx|T [ρ(t)]|yi =                           (22)
+                          2 /4r 2                       within one unified dynamical principle.
+         λGRW [1 − e−(x−y)     C    ]hx|ρ(t)|yi.
+
+As expected, the effect of the spontaneous
+                                                           D. The QMUPL model
+== Hornberger (arXiv:quant-ph/0612118v3) Eqs. (5.170), (5.171)
+the evolution, and by stating the master equation in position representation.
+From Eqs. (5.165) and (5.169) one obtains
+
+                        ∂t ρ̃(X, X ′ ) = −F (X − X ′ )ρ̃(X, X ′ )                (5.170)
+
+with localization rate [36]
+                 Z ∞                 Z
+                                       dΩ1 dΩ2                        
+        F (x) =       dv ν(v) ngas v             1 − eimv(n1 −n2 )·x/~
+                  0                      4π
+                                         2
+                    ×|f (mvn2 , mvn1 )| .                                        (5.171)
+
+so that the scattered state can resolve whether the collision took place at
+position X or X ′ the sinc function in (5.172) suppresses the integrand. It
+follows that in the limit of large distances the localization rate saturates, at
+a value given by the average collision rate F (∞) = hσvngas i, see Figure 5.2.
+    Decoherence in this saturated regime of large separations has been ob-
+== Blanes et al. (arXiv:0810.5488v1) Eqs. (252)-(254)
+
+                            √                              √
+                          1   3                        1      3
+           A1 = A(tn + ( −      )h),     A2 = A(tn + ( +        )h)    (252)
+                          2 6                          2     6
+                  (2,2)
+and thus, taking QG in (247), R(2) in (249) and substituting in (250) we find
+                                             √
+                        h                   h 3
+                 α1 = (A1 + A2 ),      α2 =      (A2 − A1 ).           (253)
+                        2                    12
+Then, by replacing in (243) we obtain
+                                                    √
+                     Ω[4] (h) = h2 (A1 + A2 ) − h2 123 [A1 , A2 ]
+                                                                          (254)
+                             Yn+1 = exp(Ω[4] (h))Yn .
+
+== Manzano (arXiv:1906.04478) Eqs. (92), (93), (101)
+                                                      2
+                                                    dX  −1                          o
+                                   dρ                                     1n †
+                                      = −i [H, ρ] +        gi,j Fi ρFj† −   Fj Fi , ρ   .                                        (92)
+                                   dt               i,j=1
+                                                                          2
+                                                                                                                      21
+
+Finally, by definition the coefficients gi,j can be arranged to form a Hermitian, and therefore diagonalisable, matrix.
+By diagonalising it, we obtain the diagonal form of the Lindblad master equation.
+
+
+                              d                  X            1n          o
+                                 ρ = −i [H, ρ] +  Γk Lk ρL†k −   Lk L†k , ρ   ≡ Lρ.                                  (93)
+                              dt                               2
+                                                   k
+
+                                                                  i iihhΛi |ρ(0)ii.                                 (100)
+                                                            i
+
+Therefore, the state of the system at a time t can be calculated in the form
+
+                                                       X
+                                           |ρ(t)ii =        eΛi t |ΛR      L
+                                                                    i iihhΛi |ρ(0)ii.                               (101)
+                                                       i
+
+Note that in this case to calculate the state a time t we do not need to integrate into the interval [0, t], as we have to
+do if we use a numerical solution of the differential set of equations. This is an advantage when we want to calculate
+long-time behaviour. Furthermore, to calculate the steady-state of a system, we can look to the eigenvector that has
+zero eigenvalue, as this is the only one that survives when t → ∞.
+   For any finite system, Evans’ Theorem ensures the existence of at least one zero eigenvalue of the Liouvillian
+matrix [34, 35]. The eigenvector corresponding to this zero eigenvalue would be the steady-state of the system. In
+exceptional cases, a Liouvillian can present more than one zero eigenvalues due to the presence of symmetry in the
+system [26, 27, 36]. This is a non-generic case, and for most purposes, we can assume the existence of a unique
+fixed point in the dynamics of the system. Therefore, diagonalising can be used to calculate the steady-state without
+== Plenio & Knight (arXiv:quant-ph/9702007v1) Eqs. (30), (66), (67)
+
+
+The negative differential of this survival probability describes the delay function I1 (τ )
+(Cohen-Tannoudji and Dalibard, 1986)
+
+                                                    dP0
+                                     I1 (τ ) ≡ −        ,                               (30)
+                                                    dτ
+
+
+where no photons have been detected in all measurements in the interval [0, t]
+
+                                 (0)
+                               |ψA (t)i = e−i Hef f t/h̄ |ψA (0)i .                       (66)
+
+
+One should note that the effective time evolution does not preserve the norm of the state
+
+                                                  27
+and that it maps pure states onto pure states. In fact the square of the norm of Eq. (66) is
+just the delay function
+
+                                                 (0)     (0)
+                                     P0 (t) = hψA (t)|ψA (t)i                              (67)
+
+
+and coincides with P0 (t) given in Eq. (56). The delay function P0 (t) will become important

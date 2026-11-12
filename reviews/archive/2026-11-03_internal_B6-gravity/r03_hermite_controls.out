@@ -1,0 +1,11 @@
+(a) n_iter=3, max_passes=1 vs n_iter=1, max_passes=1 after 5 orbits: bit-identical positions: True | force evaluations 853 853 | steps 850 850
+(b) e = 0.9, eta = 0.02: |E(t) - E0| at apoapsis after k orbits
+  A n_iter=3 symmetric (default)        :   1P 1.37e-09   10P 1.33e-09   30P 1.24e-09  100P 9.45e-10   (steps 17104; late/early(10) = 0.71)
+  B n_iter=1 symmetric (max_passes 6)   :   1P 1.79e-08   10P 2.34e-08   30P 1.15e-07  100P 4.37e-07   (steps 17100; late/early(10) = 18.69)
+  C n_iter=3 NOT symmetric              :   1P 2.37e-09   10P 8.46e-09   30P 2.20e-08  100P 6.93e-08   (steps 17066; late/early(10) = 8.20)
+  C' n_iter=10 NOT symmetric            :   1P 2.37e-09   10P 8.46e-09   30P 2.20e-08  100P 6.93e-08   (steps 17066; late/early(10) = 8.20)
+  D max_passes=1 (test's control)       :   1P 3.01e-09   10P 1.36e-07   30P 4.46e-07  100P 1.53e-06   (steps 17056; late/early(10) = 11.23)
+(c) Kepler e = 0.5, 10 orbits: position error |x - x_kepler| for eta, eta/2, eta/16
+  eta = 0.02: err(eta) = 6.468e-05, err(eta/2) = 1.572e-05, err(eta/16) = 2.468e-07; ratio eta/(eta/2) = 4.11 (16 claimed by the playground's note, 4 = 2^(4/2) expected for dt ~ sqrt(eta)); eta/(eta/16) = 262.0
+  eta = 0.005: err(eta) = 3.934e-06, err(eta/2) = 9.713e-07, err(eta/16) = 1.440e-08; ratio eta/(eta/2) = 4.05 (16 claimed by the playground's note, 4 = 2^(4/2) expected for dt ~ sqrt(eta)); eta/(eta/16) = 273.2
+exit 0

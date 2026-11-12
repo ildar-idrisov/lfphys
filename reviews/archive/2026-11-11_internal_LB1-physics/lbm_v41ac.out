@@ -1,0 +1,16 @@
+== V. STATUS V41 (ac): the running momentum bound on the test's 4 x 16 Poiseuille channel ==
+  setup: 4 x 16, tau 0.8, g 1e-05, steps already 9537 (the test helper's run)
+    after   9537 steps: |rel.residual| 1.698e-11  limit 4.235e-12  ok False
+    steps   engine rel.residual   limit 2 eps n   exact-books residual   max |per-link acc_p|
+     1000   1.345e-13            1.000e-12      1.178e-15            2.222e+02
+     2000   9.941e-13            1.000e-12      2.339e-15            4.444e+02
+     4000   7.747e-13            1.776e-12      4.509e-15            8.889e+02
+     8000   1.280e-11            3.553e-12      8.433e-15            1.778e+03
+    16000   3.985e-12            7.105e-12      1.638e-14            3.556e+03
+    32000   5.424e-11            1.421e-11      3.363e-14            7.111e+03
+    64000   6.142e-10            2.842e-11      6.752e-14            1.422e+04
+== O. the same bound on an open channel (inlet, outlet, interpolated disk: the remap test's _channel) ==
+     2000 steps: momentum |rel.res| 1.776e-16 limit 1.000e-12 ok True; mass |rel.res| 3.207e-17 ok True
+     8000 steps: momentum |rel.res| 2.028e-14 limit 3.553e-12 ok True; mass |rel.res| 7.179e-16 ok True
+    32000 steps: momentum |rel.res| 6.594e-12 limit 1.421e-11 ok True; mass |rel.res| 1.743e-13 ok True
+[exit 0]

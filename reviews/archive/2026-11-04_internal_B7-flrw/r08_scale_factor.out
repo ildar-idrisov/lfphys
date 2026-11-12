@@ -1,0 +1,13 @@
+t =     1e-09 Gyr: a_engine = 1.150969313669080e-06, a_ref = 1.150969313669079e-6, rel err 6.66e-16, t H = 0.5
+t =     0.001 Gyr: a_engine = 1.665769338915212e-03, a_ref = 0.001665769338915212, rel err 0.00e+00, t H = 0.615
+t =      0.38 Gyr: a_engine = 7.876501316832547e-02, a_ref = 0.07876501316832547, rel err 0.00e+00, t H = 0.665
+t =    13.787 Gyr: a_engine = 9.999869022517563e-01, a_ref = 0.9999869022517562, rel err 2.22e-16, t H = 0.954
+t =        50 Gyr: a_engine = 8.539110865516490e+00, a_ref = 8.539110865516493, rel err 4.44e-16, t H = 2.87
+t =       200 Gyr: a_engine = 4.707894619706007e+04, a_ref = 47078.94619706006, rel err 2.22e-16, t H = 11.5
+t =      1000 Gyr: a_engine = 4.234043155760282e+24, a_ref = 4.234043155760278e+24, rel err 1.11e-15, t H = 57.4
+t =      2000 Gyr: a_engine = 3.708224032646731e+49, a_ref = 3.708224032646732e+49, rel err 3.33e-16, t H = 115
+/lf/lfphys/lfphys/core/cosmology/flrw.py:361: RuntimeWarning: overflow encountered in power
+  t_l = self.OL * a ** 4
+/lf/lfphys/lfphys/core/cosmology/flrw.py:857: RuntimeWarning: divide by zero encountered in divide
+  step = np.where(np.isfinite(dg) & (dg > 0), -g / dg, 0.0)
+t =      5000 Gyr: a_engine = 2.491139315961139e+124, a_ref = 2.491139315961256e+124, rel err 4.73e-14, t H = 287

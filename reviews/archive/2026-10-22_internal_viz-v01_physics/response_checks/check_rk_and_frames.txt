@@ -1,0 +1,11 @@
+rs = 29532.500761 m
+1. RK fan (eta = 4e-3, default) vs DOP853 polar reference, 71 escaping rays: max rel err r = 2.08e-10, ct = 2.84e-09
+2a. local static-frame velocity: engine [-0.3163239   0.46667735] c, reference [-0.3163239   0.46667735] c, diff 0.0e+00
+2b. aberrated directions in the static frame: max |engine - textbook| = 4.4e-16
+2c. aberration closed form: max |cos_lab - (cos' + b)/(1 + b cos')| = 2.2e-16
+2d. dx/dlambda: max |engine - tetrad| = 6.7e-16; null condition residual max = 1.0e-15
+3. emit_velocities (SR, |v| = 0.922 c): max ||u| - c|/c = 9.9e-16, max |u/c - textbook| = 1.1e-16
+   frame_matrix vs textbook boost: max diff 0.0e+00
+4. ray 0 (status 2, 19 vertices): max |front(t) linear - exact| = 8.824e-03 rs
+4. ray 1 (status 0, 88 vertices): max |front(t) linear - exact| = 8.067e-03 rs
+4. ray 2 (status 0, 52 vertices): max |front(t) linear - exact| = 7.537e-03 rs

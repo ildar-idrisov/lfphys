@@ -1,0 +1,23 @@
+tangential launches at r0 with speed k x circular (v_r = 0 exactly):
+  r0=6.01    -1e-03:plun -1e-04:plun -1e-05:circ!=plun -1e-06:plun +1e-06:circ!=boun +1e-05:circ!=boun +1e-04:boun +1e-03:boun
+  r0=6.1     -1e-03:plun -1e-04:plun -1e-05:boun -1e-06:circ!=boun +1e-06:circ!=boun +1e-05:circ!=boun +1e-04:boun +1e-03:boun
+  r0=6.5     -1e-03:boun -1e-04:boun -1e-05:boun -1e-06:circ!=boun +1e-06:circ!=boun +1e-05:boun +1e-04:boun +1e-03:boun
+  r0=7       -1e-03:boun -1e-04:boun -1e-05:boun -1e-06:circ!=boun +1e-06:circ!=boun +1e-05:boun +1e-04:boun +1e-03:boun
+  r0=10      -1e-03:boun -1e-04:boun -1e-05:circ!=boun -1e-06:circ!=boun +1e-06:boun +1e-05:boun +1e-04:boun +1e-03:boun
+  r0=20      -1e-03:boun -1e-04:boun -1e-05:circ!=boun -1e-06:circ!=boun +1e-06:circ!=boun +1e-05:circ!=boun +1e-04:boun +1e-03:boun
+  r0=100     -1e-03:boun -1e-04:boun -1e-05:boun -1e-06:circ!=boun +1e-06:boun +1e-05:boun +1e-04:boun +1e-03:boun
+  r0=10000   -1e-03:boun -1e-04:boun -1e-05:circ!=boun -1e-06:circ!=boun +1e-06:circ!=boun +1e-05:boun +1e-04:boun +1e-03:boun
+  -> 20 of 64 kinds wrong
+
+examples (run vs truth):
+  r0=6.01 k=1+1e-05: run circular r_peri=6.01 r_apo=np.float64(6.010000000032506) | truth bound r_peri=6.01 r_apo=6.05113430713
+  r0=6.5 k=1+1e-04: run bound r_peri=6.5 r_apo=np.float64(6.523151161196283) | truth bound r_peri=6.5 r_apo=6.5231511612
+  r0=7.0 k=1+1e-05: run bound r_peri=7.0 r_apo=np.float64(7.0013996992815395) | truth bound r_peri=7.0 r_apo=7.00139969929
+  r0=10.0 k=1-1e-05: run circular r_peri=np.float64(9.999999999960288) r_apo=10.0 | truth bound r_peri=9.99920002 r_apo=10.0
+
+boosts of a circular orbit: state (r, v_r ~ 1e-17, v_phi) then v -> v (1 + dv):
+  r0=6.2    -3e-01/+:plun -3e-01/-:plun -5e-02/+:esca!=plun -5e-02/-:esca!=plun -1e-03/+:esca!=plun -1e-03/-:esca!=plun +1e-03/+:boun!=boun +1e-03/-:boun!=boun +5e-02/+:boun +5e-02/-:boun +3e-01/+:esca +3e-01/-:esca
+  r0=8      -3e-01/+:circ!=plun -3e-01/-:circ!=plun -5e-02/+:esca!=plun -5e-02/-:esca!=plun -1e-03/+:boun -1e-03/-:boun +1e-03/+:boun!=boun +1e-03/-:boun!=boun +5e-02/+:boun!=boun +5e-02/-:boun!=boun +3e-01/+:boun!=esca +3e-01/-:boun!=esca
+  r0=20     -3e-01/+:esca!=plun -3e-01/-:esca!=plun -5e-02/+:esca!=boun -5e-02/-:esca!=boun -1e-03/+:boun -1e-03/-:boun +1e-03/+:boun!=boun +1e-03/-:boun!=boun +5e-02/+:boun!=boun +5e-02/-:boun!=boun +3e-01/+:boun!=boun +3e-01/-:boun!=boun
+  r0=1000   -3e-01/+:circ!=boun -3e-01/-:circ!=boun -5e-02/+:boun -5e-02/-:boun -1e-03/+:boun -1e-03/-:boun +1e-03/+:boun!=boun +1e-03/-:boun!=boun +5e-02/+:boun +5e-02/-:boun +3e-01/+:boun!=boun +3e-01/-:boun!=boun
+  -> 32 of 48 wrong (kind, or bound with wrong turning points)

@@ -1,0 +1,11 @@
+== (1) state round trips ==
+  cw plane wave + conductor: differing arrays after 150 more steps: none; monitors identical: [True, True]
+  Bloch slab TE + Drude: differing arrays after 150 more steps: none; monitors identical: [True]
+  PEC/PMC/PML both pols + Lorentz + hard source: differing arrays after 150 more steps: none; monitors identical: [True]
+  3-D oblique plane wave + sphere: differing arrays after 150 more steps: none; monitors identical: [True]
+== (2) GPU 0 against the CPU ==
+  cw plane wave + conductor: devices cpu/gpu; complex False; differing arrays: none; largest relative difference 0.00e+00
+  Bloch slab TE + Drude: devices cpu/gpu; complex True; differing arrays: ['ex', 'ey', 'hz', "psi('ey', 0)", "psi('hz', 0)", 'disp ex P', 'disp ex Pm', 'disp ey P', 'disp ey Pm']; largest relative difference 6.29e-15
+  PEC/PMC/PML both pols + Lorentz + hard source: devices cpu/gpu; complex False; differing arrays: none; largest relative difference 0.00e+00
+  3-D oblique plane wave + sphere: devices cpu/gpu; complex False; differing arrays: none; largest relative difference 0.00e+00
+rc=0

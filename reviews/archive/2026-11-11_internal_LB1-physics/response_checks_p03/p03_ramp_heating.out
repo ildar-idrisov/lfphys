@@ -1,0 +1,5 @@
+tau     0 ps: net work per atom [0.182, 0.133, 0.1186, 0.097] eps; mean 0.1326 ± 0.0180 eps = 15.9 ± 2.2 K (as kT per atom); T change [19.8, 12.4, 18.4, 8.1] K  (13 s)
+tau    10 ps: net work per atom [0.0157, -0.0005, -0.0031, 0.0123] eps; mean 0.0061 ± 0.0047 eps = 0.7 ± 0.6 K (as kT per atom); T change [0.5, -1.6, 7.1, 0.0] K  (16 s)
+tau    50 ps: net work per atom [0.0102, 0.0061, 0.0034, 0.0021] eps; mean 0.0054 ± 0.0018 eps = 0.6 ± 0.2 K (as kT per atom); T change [4.9, -0.3, 4.9, -4.3] K  (36 s)
+tau   200 ps: net work per atom [0.0039, 0.0008, -0.0017, -0.0023] eps; mean 0.0002 ± 0.0014 eps = 0.0 ± 0.2 K (as kT per atom); T change [3.4, 5.5, 0.7, 6.4] K  (122 s)
+[exit 0]

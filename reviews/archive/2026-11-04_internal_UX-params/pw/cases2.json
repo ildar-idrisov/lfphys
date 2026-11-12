@@ -1,0 +1,4 @@
+[{"name": "e_v01_measure_c_lab_flash_obs1", "start": {"viz": "v01_light_travel", "preset": "measure_c_lab", "seed": 1}, "wait": 5000,
+  "cmds": [["play", {}, 1500], ["pause", {}, 300], ["action", {"name": "flash", "args": {"obj": "obs1"}}, 500], ["play", {}, 6000], ["pause", {}, 1500]]},
+ {"name": "e_v01_andromeda_flash_default", "start": {"viz": "v01_light_travel", "preset": "andromeda", "seed": 1}, "wait": 5000,
+  "cmds": [["play", {}, 1500], ["pause", {}, 300], ["action", {"name": "flash", "args": {"obj": "earth"}}, 500], ["play", {}, 6000], ["pause", {}, 1500]]}]

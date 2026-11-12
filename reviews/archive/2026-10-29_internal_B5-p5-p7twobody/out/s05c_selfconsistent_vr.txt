@@ -1,0 +1,4 @@
+r0=40.0: self-consistent k = 0.991
+r0=20.0: self-consistent k = 0.956
+r0=12.0: self-consistent k = 0.794
+r0=10.0: self-consistent k = 0.490

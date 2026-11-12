@@ -1,0 +1,14 @@
+cell: '.' converged with the requested invariants (1e-12) at a periapsis (r_p < r of a quarter-period later); 'E' not converged; 'A' apoapsis
+  eps=0.0001     .    .    .    .    .    .    .    .    .    .    .    .    .
+  eps=0.0003     .    .    .    .    .    .    .    .    .    .    .    .    .
+  eps=0.001      E    .    .    .    .    .    .    .    .    .    .    .    .
+  eps=0.002      E    .    .    .    .    .    .    .    .    .    .    .    .
+  eps=0.003      E    .    .    .    .    .    .    .    .    .    .    .    .
+  eps=0.005      E    .    .    .    .    .    .    .    .    .    .    .    .
+  eps=0.007      E    E    .    .    .    .    .    .    .    .    .    .    .
+  eps=0.01       E    E    .    .    .    .    .    .    .    .    .    .    .
+  eps=0.015      E    E    E    .    .    .    .    .    .    .    .    .    .
+  eps=0.02       E    E    E    A    .    .    .    .    .    .    .    .    .
+  eps=0.03       E    E    E    E    A    A    .    .    .    .    .    .    .
+  eps=0.05       E    E    E    E    A    A    A    A    .    .    .    .    .
+127 of 156 cells converged to the periapsis state

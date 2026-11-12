@@ -1,0 +1,4 @@
+beta = 0.00: facing face 1.000250 L (closed form 1/gamma = 1.000000), trailing face 0.000000 L (beta = 0.000000), leading face 0.000000 L (0); total 1.000250 (beta + 1/gamma = 1.000000)
+beta = 0.50: facing face 0.866188 L (closed form 1/gamma = 0.866025), trailing face 0.499838 L (beta = 0.500000), leading face 0.000000 L (0); total 1.366026 (beta + 1/gamma = 1.366025)
+beta = 0.90: facing face 0.435910 L (closed form 1/gamma = 0.435890), trailing face 0.899980 L (beta = 0.900000), leading face 0.000000 L (0); total 1.335890 (beta + 1/gamma = 1.335890)
+beta = 0.99: facing face 0.141068 L (closed form 1/gamma = 0.141067), trailing face 0.989998 L (beta = 0.990000), leading face 0.000000 L (0); total 1.131066 (beta + 1/gamma = 1.131067)

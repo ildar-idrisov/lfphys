@@ -1,0 +1,22 @@
+(a) expm route against 40-digit mpmath
+  OBE stiff Gamma=1e4, Omega=1, T2=2T1; t=1: trace-norm error 9.96e-14, bound 3.36e-10, ratio 3.0e-04
+  OBE stiff Gamma=1e4, Omega=1, T2=2T1; t=100: trace-norm error 9.10e-12, bound 4.28e-08, ratio 2.1e-04
+  OBE stiff Gamma=1e4, Omega=1, T2=2T1; t=10000: trace-norm error 1.63e-09, bound 5.46e-06, ratio 3.0e-04
+  OBE Gamma=1e-3, Omega=50 (underdamped, long); t=1: trace-norm error 5.32e-15, bound 1.30e-12, ratio 4.1e-03
+  OBE Gamma=1e-3, Omega=50 (underdamped, long); t=100: trace-norm error 5.62e-13, bound 8.40e-11, ratio 6.7e-03
+  OBE Gamma=1e-3, Omega=50 (underdamped, long); t=10000: trace-norm error 5.86e-12, bound 1.07e-08, ratio 5.5e-04
+  thermal oscillator N=8 nth=2 kappa=0.5 drive; t=1: trace-norm error 5.40e-16, bound 1.60e-10, ratio 3.4e-06
+  thermal oscillator N=8 nth=2 kappa=0.5 drive; t=100: trace-norm error 6.34e-14, bound 2.04e-08, ratio 3.1e-06
+  thermal oscillator N=8 nth=2 kappa=0.5 drive; t=10000: trace-norm error 6.36e-12, bound 2.61e-06, ratio 2.4e-06
+(b) 'eig' route near the Liouvillian exceptional point Omega = Gamma/4 (Delta = 0, T2 = 2 T1)
+  Omega = 0.25 + 0.01: cond(V) 1.01e+01, eig route accepted, max error 1.94e-16
+  Omega = 0.25 + 0.0001: cond(V) 9.94e+01, eig route accepted, max error 1.31e-15
+  Omega = 0.25 + 1e-06: cond(V) 9.94e+02, eig route accepted, max error 7.99e-15
+  Omega = 0.25 + 1e-08: cond(V) 9.94e+03, eig route accepted, max error 5.69e-14
+(c) steady_state: err_bound against the exact steady state
+  Gamma=0.001: s_next/s_max 6.7e-04, error_F 2.71e-14, err_bound 1.62e-11 -> OK
+  Gamma=1e-06: s_next/s_max 6.7e-07, error_F 5.15e-11, err_bound 1.62e-08 -> OK
+  Gamma=1e-09: s_next/s_max 6.7e-10, error_F 7.53e-08, err_bound 1.63e-05 -> OK
+  Gamma=1e-11: s_next/s_max 6.7e-12, error_F 2.17e-06, err_bound 1.61e-03 -> OK
+  thermal ladder N=20 nth=0.5: error_F 7.44e-15, err_bound 4.00e-10 (truncated ladder: exact closed form)
+  thermal ladder N=30 nth=3.0: error_F 9.65e-16, err_bound 3.49e-09 (truncated ladder: exact closed form)

@@ -1,0 +1,10 @@
+lensing         obs boosted 0.5c at   0.0 deg, then src flashes: scheduled arrivals at obs = 2
+lensing         obs boosted 0.7c at   0.0 deg, then src flashes: scheduled arrivals at obs = 0
+lensing         obs boosted 0.9c at   0.0 deg, then src flashes: scheduled arrivals at obs = 0
+lensing         obs boosted 0.9c at  90.0 deg, then src flashes: scheduled arrivals at obs = 0
+lensing         obs boosted 0.9c at 180.0 deg, then src flashes: scheduled arrivals at obs = 0
+lensing_newton  obs boosted 0.5c at   0.0 deg, then src flashes: scheduled arrivals at obs = 2
+lensing_newton  obs boosted 0.7c at   0.0 deg, then src flashes: scheduled arrivals at obs = 0
+lensing_newton  obs boosted 0.9c at   0.0 deg, then src flashes: scheduled arrivals at obs = 0
+lensing_newton  obs boosted 0.9c at  90.0 deg, then src flashes: scheduled arrivals at obs = 0
+lensing_newton  obs boosted 0.9c at 180.0 deg, then src flashes: scheduled arrivals at obs = 0

@@ -1,0 +1,37 @@
+== 1. Heaviside at beta = 0.99 ==
+dir [1. 0. 0.] t = 0: max rel |E_LW - E_H| = 9.39e-14, c|B_LW - B_H|/|E_H| 7.88e-14
+dir [1. 0. 0.] t = 3e-09: max rel |E_LW - E_H| = 1.34e-13, c|B_LW - B_H|/|E_H| 9.18e-14
+dir [1. 0. 0.] t = 1: fields() raised RuntimeError: retarded_time: no convergence
+dir [0.    0.707 0.707] t = 0: max rel |E_LW - E_H| = 1.07e-13, c|B_LW - B_H|/|E_H| 6.70e-14
+dir [0.    0.707 0.707] t = 3e-09: max rel |E_LW - E_H| = 1.18e-13, c|B_LW - B_H|/|E_H| 1.11e-13
+dir [0.    0.707 0.707] t = 1: fields() raised RuntimeError: retarded_time: no convergence
+
+-- double-precision cancellation at large gamma (uniform motion along x, field point ahead / abeam) --
+gamma = 1e+02 ahead   : LW vs mp 2.39e-12; heaviside_field vs mp 6.14e-15
+gamma = 1e+02 abeam   : LW vs mp 1.58e-12; heaviside_field vs mp 2.94e-15
+gamma = 1e+02 oblique : LW vs mp 3.16e-12; heaviside_field vs mp 5.96e-15
+gamma = 1e+04 ahead   : LW vs mp 7.80e-09; heaviside_field vs mp 5.45e-09
+gamma = 1e+04 abeam   : LW vs mp 7.28e-10; heaviside_field vs mp 2.73e-09
+gamma = 1e+04 oblique : LW vs mp 3.65e-08; heaviside_field vs mp 5.45e-09
+gamma = 1e+06 ahead   : LW vs mp 3.10e-05; heaviside_field vs mp 8.52e-05
+gamma = 1e+06 abeam   : LW vs mp 1.14e-04; heaviside_field vs mp 4.26e-05
+gamma = 1e+06 oblique : LW vs mp 2.99e-05; heaviside_field vs mp 8.52e-05
+gamma = 1e+07 ahead   : LW vs mp 9.34e-03; heaviside_field vs mp 5.13e-03
+gamma = 1e+07 abeam   : LW vs mp 1.13e-02; heaviside_field vs mp 2.56e-03
+gamma = 1e+07 oblique : LW vs mp 7.60e-02; heaviside_field vs mp 5.13e-03
+
+== 2. Lienard against the sphere integral of dP/dOmega (adaptive in the polar angle about beta) ==
+beta = 0.9: linear   int dP/dOmega(ret) / Lienard - 1 = +4.44e-16; observer/retarded = 6.11578947368 (closed-form ratio 6.11578947368)
+beta = 0.9: circular int dP/dOmega(ret) / Lienard - 1 = -7.77e-16
+beta = 0.9: general  int dP/dOmega(ret) / Lienard - 1 = -4.55e-15
+beta = 0.99: linear   int dP/dOmega(ret) / Lienard - 1 = +4.22e-15; observer/retarded = 60.1015075377 (closed-form ratio 60.1015075377)
+beta = 0.99: circular int dP/dOmega(ret) / Lienard - 1 = +2.44e-15
+beta = 0.99: general  int dP/dOmega(ret) / Lienard - 1 = +3.13e-14
+beta = 0.999: linear   int dP/dOmega(ret) / Lienard - 1 = -4.54e-14; observer/retarded = 600.100150075 (closed-form ratio 600.100150075)
+beta = 0.999: circular int dP/dOmega(ret) / Lienard - 1 = -7.29e-14
+beta = 0.999: general  int dP/dOmega(ret) / Lienard - 1 = -3.11e-13
+
+== 3. Synchrotron spectrum ==
+gamma = 2000: int spectrum / Lienard - 1 = -5.13e-10; sigma/pi = 7.0000000000; (sigma+pi)/total - 1 = +2.2e-16; fraction below omega_c = 0.5000052565
+gamma = 10000: int spectrum / Lienard - 1 = +9.83e-08; sigma/pi = 7.0000000000; (sigma+pi)/total - 1 = +0.0e+00; fraction below omega_c = 0.5000052565
+mpmath: int_0^1 F / int_0^inf F = 0.500005256538

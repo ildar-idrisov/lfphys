@@ -1,0 +1,4 @@
+N =   48: |R_N - R_2N| = 4.602e-03; ratio to the next halving 3.96
+N =   96: |R_N - R_2N| = 1.164e-03; ratio to the next halving 3.99
+N =  192: |R_N - R_2N| = 2.917e-04; ratio to the next halving 4.00
+N =  384: |R_N - R_2N| = 7.299e-05

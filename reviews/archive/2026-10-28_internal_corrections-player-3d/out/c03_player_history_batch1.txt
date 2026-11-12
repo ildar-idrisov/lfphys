@@ -1,0 +1,13 @@
+  (overshot to 142 > 140: A is then reached backwards too)
+v01_light_travel run 20261028-174054-v01-5e8c: 282 frames, end t = 4 мин 40.77 с; middle frame 140: A t = 2 мин 19.38 с / B t = 2 мин 19.38 с
+  centre A vs B: 17 px differ (0.00 %), max channel diff 48
+  panels: checks same; events shown 1/1 (future 1/1); set-up same; right panels same
+  ◀ from the end: 7.2 distinct frames/s, 19.2 animation frames/s, longest gap 707 ms
+v04_orbits run 20261028-174207-v04-3d6b: 282 frames, end t = 163,031938 мс; middle frame 140: A t = 80,9367164 мс / B t = 80,9367164 мс
+  centre A vs B: 0 px differ (0.00 %), max channel diff 0
+  panels: checks same; events shown 2/2 (future 1/1); set-up same; right panels same
+  ◀ from the end: 19.0 distinct frames/s, 56.8 animation frames/s, longest gap 223 ms
+v02_double_slit run 20261028-174253-v02-0769: 241 frames, end t = 564,027196 мс; middle frame 120: A t = 279,425769 мс / B t = 279,425769 мс
+  centre A vs B: 0 px differ (0.00 %), max channel diff 0
+  panels: checks same; events shown 10/10 (future 0/0); set-up same; right panels same
+  ◀ from the end: 3.8 distinct frames/s, 10.2 animation frames/s, longest gap 2971 ms

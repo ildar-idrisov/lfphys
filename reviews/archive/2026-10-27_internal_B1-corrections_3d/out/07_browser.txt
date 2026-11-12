@@ -1,0 +1,29 @@
+[double] run 20261027-174135-v08-64b5 {"viz":"v08_wave_3d","preset":"double"}: first slice ready true
+(1) layers: ["screen:object:true","incident:object:true","target:object:true","light:volume:true","flux:vectors:false"]
+    planes: [{"id":1,"origin":[0,0,15],"n":[0,-1,0],"label":"y = 0","verify":{"points":3,"max_err":0.00010627653264071006,"tol":0.0009308427737229389,"ok":true,"max_rel":0.0002412692322484141}}]
+    top bar: стандартная физика
+(2) 6 s of play: planes unchanged true; slice messages during play 0, planes messages 0, frames 130
+    time shown: t = 6,4613689 с
+(3) planes after two '+ Срез': [{"id":1,"origin":[0,0,15],"n":[0,-1,0],"label":"y = 0"},{"id":2,"origin":[0,0,15],"n":[1,0,0],"label":"x = 0"},{"id":3,"origin":[0,0,15],"n":[0,0,1],"label":"z = 15"}] |n_i.n_j|: ["0.000","0.000","0.000"] windows: 3 add button disabled: true
+(4) hover window 2: highlight [[1,0,0.45],[2,1,0.92],[3,0,0.45]]
+(6) selected: 3 panel inputs: 6
+    plane 3 after centre x = 5: {"origin":[5,0,15],"s":[-21,10.875,256],"tt":[-16,15.875,256],"label":"z = 15"} -> window's horizontal axis is labelled 'x, мкм' with ticks from s0 = -21 to s1 = 10.875 ; the true x of those points: -16.000 to 15.875
+    readout at the left edge of window 3: x = -15,63, y = -2, z = 15 мкм · I/Iпик = 0,0009461 · фаза 1,09 рад
+(7) plane 2 at theta 45, phi 30: {"n":[0.6124,0.3536,0.7071],"u":[-0.5,0.866,0],"v":[-0.6124,-0.3536,0.7071],"label":"произвольная плоскость","route":"точно для этой плоскости (как дал бы объём на этой сетке)","verify":{"points":3,"max_err":0.00006285417385976926,"tol":0.0005797453096147225,"ok":true,"max_rel":0.0001952215675907551}}
+    window 2 status: точно для этой плоскости (как дал бы объём на этой сетке) · сверено в 3 точк.: 6.3·10⁻⁵ ≤ 0,00058 ✓
+(8) gizmo drag from 1.2 along the normal: plane 1 origin [0,0,15] -> [-3.4663,0,15], normal [0,-1,0], label y = 0, verify {"points":3,"max_err":0.00010823673077185179,"tol":0.0009308427737229389,"ok":true,"max_rel":0.0002505802010810904}
+(9) 8 layer checkboxes; each one alone switched off -> [["screen+flux",""],["incident+flux",""],["target+flux",""],["light+flux",""],["flux",""],["","plane1"],["","plane2"],["","plane3"]]
+(10) after removing 3 and 2: planes [1] windows 1
+    plane 1 turned to theta 90, phi 300; then two '+ Срез': [{"id":1,"n":[0.5,-0.866,0]},{"id":2,"n":[1,0,0]},{"id":3,"n":[0,0,1]}] |n_i.n_j|: ["0.500","0.000","0.000"]
+(11) new world (circle): planes [{"id":1,"origin":[0,0,20],"n":[0,-1,0]}]
+    world 1 from the record: planes [1,2,3] plane panel controls disabled: panel empty add disabled: true banner: Вы смотрите мир 1 из записи — менять его нельзя. к текущему миру
+    page errors: []
+    message counts: {"history_end":1,"header":2,"planes":17,"slice":15,"check":29,"volume":2,"vectors":2,"target":2,"state":4,"frame":146,"event":15}
+[double_slices] run 20261027-174222-v08-645b {"viz":"v08_wave_3d","preset":"double_slices"}: first slice ready true
+(12) slices only, reduced model: top bar стандартная физика ПРИБЛИЖЕНИЕ: срез y = 0: щель длиной L = 8 мкм принята беск…
+     window 1 status: ПРИБЛИЖЕНИЕ: упрощённая 2-D модель (щель бесконечна) · приближение: его размер — в проверке «ПРИБЛИЖЕНИЕ»
+     layers: ["screen","incident","target"] planes: [{"id":1,"label":"y = 0","route":"ПРИБЛИЖЕНИЕ: упрощённая 2-D модель (щель бесконечна)"}]
+     after removing the reduced plane: top bar "стандартная физика"
+     run list entry approximations: ["срез y = 0: щель длиной L = 8 мкм принята бесконечной (упрощённая 2-D модель); размер приближения — в проверках"]
+     page errors: []
+runs stopped: ["20261027-174135-v08-64b5","20261027-174222-v08-645b"]

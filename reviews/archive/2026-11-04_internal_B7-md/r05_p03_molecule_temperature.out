@@ -1,0 +1,8 @@
+t = 0: {'T_measured': 84.3, 'trans': np.float64(0.0), 'rot': np.float64(155.2), 'vib_kin': np.float64(191.4), 'vib_pot': np.float64(0.0)}
+t = 5 ps: {'T_measured': 105.4, 'trans': np.float64(43.7), 'rot': np.float64(162.1), 'vib_kin': np.float64(171.9), 'vib_pot': np.float64(74.0)}
+t = 25 ps: {'T_measured': 102.2, 'trans': np.float64(68.9), 'rot': np.float64(134.6), 'vib_kin': np.float64(132.2), 'vib_pot': np.float64(111.4)}
+t = 100 ps: {'T_measured': 103.1, 'trans': np.float64(101.9), 'rot': np.float64(96.3), 'vib_kin': np.float64(115.2), 'vib_pot': np.float64(123.9)}
+t = 300 ps: {'T_measured': 108.2, 'trans': np.float64(115.5), 'rot': np.float64(95.0), 'vib_kin': np.float64(107.3), 'vib_pot': np.float64(90.2)}
+t = 700 ps: {'T_measured': 104.9, 'trans': np.float64(104.8), 'rot': np.float64(117.8), 'vib_kin': np.float64(74.2), 'vib_pot': np.float64(95.1)}
+bond: omega = sqrt(k/mu) = 1.312e+13 1/s, hbar omega / k_B = 100.2 K
+exit 0

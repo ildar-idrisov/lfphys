@@ -1,0 +1,6 @@
+before the cancel: done 2 of 6 state running
+DELETE while running: (409, {'error': 'свип ещё идёт: сначала «✕ отменить», потом удалить'})
+first cancel: HTTP 200 {'ok': True, 'cancelled': 1}
+second cancel: HTTP 200 {'ok': True, 'already': True, 'state': 'cancelled', 'text': 'свип уже остановлен'}
+the sweep afterwards: HTTP 200 cancelled results kept: 2 | Отменено: посчитано 2 из 6 значений; они сохранены
+DELETE after: HTTP 200 {'ok': True, 'removed': 1} | then GET: 404

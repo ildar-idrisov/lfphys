@@ -1,0 +1,6 @@
+width 3.0 nm, dt x 1.0: T_run = 1.407200e-05, T_ref = 1.412437e-05, rel = -3.708e-03, ok = True, n_grid = 2048, abs = 0.999992, 2.4 s
+width 3.0 nm, dt x 0.5: T_run = 1.407271e-05, T_ref = 1.412437e-05, rel = -3.657e-03, ok = True, n_grid = 2048, abs = 0.999992, 3.4 s
+width 3.0 nm, dt x 0.25: T_run = 1.407289e-05, T_ref = 1.412437e-05, rel = -3.645e-03, ok = True, n_grid = 2048, abs = 0.999992, 6.5 s
+width 5.0 nm, dt x 1.0: T_run = 7.133207e-07, T_ref = 1.602645e-06, rel = -5.549e-01, ok = True, n_grid = 2048, abs = 0.999990, 2.2 s
+width 5.0 nm, dt x 0.5: T_run = 7.133232e-07, T_ref = 1.602645e-06, rel = -5.549e-01, ok = True, n_grid = 2048, abs = 0.999990, 2.7 s
+width 5.0 nm, dt x 0.25: T_run = 7.133226e-07, T_ref = 1.602645e-06, rel = -5.549e-01, ok = True, n_grid = 2048, abs = 0.999990, 6.3 s

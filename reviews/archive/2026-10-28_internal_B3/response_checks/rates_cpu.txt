@@ -1,0 +1,2 @@
+cpu narrow N=100 spinor=False points 46010 pairs 700 (est 966) total 28.6 s = 40.9 ms/pair; estimate 26 s
+cpu narrow N=1000 spinor=False points 46010 pairs 700 (est 966) total 55.2 s = 78.8 ms/pair; estimate 43 s

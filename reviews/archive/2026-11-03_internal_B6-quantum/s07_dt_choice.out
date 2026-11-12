@@ -1,0 +1,6 @@
+wrapper dt 0.0078125; engine suggest_dt 0.00257 -> power of two 0.001953125; ratio of steps 4
+wrapper : ||psi - psi_ref|| at t = 12.0: 2.546e-04; companion's accumulated estimate 3.749e-03
+suggest : ||psi - psi_ref|| at t = 12.0: 1.591e-05; companion's accumulated estimate 2.345e-04
+ref16   : ||psi - psi_ref|| at t = 12.0: 9.942e-07; companion's accumulated estimate 1.465e-05
+ref32   : ||psi - psi_ref|| at t = 12.0: 2.486e-07; companion's accumulated estimate 3.663e-06
+Richardson correction size |ref32 - ref16| = 7.457e-07

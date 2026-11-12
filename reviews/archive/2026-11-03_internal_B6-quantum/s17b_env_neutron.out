@@ -1,0 +1,2 @@
+neutron packet: errors []; dt = 16.0 units = 138 fs
+default environment: lambda dt = 1.38; errors ['Сцена: среда: λ·dt = 1.38 > 0.05: за шаг возможны два скачка — уменьшите шаг по времени до 0.579']

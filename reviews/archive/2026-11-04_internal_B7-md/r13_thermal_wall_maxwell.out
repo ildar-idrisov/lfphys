@@ -1,0 +1,4 @@
+MD 2-D: 19387 emissions; normal speed vs flux-weighted: D = 0.0040 (bound 0.0117) within True; vs half-Gaussian: D = 0.3020 within False; tangential (19387): D = 0.0115 (bound 0.0117) within True; mean emitted energy 1.4904 T_w
+MD 3-D: 19711 emissions; normal speed vs flux-weighted: D = 0.0046 (bound 0.0116) within True; vs half-Gaussian: D = 0.3009 within False; tangential (39422): D = 0.0040 (bound 0.0082) within True; mean emitted energy 1.9938 T_w
+hard 2-D: 3404 emissions; normal speed vs flux-weighted: D = 0.0241 (bound 0.0279) within True; vs half-Gaussian: D = 0.3008 within False; tangential (3404): D = 0.0088 (bound 0.0279) within True; mean emitted energy 1.4768 T_w
+exit 0

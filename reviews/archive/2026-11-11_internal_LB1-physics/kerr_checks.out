@@ -1,0 +1,22 @@
+== M. the hole's mass 10 -> 20 Msun at t1: what is continuous, what jumps (by design), vs a world never changed ==
+  tau_s    after/before: [1. 1. 1. 1. 1.]
+  clock_s  after/before: 1.
+  rate     after/before: 1.
+  r_M      after/before: [1. 1. 1. 1. 1.]
+  r_km     after/before: [2. 2. 2.]
+  speed    after/before: [1. 1. 1.]
+  E        after/before: [1. 1. 1. 1. 1.]
+  Tr       after/before: [nan nan nan]
+  geometric time A 60.90763401842508 B 60.90763401842508; max |r_A - r_B| 5.77e-15 (A ran 0.002 s at M = 20, B 0.001 s at M = 10)
+  proper times in units of M: A - B/2 - (its growth) checks the 'rescale': 1.95e-14
+  checks failed in A: []
+== W. the spin 'what if' near the horizon: the ZAMO speed kept, or silently clamped at 0.999 c? ==
+  a = 0.9: r+ = 1.435890; capture at r+ + 0.0001
+  body: status active, r 1.4363025, ZAMO speed 0.9990030, E 0.212436
+  errors: []
+  after a -> 0.95: ZAMO velocity before [-9.990030e-01  8.951571e-21  0.000000e+00] |v| 0.9990030; after [-9.990000e-01  8.951544e-21  0.000000e+00] |v| 0.9990000; gamma 22.40 -> 22.37
+  does the event mention the clamp (0.999 / 'огранич')? False
+  event: МОДЕЛЬ «что если»: спин 0.9 → 0.95, заряд 0 → 0 — у смены метрики под движущимися телами нет установленной динамики; каждое тело сохранило место (r, θ, φ), собственное время и скорость, измеренную местным наблюдателем без момента (ZAMO); E, L и постоянная Картера пересчитаны в новой метрике, их проверка — заново; горизонт r₊ = 1.3122 G M/c², ISCO 1.9372 | «Чёрная дыра»: Спин a/M = 0.95
+== R. the measured radial period across a mass change ==
+  Tr before 0.043732 s; right after the change (no new periapsis yet) 0.0874639 s; ratio 2
+[exit 0]

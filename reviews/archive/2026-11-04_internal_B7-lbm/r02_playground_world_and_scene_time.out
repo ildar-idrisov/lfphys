@@ -1,0 +1,14 @@
+=== (a) the default laws, no preset ===
+refused: ValueError неустойчиво: τ = 0.50008 слишком близко к 1/2 (нужно τ − 1/2 ≥ 0.001); увеличьте вязкость или уменьшите dx, или увеличьте dt
+
+=== (b) a world from a scene file (karman preset exported at t ~ 0.2 s) ===
+scene time: 0.2
+after load: sim.t = 0.2, fl.t = 0.2, fl.steps = 0, dt = 0.0001443, inlet t0 = 0.2
+run_to(0.2100): sim.t = 0.21, fl.t = 0.00995929, fl.steps = 69 (steps expected from the file's time: 69), inlet scale at fl.t: 0
+run_to(0.2200): sim.t = 0.22, fl.t = 0.21997, fl.steps = 1524 (steps expected from the file's time: 139), inlet scale at fl.t: 0.003931
+run_to(0.2300): sim.t = 0.23, fl.t = 0.22993, fl.steps = 1593 (steps expected from the file's time: 208), inlet scale at fl.t: 0.008815
+errors: []
+
+=== (c) gravity (0, -0.5) at rest: with an outlet on the right, and the control with walls only ===
+sides {'left': 'wall', 'right': 'outlet', 'bottom': 'wall', 'top': 'wall'}: max |u| = 0.1289 m/s at x = 0.399 m, y = 0.017 m; mean |u| = 0.008464 m/s
+sides {'left': 'wall', 'right': 'wall', 'bottom': 'wall', 'top': 'wall'}: max |u| = 3.939e-12 m/s at x = 0.399 m, y = 0.099 m; mean |u| = 2.498e-12 m/s

@@ -1,0 +1,2 @@
+phase in fp32 (as the kernel)   : dtype complex64, max|U32 - U64| / max|U64| = 1.8e-05
+phase in fp64, cast             : dtype complex64, max|U32 - U64| / max|U64| = 1.6e-07

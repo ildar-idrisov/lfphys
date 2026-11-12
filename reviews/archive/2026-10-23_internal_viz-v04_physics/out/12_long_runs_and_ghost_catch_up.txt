@@ -1,0 +1,5 @@
+mercury           415 orbits: run    4.70 s, then ghost on (catch-up from the segment start)    9.64 s; errors 0, messages 1984
+mercury          2000 orbits: run   20.10 s, then ghost on (catch-up from the segment start)   58.35 s; errors 0, messages 9270
+default          1000 orbits: run   11.27 s, then ghost on (catch-up from the segment start)   24.22 s; errors 0, messages 3879
+newton_ellipse   1000 orbits: run   18.42 s, then ghost on (catch-up from the segment start)   10.99 s; errors 0, messages 5152
+newton_ellipse   3000 orbits: run   60.88 s, then ghost on (catch-up from the segment start)   48.22 s; errors 0, messages 15376

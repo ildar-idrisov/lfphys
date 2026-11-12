@@ -1,0 +1,96 @@
+{
+ "a": [
+  {
+   "k": 4.0,
+   "window": 0.7,
+   "measured": -0.11857651885070955,
+   "exact": -0.11857700304053247,
+   "rel": 4.083336654669934e-06
+  },
+  {
+   "k": 9.0,
+   "window": 0.7,
+   "measured": -0.17990098737984359,
+   "exact": -0.1799026402383885,
+   "rel": 9.187516885412457e-06
+  }
+ ],
+ "a_short": {
+  "measured": -0.7570129968779369,
+  "exact": -0.7570129968219517
+ },
+ "b": [
+  {
+   "n_samples": 1,
+   "measured": 0.753902254343305,
+   "true_max": 0.9999999999999999,
+   "stat_text": "максимум",
+   "readings": 2
+  },
+  {
+   "n_samples": 4,
+   "measured": 0.753902254343305,
+   "true_max": 0.9999999999999999,
+   "stat_text": "максимум",
+   "readings": 5
+  },
+  {
+   "n_samples": 200,
+   "measured": 0.9999949269133802,
+   "true_max": 0.9999999999999999,
+   "stat_text": "максимум",
+   "readings": 201
+  }
+ ],
+ "c": {
+  "final": {
+   "measured": null,
+   "note": "величина в конце не определена (в сцене нет осцилляторов)",
+   "error": null
+  },
+  "mean_last": {
+   "measured": null,
+   "note": "величина не определена в 6 из 6 замеров окна (в сцене нет осцилляторов)",
+   "error": null
+  },
+  "max": {
+   "measured": null,
+   "note": "величина не определена ни в одном замере (в сцене нет осцилляторов)",
+   "error": null
+  }
+ },
+ "d": {
+  "window > duration": {
+   "status": 400,
+   "body": "{\"error\": \"окно усреднения длиннее свипа\", \"hint\": \"окно — не больше длительности\"}"
+  },
+  "n_samples 0": {
+   "status": 400,
+   "body": "{\"error\": \"«n_samples» — целое от 1 до 2000\"}"
+  },
+  "value text": {
+   "status": 400,
+   "body": "{\"error\": \"«Жёсткость пружины, Н/м»: «abc» — не число; нужно от 1·10⁻⁶ до 10000\"}"
+  },
+  "value dict": {
+   "status": 400,
+   "body": "{\"error\": \"«Жёсткость пружины, Н/м»: «{'a': 1}» — не число; нужно от 1·10⁻⁶ до 10000\"}"
+  },
+  "target id a list": {
+   "status": 500,
+   "body": "500 Internal Server Error\n\nServer got itself in trouble"
+  },
+  "obj id a list": {
+   "status": 500,
+   "body": "500 Internal Server Error\n\nServer got itself in trouble"
+  },
+  "measure a list": {
+   "status": 500,
+   "body": "500 Internal Server Error\n\nServer got itself in trouble"
+  },
+  "body a list": {
+   "status": 400,
+   "body": "{\"error\": \"тело запроса — объект JSON\"}"
+  }
+ }
+}

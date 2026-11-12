@@ -1,0 +1,32 @@
+[P5] dissipator anticommutator 1/2 -> 0.49: CAUGHT (2 s) 1 failed in 0.98s FAILED tests/test_open_systems.py::test_liouvillian_equals_the_direct_right_hand_side
+[P5] Magnus commutator coefficient x1.05: CAUGHT (3 s) 1 failed, 13 passed in 2.12s FAILED tests/test_open_systems.py::test_magnus_is_fourth_order - AssertionErr...
+[P5] Richardson divisor 15 -> 150 (error estimate 10x too small): CAUGHT (3 s) 1 failed, 14 passed in 2.01s FAILED tests/test_open_systems.py::test_adaptive_magnus_meets_its_stated_error
+[P5] dephasing jump operator sqrt(gc/2) -> sqrt(gc): CAUGHT (2 s) 1 failed, 7 passed in 1.11s FAILED tests/test_open_systems.py::test_steady_state_null_space_against_the_closed_form[0.3--2.0-4.0-1.0]
+[P5] steady state v: G1 gp -> G1 gp * 1.01: CAUGHT (2 s) 1 failed, 3 passed in 1.01s FAILED tests/test_open_systems.py::test_exceptional_point_is_refused_by_the_eig_route
+[P5] Torrey resonance: delta sign: CAUGHT (1 s) 1 failed, 3 passed in 0.90s FAILED tests/test_open_systems.py::test_exceptional_point_is_refused_by_the_eig_route
+[P5] waiting-time c_e amplitude x1.001: CAUGHT (3 s) 1 failed, 27 passed in 2.03s FAILED tests/test_open_systems.py::test_no_emission_probability_and_waiting_time_density
+[P5] jump channel weights |L psi| instead of |L psi|^2: CAUGHT (3 s) 1 failed, 29 passed in 2.16s FAILED tests/test_open_systems.py::test_trajectory_average_converges_to_the_master_equation
+[P5] jump thresholds not rescaled after renormalisation: CAUGHT (3 s) 1 failed, 29 passed in 2.16s FAILED tests/test_open_systems.py::test_trajectory_average_converges_to_the_master_equation
+[P5] Gaussian kick overlap 4a^2 -> 2a^2: CAUGHT (5 s) 1 failed, 39 passed in 4.55s FAILED tests/test_open_systems.py::test_converging_paths_equal_the_grw_pattern_shift
+[P7] 2PN A: 87/4 -> 88/4: CAUGHT (1 s) 1 failed in 0.53s FAILED tests/test_pn_binary.py::test_coefficients_agree_with_a_second_transcription
+[P7] 2.5PN A: -17/3 -> -16/3: CAUGHT (10 s) 1 failed, 18 passed in 9.29s FAILED tests/test_pn_binary.py::test_averaged_reaction_equals_peters_mathews_in_two_gauges[0.3]
+[P7] 3.5PN A: 112 rdot^4 -> 113: NOT CAUGHT (29 s) 67 passed in 28.57s 
+[P7] 3.5PN A: 3956/35 -> 3946/35: NOT CAUGHT (29 s) 67 passed in 28.20s 
+[P7] 3.5PN B: -120 rdot^4 -> -119: CAUGHT (20 s) 1 failed, 26 passed in 19.49s FAILED tests/test_pn_binary.py::test_reaction_at_3p5pn_gives_the_1pn_eccentric_flux[0.5-0.1]
+[P7] 3.5PN B: -1060/21 -> -1050/21: CAUGHT (10 s) 1 failed, 16 passed in 9.22s FAILED tests/test_pn_binary.py::test_circular_radiation_reaction_matches_eq_226
+[P7] 3.5PN B: 678/5 + 12/5 nu -> 678/5 + 13/5 nu: NOT CAUGHT (65 s) 67 passed in 64.91s (0:01:04) 
+[P7] 3.5PN A: 184/5 nu -> 180/5 nu (nu^2 part of the G^3 term): NOT CAUGHT (79 s) 67 passed in 78.54s (0:01:18) 
+[P7] E_2PN: 27 nu^2 -> 26 nu^2: CAUGHT (2 s) 1 failed, 5 passed in 1.08s FAILED tests/test_pn_binary.py::test_energy_and_angular_momentum_are_conserved_to_their_order[2-0.25]
+[P7] K(eps, j): 15/j^2 (7 - 2 nu) -> (7 - nu): CAUGHT (8 s) 1 failed, 9 passed in 6.94s FAILED tests/test_pn_binary.py::test_periastron_advance_and_mean_motion_are_gauge_invariant_closed_forms[0.95-0.25]
+[P7] n(eps, j): 555 -> 556: CAUGHT (7 s) 1 failed, 9 passed in 6.24s FAILED tests/test_pn_binary.py::test_periastron_advance_and_mean_motion_are_gauge_invariant_closed_forms[0.95-0.25]
+[P7] x(eps, j): 2/j -> 1.9/j: CAUGHT (19 s) 1 failed, 21 passed in 18.56s FAILED tests/test_pn_binary.py::test_reaction_at_3p5pn_gives_the_1pn_eccentric_flux[0.95-0.25]
+[P7] e_t: 17 - 7 nu -> 17 - 6 nu: CAUGHT (13 s) 1 failed, 21 passed in 12.81s FAILED tests/test_pn_binary.py::test_reaction_at_3p5pn_gives_the_1pn_eccentric_flux[0.95-0.25]
+[P7] circular inspiral rate: -1751/336 -> -1700/336: NOT CAUGHT (37 s) 67 passed in 35.89s 
+[P7] 1PN CM positions: m/(2r) -> 0.45 m/r: CAUGHT (27 s) 1 failed, 31 passed in 26.65s FAILED tests/test_pn_binary.py::test_body_positions_cancel_the_1pn_mass_dipole
+[P7] elements route: drop v x (x x f) in dA/dt (x-component): CAUGHT (21 s) 1 failed, 28 passed in 20.46s FAILED tests/test_pn_binary.py::test_two_integrators_agree - AssertionError: ...
+[P7] GW angular momentum flux 2/5 -> 0.41: CAUGHT (53 s) 1 failed, 49 passed in 52.56s FAILED tests/test_gw_quadrupole.py::test_orbit_averaged_fluxes_are_peters_mathews[0.0]
+[P7] polarisation vector P -> -P (hx sign): NOT CAUGHT (51 s) 67 passed in 50.40s 
+[P7] Peters de/dt: 121/304 -> 121/300: CAUGHT (23 s) 1 failed, 27 passed in 22.81s FAILED tests/test_pn_binary.py::test_secular_decay_matches_peters_orbit_by_orbit
+[P7] omega_dot: 3 -> 3.003 (1e-3): CAUGHT (36 s) 1 failed, 61 passed in 35.57s FAILED tests/test_peters_mathews.py::test_psr_b1913_masses_from_omega_dot_and_gamma
+[P7] Einstein gamma: m1 + 2 m2 -> 2 m1 + m2 (pulsar/companion swapped): CAUGHT (34 s) 1 failed, 59 passed in 33.14s FAILED tests/test_peters_mathews.py::test_einstein_delay_from_the_pulsar_clock
+[P7] data: Pb_dot^GR -2.40263 -> -2.40273 (2 sigma): CAUGHT (33 s) 1 failed, 62 passed in 32.55s FAILED tests/test_peters_mathews.py::test_psr_b1913_orbital_decay_gr_prediction

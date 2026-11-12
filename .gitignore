@@ -1,0 +1,16 @@
+# run records of the visualization server (recreated by it; visualizations/RULES.md)
+visualizations/runs/
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# the owner's device settings of the engine on this machine (visualizations/server/lfviz/devices.py)
+visualizations/settings.local.json
+
+# third-party web pages that reviews fetch as evidence (their quoted sentences are kept in the review's text outputs)
+reviews/**/out/eula/*.html
+reviews/**/out/cuda_env/*.html
+# third-party papers a reviewer downloaded as evidence (full texts; the quoted sentences are in the review and in
+# lfphys/sources/verification_*.md): kept locally, not distributed with the engine
+reviews/**/sources/*.txt
+reviews/**/sources/*.pdf

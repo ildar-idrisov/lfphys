@@ -1,0 +1,107 @@
+{
+ "v08_wave_3d": {
+  "used": {
+   "optics.angular_spectrum": "gpu"
+  },
+  "checkpoint_bytes": 26881848,
+  "checkpoint_ms": 239.5,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 47,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 47,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "check",
+   "command",
+   "event",
+   "frame",
+   "header",
+   "notice",
+   "planes",
+   "slice",
+   "state",
+   "target",
+   "vectors",
+   "volume"
+  ]
+ }
+}
+{
+ "v11_double_slit_2d": {
+  "used": {
+   "quantum.split_operator": "gpu"
+  },
+  "checkpoint_bytes": 11102852,
+  "checkpoint_ms": 129.1,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 103,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 103,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "check",
+   "command",
+   "error",
+   "frame",
+   "header",
+   "live",
+   "notice",
+   "screen",
+   "state",
+   "target",
+   "tracks",
+   "wave"
+  ]
+ }
+}
+{
+ "v12_arrival_times_2d": {
+  "used": {
+   "quantum.split_operator": "gpu"
+  },
+  "checkpoint_bytes": 10524581,
+  "checkpoint_ms": 115.5,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 59,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 59,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "arrival",
+   "check",
+   "command",
+   "event",
+   "frame",
+   "header",
+   "live",
+   "notice",
+   "screen",
+   "setup",
+   "state",
+   "target",
+   "tracks",
+   "wave"
+  ]
+ }
+}

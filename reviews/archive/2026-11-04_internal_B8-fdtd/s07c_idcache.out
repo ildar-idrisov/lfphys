@@ -1,0 +1,16 @@
+/lf/lfphys/lfphys/core/em/fdtd.py:1714: RuntimeWarning: overflow encountered in multiply
+  np.multiply(out, self.rd, out=out)
+/lf/lfphys/lfphys/core/em/fdtd.py:1764: RuntimeWarning: overflow encountered in subtract
+  curl = ds[0][1] - ds[1][1]
+/lf/lfphys/lfphys/core/em/fdtd.py:1781: RuntimeWarning: invalid value encountered in subtract
+  np.subtract(Fb, t2, out=Fb)
+/lf/lfphys/lfphys/core/em/fdtd.py:1777: RuntimeWarning: invalid value encountered in add
+  np.add(Fb, t2, out=Fb)
+/lf/lfphys/lfphys/core/em/fdtd.py:1745: RuntimeWarning: invalid value encountered in multiply
+  new = B * ps + A * ds
+/lf/lfphys/lfphys/core/em/fdtd.py:1747: RuntimeWarning: invalid value encountered in add
+  ds[...] = ds * K + new
+  first acceptance (trial 0): the run blew up: поля стали нечисловыми к t = 15.36 (шаг 512)
+unstable Medium(eps=0.3) accepted in 9 of 200 trials
+control: a fresh world refuses Medium(eps=0.3) at S = 0.6
+rc=0

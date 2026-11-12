@@ -1,0 +1,4 @@
+t = 0: K = 125.64 eps (T = 84.3 K), LJ pair energy 35.22 eps, bond 0.000; per-atom potential energy: max 23.16 eps, atoms above 1 eps: 2, sum of the positive shares 46.97 eps
+   equilibrium T from K alone: 2 K / (357 + 60) = 72.2 K; with the pair energy released as well: 92.4 K
+t = 300 ps: T = 108.2 K, LJ pair energy -24.14 eps, total E drift -1.200 eps
+exit 0

@@ -1,0 +1,44 @@
+== A. far from the origin (uniform motion along x) ==
+beta = 0.5, |r| =         1 m, t = 6.67e-09 s: t_ret error +1.69e-25 s (ulp(t) = 8.3e-25 s; delay 3.852e-09 s)
+beta = 0.5, |r| =        10 m, t = 6.67e-08 s: t_ret error +3.30e-26 s (ulp(t) = 1.3e-23 s; delay 3.852e-09 s)
+beta = 0.5, |r| =        30 m, t = 2e-07 s: t_ret error -8.97e-24 s (ulp(t) = 2.6e-23 s; delay 3.852e-09 s)
+beta = 0.5, |r| =       100 m, t = 6.67e-07 s: t_ret error -5.81e-23 s (ulp(t) = 1.1e-22 s; delay 3.852e-09 s)
+beta = 0.5, |r| =     1e+03 m, t = 6.67e-06 s: t_ret error +2.60e-22 s (ulp(t) = 8.5e-22 s; delay 3.852e-09 s)
+beta = 0.5, |r| =     1e+06 m, t = 0.00667 s: t_ret error -2.54e-19 s (ulp(t) = 8.7e-19 s; delay 3.852e-09 s)
+beta = 0.5, |r| =   1.5e+08 m, t = 1 s: t_ret error +5.97e-17 s (ulp(t) = 2.2e-16 s; delay 3.852e-09 s)
+beta = 0.99, |r| =         1 m, t = 3.37e-09 s: t_ret error -7.59e-23 s (ulp(t) = 4.1e-25 s; delay 2.365e-08 s)
+beta = 0.99, |r| =        10 m, t = 3.37e-08 s: t_ret error -4.45e-23 s (ulp(t) = 6.6e-24 s; delay 2.365e-08 s)
+beta = 0.99, |r| =        30 m, t = 1.01e-07 s: t_ret error +4.84e-22 s (ulp(t) = 1.3e-23 s; delay 2.365e-08 s)
+beta = 0.99, |r| =       100 m, t = 3.37e-07 s: t_ret error -7.28e-22 s (ulp(t) = 5.3e-23 s; delay 2.365e-08 s)
+beta = 0.99, |r| =     1e+03 m, t = 3.37e-06 s: t_ret error +1.15e-20 s (ulp(t) = 4.2e-22 s; delay 2.365e-08 s)
+beta = 0.99, |r| =     1e+06 m, t = 0.00337 s: t_ret error +1.32e-17 s (ulp(t) = 4.3e-19 s; delay 2.365e-08 s)
+beta = 0.99, |r| =  2.97e+08 m, t = 1 s: t_ret error +2.22e-15 s (ulp(t) = 2.2e-16 s; delay 2.365e-08 s)
+
+-- circular motion of radius 1 m about a centre far from the origin; observer 2 m from the centre --
+centre x = 0 m: ok
+centre x = 10 m: ok
+centre x = 100 m: ok
+centre x = 10000 m: ok
+
+== B. near light speed: circular motion, observer far in the orbit plane ==
+gamma = 100: max |c tau - R|/R = 2.8e-16; min kappa = 1.41e-03 (1/(2 gamma^2) = 5.0e-05); phase error of t_ret at the 5 smallest kappa: 2.4e-12 rad (pulse width ~ 1/gamma^3 = 1.0e-06 rad)
+gamma = 1000: max |c tau - R|/R = 4.3e-16; min kappa = 1.47e-03 (1/(2 gamma^2) = 5.0e-07); phase error of t_ret at the 5 smallest kappa: 3.9e-12 rad (pulse width ~ 1/gamma^3 = 1.0e-09 rad)
+gamma = 10000: max |c tau - R|/R = 2.8e-16; min kappa = 1.47e-03 (1/(2 gamma^2) = 5.0e-09); phase error of t_ret at the 5 smallest kappa: 8.8e-12 rad (pulse width ~ 1/gamma^3 = 1.0e-12 rad)
+
+== C. hyperbolic motion near its horizon (g = 3e15 m/s^2, c^2/g = 30 m, along +x; point at t = 0) ==
+x = -c^2/g +1e+00 m: t_ret = -1.495221e-06 s, exact -1.495221e-06 s, rel err 6.8e-15
+x = -c^2/g +1e-03 m: t_ret = -1.496889e-03 s, exact -1.496889e-03 s, rel err 6.2e-08
+x = -c^2/g +1e-06 m: t_ret = -1.454339e+00 s, exact -1.496889e+00 s, rel err 2.8e-02
+x = -c^2/g +1e-09 m: t_ret = -2.706244e+00 s, exact -1.496889e+03 s, rel err 1.0e+00
+/lf/lfphys/lfphys/core/em/charges.py:347: RuntimeWarning: invalid value encountered in divide
+  step = np.where(gv == 0, 0.0, gv / dg)
+x = -c^2/g +0e+00 m: t_ret = -6.706244e+00 s  <-- a root reported where none exists
+x = -c^2/g -1e-09 m: t_ret = -6.706244e+00 s  <-- a root reported where none exists
+x = -c^2/g -1e-06 m: t_ret = -2.682498e+01 s  <-- a root reported where none exists
+x = -c^2/g -1e-03 m: RuntimeError: retarded_time: no retarded time — the point is outside the causal future of the worldline (e.g. beyond the horizon of hyperbolic motion) or the worldline is not subluminal
+x = -c^2/g -1e+00 m: t_ret = -5.813385e+07 s  <-- a root reported where none exists
+
+== D. sampled worldline: retarded time inside the domain, present distance / c beyond it ==
+x = (-1.5, 0, 0) m, t = 8.00e-09 s: exact t_ret = 1.5771e-09 s (inside [0, 1e-8]); sampled: ValueError: retarded_time: the retarded time lies before the worldline's domain; formula worldline: 1.5771e-09 s
+x = (-0.2, 0, 0) m, t = 9.00e-09 s: exact t_ret = 4.3857e-09 s (inside [0, 1e-8]); sampled: 4.3857e-09 s; formula worldline: 4.3857e-09 s
+x = (-2.3, 0, 0) m, t = 9.90e-09 s: exact t_ret = 1.1726e-09 s (inside [0, 1e-8]); sampled: ValueError: retarded_time: the retarded time lies before the worldline's domain; formula worldline: 1.1726e-09 s

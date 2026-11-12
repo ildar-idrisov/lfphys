@@ -1,0 +1,5 @@
+N = 4, sep = 30 λ: curve area 1.000000, exact F_SC 1.000000, total in the window 1.000000, mean 1.0002 t0, sd 0.0147 t0, k samples 20001
+N = 4, sep = 60 λ: curve area 1.000000, exact F_SC 1.000000, total in the window 1.000000, mean 1.0003 t0, sd 0.0159 t0, k samples 20001
+N = 8, sep = 30 λ: curve area 1.000000, exact F_SC 1.000000, total in the window 1.000000, mean 1.0002 t0, sd 0.0145 t0, k samples 20001
+N = 4, sep = 90 λ: refused — опыт слишком тяжёл: ~10 мин счёта на GPU 0 (предел 10 мин; сетка 529×2047, ~5193 пар шагов): уменьшите экран, пакет или выберите сетку грубее
+N = 5, sep = 60 λ: curve area 1.000000, exact F_SC 1.000000, total in the window 1.000000, mean 1.0003 t0, sd 0.0159 t0, k samples 20001

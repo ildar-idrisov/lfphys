@@ -1,0 +1,12 @@
+TE: modes [26, 25], P_t = 0.890644116419, P_b = 1.839321380600, extinction = 2.729965497050, rel = -1.1e-11, P_modes rel = -9.4e-12, T = 0.717140889
+   r0 = 1.5: flux out of the upper arc 0.890644116420 (P_t rel +2.8e-14); flux into the lower arc 0.890644116450 (rel +3.4e-11)
+   r0 = 4.0: flux out of the upper arc 0.890644116420 (P_t rel +2.7e-14); flux into the lower arc 0.890644116450 (rel +3.4e-11)
+TM: modes [26, 25], P_t = 1.186848005408, P_b = 1.484276669640, extinction = 2.671124675048, rel = 6.7e-16, P_modes rel = -8.5e-14, T = 0.955642346
+   r0 = 1.5: flux out of the upper arc 1.186848005408 (P_t rel +1.2e-14); flux into the lower arc 1.186848005408 (rel +1.1e-13)
+   r0 = 4.0: flux out of the upper arc 1.186848005408 (P_t rel +1.5e-14); flux into the lower arc 1.186848005408 (rel -2.7e-14)
+
+Sign check of the specular wave: field at z = -3 lambda far from the slits (x = 40 lambda), |u + ...| vs closed form
+  TE z = -0.25: u = 0.000258-2.000403j, screen without slits gives -0.000000-2.000000j
+  TE z = -0.5: u = 0.000528-0.000797j, screen without slits gives -0.000000-0.000000j
+  TM z = -0.25: u = -0.023221+0.030643j, screen without slits gives 0.000000
+  TM z = -0.5: u = -2.023675+0.030299j, screen without slits gives -2.000000

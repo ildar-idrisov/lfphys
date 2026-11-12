@@ -1,0 +1,26 @@
+(a)+(b) Newton world, r0 = 20 M, speed 1.0 x circular, inward angles
+  angle  -60.00: r_peri = 2.6795e+00 M (r_peri/r0 = 1.34e-01); swept angle per sample at periapsis ~ 0.0438 rad; drift E = 8.34e-11, h = 7.92e-12
+     periapsis adv per orbit [deg]: [None, 0.0, 0.0, 0.0]
+  angle  -80.00: r_peri = 3.0384e-01 M (r_peri/r0 = 1.52e-02); swept angle per sample at periapsis ~ 1.18 rad; drift E = 4.02e-10, h = 3.93e-12
+     periapsis adv per orbit [deg]: [None, -0.0, 0.0, 0.0]
+  angle  -85.00: r_peri = 7.6106e-02 M (r_peri/r0 = 3.81e-03); swept angle per sample at periapsis ~ 9.45 rad; drift E = 4.87e-10, h = 4.18e-12
+     FAILING s0.adv: value=-1295999.9999998154 ref=0.0 rel=None tol=0.00020626480624709638 ok=False
+     periapsis adv per orbit [deg]: [None, -360.0, -360.0, -360.0]
+  angle  -89.00: r_peri = 3.0461e-03 M (r_peri/r0 = 1.52e-04); swept angle per sample at periapsis ~ 1.18e+03 rad; drift E = 1.11e-08, h = 4.30e-12
+     FAILING s0.adv: value=-1295999.9999998752 ref=0.0 rel=None tol=0.00020626480624709638 ok=False
+     FAILING s0.energy: value=1.1120383280882606e-08 ref=None rel=None tol=1e-09 ok=False
+     periapsis adv per orbit [deg]: [None, -360.0, -360.0, -360.0]
+  angle  -89.90: r_peri = 3.0462e-05 M (r_peri/r0 = 1.52e-06); swept angle per sample at periapsis ~ 1.18e+06 rad; drift E = 6.64e-07, h = 4.31e-12
+     FAILING s0.adv: value=-1295999.9999999283 ref=0.0 rel=None tol=0.00020626480624709638 ok=False
+     FAILING s0.period: value=0.027680513660395565 ref=0.0276805290932785 rel=-5.575356916551932e-07 tol=1e-08 ok=None
+     FAILING s0.energy: value=6.64469535838208e-07 ref=None rel=None tol=1e-09 ok=False
+     periapsis adv per orbit [deg]: [None, -360.0, -360.0, -360.0]
+  angle  -89.99: r_peri = 3.0462e-07 M (r_peri/r0 = 1.52e-08); swept angle per sample at periapsis ~ 1.18e+09 rad; drift E = 5.93e-07, h = 4.33e-12
+     FAILING s0.energy: value=5.930196491643614e-07 ref=None rel=None tol=1e-09 ok=False
+     periapsis adv per orbit [deg]: []
+
+(c) boost dv = 0: the orbit must continue unchanged
+  newton at 0.30 period: specific energy rel change +8.51e-12, angular momentum rel change +4.38e-12
+  newton at 0.71 period: specific energy rel change +7.66e-12, angular momentum rel change +2.54e-12
+  GR     at 0.30 period: specific energy rel change -3.50e-14, angular momentum rel change -3.01e-16
+  GR     at 0.71 period: specific energy rel change -3.43e-14, angular momentum rel change -1.51e-16

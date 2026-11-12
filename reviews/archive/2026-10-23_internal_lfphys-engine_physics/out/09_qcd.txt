@@ -1,0 +1,15 @@
+=== n_f = 5 fixed, alpha_s(91.18) = 0.118 -> RunDec Table 1 (c) ===
+1 loops: alpha_s(4.7) = 0.2059144 (RunDec 0.2059), alpha_s(1) = 0.3369 (RunDec 0.3369)
+2 loops: alpha_s(4.7) = 0.2160558 (RunDec 0.2161), alpha_s(1) = 0.3965 (RunDec 0.3965)
+3 loops: alpha_s(4.7) = 0.2167125 (RunDec 0.216712), alpha_s(1) = 0.4029 (RunDec 0.4029)
+4 loops: alpha_s(4.7) = 0.2169467 (RunDec 0.2169467), alpha_s(1) = 0.4065 (RunDec 0.4065)
+
+=== PDG 2024 inputs: alpha_s(M_Z = 91.188) = 0.118, m_b(m_b) = 4.183, m_c(m_c) = 1.273 ===
+independent 4-loop running (mpmath odefun) with decoupling at m_h(m_h) of order LO / 2-loop / 3-loop
+mu = 4.183: engine 0.224568 | ref LO-match 0.224568  2-loop 0.224743  3-loop 0.224795 | engine-(3-loop match) -2.27e-04 (-1.0e-03 rel) | engine 4 vs 3 loops +2.76e-04
+mu = 3: engine 0.253166 | ref LO-match 0.253166  2-loop 0.253393  3-loop 0.253460 | engine-(3-loop match) -2.94e-04 (-1.2e-03 rel) | engine 4 vs 3 loops +5.44e-04
+mu = 2: engine 0.301077 | ref LO-match 0.301077  2-loop 0.301409  3-loop 0.301507 | engine-(3-loop match) -4.30e-04 (-1.4e-03 rel) | engine 4 vs 3 loops +1.29e-03
+mu = 1.7769: engine 0.319107 | ref LO-match 0.319107  2-loop 0.319484  3-loop 0.319595 | engine-(3-loop match) -4.89e-04 (-1.5e-03 rel) | engine 4 vs 3 loops +1.70e-03
+mu = 1.273: engine 0.386189 | ref LO-match 0.386189  2-loop 0.387664  3-loop 0.388356 | engine-(3-loop match) -2.17e-03 (-5.6e-03 rel) | engine 4 vs 3 loops +3.97e-03
+mu = 1: engine 0.473160 | ref LO-match 0.473160  2-loop 0.475572  3-loop 0.476707 | engine-(3-loop match) -3.55e-03 (-7.4e-03 rel) | engine 4 vs 3 loops +1.04e-02
+PDG uncertainty of alpha_s(M_Z): 0.0009 (0.8 %), propagated to 2 GeV it is ~ +-0.0025 (scales ~ alpha_s^2)

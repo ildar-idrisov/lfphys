@@ -1,0 +1,12 @@
+........................................................................ [ 69%]
+...............................                                          [100%]
+============================= slowest 8 durations ==============================
+1.93s call     tests/test_mie_debye.py::test_p2_peak_approaches_descartes_with_airys_offset[10000.0]
+1.52s call     tests/test_mie.py::test_coefficients_at_x_1e4_against_60_digit_recurrences
+1.30s call     tests/test_mie_water.py::test_size_average_converges_with_the_node_spacing
+0.60s call     tests/test_mie_debye.py::test_p2_peak_approaches_descartes_with_airys_offset[3000.0]
+0.51s call     tests/test_mie_debye.py::test_debye_sum_equals_mie[1.333-10000.0-5e-10]
+0.50s call     tests/test_mie_debye.py::test_debye_sum_equals_mie[0.75-10000.0-1e-09]
+0.37s call     tests/test_mie.py::test_every_coefficient_within_the_stated_bound[1.333-3000.0]
+0.20s call     tests/test_mie_debye.py::test_p2_peak_approaches_descartes_with_airys_offset[1000.0]
+103 passed in 10.18s

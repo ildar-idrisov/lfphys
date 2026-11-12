@@ -1,0 +1,6 @@
+[A_steps] frames 29, cpu_ms min 0.01 median 41.03 max 49.89
+[A_steps] estimate: HTTP 200; ms per world second 830.1999999999998; total 169.14401999999995 s; «≈ 2 мин 49 с счёта: 2 знач. × (восстановление 0,1 с + 100 с мира × 830 мс за 1 с + 201 замер(ов) × 0,01 мс); предел 10 мин. Оценка — по цене шага этого мира в записи (29 кадров)»
+[A_steps] the sweep itself: advance per value [0.03138541243970394, 0.03155622351914644] s, wall per value [0.03545583691447973, 0.0357748381793499] s → 0.315 ms per world second
+[B_played] frames 70, cpu_ms min 0.01 median 0.07 max 49.74
+[B_played] estimate: HTTP 200; ms per world second 17.843660634133833; total 6.672752126826767 s; «≈ 6,7 с счёта: 2 знач. × (восстановление 0,1 с + 100 с мира × 17,8 мс за 1 с + 201 замер(ов) × 0,01 мс); предел 10 мин. Оценка — по цене шага этого мира в записи (70 кадров)»
+[B_played] the sweep itself: advance per value [0.03167864168062806, 0.030360270757228136] s, wall per value [0.035859130788594484, 0.03439976694062352] s → 0.310 ms per world second

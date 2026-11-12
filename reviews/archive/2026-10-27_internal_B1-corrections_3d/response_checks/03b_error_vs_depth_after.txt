@@ -1,0 +1,65 @@
+GPU available: True
+
+== preset circle: source circle, n 256, dx 0.125, z_max 40.0; окно ×8, обычная сумма; оценка ошибки 1.6e-03 пика; tolerance of slices = est x peak = 2.13e-03 (6.0 s)
+  vs exact on axis (closed form): max over depths 8.99e-04 at z = 32.00 (at z_max 8.94e-04); estimate used as tolerance 1.65e-03; ratio 0.5
+  vs window x16 over the whole slice: max 1.07e-03 at z = 38.75 (at z_max 9.69e-04)
+     z =   0.78: |drawn - exact|/peak 2.81e-05   |drawn - wide|/peak 2.28e-05
+     z =   5.65: |drawn - exact|/peak 2.05e-04   |drawn - wide|/peak 1.70e-04
+     z =  10.51: |drawn - exact|/peak 2.93e-04   |drawn - wide|/peak 2.52e-04
+     z =  15.37: |drawn - exact|/peak 4.77e-05   |drawn - wide|/peak 7.02e-05
+     z =  20.24: |drawn - exact|/peak 4.99e-04   |drawn - wide|/peak 4.99e-04
+     z =  25.10: |drawn - exact|/peak 2.50e-04   |drawn - wide|/peak 3.50e-04
+     z =  29.96: |drawn - exact|/peak 6.17e-04   |drawn - wide|/peak 5.63e-04
+     z =  34.82: |drawn - exact|/peak 3.47e-04   |drawn - wide|/peak 3.61e-04
+     z =  39.69: |drawn - exact|/peak 8.62e-04   |drawn - wide|/peak 6.15e-04
+  real run (2.8 s): slice 1 verify {'points': 3, 'max_err': 0.000469570524837059, 'tol': 0.002133457114971246, 'ok': True, 'max_rel': 0.0002980972234493008}; failed checks []
+  real run, slice 1 on the axis vs closed form at 251 depths: max 8.99e-04, 0% of depths above the estimate 1.65e-03
+
+== preset gauss: source gauss, n 256, dx 0.125, z_max 30.0; окно ×2, обычная сумма; оценка ошибки 5.9e-15 пика; tolerance of slices = est x peak = 2.51e-15 (0.7 s)
+  vs exact on 9 points across x (RS-I / Hankel): max over depths 2.98e-13 at z = 2.82 (at z_max 1.30e-13); estimate used as tolerance 5.90e-15; ratio 50.6
+  vs window x8 over the whole slice: max 4.90e-15 at z = 22.12 (at z_max 3.35e-15)
+     z =   0.94: |drawn - exact|/peak 1.09e-13   |drawn - wide|/peak 2.18e-16
+     z =   3.76: |drawn - exact|/peak 1.52e-14   |drawn - wide|/peak 1.27e-15
+     z =   6.59: |drawn - exact|/peak 2.28e-13   |drawn - wide|/peak 1.67e-15
+     z =   9.41: |drawn - exact|/peak 1.74e-13   |drawn - wide|/peak 1.44e-15
+     z =  12.24: |drawn - exact|/peak 8.02e-14   |drawn - wide|/peak 2.07e-15
+     z =  15.06: |drawn - exact|/peak 2.70e-14   |drawn - wide|/peak 2.23e-15
+     z =  17.88: |drawn - exact|/peak 2.13e-13   |drawn - wide|/peak 2.22e-15
+     z =  20.71: |drawn - exact|/peak 1.13e-13   |drawn - wide|/peak 4.49e-15
+     z =  23.53: |drawn - exact|/peak 2.87e-14   |drawn - wide|/peak 4.00e-15
+     z =  26.35: |drawn - exact|/peak 3.25e-14   |drawn - wide|/peak 3.45e-15
+     z =  29.18: |drawn - exact|/peak 1.30e-13   |drawn - wide|/peak 3.24e-15
+  real run (0.3 s): slice 1 verify {'points': 3, 'max_err': 5.305721950822581e-14, 'tol': 1.000003914421878e-09, 'ok': True, 'max_rel': 1.4821769150787695e-13}; failed checks []
+
+== preset double: source double, n 256, dx 0.125, z_max 30.0; окно ×8, обычная сумма; оценка ошибки 1.1e-03 пика; tolerance of slices = est x peak = 9.31e-04 (3.3 s)
+  vs exact on 9 points across x (RS-I / Hankel): max over depths 3.52e-04 at z = 29.18 (at z_max 3.52e-04); estimate used as tolerance 1.06e-03; ratio 0.3
+  vs window x16 over the whole slice: max 7.07e-04 at z = 30.00 (at z_max 7.07e-04)
+     z =   0.94: |drawn - exact|/peak 3.37e-06   |drawn - wide|/peak 2.73e-06
+     z =   3.76: |drawn - exact|/peak 1.38e-05   |drawn - wide|/peak 1.16e-05
+     z =   6.59: |drawn - exact|/peak 2.73e-05   |drawn - wide|/peak 2.31e-05
+     z =   9.41: |drawn - exact|/peak 3.76e-05   |drawn - wide|/peak 3.20e-05
+     z =  12.24: |drawn - exact|/peak 4.75e-05   |drawn - wide|/peak 4.32e-05
+     z =  15.06: |drawn - exact|/peak 7.86e-05   |drawn - wide|/peak 7.16e-05
+     z =  17.88: |drawn - exact|/peak 1.10e-04   |drawn - wide|/peak 1.16e-04
+     z =  20.71: |drawn - exact|/peak 1.03e-04   |drawn - wide|/peak 1.03e-04
+     z =  23.53: |drawn - exact|/peak 2.35e-04   |drawn - wide|/peak 2.23e-04
+     z =  26.35: |drawn - exact|/peak 3.25e-04   |drawn - wide|/peak 3.33e-04
+     z =  29.18: |drawn - exact|/peak 3.52e-04   |drawn - wide|/peak 3.45e-04
+  real run (2.7 s): slice 1 verify {'points': 3, 'max_err': 0.00010627653264071006, 'tol': 0.000930827890130766, 'ok': True, 'max_rel': 0.0002412692322484141}; failed checks []
+
+== preset square_big: source square, n 512, dx 0.0625, z_max 15.0; окно ×4, обычная сумма; оценка ошибки 8.9e-04 пика; tolerance of slices = est x peak = 1.47e-03 (2.8 s)
+  vs exact on 9 points across x (RS-I / Hankel): max over depths 4.22e-04 at z = 14.59 (at z_max 4.22e-04); estimate used as tolerance 8.92e-04; ratio 0.5
+  vs window x8 over the whole slice: max 5.95e-04 at z = 15.00 (at z_max 5.95e-04)
+     z =   0.47: |drawn - exact|/peak 7.92e-06   |drawn - wide|/peak 7.42e-06
+     z =   1.88: |drawn - exact|/peak 3.07e-05   |drawn - wide|/peak 2.89e-05
+     z =   3.29: |drawn - exact|/peak 5.51e-05   |drawn - wide|/peak 5.26e-05
+     z =   4.71: |drawn - exact|/peak 8.58e-05   |drawn - wide|/peak 8.23e-05
+     z =   6.12: |drawn - exact|/peak 1.15e-04   |drawn - wide|/peak 1.11e-04
+     z =   7.53: |drawn - exact|/peak 1.29e-04   |drawn - wide|/peak 1.24e-04
+     z =   8.94: |drawn - exact|/peak 1.04e-04   |drawn - wide|/peak 1.09e-04
+     z =  10.35: |drawn - exact|/peak 1.88e-04   |drawn - wide|/peak 1.92e-04
+     z =  11.76: |drawn - exact|/peak 2.37e-04   |drawn - wide|/peak 2.37e-04
+     z =  13.18: |drawn - exact|/peak 3.13e-04   |drawn - wide|/peak 3.15e-04
+     z =  14.59: |drawn - exact|/peak 4.22e-04   |drawn - wide|/peak 4.13e-04
+  real run (1.7 s): slice 1 verify {'points': 3, 'max_err': 0.00041744034472404856, 'tol': 0.0014657197846401626, 'ok': True, 'max_rel': 0.0002482831446431252}; failed checks []
+done

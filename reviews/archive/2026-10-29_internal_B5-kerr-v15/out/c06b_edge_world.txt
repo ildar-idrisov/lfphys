@@ -1,0 +1,3 @@
+chi=0.998 incl=81.0: edge value 1.830e-14, tol 1.421e-14, ok = False
+chi=0.998 incl=99.0: edge value 1.830e-14, tol 1.421e-14, ok = False
+chi=0.998 incl=80.0: edge value 9.539e-15, tol 1.421e-14, ok = True

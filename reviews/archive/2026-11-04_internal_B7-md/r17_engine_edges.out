@@ -1,0 +1,4 @@
+(a) set_species(sigma 1 -> 1.4) accepted: potential energy 3.374e+04, largest |F| 4033
+    after 20 steps: max |v| 24.83, T = 48.49
+(b) hard disks in a walled box: pressure() = 1.1537; walls {'x-lo': np.float64(1.2399), 'x-hi': np.float64(1.2354), 'y-lo': np.float64(1.2365), 'y-hi': np.float64(1.2316)}; with V = (L - sigma)^2 in place of L^2: 1.3244
+exit 0

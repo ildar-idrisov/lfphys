@@ -1,0 +1,25 @@
+/out/scripts/s01_jz_vector_beam.py:35: IntegrationWarning: The occurrence of roundoff error is detected, which prevents 
+  the requested tolerance from being achieved.  The error may be 
+  underestimated.
+  return quad(g, 0.0, th_max, limit=400, epsabs=1e-15, epsrel=1e-12)[0]
+--- l = 2, sigma = +1, w0 = 1.2 lambda (spectrum at q = k / max: 2.60e-05)
+  B closed forms : J = 3.0000000000  S = 0.9451823918  L = 2.0548176082  <cos> = 0.9451823918
+  A own quadrature: J = 3.0000000000  S = 0.9451823918  L = 2.0548176082  flux/W = 0.9451823918
+  C engine plane : J = 3.0000000000  S = 0.9451823918  L = 2.0548176082  flux_J = 3.0000000000  (window +-5.5, n = 72)
+  |A - B|: S 3.8e-11, L 3.8e-11;  |C - B|: S 6.8e-11
+  Barnett flux split (Monteiro et al. 2009 Eqs. 33-36): spin = 1.002165 (closed form sigma<(1+c^2)/2>/<c> = 1.002165), orbital = 1.997835
+     -> per-unit-length canonical split: S - sigma = -0.0548;  Barnett flux split: spin - sigma = +0.0022 (opposite sign)
+--- l = 3, sigma = +1, w0 = 1.5 lambda (spectrum at q = k / max: 5.79e-08)
+  B closed forms : J = 4.0000000000  S = 0.9536056534  L = 3.0463943466  <cos> = 0.9536056534
+  A own quadrature: J = 4.0000000000  S = 0.9536056534  L = 3.0463943466  flux/W = 0.9536056534
+  C engine plane : J = 4.0000000000  S = 0.9536056534  L = 3.0463943466  flux_J = 4.0000000000  (window +-7.0, n = 96)
+  |A - B|: S 1.1e-16, L 0.0e+00;  |C - B|: S 3.3e-16
+  Barnett flux split (Monteiro et al. 2009 Eqs. 33-36): spin = 1.001429 (closed form sigma<(1+c^2)/2>/<c> = 1.001429), orbital = 2.998571
+     -> per-unit-length canonical split: S - sigma = -0.0464;  Barnett flux split: spin - sigma = +0.0014 (opposite sign)
+--- l = 1, sigma = -1, w0 = 0.6 lambda (spectrum at q = k / max: 1.26e-01)
+  B closed forms : J = 0.0000000000  S = -0.8417884744  L = 0.8417884744  <cos> = 0.8417884744
+  A own quadrature: J = 0.0000000000  S = -0.8420626225  L = 0.8420626225  flux/W = 0.8420626225
+  C engine plane : J = -0.0000047764  S = -0.8420839306  L = 0.8420791542  flux_J = 0.0002384099  (window +-10.0, n = 128)
+  |A - B|: S 2.7e-04, L 2.7e-04;  |C - B|: S 3.0e-04
+  Barnett flux split (Monteiro et al. 2009 Eqs. 33-36): spin = -1.024075 (closed form sigma<(1+c^2)/2>/<c> = -1.024259), orbital = 1.024075
+     -> per-unit-length canonical split: S - sigma = +0.1582;  Barnett flux split: spin - sigma = -0.0241 (opposite sign)

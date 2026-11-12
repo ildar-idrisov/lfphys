@@ -1,0 +1,10 @@
+2026-10-27, Chromium (SwiftShader WebGL), own server instance on 127.0.0.1:8499, preset "double" and "double_slices":
+normals after turning plane 1 to (0.5, -0.866, 0) and two "＋ Срез": [[0.5, -0.866, 0], [-0.866, -0.5, 0], [0, 0, 1]]
+|n_i . n_j|: [0.0, 0.0, 0.0]                                              (C5: mutually perpendicular)
+window 3, plane z = 15 with the requested centre x = 5: h "x, мкм" -16 .. 15.875, v "y, мкм" -16 .. 15.875   (C2)
+window 3, normal -z: h "x, мкм" -16 .. 15.875, v "y, мкм" -16 .. 15.875 (drawn with y growing upwards)      (C2)
+window 1, turned plane: v "от центра плоскости вдоль (0,87, 0,5, 0), мкм" -18.375 .. 18.25                   (C2)
+gizmo translate: showX false, showY false, showZ true; rotate (key E after a click in a window): showX true,
+showY true, showZ false                                                                                     (C10)
+double_slices: the reduced plane's outline in 3-D: ff3b3b (red)                                              (C11)
+no page errors

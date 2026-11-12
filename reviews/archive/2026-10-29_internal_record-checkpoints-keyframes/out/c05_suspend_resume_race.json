@@ -1,0 +1,815 @@
+{
+ "run": "20261029-124828-v07-6e09",
+ "rounds": [
+  {
+   "round": 0,
+   "delay_s": 0.0,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 1,
+   "delay_s": 0.005,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 2,
+   "delay_s": 0.01,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 3,
+   "delay_s": 0.02,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 4,
+   "delay_s": 0.03,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 5,
+   "delay_s": 0.05,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 6,
+   "delay_s": 0.08,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 7,
+   "delay_s": 0.12,
+   "resumed": true,
+   "state": "running",
+   "playing": true,
+   "resumed_from": "checkpoint",
+   "order": [
+    "checkpoint:suspend",
+    "end",
+    "notice:resume",
+    "notice"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 23,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 8,
+   "delay_s": 0.2,
+   "resumed": true,
+   "state": "running",
+   "playing": true,
+   "resumed_from": "checkpoint",
+   "order": [
+    "checkpoint:suspend",
+    "end",
+    "notice:resume",
+    "notice"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 21,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 9,
+   "delay_s": 0.0,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 10,
+   "delay_s": 0.005,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 11,
+   "delay_s": 0.01,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 12,
+   "delay_s": 0.02,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 13,
+   "delay_s": 0.03,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 14,
+   "delay_s": 0.05,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 15,
+   "delay_s": 0.08,
+   "resumed": true,
+   "state": "running",
+   "playing": true,
+   "resumed_from": "checkpoint",
+   "order": [
+    "checkpoint:suspend",
+    "end",
+    "notice:resume",
+    "notice"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 24,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 16,
+   "delay_s": 0.12,
+   "resumed": true,
+   "state": "running",
+   "playing": true,
+   "resumed_from": "checkpoint",
+   "order": [
+    "checkpoint:suspend",
+    "end",
+    "notice:resume",
+    "notice"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 24,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 17,
+   "delay_s": 0.2,
+   "resumed": true,
+   "state": "running",
+   "playing": true,
+   "resumed_from": "checkpoint",
+   "order": [
+    "checkpoint:suspend",
+    "end",
+    "notice:resume",
+    "notice"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 23,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 18,
+   "delay_s": 0.0,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 19,
+   "delay_s": 0.005,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 20,
+   "delay_s": 0.01,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 21,
+   "delay_s": 0.02,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 22,
+   "delay_s": 0.03,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 23,
+   "delay_s": 0.05,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 24,
+   "delay_s": 0.08,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 25,
+   "delay_s": 0.12,
+   "resumed": true,
+   "state": "running",
+   "playing": true,
+   "resumed_from": "checkpoint",
+   "order": [
+    "checkpoint:suspend",
+    "end",
+    "notice:resume",
+    "notice"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 24,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 26,
+   "delay_s": 0.2,
+   "resumed": true,
+   "state": "running",
+   "playing": true,
+   "resumed_from": "checkpoint",
+   "order": [
+    "checkpoint:suspend",
+    "end",
+    "notice:resume",
+    "notice"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 24,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 27,
+   "delay_s": 0.0,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 28,
+   "delay_s": 0.005,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 29,
+   "delay_s": 0.01,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 30,
+   "delay_s": 0.02,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 31,
+   "delay_s": 0.03,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 32,
+   "delay_s": 0.05,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 33,
+   "delay_s": 0.08,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 34,
+   "delay_s": 0.12,
+   "resumed": false,
+   "state": "suspended",
+   "playing": false,
+   "resumed_from": null,
+   "order": [
+    "checkpoint:suspend",
+    "end"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 0,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  },
+  {
+   "round": 35,
+   "delay_s": 0.2,
+   "resumed": true,
+   "state": "running",
+   "playing": true,
+   "resumed_from": "checkpoint",
+   "order": [
+    "checkpoint:suspend",
+    "end",
+    "notice:resume",
+    "notice"
+   ],
+   "checkpoint_after_resume_notice": false,
+   "end_after_resume_notice": false,
+   "frames_after_resume": 23,
+   "stop": {
+    "ok": true,
+    "state": "suspended"
+   },
+   "play": {
+    "ok": true
+   }
+  }
+ ],
+ "lost": 28,
+ "resumed_wrongly": 0
+}

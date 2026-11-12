@@ -1,0 +1,15 @@
+== (1) interior length for each pair of side kinds (size 0.6, dx 0.05) ==
+  y: (pec, pec) shape  12  reported interior 0.6000  outer walls at y = +0.0000 ... +0.6000
+  y: (pmc, pmc) shape  13  reported interior 0.6000  outer walls at y = +0.0000 ... +0.6000
+  y: (pec, pmc) shape  13  reported interior 0.6250  outer walls at y = +0.0000 ... +0.6250
+  y: (pmc, pec) shape  13  reported interior 0.6250  outer walls at y = +0.0000 ... +0.6250
+  y: (pml, pmc) shape  17  reported interior 0.6250  outer walls at y = -0.2000 ... +0.6250
+  y: (pmc, pml) shape  17  reported interior 0.6250  outer walls at y = +0.0000 ... +0.8250
+  y: (pml, pec) shape  16  reported interior 0.6000  outer walls at y = -0.2000 ... +0.6000
+  y: (pml, pml) shape  20  reported interior 0.6000  outer walls at y = -0.2000 ... +0.8000
+  mode (1, 0): FFT peak 0.6401; grid frequency with Ly requested 0.6: 0.6507
+  mode (1, 0): FFT peak 0.6401; grid frequency with Ly realised 0.625: 0.6401
+== (2) hard sources, 1-D, magic time step: radiated waveform 1 m from the source ==
+  hard ez: max |probe - f(t - 1)| = 1.523e-08 (peak 1.0000; exact 1.0)
+  hard hz: max |probe - f(t - 1)| = 3.843e+36 (peak 3843215215221913992038058511839526912.0000; exact 1.0)
+rc=0

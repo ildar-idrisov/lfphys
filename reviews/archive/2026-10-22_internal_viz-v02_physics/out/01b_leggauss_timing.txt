@@ -1,0 +1,4 @@
+n=500: numpy leggauss 0.02 s, scipy roots_legendre 0.047 s
+n=1000: numpy leggauss 0.06 s, scipy roots_legendre 0.024 s
+n=2000: numpy leggauss 0.42 s, scipy roots_legendre 0.092 s
+n=4000: numpy leggauss 4.69 s, scipy roots_legendre 0.373 s

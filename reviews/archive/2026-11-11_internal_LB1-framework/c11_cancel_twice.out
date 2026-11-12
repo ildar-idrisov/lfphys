@@ -1,0 +1,5 @@
+estimate: 200 ≈ 1 мин 43 с счёта: 6 знач. × (восстановление 0,1 с + 3000 с мира × 5,56 мс за 1 с + 1 замер(ов) × 0,01 мс); предел 10 мин. Оценка — по цене шага этого мира в записи (62 кадров)
+before the cancel: done 2 of 6 state running
+first DELETE: HTTP 200 {'ok': True, 'cancelled': 1}
+second DELETE: HTTP 200 {'ok': True, 'removed': 1}
+the sweep afterwards: HTTP 404 {'error': 'нет такого свипа'}

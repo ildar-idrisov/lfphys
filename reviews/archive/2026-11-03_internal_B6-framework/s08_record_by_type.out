@@ -1,0 +1,14 @@
+run 20261103-183745-p02-3575 world time 2.277800908260189e-12
+  wave                273 messages    35.87 MB   (accumulative: kept by the tab)
+  frame              1355 messages     3.68 MB
+  check               611 messages     0.29 MB   (accumulative: kept by the tab)
+  header                1 messages     0.03 MB   (accumulative: kept by the tab)
+  approximations        3 messages     0.00 MB   (accumulative: kept by the tab)
+  checkpoint            2 messages     0.00 MB   (accumulative: kept by the tab)
+  shapes                3 messages     0.00 MB   (accumulative: kept by the tab)
+  scene                 3 messages     0.00 MB   (accumulative: kept by the tab)
+  actions               3 messages     0.00 MB   (accumulative: kept by the tab)
+  marks                 2 messages     0.00 MB   (accumulative: kept by the tab)
+  state                 3 messages     0.00 MB   (accumulative: kept by the tab)
+  record_segment        2 messages     0.00 MB   (accumulative: kept by the tab)
+accumulative total 36.2 MB; checkpoint files: [('w1-1793731134259786604.pkl', 12.6), ('w1-1793731179940495633.pkl', 12.6)]

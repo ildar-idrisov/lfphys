@@ -1,0 +1,39 @@
+{
+ "run": "20261111-192636-p97-0c0b",
+ "n": 1,
+ "cancels": [
+  [
+   "first",
+   [
+    200,
+    {
+     "ok": true,
+     "cancelled": 1
+    }
+   ]
+  ],
+  [
+   "second",
+   [
+    200,
+    {
+     "ok": true,
+     "already": true,
+     "state": "cancelled",
+     "text": "свип уже остановлен"
+    }
+   ]
+  ]
+ ],
+ "after": {
+  "state": "cancelled",
+  "results": 2
+ },
+ "delete_after": [
+  200,
+  {
+   "ok": true,
+   "removed": 1
+  }
+ ]
+}

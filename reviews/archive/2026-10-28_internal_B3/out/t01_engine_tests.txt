@@ -1,0 +1,26 @@
+........................................................................ [ 12%]
+........................................................................ [ 24%]
+........................................................................ [ 37%]
+........................................................................ [ 49%]
+........................................................................ [ 62%]
+........................................................................ [ 74%]
+........................................................................ [ 86%]
+........................................................................ [ 99%]
+....                                                                     [100%]
+============================= slowest 15 durations =============================
+43.08s call     tests/test_schrodinger_nd.py::test_hydrogen_3d_converges_to_the_bohr_levels
+18.87s call     tests/test_schrodinger_nd.py::test_double_slit_approaches_kirchhoff_as_the_slits_widen
+11.70s call     tests/test_qcd.py::test_cornell_box_grows_for_large_states
+7.88s call     tests/test_schrodinger_nd.py::test_harmonic_levels_2d_and_3d
+6.11s call     tests/test_quantum.py::test_wave_packet_tunnelling_matches_stationary_transmission
+5.76s call     tests/test_raytrace.py::test_gpu_equals_cpu
+5.02s call     tests/test_bohm_nd.py::test_equivariance_behind_an_obstacle
+4.48s call     tests/test_schrodinger_nd.py::test_fock_darwin_levels
+3.54s call     tests/test_aperture_fields.py::test_gaussian_reference_converged_at_large_kz
+3.46s call     tests/test_aperture_fields.py::test_a_staircase_of_strips_converges_to_the_disc
+3.05s call     tests/test_aperture_fields.py::test_exact_source_equals_samples_for_a_smooth_field_and_the_exact_field_for_sharp_ones
+2.52s call     tests/test_schrodinger_nd.py::test_aharonov_bohm_flux_quantum_changes_nothing
+1.45s call     tests/test_backend.py::test_calibration_measures_a_crossover
+1.37s call     tests/test_backend.py::test_gpu_is_pinned_by_its_pci_bus_id
+1.15s call     tests/test_qcd.py::test_radial_solver_coulomb_and_linear
+580 passed in 143.60s (0:02:23)

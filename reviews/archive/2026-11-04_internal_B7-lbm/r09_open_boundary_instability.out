@@ -1,0 +1,22 @@
+=== (a) periodic channel driven by a body force (Poiseuille with centre speed U) ===
+cell Re 20: stable; max |uy| = 1.89e-15, max ux / U = 0.999139
+cell Re 60: stable; max |uy| = 2.78e-15, max ux / U = 0.999060
+
+=== (b) inlet + outlet at cell Re 20: where |uy| first grows ===
+step    32: max |uy| = 1.215e-03 at node (0, 32); max |uy| in the first 5 columns 1.215e-03, last 5 4.572e-04, middle 5.829e-16
+step   160: max |uy| = 3.748e-03 at node (0, 8); max |uy| in the first 5 columns 3.748e-03, last 5 6.574e-04, middle 8.003e-07
+step   288: max |uy| = 4.009e-03 at node (0, 8); max |uy| in the first 5 columns 4.009e-03, last 5 6.487e-04, middle 7.177e-06
+step   416: max |uy| = 4.048e-03 at node (0, 8); max |uy| in the first 5 columns 4.048e-03, last 5 6.439e-04, middle 5.996e-06
+step   544: max |uy| = 4.070e-03 at node (0, 8); max |uy| in the first 5 columns 4.070e-03, last 5 6.418e-04, middle 5.322e-06
+step   672: max |uy| = 4.080e-03 at node (0, 8); max |uy| in the first 5 columns 4.080e-03, last 5 6.428e-04, middle 4.613e-06
+step   800: max |uy| = 4.076e-03 at node (0, 8); max |uy| in the first 5 columns 4.076e-03, last 5 6.452e-04, middle 9.445e-06
+step   928: max |uy| = 4.069e-03 at node (0, 32); max |uy| in the first 5 columns 4.069e-03, last 5 6.478e-04, middle 9.043e-06
+step  1056: max |uy| = 4.075e-03 at node (0, 32); max |uy| in the first 5 columns 4.075e-03, last 5 6.506e-04, middle 3.828e-06
+step  1184: max |uy| = 4.079e-03 at node (0, 8); max |uy| in the first 5 columns 4.079e-03, last 5 6.533e-04, middle 9.209e-06
+step  1312: max |uy| = 4.087e-03 at node (0, 8); max |uy| in the first 5 columns 4.087e-03, last 5 6.564e-04, middle 7.784e-06
+step  1440: max |uy| = 1.708e-02 at node (0, 16); max |uy| in the first 5 columns 1.708e-02, last 5 6.574e-04, middle 8.120e-06
+step  1472: max |uy| = 1.987e-01 at node (0, 17); max |uy| in the first 5 columns 1.987e-01, last 5 6.573e-04, middle 1.406e-05
+
+=== (c) inlet + outlet at cell Re 10 and 11, 100 000 steps ===
+cell Re 10: stable for 100000 steps; max |uy| 0.00221
+cell Re 11: stable for 100000 steps; max |uy| 0.00241

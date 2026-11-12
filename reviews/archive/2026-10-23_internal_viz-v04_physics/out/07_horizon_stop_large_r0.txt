@@ -1,0 +1,32 @@
+engine: radial fall from rest, stop event radius (nominal r - 2M = 2.000002e-06 M)
+  r0 =    1e+03: horizon  r - 2M = +2.000000e-06 M, v_r = -0.999999498999 c
+  r0 =    1e+04: horizon  r - 2M = +1.999916e-06 M, v_r = -0.999999499922 c
+  r0 =    1e+05: horizon  r - 2M = +2.000137e-06 M, v_r = -0.999999499957 c
+  r0 =    1e+06: horizon  r - 2M = +1.568301e-06 M, v_r = -0.999999607925 c
+  r0 =    3e+06: horizon  r - 2M = +2.416555e-06 M, v_r = -0.999999395862 c
+  r0 =    1e+07: horizon  r - 2M = +4.469730e-06 M, v_r = -0.999998882569 c
+  r0 =    3e+07: horizon  r - 2M = +4.802733e-05 M, v_r = -0.999987993383 c
+  r0 =    1e+08: horizon  r - 2M = +3.513563e-04 M, v_r = -0.999912172502 c
+
+engine: the same in chunks ended by a coordinate-time event (as the run calls it)
+  r0 =    1e+06: horizon  r - 2M = +1.978478e-06 M, v_r = -0.999999505381 c
+  r0 =    1e+07: horizon  r - 2M = +1.495172e-06 M, v_r = -0.999999626208 c
+  r0 =    1e+08: horizon  r - 2M = -2.621058e-04 M, v_r = -1.000065532886 c
+
+the run (Harness, preset 'radial' with r0 changed): what the frame shows after the stop
+  r0 =    2e+01: frame r = 2.000002000002003, v = 0.9999994444445124 c, dtau/dt = 1.0540925550581598e-06, 1 - dtau/dt = 0.999998945907445, grav = 0.001000000000791534, kin = 0.0010540923425322334
+      event text: Падение за горизонт: r = 2.000002M, собственное время тела τ = 0.00482552 с (удалённый наб
+      checks: fall_tau: rel=5.554116400134799e-14 ok=None
+      trail: min r = np.float64(2.000002000002003), max 1 - dtau/dt = np.float64(0.999998945907445)
+  r0 =    1e+06: frame r = 2.0000019784776804, v = 0.9999995053806482 c, dtau/dt = 9.892388508654253e-07, 1 - dtau/dt = 0.9999990107611492, grav = 0.0009946043744253692, kin = 0.0009946046746954628
+      event text: Падение за горизонт: r = 2.000002M, собственное время тела τ = 54708.4 с (удалённый наблюд
+      checks: fall_tau: rel=5.3331049365824026e-14 ok=None
+      trail: min r = np.float64(2.0000019784776804), max 1 - dtau/dt = np.float64(0.9999990107611492)
+  r0 =    1e+07: frame r = 2.0000014951719445, v = 0.9999996262078239 c, dtau/dt = 7.475854881106224e-07, 1 - dtau/dt = 0.9999992524145119, grav = 0.0008646302176954434, kin = 0.0008646295232843061
+      event text: Падение за горизонт: r = 2.0000015M, собственное время тела τ = 1.73003e+06 с (удалённый н
+      checks: fall_tau: rel=5.2755992926706885e-14 ok=None
+      trail: min r = np.float64(2.0000014951719445), max 1 - dtau/dt = np.float64(0.9999992524145119)
+  r0 =    1e+08: frame r = 1.999737894226052, v = 1.0000655328864827 c, dtau/dt = -0.000131070065395116, 1 - dtau/dt = 1.0001310700653951, grav = 0.0, kin = 0.0
+      event text: Падение за горизонт: r = 1.9997379M, собственное время тела τ = 5.47084e+07 с (удалённый н
+      checks: fall_tau: rel=6.142034541841884e-14 ok=None
+      trail: min r = np.float64(1.999737894226052), max 1 - dtau/dt = np.float64(1.0001310700653951)

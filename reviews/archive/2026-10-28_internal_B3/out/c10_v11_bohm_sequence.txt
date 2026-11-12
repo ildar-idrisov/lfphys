@@ -1,0 +1,11 @@
+m = 1 grid step, cap 64, E0 dt = 0.1: 35 s, max sub-steps 16, screen 87, back 310, side 3
+m = 0.5 grid step, cap 128, E0 dt = 0.1: 51 s, max sub-steps 32, screen 87, back 310, side 3
+m = 0.25 grid step, cap 256, E0 dt = 0.1: 101 s, max sub-steps 32, screen 87, back 311, side 2
+m = 0.125 grid step, cap 512, E0 dt = 0.1: 196 s, max sub-steps 128, screen 88, back 310, side 2
+m = 0.125 grid step, cap 512, E0 dt = 0.05: 198 s, max sub-steps 64, screen 87, back 311, side 2
+
+against R (E0 dt = 0.05, m = 1/8): fringe period near the axis 6.12 lambda
+  m1   : fate differs   1; slit differs 0; on screen in both 87: |dx| median 7.9e-03, 90% 1.1e-01, max 3.95e+00 lambda; > period/10: 2, > period/2: 1
+  m1/2 : fate differs   1; slit differs 0; on screen in both 87: |dx| median 3.5e-03, 90% 5.9e-02, max 4.24e-01 lambda; > period/10: 0, > period/2: 0
+  m1/4 : fate differs   0; slit differs 0; on screen in both 87: |dx| median 2.6e-03, 90% 1.8e-02, max 8.58e-02 lambda; > period/10: 0, > period/2: 0
+  m1/8 : fate differs   1; slit differs 0; on screen in both 87: |dx| median 2.6e-03, 90% 1.4e-02, max 1.37e-01 lambda; > period/10: 0, > period/2: 0

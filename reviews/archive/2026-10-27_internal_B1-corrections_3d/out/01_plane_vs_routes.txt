@@ -1,0 +1,115 @@
+(a)(b) propagate_plane vs the volume (propagate_field) at grid nodes, planes whose t steps land on nodes
+   lambda 0.5, dx 0.125, z_near 0.635; source: asymmetric double slit by its exact spectrum
+  Spectral n=128     u= x alpha  90.0 bl=False pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 2.55e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u= x alpha  90.0 bl=True  pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 2.56e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u= x alpha  60.0 bl=False pad 2:  4992 node pts; max|plane - volume|/peak  z>=z_near 6.17e-14  z<z_near 2.46e-16  NaN where z<0: True
+  Spectral n=128     u= x alpha  60.0 bl=True  pad 2:  4992 node pts; max|plane - volume|/peak  z>=z_near 6.15e-14  z<z_near 2.46e-16  NaN where z<0: True
+  Spectral n=128     u= x alpha  30.0 bl=False pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 2.25e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u= x alpha  30.0 bl=True  pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 2.25e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u= x alpha   1.0 bl=False pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 1.07e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u= x alpha   1.0 bl=True  pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 1.07e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u= x alpha  0.01 bl=False pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 7.10e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u= x alpha  0.01 bl=True  pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 7.12e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-x alpha  90.0 bl=False pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 2.55e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-x alpha  90.0 bl=True  pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 2.56e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-x alpha  60.0 bl=False pad 2:  4719 node pts; max|plane - volume|/peak  z>=z_near 6.03e-14  z<z_near 9.26e-16  NaN where z<0: True
+  Spectral n=128     u=-x alpha  60.0 bl=True  pad 2:  4719 node pts; max|plane - volume|/peak  z>=z_near 6.04e-14  z<z_near 9.19e-16  NaN where z<0: True
+  Spectral n=128     u=-x alpha  30.0 bl=False pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 2.12e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-x alpha  30.0 bl=True  pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 2.13e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-x alpha   1.0 bl=False pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 9.54e-15  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-x alpha   1.0 bl=True  pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 9.47e-15  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-x alpha  0.01 bl=False pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 6.27e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-x alpha  0.01 bl=True  pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 6.29e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u= y alpha  90.0 bl=False pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 2.44e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u= y alpha  90.0 bl=True  pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 2.49e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u= y alpha  60.0 bl=False pad 2:  4992 node pts; max|plane - volume|/peak  z>=z_near 5.08e-14  z<z_near 5.88e-16  NaN where z<0: True
+  Spectral n=128     u= y alpha  60.0 bl=True  pad 2:  4992 node pts; max|plane - volume|/peak  z>=z_near 5.08e-14  z<z_near 5.88e-16  NaN where z<0: True
+  Spectral n=128     u= y alpha  30.0 bl=False pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 1.15e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u= y alpha  30.0 bl=True  pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 1.15e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u= y alpha   1.0 bl=False pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 5.89e-15  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u= y alpha   1.0 bl=True  pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 5.84e-15  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u= y alpha  0.01 bl=False pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 2.74e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u= y alpha  0.01 bl=True  pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 2.75e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-y alpha  90.0 bl=False pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 2.46e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-y alpha  90.0 bl=True  pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 2.51e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-y alpha  60.0 bl=False pad 2:  4719 node pts; max|plane - volume|/peak  z>=z_near 5.97e-14  z<z_near 5.81e-16  NaN where z<0: True
+  Spectral n=128     u=-y alpha  60.0 bl=True  pad 2:  4719 node pts; max|plane - volume|/peak  z>=z_near 5.97e-14  z<z_near 5.81e-16  NaN where z<0: True
+  Spectral n=128     u=-y alpha  30.0 bl=False pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 2.12e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-y alpha  30.0 bl=True  pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 2.13e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-y alpha   1.0 bl=False pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 1.05e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-y alpha   1.0 bl=True  pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 1.06e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-y alpha  0.01 bl=False pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 6.97e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=128     u=-y alpha  0.01 bl=True  pad 2:  4961 node pts; max|plane - volume|/peak  z>=z_near 6.96e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= x alpha  90.0 bl=False pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 2.55e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= x alpha  90.0 bl=True  pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 2.56e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= x alpha  60.0 bl=False pad 2:  3783 node pts; max|plane - volume|/peak  z>=z_near 6.17e-14  z<z_near 2.46e-16  NaN where z<0: True
+  Spectral n=97      u= x alpha  60.0 bl=True  pad 2:  3783 node pts; max|plane - volume|/peak  z>=z_near 6.15e-14  z<z_near 2.46e-16  NaN where z<0: True
+  Spectral n=97      u= x alpha  30.0 bl=False pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 2.25e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= x alpha  30.0 bl=True  pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 2.25e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= x alpha   1.0 bl=False pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 1.07e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= x alpha   1.0 bl=True  pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 1.07e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= x alpha  0.01 bl=False pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 7.10e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= x alpha  0.01 bl=True  pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 7.12e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-x alpha  90.0 bl=False pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 2.55e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-x alpha  90.0 bl=True  pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 2.56e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-x alpha  60.0 bl=False pad 2:  3549 node pts; max|plane - volume|/peak  z>=z_near 6.03e-14  z<z_near 9.26e-16  NaN where z<0: True
+  Spectral n=97      u=-x alpha  60.0 bl=True  pad 2:  3549 node pts; max|plane - volume|/peak  z>=z_near 6.04e-14  z<z_near 9.19e-16  NaN where z<0: True
+  Spectral n=97      u=-x alpha  30.0 bl=False pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 2.12e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-x alpha  30.0 bl=True  pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 2.13e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-x alpha   1.0 bl=False pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 9.54e-15  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-x alpha   1.0 bl=True  pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 9.47e-15  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-x alpha  0.01 bl=False pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 6.27e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-x alpha  0.01 bl=True  pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 6.29e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= y alpha  90.0 bl=False pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 2.44e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= y alpha  90.0 bl=True  pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 2.49e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= y alpha  60.0 bl=False pad 2:  3783 node pts; max|plane - volume|/peak  z>=z_near 5.08e-14  z<z_near 5.88e-16  NaN where z<0: True
+  Spectral n=97      u= y alpha  60.0 bl=True  pad 2:  3783 node pts; max|plane - volume|/peak  z>=z_near 5.08e-14  z<z_near 5.88e-16  NaN where z<0: True
+  Spectral n=97      u= y alpha  30.0 bl=False pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 1.15e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= y alpha  30.0 bl=True  pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 1.15e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= y alpha   1.0 bl=False pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 5.89e-15  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= y alpha   1.0 bl=True  pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 5.84e-15  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= y alpha  0.01 bl=False pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 2.74e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u= y alpha  0.01 bl=True  pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 2.75e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-y alpha  90.0 bl=False pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 2.46e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-y alpha  90.0 bl=True  pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 2.51e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-y alpha  60.0 bl=False pad 2:  3549 node pts; max|plane - volume|/peak  z>=z_near 5.97e-14  z<z_near 5.81e-16  NaN where z<0: True
+  Spectral n=97      u=-y alpha  60.0 bl=True  pad 2:  3549 node pts; max|plane - volume|/peak  z>=z_near 5.97e-14  z<z_near 5.81e-16  NaN where z<0: True
+  Spectral n=97      u=-y alpha  30.0 bl=False pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 2.12e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-y alpha  30.0 bl=True  pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 2.13e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-y alpha   1.0 bl=False pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 1.05e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-y alpha   1.0 bl=True  pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 1.06e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-y alpha  0.01 bl=False pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 6.97e-14  z<z_near nan  NaN where z<0: True
+  Spectral n=97      u=-y alpha  0.01 bl=True  pad 2:  3731 node pts; max|plane - volume|/peak  z>=z_near 6.96e-14  z<z_near nan  NaN where z<0: True
+  sampled n=97       u= x alpha  90.0 bl=False pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 3.33e-14  z<z_near nan  NaN where z<0: True
+  sampled n=97       u= x alpha  45.0 bl=False pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 6.26e-15  z<z_near nan  NaN where z<0: True
+  sampled n=97       u= x alpha   0.5 bl=False pad 2:  3977 node pts; max|plane - volume|/peak  z>=z_near 2.14e-14  z<z_near nan  NaN where z<0: True
+  sampled n=128      u= x alpha  90.0 bl=False pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 3.32e-14  z<z_near nan  NaN where z<0: True
+  sampled n=128      u= x alpha  45.0 bl=False pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 6.27e-15  z<z_near nan  NaN where z<0: True
+  sampled n=128      u= x alpha   0.5 bl=False pad 2:  5248 node pts; max|plane - volume|/peak  z>=z_near 2.14e-14  z<z_near nan  NaN where z<0: True
+
+(c) planes at an arbitrary azimuth: same sum (brute force in the turned frame), the unturned lattice, exact
+  phi_u -150.00 deg, tilt  40.0: plane vs same sum 2.00e-14; vs unturned lattice 2.60e-03; vs exact (no FFT, 166 pts) 9.65e-04; 0.16 s
+  phi_u -117.00 deg, tilt  75.0: plane vs same sum 5.73e-14; vs unturned lattice 3.09e-03; vs exact (no FFT, 166 pts) 1.05e-03; 0.22 s
+  phi_u  -43.00 deg, tilt  20.0: plane vs same sum 5.78e-14; vs unturned lattice 2.00e-03; vs exact (no FFT, 166 pts) 5.17e-04; 0.15 s
+  phi_u   30.00 deg, tilt  89.0: plane vs same sum 7.31e-14; vs unturned lattice 3.90e-03; vs exact (no FFT, 166 pts) 1.05e-03; 0.16 s
+
+(d) origin at a corner of the box, s range longer than half the window period (read modulo the period)
+  pad 2: window period 32.00, s from -31.75 to 0.00 (255 pts): max|plane - brute|/peak 5.17e-14
+  s range longer than the period: refused (propagate_plane: the plane's extent along u is empty or longer than the window)
+  pad 1: window period 16.00, s from -15.75 to 0.00 (127 pts): max|plane - brute|/peak 8.19e-14
+  s range longer than the period: refused (propagate_plane: the plane's extent along u is empty or longer than the window)
+
+(e) planes partly before z = 0, nearly transverse planes; brute force at every point
+  tilted, half before the source         u = (+1.000, +0.000), v_z 6.00e-01: max|plane - brute|/peak 7.42e-15; NaN exactly where z < 0: True
+  nearly transverse 14 deg, turned       u = (+0.447, +0.894), v_z 2.25e-01: max|plane - brute|/peak 1.95e-14; NaN exactly where z < 0: True
+  normal 8e-3 deg from z, turned         u = (+0.707, +0.707), v_z 1.41e-04: max|plane - brute|/peak 6.96e-14; NaN exactly where z < 0: True
+  transverse, normal -z                  u = (+1.000, +0.000), v_z 0.00e+00: max|plane - brute|/peak 1.86e-15; NaN exactly where z < 0: True
+
+(f) fp32 drawing of a turned, tilted plane against fp64
+  dtype complex64; max|fp32 - fp64|/peak 5.52e-08 (kernel bound 1e-5)
+
+(g) the recurrence: long uniform t ranges (exp advanced step by step) against brute force
+  nt 2000, t in (0.0, 60.0), v_z 1.00: recurrence vs brute 5.76e-14; vs per-row exp 7.15e-11; 0.8 s
+  nt 4000, t in (-1.0, 79.0), v_z 0.58: recurrence vs brute 3.41e-14; vs per-row exp 5.17e-11; 1.7 s
+  nt 600, t in (0.0, 0.6), v_z 1.00: recurrence vs brute 1.24e-15; vs per-row exp 1.20e-12; 0.1 s
+done

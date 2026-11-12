@@ -1,0 +1,14 @@
+== (c) histogram coherence fit: run's estimator vs a constrained Poisson-ML alternative ==
+
+== (d) dark counts: histogram includes them, expectation does not ==
+  photon_young, rate 1000/s, dark     0/s, 30 s: detections 28957, dark 0; chi2 = 197.9 / 173 dof, p = 9.44e-02; |gamma| hist 1.0042134536242313 +- 0.013649136669789716 (None = the fit failed: c1 or c2 <= 0) vs expected 1.000
+  photon_young, rate 1000/s, dark    50/s, 30 s: detections 30523, dark 1531; chi2 = 376.5 / 177 dof, p = 1.79e-16; |gamma| hist 0.9905948852181607 +- 0.06174034067325557 (None = the fit failed: c1 or c2 <= 0) vs expected 1.000
+  photon_young, rate 1000/s, dark   500/s, 30 s: detections 44041, dark 15047; chi2 = 24491.4 / 189 dof, p = 0.00e+00; |gamma| hist None +- None (None = the fit failed: c1 or c2 <= 0) vs expected 1.000
+
+== (e) seed scatter of the run's expected |gamma|, electron microscope p = 0.5 (near-exact 0.432, see 05) ==
+  0.504, 0.504, 0.441, 0.436, 0.411, 0.443, 0.419, 0.414, 0.413, 0.411, 0.454, 0.437; mean 0.4406, std 0.0331
+
+== (f) grid cap in paraxial geometries (electrons 50 keV, L2 = 1 m) ==
+  n=12 a=0.1 um d= 10.0 um: Nx = 16384, points per finest fringe 1.85, bins 4000 (bin width / finest fringe 2.22); max rel. error of bin probabilities 0.479; central bin contrast run 0.600 vs exact 0.701; rs check 3.1e-05 (passes); notices []
+  n= 2 a=0.1 um d= 50.0 um: Nx = 16384, points per finest fringe 4.71, bins 4000 (bin width / finest fringe 0.87); max rel. error of bin probabilities 0.057; central bin contrast run 0.130 vs exact 0.154; rs check 2.9e-05 (passes); notices []
+  n= 2 a=0.1 um d=150.0 um: Nx = 16384, points per finest fringe 1.24, bins 4000 (bin width / finest fringe 3.30); max rel. error of bin probabilities 0.271; central bin contrast run 0.873 vs exact 0.850; rs check 2.7e-05 (passes); notices []

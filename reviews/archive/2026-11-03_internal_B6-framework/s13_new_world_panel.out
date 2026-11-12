@@ -1,0 +1,2 @@
+schema errors: [] | scene objects carried over: ['star', 'planet', 'field']
+new world refused: ValueError в этом разделе нет объектов «star»

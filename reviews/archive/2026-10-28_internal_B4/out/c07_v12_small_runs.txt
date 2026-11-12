@@ -1,0 +1,16 @@
+
+== gauss SMALL ==
+(c) at t = 0 the header carries arrival.tau_obs = 3.24765 (= 1.7005 t0, the closed-form leave time x 1.02); 'arrival_ref' messages at t = 0: 1 (curves to tau = 3.24765)
+(a) d2: max|run - exact| / max exact = 1.88e-05 (arr_plane_psi for |psi|^2 reports 2.03e-05)
+(b) first-arrival law: max|world's - exact| = 3.09e-03 (exact total by the window end 0.999953)
+    Bohm hits (300 of 300): KS against the exact law 0.0424, against the world's law 0.0454; world's check arr_bohm_times = 0.0454, critical 1.95/sqrt(n) = 0.1126
+(d) flux: max|run - exact| / max|exact| = 2.86e-06; backflow run 0.00000 vs exact 0.00000
+    failed checks: []
+
+== backflow SMALL ==
+(c) at t = 0 the header carries arrival.tau_obs = 19.1556 (= 10.9417 t0, the closed-form leave time x 1.02); 'arrival_ref' messages at t = 0: 1 (curves to tau = 19.1556)
+(a) d2: max|run - exact| / max exact = 1.99e-05 (arr_plane_psi for |psi|^2 reports 6.27e-05)
+(b) first-arrival law: max|world's - exact| = 2.50e-03 (exact total by the window end 0.999919)
+    Bohm hits (400 of 400): KS against the exact law 0.0584, against the world's law 0.0567; world's check arr_bohm_times = 0.0567, critical 1.95/sqrt(n) = 0.0975
+(d) flux: max|run - exact| / max|exact| = 1.18e-05; backflow run 0.01535 vs exact 0.01535
+    failed checks: []

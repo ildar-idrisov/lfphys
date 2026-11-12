@@ -1,0 +1,27 @@
+
+== odd counts, same window and both changed: start [191, 191] x 0.5, window [95.5, 95.5], edges=closed
+  t= 1.000 -> [287, 287] x 0.33275 (cell x [-47.75, 47.75)): err before 2.98e-15 after 3.84e-15; norm 0.999999999999995 -> 0.999999999999994 (dropped 7.77e-16); spectrum 0.0e+00 outside 0.0e+00 face 0.0e+00; E 1.277777777778 -> 1.277777777778
+  t= 2.000 -> [190, 190] x 0.50263 (cell x [-48.001, 47.499)): err before 3.44e-15 after 3.25e-15; norm 0.999999999999994 -> 0.999999999999994 (dropped -2.22e-16); spectrum 3.3e-31 outside 0.0e+00 face 0.0e+00; E 1.277777777778 -> 1.277777777778
+  t= 3.000 -> [257, 257] x 0.4 (cell x [-51.4, 51.4)): err before 3.35e-15 after 7.39e-15; norm 0.999999999999994 -> 0.999999999999993 (dropped 3.33e-16); spectrum 0.0e+00 outside 0.0e+00 face 2.7e-31; E 1.277777777778 -> 1.277777777778
+  t= 4.000 -> [191, 191] x 0.5 (cell x [-47.75, 47.75)): err before 7.70e-15 after 1.13e-14; norm 0.999999999999994 -> 0.999999999999994 (dropped 1.11e-16); spectrum 5.2e-30 outside 1.2e-30 face 0.0e+00; E 1.277777777778 -> 1.277777777778
+  final t=6.000: err vs closed form 1.18e-14; balance -1.49e-14 (tol 1.8e-13); absorbed {'regrid': 9.992007221626409e-16}
+
+== near the band edge: start [192, 192] x 0.5, window [96.0, 96.0], edges=closed
+  t= 0.100 -> [384, 384] x 0.25 (cell x [-48.125, 47.875)): err before 2.64e-15 after 9.42e-14; norm 0.999999999999999 -> 0.999999999999999 (dropped 4.44e-16); spectrum 0.0e+00 outside 0.0e+00 face 0.0e+00; E 10.152777777778 -> 10.152777777778
+  t= 0.200 -> [192, 192] x 0.5 (cell x [-48.25, 47.75)): err before 9.62e-14 after 4.34e-15; norm 0.999999999999998 -> 0.999999999999997 (dropped 3.33e-16); spectrum 2.8e-31 outside 0.0e+00 face 0.0e+00; E 10.152777777778 -> 10.152777777778
+  t= 0.300 [192, 192]x0.5 -> [160, 160]x0.6: REFUSED: частица 1: за полосой новой сетки (|k| ≥ π/шаг = 5.236) — 1.09e-05 нормы её волны, больше допуска 1e-06: огрубление сетки отбросило бы их
+  final t=0.700: err vs closed form 7.49e-15; balance -7.22e-15 (tol 1.1e-13); absorbed {'regrid': 7.771561172376096e-16}
+
+== chain with open edges: start [192, 192] x 0.5, window [96.0, 96.0], edges=open
+  t= 1.000 -> [288, 288] x 0.33333 (cell x [-48.167, 47.833)): err before 1.43e-15 after 1.58e-15; norm 0.999999999999998 -> 0.999999999999998 (dropped 5.55e-16); spectrum 0.0e+00 outside 0.0e+00 face 0.0e+00; E 1.277777777778 -> 1.277777777778
+  t= 2.000 -> [320, 320] x 0.33333 (cell x [-53.5, 53.167)): err before 2.27e-15 after 2.27e-15; norm 0.999999999999995 -> 0.999999999999995 (dropped 0.00e+00); spectrum 0.0e+00 outside 0.0e+00 face 1.1e-32; E 1.277777777778 -> 1.277777777778
+  t= 3.000 -> [200, 200] x 0.6 (cell x [-60.3, 59.7)): err before 1.96e-15 after 8.01e-15; norm 0.999999999999996 -> 0.999999999999996 (dropped -1.11e-16); spectrum 8.5e-31 outside 0.0e+00 face 1.0e-32; E 1.277777777778 -> 1.277777777778
+  t= 4.000 -> [176, 176] x 0.6 (cell x [-53.1, 52.5)): err before 6.30e-15 after 6.30e-15; norm 0.999999999999997 -> 0.999999999999997 (dropped 1.11e-16); spectrum 0.0e+00 outside 1.0e-30 face 0.0e+00; E 1.277777777778 -> 1.277777777778
+  final t=6.000: err vs closed form 4.53e-15; balance -2.66e-15 (tol 1.8e-13); absorbed {'edges': 1.2394894309696355e-29, 'regrid': 5.551115123125783e-16}
+
+== 3-D: start [64, 64, 64] x 0.5, window [32.0, 32.0, 32.0], edges=closed
+  t= 0.500 -> [80, 80, 80] x 0.4 (cell x [-16.2, 15.8)): err before 4.50e-11 after 5.17e-11; norm 1.000000000000000 -> 1.000000000000001 (dropped -6.66e-16); spectrum 0.0e+00 outside 0.0e+00 face 0.0e+00; E 0.791666666667 -> 0.791666666667
+  t= 1.000 -> [96, 96, 96] x 0.4 (cell x [-19.4, 19)): err before 4.21e-11 after 4.52e-11; norm 1.000000000000002 -> 1.000000000000002 (dropped 2.22e-16); spectrum 0.0e+00 outside 0.0e+00 face 3.9e-18; E 0.791666666667 -> 0.791666666667
+  t= 1.500 -> [72, 72, 72] x 0.5 (cell x [-18.25, 17.75)): err before 1.74e-11 after 1.74e-11; norm 1.000000000000000 -> 1.000000000000000 (dropped 5.55e-16); spectrum 5.5e-23 outside 7.1e-23 face 0.0e+00; E 0.791666666667 -> 0.791666666667
+  t= 2.000 -> [64, 64, 64] x 0.5 (cell x [-16.25, 15.75)): err before 1.77e-11 after 1.48e-11; norm 0.999999999999998 -> 0.999999999999998 (dropped 0.00e+00); spectrum 0.0e+00 outside 9.5e-20 face 0.0e+00; E 0.791666666667 -> 0.791666666667
+  final t=4.000: err vs closed form 5.21e-06; balance -3.33e-16 (tol 1.2e-13); absorbed {'regrid': 1.1102230246251565e-16}

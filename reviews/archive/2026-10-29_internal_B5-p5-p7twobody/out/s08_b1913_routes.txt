@@ -1,0 +1,5 @@
+a = 466694.3 G M/c^2, Peters-Mathews Pb_dot = -2.402630e-12
+  orders (2.5,), elements: Pb_dot / PM - 1 = -5.95e-12 over 5 periapses
+  orders (2.5,), cartesian: Pb_dot / PM - 1 = +9.58e-01 over 5 periapses
+  orders (1, 2, 2.5, 3.5), elements: Pb_dot / PM - 1 = -2.81e-05 over 5 periapses
+  orders (1, 2, 2.5, 3.5), cartesian: Pb_dot / PM - 1 = +6.41e-01 over 5 periapses

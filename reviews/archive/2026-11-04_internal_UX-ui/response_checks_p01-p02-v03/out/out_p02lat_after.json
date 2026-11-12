@@ -1,0 +1,35 @@
+{
+ "out": [
+  {
+   "tag": "after",
+   "change": "add box",
+   "s": 0.141,
+   "ok": true
+  },
+  {
+   "tag": "after",
+   "change": "add detector",
+   "s": 0.409,
+   "ok": true
+  },
+  {
+   "tag": "after",
+   "change": "add marker",
+   "s": 1.217,
+   "ok": true
+  },
+  {
+   "tag": "after",
+   "change": "add plane",
+   "s": 0.427,
+   "ok": true
+  },
+  {
+   "tag": "after",
+   "change": "add ball",
+   "s": 0.239,
+   "ok": true
+  }
+ ],
+ "logs": []
+}

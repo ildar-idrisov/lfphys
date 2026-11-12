@@ -1,0 +1,15 @@
+(1) box 29.369 sigma; atoms 733 = round(0.85 x 862.5); nearest-neighbour distance 1.1296..1.1302 sigma -> lattice density 2/(sqrt(3) a^2) = 0.904; sites of that lattice in the box 780
+    the widest empty strip across x: 1.694 sigma (a row spacing is ~0.565)
+(2) bath 80.0 K (0.668 eps/k):
+    t =   0 ps: T =  20.4 K, |<psi6>| = 1.000, <|psi6|> = 1.000
+    t =  25 ps: T =  78.4 K, |<psi6>| = 0.630, <|psi6|> = 0.757
+    t =  50 ps: T =  77.6 K, |<psi6>| = 0.640, <|psi6|> = 0.754
+    t = 100 ps: T =  79.5 K, |<psi6>| = 0.681, <|psi6|> = 0.775
+    t = 200 ps: T =  80.2 K, |<psi6>| = 0.645, <|psi6|> = 0.748; MSD over the last 100 ps = 0.603 sigma^2
+(2) bath 20.0 K (0.167 eps/k):
+    t =   0 ps: T =  20.4 K, |<psi6>| = 1.000, <|psi6|> = 1.000
+    t =  25 ps: T =  19.3 K, |<psi6>| = 0.931, <|psi6|> = 0.949
+    t =  50 ps: T =  20.7 K, |<psi6>| = 0.934, <|psi6|> = 0.952
+    t = 100 ps: T =  19.8 K, |<psi6>| = 0.934, <|psi6|> = 0.949
+    t = 200 ps: T =  20.8 K, |<psi6>| = 0.932, <|psi6|> = 0.949; MSD over the last 100 ps = 0.025 sigma^2
+exit 0

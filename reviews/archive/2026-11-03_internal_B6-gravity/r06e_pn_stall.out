@@ -1,0 +1,17 @@
+q = 1.0: start r0 = 11
+   t =    2000: status running, r over the last quarter 9.7076..9.9631, E/mu = -0.040215
+   t =    5000: status running, r over the last quarter 9.1167..9.2243, E/mu = -0.041516
+   t =   10000: status running, r over the last quarter 8.8978..9.3480, E/mu = -0.041489
+   t =   20000: status running, r over the last quarter 6.3184..46.6592, E/mu = -0.013521
+   t =   40000: status running, r over the last quarter 6.7741..685.3667, E/mu = -0.000509
+q = 0.25: start r0 = 11
+   t =    2000: status running, r over the last quarter 10.1097..10.3124, E/mu = -0.039550
+   t =    5000: status running, r over the last quarter 9.3240..9.5484, E/mu = -0.041555
+   t =   10000: status running, r over the last quarter 9.1205..9.1599, E/mu = -0.042057
+   t =   20000: status running, r over the last quarter 8.8869..9.3829, E/mu = -0.041990
+   t =   40000: status running, r over the last quarter 6.9039..95.3670, E/mu = -0.009431
+preset pn_inspiral at t = 20000 m: r = 10.7758, status running, merger events [], balance check value 0.67291607045227 ok True tol 0.7578967351126628
+preset pn_inspiral at t = 40000 m: r = 11.1301, status running, merger events [], balance check value 0.08863016896859933 ok True tol 1.2378551575914172
+preset pn_inspiral at t = 60000 m: r = 305.3483, status running, merger events [], balance check value -0.07422688150625678 ok False tol 0.0010280083685829864
+preset pn_inspiral at t = 80000 m: r = 1250.4325, status running, merger events [], balance check value -0.0908504084400647 ok False tol 7.124716403198761e-05
+exit 0

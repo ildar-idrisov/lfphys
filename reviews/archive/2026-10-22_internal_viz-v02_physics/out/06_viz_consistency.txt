@@ -1,0 +1,27 @@
+== (a) map / flow lines vs the run's own expectation ==
+  photon_young{}: |gamma| shown by map/flow lines (Gavg) = 1.000; run's expectation |gamma| = 1.000; map contrast near axis at z = L2: 0.996
+  electron_microscope{}: |gamma| shown by map/flow lines (Gavg) = 1.000; run's expectation |gamma| = 0.138; map contrast near axis at z = L2: 0.996
+  c60_grw{}: |gamma| shown by map/flow lines (Gavg) = 1.000; run's expectation |gamma| = 0.611; map contrast near axis at z = L2: 0.993
+  photon_partial{}: |gamma| shown by map/flow lines (Gavg) = 1.000; run's expectation |gamma| = 0.466; map contrast near axis at z = L2: 0.996
+  photon_young{'dlam_rel': 0.3}: |gamma| shown by map/flow lines (Gavg) = 1.000; run's expectation |gamma| = 0.365; map contrast near axis at z = L2: 0.996
+  electron_qubit{}: |gamma| shown by map/flow lines (Gavg) = 0.000; run's expectation |gamma| = 0.000; map contrast near axis at z = L2: 0.603
+
+== (b) browser rebin (view.js) vs server rebin ==
+  photon_young: 2048 grid points into 288 bins (points per bin 7..8); browser/server expected per bin: min 0.986, max 1.028 (bins above 20 % of max)
+  electron: 2048 grid points into 289 bins (points per bin 7..8); browser/server expected per bin: min 0.954, max 1.129 (bins above 20 % of max)
+  c60: 2048 grid points into 914 bins (points per bin 2..3); browser/server expected per bin: min 0.835, max 1.363 (bins above 20 % of max)
+
+== (c) filter 'no scattered photon' (electron microscope, p = 0.5) ==
+  subset without scattered photon: 14651 detections, histogram |gamma| = 1.016 +- 0.037; curve the view draws for it (whole ensemble) has |gamma| = 0.504; correct subset expectation: 1.000
+
+== (d) apparatus change while particles are in flight (neutron, analyzer inserted) ==
+  time of flight 25.28 ms; detections in (t0, t0 + flight]: 511, of them tagged with the old segment (analyzer absent although they reach it after t0): 511
+  detection rate in (t0, t0+flight]: 20215/s (no analyzer acting); in (t0+flight, t0+3 flight]: 8545/s (analyzer acting, expected 0.5 x 20000)
+
+== (e) Born exponent 2.4 with the which-path detector read in the 45 deg basis ==
+  screen marginal of the sampled joint distribution (read) vs not read: max |diff| / max = 0.074
+  the run's no-signalling check: value 1.6e-16, ok = True
+
+== (f) flow-line velocity vs phase gradient; ordering ==
+  max |v_engine - (1/k) dphase/dx| / max|v| (|psi|^2 > 5% max) = 4.72e-04
+  pure state, 60 lines: order preserved at every step: True

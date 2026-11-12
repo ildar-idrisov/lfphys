@@ -1,0 +1,14 @@
+beyond the horizon by 100 m: 0 of 60 points get a retarded time (none exists)
+beyond the horizon by 30 m: 0 of 60 points get a retarded time (none exists)
+beyond the horizon by 10 m: 0 of 60 points get a retarded time (none exists)
+/lf/lfphys/lfphys/core/em/charges.py:347: RuntimeWarning: invalid value encountered in divide
+  step = np.where(gv == 0, 0.0, gv / dg)
+beyond the horizon by 1 m: 56 of 60 points get a retarded time (none exists)
+/lf/lfphys/lfphys/core/em/charges.py:347: RuntimeWarning: divide by zero encountered in divide
+  step = np.where(gv == 0, 0.0, gv / dg)
+beyond the horizon by 0.1 m: 57 of 60 points get a retarded time (none exists)
+beyond the horizon by 0.001 m: 59 of 60 points get a retarded time (none exists)
+inside by 1 m (axis): t_ret = -1.495221e-06 s, exact -1.495221e-06 s, rel error 6.9e-15
+inside by 0.01 m (axis): t_ret = -1.496889e-04 s, exact -1.496889e-04 s, rel error 1.6e-10
+inside by 0.0001 m (axis): t_ret = -1.496887e-02 s, exact -1.496889e-02 s, rel error 1.1e-06
+inside by 1e-06 m (axis): t_ret = -1.454339e+00 s, exact -1.496889e+00 s, rel error 2.8e-02

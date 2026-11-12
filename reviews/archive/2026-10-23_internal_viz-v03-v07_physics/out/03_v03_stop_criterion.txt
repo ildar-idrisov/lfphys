@@ -1,0 +1,8 @@
+thick barrier 5 nm: stop at norm < 1e-05, t_end x 1: T_run = 7.133207e-07, T_ref(run) = 1.602645e-06, rel = -5.549e-01, absorbed = 0.9999902, left in window = 9.8e-06, 2.6 s
+thick barrier 5 nm: stop at norm < 1e-09, t_end x 4: T_run = 1.602175e-06, T_ref(run) = 1.602645e-06, rel = -2.933e-04, absorbed = 1.0000000, left in window = 1.0e-09, 8.8 s
+step V0 = 0.75, E = 0.8: stop at norm < 1e-05, t_end x 1: T_run = 2.585149e-01, T_ref(run) = 5.982160e-01, rel = -5.679e-01, absorbed = 0.5418106, left in window = 4.6e-01, 2.6 s
+step V0 = 0.75, E = 0.8: stop at norm < 1e-09, t_end x 4: T_run = 5.913553e-01, T_ref(run) = 5.982160e-01, rel = -1.147e-02, absorbed = 0.9880387, left in window = 1.2e-02, 9.9 s
+free, E = 0.05, sigma = 1: stop at norm < 1e-05, t_end x 1: T_run = 9.664373e-01, T_ref(run) = 1.000000e+00, rel = -3.356e-02, absorbed = 0.9729762, left in window = 2.7e-02, 1.9 s
+free, E = 0.05, sigma = 1: stop at norm < 1e-09, t_end x 4: T_run = 9.571596e-01, T_ref(run) = 1.000000e+00, rel = -4.284e-02, absorbed = 0.9924560, left in window = 7.5e-03, 9.8 s
+barrier, E = 0.05, sigma = 1: stop at norm < 1e-05, t_end x 1: T_run = 2.076062e-03, T_ref(run) = 2.010128e-03, rel = +3.280e-02, absorbed = 0.9707882, left in window = 2.9e-02, 13.4 s
+barrier, E = 0.05, sigma = 1: stop at norm < 1e-09, t_end x 4: T_run = 2.033801e-03, T_ref(run) = 2.010128e-03, rel = +1.178e-02, absorbed = 0.9945678, left in window = 5.4e-03, 54.3 s

@@ -1,0 +1,3 @@
+wall     3 eV: wrapper dt 0.0078125 (wall phase per step 0.31 rad): ||psi - psi_ref|| at t = 12.0: 2.55e-04; companion's estimate 3.75e-03; ref16 vs ref8 3.0e-06
+wall    30 eV: wrapper dt 0.0078125 (wall phase per step 3.08 rad): ||psi - psi_ref|| at t = 12.0: 5.96e-04; companion's estimate 2.11e-02; ref16 vs ref8 7.0e-06
+wall   300 eV: wrapper dt 0.0078125 (wall phase per step 30.76 rad): ||psi - psi_ref|| at t = 12.0: 1.06e-03; companion's estimate 2.10e-01; ref16 vs ref8 1.3e-05

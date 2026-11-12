@@ -1,0 +1,11 @@
+(duplicate the Earth (o2)) before: scene objects ['o1', 'o2', 'o3']; engine keys ['o1', 'o2']; engine rows x 2, a 2
+   after the command: scene objects ['o1', 'o2', 'o3']; engine keys ['o1', 'o2', 'o4']; engine rows x 3, a 2
+   messages: [('command', ''), ('error', 'Сцена: two bodies at the same point (exact collision of point masses)')]
+   the world FAILS on the next frame: ValueError: operands could not be broadcast together with shapes (3,3) (2,3) 
+(add a star on the Sun's position) before: scene objects ['o1', 'o2', 'o3']; engine keys ['o1', 'o2']; engine rows x 2, a 2
+   after the command: scene objects ['o1', 'o2', 'o3', 'o4']; engine keys ['o1', 'o2', 'o4']; engine rows x 3, a 3
+   messages: [('command', ''), ('approx', ''), ('scene', ''), ('event', 'добавлен объект «Звезда 2»')]
+   the world runs on: scene objects ['o1', 'o2', 'o3']; engine keys ['o1', 'o2']; engine rows x 2, a 2
+
+(3) Kerr body o2 before a colour change: r, theta, phi = [11.687453, 1.832339, 1.859931], tau = 40.7073; after: [8.0, 1.22173, 0.0], tau = 0
+exit 0

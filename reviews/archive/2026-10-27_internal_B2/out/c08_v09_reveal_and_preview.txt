@@ -1,0 +1,14 @@
+(a) header at t = 0 (before anything ran):
+    loop.T_end  = 8.95023 yr (lab duration of the whole manoeuvre)
+    loop.tau_end = 6.9555 yr (the craft's proper time at the end)
+    loop.eta_max = 0.8 (largest gamma 1.33743)
+    scene3d.box (lab space only: the extent of the whole future trajectory) -> see lab below
+    lab preset: scene3d.box = [[-0.9465887936217747, -1.472679193991, -2.8105692373607507], [1.9987695943602253, 1.472679193991, 0.1347891506212493]] at t = 0.0
+    view.js drawLoop() shows T_end, tau_end and cosh(eta_max) in the panel «Манёвр и голономия» on the header
+(b) drag preview readout in v09 (theta field): global volume peak vs each slice's own peak
+    slice 1 (βy = 0): its peak theta = 0.9085 rad; volume peak theta = 0.9081 rad -> preview readout off by x1.000
+    slice 2 (βx = 0): its peak theta = 0.8308 rad; volume peak theta = 0.9081 rad -> preview readout off by x0.915
+    slice 3 (βz = 0.6): its peak theta = 0.9058 rad; volume peak theta = 0.9081 rad -> preview readout off by x0.997
+    slice 2 (βx = -0.6): its peak theta = 0.5406 rad; volume peak theta = 0.9081 rad -> preview readout off by x0.595
+(c) planar loop: the shown accumulated angle vs what the run computes
+    holonomy message: angle (SO(3), computed) = 1.854675, su2_angle (computed) = 4.428510, reference (closed form) = 16.994880 shown as «накопленный угол = площадь»; per_bound = reference / bound = 0.801572

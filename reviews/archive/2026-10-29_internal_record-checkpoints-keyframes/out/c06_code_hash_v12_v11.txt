@@ -1,0 +1,4 @@
+as is:
+{'v11_double_slit_2d': '3f28d0f52ad8', 'v12_arrival_times_2d': '076f254c81d1'}
+with v11/viz.py edited:
+{'v11_double_slit_2d': 'bc4ce6cc1b72', 'v12_arrival_times_2d': '076f254c81d1'}

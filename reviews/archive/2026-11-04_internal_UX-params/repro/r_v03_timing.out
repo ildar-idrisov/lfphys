@@ -1,0 +1,8 @@
+build defaults                           2.5 s    failed checks: []
+build scenario=step (start form)        87.7 s    failed checks: [('abs0', 'Волна поглощена детекторами (остаток не меняет рез', np.float64(0.9999999675917046), 1.0), ('T0', 'Прохождение волнового пакета (вычислено по времени', np.float64(2.3590500899798224e-06), 2.5579433627711566e-06)]
+build energy=min                        27.9 s    failed checks: []
+build width=max                         43.0 s    failed checks: []
+build width=max, edge=min               50.5 s    failed checks: [('T0', 'Прохождение волнового пакета (вычислено по времени', np.float64(7.661928700609954e-05), 1.3820166799090736e-06)]
+live  scenario=step (live)              51.9 s  errors: []  failed checks: [('abs1', 'Волна поглощена детекторами (остаток не меняет рез', np.float64(0.9999999675917046), 1.0), ('T1', 'Прохождение волнового пакета (вычислено по времени', np.float64(2.3590500899798224e-06), 2.5579433627711566e-06)]
+live  energy=min (live)                 18.1 s  errors: []  failed checks: []
+live  V0=max (live)                     15.8 s  errors: []  failed checks: []

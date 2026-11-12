@@ -1,0 +1,18 @@
+== sn, cn, dn ==
+m = 0.5: max |error| / stated bound = 0.0132
+m = 0.99: max |error| / stated bound = 0.0055
+m = 0.999999: max |error| / stated bound = 0.00805
+m = 0.9999999999: max |error| / stated bound = 0.0161
+m = 0.9999999999999: max |error| / stated bound = 0.016
+m = 0.999999999999999: max |error| / stated bound = 0.0834
+m = -10.0: max |error| / stated bound = 0.00236
+m = -1000.0: max |error| / stated bound = 0.00447
+m = -1000000.0: max |error| / stated bound = 0.106
+== F(phi|m) ==
+m = 0.3: max |error| / stated bound = 0.0869
+m = 0.999: max |error| / stated bound = 0.0408
+m = 0.999999999: max |error| / stated bound = 0.000246
+m = 0.9999999999999: max |error| / stated bound = 2.16e-06
+m = -10000.0: max |error| / stated bound = 0.016
+== R_F ==
+finite 200/200; max rel error / 32u = 0.156

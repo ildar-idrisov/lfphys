@@ -1,0 +1,14 @@
+[linear strong drive (BS regime)] reference self-consistency (n=2000 vs 4000, extrapolated): 5.43e-14  (13.8 s)
+  tol=1e-06: measured max 5.775e-08, returned err[-1] 6.482e-07, max(measured/err) 0.298, steps acc/rej 274/4, 0.2 s  -> OK
+  tol=1e-09: measured max 5.950e-11, returned err[-1] 6.693e-10, max(measured/err) 0.289, steps acc/rej 1532/1, 0.8 s  -> OK
+  tol=1e-11: measured max 6.059e-13, returned err[-1] 4.952e-11, max(measured/err) 0.033, steps acc/rej 4837/1, 2.6 s  -> OK
+[damped Landau-Zener] reference self-consistency (n=2000 vs 4000, extrapolated): 1.41e-14  (14.2 s)
+  tol=1e-06: measured max 1.650e-08, returned err[-1] 6.522e-07, max(measured/err) 0.041, steps acc/rej 987/5, 0.5 s  -> OK
+  tol=1e-09: measured max 1.620e-11, returned err[-1] 7.051e-10, max(measured/err) 0.038, steps acc/rej 5533/1, 2.9 s  -> OK
+[4-level random, two-tone] reference self-consistency (n=2000 vs 4000, extrapolated): 3.61e-14  (15.0 s)
+  tol=1e-07: measured max 3.265e-09, returned err[-1] 6.517e-08, max(measured/err) 0.155, steps acc/rej 474/0, 0.3 s  -> OK
+  tol=1e-10: measured max 3.207e-12, returned err[-1] 1.600e-10, max(measured/err) 0.060, steps acc/rej 2659/1, 1.9 s  -> OK
+[stiff] Gamma >> drive: slowly modulated drive Omega(t) = cos(0.1 t), span 10
+  Gamma=1e+02: accepted 1753, rejected 800, h_max 6.32e-03, 1.0 s
+  Gamma=1e+03: accepted 17570, rejected 17567, h_max 5.69e-04, 11.4 s
+  Gamma=1e+04: accepted 175684, rejected 175681, h_max 5.69e-05, 122.6 s

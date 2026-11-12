@@ -1,0 +1,11 @@
+run 20261111-190540-p97-8003 live world at t = 0.49999999999999994
+base t0 = 0.49999999999999994 (source now); x0 = 0.54030230586814, v0 = -1.68294196961579
+(a) k =     1: measured -0.670934986006091  closed form -0.67093498600609  |err| = 8.88e-16
+(a) k =     4: measured -0.737393715541245  closed form -0.737393715541245  |err| = 2.22e-16
+(a) k =     9: measured -0.757013271656804  closed form -0.757013271656803  |err| = 3.33e-16
+(b) x =  0.5: measured -0.744243783322  if set -0.744243783322  if unchanged -0.737393715541  -> set
+(b) x =    1: measured -0.737393715541  if set -0.659260211872  if unchanged -0.737393715541  -> NO CHANGE
+(b) x =  1.5: measured -0.574276640422  if set -0.574276640422  if unchanged -0.737393715541  -> set
+(c) v =   -1: measured -0.400891225763  if set -0.400891225763  if unchanged -0.737393715541  -> set
+(c) v =    0: measured -0.737393715541  if set 0.0918336392308  if unchanged -0.737393715541  -> NO CHANGE
+(c) v =    1: measured 0.584558504225  if set 0.584558504225  if unchanged -0.737393715541  -> set

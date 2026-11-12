@@ -1,0 +1,3 @@
+[{"name": "p04_water_from_defaults", "viz": "p04_fluids", "params": {"fluid": "water"}, "build_wait": 5},
+ {"name": "v16_fork_from_defaults", "viz": "v16_optical_vortices", "params": {"gen": "fork"}, "build_wait": 8},
+ {"name": "v03_step_from_defaults_timing", "viz": "v03_quantum_1d", "params": {"scenario": "step"}, "build_wait": 20, "end_wait": 1}]

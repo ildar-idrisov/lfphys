@@ -1,0 +1,16 @@
+largest relative errors (rel, x):
+  5.88e-05 at x = 0.0001
+  5.06e-05 at x = 0.0001122
+  2.57e-05 at x = 0.0001259
+  2.10e-05 at x = 0.0001059
+  1.85e-05 at x = 0.0001334
+  1.65e-05 at x = 0.0001
+  1.26e-05 at x = 0.0001189
+  1.14e-05 at x = 0.0001778
+max rel. error for x in [1e-07, 0.0001): 1.29e-11
+max rel. error for x in [0.0001, 0.001): 5.88e-05
+max rel. error for x in [0.001, 0.1): 6.99e-08
+max rel. error for x in [0.1, 1000): 7.48e-14
+3-term series truncation at x = 1e-4: 133/10 x^3 = 1.33e-11
+with log1p: max rel. error for x in [0.0001, 0.001): 2.47e-08
+with log1p: max rel. error for x in [0.001, 0.1): 2.70e-10

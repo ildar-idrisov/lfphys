@@ -1,0 +1,18 @@
+GPU: NVIDIA GeForce RTX 2080 Ti pci 0000:01:00.0 available True
+spectrum disc a = 3          : max|device - host| / max|host| = 1.72e-14
+spectrum rect                : max|device - host| / max|host| = 7.40e-17
+spectrum gauss w = 1.5       : max|device - host| / max|host| = 1.57e-17
+spectrum disc turned 37 deg  : max|device - host| / max|host| = 1.72e-14
+plane disc n=(0.4, 0.3, 0.86) bl=False: max|gpu - cpu|/peak 1.60e-14; cpu 3.88 s, gpu 0.92 s
+plane disc n=(0.4, 0.3, 0.86) bl=True: max|gpu - cpu|/peak 1.60e-14; cpu 5.46 s, gpu 0.68 s
+plane disc n=(-0.5, 0.866, 0.0) bl=False: max|gpu - cpu|/peak 4.43e-13; cpu 3.16 s, gpu 0.08 s
+plane disc n=(1.0, 0.0, 0.0) bl=True: max|gpu - cpu|/peak 4.25e-13; cpu 4.42 s, gpu 0.11 s
+current disc: max|gpu - cpu| j 5.92e-13, P rel 1.65e-14; cpu 1.55 s, gpu 0.37 s
+plane rect n=(0.4, 0.3, 0.86) bl=False: max|gpu - cpu|/peak 1.18e-15; cpu 3.99 s, gpu 0.09 s
+plane rect n=(0.4, 0.3, 0.86) bl=True: max|gpu - cpu|/peak 1.15e-15; cpu 4.98 s, gpu 0.13 s
+plane rect n=(-0.5, 0.866, 0.0) bl=False: max|gpu - cpu|/peak 3.69e-16; cpu 3.70 s, gpu 0.08 s
+plane rect n=(1.0, 0.0, 0.0) bl=True: max|gpu - cpu|/peak 5.85e-16; cpu 4.68 s, gpu 0.11 s
+current rect: max|gpu - cpu| j 8.88e-16, P rel 3.16e-16; cpu 1.50 s, gpu 0.06 s
+NumPy-only Spectral fn on the GPU: falls back, max|gpu - cpu| 5.65e-17
+memory after: 0.0 MB used in the pool
+done

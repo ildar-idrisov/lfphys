@@ -1,0 +1,20 @@
+
+[T1] two concurrent ⏺ (play) on a suspended run
+  run 20261028-173743-v01-c6ac: state suspended, sim_t 61.12
+  answers: [(200, {'ok': True}), (200, {'ok': True})]
+  meta: state running, resumed 2, pid 16
+  health: running 1 (max 2)
+  record: 158 messages, trailing bytes not parsed 0, all decodable; state:start×2, notice:restored×1, header×1
+
+[T2] a suspension during a rebuild; a `set` during a rebuild (v04: a long record rebuilds in seconds)
+  run 20261028-173755-v04-89b2: state suspended, sim_t 108.062
+  resume answered in 0.01 s: 200 {'ok': True}
+  set during the rebuild: 200 {'ok': True}
+  stop during the rebuild: 200 {'ok': True, 'state': 'suspended'}
+  after: state suspended, stop_reason user, returncode -15
+  resume again: 200 {'ok': True}
+  then: state running, resumed 2, sim_t 108.062, errors None
+  record: 3740 messages; commands recorded []; all decodable
+
+[T3] ⏺ on a suspended run while both workers serve viewed runs (max_workers = 2 on this server)
+  the viewer of the suspended run received: [('state', {'live': None, 'state': None, 'resumable': None, 'text': None, 'playing': False}), ('history_end', {'live': False, 'state': 'suspended', 'resumable': True, 'text': None, 'playing': None}), ('text', '{"error": "все 2 вычислителя заняты открытыми запусками: закройте вкладку одного из них (он приостановится и продолжится, когда вы его откроете)"}')]

@@ -1,0 +1,10 @@
+200 20261111-180927-p97-d1fd 1
+1 oom_score_adj 0 oom_score 666 RLIMIT_DATA soft/hard unlimited unlimited | python3 server/serve.py --host 0.0.0.0 --port 8479 --max-workers 3 
+19 oom_score_adj 0 oom_score 667 RLIMIT_DATA soft/hard 3865470566 3865470566 | /usr/local/bin/python3 -m lfviz.worker --viz p97_osc 
+24 oom_score_adj 0 oom_score 667 RLIMIT_DATA soft/hard 3865470566 3865470566 | /usr/local/bin/python3 -m lfviz.worker --viz p97_osc 
+56 oom_score_adj 0 oom_score 667 RLIMIT_DATA soft/hard 3865470566 3865470566 | /usr/local/bin/python3 -m lfviz.worker --viz p97_osc 
+62 oom_score_adj 0 oom_score 667 RLIMIT_DATA soft/hard 3865470566 3865470566 | /usr/local/bin/python3 -m lfviz.sweep --file /lf/visualizations/runs/20261111-180927-p97-d
+66 oom_score_adj 0 oom_score 666 RLIMIT_DATA soft/hard unlimited unlimited | python3 -c 
+import os
+for p in sorted([p for p in os.listdir('/proc') if p.isdigit()], key
+{"ok": true, "cancelled": 1}

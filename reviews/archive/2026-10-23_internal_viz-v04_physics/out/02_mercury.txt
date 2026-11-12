@@ -1,0 +1,52 @@
+constants: GM_SUN 1.3271244e+20 AU 149597870700.0 C 299792458.0 DAY 86400.0
+M_sun length GM/c^2 [m] 1476.6250380501249   T_s GM/c^3 [s] 4.9254909476412675e-06
+r0 (perihelion, M) 31152981.116278067  k 1.0980121538489453  v/c 0.0001967240040734056
+e  float 0.9999999872505095  mp 0.99999998725050958301  rel -4.6376302399030767e-17
+em1 float -2.54989806714393e-08  mp -2.5498980671439300749e-8  rel -4.229548423818728e-19
+e*e-1 (cancelling) float -2.5498980815719108e-08  rel vs mp 5.658257830189791e-09
+l  float 6128.539302605674  rel -3.034070832697624e-17
+mp turning points: r_peri 31152981.116278067231  r_apo 47281524.747800552929  r3 2.000000213
+r_peri - r0 (rel) 1.5833e-50  (start at the perihelion)
+exact advance per orbit [rad]: chi-integral 5.0186540460308775778e-7  elliptic 5.0186540460308775778e-7
+radial period t_r [days] 87.9693611613641   tau_r/t_r 0.999999961751527201
+EXACT GR advance per Julian century for these initial data [arcsec]: 42.9804718427
+1PN 6 pi GM/(c^2 a (1-e^2)) per Kepler period (NSSDCA a, e): per orbit 5.01865355323174e-7  period [d] 87.9693500462  century 42.98047305
+  with the sidereal period 87.969 d (fact sheet): 42.98064408
+a_run (AU) 0.387098942866129  ecc_run 0.205630716402703
+
+float references (orbits.elements / periapsis_advance with float e):
+  r_peri rel err 1.0929203942736672e-08   r_apo rel err -1.6587459959367402e-08
+  ecc rel err -6.407882556848354e-08   p rel err 7.377757835395194e-15
+  advance rel err -5.134982735536499e-10
+  v04 r_peri/r_apo tolerance 1.678308876969769e-07
+  turning points from em1 via np.roots: r_peri rel err 2.8101426854494925e-14  r_apo rel err -2.6821739785878704e-14
+  Vieta route from em1 (float): r_peri rel err 1.0045661001977505e-09  r_apo rel err -1.0045662302658397e-09
+
+the run (Harness, preset mercury):
+  wall 0.61 s
+  periapses 11
+   adv 5.018660358402371e-07  rel vs exact 1.2577817550249314e-06
+   adv 5.018662045941369e-07  rel vs exact 1.594035057594147e-06
+   adv 5.01866264102091e-07  rel vs exact 1.7126085906053966e-06
+   adv 5.018663067346552e-07  rel vs exact 1.7975567933597248e-06
+   adv 5.018660438338429e-07  rel vs exact 1.273709543041368e-06
+   adv 5.0186625344395e-07  rel vs exact 1.6913715399168145e-06
+   adv 5.018660473865566e-07  rel vs exact 1.2807885599375621e-06
+   adv 5.018661397571123e-07  rel vs exact 1.4648429992386062e-06
+   adv 5.018662250222405e-07  rel vs exact 1.6347394047472624e-06
+   adv 5.018663173927962e-07  rel vs exact 1.8187938440483067e-06
+  check s0.adv         value      0.10351733123897643 ref      0.10351717038942063 rel   1.5538442095611678e-06 tol 3.9851322340274564e-05
+  check s0.adv2        value      0.10351685015590864 ref      0.10351730064458484 rel  -4.3518201633029015e-06 tol 7.970264468054913e-05
+  check s0.century     value       42.980538605575624 ref                    42.98 rel    1.253153968421524e-05 tol 0.0002
+  check s0.drift_e     value    4.440892155119738e-16 ref                     None rel                     None tol 1e-09 ok True
+  check s0.drift_l     value    9.258874201799993e-13 ref                     None rel                     None tol 1e-09 ok True
+  check s0.drift_n     value    8.881784197001252e-16 ref                     None rel                     None tol 1e-09 ok True
+  check s0.em1         value  -2.5498980671445432e-08 ref    -2.54989806714393e-08 rel  -2.4044344278868663e-13 tol 1e-09
+  check s0.merc_a      value       0.3870989406758215 ref               0.38709893 rel   2.7579051961218575e-08 tol 1e-06
+  check s0.merc_e      value      0.20563070322612806 ref               0.20563069 rel    6.431981555806737e-08 tol 1e-06
+  check s0.period      value        7600552.804341415 ref                     None rel                     None tol 1e-09
+  check s0.ppn         value      0.10351733123897643 ref      0.10351715801089052 rel   1.6734238964061572e-06 tol 4.003146180422783e-05
+  check s0.r_apo       value        47281524.74778734 ref       47281523.963520154 rel   1.6587180813453222e-08 tol 1.678308876969769e-07
+  check s0.r_peri      value       31152981.116292518 ref        31152981.45675535 rel  -1.0928739970380334e-08 tol 1.678308876969769e-07
+  run century 42.980538605575624  vs exact for these data 42.9804718427  rel 1.553330769348347e-06
+  run century vs 42.98: rel 1.253153968421524e-05

@@ -1,0 +1,3 @@
+status stopped, r = 12, events ['Двойная сблизилась до 12 G m/c²: постнью']
+reloading the scene FAILED: ValueError начальное расстояние не больше «остановить при» (12.0 G m/c²)
+exit 0

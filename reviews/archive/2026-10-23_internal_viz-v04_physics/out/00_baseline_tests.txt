@@ -1,0 +1,10 @@
+.......................                                                  [100%]
+23 passed in 2.08s
+...........................                                              [100%]
+============================= slowest 5 durations ==============================
+0.14s call     v04_orbits/tests/test_v04_orbits.py::test_measured_advance_matches_the_exact_one
+0.11s call     v04_orbits/tests/test_v04_orbits.py::test_every_preset_runs_and_all_checks_pass[newton_ellipse]
+0.08s call     v04_orbits/tests/test_v04_orbits.py::test_newton_world_is_flagged_and_its_ellipse_is_closed
+0.07s call     v04_orbits/tests/test_v04_orbits.py::test_inside_isco_the_perturbed_circle_falls_and_outside_it_stays_bound
+0.06s call     v04_orbits/tests/test_v04_orbits.py::test_every_preset_runs_and_all_checks_pass[default]
+27 passed in 2.61s

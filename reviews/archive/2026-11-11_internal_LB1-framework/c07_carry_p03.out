@@ -1,0 +1,7 @@
+(a) worlds: 2 | N before 300.0 rho 2.3999999999999995 | N after 0.0 rho 0.0
+(a) notices after the new world: ['Сцена перенесена в новый мир: 0 из 1 объектов; не перенесены: «Молекулы X₂» — 150 молекул в области 5 × 5 нм заняли бы 109% площади (с уже имеющимися атомами) — случайно без перекрытий укладывается не больше ≈ 40%. Что изменить: не больше 54 молекул, или область больше; плотнее — «Кристалл»']
+(a) errors: []
+(b) gas of 4000 atoms: worlds 2; last error: None
+    world 2 header: 89005 chars
+(b) gas of 12000 atoms: worlds 2; last error: None
+    world 2 header: 89007 chars

@@ -1,0 +1,19 @@
+grid: 186 values of y in [0, 1e8]
+max |F_engine/F_mp - 1| = 4.441e-16 at y = 0.002512   (stated bound FD_REL_ERROR = 4e-15; docstring 'measured below 2e-15')
+max |J_engine/J_mp - 1| = 2.220e-16 at y = 5.012e-08
+
+small y: (F - 1 - 5y^2/(7pi^2)) / (y^4 ln y)   [should approach a constant]
+  y =   1e-01:  0.012766
+  y =   3e-02:  0.012045
+  y =   1e-02:  0.011770
+  y =   3e-03:  0.011603
+  y =   1e-03:  0.011506
+
+large y: w y^2 / (5 zeta5/zeta3) - 1
+  y =      30: -2.324e-02
+  y =     100: -2.170e-03
+  y =     357: -1.709e-04
+  y =    1000: -2.178e-05
+  y =   10000: -2.179e-07
+
+y0 of a 0.06 eV species in the engine's (CAMB) convention, T_cmb = 2.7255, N_eff = 3.046: 356.5531234572133

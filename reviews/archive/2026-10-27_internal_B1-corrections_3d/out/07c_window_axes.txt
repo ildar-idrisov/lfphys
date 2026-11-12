@@ -1,0 +1,13 @@
+transverse, normal -z (theta 180): u [1,0,0], v [0,-1,0], origin [0,0,6]
+   horizontal axis named 'x', ticks -8.000 (left) .. 7.875 (right); readout at the left edge: наведите на срез
+   vertical axis named 'y', ticks -7.875 (bottom) .. 8.000 (top); readout at the top edge: x = -4, y = -7,875, z = 6 мкм · I/Iпик = 2.951·10⁻⁵ · фаза -1,69 рад
+tilted 17 deg from z, u = -x: u [-1,0,0], v [0,-0.9535826651341417,0.3011313679370974], origin [0,0,6]
+   horizontal axis named 'x', ticks -7.875 (left) .. 8.000 (right); readout at the left edge: наведите на срез
+   vertical axis named 't', ticks -8.258 (bottom) .. 8.389 (top); readout at the top edge: x = 3,875, y = -7,938, z = 8,507 мкм · I/Iпик = 0,0005396 · фаза 0,549 рад
+longitudinal y = 0, origin moved to x = 3: u [1,0,0], v [0,0,1], origin [3,0,6]
+   horizontal axis named 'z', ticks 0.000 (left) .. 12.000 (right); readout at the left edge: x = -6,125, y = 0, z = 0,09412 мкм · I/Iпик = 3.068·10⁻⁷ · фаза -0,956 рад
+   vertical axis named 'x', ticks -11.000 (bottom) .. 4.875 (top); readout at the top edge: x = 7,75, y = 0, z = 3,059 мкм · I/Iпик = 0,0007835 · фаза -0,505 рад
+longitudinal, normal +y (u = -x): u [-1,0,0], v [0,0,1], origin [0,0,6]
+   horizontal axis named 'z', ticks 0.000 (left) .. 12.000 (right); readout at the left edge: x = 6, y = 0, z = 0,09412 мкм · I/Iпик = 3.099·10⁻⁷ · фаза -2,2 рад
+   vertical axis named '−x', ticks -7.875 (bottom) .. 8.000 (top); readout at the top edge: x = -7,875, y = 0, z = 3,059 мкм · I/Iпик = 0,0006624 · фаза 0,82 рад
+runs stopped: ["20261027-174709-v08-94fb"]

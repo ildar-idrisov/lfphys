@@ -1,0 +1,8 @@
+lam=0.5 a=3.00 n=256 z=  9.60: |ref|=0.5137  err|Un-ref|=9.52e-03  tol=1.43e-02  ok=True   period part |Un(pad4)-Un(pad16)|=7.66e-04  |U2n(pad16)-ref|=2.36e-03
+lam=0.5 a=0.75 n=256 z=  9.60: |ref|=0.3650  err|Un-ref|=1.12e-03  tol=1.51e-03  ok=True   period part |Un(pad4)-Un(pad16)|=3.42e-04  |U2n(pad16)-ref|=2.66e-04
+lam=0.5 a=2.00 n=256 z=  9.60: |ref|=1.9043  err|Un-ref|=4.56e-03  tol=6.92e-03  ok=True   period part |Un(pad4)-Un(pad16)|=5.63e-04  |U2n(pad16)-ref|=1.15e-03
+lam=0.5 a=6.00 n=256 z=  9.60: |ref|=1.8171  err|Un-ref|=2.56e-02  tol=3.86e-02  ok=True   period part |Un(pad4)-Un(pad16)|=1.11e-03  |U2n(pad16)-ref|=6.36e-03
+lam=1.0 a=3.00 n=128 z=  9.60: |ref|=1.9374  err|Un-ref|=8.70e-03  tol=1.58e-02  ok=True   period part |Un(pad4)-Un(pad16)|=1.45e-03  |U2n(pad16)-ref|=2.33e-03
+lam=0.3 a=1.00 n=128 z=  2.88: |ref|=1.9076  err|Un-ref|=1.26e-02  tol=1.79e-02  ok=True   period part |Un(pad4)-Un(pad16)|=1.95e-03  |U2n(pad16)-ref|=2.10e-03
+lam=1.5 a=6.00 n=128 z= 14.40: |ref|=1.1321  err|Un-ref|=1.67e-02  tol=2.29e-02  ok=True   period part |Un(pad4)-Un(pad16)|=1.65e-03  |U2n(pad16)-ref|=3.95e-03
+lam=0.5 a=0.20 n=128 z=  4.80: |ref|=0.0523  err|Un-ref|=7.94e-04  tol=2.03e-03  ok=True   period part |Un(pad4)-Un(pad16)|=7.43e-04  |U2n(pad16)-ref|=1.68e-04

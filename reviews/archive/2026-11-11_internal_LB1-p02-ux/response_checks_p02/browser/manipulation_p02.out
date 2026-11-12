@@ -1,0 +1,14 @@
+{"name":"p02_quantum 1600x1000: objects with a position handle report at[id]","ok":true,"types":["trap:true:true","packet:true:true"]}
+{"name":"p02_quantum 1600x1000: the window's selection ring follows «Ловушка»","ok":true,"ring":[515.3695882414697,455.62925522309706],"now":[824.3695882414697,531.6292552230971]}
+{"name":"p02_quantum 1600x1000: drag «Ловушка» (trap) in the window: one edit, applied","ok":true,"values":{"x":2.7818,"y":-1.7386000000000001},"text":"(1,95; −1,22; 0)"}
+{"name":"p02_quantum 1600x1000: the window's selection ring follows «Электрон»","ok":true,"ring":[601.6436039895013,426.87124997375327],"now":[910.6436039895013,502.87124997375327]}
+{"name":"p02_quantum 1600x1000: throw «Электрон» (packet) in the window: one edit, applied","ok":true,"values":{"x":8.7818,"y":0.2614,"vx":11260000000000,"vy":-7035000000000},"text":"бросок: v = (9,73·10¹²; −6,08·10¹²) нм/с (×0,0371, авто)"}
+{"name":"p02_quantum 1600x1000: no page errors","ok":true,"errs":[]}
+{"name":"p02_quantum 1280x800: objects with a position handle report at[id]","ok":true,"types":["trap:true:true","packet:true:true"]}
+{"name":"p02_quantum 1280x800: the window's selection ring follows «Ловушка»","ok":true,"ring":[404.50389669291343,346.49643842519686],"now":[673.5038966929135,422.49643842519686]}
+{"name":"p02_quantum 1280x800: drag «Ловушка» (trap) in the window: one edit, applied","ok":true,"values":{"x":3.7441,"y":-2.3401},"text":"(2,62; −1,64; 0)"}
+{"name":"p02_quantum 1280x800: the window's selection ring follows «Электрон»","ok":true,"ring":[468.6046840944882,325.1295092913386],"now":[737.6046840944882,401.1295092913386]}
+{"name":"p02_quantum 1280x800: throw «Электрон» (packet) in the window: one edit, applied","ok":true,"values":{"x":9.744100000000001,"y":-0.3401,"vx":17350000000000,"vy":-10840000000000},"text":"бросок: v = (1,89·10¹³; −1,18·10¹³) нм/с (×0,0363, авто)"}
+{"name":"p02_quantum 1280x800: no page errors","ok":true,"errs":[]}
+all passed (12)
+exit 0

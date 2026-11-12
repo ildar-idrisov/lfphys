@@ -1,0 +1,12 @@
+(a) thermal oscillator, coarse grid: mean jumps per trajectory 77.4 over 2 intervals (2.4 s)
+  <n>: max |z| = 1.40 over 3 points -> OK
+(b) Lambda system with a dark state
+  P_g1: max |z| = 1.43 over 9 points -> OK
+  P_e: max |z| = 7.20 over 9 points -> FAIL
+(c) Gamma = 50, one interval of 60 (Gamma dt = 3000): 11 jumps per trajectory, 0.0 s
+  P_e(60): max |z| = 2.36 over 2 points -> OK
+(d) Omega = Gamma/2 + 0.001: route eig, cond(V) 3.2e+01, KS 0.0175 vs DKW 0.0348 -> OK
+(d) Omega = Gamma/2 + 2e-05: route eig, cond(V) 2.2e+02, KS 0.0181 vs DKW 0.0348 -> OK
+(e) output grid of 2 points: <P_e(6)> = 0.3545 +- 0.0040, exact 0.3554, z = 0.21
+(e) output grid of 5 points: <P_e(6)> = 0.3561 +- 0.0040, exact 0.3554, z = 0.17
+(e) output grid of 401 points: <P_e(6)> = 0.3529 +- 0.0040, exact 0.3554, z = 0.61

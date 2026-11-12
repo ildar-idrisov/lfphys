@@ -1,0 +1,10 @@
+variant A: 43 s, device gpu, max sub-steps 32, bohm {'n': 1000, 'screen': 146, 'back': 839, 'side': 15, 'flight': 0, 'A': 76, 'B': 70, 'crossed_axis': 0, 'max_substeps': 32}
+variant B: 253 s, device gpu, max sub-steps 128, bohm {'n': 1000, 'screen': 145, 'back': 837, 'side': 18, 'flight': 0, 'A': 75, 'B': 70, 'crossed_axis': 0, 'max_substeps': 128}
+variant C: 57 s, device gpu, max sub-steps 8, bohm {'n': 1000, 'screen': 147, 'back': 838, 'side': 15, 'flight': 0, 'A': 77, 'B': 70, 'crossed_axis': 0, 'max_substeps': 8}
+
+preset narrow (full); fringe period near the axis 6.12 lambda; screen half-width 56
+A vs B (finer Bohm sub-steps): N = 1000; fate differs 7; slit label differs 0; both on screen 144: |dx| median 7.88e-03, 95% 3.88e-01, max 1.15e+01 lambda; |dx| > period/10: 6, > period/2: 4
+A vs C (wave dt/2): N = 1000; fate differs 4; slit label differs 0; both on screen 145: |dx| median 8.48e-03, 95% 3.61e-01, max 1.08e+01 lambda; |dx| > period/10: 7, > period/2: 5
+A {'time_step': (0.0005255212460342468, True), 'bohm_born': (0.07026795683088716, True), 'bohm_fraction': (0.146, None), 'no_crossing': (0.0, True)}
+B {'time_step': (0.0005255212460342468, True), 'bohm_born': (0.06573323788898827, True), 'bohm_fraction': (0.145, None), 'no_crossing': (0.0, True)}
+C {'time_step': (0.0001297101662261332, True), 'bohm_born': (0.06786686277859544, True), 'bohm_fraction': (0.147, None), 'no_crossing': (0.0, True)}

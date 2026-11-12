@@ -1,0 +1,9 @@
+  2-D 64^2: cpu:    0.068 ms (table    0.063, ratio 1.08)
+  2-D 128^2: cpu:    0.144 ms (table    0.139, ratio 1.04)
+  2-D 256^2: cpu:    0.483 ms (table    0.456, ratio 1.06)
+  2-D 1024^2: cpu:   14.204 ms (table   10.400, ratio 1.37)
+  3-D 32^3: cpu:    0.820 ms (table    0.753, ratio 1.09)
+  3-D 64^3: cpu:    4.814 ms (table    3.210, ratio 1.50)
+  3-D 128^3: cpu:   83.702 ms (table   67.600, ratio 1.24)
+  complex 256^2 world (CPU): measured 1.276 ms, estimate 0.912 ms, 'other device' estimate 0.060 ms (no complex factor)
+rc=0

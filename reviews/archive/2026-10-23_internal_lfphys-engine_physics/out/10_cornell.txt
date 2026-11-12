@@ -1,0 +1,17 @@
+--- charmonium (m_q = 1.84) ---
+  (n,L)=(1, 0): shooting 3.937529 GeV, engine N=700 3.937529 (diff +0.000 MeV), N=2000 3.937529
+  (n,L)=(2, 0): shooting 4.528179 GeV, engine N=700 4.528179 (diff +0.000 MeV), N=2000 4.528179
+  (n,L)=(3, 0): shooting 4.951957 GeV, engine N=700 4.951957 (diff +0.000 MeV), N=2000 4.951957
+  (n,L)=(1, 1): shooting 4.365911 GeV, engine N=700 4.365911 (diff +0.000 MeV), N=2000 4.365911
+  splitting 2S-1S: model 590.7 MeV, PDG spin-averaged 605.3 MeV (-2.4%); states ['eta_c(2S)', 'psi(2S)']
+  splitting 1P-1S: model 428.4 MeV, PDG spin-averaged 456.6 MeV (-6.2%); states ['chi_c0(1P)', 'chi_c1(1P)', 'h_c(1P)', 'chi_c2(1P)']
+  absolute: 2 m_q + E(1S) = 3.9375 GeV vs spin-averaged 1S 3.0687 GeV
+--- bottomonium (m_q = 5.18) ---
+  (n,L)=(1, 0): shooting 10.189577 GeV, engine N=700 10.189582 (diff +0.006 MeV), N=2000 10.189577
+  (n,L)=(2, 0): shooting 10.781447 GeV, engine N=700 10.781449 (diff +0.002 MeV), N=2000 10.781447
+  (n,L)=(3, 0): shooting 11.126541 GeV, engine N=700 11.126542 (diff +0.002 MeV), N=2000 11.126541
+  (n,L)=(1, 1): shooting 10.687919 GeV, engine N=700 10.687919 (diff +0.000 MeV), N=2000 10.687919
+  splitting 2S-1S: model 591.9 MeV, PDG spin-averaged 578.4 MeV (+2.3%); states ['Upsilon(2S)']
+  splitting 1P-1S: model 498.3 MeV, PDG spin-averaged 454.8 MeV (+9.6%); states ['chi_b0(1P)', 'chi_b1(1P)', 'h_b(1P)', 'chi_b2(1P)']
+  splitting 3S-1S: model 937.0 MeV, PDG spin-averaged 910.1 MeV (+2.9%); states ['Upsilon(3S)']
+  absolute: 2 m_q + E(1S) = 10.1896 GeV vs spin-averaged 1S 9.4450 GeV

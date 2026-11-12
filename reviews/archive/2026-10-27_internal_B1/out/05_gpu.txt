@@ -1,0 +1,26 @@
+(a) devices: {'available': True, 'name': 'NVIDIA GeForce RTX 2080 Ti', 'memory_total': 11539054592, 'memory_free': 11150360576, 'cupy': '14.2.0', 'cuda_runtime': 12090, 'driver': 12040, 'visible': '0'}
+    CUDA device 0 PCI bus id: 0000:01:00.0
+(b) GPU 0 memory.used: before CUDA 217 MiB; after the backend's probe (context) 379 MiB (+162)
+    after a full-volume world (double, n = 256, pad 4) on the GPU: 483 MiB (+266 over no CUDA); CuPy pool holds 97 MiB (in use 0); built in 1.1 s
+    after the 512-grid slices world (square_big): 867 MiB (+650); pool 481 MiB; built in 1.0 s
+    square_big checks failed on the GPU: []
+
+(c) GPU against CPU, fp64, v08 'double' volume and 'circle' volume
+    double: max|U_gpu - U_cpu| / max|U| = 6.1e-16
+    circle: max|U_gpu - U_cpu| / max|U| = 3.8e-16
+
+(d) fp32 on the GPU: double slit, lam = 0.3 um, z = 80 um, n = 256, pad 4
+    fp32 error 1.2e-05 (declared bound 1e-5); used = {'device': 'gpu', 'precision': 'fp32', 'reason': 'выбрано в настройках', 'size': 1048576}
+
+(e) GPU memory exhausted (CuPy pool limited to 64 MiB, as if the owner's other jobs held the rest)
+    world construction raised OutOfMemoryError: Out of memory allocating 16,777,216 bytes (allocated so far: 67,108,864 bytes, limit set to: 67,108,864 bytes).  (no fallback to the CPU)
+
+(f) calibration
+    took 1.5 s; crossover 16384; rows:
+          1024: cpu     0.09 ms  gpu     0.21 ms  x0.4
+          4096: cpu     0.18 ms  gpu     0.22 ms  x0.8
+         16384: cpu     0.60 ms  gpu     0.28 ms  x2.1
+         65536: cpu     2.13 ms  gpu     0.54 ms  x3.9
+        262144: cpu     9.47 ms  gpu     2.00 ms  x4.7
+       1048576: cpu    59.75 ms  gpu     6.80 ms  x8.8
+       4194304: cpu   283.22 ms  gpu    32.29 ms  x8.8

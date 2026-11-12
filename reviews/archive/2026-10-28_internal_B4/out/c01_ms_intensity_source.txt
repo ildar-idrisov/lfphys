@@ -1,0 +1,21 @@
+== source text (arXiv:2105.14744v1), lines with the authors, Table I and eqs. 27-28 ==
+   3: Siddhant Das∗
+   6: Ward Struyve†
+  85: [27, 28] and spontaneous [29, 30]), path integrals with absorb-                    Marchewka & Schuss (MS) (λ0  / π) |∂x ψ(L, t)|2            [31]
+ 266: (−∞, L] with initial condition ψ(x, 0) and Dirichlet bound-                                  = e− iδtH/h̄ e− i(t−kτ0 −δt)H/h̄
+ 269: ψ(x, t) = ψ(x, t) − ψ(2L − x, t)                  (27)                      = e− iδtH/h̄ e− i(t−kτ0 −δt)H/h̄ φ(x + kL, kτ0 ).
+ 273: at L is ∂x ψ(L, t) = 2∂x ψ(L, t) and                                      |σ(kτ0 )| ≈ σ in view of the “no spreading” condition (20) [cf
+ 331: where H is the free Hamiltonian (11) and H refers to free mo-             obtained by free evolution with Dirichlet boundary conditions
+ 332: tion on the half-line (−∞, L] with Dirichlet boundary condi-              up until time t − δt, and then free evolution for a time δt.)
+2211.13362.txt 723: [24] S. Das and W. Struyve, “Questioning the adequacy of certain quantum arrival-time distribu-
+2211.13362.txt 724: tions”, Phys. Rev. A 104, 042214 (2021).
+
+== |d_x psibar(L,t)|^2 / |d_x psi_free(L,t)|^2 where the flux is not negligible ==
+min 3.999842  max 3.999843  (eq. 27-28: exactly 4)
+
+== non-detection probability P(inf) for the Fig. 3 train, lambda' = 0.01 ==
+engine's formula (lambda0/pi)|d psi_free|^2 with lambda0 = 0.01: P(inf) = 0.000000
+paper's Table I  (lambda' eps/pi)|d psibar|^2, lambda' = 0.01:   P(inf) = 0.279937
+ratio of the intensities (paper/engine) = 0.039998 (= 4 eps = 0.04 here; = 4 with hbar = m = 1)
+
+paper eq. 31 at t = tau0: 0.014367; Table I with psibar: 0.014364; engine: 0.359102

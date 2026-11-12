@@ -1,0 +1,14 @@
+v01_light_travel {"arrays": 9, "sharing_groups": 0, "broken_by_pickle": []}
+v02_double_slit {"arrays": 36, "sharing_groups": 0, "broken_by_pickle": []}
+v03_quantum_1d {"arrays": 11, "sharing_groups": 0, "broken_by_pickle": []}
+v04_orbits {"arrays": 80, "sharing_groups": 0, "broken_by_pickle": []}
+v05_optics_bench {"arrays": 14, "sharing_groups": 0, "broken_by_pickle": []}
+v06_qcd {"arrays": 9, "sharing_groups": 0, "broken_by_pickle": []}
+v07_bell_test {"arrays": 10, "sharing_groups": 0, "broken_by_pickle": []}
+v08_wave_3d {"arrays": 10, "sharing_groups": 0, "broken_by_pickle": []}
+v09_thomas_3d {"arrays": 36, "sharing_groups": 0, "broken_by_pickle": []}
+v10_fast_observer {"arrays": 18, "sharing_groups": 0, "broken_by_pickle": []}
+v11_double_slit_2d {"arrays": 50, "sharing_groups": 2, "broken_by_pickle": [["sim.W", "sim.prop.H.W"], ["sim.W_c", "sim.comp.H.W"]]}
+v12_arrival_times_2d {"arrays": 75, "sharing_groups": 3, "broken_by_pickle": [["sim.W", "sim.prop.H.W"], ["sim.W_c", "sim.comp.H.W"], ["sim.W_d", "sim.det.H.W"]]}
+v13_hydrogen_3d {"arrays": 11, "sharing_groups": 0, "broken_by_pickle": []}
+v14_quarkonium_3d {"arrays": 15, "sharing_groups": 0, "broken_by_pickle": []}

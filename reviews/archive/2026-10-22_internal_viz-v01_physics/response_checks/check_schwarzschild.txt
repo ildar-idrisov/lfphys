@@ -1,0 +1,34 @@
+case                                     side  branch              b   dphi err  dt rel err shoot dphi   shoot dt
+lens 60/60 offset                          -1  turned      8.6547037   4.44e-16    1.13e-16   7.80e-12   7.55e-12  (L/b-1 = 0.0e+00)
+lens 60/60 offset                           1  turned      8.4321379   8.88e-16    0.00e+00   7.23e-12   7.87e-12  (L/b-1 = 0.0e+00)
+outward 10 -> 1000, 90 deg                  1     out     10.4978451   2.22e-16    1.13e-16   1.76e-12   6.47e-13  (L/b-1 = 0.0e+00)
+outward 10 -> 1000, 90 deg                 -1  turned     2.93156519   2.66e-15    0.00e+00   2.90e-11   7.96e-13  (L/b-1 = -1.1e-16)
+inward 1000 -> 10, 90 deg                  -1      in     10.4978451   2.22e-16    1.13e-16   1.86e-08   1.99e-10  (L/b-1 = 0.0e+00)
+inward 1000 -> 10, 90 deg                   1  turned     2.93156519   2.66e-15    0.00e+00   1.94e-09   4.34e-12  (L/b-1 = 0.0e+00)
+inward 50 -> 4, 170 deg                     1  turned     3.71330792   1.33e-15    1.20e-16   3.47e-11   1.40e-14  (L/b-1 = 0.0e+00)
+inward 50 -> 4, 170 deg                    -1  turned     3.39871091   8.88e-16    0.00e+00   4.86e-11   2.33e-12  (L/b-1 = 2.2e-16)
+near photon sphere 1.6 -> 1.6, 20 deg       1  turned     2.61237974   1.11e-14    5.17e-14   4.94e-11   1.41e-10  (L/b-1 = 0.0e+00)
+near photon sphere 1.6 -> 1.6, 20 deg      -1  turned     2.59824354   1.05e-12    1.80e-13   9.45e-11   1.59e-11  (L/b-1 = 0.0e+00)
+same radius 5 -> 5, 179.9 deg               1  turned     3.22539148   4.44e-16    0.00e+00   9.28e-13   2.21e-13  (L/b-1 = 0.0e+00)
+same radius 5 -> 5, 179.9 deg              -1  turned     3.22328511   8.88e-16    3.71e-16   9.19e-13   2.27e-13  (L/b-1 = 0.0e+00)
+radial 5 -> 500                             1     out              0   0.00e+00    3.41e-16   0.00e+00   2.63e-14  (L/b-1 = 0.0e+00)
+radial 5 -> 500                            -1  turned     2.64292888   3.55e-15    2.18e-16   1.22e-11   3.16e-14  (L/b-1 = 0.0e+00)
+radial in 500 -> 5                          1      in              0   0.00e+00    3.41e-16   0.00e+00   9.41e-13  (L/b-1 = 0.0e+00)
+radial in 500 -> 5                         -1  turned     2.64292888   3.55e-15    2.18e-16   3.87e-09   1.95e-11  (L/b-1 = 0.0e+00)
+far 1e6 <-> 1e6, 180 deg - 1e-6            -1  turned     1000.98659   8.88e-16    0.00e+00   3.56e-08   1.82e-08  (L/b-1 = -1.1e-16)
+far 1e6 <-> 1e6, 180 deg - 1e-6             1  turned     1000.48696   0.00e+00    0.00e+00   8.50e-09   1.29e-08  (L/b-1 = 0.0e+00)
+worst: {'phi': 1.0516032489249483e-12, 't': 1.7987968780813738e-13, 'shoot_phi': np.float64(3.5633775929966305e-08), 'shoot_t': np.float64(1.8173484862621922e-08)}
+
+turning point vs numpy.roots (relative):
+  b = 2.59807621136: engine 1.500001224800644  numpy 1.500001224585379  mpmath 1.50000122483135501  rel(engine-mp) = -2.05e-11
+  b = 2.59807880943: engine 1.501226078873736  numpy 1.501226078873773  mpmath 1.50122607887372073  rel(engine-mp) = 1.04e-14
+  b = 3: engine 2.226681596905678  numpy 2.226681596905678  mpmath 2.22668159690567747  rel(engine-mp) = 1.98e-16
+  b = 10: engine 9.456492739235916  numpy 9.456492739235916  mpmath 9.45649273923591443  rel(engine-mp) = 1.59e-16
+  b = 1000: engine 999.4996244991783  numpy 999.4996244991778  mpmath 999.499624499178185  rel(engine-mp) = 6.87e-17
+  b = 100000000: engine 99999999.5  numpy 99999999.5  mpmath 99999999.4999999962  rel(engine-mp) = 3.75e-17
+
+integrals(b, rtp -> 100) near b_c: engine (own rtp), engine (mp-refined rtp), vs 40-digit mpmath:
+  eps = 1e-03: rtp rel err +4.63e-16; dphi rel err own-rtp 3.66e-15, refined-rtp 2.22e-16; dt rel err own-rtp 3.33e-16; quad warnings: 0
+  eps = 1e-06: rtp rel err +1.04e-14; dphi rel err own-rtp 1.55e-12, refined-rtp 4.77e-15; dt rel err own-rtp 2.71e-13; quad warnings: 0
+  eps = 1e-09: rtp rel err -3.14e-13; dphi rel err own-rtp 1.04e-09, refined-rtp 0.00e+00; dt rel err own-rtp 2.41e-10; quad warnings: 0
+  eps = 1e-11: rtp rel err -7.29e-12; dphi rel err own-rtp 2.02e-07, refined-rtp 1.19e-12; dt rel err own-rtp 5.34e-08; quad warnings: 0

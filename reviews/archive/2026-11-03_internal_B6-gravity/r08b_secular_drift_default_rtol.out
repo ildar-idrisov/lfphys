@@ -1,0 +1,3 @@
+defaults (dt_rtol 1e-3): signed dE/E at apoapsis after k orbits: 1: +4.463e-04, 10: +4.292e-04, 100: +2.502e-04, 200: +4.496e-05, 400: -3.946e-04, 600: -8.531e-04   wall 78 s
+{'dt_rtol': 1e-08, 'max_passes': 30}: signed dE/E at apoapsis after k orbits: 1: +4.488e-04, 10: +4.488e-04, 100: +4.488e-04, 200: +4.487e-04, 400: +4.485e-04, 600: +4.477e-04   wall 241 s
+exit 0

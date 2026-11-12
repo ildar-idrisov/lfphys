@@ -1,0 +1,16 @@
+case | n_grid | T_run(packet) | T_ref(run) | T_ref(full, independent) | P(k<0) | |T_run-T_ref(run)| tol | T check ok | abs value | E rel | seconds
+barrier, default | 2048 | 2.027882e-01 | 2.028044e-01 | 2.028075e-01 | 0.000e+00 | 1.63e-05 vs 3.03e-04 | True | 0.999990 (tol 0.002) | 2.8e-14 | 2.7
+barrier, E = 0.05 eV, sigma = 1 nm (both at range limits) | 1024 | 2.076062e-03 | 2.010128e-03 | 1.988409e-03 | 1.094e-02 | 6.59e-05 vs 1.02e-04 | True | 0.970788 (tol 0.002) | -2.3e-16 | 14.9
+barrier, E = 0.1 eV, sigma = 1 nm | 1024 | 4.311509e-03 | 4.293046e-03 | 4.290502e-03 | 5.924e-04 | 1.85e-05 vs 1.04e-04 | True | 0.996710 (tol 0.002) | -2.5e-16 | 11.6
+free particle, E = 0.05 eV, sigma = 1 nm | 1024 | 9.664373e-01 | 1.000000e+00 | 9.890617e-01 | 1.094e-02 | 3.36e-02 vs 1.10e-03 | False | 0.972976 (tol 0.002) | -2.3e-16 | 3.3
+free particle, E = 0.2 eV, sigma = 1 nm | 1024 | 9.997996e-01 | 1.000000e+00 | 9.999977e-01 | 2.297e-06 | 2.00e-04 vs 1.10e-03 | True | 0.999878 (tol 0.002) | -4.0e-16 | 3.5
+well V0 = -5, E = 0.05, sigma = 1 | 4096 | 3.804304e-01 | 3.703681e-01 | 3.664075e-01 | 1.094e-02 | 1.01e-02 vs 4.70e-04 | False | 0.971018 (tol 0.002) | -2.3e-16 | 119.9
+step V0 = 0.75, E = 0.8 (slow transmitted wave) | 2048 | 2.585149e-01 | 5.982160e-01 | 5.981611e-01 | 0.000e+00 | 3.40e-01 vs 6.98e-04 | False | 0.541811 (tol 0.002) | 3.1e-14 | 2.9
+step V0 = -5, E = 0.05, sigma = 1 (step down) | 4096 | 5.293027e-01 | 5.130339e-01 | 5.075055e-01 | 1.094e-02 | 1.63e-02 vs 6.13e-04 | False | 0.975878 (tol 0.002) | -2.3e-16 | 112.1
+thick barrier width 3 nm (T tiny) | 2048 | 1.407200e-05 | 1.412437e-05 | 1.412466e-05 | 0.000e+00 | 5.24e-08 vs 1.00e-04 | True | 0.999992 (tol 0.002) | 4.0e-14 | 3.2
+thick barrier width 5 nm (T tiny) | 2048 | 7.133207e-07 | 1.602645e-06 | 1.602662e-06 | 0.000e+00 | 8.89e-07 vs 1.00e-04 | True | 0.999990 (tol 0.002) | 4.1e-14 | 2.8
+
+Reading: when P(k<0) is not negligible, the run's packet result agrees with the FULL reference and the run's
+own reference (normalised over k > 0 only) is wrong by the factor 1/(1 - P(k<0)); the check then fails on a
+legitimate input. For tiny T, the absolute part 1e-4 of the tolerance exceeds T itself: the check cannot detect
+an error of 100 % (any value in [0, 2T] passes).

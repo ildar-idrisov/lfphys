@@ -1,0 +1,5 @@
+hw=0.05 x0=15 exit=0 wall=16 s
+hw=0.05 x0=0.01 exit=0 wall=2 s
+hw=0.05 x0=60 exit=137 wall=125 s
+hw=1 x0=60: stopped by the reviewer after 24.5 min of wall time, still in the split-operator loop (100 % CPU, 70 MiB; dry run: 2.5e6 steps on 32768 points, then a 32768^2 dense Hamiltonian = 8.6 GB per array)
+hw=1 x0=60 exit=124 wall=1477 s

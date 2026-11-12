@@ -1,0 +1,6 @@
+LG_{0,1}, curvature printed (-): residual of i du/dz = -(1/2k) lap u: 6.86e-01
+LG_{0,1}, curvature opposite (+): residual of i du/dz = -(1/2k) lap u: 3.10e-10
+LG_{1,2}, curvature printed (-): residual of i du/dz = -(1/2k) lap u: 7.53e-01
+LG_{1,2}, curvature opposite (+): residual of i du/dz = -(1/2k) lap u: 3.75e-10
+LG_{2,-3}, curvature printed (-): residual of i du/dz = -(1/2k) lap u: 4.62e-01
+LG_{2,-3}, curvature opposite (+): residual of i du/dz = -(1/2k) lap u: 5.41e-10

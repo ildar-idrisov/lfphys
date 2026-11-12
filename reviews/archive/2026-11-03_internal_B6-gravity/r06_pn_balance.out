@@ -1,0 +1,55 @@
+q = 1.0, r0 = 20.0: 100 messages over t = 10..19810 m (x = 0.0500..0.0916; status running); failed: 0
+    t =      10.0  x = 0.0500  ratio = 0.862861  (ratio - 1)/x^2 =   -54.84  ok = True
+    t =    2810.0  x = 0.0521  ratio = 0.855829  (ratio - 1)/x^2 =   -53.13  ok = True
+    t =    5610.0  x = 0.0546  ratio = 0.846775  (ratio - 1)/x^2 =   -51.34  ok = True
+    t =    8410.0  x = 0.0578  ratio = 0.834701  (ratio - 1)/x^2 =   -49.46  ok = True
+    t =   11210.0  x = 0.0620  ratio = 0.817606  (ratio - 1)/x^2 =   -47.50  ok = True
+    t =   14010.0  x = 0.0677  ratio = 0.791206  (ratio - 1)/x^2 =   -45.50  ok = True
+    t =   16810.0  x = 0.0764  ratio = 0.744683  (ratio - 1)/x^2 =   -43.72  ok = True
+    t =   19810.0  x = 0.0916  ratio = 0.635207  (ratio - 1)/x^2 =   -43.47  ok = True
+q = 1.0, r0 = 12.0: 100 messages over t = 1..1981 m (x = 0.0833..0.0950; status running); failed: 0
+    t =       1.0  x = 0.0833  ratio = 0.502054  (ratio - 1)/x^2 =   -71.69  ok = True
+    t =     281.0  x = 0.0848  ratio = 0.492834  (ratio - 1)/x^2 =   -70.56  ok = True
+    t =     561.0  x = 0.0863  ratio = 0.479935  (ratio - 1)/x^2 =   -69.77  ok = True
+    t =     841.0  x = 0.0879  ratio = 0.466627  (ratio - 1)/x^2 =   -68.97  ok = True
+    t =    1121.0  x = 0.0896  ratio = 0.452483  (ratio - 1)/x^2 =   -68.25  ok = True
+    t =    1401.0  x = 0.0913  ratio = 0.437015  (ratio - 1)/x^2 =   -67.57  ok = True
+    t =    1681.0  x = 0.0931  ratio = 0.420352  (ratio - 1)/x^2 =   -66.92  ok = True
+    t =    1981.0  x = 0.0950  ratio = 0.401462  (ratio - 1)/x^2 =   -66.33  ok = True
+q = 1.0, r0 = 60.0: 100 messages over t = 100..198100 m (x = 0.0167..0.0175; status running); failed: 0
+    t =     100.0  x = 0.0167  ratio = 0.988593  (ratio - 1)/x^2 =   -41.06  ok = True
+    t =   28100.0  x = 0.0168  ratio = 0.988515  (ratio - 1)/x^2 =   -40.82  ok = True
+    t =   56100.0  x = 0.0169  ratio = 0.988435  (ratio - 1)/x^2 =   -40.58  ok = True
+    t =   84100.0  x = 0.0170  ratio = 0.988351  (ratio - 1)/x^2 =   -40.34  ok = True
+    t =  112100.0  x = 0.0171  ratio = 0.988264  (ratio - 1)/x^2 =   -40.09  ok = True
+    t =  140100.0  x = 0.0172  ratio = 0.988174  (ratio - 1)/x^2 =   -39.83  ok = True
+    t =  168100.0  x = 0.0174  ratio = 0.988080  (ratio - 1)/x^2 =   -39.58  ok = True
+    t =  198100.0  x = 0.0175  ratio = 0.987974  (ratio - 1)/x^2 =   -39.30  ok = True
+q = 0.1, r0 = 20.0: 100 messages over t = 10..19810 m (x = 0.0500..0.0557; status running); failed: 0
+    t =      10.0  x = 0.0500  ratio = 0.873726  (ratio - 1)/x^2 =   -50.50  ok = True
+    t =    2810.0  x = 0.0507  ratio = 0.871731  (ratio - 1)/x^2 =   -49.98  ok = True
+    t =    5610.0  x = 0.0514  ratio = 0.869556  (ratio - 1)/x^2 =   -49.45  ok = True
+    t =    8410.0  x = 0.0521  ratio = 0.867204  (ratio - 1)/x^2 =   -48.91  ok = True
+    t =   11210.0  x = 0.0529  ratio = 0.864651  (ratio - 1)/x^2 =   -48.37  ok = True
+    t =   14010.0  x = 0.0538  ratio = 0.861866  (ratio - 1)/x^2 =   -47.81  ok = True
+    t =   16810.0  x = 0.0547  ratio = 0.858815  (ratio - 1)/x^2 =   -47.24  ok = True
+    t =   19810.0  x = 0.0557  ratio = 0.855200  (ratio - 1)/x^2 =   -46.63  ok = True
+q = 1.0, r0 = 300.0: 100 messages over t = 100..198100 m (x = 0.0033..0.0033; status running); failed: 0
+    t =     100.0  x = 0.0033  ratio = 0.999594  (ratio - 1)/x^2 =   -36.55  ok = True
+    t =   28100.0  x = 0.0033  ratio = 0.999594  (ratio - 1)/x^2 =   -36.55  ok = True
+    t =   56100.0  x = 0.0033  ratio = 0.999594  (ratio - 1)/x^2 =   -36.55  ok = True
+    t =   84100.0  x = 0.0033  ratio = 0.999594  (ratio - 1)/x^2 =   -36.55  ok = True
+    t =  112100.0  x = 0.0033  ratio = 0.999594  (ratio - 1)/x^2 =   -36.55  ok = True
+    t =  140100.0  x = 0.0033  ratio = 0.999594  (ratio - 1)/x^2 =   -36.54  ok = True
+    t =  168100.0  x = 0.0033  ratio = 0.999594  (ratio - 1)/x^2 =   -36.54  ok = True
+    t =  198100.0  x = 0.0033  ratio = 0.999594  (ratio - 1)/x^2 =   -36.54  ok = True
+q = 0.05, r0 = 8.5: 100 messages over t = 2..2972 m (x = 0.1176..0.1130; status running); failed: 0
+    t =       1.5  x = 0.1176  ratio = -0.242834  (ratio - 1)/x^2 =   -89.80  ok = True
+    t =     421.5  x = 0.1166  ratio = -0.225881  (ratio - 1)/x^2 =   -90.17  ok = True
+    t =     841.5  x = 0.1157  ratio = -0.210754  (ratio - 1)/x^2 =   -90.41  ok = True
+    t =    1261.5  x = 0.1150  ratio = -0.197518  (ratio - 1)/x^2 =   -90.56  ok = True
+    t =    1681.5  x = 0.1144  ratio = -0.185793  (ratio - 1)/x^2 =   -90.61  ok = True
+    t =    2101.5  x = 0.1139  ratio = -0.175416  (ratio - 1)/x^2 =   -90.62  ok = True
+    t =    2521.5  x = 0.1134  ratio = -0.166197  (ratio - 1)/x^2 =   -90.64  ok = True
+    t =    2971.5  x = 0.1130  ratio = -0.157297  (ratio - 1)/x^2 =   -90.65  ok = True
+exit 0

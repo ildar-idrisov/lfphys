@@ -1,0 +1,11 @@
+run 20261111-181121-p97-63a3
+GET /sweeps/%C2%B2 -> 404
+GET /sweeps/%D9%A1 -> 404
+GET /sweeps/..%2F..%2Fx -> 404
+GET /sweeps/1 -> 404
+DELETE /sweeps/%C2%B2 -> 500
+DELETE /sweeps/%D9%A1 -> 404
+DELETE /sweeps/..%2F..%2Fx -> 404
+DELETE /sweeps/1 -> 404
+GET /series?ids=E&world=..%2F -> {"error": "«world» — номер мира (целое число)"} 400
+GET /api/runs/..%2F..%2Fetc/series -> 404

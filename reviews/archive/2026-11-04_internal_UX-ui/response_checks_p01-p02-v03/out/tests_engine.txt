@@ -1,0 +1,18 @@
+.............................................................s.......... [ 17%]
+............................................ss.......................... [ 34%]
+........................................................................ [ 51%]
+........................................................................ [ 68%]
+........................................................................ [ 85%]
+.............................................................            [100%]
+============================= slowest 10 durations =============================
+68.75s call     tests/test_schrodinger_nd.py::test_hydrogen_3d_converges_to_the_bohr_levels
+50.60s call     tests/test_schrodinger_nd.py::test_aharonov_bohm_flux_quantum_changes_nothing
+39.00s call     tests/test_nbody.py::test_pythagorean_outcome_binary_and_escape
+35.11s call     tests/test_nbody.py::test_symplectic_energy_bounded_over_ten_thousand_orbits
+33.09s call     tests/test_nbody.py::test_periodic_energy_without_secular_drift_and_its_two_negative_controls
+25.47s call     tests/test_quantum_scene.py::test_aharonov_bohm_shift_of_the_fringes
+24.08s call     tests/test_nbody.py::test_secular_drift_is_set_by_the_symmetrization_tolerance
+23.72s call     tests/test_nbody.py::test_pythagorean_close_approaches_against_szebehely_peters
+23.65s call     tests/test_quantum_scene.py::test_path_marker_turns_as_the_transfer_matrices_say
+21.58s call     tests/test_quantum_scene.py::test_double_slit_far_field_approaches_fraunhofer
+418 passed, 3 skipped in 633.95s (0:10:33)

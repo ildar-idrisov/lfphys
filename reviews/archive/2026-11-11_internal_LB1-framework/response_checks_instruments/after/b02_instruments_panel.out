@@ -1,0 +1,14 @@
+{"scroller":"right"}
+{"name":"ticking a quantity with the keyboard keeps the focus on it","ok":true,"before":"o10.x","after":"INPUT o10.x"}
+{"name":"ticking a quantity keeps a folded group folded","ok":true,"active":"INPUT o10.x","worldOpen":false}
+{"name":"ticking a quantity keeps the column's scroll","ok":false,"before":{"top":969,"h":1684},"after":{"top":383,"h":1823}}
+{"name":"the sweep form keeps the values typed after folding and opening it","ok":true,"kept":"1; 2; 3"}
+{"name":"«Сейчас» for the position of o1 shows where it is (not the stored parameter)","ok":false,"position_now":-0.7462890699448648}
+{"estimate":"≈ 48 с счёта: 40 знач. × (восстановление 0,1 с + 300 с мира × 3,52 мс за 1 с + 201 замер × 0,08 мс); предел 10 мин. Оценка — по цене счёта этого мира, пока он играл (44 кадров записи); свип проверит её сам и остановится, если выйдет дороже 15 мин"}
+{"name":"a running sweep keeps the column's scroll across its polls","ok":true,"before":{"top":1678,"h":2393},"after":{"top":1678,"h":2693},"state":"Свип № 1: считается ✕ отменитьудалить"}
+{"name":"a running sweep updates its table in place (the nodes kept)","ok":true,"table":true,"canvas":true,"state":"Свип № 1: считается ✕ отменитьудалить"}
+{"name":"the result states the base moment","ok":true,"head":["закон «Жёсткость пружины» → Полная энергия, максимум по 201 замеру через 1,5 с; каждое значение — 300 с мира от t = 2,95547 с","","40 из 40 значений · 7 с · осталось ≈ 0 с","Готово: измерено 40 из 40 значений"],"estimate":"≈ 48 с счёта: 40 знач. × (восстановление 0,1 с + 300 с мира × 3,52 мс за 1 с + 201 замер × 0,08 мс); предел 10 мин. Оценка — по цене счёта этого мира, пока он играл (44 кадров записи); свип проверит её сам и остановится, если выйдет дороже 15 мин"}
+{"name":"the result states the sampling (how many readings a «максимум» is taken over)","ok":true,"head":["закон «Жёсткость пружины» → Полная энергия, максимум по 201 замеру через 1,5 с; каждое значение — 300 с мира от t = 2,95547 с","","40 из 40 значений · 7 с · осталось ≈ 0 с","Готово: измерено 40 из 40 значений"]}
+{"name":"the CSV of the table states the base moment and the sampling","ok":true,"first_line":"# свип № 1 запуска 20261112-063400-p97-ad1b: закон «Жёсткость пружины» → Полная энергия (максимум по 201 замеру через 1,5 с)\r"}
+{"name":"no page errors","ok":true,"errs":[]}
+2 failed

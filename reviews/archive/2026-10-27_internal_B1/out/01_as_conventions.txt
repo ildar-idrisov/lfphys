@@ -1,0 +1,25 @@
+(a) grid convention of propagate_slice at an absolute position; Gaussian w = 1.2, centred at (0.31, -0.17)
+  n=64 pad=1: max|slice(x=0) - volume[x index n//2]| = 1.24e-16;  |slice - ref| at y=+0.333: 1.93e-07;  |volume - ref|: 1.93e-07
+  n=64 pad=2: max|slice(x=0) - volume[x index n//2]| = 1.24e-16;  |slice - ref| at y=+0.333: 3.16e-08;  |volume - ref|: 3.16e-08
+  n=65 pad=1: max|slice(x=0) - volume[x index n//2]| = 2.29e-16;  |slice - ref| at y=+0.333: 1.27e-07;  |volume - ref|: 1.27e-07
+  n=65 pad=2: max|slice(x=0) - volume[x index n//2]| = 4.11e-02;  |slice - ref| at y=+0.333: 3.57e-02;  |volume - ref|: 9.60e-09
+
+(b) slice between nodes against the independent reference (n = 64, pad = 2)
+  at = 0.4 + 0.00 dx: max error over 3 points = 3.35e-08
+  at = 0.4 + 0.25 dx: max error over 3 points = 2.93e-08
+  at = 0.4 + 0.50 dx: max error over 3 points = 2.40e-08
+  at = 0.4 + 0.77 dx: max error over 3 points = 1.74e-08
+
+(c) slice between nodes, sharp edge (slit |x| <= 1, 8x8 sub-pixel coverage as v08), z = 0 and z = 0.25 lambda
+  z=0.00 at= 0.125: |U| on the y = 0 line: grid n 1.0024, grid 2n 1.0000  (difference 2.42e-03)
+  z=0.00 at= 1.125: |U| on the y = 0 line: grid n 0.1806, grid 2n 0.0000  (difference 1.81e-01)
+  z=0.00 at= 1.375: |U| on the y = 0 line: grid n 0.0296, grid 2n 0.0000  (difference 2.96e-02)
+  z=0.25 at= 0.125: |U| on the y = 0 line: grid n 0.9771, grid 2n 0.9682  (difference 1.06e-02)
+  z=0.25 at= 1.125: |U| on the y = 0 line: grid n 0.2977, grid 2n 0.2950  (difference 2.70e-02)
+  z=0.25 at= 1.375: |U| on the y = 0 line: grid n 0.1109, grid 2n 0.1180  (difference 1.88e-02)
+  z=1.00 at= 0.125: |U| on the y = 0 line: grid n 1.1753, grid 2n 1.1891  (difference 1.43e-02)
+  z=1.00 at= 1.125: |U| on the y = 0 line: grid n 0.4471, grid 2n 0.4558  (difference 8.92e-03)
+  z=1.00 at= 1.375: |U| on the y = 0 line: grid n 0.3023, grid 2n 0.3128  (difference 1.20e-02)
+
+(d) negative z with evanescent content (the slit above, z = -1 lambda)
+  max|U(z=-1)| = 8.842e+02 (|U(0)| <= 1); no error raised

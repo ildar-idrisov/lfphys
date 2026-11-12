@@ -1,0 +1,4 @@
+terrell : header reports cpu (size 936: авто: задача 936 меньше порога 786432); the image itself: cpu (size 147456: авто: задача 147456 меньше порога 786432)
+city    : header reports cpu (size 9900: авто: задача 9900 меньше порога 786432); the image itself: gpu (size 1622016: авто: задача 1622016 ≥ порога 786432)
+sky     : header reports cpu (size 51200: авто: задача 51200 меньше порога 786432); the image itself: cpu (size 51200: авто: задача 51200 меньше порога 786432)
+train   : header reports cpu (size 5642: авто: задача 5642 меньше порога 786432); the image itself: cpu (size 638976: авто: задача 638976 меньше порога 786432)

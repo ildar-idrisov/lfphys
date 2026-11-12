@@ -1,0 +1,30 @@
+  TE eta = 0.8: N =   8 (9152 unknowns, 0 s): T = 0.316260
+  TE eta = 0.8: N =  16 (36608 unknowns, 0 s): T = 0.287396
+  TE eta = 0.8: N =  32 (146432 unknowns, 2 s): T = 0.273743
+  TE eta = 0.8: N =  64 (585728 unknowns, 25 s): T = 0.267104
+TE eta = 0.8: FDFD extrapolated 0.2608 (observed order 1.04; with order 1: 0.2605); engine 0.2606 (engine/FDFD - 1 = -0.09%); Libelo-Bombardt 0.2923 (LB/FDFD - 1 = +12.07%)
+  TE eta = 1.0: N =   8 (6336 unknowns, 0 s): T = 0.648003
+  TE eta = 1.0: N =  16 (24708 unknowns, 0 s): T = 0.595339
+  TE eta = 1.0: N =  32 (97572 unknowns, 1 s): T = 0.570029
+  TE eta = 1.0: N =  64 (390288 unknowns, 10 s): T = 0.557630
+TE eta = 1.0: FDFD extrapolated 0.5457 (observed order 1.03; with order 1: 0.5452); engine 0.5454 (engine/FDFD - 1 = -0.06%); Libelo-Bombardt 0.6012 (LB/FDFD - 1 = +10.17%)
+  TE eta = 1.5: N =   8 (3072 unknowns, 0 s): T = 1.263089
+  TE eta = 1.5: N =  16 (11844 unknowns, 0 s): T = 1.223859
+  TE eta = 1.5: N =  32 (47376 unknowns, 0 s): T = 1.203563
+  TE eta = 1.5: N =  64 (189504 unknowns, 2 s): T = 1.193205
+TE eta = 1.5: FDFD extrapolated 1.1824 (observed order 0.97; with order 1: 1.1828); engine 1.1827 (engine/FDFD - 1 = +0.03%); Libelo-Bombardt 1.2307 (LB/FDFD - 1 = +4.08%)
+  TE eta = 2.0: N =   8 (1872 unknowns, 0 s): T = 1.213459
+  TE eta = 2.0: N =  16 (7488 unknowns, 0 s): T = 1.199500
+  TE eta = 2.0: N =  32 (29252 unknowns, 0 s): T = 1.192052
+  TE eta = 2.0: N =  64 (115620 unknowns, 1 s): T = 1.188199
+TE eta = 2.0: FDFD extrapolated 1.1841 (observed order 0.95; with order 1: 1.1843); engine 1.1843 (engine/FDFD - 1 = +0.02%); Libelo-Bombardt 1.2061 (LB/FDFD - 1 = +1.86%)
+  TM eta = 0.8: N =   8 (9152 unknowns, 0 s): T = 0.975540
+  TM eta = 0.8: N =  16 (36608 unknowns, 0 s): T = 0.994925
+  TM eta = 0.8: N =  32 (146432 unknowns, 1 s): T = 1.004615
+  TM eta = 0.8: N =  64 (585728 unknowns, 26 s): T = 1.009461
+TM eta = 0.8: FDFD extrapolated 1.0143 (observed order 1.00; with order 1: 1.0143); engine 1.0143 (engine/FDFD - 1 = -0.00%)
+  TM eta = 1.5: N =   8 (3072 unknowns, 0 s): T = 0.938038
+  TM eta = 1.5: N =  16 (11844 unknowns, 0 s): T = 0.960353
+  TM eta = 1.5: N =  32 (47376 unknowns, 0 s): T = 0.971482
+  TM eta = 1.5: N =  64 (189504 unknowns, 3 s): T = 0.977050
+TM eta = 1.5: FDFD extrapolated 0.9826 (observed order 1.00; with order 1: 0.9826); engine 0.9826 (engine/FDFD - 1 = -0.00%)

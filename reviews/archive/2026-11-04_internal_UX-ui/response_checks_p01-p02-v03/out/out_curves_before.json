@@ -1,0 +1,23 @@
+[
+ {
+  "tag": "before",
+  "name": "inner_x1",
+  "run": "20261105-002442-p01-577f",
+  "speed": "1 лет / с",
+  "logs": []
+ },
+ {
+  "tag": "before",
+  "name": "inner_x10",
+  "run": "20261105-002453-p01-9e17",
+  "speed": "10 лет / с",
+  "logs": []
+ },
+ {
+  "tag": "before",
+  "name": "hole_x1",
+  "run": "20261105-002504-p01-a15f",
+  "speed": "1 лет / с",
+  "logs": []
+ }
+]

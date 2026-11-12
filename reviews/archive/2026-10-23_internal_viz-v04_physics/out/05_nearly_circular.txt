@@ -1,0 +1,50 @@
+GR, r0 = 20 M:
+params {'r0': 20.0, 'speed': 1.0, 'angle': 0.0} boost None: kind circular, r_peri 20.0, r_apo 20.0
+   all checks pass; 6 checks
+   errors: []
+params {'r0': 20.0, 'speed': 1.0000001, 'angle': 0.0} boost None: kind circular, r_peri 20.0, r_apo np.float64(20.00000000526117)
+   FAILING: ('s0.rate', 'dτ/dt на круговой орбите: Δτ/Δt по орбите ↔ √(1 − 3M/r)', 0.9219544667522536, 0.9219544457292888, 2.2802606908417623e-08, 1e-10, None)
+   FAILING: ('s0.period', 'Период обращения (t) ↔ 2π√(r³/GM) (точно для круговой геодез', 0.02768053982348197, 0.0276805290932785, 3.8764444986301597e-07, 1e-10, None)
+   FAILING: ('s0.circ2', 'Вторая схема: отклонение r от r₀ за оборот', 5.142858167772602e-07, None, None, 1e-09, False)
+   errors: []
+params {'r0': 20.0, 'speed': 1.0000002, 'angle': 0.0} boost None: kind circular, r_peri 20.0, r_apo np.float64(20.0000000001044)
+   FAILING: ('s0.rate', 'dτ/dt на круговой орбите: Δτ/Δt по орбите ↔ √(1 − 3M/r)', 0.9219544920063284, 0.9219544457292888, 5.019449698316129e-08, 1e-10, None)
+   FAILING: ('s0.period', 'Период обращения (t) ↔ 2π√(r³/GM) (точно для круговой геодез', 0.027680552713269677, 0.0276805290932785, 8.533070700574447e-07, 1e-10, None)
+   FAILING: ('s0.circ2', 'Вторая схема: отклонение r от r₀ за оборот', 1.0285719309166553e-06, None, None, 1e-09, False)
+   errors: []
+params {'r0': 20.0, 'speed': 0.9999998, 'angle': 0.0} boost None: kind circular, r_peri np.float64(19.999999998271086), r_apo 20.0
+   FAILING: ('s0.rate', 'dτ/dt на круговой орбите: Δτ/Δt по орбите ↔ √(1 − 3M/r)', 0.9219543994522498, 0.9219544457292888, -5.019449626063772e-08, 1e-10, None)
+   FAILING: ('s0.period', 'Период обращения (t) ↔ 2π√(r³/GM) (точно для круговой геодез', 0.02768050547332201, 0.0276805290932785, -8.533058167938255e-07, 1e-10, None)
+   FAILING: ('s0.circ2', 'Вторая схема: отклонение r от r₀ за оборот', 1.0285707359614093e-06, None, None, 1e-09, False)
+   errors: []
+
+GR, bh_isco preset (6.2 M) with a tiny boost:
+params {} boost 1e-09: kind circular, r_peri np.float64(6.199999859454296), r_apo np.float64(6.20000065636954)
+   FAILING: ('s1.rate', 'dτ/dt на круговой орбите: Δτ/Δt по орбите ↔ √(1 − 3M/r)', 0.7184212232758749, 0.7184212081070999, 2.1114041237462215e-08, 1e-10, None)
+   FAILING: ('s1.period', 'Период обращения (t) ↔ 2π√(r³/GM) (точно для круговой геодез', 0.0047776788891284476, 0.00477767856632491, 6.756493407652594e-08, 1e-10, None)
+   FAILING: ('s1.circ2', 'Вторая схема: отклонение r от r₀ за оборот', 2.402309247586233e-08, None, None, 1e-09, False)
+   errors: []
+params {} boost 1e-07: kind bound, r_peri np.float64(5.636320598991078), r_apo np.float64(6.200000000907318)
+   FAILING: ('s1.r_apo', 'Апоцентр: r в событии du/dφ = 0 по орбите ↔ корень f(u) (точ', 6.200052076055417, 6.200052109124176, -5.333625881884626e-09, 1.887278866504422e-09, None)
+   errors: []
+params {} boost -2e-07: kind escape, r_peri np.float64(6.1999999989553505), r_apo None
+   all checks pass; 0 checks
+   errors: []
+
+Newton, r0 = 50 M:
+params {'gravity': 'newton', 'r0': 50.0, 'speed': 1.0, 'angle': 0.0} boost None: kind circular, r_peri np.float64(50.0), r_apo np.float64(50.0)
+   all checks pass; 3 checks
+   errors: []
+params {'gravity': 'newton', 'r0': 50.0, 'speed': 1.0000001, 'angle': 0.0} boost None: kind circular, r_peri np.float64(50.00000000399769), r_apo np.float64(50.00001999600732)
+   FAILING: ('s0.period', 'Период обращения ↔ 2π√(r³/GM) (Кеплер)', 0.10941693129179708, 0.10941689846664436, 3.0000076022048653e-07, 1e-08, None)
+   errors: []
+params {'gravity': 'newton', 'r0': 50.0, 'speed': 1.0000004, 'angle': 0.0} boost None: kind circular, r_peri np.float64(49.99999999864635), r_apo np.float64(50.000080001433666)
+   FAILING: ('s0.period', 'Период обращения ↔ 2π√(r³/GM) (Кеплер)', 0.10941702976715366, 0.10941689846664436, 1.2000021124567377e-06, 1e-08, None)
+   errors: []
+
+GR, r0 = 20 M, launch 1e-5 deg off the tangent (circular speed):
+params {'r0': 20.0, 'speed': 1.0, 'angle': 1e-05} boost None: kind circular, r_peri np.float64(19.999996054355567), r_apo np.float64(20.00000394572859)
+   FAILING: ('s0.rate', 'dτ/dt на круговой орбите: Δτ/Δt по орбите ↔ √(1 − 3M/r)', 0.9219544482977274, 0.9219544457292888, 2.785862897951449e-09, 1e-10, None)
+   FAILING: ('s0.period', 'Период обращения (t) ↔ 2π√(r³/GM) (точно для круговой геодез', 0.02768053040421961, 0.0276805290932785, 4.735968406496987e-08, 1e-10, None)
+   FAILING: ('s0.circ2', 'Вторая схема: отклонение r от r₀ за оборот', 1.9790171528200063e-07, None, None, 1e-09, False)
+   errors: []

@@ -1,0 +1,4 @@
+t in (0, 1] s: cell Re max 10.931, fraction of samples above 10: 0.57
+t in (1, 4] s: cell Re max 11.200, fraction of samples above 10: 1.00
+t in (4, 7] s: cell Re max 11.243, fraction of samples above 10: 1.00
+t in (7, 11] s: cell Re max 11.237, fraction of samples above 10: 1.00

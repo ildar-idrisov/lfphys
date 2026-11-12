@@ -1,0 +1,3 @@
+backend {'kernels': {}, 'crossover': {}}
+{'source': 'circle'} refused: окно расчёта мало для глубины z_max = 30 мкм: свет, ушедший под большими углами, возвращае 11.3 s used {'check': {'device': 'gpu', 'precision': 'fp64', 'reason': 'авто: задача 16777216 ≥ порога 16384', 'size': 16777216}}
+{'source': 'circle', 'a': 3.0, 'zmax': 40.0} built 2.6 s used {'check': {'device': 'gpu', 'precision': 'fp64', 'reason': 'авто: задача 4194304 ≥ порога 16384', 'size': 4194304}, 'drawn': {'device': 'gpu', 'precision': 'fp64', 'reason': 'авто: задача 4194304 ≥ порога 16384', 'size': 4194304}}

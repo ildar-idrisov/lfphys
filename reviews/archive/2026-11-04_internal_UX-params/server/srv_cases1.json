@@ -1,0 +1,5 @@
+[{"name": "v13_super_l2_0_crash", "viz": "v13_hydrogen_3d", "params": {"mode": "super", "l2": 0}, "build_wait": 8, "ops": [["play", 3]], "end_wait": 3},
+ {"name": "v13_super_default_refused", "viz": "v13_hydrogen_3d", "params": {"mode": "super"}, "build_wait": 5},
+ {"name": "v06_rg_failed", "viz": "v06_qcd", "preset": "strong", "params": {"alpha_mz": 0.1389, "mu": 10000.0, "system": "bottom", "kappa": 0.655}, "build_wait": 8},
+ {"name": "v01_andromeda_walk_faster_than_c", "viz": "v01_light_travel", "params": {"scenario": "andromeda", "c_factor": 0.5, "an_walk": 2e8}, "build_wait": 5},
+ {"name": "v01_ether_from_defaults", "viz": "v01_light_travel", "params": {"kinematics": "ether"}, "build_wait": 5}]

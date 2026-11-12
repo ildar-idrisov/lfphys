@@ -1,0 +1,4 @@
+#!/bin/sh
+# [root path fixed after archiving, 2026-11-12, by the integrator's assistant: reviews/ -> reviews/archive/]
+# usage: runb.sh <script.mjs> [name]
+docker run --rm -e TARGET -e VALUES -e DUR -e VIZ -e PRESET -e W -e H -e WORLDS --name lf-lbrx-pw-${2:-x} --init --shm-size=2g --memory=4g --network host -v /tmp/claude-1000/-home-ildar-hdd/2d877fb3-83c1-460d-af16-9ddd26aff08b/scratchpad/lbrx/pw:/pw -v /home/ildar/hdd/projects/i/light-funnel/engine/reviews/archive/2026-11-11_internal_LB1-p02-ux:/rev:ro -v /tmp/claude-1000/-home-ildar-hdd/2d877fb3-83c1-460d-af16-9ddd26aff08b/scratchpad/lbrx/shots:/shots -v /tmp/claude-1000/-home-ildar-hdd/2d877fb3-83c1-460d-af16-9ddd26aff08b/scratchpad/lbrx/logs:/logs -e OUT=/shots -e LOG=/logs/${1%.mjs}.log -e PORT=8603 -w /pw mcr.microsoft.com/playwright:v1.58.2-jammy sh -c "cp /rev/b_lib.mjs /rev/$1 /pw/ && node /pw/$1"

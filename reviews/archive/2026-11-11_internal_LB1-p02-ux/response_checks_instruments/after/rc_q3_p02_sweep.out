@@ -1,0 +1,6 @@
+measurables (from the refusal): нет измеряемой величины «__list__» (есть: absorbed, norm, o2.P, o2.P.o4, o2.in, o2.n, o3.F, o3.J, o3.J.o4, o4.E, o4.absorbed, o4.kx, o4.ky, o4.norm, o4.sx, o4.sy, o4.sz, o4.v, o4.x, o4.y, regrid)
+measure absorbed | estimate: {"n_values": 3, "n_readings": 1, "duration": 5e-15, "budget_s": 600.0, "restore_s": 0.05, "sample_ms": 283.04, "ms_per_t": 9.208852370383534e+16, "frames_measured": 10, "known": true, "per_value_s": 0.7934826185191768, "total_s": 5.380447855557531, "text": "≈ 5,4 с счёта: 3 знач. × (восстановление 0,1 с + 5 фс мира × 9,21e+16 мс за 1 с + 1 замер × 283 мс); предел 10 мин. Оценка — по цене счёта это
+start: {'n': 1, 'state': 'starting', 'error': None, 'hint': None}
+state: done | message: Готово: измерено 3 из 3 значений
+results: [(76.0, 1.441173902573198e-08, ''), (80.0, 1.3312123893346834e-08, ''), (84.0, 1.567853608805508e-08, '')]
+sampler: measure

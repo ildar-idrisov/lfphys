@@ -1,0 +1,23 @@
+### 1. container without --gpus
+env: LFPHYS_NO_GPU = None | HOME = /home/lf | CUDA_VISIBLE_DEVICES = None
+gpu: {'available': False, 'reason': 'CUDARuntimeError: cudaErrorInsufficientDriver: CUDA driver version is insufficient for CUDA runtime version'}
+configure(device = gpu) notes: []
+header backend.notes: []
+header backend.used: {'device': 'cpu', 'precision': 'fp64', 'reason': 'GPU недоступен: CUDARuntimeError: cudaErrorInsufficientDriver: CUDA driver version is insufficient for CUDA runtime version', 'size': 1048576}
+failed checks: [] | errors: []
+
+### 2. GPU 0 given, LFPHYS_NO_GPU=1
+env: LFPHYS_NO_GPU = 1 | HOME = /home/lf | CUDA_VISIBLE_DEVICES = None
+gpu: {'available': False, 'reason': 'отключено переменной LFPHYS_NO_GPU'}
+configure(device = gpu) notes: []
+header backend.notes: []
+header backend.used: {'device': 'cpu', 'precision': 'fp64', 'reason': 'GPU недоступен: отключено переменной LFPHYS_NO_GPU', 'size': 1048576}
+failed checks: [] | errors: []
+
+### 3. GPU 0 given, user 1234:1234 (no passwd entry, HOME=/)
+env: LFPHYS_NO_GPU = None | HOME = / | CUDA_VISIBLE_DEVICES = None
+gpu: {'available': False, 'reason': "PermissionError: [Errno 13] Permission denied: '/.cupy'"}
+configure(device = gpu) notes: []
+header backend.notes: []
+header backend.used: {'device': 'cpu', 'precision': 'fp64', 'reason': "GPU недоступен: PermissionError: [Errno 13] Permission denied: '/.cupy'", 'size': 1048576}
+failed checks: [] | errors: []

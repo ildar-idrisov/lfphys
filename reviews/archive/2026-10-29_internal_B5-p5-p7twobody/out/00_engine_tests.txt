@@ -1,0 +1,19 @@
+........................................................................ [ 66%]
+.....................................                                    [100%]
+============================= slowest 15 durations =============================
+5.96s call     tests/test_pn_binary.py::test_quasi_circular_inspiral_follows_eq_227a_and_stops
+1.82s call     tests/test_pn_binary.py::test_reaction_at_3p5pn_gives_the_1pn_eccentric_flux[0.5-0.1]
+1.79s call     tests/test_pn_binary.py::test_reaction_at_3p5pn_gives_the_1pn_eccentric_flux[0.5-0.25]
+1.77s call     tests/test_open_systems.py::test_waiting_times_follow_the_closed_form_distribution
+1.76s call     tests/test_pn_binary.py::test_periastron_advance_and_mean_motion_are_gauge_invariant_closed_forms[0.5-0.1]
+1.71s call     tests/test_pn_binary.py::test_periastron_advance_and_mean_motion_are_gauge_invariant_closed_forms[0.5-0.25]
+1.42s call     tests/test_pn_binary.py::test_reaction_at_3p5pn_gives_the_1pn_eccentric_flux[0.75-0.1]
+1.33s call     tests/test_pn_binary.py::test_reaction_at_3p5pn_gives_the_1pn_eccentric_flux[0.75-0.25]
+1.29s call     tests/test_pn_binary.py::test_periastron_advance_and_mean_motion_are_gauge_invariant_closed_forms[0.75-0.1]
+1.24s call     tests/test_pn_binary.py::test_periastron_advance_and_mean_motion_are_gauge_invariant_closed_forms[0.75-0.25]
+1.15s call     tests/test_pn_binary.py::test_reaction_at_3p5pn_gives_the_1pn_eccentric_flux[0.95-0.25]
+1.14s call     tests/test_pn_binary.py::test_reaction_at_3p5pn_gives_the_1pn_eccentric_flux[0.95-0.1]
+1.07s call     tests/test_pn_binary.py::test_periastron_advance_and_mean_motion_are_gauge_invariant_closed_forms[0.95-0.25]
+1.04s call     tests/test_pn_binary.py::test_periastron_advance_and_mean_motion_are_gauge_invariant_closed_forms[0.95-0.1]
+0.93s call     tests/test_open_systems.py::test_adaptive_magnus_meets_its_stated_error
+109 passed in 33.47s

@@ -1,0 +1,6 @@
+A. external flash, rod along x: engine value vs hand-made events vs checks.one_way_speed
+  140 configurations; max rel |engine/hand - 1| = 2.2e-13; max rel |checks.py/hand - 1| = 1.2e-13
+B. own-light round trip: checks.round_trip_speed vs hand-made
+  max rel |checks.py/hand - 1| = 2.2e-16
+C. Doppler closed forms (checks.doppler_ratio) vs hand-made pulse arrival intervals
+  max rel |checks.py/hand - 1| = 1.1e-15

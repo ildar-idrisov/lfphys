@@ -1,0 +1,12 @@
+=== (b) outlet pressure 10 Pa in the DFG-size world (u_max 0.45 m/s) ===
+pressure scale c_s^2 rho (dx/dt)^2 = 20.25 Pa
+accepted; the outlet's lattice density: 1.4938271604938271
+the first advance blew up: счёт неустойчив к t = 0.041056 с (популяции нечисловые или вне |f| < 1.5); последнее здоровое состояние (t = 0 с): Ma_max = 0, τ+ = 0.577, Re ячейки = 0 (предел 10); состояние восстановлено на начало вызова (t = 0 с). Уменьшите скорость или dx, увеличьте вязкость
+outlet 1.0 Pa: after 1 s density range [1.0493, 1.0978], Mach 0.0511 (declared 0.1); checks failing: ['compressibility']
+outlet 2.0 Pa: after 1 s density range [1.0943, 1.1994], Mach 0.0836 (declared 0.1); checks failing: ['compressibility']
+
+=== (a) the airfoil preset ===
+grid 512 x 205, dx = 0.003906 m, dt = 0.0001879 s, chord 102.4 cells, solid nodes 860, Re = 400
+ran to t = 6.02 s; cell Re max 7.35 (limit 10), first above the limit at t = None; Mach max 0.157
+shown C_x over the last 2 s: 0.1703 ... 0.3245; C_y: 0.3188 ... 0.4085
+final checks: {'mass': True, 'momentum': True, 'mach': True, 're_cell': True, 'compressibility': True, 'dye': True}

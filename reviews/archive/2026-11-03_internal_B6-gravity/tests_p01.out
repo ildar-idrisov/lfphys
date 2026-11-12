@@ -1,0 +1,19 @@
+..s...........                                                           [100%]
+============================= slowest 15 durations =============================
+3.38s call     visualizations/p01_gravity/tests/test_p01_gravity.py::test_the_pythagorean_problem_keeps_its_energy_through_close_encounters
+3.13s call     visualizations/p01_gravity/tests/test_p01_gravity.py::test_every_preset_builds_and_keeps_its_conservation_laws[hole_stars]
+1.51s call     visualizations/p01_gravity/tests/test_p01_gravity.py::test_every_preset_builds_and_keeps_its_conservation_laws[inner]
+0.55s call     visualizations/p01_gravity/tests/test_p01_gravity.py::test_the_binary_loses_energy_as_its_waves_carry_it_away
+0.41s call     visualizations/p01_gravity/tests/test_p01_gravity.py::test_every_preset_builds_and_keeps_its_conservation_laws[sun_earth]
+0.40s call     visualizations/p01_gravity/tests/test_p01_gravity.py::test_every_preset_builds_and_keeps_its_conservation_laws[pn_eccentric]
+0.39s call     visualizations/p01_gravity/tests/test_p01_gravity.py::test_every_preset_builds_and_keeps_its_conservation_laws[pn_inspiral]
+0.34s call     visualizations/p01_gravity/tests/test_p01_gravity.py::test_without_radiation_reaction_the_energy_is_conserved
+0.33s call     visualizations/p01_gravity/tests/test_p01_gravity.py::test_a_change_applies_at_the_current_moment_and_a_collision_merges
+0.19s call     visualizations/p01_gravity/tests/test_p01_gravity.py::test_a_planet_on_a_circular_orbit_gets_keplers_speed_and_keeps_its_radius
+0.17s call     visualizations/p01_gravity/tests/test_p01_gravity.py::test_clocks_near_the_hole_against_their_closed_forms
+0.17s call     visualizations/p01_gravity/tests/test_p01_gravity.py::test_every_preset_builds_and_keeps_its_conservation_laws[kerr_orbits]
+0.14s call     visualizations/p01_gravity/tests/test_p01_gravity.py::test_the_scene_file_restores_bodies_where_they_were
+
+(2 durations < 0.005s hidden.  Use -vv to show these durations.)
+13 passed, 1 skipped in 11.86s
+exit 0

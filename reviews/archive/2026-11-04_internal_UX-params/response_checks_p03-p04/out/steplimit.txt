@@ -1,0 +1,18 @@
+d=2 delta=0.05 T=6963 K seed=1 max|dE|/(N kT)=0.379 crash=FloatingPointError: two interacting particles at the same point
+d=2 delta=0.05 T=6963 K seed=2 max|dE|/(N kT)=0.322 crash=FloatingPointError: two interacting particles at the same point
+d=2 delta=0.05 T=6963 K seed=3 max|dE|/(N kT)=1.01e+28 crash=FloatingPointError: two interacting particles at the same point
+d=2 delta=0.1 T=2.785e+04 K seed=1 max|dE|/(N kT)=0 crash=FloatingPointError: two interacting particles at the same point
+d=2 delta=0.1 T=2.785e+04 K seed=2 max|dE|/(N kT)=1.23e+33 crash=FloatingPointError: two interacting particles at the same point
+d=2 delta=0.1 T=2.785e+04 K seed=3 max|dE|/(N kT)=0 crash=FloatingPointError: two interacting particles at the same point
+d=2 delta=0.19 T=1.005e+05 K seed=1 max|dE|/(N kT)=0 crash=FloatingPointError: two interacting particles at the same point
+d=2 delta=0.19 T=1.005e+05 K seed=2 max|dE|/(N kT)=0 crash=FloatingPointError: two interacting particles at the same point
+d=2 delta=0.19 T=1.005e+05 K seed=3 max|dE|/(N kT)=0 crash=FloatingPointError: two interacting particles at the same point
+d=3 delta=0.05 T=4642 K seed=1 max|dE|/(N kT)=0.0187 crash=None
+d=3 delta=0.05 T=4642 K seed=2 max|dE|/(N kT)=0.00186 crash=None
+d=3 delta=0.05 T=4642 K seed=3 max|dE|/(N kT)=0.0162 crash=None
+d=3 delta=0.1 T=1.857e+04 K seed=1 max|dE|/(N kT)=1.32e+25 crash=None
+d=3 delta=0.1 T=1.857e+04 K seed=2 max|dE|/(N kT)=1.12e+33 crash=None
+d=3 delta=0.1 T=1.857e+04 K seed=3 max|dE|/(N kT)=9.05e+14 crash=FloatingPointError: two interacting particles at the same point
+d=3 delta=0.19 T=6.703e+04 K seed=1 max|dE|/(N kT)=3.84e+15 crash=FloatingPointError: two interacting particles at the same point
+d=3 delta=0.19 T=6.703e+04 K seed=2 max|dE|/(N kT)=2.04e+25 crash=None
+d=3 delta=0.19 T=6.703e+04 K seed=3 max|dE|/(N kT)=2.53e+24 crash=FloatingPointError: two interacting particles at the same point

@@ -1,0 +1,18 @@
+== 1. lambda from the kinetic energy: engine vs 50-digit reference ==
+  neutron  E_k = 0.0002045 eV: lambda = 2.000051e-09 m, rel. error vs 50 digits = +9.27e-17
+  neutron  E_k = 0.025 eV: lambda = 1.808914e-10 m, rel. error vs 50 digits = +7.42e-17
+  c60      E_k = 0.1498 eV: lambda = 2.765952e-12 m, rel. error vs 50 digits = -4.68e-17
+  he4      E_k = 0.02 eV: lambda = 1.015255e-10 m, rel. error vs 50 digits = -7.43e-17
+  electron E_k = 5e+04 eV: lambda = 5.355307e-12 m, rel. error vs 50 digits = -1.72e-16
+  electron E_k = 1 eV: lambda = 1.226425e-09 m, rel. error vs 50 digits = +1.24e-17
+
+== 2. the run's own wavelength check for a slow neutron given by kinetic energy ==
+  check 'lam': value 2.00005147 nm, ref 2.00005147 nm, rel +0.00e+00, tol 1e-09  -> passes
+  C60 by E_k: rel +0.00e+00 vs tol 1e-09
+
+== 3. Aharonov-Bohm phase: engine vs q Phi / hbar ==
+Traceback (most recent call last):
+  File "/lf/reviews/2026-10-22_internal_viz-v02_physics/04_particles_ab_probe.py", line 46, in <module>
+    ph = h.sim.exp.ab_phases()
+         ^^^^^^^^^^^^^^^^^^^^^
+TypeError: Experiment.ab_phases() missing 1 required positional argument: 'app'

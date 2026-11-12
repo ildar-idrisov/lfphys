@@ -1,0 +1,31 @@
+1. Penrose's outline against a brute-force light-time image of the body's surface
+   v=[0.6 0.3 0.1]: outline angular radius 0.352419745; surface images: max angle from the axis 0.352419745 (excess -2.07e-13)
+   v=[0.95 0.   0.  ]: outline angular radius 0.097884228; surface images: max angle from the axis 0.097884228 (excess -1.33e-13)
+   v=[ 0.   -0.4   0.85]: outline angular radius 0.137597966; surface images: max angle from the axis 0.137597966 (excess -5.93e-12)
+   v=[-0.9  0.   0. ]: outline angular radius 0.025053620; surface images: max angle from the axis 0.025053620 (excess -7.53e-14)
+2. Wigner angle: matrices vs closed form vs mpmath (50 digits) at the edges
+   rapidities 3, 3 at 90 deg                        exact 1.372789946971533e+00  matrices rel -9.2e-14  closed form rel -1.6e-16
+   rapidities 7, 7 at 90 deg                        exact 1.567148806009732e+00  matrices rel +3.9e-08  closed form rel +0.0e+00
+   rapidities 7, 7 at 170 deg                       exact 2.925374366147398e+00  matrices rel +3.8e-09  closed form rel -5.3e-14
+   antiparallel 0.999999, 0.999999 + 1e-3 sideways  exact 7.843989127167786e-01  matrices rel -2.3e-12  closed form rel -3.0e-12
+   tiny: 1e-8, 1e-8                                 exact 5.000000000000001e-17  matrices rel +0.0e+00  closed form rel +1.2e-16
+3. axis_angle / su2_axis_angle near their edges
+   theta=1e-12: SO(3) -> 1e-12 axis.n0=+1.000000; SU(2) -> 1e-12 axis.n0=+1.000000
+   theta=1e-08: SO(3) -> 1e-08 axis.n0=+1.000000; SU(2) -> 1e-08 axis.n0=+1.000000
+   theta=3.14159265259: SO(3) -> 3.14159265259 axis.n0=+1.000000; SU(2) -> 3.14159265259 axis.n0=+1.000000
+   theta=3.14159265359: SO(3) -> 3.14159265359 axis.n0=+1.000000; SU(2) -> 3.14159265359 axis.n0=+1.000000
+   theta=6.28318530618: SO(3) -> 1.00000032767e-09 axis.n0=-1.000000; SU(2) -> 6.28318530618 axis.n0=+1.000000
+4. retarded_time / apparent: a point passing the observer, and the observer at the point's position
+/lf/lfphys/lfphys/core/lorentz.py:342: RuntimeWarning: invalid value encountered in divide
+  khat = -xe / r  # the photon travels from x_e to the origin
+   x0=(1,0,0), v=-0.5 x, t_obs=2: t_e=2.000000 x_e=[0. 0. 0.] d=[nan nan nan] D=nan
+/lf/lfphys/lfphys/core/lorentz.py:330: RuntimeWarning: invalid value encountered in divide
+  return np.where(bp > 0, -cc / (bp + sq), (bp - sq) / a)
+   point at the observer at t_obs: t_e=0.0, d=[nan nan nan] (division by |x_e| = 0)
+5. add_velocities near c: |u (+) v| < 1 kept?
+   b = 1 - 1e-09: |w| = 1 - -2.220e-16, gamma_of(w) = raises: |v| >= c: no inertial frame moves at or faster than light (SR)
+   b = 1 - 1e-12: |w| = 1 - 1.110e-16, gamma_of(w) = 67108864.0
+   b = 1 - 1e-15: |w| = 1 - 1.110e-16, gamma_of(w) = 67108864.0
+6. searchlight: integral of D^3/gamma over the sphere at high gamma (Gauss-Legendre 4000 nodes)
+   eta=3.0: <D^3/gamma> = 1.000000000126
+   eta=6.0: <D^3/gamma> = 1.000000039699

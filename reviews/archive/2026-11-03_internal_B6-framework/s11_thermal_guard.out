@@ -1,0 +1,10 @@
+NVML answers None after a hot reading: first call -> cpu, 'GPU остывает: 90 °C ≥ 82 °C — считается на CPU, пока не остынет до 70 °C'
+   second call raises TypeError: unsupported format string passed to NoneType.__format__;  thermal() = {'pause_c': 82.0, 'resume_c': 70.0, 'period_s': 0.0, 'hot': True, 'temp': None, 'error': ''}
+the reader raises after a hot reading: first call -> cpu, 'GPU остывает: 90 °C ≥ 82 °C — считается на CPU, пока не остынет до 70 °C'
+   second call raises TypeError: unsupported format string passed to NoneType.__format__;  thermal() = {'pause_c': 82.0, 'resume_c': 70.0, 'period_s': 0.0, 'hot': True, 'temp': None, 'error': 'StopIteration: '}
+--- (b) where the backend's report is emitted (sim.py) ---
+132:def _backend_info(notes=()) -> dict | None:
+139:    return {"settings": B.settings(), "used": B.used(), "notes": list(notes)}
+329:                    engine=_engine_info(self.sim), backend=_backend_info(self.backend_notes))
+405:            used = B.used()
+

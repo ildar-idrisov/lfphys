@@ -1,0 +1,3 @@
+[{"name": "p03_default_add_wall_and_piston", "viz": "p03_molecules", "build_wait": 4,
+  "ops": [["scene", {"op": "add", "type": "wall", "values": {}}], ["scene", {"op": "add", "type": "piston", "values": {}}],
+          ["scene", {"op": "add", "type": "gas", "values": {"n": 1, "start": "same_speed"}}]], "end_wait": 3}]

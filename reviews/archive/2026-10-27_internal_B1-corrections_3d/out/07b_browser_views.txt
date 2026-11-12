@@ -1,0 +1,3 @@
+layer labels: [" Заслонка с отверстием (z = 0)"," Падающая плоская волна (задана)"," Мишень (z = 30 мкм): интенсивность"," Свет за отверстием (объём, предпросмотр)"," Поток энергии (направление и величина)"," 1 срез в 3D: y = 0"]
+archived world 1: plane panel controls disabled: [true,true,true,true,true,true,true,true,true,true,true,true] ; commands sent after drag + Delete: []
+runs stopped: ["20261027-174330-v08-dbe7"]

@@ -1,0 +1,5 @@
+GL 4000 vs GL 16000 panels: 8.3e-15
+mpmath split at k/2, k (v08) vs GL: 2.9e-06
+mpmath split into 64 panels on [0, k] vs GL: 1.0e-14
+FFT route (pad 4) vs GL: 4.1e-06;  vs v08's reference: 3.6e-06
+FFT route (pad 16) vs GL: 1.9e-12

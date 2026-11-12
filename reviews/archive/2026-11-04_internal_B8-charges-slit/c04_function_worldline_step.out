@@ -1,0 +1,4 @@
+h = None: |v - v_true|/|v_true| = 1.00e+00, |a - a_true|/|a_true| = 1.00e+00; derivative_error() = {'v': 106.46857860137206, 'a': 95563.00990068604}
+   field error 1.30e+00
+h = 1e-12: |v - v_true|/|v_true| = 4.34e-13, |a - a_true|/|a_true| = 4.75e-09; derivative_error() = {'v': 4.934767882029216e-06, 'a': 6013707.733333333}
+   field error 5.62e-09

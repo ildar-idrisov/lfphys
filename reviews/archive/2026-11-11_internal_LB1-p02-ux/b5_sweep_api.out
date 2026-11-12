@@ -1,0 +1,4 @@
+p03_molecules maxwell {"kind": "object", "obj": "o1", "param": "T"} measure x -> {"http": 400, "error": "у «Аргон» нет параметра «T»; есть: нет"}
+p04_fluids cylinder_re20 {"kind": "object", "obj": "o3", "param": "radius"} measure x -> {"http": 400, "error": "у «Цилиндр» нет параметра «radius»; есть: нет"}
+p04_fluids cylinder_re20 {"kind": "law", "id": "nu"} measure mach -> {"estimate": {"n_values": 2, "n_readings": 1, "duration": 0.5, "budget_s": 600.0, "restore_s": 0.05, "sample_ms": 0.06, "ms_per_t": 3536.3482234308935, "frames_measured": 30, "known": true, "per_value_s": 1.8182341117154468, "total_s": 6.636468223430894, "text": "≈ 6,6 с счёта: 2 знач. × (восстановление 0,1 с + 0,5 с мира × 3,54e+03 мс за 1 с + 1 замер(ов) × 0,06 мс); предел 10 мин. Оценка — по цене шага этого мира в записи (30 кадров)"}, "target_label": "Кинематическая вязкость ν, м²/с", "targe
+   run: done [(0.001, 0.04837119182989025, None), (0.002, 0.049441555873972, None)]

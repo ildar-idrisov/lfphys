@@ -1,0 +1,17 @@
+(a) a spin-1/2 mark for every particle of the schema
+  electron: engine internal state = 'spin'; world built: yes; modifications = None; header particle.spin = True; errors []
+  neutron : engine internal state = 'spin'; world built: yes; modifications = None; header particle.spin = True; errors []
+  he4     : engine internal state = None; world built: yes; modifications = None; header particle.spin = True; errors []
+  c60     : engine internal state = None; world built: yes; modifications = None; header particle.spin = True; errors []
+
+(b) the size of the computation at corners of the schema (normal grid unless stated)
+  narrow preset: grid (745, 640), ~3244 pairs (t_end_est / 2dt); measured ~35 s on GPU 0
+  a = 0.5, d = 8, L = 200, sigma = (40, 20), fine: grid (3369, 3072) = 10.3 M points, ~12268 pairs; extrapolated ~48 min on GPU 0 (the wave and its companion), ~1.2 GB for 8 complex arrays
+  a = 0.5, d = 8, L = 200, sigma = (1, 20), fine: grid (3369, 3072) = 10.3 M points, ~12268 pairs; extrapolated ~48 min on GPU 0 (the wave and its companion), ~1.2 GB for 8 complex arrays
+  a = 0.5, d = 8, L = 200, sigma = (40, 20), normal: grid (2527, 2304) = 5.8 M points, ~12268 pairs; extrapolated ~27 min on GPU 0 (the wave and its companion), ~0.7 GB for 8 complex arrays
+  a = 0.5, d = 8, L = 200, sigma = (1, 20), normal: grid (2527, 2304) = 5.8 M points, ~12268 pairs; extrapolated ~27 min on GPU 0 (the wave and its companion), ~0.7 GB for 8 complex arrays
+  a = 0.5, d = 8, L = 200, sigma = (40, 2), fine: grid (3369, 1848) = 6.2 M points, ~9865 pairs; extrapolated ~23 min on GPU 0 (the wave and its companion), ~0.7 GB for 8 complex arrays
+  a = 0.5, d = 8, L = 200, sigma = (1, 2), fine: grid (3369, 1848) = 6.2 M points, ~9865 pairs; extrapolated ~23 min on GPU 0 (the wave and its companion), ~0.7 GB for 8 complex arrays
+  a = 20, d = 60, L = 200, sigma = (40, 20), fine: grid (2017, 3072) = 6.2 M points, ~9613 pairs; extrapolated ~22 min on GPU 0 (the wave and its companion), ~0.7 GB for 8 complex arrays
+  a = 20, d = 60, L = 200, sigma = (1, 20), fine: grid (1383, 3072) = 4.2 M points, ~8367 pairs; extrapolated ~13 min on GPU 0 (the wave and its companion), ~0.5 GB for 8 complex arrays
+  (schema limits: a 0.5..20.0, d 1.0..60.0, L 5.0..200.0, sigma_x 1.0..40.0, sigma_z 2.0..20.0)

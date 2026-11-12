@@ -1,0 +1,5 @@
+before: atoms 300 ; scene {'o1': 300} ; parts {'o1': 300}
+refused: ["Сцена: overlap: an inserted particle's potential energy 2.146e+04 exceeds max_insert_energy = 50"]
+after: atoms 0 ; scene {'o1': 300} ; parts {} ; kind {}
+then removing the object: []
+exit 0

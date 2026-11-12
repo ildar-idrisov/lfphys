@@ -1,0 +1,4 @@
+confined Bz (x in [-15,-5], y in [-5, 5]; flux 1.5 h/e), strip towards +x:
+   admitted with closed edges; after crossing the face: int |rho_field - rho_none| = 1.850e-04 (0 if the field-free packet were unaffected); window_face check 4.25e-01
+flux tube at (-10, 0), half a flux quantum, R = 1:
+   admitted with closed edges; after crossing the face: int |rho_field - rho_none| = 1.525e-06 (0 if the field-free packet were unaffected); window_face check 4.25e-01

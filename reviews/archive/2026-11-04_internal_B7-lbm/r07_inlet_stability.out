@@ -1,0 +1,13 @@
+plain channel, parabolic inlet, TRT, cell Re 12: UNSTABLE: счёт неустойчив к t = 8320 с (популяции нечисловые или вне |f| < 1.5); последнее здоровое состояние (t = 8256 с): Ma_max
+plain channel, parabolic inlet, TRT, cell Re 20: UNSTABLE: счёт неустойчив к t = 1664 с (популяции нечисловые или вне |f| < 1.5); последнее здоровое состояние (t = 1600 с): Ma_max
+plain channel, parabolic inlet, TRT, cell Re 40: UNSTABLE: счёт неустойчив к t = 1088 с (популяции нечисловые или вне |f| < 1.5); последнее здоровое состояние (t = 1024 с): Ma_max
+plain channel, parabolic inlet, TRT, cell Re 60: UNSTABLE: счёт неустойчив к t = 960 с (популяции нечисловые или вне |f| < 1.5); последнее здоровое состояние (t = 896 с): Ma_max =
+plain channel, uniform inlet, TRT, cell Re 12: UNSTABLE: счёт неустойчив к t = 1408 с (популяции нечисловые или вне |f| < 1.5); последнее здоровое состояние (t = 1344 с): Ma_max
+plain channel, uniform inlet, TRT, cell Re 20: UNSTABLE: счёт неустойчив к t = 576 с (популяции нечисловые или вне |f| < 1.5); последнее здоровое состояние (t = 512 с): Ma_max =
+plain channel, uniform inlet, TRT, cell Re 40: UNSTABLE: счёт неустойчив к t = 448 с (популяции нечисловые или вне |f| < 1.5); последнее здоровое состояние (t = 384 с): Ma_max =
+plain channel, uniform inlet, TRT, cell Re 60: UNSTABLE: счёт неустойчив к t = 448 с (популяции нечисловые или вне |f| < 1.5); последнее здоровое состояние (t = 384 с): Ma_max =
+plain channel, parabolic, BGK, cell Re 12: stable, max |u| / U_in = 1.000, density range [1.0, 1.0009]
+plain channel, parabolic, BGK, cell Re 20: UNSTABLE: счёт неустойчив к t = 3200 с (популяции нечисловые или вне |f| < 1.5); последнее здоровое состояние (t = 3136 с): Ma_max
+cylinder D = 20 cells, parabolic, TRT, cell Re 8 (Re = 107): stable, max |u| / U_in = 1.704, density range [0.9945, 1.0133]
+cylinder D = 20 cells, parabolic, TRT, cell Re 12 (Re = 160): UNSTABLE: счёт неустойчив к t = 2048 с (популяции нечисловые или вне |f| < 1.5); последнее здоровое состояние (t = 1984 с): Ma_max
+cylinder D = 20 cells, parabolic, TRT, cell Re 20 (Re = 267): UNSTABLE: счёт неустойчив к t = 1664 с (популяции нечисловые или вне |f| < 1.5); последнее здоровое состояние (t = 1600 с): Ma_max

@@ -1,0 +1,13 @@
+grep: /usr/local/lib/python3.11/site-packages/miepython/__pycache__/rayleigh.cpython-311.pyc: binary file matches
+grep: /usr/local/lib/python3.11/site-packages/miepython/__pycache__/core.cpython-311.pyc: binary file matches
+/usr/local/lib/python3.11/site-packages/miepython/core.py:103:          automatically corrected to its conjugate value to ensure a valid input.
+/usr/local/lib/python3.11/site-packages/miepython/core.py:171:            Complex refractive index of the sphere, defined as m = n - ik,
+/usr/local/lib/python3.11/site-packages/miepython/core.py:342:    The normalization is controlled by `norm` and should be one of
+/usr/local/lib/python3.11/site-packages/miepython/core.py:398:    The normalization is controlled by `norm` and should be one of
+/usr/local/lib/python3.11/site-packages/miepython/core.py:510:    over all 4𝜋 steradians.  The normalization should be one of
+/usr/local/lib/python3.11/site-packages/miepython/core.py:563:    The normalization is controlled by `norm` and should be one of
+/usr/local/lib/python3.11/site-packages/miepython/rayleigh.py:196:    The normalization is controlled by `norm` and should be one of
+/usr/local/lib/python3.11/site-packages/miepython/rayleigh.py:231:    The normalization is controlled by `norm` and should be one of
+6:License-Expression: MIT
+24:License-File: LICENSE.txt
+77:   :alt: License

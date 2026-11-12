@@ -1,0 +1,13 @@
+registry: three 0.185.1 published 2026-07-01T14:04:30.373Z, license MIT
+tarball 5320348 bytes; sha512 equals the registry's integrity: True
+  three.module.min.js    identical to the package: True  sha256 86bcee248b64f44bcfc23c331ae74619061957d59cab040171dcb6fb5900beb6
+  three.core.min.js      identical to the package: True  sha256 05b2609338c76cd65daf74f3ac515bc9a5045e1b3b33edc07d8c9bd55250fa90
+  OrbitControls.js       identical to the package: True  sha256 faabb4e8dfd9235ee4a9fd7c9a3d75f90f1689dbd4944bd6fd32117dacec5f93
+  TransformControls.js   identical to the package: True  sha256 151befe25bb0d68626f9a6b033625b7b0cf6848e39ba71623b7bed8e3df565d6
+  LICENSE                identical to the package: True  sha256 8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc
+files in the vendor folder not from the list: []
+LICENSE first line: The MIT License
+vendor/README.md records 'published 2026-07-01': True
+NOTICE names three.js r185.1 MIT: True
+visualizations/NOTICE names three.js r185.1 MIT: True
+third-party licence markers in the player's own files: []

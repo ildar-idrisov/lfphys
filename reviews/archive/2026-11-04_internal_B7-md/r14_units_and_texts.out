@@ -1,0 +1,7 @@
+(a) acceleration unit eps/(m sigma) = 7.323e+13 m/s^2 (help text: 9e11); Earth's g = 1.34e-13 reduced
+(b) 2-D pressure unit eps/sigma^2 = 14.266 mN/m; preset piston p_ext 50 mN/m = 3.505 reduced
+    the preset's gas: N = 200 in 35.2 x 23.5 sigma at 300 K = 2.504: ideal-gas pressure N T / A = 0.605 reduced = 8.63 mN/m
+(c) preset 'maxwell' gas, 300 atoms: distinct x coordinates 30, distinct y coordinates 20 (random places would give 300 each)
+(d) substance change (mass 39.948 -> 80 u, velocities kept): E0 734.9777 -> 1574.4718, W 0.0000 -> 0.0000, residual -5.97e-02
+(e) slab, NVE: P_x -1.332e-15 -> -1.332e-15 (conserved); dof() = (100, 'd·N: импульс не сохраняется (стенки, поле, термостат Ланжевена или локальный)')
+exit 0

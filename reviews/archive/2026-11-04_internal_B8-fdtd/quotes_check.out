@@ -1,0 +1,32 @@
+# quotes used in REVIEW.md, grepped in the downloaded texts (pdftotext -layout; texts kept outside the repository)
+## Farjadpour et al. 2006 (math.mit.edu/~stevenj/papers/FarjadpourRo06.pdf)
+92:terion and are therefore expected to have only linear
+93:convergence in general, and they may even have
+100:consider the VP-EP scheme,7 which is exactly the di-
+101:agonal part of Eq. (1) for s = 1. Both Kaneda and
+104:satisfy the perturbation criterion for diagonal inter-
+## Bidegaray-Fesquet, arXiv:math/0506289
+18:                                                   used. We use von Neumann analysis to give necessary and sufficient
+277:In [8], Joseph et al. close System (8) by a discretization for Eq. (3), namely
+437:            Ejn+1 − 2Ejn + Ejn−1              Ejn+1 − Ejn−1                     Ejn+1 + Ejn−1
+579:4.3   Lorentz–Young model
+580:In [9], System (9) is closed by a discretization for Eq. (6), namely
+619:is an extra condition on the time step: ω < 2/(2ε′s − 1). This will have
+622:raw Maxwell equations: q ≤ 2 instead of q ≤ 4. Last, and also as for the
+680:model compete, the Kashiwa et al. model seems to overcome others for
+## Schneider, ufdtd.pdf
+8648:This is the FDTD dispersion relation. Alternatively, expanding terms and rearranging slightly
+8780:magic time-step. Unfortunately a magic time-step does not exist in higher dimensions.
+## GNU GPL FAQ (gnu.org/licenses/gpl-faq.html)
+found | Yes, because the program actually links to the library. As such, the terms of the GPL apply to the entire combination.
+## Corbino, arXiv:2603.19056
+406:amplitude without altering the wave impedance. A common estimate for the maximum
+## arXiv:2606.06910 title page
+ Communication Strategy Selection for Multi-GPU
+ 3D FDTD with Convolutional Perfectly Matched Boundary Layers
+ Victory Obieke
+ Department of Mathematics
+ Oregon State University
+67:the introduction of a new FDTD scheme, but the combined                     where f can be the pressure p or one of t
+80:we use the first-order acoustic pressure–velocity system pt =               performance code, cubic grading is used
+81:−K∇ · v and vt = −(1/ρ)∇p, where p is pressure, v =                         ρq = ρ3 . The damping profile

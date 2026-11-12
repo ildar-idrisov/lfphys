@@ -1,0 +1,35 @@
+== (a) R_nl against mpmath (50 digits), relative to max|R| over the grid ==
+largest max|R - R_mp| / max|R| = 6.56e-15 at (n, l) = (12, 11)
+
+== (b) Y_lm against mpmath.spherharm and real orbitals against Cartesian forms ==
+max |Y_lm - mpmath| over l <= 11, all m, 40 random directions: 1.47e-15
+  real_harm(1,+1) vs p_x: max diff 1.11e-16; name p_x
+  real_harm(1,-1) vs p_y: max diff 1.11e-16; name p_y
+  real_harm(2,-2) vs d_xy: max diff 2.22e-16; name d_xy
+  real_harm(2,+0) vs d_z2: max diff 2.22e-16; name d_z²
+  real_harm(2,+2) vs d_x2-y2: max diff 1.11e-16; name d_x²−y²
+
+== (c) the `dipole` check with a wrong radial function for state 2 ==
+  2s + 3p_z, correct:
+    continuity   ok   value 1.83647e-06 ref 0
+    dipole       ok   value 0.904951 ref 0.904951
+    energy_0     ok   value -3.39957 ref -3.39957
+    energy_1     ok   value -1.51092 ref -1.51092
+    nodes_0      ok   value 1 ref 1
+    nodes_1      ok   value 1 ref 1
+    r_0          ok   value 3.17679 ref 3.17679
+    r_1          ok   value 6.61832 ref 6.61832
+    slice_1      ok   value 6.07071e-16 ref 0
+  2s + 3p_z, R_31 replaced by R_21 (WRONG state 2):
+    continuity   FAIL value 0.999999 ref 0
+    dipole       ok   value -1.53427 ref -1.53427
+    energy_0     ok   value -3.39957 ref -3.39957
+    energy_1     FAIL value -3.39957 ref -1.51092
+    nodes_0      ok   value 1 ref 1
+    nodes_1      FAIL value 0 ref 1
+    r_0          ok   value 3.17679 ref 3.17679
+    r_1          FAIL value 2.64733 ref 6.61832
+    slice_1      FAIL value 0.231288 ref 0
+
+== (d) the record's size per placement of a plane (superposition, 24 phases) ==
+after one period: 2.42 MB; five placements of plane 1: +8.02 MB (1.60 MB each)

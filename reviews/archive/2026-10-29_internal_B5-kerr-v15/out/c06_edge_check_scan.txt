@@ -1,0 +1,5 @@
+worlds 1074; edge value > 64 eps (1.421e-14) in 2
+  chi=0.998 incl=81.0: edge = 1.830e-14 (direction k = 4); derived tolerance of the unit test 2.062e-13
+  chi=0.998 incl=99.0: edge = 1.830e-14 (direction k = 4); derived tolerance of the unit test 2.062e-13
+largest values: chi=0.998 incl=81.0: 1.83e-14; chi=0.998 incl=99.0: 1.83e-14; chi=0.998 incl=80.0: 9.54e-15; chi=0.998 incl=100.0: 9.54e-15; chi=0.998 incl=94.0: 8.40e-15
+distribution of edge/eps: [0,4): 787, [4,8): 144, [8,16): 87, [16,32): 42, [32,64): 12, [64,128): 2, [128,256): 0, [256,1e+09): 0

@@ -1,0 +1,6 @@
+[fail] before ⏺: {"rec":"⏺","recDisabled":false,"status":"приостановлен — ⏺ продолжит · конец записи","statusTitle":"","busy":""}
+[fail] after ⏺: {"rec":"⏺","recDisabled":false,"status":"продолжение не удалось — ⏺ повторит · конец записи","statusTitle":"Продолжение не удалось: Мир не восстановлен: unknown parameter 'renamed_param'","busy":""}
+[fail] catalogue row: приостановленпродолжение не удалось — ⏺ повторит
+[retry] before ⏺: {"rec":"⏺","recDisabled":false,"status":"продолжение не удалось — ⏺ повторит · конец записи","statusTitle":"Продолжение не удалось: Мир не восстановлен: unknown parameter 'renamed_param'","busy":""}
+[retry] after ⏺: {"rec":"⏸ запись","recDisabled":false,"status":"запись идёт · вживую","statusTitle":"","busy":""}
+[retry] catalogue row: идёт запись

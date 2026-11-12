@@ -1,0 +1,11 @@
+After c02 T1 (two concurrent "play" on suspended run 20261028-173743-v01-c6ac, then POST /stop), processes inside the
+review server container (lf-c1rev-srv), listed from /proc:
+  1  python3 server/serve.py --host 0.0.0.0 --port 8502 --runs-dir /runs --max-workers 2 --idle-pause 20 --idle-suspend 90
+  14 /usr/local/bin/python3 -m lfviz.worker --viz v01_light_travel      <- still alive
+meta.json of the run: state "suspended", resumed 2, pid 16 (the worker the server tracked and stopped), commands
+  ['play', 'stop', 'speed', 'play', 'speed', 'play', 'stop'];
+/api/health right after the double resume: running 1 (max 2) although two workers of that run were alive.
+The record after the resume (c1rev_dump.py): two "Продолжение: мир пересчитывается…" notices (both resumes went
+through), one "Мир восстановлен" notice and two state "start" messages.
+Worker 14 was orphaned: no Run tracks it, nothing reads its stdout, it is not counted against max_workers and it
+never ends while the server lives. The reviewer terminated it by PID (os.kill(14, SIGTERM) inside its own container).

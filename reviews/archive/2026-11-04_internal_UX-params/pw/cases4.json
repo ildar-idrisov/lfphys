@@ -1,0 +1,2 @@
+[{"name": "c_p02_cyclotron_remove_field_then_clear", "start": {"viz": "p02_quantum", "preset": "cyclotron", "seed": 1}, "wait": 8000,
+  "cmds": [["play", {}, 3000], ["pause", {}, 500], ["scene", {"op": "remove", "id": "o1"}, 3000], ["scene", {"op": "clear"}, 3000], ["scene", {"op": "remove", "id": "o1"}, 3000]]}]

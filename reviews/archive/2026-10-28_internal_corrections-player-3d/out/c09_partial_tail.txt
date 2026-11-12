@@ -1,0 +1,46 @@
+C1 check 09 — a cut last message, a resume that appends, a restart (2026-10-28T20:02:54+02:00)
+run 20261028-180254-v01-9089 recorded and suspended: state suspended n_messages 71 sim_t 62.11257169954479 size 192236
+simulated crash mid-write: the record cut from 192236 to 192226 bytes
+after the restart: state suspended n_messages 70 sim_t 62.11257169954479 size 192226
+{"ok": true}
+resumed for 5 s and suspended (same server): state suspended n_messages 158 sim_t 143.2669571135193 size 263386
+SERVER DID NOT COME UP
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.8/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+  File "/usr/lib/python3.8/json/__init__.py", line 357, in loads
+    return _default_decoder.decode(s)
+  File "/usr/lib/python3.8/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/lib/python3.8/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+after another restart: 
+parse: message 70 at 192176 undecodable: UnicodeDecodeError('utf-8', b'{"type":"end","t":62.11257169954479,"reaso\xd8\x00\x00\x00\xd3\x00\x00\x00{"', 42, 43, 'in
+parse of the file as the server does: 70 messages; last parsed (191316, 'frame', 62.11257169954479) ; file size 263386 ; types {'header': 1, 'check': 2, 'pulse': 1, 'event': 1, 'state': 2, 'frame': 63}
+  File "/usr/local/lib/python3.11/asyncio/streams.py", line 750, in readexactly
+    await self._wait_for_data('readexactly')
+  File "/usr/local/lib/python3.11/asyncio/streams.py", line 529, in _wait_for_data
+    raise RuntimeError(
+RuntimeError: readexactly() called while another coroutine is already waiting for incoming data
+light-funnel viz server: http://127.0.0.1:8502/
+  LAN: http://172.17.0.3:8502/
+Traceback (most recent call last):
+  File "/lf/visualizations/server/serve.py", line 61, in <module>
+    main()
+  File "/lf/visualizations/server/serve.py", line 52, in main
+    app = create_app(Path(a.runs_dir), max_workers=a.max_workers, keep_days=a.keep_days, quota_gb=a.quota_gb,
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lf/visualizations/server/lfviz/app.py", line 64, in create_app
+    mgr = RunManager(runs_dir, **limits)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lf/visualizations/server/lfviz/runs.py", line 305, in __init__
+    self._load_existing()
+  File "/lf/visualizations/server/lfviz/runs.py", line 332, in _load_existing
+    pm = protocol.peek_meta(msg)
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lf/visualizations/server/lfviz/protocol.py", line 114, in peek_meta
+    return json.loads(bytes(buf[4 : 4 + jlen]).decode("utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xd8 in position 42: invalid continuation byte

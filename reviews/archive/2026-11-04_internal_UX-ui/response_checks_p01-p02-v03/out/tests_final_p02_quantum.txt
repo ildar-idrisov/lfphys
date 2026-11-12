@@ -1,0 +1,6 @@
+..............................                                           [100%]
+============================= slowest 3 durations ==============================
+81.48s call     p02_quantum/tests/test_p02_quantum.py::test_the_presets_show_their_effects
+58.68s call     p02_quantum/tests/test_p02_quantum.py::test_bohm_registrations_follow_the_absorbed_probabilities
+26.58s call     p02_quantum/tests/test_p02_quantum.py::test_a_jump_keeps_the_registered_bohm_points
+30 passed in 292.88s (0:04:52)

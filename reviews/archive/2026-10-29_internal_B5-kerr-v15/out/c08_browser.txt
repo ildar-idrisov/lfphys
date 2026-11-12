@@ -1,0 +1,17 @@
+A: m87 status готово: 192 × 192 · CPU
+A: data {"W":192,"H":192,"sumI_left":198.07457978380697,"sumI_right":98.4924136901684,"mean_g0_left":0.7736776417241875,"mean_g0_right":0.6524323854621105,"camera":{"kind":"screen","alpha":[-9,9],"beta":[-9,9],"axis_label":"α, M (вдоль экрана; ось вращения дыры — вверх)"}}
+A: drawn brightness left 511670 right 323779 (ratio 1.580)
+A: mode order status «готово: 192 × 192 · CPU» class st-bad
+A: mode redshift status «готово: 192 × 192 · CPU» class st-bad
+A: mode fate status «готово: 192 × 192 · CPU» class st-bad
+C: scene3d camera directions (three.js): top [0.001, 1, 0] = physics +y; beam [-1, 0, 0] = physics -z; side [0, 0, 1] = physics -x; up = three +y = physics +y
+B: paused at t = 1.0515701966360211, frames 23, status «считается: 51 из 192 строк», sampled 1024 pixels of rows < 51
+B: end status готово: 192 × 192 · CPU
+B: cursor back at t = 1.0515701966360211 (frame 22), status «считается: 51 из 192 строк»: 0 of 1024 sampled pixels drawn differently (max channel difference 0; brighter 0, dimmer 0)
+D: D_whatif left panel:
+узкое кольцо у r = 6 M (ширина 0,3 M)
+D: D_edge_on left panel:
+узкое кольцо у r = 6 M (ширина 0,3 M)
+D: D_chi0998_81 left panel:
+узкое кольцо у r = 6 M (ширина 0,3 M)
+errors: []

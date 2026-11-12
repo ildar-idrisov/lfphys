@@ -1,0 +1,43 @@
+[
+ {
+  "name": "p03_default_add_wall_and_piston",
+  "viz": "p03_molecules",
+  "start": {
+   "status": 200,
+   "body": {
+    "id": "20261104-231703-p03-0fb6"
+   }
+  },
+  "id": "20261104-231703-p03-0fb6",
+  "cmd": [
+   [
+    200,
+    {
+     "ok": true
+    }
+   ],
+   [
+    200,
+    {
+     "ok": true
+    }
+   ],
+   [
+    200,
+    {
+     "ok": true
+    }
+   ]
+  ],
+  "state": "running",
+  "errors": [
+   "Сцена: axis y is periodic",
+   "Сцена: a piston needs a walled axis",
+   "Сцена: float division by zero"
+  ],
+  "returncode": null,
+  "sim_t": 0.0,
+  "stop_reason": null,
+  "resume_error": null
+ }
+]

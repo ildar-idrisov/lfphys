@@ -1,0 +1,2 @@
+N=1000000 dye=True build=572 B/node peak=840 B/node footprint=274
+N=1000000 dye=False build=421 B/node peak=631 B/node footprint=194

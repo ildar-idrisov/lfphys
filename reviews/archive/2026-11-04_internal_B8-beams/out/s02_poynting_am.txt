@@ -1,0 +1,8 @@
+--- l = 2, sigma = +1, w0 = 1.2 lambda, z_R = 4.524: closed form J_P = 3.05708595
+  z =   0.000: J_P/photon = 3.05708595  (closed 3.05708595, diff -9.1e-10);  (1/2) d/dz int r.S_T per photon = +0.057086;  identity residual 1.3e-12  (window +-6.00, n = 72)
+  z =   0.400: J_P/photon = 3.05708595  (closed 3.05708595, diff -1.0e-09);  (1/2) d/dz int r.S_T per photon = +0.057086;  identity residual 1.8e-12  (window +-6.02, n = 74)
+  z =   4.524: J_P/photon = 3.05708566  (closed 3.05708595, diff -2.9e-07);  (1/2) d/dz int r.S_T per photon = +0.057086;  identity residual 1.7e-08  (window +-8.49, n = 102)
+--- l = 3, sigma = +1, w0 = 1.5 lambda, z_R = 7.069: closed form J_P = 4.04786356
+  z =   0.000: J_P/photon = 4.04786356  (closed 4.04786356, diff -6.2e-15);  (1/2) d/dz int r.S_T per photon = +0.047864;  identity residual 1.2e-15  (window +-7.50, n = 90)
+--- l = 2, sigma = -1, w0 = 1.2 lambda, z_R = 4.524: closed form J_P = 0.94291405
+  z =   0.000: J_P/photon = 0.94291405  (closed 0.94291405, diff +9.1e-10);  (1/2) d/dz int r.S_T per photon = -0.057086;  identity residual 5.1e-12  (window +-6.00, n = 72)

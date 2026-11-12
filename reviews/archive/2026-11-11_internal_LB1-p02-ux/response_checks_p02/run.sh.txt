@@ -1,0 +1,13 @@
+#!/bin/bash
+# usage: run.sh <name> <cmd...>  (CPU, engine read-only at /lf, scratch at /out, from engine/)
+P=/tmp/claude-1000/-home-ildar-hdd/2d877fb3-83c1-460d-af16-9ddd26aff08b/scratchpad/lb1/proc_p02
+name=$1; shift
+cd /home/ildar/hdd/projects/i/light-funnel/engine
+timeout 1700 docker run --rm --name lf-lpq-$name --memory=10g --cpus=8 \
+  -v /home/ildar/hdd/projects/i/light-funnel/engine:/lf:ro -v $P:/out \
+  -e PYTHONDONTWRITEBYTECODE=1 -e LFPHYS_NO_GPU=1 -e OMP_NUM_THREADS=4 \
+  -e PYTHONPATH=/lf/lfphys:/lf/visualizations:/lf/visualizations/server:/lf/visualizations/tests \
+  -w /lf/visualizations light-funnel-viz "$@"
+rc=$?
+docker rm -f lf-lpq-$name >/dev/null 2>&1
+echo "[exit $rc]"

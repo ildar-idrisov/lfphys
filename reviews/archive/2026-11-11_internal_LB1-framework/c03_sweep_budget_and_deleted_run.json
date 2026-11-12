@@ -1,0 +1,28 @@
+{
+ "a": {
+  "estimate_known": false,
+  "after_s": 45,
+  "state": "running",
+  "active": true,
+  "progress": {
+   "done": 0,
+   "total": 2,
+   "frac": 0.0,
+   "elapsed_s": 0.34434919338673353,
+   "eta_s": null
+  }
+ },
+ "b": {
+  "delete_run": 200,
+  "cancel_after_delete": {
+   "error": "нет такого запуска"
+  },
+  "second": 200,
+  "third": [
+   409,
+   {
+    "error": "на сервере уже идут 2 свипа (больше 2 сразу нельзя): дождитесь одного из них"
+   }
+  ]
+ }
+}

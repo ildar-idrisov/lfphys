@@ -1,0 +1,5 @@
+k d = 0.5 (lambda = 3.927 nm, admitted: True): dt = 0.03125, t = 18.750, max |X - exact| = 6.524e-04 nm over 29.8 nm (rel 2.19e-05); derivative remainder bound 576 (kd)^8/9! = 6.20e-06
+k d = 1.0 (lambda = 1.963 nm, admitted: True): dt = 0.0078125, t = 9.375, max |X - exact| = 3.341e-02 nm over 29.9 nm (rel 1.12e-03); derivative remainder bound 576 (kd)^8/9! = 1.59e-03
+k d = 1.5 (lambda = 1.309 nm, admitted: True): dt = 0.00390625, t = 6.250, max |X - exact| = 4.273e-01 nm over 30.0 nm (rel 1.43e-02); derivative remainder bound 576 (kd)^8/9! = 4.07e-02
+k d = 2.0 (lambda = 0.982 nm, admitted: True): dt = 0.00390625, t = 4.688, max |X - exact| = 2.193e+00 nm over 30.0 nm (rel 7.32e-02); derivative remainder bound 576 (kd)^8/9! = 4.06e-01
+k d = 2.5 (lambda = 0.785 nm, admitted: True): dt = 0.001953125, t = 3.750, max |X - exact| = 7.890e+00 nm over 30.0 nm (rel 2.63e-01); derivative remainder bound 576 (kd)^8/9! = 2.42e+00

@@ -1,0 +1,21 @@
+  seed  1: run |gamma| 0.1380 (c1 7.497e+17, c2 1.103e+18); check ok = True (ref 0.1520); constrained fit 0.1355
+  seed  2: run |gamma| 0.1379 (c1 5.365e+17, c2 1.316e+18); check ok = True (ref 0.1520); constrained fit 0.1251
+  seed  3: run |gamma| 0.3284 (c1 9.628e+16, c2 1.756e+18); check ok = False (ref 0.1520); constrained fit 0.1458
+  seed  4: run |gamma| 0.1639 (c1 8.157e+17, c2 1.037e+18); check ok = True (ref 0.1520); constrained fit 0.1627
+  seed  5: run |gamma| 0.1965 (c1 7.026e+17, c2 1.15e+18); check ok = True (ref 0.1520); constrained fit 0.1907
+  seed  6: run |gamma| 0.1507 (c1 5.574e+17, c2 1.295e+18); check ok = True (ref 0.1520); constrained fit 0.1383
+  seed  7: run |gamma| 0.1527 (c1 1.2e+18, c2 6.53e+17); check ok = True (ref 0.1520); constrained fit 0.1459
+  seed  8: run |gamma| 0.1539 (c1 7.986e+17, c2 1.054e+18); check ok = True (ref 0.1520); constrained fit 0.1524
+  seed  9: run |gamma| 0.1537 (c1 1.286e+18, c2 5.669e+17); check ok = True (ref 0.1520); constrained fit 0.1417
+  seed 10: run |gamma| 0.1761 (c1 9.982e+17, c2 8.541e+17); check ok = True (ref 0.1520); constrained fit 0.1756
+  seed 11: run |gamma| 0.1425 (c1 1.178e+18, c2 6.751e+17); check ok = True (ref 0.1520); constrained fit 0.1372
+  seed 12: run |gamma| 0.1424 (c1 8.547e+17, c2 9.98e+17); check ok = True (ref 0.1520); constrained fit 0.1420
+  seed 13: run |gamma| 0.1698 (c1 9.437e+17, c2 9.086e+17); check ok = True (ref 0.1520); constrained fit 0.1698
+  seed 14: run |gamma| 0.2116 (c1 5.111e+17, c2 1.341e+18); check ok = True (ref 0.1520); constrained fit 0.1892
+  seed 15: run |gamma| 0.1817 (c1 9.896e+17, c2 8.625e+17); check ok = True (ref 0.1520); constrained fit 0.1813
+  seed 16: run |gamma| 0.1600 (c1 1.387e+18, c2 4.663e+17); check ok = True (ref 0.1520); constrained fit 0.1389
+  seed 17: run |gamma| 0.1570 (c1 1.267e+18, c2 5.86e+17); check ok = True (ref 0.1520); constrained fit 0.1460
+  seed 18: run |gamma| 0.1674 (c1 1.348e+18, c2 5.045e+17); check ok = True (ref 0.1520); constrained fit 0.1490
+  seed 19: run |gamma| 0.2001 (c1 1.485e+18, c2 3.671e+17); check ok = True (ref 0.1520); constrained fit 0.1596
+  seed 20: run |gamma| 0.1068 (c1 7.409e+17, c2 1.112e+18); check ok = True (ref 0.1520); constrained fit 0.1046
+  run fit: mean 0.1696, std 0.0445; constrained: mean 0.1516, std 0.0217; failed checks 1/20

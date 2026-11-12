@@ -1,0 +1,7 @@
+window 40.0 nm, 64^3 (d = 0.625), dt 0.015625, edges W0 0.644 eV width 4.0: R(normal, |k|) = 1.3e-04
+window 60.0 nm, 96^3 (d = 0.625), dt 0.015625, edges W0 0.644 eV width 6.0: R(normal, |k|) = 6.3e-06
+t =   6.0: probability inside |x_i| < 14 nm: window 40: 9.970e-01, window 60: 9.970e-01; difference +4.44e-06
+t =  10.0: probability inside |x_i| < 14 nm: window 40: 5.459e-01, window 60: 5.460e-01; difference -7.64e-05
+t =  14.0: probability inside |x_i| < 14 nm: window 40: 4.041e-02, window 60: 3.954e-02; difference +8.71e-04
+t =  18.0: probability inside |x_i| < 14 nm: window 40: 1.858e-03, window 60: 9.080e-04; difference +9.50e-04
+t =  22.0: probability inside |x_i| < 14 nm: window 40: 5.696e-04, window 60: 2.975e-05; difference +5.40e-04

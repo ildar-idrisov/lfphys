@@ -1,0 +1,37 @@
+A. preset 'scan' (photons, fixed a = b = 0): move b live (as the preset label suggests)
+  b = 0: ok
+  b = 22.5: ok
+  b = 30: ok
+  b = 45: ok
+  b = 60: ok
+  b = 90: ok
+  b = 135: ok
+  b = 180: ok
+  b = -90: ok
+  b = 270: ok
+  b = 360: ok
+  b = 10: ok
+  b = 15: ok
+  b = 75: ok
+  b = 120: ok
+  b = 150: ok
+B. spins, fixed settings: a = 0, move b
+  b = 0: ok
+  b = 30: ok
+  b = 45: ok
+  b = 60: ok
+  b = 90: ok
+  b = 120: ok
+  b = 180: ok
+  b = 270: ok
+  b = 360: ok
+C. photon_chsh (random): b' set equal to a' or to a + 90
+  {'b2_deg': 45.0}: ok
+  {'b2_deg': 135.0}: ok
+  {'b_deg': 0.0}: ok
+  {'a2_deg': 22.5}: ok
+  {'a2_deg': 112.5}: ok
+D. many pairs in flight: spin, v/c = 1e-4, L = 1000 m, rate = 1e8 /s
+  advanced to 0.02 of the flight (0.000667 s of world time): in flight 66774, cumulative wall 0.0 s for this slice
+  advanced to 0.04 of the flight (0.00133 s of world time): in flight 133976, cumulative wall 0.1 s for this slice
+  advanced to 0.08 of the flight (0.00267 s of world time): in flight 267931, cumulative wall 0.7 s for this slice

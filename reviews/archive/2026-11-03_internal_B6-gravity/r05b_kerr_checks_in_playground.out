@@ -1,0 +1,12 @@
+(a) preset kerr_orbits, 200 M in 2000 frames: every emitted check with ok = False
+  200 check messages, 0 failed:
+  last message per check (what the p01 test asserts on): {'carter': True, 'shell': True}
+
+(b) one inclined orbit at r ~ 20 (a = 0.9, q = 0.3, rtol 1e-10): relative K drift vs 10 rtol sqrt(steps)
+  t =     10000 M  steps     685  K0 = 12.5529  dK_rel = 1.196e-09  tol = 2.617e-08  fails: False  dK per step 1.75e-12  wall 1 s
+  t =    100000 M  steps    6843  K0 = 12.5529  dK_rel = 1.291e-08  tol = 8.272e-08  fails: False  dK per step 1.89e-12  wall 5 s
+  t =   1000000 M  steps   68398  K0 = 12.5529  dK_rel = 1.343e-07  tol = 2.615e-07  fails: False  dK per step 1.96e-12  wall 53 s
+  t =   2000000 M  steps  136785  K0 = 12.5529  dK_rel = 2.696e-07  tol = 3.698e-07  fails: False  dK per step 1.97e-12  wall 114 s
+  t =   4000000 M  steps  273566  K0 = 12.5529  dK_rel = 5.353e-07  tol = 5.230e-07  fails: True  dK per step 1.96e-12  wall 247 s
+  t =   8000000 M  steps  547142  K0 = 12.5529  dK_rel = 1.067e-06  tol = 7.397e-07  fails: True  dK per step 1.95e-12  wall 486 s
+exit 0

@@ -1,0 +1,21 @@
+(1) Debye sum (1 - R22 - T21T12/(1 - R11))/2 and partial sums p <= 4 + remainder, against mie.coefficients
+  m = 1.333, x = 1000, Im(m)x = 0: sum err 6.8e-12, partial+rem err 6.8e-12, underflow 0, finite True, 0.1 s
+  m = 1.001, x = 500, Im(m)x = 0: sum err 6.5e-13, partial+rem err 6.5e-13, underflow 0, finite True, 0.0 s
+  m = 0.5, x = 1000, Im(m)x = 0: sum err 2.2e-12, partial+rem err 2.2e-12, underflow 0, finite True, 0.0 s
+  m = 0.75, x = 20000, Im(m)x = 0: sum err 9.5e-10, partial+rem err 9.5e-10, underflow 0, finite True, 1.0 s
+  m = 1.333, x = 20000, Im(m)x = 0: sum err 3.2e-10, partial+rem err 3.2e-10, underflow 0, finite True, 1.1 s
+  m = 3.0, x = 500, Im(m)x = 0: sum err 2.7e-12, partial+rem err 2.7e-12, underflow 0, finite True, 0.0 s
+  m = 10.0, x = 100, Im(m)x = 0: sum err 3.5e-13, partial+rem err 3.3e-13, underflow 0, finite True, 0.0 s
+  m = (1.5+0.5j), x = 1000, Im(m)x = 500: sum err 1.0e-12, partial+rem err 1.0e-12, underflow 0, finite True, 0.1 s
+  m = (1.5+1j), x = 1000, Im(m)x = 1000: sum err 1.0e-12, partial+rem err 1.0e-12, underflow 0, finite True, 0.1 s
+  m = (1.5+0.1j), x = 10000, Im(m)x = 1000: sum err 4.6e-11, partial+rem err 4.6e-11, underflow 0, finite True, 0.5 s
+  m = (1+1e-06j), x = 100, Im(m)x = 0.0001: sum err 4.2e-10, partial+rem err 5.1e-04, underflow 0, finite True, 0.0 s
+
+(2) Individual terms against Fresnel by localization, m = 1.333, x = 2000 (orders n = (x - 1/2) sin i)
+  i =  10.01 deg, n = 347: |R22| TE 0.14604 vs |rs| 0.14604; TM 0.13942 vs |rp| 0.13942; |R11| TE 0.14604 TM 0.13942; |T21T12| TE 0.97867 vs 1-rs^2 0.97867, TM 0.98056 vs 1-rp^2 0.98056
+  i =  29.98 deg, n = 999: |R22| TE 0.17584 vs |rs| 0.17584; TM 0.10931 vs |rp| 0.10931; |R11| TE 0.17584 TM 0.10931; |T21T12| TE 0.96908 vs 1-rs^2 0.96908, TM 0.98805 vs 1-rp^2 0.98805
+  i =  50.02 deg, n = 1532: |R22| TE 0.25859 vs |rs| 0.25859; TM 0.02283 vs |rp| 0.02283; |R11| TE 0.25859 TM 0.02283; |T21T12| TE 0.93313 vs 1-rs^2 0.93313, TM 0.99948 vs 1-rp^2 0.99948
+  i =  60.03 deg, n = 1732: |R22| TE 0.33947 vs |rs| 0.33948; TM 0.06597 vs |rp| 0.06597; |R11| TE 0.33947 TM 0.06597; |T21T12| TE 0.88476 vs 1-rs^2 0.88476, TM 0.99565 vs 1-rp^2 0.99565
+  i =  70.01 deg, n = 1879: |R22| TE 0.46882 vs |rs| 0.46885; TM 0.21759 vs |rp| 0.21762; |R11| TE 0.46882 TM 0.21759; |T21T12| TE 0.78021 vs 1-rs^2 0.78018, TM 0.95265 vs 1-rp^2 0.95264
+  i =  79.98 deg, n = 1969: |R22| TE 0.67420 vs |rs| 0.67554; TM 0.48620 vs |rp| 0.48800; |R11| TE 0.67420 TM 0.48620; |T21T12| TE 0.54545 vs 1-rs^2 0.54365, TM 0.76361 vs 1-rp^2 0.76186
+  (Brewster: tan i_B = m -> i_B = 53.12 deg, where |rp| = 0)

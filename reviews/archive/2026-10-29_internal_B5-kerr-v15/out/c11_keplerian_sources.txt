@@ -1,0 +1,2 @@
+(a) max rel |Omega(metric) - Omega(engine)| = 3.81e-16
+(b) max rel |g(GLM B7) - g(engine, keplerian)| = 7.55e-15

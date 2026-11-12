@@ -1,0 +1,6 @@
+grid step 0.3125 nm, edge (10-90 %) 0.9950 nm, barrier 0.5 eV = 6.5617 units, its top 0.4733 eV
+packet: k0 = 3.1416/nm, sigma_k = 0.2000, E(k0) = 0.3760 eV; k at the top: 3.5246
+Richardson residual of T: 1.61e-06
+transmitted probability 0.13214: from E_x below the top 0.11791 (89.2 %), over the top 0.01423 (10.8 %); share of the packet above the top 2.26 %
+T at k0 itself: 8.812e-02
+wrapper run: t = 14.312 units, dt = 0.0078125, beyond the barrier (density + absorbed record since the last bank) 0.13213; banked {'edges': 0.0}; absorbed {'edges': 0.0030201582029224083}

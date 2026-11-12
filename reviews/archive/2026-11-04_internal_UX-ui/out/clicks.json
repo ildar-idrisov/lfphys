@@ -1,0 +1,15 @@
+{
+ "events_rebuilds_per_s": 6,
+ "human_click_on_event": [
+  "no jump (t 0.8532 -> 0.9283)",
+  "no jump (t 0.9684 -> 1.194)",
+  "no jump (t 1.249 -> 1.425)",
+  "no jump (t 1.470 -> 1.716)",
+  "no jump (t 1.756 -> 2.097)",
+  "no jump (t 2.137 -> 2.362)"
+ ],
+ "older_present": true,
+ "older_open_series": "1111000000000000000000000000000000000000",
+ "right_scrollTop_after": 2562,
+ "shot_error": "TimeoutError: page.screenshot: Timeout 90000ms exceeded.\nCall log:\n  - taking page screenshot\n  - wa"
+}

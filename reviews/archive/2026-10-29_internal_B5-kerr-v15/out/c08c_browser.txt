@@ -1,0 +1,12 @@
+m87: paused at t=0.5016875702422112 with 25 rows shown; back at t=0.5016875702422112, status «считается: 25 из 192 строк»
+   held data live {"max_all_held":0.010578866116702557,"max_rows_shown":0.010578866116702557}; after going back {"max_all_held":0.018657365813851357,"max_rows_shown":0.010578866116702557}
+   1152 of 1152 sampled pixels drawn differently (1152 dimmer); player dbg before {"fromKey":0,"full":1,"keyFailed":0,"lastMs":6.799999713897705,"lastFed":0} after {"fromKey":1,"full":1,"keyFailed":0,"lastMs":0.5999999046325684,"lastFed":2}
+m87: paused at t=1.2024548285407946 with 58 rows shown; back at t=1.2024548285407946, status «считается: 58 из 192 строк»
+   held data live {"max_all_held":0.015833739191293716,"max_rows_shown":0.015833739191293716}; after going back {"max_all_held":0.018657365813851357,"max_rows_shown":0.015833739191293716}
+   2644 of 2688 sampled pixels drawn differently (2644 dimmer); player dbg before {"fromKey":0,"full":1,"keyFailed":0,"lastMs":5.300000190734863,"lastFed":0} after {"fromKey":1,"full":1,"keyFailed":0,"lastMs":0.40000009536743164,"lastFed":2}
+edge_on: paused at t=1.1902671350399032 with 58 rows shown; back at t=1.1902671350399032, status «считается: 58 из 192 строк»
+   held data live {"max_all_held":0.05008954182267189,"max_rows_shown":0.05008954182267189}; after going back {"max_all_held":3.5588526725769043,"max_rows_shown":0.05008954182267189}
+   2310 of 2688 sampled pixels drawn differently (2310 dimmer); player dbg before {"fromKey":0,"full":1,"keyFailed":0,"lastMs":4.799999713897705,"lastFed":0} after {"fromKey":1,"full":1,"keyFailed":0,"lastMs":0.40000009536743164,"lastFed":2}
+ring: paused at t=1.189657237031497 with 58 rows shown; back at t=1.189657237031497, status «считается: 58 из 192 строк»
+   held data live {"max_all_held":1.477708101272583,"max_rows_shown":1.477708101272583}; after going back {"max_all_held":2.15985107421875,"max_rows_shown":1.477708101272583}
+   551 of 2688 sampled pixels drawn differently (551 dimmer); player dbg before {"fromKey":0,"full":1,"keyFailed":0,"lastMs":7.400000095367432,"lastFed":0} after {"fromKey":1,"full":1,"keyFailed":0,"lastMs":0.2999997138977051,"lastFed":2}

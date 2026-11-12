@@ -1,0 +1,1 @@
+radius 600 um +-30 %: build 4.0 s (x = 6854 at 550 nm), first wavelength 5.0 s (380 nm, 1199 nodes, dx 14.91, coarse True); 24 wavelengths; peak RSS 1.05 GB; checks failing: []

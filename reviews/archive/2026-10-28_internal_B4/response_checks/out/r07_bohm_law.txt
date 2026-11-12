@@ -1,0 +1,2 @@
+gauss: max |law - exact| = 4.93e-06 (before the fix: 3.1e-3 gauss, 2.5e-3 backflow)
+backflow: max |law - exact| = 2.23e-05 (before the fix: 3.1e-3 gauss, 2.5e-3 backflow)

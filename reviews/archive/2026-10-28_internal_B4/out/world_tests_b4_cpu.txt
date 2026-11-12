@@ -1,0 +1,40 @@
+E        +  where 929.1102445155881 = <v12_arrival_times_2d.viz.Simulation object at 0x7f8a1a314150>.est_cost
+E        +    where <v12_arrival_times_2d.viz.Simulation object at 0x7f8a1a314150> = <harness.Harness object at 0x7f8a4d3fbad0>.sim
+
+v12_arrival_times_2d/tests/test_v12_arrival_times_2d.py:45: AssertionError
+__________________________ test_presets_build[slits] ___________________________
+
+preset = 'slits'
+
+    @pytest.mark.parametrize("preset", list(SCHEMA.presets))
+    def test_presets_build(preset):
+        h = Harness(V, preset)
+        hd = h.of("header")[-1]
+        assert hd["arrival"]["rules"][:2] == ["flux", "bohm"]
+        assert not failed(h), failed(h)  # the static checks: grid, absorbers, the initial state, the soft detector
+        assert "arr_state" in h.checks()
+        assert bool(h.of("arrival_ref")) == (hd["arrival"]["scene"] == "free")
+>       assert 0 < h.sim.est_cost < 600
+E       assert 727.4790074991238 < 600
+E        +  where 727.4790074991238 = <v12_arrival_times_2d.viz.Simulation object at 0x7f8a1a3146d0>.est_cost
+E        +    where <v12_arrival_times_2d.viz.Simulation object at 0x7f8a1a3146d0> = <harness.Harness object at 0x7f8a1a315a10>.sim
+
+v12_arrival_times_2d/tests/test_v12_arrival_times_2d.py:45: AssertionError
+_____________________________ test_gpu_equals_cpu ______________________________
+
+    def test_gpu_equals_cpu():
+        from lfphys.core.quantum import schrodinger_nd as S
+        h = Harness(V, "gauss", SMALL)
+>       assert h.sim.prop.device == "gpu" and h.sim.det.device == "gpu"
+E       AssertionError: assert ('cpu' == 'gpu'
+E         
+E         - gpu
+E         + cpu)
+
+v12_arrival_times_2d/tests/test_v12_arrival_times_2d.py:137: AssertionError
+=========================== short test summary info ============================
+FAILED v12_arrival_times_2d/tests/test_v12_arrival_times_2d.py::test_presets_build[train]
+FAILED v12_arrival_times_2d/tests/test_v12_arrival_times_2d.py::test_presets_build[backflow]
+FAILED v12_arrival_times_2d/tests/test_v12_arrival_times_2d.py::test_presets_build[slits]
+FAILED v12_arrival_times_2d/tests/test_v12_arrival_times_2d.py::test_gpu_equals_cpu
+4 failed, 60 passed in 316.52s (0:05:16)

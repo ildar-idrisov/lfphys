@@ -1,0 +1,22 @@
+C1 check 01 (c01_restore_all_messages.py), console log of the run, 2026-10-28
+[A] lines 1-14: every visualization, frames in irregular steps (+ live change / view command where listed in CASES), restore, the same continuation for both; every message after the suspension point compared
+[B] lines 15-17: the original advanced with wall time (sleep) between its frames, as a live run; the restore without
+
+  v01_light_travel: identical (12 messages: frame×12)
+  v02_double_slit: identical (36 messages: detections×12, frame×12, stories×12)
+  v03_quantum_1d: identical (13 messages: emit×1, frame×12)
+  v04_orbits: identical (38 messages: apsis×2, check×11, event×1, frame×12, trail×12)
+  v05_optics_bench: identical (20 messages: clicks×8, frame×12)
+  v06_qcd: identical (12 messages: frame×12)
+  v07_bell_test: identical (17 messages: frame×12, pairs×5)
+  v08_wave_3d: identical (12 messages: frame×12)
+  v09_thomas_3d: identical (29 messages: frame×12, path×12, triads×5)
+  v10_fast_observer: identical (13 messages: box×1, frame×12)
+  v11_double_slit_2d: identical (60 messages: frame×12, screen×4, target×4, tracks×33, wave×7)
+  v12_arrival_times_2d: identical (28 messages: arrival×1, frame×12, screen×1, target×1, tracks×11, wave×2)
+  v13_hydrogen_3d: identical (12 messages: frame×12)
+  v14_quarkonium_3d: identical (12 messages: frame×12)
+  v10_fast_observer (wall-clock spaced frames, 0.40 s): DIFFERENT message counts 7 vs 6; types frame×6, image×1 vs frame×6
+  v02_double_slit (wall-clock spaced frames, 1.05 s): DIFFERS at msg[2] frame.coh.err: 0.04395032449341671 vs 0.06491050630154302
+  v04_orbits: identical (15 messages: apsis×1, check×2, frame×6, trail×6)
+(run stopped by the reviewer after parts A and B: part C used absolute world times unsuited to v11 and was redone in c01b; part D redone in c01b)

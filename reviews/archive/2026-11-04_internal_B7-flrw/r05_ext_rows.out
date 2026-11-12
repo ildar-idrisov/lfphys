@@ -1,0 +1,21 @@
+WARNING: AstropyDeprecationWarning: Use ``angular_diameter_distance(z1, z2)`` instead. [test_ext_flrw_astropy]
+661 rows, 519 with an exact reference
+largest engine errors relative to the value:
+   flat w0wa + radiation: Omega_de(z)                      z=1000     eng rel 8.49e-16  lib rel 9.45e-14
+   flat w0wa + radiation: age [Gyr]                        z=2        eng rel 5.60e-16  lib rel 2.63e-14
+   flat LCDM + radiation: age [Gyr]                        z=2        eng rel 5.41e-16  lib rel 1.92e-14
+   flat w0wa + radiation: Omega_de(z)                      z=100      eng rel 5.26e-16  lib rel 1.17e-14
+   flat LCDM, no radiation: age [Gyr]                      z=0.5      eng rel 4.22e-16  lib rel 0.00e+00
+   open LCDM + radiation: D_A [Mpc]                        z=2        eng rel 4.00e-16  lib rel 4.00e-16
+   flat w0wa + radiation: Omega_m(z)                       z=0.001    eng rel 3.69e-16  lib rel 1.85e-16
+   flat LCDM, no radiation: Omega_m(z)                     z=0.001    eng rel 3.69e-16  lib rel 1.85e-16
+rows where Astropy is closer: 50; of these with engine rel error > 1e-14: 0
+largest diff/tol:
+   closed LCDM + radiation: age [Gyr]                      z=1000     diff/tol 28.017  basis: engine bound + quad 1.49e-8  (xfail)
+   open LCDM + radiation: Omega_nu0                        today      diff/tol 0.996  basis: 16 roundings + literal  
+   closed LCDM + radiation: Omega_nu0                      today      diff/tol 0.996  basis: 16 roundings + literal  
+   flat w0wa + radiation: Omega_nu0                        today      diff/tol 0.996  basis: 16 roundings + literal  
+   flat LCDM + radiation: Omega_nu0                        today      diff/tol 0.996  basis: 16 roundings + literal  
+   Planck 2018, m_nu = 0.06 eV: nu density / photon density z=35       diff/tol 0.961  basis: Komatsu fit 0.35 % + literal  
+   open LCDM + radiation: Omega_k(z)                       z=1000     diff/tol 0.491  basis: 16u x conditioning per side  
+   closed LCDM + radiation: Omega_m(z)                     z=1000     diff/tol 0.490  basis: 16u x conditioning per side  

@@ -1,0 +1,237 @@
+{
+ "id": "20261103-183550-p01-c244",
+ "viz": "p01_gravity",
+ "title": "Космос и гравитация",
+ "version": "0.1",
+ "code": "f32690099dd0",
+ "preset": "inner",
+ "params": {
+  "laws": "newton",
+  "m_total": 20.0,
+  "m_hole": 10.0,
+  "spin": 0.9,
+  "charge": 0.0,
+  "collisions": "merge",
+  "scene": {
+   "format": "lfscene",
+   "version": 1,
+   "objects": [
+    {
+     "type": "star",
+     "label": "Солнце",
+     "values": {
+      "mass": 1.0
+     }
+    },
+    {
+     "type": "planet",
+     "label": "Меркурий",
+     "values": {
+      "mass": 0.0553,
+      "radius": 0.383,
+      "x": 0.387,
+      "color": "#ced4da"
+     }
+    },
+    {
+     "type": "planet",
+     "label": "Венера",
+     "values": {
+      "mass": 0.815,
+      "radius": 0.949,
+      "x": 0.723,
+      "color": "#ffd43b"
+     }
+    },
+    {
+     "type": "planet",
+     "label": "Земля",
+     "values": {
+      "mass": 1.0,
+      "radius": 1.0,
+      "x": 1.0
+     }
+    },
+    {
+     "type": "planet",
+     "label": "Марс",
+     "values": {
+      "mass": 0.107,
+      "radius": 0.532,
+      "x": 1.524,
+      "color": "#ff6b6b"
+     }
+    },
+    {
+     "type": "planet",
+     "label": "Юпитер",
+     "values": {
+      "mass": 317.8,
+      "radius": 11.21,
+      "x": 5.203,
+      "color": "#ff922b"
+     }
+    }
+   ]
+  }
+ },
+ "seed": 3,
+ "label": "",
+ "created": "2026-11-03T18:35:50",
+ "state": "suspended",
+ "keep": false,
+ "modifications": [],
+ "started_from": "172.17.0.1",
+ "python": "3.11.17",
+ "backend_settings": {},
+ "backend_notes": [],
+ "restorable": true,
+ "kind": "playground",
+ "buffer": {
+  "window_s": 600,
+  "window_mb": 1024,
+  "recording": false,
+  "protected": [],
+  "segs": [
+   {
+    "k": 0,
+    "wall0": 1793730950.9025447,
+    "t0": 0.0,
+    "world": 1
+   },
+   {
+    "k": 1,
+    "wall0": 1793731011.7076452,
+    "t0": 1823531206.5316958,
+    "world": 1
+   },
+   {
+    "k": 2,
+    "wall0": 1793731039.023531,
+    "t0": 2650241713.040532,
+    "world": 1
+   }
+  ]
+ },
+ "last_action": 1793731065.7327514,
+ "last_action_iso": "2026-11-03T18:37:45",
+ "size": 3052,
+ "n_messages": 2161,
+ "pid": 9,
+ "last_viewed": "2026-11-03T18:35:51",
+ "sim_t": 2650241713.040532,
+ "approximations": [
+  "ньютоновская гравитация точечных масс"
+ ],
+ "scene": "Плейграунд: ньютоновские N тел",
+ "worlds": [
+  {
+   "n": 1,
+   "wall": "2026-11-03T18:35:51",
+   "scene": "Плейграунд: ньютоновские N тел",
+   "preset": "inner",
+   "seed": 3,
+   "params": {
+    "laws": "newton",
+    "m_total": 20.0,
+    "m_hole": 10.0,
+    "spin": 0.9,
+    "charge": 0.0,
+    "collisions": "merge",
+    "scene": {
+     "format": "lfscene",
+     "version": 1,
+     "objects": [
+      {
+       "type": "star",
+       "label": "Солнце",
+       "values": {
+        "mass": 1.0
+       }
+      },
+      {
+       "type": "planet",
+       "label": "Меркурий",
+       "values": {
+        "mass": 0.0553,
+        "radius": 0.383,
+        "x": 0.387,
+        "color": "#ced4da"
+       }
+      },
+      {
+       "type": "planet",
+       "label": "Венера",
+       "values": {
+        "mass": 0.815,
+        "radius": 0.949,
+        "x": 0.723,
+        "color": "#ffd43b"
+       }
+      },
+      {
+       "type": "planet",
+       "label": "Земля",
+       "values": {
+        "mass": 1.0,
+        "radius": 1.0,
+        "x": 1.0
+       }
+      },
+      {
+       "type": "planet",
+       "label": "Марс",
+       "values": {
+        "mass": 0.107,
+        "radius": 0.532,
+        "x": 1.524,
+        "color": "#ff6b6b"
+       }
+      },
+      {
+       "type": "planet",
+       "label": "Юпитер",
+       "values": {
+        "mass": 317.8,
+        "radius": 11.21,
+        "x": 5.203,
+        "color": "#ff922b"
+       }
+      }
+     ]
+    }
+   },
+   "modifications": [],
+   "approximations": [
+    "ньютоновская гравитация точечных масс"
+   ]
+  }
+ ],
+ "playing": false,
+ "speed": 31557600.0,
+ "commands": [
+  {
+   "wall": "2026-11-03T18:35:51",
+   "from": "172.17.0.1",
+   "cmd": "play",
+   "args": {}
+  },
+  {
+   "wall": "2026-11-03T18:37:18",
+   "from": "172.17.0.1",
+   "cmd": "pause",
+   "args": {}
+  },
+  {
+   "wall": "2026-11-03T18:37:45",
+   "from": "server",
+   "cmd": "stop",
+   "args": {
+    "checkpoint": true
+   }
+  }
+ ],
+ "stop_reason": "room for another run",
+ "ended": "2026-11-03T18:37:45",
+ "returncode": 0
+}

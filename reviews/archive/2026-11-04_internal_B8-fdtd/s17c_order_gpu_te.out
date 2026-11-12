@@ -1,0 +1,7 @@
+  te eps 6 subpixel    40 cells/unit (gpu, 19 s): Q/Q_exact - 1 = [ 0.026241  0.000551 -0.001776]
+  te eps 6 subpixel    80 cells/unit (gpu, 28 s): Q/Q_exact - 1 = [0.014367 0.000972 0.011138]  ratio [ 1.83  0.57 -0.16]
+  te eps 6 subpixel   160 cells/unit (gpu, 57 s): Q/Q_exact - 1 = [0.007716 0.00069  0.008781]  ratio [1.86 1.41 1.27]
+  te eps 6 staircase   40 cells/unit (gpu, 14 s): Q/Q_exact - 1 = [ 0.021185 -0.005651  0.063787]
+  te eps 6 staircase   80 cells/unit (gpu, 28 s): Q/Q_exact - 1 = [ 0.017436 -0.000427  0.046   ]  ratio [ 1.22 13.24  1.39]
+  te eps 6 staircase  160 cells/unit (gpu, 57 s): Q/Q_exact - 1 = [ 0.004019 -0.000185  0.012436]  ratio [4.34 2.3  3.7 ]
+rc=0

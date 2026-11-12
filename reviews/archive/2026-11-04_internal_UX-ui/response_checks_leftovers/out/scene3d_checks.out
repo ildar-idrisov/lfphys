@@ -1,0 +1,8 @@
+{"case":"depth","ok":true,"cloudBack":[195,131,121],"withFront":[76,255,94],"aloneFront":[76,255,94],"withBack":[203,158,130],"aloneBack":[84,255,100],"errs":[]}
+{"case":"planes","ok":true,"cloudOverPlane":[[162,50,115],[200,64,114]],"crossing":[{"p":[0,-0.8914892643580532,-0.5943261762387022],"expect":"plane1","rgb":[255,0,0],"ok":true},{"p":[0,-0.8914892643580532,0.5943261762387022],"expect":"plane1","rgb":[255,0,0],"ok":true},{"p":[0,-0.47546094099096176,-0.5943261762387022],"expect":"plane1","rgb":[255,0,0],"ok":true},{"p":[0,-0.47546094099096176,0.5943261762387022],"expect":"plane1","rgb":[255,0,0],"ok":true},{"p":[0,0.47546094099096176,-0.5943261762387022],"expect":"plane2","rgb":[0,255,0],"ok":true},{"p":[0,0.47546094099096176,0.5943261762387022],"expect":"plane2","rgb":[0,255,0],"ok":true},{"p":[0,0.8914892643580532,-0.5943261762387022],"expect":"plane2","rgb":[0,255,0],"ok":true},{"p":[0,0.8914892643580532,0.5943261762387022],"expect":"plane2","rgb":[0,255,0],"ok":true}],"errs":[]}
+{"case":"labels","ok":true,"n":14,"shown":12,"pxRatio":[1,1],"flags":true,"overlaps":0,"errs":[]}
+{"case":"quality","ok":true,"during":0.5,"after":1,"errs":[]}
+{"case":"keys","ok":true,"preserveDrawingBuffer":false,"planes":[1,1,0],"errs":[]}
+all passed
+{"case":"views","ok":false,"p04":{"opened":true,"top":{"xRight":false,"yUp":false}},"v08":{"zRight":true,"xUp":true},"errs":[]}
+FAILED: 1

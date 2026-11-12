@@ -1,0 +1,12 @@
+{"label": "before", "preset": "double_slit", "change": "set packet x -19", "s": 17.159, "load1": 6.5, "errors": []}
+{"label": "before", "preset": "double_slit", "change": "add box far (20,20)", "s": 26.708, "load1": 8.0, "errors": []}
+{"label": "before", "preset": "double_slit", "change": "set packet wavelength 2.2", "s": 26.911, "load1": 15.9, "errors": []}
+{"label": "before", "preset": "double_slit", "change": "add detector (20,-20)", "s": 44.167, "load1": 21.1, "errors": []}
+{"label": "before", "preset": "double_slit", "change": "set screen edge 4", "s": 64.821, "load1": 31.9, "errors": []}
+{"label": "before", "preset": "double_slit", "change": "add marker (0,5)", "s": 51.605, "load1": 31.4, "errors": []}
+{"label": "before", "preset": "double_slit", "change": "add plane at 20", "s": 38.809, "load1": 34.0, "errors": []}
+{"label": "before", "preset": "double_slit", "change": "rename packet", "s": 0.001, "load1": 26.2, "errors": []}
+{"label": "before", "preset": "tunnel", "change": "set barrier V 0.6", "s": 5.36, "load1": 23.7, "errors": []}
+{"label": "before", "preset": "tunnel", "change": "set packet x -18", "s": 5.023, "load1": 22.6, "errors": []}
+{"label": "before", "preset": "ball_3d", "change": "set ball V 1.2", "s": 6.102, "load1": 20.0, "errors": []}
+{"label": "before", "preset": "ball_3d", "change": "add detector 3d", "s": 15.533, "load1": 19.1, "errors": []}

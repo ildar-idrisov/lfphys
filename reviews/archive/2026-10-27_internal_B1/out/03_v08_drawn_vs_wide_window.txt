@@ -1,0 +1,15 @@
+preset double: n=256 dx=0.125 half=16 zmax=30 pad used=4
+   y=0    : linear max|dI|/max I = 3.95e-03;  log view:   0.1% of pixels off by > 0.1 decade (worst 0.13 decades)
+   x=0    : linear max|dI|/max I = 6.41e-03;  log view:   0.0% of pixels off by > 0.1 decade (worst 0.16 decades)
+   z=zmax : linear max|dI|/max I = 5.22e-03;  log view:  13.9% of pixels off by > 0.1 decade (worst 2.51 decades)
+preset circle: n=256 dx=0.125 half=16 zmax=40 pad used=4
+   y=0    : linear max|dI|/max I = 3.54e-03;  log view:   1.4% of pixels off by > 0.1 decade (worst 0.34 decades)
+   x=0    : linear max|dI|/max I = 3.54e-03;  log view:   1.4% of pixels off by > 0.1 decade (worst 0.34 decades)
+   z=zmax : linear max|dI|/max I = 4.91e-03;  log view:   4.0% of pixels off by > 0.1 decade (worst 0.94 decades)
+preset gauss: n=256 dx=0.125 half=16 zmax=30 pad used=4
+   y=0    : linear max|dI|/max I = 1.78e-15;  log view:   0.0% of pixels off by > 0.1 decade (worst 0.00 decades)
+   x=0    : linear max|dI|/max I = 1.67e-15;  log view:   0.0% of pixels off by > 0.1 decade (worst 0.00 decades)
+   z=zmax : linear max|dI|/max I = 5.21e-15;  log view:   0.0% of pixels off by > 0.1 decade (worst 0.00 decades)
+preset double_slices: n=256 dx=0.125 half=16 zmax=30 pad used=4
+   x=0    : linear max|dI|/max I = 6.41e-03;  log view:   0.0% of pixels off by > 0.1 decade (worst 0.16 decades)
+   z=zmax : linear max|dI|/max I = 5.22e-03;  log view:  13.9% of pixels off by > 0.1 decade (worst 2.51 decades)

@@ -1,0 +1,6 @@
+0.5 h live: kept 18001 (stride 2); per second of recording by tenths: 10.00 10.00 10.00 10.00 10.00 10.00 10.00 10.00 10.00 10.01
+   reloaded half-way (server stride 5): kept 7202 (stride 5); by tenths: 4.00 4.00 4.00 4.00 4.01 4.00 4.00 4.00 4.00 4.01
+2 h live: kept 18001 (stride 8); per second of recording by tenths: 2.50 2.50 2.50 2.50 2.50 2.50 2.50 2.50 2.50 2.50
+   reloaded half-way (server stride 18): kept 8002 (stride 18); by tenths: 1.11 1.11 1.11 1.11 1.11 1.11 1.11 1.11 1.11 1.11
+6 h live: kept 13501 (stride 32); per second of recording by tenths: 0.63 0.63 0.63 0.63 0.63 0.63 0.63 0.63 0.63 0.63
+   reloaded half-way (server stride 54): kept 8002 (stride 54); by tenths: 0.37 0.37 0.37 0.37 0.37 0.37 0.37 0.37 0.37 0.37

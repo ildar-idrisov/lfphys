@@ -1,0 +1,9 @@
+=== (a) the view's trails before and after a checkpoint ===
+trail points held by the view after 1200 frames: {'o1': 1201, 'o2': 1201}
+rekey's trail message: reset = True  counts = []
+trail points held by the view right after the checkpoint: {}
+... and 30 frames later: {'o1': 30, 'o2': 30}
+messages at the checkpoint: ['record_segment', 'scene', 'trail', 'checkpoint']
+=== (b) a world rebuilt by replay after a rekey continues differently ===
+messages after the end of the record: original 20  replayed 20
+first difference at message 4: type trail; original counts [2, 2, 2], replayed counts [3, 3, 3]

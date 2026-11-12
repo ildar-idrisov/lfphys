@@ -1,0 +1,4 @@
+wrapper dt for this packet: 0.0078125 (E_max 7.070, phase per step 0.055); E(k0) h for h = 8 dt: 0.308 rad
+chunk  2 steps (h = 0.0156): t = 12.000, max |X - exact| = 4.095e-02 nm, median 3.521e-02; displacement 37.58 nm; rel 1.09e-03
+chunk  8 steps (h = 0.0625): t = 12.000, max |X - exact| = 4.087e-02 nm, median 3.524e-02; displacement 37.58 nm; rel 1.09e-03
+chunk 16 steps (h = 0.1250): t = 12.000, max |X - exact| = 4.124e-02 nm, median 3.523e-02; displacement 37.58 nm; rel 1.10e-03

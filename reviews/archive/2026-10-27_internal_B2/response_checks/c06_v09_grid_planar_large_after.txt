@@ -1,0 +1,6 @@
+160 worlds in 113 s: 160 ran, 0 refused, 0 with failed checks/errors
+smallest bound/est = 55.99 at {"space": "lab", "loop": "thomas", "rho": 2.993794224222018, "turns": 3, "sides": 16, "alpha": 143.07058274087882, "chi": 42.12681574781388, "nth": 104.11401776362895, "nph": 359.5112572870684, "accel_g": 1.4387457031703474} (est 3.55e-09)
+  thomas    n= 40 min bound/est =     55.99  max est = 3.55e-09
+  circle    n= 40 min bound/est =    205.54  max est = 3.57e-07
+  triangle  n= 40 min bound/est =  12111.72  max est = 3.55e-11
+  polygon   n= 40 min bound/est =   2183.29  max est = 1.38e-08

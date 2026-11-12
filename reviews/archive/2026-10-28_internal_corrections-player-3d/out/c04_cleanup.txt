@@ -1,0 +1,5 @@
+Q1 over the quota: removed ['20261020-000000-v01-aaaa'] (A was used a minute ago; B and C untouched for 2 days)
+Q2 a viewer is looking at dddd (suspended), quota exceeded: removed ['20261027-000000-v01-dddd']; folder still there: False
+Q3 a viewer came and left: last action in memory -0.000 d ago, on disk 2.000 d ago, after a restart 2.000 d ago
+    removed by the next cleanup with the restart's value: ['20261026-000000-v01-ffff']
+Q4 a record without last_action, meta.json 10 days old: after the server's start its mtime is 0 s old; cleanup removes [] (it would go only after 3.0 days of uninterrupted uptime)

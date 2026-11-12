@@ -1,0 +1,4 @@
+(A) LJ, walls: virial tensor (x, y) = (0.1979, 0.2008); walls {'x-lo': 0.2015, 'x-hi': 0.2038, 'y-lo': 0.1999, 'y-hi': 0.1986}
+(B0) frozen block only (no mobile atoms): virial = 1.0974, tensor [1.0973546803644545, 1.0973546803644545]
+(B) LJ + frozen block, walls: virial tensor (x, y) = (1.4512, 1.4596); walls {'x-lo': 0.3883, 'x-hi': 0.3746, 'y-lo': 0.395, 'y-hi': 0.3894}
+exit 0

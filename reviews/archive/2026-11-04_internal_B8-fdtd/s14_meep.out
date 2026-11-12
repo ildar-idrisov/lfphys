@@ -1,0 +1,22 @@
+meep 1.35.0
+  slab f=0.50: exact 0.000000 | eng 0.000081 0.000005 bound 5.09e-05 err 5.14e-06 | meep 0.000082 0.000005 bound 5.11e-05 err 5.15e-06 | diff 2.83e-09 tol 1.02e-04 ratio 0.00 | engine/cos(k dx/2): err 5.15e-06
+  slab f=0.75: exact 0.360000 | eng 0.340651 0.355324 bound 9.78e-03 err 4.68e-03 | meep 0.343042 0.355942 bound 8.60e-03 err 4.06e-03 | diff 6.18e-04 tol 1.84e-02 ratio 0.03 | engine/cos(k dx/2): err 4.06e-03
+  slab f=1.00: exact 0.000000 | eng 0.004956 0.000326 bound 3.09e-03 err 3.26e-04 | meep 0.005018 0.000327 bound 3.13e-03 err 3.27e-04 | diff 1.02e-06 tol 6.21e-03 ratio 0.00 | engine/cos(k dx/2): err 3.27e-04
+  slab f=1.25: exact 0.360000 | eng 0.296145 0.346413 bound 3.35e-02 err 1.36e-02 | meep 0.302000 0.348094 bound 3.07e-02 err 1.19e-02 | diff 1.68e-03 tol 6.42e-02 ratio 0.03 | engine/cos(k dx/2): err 1.19e-02
+  slab f=1.50: exact 0.000000 | eng 0.047038 0.003630 bound 2.89e-02 err 3.63e-03 | meep 0.048397 0.003656 bound 2.98e-02 err 3.66e-03 | diff 2.54e-05 tol 5.88e-02 ratio 0.00 | engine/cos(k dx/2): err 3.66e-03
+  drude f=0.50: exact 0.902314 | eng 0.903815 0.902744 bound 7.14e-04 err 4.30e-04 | meep 0.906606 0.903443 bound 2.11e-03 err 1.13e-03 | diff 6.99e-04 tol 2.82e-03 ratio 0.25 | engine/cos(k dx/2): err 1.13e-03
+  drude f=0.75: exact 0.897939 | eng 0.896304 0.897583 bound 8.52e-04 err 3.56e-04 | meep 0.902580 0.899146 bound 2.29e-03 err 1.21e-03 | diff 1.56e-03 tol 3.14e-03 ratio 0.50 | engine/cos(k dx/2): err 1.20e-03
+  drude f=1.00: exact 0.891061 | eng 0.885129 0.889644 bound 3.01e-03 err 1.42e-03 | meep 0.896217 0.892397 bound 2.55e-03 err 1.34e-03 | diff 2.75e-03 tol 5.56e-03 ratio 0.50 | engine/cos(k dx/2): err 1.33e-03
+  drude f=1.25: exact 0.879852 | eng 0.868664 0.877133 bound 5.65e-03 err 2.72e-03 | meep 0.885838 0.881387 bound 2.97e-03 err 1.54e-03 | diff 4.25e-03 tol 8.61e-03 ratio 0.49 | engine/cos(k dx/2): err 1.53e-03
+  drude f=1.50: exact 0.859817 | eng 0.843048 0.855735 bound 8.46e-03 err 4.08e-03 | meep 0.867330 0.861729 bound 3.73e-03 err 1.91e-03 | diff 5.99e-03 tol 1.22e-02 ratio 0.49 | engine/cos(k dx/2): err 1.89e-03
+  cyl tm f=0.40: exact 1.211360 | eng 1.213694 1.211963 bound 1.15e-03 err 6.03e-04 | meep 1.214769 1.212364 bound 1.60e-03 err 1.00e-03 | diff 4.01e-04 tol 2.76e-03 ratio 0.15
+  cyl tm f=0.60: exact 2.391860 | eng 2.394585 2.392547 bound 1.36e-03 err 6.87e-04 | meep 2.403057 2.394577 bound 5.65e-03 err 2.72e-03 | diff 2.03e-03 tol 7.01e-03 ratio 0.29
+  cyl tm f=0.80: exact 3.503184 | eng 3.510619 3.505192 bound 3.62e-03 err 2.01e-03 | meep 3.535280 3.511058 bound 1.61e-02 err 7.87e-03 | diff 5.87e-03 tol 1.98e-02 ratio 0.30
+  cyl tm f=1.00: exact 4.078705 | eng 4.087261 4.081304 bound 3.97e-03 err 2.60e-03 | meep 4.134176 4.092485 bound 2.78e-02 err 1.38e-02 | diff 1.12e-02 tol 3.18e-02 ratio 0.35
+  cyl te f=0.40: exact 0.553001 | eng 0.552907 0.552358 bound 3.66e-04 err 6.43e-04 OUT | meep 0.556029 0.553866 bound 1.44e-03 err 8.65e-04 | diff 1.51e-03 tol 1.81e-03 ratio 0.83
+  cyl te f=0.60: exact 1.676561 | eng 1.683570 1.678101 bound 3.65e-03 err 1.54e-03 | meep 1.690715 1.680245 bound 6.98e-03 err 3.68e-03 | diff 2.14e-03 tol 1.06e-02 ratio 0.20
+  cyl te f=0.80: exact 2.823946 | eng 2.848936 2.831097 bound 1.19e-02 err 7.15e-03 | meep 2.864135 2.833898 bound 2.02e-02 err 9.95e-03 | diff 2.80e-03 tol 3.20e-02 ratio 0.09
+  cyl te f=1.00: exact 3.544643 | eng 3.575351 3.554947 bound 1.36e-02 err 1.03e-02 | meep 3.604836 3.559523 bound 3.02e-02 err 1.49e-02 | diff 4.58e-03 tol 4.38e-02 ratio 0.10
+
+Elapsed run time = 32.4778 s
+rc=0

@@ -1,0 +1,11 @@
+  slab  f=0.50: |eng - meep| = 0.00e+00;  |eng/cos(k dx/2) - meep| = 3.86e-09  (R = 0.000005)
+  slab  f=0.75: |eng - meep| = 6.18e-04;  |eng/cos(k dx/2) - meep| = 6.59e-07  (R = 0.355942)
+  slab  f=1.00: |eng - meep| = 1.00e-06;  |eng/cos(k dx/2) - meep| = 8.06e-09  (R = 0.000327)
+  slab  f=1.25: |eng - meep| = 1.68e-03;  |eng/cos(k dx/2) - meep| = 4.86e-06  (R = 0.348094)
+  slab  f=1.50: |eng - meep| = 2.60e-05;  |eng/cos(k dx/2) - meep| = 6.63e-07  (R = 0.003656)
+  drude f=0.50: |eng - meep| = 6.99e-04;  |eng/cos(k dx/2) - meep| = 2.48e-06  (R = 0.903443)
+  drude f=0.75: |eng - meep| = 1.56e-03;  |eng/cos(k dx/2) - meep| = 3.54e-06  (R = 0.899146)
+  drude f=1.00: |eng - meep| = 2.75e-03;  |eng/cos(k dx/2) - meep| = 2.04e-06  (R = 0.892397)
+  drude f=1.25: |eng - meep| = 4.25e-03;  |eng/cos(k dx/2) - meep| = 9.93e-06  (R = 0.881387)
+  drude f=1.50: |eng - meep| = 5.99e-03;  |eng/cos(k dx/2) - meep| = 2.10e-05  (R = 0.861729)
+rc=0

@@ -1,0 +1,27 @@
+.........................................................                [100%]
+=============================== warnings summary ===============================
+tests/test_kerr_newman.py::test_rn_light_deflection_quadrature_and_weak_field_series
+  /lf/lfphys/tests/test_kerr_newman.py:399: IntegrationWarning: The occurrence of roundoff error is detected, which prevents 
+    the requested tolerance from being achieved.  The error may be 
+    underestimated.
+    v1, e1 = si.quad(g, 0.0, 1.0, epsabs=0.0, epsrel=1e-13, limit=400)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 15 durations =============================
+23.10s call     tests/test_nbody.py::test_pythagorean_outcome_binary_and_escape
+21.84s call     tests/test_nbody.py::test_symplectic_energy_bounded_over_ten_thousand_orbits
+14.96s call     tests/test_nbody.py::test_pythagorean_close_approaches_against_szebehely_peters
+8.46s call     tests/test_nbody.py::test_periodic_energy_without_secular_drift_and_its_negative_control
+7.46s call     tests/test_kerr_newman.py::test_kerr_shadow_edge_lies_on_bardeens_curve[0.9-60.0-dirs0]
+5.81s call     tests/test_nbody.py::test_kepler_eccentric_orbit_after_many_orbits[hermite]
+5.54s call     tests/test_nbody.py::test_kepler_negative_control_wrong_force_law
+4.63s call     tests/test_kerr_newman.py::test_kerr_shadow_edge_lies_on_bardeens_curve[0.5-89.0-dirs1]
+4.28s call     tests/test_nbody.py::test_figure_eight_returns_after_one_period
+3.90s call     tests/test_nbody.py::test_pass_policy_reports_each_contact_once
+3.07s call     tests/test_nbody.py::test_kepler_eccentric_orbit_after_many_orbits[yoshida4]
+3.05s call     tests/test_kerr_newman.py::test_shadow_size_seen_from_a_finite_distance_reissner_nordstrom[0.6]
+2.99s call     tests/test_kerr_newman.py::test_shadow_size_seen_from_a_finite_distance_reissner_nordstrom[0.0]
+1.10s call     tests/test_nbody.py::test_time_reversibility
+0.68s call     tests/test_kerr_newman.py::test_conserved_quantities_drift_within_the_local_error_budget
+57 passed, 1 warning in 116.70s (0:01:56)
+exit 0

@@ -1,0 +1,7 @@
+grid 440 x 82, dx = 0.005 m, dt = 0.0001443 s, declared u_max 2 m/s, declared cell Re 10 (limit 10)
+cell Re over the run: max 11.24 at t = 5.36 s; first above the limit: (0.43820885431492596, 10.16524899256891, 2.0330497985137823)
+largest Mach: 0.1124
+shown C_x over 7-11 s: max 3.3669 (DFG cDmax 3.22-3.24)
+shown C_y over 7-11 s: max 1.0451, min -1.0822, (max-min)/2 1.0636 (DFG cLmax 0.99-1.01)
+St from the shown C_y: 0.2983 (DFG 0.295-0.305)
+final checks: {'mass': True, 'momentum': True, 'mach': True, 're_cell': False, 'compressibility': True, 'dye': True}

@@ -1,0 +1,21 @@
+{"name":"X8 top bar one row, p02 (1600x1000)","ok":false,"h":42,"rows":2,"overflow":false}
+{"name":"X13 window ticks round, last label inside (1600x1000)","ok":false,"ticks":"not exposed (before the fix)"}
+{"name":"X2 control: Delete on the world's own window removes nothing (1600x1000)","ok":false,"selectedBefore":null,"removes":0,"views":1,"toasts":["Срез не построен: у этого мира нет запросов просмотра"]}
+{"name":"X2 Delete removes the object picked in the plane window (1600x1000)","ok":false,"picked":{"sel":"o2","slice":1},"removes":0,"views":2,"toasts":["Срез не построен: у этого мира нет запросов просмотра"]}
+{"name":"X8 toasts do not overlap (1600x1000)","ok":false,"n":3,"overlaps":3,"rects":[[905,940],[888,940],[905,940]]}
+{"name":"X3 new-world form of the space shows the grid and the window (1600x1000)","ok":false,"labels":["Сценарий","перенести сцену","Пространство","Затравка случайных чисел"]}
+{"name":"X8 top bar one row with the world selector (1600x1000)","ok":false,"h":77,"rows":4,"overflow":false}
+{"name":"X8 the carry-over's toasts do not overlap (1600x1000)","ok":false,"n":2,"texts":["Сцена перенесена в новый мир: 0 из 4 объектов; не перенесены","Перенесено из мира другого пространства с изменениями: Части"]}
+{"name":"no page errors p02 (1600x1000)","ok":true,"errs":[]}
+{"name":"X8 top bar one row, p01 (1600x1000)","ok":false,"h":42,"rows":2,"overflow":false}
+{"name":"X8 top bar one row, p02 (1280x800)","ok":false,"h":42,"rows":2,"overflow":false}
+{"name":"X13 window ticks round, last label inside (1280x800)","ok":false,"ticks":"not exposed (before the fix)"}
+{"name":"X2 control: Delete on the world's own window removes nothing (1280x800)","ok":false,"selectedBefore":null,"removes":0,"views":1,"toasts":["Срез не построен: у этого мира нет запросов просмотра"]}
+{"name":"X2 Delete removes the object picked in the plane window (1280x800)","ok":false,"picked":{"sel":"o2","slice":1},"removes":0,"views":2,"toasts":["Срез не построен: у этого мира нет запросов просмотра"]}
+{"name":"X8 toasts do not overlap (1280x800)","ok":false,"n":3,"overlaps":3,"rects":[[705,740],[688,740],[705,740]]}
+{"name":"X3 new-world form of the space shows the grid and the window (1280x800)","ok":false,"labels":["Сценарий","перенести сцену","Пространство","Затравка случайных чисел"]}
+{"name":"X8 top bar one row with the world selector (1280x800)","ok":false,"h":77,"rows":4,"overflow":false}
+{"name":"X8 the carry-over's toasts do not overlap (1280x800)","ok":false,"n":2,"texts":["Сцена перенесена в новый мир: 0 из 4 объектов; не перенесены","Перенесено из мира другого пространства с изменениями: Части"]}
+{"name":"no page errors p02 (1280x800)","ok":true,"errs":[]}
+{"name":"X8 top bar one row, p01 (1280x800)","ok":false,"h":42,"rows":2,"overflow":false}
+18 failed

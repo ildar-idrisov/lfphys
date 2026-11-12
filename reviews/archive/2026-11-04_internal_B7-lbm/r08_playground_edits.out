@@ -1,0 +1,14 @@
+=== (a) karman preset: the inlet's dye changed at t = 1 s ===
+before the edit: t = 1.0000 s, inlet scale 1.0000, inflow 0.41 kg/(s m)
+errors: []
+  0.0001 s after the edit: inlet scale 0.0000, inflow 8.4303e-08 kg/(s m)
+  0.0501 s after the edit: inlet scale 0.0246, inflow 0.010067 kg/(s m)
+  the world stopped: течение потеряло устойчивость (мир остановлен в состоянии до шага): счёт неустойчив к t = 1.12627 с (популяции нечисловые или вне |f| < 1.5); последнее здоровое состояние (t = 1.11703 с): Ma_max = 0.143, τ+ = 0.5173, Re ячейки = 14.3 (предел 10); состояние восстановлено на начало вызова (t = 1.10779 с). Уменьшите скорость или dx
+
+=== (a') the same preset: a second inlet added on the top side at t = 1.5 s ===
+before: inlet scale 1.0000, left inflow 0.41
+just after: inlet scale 0.0000, left inflow 3.3721e-07 (errors [])
+
+=== (b) the coefficient length of a disk: 0.2 m, then back to 0 (= its diameter 0.1 m) ===
+ref set to 0.20: the engine's coefficient length = 0.2 m (errors [])
+ref set to 0.00: the engine's coefficient length = 0.2 m (errors [])

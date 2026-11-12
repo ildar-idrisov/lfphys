@@ -1,0 +1,5 @@
+{"name":"p03_molecules 1600x1000: objects with a position handle report at[id]","ok":true,"types":["gas:true:true","piston:true:true","wall:false:false"]}
+{"name":"p03_molecules 1600x1000: drag «Аргон» (gas) in the 3d: one edit, refused (ghost snapped back)","ok":true,"values":{"x":6.9989,"y":3.8992},"text":"(6,73; 4,12; 0)","error":"Сцена не изменена: «Аргон»: атомы оказались бы за стенкой по оси x. Что изменить: центр по x от 6,087 до 6,103 нм"}
+{"name":"p03_molecules 1600x1000: drag «Поршень» (piston) in the 3d: one edit, applied","ok":true,"values":{"position":9.4956},"text":"y = 9,646"}
+{"name":"p03_molecules 1600x1000: no page errors","ok":true,"errs":[]}
+all passed (4)

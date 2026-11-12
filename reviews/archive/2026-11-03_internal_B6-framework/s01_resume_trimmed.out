@@ -1,0 +1,27 @@
+=== A: recording on/off leaves a hole between the header and the tail; no usable checkpoint ===
+recording on: True protected [[0, None]]
+recording off: protected [[0, 2]]
+the scene change is recorded in segment [4] at t = [1.753]
+segments kept: [0, 1, 2, 7, 8] trimmed: True
+scene change still in the record: False
+header in the record: True
+before suspension: t = 3.5563, o1 x = 9.7697 (vx = 5 since the change)
+_latest_world: complete = True  checkpoint = None  script commands = []
+POST command play (resumes) -> 200 {'ok': True}
+resumed how: replay
+after resume: t = 3.5564, o1 x = 2.5564; expected about 9.7699 (continuation with vx = 5)
+=== B: header trimmed; the checkpoint passes the server's checks but does not load in the worker ===
+segments kept: [4, 5] header in the record: False scene change in the record: False
+_latest_world: complete = False  checkpoint file = w1-1793730451102096632.pkl
+POST command play (resumes) -> 200 {'ok': True}
+notice: Продолжение с сохранённого состояния мира на t = 2.20412 с…
+notice: Сохранённое состояние не загрузилось (UnpicklingError: invalid load key, '\x00'.); мир пересчитывается от начала по записи
+notice: Мир восстановлен: пересчитан от начала по записи (0 изменений установки) и продолжается с t = 2.20412 с
+resumed how: replay | errors: none
+before suspension: t = 2.2041, o1 x = 8.4176; after resume: t = 2.2042, o1 x = 1.2042; expected about 8.4179
+=== C: world 1 kept (recording on), world 2's header trimmed: t_end of the resume ===
+world 1 reached t = 72.636
+headers in the record: [1]  headers kept apart: [1, 2]
+world 2 last frame t = 2.2540;  _latest_world: world 2, t_end = 87.6636, checkpoint t = 2.2540
+POST command play (resumes) -> 200
+first frame after the resume: t = 87.6637 (world 2 was at 2.2540)

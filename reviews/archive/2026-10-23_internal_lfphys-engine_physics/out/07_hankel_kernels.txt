@@ -1,0 +1,5 @@
+=== hankel1(nu, x): relative error vs mpmath J + iY ===
+nu=0: max rel. err 4.80e-16 at x = 5277;  by band x<1e4: 4.8e-16, x>=1e4: 2.7e-16
+nu=1: max rel. err 6.29e-16 at x = 1047;  by band x<1e4: 6.3e-16, x>=1e4: 3.6e-16
+
+=== RS kernel: int K dx' over a wide aperture -> exp(i k z) (k = 2 pi, z = 3) ===

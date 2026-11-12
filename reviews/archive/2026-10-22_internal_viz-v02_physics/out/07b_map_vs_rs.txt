@@ -1,0 +1,20 @@
+photon_young (a=20um, d=100um)
+   z = 4.00e-05 m (    2.0 a,  0.0 % of the map width): max|dev| = 0.123
+   z = 6.65e-05 m (    3.3 a,  5.0 % of the map width): max|dev| = 0.052
+   z = 1.11e-04 m (    5.5 a, 10.0 % of the map width): max|dev| = 0.057
+   z = 3.06e-04 m (   15.3 a, 20.1 % of the map width): max|dev| = 0.106
+   z = 8.44e-04 m (   42.2 a, 30.1 % of the map width): max|dev| = 0.031
+   z = 2.33e-03 m (  116.7 a, 40.2 % of the map width): max|dev| = 0.005
+   z = 6.45e-03 m (  322.5 a, 50.2 % of the map width): max|dev| = 0.001
+   z = 4.93e-02 m ( 2463.1 a, 70.3 % of the map width): max|dev| = 0.002
+   z = 1.00e+00 m (50000.0 a, 100.0 % of the map width): max|dev| = 0.002
+photon a=3um, d=15um
+   z = 6.00e-06 m (    2.0 a,  0.0 % of the map width): max|dev| = 0.085
+   z = 1.10e-05 m (    3.7 a,  5.0 % of the map width): max|dev| = 0.177
+   z = 2.01e-05 m (    6.7 a, 10.0 % of the map width): max|dev| = 0.294
+   z = 6.71e-05 m (   22.4 a, 20.1 % of the map width): max|dev| = 0.160
+   z = 2.24e-04 m (   74.8 a, 30.1 % of the map width): max|dev| = 0.033
+   z = 7.50e-04 m (  249.9 a, 40.2 % of the map width): max|dev| = 0.037
+   z = 2.51e-03 m (  835.7 a, 50.2 % of the map width): max|dev| = 0.037
+   z = 2.80e-02 m ( 9341.9 a, 70.3 % of the map width): max|dev| = 0.037
+   z = 1.00e+00 m (333333.3 a, 100.0 % of the map width): max|dev| = 0.037

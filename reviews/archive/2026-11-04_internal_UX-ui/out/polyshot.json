@@ -1,0 +1,43 @@
+[
+ {
+  "name": "p01_inner_default",
+  "run": "20261104-214131-p01-3491",
+  "actual_speed": "1 лет / с",
+  "fact": ""
+ },
+ {
+  "name": "p01_inner_tenth",
+  "run": "20261104-214144-p01-d928",
+  "actual_speed": "36,5 сут / с",
+  "fact": ""
+ },
+ {
+  "name": "p01_hole_default",
+  "run": "20261104-214217-p01-91f2",
+  "actual_speed": "1 лет / с",
+  "fact": ""
+ },
+ {
+  "name": "p01_kerr_default",
+  "run": "20261104-214226-p01-c32e",
+  "actual_speed": "493 мкс / с",
+  "fact": ""
+ },
+ {
+  "name": "v04_zoom",
+  "run": "20261104-214247-v04-8417"
+ },
+ {
+  "name": "p03_hard_atom",
+  "run": "20261104-214308-p03-b858",
+  "status": "пауза · конец записи",
+  "toasts": [
+   "Traceback (most recent call last):\n  File \"/lf/visualizations/server/lfviz/sim.py\", line 544, in run\n    self._frame((time.monotonic() - t0) * 1e3)\n  File \"/lf/visualizations/server/lfviz/sim.py\", line 185, in _frame\n    meta, blobs = self.sim.frame()\n                  ^^^^^^^^^^^^^^^^\n  File \"/lf/visualizations/p03_molecules/viz.py\", line 698, in frame\n    self.emit_stats()\n  File \"/lf/visualizations/p03_molecules/viz.py\", line 734, in emit_stats\n    P = md.pressure()\n        ^^^^^^^^^^^^^\n  File \"/lf/lfphys/lfphys/core/md/hard.py\", line 731, in pressure\n    \"Z\": 1.0 + a[\"W\"] / (self.dim * se"
+  ],
+  "events": [
+   "0 с — добавлен объект «Атом 1»",
+   "0 сдобавлен объект «Атом 1»",
+   "0,8011891 псОШИБКА: Traceback (most recent call last):\n  File \"/lf/visualizations/server/lfviz/sim.py\", line 544, in run\n    self._frame((time.monotonic() - t0) * 1e3)\n  File \"/lf/visualizations/server/lfviz/sim.py\", line 185, in _frame\n    meta, blobs = self.sim.frame()\n                  ^^^^^^^^^^"
+  ]
+ }
+]

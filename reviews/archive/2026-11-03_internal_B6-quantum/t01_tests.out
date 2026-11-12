@@ -1,0 +1,31 @@
+.............................s.......                                    [100%]
+============================= slowest 15 durations =============================
+10.63s call     tests/test_quantum_scene.py::test_aharonov_bohm_shift_of_the_fringes
+9.49s call     tests/test_quantum_scene.py::test_double_slit_far_field_approaches_fraunhofer
+7.50s call     tests/test_quantum_scene.py::test_path_marker_turns_as_the_transfer_matrices_say
+5.70s call     tests/test_quantum_scene.py::test_decoherence_jumps_reproduce_the_master_equation[True]
+5.16s call     tests/test_bohm_nd.py::test_equivariance_behind_an_obstacle
+3.29s call     tests/test_quantum_scene.py::test_position_measurement_probability_rule_and_post_state
+3.04s call     tests/test_quantum_scene.py::test_decoherence_jumps_reproduce_the_master_equation[False]
+2.84s call     tests/test_quantum_scene.py::test_decoherence_negative_control_wrong_rate
+2.08s call     tests/test_quantum_scene.py::test_cyclotron_orbit_and_electron_spin_in_a_uniform_field
+1.95s call     tests/test_quantum_scene.py::test_detector_reflection_from_transfer_matrices_matches_a_run
+1.71s call     tests/test_quantum_scene.py::test_tunnelling_through_a_smooth_barrier_against_transfer_matrices
+1.21s call     tests/test_bohm_nd.py::test_error_controlled_steps_follow_a_vortex
+0.75s call     tests/test_bohm_nd.py::test_time_reversal
+0.52s call     tests/test_quantum_scene.py::test_free_packet_spreads_as_the_closed_form[shape1-0.4-center1-k1-sigma1-1.0]
+0.45s call     tests/test_quantum_scene.py::test_measurement_draws_the_absorbed_outcomes_with_their_probability
+36 passed, 1 skipped in 58.91s
+...............                                                          [100%]
+============================= slowest 10 durations =============================
+20.55s call     p02_quantum/tests/test_p02_quantum.py::test_bohm_points_are_registered_by_the_detectors_they_enter
+19.37s call     p02_quantum/tests/test_p02_quantum.py::test_a_change_at_the_current_moment_keeps_the_balance
+14.82s call     p02_quantum/tests/test_p02_quantum.py::test_the_scene_file_starts_the_same_set_up
+13.29s call     p02_quantum/tests/test_p02_quantum.py::test_every_preset_builds_runs_and_keeps_the_balance[which_path]
+12.29s call     p02_quantum/tests/test_p02_quantum.py::test_every_preset_builds_runs_and_keeps_the_balance[double_slit]
+12.15s call     p02_quantum/tests/test_p02_quantum.py::test_every_preset_builds_runs_and_keeps_the_balance[aharonov_bohm]
+9.21s call     p02_quantum/tests/test_p02_quantum.py::test_the_cyclotron_orbit_from_the_field_in_tesla
+6.43s call     p02_quantum/tests/test_p02_quantum.py::test_every_preset_builds_runs_and_keeps_the_balance[tunnel]
+5.81s call     p02_quantum/tests/test_p02_quantum.py::test_every_preset_builds_runs_and_keeps_the_balance[ball_3d]
+5.32s call     p02_quantum/tests/test_p02_quantum.py::test_every_preset_builds_runs_and_keeps_the_balance[cyclotron]
+15 passed in 132.74s (0:02:12)

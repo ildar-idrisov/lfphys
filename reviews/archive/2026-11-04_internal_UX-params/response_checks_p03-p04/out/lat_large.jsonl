@@ -1,0 +1,11 @@
+{"s": 24.311, "err": null, "case": "gas3_n12000", "tag": "before", "build_s": 0.84}
+{"s": 1.501, "err": null, "case": "mol2_add_count250", "tag": "before", "build_s": 0.0}
+{"s": 26.929, "err": null, "case": "mol3_count600", "tag": "before", "build_s": 0.53}
+{"s": 6.866, "err": null, "case": "gas3_n12000", "tag": "final2", "build_s": 0.86}
+{"s": 0.157, "err": null, "case": "mol2_add_count250", "tag": "final2", "build_s": 0.0}
+{"s": 1.168, "err": null, "case": "mol3_count600", "tag": "final2", "build_s": 0.08}
+{"s": 3.73, "err": null, "case": "gas3_n12000", "tag": "final3", "build_s": 0.79}
+{"s": 0.007, "err": null, "case": "gas2_add", "tag": "final3", "build_s": 0.0}
+{"s": 2.802, "err": null, "case": "gas3_n12000", "tag": "final4", "build_s": 1.0}
+{"s": 0.012, "err": null, "case": "gas2_add", "tag": "final4", "build_s": 0.01}
+{"s": 0.019, "err": null, "case": "maxwell_n_set", "tag": "final4", "build_s": 0.02}

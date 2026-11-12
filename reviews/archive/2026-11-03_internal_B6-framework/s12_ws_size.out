@@ -1,0 +1,5 @@
+scene as JSON: 1.41 M characters (limit of the json parameter: 2.0 M); the WebSocket message: 1.35 MiB (limit 1 MiB)
+POST /api/runs with this scene (the catalogue's way): 200 {"id": "20261103-184503-p01-8e26"}
+the socket after the load: CLOSE code 1009 
+--- the run started from that scene (POST /api/runs): its meta.json (runs_browser/20261103-184503-p01-8e26, removed after measuring)
+meta.json 2930272 bytes; largest keys: {'params': 1413096, 'worlds': 1413604}

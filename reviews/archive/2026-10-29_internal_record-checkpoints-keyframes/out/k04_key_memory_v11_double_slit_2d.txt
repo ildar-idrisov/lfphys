@@ -1,0 +1,6 @@
+run 20261029-123330-v11-6679 v11_double_slit_2d {"grid":"coarse","n_tracks":400,"n_bohm":400,"L":12,"sigma_z":2,"sigma_x":3,"a":1.5,"d":4,"w":1}
+{"key_every":1000000000,"heap_MB":10.7,"keys":0,"frames":59,"segs_at_end":30800,"last_rebuild_ms":34.2}
+{"key_every":1000000000,"step_back_to_middle":{"fromKey":0,"full":2,"ms":26.4,"fed":55}}
+{"key_every":100,"heap_MB":11.3,"keys":1,"frames":59,"segs_at_end":30800,"last_rebuild_ms":20.4}
+{"key_every":100,"step_back_to_middle":{"fromKey":0,"full":2,"ms":32.4,"fed":55}}
+errors []

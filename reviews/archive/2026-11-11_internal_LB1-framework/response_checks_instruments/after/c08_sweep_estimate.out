@@ -1,0 +1,6 @@
+[A_steps] frames 29, cpu_ms min 0.01 median 41.19 max 43.29
+[A_steps] estimate: HTTP 200; ms per world second None; total None s; «2 знач. × 201 замер: цену счёта этого мира запись не измерила (мир ещё не играл ⏺ — шаги и паузы её не показывают). Свип измерит её сам в первые 3,0 с счёта и остановится, если весь он займёт больше 1»
+[A_steps] the sweep itself: advance per value [0.029547005891799927, 0.030080504715442657] s, wall per value [0.033793709240853786, 0.0344271631911397] s → 0.298 ms per world second
+[B_played] frames 69, cpu_ms min 0.01 median 0.27 max 40.08
+[B_played] estimate: HTTP 200; ms per world second 4.82370894930217; total 4.084841789860434 s; «≈ 4,1 с счёта: 2 знач. × (восстановление 0,1 с + 100 с мира × 4,82 мс за 1 с + 201 замер × 0,05 мс); предел 10 мин. Оценка — по цене счёта этого мира, пока он играл (45 кадров записи); свип проверит е»
+[B_played] the sweep itself: advance per value [0.030605120584368706, 0.04238617653027177] s, wall per value [0.035062715876847506, 0.04890062799677253] s → 0.365 ms per world second

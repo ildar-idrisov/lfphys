@@ -1,0 +1,16 @@
+== (a) per-hit average of the engine's GRW sampler ==
+  1 hit(s): E[c1 c2*] = 0.7781+0.0000i   exp(-n d^2/4rC^2) = 0.7788   (MC sigma ~ 0.0050)
+  2 hit(s): E[c1 c2*] = 0.6067+0.0000i   exp(-n d^2/4rC^2) = 0.6065   (MC sigma ~ 0.0050)
+  4 hit(s): E[c1 c2*] = 0.3705+0.0000i   exp(-n d^2/4rC^2) = 0.3679   (MC sigma ~ 0.0050)
+
+== (b1) kick at distance z = rigid shift q(L2 - z)/k on the screen (two-step Fresnel, numerical) ==
+  max|P_two-step - P0(x - q s/k)| / max P = 8.52e-04
+
+== (b2/c) c60_grw preset: engine vs exact free-flight GRW ==
+  lambda N T = 2.2500; per-hit coherence factor: at slit plane 0.77880, averaged over the flight 0.92256
+  engine formula exp(-LNT(1-e^(-d^2/4rC^2)))         = 0.6079
+  free flight   exp(-LNT(1-<e^(-d^2(1-z/L)^2/4rC^2)>)) = 0.8401
+  engine run: |gamma| of the expected pattern = 0.6107, its reference 0.6079
+  exact paraxial free-flight ensemble (MC of 200000 particles), fitted |gamma| = 0.8476
+  same kicks all at the slit plane (engine's assumption), fitted |gamma| = 0.6217
+  fraction of shifts beyond the binning range: 0.00e+00

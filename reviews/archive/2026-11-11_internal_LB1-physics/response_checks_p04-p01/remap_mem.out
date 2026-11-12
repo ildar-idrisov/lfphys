@@ -1,0 +1,7 @@
+dye=0.001 (200, 40)->(400, 80): peak 30.83 MB, estimate 48.80 MB, ratio 0.632
+dye=0.001 (400, 80)->(200, 40): peak 29.39 MB, estimate 27.20 MB, ratio 1.081
+dye=0.001 (200, 40)->(200, 40): peak 9.94 MB, estimate 15.20 MB, ratio 0.654
+dye=None (200, 40)->(400, 80): peak 23.64 MB, estimate 38.24 MB, ratio 0.618
+dye=None (400, 80)->(200, 40): peak 24.01 MB, estimate 20.96 MB, ratio 1.146
+dye=None (200, 40)->(200, 40): peak 7.82 MB, estimate 11.84 MB, ratio 0.661
+[exit 0]

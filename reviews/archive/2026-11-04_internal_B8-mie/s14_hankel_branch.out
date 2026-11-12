@@ -1,0 +1,9 @@
+m = 100000.0, x = 0.5: |mx| = 5e+04, N = 20, start by Hankel: max error 3.57e-05 of the largest coefficient
+m = (300+300j), x = 2.0: |mx| = 849, N = 24, start by Hankel: max error 2.02e-16 of the largest coefficient
+m = 2000.0, x = 0.5: |mx| = 1e+03, N = 20, start by Hankel: max error 1.61e-16 of the largest coefficient
+m = (50+10000j), x = 0.3: |mx| = 3e+03, N = 19, start by Hankel: max error 1.88e-16 of the largest coefficient
+m = 1e5, x = 0.5 with D_n(mx) from Bessel functions: engine error 1.61e-16; the recurrence reference's own error 3.57e-05
+m = 200.0, x = 1.0: |mx| = 200, N = 22, start by continued fraction (178 oscillatory steps): engine error 2.33e-16
+m = 50.0, x = 5.0: |mx| = 250, N = 28, start by continued fraction (222 oscillatory steps): engine error 5.28e-16
+m = 30.0, x = 10.0: |mx| = 300, N = 36, start by continued fraction (264 oscillatory steps): engine error 5.99e-14
+m = 8.0, x = 60.0: |mx| = 480, N = 93, start by continued fraction (387 oscillatory steps): engine error 2.81e-14

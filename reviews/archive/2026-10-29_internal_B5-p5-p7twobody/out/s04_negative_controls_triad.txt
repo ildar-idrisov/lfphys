@@ -1,0 +1,1 @@
+[P7] left-handed triad Q = P x N (hx sign): CAUGHT (28 s) 1 failed, 32 passed in 27.70s FAILED tests/test_gw_quadrupole.py::test_circular_orbit_matches_blanchet[0.0-0.0]

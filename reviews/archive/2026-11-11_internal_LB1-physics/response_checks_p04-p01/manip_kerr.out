@@ -1,0 +1,6 @@
+{"name":"p01_gravity 1600x1000: objects with a position handle report at[id]","ok":true,"types":["body:true:true","light:true:true","observer:true:true","kn_hole:false:true"]}
+{"name":"p01_gravity 1600x1000: drag «На ISCO-близкой орбите» (body) in the 3d: one edit, applied","ok":true,"values":{"x":5.9293000000000005,"y":1.1535,"z":-1.6244},"text":"(5,09; 0,807; −1,14)"}
+{"name":"p01_gravity 1600x1000: throw «Наклонная орбита» (body) in the 3d: one edit, applied","ok":true,"values":{"x":10.2558,"y":1.1097000000000001,"z":1.1736,"tvx":346.3,"tvy":142.8,"tvz":-201.10000000000002},"text":"бросок: v = (484; 200; −281) (G M/c²)/с (×0,038, авто)"}
+{"name":"p01_gravity 1600x1000: drag «Падает» (body) in the 3d: one edit, applied","ok":true,"values":{"x":-8.3641,"y":-2.9017,"z":-1.7096},"text":"(−9,25; −3,27; −1,2)"}
+{"name":"p01_gravity 1600x1000: no page errors","ok":true,"errs":[]}
+all passed (5)

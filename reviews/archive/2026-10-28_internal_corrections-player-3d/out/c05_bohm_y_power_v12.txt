@@ -1,0 +1,9 @@
+v12_arrival_times_2d (v12): params defaults; done True after 90 s wall, world t 7.06e-16 s
+  shipped check screen_y: value 5.539e-10, ok True; Σ_y P(x, y) Δy против потока в экран по x; 48 полос по y на ±19.3 λ, |η(y, t)|² свободного гауссова множителя (σy = 3 λ при t = 0); доля пика; цель < 1e-3 (обре
+  shipped check bohm_y: value 0.02151, ok True; 2000 попаданий; y траектории — y₀·σy(t)/σy (точное движение Бома в свободном множителе η), старт по |η|²; эталон — распределение по y потока в экран, Σ_t J(x, t
+  hits n = 2000; sigma_y0 = 3 lambda; sigma_y(t_hit)/sigma_y0: mean 1.0355, range 1.0068-1.0843
+  KS D = 0.0215 vs critical 0.0436 -> passes: as shipped (hit_y)
+  KS D = 0.0203 vs critical 0.0436 -> passes: no spreading: y = y0
+  KS D = 0.0210 vs critical 0.0436 -> passes: sigma_y(t) 10 % too small
+  KS D = 0.0225 vs critical 0.0436 -> passes: sigma_y(t) 10 % too large
+  KS D = 0.0275 vs critical 0.0436 -> passes: double spread

@@ -1,0 +1,10 @@
+=== 1: a not yet opened unprotected segment is deleted during the history ===
+segments: [0, 1, 2, 3, 4, 5] protected: [[0, 2]]
+segments after the trim: [0, 1, 2, 5, 6]
+pump finished: True  viewer alive: False  exception: FileNotFoundError(2, 'No such file or directory')
+messages sent: 156  history_end sent: False  corrupt or empty messages sent: 0 []
+=== 2: segment 0 is emptied while it is being sent ===
+segments: [0, 1, 2, 3, 4, 5] protected: []
+segments after the trim: [1, 2, 3, 4, 5, 6]
+pump finished: False  viewer alive: True  exception: None
+messages sent: 313  history_end sent: True  corrupt or empty messages sent: 26 ['<corrupt: 52 bytes>', '<corrupt: 0 bytes>', '<corrupt: 0 bytes>']

@@ -1,0 +1,5 @@
+default double: окно ×8, обычная сумма; оценка ошибки 1.1e-03 пика
+azimuth   30: window of the slice x8 (est 6.6e-04); at 755 points: max|slice - volume's sum| = 6.13e-04 of the peak; slice vs exact 2.36e-04, volume's sum vs exact 4.78e-04
+azimuth   45: window of the slice x8 (est 4.0e-04); at 927 points: max|slice - volume's sum| = 1.42e-04 of the peak; slice vs exact 2.12e-04, volume's sum vs exact 2.07e-04
+azimuth   90: window of the slice x8 (est 1.1e-03); at 657 points: max|slice - volume's sum| = 4.95e-14 of the peak; slice vs exact 5.06e-04, volume's sum vs exact 5.06e-04
+done

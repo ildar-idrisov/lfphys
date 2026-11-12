@@ -1,0 +1,8 @@
+photon, b = a + 0: 371 of 720 half-degree settings give a negative cell; integer a among them: 179, e.g. [1.0, 2.0, 5.0, 8.0, 9.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 19.0, 20.0, 21.0]
+photon, b = a + 90: 541 of 720 half-degree settings give a negative cell; integer a among them: 260, e.g. [1.0, 2.0, 5.0, 7.0, 8.0, 9.0, 11.0, 12.0, 13.0, 14.0, 15.0, 17.0, 18.0, 19.0, 20.0]
+spin, b = a + 0: 378 of 720 half-degree settings give a negative cell; integer a among them: 203, e.g. [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0]
+spin, b = a + 180: 591 of 720 half-degree settings give a negative cell; integer a among them: 296, e.g. [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0]
+run photon fixed a = 30, b = 30: min P = -2.78e-17 -> advance RAISES ValueError: Probabilities are not non-negative
+run photon fixed a = 10, b = 100: min P = 1.73e-18 -> ok, detected 2
+run spin fixed a = 30, b = 30: min P = -6.94e-18 -> advance RAISES ValueError: Probabilities are not non-negative
+run spin fixed a = 50, b = 230: min P = -3.08e-33 -> advance RAISES ValueError: Probabilities are not non-negative

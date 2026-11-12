@@ -1,0 +1,64 @@
+
+=== rainbow: x = 1713.6 at 550.0 nm, m = [1.3354010303999764, 0.0], N = 1780, n_fine = 20001; build 1.0 s, sky (16 wavelengths) 7.2 s; errors []
+  Descartes/Airy: {"2": {"theta": 138.26976946239463, "airy": [138.95892747584605, 140.46699839440512, 141.53030432026966], "b": 0.8595937195378371}, "3": {"theta": 128.4818723713637, "airy": [127.25063348934232, 124.5563376739654, 122.65665200847977], "b": 0.9497831389326908}}; measured Debye maxima {'2': 138.95000000000002, '3': 127.30000000000001}
+  check alexander: value 9.7879 ref None tol 1e-09 [info]
+  check bow2: value 138.95 ref 138.959 tol 0.05 [info]
+  check bow3: value 127.3 ref 127.251 tol 0.05 [info]
+  check debye: value 4.33627e-12 ref 0 tol 5e-10 [ok]
+  check energy: value 4.44089e-16 ref 0 tol 1e-10 [ok]
+  check mueller: value 7.10315e-16 ref 0 tol 1e-10 [ok]
+  check sky_bow: value 138.9 ref 138.27 tol 0.5 [info]
+  check sky_sum: value 0.0362289 ref None tol 1e-09 [info]
+  check theorem: value 2.01631 ref 2.01631 tol 3.952393967665557e-11 [ok]
+  check water: value 1.33434 ref 1.33434 tol 7.494319305966077e-07 [ok]
+  sky: nodes per wavelength [1193, 1119, 1053, 995, 941, 895, 853, 813, 779, 747, 717, 689, 663, 639, 617, 597], coarse []
+  luminance maxima (deg, Y/Ymax): [(127.4, 0.131), (138.9, 1.0), (140.4, 0.589), (141.5, 0.499), (142.4, 0.438), (143.2, 0.383), (143.9, 0.329), (144.6, 0.286), (145.2, 0.249), (145.8, 0.226), (146.4, 0.213), (173.7, 0.066), (174.9, 0.066)]
+  brightest angle 132-145 deg: 138.9; brightest over 125-180: 138.9
+
+=== supernumerary: x = 1142.4 at 550.0 nm, m = [1.3354010303999764, 0.0], N = 1202, n_fine = 20001; build 0.6 s, sky (16 wavelengths) 1.0 s; errors []
+  Descartes/Airy: {"2": {"theta": 138.26976946239463, "airy": [139.1728219288961, 141.14895386973126, 142.5422787970417], "b": 0.8595937195378371}, "3": {"theta": 128.4818723713637, "airy": [126.86849301922723, 123.33796673342617, 120.84867430366444], "b": 0.9497831389326908}}; measured Debye maxima {'2': 139.15, '3': 126.95}
+  check alexander: value 9.7879 ref None tol 1e-09 [info]
+  check bow2: value 139.15 ref 139.173 tol 0.05 [info]
+  check bow3: value 126.95 ref 126.868 tol 0.05 [info]
+  check debye: value 2.05898e-12 ref 0 tol 5e-10 [ok]
+  check energy: value 4.44089e-16 ref 0 tol 1e-10 [ok]
+  check mueller: value 8.09046e-16 ref 0 tol 1e-10 [ok]
+  check sky_bow: value 139.1 ref 138.27 tol 0.5 [info]
+  check sky_sum: value 0.312413 ref None tol 1e-09 [info]
+  check theorem: value 2.02062 ref 2.02062 tol 2.6689761511988763e-11 [ok]
+  check water: value 1.33434 ref 1.33434 tol 7.494319305966077e-07 [ok]
+  sky: nodes per wavelength [201, 189, 177, 167, 159, 151, 143, 137, 131, 127, 121, 117, 113, 109, 105, 101], coarse []
+  luminance maxima (deg, Y/Ymax): [(127.0, 0.131), (131.7, 0.022), (132.2, 0.022), (139.1, 1.0), (141.1, 0.605), (142.5, 0.496), (143.7, 0.418), (144.7, 0.356), (145.6, 0.299), (146.5, 0.259), (147.3, 0.231), (148.1, 0.214), (148.8, 0.204), (158.0, 0.119), (158.4, 0.117), (158.9, 0.115), (159.4, 0.112), (159.9, 0.11), (160.4, 0.107), (160.9, 0.104), (161.4, 0.101), (161.9, 0.098), (163.0, 0.093), (166.0, 0.085), (166.4, 0.084), (166.8, 0.083), (167.9, 0.082), (168.3, 0.082), (168.7, 0.082), (169.1, 0.08), (169.5, 0.08), (169.9, 0.08), (170.3, 0.079), (170.7, 0.078), (171.5, 0.078), (172.7, 0.077), (173.4, 0.076), (173.9, 0.076), (174.4, 0.076), (176.0, 0.079), (176.8, 0.08)]
+  brightest angle 132-145 deg: 139.1; brightest over 125-180: 139.1
+
+=== glory: x = 91.4 at 550.0 nm, m = [1.3354010303999764, 0.0], N = 127, n_fine = 4113; build 0.1 s, sky (16 wavelengths) 0.2 s; errors []
+  Descartes/Airy: {"2": {"theta": 138.26976946239463, "airy": [143.13368836426858, 153.7773063778069, 161.2818752725163], "b": 0.8595937195378371}, "3": {"theta": 128.4818723713637, "airy": [119.79207126030377, 100.77635049980576, 87.3688055890247], "b": 0.9497831389326908}}; measured Debye maxima {'2': 142.9, '3': 122.65}
+  check alexander: value 9.7879 ref None tol 1e-09 [info]
+  check bow2: value 142.9 ref 143.134 tol 0.05 [info]
+  check bow3: value 122.65 ref 119.792 tol 0.05 [info]
+  check debye: value 3.99642e-14 ref 0 tol 5e-10 [ok]
+  check energy: value 2.17215 ref 2.17215 tol 6.639932965095795e-12 [ok]
+  check mueller: value 7.84936e-16 ref 0 tol 1e-10 [ok]
+  check sky_bow: value 142.5 ref 138.27 tol 0.5 [info]
+  check sky_sum: value 0.0376262 ref None tol 1e-09 [info]
+  check theorem: value 2.17215 ref 2.17215 tol 2.8199664825478976e-12 [ok]
+  check water: value 1.33434 ref 1.33434 tol 7.494319305966077e-07 [ok]
+  sky: nodes per wavelength [319, 299, 283, 267, 253, 241, 229, 219, 209, 201, 193, 185, 179, 173, 167, 161], coarse []
+  luminance maxima (deg, Y/Ymax): [(129.4, 0.065), (142.5, 0.506), (152.0, 0.267), (158.0, 0.214), (162.6, 0.197), (174.0, 0.254), (175.9, 0.378), (178.1, 0.98)]
+  brightest angle 132-145 deg: 142.5; brightest over 125-180: 180.0
+
+=== fogbow: x = 171.4 at 550.0 nm, m = [1.3354010303999764, 0.0], N = 211, n_fine = 7712; build 0.1 s, sky (16 wavelengths) 0.8 s; errors []
+  Descartes/Airy: {"2": {"theta": 138.26976946239463, "airy": [141.46855760222547, 148.46840273810537, 153.4038316503126], "b": 0.8595937195378371}, "3": {"theta": 128.4818723713637, "airy": [122.76696772506332, 110.2611543539602, 101.44359458166784], "b": 0.9497831389326908}}; measured Debye maxima {'2': 141.35, '3': 124.10000000000001}
+  check alexander: value 9.7879 ref None tol 1e-09 [info]
+  check bow2: value 141.35 ref 141.469 tol 0.05 [info]
+  check bow3: value 124.1 ref 122.767 tol 0.05 [info]
+  check debye: value 1.2454e-13 ref 0 tol 5e-10 [ok]
+  check energy: value 3.33067e-16 ref 0 tol 1e-10 [ok]
+  check mueller: value 1.09989e-15 ref 0 tol 1e-10 [ok]
+  check sky_bow: value 141.2 ref 138.27 tol 0.5 [info]
+  check sky_sum: value 0.0254248 ref None tol 1e-09 [info]
+  check theorem: value 2.03188 ref 2.03188 tol 4.685141163918161e-12 [ok]
+  check water: value 1.33434 ref 1.33434 tol 7.494319305966077e-07 [ok]
+  sky: nodes per wavelength [895, 839, 789, 747, 707, 671, 639, 611, 585, 561, 537, 517, 499, 481, 463, 449], coarse []
+  luminance maxima (deg, Y/Ymax): [(141.2, 0.583), (147.6, 0.287), (151.7, 0.212), (168.2, 0.138), (169.2, 0.137), (170.0, 0.137), (177.8, 0.262), (179.0, 0.693)]
+  brightest angle 132-145 deg: 141.2; brightest over 125-180: 180.0

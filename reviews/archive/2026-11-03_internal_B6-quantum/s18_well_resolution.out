@@ -1,0 +1,3 @@
+256^2 (d = 0.3125), dt 0.001953125: spectral tail with the packet in the well 2.51e-01, at the end 1.83e-09; probability past the well at t = 14.00: 0.92337
+512^2 (d = 0.15625), dt 0.001953125: spectral tail with the packet in the well 4.51e-06, at the end 3.26e-13; probability past the well at t = 14.00: 0.99730
+difference 256 vs 512: -7.39e-02

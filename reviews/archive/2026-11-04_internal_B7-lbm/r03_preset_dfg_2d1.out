@@ -1,0 +1,10 @@
+grid 440 x 82, dx = 0.005 m, dt = 0.0006415 s, D = 20.0 cells, interpolated: False
+t =  2.01 s: shown C_x = -0.4799, C_y = -0.46717
+t =  4.00 s: shown C_x = 1.1894, C_y = -0.06089
+t =  7.99 s: shown C_x = 4.8009, C_y = 0.01490
+t = 10.00 s: shown C_x = 5.2588, C_y = 0.00212
+t = 11.99 s: shown C_x = 5.4403, C_y = 0.00592
+shown C_x over 8-12 s: min 4.9224 max 6.3975 (DFG range 5.5700-5.5900)
+shown C_y over 8-12 s: min -0.00786 max 0.03171 (DFG range 0.0104-0.0110)
+mean over two acoustic periods (1.956 s each): C_x = 5.6465, C_y = 0.01109 (u_ref = 0.2)
+checks: {'mass': (1.8149561676178168e-14, True), 'momentum': (1.4825293001114285e-14, True), 'mach': (0.0899, True), 're_cell': (2.0222, True), 'compressibility': (0.0054, True), 'dye': (-2.9780772877665267e-15, True)}

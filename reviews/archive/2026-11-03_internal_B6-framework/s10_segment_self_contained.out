@@ -1,0 +1,18 @@
+=== p01 preset kerr_orbits ===
+  never reaches a viewer joining after the first segment left the window: ['event', 'lines:orbits', 'mesh:ergo', 'mesh:horizon']
+  approximations: full record ['пробные тела и свет: без собственного поля и заряда (дыра — неизменный фон)']
+                  joined view  ['пробные тела и свет: без собственного поля и заряда (дыра — неизменный фон)']
+  scene box:      full record [[-32.0, -32.0, -32.0], [32.0, 32.0, 32.0]]  joined view [[-32.0, -32.0, -32.0], [32.0, 32.0, 32.0]]
+  largest |coordinate| of a body in the last frame: 98.00882720947266
+=== p01 preset inner ===
+  never reaches a viewer joining after the first segment left the window: ['approx', 'box']
+  approximations: full record ['ньютоновская гравитация точечных масс']
+                  joined view  ['ньютоновская гравитация точечных масс']
+  scene box:      full record [[-8.0, -8.0, -4.0], [8.0, 8.0, 4.0]]  joined view [[-1.5, -1.5, -0.75], [1.5, 1.5, 0.75]]
+  largest |coordinate| of a body in the last frame: 5.228327751159668
+=== p01 preset hole_stars ===
+  never reaches a viewer joining after the first segment left the window: ['approx', 'box', 'event']
+  approximations: full record ['ньютоновская гравитация точечных масс', 'чёрная дыра — ньютоновская точечная масса с радиусом Шварцшильда как радиусом захвата (не ОТО)']
+                  joined view  ['ньютоновская гравитация точечных масс']
+  scene box:      full record [[-8.0, -8.0, -4.0], [8.0, 8.0, 4.0]]  joined view [[-1.5, -1.5, -0.75], [1.5, 1.5, 0.75]]
+  largest |coordinate| of a body in the last frame: 4.122313499450684

@@ -1,0 +1,19 @@
+A. zero cells of the joint Born probabilities
+  angles a = b (step 0.5 deg over [-360, 360]) with a negative joint probability: 1502; first: [('photon', -360.0, -2.9995195653237147e-32), ('photon', -359.5, -4.9873299934333204e-18), ('photon', -359.0, -3.6591823321385775e-17), ('photon', -358.0, -3.7947076036992655e-17), ('photon', -357.5, -6.722053469410127e-17), ('photon', -355.0, -3.0357660829594124e-17)]
+  qubits.sample_pairs at photon a = b = -360.0: ValueError: Probabilities are not non-negative
+  run (fixed a = b = -360.0, photon): EXCEPTION in advance: ValueError: Probabilities are not non-negative
+
+B. a' = a (degenerate settings): spread of S over seeds vs the run's sigma
+  a = a' = 0.0, b = 45.0, b' = 0.0: S mean -0.0039 (law +0.0000), empirical SD 0.0491, mean reported sigma 0.0316, ratio 1.55
+  a = a' = 0.0, b = 0.0, b' = 45.0: S mean +2.0000 (law +2.0000), empirical SD 0.0000, mean reported sigma 0.0316, ratio 0.00
+
+C. calibration of z(S) for the presets (60 seeds, ~4000 pairs each)
+  photon_chsh: mean z -0.011, SD 0.918, max |z| 2.75
+  spin_chsh: mean z +0.004, SD 1.134, max |z| 3.02
+  photon_lhv: mean z +0.009, SD 0.910, max |z| 2.43
+  spin_lhv: mean z +0.056, SD 1.048, max |z| 2.68
+
+D. pairs in flight
+  photon, v/c = 1, L = 100000 m, rate = 1e+09/s: flight 0.000334 s, in flight now 83525, wall time for a quarter of the flight 0.0 s (the default speed plays one flight in 2 s of wall time)
+  spin, v/c = 0.001, L = 1000 m, rate = 1e+08/s: flight 0.00334 s, in flight now 83525, wall time for a quarter of the flight 0.0 s (the default speed plays one flight in 2 s of wall time)
+  upper corner of the allowed ranges (spin, v/c = 1e-4, L = 1e5 m, rate 1e9/s): rate L / v = 3.34e+09 pairs in flight (~220 GB)

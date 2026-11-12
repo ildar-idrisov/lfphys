@@ -1,0 +1,6 @@
+A3.5: 112 -> 113 (rdot^5 term): 0.001,0.5: dE +4.7e-06 (of the 3.5PN part -1.7e-04); 0.005,0.5: dE +2.5e-05 (of the 3.5PN part -1.5e-04); 0.01,0.9: dE +7.5e-07 (of the 3.5PN part -5.3e-06); inspiral 20->10: time -2.0e-14
+A3.5: 3956/35 -> 3946/35: 0.001,0.5: dE -1.2e-05 (of the 3.5PN part +4.4e-04); 0.005,0.5: dE -7.0e-05 (of the 3.5PN part +4.3e-04); 0.01,0.9: dE -2.8e-05 (of the 3.5PN part +2.0e-04); inspiral 20->10: time -1.7e-07
+A3.5: 184/5 nu -> 180/5 nu: 0.001,0.5: dE -8.5e-06 (of the 3.5PN part +3.1e-04); 0.005,0.5: dE -4.9e-05 (of the 3.5PN part +3.0e-04); 0.01,0.9: dE -2.0e-05 (of the 3.5PN part +1.4e-04); inspiral 20->10: time -1.2e-07
+B3.5: 12/5 nu -> 13/5 nu (v^2 rdot^2): 0.001,0.5: dE +5.3e-06 (of the 3.5PN part -1.9e-04); 0.005,0.5: dE +2.8e-05 (of the 3.5PN part -1.7e-04); 0.01,0.9: dE +6.4e-06 (of the 3.5PN part -4.4e-05); inspiral 20->10: time -6.4e-09
+B3.5: -120 -> -119 (caught, for scale): 0.001,0.5: dE +1.9e-05 (of the 3.5PN part -6.8e-04); 0.005,0.5: dE +1.0e-04 (of the 3.5PN part -6.2e-04); 0.01,0.9: dE +8.7e-06 (of the 3.5PN part -6.1e-05); inspiral 20->10: time -8.1e-13
+left-handed triad: h+ 2.588982e-02 -> 2.588982e-02, hx 5.065023e-03 -> -5.065023e-03

@@ -1,0 +1,11 @@
+devices: {'available': True, 'name': 'NVIDIA GeForce RTX 2080 Ti', 'memory_total': 11539054592, 'memory_free': 11150360576, 'cupy': '14.2.0', 'cuda_runtime': 12090, 'driver': 12040, 'pci_bus_id': '0000:01:00.0', 'visible': '0'}
+(1) devices gpu/cpu; max |psi_gpu - psi_cpu| = 1.97e-14; jumps [0.7775] / [0.7775]; absorbed {'edges': 0.0029748685583488492} / {'edges': 0.002974868558349029}; balance gpu 2.4e-15 (tol 2.8e-12); 2.9 s
+(2) sample 3-D: device path used: True; |v_gpu - v_cpu| 2.6e-15, |grad| 8.7e-15
+    3-D Bohm, 30 points (op device gpu): max |X_gpu - X_cpu| = 4.7e-15
+    3-D Bohm, 100 points (op device gpu): max |X_gpu - X_cpu| = 4.9e-15
+(3) gpu: scene on gpu, 12.8 s, absorbed {'detector 2': 0.17918100667525602, 'edges': 0.7883566032245862}, Bohm in flight 1, hits 59
+(3) cpu: scene on cpu, 14.8 s, absorbed {'detector 2': 0.17918100667523323, 'edges': 0.7883566032244839}, Bohm in flight 1, hits 59
+    wave max diff 6.5e-15
+    Bohm points in flight max diff 1.7e-12 nm
+    hits gpu 59 cpu 59
+total 33.4 s

@@ -1,0 +1,63 @@
+{
+ "a": {
+  "estimate_known": false,
+  "after_s": 45,
+  "state": "over_budget",
+  "active": false,
+  "progress": {
+   "done": 0,
+   "total": 2,
+   "frac": 1.0,
+   "elapsed_s": 3.3446478783152997,
+   "eta_s": 817.9946317897823
+  }
+ },
+ "b": {
+  "delete_run": 200,
+  "cancel_after_delete": {
+   "error": "нет такого свипа"
+  },
+  "second": 200,
+  "third": [
+   200,
+   {
+    "n": 1,
+    "state": "starting",
+    "estimate": {
+     "n_values": 2,
+     "n_readings": 1,
+     "duration": 10000000.0,
+     "budget_s": 20.0,
+     "restore_s": 0.05,
+     "sample_ms": 0.01,
+     "ms_per_t": null,
+     "frames_measured": 0,
+     "known": false,
+     "total_s": null,
+     "text": "2 знач. × 1 замер: цену счёта этого мира запись не измерила (мир ещё не играл ⏺ — шаги и паузы её не показывают). Свип измерит её сам в первые 3,0 с счёта и остановится, если весь он займёт больше 30 с (предел 20 с × 1,5)"
+    },
+    "base": {
+     "t": 0.0,
+     "world": 1,
+     "source": "now",
+     "file": "w1-1794425309087256427.pkl",
+     "bytes": 1327,
+     "note": ""
+    },
+    "target_label": "Жёсткость пружины",
+    "target_unit": "Н/м",
+    "target_text": "закон «Жёсткость пружины»",
+    "target_handle": false,
+    "world": 1,
+    "t_unit": "с",
+    "measure_label": "Осциллятор 1: положение",
+    "measure_unit": "м",
+    "stat_text": "в конце (1 замер)",
+    "sampling": {
+     "readings": 1,
+     "dt": null
+    }
+   }
+  ]
+ }
+}

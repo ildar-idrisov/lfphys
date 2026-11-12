@@ -1,0 +1,5 @@
+crossings: 293 random orbits agree in count; max rel time err 5.8e-11, max position err / rT 2.1e-11; count mismatches: 0
+  target [30.  0.]: 2 image(s), dt = [57.978542024, 57.979395321]
+  target [10. 12.]: 2 image(s), dt = [40.036260277, 42.412490823]
+  target [ -5. -20.]: 1 image(s), dt = [32.54808335]
+connect_newton: re-shot images hit the target to max rel 1.3e-11

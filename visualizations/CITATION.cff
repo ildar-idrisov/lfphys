@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "Publications of results obtained substantially with this software must cite it as below (LICENSE.md section 5: the lfphys Research Licence 1.0, SPDX LicenseRef-lfphys-Research-1.0; PUBLICATIONS.md). Questions: idrisov.sci@gmail.com"
+title: "lfphys visualizations: an interactive player and worlds built on the lfphys engine"
+type: software
+authors:
+  - family-names: Idrisov
+    given-names: Ildar
+    email: idrisov.sci@gmail.com
+contact:
+  - family-names: Idrisov
+    given-names: Ildar
+    email: idrisov.sci@gmail.com
+version: 0.1.0
+abstract: "Interactive browser visualizations of the consequences of physical hypotheses, computed in the run by the lfphys engine, with live checks against independent references."
+keywords:
+  - interactive visualization
+  - physics
+  - relativity
+  - quantum mechanics
+  - optics

@@ -1,0 +1,11 @@
+C1 check 16 — SIGKILL after a new world (2026-10-28T20:25:47+02:00)
+server killed 3 s after new_world
+after the restart: state suspended | meta worlds [(1, 'measure_c')] | preset measure_c | sim_t 0.005914795601274821
+  stream header: world 1 preset measure_c title Измерение скорости света движущимися наблюдателями
+  stream header: world 2 preset sun_earth title Солнце → Земля: свет летит 8 минут
+{"ok": true}
+resumed: state suspended | meta worlds [(1, 'measure_c')] | errors None
+  stream header: world 1 preset measure_c title Измерение скорости света движущимися наблюдателями
+  stream header: world 2 preset sun_earth title Солнце → Земля: свет летит 8 минут
+  stream notice: Продолжение: мир пересчитывается от начала по записи до t = 0.0059148 с (0 изменений установки)…
+  stream notice: Мир восстановлен: пересчитан от начала по записи (0 изменений установки) и продолжается с t = 60.1406 с

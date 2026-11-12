@@ -1,0 +1,11 @@
+......................................................................   [100%]
+============================= slowest 8 durations ==============================
+21.98s call     tests/test_beams.py::test_poynting_angular_momentum_per_unit_length_is_not_l_plus_sigma_for_a_focused_beam
+7.33s call     tests/test_beams.py::test_vector_beam_angular_momentum_per_photon[2-1]
+6.38s call     tests/test_beams.py::test_vector_beam_angular_momentum_per_photon[2--1]
+5.56s call     tests/test_beams.py::test_spiral_phase_plate_exact_propagation_two_routes_charge_and_oam
+5.22s call     tests/test_beams.py::test_vector_beam_angular_momentum_per_photon[-1-1]
+2.42s call     tests/test_beams.py::test_spinning_surface_on_axis_shift_and_beat
+0.98s call     tests/test_beams.py::test_turned_image_rotator_shifts_by_m_out_times_the_beam_rotation[True]
+0.68s call     tests/test_beams_paraxial.py::test_modes_are_orthonormal_and_carry_unit_power_at_every_z
+70 passed in 55.71s

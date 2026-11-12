@@ -1,0 +1,20 @@
+largest dense matrices (one helicity, the finer pass): gen model l p w0 lam zspan -> nr x nq, GB
+  ('spp', 'exact', 6, 0, 6.0, 0.4, 3.0): nr = 8858, nq = 241408, ~17.88 GB  (half 152.7 um, z_max 1696 um, edge 0.011)
+  ('spp', 'paraxial', 6, 0, 6.0, 0.4, 3.0): nr = 8858, nq = 43056, ~3.19 GB  (half 152.7 um, z_max 1696 um, edge 0.011)
+  ('spp', 'paraxial', 0, 0, 6.0, 0.4, 3.0): nr = 6245, nq = 40432, ~2.15 GB  (half 107.7 um, z_max 1696 um, edge 0)
+  ('spp', 'exact', 0, 0, 6.0, 0.4, 3.0): nr = 6245, nq = 19328, ~1.03 GB  (half 107.7 um, z_max 1696 um, edge 0)
+  ('mode', 'exact', 6, 3, 6.0, 0.4, 3.0): nr = 5397, nq = 13568, ~0.63 GB  (half 93.0 um, z_max 848 um, edge 0)
+  ('spp', 'exact', 6, 0, 6.0, 0.4, 0.4): nr = 1865, nq = 34688, ~0.63 GB  (half 32.2 um, z_max 226 um, edge 0.011)
+  ('mode', 'exact', 0, 3, 6.0, 0.4, 3.0): nr = 4605, nq = 12128, ~0.49 GB  (half 79.4 um, z_max 848 um, edge 0)
+  ('mode', 'exact', 6, 0, 6.0, 0.4, 3.0): nr = 4605, nq = 12096, ~0.48 GB  (half 79.4 um, z_max 848 um, edge 0)
+  ('spp', 'exact', 6, 0, 6.0, 1.6, 3.0): nr = 2215, nq = 20672, ~0.43 GB  (half 152.7 um, z_max 424 um, edge 0.17)
+  ('mode', 'exact', 0, 0, 6.0, 0.4, 3.0): nr = 3247, nq = 10304, ~0.30 GB  (half 56.0 um, z_max 848 um, edge 0)
+  ('spp', 'paraxial', 6, 0, 6.0, 0.4, 0.4): nr = 1865, nq = 6656, ~0.12 GB  (half 32.2 um, z_max 226 um, edge 0.011)
+  ('spp', 'exact', 0, 0, 6.0, 1.6, 3.0): nr = 1562, nq = 6592, ~0.10 GB  (half 107.7 um, z_max 424 um, edge 0)
+  ('spp', 'paraxial', 6, 0, 6.0, 1.6, 3.0): nr = 2215, nq = 4592, ~0.10 GB  (half 152.7 um, z_max 424 um, edge 0.17)
+  ('spp', 'paraxial', 0, 0, 6.0, 0.4, 0.4): nr = 1315, nq = 6096, ~0.08 GB  (half 22.7 um, z_max 226 um, edge 0)
+defaults for comparison:
+  ('mode', 'exact', 3, 0, 1.5, 1.0, 1.5): nr = 320, nq = 1664, ~0.010 GB
+  ('spp', 'exact', 2, 0, 1.5, 1.0, 1.5): nr = 386, nq = 2688, ~0.017 GB
+a modest legal world: spp exact l=2 w0=6 lam=1 zspan=1.5 -> {'nr': 1541, 'nq': 22304, 'GB': 0.346336512, 'half': 66.38958020195508, 'zmax': 339.29200658769764, 'edge': 0.009431090739710653}
+                      spp exact l=2 w0=3 lam=0.6 zspan=1.5 -> {'nr': 1284, 'nq': 16288, 'GB': 0.219431936, 'half': 33.19479010097754, 'zmax': 141.37166941154067, 'edge': 0.013580944669144052}

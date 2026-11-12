@@ -1,0 +1,12 @@
+launch near the ISCO (start at a turning point, v_r = 0 exactly):
+  r0=6.2 k=1.0001: kind circular
+  r0=6.2 k=0.9999: s0.r_apo  event 6.2                    ref(elements) 6.200000000019512      40-digit 6.2000000000000002   | event err +1.1e-38, ref err +3.1e-12, tol 1.0e-09 pass
+  r0=6.2 k=0.9999: s0.r_peri event 6.143124198309844      ref(elements) 6.143124198288462      40-digit 6.1431241983098402   | event err +6.7e-16, ref err -3.5e-12, tol 1.0e-09 pass
+  r0=6.05 k=1.00001: s0.r_peri event 6.05                   ref(elements) 6.050000000079958      40-digit 6.0499999999999998   | event err +1.3e-36, ref err +1.3e-11, tol 1.0e-09 pass
+  r0=6.5 k=1.00001: s0.r_apo  event 6.502337445330615      ref(elements) 6.502337445388655      40-digit 6.502337445330275    | event err +5.2e-14, ref err +9.0e-12, tol 1.0e-09 pass
+  r0=6.5 k=1.00001: s0.r_peri event 6.5                    ref(elements) 6.499999999941534      40-digit 6.5                  | event err -6.9e-37, ref err -9.0e-12, tol 1.0e-09 pass
+  r0=6.01 k=1.000001: kind circular
+  r0=7.0 k=1.000001: kind circular
+
+bh_isco + boost dv = +1e-7 at 0.61 turn (classified correctly there):
+  boost 1e-7: s1.r_apo  event 6.2000520760559095     ref(elements) 6.200052067780895      40-digit 6.200052076055691    | event err +3.5e-14, ref err -1.3e-09, tol 1.9e-09 pass

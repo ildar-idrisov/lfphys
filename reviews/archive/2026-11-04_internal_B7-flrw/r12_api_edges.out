@@ -1,0 +1,5 @@
+Background(70, -0.1)  (negative dust density)                -> ValueError: Ob is part of Om and cannot exceed it
+from_physical(0.7, 0.022, 0.12, T_cmb=2.7255, N_eff=3.046, OL=0.7) -> ValueError: Ok + OL + the rest = 0.9898813000556296 != 1; give only one of Ok, OL
+angular_diameter_distance_z1z2(2.0, 0.5)  (z1 > z2)          -> -2241.2419891188624
+sum of densities(1.0) over all keys (docstring: 'they sum to one') -> 1.1232632696972416
+sum without 'baryons'                                        -> 0.9999999999999999

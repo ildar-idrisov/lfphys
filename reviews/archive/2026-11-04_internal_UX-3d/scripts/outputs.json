@@ -1,0 +1,5288 @@
+{
+"tours": {
+"p01_kerr": {
+"viz": "p01_gravity",
+"preset": "kerr_orbits",
+"run": "20261104-211029-p01-2e58",
+"failed": null,
+"canvas": {
+"w": 940,
+"h": 887.4375
+},
+"box": [
+[
+-32,
+-32,
+-32
+],
+[
+32,
+32,
+32
+]
+],
+"cornersInside": 8,
+"boxOnScreen": {
+"x0": 132.39319179917385,
+"x1": 789.6603977420264,
+"y0": 152.85812480311816,
+"y1": 825.0565918565644
+},
+"camera_opened": {
+"pos": [
+86.018,
+-133.81,
+-105.13
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.9534,
+"far": 3813,
+"fov": 38,
+"dist": 190.67,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+86.018,
+-133.81,
+-105.13
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.9534,
+"far": 3813,
+"fov": 38,
+"dist": 190.67,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+635.87,
+-989.13,
+-777.17
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.9534,
+"far": 3813,
+"fov": 38,
+"dist": 1409.5,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "horizon",
+"label": "Горизонт r₊ = 1.43589 G M/c²",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/double": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "ergo",
+"label": "Эргосфера (внутри неё ничто не может покоиться)",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.18": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "orbits",
+"label": "Круговые орбиты в экваторе: фотонные (по и против вращения) и ISCO (по вращению)",
+"kind": "lines",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial": 1
+}
+},
+{
+"id": "bodies",
+"label": "Тела сейчас",
+"kind": "spheres",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 6
+}
+},
+{
+"id": "trails",
+"label": "Следы тел (посчитаны)",
+"kind": "lines",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial": 1
+}
+}
+],
+"perf": {
+"calls": 21,
+"triangles": 15240,
+"lines": 18768,
+"points": 0,
+"msPerRender": 541,
+"px": [
+940,
+887
+]
+},
+"fps": {
+"secs": 4.07,
+"rafFps": 15.2,
+"drawsPerSec": 9.8,
+"scriptShare": 0.12,
+"taskShare": 0.33
+},
+"errors": []
+},
+"p01_pyth": {
+"viz": "p01_gravity",
+"preset": "pythagorean",
+"run": "20261104-210931-p01-c7da",
+"failed": null,
+"canvas": {
+"w": 940,
+"h": 916.8125
+},
+"box": [
+[
+-16,
+-16,
+-8
+],
+[
+16,
+16,
+8
+]
+],
+"cornersInside": 8,
+"boxOnScreen": {
+"x0": 75.450322723944,
+"x1": 833.5093166138017,
+"y0": 211.67691212449697,
+"y1": 817.168858576668
+},
+"camera_opened": {
+"pos": [
+41.49,
+-58.086,
+-41.49
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.4128,
+"far": 1651,
+"fov": 38,
+"dist": 82.563,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+41.49,
+-58.086,
+-41.49
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.4128,
+"far": 1651,
+"fov": 38,
+"dist": 82.563,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+900.58,
+-1260.8,
+-900.58
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.4128,
+"far": 1651,
+"fov": 38,
+"dist": 1792.1,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "bodies",
+"label": "Тела сейчас",
+"kind": "spheres",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 3
+}
+},
+{
+"id": "trails",
+"label": "Следы тел (посчитаны)",
+"kind": "lines",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial": 1
+}
+}
+],
+"perf": {
+"calls": 15,
+"triangles": 1584,
+"lines": 309,
+"points": 0,
+"msPerRender": 14.1,
+"px": [
+940,
+917
+]
+},
+"fps": {
+"secs": 4.04,
+"rafFps": 60.1,
+"drawsPerSec": 28.9,
+"scriptShare": 0.03,
+"taskShare": 0.07
+},
+"errors": []
+},
+"p01_sun_earth": {
+"viz": "p01_gravity",
+"preset": "sun_earth",
+"run": "20261104-210833-p01-925c",
+"failed": null,
+"canvas": {
+"w": 940,
+"h": 916.8125
+},
+"box": [
+[
+-1.5,
+-1.5,
+-0.75
+],
+[
+1.5,
+1.5,
+0.75
+]
+],
+"cornersInside": 8,
+"boxOnScreen": {
+"x0": 75.45032272394417,
+"x1": 833.509316613802,
+"y0": 211.6769121244972,
+"y1": 817.1688585766682
+},
+"camera_opened": {
+"pos": [
+3.8897,
+-5.4455,
+-3.8897
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.0387,
+"far": 154.8,
+"fov": 38,
+"dist": 7.7403,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+3.8897,
+-5.4455,
+-3.8897
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.0387,
+"far": 154.8,
+"fov": 38,
+"dist": 7.7403,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+84.43,
+-118.2,
+-84.43
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.0387,
+"far": 154.8,
+"fov": 38,
+"dist": 168.01,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "bodies",
+"label": "Тела сейчас",
+"kind": "spheres",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 2
+}
+},
+{
+"id": "trails",
+"label": "Следы тел (посчитаны)",
+"kind": "lines",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial": 1
+}
+}
+],
+"perf": {
+"calls": 15,
+"triangles": 1064,
+"lines": 1704,
+"points": 0,
+"msPerRender": 164.7,
+"px": [
+940,
+917
+]
+},
+"fps": {
+"secs": 4.01,
+"rafFps": 56.1,
+"drawsPerSec": 26.4,
+"scriptShare": 0.13,
+"taskShare": 0.31
+},
+"errors": []
+},
+"p02_ball3d": {
+"viz": "p02_quantum",
+"preset": "ball_3d",
+"run": "20261104-211352-p02-5596",
+"failed": null,
+"canvas": {
+"w": 470,
+"h": 916.8125
+},
+"box": [
+[
+-20,
+-20,
+-20
+],
+[
+19.375,
+19.375,
+19.375
+]
+],
+"cornersInside": 4,
+"boxOnScreen": {
+"x0": -45.85030612901073,
+"x1": 571.7758253502129,
+"y0": 106.26181046160818,
+"y1": 709.7497789138962
+},
+"camera_opened": {
+"pos": [
+-31.585,
+43.469,
+104.55
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.5865,
+"far": 2346,
+"fov": 38,
+"dist": 117.31,
+"target": [
+-0.3125,
+-0.3125,
+0.3125
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-58.895,
+81.702,
+195.59
+],
+"up": [
+1,
+0,
+0
+],
+"near": 1.099,
+"far": 4395,
+"fov": 38,
+"dist": 219.75,
+"target": [
+-0.3125,
+-0.3125,
+0.3125
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-1237,
+1731,
+4122.5
+],
+"up": [
+1,
+0,
+0
+],
+"near": 1.069,
+"far": 4274,
+"fov": 38,
+"dist": 4638.8,
+"target": [
+-0.3125,
+-0.3125,
+0.3125
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "pot",
+"label": "Потенциалы (барьеры, ямы, стенки, ловушки)",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.35": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "wave3d",
+"label": "Волна |ψ|² в объёме (сумма по частицам)",
+"kind": "volume",
+"visible": true,
+"parts": {
+"Mesh/ShaderMaterial/transp/noDW/ro2/back": 1
+}
+},
+{
+"id": "bohm",
+"label": "Частицы Бома (интерпретация)",
+"kind": "spheres",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 30
+}
+}
+],
+"perf": {
+"calls": 18,
+"triangles": 17684,
+"lines": 1519,
+"points": 0,
+"msPerRender": 341.8,
+"px": [
+470,
+891
+]
+},
+"fps": {
+"secs": 4.01,
+"rafFps": 25.9,
+"drawsPerSec": 9.5,
+"scriptShare": 0.03,
+"taskShare": 0.1
+},
+"errors": []
+},
+"p02_dslit": {
+"viz": "p02_quantum",
+"preset": "double_slit",
+"run": "20261104-211228-p02-8756",
+"failed": null,
+"canvas": {
+"w": 470,
+"h": 890.625
+},
+"box": [
+[
+-40,
+-40,
+-6.4
+],
+[
+39.6875,
+39.6875,
+6.4
+]
+],
+"cornersInside": 4,
+"boxOnScreen": {
+"x0": -80.49851735663412,
+"x1": 625.4646037115963,
+"y0": 268.12114938981045,
+"y1": 551.8627350643537
+},
+"camera_opened": {
+"pos": [
+-52.008,
+72.655,
+173.52
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.9754,
+"far": 3902,
+"fov": 38,
+"dist": 195.09,
+"target": [
+0,
+-0.15625,
+0.15625
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-94.748,
+132.49,
+315.98
+],
+"up": [
+1,
+0,
+0
+],
+"near": 1.777,
+"far": 7108,
+"fov": 38,
+"dist": 355.41,
+"target": [
+0,
+-0.15625,
+0.15625
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-2056.6,
+2879.1,
+6855.5
+],
+"up": [
+1,
+0,
+0
+],
+"near": 1.777,
+"far": 7108,
+"fov": 38,
+"dist": 7714.7,
+"target": [
+0,
+-0.15625,
+0.15625
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "wave",
+"label": "Волна |ψ|² (сумма по частицам)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.95": 1
+}
+},
+{
+"id": "pot",
+"label": "Потенциалы (барьеры, ямы, стенки, ловушки)",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.35": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "det",
+"label": "Детекторы и метки пути",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.25": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "pln",
+"label": "Плоскости потока",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.20": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "bohm",
+"label": "Частицы Бома (интерпретация)",
+"kind": "spheres",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 60
+}
+}
+],
+"perf": {
+"calls": 25,
+"triangles": 31348,
+"lines": 102,
+"points": 0,
+"msPerRender": 238.7,
+"px": [
+470,
+917
+]
+},
+"fps": {
+"secs": 4.08,
+"rafFps": 24,
+"drawsPerSec": 12.3,
+"scriptShare": 0.16,
+"taskShare": 0.33
+},
+"errors": []
+},
+"p03_lv": {
+"viz": "p03_molecules",
+"preset": "liquid_vapour",
+"run": "20261104-212015-p03-fb5e",
+"failed": null,
+"canvas": {
+"w": 940,
+"h": 916.8125
+},
+"box": [
+[
+0,
+0,
+0
+],
+[
+3.0539999999999994,
+6,
+3.0539999999999994
+]
+],
+"cornersInside": 8,
+"boxOnScreen": {
+"x0": 113.68546818094654,
+"x1": 840.3205921077752,
+"y0": 188.71674256469768,
+"y1": 652.6007290759637
+},
+"camera_opened": {
+"pos": [
+-1.8629,
+7.7459,
+9.7728
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.06358,
+"far": 254.3,
+"fov": 38,
+"dist": 12.716,
+"target": [
+1.527,
+3,
+-1.527
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-1.8629,
+7.7459,
+9.7728
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.06358,
+"far": 254.3,
+"fov": 38,
+"dist": 12.716,
+"target": [
+1.527,
+3,
+-1.527
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-72.056,
+106.02,
+243.75
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.06358,
+"far": 254.3,
+"fov": 38,
+"dist": 276.02,
+"target": [
+1.527,
+3,
+-1.527
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "atoms",
+"label": "Атомы",
+"kind": "spheres",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 400
+}
+}
+],
+"perf": {
+"calls": 14,
+"triangles": 208024,
+"lines": 12,
+"points": 0,
+"msPerRender": 1883.9,
+"px": [
+940,
+917
+]
+},
+"fps": {
+"secs": 5.75,
+"rafFps": 8.5,
+"drawsPerSec": 4.5,
+"scriptShare": 0.05,
+"taskShare": 0.13
+},
+"errors": []
+},
+"p03_maxwell": {
+"viz": "p03_molecules",
+"preset": "maxwell",
+"run": "20261104-211558-p03-db47",
+"failed": null,
+"canvas": {
+"w": 940,
+"h": 916.8125
+},
+"box": [
+[
+0,
+0,
+-0.6000000000000001
+],
+[
+12,
+12,
+0.6000000000000001
+]
+],
+"cornersInside": 8,
+"boxOnScreen": {
+"x0": 374.9252410195387,
+"x1": 610.0769958355047,
+"y0": 140.04302020933665,
+"y1": 856.3835390012601
+},
+"camera_opened": {
+"pos": [
+-7.8012,
+16.922,
+20.004
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.1463,
+"far": 585.3,
+"fov": 38,
+"dist": 29.263,
+"target": [
+0,
+6,
+-6
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-7.8012,
+16.922,
+20.004
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.1463,
+"far": 585.3,
+"fov": 38,
+"dist": 29.263,
+"target": [
+0,
+6,
+-6
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-169.33,
+243.07,
+558.45
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.1463,
+"far": 585.3,
+"fov": 38,
+"dist": 635.2,
+"target": [
+0,
+6,
+-6
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "atoms",
+"label": "Атомы",
+"kind": "spheres",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 300
+}
+}
+],
+"perf": {
+"calls": 14,
+"triangles": 156024,
+"lines": 12,
+"points": 0,
+"msPerRender": 1451.7,
+"px": [
+940,
+917
+]
+},
+"fps": {
+"secs": 4.3,
+"rafFps": 13.3,
+"drawsPerSec": 6.1,
+"scriptShare": 0.07,
+"taskShare": 0.2
+},
+"errors": []
+},
+"p04_cyl": {
+"viz": "p04_fluids",
+"preset": "cylinder_re20",
+"run": "20261104-212523-p04-fee6",
+"failed": null,
+"canvas": {
+"w": 470,
+"h": 916.8125
+},
+"box": [
+[
+0,
+0,
+-0.08800000000000001
+],
+[
+2.2,
+0.41000000000000003,
+0.08800000000000001
+]
+],
+"cornersInside": 6,
+"boxOnScreen": {
+"x0": 62.194978579863914,
+"x1": 513.8345371327372,
+"y0": 281.4059238509373,
+"y1": 560.8299965353541
+},
+"camera_opened": {
+"pos": [
+-1.0293,
+1.6461,
+2.3311
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.01931,
+"far": 77.22,
+"fov": 38,
+"dist": 3.8612,
+"target": [
+0,
+0.205,
+-1.1
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-1.9282,
+2.9045,
+5.3274
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.03617,
+"far": 144.7,
+"fov": 38,
+"dist": 7.2331,
+"target": [
+0,
+0.205,
+-1.1
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-41.855,
+58.801,
+138.42
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.03617,
+"far": 144.7,
+"fov": 38,
+"dist": 157,
+"target": [
+0,
+0.205,
+-1.1
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "field",
+"label": "Поле течения (картина)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.95": 1
+}
+},
+{
+"id": "bodies",
+"label": "Препятствия",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.85": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "flow",
+"label": "Скорость (стрелки)",
+"kind": "vectors",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial": 134
+}
+}
+],
+"perf": {
+"calls": 18,
+"triangles": 412,
+"lines": 300,
+"points": 0,
+"msPerRender": 29.6,
+"px": [
+470,
+917
+]
+},
+"fps": {
+"secs": 4.04,
+"rafFps": 59.7,
+"drawsPerSec": 26.5,
+"scriptShare": 0.07,
+"taskShare": 0.22
+},
+"errors": []
+},
+"p04_karman": {
+"viz": "p04_fluids",
+"preset": "karman",
+"run": "20261104-212556-p04-2759",
+"failed": null,
+"canvas": {
+"w": 470,
+"h": 916.8125
+},
+"box": [
+[
+0,
+0,
+-0.08800000000000001
+],
+[
+2.2,
+0.41000000000000003,
+0.08800000000000001
+]
+],
+"cornersInside": 6,
+"boxOnScreen": {
+"x0": 62.194978579863914,
+"x1": 513.8345371327372,
+"y0": 281.4059238509373,
+"y1": 560.8299965353541
+},
+"camera_opened": {
+"pos": [
+-1.0293,
+1.6461,
+2.3311
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.01931,
+"far": 77.22,
+"fov": 38,
+"dist": 3.8612,
+"target": [
+0,
+0.205,
+-1.1
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-1.9282,
+2.9045,
+5.3274
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.03617,
+"far": 144.7,
+"fov": 38,
+"dist": 7.2331,
+"target": [
+0,
+0.205,
+-1.1
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-41.855,
+58.801,
+138.42
+],
+"up": [
+1,
+0,
+0
+],
+"near": 0.03617,
+"far": 144.7,
+"fov": 38,
+"dist": 157,
+"target": [
+0,
+0.205,
+-1.1
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "field",
+"label": "Поле течения (картина)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.95": 1
+}
+},
+{
+"id": "bodies",
+"label": "Препятствия",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.85": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "flow",
+"label": "Скорость (стрелки)",
+"kind": "vectors",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial": 134
+}
+}
+],
+"perf": {
+"calls": 18,
+"triangles": 412,
+"lines": 300,
+"points": 0,
+"msPerRender": 25.4,
+"px": [
+470,
+917
+]
+},
+"fps": {
+"secs": 4.07,
+"rafFps": 59.3,
+"drawsPerSec": 24.6,
+"scriptShare": 0.08,
+"taskShare": 0.21
+},
+"errors": []
+},
+"v08_double": {
+"viz": "v08_wave_3d",
+"preset": "double",
+"run": "20261104-210320-v08-e46b",
+"failed": null,
+"canvas": {
+"w": 564,
+"h": 916.8125
+},
+"box": [
+[
+-16,
+-16,
+0
+],
+[
+15.875,
+15.875,
+30
+]
+],
+"cornersInside": 6,
+"boxOnScreen": {
+"x0": 22.848572411738928,
+"x1": 609.540416670387,
+"y0": 179.23543759048118,
+"y1": 821.8392403676619
+},
+"camera_opened": {
+"pos": [
+-9.8294,
+34.699,
+82.827
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.4657,
+"far": 1863,
+"fov": 38,
+"dist": 93.139,
+"target": [
+15,
+-0.0625,
+0.0625
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-24.017,
+54.561,
+130.12
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.7318,
+"far": 2927,
+"fov": 38,
+"dist": 146.36,
+"target": [
+15,
+-0.0625,
+0.0625
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-831.91,
+1185.6,
+2823.1
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.7318,
+"far": 2927,
+"fov": 38,
+"dist": 3176.9,
+"target": [
+15,
+-0.0625,
+0.0625
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "screen",
+"label": "Заслонка с отверстием (z = 0)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshStandardMaterial/double": 1,
+"LineLoop/LineBasicMaterial": 2
+}
+},
+{
+"id": "incident",
+"label": "Падающая плоская волна (задана)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.06": 10,
+"Line/LineBasicMaterial": 1,
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "target",
+"label": "Мишень (z = 30 мкм): интенсивность",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/double": 1
+}
+},
+{
+"id": "light",
+"label": "Свет за отверстием (объём, предпросмотр)",
+"kind": "volume",
+"visible": true,
+"parts": {
+"Mesh/ShaderMaterial/transp/noDW/ro2/back": 1
+}
+},
+{
+"id": "flux",
+"label": "Поток энергии (направление и величина)",
+"kind": "vectors",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial": 2560
+}
+}
+],
+"perf": {
+"calls": 46,
+"triangles": 152,
+"lines": 28,
+"points": 0,
+"msPerRender": 597.4,
+"px": [
+564,
+917
+]
+},
+"fps": {
+"secs": 4.01,
+"rafFps": 18.7,
+"drawsPerSec": 9.2,
+"scriptShare": 0.02,
+"taskShare": 0.08
+},
+"errors": []
+},
+"v08_slices": {
+"viz": "v08_wave_3d",
+"preset": "double_slices",
+"run": "20261104-210833-v08-1050",
+"failed": null,
+"canvas": {
+"w": 564,
+"h": 877.4375
+},
+"box": [
+[
+-16,
+-16,
+0
+],
+[
+15.875,
+15.875,
+30
+]
+],
+"cornersInside": 7,
+"boxOnScreen": {
+"x0": 34.15288768276446,
+"x1": 595.252939389236,
+"y0": 171.53768548181645,
+"y1": 786.5431246520966
+},
+"camera_opened": {
+"pos": [
+-9.8294,
+34.699,
+82.827
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.4657,
+"far": 1863,
+"fov": 38,
+"dist": 93.139,
+"target": [
+15,
+-0.0625,
+0.0625
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-22.39,
+52.283,
+124.69
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.7013,
+"far": 2805,
+"fov": 38,
+"dist": 140.25,
+"target": [
+15,
+-0.0625,
+0.0625
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-796.59,
+1136.2,
+2705.4
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.7013,
+"far": 2805,
+"fov": 38,
+"dist": 3044.4,
+"target": [
+15,
+-0.0625,
+0.0625
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "screen",
+"label": "Заслонка с отверстием (z = 0)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshStandardMaterial/double": 1,
+"LineLoop/LineBasicMaterial": 2
+}
+},
+{
+"id": "incident",
+"label": "Падающая плоская волна (задана)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.06": 10,
+"Line/LineBasicMaterial": 1,
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "target",
+"label": "Мишень (z = 30 мкм): интенсивность",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/double": 1
+}
+}
+],
+"perf": {
+"calls": 45,
+"triangles": 140,
+"lines": 28,
+"points": 0,
+"msPerRender": 174.6,
+"px": [
+564,
+877
+]
+},
+"fps": {
+"secs": 4.06,
+"rafFps": 35.4,
+"drawsPerSec": 17.7,
+"scriptShare": 0.08,
+"taskShare": 0.3
+},
+"errors": []
+},
+"v09_lab": {
+"viz": "v09_thomas_3d",
+"preset": "lab",
+"run": "20261104-211548-v09-6d20",
+"failed": null,
+"canvas": {
+"w": 940,
+"h": 877.4375
+},
+"box": [
+[
+-3.874860318289155,
+-3.874860318289155,
+-3.874860318289155
+],
+[
+3.874860318289155,
+3.874860318289155,
+3.874860318289155
+]
+],
+"cornersInside": 8,
+"boxOnScreen": {
+"x0": 214.53910689226325,
+"x1": 789.493501102163,
+"y0": 175.5052728125355,
+"y1": 781.4561736587017
+},
+"camera_opened": {
+"pos": [
+-6.155,
+8.617,
+20.517
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.1154,
+"far": 461.8,
+"fov": 38,
+"dist": 23.088,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-6.155,
+8.617,
+20.517
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.1154,
+"far": 461.8,
+"fov": 38,
+"dist": 23.088,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-133.6,
+187.04,
+445.34
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.1154,
+"far": 461.8,
+"fov": 38,
+"dist": 501.16,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "start",
+"label": "Старт и финиш (покой)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "path",
+"label": "Путь (посчитан)",
+"kind": "path",
+"visible": true,
+"parts": {
+"Line/LineBasicMaterial": 1
+}
+},
+{
+"id": "triads",
+"label": "Оси гироскопов вдоль пути",
+"kind": "triads",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial": 8
+}
+},
+{
+"id": "craft",
+"label": "Корабль: гироскопы, спин, тяга",
+"kind": "body",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 6,
+"Line/LineBasicMaterial": 5
+}
+}
+],
+"perf": {
+"calls": 35,
+"triangles": 780,
+"lines": 899,
+"points": 0,
+"msPerRender": 37.8,
+"px": [
+940,
+877
+]
+},
+"fps": {
+"secs": 4.02,
+"rafFps": 51.3,
+"drawsPerSec": 22.2,
+"scriptShare": 0.05,
+"taskShare": 0.16
+},
+"errors": []
+},
+"v09_thomas": {
+"viz": "v09_thomas_3d",
+"preset": "thomas",
+"run": "20261104-214603-v09-6bab",
+"failed": null,
+"canvas": {
+"w": 564,
+"h": 916.8125
+},
+"box": [
+[
+-1,
+-1,
+-1
+],
+[
+1,
+1,
+1
+]
+],
+"cornersInside": 6,
+"boxOnScreen": {
+"x0": 14.887526818934305,
+"x1": 616.0656106165148,
+"y0": 183.38107036733982,
+"y1": 816.5240124937314
+},
+"camera_opened": {
+"pos": [
+-1.5884,
+2.2238,
+5.2948
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.02979,
+"far": 119.2,
+"fov": 38,
+"dist": 5.9585,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-2.4961,
+3.4945,
+8.3203
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.04682,
+"far": 187.3,
+"fov": 38,
+"dist": 9.3632,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-54.181,
+75.853,
+180.6
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.04682,
+"far": 187.3,
+"fov": 38,
+"dist": 203.24,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "light",
+"label": "Свет: |β| = 1 (граница пространства скоростей)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Line/LineBasicMaterial/transp/op0.35": 19,
+"Mesh/MeshBasicMaterial/transp/noDW/back/op0.04": 1
+}
+},
+{
+"id": "rest",
+"label": "Покой (начало и конец петли)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "field",
+"label": "Поле поворотов (объём)",
+"kind": "volume",
+"visible": true,
+"parts": {
+"Mesh/ShaderMaterial/transp/noDW/ro2/back": 1
+}
+},
+{
+"id": "rotvec",
+"label": "Оси поворота гироскопов (стрелки)",
+"kind": "vectors",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial": 305
+}
+},
+{
+"id": "path",
+"label": "Путь (посчитан)",
+"kind": "path",
+"visible": true,
+"parts": {
+"Line/LineBasicMaterial": 1
+}
+},
+{
+"id": "triads",
+"label": "Оси гироскопов вдоль пути",
+"kind": "triads",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial": 37
+}
+},
+{
+"id": "craft",
+"label": "Корабль: гироскопы, спин, тяга",
+"kind": "body",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 6,
+"Line/LineBasicMaterial": 5
+}
+},
+{
+"id": "holonomy",
+"label": "Ось поворота гироскопов (после петли)",
+"kind": "arrow",
+"visible": true,
+"parts": {
+"Line/LineBasicMaterial": 1,
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+}
+],
+"perf": {
+"calls": 91,
+"triangles": 3016,
+"lines": 4941,
+"points": 0,
+"msPerRender": 1411.6,
+"px": [
+564,
+917
+]
+},
+"fps": {
+"secs": 4.19,
+"rafFps": 15.8,
+"drawsPerSec": 6,
+"scriptShare": 0.05,
+"taskShare": 0.15
+},
+"errors": []
+},
+"v10_city": {
+"viz": "v10_fast_observer",
+"preset": "city",
+"run": "20261104-211708-v10-bda4",
+"failed": null,
+"canvas": {
+"w": 470,
+"h": 916.8125
+},
+"box": [
+[
+-16,
+-5,
+-101
+],
+[
+16,
+12.787682198131302,
+85
+]
+],
+"cornersInside": 8,
+"boxOnScreen": {
+"x0": 26.036360978029848,
+"x1": 436.81342266529987,
+"y0": 409.09937427706205,
+"y1": 513.8327977469885
+},
+"camera_opened": {
+"pos": [
+-170.84,
+231.86,
+542.79
+],
+"up": [
+0,
+1,
+0
+],
+"near": 3.054,
+"far": 12220,
+"fov": 38,
+"dist": 610.82,
+"target": [
+-8,
+3.8938,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-170.84,
+231.86,
+542.79
+],
+"up": [
+0,
+1,
+0
+],
+"near": 3.054,
+"far": 12220,
+"fov": 38,
+"dist": 610.82,
+"target": [
+-8,
+3.8938,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-6884.5,
+9761.2,
+23232
+],
+"up": [
+0,
+1,
+0
+],
+"near": 6.022,
+"far": 24090,
+"fov": 38,
+"dist": 26144,
+"target": [
+85,
+3.8938,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "body32",
+"label": "улица (в покое): в лаборатории сейчас",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.50": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "static",
+"label": "башни в покое (32)",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.85": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "observer",
+"label": "Наблюдатель: скорость и поле зрения (в лаборатории)",
+"kind": "observer",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 2,
+"Line/LineBasicMaterial": 1,
+"LineSegments/LineBasicMaterial/transp/op0.55": 1
+}
+}
+],
+"perf": {
+"calls": 23,
+"triangles": 34562,
+"lines": 25857,
+"points": 0,
+"msPerRender": 614.3,
+"px": [
+470,
+917
+]
+},
+"fps": {
+"secs": 4.18,
+"rafFps": 23.5,
+"drawsPerSec": 11,
+"scriptShare": 0.05,
+"taskShare": 0.21
+},
+"errors": []
+},
+"v10_terrell": {
+"viz": "v10_fast_observer",
+"preset": "terrell",
+"run": "20261104-211630-v10-77d4",
+"failed": null,
+"canvas": {
+"w": 470,
+"h": 877.4375
+},
+"box": [
+[
+-13.566656862660288,
+-4,
+-3
+],
+[
+3,
+4.8,
+15.3
+]
+],
+"cornersInside": 8,
+"boxOnScreen": {
+"x0": 73.2119344048615,
+"x1": 417.23619280224966,
+"y0": 328.3055208377837,
+"y1": 572.7470906042859
+},
+"camera_opened": {
+"pos": [
+-16.361,
+31.915,
+80.32
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.4222,
+"far": 1689,
+"fov": 38,
+"dist": 84.442,
+"target": [
+6.15,
+0.4,
+5.2833
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-15.409,
+30.583,
+77.148
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.4044,
+"far": 1617,
+"fov": 38,
+"dist": 80.872,
+"target": [
+6.15,
+0.4,
+5.2833
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-461.82,
+655.56,
+1565.2
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.4044,
+"far": 1617,
+"fov": 38,
+"dist": 1755.4,
+"target": [
+6.15,
+0.4,
+5.2833
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "body0",
+"label": "куб: в лаборатории сейчас (сокращён)",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.35": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "ret0",
+"label": "куб: откуда пришёл свет, видимый сейчас",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/double": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "body1",
+"label": "шар: в лаборатории сейчас (сокращён)",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.35": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "ret1",
+"label": "шар: откуда пришёл свет, видимый сейчас",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/double": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "body2",
+"label": "пол (в покое): в лаборатории сейчас",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.50": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "observer",
+"label": "Наблюдатель: скорость и поле зрения (в лаборатории)",
+"kind": "observer",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 2,
+"Line/LineBasicMaterial": 1,
+"LineSegments/LineBasicMaterial/transp/op0.55": 1
+}
+}
+],
+"perf": {
+"calls": 27,
+"triangles": 17080,
+"lines": 12488,
+"points": 0,
+"msPerRender": 93.1,
+"px": [
+470,
+877
+]
+},
+"fps": {
+"secs": 4.06,
+"rafFps": 47.6,
+"drawsPerSec": 20.2,
+"scriptShare": 0.03,
+"taskShare": 0.11
+},
+"errors": []
+},
+"v11_narrow": {
+"viz": "v11_double_slit_2d",
+"preset": "narrow",
+"run": "20261104-215244-v11-09a1",
+"failed": null,
+"canvas": {
+"w": 470,
+"h": 861.25
+},
+"box": [
+[
+-62,
+-27.625,
+-50.49999999999999
+],
+[
+62,
+27.625,
+60
+]
+],
+"cornersInside": 4,
+"boxOnScreen": {
+"x0": -32.07485196791748,
+"x1": 588.1802379002127,
+"y0": 244.31829300557263,
+"y1": 708.7293518255213
+},
+"camera_opened": {
+"pos": [
+-75.513,
+112.37,
+267.54
+],
+"up": [
+0,
+1,
+0
+],
+"near": 1.505,
+"far": 6022,
+"fov": 38,
+"dist": 301.08,
+"target": [
+4.75,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-136.71,
+198.04,
+471.53
+],
+"up": [
+0,
+1,
+0
+],
+"near": 2.653,
+"far": 10610,
+"fov": 38,
+"dist": 530.64,
+"target": [
+4.75,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-3065.8,
+4298.8,
+10235
+],
+"up": [
+0,
+1,
+0
+],
+"near": 2.653,
+"far": 10610,
+"fov": 38,
+"dist": 11518,
+"target": [
+4.75,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "plate",
+"label": "Пластина с двумя щелями (вдоль y)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshStandardMaterial/double": 1,
+"LineLoop/LineBasicMaterial": 2
+}
+},
+{
+"id": "incident",
+"label": "Падающий пакет (задан)",
+"kind": "object",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.06": 9,
+"Line/LineBasicMaterial": 1,
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "screen",
+"label": "Экран (z = 50 λ): поток, накопленный за опыт",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/double": 1
+}
+},
+{
+"id": "wave",
+"label": "Волна |ψ|² в плоскости опыта (y = 0)",
+"kind": "object",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.95": 1
+}
+},
+{
+"id": "bohm",
+"label": "Траектории Бома (по щелям), в 3D",
+"kind": "tracks",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial/transp/op0.85": 1
+}
+},
+{
+"id": "wave3d",
+"label": "Волна |ψ|² в объёме: ψ(x, z, t)·η(y, t)",
+"kind": "volume",
+"visible": true,
+"parts": {
+"Mesh/ShaderMaterial/transp/noDW/ro2/back": 1
+}
+},
+{
+"id": "particles",
+"label": "Частицы Бома сейчас",
+"kind": "points",
+"visible": true,
+"parts": {
+"Points/PointsMaterial": 1
+}
+}
+],
+"perf": {
+"calls": 20,
+"triangles": 86,
+"lines": 8422,
+"points": 120,
+"msPerRender": 469.6,
+"px": [
+470,
+861
+]
+},
+"fps": {
+"secs": 4.13,
+"rafFps": 21.6,
+"drawsPerSec": 9.9,
+"scriptShare": 0.05,
+"taskShare": 0.11
+},
+"errors": []
+},
+"v11_observer": {
+"viz": "v11_double_slit_2d",
+"preset": "observer",
+"run": "20261104-212244-v11-bd63",
+"failed": null,
+"canvas": {
+"w": 470,
+"h": 861.25
+},
+"box": [
+[
+-62,
+-27.625,
+-50.49999999999999
+],
+[
+62,
+27.625,
+60
+]
+],
+"cornersInside": 4,
+"boxOnScreen": {
+"x0": -32.07485196791748,
+"x1": 588.1802379002127,
+"y0": 244.31829300557263,
+"y1": 708.7293518255213
+},
+"camera_opened": {
+"pos": [
+-75.513,
+112.37,
+267.54
+],
+"up": [
+0,
+1,
+0
+],
+"near": 1.505,
+"far": 6022,
+"fov": 38,
+"dist": 301.08,
+"target": [
+4.75,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-136.71,
+198.04,
+471.53
+],
+"up": [
+0,
+1,
+0
+],
+"near": 2.653,
+"far": 10610,
+"fov": 38,
+"dist": 530.64,
+"target": [
+4.75,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-3065.8,
+4298.8,
+10235
+],
+"up": [
+0,
+1,
+0
+],
+"near": 2.653,
+"far": 10610,
+"fov": 38,
+"dist": 11518,
+"target": [
+4.75,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "plate",
+"label": "Пластина с двумя щелями (вдоль y)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshStandardMaterial/double": 1,
+"LineLoop/LineBasicMaterial": 2
+}
+},
+{
+"id": "observer",
+"label": "Наблюдатель: детектор пути у щели B",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.62": 1,
+"LineSegments/LineBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "incident",
+"label": "Падающий пакет (задан)",
+"kind": "object",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.06": 9,
+"Line/LineBasicMaterial": 1,
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "screen",
+"label": "Экран (z = 50 λ): поток, накопленный за опыт",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/double": 1
+}
+},
+{
+"id": "wave",
+"label": "Волна |ψ|² в плоскости опыта (y = 0)",
+"kind": "object",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.95": 1
+}
+},
+{
+"id": "bohm",
+"label": "Траектории Бома (по щелям), в 3D",
+"kind": "tracks",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial/transp/op0.85": 1
+}
+},
+{
+"id": "wave3d",
+"label": "Волна |ψ|² в объёме: ψ(x, z, t)·η(y, t)",
+"kind": "volume",
+"visible": true,
+"parts": {
+"Mesh/ShaderMaterial/transp/noDW/ro2/back": 1
+}
+},
+{
+"id": "particles",
+"label": "Частицы Бома сейчас",
+"kind": "points",
+"visible": true,
+"parts": {
+"Points/PointsMaterial": 1
+}
+}
+],
+"perf": {
+"calls": 24,
+"triangles": 112,
+"lines": 2914,
+"points": 120,
+"msPerRender": 299.4,
+"px": [
+470,
+861
+]
+},
+"fps": {
+"secs": 4.38,
+"rafFps": 22.9,
+"drawsPerSec": 8.9,
+"scriptShare": 0.04,
+"taskShare": 0.11
+},
+"errors": []
+},
+"v12_gauss": {
+"viz": "v12_arrival_times_2d",
+"preset": "gauss",
+"run": "20261104-212421-v12-cf0e",
+"failed": null,
+"canvas": {
+"w": 470,
+"h": 851.25
+},
+"box": [
+[
+-26.5,
+-19.261476656684735,
+-31
+],
+[
+26.5,
+19.261476656684735,
+40
+]
+],
+"cornersInside": 3,
+"boxOnScreen": {
+"x0": -62.143494072441484,
+"x1": 589.9064938336646,
+"y0": 225.08373228292692,
+"y1": 699.9586744454697
+},
+"camera_opened": {
+"pos": [
+-39.801,
+62.022,
+147.67
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.8309,
+"far": 3324,
+"fov": 38,
+"dist": 166.18,
+"target": [
+4.5,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-74.98,
+111.27,
+264.93
+],
+"up": [
+0,
+1,
+0
+],
+"near": 1.491,
+"far": 5963,
+"fov": 38,
+"dist": 298.14,
+"target": [
+4.5,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-1671.3,
+2346.1,
+5585.9
+],
+"up": [
+0,
+1,
+0
+],
+"near": 1.448,
+"far": 5792,
+"fov": 38,
+"dist": 6286.1,
+"target": [
+4.5,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "plate",
+"label": "Пластины нет: свободный полёт",
+"kind": "object",
+"visible": false,
+"parts": {
+"Mesh/MeshStandardMaterial/double": 1
+}
+},
+{
+"id": "incident",
+"label": "Падающий пакет (задан)",
+"kind": "object",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.06": 4,
+"Line/LineBasicMaterial": 1,
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "screen",
+"label": "Плоскость детектора (z = 30 λ): поток, накопленный за опыт",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/double": 1
+}
+},
+{
+"id": "wave",
+"label": "Волна |ψ|² в плоскости опыта (y = 0)",
+"kind": "object",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.95": 1
+}
+},
+{
+"id": "bohm",
+"label": "Траектории Бома (по щелям), в 3D",
+"kind": "tracks",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial/transp/op0.85": 1
+}
+},
+{
+"id": "wave3d",
+"label": "Волна |ψ|² в объёме: ψ(x, z, t)·η(y, t)",
+"kind": "volume",
+"visible": true,
+"parts": {
+"Mesh/ShaderMaterial/transp/noDW/ro2/back": 1
+}
+},
+{
+"id": "particles",
+"label": "Частицы Бома сейчас",
+"kind": "points",
+"visible": true,
+"parts": {
+"Points/PointsMaterial": 1
+}
+}
+],
+"perf": {
+"calls": 17,
+"triangles": 38,
+"lines": 9423,
+"points": 0,
+"msPerRender": 5623.8,
+"px": [
+470,
+877
+]
+},
+"fps": {
+"secs": 4.37,
+"rafFps": 15.1,
+"drawsPerSec": 8,
+"scriptShare": 0.32,
+"taskShare": 0.48
+},
+"errors": []
+},
+"v12_slits": {
+"viz": "v12_arrival_times_2d",
+"preset": "slits",
+"run": "20261104-212911-v12-ef11",
+"failed": null,
+"canvas": {
+"w": 470,
+"h": 851.25
+},
+"box": [
+[
+-42,
+-22.645537449294576,
+-50.49999999999999
+],
+[
+42,
+22.645537449294576,
+40
+]
+],
+"cornersInside": 4,
+"boxOnScreen": {
+"x0": -46.7450442329162,
+"x1": 590.6785182450301,
+"y0": 236.49569486811117,
+"y1": 698.3166157092006
+},
+"camera_opened": {
+"pos": [
+-65.558,
+84.431,
+201.03
+],
+"up": [
+0,
+1,
+0
+],
+"near": 1.131,
+"far": 4524,
+"fov": 38,
+"dist": 226.22,
+"target": [
+-5.25,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-113.45,
+151.48,
+360.66
+],
+"up": [
+0,
+1,
+0
+],
+"near": 2.029,
+"far": 8117,
+"fov": 38,
+"dist": 405.86,
+"target": [
+-5.25,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-2286.5,
+3193.8,
+7604.2
+],
+"up": [
+0,
+1,
+0
+],
+"near": 1.971,
+"far": 7885,
+"fov": 38,
+"dist": 8557.3,
+"target": [
+-5.25,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "plate",
+"label": "Пластина с двумя щелями (вдоль y)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshStandardMaterial/double": 1,
+"LineLoop/LineBasicMaterial": 2
+}
+},
+{
+"id": "incident",
+"label": "Падающий пакет (задан)",
+"kind": "object",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.06": 9,
+"Line/LineBasicMaterial": 1,
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "screen",
+"label": "Плоскость детектора (z = 30 λ): поток, накопленный за опыт",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/double": 1
+}
+},
+{
+"id": "wave",
+"label": "Волна |ψ|² в плоскости опыта (y = 0)",
+"kind": "object",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.95": 1
+}
+},
+{
+"id": "bohm",
+"label": "Траектории Бома (по щелям), в 3D",
+"kind": "tracks",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial/transp/op0.85": 1
+}
+},
+{
+"id": "wave3d",
+"label": "Волна |ψ|² в объёме: ψ(x, z, t)·η(y, t)",
+"kind": "volume",
+"visible": true,
+"parts": {
+"Mesh/ShaderMaterial/transp/noDW/ro2/back": 1
+}
+},
+{
+"id": "particles",
+"label": "Частицы Бома сейчас",
+"kind": "points",
+"visible": true,
+"parts": {
+"Points/PointsMaterial": 1
+}
+}
+],
+"perf": {
+"calls": 20,
+"triangles": 86,
+"lines": 5662,
+"points": 60,
+"msPerRender": 506.9,
+"px": [
+470,
+851
+]
+},
+"fps": {
+"secs": 4.14,
+"rafFps": 18.4,
+"drawsPerSec": 8.2,
+"scriptShare": 0.03,
+"taskShare": 0.06
+},
+"errors": []
+},
+"v13_1s": {
+"viz": "v13_hydrogen_3d",
+"preset": "1s",
+"run": "20261104-213420-v13-6219",
+"failed": null,
+"canvas": {
+"w": 564,
+"h": 916.8125
+},
+"box": [
+[
+-2.971630881193511,
+-2.971630881193511,
+-2.971630881193511
+],
+[
+2.971630881193511,
+2.971630881193511,
+2.971630881193511
+]
+],
+"cornersInside": 6,
+"boxOnScreen": {
+"x0": 14.887526818934418,
+"x1": 616.0656106165146,
+"y0": 183.3810703673397,
+"y1": 816.5240124937312
+},
+"camera_opened": {
+"pos": [
+-4.7203,
+6.6084,
+15.734
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.08853,
+"far": 354.1,
+"fov": 38,
+"dist": 17.706,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-7.4175,
+10.384,
+24.725
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.1391,
+"far": 556.5,
+"fov": 38,
+"dist": 27.824,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-161,
+225.41,
+536.68
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.1391,
+"far": 556.5,
+"fov": 38,
+"dist": 603.95,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "nucleus",
+"label": "Ядро (p⁺) в начале координат",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "cloud",
+"label": "Облако |ψ|² (плотность вероятности)",
+"kind": "volume",
+"visible": true,
+"parts": {
+"Mesh/ShaderMaterial/transp/noDW/ro2/back": 1
+}
+}
+],
+"perf": {
+"calls": 21,
+"triangles": 404,
+"lines": 17,
+"points": 0,
+"msPerRender": 1546.5,
+"px": [
+564,
+917
+]
+},
+"fps": {
+"secs": 4.66,
+"rafFps": 14.6,
+"drawsPerSec": 6.4,
+"scriptShare": 0.04,
+"taskShare": 0.16
+},
+"errors": []
+},
+"v13_3dm2": {
+"viz": "v13_hydrogen_3d",
+"preset": "3d_m2",
+"run": "20261104-214040-v13-d7d1",
+"failed": null,
+"canvas": {
+"w": 564,
+"h": 916.8125
+},
+"box": [
+[
+-14.347924708737251,
+-14.347924708737251,
+-14.347924708737251
+],
+[
+14.347924708737251,
+14.347924708737251,
+14.347924708737251
+]
+],
+"cornersInside": 6,
+"boxOnScreen": {
+"x0": 14.887526818934361,
+"x1": 616.0656106165148,
+"y0": 183.38107036733987,
+"y1": 816.5240124937316
+},
+"camera_opened": {
+"pos": [
+-22.791,
+31.907,
+75.97
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.4275,
+"far": 1710,
+"fov": 38,
+"dist": 85.492,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-35.814,
+50.139,
+119.38
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.6717,
+"far": 2687,
+"fov": 38,
+"dist": 134.34,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-777.38,
+1088.3,
+2591.3
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.6717,
+"far": 2687,
+"fov": 38,
+"dist": 2916.1,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "nucleus",
+"label": "Ядро (p⁺) в начале координат",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "current",
+"label": "Ток вероятности (стрелки)",
+"kind": "vectors",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 552
+}
+},
+{
+"id": "cloud",
+"label": "Облако |ψ|² (плотность вероятности)",
+"kind": "volume",
+"visible": true,
+"parts": {
+"Mesh/ShaderMaterial/transp/noDW/ro2/back": 1
+}
+}
+],
+"perf": {
+"calls": 22,
+"triangles": 11444,
+"lines": 17,
+"points": 0,
+"msPerRender": 2157.2,
+"px": [
+564,
+917
+]
+},
+"fps": {
+"secs": 4.2,
+"rafFps": 14.3,
+"drawsPerSec": 6.7,
+"scriptShare": 0.01,
+"taskShare": 0.1
+},
+"errors": []
+},
+"v13_super": {
+"viz": "v13_hydrogen_3d",
+"preset": "super_1s2p",
+"run": "20261104-215036-v13-0073",
+"failed": null,
+"canvas": {
+"w": 564,
+"h": 916.8125
+},
+"box": [
+[
+-7.835885886045831,
+-7.835885886045831,
+-7.835885886045831
+],
+[
+7.835885886045831,
+7.835885886045831,
+7.835885886045831
+]
+],
+"cornersInside": 6,
+"boxOnScreen": {
+"x0": 14.887526818934361,
+"x1": 616.065610616515,
+"y0": 183.38107036733965,
+"y1": 816.5240124937314
+},
+"camera_opened": {
+"pos": [
+-12.447,
+17.426,
+41.49
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.2335,
+"far": 933.8,
+"fov": 38,
+"dist": 46.69,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-19.559,
+27.383,
+65.197
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.3668,
+"far": 1467,
+"fov": 38,
+"dist": 73.369,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-424.55,
+594.37,
+1415.2
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.3668,
+"far": 1467,
+"fov": 38,
+"dist": 1592.6,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "nucleus",
+"label": "Ядро (p⁺) в начале координат",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "current",
+"label": "Ток вероятности (стрелки)",
+"kind": "vectors",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 552
+}
+},
+{
+"id": "cloud",
+"label": "Облако |ψ|² (плотность вероятности)",
+"kind": "volume",
+"visible": true,
+"parts": {
+"Mesh/ShaderMaterial/transp/noDW/ro2/back": 1
+}
+}
+],
+"perf": {
+"calls": 22,
+"triangles": 11444,
+"lines": 17,
+"points": 0,
+"msPerRender": 1058.3,
+"px": [
+564,
+917
+]
+},
+"fps": {
+"secs": 5.46,
+"rafFps": 8.8,
+"drawsPerSec": 4.9,
+"scriptShare": 0.76,
+"taskShare": 0.82
+},
+"errors": []
+},
+"v14_cc1P": {
+"viz": "v14_quarkonium_3d",
+"preset": "cc_1P",
+"run": "20261104-215919-v14-ab34",
+"failed": null,
+"canvas": {
+"w": 564,
+"h": 877.4375
+},
+"box": [
+[
+-1.3442246955823172,
+-1.3442246955823172,
+-1.3442246955823172
+],
+[
+1.3442246955823172,
+1.3442246955823172,
+1.3442246955823172
+]
+],
+"cornersInside": 7,
+"boxOnScreen": {
+"x0": 26.539106892263135,
+"x1": 601.4935011021629,
+"y0": 175.50527281253557,
+"y1": 781.4561736587018
+},
+"camera_opened": {
+"pos": [
+-2.1352,
+2.9893,
+7.1174
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.04005,
+"far": 160.2,
+"fov": 38,
+"dist": 8.0096,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-3.2154,
+4.5015,
+10.718
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.06031,
+"far": 241.2,
+"fov": 38,
+"dist": 12.061,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-69.793,
+97.711,
+232.64
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.06031,
+"far": 241.2,
+"fov": 38,
+"dist": 261.8,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "cm",
+"label": "Центр масс пары (облако — расстояние r = r_q − r_q̄)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "cloud",
+"label": "Облако |ψ|² (плотность вероятности)",
+"kind": "volume",
+"visible": true,
+"parts": {
+"Mesh/ShaderMaterial/transp/noDW/ro2/back": 1
+}
+}
+],
+"perf": {
+"calls": 21,
+"triangles": 404,
+"lines": 17,
+"points": 0,
+"msPerRender": 654.7,
+"px": [
+564,
+877
+]
+},
+"fps": {
+"secs": 4.01,
+"rafFps": 21.4,
+"drawsPerSec": 12.7,
+"scriptShare": 0.01,
+"taskShare": 0.04
+},
+"errors": []
+},
+"v14_cc1S": {
+"viz": "v14_quarkonium_3d",
+"preset": "cc_1S",
+"run": "20261104-214904-v14-6b7a",
+"failed": null,
+"canvas": {
+"w": 564,
+"h": 877.4375
+},
+"box": [
+[
+-1.022805130223233,
+-1.022805130223233,
+-1.022805130223233
+],
+[
+1.022805130223233,
+1.022805130223233,
+1.022805130223233
+]
+],
+"cornersInside": 7,
+"boxOnScreen": {
+"x0": 26.539106892263362,
+"x1": 601.4935011021631,
+"y0": 175.50527281253562,
+"y1": 781.4561736587018
+},
+"camera_opened": {
+"pos": [
+-1.6247,
+2.2745,
+5.4156
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.03047,
+"far": 121.9,
+"fov": 38,
+"dist": 6.0944,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-2.4465,
+3.4251,
+8.1551
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.04589,
+"far": 183.5,
+"fov": 38,
+"dist": 9.1773,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-53.105,
+74.347,
+177.02
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.04589,
+"far": 183.5,
+"fov": 38,
+"dist": 199.2,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "cm",
+"label": "Центр масс пары (облако — расстояние r = r_q − r_q̄)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "cloud",
+"label": "Облако |ψ|² (плотность вероятности)",
+"kind": "volume",
+"visible": true,
+"parts": {
+"Mesh/ShaderMaterial/transp/noDW/ro2/back": 1
+}
+}
+],
+"perf": {
+"calls": 21,
+"triangles": 404,
+"lines": 17,
+"points": 0,
+"msPerRender": 1313,
+"px": [
+564,
+877
+]
+},
+"fps": {
+"secs": 4.1,
+"rafFps": 15.8,
+"drawsPerSec": 8.3,
+"scriptShare": 0.01,
+"taskShare": 0.06
+},
+"errors": []
+},
+"v15_edge": {
+"viz": "v15_kerr_shadow",
+"preset": "edge_on",
+"run": "20261104-212809-v15-039c",
+"failed": null,
+"canvas": {
+"w": 470,
+"h": 877.4375
+},
+"box": [
+[
+-24,
+-24,
+-24
+],
+[
+24,
+24,
+24
+]
+],
+"cornersInside": 8,
+"boxOnScreen": {
+"x0": 65.67239355762962,
+"x1": 399.6388078978914,
+"y0": 276.2128163639318,
+"y1": 626.3853533125539
+},
+"camera_opened": {
+"pos": [
+120.85,
+-187.99,
+-147.71
+],
+"up": [
+1,
+0,
+0
+],
+"near": 1.339,
+"far": 5358,
+"fov": 38,
+"dist": 267.89,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+115.74,
+-180.04,
+-141.46
+],
+"up": [
+1,
+0,
+0
+],
+"near": 1.283,
+"far": 5131,
+"fov": 38,
+"dist": 256.56,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+2512.3,
+-3908.1,
+-3070.6
+],
+"up": [
+1,
+0,
+0
+],
+"near": 1.283,
+"far": 5131,
+"fov": 38,
+"dist": 5569,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "horizon",
+"label": "Горизонт r₊ = 1.14107 M",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/double": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "ergo",
+"label": "Эргосфера (внутри неё ничто не может покоиться)",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.18": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "orbits",
+"label": "Круговые орбиты в экваторе: фотонные (по и против вращения) и ISCO",
+"kind": "lines",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial": 1
+}
+},
+{
+"id": "observer",
+"label": "Наблюдатель (далеко, в этом направлении)",
+"kind": "arrow",
+"visible": true,
+"parts": {
+"Line/LineBasicMaterial": 1,
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "disk",
+"label": "Диск: излучение J(r) от 1.141 до 20 M (модель источника)",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.55": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "rays",
+"label": "Лучи к наблюдателю (посчитаны): красные — захвачены, жёлтые — у критической кривой, голубые — дальше",
+"kind": "lines",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial": 1
+}
+}
+],
+"perf": {
+"calls": 26,
+"triangles": 25092,
+"lines": 25213,
+"points": 0,
+"msPerRender": 573.6,
+"px": [
+470,
+877
+]
+},
+"fps": {
+"secs": 4.08,
+"rafFps": 22.5,
+"drawsPerSec": 10.8,
+"scriptShare": 0.08,
+"taskShare": 0.23
+},
+"errors": []
+},
+"v15_m87": {
+"viz": "v15_kerr_shadow",
+"preset": "m87",
+"run": "20261104-212641-v15-0a1e",
+"failed": null,
+"canvas": {
+"w": 470,
+"h": 877.4375
+},
+"box": [
+[
+-24,
+-24,
+-24
+],
+[
+24,
+24,
+24
+]
+],
+"cornersInside": 8,
+"boxOnScreen": {
+"x0": 65.67239355762962,
+"x1": 399.6388078978914,
+"y0": 276.2128163639318,
+"y1": 626.3853533125539
+},
+"camera_opened": {
+"pos": [
+120.85,
+-187.99,
+-147.71
+],
+"up": [
+1,
+0,
+0
+],
+"near": 1.339,
+"far": 5358,
+"fov": 38,
+"dist": 267.89,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+115.74,
+-180.04,
+-141.46
+],
+"up": [
+1,
+0,
+0
+],
+"near": 1.283,
+"far": 5131,
+"fov": 38,
+"dist": 256.56,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+2512.3,
+-3908.1,
+-3070.6
+],
+"up": [
+1,
+0,
+0
+],
+"near": 1.283,
+"far": 5131,
+"fov": 38,
+"dist": 5569,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "horizon",
+"label": "Горизонт r₊ = 1.43589 M",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/double": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "ergo",
+"label": "Эргосфера (внутри неё ничто не может покоиться)",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.18": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "orbits",
+"label": "Круговые орбиты в экваторе: фотонные (по и против вращения) и ISCO",
+"kind": "lines",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial": 1
+}
+},
+{
+"id": "observer",
+"label": "Наблюдатель (далеко, в этом направлении)",
+"kind": "arrow",
+"visible": true,
+"parts": {
+"Line/LineBasicMaterial": 1,
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "disk",
+"label": "Диск: излучение J(r) от 1.436 до 20 M (модель источника)",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.55": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "rays",
+"label": "Лучи к наблюдателю (посчитаны): красные — захвачены, жёлтые — у критической кривой, голубые — дальше",
+"kind": "lines",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial": 1
+}
+}
+],
+"perf": {
+"calls": 26,
+"triangles": 25092,
+"lines": 25213,
+"points": 0,
+"msPerRender": 431.7,
+"px": [
+470,
+877
+]
+},
+"fps": {
+"secs": 4.14,
+"rafFps": 27.3,
+"drawsPerSec": 13.8,
+"scriptShare": 0.03,
+"taskShare": 0.15
+},
+"errors": []
+},
+"v16_fork": {
+"viz": "v16_optical_vortices",
+"preset": "fork",
+"run": "20261104-213630-v16-6032",
+"failed": null,
+"canvas": {
+"w": 564,
+"h": 887.4375
+},
+"box": [
+[
+-65.65269323319585,
+-65.65269323319585,
+0
+],
+[
+65.65269323319585,
+65.65269323319585,
+90.18665048988304
+]
+],
+"cornersInside": 8,
+"boxOnScreen": {
+"x0": 69.9276755540684,
+"x1": 563.1841188754441,
+"y0": 156.97908172728665,
+"y1": 815.505860327739
+},
+"camera_opened": {
+"pos": [
+-49.567,
+132.52,
+315.53
+],
+"up": [
+0,
+1,
+0
+],
+"near": 1.775,
+"far": 7102,
+"fov": 38,
+"dist": 355.08,
+"target": [
+45.093,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-99.002,
+201.73,
+480.32
+],
+"up": [
+0,
+1,
+0
+],
+"near": 2.703,
+"far": 10810,
+"fov": 38,
+"dist": 540.52,
+"target": [
+45.093,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-3082.7,
+4378.9,
+10426
+],
+"up": [
+0,
+1,
+0
+],
+"near": 2.703,
+"far": 10810,
+"fov": 38,
+"dist": 11733,
+"target": [
+45.093,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "light",
+"label": "Интенсивность |E|² (объём, посчитан)",
+"kind": "volume",
+"visible": true,
+"parts": {
+"Mesh/ShaderMaterial/transp/noDW/ro2/back": 1
+}
+},
+{
+"id": "hologram",
+"label": "Голограмма-«вилка» (z = 0)",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.95": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+}
+],
+"perf": {
+"calls": 22,
+"triangles": 36150,
+"lines": 27282,
+"points": 0,
+"msPerRender": 2313.8,
+"px": [
+564,
+887
+]
+},
+"fps": {
+"secs": 4.79,
+"rafFps": 8.8,
+"drawsPerSec": 5.8,
+"scriptShare": 0.06,
+"taskShare": 0.2
+},
+"errors": []
+},
+"v16_lg3": {
+"viz": "v16_optical_vortices",
+"preset": "lg3",
+"run": "20261104-212930-v16-039e",
+"failed": null,
+"canvas": {
+"w": 564,
+"h": 887.4375
+},
+"box": [
+[
+-10.00540478941257,
+-10.00540478941257,
+-10.602875205865551
+],
+[
+10.00540478941257,
+10.00540478941257,
+10.602875205865551
+]
+],
+"cornersInside": 6,
+"boxOnScreen": {
+"x0": 16.253150687912182,
+"x1": 610.9115275749243,
+"y0": 181.6023038974701,
+"y1": 785.0334163129806
+},
+"camera_opened": {
+"pos": [
+-16.216,
+22.702,
+54.052
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.3041,
+"far": 1217,
+"fov": 38,
+"dist": 60.827,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-24.684,
+34.557,
+82.28
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.463,
+"far": 1852,
+"fov": 38,
+"dist": 92.593,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-535.79,
+750.11,
+1786
+],
+"up": [
+0,
+1,
+0
+],
+"near": 0.463,
+"far": 1852,
+"fov": 38,
+"dist": 2009.8,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "waist",
+"label": "Перетяжка пучка (z = 0): w0",
+"kind": "object",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/double/op0.85": 1
+}
+},
+{
+"id": "detector",
+"label": "Детектор (одномодовый, дальняя зона)",
+"kind": "object",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.80": 1,
+"LineSegments/LineBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "light",
+"label": "Интенсивность |E|² (объём, посчитан)",
+"kind": "volume",
+"visible": true,
+"parts": {
+"Mesh/ShaderMaterial/transp/noDW/ro2/back": 1
+}
+},
+{
+"id": "rotor",
+"label": "Вращающийся шероховатый диск",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.85": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "flowP",
+"label": "Линии потока энергии (вектор Пойнтинга, посчитаны)",
+"kind": "lines",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial": 1
+}
+},
+{
+"id": "flowO",
+"label": "Линии орбитального (канонического) тока p_o",
+"kind": "lines",
+"visible": false,
+"parts": {
+"LineSegments/LineBasicMaterial": 1
+}
+},
+{
+"id": "helix",
+"label": "Поверхности равной фазы arg ψ = ωt (участок z = -9.54…8.48 мкм)",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.62": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+}
+],
+"perf": {
+"calls": 30,
+"triangles": 32536,
+"lines": 28560,
+"points": 0,
+"msPerRender": 2173.8,
+"px": [
+564,
+887
+]
+},
+"fps": {
+"secs": 4.2,
+"rafFps": 4.5,
+"drawsPerSec": 4.3,
+"scriptShare": 0.3,
+"taskShare": 0.43
+},
+"errors": []
+},
+"v17_near": {
+"viz": "v17_mie_scattering",
+"preset": "near",
+"run": "20261104-214401-v17-9fc8",
+"failed": null,
+"canvas": {
+"w": 564,
+"h": 887.4375
+},
+"box": [
+[
+-2.5,
+-2.5,
+-2.5
+],
+[
+2.5,
+2.5,
+2.5
+]
+],
+"cornersInside": 5,
+"boxOnScreen": {
+"x0": -57.335970007371884,
+"x1": 592.098090443404,
+"y0": 154.7670681289934,
+"y1": 821.5270451774114
+},
+"camera_opened": {
+"pos": [
+-7.3929,
+-11.089,
+-6.6536
+],
+"up": [
+0,
+0,
+-1
+],
+"near": 0.07448,
+"far": 297.9,
+"fov": 38,
+"dist": 14.896,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-11.254,
+-16.881,
+-10.128
+],
+"up": [
+0,
+0,
+-1
+],
+"near": 0.1134,
+"far": 453.5,
+"fov": 38,
+"dist": 22.676,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-244.28,
+-366.41,
+-219.85
+],
+"up": [
+0,
+0,
+-1
+],
+"near": 0.1134,
+"far": 453.5,
+"fov": 38,
+"dist": 492.2,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "drop",
+"label": "Капля (вода), радиус a = 1 мкм — в сцене радиус 1",
+"kind": "object",
+"visible": true,
+"parts": {
+"Line/LineBasicMaterial/transp/op0.35": 19,
+"Mesh/MeshBasicMaterial/transp/noDW/back/op0.04": 1
+}
+},
+{
+"id": "incident",
+"label": "Падающая волна",
+"kind": "arrow",
+"visible": true,
+"parts": {
+"Line/LineBasicMaterial": 1,
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "polarisation",
+"label": "Поляризация падающей волны",
+"kind": "arrow",
+"visible": true,
+"parts": {
+"Line/LineBasicMaterial": 1,
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "polar_u",
+"label": "Рассеянный свет, неполяризованный падающий (лог. шкала, 5 порядков)",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.55": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "polar_x",
+"label": "Рассеянный свет при поляризации падающего вдоль x",
+"kind": "mesh",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.55": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "polar_y",
+"label": "Рассеянный свет при поляризации падающего вдоль y",
+"kind": "mesh",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.55": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "rays",
+"label": "Лучи (геометрическая оптика, m = 1.335): серые — отражение p = 0, голубые — проход p = 1, жёлтые — одно внутреннее отражение p = 2, лиловые — два, p = 3; яркие — лучи Декарта",
+"kind": "lines",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial": 1
+}
+},
+{
+"id": "field",
+"label": "Поле |E|² в объёме (внутри и вокруг капли)",
+"kind": "volume",
+"visible": true,
+"parts": {
+"Mesh/ShaderMaterial/transp/noDW/ro2/back": 1
+}
+}
+],
+"perf": {
+"calls": 49,
+"triangles": 28202,
+"lines": 20739,
+"points": 0,
+"msPerRender": 2251.8,
+"px": [
+564,
+887
+]
+},
+"fps": {
+"secs": 4.61,
+"rafFps": 12.1,
+"drawsPerSec": 5.6,
+"scriptShare": 0.01,
+"taskShare": 0.05
+},
+"errors": []
+},
+"v17_rainbow": {
+"viz": "v17_mie_scattering",
+"preset": "rainbow",
+"run": "20261104-214213-v17-9d60",
+"failed": null,
+"canvas": {
+"w": 470,
+"h": 887.4375
+},
+"box": [
+[
+-2.5,
+-2.5,
+-2.5
+],
+[
+2.5,
+2.5,
+2.5
+]
+],
+"cornersInside": 4,
+"boxOnScreen": {
+"x0": -104.33597000737194,
+"x1": 545.0980904434041,
+"y0": 154.7670681289934,
+"y1": 821.5270451774114
+},
+"camera_opened": {
+"pos": [
+-7.3929,
+-11.089,
+-6.6536
+],
+"up": [
+0,
+0,
+-1
+],
+"near": 0.07448,
+"far": 297.9,
+"fov": 38,
+"dist": 14.896,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_afterF": {
+"pos": [
+-13.41,
+-20.115,
+-12.069
+],
+"up": [
+0,
+0,
+-1
+],
+"near": 0.1351,
+"far": 540.4,
+"fov": 38,
+"dist": 27.02,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"camera_zoomout": {
+"pos": [
+-291.07,
+-436.61,
+-261.97
+],
+"up": [
+0,
+0,
+-1
+],
+"near": 0.1351,
+"far": 540.4,
+"fov": 38,
+"dist": 586.5,
+"target": [
+0,
+0,
+0
+],
+"zoomToCursor": false,
+"enableDamping": false,
+"minDistance": 0,
+"maxDistance": null
+},
+"layers": [
+{
+"id": "drop",
+"label": "Капля (вода), радиус a = 150 мкм — в сцене радиус 1",
+"kind": "object",
+"visible": true,
+"parts": {
+"Line/LineBasicMaterial/transp/op0.35": 19,
+"Mesh/MeshBasicMaterial/transp/noDW/back/op0.04": 1
+}
+},
+{
+"id": "incident",
+"label": "Падающая волна",
+"kind": "arrow",
+"visible": true,
+"parts": {
+"Line/LineBasicMaterial": 1,
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "polarisation",
+"label": "Поляризация падающей волны",
+"kind": "arrow",
+"visible": true,
+"parts": {
+"Line/LineBasicMaterial": 1,
+"Mesh/MeshBasicMaterial": 1,
+"Sprite/SpriteMaterial/transp/noDT/ro10": 1
+}
+},
+{
+"id": "polar_u",
+"label": "Рассеянный свет, неполяризованный падающий (лог. шкала, 5 порядков)",
+"kind": "mesh",
+"visible": true,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.55": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "polar_x",
+"label": "Рассеянный свет при поляризации падающего вдоль x",
+"kind": "mesh",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.55": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "polar_y",
+"label": "Рассеянный свет при поляризации падающего вдоль y",
+"kind": "mesh",
+"visible": false,
+"parts": {
+"Mesh/MeshBasicMaterial/transp/noDW/double/op0.55": 1,
+"LineSegments/LineBasicMaterial/transp/op0.12": 1
+}
+},
+{
+"id": "rays",
+"label": "Лучи (геометрическая оптика, m = 1.335): серые — отражение p = 0, голубые — проход p = 1, жёлтые — одно внутреннее отражение p = 2, лиловые — два, p = 3; яркие — лучи Декарта",
+"kind": "lines",
+"visible": true,
+"parts": {
+"LineSegments/LineBasicMaterial": 1
+}
+}
+],
+"perf": {
+"calls": 43,
+"triangles": 28176,
+"lines": 20734,
+"points": 0,
+"msPerRender": 429.4,
+"px": [
+470,
+887
+]
+},
+"fps": {
+"secs": 4.58,
+"rafFps": 18.1,
+"drawsPerSec": 10.3,
+"scriptShare": 0.07,
+"taskShare": 0.22
+},
+"errors": []
+}
+},
+"probes": {
+"volsphere": {
+"case": "volsphere",
+"geo": {
+"peak": [
+-0.08248300932679786,
+-0.08248300932679786,
+-1.0722791212483775
+],
+"front": [
+-1.999568357629145,
+0.953208913361331,
+0.41425314066551633
+],
+"back": [
+2.012976235499993,
+-0.9663451441958222,
+-0.47735226394858454
+],
+"r": 0.4701531531627498,
+"box": [
+[
+-7.835885886045831,
+-7.835885886045831,
+-7.835885886045831
+],
+[
+7.835885886045831,
+7.835885886045831,
+7.835885886045831
+]
+],
+"frontVal": 0.016224845171043605,
+"backVal": 0.020626496871881058
+},
+"cloudAtFront": [
+127,
+41,
+110
+],
+"cloudAtBack": [
+92,
+28,
+104
+],
+"withFront": [
+51,
+255,
+77
+],
+"withBack": [
+51,
+255,
+77
+],
+"sphereAloneFront": [
+51,
+255,
+77
+],
+"sphereAloneBack": [
+51,
+255,
+77
+],
+"errors": []
+},
+"volcost": {
+"case": "volcost",
+"cost": {
+"px1": [
+564,
+917
+],
+"on_pr1": 835.7,
+"on64_pr1": 476.8,
+"off_pr1": 15.2,
+"px2": [
+1128,
+1834
+],
+"on_pr2": 2834.5,
+"on64_pr2": 1160.4,
+"off_pr2": 62.4
+},
+"errors": []
+},
+"layerspanel": {
+"case": "layerspanel",
+"worlds": {
+"p01_gravity": {
+"secs": 10.031099999904633,
+"childListMutations": 40,
+"firstInputReplaced": true,
+"hasRange": false
+},
+"p02_quantum": {
+"secs": 10.000099999904632,
+"childListMutations": 0,
+"firstInputReplaced": false,
+"hasRange": true
+},
+"v16_optical_vortices": {
+"secs": 10.005400000095367,
+"childListMutations": 7,
+"firstInputReplaced": true,
+"hasRange": true
+}
+},
+"errors": []
+},
+"boxjump": {
+"case": "boxjump",
+"before": {
+"pos": [
+-3.991,
+-5.216,
+12.016
+],
+"target": [
+0,
+0,
+0
+],
+"dist": 13.694,
+"box": "[[-4,-4,-2],[4,4,2]]",
+"lastView": "iso"
+},
+"samples": 12,
+"after": {
+"pos": [
+41.49,
+-58.086,
+-41.49
+],
+"target": [
+0,
+0,
+0
+],
+"dist": 82.563,
+"box": "[[-16,-16,-8],[16,16,8]]",
+"lastView": "iso"
+},
+"errors": []
+},
+"faint": {
+"case": "faint",
+"look": {
+"look": {
+"density": 0.9,
+"threshold": 0.01
+},
+"diag": 10.29403133513567,
+"dt": 0.06433769584459795
+},
+"errors": []
+},
+"zfight": {
+"case": "zfight",
+"errors": []
+},
+"theme": {
+"case": "theme",
+"errors": []
+},
+"twoplanes": {
+"case": "twoplanes",
+"planes": [
+{
+"id": 1,
+"label": "y = 0",
+"n": [
+0,
+-1,
+0
+]
+},
+{
+"id": 2,
+"label": "x = 0",
+"n": [
+1,
+0,
+0
+]
+}
+],
+"current": [
+{
+"p": [
+0,
+-1.7829785287161064,
+0.8914892643580532
+],
+"plane2InFront": false,
+"rgb": [
+0,
+255,
+0
+]
+},
+{
+"p": [
+0,
+1.7829785287161064,
+0.8914892643580532
+],
+"plane2InFront": true,
+"rgb": [
+0,
+255,
+0
+]
+}
+],
+"fix": [
+{
+"p": [
+0,
+-1.7829785287161064,
+0.8914892643580532
+],
+"plane2InFront": false,
+"rgb": [
+0,
+255,
+0
+]
+},
+{
+"p": [
+0,
+1.7829785287161064,
+0.8914892643580532
+],
+"plane2InFront": true,
+"rgb": [
+0,
+255,
+0
+]
+}
+],
+"errors": []
+},
+"planevol": {
+"case": "planevol",
+"planes": [
+{
+"id": 1,
+"label": "y = 0",
+"data": true
+}
+],
+"errors": []
+},
+"flat": {
+"case": "flat",
+"layers": [
+[
+"atoms",
+"spheres"
+]
+],
+"errors": []
+}
+}
+}

@@ -1,0 +1,10 @@
+world 1 ended at t = 0.9900000000000002 ; world 2 header t = 0.9900000000000002 world 2
+carry notice: Сцена перенесена в новый мир: 4 из 6 объектов; не перенесены: «Частица 3» — Частица вне плоскости z = 0 (z = 1 м, vz = 0.2 м/с). Что изменить: перенесите её в 3-D мир или поставьте z = 0, vz = 0; «Стенка (отражает) 1» — Стенки поперёк оси z в этом мире нет: он плоский. Что изменить: выберите ось x или y
+carried scene in the header's params: objects 6 carry flag True ; header JSON chars 8055
+world 2 objects: [('o1', 'Частица 1', 'particle'), ('o2', 'Частица 2', 'particle'), ('o3', 'Датчик 1', 'probe'), ('o4', 'Частица 4', 'particle')]
+last frame before the suspension: t = 1.930000000000001
+checkpoint files deleted: 1
+resume: 200 {'ok': True}
+resumed: ['Продолжение: мир пересчитывается от начала по записи до t = 1.93 с (2 изменений установки)…', 'replay', 'Мир восстановлен: пересчитан от начала по записи (2 изменений установки) и продолжается с t = 1.93 с']
+first frame after the resume: t = 1.930000000000001
+bit for bit equal (t, at, meas): True

@@ -1,0 +1,25 @@
+rows: eps; columns: j = 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95 0.99 1
+cell: '.' invariants reproduced to 1e-10 at a periapsis; 'A' right invariants but an apoapsis (the docstring promises the periapsis); 'X' wrong state returned silently; 'E' error raised
+  eps=0.0001     .    .    .    .    .    .    .    .    .    .    .    .    A
+  eps=0.0003     .    E    .    .    .    .    .    .    .    .    .    .    A
+  eps=0.001      A    .    .    .    .    .    .    .    .    .    .    .    A
+  eps=0.002      .    .    .    .    .    .    .    .    .    .    .    .    A
+  eps=0.003      E    E    .    A    .    .    .    .    .    .    .    .    A
+  eps=0.005      A    .    .    .    E    .    .    .    .    .    .    .    E
+  eps=0.007      E    E    A    .    E    .    .    .    .    .    .    .    .
+  eps=0.01       E    A    A    .    X    X    .    .    .    .    .    .    .
+  eps=0.015      E    E    A    E    E    E    E    .    .    .    .    .    .
+  eps=0.02       E    E    E    A    A    A    X    A    .    .    .    .    .
+  eps=0.03       E    X    X    E    E    E    E    X    A    .    .    .    X
+  eps=0.05       E    E    X    E    X    A    E    E    E    E    A    E    A
+9 silent failures (X), e.g.:
+  eps=0.01 j=0.4: r_p = 4.394e+36, eps(state) = -6.238e-02, j(state) = -7.543e+70
+  eps=0.01 j=0.5: r_p = 3.273e+36, eps(state) = -8.899e-03, j(state) = -8.485e+68
+  eps=0.02 j=0.6: r_p = 2.202e+34, eps(state) = -1.909e-03, j(state) = -1.767e+63
+  eps=0.03 j=0.1: r_p = 4.174e+35, eps(state) = -2.825e+00, j(state) = -1.622e+72
+  eps=0.03 j=0.2: r_p = 8.274e+36, eps(state) = -2.767e-01, j(state) = -5.330e+72
+  eps=0.03 j=0.7: r_p = 3.004e+35, eps(state) = -3.880e-03, j(state) = -1.359e+66
+  eps=0.03 j=1: r_p = 2.092e+36, eps(state) = -4.833e-03, j(state) = -1.022e+68
+  eps=0.05 j=0.2: r_p = 5.937e+36, eps(state) = -5.057e-02, j(state) = -9.043e+70
+nu=0.1: 6 silent failures on the same grid
+nu=0.01: 6 silent failures on the same grid

@@ -1,0 +1,7 @@
+[{"name": "c_v13_super_l2_0_after_header_crash", "id": "20261104-215016-v13-5e21", "wait": 6000},
+ {"name": "f_v15_newworld_jp_a13_min_english", "start": {"viz": "v15_kerr_shadow", "seed": 1}, "wait": 6000,
+  "cmds": [["new_world", {"params": {"metric": "jp", "a13": -10}}, 4000]]},
+ {"name": "f_v06_newworld_rg_failed", "start": {"viz": "v06_qcd", "seed": 1}, "wait": 6000,
+  "cmds": [["new_world", {"preset": "strong", "params": {"alpha_mz": 0.1389, "mu": 10000.0, "system": "bottom", "kappa": 0.655}}, 5000]]},
+ {"name": "f_v01_newworld_walk_faster_than_c", "start": {"viz": "v01_light_travel", "seed": 1}, "wait": 5000,
+  "cmds": [["new_world", {"params": {"scenario": "andromeda", "c_factor": 0.5, "an_walk": 2e8}}, 4000]]}]

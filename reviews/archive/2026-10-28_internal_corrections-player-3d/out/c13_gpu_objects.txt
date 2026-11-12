@@ -1,0 +1,4 @@
+v10_fast_observer (298 frames), rebuilds → GPU objects: 0: {"geometries":15,"textures":24}  10: {"geometries":15,"textures":24}  20: {"geometries":15,"textures":24}  30: {"geometries":15,"textures":24}  40: {"geometries":15,"textures":24}
+v09_thomas_3d (307 frames), rebuilds → GPU objects: 0: {"geometries":52,"textures":17}  10: {"geometries":42,"textures":17}  20: {"geometries":42,"textures":17}  30: {"geometries":42,"textures":17}  40: {"geometries":42,"textures":17}
+v13_hydrogen_3d (307 frames), rebuilds → GPU objects: 0: {"geometries":8,"textures":17}  10: {"geometries":8,"textures":17}  20: {"geometries":8,"textures":17}  30: {"geometries":8,"textures":17}  40: {"geometries":8,"textures":17}
+v11_double_slit_2d (31 frames), rebuilds → GPU objects: 0: {"geometries":9,"textures":16}  10: {"geometries":9,"textures":13}  20: {"geometries":9,"textures":13}  30: {"geometries":9,"textures":13}  40: {"geometries":9,"textures":13}

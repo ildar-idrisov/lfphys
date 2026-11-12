@@ -1,0 +1,48 @@
+== (a) predicted spectral radius vs. growth in a long run (1-D: grid one cell wide, periodic) ==
+S = 0.50  Lorentz eps_inf=1 de=1.25 f0=0.2 g=0.1  rho_pred = 1.000000000000  growth over 20000 steps = 5.650e-01
+S = 0.50  Lorentz eps_inf=1 de=1.25 f0=0.2 g=0    rho_pred = 1.000000000000  growth over 20000 steps = 7.823e-01
+S = 0.50  Drude fp=1 g=0.1                       rho_pred = 1.000000000000  growth over 20000 steps = 6.841e-03
+S = 0.50  Debye de=3 tau=0.2                     rho_pred = 1.000000000000  growth over 20000 steps = 1.634e-02
+S = 0.70  Lorentz eps_inf=1 de=1.25 f0=0.2 g=0.1  rho_pred = 1.000000000000  growth over 20000 steps = 4.118e-01
+S = 0.70  Lorentz eps_inf=1 de=1.25 f0=0.2 g=0    rho_pred = 1.000000000000  growth over 20000 steps = 8.236e-01
+S = 0.70  Drude fp=1 g=0.1                       rho_pred = 1.000000000000  growth over 20000 steps = 1.304e-03
+S = 0.70  Debye de=3 tau=0.2                     rho_pred = 1.000000000000  growth over 20000 steps = 1.634e-02
+S = 0.75  Lorentz eps_inf=1 de=1.25 f0=0.2 g=0.1  rho_pred = 1.000000000000  growth over 20000 steps = 5.854e-01
+S = 0.75  Lorentz eps_inf=1 de=1.25 f0=0.2 g=0    rho_pred = 1.000000000000  growth over 20000 steps = 9.123e-01
+S = 0.75  Drude fp=1 g=0.1                       rho_pred = 1.000000000000  growth over 20000 steps = 1.381e-03
+S = 0.75  Debye de=3 tau=0.2                     rho_pred = 1.000000000000  growth over 20000 steps = 1.634e-02
+S = 0.90  Lorentz eps_inf=1 de=1.25 f0=0.2 g=0.1  rho_pred = 1.000000000000  growth over 20000 steps = 6.287e-01
+S = 0.90  Lorentz eps_inf=1 de=1.25 f0=0.2 g=0    rho_pred = 1.000000000000  growth over 20000 steps = 1.145e+00
+S = 0.90  Drude fp=1 g=0.1                       rho_pred = 1.000000000000  growth over 20000 steps = 6.274e-04
+S = 0.90  Debye de=3 tau=0.2                     rho_pred = 1.000000000000  growth over 20000 steps = 1.634e-02
+S = 0.99  Lorentz eps_inf=1 de=1.25 f0=0.2 g=0.1  rho_pred = 1.000000000000  growth over 20000 steps = 9.417e-01
+S = 0.99  Lorentz eps_inf=1 de=1.25 f0=0.2 g=0    rho_pred = 1.000000000000  growth over 20000 steps = 1.700e+00
+S = 0.99  Drude fp=1 g=0.1                       REFUSED: схема неустойчива в среде box (без имени): спектральный радиус шага 1.13931 > 1 
+S = 0.99  Debye de=3 tau=0.2                     rho_pred = 1.000000000000  growth over 20000 steps = 1.634e-02
+
+== (a') Bidegaray's Young-scheme conditions (1-D, Table 7): q <= 2 i.e. c_inf dt <= dx/sqrt(2), and omega = w1^2 dt^2/2 <= 2/(2 eps_s' - 1) ==
+  S = 0.6: engine's spectral radius over q in [0, 4 S^2]: 1.000000000000000
+  S = 0.7071: engine's spectral radius over q in [0, 4 S^2]: 1.000000000000000
+  S = 0.75: engine's spectral radius over q in [0, 4 S^2]: 1.000000000000000
+  S = 0.9: engine's spectral radius over q in [0, 4 S^2]: 1.000000000000000
+
+== (b) sampling: 257 points vs 20001 points of the curl-curl eigenvalue ==
+largest (dense - coarse):
+  3.115e-11  coarse 1.000000000007  dense 1.000000000038  eps_inf 1.157 {'kind': 'drude', 'plasma_frequency': 5.350414481065276, 'gamma': 0.0018395782217315304}
+  1.372e-11  coarse 1.000000000004  dense 1.000000000017  eps_inf 2.165 {'kind': 'drude', 'plasma_frequency': 9.256099236988035, 'gamma': 0.01142537985583636}
+  5.905e-12  coarse 1.000000000001  dense 1.000000000007  eps_inf 1.977 {'kind': 'drude', 'plasma_frequency': 8.993223573577364, 'gamma': 0.032465768024244834}
+  1.466e-12  coarse 1.000000000000  dense 1.000000000002  eps_inf 2.821 {'kind': 'drude', 'plasma_frequency': 6.178795799444147, 'gamma': 0.11267735777903476}
+  1.443e-12  coarse 1.000000000000  dense 1.000000000002  eps_inf 1.934 {'kind': 'drude', 'plasma_frequency': 10.130943802631922, 'gamma': 0.16349845211075742}
+cases accepted by the 257-point check but unstable on the dense grid: 0 of 300
+
+== (c) the check cache is keyed by id(Medium): a freed medium's id reused by an unstable one ==
+  control: a fresh world refuses Medium(eps=0.3) at S = 0.6
+
+== (d) E nodes in medium A (eps=0.25, mu=4), H nodes in medium B (eps=4, mu=0.25): each medium alone n = 1 ==
+  eps at Ez nodes: [0.25], mu at Hy nodes: [0.25]; accepted at S = 0.5 (local wave speed 1/sqrt(0.25*0.25) = 4: 1-D limit S = 0.25)
+/lf/lfphys/lfphys/core/em/fdtd.py:1714: RuntimeWarning: overflow encountered in multiply
+  np.multiply(out, self.rd, out=out)
+/lf/lfphys/lfphys/core/em/fdtd.py:1781: RuntimeWarning: invalid value encountered in subtract
+  np.subtract(Fb, t2, out=Fb)
+  after 500 steps max|Ez| = nan
+rc=0

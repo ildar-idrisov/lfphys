@@ -1,0 +1,69 @@
+/lf/lfphys/lfphys/core/gravity/kerr_null.py:527: RuntimeWarning: divide by zero encountered in divide
+  return a * (2.0 * r - a * lam) / delta + lam / np.sin(theta) ** 2
+/lf/lfphys/lfphys/core/gravity/kerr_null.py:558: RuntimeWarning: invalid value encountered in cos
+  return s * np.cos(phi), s * np.sin(phi), np.asarray(r, float) * np.cos(theta)
+/lf/lfphys/lfphys/core/gravity/kerr_null.py:558: RuntimeWarning: invalid value encountered in sin
+  return s * np.cos(phi), s * np.sin(phi), np.asarray(r, float) * np.cos(theta)
+/lf/lfphys/lfphys/core/gravity/kerr_null.py:527: RuntimeWarning: divide by zero encountered in divide
+  return a * (2.0 * r - a * lam) / delta + lam / np.sin(theta) ** 2
+/lf/lfphys/lfphys/core/gravity/kerr_null.py:558: RuntimeWarning: invalid value encountered in cos
+  return s * np.cos(phi), s * np.sin(phi), np.asarray(r, float) * np.cos(theta)
+/lf/lfphys/lfphys/core/gravity/kerr_null.py:558: RuntimeWarning: invalid value encountered in sin
+  return s * np.cos(phi), s * np.sin(phi), np.asarray(r, float) * np.cos(theta)
+/lf/lfphys/lfphys/core/gravity/kerr_null.py:527: RuntimeWarning: divide by zero encountered in divide
+  return a * (2.0 * r - a * lam) / delta + lam / np.sin(theta) ** 2
+/lf/lfphys/lfphys/core/gravity/kerr_null.py:558: RuntimeWarning: invalid value encountered in cos
+  return s * np.cos(phi), s * np.sin(phi), np.asarray(r, float) * np.cos(theta)
+/lf/lfphys/lfphys/core/gravity/kerr_null.py:558: RuntimeWarning: invalid value encountered in sin
+  return s * np.cos(phi), s * np.sin(phi), np.asarray(r, float) * np.cos(theta)
+/lf/lfphys/lfphys/core/gravity/kerr_null.py:527: RuntimeWarning: divide by zero encountered in divide
+  return a * (2.0 * r - a * lam) / delta + lam / np.sin(theta) ** 2
+/lf/lfphys/lfphys/core/gravity/kerr_null.py:558: RuntimeWarning: invalid value encountered in cos
+  return s * np.cos(phi), s * np.sin(phi), np.asarray(r, float) * np.cos(theta)
+/lf/lfphys/lfphys/core/gravity/kerr_null.py:558: RuntimeWarning: invalid value encountered in sin
+  return s * np.cos(phi), s * np.sin(phi), np.asarray(r, float) * np.cos(theta)
+== (a) presets (res s) ==
+-- m87 (2.7 s): failed []
+   edge: value=4.841421506957653e-16 ref=0.0 tol=1.4210854715202004e-14 ok=True info=None
+   lyapunov: value=0.06008839492466452 ref=0.06068146481555595 tol=0.022919809350444832 ok=True info=None
+      note: изображения кольца газа r = 8 M в направлении α > 0: расстояние до кривой убывает в e^γ раз за пол-оборота (Johnson et al. 2020), γ = 2.80212 у орбиты r = 2.95763 M; отношение n = 1 → 2 = 0.0549556; допуск — 4 e^(−γ)·|отклонение n = 1 → 2| (поправки убывают как e^(−γ) с каждым порядком)
+   eht: value=-0.05230057492823248 ref=-0.01 tol=0.17 ok=True info=True
+      note: медианный диаметр тени 9.84878 M; δ по определению EHT (Paper VI 2022: отклонение диаметра тени от шварцшильдовского); масса по звёздам (Paper VI): δ = -0.01 ± 0.17; угловой диаметр тени при θg = 3.8 мкс дуги — 37.43 мкс дуги (кольцо EHT 42 ± 3 — это кольцо излучения, а не тень)
+   pixels: value=0 ref=0 tol=0 ok=True info=None
+-- edge_on (2.6 s): failed []
+   edge: value=7.88887348009019e-16 ref=0.0 tol=1.4210854715202004e-14 ok=True info=None
+   lyapunov: value=0.04316958581711452 ref=0.04321391826377226 tol=0.0025341808240922537 ok=True info=None
+      note: изображения кольца газа r = 8 M в направлении α > 0: расстояние до кривой убывает в e^γ раз за пол-оборота (Johnson et al. 2020), γ = 3.14159 у орбиты r = 3.9911 M; отношение n = 1 → 2 = 0.0425862; допуск — 4 e^(−γ)·|отклонение n = 1 → 2| (поправки убывают как e^(−γ) с каждым порядком)
+   eht: value=-0.04802124429281229 ref=-0.01 tol=0.17 ok=True info=True
+      note: медианный диаметр тени 9.89325 M; δ по определению EHT (Paper VI 2022: отклонение диаметра тени от шварцшильдовского); масса по звёздам (Paper VI): δ = -0.01 ± 0.17; угловой диаметр тени при θg = 3.8 мкс дуги — 37.59 мкс дуги (кольцо EHT 42 ± 3 — это кольцо излучения, а не тень)
+   pixels: value=0 ref=0 tol=0 ok=True info=None
+-- schwarzschild (2.8 s): failed []
+   edge: value=1.7093001656742794e-16 ref=0.0 tol=1.4210854715202004e-14 ok=True info=None
+   lyapunov: value=0.042967737309931385 ref=0.04321391826377226 tol=0.01229982571552592 ok=True info=None
+      note: изображения кольца газа r = 8 M в направлении α > 0: расстояние до кривой убывает в e^γ раз за пол-оборота (Johnson et al. 2020), γ = 3.14159 у орбиты r = 3 M; отношение n = 1 → 2 = 0.0401447; допуск — 4 e^(−γ)·|отклонение n = 1 → 2| (поправки убывают как e^(−γ) с каждым порядком)
+   schw: value=5.196152422706632 ref=5.196152422706632 tol=1.7763568394002505e-15 ok=None info=None
+   eht: value=-7.1793032460076844e-06 ref=-0.01 tol=0.17 ok=True info=True
+      note: медианный диаметр тени 10.3922 M; δ по определению EHT (Paper VI 2022: отклонение диаметра тени от шварцшильдовского); масса по звёздам (Paper VI): δ = -0.01 ± 0.17; угловой диаметр тени при θg = 3.8 мкс дуги — 39.49 мкс дуги (кольцо EHT 42 ± 3 — это кольцо излучения, а не тень)
+   pixels: value=0 ref=0 tol=0 ok=True info=None
+-- ring (2.8 s): failed []
+   edge: value=3.6596615077554835e-16 ref=0.0 tol=1.4210854715202004e-14 ok=True info=None
+   lyapunov: value=0.045537960908680106 ref=0.04576020588620946 tol=0.010117440160711153 ok=True info=None
+      note: изображения кольца газа r = 8 M в направлении α > 0: расстояние до кривой убывает в e^γ раз за пол-оборота (Johnson et al. 2020), γ = 3.08434 у орбиты r = 3.73222 M; отношение n = 1 → 2 = 0.0432363; допуск — 4 e^(−γ)·|отклонение n = 1 → 2| (поправки убывают как e^(−γ) с каждым порядком)
+   eht: value=-0.038047672664693444 ref=-0.01 tol=0.17 ok=True info=True
+      note: медианный диаметр тени 9.9969 M; δ по определению EHT (Paper VI 2022: отклонение диаметра тени от шварцшильдовского); масса по звёздам (Paper VI): δ = -0.01 ± 0.17; угловой диаметр тени при θg = 3.8 мкс дуги — 37.99 мкс дуги (кольцо EHT 42 ± 3 — это кольцо излучения, а не тень)
+   pixels: value=0 ref=0 tol=0 ok=True info=None
+-- sgra (2.8 s): failed []
+   edge: value=5.78646936809585e-16 ref=0.0 tol=1.4210854715202004e-14 ok=True info=None
+   lyapunov: value=0.04617229839560437 ref=0.04644779641107516 tol=0.012973127702726113 ok=True info=None
+      note: изображения кольца газа r = 8 M в направлении α > 0: расстояние до кривой убывает в e^γ раз за пол-оборота (Johnson et al. 2020), γ = 3.06943 у орбиты r = 3.20003 M; отношение n = 1 → 2 = 0.0432099; допуск — 4 e^(−γ)·|отклонение n = 1 → 2| (поправки убывают как e^(−γ) с каждым порядком)
+   eht: value=-0.012810258525469465 ref=-0.08 tol=0.09 ok=True info=True
+      note: медианный диаметр тени 10.2592 M; δ по определению EHT (Paper VI 2022: отклонение диаметра тени от шварцшильдовского); интервал 68 % (EHT 2022 Paper VI, VLTI)
+   pixels: value=0 ref=0 tol=0 ok=True info=None
+-- whatif (0.5 s): failed []
+   eht: value=0.09631386536690956 ref=-0.01 tol=0.17 ok=True info=True
+      note: медианный диаметр тени 11.3932 M; δ по определению EHT (Paper VI 2022: отклонение диаметра тени от шварцшильдовского); масса по звёздам (Paper VI): δ = -0.01 ± 0.17; угловой диаметр тени при θg = 3.8 мкс дуги — 43.29 мкс дуги (кольцо EHT 42 ± 3 — это кольцо излучения, а не тень)
+   eht_kerr: value=-2.220446049250313e-16 ref=None tol=1e-09 ok=None info=True
+      note: отклонение метрики меняет δ на +0.09631
+
+== (b) grid (res s, half 9) ==
+worlds 240; with a failed check or an error: 0; worst edge value 6.259e-15 at {'res': 's', 'chi': 0.998, 'incl': 120.0, 'emitter': 'cunningham', 'retro': False} (tolerance 64 eps = 1.421e-14); wall 75 s

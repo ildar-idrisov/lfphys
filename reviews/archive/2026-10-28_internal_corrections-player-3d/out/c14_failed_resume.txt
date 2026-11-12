@@ -1,0 +1,10 @@
+C1 check 14 — a failed rebuild (2026-10-28T20:23:43+02:00)
+run 20261028-182343-v01-40d1 recorded and suspended: state suspended | resumed None | errors []
+meta.json: worlds[-1].params add zz_removed_param
+⏺ (play): {"ok": true}
+after the failed rebuild: state failed | resumed 1 | errors ["unknown parameter 'zz_removed_param'"]
+meta.json: worlds[-1].params remove zz_removed_param
+the cause removed, server restarted: state failed | resumed 1 | errors ["unknown parameter 'zz_removed_param'"]
+⏺ again: {"error": "запуск завершился сбоем: продолжить нельзя, начните новый"}
+POST /resume: {"error": "запуск завершился сбоем: продолжить нельзя, начните новый"}
+RUN=20261028-182343-v01-40d1

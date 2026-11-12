@@ -1,0 +1,2 @@
+v10 sky preset, seed 5 (300 stars, beta 0.9): tracer max error 1.04e-15 rad = 0.9 eps gamma^2 (star at 159.82 deg from the velocity); reference max error 1.96e-14 rad = 16.8 eps gamma^2 (star at 178.423 deg from the velocity)
+20 000 random stars, beta 0.5: tracer max error 3.44e-16 rad = 1.2 eps gamma^2 (star at 107.00 deg from the velocity); reference max error 1.40e-14 rad = 47.2 eps gamma^2 (star at 178.433 deg from the velocity)

@@ -1,0 +1,47 @@
+A. world construction over alpha_s(M_Z) in the allowed range [0.05, 0.3]
+  alpha_mz = 0.05: built; errors []; ok=False checks []
+  alpha_mz = 0.1: built; errors []; ok=False checks []
+  alpha_mz = 0.15: built; errors []; ok=False checks ['conv0']
+  alpha_mz = 0.18: built; errors []; ok=False checks []
+  alpha_mz = 0.2: built; errors []; ok=False checks []
+  alpha_mz = 0.205: CONSTRUCTION FAILED LandauPole: полюс Ландау: α_s расходится около μ ≈ 2.2 ГэВ (теория возмущений неприменима)
+  alpha_mz = 0.21: CONSTRUCTION FAILED LandauPole: полюс Ландау: α_s расходится около μ ≈ 2.42 ГэВ (теория возмущений неприменима)
+  alpha_mz = 0.22: CONSTRUCTION FAILED LandauPole: полюс Ландау: α_s расходится около μ ≈ 2.89 ГэВ (теория возмущений неприменима)
+  alpha_mz = 0.25: CONSTRUCTION FAILED LandauPole: полюс Ландау: α_s расходится около μ ≈ 4.52 ГэВ (теория возмущений неприменима)
+  alpha_mz = 0.3: CONSTRUCTION FAILED LandauPole: полюс Ландау: α_s расходится около μ ≈ 7.8 ГэВ (теория возмущений неприменима)
+
+B. the 'kap' comparison as the player renders it
+  standard {}: no kap check (mu_bs < 1 GeV), mu_bs = 0.586 GeV
+  bottom {}: kap0 value 0.52 ref 0.5725 rel -0.092 tol 1e-09 ok-field None -> player shows ✗ (failed)
+  standard {'m_q': 4.0}: no kap check (mu_bs < 1 GeV), mu_bs = 0.929 GeV
+  bottom {'kappa': 0.3}: no kap check (mu_bs < 1 GeV), mu_bs = 0.864 GeV
+
+C. matching order at the quark thresholds (independent code)
+  scale | engine (4 loops, continuous) | own, continuous | own + c2 (NNLO) | own + c2 + c3 (N3LO, RunDec-like) | engine - N3LO
+  1.7769 GeV | 0.319100 | 0.319100 | 0.319477 | 0.319589 | -4.89e-04
+  2 GeV | 0.301077 | 0.301077 | 0.301409 | 0.301507 | -4.30e-04
+  1.2717 GeV | 0.386472 | 0.386472 | 0.387950 | 0.388643 | -2.17e-03
+  3 GeV | 0.253166 | 0.253166 | 0.253393 | 0.253460 | -2.94e-04
+  4.183 GeV | 0.224568 | 0.224568 | 0.224568 | 0.224568 | -2.20e-14
+  10 GeV | 0.178231 | 0.178231 | 0.178231 | 0.178231 | -9.55e-15
+  for scale: the PDG uncertainty +-0.0009 of alpha_s(M_Z) maps to alpha_s(m_tau) in [0.3119, 0.3266]
+  engine 3 vs 4 loops at m_tau: 0.317404 vs 0.319100 (difference +1.7e-03)
+  the run's threshold check: alpha(m(1+1e-9)) = alpha(m(1-1e-9)) holds by construction of continuous matching
+
+D. live change of the sweep speed while the probe is moving
+  t = 3 s, sweep 0.5 dec/s from mu = 10 GeV: probe at 316.2 GeV; after set(sweep=0.6) at the same t: 10 GeV
+
+E. quarkonium levels: box R = 25 GeV^-1, N = 700 (as the run) vs R = 60, N = 1700
+  m_q = 1.84, kappa = 0.52, a = 2.34: worst splitting error of the run's box = 6.67e-06 MeV (3D level: run 1438.8 MeV, big box 1438.8 MeV)
+  m_q = 5.18, kappa = 0.52, a = 2.34: worst splitting error of the run's box = 0.00019 MeV (3D level: run 1292.7 MeV, big box 1292.7 MeV)
+  m_q = 1.0, kappa = 0.52, a = 2.34: worst splitting error of the run's box = 1.22e-06 MeV (3D level: run 1645.3 MeV, big box 1645.3 MeV)
+  m_q = 0.5, kappa = 0.52, a = 2.34: worst splitting error of the run's box = 0.000158 MeV (3D level: run 1977.3 MeV, big box 1977.3 MeV)
+  m_q = 0.3, kappa = 0.52, a = 5.0: worst splitting error of the run's box = 152 MeV (3D level: run 1016.4 MeV, big box 864.0 MeV)
+  m_q = 1.84, kappa = 0.0, a = 5.0: worst splitting error of the run's box = 0.00129 MeV (3D level: run 432.5 MeV, big box 432.5 MeV)
+  m_q = 0.2, kappa = 0.0, a = 5.0: worst splitting error of the run's box = 393 MeV (3D level: run 1299.1 MeV, big box 906.2 MeV)
+  m_q = 10.0, kappa = 1.5, a = 1.0: worst splitting error of the run's box = 0.344 MeV (3D level: run 7557.7 MeV, big box 7558.0 MeV)
+
+F. largest alpha_s on the drawn curves (view clips at 0.5)
+  standard: max alpha on the curves {'L1': 0.3583568953445508, 'L2': 0.4444701318851183, 'L3': 0.46278756408745303, 'L4': 0.4731600995384136}
+  one_loop: max alpha on the curves {'L1': 0.3583568953445508, 'L2': 0.4444701318851183, 'L3': 0.46278756408745303, 'L4': 0.4731600995384136}
+  strong: max alpha on the curves {'L1': 1.0177033764747943, 'L2': 2.0677626472020556, 'L3': 1.7583286276509635, 'L4': 1.8664998167438607}

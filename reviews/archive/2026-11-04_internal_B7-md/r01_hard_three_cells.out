@@ -1,0 +1,24 @@
+cells per axis: L=3 -> 3 ; L=4 -> 4
+Lx = 3.0: collisions 2, smallest centre distance seen 0.9000 (sigma = 1); first sample after a collision (np.float64(0.9), np.float64(0.9000000000000001))
+   t = 0.65  |r_ij| = 1.1500  collisions = 0
+   t = 0.70  |r_ij| = 1.1000  collisions = 0
+   t = 0.75  |r_ij| = 1.0500  collisions = 0
+   t = 0.80  |r_ij| = 1.0000  collisions = 0
+   t = 0.85  |r_ij| = 0.9500  collisions = 0
+   t = 0.90  |r_ij| = 0.9000  collisions = 1
+   t = 0.95  |r_ij| = 0.9500  collisions = 1
+   t = 1.00  |r_ij| = 1.0000  collisions = 1
+   t = 1.05  |r_ij| = 1.0500  collisions = 1
+   t = 1.10  |r_ij| = 1.1000  collisions = 1
+Lx = 4.0: collisions 1, smallest centre distance seen 1.0000 (sigma = 1); first sample after a collision (np.float64(0.8), np.float64(1.0000000000000002))
+   t = 0.65  |r_ij| = 1.1500  collisions = 0
+   t = 0.70  |r_ij| = 1.1000  collisions = 0
+   t = 0.75  |r_ij| = 1.0500  collisions = 0
+   t = 0.80  |r_ij| = 1.0000  collisions = 1
+   t = 0.85  |r_ij| = 1.0500  collisions = 1
+   t = 0.90  |r_ij| = 1.1000  collisions = 1
+   t = 0.95  |r_ij| = 1.1500  collisions = 1
+   t = 1.00  |r_ij| = 1.2000  collisions = 1
+   t = 1.05  |r_ij| = 1.2500  collisions = 1
+   t = 1.10  |r_ij| = 1.3000  collisions = 1
+exit 0

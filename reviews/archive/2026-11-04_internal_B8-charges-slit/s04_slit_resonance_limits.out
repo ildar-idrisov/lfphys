@@ -1,0 +1,44 @@
+== TM resonance of a narrow slit in a thick screen (m = 1) ==
+w = 0.02: M =  8: peak T = 15.92805 (lambda/(pi w) = 15.91549, rel +7.9e-04); d_peak = 0.45374; H-S (34) 0.45027, Takakura (35) 0.44149; shift 0.5 - d: engine 0.04626, H-S 0.04973, Takakura 0.05851
+w = 0.02: M = 16: peak T = 15.92817 (lambda/(pi w) = 15.91549, rel +8.0e-04); d_peak = 0.45379; H-S (34) 0.45027, Takakura (35) 0.44149; shift 0.5 - d: engine 0.04621, H-S 0.04973, Takakura 0.05851
+w = 0.02: M = 32: peak T = 15.92822 (lambda/(pi w) = 15.91549, rel +8.0e-04); d_peak = 0.45381; H-S (34) 0.45027, Takakura (35) 0.44150; shift 0.5 - d: engine 0.04619, H-S 0.04973, Takakura 0.05850
+w = 0.02: M = 64: peak T = 15.92823 (lambda/(pi w) = 15.91549, rel +8.0e-04); d_peak = 0.45381; H-S (34) 0.45027, Takakura (35) 0.44150; shift 0.5 - d: engine 0.04619, H-S 0.04973, Takakura 0.05850
+w = 0.05: M =  8: peak T = 6.39773 (lambda/(pi w) = 6.36620, rel +5.0e-03); d_peak = 0.41366; H-S (34) 0.40244, Takakura (35) 0.37836; shift 0.5 - d: engine 0.08634, H-S 0.09756, Takakura 0.12164
+w = 0.05: M = 16: peak T = 6.39804 (lambda/(pi w) = 6.36620, rel +5.0e-03); d_peak = 0.41378; H-S (34) 0.40245, Takakura (35) 0.37839; shift 0.5 - d: engine 0.08622, H-S 0.09755, Takakura 0.12161
+w = 0.05: M = 32: peak T = 6.39815 (lambda/(pi w) = 6.36620, rel +5.0e-03); d_peak = 0.41382; H-S (34) 0.40246, Takakura (35) 0.37840; shift 0.5 - d: engine 0.08618, H-S 0.09754, Takakura 0.12160
+w = 0.05: M = 64: peak T = 6.39819 (lambda/(pi w) = 6.36620, rel +5.0e-03); d_peak = 0.41384; H-S (34) 0.40246, Takakura (35) 0.37840; shift 0.5 - d: engine 0.08616, H-S 0.09754, Takakura 0.12160
+
+-- against Harrington & Auckland's circuit (8-4), (8-7), (8-8), w = 0.02 --
+d = 0.1: M = 8: engine 0.37480, circuit 0.37870, ratio - 1 = -1.03e-02
+d = 0.1: M = 32: engine 0.37507, circuit 0.37870, ratio - 1 = -9.59e-03
+d = 0.25: M = 8: engine 0.25997, circuit 0.25975, ratio - 1 = +8.16e-04
+d = 0.25: M = 32: engine 0.25993, circuit 0.25975, ratio - 1 = +6.86e-04
+d = 0.45: M = 8: engine 15.36997, circuit 15.09150, ratio - 1 = +1.85e-02
+d = 0.45: M = 32: engine 15.35174, circuit 15.09150, ratio - 1 = +1.72e-02
+d = 0.6: M = 8: engine 0.37480, circuit 0.37870, ratio - 1 = -1.03e-02
+d = 0.6: M = 32: engine 0.37507, circuit 0.37870, ratio - 1 = -9.59e-03
+
+-- Qi et al. (22) T0 = 0.0096 + 0.3183 s --
+s = 55: engine peak 17.5185, Qi 17.5161, s/pi 17.5070; engine - s/pi = +0.0114
+s = 100: engine peak 31.8373, Qi 31.8396, s/pi 31.8310; engine - s/pi = +0.0063
+s = 260: engine peak 82.7630, Qi 82.7676, s/pi 82.7606; engine - s/pi = +0.0024
+
+== Rayleigh's narrow-slit limits (thin screen) ==
+k a = 0.02: TE: engine/Rayleigh - 1 = +3.020e-04
+k a = 0.02: TM: engine/Rayleigh - 1 = +2.500e-05
+k a = 0.1: TE: engine/Rayleigh - 1 = +5.559e-03
+k a = 0.1: TM: engine/Rayleigh - 1 = +6.251e-04
+k a = 0.2: TE: engine/Rayleigh - 1 = +1.893e-02
+k a = 0.2: TM: engine/Rayleigh - 1 = +2.501e-03
+k a = 0.3: TE: engine/Rayleigh - 1 = +3.845e-02
+k a = 0.3: TM: engine/Rayleigh - 1 = +5.629e-03
+
+== the 'auto' switch at k w = 40 (thin screen) ==
+k w = 10.0: TE: auto = edge with 15 modes, T = 1.0502630; edge reference 1.0502630; error +1.2e-14
+k w = 10.0: TM: auto = edge with 15 modes, T = 0.9994066; edge reference 0.9994066; error +1.1e-15
+k w = 39.9: TE: auto = edge with 30 modes, T = 0.9987379; edge reference 0.9987379; error -3.6e-10
+k w = 39.9: TM: auto = edge with 30 modes, T = 0.9999617; edge reference 0.9999617; error +7.6e-14
+k w = 40.1: TE: auto = modal with 37 modes, T = 0.9952540; edge reference 1.0001696; error -4.9e-03
+k w = 40.1: TM: auto = modal with 37 modes, T = 0.9960848; edge reference 0.9999610; error -3.9e-03
+k w = 60.0: TE: auto = modal with 44 modes, T = 0.9995885; edge reference 1.0031724; error -3.6e-03
+k w = 60.0: TM: auto = modal with 44 modes, T = 0.9966917; edge reference 0.9999928; error -3.3e-03

@@ -1,0 +1,6 @@
+a = 1.5 λ, w = 1.0 λ: b0(180°) = 9.870 = 0.500 E0; lowest transverse mode E_perp = 2.193 = 0.111 E0; in the channel k± = 3.918, 7.405: (k− − k+) w = 3.4866 rad (first-order design: π) -> |cos(θ_eff/2)| = 0.172
+theta for a rotation of π in the lowest mode (same b0 scaling): ≈ 162.2°
+theta = 155.0°: visibility 0.0873 (two-path model |cos(θ/2)| = 0.2164)
+theta = 145.0°: visibility 0.0983 (two-path model |cos(θ/2)| = 0.3007)
+theta = 140.0°: visibility 0.1274 (two-path model |cos(θ/2)| = 0.3420)
+theta = 130.0°: visibility 0.2010 (two-path model |cos(θ/2)| = 0.4226)

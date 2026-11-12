@@ -1,0 +1,4 @@
+r=100.0: x=0.0099; |h| default/(4 nu x) - 1 = -4.396e-03; with PN a, j: -1.783e-02; 1PN amplitude (face-on): -2.106e-02
+r=30.0: x=0.0324; |h| default/(4 nu x) - 1 = -1.317e-02; with PN a, j: -5.506e-02; 1PN amplitude (face-on): -6.886e-02
+r=15.0: x=0.0634; |h| default/(4 nu x) - 1 = -2.198e-02; with PN a, j: -9.533e-02; 1PN amplitude (face-on): -1.347e-01
+r=10.0: x=0.0940; |h| default/(4 nu x) - 1 = -2.626e-02; with PN a, j: -1.163e-01; 1PN amplitude (face-on): -1.998e-01

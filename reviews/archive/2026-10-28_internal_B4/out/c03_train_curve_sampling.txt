@@ -1,0 +1,25 @@
+
+== preset 'train': state train, sigma_z 5.0, D 30.0, N 4, sep 30.0; t_obs = 4.7019 t0, sample step 3.13e-03 t0, fringe spacing ~ 2 pi D/(sep k0^2) = 3.33e-02 t0 ==
+  semiclassical  v12 grid: total 1.000000, mean 1.00022 t0 | fine: total 1.000000, mean 1.00022 t0 | exact total int_k>0 |phi|^2 = 1.000000 | largest value: sampled 98.62, between samples 98.62 (x t0)
+  ABK            v12 grid: total 0.999985, mean 2.50051 t0 | fine: total 0.999985, mean 2.50051 t0
+  ABR kappa=k0   v12 grid: total 0.999931, mean 2.50051 t0 | fine: total 0.999931, mean 2.50051 t0
+
+== train N = 8, sep = 60: state train, sigma_z 5.0, D 30.0, N 8, sep 60.0; t_obs = 16.2779 t0, sample step 1.09e-02 t0, fringe spacing ~ 2 pi D/(sep k0^2) = 1.67e-02 t0 ==
+  semiclassical  v12 grid: total 0.273783, mean 1.00678 t0 | fine: total 1.000000, mean 1.00025 t0 | exact total int_k>0 |phi|^2 = 1.000000 | largest value: sampled 14.04, between samples 200.5 (x t0)
+  ABK            v12 grid: total 0.999998, mean 8.00201 t0 | fine: total 0.999998, mean 8.00201 t0
+  ABR kappa=k0   v12 grid: total 0.999935, mean 8.00201 t0 | fine: total 0.999935, mean 8.00201 t0
+
+== train N = 8, sep = 120 (schema maximum): state train, sigma_z 5.0, D 30.0, N 8, sep 120.0; t_obs = 31.2382 t0, sample step 2.08e-02 t0, fringe spacing ~ 2 pi D/(sep k0^2) = 8.33e-03 t0 ==
+  semiclassical  v12 grid: total 2.707635, mean 0.99973 t0 | fine: total 1.000000, mean 1.00025 t0 | exact total int_k>0 |phi|^2 = 1.000000 | largest value: sampled 128.6, between samples 200.4 (x t0)
+  ABK            v12 grid: total 0.999999, mean 15.00378 t0 | fine: total 0.999999, mean 15.00378 t0
+  ABR kappa=k0   v12 grid: total 0.999935, mean 15.00378 t0 | fine: total 0.999935, mean 15.00378 t0
+
+== train N = 8, sep = 120, sigma_z = 2: state train, sigma_z 2.0, D 30.0, N 8, sep 120.0; t_obs = 33.8338 t0, sample step 2.26e-02 t0, fringe spacing ~ 2 pi D/(sep k0^2) = 8.33e-03 t0 ==
+  semiclassical  v12 grid: total 0.393226, mean 0.98750 t0 | fine: total 1.000000, mean 1.00159 t0 | exact total int_k>0 |phi|^2 = 1.000000 | largest value: sampled 10.62, between samples 79.82 (x t0)
+  ABK            v12 grid: total 0.999979, mean 15.02346 t0 | fine: total 0.999979, mean 15.02346 t0
+  ABR kappa=k0   v12 grid: total 0.999582, mean 15.02341 t0 | fine: total 0.999582, mean 15.02341 t0
+
+== preset 'gauss': state gauss, sigma_z 5.0, D 30.0, N 4, sep 30.0; t_obs = 1.6598 t0, sample step 1.11e-03 t0, fringe spacing ~ 2 pi D/(sep k0^2) = 3.33e-02 t0 ==
+  semiclassical  v12 grid: total 1.000000, mean 1.00025 t0 | fine: total 1.000000, mean 1.00025 t0 | exact total int_k>0 |phi|^2 = 1.000000 | largest value: sampled 25.08, between samples 25.08 (x t0)
+  ABK            v12 grid: total 0.999954, mean 1.00022 t0 | fine: total 0.999954, mean 1.00022 t0
+  ABR kappa=k0   v12 grid: total 0.999890, mean 1.00022 t0 | fine: total 0.999890, mean 1.00022 t0

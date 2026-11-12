@@ -1,0 +1,20 @@
+# framework tests, light-funnel-viz image, CPU (LFPHYS_NO_GPU=1), 2026-11-05
+
+## final (08:10): tests/test_server.py tests/test_playground.py tests/test_restore.py tests/test_checkpoint.py v04_orbits/tests
+172 passed in 1161.13s (0:19:21)
+
+## after the last framework change (playground._placed keeps a scalar position): test_server + test_playground in full; restore + checkpoint for the playgrounds (-k p0)
+40 passed in 136.35s (0:02:16)
+12 passed, 60 deselected in 88.44s (0:01:28)
+
+## earlier long run (02:10-02:32): p04_fluids/viz.py and v06_qcd/viz.py were changed by their agents during it
+FAILED tests/test_checkpoint.py::test_a_session_around_a_checkpoint_continues_as_the_original[p04_fluids]
+FAILED tests/test_checkpoint.py::test_a_session_around_a_checkpoint_continues_as_the_original[v06_qcd]
+2 failed, 141 passed in 1348.88s (0:22:28)
+## the two again, on the files as they then were
+2 passed in 36.70s
+
+## keyframes.mjs (browser): all worlds on the final code
+all equal
+## keyframes.mjs: the playgrounds again after the last playground.py change
+all equal

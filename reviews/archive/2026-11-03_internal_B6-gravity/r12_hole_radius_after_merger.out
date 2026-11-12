@@ -1,0 +1,4 @@
+before: hole mass 1000 Msun, radius 1.9741e-05 au (Schwarzschild 1.9741e-05 au)
+merges: ['«Чёрная дыра» и «Падающая звезда» столкнулись и слились: масса 1001 M☉, остался «Чёрная дыра»']
+after: hole mass 1001 Msun, radius 4.6505e-03 au = 235.3 x its Schwarzschild radius 1.9761e-05 au
+exit 0

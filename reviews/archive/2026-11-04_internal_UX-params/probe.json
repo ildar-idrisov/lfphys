@@ -1,0 +1,6806 @@
+{
+ "p01_gravity": {
+  "build_s": 0.0,
+  "actions": [],
+  "default_speed": 31557600.0,
+  "speed_range": [
+   1.0,
+   3155760000000.0
+  ],
+  "max_step": null,
+  "next_event": null,
+  "has_scene3d": true,
+  "planes": {
+   "max": 0,
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "defaults": {}
+  },
+  "header_keys": [
+   "actions",
+   "approximations",
+   "backend",
+   "engine",
+   "fps",
+   "live",
+   "modifications",
+   "params",
+   "playground",
+   "preset",
+   "scene3d",
+   "seed",
+   "t",
+   "title",
+   "type",
+   "units",
+   "world"
+  ],
+  "palette": {
+   "star": {
+    "type": "star",
+    "label": "Звезда",
+    "kind": "body",
+    "help": "Масса и радиус в солнечных; поверхность звезды — граница столкновения",
+    "limit": null,
+    "color": "#ffd43b",
+    "params": [
+     {
+      "id": "mass",
+      "label": "Масса, M☉",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0001,
+      "max": 1000.0,
+      "log": true,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "radius",
+      "label": "Радиус, R☉",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.001,
+      "max": 2000.0,
+      "log": true,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "x",
+      "label": "Положение: x, а.е.",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Положение: y, а.е.",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "z",
+      "label": "Положение: z, а.е.",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vmode",
+      "label": "Скорость",
+      "type": "select",
+      "default": "manual",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "circular",
+        "label": "круговая орбита вокруг центра масс остальных (остальные получают отдачу)"
+       },
+       {
+        "value": "manual",
+        "label": "задать vx, vy, vz"
+       }
+      ],
+      "standard": null,
+      "help": "Круговая — в момент добавления (или смены скорости): относительная орбита тела и остальных как двух тел круговая для любой массы тела, остальные получают общую отдачу, центр масс системы не сдвигается; плоскость орбиты — ближайшая к xy (против часовой стрелки, если смотреть с +z)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vx",
+      "label": "vx, км/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -299790.0,
+      "max": 299790.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Ньютоновская механика: скорость меньше скорости света (и много меньше — для точности)",
+      "show_if": {
+       "vmode": [
+        "manual"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vy",
+      "label": "vy, км/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -299790.0,
+      "max": 299790.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Ньютоновская механика: скорость меньше скорости света (и много меньше — для точности)",
+      "show_if": {
+       "vmode": [
+        "manual"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vz",
+      "label": "vz, км/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -299790.0,
+      "max": 299790.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Ньютоновская механика: скорость меньше скорости света (и много меньше — для точности)",
+      "show_if": {
+       "vmode": [
+        "manual"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "color",
+      "label": "Цвет",
+      "type": "select",
+      "default": "#ffd43b",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "#ffd43b",
+        "label": "жёлтый"
+       },
+       {
+        "value": "#ff922b",
+        "label": "оранжевый"
+       },
+       {
+        "value": "#ff6b6b",
+        "label": "красный"
+       },
+       {
+        "value": "#74c0fc",
+        "label": "голубой"
+       },
+       {
+        "value": "#8ce99a",
+        "label": "зелёный"
+       },
+       {
+        "value": "#e9ecef",
+        "label": "белый"
+       },
+       {
+        "value": "#b197fc",
+        "label": "фиолетовый"
+       },
+       {
+        "value": "#ced4da",
+        "label": "серый"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "planet": {
+    "type": "planet",
+    "label": "Планета",
+    "kind": "body",
+    "help": "Масса и радиус в земных; по умолчанию — на круговой орбите",
+    "limit": null,
+    "color": "#74c0fc",
+    "params": [
+     {
+      "id": "mass",
+      "label": "Масса, M⊕",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1e-06,
+      "max": 10000.0,
+      "log": true,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "radius",
+      "label": "Радиус, R⊕",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.001,
+      "max": 30.0,
+      "log": true,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "x",
+      "label": "Положение: x, а.е.",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Положение: y, а.е.",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "z",
+      "label": "Положение: z, а.е.",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vmode",
+      "label": "Скорость",
+      "type": "select",
+      "default": "circular",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "circular",
+        "label": "круговая орбита вокруг центра масс остальных (остальные получают отдачу)"
+       },
+       {
+        "value": "manual",
+        "label": "задать vx, vy, vz"
+       }
+      ],
+      "standard": null,
+      "help": "Круговая — в момент добавления (или смены скорости): относительная орбита тела и остальных как двух тел круговая для любой массы тела, остальные получают общую отдачу, центр масс системы не сдвигается; плоскость орбиты — ближайшая к xy (против часовой стрелки, если смотреть с +z)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vx",
+      "label": "vx, км/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -299790.0,
+      "max": 299790.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Ньютоновская механика: скорость меньше скорости света (и много меньше — для точности)",
+      "show_if": {
+       "vmode": [
+        "manual"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vy",
+      "label": "vy, км/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -299790.0,
+      "max": 299790.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Ньютоновская механика: скорость меньше скорости света (и много меньше — для точности)",
+      "show_if": {
+       "vmode": [
+        "manual"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vz",
+      "label": "vz, км/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -299790.0,
+      "max": 299790.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Ньютоновская механика: скорость меньше скорости света (и много меньше — для точности)",
+      "show_if": {
+       "vmode": [
+        "manual"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "color",
+      "label": "Цвет",
+      "type": "select",
+      "default": "#74c0fc",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "#ffd43b",
+        "label": "жёлтый"
+       },
+       {
+        "value": "#ff922b",
+        "label": "оранжевый"
+       },
+       {
+        "value": "#ff6b6b",
+        "label": "красный"
+       },
+       {
+        "value": "#74c0fc",
+        "label": "голубой"
+       },
+       {
+        "value": "#8ce99a",
+        "label": "зелёный"
+       },
+       {
+        "value": "#e9ecef",
+        "label": "белый"
+       },
+       {
+        "value": "#b197fc",
+        "label": "фиолетовый"
+       },
+       {
+        "value": "#ced4da",
+        "label": "серый"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "hole": {
+    "type": "hole",
+    "label": "Чёрная дыра (ньютоновская масса)",
+    "kind": "body",
+    "help": "Точечная масса с радиусом Шварцшильда как радиусом захвата: приближение Ньютона, не ОТО (для ОТО — законы «тела и свет у чёрной дыры»); что её коснётся, она поглощает, и её радиус — радиус Шварцшильда новой массы",
+    "limit": null,
+    "color": "#343a40",
+    "params": [
+     {
+      "id": "mass",
+      "label": "Масса, M☉",
+      "type": "float",
+      "default": 10.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.01,
+      "max": 10000000000.0,
+      "log": true,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "x",
+      "label": "Положение: x, а.е.",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Положение: y, а.е.",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "z",
+      "label": "Положение: z, а.е.",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vmode",
+      "label": "Скорость",
+      "type": "select",
+      "default": "manual",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "circular",
+        "label": "круговая орбита вокруг центра масс остальных (остальные получают отдачу)"
+       },
+       {
+        "value": "manual",
+        "label": "задать vx, vy, vz"
+       }
+      ],
+      "standard": null,
+      "help": "Круговая — в момент добавления (или смены скорости): относительная орбита тела и остальных как двух тел круговая для любой массы тела, остальные получают общую отдачу, центр масс системы не сдвигается; плоскость орбиты — ближайшая к xy (против часовой стрелки, если смотреть с +z)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vx",
+      "label": "vx, км/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -299790.0,
+      "max": 299790.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Ньютоновская механика: скорость меньше скорости света (и много меньше — для точности)",
+      "show_if": {
+       "vmode": [
+        "manual"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vy",
+      "label": "vy, км/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -299790.0,
+      "max": 299790.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Ньютоновская механика: скорость меньше скорости света (и много меньше — для точности)",
+      "show_if": {
+       "vmode": [
+        "manual"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vz",
+      "label": "vz, км/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -299790.0,
+      "max": 299790.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Ньютоновская механика: скорость меньше скорости света (и много меньше — для точности)",
+      "show_if": {
+       "vmode": [
+        "manual"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "test": {
+    "type": "test",
+    "label": "Пробное тело (без массы)",
+    "kind": "particle",
+    "help": "Чувствует притяжение, само не притягивает",
+    "limit": null,
+    "color": "#e9ecef",
+    "params": [
+     {
+      "id": "x",
+      "label": "Положение: x, а.е.",
+      "type": "float",
+      "default": 2.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Положение: y, а.е.",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "z",
+      "label": "Положение: z, а.е.",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vmode",
+      "label": "Скорость",
+      "type": "select",
+      "default": "circular",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "circular",
+        "label": "круговая орбита вокруг центра масс остальных (остальные получают отдачу)"
+       },
+       {
+        "value": "manual",
+        "label": "задать vx, vy, vz"
+       }
+      ],
+      "standard": null,
+      "help": "Круговая — в момент добавления (или смены скорости): относительная орбита тела и остальных как двух тел круговая для любой массы тела, остальные получают общую отдачу, центр масс системы не сдвигается; плоскость орбиты — ближайшая к xy (против часовой стрелки, если смотреть с +z)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vx",
+      "label": "vx, км/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -299790.0,
+      "max": 299790.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Ньютоновская механика: скорость меньше скорости света (и много меньше — для точности)",
+      "show_if": {
+       "vmode": [
+        "manual"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vy",
+      "label": "vy, км/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -299790.0,
+      "max": 299790.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Ньютоновская механика: скорость меньше скорости света (и много меньше — для точности)",
+      "show_if": {
+       "vmode": [
+        "manual"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vz",
+      "label": "vz, км/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -299790.0,
+      "max": 299790.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Ньютоновская механика: скорость меньше скорости света (и много меньше — для точности)",
+      "show_if": {
+       "vmode": [
+        "manual"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "color",
+      "label": "Цвет",
+      "type": "select",
+      "default": "#e9ecef",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "#ffd43b",
+        "label": "жёлтый"
+       },
+       {
+        "value": "#ff922b",
+        "label": "оранжевый"
+       },
+       {
+        "value": "#ff6b6b",
+        "label": "красный"
+       },
+       {
+        "value": "#74c0fc",
+        "label": "голубой"
+       },
+       {
+        "value": "#8ce99a",
+        "label": "зелёный"
+       },
+       {
+        "value": "#e9ecef",
+        "label": "белый"
+       },
+       {
+        "value": "#b197fc",
+        "label": "фиолетовый"
+       },
+       {
+        "value": "#ced4da",
+        "label": "серый"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "field": {
+    "type": "field",
+    "label": "Датчик поля и приливов",
+    "kind": "probe",
+    "help": "Ускорение свободного падения и приливное растяжение в точке",
+    "limit": 8,
+    "color": "#f06595",
+    "params": [
+     {
+      "id": "x",
+      "label": "Точка: x, а.е.",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Точка: y, а.е.",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "z",
+      "label": "Точка: z, а.е.",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   }
+  },
+  "frames20_s": 0.0,
+  "frame_max_s": 0.0,
+  "t_after": 31557600.0,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "frame",
+   "header",
+   "scene"
+  ]
+ },
+ "p02_quantum": {
+  "build_s": 0.0,
+  "actions": [],
+  "default_speed": 2.1594981871961276e-14,
+  "speed_range": [
+   1e-18,
+   1e-06
+  ],
+  "max_step": 1.727598549756902e-14,
+  "next_event": null,
+  "has_scene3d": true,
+  "planes": {
+   "max": 0,
+   "center": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "defaults": {
+    "1": [
+     0,
+     0,
+     1
+    ]
+   }
+  },
+  "header_keys": [
+   "actions",
+   "approximations",
+   "backend",
+   "engine",
+   "fps",
+   "grid",
+   "live",
+   "modifications",
+   "params",
+   "playground",
+   "preset",
+   "scene3d",
+   "seed",
+   "t",
+   "text",
+   "title",
+   "type",
+   "units",
+   "world"
+  ],
+  "palette": {
+   "packet": {
+    "type": "packet",
+    "label": "Частица (волновой пакет)",
+    "kind": "particle",
+    "help": "Гауссов пакет; своя волна у каждой частицы, частицы не взаимодействуют",
+    "limit": 6,
+    "color": "#ffd43b",
+    "params": [
+     {
+      "id": "species",
+      "label": "Частица",
+      "type": "select",
+      "default": "electron",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "electron",
+        "label": "электрон (заряд −e, спин ½)"
+       },
+       {
+        "value": "neutron",
+        "label": "нейтрон (спин ½)"
+       },
+       {
+        "value": "he4",
+        "label": "атом ⁴He"
+       },
+       {
+        "value": "c60",
+        "label": "фуллерен C₆₀"
+       },
+       {
+        "value": "atom",
+        "label": "атом заданной массы"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "mass_u",
+      "label": "Масса атома, а.е.м.",
+      "type": "float",
+      "default": 7.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.001,
+      "max": 1000000.0,
+      "log": true,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "species": [
+        "atom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "x",
+      "label": "Центр пакета: x, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр пакета: y, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "wavelength",
+      "label": "Длина волны де Бройля, нм (0 — в покое)",
+      "type": "float",
+      "default": 2.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Импульс ħk, k = 2π/λ; сетка должна передавать волну: |k| + 3/σ ≤ π/шаг",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "theta",
+      "label": "Направление в плоскости xy, °",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -360.0,
+      "max": 360.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sx",
+      "label": "Ширина σ по x, нм",
+      "type": "float",
+      "default": 3.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.001,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "σ распределения |ψ|²",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sy",
+      "label": "Ширина σ по y, нм",
+      "type": "float",
+      "default": 3.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.001,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "σ распределения |ψ|²",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "spin",
+      "label": "Спин (для частиц со спином ½)",
+      "type": "select",
+      "default": "+z",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "+z",
+        "label": "↑ по z"
+       },
+       {
+        "value": "-z",
+        "label": "↓ по z"
+       },
+       {
+        "value": "+x",
+        "label": "→ по x"
+       },
+       {
+        "value": "-x",
+        "label": "← по x"
+       },
+       {
+        "value": "+y",
+        "label": "по +y"
+       },
+       {
+        "value": "-y",
+        "label": "по −y"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "species": [
+        "electron",
+        "neutron"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "bohm",
+      "label": "Частицы Бома (траектории)",
+      "type": "int",
+      "default": 0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0,
+      "max": 300,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Ансамбль точек, ведомых током вероятности этой волны (интерпретация де Бройля–Бома); начальные положения — по |ψ|²",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "box": {
+    "type": "box",
+    "label": "Барьер или яма (ящик)",
+    "kind": "potential",
+    "help": "",
+    "limit": null,
+    "color": "#ff922b",
+    "params": [
+     {
+      "id": "x",
+      "label": "Центр: x, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр: y, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sx",
+      "label": "Размер по x, нм",
+      "type": "float",
+      "default": 2.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "0 — без границ вдоль этой оси",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sy",
+      "label": "Размер по y, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "0 — без границ вдоль этой оси",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "V",
+      "label": "Высота, эВ (минус — яма)",
+      "type": "float",
+      "default": 0.5,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "edge",
+      "label": "Ширина края, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Расстояние, на котором потенциал растёт от 10 % до 90 % (физическая длина); 0 — самый резкий край, который передаёт сетка (≈ 3 шага)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "ball": {
+    "type": "ball",
+    "label": "Шар (круг)",
+    "kind": "potential",
+    "help": "",
+    "limit": null,
+    "color": "#ff922b",
+    "params": [
+     {
+      "id": "x",
+      "label": "Центр: x, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр: y, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "radius",
+      "label": "Радиус, нм",
+      "type": "float",
+      "default": 3.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.001,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "V",
+      "label": "Высота, эВ (минус — яма)",
+      "type": "float",
+      "default": 0.5,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "edge",
+      "label": "Ширина края, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Расстояние, на котором потенциал растёт от 10 % до 90 % (физическая длина); 0 — самый резкий край, который передаёт сетка (≈ 3 шага)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "slit_wall": {
+    "type": "slit_wall",
+    "label": "Стенка со щелями",
+    "kind": "potential",
+    "help": "",
+    "limit": null,
+    "color": "#ff922b",
+    "params": [
+     {
+      "id": "axis",
+      "label": "Стенка поперёк оси",
+      "type": "select",
+      "default": "0",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "0",
+        "label": "x"
+       },
+       {
+        "value": "1",
+        "label": "y"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "position",
+      "label": "Положение стенки, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "thickness",
+      "label": "Толщина, нм",
+      "type": "float",
+      "default": 2.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.001,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "V",
+      "label": "Высота, эВ",
+      "type": "float",
+      "default": 3.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "n_slits",
+      "label": "Число щелей",
+      "type": "int",
+      "default": 2,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0,
+      "max": 8,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "width",
+      "label": "Ширина щели, нм",
+      "type": "float",
+      "default": 2.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.001,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "spacing",
+      "label": "Расстояние между центрами щелей, нм",
+      "type": "float",
+      "default": 10.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "offset",
+      "label": "Сдвиг щелей вдоль стенки, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "edge",
+      "label": "Ширина края, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Расстояние, на котором потенциал растёт от 10 % до 90 % (физическая длина); 0 — самый резкий край, который передаёт сетка (≈ 3 шага)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "step": {
+    "type": "step",
+    "label": "Ступенька",
+    "kind": "potential",
+    "help": "",
+    "limit": null,
+    "color": "#ff922b",
+    "params": [
+     {
+      "id": "axis",
+      "label": "Ступенька вдоль оси",
+      "type": "select",
+      "default": "0",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "0",
+        "label": "x"
+       },
+       {
+        "value": "1",
+        "label": "y"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "position",
+      "label": "Положение, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "V",
+      "label": "Высота, эВ",
+      "type": "float",
+      "default": 0.2,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "edge",
+      "label": "Ширина края, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Расстояние, на котором потенциал растёт от 10 % до 90 % (физическая длина); 0 — самый резкий край, который передаёт сетка (≈ 3 шага)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "trap": {
+    "type": "trap",
+    "label": "Гармоническая ловушка",
+    "kind": "potential",
+    "help": "",
+    "limit": null,
+    "color": "#4dabf7",
+    "params": [
+     {
+      "id": "x",
+      "label": "Центр: x, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр: y, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "hw",
+      "label": "Энергия кванта ħω для массы электрона, мэВ",
+      "type": "float",
+      "default": 20.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1e-06,
+      "max": 100000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "V = m_e ω² r²/2 — один потенциал для всех частиц (для массы m частота ω·√(m_e/m))",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "bfield": {
+    "type": "bfield",
+    "label": "Магнитное поле",
+    "kind": "field",
+    "help": "На спин — через магнитный момент; на заряд — через векторный потенциал (только Bz в плоскости, поле вдоль оси в объёме)",
+    "limit": null,
+    "color": "#74c0fc",
+    "params": [
+     {
+      "id": "Bx",
+      "label": "Bx, Тл",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -100000.0,
+      "max": 100000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "By",
+      "label": "By, Тл",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -100000.0,
+      "max": 100000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "Bz",
+      "label": "Bz, Тл",
+      "type": "float",
+      "default": 10.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -100000.0,
+      "max": 100000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "grad",
+      "label": "Градиент g, Тл/нм (Bx = Bx₀ − g·(x − x_c), By = By₀ + g·(y − y_c))",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Неоднородное поле с div B = 0 и rot B = 0 около центра области (x_c, y_c; у поля во всей сцене — около нуля): действует на спин; для заряда — только однородное Bz",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "region",
+      "label": "Область",
+      "type": "select",
+      "default": "all",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "all",
+        "label": "вся сцена"
+       },
+       {
+        "value": "box",
+        "label": "прямоугольная"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "x",
+      "label": "Центр области: x, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "region": [
+        "box"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр области: y, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "region": [
+        "box"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sx",
+      "label": "Размер по x, нм",
+      "type": "float",
+      "default": 10.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "0 — без границ вдоль этой оси",
+      "show_if": {
+       "region": [
+        "box"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sy",
+      "label": "Размер по y, нм",
+      "type": "float",
+      "default": 10.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "0 — без границ вдоль этой оси",
+      "show_if": {
+       "region": [
+        "box"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "edge",
+      "label": "Ширина края, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Расстояние, на котором потенциал растёт от 10 % до 90 % (физическая длина); 0 — самый резкий край, который передаёт сетка (≈ 3 шага)",
+      "show_if": {
+       "region": [
+        "box"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "flux": {
+    "type": "flux",
+    "label": "Трубка потока (Ааронов–Бом)",
+    "kind": "field",
+    "help": "Поле только внутри трубки; снаружи — векторный потенциал",
+    "limit": null,
+    "color": "#b197fc",
+    "params": [
+     {
+      "id": "x",
+      "label": "Центр: x, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр: y, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "flux",
+      "label": "Поток, в квантах h/e",
+      "type": "float",
+      "default": 0.5,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "radius",
+      "label": "Радиус трубки, нм",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.001,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "detector": {
+    "type": "detector",
+    "label": "Детектор (поглощает)",
+    "kind": "detector",
+    "help": "Поглощённая им вероятность считается для каждой частицы",
+    "limit": null,
+    "color": "#51cf66",
+    "params": [
+     {
+      "id": "x",
+      "label": "Центр: x, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр: y, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sx",
+      "label": "Размер по x, нм",
+      "type": "float",
+      "default": 4.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "0 — без границ вдоль этой оси",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sy",
+      "label": "Размер по y, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "0 — без границ вдоль этой оси",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "W",
+      "label": "Сила поглощения W₀, эВ (0 — по энергии частиц)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "edge",
+      "label": "Ширина края, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Расстояние, на котором потенциал растёт от 10 % до 90 % (физическая длина); 0 — самый резкий край, который передаёт сетка (≈ 3 шага)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "marker": {
+    "type": "marker",
+    "label": "Метка пути",
+    "kind": "detector",
+    "help": "Двухуровневый прибор (Энглерт): поворачивается, пока частица в области",
+    "limit": null,
+    "color": "#f783ac",
+    "params": [
+     {
+      "id": "x",
+      "label": "Центр: x, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр: y, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sx",
+      "label": "Размер по x, нм",
+      "type": "float",
+      "default": 3.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "0 — без границ вдоль этой оси",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sy",
+      "label": "Размер по y, нм",
+      "type": "float",
+      "default": 3.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "0 — без границ вдоль этой оси",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "rate",
+      "label": "Скорость поворота метки, рад/фс",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Пока частица в области, метка поворачивается |0⟩ → cos|0⟩ + sin|1⟩",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "edge",
+      "label": "Ширина края, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Расстояние, на котором потенциал растёт от 10 % до 90 % (физическая длина); 0 — самый резкий край, который передаёт сетка (≈ 3 шага)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "env": {
+    "type": "env",
+    "label": "Среда (декогеренция)",
+    "kind": "field",
+    "help": "Среда локализует частицу случайными скачками (уравнение Линдблада, квантовые скачки)",
+    "limit": 1,
+    "color": "#a9744f",
+    "params": [
+     {
+      "id": "rate",
+      "label": "Частота локализаций λ, 1/пс",
+      "type": "float",
+      "default": 10.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1e-09,
+      "max": 1000000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "length",
+      "label": "Длина локализации a, нм",
+      "type": "float",
+      "default": 2.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.001,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "region",
+      "label": "Область",
+      "type": "select",
+      "default": "all",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "all",
+        "label": "вся сцена"
+       },
+       {
+        "value": "box",
+        "label": "прямоугольная"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "x",
+      "label": "Центр области: x, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "region": [
+        "box"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр области: y, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "region": [
+        "box"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sx",
+      "label": "Размер по x, нм",
+      "type": "float",
+      "default": 10.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "0 — без границ вдоль этой оси",
+      "show_if": {
+       "region": [
+        "box"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sy",
+      "label": "Размер по y, нм",
+      "type": "float",
+      "default": 10.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "0 — без границ вдоль этой оси",
+      "show_if": {
+       "region": [
+        "box"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "edge",
+      "label": "Ширина края, нм",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Расстояние, на котором потенциал растёт от 10 % до 90 % (физическая длина); 0 — самый резкий край, который передаёт сетка (≈ 3 шага)",
+      "show_if": {
+       "region": [
+        "box"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "plane": {
+    "type": "plane",
+    "label": "Плоскость потока",
+    "kind": "probe",
+    "help": "Поток вероятности через плоскость, проинтегрированный по времени",
+    "limit": 4,
+    "color": "#3bc9db",
+    "params": [
+     {
+      "id": "axis",
+      "label": "Плоскость поперёк оси",
+      "type": "select",
+      "default": "0",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "0",
+        "label": "x"
+       },
+       {
+        "value": "1",
+        "label": "y"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "position",
+      "label": "Положение, нм",
+      "type": "float",
+      "default": 10.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   }
+  },
+  "frames20_s": 0.0,
+  "frame_max_s": 0.0,
+  "t_after": 2.1594981871961276e-14,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "actions",
+   "approximations",
+   "frame",
+   "header",
+   "scene",
+   "shapes",
+   "wave"
+  ]
+ },
+ "p03_molecules": {
+  "build_s": 0.0,
+  "actions": [],
+  "default_speed": 2e-12,
+  "speed_range": [
+   0.001,
+   100000.0
+  ],
+  "max_step": 4e-12,
+  "next_event": null,
+  "has_scene3d": true,
+  "planes": {
+   "max": 0,
+   "center": [
+    6.0,
+    6.0,
+    0.30000000000000004
+   ],
+   "defaults": {
+    "1": [
+     0,
+     0,
+     1
+    ]
+   }
+  },
+  "header_keys": [
+   "actions",
+   "approximations",
+   "backend",
+   "engine",
+   "fps",
+   "live",
+   "md",
+   "modifications",
+   "params",
+   "playground",
+   "preset",
+   "scene3d",
+   "seed",
+   "t",
+   "text",
+   "title",
+   "type",
+   "world"
+  ],
+  "palette": {
+   "gas": {
+    "type": "gas",
+    "label": "Газ (атомы)",
+    "kind": "particle",
+    "help": "Атомы в случайных местах (не ближе σ друг к другу и к уже имеющимся: случайная последовательная вставка), скорости при температуре T; общий импульс газа снят",
+    "limit": null,
+    "color": "#74c0fc",
+    "params": [
+     {
+      "id": "n",
+      "label": "Число атомов",
+      "type": "int",
+      "default": 200,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1,
+      "max": 20000,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "T",
+      "label": "Температура, K",
+      "type": "float",
+      "default": 300.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 100000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "start",
+      "label": "Начальные скорости",
+      "type": "select",
+      "default": "maxwell",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "maxwell",
+        "label": "по Максвеллу при T"
+       },
+       {
+        "value": "same_speed",
+        "label": "все с одной скоростью (как при T)"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "x",
+      "label": "Центр области: x, нм (0 и размер 0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр области: y, нм (0 и размер 0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sx",
+      "label": "Размер области по x, нм (0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sy",
+      "label": "Размер области по y, нм (0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "substance",
+      "label": "Вещество",
+      "type": "select",
+      "default": "argon",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "argon",
+        "label": "аргон (σ = 3,405 Å, ε/k = 119,8 K, m = 39,948 а.е.м.)"
+       },
+       {
+        "value": "custom",
+        "label": "своё"
+       }
+      ],
+      "standard": null,
+      "help": "Смена вещества — те же атомы с новыми параметрами в текущий момент; температура сохраняется (скорости пересчитаны v·√(m/m′)); перекрытия при новом σ отклоняются",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sigma",
+      "label": "Размер σ, доля аргонового",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.3,
+      "max": 3.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "epsilon",
+      "label": "Глубина ямы ε, доля аргоновой",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 20.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "mass",
+      "label": "Масса, а.е.м.",
+      "type": "float",
+      "default": 39.948,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1.0,
+      "max": 10000.0,
+      "log": true,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "charge",
+      "label": "Заряд, e (только в ящике со стенками)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -5.0,
+      "max": 5.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "color",
+      "label": "Цвет",
+      "type": "select",
+      "default": "0",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "0",
+        "label": "голубой"
+       },
+       {
+        "value": "1",
+        "label": "оранжевый"
+       },
+       {
+        "value": "2",
+        "label": "зелёный"
+       },
+       {
+        "value": "3",
+        "label": "розовый"
+       },
+       {
+        "value": "4",
+        "label": "жёлтый"
+       },
+       {
+        "value": "5",
+        "label": "фиолетовый"
+       },
+       {
+        "value": "6",
+        "label": "белый"
+       },
+       {
+        "value": "7",
+        "label": "красный"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "crystal": {
+    "type": "crystal",
+    "label": "Кристалл (решётка атомов)",
+    "kind": "particle",
+    "help": "",
+    "limit": null,
+    "color": "#8ce99a",
+    "params": [
+     {
+      "id": "density",
+      "label": "Плотность решётки ρσ^d",
+      "type": "float",
+      "default": 0.9,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.05,
+      "max": 1.3,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Решётка (2-D треугольная, 3-D ГЦК) с шагом этой плотности: целые ячейки в области; вдоль периодической оси, которую блок занимает целиком, ячейки подогнаны к ящику (фактическая плотность — в инспекторе). Плотная упаковка: ρσ² ≈ 0,9, ρσ³ ≈ 1,0",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "T",
+      "label": "Температура, K",
+      "type": "float",
+      "default": 300.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 100000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "x",
+      "label": "Центр области: x, нм (0 и размер 0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр области: y, нм (0 и размер 0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sx",
+      "label": "Размер области по x, нм (0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sy",
+      "label": "Размер области по y, нм (0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "substance",
+      "label": "Вещество",
+      "type": "select",
+      "default": "argon",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "argon",
+        "label": "аргон (σ = 3,405 Å, ε/k = 119,8 K, m = 39,948 а.е.м.)"
+       },
+       {
+        "value": "custom",
+        "label": "своё"
+       }
+      ],
+      "standard": null,
+      "help": "Смена вещества — те же атомы с новыми параметрами в текущий момент; температура сохраняется (скорости пересчитаны v·√(m/m′)); перекрытия при новом σ отклоняются",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sigma",
+      "label": "Размер σ, доля аргонового",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.3,
+      "max": 3.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "epsilon",
+      "label": "Глубина ямы ε, доля аргоновой",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 20.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "mass",
+      "label": "Масса, а.е.м.",
+      "type": "float",
+      "default": 39.948,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1.0,
+      "max": 10000.0,
+      "log": true,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "charge",
+      "label": "Заряд, e (только в ящике со стенками)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -5.0,
+      "max": 5.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "color",
+      "label": "Цвет",
+      "type": "select",
+      "default": "0",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "0",
+        "label": "голубой"
+       },
+       {
+        "value": "1",
+        "label": "оранжевый"
+       },
+       {
+        "value": "2",
+        "label": "зелёный"
+       },
+       {
+        "value": "3",
+        "label": "розовый"
+       },
+       {
+        "value": "4",
+        "label": "жёлтый"
+       },
+       {
+        "value": "5",
+        "label": "фиолетовый"
+       },
+       {
+        "value": "6",
+        "label": "белый"
+       },
+       {
+        "value": "7",
+        "label": "красный"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "atom": {
+    "type": "atom",
+    "label": "Атом",
+    "kind": "particle",
+    "help": "",
+    "limit": null,
+    "color": "#ffd43b",
+    "params": [
+     {
+      "id": "x",
+      "label": "Центр: x, нм",
+      "type": "float",
+      "default": 6.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр: y, нм",
+      "type": "float",
+      "default": 6.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vx",
+      "label": "Скорость vx, м/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -100000.0,
+      "max": 100000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vy",
+      "label": "Скорость vy, м/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -100000.0,
+      "max": 100000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "substance",
+      "label": "Вещество",
+      "type": "select",
+      "default": "argon",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "argon",
+        "label": "аргон (σ = 3,405 Å, ε/k = 119,8 K, m = 39,948 а.е.м.)"
+       },
+       {
+        "value": "custom",
+        "label": "своё"
+       }
+      ],
+      "standard": null,
+      "help": "Смена вещества — те же атомы с новыми параметрами в текущий момент; температура сохраняется (скорости пересчитаны v·√(m/m′)); перекрытия при новом σ отклоняются",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sigma",
+      "label": "Размер σ, доля аргонового",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.3,
+      "max": 3.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "epsilon",
+      "label": "Глубина ямы ε, доля аргоновой",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 20.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "mass",
+      "label": "Масса, а.е.м.",
+      "type": "float",
+      "default": 39.948,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1.0,
+      "max": 10000.0,
+      "log": true,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "charge",
+      "label": "Заряд, e (только в ящике со стенками)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -5.0,
+      "max": 5.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "color",
+      "label": "Цвет",
+      "type": "select",
+      "default": "0",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "0",
+        "label": "голубой"
+       },
+       {
+        "value": "1",
+        "label": "оранжевый"
+       },
+       {
+        "value": "2",
+        "label": "зелёный"
+       },
+       {
+        "value": "3",
+        "label": "розовый"
+       },
+       {
+        "value": "4",
+        "label": "жёлтый"
+       },
+       {
+        "value": "5",
+        "label": "фиолетовый"
+       },
+       {
+        "value": "6",
+        "label": "белый"
+       },
+       {
+        "value": "7",
+        "label": "красный"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "wall": {
+    "type": "wall",
+    "label": "Стенка (тип)",
+    "kind": "field",
+    "help": "Меняет одну из стенок ящика (у границ со стенками)",
+    "limit": 6,
+    "color": "#adb5bd",
+    "params": [
+     {
+      "id": "axis",
+      "label": "Стенка поперёк оси",
+      "type": "select",
+      "default": "y",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "x",
+        "label": "x"
+       },
+       {
+        "value": "y",
+        "label": "y"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "side",
+      "label": "Сторона",
+      "type": "select",
+      "default": "lo",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "lo",
+        "label": "нижняя / левая"
+       },
+       {
+        "value": "hi",
+        "label": "верхняя / правая"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "kind",
+      "label": "Стенка",
+      "type": "select",
+      "default": "thermal",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "specular",
+        "label": "зеркальная (упругое отражение)"
+       },
+       {
+        "value": "thermal",
+        "label": "тепловая (возвращает атомы с температурой стенки: тепловая ванна)"
+       },
+       {
+        "value": "soft",
+        "label": "мягкая (потенциал стенки Леннард-Джонса)"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "T",
+      "label": "Температура стенки, K",
+      "type": "float",
+      "default": 300.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 100000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "kind": [
+        "thermal"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "probe": {
+    "type": "probe",
+    "label": "Термометр (область)",
+    "kind": "probe",
+    "help": "Число атомов, их плотность и температура в шаре вокруг точки (периодические грани учтены)",
+    "limit": 6,
+    "color": "#ffd43b",
+    "params": [
+     {
+      "id": "x",
+      "label": "Центр: x, нм",
+      "type": "float",
+      "default": 6.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр: y, нм",
+      "type": "float",
+      "default": 6.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "r",
+      "label": "Радиус, нм",
+      "type": "float",
+      "default": 2.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.1,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "molecule": {
+    "type": "molecule",
+    "label": "Молекулы",
+    "kind": "particle",
+    "help": "Атомы, связанные пружинами (и углами): модель молекулы; размещаются без перекрытий (энергия каждого атома при вставке не выше 2kT)",
+    "limit": null,
+    "color": "#ff922b",
+    "params": [
+     {
+      "id": "shape",
+      "label": "Молекула",
+      "type": "select",
+      "default": "dimer",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "dimer",
+        "label": "двухатомная"
+       },
+       {
+        "value": "bent",
+        "label": "трёхатомная угловая"
+       },
+       {
+        "value": "chain",
+        "label": "цепочка"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "atoms",
+      "label": "Атомов в цепочке",
+      "type": "int",
+      "default": 6,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 3,
+      "max": 50,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "shape": [
+        "chain"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "count",
+      "label": "Сколько молекул",
+      "type": "int",
+      "default": 20,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1,
+      "max": 2000,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "T",
+      "label": "Температура, K",
+      "type": "float",
+      "default": 300.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 100000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "start",
+      "label": "Начальное движение",
+      "type": "select",
+      "default": "maxwell",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "maxwell",
+        "label": "всё при T (поступательное, вращение, колебания)"
+       },
+       {
+        "value": "translation",
+        "label": "только поступательное при T (вращение и колебания холодные)"
+       }
+      ],
+      "standard": null,
+      "help": "«всё при T»: скорость каждого атома по Максвеллу при T, длины связей и углы — по Больцману около равновесных (каноническое начало); «только поступательное»: молекула движется как целое со скоростью при T своей массы, связи и углы равновесные",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "bond",
+      "label": "Длина связи, σ",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.5,
+      "max": 2.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "k_bond",
+      "label": "Жёсткость связи, ε/σ²",
+      "type": "float",
+      "default": 400.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1.0,
+      "max": 10000.0,
+      "log": true,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "angle",
+      "label": "Угол связей, °",
+      "type": "float",
+      "default": 105.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 30.0,
+      "max": 180.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "shape": [
+        "bent",
+        "chain"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "k_angle",
+      "label": "Жёсткость угла, ε/рад²",
+      "type": "float",
+      "default": 50.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "shape": [
+        "bent",
+        "chain"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "x",
+      "label": "Центр области: x, нм (0 и размер 0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр области: y, нм (0 и размер 0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sx",
+      "label": "Размер области по x, нм (0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sy",
+      "label": "Размер области по y, нм (0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "substance",
+      "label": "Вещество",
+      "type": "select",
+      "default": "argon",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "argon",
+        "label": "аргон (σ = 3,405 Å, ε/k = 119,8 K, m = 39,948 а.е.м.)"
+       },
+       {
+        "value": "custom",
+        "label": "своё"
+       }
+      ],
+      "standard": null,
+      "help": "Смена вещества — те же атомы с новыми параметрами в текущий момент; температура сохраняется (скорости пересчитаны v·√(m/m′)); перекрытия при новом σ отклоняются",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sigma",
+      "label": "Размер σ, доля аргонового",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.3,
+      "max": 3.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "epsilon",
+      "label": "Глубина ямы ε, доля аргоновой",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 20.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "mass",
+      "label": "Масса, а.е.м.",
+      "type": "float",
+      "default": 39.948,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1.0,
+      "max": 10000.0,
+      "log": true,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "charge",
+      "label": "Заряд, e (только в ящике со стенками)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -5.0,
+      "max": 5.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "substance": [
+        "custom"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "color",
+      "label": "Цвет",
+      "type": "select",
+      "default": "0",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "0",
+        "label": "голубой"
+       },
+       {
+        "value": "1",
+        "label": "оранжевый"
+       },
+       {
+        "value": "2",
+        "label": "зелёный"
+       },
+       {
+        "value": "3",
+        "label": "розовый"
+       },
+       {
+        "value": "4",
+        "label": "жёлтый"
+       },
+       {
+        "value": "5",
+        "label": "фиолетовый"
+       },
+       {
+        "value": "6",
+        "label": "белый"
+       },
+       {
+        "value": "7",
+        "label": "красный"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "piston": {
+    "type": "piston",
+    "label": "Поршень",
+    "kind": "body",
+    "help": "Верхняя стенка оси подвижна: масса и внешнее давление; работа считается",
+    "limit": 1,
+    "color": "#868e96",
+    "params": [
+     {
+      "id": "axis",
+      "label": "Поршень поперёк оси",
+      "type": "select",
+      "default": "y",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "x",
+        "label": "x"
+       },
+       {
+        "value": "y",
+        "label": "y"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "position",
+      "label": "Положение, нм",
+      "type": "float",
+      "default": 10.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Задаётся при установке; правка других параметров поршень не двигает",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "mass",
+      "label": "Масса поршня, а.е.м. (0 — движется как задано)",
+      "type": "float",
+      "default": 4000.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "p_ext",
+      "label": "Внешнее давление, бар (в плоскости — мН/м)",
+      "type": "float",
+      "default": 50.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "speed",
+      "label": "Скорость (если масса 0), м/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "thermostat": {
+    "type": "thermostat",
+    "label": "Термостат",
+    "kind": "field",
+    "help": "Держит температуру (вся область или её часть); теплота считается",
+    "limit": 4,
+    "color": "#ff6b6b",
+    "params": [
+     {
+      "id": "kind",
+      "label": "Термостат",
+      "type": "select",
+      "default": "csvr",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "csvr",
+        "label": "CSVR (Буси–Донадио–Парринелло): канонический, мягкий"
+       },
+       {
+        "value": "langevin",
+        "label": "Ланжевен (трение и шум)"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "T",
+      "label": "Температура, K",
+      "type": "float",
+      "default": 300.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 100000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "tau",
+      "label": "Время релаксации, пс",
+      "type": "float",
+      "default": 2.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.001,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "kind": [
+        "csvr"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "gamma",
+      "label": "Трение γ, 1/пс",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1e-06,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": {
+       "kind": [
+        "langevin"
+       ]
+      },
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "x",
+      "label": "Центр области: x, нм (0 и размер 0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр области: y, нм (0 и размер 0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sx",
+      "label": "Размер области по x, нм (0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "sy",
+      "label": "Размер области по y, нм (0 — весь ящик)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "gravity": {
+    "type": "gravity",
+    "label": "Поле (тяжесть)",
+    "kind": "field",
+    "help": "",
+    "limit": 1,
+    "color": "#868e96",
+    "params": [
+     {
+      "id": "g",
+      "label": "Поле g (вниз по y), ε/(mσ)",
+      "type": "float",
+      "default": 0.02,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10.0,
+      "max": 10.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Для аргона единица ε/(mσ) ≈ 7,3·10¹³ м/с² (земное g ≈ 1,3·10⁻¹³ в этих единицах): земное поле на масштабе атомов незаметно, здесь — модельное сильное поле, чтобы увидеть расслоение",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   }
+  },
+  "frames20_s": 0.0,
+  "frame_max_s": 0.0,
+  "t_after": 2e-12,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "frame",
+   "header",
+   "scene"
+  ]
+ },
+ "p04_fluids": {
+  "build_s": 0.05,
+  "actions": [],
+  "default_speed": 0.48888888888888893,
+  "speed_range": [
+   1e-09,
+   1000000.0
+  ],
+  "max_step": 0.2566001196398337,
+  "next_event": null,
+  "has_scene3d": true,
+  "planes": {
+   "max": 0,
+   "center": [
+    1.1,
+    0.20500000000000002,
+    0.0
+   ],
+   "defaults": {
+    "1": [
+     0,
+     0,
+     1
+    ]
+   }
+  },
+  "header_keys": [
+   "actions",
+   "approximations",
+   "backend",
+   "engine",
+   "fields",
+   "fluid",
+   "fps",
+   "grid",
+   "live",
+   "modifications",
+   "numbers",
+   "params",
+   "playground",
+   "preset",
+   "scene3d",
+   "seed",
+   "shown",
+   "t",
+   "text",
+   "title",
+   "type",
+   "world"
+  ],
+  "palette": {
+   "disk": {
+    "type": "disk",
+    "label": "Цилиндр (круг)",
+    "kind": "body",
+    "help": "",
+    "limit": null,
+    "color": "#adb5bd",
+    "params": [
+     {
+      "id": "x",
+      "label": "Центр: x, м",
+      "type": "float",
+      "default": 0.1,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр: y, м",
+      "type": "float",
+      "default": 0.1,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "radius",
+      "label": "Радиус, м",
+      "type": "float",
+      "default": 0.03,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1e-09,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "wall",
+      "label": "Стенка тела",
+      "type": "select",
+      "default": "staircase",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "staircase",
+        "label": "ступеньки (отражение на полпути; 1-й порядок по форме)"
+       },
+       {
+        "value": "interpolated",
+        "label": "интерполяция Бузиди (точнее; только у неподвижной поверхности)"
+       }
+      ],
+      "standard": null,
+      "help": "Как сетка видит кривую стенку: ступеньками из ячеек или с точным положением стенки на каждой связи (масса через такую стенку не сохраняется точно — баланс это учитывает)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vx",
+      "label": "Скорость поверхности (тело на месте): vx, м/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Тело НЕ перемещается: на его неподвижной форме задаётся скорость поверхности (условие Ладда). Часть, нормальная к поверхности, — источник спереди и сток сзади (жидкость проходит сквозь стенку; баланс массы это учитывает): так получается мгновенное граничное условие движущегося тела, но не его течение. Перемещение тел пока не сделано (STATUS V41 o)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vy",
+      "label": "Скорость поверхности (тело на месте): vy, м/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "omega",
+      "label": "Вращение поверхности, рад/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Поверхность вращается вокруг центра, форма на месте (у круга скорость касательна к поверхности: вращающийся цилиндр, эффект Магнуса)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "ref",
+      "label": "Длина для коэффициентов (0 — диаметр), м",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "u_ref",
+      "label": "Скорость для коэффициентов (0 — средняя на входе), м/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "rect": {
+    "type": "rect",
+    "label": "Прямоугольник",
+    "kind": "body",
+    "help": "",
+    "limit": null,
+    "color": "#adb5bd",
+    "params": [
+     {
+      "id": "x",
+      "label": "Центр: x, м",
+      "type": "float",
+      "default": 0.1,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр: y, м",
+      "type": "float",
+      "default": 0.1,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "w",
+      "label": "Ширина, м",
+      "type": "float",
+      "default": 0.04,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1e-09,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "h",
+      "label": "Высота, м",
+      "type": "float",
+      "default": 0.02,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1e-09,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "angle",
+      "label": "Поворот, °",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -360.0,
+      "max": 360.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "wall",
+      "label": "Стенка тела",
+      "type": "select",
+      "default": "staircase",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "staircase",
+        "label": "ступеньки (отражение на полпути; 1-й порядок по форме)"
+       },
+       {
+        "value": "interpolated",
+        "label": "интерполяция Бузиди (точнее; только у неподвижной поверхности)"
+       }
+      ],
+      "standard": null,
+      "help": "Как сетка видит кривую стенку: ступеньками из ячеек или с точным положением стенки на каждой связи (масса через такую стенку не сохраняется точно — баланс это учитывает)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vx",
+      "label": "Скорость поверхности (тело на месте): vx, м/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Тело НЕ перемещается: на его неподвижной форме задаётся скорость поверхности (условие Ладда). Часть, нормальная к поверхности, — источник спереди и сток сзади (жидкость проходит сквозь стенку; баланс массы это учитывает): так получается мгновенное граничное условие движущегося тела, но не его течение. Перемещение тел пока не сделано (STATUS V41 o)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "vy",
+      "label": "Скорость поверхности (тело на месте): vy, м/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "ref",
+      "label": "Длина для коэффициентов (0 — высота поперёк потока), м",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "u_ref",
+      "label": "Скорость для коэффициентов (0 — средняя на входе), м/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "airfoil": {
+    "type": "airfoil",
+    "label": "Профиль крыла NACA",
+    "kind": "body",
+    "help": "",
+    "limit": null,
+    "color": "#adb5bd",
+    "params": [
+     {
+      "id": "code",
+      "label": "Профиль NACA (4 цифры)",
+      "type": "select",
+      "default": "0012",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "0006",
+        "label": "NACA 0006"
+       },
+       {
+        "value": "0012",
+        "label": "NACA 0012"
+       },
+       {
+        "value": "0018",
+        "label": "NACA 0018"
+       },
+       {
+        "value": "2412",
+        "label": "NACA 2412"
+       },
+       {
+        "value": "4412",
+        "label": "NACA 4412"
+       },
+       {
+        "value": "6409",
+        "label": "NACA 6409"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "chord",
+      "label": "Хорда, м",
+      "type": "float",
+      "default": 0.2,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1e-09,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "x",
+      "label": "Передняя кромка: x, м",
+      "type": "float",
+      "default": 0.1,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Передняя кромка: y, м",
+      "type": "float",
+      "default": 0.1,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "aoa",
+      "label": "Угол атаки, °",
+      "type": "float",
+      "default": 5.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -90.0,
+      "max": 90.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "wall",
+      "label": "Стенка тела",
+      "type": "select",
+      "default": "staircase",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "staircase",
+        "label": "ступеньки (отражение на полпути; 1-й порядок по форме)"
+       },
+       {
+        "value": "interpolated",
+        "label": "интерполяция Бузиди (точнее; только у неподвижной поверхности)"
+       }
+      ],
+      "standard": null,
+      "help": "Как сетка видит кривую стенку: ступеньками из ячеек или с точным положением стенки на каждой связи (масса через такую стенку не сохраняется точно — баланс это учитывает)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "u_ref",
+      "label": "Скорость для коэффициентов (0 — средняя на входе), м/с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "inlet": {
+    "type": "inlet",
+    "label": "Вход потока",
+    "kind": "source",
+    "help": "Заданная скорость на стороне области",
+    "limit": 4,
+    "color": "#51cf66",
+    "params": [
+     {
+      "id": "side",
+      "label": "Сторона",
+      "type": "select",
+      "default": "left",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "left",
+        "label": "слева"
+       },
+       {
+        "value": "right",
+        "label": "справа"
+       },
+       {
+        "value": "bottom",
+        "label": "снизу"
+       },
+       {
+        "value": "top",
+        "label": "сверху"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "speed",
+      "label": "Скорость входа (наибольшая для параболы), м/с",
+      "type": "float",
+      "default": 0.1,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "profile",
+      "label": "Профиль",
+      "type": "select",
+      "default": "uniform",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "uniform",
+        "label": "однородный"
+       },
+       {
+        "value": "parabolic",
+        "label": "парабола (как в канале)"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "ramp",
+      "label": "Плавный разгон за, с",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "После смены скорости вход плавно переходит от прежней скорости к новой за это время; смена только красителя разгон не перезапускает",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "dye",
+      "label": "Краситель во входящей жидкости (доля)",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "outlet": {
+    "type": "outlet",
+    "label": "Выход (давление)",
+    "kind": "source",
+    "help": "",
+    "limit": 4,
+    "color": "#ff922b",
+    "params": [
+     {
+      "id": "side",
+      "label": "Сторона",
+      "type": "select",
+      "default": "right",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "left",
+        "label": "слева"
+       },
+       {
+        "value": "right",
+        "label": "справа"
+       },
+       {
+        "value": "bottom",
+        "label": "снизу"
+       },
+       {
+        "value": "top",
+        "label": "сверху"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "pressure",
+      "label": "Давление на выходе (относительное), Па",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -1000000000.0,
+      "max": 1000000000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Давление в середине стороны; при объёмной силе вдоль стороны к нему добавляется гидростатическая часть. Движок откажет, если плотность схемы отклонится больше чем на 0,045 (масштаб — c_s²ρ, c_s — скорость звука схемы)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "lid": {
+    "type": "lid",
+    "label": "Подвижная стенка",
+    "kind": "source",
+    "help": "",
+    "limit": 4,
+    "color": "#b197fc",
+    "params": [
+     {
+      "id": "side",
+      "label": "Сторона",
+      "type": "select",
+      "default": "top",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "left",
+        "label": "слева"
+       },
+       {
+        "value": "right",
+        "label": "справа"
+       },
+       {
+        "value": "bottom",
+        "label": "снизу"
+       },
+       {
+        "value": "top",
+        "label": "сверху"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "speed",
+      "label": "Скорость стенки вдоль себя, м/с",
+      "type": "float",
+      "default": 0.1,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Снизу и сверху — вдоль +x, слева и справа — вдоль +y",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "periodic": {
+    "type": "periodic",
+    "label": "Периодичность",
+    "kind": "field",
+    "help": "Ушедшее через одну сторону входит с противоположной (тела повторяются: решётка)",
+    "limit": 2,
+    "color": "#74c0fc",
+    "params": [
+     {
+      "id": "axis",
+      "label": "Пара сторон",
+      "type": "select",
+      "default": "x",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "x",
+        "label": "слева–справа (по x)"
+       },
+       {
+        "value": "y",
+        "label": "снизу–сверху (по y)"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "gravity": {
+    "type": "gravity",
+    "label": "Объёмная сила (тяжесть)",
+    "kind": "field",
+    "help": "",
+    "limit": 1,
+    "color": "#868e96",
+    "params": [
+     {
+      "id": "gx",
+      "label": "Ускорение: gx, м/с²",
+      "type": "float",
+      "default": 0.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "gy",
+      "label": "Ускорение: gy, м/с²",
+      "type": "float",
+      "default": -9.81,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "Однородная объёмная сила (схема Гуо). В жидкости постоянной плотности она меняет только давление (гидростатическое, сразу), пока стенки и выходы её уравновешивают; вдоль периодической оси она гонит течение, как перепад давления. Схема несёт её гидростатический перепад плотности g·L/c_s² (c_s — скорость звука схемы, не жидкости): движок откажет, если он больше допустимого (тогда уменьшите g или увеличьте наибольшую ожидаемую скорость)",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "dye_source": {
+    "type": "dye_source",
+    "label": "Краситель",
+    "kind": "source",
+    "help": "Пассивная примесь: показывает, куда течёт жидкость",
+    "limit": 12,
+    "color": "#f783ac",
+    "params": [
+     {
+      "id": "x",
+      "label": "Центр: x, м",
+      "type": "float",
+      "default": 0.1,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Центр: y, м",
+      "type": "float",
+      "default": 0.1,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "radius",
+      "label": "Радиус пятна, м",
+      "type": "float",
+      "default": 0.01,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 1e-09,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "concentration",
+      "label": "Концентрация",
+      "type": "float",
+      "default": 1.0,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": 0.0,
+      "max": 1.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "mode",
+      "label": "Как",
+      "type": "select",
+      "default": "source",
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": null,
+      "max": null,
+      "log": false,
+      "options": [
+       {
+        "value": "source",
+        "label": "источник (держит концентрацию)"
+       },
+       {
+        "value": "drop",
+        "label": "капля один раз"
+       }
+      ],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   },
+   "probe": {
+    "type": "probe",
+    "label": "Датчик скорости",
+    "kind": "probe",
+    "help": "",
+    "limit": 8,
+    "color": "#ffd43b",
+    "params": [
+     {
+      "id": "x",
+      "label": "Точка: x, м",
+      "type": "float",
+      "default": 0.1,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     },
+     {
+      "id": "y",
+      "label": "Точка: y, м",
+      "type": "float",
+      "default": 0.1,
+      "group": "",
+      "unit": "",
+      "scale": 1.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "log": false,
+      "options": [],
+      "standard": null,
+      "help": "",
+      "show_if": null,
+      "live": false,
+      "hidden": false
+     }
+    ]
+   }
+  },
+  "frames20_s": 1.94,
+  "frame_max_s": 0.117,
+  "t_after": 0.48888888888888876,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "approximations",
+   "check",
+   "field",
+   "frame",
+   "header",
+   "scene",
+   "vectors"
+  ]
+ },
+ "v01_light_travel": {
+  "build_s": 0.3,
+  "actions": [
+   {
+    "name": "flash",
+    "label": "Вспышка",
+    "args": [
+     {
+      "id": "obj",
+      "label": "Кто",
+      "type": "select",
+      "options": [
+       {
+        "value": "flare",
+        "label": "Вспышка на Солнце"
+       },
+       {
+        "value": "earth",
+        "label": "Земля"
+       },
+       {
+        "value": "station",
+        "label": "Станция (покоится в точке старта Земли)"
+       },
+       {
+        "value": "rocket",
+        "label": "Ракета"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "boost",
+    "label": "Скорость (меняется сразу)",
+    "mode": "live",
+    "key": "obj",
+    "help": "Отпустите ползунок или нажмите Enter: объект мгновенно получает новую скорость в текущий момент. Малые скорости вводите числом (1,4 м/с ≈ 4,67e-9 c).",
+    "current": {
+     "rocket": {
+      "v": 0.0,
+      "angle": 0.0
+     }
+    },
+    "args": [
+     {
+      "id": "obj",
+      "label": "Кто",
+      "type": "select",
+      "options": [
+       {
+        "value": "rocket",
+        "label": "Ракета"
+       }
+      ]
+     },
+     {
+      "id": "v",
+      "label": "скорость, доли c",
+      "type": "float",
+      "default": 0.0,
+      "min": 0.0,
+      "max": 0.99
+     },
+     {
+      "id": "angle",
+      "label": "направление, °",
+      "type": "float",
+      "default": 0.0,
+      "min": -180.0,
+      "max": 180.0
+     }
+    ]
+   },
+   {
+    "name": "train",
+    "label": "Серия импульсов (частота)",
+    "args": [
+     {
+      "id": "obj",
+      "label": "Источник",
+      "type": "select",
+      "options": [
+       {
+        "value": "flare",
+        "label": "Вспышка на Солнце"
+       },
+       {
+        "value": "earth",
+        "label": "Земля"
+       },
+       {
+        "value": "station",
+        "label": "Станция (покоится в точке старта Земли)"
+       },
+       {
+        "value": "rocket",
+        "label": "Ракета"
+       }
+      ]
+     },
+     {
+      "id": "period",
+      "label": "Период по часам источника, с",
+      "type": "float",
+      "default": 1.0
+     },
+     {
+      "id": "count",
+      "label": "Сколько",
+      "type": "int",
+      "default": 5
+     }
+    ]
+   },
+   {
+    "name": "measure",
+    "label": "Локально измерить c (статичный наблюдатель, ОТО)",
+    "args": [
+     {
+      "id": "obj",
+      "label": "Кто",
+      "type": "select",
+      "options": [
+       {
+        "value": "station",
+        "label": "Станция (покоится в точке старта Земли)"
+       },
+       {
+        "value": "rocket",
+        "label": "Ракета"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "default_speed": 20.0,
+  "speed_range": [
+   1e-12,
+   1e+18
+  ],
+  "max_step": null,
+  "next_event": 247.1818325848564,
+  "has_scene3d": false,
+  "header_keys": [
+   "actions",
+   "backend",
+   "body",
+   "diagram",
+   "engine",
+   "flat",
+   "fps",
+   "gr",
+   "laws",
+   "live",
+   "modifications",
+   "objects",
+   "params",
+   "planned",
+   "preset",
+   "scenario",
+   "scene",
+   "seed",
+   "t",
+   "text",
+   "title",
+   "type",
+   "units",
+   "view",
+   "world"
+  ],
+  "frames20_s": 0.0,
+  "frame_max_s": 0.0,
+  "t_after": 20.0,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "check",
+   "event",
+   "frame",
+   "header",
+   "pulse"
+  ]
+ },
+ "v02_double_slit": {
+  "build_s": 0.42,
+  "actions": [
+   {
+    "name": "clear",
+    "label": "Очистить экран",
+    "help": "новый отрезок, установка та же",
+    "args": []
+   }
+  ],
+  "default_speed": 0.04,
+  "speed_range": [
+   1e-15,
+   1000000000.0
+  ],
+  "max_step": 4.0,
+  "next_event": 0.0010730290263725388,
+  "has_scene3d": false,
+  "header_keys": [
+   "actions",
+   "backend",
+   "blobs",
+   "engine",
+   "fps",
+   "geometry",
+   "laws",
+   "live",
+   "modifications",
+   "params",
+   "particle",
+   "preset",
+   "rate",
+   "seed",
+   "t",
+   "t_flight",
+   "text",
+   "title",
+   "type",
+   "world"
+  ],
+  "frames20_s": 0.01,
+  "frame_max_s": 0.001,
+  "t_after": 0.04000000000000002,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "check",
+   "detections",
+   "frame",
+   "header",
+   "segment",
+   "stories"
+  ]
+ },
+ "v03_quantum_1d": {
+  "build_s": 1.83,
+  "actions": [
+   {
+    "name": "clear",
+    "label": "Очистить счётчики",
+    "args": []
+   }
+  ],
+  "default_speed": 6.654636442560527e-14,
+  "speed_range": [
+   1e-18,
+   1e-06
+  ],
+  "max_step": 7.985563731072631e-15,
+  "next_event": 1.8697412311323358e-13,
+  "has_scene3d": false,
+  "header_keys": [
+   "actions",
+   "backend",
+   "engine",
+   "fps",
+   "live",
+   "params",
+   "preset",
+   "seed",
+   "t",
+   "text",
+   "title",
+   "type",
+   "units",
+   "world"
+  ],
+  "frames20_s": 0.0,
+  "frame_max_s": 0.0,
+  "t_after": 6.654636442560527e-14,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "check",
+   "emit",
+   "frame",
+   "header",
+   "segment"
+  ]
+ },
+ "v04_orbits": {
+  "build_s": 0.01,
+  "actions": [
+   {
+    "name": "boost",
+    "label": "Толчок",
+    "button": "толкнуть",
+    "help": "Мгновенное изменение скорости вдоль движения (в системе неподвижного наблюдателя в этой точке): доля текущей скорости, минус — торможение. Часы тела идут дальше.",
+    "args": [
+     {
+      "id": "dv",
+      "label": "Δv, доля скорости",
+      "type": "float",
+      "default": 0.05,
+      "min": -1.0,
+      "max": 1.0
+     }
+    ]
+   },
+   {
+    "name": "relaunch",
+    "label": "Новый запуск тела",
+    "help": "Тело запускается заново из начальных данных панели «Запуск тела» (r₀, скорость, угол) в текущий момент, с текущего направления на центр; часы тела — с нуля.",
+    "args": []
+   }
+  ],
+  "default_speed": 0.011620276913293521,
+  "speed_range": [
+   1e-10,
+   1e+18
+  ],
+  "max_step": 0.09005162381875483,
+  "next_event": 0.05007484670697797,
+  "has_scene3d": false,
+  "header_keys": [
+   "actions",
+   "backend",
+   "body",
+   "engine",
+   "fps",
+   "law",
+   "live",
+   "modifications",
+   "params",
+   "preset",
+   "seed",
+   "special",
+   "t",
+   "text",
+   "title",
+   "type",
+   "units",
+   "world"
+  ],
+  "frames20_s": 0.01,
+  "frame_max_s": 0.0,
+  "t_after": 0.01162027691329352,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "apsis",
+   "check",
+   "event",
+   "frame",
+   "header",
+   "segment",
+   "trail"
+  ]
+ },
+ "v05_optics_bench": {
+  "build_s": 0.02,
+  "actions": [
+   {
+    "name": "emit_one",
+    "label": "Выпустить один фотон",
+    "args": [],
+    "help": "Один фотон сейчас, сверх пуассоновского потока"
+   },
+   {
+    "name": "clear",
+    "label": "Обнулить счётчики (новый отрезок)",
+    "args": [],
+    "help": "Установка та же; статистика начинается заново"
+   }
+  ],
+  "default_speed": 8.339102379953802e-10,
+  "speed_range": [
+   1e-15,
+   1000.0
+  ],
+  "max_step": 5e-06,
+  "next_event": 2.6825725659313475e-10,
+  "has_scene3d": false,
+  "header_keys": [
+   "actions",
+   "arm_m",
+   "backend",
+   "engine",
+   "fps",
+   "live",
+   "modifications",
+   "params",
+   "preset",
+   "rate",
+   "seed",
+   "t",
+   "t_in",
+   "text",
+   "title",
+   "type",
+   "world"
+  ],
+  "frames20_s": 0.0,
+  "frame_max_s": 0.0,
+  "t_after": 8.339102379953799e-10,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "check",
+   "frame",
+   "header",
+   "segment"
+  ]
+ },
+ "v06_qcd": {
+  "build_s": 1.6,
+  "actions": [],
+  "default_speed": 1.0,
+  "speed_range": [
+   0.01,
+   100.0
+  ],
+  "max_step": null,
+  "next_event": null,
+  "has_scene3d": false,
+  "header_keys": [
+   "actions",
+   "backend",
+   "engine",
+   "fps",
+   "live",
+   "modifications",
+   "params",
+   "preset",
+   "seed",
+   "t",
+   "text",
+   "title",
+   "type",
+   "world"
+  ],
+  "frames20_s": 0.01,
+  "frame_max_s": 0.001,
+  "t_after": 1.0000000000000002,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "check",
+   "frame",
+   "header",
+   "segment"
+  ]
+ },
+ "v07_bell_test": {
+  "build_s": 0.01,
+  "actions": [
+   {
+    "name": "clear",
+    "label": "Сбросить статистику",
+    "help": "Счёты совпадений начинаются заново; установка и пары в полёте те же.",
+    "args": []
+   }
+  ],
+  "default_speed": 8.339102379953801e-07,
+  "speed_range": [
+   1e-12,
+   1000.0
+  ],
+  "max_step": 0.002,
+  "next_event": 1.0730290263725388e-06,
+  "has_scene3d": false,
+  "header_keys": [
+   "actions",
+   "backend",
+   "blobs",
+   "c",
+   "engine",
+   "fps",
+   "law",
+   "live",
+   "model",
+   "model_label",
+   "modifications",
+   "pair",
+   "pair_label",
+   "params",
+   "period",
+   "preset",
+   "seed",
+   "t",
+   "text",
+   "title",
+   "type",
+   "v",
+   "world"
+  ],
+  "frames20_s": 0.0,
+  "frame_max_s": 0.0,
+  "t_after": 8.339102379953798e-07,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "check",
+   "frame",
+   "header"
+  ]
+ },
+ "v08_wave_3d": {
+  "build_s": 76.67,
+  "actions": [],
+  "default_speed": 1.0,
+  "speed_range": [
+   0.05,
+   20.0
+  ],
+  "max_step": null,
+  "next_event": null,
+  "has_scene3d": true,
+  "planes": {
+   "max": 3,
+   "center": [
+    0.0,
+    0.0,
+    15.0
+   ],
+   "defaults": {
+    "1": [
+     0.0,
+     -1.0,
+     0.0
+    ],
+    "2": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "3": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  "header_keys": [
+   "accuracy",
+   "actions",
+   "approximations",
+   "backend",
+   "dx",
+   "engine",
+   "fps",
+   "half",
+   "lam",
+   "live",
+   "modelling",
+   "n",
+   "params",
+   "preset",
+   "scene3d",
+   "seed",
+   "t",
+   "text",
+   "title",
+   "type",
+   "units",
+   "world",
+   "zmax"
+  ],
+  "frames20_s": 0.0,
+  "frame_max_s": 0.0,
+  "t_after": 1.0000000000000002,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "check",
+   "frame",
+   "header",
+   "planes",
+   "slice",
+   "target",
+   "vectors",
+   "volume"
+  ]
+ },
+ "v09_thomas_3d": {
+  "build_s": 0.76,
+  "actions": [],
+  "default_speed": 10974951.477232873,
+  "speed_range": [
+   109749.51477232874,
+   4389980590.893149
+  ],
+  "max_step": null,
+  "next_event": 27149686.729365457,
+  "has_scene3d": true,
+  "planes": {
+   "max": 3,
+   "center": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "time_unit": "год",
+   "defaults": {
+    "1": [
+     6.123233995736766e-17,
+     1.0,
+     6.123233995736766e-17
+    ],
+    "2": [
+     1.0,
+     -6.123233995736766e-17,
+     -3.749399456654644e-33
+    ],
+    "3": [
+     0.0,
+     6.123233995736766e-17,
+     -1.0
+    ]
+   }
+  },
+  "header_keys": [
+   "actions",
+   "backend",
+   "engine",
+   "field",
+   "fps",
+   "live",
+   "loop",
+   "params",
+   "preset",
+   "scene3d",
+   "seed",
+   "space",
+   "t",
+   "text",
+   "title",
+   "type",
+   "units",
+   "world"
+  ],
+  "frames20_s": 0.0,
+  "frame_max_s": 0.0,
+  "t_after": 10974951.477232873,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "check",
+   "event",
+   "frame",
+   "header",
+   "path",
+   "planes",
+   "slice",
+   "triads",
+   "vectors",
+   "volume"
+  ]
+ },
+ "v10_fast_observer": {
+  "build_s": 0.08,
+  "actions": [],
+  "default_speed": 4.941690299231882e-09,
+  "speed_range": [
+   4.941690299231882e-12,
+   4.941690299231882e-07
+  ],
+  "max_step": null,
+  "next_event": null,
+  "has_scene3d": true,
+  "planes": {
+   "max": 0,
+   "center": [
+    -5.283328431330144,
+    0.3999999999999999,
+    6.15
+   ],
+   "defaults": {
+    "1": [
+     0,
+     1,
+     0
+    ],
+    "2": [
+     1,
+     0,
+     0
+    ],
+    "3": [
+     0,
+     0,
+     1
+    ]
+   }
+  },
+  "header_keys": [
+   "actions",
+   "backend",
+   "bodies",
+   "engine",
+   "fps",
+   "live",
+   "params",
+   "preset",
+   "scene",
+   "scene3d",
+   "seed",
+   "t",
+   "text",
+   "title",
+   "type",
+   "units",
+   "world"
+  ],
+  "frames20_s": 0.06,
+  "frame_max_s": 0.028,
+  "t_after": 4.9416902992318795e-09,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "check",
+   "frame",
+   "header",
+   "image",
+   "mesh"
+  ]
+ },
+ "v11_double_slit_2d": {
+  "build_s": 0.17,
+  "actions": [],
+  "default_speed": 7.09729784901368e-17,
+  "speed_range": [
+   7.09729784901368e-19,
+   1.419459569802736e-15
+  ],
+  "max_step": 3.50084659840311e-18,
+  "next_event": null,
+  "has_scene3d": true,
+  "planes": {
+   "max": 0,
+   "center": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "defaults": {
+    "1": [
+     0,
+     1,
+     0
+    ],
+    "2": [
+     1,
+     0,
+     0
+    ],
+    "3": [
+     0,
+     0,
+     1
+    ]
+   }
+  },
+  "header_keys": [
+   "actions",
+   "approximations",
+   "backend",
+   "device",
+   "engine",
+   "fps",
+   "geometry",
+   "live",
+   "n_bohm",
+   "n_tracks",
+   "params",
+   "particle",
+   "preset",
+   "scene3d",
+   "seed",
+   "t",
+   "text",
+   "title",
+   "type",
+   "units",
+   "world"
+  ],
+  "frames20_s": 18.03,
+  "frame_max_s": 1.069,
+  "t_after": 7.001693196806219e-17,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "check",
+   "frame",
+   "header",
+   "screen",
+   "target",
+   "tracks",
+   "wave"
+  ]
+ },
+ "v12_arrival_times_2d": {
+  "build_s": 0.96,
+  "actions": [],
+  "default_speed": 1.7114151410518185e-17,
+  "speed_range": [
+   1.7114151410518185e-19,
+   3.422830282103637e-16
+  ],
+  "max_step": 3.50084659840311e-18,
+  "next_event": null,
+  "has_scene3d": true,
+  "planes": {
+   "max": 0,
+   "center": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "defaults": {
+    "1": [
+     0,
+     1,
+     0
+    ],
+    "2": [
+     1,
+     0,
+     0
+    ],
+    "3": [
+     0,
+     0,
+     1
+    ]
+   }
+  },
+  "header_keys": [
+   "actions",
+   "approximations",
+   "arrival",
+   "backend",
+   "device",
+   "engine",
+   "fps",
+   "geometry",
+   "live",
+   "n_bohm",
+   "n_tracks",
+   "params",
+   "particle",
+   "preset",
+   "scene3d",
+   "seed",
+   "t",
+   "text",
+   "title",
+   "type",
+   "units",
+   "world"
+  ],
+  "frames20_s": 2.89,
+  "frame_max_s": 0.163,
+  "t_after": 1.7114151410518176e-17,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "check",
+   "frame",
+   "header",
+   "tracks",
+   "wave"
+  ]
+ },
+ "v13_hydrogen_3d": {
+  "build_s": 0.11,
+  "actions": [],
+  "default_speed": 2.0275434283703766e-16,
+  "speed_range": [
+   2.0275434283703766e-20,
+   1.216526057022226e-12
+  ],
+  "max_step": null,
+  "next_event": null,
+  "has_scene3d": true,
+  "planes": {
+   "max": 3,
+   "center": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "defaults": {
+    "1": [
+     0.0,
+     -1.0,
+     0.0
+    ],
+    "2": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "3": [
+     1.0,
+     0.0,
+     0.0
+    ]
+   },
+   "time_unit": "(2.03e-16 с)"
+  },
+  "header_keys": [
+   "actions",
+   "atom",
+   "backend",
+   "energy_unit",
+   "engine",
+   "fps",
+   "grid",
+   "level_columns",
+   "levels",
+   "levels_top",
+   "live",
+   "nb",
+   "omega_E",
+   "params",
+   "period",
+   "preset",
+   "scene3d",
+   "seed",
+   "states",
+   "t",
+   "text",
+   "title",
+   "type",
+   "units",
+   "world"
+  ],
+  "frames20_s": 0.0,
+  "frame_max_s": 0.0,
+  "t_after": 2.0275434283703774e-16,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "check",
+   "cloud",
+   "frame",
+   "header",
+   "planes",
+   "radial",
+   "slice"
+  ]
+ },
+ "v14_quarkonium_3d": {
+  "build_s": 1.96,
+  "actions": [],
+  "default_speed": 2.6765082135788547e-24,
+  "speed_range": [
+   2.6765082135788547e-28,
+   1.605904928147313e-20
+  ],
+  "max_step": null,
+  "next_event": null,
+  "has_scene3d": true,
+  "planes": {
+   "max": 3,
+   "center": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "defaults": {
+    "1": [
+     0.0,
+     -1.0,
+     0.0
+    ],
+    "2": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "3": [
+     1.0,
+     0.0,
+     0.0
+    ]
+   },
+   "time_unit": "(2.68e-24 с)"
+  },
+  "header_keys": [
+   "actions",
+   "approximations",
+   "backend",
+   "energy_unit",
+   "engine",
+   "fps",
+   "grid",
+   "level_columns",
+   "levels",
+   "live",
+   "nb",
+   "omega_E",
+   "params",
+   "period",
+   "preset",
+   "scene3d",
+   "seed",
+   "states",
+   "system",
+   "t",
+   "text",
+   "title",
+   "type",
+   "units",
+   "world"
+  ],
+  "frames20_s": 0.0,
+  "frame_max_s": 0.0,
+  "t_after": 2.676508213578854e-24,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "check",
+   "cloud",
+   "frame",
+   "header",
+   "planes",
+   "radial",
+   "slice"
+  ]
+ },
+ "v15_kerr_shadow": {
+  "build_s": 0.19,
+  "actions": [],
+  "default_speed": 1.0,
+  "speed_range": [
+   0.01,
+   100.0
+  ],
+  "max_step": 0.5,
+  "next_event": 4.0,
+  "has_scene3d": true,
+  "planes": {
+   "max": 0,
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "defaults": {}
+  },
+  "header_keys": [
+   "actions",
+   "approximations",
+   "backend",
+   "engine",
+   "fps",
+   "hole",
+   "live",
+   "metric",
+   "modifications",
+   "n_max",
+   "params",
+   "preset",
+   "r_out",
+   "scan_m",
+   "scene3d",
+   "seed",
+   "t",
+   "text",
+   "title",
+   "type",
+   "units",
+   "world"
+  ],
+  "frames20_s": 0.06,
+  "frame_max_s": 0.004,
+  "t_after": 1.0000000000000002,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "arrow",
+   "curve",
+   "frame",
+   "header",
+   "lines",
+   "mesh",
+   "rows"
+  ]
+ },
+ "v16_optical_vortices": {
+  "build_s": 4.55,
+  "actions": [],
+  "default_speed": 0.05,
+  "speed_range": [
+   0.001,
+   2.0
+  ],
+  "max_step": 0.25,
+  "next_event": 0.025,
+  "has_scene3d": true,
+  "planes": {
+   "max": 3,
+   "center": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "defaults": {
+    "1": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "2": [
+     0.0,
+     -1.0,
+     0.0
+    ],
+    "3": [
+     1.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "header_keys": [
+   "actions",
+   "approximations",
+   "backend",
+   "beam",
+   "engine",
+   "fps",
+   "live",
+   "nb",
+   "params",
+   "preset",
+   "scene3d",
+   "seed",
+   "t",
+   "t_show",
+   "text",
+   "title",
+   "type",
+   "units",
+   "world"
+  ],
+  "frames20_s": 0.18,
+  "frame_max_s": 0.039,
+  "t_after": 0.05000000000000001,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "am",
+   "check",
+   "frame",
+   "header",
+   "helix",
+   "lines",
+   "mesh",
+   "planes",
+   "slice",
+   "trace",
+   "volume"
+  ]
+ },
+ "v17_mie_scattering": {
+  "build_s": 1.25,
+  "actions": [],
+  "default_speed": 1.0,
+  "speed_range": [
+   0.05,
+   20.0
+  ],
+  "max_step": 0.5,
+  "next_event": 12.0,
+  "has_scene3d": true,
+  "planes": {
+   "max": 0,
+   "center": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "defaults": {
+    "1": [
+     0.0,
+     -1.0,
+     0.0
+    ],
+    "2": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "3": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  "header_keys": [
+   "actions",
+   "approximations",
+   "backend",
+   "drop",
+   "engine",
+   "fps",
+   "live",
+   "params",
+   "preset",
+   "scene3d",
+   "seed",
+   "sky",
+   "t",
+   "text",
+   "title",
+   "type",
+   "units",
+   "world"
+  ],
+  "frames20_s": 2.18,
+  "frame_max_s": 1.164,
+  "t_after": 1.0000000000000002,
+  "errors": [],
+  "checks_failed": [],
+  "types": [
+   "arrow",
+   "check",
+   "frame",
+   "header",
+   "lines",
+   "mesh",
+   "mono",
+   "sky",
+   "sky_start"
+  ]
+ }
+}

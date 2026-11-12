@@ -1,0 +1,9 @@
+lambda =   0.5, t =    12.757: |err r| = 5.05e-13; x2 term 1.02e-12; 1e-12 r 4.20e-12; e_cf_t 3.55e-15 x |dr/dlambda| 6.19e+00 = 2.20e-14 (with |dr/dt| = 2.08e-01: 7.40e-16; dt/dlambda = 29.7)
+      theta: |err| = 1.02e-11; x2 term 2.04e-11; loose term 2.20e-14   phi: |err| = 3.15e-13; x2 5.95e-13; quadrature 4.44e-16
+lambda =   2.0, t =   286.781: |err r| = 3.53e-10; x2 term 6.97e-10; 1e-12 r 9.57e-12; e_cf_t 1.14e-13 x |dr/dlambda| 3.93e+01 = 4.46e-12 (with |dr/dt| = 3.56e-01: 4.04e-14; dt/dlambda = 110.4)
+      theta: |err| = 9.05e-12; x2 term 1.79e-11; loose term 4.46e-12   phi: |err| = 5.73e-11; x2 1.12e-10; quadrature 0.00e+00
+lambda =   7.0, t =   687.646: |err r| = 5.99e-10; x2 term 1.18e-09; 1e-12 r 5.73e-12; e_cf_t 2.27e-13 x |dr/dlambda| 1.55e+01 = 3.53e-12 (with |dr/dt| = 3.31e-01: 7.52e-14; dt/dlambda = 46.9)
+      theta: |err| = 8.09e-11; x2 term 1.62e-10; loose term 3.53e-12   phi: |err| = 2.80e-10; x2 5.63e-10; quadrature 7.11e-15
+lambda =  15.0, t =  1646.982: |err r| = 8.46e-10; x2 term 1.67e-09; 1e-12 r 4.20e-12; e_cf_t 0.00e+00 x |dr/dlambda| 6.17e+00 = 0.00e+00 (with |dr/dt| = 2.07e-01: 0.00e+00; dt/dlambda = 29.7)
+      theta: |err| = 5.55e-11; x2 term 1.12e-10; loose term 0.00e+00   phi: |err| = 1.32e-09; x2 2.65e-09; quadrature 1.42e-14
+exit 0

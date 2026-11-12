@@ -1,0 +1,5 @@
+header units: None
+estimate: 200 False | 1 знач. × 1 замер(ов): цену шага этого мира запись ещё не измерила (мир не считался); свип начнётся и остановится сам, если первое значение покажет, что он дороже предела 20 с
+start: 200 1 starting None
+after 60 s: state running, active True, progress {'done': 0, 'total': 1, 'frac': 0.0, 'elapsed_s': 0.649904394056648, 'eta_s': None}
+cancel: 200 {'ok': True, 'cancelled': 1}

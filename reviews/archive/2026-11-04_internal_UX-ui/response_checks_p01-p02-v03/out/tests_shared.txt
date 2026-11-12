@@ -1,0 +1,11 @@
+.........                                                                [100%]
+============================= slowest 8 durations ==============================
+24.37s call     tests/test_checkpoint.py::test_a_session_around_a_checkpoint_continues_as_the_original[v03_quantum_1d]
+21.68s call     tests/test_checkpoint.py::test_a_session_around_a_checkpoint_continues_as_the_original[p02_quantum]
+15.14s call     tests/test_restore.py::test_a_world_restored_by_replay_continues_as_the_original[p02_quantum]
+12.16s call     tests/test_checkpoint.py::test_a_session_around_a_checkpoint_continues_as_the_original[p01_gravity]
+10.72s call     tests/test_checkpoint.py::test_a_world_continued_from_its_checkpoint_emits_what_the_original_emits[p02_quantum]
+9.72s call     tests/test_restore.py::test_a_world_restored_by_replay_continues_as_the_original[p01_gravity]
+5.50s call     tests/test_checkpoint.py::test_a_world_continued_from_its_checkpoint_emits_what_the_original_emits[p01_gravity]
+3.91s call     tests/test_restore.py::test_a_world_restored_by_replay_continues_as_the_original[v03_quantum_1d]
+9 passed, 63 deselected in 107.57s (0:01:47)

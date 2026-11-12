@@ -1,0 +1,3 @@
+{"change": "set packet x", "s": 33.1, "load1_before": 49.0, "load1_after": 48.5, "errors": []}
+{"change": "add box (x=20, y=20)", "s": 33.01, "load1_before": 48.5, "load1_after": 50.2, "errors": []}
+{"change": "set packet wavelength", "s": 31.92, "load1_before": 50.2, "load1_after": 49.2, "errors": []}

@@ -1,0 +1,7 @@
+(a) snapshots after a measurement: the pre-measurement interval (stale); same object as before: True
+(b) after a change at t = 0 and the first check at t = 3.00: since = 0.0, but E_ref is the energy at t = 3.00 (drift 0.0e+00 by construction)
+(c) ball R = 3.0 nm, edge 1.0 nm: V(centre)/height = 1.000; |dV/dr| at the centre (a cone) = 0.000 height per nm
+(c) ball R = 1.0 nm, edge 1.0 nm: V(centre)/height = 0.995; |dV/dr| at the centre (a cone) = 0.038 height per nm
+(c) ball R = 0.5 nm, edge 1.0 nm: V(centre)/height = 0.900; |dV/dr| at the centre (a cone) = 0.450 height per nm
+(c) ball R = 0.25 nm, edge 1.0 nm: V(centre)/height = 0.739; |dV/dr| at the centre (a cone) = 0.833 height per nm
+    tunnel preset barrier: 1.5 nm wide, edge 0.995 nm: peak 0.947 of its height

@@ -1,0 +1,8 @@
+== (1) update_body with a different dispersive medium ==
+  nodes unchanged: True; |P| of medium A before: 4.5941e-01; |P| carried into the Drude pole of B: 4.5941e-01; identical arrays: True
+  pole coefficients now (c1, c2, c3) at one node: 1.924428, -0.924428, 2.136751e-01 (Drude: w0 = 0)
+== (2) removing an earlier body: an unchanged dispersive body after it ==
+  D's nodes: 144; |P| before the edit 4.5941e-01; after removing body 1 (E): 0.0000e+00  (docstring: kept, the medium did not change)
+== (3) energy: 1/2 delta_eps |E|^2 and a lossless Lorentz medium in a closed PEC box ==
+  energy()['total'] with a gamma = 0 Lorentz body: min/max over 2000 steps = 0.1670 / 1.0000 of the start (the docstring: 'exactly conserved ... in a closed lossless box')
+rc=0

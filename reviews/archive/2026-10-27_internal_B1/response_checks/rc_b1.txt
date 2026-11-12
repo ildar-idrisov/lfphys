@@ -1,0 +1,24 @@
+B1-1 (a) the reviewer's wide-angle world (double, a 0.2, lambda 1.5, n 128, z_max 80):
+    refused: окно расчёта мало для глубины z_max = 80 мкм: свет, ушедший под большими углами, возвращается периодическими копиями отверстия; лучшее, что достижимо при окне до 2048 точек на ось, — окно ×16, с огран ...
+B1-1 (b) presets: the drawn plane z_max against the exact field (21 points) and against a window x4 wider
+    double: окно ×8, обычная сумма; оценка ошибки 1.1e-03 пика; exact: 3.9e-04 of peak at 21 points; wider window: linear 8.3e-04; log view: 0.1% of pixels above 1e-06 off > 0.1 decade (max 0.35); 0.0% of pixels above 1e-05 off > 0.1 decade (max 0.07)
+    circle: окно ×4, с ограничением полосы; оценка ошибки 8.8e-04 пика; exact: 2.2e-05 of peak at 1 points; wider window: linear 4.4e-04; log view: 0.0% of pixels above 1e-06 off > 0.1 decade (max 0.06); 0.0% of pixels above 7e-06 off > 0.1 decade (max 0.06)
+    gauss: окно ×2, обычная сумма; оценка ошибки 5.9e-15 пика; exact: 2.4e-14 of peak at 1 points; wider window: linear 5.5e-15; log view: 0.0% of pixels above 1e-06 off > 0.1 decade (max 0.00); 0.0% of pixels above 1e-06 off > 0.1 decade (max 0.00)
+    square_big: окно ×4, обычная сумма; оценка ошибки 8.9e-04 пика; exact: 6.1e-04 of peak at 21 points; wider window: linear 9.2e-04; log view: 1.5% of pixels above 1e-06 off > 0.1 decade (max 0.39); 0.0% of pixels above 7e-06 off > 0.1 decade (max 0.10)
+B1-2 grid error: the same world on the grid n against 2n (half the step, the same window), exact sources
+    double: y = 0 slice, z >= z_near = 0.63: 2.0e-11 of the peak intensity; including z < z_near (the band-limited zone): 1.7e-01
+    square: y = 0 slice, z >= z_near = 0.63: 1.2e-11 of the peak intensity; including z < z_near (the band-limited zone): 8.5e-02
+B1-3 odd n = 65, pad 2: slice x = 0 against the Hankel integral (no FFT)
+    max error 1.6e-08 (reviewer: 3.6e-2 before)
+B1-6 fp32 against fp64, double slit, lambda 0.3, z 80 (k z = 1676), CPU
+    max|U32 - U64| / max|U64| = 1.5e-07 (bound 1e-5; reviewer: 1.2e-5 before)
+B1-13 the reviewer's Gaussian worlds (11_gauss_check_sweep.py) on the processed v08
+    lam=0.5 w=1.5 z=30 n=256: окно ×2, обычная сумма; оценка ошибки 5.9e-15 пика; |U| vs exact: rel 1.8e-14, tolerance 2.3e-09, ok=True
+    lam=0.3 w=0.5 z=80 n=256: окно ×4, обычная сумма; оценка ошибки 1.9e-05 пика; |U| vs exact: rel 4.0e-06, tolerance 1.9e-05, ok=True
+    lam=1.5 w=0.5 z=80 n=128: refused: окно расчёта мало для глубины z_max = 80 мкм: свет, ушедший под большими углами, возвращается периодическими копиями отв
+    lam=0.3 w=6.0 z=80 n=256: окно ×2, обычная сумма; оценка ошибки 4.0e-10 пика; |U| vs exact: rel 4.0e-13, tolerance 1.4e-09, ok=True
+    lam=1.5 w=6.0 z=2 n=256: окно ×2, обычная сумма; оценка ошибки 4.7e-16 пика; |U| vs exact: rel 1.8e-15, tolerance 1.0e-09, ok=True
+    lam=0.5 w=6.0 z=30 n=128: окно ×2, обычная сумма; оценка ошибки 2.2e-07 пика; |U| vs exact: rel 2.6e-12, tolerance 2.2e-07, ok=True
+    lam=0.3 w=6.0 z=30 n=128: окно ×4, обычная сумма; оценка ошибки 4.1e-14 пика; |U| vs exact: rel 1.5e-13, tolerance 1.0e-09, ok=True
+    lam=1.0 w=3.0 z=80 n=256: окно ×2, обычная сумма; оценка ошибки 1.4e-14 пика; |U| vs exact: rel 5.0e-15, tolerance 3.0e-09, ok=True
+exit 0

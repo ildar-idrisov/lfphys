@@ -1,0 +1,14 @@
+== (1) v04 black hole (preset default) ==
+default speed 0.01162 s/s, range (1e-10, 1e+18)
+v04 default x1: chosen 0.0116 s/s | measured here over the last 1.5 s: 0.0116 s/s (100.013% of chosen) | frames' rate (last): 0.0116208673 | lag in 0/30 frames | the player shows «факт» if rate < 0.97 chosen: False | the world's own frame field 'rate' (v04: dτ/dt): 0.9818927768505799
+v04 default x10: chosen 0.116 s/s | measured here over the last 1.5 s: 0.115 s/s (99.194% of chosen) | frames' rate (last): 0.1152952131 | lag in 0/30 frames | the player shows «факт» if rate < 0.97 chosen: False | the world's own frame field 'rate' (v04: dτ/dt): 0.9797698445831858
+v04 default x100: chosen 1.16 s/s | measured here over the last 1.5 s: 1.18 s/s (101.217% of chosen) | frames' rate (last): 1.1691340939 | lag in 0/31 frames | the player shows «факт» if rate < 0.97 chosen: False | the world's own frame field 'rate' (v04: dτ/dt): 0.9819786866696515
+v04 default x1000: chosen 11.6 s/s | measured here over the last 1.5 s: 10.2 s/s (87.870% of chosen) | frames' rate (last): 10.228178103 | lag in 30/30 frames | the player shows «факт» if rate < 0.97 chosen: True | the world's own frame field 'rate' (v04: dτ/dt): 0.9748706511363076
+v04 default x10000: chosen 116 s/s | measured here over the last 1.5 s: 9.27 s/s (7.978% of chosen) | frames' rate (last): 9.0944643802 | lag in 30/30 frames | the player shows «факт» if rate < 0.97 chosen: True | the world's own frame field 'rate' (v04: dτ/dt): 0.9761954224613616
+
+== (2) synthetic worlds ==
+cheap world at 1 s/s: first non-null rate 0.9999 at 0.75 s after play; last 1.0000
+cheap world: chosen 1 s/s | measured here over the last 1.5 s: 1 s/s (99.999% of chosen) | frames' rate (last): 0.9999935630 | lag in 0/30 frames | the player shows «факт» if rate < 0.97 chosen: False | the world's own frame field 'rate' (v04: dτ/dt): None
+one slow step per frame (max_step None, cost 1 wall s per world s) at 1 s/s: chosen 1 s/s | measured here over the last 1.5 s: 0.997 s/s (99.691% of chosen) | frames' rate (last): 0.9969159068 | lag in 0/25 frames | the player shows «факт» if rate < 0.97 chosen: False | the world's own frame field 'rate' (v04: dτ/dt): None
+one slow step per frame (max_step None, cost 2 wall s per world s) at 1 s/s: chosen 1 s/s | measured here over the last 1.5 s: 0.5 s/s (49.980% of chosen) | frames' rate (last): 0.4997925416 | lag in 0/3 frames | the player shows «факт» if rate < 0.97 chosen: True | the world's own frame field 'rate' (v04: dτ/dt): None
+pause at 2 s: frames after pause carry rate [] (frames are emitted only while playing or dirty)

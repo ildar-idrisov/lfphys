@@ -1,0 +1,40 @@
+== 1. Jones conventions ==
+  R=(1,-i)/sqrt2 at wt=0.00: E = (+1.00, -0.00)
+  R=(1,-i)/sqrt2 at wt=1.57: E = (+0.00, -1.00)
+  -> E goes +x -> -y: clockwise seen by the receiver = RIGHT circular (Hecht/Born&Wolf)
+  engine Stokes label of R: Стокс (+0.00, -0.00, -1.00)   of L: Стокс (+0.00, +0.00, +1.00)
+  S3 = I_R - I_L for the state R (projective definition with the engine's own R, L): 0.9999999999999996
+  custom (azimuth 0, ellipticity +45 deg) = [0.7071+0.j     0.    +0.7071j] -> equals L? True  (Born&Wolf: chi > 0 is right-handed, S3 = sin 2chi > 0)
+  QWP(axis 45 deg) on H -> [0.7071+0.j     0.    -0.7071j]; |<R|out>|^2 = 1.000 (axis = fast axis in exp(-iwt))
+  HWP(22.5 deg) on H: |<D|out>|^2 = 1.000000000000
+  HWP(40 deg) on linear 17.2 deg -> overlap with linear 62.8 deg: 1.000000000000
+  polarizer: P^2 = P: True, Hermitian: True, Malus at 30 deg on H: 0.750000 vs cos^2 = 0.750000
+
+== 2. spin ==
+  rot_y(30) = exp(-i a sy/2): True
+  rot_y(90) = exp(-i a sy/2): True
+  rot_y(180) = exp(-i a sy/2): True
+  rot_y(270) = exp(-i a sy/2): True
+  filter(0): projector True, passes |+n> True, <sigma> of |+n> = [0. 0. 1.]
+  filter(60): projector True, passes |+n> True, <sigma> of |+n> = [0.866025 0.       0.5     ]
+  filter(90): projector True, passes |+n> True, <sigma> of |+n> = [1. 0. 0.]
+  filter(180): projector True, passes |+n> True, <sigma> of |+n> = [ 0.  0. -1.]
+  up_x: label спин (+1.00, +0.00, +0.00)
+  up_y: label спин (+0.00, +1.00, +0.00)
+  down_y: label спин (-0.00, -1.00, +0.00)
+
+== 3. unpolarized and partially polarized sampling (engine sampler, 200000 draws) ==
+  unpol P=1.0: max|rho_MC - rho| = 0.0010 (MC sigma ~ 0.0022)
+  H P=0.3: max|rho_MC - rho| = 0.0010 (MC sigma ~ 0.0022)
+  R P=0.6: max|rho_MC - rho| = 0.0002 (MC sigma ~ 0.0022)
+  Haar: <S_i^2> = [0.3329 0.3348 0.3323] (1/3), <S_i^4> = [0.1995 0.201  0.199 ] (1/5)
+
+== 4. Englert duality and readout ==
+  theta=  0: V=1.000000 (|cos|=1.000000) D=0.000000 (|sin|=0.000000) V^2+D^2=1.000000000000
+  theta= 30: V=0.866025 (|cos|=0.866025) D=0.500000 (|sin|=0.500000) V^2+D^2=1.000000000000
+  theta= 60: V=0.500000 (|cos|=0.500000) D=0.866025 (|sin|=0.866025) V^2+D^2=1.000000000000
+  theta= 90: V=0.000000 (|cos|=0.000000) D=1.000000 (|sin|=1.000000) V^2+D^2=1.000000000000
+  theta=135: V=0.707107 (|cos|=0.707107) D=0.707107 (|sin|=0.707107) V^2+D^2=1.000000000000
+  theta=180: V=1.000000 (|cos|=1.000000) D=0.000000 (|sin|=0.000000) V^2+D^2=1.000000000000
+  unequal weights: V=0.550961, D=0.834531, predictability=0.142857; V^2+D^2=1.000000000000, D>=P: True
+  sum_r G^(r) = G (200 random theta, basis): max dev 4.4e-16

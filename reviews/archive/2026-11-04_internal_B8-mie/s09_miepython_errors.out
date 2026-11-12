@@ -1,0 +1,17 @@
+miepython 3.3.0
+x = 1000, N = 1042:
+   n in [1, 10]: miepython max err 1.04e-12 (median 1.0e-12); engine max 2.74e-14
+   n in [11, 260]: miepython max err 1.28e-12 (median 1.1e-12); engine max 4.40e-14
+   n in [260, 521]: miepython max err 1.36e-12 (median 1.1e-12); engine max 4.37e-14
+   n in [521, 900]: miepython max err 2.10e-12 (median 1.0e-12); engine max 4.87e-14
+   n in [900, 1000]: miepython max err 5.22e-12 (median 7.9e-13); engine max 9.89e-14
+   n in [1000, 1042]: miepython max err 1.46e-10 (median 5.2e-15); engine max 2.75e-12
+   n = 1: |a_1| = 0.148, miepython rel err 6.89e-12
+x = 10000, N = 10089:
+   n in [1, 10]: miepython max err 1.17e-09 (median 1.2e-09); engine max 4.85e-13
+   n in [11, 2522]: miepython max err 1.23e-09 (median 1.1e-09); engine max 5.05e-13
+   n in [2522, 5044]: miepython max err 1.30e-09 (median 1.1e-09); engine max 5.00e-13
+   n in [5044, 9000]: miepython max err 2.05e-09 (median 1.0e-09); engine max 5.96e-13
+   n in [9000, 10000]: miepython max err 1.73e-08 (median 7.9e-10); engine max 4.53e-12
+   n in [10000, 10089]: miepython max err 3.03e-08 (median 1.6e-12); engine max 7.92e-12
+   n = 1: |a_1| = 0.142, miepython rel err 4.91e-09

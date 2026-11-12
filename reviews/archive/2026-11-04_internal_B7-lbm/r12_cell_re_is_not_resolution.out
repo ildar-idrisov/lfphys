@@ -1,0 +1,2 @@
+Re 1000, 64^2: cell Re (lid) 15.6, limit 25, accepted; tau+ = 0.5111; steady to 1.5e-05; max |u - Ghia| = 0.0171 at y = 0.0703, max |v - Ghia| = 0.0102 at x = 0.9531; checks ok: True
+Re 1000, 128^2: cell Re (lid) 7.81, limit 25, accepted; tau+ = 0.5222; steady to 2.9e-05; max |u - Ghia| = 0.0072 at y = 0.9688, max |v - Ghia| = 0.0112 at x = 0.9531; checks ok: True

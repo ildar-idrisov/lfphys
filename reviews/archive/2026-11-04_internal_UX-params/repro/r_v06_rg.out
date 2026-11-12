@@ -1,0 +1,8 @@
+/lf/lfphys/lfphys/core/qcd/running.py:84: RuntimeWarning: overflow encountered in scalar power
+  return [-sum(bi * a ** (i + 2) for i, bi in enumerate(b))]
+/usr/local/lib/python3.11/site-packages/scipy/integrate/_ivp/rk.py:521: RuntimeWarning: invalid value encountered in dot
+  err5 = np.dot(K.T, self.E5) / scale
+/usr/local/lib/python3.11/site-packages/scipy/integrate/_ivp/rk.py:522: RuntimeWarning: invalid value encountered in dot
+  err3 = np.dot(K.T, self.E3) / scale
+(4, 0.19) ValueError: RG integration failed (alpha_mz used 0.1900, mu 1)
+n bad (loops, alpha_mz): 1

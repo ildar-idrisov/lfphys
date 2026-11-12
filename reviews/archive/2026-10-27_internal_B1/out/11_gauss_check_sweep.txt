@@ -1,0 +1,8 @@
+lam=0.5 w=1.5 z=  30 n=256: check error 1.5e-14 -> ok    | mpmath vs Gauss-Legendre 1.3e-14 | Gaussian at the window edge 3.9e-50
+lam=0.3 w=0.5 z=  80 n=256: check error 3.6e-06 -> FAIL  | mpmath vs Gauss-Legendre 2.9e-06 | Gaussian at the window edge 8.0e-161
+lam=1.5 w=0.5 z=  80 n=128: check error 2.9e-01 -> FAIL  | mpmath vs Gauss-Legendre 2.6e-05 | Gaussian at the window edge 0.0e+00
+lam=0.3 w=6.0 z=  80 n=256: check error 2.7e-02 -> FAIL  | mpmath vs Gauss-Legendre 2.0e-14 | Gaussian at the window edge 7.7e-02
+lam=1.5 w=6.0 z=   2 n=256: check error 9.0e-16 -> ok    | mpmath vs Gauss-Legendre 3.7e-15 | Gaussian at the window edge 1.6e-28
+lam=0.5 w=6.0 z=  30 n=128: check error 4.7e-02 -> FAIL  | mpmath vs Gauss-Legendre 1.2e-14 | Gaussian at the window edge 1.7e-01
+lam=0.3 w=6.0 z=  30 n=128: check error 2.1e-01 -> FAIL  | mpmath vs Gauss-Legendre 1.0e-14 | Gaussian at the window edge 5.3e-01
+lam=1.0 w=3.0 z=  80 n=256: check error 1.5e-14 -> ok    | mpmath vs Gauss-Legendre 1.6e-14 | Gaussian at the window edge 3.9e-50

@@ -1,0 +1,4 @@
+theta = 140 deg: strongest periods in x [np.float64(1.277), np.float64(1.25), np.float64(0.674), np.float64(0.682)] (relative power [1.0, 0.95, 0.58, 0.51])
+theta = 175 deg: strongest periods in x [np.float64(1.176), np.float64(1.2), np.float64(1.154), np.float64(0.392)] (relative power [1.0, 0.54, 0.47, 0.39])
+theta = 180 deg: strongest periods in x [np.float64(0.273), np.float64(0.833), np.float64(0.822), np.float64(0.395)] (relative power [1.0, 0.94, 0.71, 0.68])
+2 pi/(4 m) = 1.176 (p = 0 against p = 2 on the axis); dx = 0.25 -> nodes per period 1.2:  4.8

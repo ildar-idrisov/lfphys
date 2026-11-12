@@ -1,0 +1,8 @@
+(a) detector sampling radius against the table's range
+  l = 3, p = 0: r_far = 14.51, Dove square corner = 11.53, disc = 9.63; |E_table - E_direct| / peak at r = [13.06 14.51 11.53]: [2.20e-11 8.00e-12 1.63e-10]; |E_direct|/peak there [3.7438260e-06 1.3333490e-06 1.4717472e-05]
+  l = 6, p = 3: r_far = 19.23, Dove square corner = 19.29, disc = 16.12; |E_table - E_direct| / peak at r = [17.31 19.23 19.29]: [4.16960000e-08 1.92530000e-08 5.92401335e-04]; |E_direct|/peak there [0.0033206  0.00179042 0.00176025]
+  l = 6, p = 0: r_far = 16.41, Dove square corner = 14.58, disc = 12.18; |E_table - E_direct| / peak at r = [14.77 16.41 14.58]: [2.19e-10 9.00e-11 6.85e-10]; |E_direct|/peak there [2.6430627e-05 1.1116069e-05 2.9518376e-05]
+(b) stepped spiral plate, l = 3, 8 steps, Gaussian w = 2, z = 6 (as in the engine's test)
+  thin-mask symmetric sum (N/2pi) sin(2 pi l/N) = 0.9003; power in n = l: sinc^2(l/N) = 0.6150
+  grid 512 x 0.125: OAM per photon of the propagated field = 1.2589; of the sampled mask itself = 0.9605
+  grid 1024 x 0.0625: OAM per photon of the propagated field = 1.2606; of the sampled mask itself = 0.9304

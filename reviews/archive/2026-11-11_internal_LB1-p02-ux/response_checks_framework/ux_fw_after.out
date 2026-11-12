@@ -1,0 +1,21 @@
+{"name":"X8 top bar one row, p02 (1600x1000)","ok":true,"h":42,"rows":1,"out":0}
+{"name":"X13 window ticks round, last label inside (1600x1000)","ok":true,"h":{"step":10,"values":[-40,-30,-20,-10,0,10,20,30],"lastRight":801.9333486519607},"v":{"step":5,"values":[-40,-35,-30,-25,-20,-15,-10,-5,0,5,10,15,20,25,30,35]},"width":908}
+{"name":"X2 control: Delete on the world's own window removes nothing (1600x1000)","ok":true,"selectedBefore":null,"removes":0,"views":0,"toasts":[]}
+{"name":"X2 Delete removes the object picked in the plane window (1600x1000)","ok":true,"picked":{"sel":"o2","slice":null},"removes":1,"views":0,"toasts":["✕Удаляется «Экран»…"]}
+{"name":"X8 toasts do not overlap (1600x1000)","ok":true,"n":4,"overlaps":0,"rects":[[905,940],[864,899],[807,858],[766,801]]}
+{"name":"X3 new-world form of the space shows the grid and the window (1600x1000)","ok":true,"labels":["Сценарий","перенести сцену","Пространство","Точек сетки по оси","Размер окна, нм","Края окна","Затравка случайных чисел"]}
+{"name":"X8 top bar one row with the world selector (1600x1000)","ok":true,"h":42,"rows":1,"out":0}
+{"name":"X8 the carry-over's toasts do not overlap (1600x1000)","ok":true,"n":1,"texts":["✕Сцена перенесена в новый мир: 2 из 3 объектов. По параметра"]}
+{"name":"no page errors p02 (1600x1000)","ok":true,"errs":[]}
+{"name":"X8 top bar one row, p01 (1600x1000)","ok":true,"h":42,"rows":1,"out":0}
+{"name":"X8 top bar one row, p02 (1280x800)","ok":true,"h":42,"rows":1,"out":0}
+{"name":"X13 window ticks round, last label inside (1280x800)","ok":true,"h":{"step":10,"values":[-40,-30,-20,-10,0,10,20,30],"lastRight":608.6784466911764},"v":{"step":5,"values":[-40,-35,-30,-25,-20,-15,-10,-5,0,5,10,15,20,25,30,35]},"width":688}
+{"name":"X2 control: Delete on the world's own window removes nothing (1280x800)","ok":true,"selectedBefore":null,"removes":0,"views":0,"toasts":[]}
+{"name":"X2 Delete removes the object picked in the plane window (1280x800)","ok":true,"picked":{"sel":"o2","slice":null},"removes":1,"views":0,"toasts":["✕Удаляется «Экран»…"]}
+{"name":"X8 toasts do not overlap (1280x800)","ok":true,"n":4,"overlaps":0,"rects":[[705,740],[664,699],[607,658],[566,601]]}
+{"name":"X3 new-world form of the space shows the grid and the window (1280x800)","ok":true,"labels":["Сценарий","перенести сцену","Пространство","Точек сетки по оси","Размер окна, нм","Края окна","Затравка случайных чисел"]}
+{"name":"X8 top bar one row with the world selector (1280x800)","ok":true,"h":42,"rows":1,"out":0}
+{"name":"X8 the carry-over's toasts do not overlap (1280x800)","ok":true,"n":1,"texts":["✕Сцена перенесена в новый мир: 2 из 3 объектов. По параметра"]}
+{"name":"no page errors p02 (1280x800)","ok":true,"errs":[]}
+{"name":"X8 top bar one row, p01 (1280x800)","ok":true,"h":42,"rows":1,"out":0}
+all passed

@@ -1,0 +1,14 @@
+{"s": 2.86, "err": null, "case": "mol3_shape_bent", "tag": "before", "build_s": 2.32}
+{"s": 33.961, "err": null, "case": "mol3_shape_chain", "tag": "before", "build_s": 0.6}
+{"s": 1.535, "err": null, "case": "mol3_start", "tag": "before", "build_s": 0.87}
+{"s": 2.492, "err": null, "case": "mol3_dup", "tag": "before", "build_s": 1.0}
+{"s": 2.085, "err": null, "case": "mol3_sz", "tag": "before", "build_s": 0.66}
+{"s": 90.004, "err": "Сцена: ", "case": "mol3_count2000", "tag": "before", "build_s": 0.51}
+{"s": 90.004, "err": "Сцена: ", "case": "mol3_atoms50", "tag": "before", "build_s": 0.7}
+{"s": 0.04, "err": null, "case": "mol2_add", "tag": "before", "build_s": 0.01}
+{"s": 90.0, "err": "Сцена: ", "case": "mol2_add_count2000", "tag": "before", "build_s": 0.01}
+{"s": 72.2, "err": "Сцена: не удалось разместить 20 молекул без перекрытий: размещено 4; уменьшите число или увеличьте область", "case": "mol2_add_chain50", "tag": "before", "build_s": 0.01}
+{"s": 0.017, "err": null, "case": "gas2_add", "tag": "before", "build_s": 0.01}
+{"s": 90.004, "err": "Сцена: ", "case": "gas3_n20000", "tag": "before", "build_s": 0.01}
+{"s": 4.991, "err": "Сцена: random placement jammed: 818 of 20000 placed without overlaps; fewer particles, a larger region or a lattice", "case": "gas2_n20000", "tag": "before", "build_s": 0.01}
+{"s": 0.054, "err": null, "case": "maxwell_n_set", "tag": "before", "build_s": 0.05}

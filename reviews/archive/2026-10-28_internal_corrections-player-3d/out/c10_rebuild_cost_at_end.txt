@@ -1,0 +1,12 @@
+v02_double_slit after 15 s of recording (258 frames, 691 messages): one step back 42 ms, one step forward 29 ms
+v02_double_slit after 45 s of recording (866 frames, 2387 messages): one step back 90 ms, one step forward 32 ms
+v02_double_slit after 90 s of recording (1784 frames, 4881 messages): one step back 68 ms, one step forward 41 ms
+v04_orbits after 15 s of recording (302 frames, 494 messages): one step back 32 ms, one step forward 45 ms
+v04_orbits after 45 s of recording (903 frames, 1694 messages): one step back 36 ms, one step forward 34 ms
+v04_orbits after 90 s of recording (1805 frames, 3290 messages): one step back 34 ms, one step forward 32 ms
+v09_thomas_3d after 15 s of recording (305 frames, 314 messages): one step back 149 ms, one step forward 25 ms
+v09_thomas_3d after 45 s of recording (911 frames, 1372 messages): one step back 32 ms, one step forward 31 ms
+v09_thomas_3d after 90 s of recording (1812 frames, 2232 messages): one step back 35 ms, one step forward 28 ms
+v12_arrival_times_2d after 15 s of recording (40 frames, 91 messages): one step back 183 ms, one step forward 30 ms
+v12_arrival_times_2d after 45 s of recording (108 frames, 314 messages): one step back 612 ms, one step forward 32 ms
+v12_arrival_times_2d after 90 s of recording (364 frames, 807 messages): one step back 32 ms, one step forward 32 ms

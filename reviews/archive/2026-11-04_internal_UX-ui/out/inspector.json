@@ -1,0 +1,29 @@
+{
+ "inspector_title": "Планета: Земля",
+ "focus_after_tab_immediately": {
+  "tag": "INPUT",
+  "type": "range",
+  "label": "Масса, M⊕"
+ },
+ "focus_after_scene_message": {
+  "tag": "BODY",
+  "inInspector": false
+ },
+ "typed_5_went_to": {
+  "tag": "BODY"
+ },
+ "events_tail": [
+  "4,05524 лет — «Земля»: Масса, M⊕ = 2.0",
+  "4,055241 лет«Земля»: Масса, M⊕ = 2.0"
+ ],
+ "remove": {
+  "before": 6,
+  "after": 5,
+  "s": 2.368
+ },
+ "list_scroll": {
+  "before_select": 393,
+  "after_select": 0,
+  "selected": "Пробное тело (без массы) 20"
+ }
+}

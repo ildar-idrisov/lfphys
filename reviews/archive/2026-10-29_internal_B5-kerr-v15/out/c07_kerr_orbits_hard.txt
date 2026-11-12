@@ -1,0 +1,96 @@
+near separatrix p_sep = 3.662469: chi=0.998 p=3.682469402 e=0.5 x=0.5; constants rel err E 2.2e-16 L 2.0e-16 Q 1.9e-16
+    Upsilon_r: ref 0.53050467185601081  closed 2.5e-13  average 2.5e-13
+    Upsilon_theta: ref 2.8037743053642031  closed 1.5e-17  average 1.5e-17
+    Upsilon_phi: ref 3.8913363565460647  closed 2.1e-14  average 2.1e-14
+    Gamma: ref 25.008994704869831  closed 7.4e-14  average 7.3e-14
+    KerrGeoPy mino_frequencies rel err: Upsilon_r 1.1e-13, Upsilon_theta 1.1e-15, Upsilon_phi 8.9e-15, Gamma 2.6e-14
+    (0.4 s)
+near separatrix p_sep = 10.487262: chi=0.998 p=12.58471497 e=0.9 x=-0.8; constants rel err E 8.3e-17 L 8.5e-16 Q 2.0e-15
+    Upsilon_r: ref 2.5885511674471832  closed 2.3e-13  average 2.3e-13
+    Upsilon_theta: ref 4.6251501480038482  closed 1.2e-15  average 1.2e-15
+    Upsilon_phi: ref -4.3419342407488386  closed 5.8e-15  average 6.2e-15
+    Gamma: ref 1524.782820897739  closed 2.0e-13  average 2.0e-13
+    KerrGeoPy mino_frequencies rel err: Upsilon_r 2.6e-13, Upsilon_theta 9.4e-14, Upsilon_phi 9.0e-14, Gamma 2.2e-13
+    (0.3 s)
+near separatrix p_sep = 1.685655: chi=0.99 p=1.687340998 e=0.1 x=0.9; constants rel err E 3.7e-16 L 5.1e-16 Q 7.3e-16
+    Upsilon_r: ref 0.17064004393067679  closed 2.9e-13  average 2.9e-13
+    Upsilon_theta: ref 1.921708513871087  closed 3.3e-16  average 3.3e-16
+    Upsilon_phi: ref 4.4346178631011845  closed 2.1e-14  average 2.2e-14
+    Gamma: ref 13.168105933347808  closed 7.6e-15  average 7.7e-15
+    KerrGeoPy mino_frequencies rel err: Upsilon_r 2.2e-13, Upsilon_theta 1.6e-15, Upsilon_phi 1.5e-14, Gamma 4.5e-15
+    (0.4 s)
+near separatrix p_sep = 5.374702: chi=0.9 p=5.377389257 e=0.7 x=0.3; constants rel err E 2.1e-16 L 4.9e-16 Q 9.6e-16
+    Upsilon_r: ref 0.59878536624693428  closed 4.1e-12  average 4.1e-12
+    Upsilon_theta: ref 3.3089187677597111  closed 4.3e-16  average 4.3e-16
+    Upsilon_phi: ref 4.1154093478356578  closed 2.3e-13  average 2.3e-13
+    Gamma: ref 48.28255211938992  closed 2.2e-12  average 2.3e-12
+    KerrGeoPy mino_frequencies rel err: Upsilon_r 9.8e-13, Upsilon_theta 7.0e-16, Upsilon_phi 5.1e-14, Gamma 4.3e-13
+    (0.6 s)
+nearly polar: chi=0.9 p=8 e=0.3 x=0.01; constants rel err E 5.2e-18 L 5.0e-16 Q 1.2e-15
+    Upsilon_r: ref 1.9197794463347572  closed 2.9e-16  average 2.9e-16
+    Upsilon_theta: ref 3.5668029706899139  closed 4.7e-16  average 4.7e-16
+    Upsilon_phi: ref 3.8574889485823947  closed 4.6e-13  average 9.4e-13
+    Gamma: ref 89.003412128371654  closed 2.8e-16  average 1.2e-16
+    KerrGeoPy mino_frequencies rel err: Upsilon_r 7.2e-15, Upsilon_theta 2.0e-15, Upsilon_phi 1.7e-15, Gamma 7.6e-16
+    (0.5 s)
+polar: chi=0.9 p=8 e=0.3 x=0.0; constants rel err E 9.3e-17 L 0.0e+00 Q 1.8e-15
+    Upsilon_r: ref 1.910502293714182  closed 6.4e-15  average 6.4e-15
+    Upsilon_theta: ref 3.571987241873102  closed 7.5e-16  average 7.5e-16
+    Upsilon_phi: ref 0.29158425895479163  closed 1.6e-16  average 1.3e-15
+    Gamma: ref 88.977554015197913  closed 1.9e-16  average 3.5e-16
+    (0.3 s)
+polar circular: chi=0.9 p=8 e=0.0 x=0.0; constants rel err E 4.5e-17 L 0.0e+00 Q 5.2e-16
+    Upsilon_r: ref 1.9082824888910533  closed 8.5e-16  average 8.5e-16
+    Upsilon_theta: ref 3.5431532687926103  closed 4.4e-17  average 4.4e-17
+    Upsilon_phi: ref 0.27965340193529736  closed 1.7e-16  average 2.3e-16
+    Gamma: ref 81.188513980775692  closed 2.2e-16  average 2.2e-16
+    (0.1 s)
+circular inclined: chi=0.5 p=7 e=0.0 x=0.3; constants rel err E 5.0e-17 L 3.7e-16 Q 9.4e-16
+    Upsilon_r: ref 1.6169011675535181  closed 1.2e-15  average 1.2e-15
+    Upsilon_theta: ref 3.3843247716371371  closed 3.8e-16  average 3.8e-16
+    Upsilon_phi: ref 3.5629413696568951  closed 1.1e-15  average 8.3e-17
+    Gamma: ref 64.48858280751708  closed 5.5e-17  average 5.0e-16
+    KerrGeoPy mino_frequencies rel err: Upsilon_r 7.6e-15, Upsilon_theta 2.8e-16, Upsilon_phi 6.6e-16, Gamma 5.5e-17
+    (0.1 s)
+tiny spin: chi=0.0001 p=10 e=0.5 x=0.5; constants rel err E 5.6e-17 L 9.3e-17 Q 1.9e-16
+    Upsilon_r: ref 2.4051650188985604  closed 4.8e-15  average 4.8e-15
+    Upsilon_theta: ref 3.848978536816548  closed 4.0e-17  average 4.0e-17
+    Upsilon_phi: ref 3.8490046212220791  closed 4.9e-16  average 2.6e-16
+    Gamma: ref 166.09263691608982  closed 1.3e-15  average 9.8e-16
+    KerrGeoPy mino_frequencies rel err: Upsilon_r 5.8e-15, Upsilon_theta 3.1e-15, Upsilon_phi 3.0e-15, Gamma 1.2e-15
+    (1.1 s)
+p = 1e3: chi=0.7 p=1000 e=0.2 x=0.6; constants rel err E 4.5e-17 L 7.1e-14 Q 1.4e-13
+    Upsilon_r: ref 31.577043310906405  closed 1.3e-13  average 1.3e-13
+    Upsilon_theta: ref 31.669679100152017  closed 7.1e-14  average 7.1e-14
+    Upsilon_phi: ref 31.671067346914124  closed 7.2e-14  average 7.1e-14
+    Gamma: ref 1064639.378670736  closed 3.7e-15  average 3.7e-15
+    KerrGeoPy mino_frequencies rel err: Upsilon_r 1.3e-13, Upsilon_theta 6.0e-14, Upsilon_phi 6.0e-14, Gamma 3.3e-15
+    (0.3 s)
+p = 1e5: chi=0.7 p=100000 e=0.2 x=0.6; constants rel err E 3.7e-17 L 4.4e-12 Q 8.7e-12
+    Upsilon_r: ref 316.22309809753264  closed 1.0e-11  average 1.0e-11
+    Upsilon_theta: ref 316.23256002624796  closed 4.4e-12  average 4.4e-12
+    Upsilon_phi: ref 316.23257401252327  closed 4.4e-12  average 4.4e-12
+    Gamma: ref 10631614752.58763  closed 2.7e-13  average 2.7e-13
+    KerrGeoPy mino_frequencies rel err: Upsilon_r 1.0e-11, Upsilon_theta 1.1e-11, Upsilon_phi 1.1e-11, Gamma 2.7e-13
+    (0.2 s)
+e = 0.95: chi=0.6 p=12 e=0.95 x=0.4; constants rel err E 6.2e-17 L 1.6e-16 Q 3.9e-16
+    Upsilon_r: ref 3.043038758073588  closed 3.1e-13  average 3.1e-13
+    Upsilon_theta: ref 4.0996094237176406  closed 2.3e-16  average 2.3e-16
+    Upsilon_phi: ref 4.2308225817481656  closed 4.8e-15  average 4.3e-15
+    Gamma: ref 4278.4270573214715  closed 2.7e-13  average 2.7e-13
+    KerrGeoPy mino_frequencies rel err: Upsilon_r 3.0e-13, Upsilon_theta 3.3e-13, Upsilon_phi 3.2e-13, Gamma 2.7e-13
+    (0.3 s)
+equatorial pro: chi=0.9 p=10 e=0.4 x=1.0; constants rel err E 1.4e-16 L 1.5e-15 Q 0.0e+00
+    Upsilon_r: ref 2.8364031117338268  closed 5.0e-15  average 5.0e-15
+    Upsilon_theta: ref 3.487059439302814  closed 1.7e-15  average 1.7e-15
+    Upsilon_phi: ref 3.6584168043475518  closed 1.9e-15  average 1.5e-15
+    Gamma: ref 147.73081952439593  closed 8.1e-16  average 8.1e-16
+    KerrGeoPy mino_frequencies rel err: Upsilon_r 2.2e-15, Upsilon_theta 1.3e-15, Upsilon_phi 1.6e-15, Gamma 4.3e-16
+    (0.2 s)
+equatorial retro: chi=0.9 p=12 e=0.4 x=-1.0; constants rel err E 7.1e-17 L 8.0e-16 Q 0.0e+00
+    Upsilon_r: ref 2.283237701846631  closed 7.1e-15  average 7.1e-15
+    Upsilon_theta: ref 4.3912492404681797  closed 7.8e-16  average 7.8e-16
+    Upsilon_phi: ref -4.167139234428213  closed 7.6e-16  average 9.7e-16
+    Gamma: ref 199.27313084042721  closed 1.3e-15  average 1.1e-15
+    KerrGeoPy mino_frequencies rel err: Upsilon_r 2.1e-14, Upsilon_theta 3.5e-15, Upsilon_phi 3.3e-15, Gamma 4.2e-15
+    (0.2 s)

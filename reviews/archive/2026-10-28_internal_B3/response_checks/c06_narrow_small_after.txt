@@ -1,0 +1,3 @@
+layers 6 lambda: grid (215, 214), 25 s on gpu; fractions {'screen': 0.27775061599245887, 'back': 0.7208089796882575, 'side': 0.0013628623474100099, 'left': 7.754197187359958e-05}; absorbers check R = 4.06e-06; flux_absorbed 0.278140 vs 0.278090
+layers 12 lambda: grid (275, 274), 23 s on gpu; fractions {'screen': 0.2777190856066537, 'back': 0.7207998989245594, 'side': 0.001394690183127989, 'left': 8.63252856588704e-05}; absorbers check R = 2.28e-07; flux_absorbed 0.278244 vs 0.278231
+same x samples: 155; max |P_6 - P_12| / peak = 1.192e-04; screen fraction 0.277751 vs 0.277719; back 0.720809 vs 0.720800

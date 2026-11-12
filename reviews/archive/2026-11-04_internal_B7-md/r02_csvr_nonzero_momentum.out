@@ -1,0 +1,7 @@
+drift 0.0: momentum_conserved() = True, dof = (765, 'd·N − d: полный импульс сохраняется (все оси периодические)')
+   P_x at start 0.0000; during the run min -0.0000 max 0.0000 (constant if conserved)
+   reported T (centre-of-mass frame): mean 0.9961 +- 0.0052 (bath 1.0); expected low by 2 <P^2/2M>/N_f = 0.0000
+drift 0.5: momentum_conserved() = True, dof = (765, 'd·N − d: полный импульс сохраняется (все оси периодические)')
+   P_x at start 128.0000; during the run min 115.5590 max 141.9513 (constant if conserved)
+   reported T (centre-of-mass frame): mean 0.9138 +- 0.0046 (bath 1.0); expected low by 2 <P^2/2M>/N_f = 0.0823
+exit 0

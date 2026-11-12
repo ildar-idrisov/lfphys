@@ -1,0 +1,12 @@
+devices: {'available': True, 'name': 'NVIDIA GeForce RTX 2080 Ti', 'memory_total': 11539054592, 'memory_free': 11150360576, 'cupy': '14.2.0', 'cuda_runtime': 12090, 'driver': 12040, 'pci_bus_id': '0000:01:00.0', 'visible': '0'}
+== (a) whole screens, CPU vs GPU ==
+chi=0.9 th=60.0 (gpu, 6915 ms): fate differs 0; finite pattern of g differs 0 (near curve 0); max |dg| 9.29e-13 (far 9.29e-13); max rel |dr| 3.86e-12
+chi=0.998 th=89.5 (gpu, 49 ms): fate differs 0; finite pattern of g differs 0 (near curve 0); max |dg| 3.89e-13 (far 3.24e-13); max rel |dr| 5.50e-13
+chi=0.5 th=17.0 (gpu, 49 ms): fate differs 0; finite pattern of g differs 0 (near curve 0); max |dg| 1.27e-11 (far 1.27e-11); max rel |dr| 7.32e-12
+== (b) v15 worlds forced to the GPU: the `gpu` check ==
+m87 {'res': 'l'}: gpu check (1.7541523789077473e-14, True); device {'device': 'gpu', 'precision': 'fp64', 'reason': 'выбрано в настройках', 'size': 7936}
+edge_on {'res': 'l'}: gpu check (1.2212453270876722e-14, True); device {'device': 'gpu', 'precision': 'fp64', 'reason': 'выбрано в настройках', 'size': 7936}
+ring {'res': 'l'}: gpu check (8.493206138382448e-14, True); device {'device': 'gpu', 'precision': 'fp64', 'reason': 'выбрано в настройках', 'size': 7936}
+None {'res': 'l', 'chi': 0.998, 'incl': 89.5}: gpu check (1.6653345369377348e-15, True); device {'device': 'gpu', 'precision': 'fp64', 'reason': 'выбрано в настройках', 'size': 7936}
+None {'res': 'l', 'chi': 0.9, 'incl': 60.0, 'emitter': 'keplerian'}: gpu check (6.661338147750939e-16, True); device {'device': 'gpu', 'precision': 'fp64', 'reason': 'выбрано в настройках', 'size': 7936}
+None {'res': 'm', 'chi': 0.7, 'incl': 75.0, 'retro': True}: gpu check (2.036149027162537e-12, False); device {'device': 'gpu', 'precision': 'fp64', 'reason': 'выбрано в настройках', 'size': 4416}

@@ -1,0 +1,3 @@
+pad  4 vs pad 32: linear max|dI|/max I = 5.22e-03;  log view:  14.0% of pixels off by > 0.1 decade (worst 2.51)
+pad  8 vs pad 32: linear max|dI|/max I = 6.57e-04;  log view:   0.0% of pixels off by > 0.1 decade (worst 0.16)
+pad 16 vs pad 32: linear max|dI|/max I = 6.43e-05;  log view:   0.0% of pixels off by > 0.1 decade (worst 0.02)

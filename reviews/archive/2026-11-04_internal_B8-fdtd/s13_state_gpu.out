@@ -1,0 +1,6 @@
+== (1) state round trips ==
+  cw plane wave + conductor: differing arrays after 150 more steps: none; monitors identical: [True, True]
+  Bloch slab TE + Drude: differing arrays after 150 more steps: none; monitors identical: [True]
+  PEC/PMC/PML both pols + Lorentz + hard source: differing arrays after 150 more steps: none; monitors identical: [True]
+  3-D oblique plane wave + sphere: differing arrays after 150 more steps: none; monitors identical: [True]
+rc=0

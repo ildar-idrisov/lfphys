@@ -1,0 +1,38 @@
+(a) preset: tube at (4, 0), half quantum: t = 40.00, dt = 0.0078125, absorbed {"detector 3": 0.18452, "edges": 0.81548}, norm 8.39e-08, events after start: ['добавлена частица 1 (electron)', 'шаг по времени 0.03125 → 0.0078125', 'края окна изменены']
+   time-integrated probability in the tube r<R: 0.0011, r<2R: 0.0069 (units of time); int int (B/Phi)|psi|^2 = 0.0004
+(b) no tube: t = 40.00, dt = 0.0078125, absorbed {"detector 2": 0.18444, "edges": 0.81556}, norm 8.33e-08, events after start: ['добавлена частица 1 (electron)', 'шаг по времени 0.03125 → 0.0078125', 'края окна изменены']
+   time-integrated probability in the tube r<R: 0.0010, r<2R: 0.0070 (units of time); int int (B/Phi)|psi|^2 = 0.0004
+(c) slit +5 only: t = 40.00, dt = 0.0078125, absorbed {"detector 2": 0.09232, "edges": 0.90768}, norm 8.82e-08, events after start: ['добавлена частица 1 (electron)', 'шаг по времени 0.03125 → 0.0078125', 'края окна изменены']
+   time-integrated probability in the tube r<R: 0.0006, r<2R: 0.0035 (units of time); int int (B/Phi)|psi|^2 = 0.0002
+(d) slit -5 only: t = 40.00, dt = 0.0078125, absorbed {"detector 2": 0.09236, "edges": 0.90764}, norm 8.82e-08, events after start: ['добавлена частица 1 (electron)', 'шаг по времени 0.03125 → 0.0078125', 'края окна изменены']
+   time-integrated probability in the tube r<R: 0.0006, r<2R: 0.0035 (units of time); int int (B/Phi)|psi|^2 = 0.0002
+
+y (nm)  P0       ideal-AB  preset-run   (screen's absorbed probability per y-sample, /peak of P0)
+ -11.88   0.4545    0.1202     0.1163
+ -10.94   0.4696    0.1563     0.1679
+ -10.00   0.3441    0.3328     0.3646
+  -9.06   0.1619    0.5652     0.6134
+  -8.12   0.1084    0.6669     0.7201
+  -6.88   0.4258    0.4091     0.4458
+  -5.94   0.7571    0.1179     0.1302
+  -5.00   0.8080    0.1023     0.0894
+  -4.06   0.4737    0.4666     0.4360
+  -3.12   0.0807    0.8838     0.8474
+  -1.88   0.2091    0.7780     0.7505
+  -0.94   0.7230    0.2737     0.2598
+   0.00   1.0000    0.0000     0.0003
+   0.94   0.7230    0.2737     0.2854
+   1.88   0.2091    0.7780     0.7964
+   3.12   0.0807    0.8838     0.9025
+   4.06   0.4737    0.4666     0.4798
+   5.00   0.8080    0.1023     0.1072
+   5.94   0.7571    0.1179     0.1147
+   6.88   0.4258    0.4091     0.4011
+   8.12   0.1084    0.6669     0.6592
+   9.06   0.1619    0.5652     0.5611
+  10.00   0.3441    0.3328     0.3325
+  10.94   0.4696    0.1563     0.1575
+  11.88   0.4545    0.1202     0.1203
+
+max |preset - ideal| over |y| < 20, relative to the ideal's peak: 0.056
+P0 at y=0 / peak: 1.000; ideal at y=0 / its peak: 0.000; preset at y=0 / its peak: 0.000

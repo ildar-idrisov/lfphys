@@ -1,0 +1,6 @@
+== restore of p03 after the LB1 live changes: whole engine state ==
+  hard -> wall box -> forces (WCA) -> drag -> affine box: world now: solver MD, box [99.853157, 82.232012], live {'dynamics': 'forces', 'model': 'wca', 'box_mode': 'affine', 'Lx': 34.0, 'Ly': 28.0}, W_box 6.168681796629585
+  hard -> wall box -> forces (WCA) -> drag -> affine box: frame q equal True; engine state keys that differ: none; balance equal True; t 3e-12 vs 3e-12
+  LJ periodic: affine Lx, Ly in steps, then back: world now: solver MD, box [35.242291, 35.242291], live {'dynamics': 'forces', 'model': 'lj', 'box_mode': 'affine', 'Lx': 12.0, 'Ly': 12.0}, W_box 13.212779992973083
+  LJ periodic: affine Lx, Ly in steps, then back: frame q equal True; engine state keys that differ: none; balance equal True; t 1.6e-12 vs 1.6e-12
+[exit 0]

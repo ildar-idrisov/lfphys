@@ -1,0 +1,3 @@
+0.5 h recorded live (36000 frames): kept 16000; frames per second of recording, by tenths of the history (oldest first): 5.00 5.00 5.00 5.00 5.00 7.22 10.00 10.00 16.67 20.00; after a reload (server history, uniform stride 9): 2.22 everywhere
+2 h recorded live (144000 frames): kept 14000; frames per second of recording, by tenths of the history (oldest first): 0.00 0.00 0.01 0.03 0.08 0.23 0.58 1.70 4.17 12.64; after a reload (server history, uniform stride 36): 0.56 everywhere
+6 h recorded live (432000 frames): kept 12000; frames per second of recording, by tenths of the history (oldest first): 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.01 0.26 5.28; after a reload (server history, uniform stride 108): 0.19 everywhere

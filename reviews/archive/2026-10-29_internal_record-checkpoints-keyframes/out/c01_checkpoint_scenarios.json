@@ -1,0 +1,429 @@
+{
+ "v01_light_travel": {
+  "checkpoint_bytes": 7528,
+  "checkpoint_ms": 24.6,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 33,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 33,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "check",
+   "command",
+   "event",
+   "frame",
+   "header",
+   "pulse",
+   "state"
+  ]
+ }
+}
+{
+ "v02_double_slit": {
+  "checkpoint_bytes": 188796,
+  "checkpoint_ms": 24.2,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 85,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 85,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "actions",
+   "check",
+   "command",
+   "detections",
+   "event",
+   "frame",
+   "header",
+   "live",
+   "segment",
+   "state",
+   "stories"
+  ]
+ }
+}
+{
+ "v03_quantum_1d": {
+  "checkpoint_bytes": 3551252,
+  "checkpoint_ms": 52.1,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 41,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 41,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "check",
+   "command",
+   "emit",
+   "event",
+   "frame",
+   "header",
+   "live",
+   "segment",
+   "state"
+  ]
+ }
+}
+{
+ "v04_orbits": {
+  "checkpoint_bytes": 40940,
+  "checkpoint_ms": 27.5,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 76,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 76,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "apsis",
+   "check",
+   "command",
+   "event",
+   "frame",
+   "header",
+   "live",
+   "segment",
+   "state",
+   "trail"
+  ]
+ }
+}
+{
+ "v05_optics_bench": {
+  "checkpoint_bytes": 3106,
+  "checkpoint_ms": 2.3,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 50,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 50,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "actions",
+   "check",
+   "clicks",
+   "command",
+   "event",
+   "frame",
+   "header",
+   "live",
+   "segment",
+   "state"
+  ]
+ }
+}
+{
+ "v06_qcd": {
+  "checkpoint_bytes": 49474,
+  "checkpoint_ms": 28.1,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 50,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 50,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "check",
+   "command",
+   "event",
+   "frame",
+   "header",
+   "live",
+   "notice",
+   "segment",
+   "state"
+  ]
+ }
+}
+{
+ "v07_bell_test": {
+  "checkpoint_bytes": 2378,
+  "checkpoint_ms": 2.4,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 66,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 66,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "check",
+   "command",
+   "event",
+   "frame",
+   "header",
+   "live",
+   "pairs",
+   "state"
+  ]
+ }
+}
+{
+ "v08_wave_3d": {
+  "checkpoint_bytes": 26881850,
+  "checkpoint_ms": 211.9,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 47,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 47,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "check",
+   "command",
+   "event",
+   "frame",
+   "header",
+   "notice",
+   "planes",
+   "slice",
+   "state",
+   "target",
+   "vectors",
+   "volume"
+  ]
+ }
+}
+{
+ "v09_thomas_3d": {
+  "checkpoint_bytes": 2660183,
+  "checkpoint_ms": 48.3,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 65,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 65,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "arrow",
+   "check",
+   "command",
+   "event",
+   "frame",
+   "header",
+   "holonomy",
+   "notice",
+   "path",
+   "planes",
+   "slice",
+   "state",
+   "triads",
+   "vectors",
+   "volume"
+  ]
+ }
+}
+{
+ "v10_fast_observer": {
+  "checkpoint_bytes": 397464,
+  "checkpoint_ms": 52.3,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 41,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 41,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "check",
+   "command",
+   "event",
+   "frame",
+   "header",
+   "image",
+   "live",
+   "mesh",
+   "notice",
+   "state"
+  ]
+ }
+}
+{
+ "v11_double_slit_2d": {
+  "checkpoint_bytes": 11102793,
+  "checkpoint_ms": 120.6,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 103,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 103,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "check",
+   "command",
+   "error",
+   "frame",
+   "header",
+   "live",
+   "notice",
+   "screen",
+   "state",
+   "target",
+   "tracks",
+   "wave"
+  ]
+ }
+}
+{
+ "v12_arrival_times_2d": {
+  "checkpoint_bytes": 10524520,
+  "checkpoint_ms": 181.1,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 59,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 59,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "arrival",
+   "check",
+   "command",
+   "event",
+   "frame",
+   "header",
+   "live",
+   "notice",
+   "screen",
+   "setup",
+   "state",
+   "target",
+   "tracks",
+   "wave"
+  ]
+ }
+}
+{
+ "v13_hydrogen_3d": {
+  "checkpoint_bytes": 9609767,
+  "checkpoint_ms": 99.5,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 43,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 43,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "check",
+   "cloud",
+   "command",
+   "event",
+   "frame",
+   "header",
+   "notice",
+   "planes",
+   "radial",
+   "slice",
+   "state"
+  ]
+ }
+}
+{
+ "v14_quarkonium_3d": {
+  "checkpoint_bytes": 9690364,
+  "checkpoint_ms": 111.7,
+  "orig_vs_cont": {
+   "same": true,
+   "n": 43,
+   "n_diff": 0,
+   "first": null
+  },
+  "cont_vs_cont": {
+   "same": true,
+   "n": 43,
+   "n_diff": 0,
+   "first": null
+  },
+  "types_after": [
+   "check",
+   "cloud",
+   "command",
+   "event",
+   "frame",
+   "header",
+   "notice",
+   "planes",
+   "radial",
+   "slice",
+   "state"
+  ]
+ }
+}

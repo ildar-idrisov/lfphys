@@ -1,0 +1,49 @@
+face critical angle glass 1.5 -> air: 41.810314895778596 deg; as the player shows it (12 digits): 41.8103148958
+
+A. prism + 200 nm gap (preset ftir): theta set live near the face critical angle = grazing angle in the gap
+  theta = 41.8103148958 (offset +2.14e-11 deg): errors [], failed checks of the new segment: []
+  theta = 41.8103149 (offset +4.22e-09 deg): errors [], failed checks of the new segment: [('film1', 4.111606174423444e-12, 0.0)]
+     film check note: max |Δr|, |Δt| по s и p; матрицы переноса и суммирование отражений — разные пути
+  theta = 41.810314895778596 (offset +0.00e+00 deg): errors [], failed checks of the new segment: []
+  theta = 41.8103148957796 (offset +1.00e-12 deg): errors [], failed checks of the new segment: []
+  theta = 41.810314895777594 (offset -1.00e-12 deg): errors [], failed checks of the new segment: []
+  theta = 41.81031489677859 (offset +1.00e-09 deg): errors [], failed checks of the new segment: [('film1', 9.554209044796756e-12, 0.0)]
+     film check note: max |Δr|, |Δt| по s и p; матрицы переноса и суммирование отражений — разные пути
+  theta = 41.8103148947786 (offset -1.00e-09 deg): errors [], failed checks of the new segment: [('film1', 7.550880037389263e-12, 0.0)]
+     film check note: max |Δr|, |Δt| по s и p; матрицы переноса и суммирование отражений — разные пути
+  theta = 41.8103149957786 (offset +1.00e-07 deg): errors [], failed checks of the new segment: []
+  theta = 41.810314795778595 (offset -1.00e-07 deg): errors [], failed checks of the new segment: []
+  theta = 41.8103248957786 (offset +1.00e-05 deg): errors [], failed checks of the new segment: []
+
+B. bare face (preset tir, no gap): theta near the critical angle
+  theta = 41.8103148958 (offset +2.14e-11 deg): errors [], failed: []
+  theta = 41.810314895778596: UNCAUGHT ZeroDivisionError: float division by zero
+     world state after it: params theta = 41.810314895778596 , seg = 1 , segments emitted = 2
+  theta = 41.810314895778696 (offset +9.95e-14 deg): errors [], failed: []
+  theta = 41.810314895778895 (offset +2.98e-13 deg): errors [], failed: []
+  theta = 41.8103148957796 (offset +1.00e-12 deg): errors [], failed: [('evan1', 509621093.02115047, 511075079.16363585, -0.0028449560578551383)]
+  theta = 41.81031489578859 (offset +1.00e-11 deg): errors [], failed: []
+  theta = 41.81031489677859 (offset +1.00e-09 deg): errors [], failed: [('evan1', 16126633.160078485, 16126587.283439921, 2.8447828270808213e-06)]
+  theta = 41.8103149957786 (offset +1.00e-07 deg): errors [], failed: [('evan1', 1612659.4623709884, 1612659.4164914312, 2.8449625999098793e-08)]
+
+C. scan of theta = theta_c + k ulp-ish steps (1e-14 deg) for the bare face: which checks fail / crash
+  k = +0: failed ('UNCAUGHT ZeroDivisionError',), errors []
+  k = +1: failed ('UNCAUGHT ZeroDivisionError',), errors []
+  k = +2: failed ('evan1',), errors []
+  k = +4: failed ('evan1',), errors []
+  k = +5: failed ('evan1',), errors []
+  k = +8: failed ('evan1',), errors []
+  k = +11: failed ('evan1',), errors []
+  k = +12: failed ('evan1',), errors []
+  k = +14: failed ('evan1',), errors []
+  k = +15: failed ('evan1',), errors []
+  k = +18: failed ('evan1',), errors []
+  k = +21: failed ('evan1',), errors []
+  k = +22: failed ('evan1',), errors []
+  k = +24: failed ('evan1',), errors []
+  k = +25: failed ('evan1',), errors []
+  k = +31: failed ('evan1',), errors []
+  k = +32: failed ('evan1',), errors []
+  k = +33: failed ('evan1',), errors []
+  k = +34: failed ('evan1',), errors []
+  k = +35: failed ('evan1',), errors []

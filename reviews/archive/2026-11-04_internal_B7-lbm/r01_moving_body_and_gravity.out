@@ -1,0 +1,15 @@
+=== (a) a disk with velocity (0.05, 0) m/s in a closed box of the DFG fluid ===
+centre before / after 4 s: [0.2, 0.1] [0.2, 0.1]  solid mask unchanged: True
+mass booked through the disk's links (lattice units): front half 500, back half -500, total 3.55e-15
+max |u| in the box after 4 s: 0.0496 m/s (a body moving at 0.05 m/s for 4 s would have travelled 0.2 m)
+mass now / start: 0.07872000000000001 0.08  checks ok: {'mass': True, 'momentum': True, 'mach': True, 're_cell': True, 'compressibility': True}
+
+=== (b) the playground's default gravity (0, -9.81) in the default DFG-size world (2.2 x 0.41 m, 440 nodes) ===
+lattice g = 0.0008074; g H / c_s^2 = 0.1986 (expected hydrostatic relative density change)
+density range after 3 s: [0.8854224361439141, 1.126991736928442]
+compressibility check: 0.1269917369284419 limit 0.09 ok False
+refused? no - set_gravity accepted the force (no check of g H / c_s^2)
+
+=== (c) gravity across a channel with a constant-pressure outlet (DFG fluid, 0.4 x 0.1 m, no inflow) ===
+fluid at rest in a hydrostatic field should stay at rest; max |u| after 20 s = 0.1289 m/s, outlet flow rate 3.547e-10 kg/(s m)
+density range: [0.9923922140506511, 1.01111315677621]

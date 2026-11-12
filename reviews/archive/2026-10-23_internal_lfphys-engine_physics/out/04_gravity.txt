@@ -1,0 +1,34 @@
+=== periapsis advance: defining integral 2 int_{u1}^{u2} du / sqrt(f(u)) - 2 pi (u = M/r) ===
+r_apo/M=30 r_peri/M=12: advance_from_turning rel. err 1.09e-17
+r_apo/M=60 r_peri/M=9: advance_from_turning rel. err 1.44e-16
+r_apo/M=1000 r_peri/M=200: advance_from_turning rel. err 1.15e-15
+r_apo/M=1e+05 r_peri/M=3e+04: advance_from_turning rel. err 8.96e-13
+r_apo/M=4.728e+07 r_peri/M=3.115e+07: advance_from_turning rel. err 4.19e-10
+
+periapsis_advance(e, l) (roots by np.roots, e^2-1 from e):
+  r_apo/M=30: rel. err 1.09e-17
+  r_apo/M=60: rel. err 8.69e-16
+  r_apo/M=1000: rel. err 1.15e-15
+  r_apo/M=1e+05: rel. err 8.96e-13
+  r_apo/M=4.728e+07: rel. err 1.35e-09
+
+=== light deflection: 2 int_0^{u0} du / sqrt(1/b^2 - u^2 + rs u^3) - pi (rs = 1) ===
+b/rs = 2.59808: deflection 1.3415285558e+01  quadrature rel. err 1.90e-12
+b/rs = 2.60067: deflection 6.5106448266e+00  quadrature rel. err 5.65e-15
+b/rs = 2.7: deflection 2.9193963396e+00  quadrature rel. err 8.80e-16
+b/rs = 4: deflection 8.5873001808e-01  quadrature rel. err 1.22e-15
+b/rs = 50: deflection 4.1222539749e-02  quadrature rel. err 9.28e-15
+b/rs = 100000: deflection 2.0000294530e-05  quadrature rel. err 1.10e-11
+b/rs = 235571: deflection 8.4900633545e-06  quadrature rel. err 9.30e-11
+b/rs = 1e+07: deflection 2.0000002945e-07  quadrature rel. err 1.29e-10
+b/rs = 1e+09: deflection 2.0000000029e-09  quadrature rel. err 1.41e-07
+
+=== Kerr: ISCO from dE/dr = 0 with (E, L) solved numerically from R = R' = 0 (no closed form used) ===
+chi=0.0 pro : isco rel. err 0.0e+00, efficiency 0.057190958418 vs engine 0.057190958418
+chi=0.0 retro: isco rel. err 0.0e+00, efficiency 0.057190958418 vs engine 0.057190958418
+chi=0.5 pro : isco rel. err 1.3e-16, efficiency 0.082117993339 vs engine 0.082117993339
+chi=0.5 retro: isco rel. err 7.0e-17, efficiency 0.045142226953 vs engine 0.045142226953
+chi=0.9 pro : isco rel. err 3.4e-18, efficiency 0.155752991994 vs engine 0.155752991994
+chi=0.9 retro: isco rel. err 3.6e-17, efficiency 0.038998345645 vs engine 0.038998345645
+chi=0.998 pro : isco rel. err 2.4e-16, efficiency 0.320994165616 vs engine 0.320994165616
+chi=0.998 retro: isco rel. err 8.5e-17, efficiency 0.037773625292 vs engine 0.037773625292

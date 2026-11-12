@@ -1,0 +1,7 @@
+(a) T =   20 K: Debye C_v / (3 N k) = 0.467 (classical: 1)
+(a) T =   40 K: Debye C_v / (3 N k) = 0.806 (classical: 1)
+(a) T =   80 K: Debye C_v / (3 N k) = 0.946 (classical: 1)
+(b) k_bond =       1 eps/sigma^2: hbar omega / k_B =     5.0 K
+(b) k_bond =     400 eps/sigma^2: hbar omega / k_B =   100.2 K
+(b) k_bond =   10000 eps/sigma^2: hbar omega / k_B =   500.9 K
+exit 0

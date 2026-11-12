@@ -1,0 +1,27 @@
+{
+ "run": "20261111-192153-p97-29fc",
+ "one_id": {
+  "status": 200,
+  "bytes": 155481,
+  "seconds": 0.041,
+  "health_max_latency_s": 0.016,
+  "health_latency_before_s": 0.0014662249013781548,
+  "n": 3991
+ },
+ "hundred_ids": {
+  "status": 200,
+  "bytes": 155481,
+  "seconds": 0.036,
+  "health_max_latency_s": 0.008,
+  "health_latency_before_s": 0.0010249372571706772,
+  "n": 3991
+ },
+ "csv_hundred": {
+  "status": 200,
+  "bytes": 151195,
+  "seconds": 0.04,
+  "health_max_latency_s": 0.013,
+  "health_latency_before_s": 0.0011864867992699146,
+  "n": null
+ }
+}

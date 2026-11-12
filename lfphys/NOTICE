@@ -1,0 +1,23 @@
+lfphys, a physics engine: established physics, widely used models and declared alternatives
+Copyright (c) 2026 Ildar Idrisov <idrisov.sci@gmail.com>
+
+Licence: the software (code) is licensed under the lfphys Research Licence 1.0 (LICENSE.md; SPDX
+LicenseRef-lfphys-Research-1.0): noncommercial research, study and teaching only. It is source-available, not open
+source. Any commercial use, by anyone and whatever the user's status, requires a separate written agreement with
+Ildar Idrisov (COMMERCIAL.md).
+
+Citation: publications of results obtained substantially with the software must cite it (LICENSE.md section 5;
+CITATION.cff; PUBLICATIONS.md).
+
+Documentation and the author's figures: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+(LICENSE-DOCS.txt), with additional permissions for scholarly publications (PUBLICATIONS.md).
+
+No warranty: the software is a research tool provided as is, without any warranty; its models, numerical methods and
+results may contain errors, and results must be verified independently before they are relied on (LICENSE.md
+section 8).
+
+This notice, the licence texts and every copyright notice in the files accompany every copy (LICENSE.md section 4).
+Contributions: CONTRIBUTING.md and CLA.md. Contact for commercial use and all other questions: idrisov.sci@gmail.com.
+
+Third-party code: none is included in this part; its dependencies are installed separately under their own licences
+(sources/dependencies.md).

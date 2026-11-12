@@ -1,0 +1,4 @@
+{"speed": "x1", "body": "Меркурий", "trail_points_per_orbit": 22.3, "max_turn_between_points_deg": 16.21, "max_drawn_deviation_over_r": 0.00013960530559017301, "former_points_per_orbit": 4.9, "former_max_turn_between_chords_deg": 74.8}
+{"speed": "x1", "body": "Земля", "trail_points_per_orbit": 19.0, "max_turn_between_points_deg": 19.51, "max_drawn_deviation_over_r": 0.00017835918155847648, "former_points_per_orbit": 20.5, "former_max_turn_between_chords_deg": 18.0}
+{"speed": "x10", "body": "Меркурий", "trail_points_per_orbit": 22.2, "max_turn_between_points_deg": 16.21, "max_drawn_deviation_over_r": 0.00013959500298977163, "former_points_per_orbit": 0.5, "former_max_turn_between_chords_deg": 27.7}
+{"speed": "x10", "body": "Земля", "trail_points_per_orbit": 18.5, "max_turn_between_points_deg": 19.51, "max_drawn_deviation_over_r": 0.00017835227917563178, "former_points_per_orbit": 2.1, "former_max_turn_between_chords_deg": 180.0}

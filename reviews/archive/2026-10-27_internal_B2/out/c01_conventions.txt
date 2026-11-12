@@ -1,0 +1,12 @@
+1. Wigner rotation: R of boost(v) boost(u) = diag(1,R) boost(w); holonomy of rest->u->w->rest by burns
+   max|R_hol - R_W^T| = 4.20e-14;  max|R_hol - rot(field rotation vector)| = 3.55e-14
+2. u along x, v along y: axis and sense
+   n = [0. 0. 1.], theta = 0.221314; R_W = rot3(n, theta)? True
+   holonomy of the counter-clockwise loop (about +z): axis [ 0.  0. -1.], angle 0.221314 -> retrograde: True
+3. Thomas precession sense from an independent integration of the Fermi-Walker equation in lab time
+   after one revolution (anticlockwise): s turned by -0.972012150 rad about +z; expected -2 pi (gamma-1) mod 2 pi = -0.972012150
+   the engine's Thomas loop: axis [ 0.  0. -1.], angle 0.972012150 (signed about +z: -0.972012150)
+4. aberrate vs doppler reciprocity and transform_fields vs the Lorentz force on a test charge
+   |q E' - F_rest| = 1.02e-15
+   |q E' - F_rest| = 4.74e-16
+   |q E' - F_rest| = 4.44e-16

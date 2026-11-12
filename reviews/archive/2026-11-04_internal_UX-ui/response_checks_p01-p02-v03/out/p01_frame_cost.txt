@@ -1,0 +1,17 @@
+# p01_frame_cost.py: wall time per frame (30 frames of speed/20 through the runner, as the player plays), CPU, one
+# process, host load ~10-30. After (the tree with this response):
+inner 1.0 65.3 ms/frame worst 692 ms trail points 278
+inner 10.0 275.0 ms/frame worst 3153 ms trail points 2360
+kerr_orbits 1.0 2.9 ms/frame worst 10 ms trail points 15
+kerr_orbits 10.0 19.8 ms/frame worst 74 ms trail points 148
+pn_inspiral 1.0 4.9 ms/frame worst 10 ms trail points 20
+pn_inspiral 10.0 13.3 ms/frame worst 24 ms trail points 360
+hole_stars 1.0 90.5 ms/frame worst 968 ms trail points 848
+hole_stars 10.0 1038.4 ms/frame worst 12647 ms trail points 7872
+# Before (the snapshot of the tree before any change of this session; p01_frame_cost_before.py = the same with /b):
+inner 1.0 58.2 ms/frame worst 434 ms trail points 186
+inner 10.0 271.3 ms/frame worst 3797 ms trail points 186
+hole_stars 1.0 90.1 ms/frame worst 1238 ms trail points 93
+hole_stars 10.0 801.0 ms/frame worst 11792 ms trail points 93
+# (the harness's run_to has no frame budget: the worst frames are the companion checks every 20 frames and, at x10,
+# whole frames of integration; in the server the Newtonian world now advances in chunks of 16 steps and lags instead)

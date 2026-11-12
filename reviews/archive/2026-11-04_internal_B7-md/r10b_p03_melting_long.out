@@ -1,0 +1,10 @@
+bath 80.0 K (0.668 eps/k):
+      0- 200 ps: T =  80.2 K, |<psi6>| = 0.645, <|psi6|> = 0.748, MSD in the window = 1.846 sigma^2
+    200- 400 ps: T =  78.4 K, |<psi6>| = 0.700, <|psi6|> = 0.775, MSD in the window = 1.294 sigma^2
+    400- 600 ps: T =  83.9 K, |<psi6>| = 0.639, <|psi6|> = 0.756, MSD in the window = 1.237 sigma^2
+    600- 800 ps: T =  76.9 K, |<psi6>| = 0.635, <|psi6|> = 0.760, MSD in the window = 1.093 sigma^2
+    800-1000 ps: T =  79.1 K, |<psi6>| = 0.668, <|psi6|> = 0.764, MSD in the window = 1.759 sigma^2
+bath 120.0 K (1.002 eps/k):
+      0- 200 ps: T = 126.4 K, |<psi6>| = 0.045, <|psi6|> = 0.644, MSD in the window = 21.471 sigma^2
+    200- 400 ps: T = 116.3 K, |<psi6>| = 0.154, <|psi6|> = 0.627, MSD in the window = 17.847 sigma^2
+exit 0

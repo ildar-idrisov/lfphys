@@ -1,0 +1,5 @@
+{"preset": "double_slit", "edit": "plane {'axis': '1'}", "s": 0.036, "errors": []}
+{"preset": "which_path", "edit": "marker {'edge': 1000000.0}", "s": 0.061, "errors": []}
+{"preset": "aharonov_bohm", "edit": "detector {'y': 1000000.0}", "s": 0.157, "errors": []}
+{"preset": "aharonov_bohm", "edit": "detector {'y': -1000000.0}", "s": 0.146, "errors": []}
+{"preset": "double_slit", "edit": "slit_wall {'offset': 1000000.0}", "s": 0.051, "errors": []}

@@ -1,0 +1,4 @@
+a = 0.9: ISCO 2.3209, prograde photon orbit 1.5579
+observer accepted at r = 2 (inside the ISCO): clock rate 0.28016915213712595
+the body started on the same circular orbit after 300 M: ['active'] r = [2.000001983699573] events []
+exit 0

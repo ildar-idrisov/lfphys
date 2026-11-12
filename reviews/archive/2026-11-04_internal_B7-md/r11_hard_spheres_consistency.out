@@ -1,0 +1,15 @@
+seed 11: closest centres 1.000000160402 (sigma = 1); collisions 48061; Z_vir 3.26546  Z_rate 3.25830  difference +0.00717
+seed 12: closest centres 1.000000134266 (sigma = 1); collisions 47773; Z_vir 3.26317  Z_rate 3.26506  difference -0.00189
+seed 13: closest centres 1.000000066275 (sigma = 1); collisions 47987; Z_vir 3.27970  Z_rate 3.28069  difference -0.00099
+seed 14: closest centres 1.000000035948 (sigma = 1); collisions 46327; Z_vir 3.25263  Z_rate 3.25349  difference -0.00087
+seed 15: closest centres 1.000000914174 (sigma = 1); collisions 46993; Z_vir 3.27101  Z_rate 3.27277  difference -0.00175
+seed 16: closest centres 1.000001062405 (sigma = 1); collisions 47700; Z_vir 3.27127  Z_rate 3.27161  difference -0.00034
+seed 17: closest centres 1.000000351915 (sigma = 1); collisions 48309; Z_vir 3.25513  Z_rate 3.25832  difference -0.00319
+seed 18: closest centres 1.000000588941 (sigma = 1); collisions 48650; Z_vir 3.25700  Z_rate 3.26182  difference -0.00481
+seed 19: closest centres 1.000000058231 (sigma = 1); collisions 46846; Z_vir 3.23313  Z_rate 3.24351  difference -0.01039
+seed 20: closest centres 1.000000647501 (sigma = 1); collisions 49107; Z_vir 3.28035  Z_rate 3.27374  difference +0.00661
+seed 21: closest centres 1.000000318632 (sigma = 1); collisions 45541; Z_vir 3.27303  Z_rate 3.26070  difference +0.01232
+seed 22: closest centres 1.000000050656 (sigma = 1); collisions 47196; Z_vir 3.27467  Z_rate 3.27980  difference -0.00513
+mean Z_vir 3.26471 +- 0.00391 (12 runs); mean Z_rate 3.26498 +- 0.00321; mean Z_vir - Z_rate -0.00027 +- 0.00179
+reference Z_NVT(500) = 3.2693735 - 1.02068/500 = 3.26733; Z_vir - ref = -0.00262 (-0.08 %, -0.7 SE); the engine's note: +0.39 % (3.2800 +- 0.0034)
+exit 0

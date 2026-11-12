@@ -1,0 +1,4 @@
+default speed: 2.546 units of scene time per wall second
+estimates every  0.25 units: accumulated 3.75e-03; true global error 2.55e-04
+estimates every  2.55 units: accumulated 3.74e-03; true global error 2.55e-04
+estimates every 25.50 units: accumulated 7.90e-05; true global error 2.55e-04

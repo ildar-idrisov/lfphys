@@ -1,0 +1,5 @@
+1 of 400 points fail alone; their distances to the present position (m): [1.105]
+cos(angle to v) of failing points: [-0.492]
+point 159: no convergence with max_iter = 200
+point 159: no convergence with max_iter = 2000
+point 159: no convergence with max_iter = 20000

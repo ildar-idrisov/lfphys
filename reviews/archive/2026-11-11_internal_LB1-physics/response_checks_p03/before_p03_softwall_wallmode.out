@@ -1,0 +1,6 @@
+errors so far: []
+walls: {'x-lo': 'specular', 'x-hi': 'specular', 'y-lo': 'specular', 'y-hi': 'soft'}
+errors: []
+energy change 1.152659931363111 W_box change 1.152659931363111 (reduced units, epsilon)
+event: ящик 6 × 6 → 6 × 6,15 нм: сдвинута стенка (пустое место добавлено или убрано), работы над системой нет
+[exit 0]

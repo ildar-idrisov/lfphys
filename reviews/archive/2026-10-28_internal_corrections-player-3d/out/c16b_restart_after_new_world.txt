@@ -1,0 +1,11 @@
+C1 check 16b — a graceful restart after a new world (2026-10-28T20:26:30+02:00)
+server restarted (docker restart: SIGTERM, graceful) 3 s after new_world
+after the restart: state suspended | meta worlds [(1, 'measure_c'), (2, 'sun_earth')] | preset sun_earth | sim_t 58.14136051572859
+  stream header: world 1 preset measure_c title Измерение скорости света движущимися наблюдателями
+  stream header: world 2 preset sun_earth title Солнце → Земля: свет летит 8 минут
+{"ok": true}
+resumed: state suspended | meta worlds [(1, 'measure_c'), (2, 'sun_earth')] | errors None
+  stream header: world 1 preset measure_c title Измерение скорости света движущимися наблюдателями
+  stream header: world 2 preset sun_earth title Солнце → Земля: свет летит 8 минут
+  stream notice: Продолжение: мир пересчитывается от начала по записи до t = 58.1414 с (0 изменений установки)…
+  stream notice: Мир восстановлен: пересчитан от начала по записи (0 изменений установки) и продолжается с t = 58.1414 с

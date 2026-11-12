@@ -1,0 +1,37 @@
+v08_wave_3d run 20261028-174453-v08-0492: 1 frames, end ; middle frame 0: A t = 300,560572 мс / B t = 74,2808916 мкс
+  centre A vs B: 0 px differ (0.00 %), max channel diff 0
+  panels: checks same; events shown 0/0 (future 0/0); set-up same; right panels same
+  ▶ from the start: 3.0 distinct frames/s, 4.0 animation frames/s, longest gap 691 ms
+  ◀ from the end: 2.2 distinct frames/s, 2.4 animation frames/s, longest gap 924 ms; GPU objects before {"geometries":15,"textures":19} after {"geometries":15,"textures":19}
+v09_thomas_3d run 20261028-174556-v09-64ec: 286 frames, end t = 4,94656959 лет; middle frame 142: A t = 2,47285085 лет / B t = 2,45542903 лет
+  centre A vs B: 259 px differ (0.03 %), max channel diff 217
+  panels: checks same; events shown 2/2 (future 0/0); set-up same; right panels DIFFER
+    first differing line: A «2,4715 / 1,9797 лет» / B «2,4534 / 1,9661 лет»
+  ▶ from the start: 3.4 distinct frames/s, 6.8 animation frames/s, longest gap 935 ms
+  ◀ from the end: 1.0 distinct frames/s, 1.0 animation frames/s, longest gap 2189 ms; GPU objects before {"geometries":50,"textures":17} after {"geometries":46,"textures":17}
+v13_hydrogen_3d run 20261028-174715-v13-37c0: 282 frames, end t = 0,00284832353 пс; middle frame 140: A t = 0,00141624418 пс / B t = 0,00141624418 пс
+  centre A vs B: 0 px differ (0.00 %), max channel diff 0
+  panels: checks same; events shown 0/0 (future 0/0); set-up same; right panels same
+  ▶ from the start: 4.0 distinct frames/s, 6.2 animation frames/s, longest gap 1101 ms
+  ◀ from the end: 3.8 distinct frames/s, 5.4 animation frames/s, longest gap 558 ms; GPU objects before {"geometries":8,"textures":17} after {"geometries":8,"textures":17}
+v10_fast_observer run 20261028-174836-v10-cb08: 281 frames, end t = 69,2424833 нс; middle frame 140: A t = 34,4000964 нс / B t = 34,4000964 нс
+  centre A vs B: 0 px differ (0.00 %), max channel diff 0
+  panels: checks same; events shown 0/0 (future 0/0); set-up same; right panels same
+  ▶ from the start: 19.8 distinct frames/s, 40.0 animation frames/s, longest gap 67 ms
+  ◀ from the end: 14.4 distinct frames/s, 31.6 animation frames/s, longest gap 173 ms; GPU objects before {"geometries":16,"textures":36} after {"geometries":17,"textures":48}
+v11_double_slit_2d run 20261028-174925-v11-ef4b: 37 frames, end t = 0,000117968684 пс; middle frame 18: A t = 5.49534455·10⁻⁵ пс / B t = 5.49534455·10⁻⁵ пс
+  centre A vs B: 0 px differ (0.00 %), max channel diff 0
+  panels: checks same; events shown 0/0 (future 0/0); set-up same; right panels DIFFER
+    first differing line: A «0,5877 ед. (5.08·10⁻¹⁷ с)» / B «0,6282 ед. (5.43·10⁻¹⁷ с)»
+  ▶ from the start: 3.2 distinct frames/s, 8.6 animation frames/s, longest gap 1232 ms
+  ◀ from the end: 2.8 distinct frames/s, 3.2 animation frames/s, longest gap 730 ms; GPU objects before {"geometries":9,"textures":13} after {"geometries":9,"textures":12}
+v12_arrival_times_2d run 20261028-175018-v12-0ed9: 141 frames, end t = 9.52768526·10⁻⁵ пс; middle frame 70: A t = 4.23116307·10⁻⁵ пс / B t = 4.23116307·10⁻⁵ пс
+  centre A vs B: 0 px differ (0.00 %), max channel diff 0
+  panels: checks same; events shown 0/0 (future 0/0); set-up same; right panels same
+  ▶ from the start: 4.0 distinct frames/s, 8.6 animation frames/s, longest gap 1532 ms
+  ◀ from the end: 2.2 distinct frames/s, 3.0 animation frames/s, longest gap 996 ms; GPU objects before {"geometries":6,"textures":12} after {"geometries":6,"textures":12}
+v01_light_travel run 20261028-175124-v01-d7c4: 287 frames, end t = 4 мин 45.84 с; middle frame 143: A t = 2 мин 22.50 с / B t = 2 мин 22.50 с
+  centre A vs B: 14 px differ (0.00 %), max channel diff 38
+  panels: checks same; events shown 1/1 (future 1/1); set-up same; right panels same
+  ▶ from the start: 10.0 distinct frames/s, 26.6 animation frames/s, longest gap 654 ms
+  ◀ from the end: 3.6 distinct frames/s, 7.0 animation frames/s, longest gap 1224 ms

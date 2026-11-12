@@ -1,0 +1,10 @@
+double_slit : edges W0 = 15.8 (1.2 eV), width 8.0 nm; worst R+T over the waves 1.17e-06; detector W0 = 0.381 eV, edge 3.0, worst R+T 1.85e-05
+     edges' R at |k| = 3.142 for theta = [0, 30, 60, 75, 85] deg: 4.0e-07, 1.2e-06, 8.1e-04, 8.2e-02, 4.7e-01
+ball_3d     : edges W0 = 8.45 (0.644 eV), width 4.0 nm; worst R+T over the waves 6.37e-03
+     edges' R at |k| = 2.094 for theta = [0, 30, 60, 75, 85] deg: 1.3e-04, 1.6e-03, 6.6e-02, 2.8e-01, 6.6e-01
+tunnel      : edges W0 = 15.8 (1.2 eV), width 8.0 nm; worst R+T over the waves 1.17e-06
+     edges' R at |k| = 3.142 for theta = [0, 30, 60, 75, 85] deg: 4.0e-07, 1.2e-06, 8.1e-04, 8.2e-02, 4.7e-01
+trap        : edges W0 = 0.416 (0.0317 eV), width 6.0 nm; worst R+T over the waves 3.83e-01
+     edges' R at |k| = 0.725 for theta = [0, 30, 60, 75, 85] deg: 2.1e-03, 8.1e-03, 1.1e-01, 3.5e-01, 7.1e-01
+cyclotron   : edges W0 = 5 (0.381 eV), width 8.0 nm; worst R+T over the waves 3.60e-04
+     edges' R at |k| = 1.571 for theta = [0, 30, 60, 75, 85] deg: 5.9e-06, 3.8e-05, 3.0e-02, 2.1e-01, 6.1e-01

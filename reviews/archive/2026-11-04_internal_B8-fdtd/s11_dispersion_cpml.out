@@ -1,0 +1,17 @@
+== (1) dispersion ==
+  N=16 S=0.5 k=2pi(1,0): omega_meas/omega_yee - 1 = +2.06e-10; omega_c/omega_yee - 1 = +4.85e-03
+  N=16 S=0.5 k=2pi(2,1): omega_meas/omega_yee - 1 = +2.68e-11; omega_c/omega_yee - 1 = +1.42e-02
+  N=16 S=0.5 k=2pi(3,3): omega_meas/omega_yee - 1 = +2.81e-12; omega_c/omega_yee - 1 = +3.17e-02
+  N=16 S=0.5 k=2pi(5,2): omega_meas/omega_yee - 1 = +9.31e-12; omega_c/omega_yee - 1 = +1.12e-01
+  N=32 S=0.7 k=2pi(1,0): omega_meas/omega_yee - 1 = +4.50e-10; omega_c/omega_yee - 1 = +8.21e-04
+  N=32 S=0.7 k=2pi(2,1): omega_meas/omega_yee - 1 = +1.16e-10; omega_c/omega_yee - 1 = +1.54e-03
+  N=32 S=0.7 k=2pi(3,3): omega_meas/omega_yee - 1 = -2.23e-12; omega_c/omega_yee - 1 = +2.99e-04
+  N=32 S=0.7 k=2pi(5,2): omega_meas/omega_yee - 1 = -4.72e-12; omega_c/omega_yee - 1 = +1.34e-02
+  yee_wavenumber(yee_frequency(k)) / k - 1: worst 8.88e-16 over 200 random 3-D directions
+== (2) CPML reflection ==
+  tests' geometry, {'cells': 10, 'm': 3.0, 'sigma_factor': 1.0, 'kappa_max': 1.0, 'alpha_max': 0.0}: dB [-93.7 -93.5 -95.1 -91.  -87.8]
+  tests' geometry, {'cells': 10, 'm': 3.0, 'sigma_factor': 1.0, 'kappa_max': 5.0, 'alpha_max': 0.2}: dB [-88.9 -84.2 -85.3 -86.  -85. ]
+  grazing (image-path angles [81.5 85.7 87.1 81.5] deg), {'cells': 10, 'm': 3.0, 'sigma_factor': 1.0, 'kappa_max': 1.0, 'alpha_max': 0.0}: dB [-74.5 -57.6 -52.4 -69.4]
+  grazing (image-path angles [81.5 85.7 87.1 81.5] deg), {'cells': 20, 'm': 3.0, 'sigma_factor': 1.0, 'kappa_max': 1.0, 'alpha_max': 0.0}: dB [-114.4 -126.6 -136.3 -126.8]
+  grazing (image-path angles [81.5 85.7 87.1 81.5] deg), {'cells': 10, 'm': 3.0, 'sigma_factor': 1.0, 'kappa_max': 5.0, 'alpha_max': 0.2}: dB [-89.5 -81.2 -60.4 -70.7]
+rc=0

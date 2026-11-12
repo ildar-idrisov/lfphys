@@ -1,0 +1,23 @@
+=== (a) a p02 scene saved at time t, loaded as a new world ===
+original: world t = 3.299e-13 s, 4889 scene steps computed over 300 frames (17.0 s)
+scene file: t = 3.299470186466388e-13  objects: ['box', 'plane', 'packet']  states: [False, False, False]
+loaded world right after its header: t = 3.299e-13 s, engine steps already computed: 4889 (18.2 s blocking in the header's advance)
+=== (b) a barrier of V = 1e308 eV (a finite value the schema accepts) ===
+/lf/lfphys/lfphys/core/quantum/scene.py:434: RuntimeWarning: invalid value encountered in multiply
+  return float(self.height) * _box_profile(grid, lo, hi, self.edge)
+accepted: True | добавлен объект «Барьер или яма (ящик) 2» | errors: 0
+potential on the grid: NaN points 3968 of 16384 ; inf points 12416
+/lf/lfphys/lfphys/core/quantum/schrodinger_nd.py:597: RuntimeWarning: invalid value encountered in multiply
+  self.P = xp.asarray(np.exp(-1j * V * tau) * damp)
+/lf/visualizations/p02_quantum/viz.py:692: RuntimeWarning: invalid value encountered in cast
+  blobs["phase"] = np.round((ph + math.pi) / (2 * math.pi) * 255).astype(np.uint8)
+20 frames later: the packet's norm in the window: nan
+its balance check: {'value': nan, 'ok': False}
+=== (c) p02: only the Bohm count of a particle changed ===
+⟨x⟩ of the packet before the change 1.4795 nm, right after it -20.0000 nm (the preset's packet starts at x = -20 nm)
+=== (d) scene files start_scene does not expect (toy section) ===
+a list instead of an object: schema errors []; world construction raises AttributeError: 'list' object has no attribute 'get'
+objects not objects: schema errors []; world construction raises AttributeError: 'str' object has no attribute 'get'
+t = 'inf': schema errors []; world built, t = inf
+t = 'nan': schema errors []; world built, t = nan
+t = -1e300: schema errors []; world built, t = -1e+300

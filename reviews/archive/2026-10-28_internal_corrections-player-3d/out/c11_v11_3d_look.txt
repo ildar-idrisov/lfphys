@@ -1,0 +1,3 @@
+v11 run 20261028-180619-v11-6428 (sigma_y 3): layers plate:object:true, incident:object:false, screen:object:true, wave:object:false, wave3d:volume:true, bohm:tracks:true, particles:points:true
+camera buttons: ✥ Двигать | ⟳ Наклонять | Изо | Сбоку | Сверху | С источника | С мишени | 📷
+history 361 frames; screenshots at the end (per camera button) and at 40 % (last camera)

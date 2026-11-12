@@ -1,0 +1,5 @@
+m = 1 - 1e-06, phi = pi/2 - 1e-04: F = 8.1942173845464854, rel error 1.07e-12, error / stated bound 11.6
+m = 1 - 1e-09, phi = pi/2 - 1e-06: F = 11.716309744419677, rel error 3.67e-09, error / stated bound 1.94e+03
+m = 1 - 1e-12, phi = pi/2 - 1e-06: F = 14.320421552668083, rel error 9.09e-07, error / stated bound 1.87e+04
+m = 1 - 1e-13, phi = pi/2 - 1e-07: F = 16.041835539419196, rel error 1.74e-06, error / stated bound 1.27e+04
+m = 1 - 1e-13, phi = pi/2 - 3e-09: F = 16.343501362047057, rel error 2.73e-06, error / stated bound 2.02e+04

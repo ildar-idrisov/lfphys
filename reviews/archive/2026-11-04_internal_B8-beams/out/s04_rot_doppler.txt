@@ -1,0 +1,13 @@
+(a) observer co-rotating at Omega in the exact vector Bessel beam: measured (omega - line)/Omega
+  l = +2, sigma = +1: (omega - w)/Omega = +3.000000   expected l + sigma = +3
+  l = +3, sigma = -1: (omega - w)/Omega = +2.000000   expected l + sigma = +2
+  l = -1, sigma = +1: (omega - w)/Omega = +0.000000   expected l + sigma = +0
+  l = +0, sigma = -1: (omega - w)/Omega = -1.000000   expected l + sigma = -1
+  l = +2, sigma = -1: (omega - w)/Omega = +1.000000   expected l + sigma = +1
+(b) image rotator (mirror across the line at angle Omega_p t): measured (w - omega)/(2 Omega_p)
+  l = +2, sigma = +1: scalar -2.000000 (expected -l = -2);  vector -3.000000 (expected -(l+sigma) = -3)
+  l = +3, sigma = -1: scalar -3.000000 (expected -l = -3);  vector -2.000000 (expected -(l+sigma) = -2)
+  l = +1, sigma = +1: scalar -1.000000 (expected -l = -1);  vector -2.000000 (expected -(l+sigma) = -2)
+(c) spinning rough phase screen (own Fourier-series surface), on-axis amplitude and +-l filter
+  l = +3: on-axis shift / Omega = -3.000000 (expected -l = -3);  filtered intensity beat / Omega = 6.000000 (expected 2|l| = 6)
+  l = -2: on-axis shift / Omega = +2.000000 (expected -l = +2);  filtered intensity beat / Omega = 4.000000 (expected 2|l| = 4)

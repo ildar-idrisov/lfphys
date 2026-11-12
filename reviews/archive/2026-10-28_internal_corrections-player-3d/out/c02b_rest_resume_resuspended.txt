@@ -1,0 +1,8 @@
+C1 check 02b (shell, review server: --idle-suspend 90): POST /resume of a suspended v01 run (20261028-182631-v01-da9e) whose last viewer time is older than idle_suspend; state polled every 2 s
+POST /resume: {"ok": true}
+2 s: running user
+4 s: running user
+6 s: suspended no viewers
+8 s: suspended no viewers
+10 s: suspended no viewers
+12 s: suspended no viewers

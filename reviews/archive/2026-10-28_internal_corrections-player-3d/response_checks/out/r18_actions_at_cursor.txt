@@ -1,0 +1,4 @@
+v01 run 20261028-191618-v01-2b53: boost of rocket to 0.5 c at t1 = 32.061929143965244
+at the end: {"time":"t = 81,1610271 с","values":["0.5","505","0","500"],"disabled":false}
+cursor at frame 2 (before t1): {"time":"t = 2,00452477 с","values":["0","0","0","500"],"disabled":true}
+back at the end: {"time":"t = 81,1610271 с","values":["0.5","505","0","500"],"disabled":false}

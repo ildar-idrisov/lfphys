@@ -1,0 +1,2 @@
+{"viz":"v04_orbits","frames":501,"keys":82,"steps":[{"p":0.85,"how":"key","keyFailed":0,"ms":0.2,"fed":1,"fullMs":0.6,"fullFed":356,"same":true,"ndiff":0},{"p":0.5,"how":"key","keyFailed":0,"ms":0,"fed":2,"fullMs":0.7,"fullFed":212,"same":true,"ndiff":0},{"p":0.15,"how":"key","keyFailed":0,"ms":0.1,"fed":3,"fullMs":0.3,"fullFed":68,"same":true,"ndiff":0},{"p":0.65,"how":"feed","keyFailed":0,"ms":0.3,"fed":68,"fullMs":0.6,"fullFed":267,"same":true,"ndiff":0},{"p":0.3,"how":"key","keyFailed":0,"ms":0,"fed":2,"fullMs":0.2,"fullFed":122,"same":true,"ndiff":0}]}
+errors: []

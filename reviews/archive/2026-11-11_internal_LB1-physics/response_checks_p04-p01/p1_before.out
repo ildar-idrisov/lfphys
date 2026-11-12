@@ -1,0 +1,12 @@
+== 4 x 16 channel, tau 0.8, g 1e-5 (fresh start, books from t = 0)
+      chan steps    9537: momentum 1.698e-11 / 4.235e-12 ok=False; mass 3.553e-15 ok=True
+      chan steps   16000: momentum 3.539e-12 / 7.105e-12 ok=True; mass 5.773e-15 ok=True
+      chan steps   32000: momentum 5.394e-11 / 1.421e-11 ok=False; mass 7.994e-15 ok=True
+      chan steps   64000: momentum 6.149e-10 / 2.842e-11 ok=False; mass 8.216e-15 ok=True
+  (8.0 s)
+== open channel 120 x 24 (inlet, outlet, interpolated disk, dye source)
+      open steps   32000: momentum 6.594e-12 / 1.421e-11 ok=True; mass 1.743e-13 ok=True; dye 5.437e-13 ok=True
+      open steps   64000: momentum 3.168e-11 / 2.842e-11 ok=False; mass 1.020e-12 ok=True; dye 8.212e-12 ok=True
+      open steps  128000: momentum 2.636e-10 / 5.684e-11 ok=False; mass 2.859e-11 ok=True; dye 4.230e-11 ok=True
+  (59.0 s)
+[exit 0]

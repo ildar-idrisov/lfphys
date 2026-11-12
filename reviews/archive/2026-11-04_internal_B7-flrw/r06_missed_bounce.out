@@ -1,0 +1,30 @@
+eps = 0.0001: true bounce at a = 0.449201426799 (z = 1.2261728); band [0.43885569, 0.44920143]
+   roots()                         : (0.4492014267988587, None)
+   _has_big_bang()                 : False
+   comoving_distance(z=1.2)        : 14695.76128  (z_bounce above)
+   comoving_distance(z=3)          : ValueError: comoving distance: this universe has no big bang; it bounced at a = 0.  (beyond the bounce: never seen)
+   E(z=1/a_L - 1)                  : nan
+   age()                           : ValueError: age: this universe has no big bang; it bounced at a = 0.449201 (z = 1.
+   scale_factor(-30, 'today')      : 0.451055263
+   scale_factor_ode(-30)           : 0.451055263
+   scale_factor(5, 'big_bang')     : ValueError: no big bang: use since='today'
+eps = 1e-06: true bounce at a = 0.444540635194 (z = 1.2495131); band [0.44350601, 0.44454064]
+   roots()                         : (None, None)
+   _has_big_bang()                 : True
+   comoving_distance(z=1.2)        : 14420.82236  (z_bounce above)
+   comoving_distance(z=3)          : FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)  (beyond the bounce: never seen)
+   E(z=1/a_L - 1)                  : nan
+   age()                           : FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+   scale_factor(-30, 'today')      : FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+   scale_factor_ode(-30)           : 0.4499228692
+   scale_factor(5, 'big_bang')     : FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+eps = 1e-08: true bounce at a = 0.444074999922 (z = 1.2518719); band [0.44397154, 0.444075]
+   roots()                         : (None, None)
+   _has_big_bang()                 : True
+   comoving_distance(z=1.2)        : 14418.33814  (z_bounce above)
+   comoving_distance(z=3)          : FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)  (beyond the bounce: never seen)
+   E(z=1/a_L - 1)                  : nan
+   age()                           : FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+   scale_factor(-30, 'today')      : FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)
+   scale_factor_ode(-30)           : 0.4499115383
+   scale_factor(5, 'big_bang')     : FloatingPointError: integrand not finite (E^2 <= 0 inside the range?)

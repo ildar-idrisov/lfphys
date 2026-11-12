@@ -1,0 +1,40 @@
+== R2: histogram |gamma| on multinomial samples of the run's expectation (200 samples each)
+  electron_weak  true 0.8660 N=   100: fails   0/200, mean 0.8808, std 0.0969, median err 0.0883, >1: 14 %
+  electron_weak  true 0.8660 N=  1000: fails   0/200, mean 0.8631, std 0.0280, median err 0.0290, >1: 0 %
+  electron_weak  true 0.8660 N=  5000: fails   0/200, mean 0.8667, std 0.0132, median err 0.0129, >1: 0 %
+  electron_weak  true 0.8660 N= 20000: fails   0/200, mean 0.8659, std 0.0066, median err 0.0065, >1: 0 %
+  photon_young   true 1.0000 N=   100: fails   0/200, mean 0.9944, std 0.0393, median err 0.0028, >1: 64 %
+  photon_young   true 1.0000 N=  1000: fails   0/200, mean 1.0020, std 0.0173, median err 0.0146, >1: 57 %
+  photon_young   true 1.0000 N=  5000: fails   1/200, mean 1.0012, std 0.0073, median err 0.0069, >1: 55 %
+  photon_young   true 1.0000 N= 20000: fails   0/200, mean 1.0004, std 0.0037, median err 0.0034, >1: 56 %
+  electron_qubit true 0.0000 N=   100: fails   0/200, mean 0.1886, std 0.0927, median err 0.1424, >1: 0 %
+  electron_qubit true 0.0000 N=  1000: fails   0/200, mean 0.0566, std 0.0299, median err 0.0456, >1: 0 %
+  electron_qubit true 0.0000 N=  5000: fails   0/200, mean 0.0252, std 0.0136, median err 0.0204, >1: 0 %
+  electron_qubit true 0.0000 N= 20000: fails   0/200, mean 0.0124, std 0.0067, median err 0.0102, >1: 0 %
+== R3: map contrast near the centre of the last column vs the run's expected |gamma|
+  electron_microscope  map contrast 0.195, expected |gamma| 0.152
+  c60_grw              map contrast 0.487, expected |gamma| 0.351
+  photon_partial       map contrast 0.465, expected |gamma| 0.461
+== R4: analyzer inserted while particles fly (neutron, spin filter along x, up_z source)
+  detections per flight: in the flight window 9851/s, next two flights 9435/s (source 20000/s; the filter passes 1/2)
+== R7: no-signalling check under p = 2.4 (electron eraser)
+  value 0.0741, ok = False
+== R8: dark counts 50/s and 500/s (photon_young, 30 s)
+  dark    50/s: chi2 353.0/287 p = 0.0047; histogram |gamma| 0.9936686302491093 +- 0.003642409659005499
+  dark   500/s: chi2 278.3/287 p = 0.632; histogram |gamma| 0.9946943302266987 +- 0.00565193355222311
+== R10: 'no scattered photon' class (microscope p = 0.5)
+  |gamma| of the noscat curve 1.0000; of the whole ensemble 0.4242
+== R12: seed dependence of the expected |gamma| (exact ensemble: none expected)
+  electron_microscope  [0.152166754841, 0.152166754841, 0.152166754841, 0.152166754841]
+  photon_partial       [0.460688330428, 0.460688330428, 0.460688330428, 0.460688330428]
+  c60_grw              [0.351383337123, 0.351383337123, 0.351383337123, 0.351383337123]
+== R16: segment time for 12 slits
+  electron: first segment 8.9 s, 500 particles 26.8 s, points per fringe 3.7, grid check ok = False
+  photon: first segment 0.6 s, 500 particles 4.2 s, points per fringe 14.0, grid check ok = True
+== R6: Aharonov-Bohm phase vs q Phi / hbar (the probe of 04_particles_ab_probe.py section 3, current API)
+  q = +2.0 e, flux = 0.2500 h/e: engine +3.141593, q Phi/hbar +3.141593, difference mod 2pi +4.4e-16
+  q = -3.0 e, flux = 0.1667 h/e: engine -3.141593, q Phi/hbar -3.141593, difference mod 2pi +4.4e-16
+  q = +0.5 e, flux = 1.0000 h/e: engine +3.141593, q Phi/hbar +3.141593, difference mod 2pi +4.4e-16
+  q = +1.0 e, flux = 0.5000 h/e: engine +3.141593, q Phi/hbar +3.141593, difference mod 2pi +4.4e-16
+  q = -1.0 e, flux = 0.5000 h/e: engine -3.141593, q Phi/hbar -3.141593, difference mod 2pi -4.4e-16
+exit 0

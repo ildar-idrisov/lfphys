@@ -1,0 +1,8 @@
+r=150 w=0.02 nm=1.0: nodes=1589 N=2752 work=2.41e+09 t=3.25s ns/unit=1.349
+r=150 w=0.3 nm=1.0: nodes=1599 N=5544 work=4.88e+09 t=4.21s ns/unit=0.862
+r=150 w=0.02 nm=1.6: nodes=1599 N=4368 work=3.85e+09 t=4.74s ns/unit=1.232
+r=300 w=0.1 nm=1.0: nodes=1599 N=7038 work=6.2e+09 t=7.08s ns/unit=1.142
+r=100 w=0.005 nm=1.0: nodes=267 N=1752 work=2.58e+08 t=0.39s ns/unit=1.507
+r=500 w=0.02 nm=1.0: nodes=1599 N=9029 work=7.95e+09 t=10.57s ns/unit=1.328
+r=1000 w=0.0 nm=1.0: nodes=1 N=16654 work=9.18e+06 t=0.84s ns/unit=91.176
+r=1000 w=0.02 nm=1.0: nodes=1599 N=17980 work=1.58e+10 t=18.85s ns/unit=1.190
