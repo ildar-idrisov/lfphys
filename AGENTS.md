@@ -75,6 +75,29 @@ lfphys Research Licence 1.0; the Licensor is the owner as an individual (residen
 > запрещено (по лицензии, правам), только перенимай опыт. работать с визуализациями должно быть удобно, информативно и
 > это должна быть полноценная 3D среда для исследователей на основе физического движка с разными визуализациями
 
+**Languages, documentation, audiences, the public site (2026-11-12):**
+
+> 1. для всего фронта сделай i18n переводы на русский и английский, по дефолту английский и переключением языка.
+> 2. в readme просочились русские тексты: … все тексты пиши на своем языке, консистентно, при указании части из
+> интерфейса, делай это на соответствующем языке.
+> 3. добавь в Agents.md правило по поддерже документации и репозитория в актуальном структурированном состоянии,
+> соблюдение соответствующего языка, если что-то добавляется то делаются соответствующие переводы не зависимо от
+> текущих языков, например сейчас английский и русский, потом будут другие, когда они появятся, то нужно будет делать
+> переводы для них тоже
+> 4. для школьников; для студентов; для исследователей; песочницы-лаборатория - эти категории нужно оформить как
+> положенно, не просто взять текущие визуализации, а подготовить по корректным учебным планам ряд визуализаций. если
+> чего=то нет, то позже добавить. раздел для исследователей должен быть намного сильнее и специализированнее, не должно
+> быть так, чтобы одна визуализация была и для исследователе и для школьников. нужно учитывать соответствующий уровень,
+> для школьников по их программе и с более простым интерфейсом, в которых поставлены обычные рядовые эксперименты:
+> магнетизм, электрический ток, прелопления света, кинетическая энергия и прочее, для студентов более сильные примеры
+> например со светом тот же двухщелевой эксперимент, для исследователей узконаправленные эксперименты, которые не
+> проводили и их неплохо бы изучить, например разные постановки двухщелевого эксперимента для постановки новых
+> экспериментов на той же базе. а плейграунд - это свободные экспериментальные лаборатории, где любой может в силу
+> своих знаний и целей исследовать разные механизмы и ставить разные эксперименты самостоятельно
+
+> делай демы по записям на github pages, закрепи это как правило, при появлении нового нужно добавлять автоматически
+> везде где нужно
+
 ## 2. Layout
 
 | path | content |
@@ -144,6 +167,32 @@ lfphys Research Licence 1.0; the Licensor is the owner as an individual (residen
     owner's e-mail or any personal identifier into requests to external services (only into this project's own
     licence and citation files, as the owner asked). Code and documentation in English; the owner guide and reports
     to the owner in Russian; a question from the owner is answered first, implied work is not started without a go.
+
+12. **The repository and its documentation stay current and structured (owner, 2026-11-12).** Every change updates,
+    in the same commit, every document it makes stale: the READMEs (the front page and every guide), `STATUS.md`,
+    `lfphys/PLAN.md`, `visualizations/RULES.md`, the catalogues of modules and visualizations. Nothing is left that
+    contradicts the code; documents keep their structure (one place per kind of fact, links instead of copies).
+13. **Languages (owner, 2026-11-12).** The supported languages are listed in `LANGUAGES.md` (now: English — the
+    default — and Russian). Everything a user reads — the player's interface and every message the server sends to it,
+    the README and every user guide, the public site — exists in every supported language, each text written in its
+    own language throughout (no words of another language leaking in) and consistent across languages. A document that
+    names a part of the interface uses that part's label in the document's language. Anything added — a world, a
+    preset, a check, a message, a document — is added with its translations into every supported language; a language
+    added later gets translations of everything. Developer texts (code, comments, docstrings, `RULES.md`,
+    `STATUS.md`, `PLAN.md`, reviews, sources) are in English. The i18n catalogues and their completeness tests are
+    the mechanism (`visualizations/RULES.md`).
+14. **Four audiences (owner, 2026-11-12).** The demonstrations are organised as the owner put it: for school
+    students (their curriculum, ordinary experiments, a simpler interface), for university students (stronger
+    experiments of the university courses), for researchers (specialised experiments not done before, worth studying —
+    e.g. new set-ups of the double slit), and playgrounds (free laboratories). A visualization belongs to one audience;
+    a topic that serves several audiences gets a visualization per audience at its level. The plan: `lfphys/PLAN.md`.
+15. **Demonstrations on the public site from recordings; everything new registered everywhere automatically (owner,
+    2026-11-12).** The public site (GitHub Pages) plays recorded runs of the demonstrations in the browser without a
+    server; the playgrounds, which compute live, run locally (Docker, GPU optional). Whatever is added — a world, a
+    preset, an audience entry, a language — appears without manual bookkeeping everywhere it belongs: the catalogue,
+    the README and the guides in every language (with its picture), the site with its recordings, the translations.
+    The registry of worlds and the site's build generate these from one source, and a check fails when anything is
+    missing (`visualizations/RULES.md`).
 
 ## 4. Boundary with the research projects (owner, 2026-10-24)
 
