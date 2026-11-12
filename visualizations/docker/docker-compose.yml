@@ -2,14 +2,15 @@
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
 # lfphys visualizations: one server for all visualizations, reachable in the LAN.
 #
-# Always from engine/, the repository root (the engine and the visualizations; it is mounted at /lf):
+# Always from the repository root (the engine and the visualizations; it is mounted at /lf):
 #   docker compose -f visualizations/docker/docker-compose.yml build
 #   docker compose -f visualizations/docker/docker-compose.yml up -d viz      # start (stays up, restarts)
 #   docker compose -f visualizations/docker/docker-compose.yml restart viz    # after code changes
 #   docker compose -f visualizations/docker/docker-compose.yml run --rm viz-test   # all tests
 #
-# Then open http://<this host's LAN address>:8479/ from any machine in the LAN (`hostname -I`).
-# Port 8479: 8477 is the drosophila player, 8090/8188 are taken. Change with VIZ_PORT.
+# Then open http://localhost:8479/ (or http://<this host's LAN address>:8479/ from the LAN, `hostname -I`).
+# Machine-specific settings go into visualizations/docker/.env (git-ignored; see .env.example): VIZ_PORT (8479),
+# VIZ_CPUS (no limit), UID/GID (the owner of the clone, 1000), LFPHYS_GPU_PCI (pin GPU 0 by its PCI bus id; empty: no pin).
 # The repository is mounted read-write: the code is served live and records go to visualizations/runs/.
 name: lfphys-viz
 
@@ -32,15 +33,16 @@ services:
       # GPU 0 only, by its PCI bus id (review B1-8): CUDA's own order is "fastest first", not nvidia-smi's; a device
       # with another bus id is refused by the engine
       CUDA_DEVICE_ORDER: PCI_BUS_ID
-      LFPHYS_GPU_PCI: "${LFPHYS_GPU_PCI:-0000:01:00.0}"
+      LFPHYS_GPU_PCI: "${LFPHYS_GPU_PCI-}"
     command: ["python3", "server/serve.py", "--host", "0.0.0.0", "--port", "8479", "--max-workers", "3"]
     restart: unless-stopped
     # on stop the server suspends its runs and each worker writes its world's state first (lfviz.checkpoint)
     stop_grace_period: 60s
-    # the physics is light; keep the host's other jobs safe
-    cpus: 6
+    # keep the host's other jobs safe where needed (VIZ_CPUS in .env; 0 = no limit)
+    cpus: ${VIZ_CPUS:-0}
     mem_limit: 6g
-    # GPU 0 only (GPU 1 of this host computes wrongly); the engine uses it where it pays (lfphys.core.backend)
+    # GPU 0 only (with several GPUs, pin it by LFPHYS_GPU_PCI); the engine uses it where it pays (lfphys.core.backend);
+    # without an NVIDIA container runtime use the service viz-cpu below
     deploy:
       resources:
         reservations:
@@ -51,6 +53,9 @@ services:
 
   # the same server without a GPU (machines without an NVIDIA runtime): docker compose ... --profile cpu up -d viz-cpu
   viz-cpu:
+    build:
+      context: ../..
+      dockerfile: visualizations/docker/Dockerfile
     image: lfphys-viz:latest
     container_name: lf-viz-cpu
     working_dir: /lf/visualizations
@@ -66,7 +71,7 @@ services:
     restart: unless-stopped
     # on stop the server suspends its runs and each worker writes its world's state first (lfviz.checkpoint)
     stop_grace_period: 60s
-    cpus: 6
+    cpus: ${VIZ_CPUS:-0}
     mem_limit: 6g
     profiles: ["cpu"]
 

@@ -6,6 +6,8 @@ __pycache__/
 
 # the owner's device settings of the engine on this machine (visualizations/server/lfviz/devices.py)
 visualizations/settings.local.json
+# the machine's own server settings (visualizations/docker/.env.example)
+visualizations/docker/.env
 
 # third-party web pages that reviews fetch as evidence (their quoted sentences are kept in the review's text outputs)
 reviews/**/out/eula/*.html

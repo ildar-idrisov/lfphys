@@ -17,7 +17,7 @@ http://<адрес машины в локальной сети>:8479/
 
 ## Запуск сервера
 
-Из папки `engine/` (корень движка и визуализаций):
+Из корня репозитория (движок и визуализации):
 
 ```bash
 docker compose -f visualizations/docker/docker-compose.yml build        # один раз (и после смены requirements.lock)
