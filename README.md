@@ -361,4 +361,6 @@ obtained substantially with lfphys must cite it with its version, as in [`CITATI
 shows the version on its page «Лицензия»). Third-party components keep their own licences ([`NOTICE`](NOTICE)).
 Contributions: [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`CLA.md`](CLA.md). No warranty: [`LICENSE.md`](LICENSE.md) §8.
 
+Questions and commercial use: [idrisov.sci@gmail.com](mailto:idrisov.sci@gmail.com).
+
 Copyright (c) 2026 Ildar Idrisov.

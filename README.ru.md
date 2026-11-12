@@ -365,4 +365,6 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD":/lf -e PYTHONPATH=/lf/lfphy
 показывает на странице «Лицензия»). Сторонние компоненты — под своими лицензиями ([`NOTICE`](NOTICE)). Участие —
 [`CONTRIBUTING.md`](CONTRIBUTING.md) и [`CLA.md`](CLA.md). Без гарантий: [`LICENSE.md`](LICENSE.md), §8.
 
+Вопросы и коммерческое использование: [idrisov.sci@gmail.com](mailto:idrisov.sci@gmail.com).
+
 Copyright (c) 2026 Ildar Idrisov.
