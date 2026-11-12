@@ -33,7 +33,7 @@ EPS = np.finfo(float).eps
 
 
 def _cpu(H, dt, **kw):
-    return S.SplitOperator(H, dt, force_cpu=True, why="тест", **kw)
+    return S.SplitOperator(H, dt, force_cpu=True, why="test", **kw)
 
 
 def _run(pr, psi, n):

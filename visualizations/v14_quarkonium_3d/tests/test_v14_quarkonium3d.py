@@ -17,6 +17,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
+from lfphys.i18n import english, text_of  # noqa: E402
 from lfphys.theories.models import cornell  # noqa: E402
 from v14_quarkonium_3d.engine import pair as Q  # noqa: E402
 from v14_quarkonium_3d.viz import SCHEMA  # noqa: E402
@@ -87,12 +88,13 @@ def test_superposition_oscillates_at_the_transition_frequency():
 
 
 @pytest.mark.parametrize("params,why", [
-    ({"mode": "super", "n2": 1, "l2": 0, "m2": 0}, "совпадает"),
-    ({"mode": "super", "l": 1, "m": 1, "real": False, "n2": 1, "l2": 1, "m2": 1, "real2": True}, "не ортогональны"),
+    ({"mode": "super", "n2": 1, "l2": 0, "m2": 0}, "equals the first"),
+    ({"mode": "super", "l": 1, "m": 1, "real": False, "n2": 1, "l2": 1, "m2": 1, "real2": True}, "not orthogonal"),
 ])
 def test_schema_edges_are_refused_with_a_reason(params, why):
-    with pytest.raises(ValueError, match=why):
+    with pytest.raises(ValueError) as e:
         Harness(V, None, params)
+    assert why in english(text_of(e.value))
 
 
 def test_highest_states_of_the_schema_build():
@@ -103,11 +105,11 @@ def test_highest_states_of_the_schema_build():
 
 def test_m_beyond_L_is_fitted_and_a_default_second_state_equal_to_the_first_is_replaced():
     """Review UX-params P10: |m| > L was refused at the start (34 combinations, hidden by the player); now m is taken
-    nearest to what was asked and said. «Суперпозиция» with a first state of 1P_z and the default second (1P_z) takes
+    nearest to what was asked and said. "Superposition" with a first state of 1P_z and the default second (1P_z) takes
     1S; a second state chosen equal to the first by hand is still refused (test above)."""
     h = Harness(V, None, {"l": 1, "m": 2, "ng": 64})
     hp = h.of("header")[-1]["params"]
-    assert (hp["l"], hp["m"]) == (1, 1) and any("взято m = 1" in m["text"] for m in h.of("notice"))
+    assert (hp["l"], hp["m"]) == (1, 1) and any("m = 1 taken" in english(m["text"]) for m in h.of("notice"))
     h = Harness(V, None, {"mode": "super", "l": 1, "ng": 64})
     hp = h.of("header")[-1]["params"]
     assert (hp["n2"], hp["l2"], hp["m2"]) == (1, 0, 0) and h.sim.nb > 1 and not failed(h)
@@ -132,4 +134,4 @@ def test_a_state_set_live_is_prepared_in_the_same_world():
     assert not failed(h), failed(h)
     assert h.checks()["split_0"]["info"] and h.sim.frame()[0]["t_prep"] == h.sim.t
     h.set(system="bottom")
-    assert "параметр мира" in h.errors()[-1] and h.sim.system == "charm"
+    assert "Quark pair" in english(h.errors()[-1]) and h.sim.system == "charm"

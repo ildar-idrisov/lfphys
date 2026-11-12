@@ -30,17 +30,21 @@ import math
 import numpy as np
 from scipy import special
 
+from lfphys.i18n import T
 from ..alternatives.collapse import grw_shift_cf
 from . import paraxial as fresnel
 
 ABOUT = {
     "layer": 'theories', "kind": 'approximation',
-    "title": 'Ожидаемая картина ансамбля в параксиальном приближении (без Монте-Карло)',
-    "statement": 'Каждое поперечное случайное воздействие (точка источника, отдача рассеянного фотона, удар GRW) сдвигает параксиальную картину целиком; картина ансамбля — свёртка с распределением сдвига через характеристические функции в замкнутой форме; спектр — узлы Гаусса–Эрмита.',
-    "validity": 'параксиальное приближение (тождество сдвига точное внутри него)',
+    "title": T("The expected pattern of an ensemble in the paraxial approximation (without Monte Carlo)"),
+    "statement": T("Each random transverse kick (a point of the source, the recoil of a scattered photon, a GRW hit) "
+                   "shifts the paraxial pattern as a whole; the ensemble's pattern is a convolution with the "
+                   "distribution of the shift, through characteristic functions in closed form; the spectrum: "
+                   "Gauss–Hermite nodes."),
+    "validity": T("paraxial approximation (the shift identity is exact within it)"),
     "basis": ['van Cittert 1934, Zernike 1938', 'Chapman et al., PRL 75, 3783 (1995)'],
-    "conflicts": ['lfphys.core.optics.scalar: тождество сдвига точно только в параксиальном приближении; вне его '
-                  'картина ансамбля отличается от точного распространения'],
+    "conflicts": [T("lfphys.core.optics.scalar: the shift identity is exact only in the paraxial approximation; "
+                    "outside it the ensemble's pattern differs from exact propagation")],
 }
 
 GH_NODES = 24

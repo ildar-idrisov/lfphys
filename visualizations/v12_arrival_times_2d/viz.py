@@ -38,8 +38,10 @@ from scipy.integrate import cumulative_trapezoid
 from lfphys.core.quantum import schrodinger_nd as S
 from lfphys.core.quantum.schrodinger1d import FreeGaussians
 from lfphys.core.quantum.transfer import transmission_profile
+from lfphys.i18n import T, is_t, join
 from lfphys.theories.interpretations import arrival_times as AT
 from lfphys.theories.models import detection as DET
+from lfviz.errors import Refusal
 from lfviz.params import Param, Schema
 from v11_double_slit_2d import viz as V11
 
@@ -59,76 +61,86 @@ def _p(*a, **k):
     return Param(*a, **k)
 
 
+LAM, E0_UNIT, K0_UNIT = V11.LAM, V11.E0_UNIT, T("k₀")
+DETECTORS, ARRIVAL = T("Detectors"), T("Arrival time")
 SCHEMA = Schema([
-    _p("particle", "Частица", "select", "electron", group="Частица",
-       options=[("electron", "электрон"), ("neutron", "нейтрон"), ("he4", "атом ⁴He"), ("c60", "фуллерен C₆₀")]),
-    _p("lam_pm", "Длина волны де Бройля λ, пм", "float", 100.0, unit="пм", group="Частица", min=20.0, max=5000.0,
-       log=True, help="задаёт физический масштаб: все длины опыта — в λ, времена — в единицах mλ²/ħ"),
-    _p("scene", "Полёт", "select", "free", group="Опыт",
-       options=[("free", "свободно до плоскости детектора"), ("slits", "через две щели (как v11)")]),
-    _p("L", "Расстояние до детектора L, λ", "float", 30.0, unit="λ", group="Опыт", min=2.0, max=200.0,
-       help="свободный полёт: от центра первого пакета до плоскости; щели: от пластины до экрана"),
-    _p("state", "Начальное состояние вдоль полёта", "select", "gauss", group="Пакет",
-       options=[("gauss", "один пакет"), ("train", "цепочка пакетов (Das & Struyve 2021)"),
-                ("backflow", "медленный и быстрый пакеты встречаются у плоскости: обратный ток")]),
-    _p("sigma_z", "Ширина пакета вдоль σz, λ", "float", 5.0, unit="λ", group="Пакет", min=1.0, max=20.0,
-       help="разброс импульса Δk/k = 1/(4π σz/λ): чем уже пакет, тем сильнее расходятся правила"),
-    _p("sigma_x", "Ширина пакета поперёк σx, λ", "float", 4.0, unit="λ", group="Пакет", min=1.0, max=40.0),
-    _p("sigma_y", "Ширина пакета вдоль y σy, λ", "float", 3.0, unit="λ", group="Пакет", min=0.5, max=40.0,
-       help="ничто не зависит от y, поэтому волна — точное произведение ψ(x, z, t)·η(y, t): η — свободный гауссов "
-            "пакет, он только расплывается; время прихода от y не зависит"),
-    _p("n_train", "Пакетов в цепочке", "int", 4, group="Пакет", min=2, max=8, show_if={"state": ["train"]}),
-    _p("sep", "Расстояние между пакетами, λ", "float", 30.0, unit="λ", group="Пакет", min=6.0, max=120.0,
-       show_if={"state": ["train"]}, help="не меньше 6σz: пакеты не перекрываются"),
+    _p("particle", V11.PARTICLE, "select", "electron", group=V11.PARTICLE, options=V11.PARTICLES),
+    _p("lam_pm", T("de Broglie wavelength λ, pm"), "float", 100.0, unit=V11.PM, group=V11.PARTICLE, min=20.0,
+       max=5000.0, log=True,
+       help=T("sets the physical scale: every length of the experiment is in λ, every time in units of mλ²/ħ")),
+    _p("scene", T("Flight"), "select", "free", group=T("Experiment"),
+       options=[("free", T("freely to the detecting plane")), ("slits", T("through two slits (as in v11)"))]),
+    _p("L", T("Distance to the detector L, λ"), "float", 30.0, unit=LAM, group=T("Experiment"), min=2.0, max=200.0,
+       help=T("free flight: from the centre of the first packet to the plane; slits: from the plate to the screen")),
+    _p("state", T("Initial state along the flight"), "select", "gauss", group=V11.PACKET,
+       options=[("gauss", T("one packet")), ("train", T("a train of packets (Das & Struyve 2021)")),
+                ("backflow", T("a slow and a fast packet meet at the plane: backflow"))]),
+    _p("sigma_z", T("Packet width along σz, λ"), "float", 5.0, unit=LAM, group=V11.PACKET, min=1.0, max=20.0,
+       help=T("the momentum spread Δk/k = 1/(4π σz/λ): the narrower the packet, the more the rules diverge")),
+    _p("sigma_x", T("Packet width across σx, λ"), "float", 4.0, unit=LAM, group=V11.PACKET, min=1.0, max=40.0),
+    _p("sigma_y", T("Packet width along y σy, λ"), "float", 3.0, unit=LAM, group=V11.PACKET, min=0.5, max=40.0,
+       help=T("nothing depends on y, so the wave is the exact product ψ(x, z, t)·η(y, t): η is a free Gaussian packet, "
+              "it only spreads; the arrival time does not depend on y")),
+    _p("n_train", T("Packets in the train"), "int", 4, group=V11.PACKET, min=2, max=8, show_if={"state": ["train"]}),
+    _p("sep", T("Distance between the packets, λ"), "float", 30.0, unit=LAM, group=V11.PACKET, min=6.0, max=120.0,
+       show_if={"state": ["train"]}, help=T("at least 6σz: the packets do not overlap")),
     # the plate is live (review UX-ui U12; v11's rules: rebuilt at the current moment in the world's window)
-    _p("a", "Ширина щели a, λ", "float", 2.0, unit="λ", group="Пластина", min=0.5, max=20.0, show_if={"scene": ["slits"]},
-       live=True, help=V11.LIVE_PLATE_HELP),
-    _p("d", "Расстояние между щелями d, λ", "float", 8.0, unit="λ", group="Пластина", min=1.0, max=60.0,
+    _p("a", T("Slit width a, λ"), "float", 2.0, unit=LAM, group=V11.PLATE, min=0.5, max=20.0,
        show_if={"scene": ["slits"]}, live=True, help=V11.LIVE_PLATE_HELP),
-    _p("w", "Толщина пластины w, λ", "float", 2.0, unit="λ", group="Пластина", min=0.5, max=10.0,
+    _p("d", T("Distance between the slits d, λ"), "float", 8.0, unit=LAM, group=V11.PLATE, min=1.0, max=60.0,
        show_if={"scene": ["slits"]}, live=True, help=V11.LIVE_PLATE_HELP),
-    _p("V0", "Высота стенки V₀, в E₀", "float", 4.0, unit="E₀", group="Пластина", min=1.5, max=8.0,
+    _p("w", T("Plate thickness w, λ"), "float", 2.0, unit=LAM, group=V11.PLATE, min=0.5, max=10.0,
+       show_if={"scene": ["slits"]}, live=True, help=V11.LIVE_PLATE_HELP),
+    _p("V0", T("Wall height V₀, in E₀"), "float", 4.0, unit=E0_UNIT, group=V11.PLATE, min=1.5, max=8.0,
        show_if={"scene": ["slits"]}, live=True,
-       help="потенциальная энергия частицы в материале пластины, в единицах её кинетической энергии E₀. "
-            + V11.LIVE_PLATE_HELP),
-    _p("edge", "Ширина краёв стенки и мягкого детектора, λ", "float", 0.2, unit="λ", group="Детекторы", min=0.1,
-       max=1.0, help="потенциалы нарастают на этой длине (tanh); не меньше шага сетки"),
-    _p("kappa", "Поглощающая граница: κ, в k₀", "float", 1.0, unit="k₀", group="Детекторы", min=0.05, max=20.0,
-       log=True, help="граничное условие ∂ψ/∂z = iκψ (Вернер, Тумулька): волна с k = κ поглощается целиком, другие "
-                      "частично отражаются; только свободный полёт. k₀ — средний волновой вектор пакета"),
+       help=T("the particle's potential energy in the plate's material, in units of its kinetic energy E₀. {live}",
+              live=V11.LIVE_PLATE_HELP)),
+    _p("edge", T("Width of the edges of the wall and of the soft detector, λ"), "float", 0.2, unit=LAM, group=DETECTORS,
+       min=0.1, max=1.0, help=T("the potentials rise over this length (tanh); not less than the grid step")),
+    _p("kappa", T("Absorbing boundary: κ, in k₀"), "float", 1.0, unit=K0_UNIT, group=DETECTORS, min=0.05, max=20.0,
+       log=True, help=T("the boundary condition ∂ψ/∂z = iκψ (Werner, Tumulka): a wave with k = κ is absorbed entirely, "
+                        "others are partly reflected; free flight only. k₀ is the packet's mean wave vector")),
     # the exponential rules' strengths and the soft detector's height are live (review UX-ui U12): a detector made
     # more or less sensitive at the current moment
-    _p("mu_w", "Правило Влодажа: сила λ₀ (безразмерная)", "float", 1.0, group="Детекторы", min=0.01,
+    _p("mu_w", T("Wlodarz's rule: strength λ₀ (dimensionless)"), "float", 1.0, group=DETECTORS, min=0.01,
        max=20.0, log=True, live=True,
-       help="λ(t) = λ₀ v₀ ∫|ψ(x, L, t)|² dx: λ₀ — среднее число щелчков, если бы частица не исчезала. Меняется на "
-            "ходу: щелчки до этого момента посчитаны с прежней силой, после — с новой"),
-    _p("mu_ms", "Правило Маркевки–Шусса: сила λ₀ (безразмерная)", "float", 1.0, group="Детекторы",
+       help=T("λ(t) = λ₀ v₀ ∫|ψ(x, L, t)|² dx: λ₀ is the mean number of clicks if the particle did not vanish. "
+              "Changes on the fly: the clicks up to that moment are computed with the old strength, after it with the "
+              "new one")),
+    _p("mu_ms", T("Marchewka–Schuss rule: strength λ₀ (dimensionless)"), "float", 1.0, group=DETECTORS,
        min=0.01, max=20.0, log=True, live=True,
-       help="λ(t) = λ₀ (v₀/k₀²) ∫|∂ψ/∂z(x, L, t)|² dx, нормировано так же. Меняется на ходу: щелчки до этого момента "
-            "посчитаны с прежней силой, после — с новой"),
-    _p("soft", "Мягкий детектор (поглощающий потенциал)", "bool", True, group="Детекторы",
-       help="второй прогон того же опыта: за плоскостью детектора потенциал −iW₀; часть волны он отражает"),
-    _p("W0", "Мягкий детектор: высота W₀, в E₀", "float", 1.0, unit="E₀", group="Детекторы",
+       help=T("λ(t) = λ₀ (v₀/k₀²) ∫|∂ψ/∂z(x, L, t)|² dx, normalised in the same way. Changes on the fly: the clicks "
+              "up to that moment are computed with the old strength, after it with the new one")),
+    _p("soft", T("Soft detector (an absorbing potential)"), "bool", True, group=DETECTORS,
+       help=T("a second run of the same experiment: behind the detecting plane the potential −iW₀; it reflects a part "
+              "of the wave")),
+    _p("W0", T("Soft detector: height W₀, in E₀"), "float", 1.0, unit=E0_UNIT, group=DETECTORS,
        min=0.01, max=6.0, log=True, show_if={"soft": [True]}, live=True,
-       help="высота поглощающего потенциала −iW₀ за плоскостью детектора, в единицах кинетической энергии пакета E₀: "
-            "больше — поглощает быстрее, но сильнее отражает. Меняется на ходу: поглотитель второго прогона "
-            "перестраивается в текущий момент"),
-    _p("grid", "Сетка", "select", "normal", group="Расчёт", options=V11.GRIDS),
-    _p("n_bohm", "Частиц Бома в ансамбле", "int", 2000, group="Траектории Бома", min=100, max=8000),
-    _p("n_tracks", "Из них рисовать траекторий", "int", 60, group="Траектории Бома", min=10, max=400),
-    _p("slit_a", "Щель A (x = −d/2) открыта", "bool", True, group="Установка", live=True, show_if={"scene": ["slits"]}),
-    _p("slit_b", "Щель B (x = +d/2) открыта", "bool", True, group="Установка", live=True, show_if={"scene": ["slits"]},
-       help="закройте щель, пока пакет в пути: опыт Das, Deckert, Kellers, Krekels, Struyve (2024)"),
+       help=T("the height of the absorbing potential −iW₀ behind the detecting plane, in units of the packet's kinetic "
+              "energy E₀: higher absorbs faster but reflects more. Changes on the fly: the absorber of the second run "
+              "is rebuilt at the current moment")),
+    _p("grid", T("Grid"), "select", "normal", group=V11.COMPUTATION, options=V11.GRIDS),
+    _p("n_bohm", T("Bohm particles in the ensemble"), "int", 2000, group=V11.BOHM_TRAJECTORIES, min=100, max=8000),
+    _p("n_tracks", T("Trajectories of them to draw"), "int", 60, group=V11.BOHM_TRAJECTORIES, min=10, max=400),
+    _p("slit_a", T("Slit A (x = −d/2) open"), "bool", True, group=V11.SETUP, live=True, show_if={"scene": ["slits"]}),
+    _p("slit_b", T("Slit B (x = +d/2) open"), "bool", True, group=V11.SETUP, live=True, show_if={"scene": ["slits"]},
+       help=T("close a slit while the packet is on its way: the experiment of Das, Deckert, Kellers, Krekels, Struyve "
+              "(2024)")),
 ], presets={
-    "gauss": {"label": "Один пакет: все правила почти совпадают вдали от источника", "params": {}},
-    "near": {"label": "Близко к источнику (σz = 1λ, L = 5λ): правила расходятся", "params": {"sigma_z": 1.0, "L": 5.0}},
-    "train": {"label": "Цепочка из 4 пакетов: экспоненциальные правила гасят поздние пики (Das & Struyve 2021)",
+    "gauss": {"label": T("One packet: far from the source all the rules almost agree"), "params": {}},
+    "near": {"label": T("Close to the source (σz = {s}λ, L = {L}λ): the rules diverge", s=1, L=5),
+             "params": {"sigma_z": 1.0, "L": 5.0}},
+    "train": {"label": T("A train of {n:d} packets: the exponential rules damp the later peaks (Das & Struyve 2021)", n=4),
               "params": {"state": "train", "mu_w": 2.0, "mu_ms": 2.0}},
-    "backflow": {"label": "Обратный ток: поток через плоскость местами отрицателен, первые прибытия Бома — нет",
+    "backflow": {"label": T("Backflow: the flux through the plane is negative in places, Bohm's first arrivals are not"),
                  "params": {"state": "backflow", "sigma_z": 3.0, "L": 16.5}},
-    "slits": {"label": "Через две щели: совместное распределение места и времени прихода (Das и др. 2024)",
+    "slits": {"label": T("Through two slits: the joint distribution of the place and the time of arrival (Das et al. "
+                         "2024)"),
               "params": {"scene": "slits", "sigma_x": 8.0, "L": 30.0, "soft": False}},
 })
+
+
+TITLE = T("Particle arrival time: the rules in 2-D")
 
 
 class Simulation(V11.Simulation):
@@ -139,7 +151,7 @@ class Simulation(V11.Simulation):
         p = {**V11_FIXED, **dict(params)}
         self.free = p["scene"] == "free"
         self.label_slits = not self.free
-        self.BACK_LABEL = "отражено пластиной" if not self.free else "ушло назад"
+        self.BACK_LABEL = T("reflected by the plate") if not self.free else T("went back")
         # the flight from the leading packet's centre to the plane (behind the plate: from v11's source point)
         D = float(p["L"]) if self.free else float(p["L"]) - AP.SlitGeometry(
             p["a"], p["d"], p["w"], p["L"], p["sigma_x"], p["sigma_z"], V11.H_OF[p["grid"]], edge=float(p["edge"])).z_src
@@ -147,16 +159,17 @@ class Simulation(V11.Simulation):
         self.fg = FreeGaussians(self.pk)  # the longitudinal state, z from the leading packet's centre, hbar = m = 1
         ov = AP.overlap(self.fg, D)
         if ov > AP.OVERLAP_MAX:
-            raise ValueError(f"детектор слишком близко: {ov:.1e} вероятности уже за его плоскостью в начале "
-                             f"(допустимо {AP.OVERLAP_MAX:g}); отодвиньте плоскость или сузьте пакет")
+            raise Refusal(T("the detector is too close: {p:.1e} of the probability is already beyond its plane at the "
+                            "start (at most {m} is allowed)", p=ov, m=AP.OVERLAP_MAX),
+                          T("move the plane farther away or make the packet narrower"))
         self.soft = bool(p["soft"])
         # the detectors' strengths in force from each moment (review UX-ui U12: live): (tau from, value, early) — early:
         # set before any signal reached the plane, so the rule saw that value alone
         self.det_hist = {k: [(0.0, float(p[k]), True)] for k in ("mu_w", "mu_ms", "W0")}
         super().__init__(p, seed, emit)
         # the world's parameters are this world's own: v11's fixed path mark and flux are not among them (the header's
-        # parameters seed the player's «new world» form; with them a new world without a scenario was refused, «нет
-        # параметра «mark»», found while processing review UX-ui U12)
+        # parameters seed the player's «new world» form; with them a new world without a scenario was refused, «there is
+        # no parameter “mark”», found while processing review UX-ui U12)
         self.params = {k: v for k, v in self.params.items() if k in SCHEMA.by_id}
         g = self.g
         self.z_lead = 0.0 if self.free else self.geo.z_src
@@ -186,7 +199,7 @@ class Simulation(V11.Simulation):
             self.W_d = self.W + AP.soft_detector(g, self.zL, W0, self.geo.edge)
             Hd = self._hamiltonian(self.live, g, self.W_d)
             self.det = S.SplitOperator(Hd, self.dt, track_absorbed=True, force_cpu=self.prop.device == "cpu",
-                                       why="как основной прогон")
+                                       why=T("as the main run"))
             self.psi_d = self.det.put(self._packet(Hd, g))
             iz0 = int(np.searchsorted(g.axes[1], self.zL - 5 * self.geo.edge))
             self.det_region = (slice(None), slice(iz0, None))
@@ -273,17 +286,16 @@ class Simulation(V11.Simulation):
         while not self.done and self.tau + self.pair <= tau_t + 1e-12:
             self._pair()
             if not self.done and self.tau >= self.t_obs:
-                self._finish("окно наблюдения закончилось")
+                self._finish(T("the observation window is over"))
 
     def set_live(self, values):
-        from lfviz.errors import Refusal
         if self.det is None and "W0" in values and float(values["W0"]) != float(self.live["W0"]):
-            raise Refusal("мягкого детектора в этом мире нет: его высоту W₀ менять не у чего",
-                          "включите «Мягкий детектор» в форме нового мира")
+            raise Refusal(T("there is no soft detector in this world: there is no height W₀ to change"),
+                          T("switch on «Soft detector» in the form of a new world"))
         before = dict(self.live)
         signal = self._signal_so_far()
         out = super().set_live(values)
-        if out == "без изменений":
+        if is_t(out) and out["$t"] == V11.NO_CHANGE["$t"]:
             return out
         notes = []
         for k in ("mu_w", "mu_ms", "W0"):
@@ -291,18 +303,19 @@ class Simulation(V11.Simulation):
                 continue
             early = self.tau == 0.0 or signal[k] < EARLY
             self.det_hist[k].append((self.tau, float(self.live[k]), early))
-            what = "мягкий детектор" if k == "W0" else "правило " + ("Влодажа" if k == "mu_w" else "Маркевки–Шусса")
-            notes.append(f"{what}: волна до детектора ещё не дошла (< 10⁻⁶ вероятности) — опыт как с новым значением с "
-                         f"самого начала" if early else
-                         f"{what}: до этого момента посчитано с прежним значением, дальше — с новым; сверка, которая "
-                         f"предполагает одно значение на весь опыт, отключена")
+            what = T("the soft detector") if k == "W0" else (T("Wlodarz's rule") if k == "mu_w" else
+                                                              T("the Marchewka–Schuss rule"))
+            notes.append(T("{what}: the wave has not reached the detector yet (< 10⁻⁶ of the probability): the "
+                           "experiment is as with the new value from the very start", what=what) if early else
+                         T("{what}: up to this moment computed with the old value, from now on with the new one; a "
+                           "comparison that assumes one value for the whole experiment is switched off", what=what))
         if self.det is not None:
             if self.live["W0"] != before["W0"]:
                 self.W_d = self.W + AP.soft_detector(self.g, self.zL, float(self.live["W0"]) * AP.E0, self.geo.edge)
                 self._soft_grid_check()
             Hd = self._hamiltonian(self.live, self.g, self.W_d)
             self.det.rebuild(V=Hd.V, W=Hd.W, keep=())
-        return out + ("; " + "; ".join(notes) if notes else "")
+        return join([out] + notes)
 
     def _signal_so_far(self) -> dict:
         """What has reached the detectors by now, per live detector parameter: the exponential rules' unit-strength
@@ -432,11 +445,12 @@ class Simulation(V11.Simulation):
         ft = np.fft.fft(phi_z) * g.d[1] / math.sqrt(2 * math.pi) * np.exp(-1j * kz * z[0])
         P_run, P_cf = np.abs(ft) ** 2, np.abs(self.fg.phi(kz)) ** 2
         dev = float(np.max(np.abs(P_run - P_cf)) / P_cf.max())
-        self._check("arr_state", "Начальное состояние: распределение импульса вдоль полёта против точного", dev, None, "",
-                    ok=dev < 1e-3, group="Время прихода",
-                    note="|ψ̃(k_z)|² начальной волны прогона (БПФ по z проекции на поперечный пакет) против замкнутой "
-                         "формы суперпозиции гауссовых пакетов, по которой считаются правила; в долях пика; окно "
-                         "обрезает хвосты амплитуды (e^(−(z/2σz)²) ~ 10⁻⁴ у краёв), цель < 10⁻³")
+        self._check("arr_state", T("Initial state: the momentum distribution along the flight against the exact one"), dev,
+                    None, "", ok=dev < 1e-3, group=ARRIVAL,
+                    note=T("|ψ̃(k_z)|² of the run's initial wave (the FFT in z of its projection on the transverse "
+                           "packet) against the closed form of the superposition of Gaussian packets the rules are "
+                           "computed from; as a fraction of the peak; the window cuts the amplitude's tails "
+                           "(e^(−(z/2σz)²) ~ 10⁻⁴ at the edges), the target is < 10⁻³"))
         if self.det is not None:
             self._soft_grid_check()
 
@@ -447,11 +461,12 @@ class Simulation(V11.Simulation):
         kmax = math.pi / g.d[1]
         k_hi = AP.k_range(self.pk, 6.0)[1]
         q = (k_hi ** 4 + 4 * W0 ** 2) ** 0.25
-        self._check("soft_grid", "Мягкий детектор разрешён сеткой: |q|/k_max", q / kmax, None, "",
-                    ok=q / kmax < 0.8 and self.geo.edge >= g.d[1] * (1 - 1e-9), group="Расчёт",
-                    note=f"волна в поглотителе: q = √(k² + 2imW₀/ħ²), |q| = {q:.3g} λ⁻¹ при k = {k_hi:.3g} λ⁻¹ "
-                         f"(верх спектра) и наибольшей высоте W₀ = {W0 / AP.E0:g} E₀, что была в опыте, k_max = π/шаг "
-                         f"= {kmax:.3g} λ⁻¹; нужно < 0,8")
+        self._check("soft_grid", T("The soft detector is resolved by the grid: |q|/k_max"), q / kmax, None, "",
+                    ok=q / kmax < 0.8 and self.geo.edge >= g.d[1] * (1 - 1e-9), group=V11.COMPUTATION,
+                    note=T("the wave in the absorber: q = √(k² + 2imW₀/ħ²), |q| = {q:.3g} λ⁻¹ at k = {k:.3g} λ⁻¹ (the "
+                           "top of the spectrum) and the largest height W₀ = {W} E₀ the experiment had, k_max = π/step "
+                           "= {kmax:.3g} λ⁻¹; less than {lim} is needed", q=q, k=k_hi, W=W0 / AP.E0, kmax=kmax,
+                           lim=0.8))
 
     def _finish(self, why):
         if self._jn:  # the last, partial time bin of J(x, t) (review B4-8)
@@ -509,38 +524,42 @@ class Simulation(V11.Simulation):
 
     def _arrival_checks(self, s, res):
         tau, J, dt = s["tau"], s["flux"], self.dt
-        grp = "Время прихода"
+        grp = ARRIVAL
         n_tot = len(self.fate)
         if self.free:
             Jx = self.fg.current(self.D, tau)
             dev = float(np.max(np.abs(J - Jx)) / np.max(np.abs(Jx)))
             bx = float(np.clip(-Jx, 0, None).sum() * dt)
-            self._check("arr_flux_exact", "Поток через плоскость против точной свободной эволюции", dev, None, "",
+            self._check("arr_flux_exact", T("Flux through the plane against the exact free evolution"), dev, None, "",
                         ok=dev < 1e-2, group=grp,
-                        note=f"J(t) = ∫ j_z(x, L, t) dx прогона против тока точного решения (суперпозиция гауссовых "
-                             f"пакетов); наибольшее отличие в долях пика; обратный ток: {res['backflow']:.3g} "
-                             f"(точно {bx:.3g}) вероятности; цель < 1 % (как сверка «Сетка и шаг»)")
+                        note=T("J(t) = ∫ j_z(x, L, t) dx of the run against the current of the exact solution (a "
+                               "superposition of Gaussian packets); the largest difference as a fraction of the peak; "
+                               "backflow: {b:.3g} (exactly {bx:.3g}) of the probability; the target is < 1 % (as for the "
+                               "check «Grid and time step»)", b=res["backflow"], bx=bx))
             rho_x = np.abs(self.fg.psi(self.D, tau)) ** 2
             rho = np.asarray(self.rec["rho"])
             dev = float(np.max(np.abs(rho - rho_x)) / rho_x.max())
-            self._check("arr_plane_psi", "ψ на плоскости детектора против точного: ∫|ψ(x, L, t)|² dx", dev, None, "",
-                        ok=dev < 1e-2, group=grp,
-                        note="вход экспоненциальных правил (Влодаж, Маркевка–Шусс); наибольшее отличие в долях пика")
+            self._check("arr_plane_psi", T("ψ on the detecting plane against the exact one: ∫|ψ(x, L, t)|² dx"), dev, None,
+                        "", ok=dev < 1e-2, group=grp,
+                        note=T("the input of the exponential rules (Wlodarz, Marchewka–Schuss); the largest difference "
+                               "as a fraction of the peak"))
             if self.curves is not None:
                 c = self.curves
                 got = float(np.trapezoid(c["abr"], c["tau"]))
-                self._check("arr_abr_identity", "Поглощающая граница: квадратура кривой — ∫Π dt за окно против "
-                                                "∫|ψ̃|²(1 − R_k) dk", got, c["abr_total"], "", tol=2e-3, group=grp,
-                            note=f"обе стороны — из формулы изображений (тождество Парсеваля), так что сверка проверяет "
-                                 f"квадратуры по t и k на окне наблюдения, а не само правило (R_k = (k − κ)²/(k + κ)², "
-                                 f"κ = {float(self.params['kappa']):g} k₀; за окном остаётся < 1e-4). Само правило "
-                                 f"проверено в тестах движка против независимого решения Кранка–Николсон с условием "
-                                 f"Робена (review B4-9)")
+                self._check("arr_abr_identity", T("Absorbing boundary: the curve's quadrature, ∫Π dt over the window "
+                                                  "against ∫|ψ̃|²(1 − R_k) dk"), got, c["abr_total"], "", tol=2e-3,
+                            group=grp,
+                            note=T("both sides come from the formula of images (Parseval's identity), so the comparison "
+                                   "checks the quadratures in t and k over the observation window, not the rule itself "
+                                   "(R_k = (k − κ)²/(k + κ)², κ = {kappa} k₀; less than 1e-4 is left beyond the window). "
+                                   "The rule itself is checked in the engine's tests against an independent "
+                                   "Crank–Nicolson solution with a Robin condition (review B4-9)",
+                                   kappa=float(self.params["kappa"])))
                 tot = float(np.trapezoid(c["abk"], c["tau"]))
-                self._check("arr_abk_norm", "Ааронов–Бом–Киёвский: ∫Π dt при t > 0 и вес t < 0", tot + c["abk_neg"], 1.0,
-                            "", tol=2e-3, info=True, group=grp,
-                            note=f"при t > 0 (окно) — {tot:.6f}, при t < 0 — {c['abk_neg']:.2e} (по Das и Nöth — "
-                                 f"вероятность «не обнаружена»); сумма должна быть 1")
+                self._check("arr_abk_norm", T("Aharonov–Bohm–Kijowski: ∫Π dt at t > 0 and the weight at t < 0"),
+                            tot + c["abk_neg"], 1.0, "", tol=2e-3, info=True, group=grp,
+                            note=T("at t > 0 (the window): {pos:.6f}, at t < 0: {neg:.2e} (after Das and Nöth, the "
+                                   "probability «not detected»); the sum must be 1", pos=tot, neg=float(c["abk_neg"])))
         hits_t = self.hit_t[self.fate == 1] / self.tunit
         n = len(hits_t)
         if n >= 20:
@@ -550,32 +569,34 @@ class Simulation(V11.Simulation):
             emp = np.searchsorted(np.sort(hits_t), tau, side="right") / n
             Dks = float(np.max(np.abs(emp - F)))
             crit = 1.95 / math.sqrt(n)
-            self._check("arr_bohm_times", "Времена первого прихода частиц Бома против закона (Колмогоров–Смирнов)", Dks,
-                        None, "", ok=Dks < crit, group="Бом",
-                        note=(f"{n} частиц из {n_tot}; " + (
-                            "свободный полёт: закон первого прихода — бегущий максимум ∫J dt (траектории не "
-                            "пересекаются); " if self.free else
-                            "за щелями: поток в экран (траектории, вернувшиеся через плоскость, не учтены); ")
-                            + f"критическое значение 99,9 %: 1,95/√n = {crit:.3g}"))
+            self._check("arr_bohm_times", T("First arrival times of the Bohm particles against the law "
+                                            "(Kolmogorov–Smirnov)"), Dks, None, "", ok=Dks < crit, group=V11.BOHM,
+                        note=T("{n:d} particles of {N:d}; {law}; the critical value at {p} %: {c}/√n = {crit:.3g}", n=n,
+                               N=n_tot, p=99.9, c=1.95, crit=crit,
+                               law=T("free flight: the law of first arrival is the running maximum of ∫J dt (the "
+                                     "trajectories do not cross)") if self.free else
+                               T("behind the slits: the flux into the screen (trajectories that came back through the "
+                                 "plane are not counted)")))
         if self.det is not None and self.free and self._one_value("W0") is None:
-            self._check("arr_soft_reflection", "Мягкий детектор: отражённая доля против стационарной теории", None,
-                        None, "", info=True, group=grp,
-                        note="высота W₀ менялась, когда волна уже была у детектора: стационарная теория для одной "
-                             "высоты к этому опыту не применима (изменения — в событиях)")
+            self._check("arr_soft_reflection", T("Soft detector: the reflected fraction against the stationary theory"),
+                        None, None, "", info=True, group=grp,
+                        note=T("the height W₀ changed while the wave was already at the detector: the stationary theory "
+                               "for one height does not apply to this experiment (the changes are in the events)"))
         elif self.det is not None and self.free:
             Rref = self._soft_reflection_reference()
             Rrun = res["soft"]["reflected"]
             tol = SOFT_REL_TOL * Rref + 2e-4
-            self._check("arr_soft_reflection", "Мягкий детектор: отражённая доля против стационарной теории", Rrun, Rref,
-                        "", tol=tol / max(Rref, 1e-12), ok=abs(Rrun - Rref) <= tol, group=grp,
-                        note=f"прогон: 1 − поглощённое детектором − оставшееся в нём; теория: R(k) матриц переноса "
-                             f"для профиля −iW(z) детектора (ступень W₀ = {self._one_value('W0'):g} E₀ с краем "
-                             f"{self.geo.edge:g} λ и поглощающий слой за ней), усреднённое по |ψ̃(k)|²; резкая ступень "
-                             f"дала бы {self._sharp_reflection():.3g}; допуск 10 % + 2e-4 (не долетевшее за окно)")
+            self._check("arr_soft_reflection", T("Soft detector: the reflected fraction against the stationary theory"),
+                        Rrun, Rref, "", tol=tol / max(Rref, 1e-12), ok=abs(Rrun - Rref) <= tol, group=grp,
+                        note=T("the run: 1 − absorbed by the detector − left in it; the theory: R(k) of transfer "
+                               "matrices for the detector's profile −iW(z) (a step W₀ = {W} E₀ with an edge of {e} λ and "
+                               "an absorbing layer behind it), averaged over |ψ̃(k)|²; a sharp step would give "
+                               "{sharp:.3g}; tolerance 10 % + 2e-4 (what did not arrive within the window)",
+                               W=float(self._one_value("W0")), e=self.geo.edge, sharp=self._sharp_reflection()))
         if self.det is not None:
             lost = abs(self.det.norm(self.psi_d) + float(self.det.absorbed().sum()) - 1.0)
-            self._check("arr_det_norm", "Прогон с мягким детектором: норма + поглощённое = 1", lost, 0.0, "", tol=1e-9,
-                        ok=lost < 1e-9, group="Расчёт")
+            self._check("arr_det_norm", T("The run with the soft detector: norm + absorbed = 1"), lost, 0.0, "", tol=1e-9,
+                        ok=lost < 1e-9, group=V11.COMPUTATION)
         if self.free and self.params["state"] == "train":
             self._train_check(s)
 
@@ -615,18 +636,20 @@ class Simulation(V11.Simulation):
         r_w = peaks["wlodarz"][1:] / peaks["wlodarz"][:-1]
         mu = self._one_value("mu_w")
         if mu is None:
-            self._check("arr_train", "Цепочка пакетов: пики правила Влодажа гаснут как e^(−λ₀/N)", None, None, "",
-                        info=True, group="Время прихода",
-                        note="сила λ₀ менялась, когда цепочка уже приходила: сравнение с e^(−λ₀/N) для одной силы к "
-                             "этому опыту не применимо (изменения — в событиях)")
+            self._check("arr_train", T("Train of packets: the peaks of Wlodarz's rule fade as e^(−λ₀/N)"), None, None, "",
+                        info=True, group=ARRIVAL,
+                        note=T("the strength λ₀ changed while the train was already arriving: the comparison with "
+                               "e^(−λ₀/N) for one strength does not apply to this experiment (the changes are in the "
+                               "events)"))
             return
         expect = math.exp(-mu / N)
         dev = float(np.max(np.abs(r_w / expect - 1)))
-        self._check("arr_train", "Цепочка пакетов: пики правила Влодажа гаснут как e^(−λ₀/N)", dev, None, "", info=True,
-                    group="Время прихода",
-                    note=f"отношения соседних пиков: поток {', '.join(f'{v:.3f}' for v in r_flux)} (ожидается ≈ 1 с "
-                         f"поправкой на расплывание), Влодаж {', '.join(f'{v:.3f}' for v in r_w)} против "
-                         f"e^(−λ₀/N) = {expect:.3f} (Das & Struyve 2021, ур. 24–25); наибольшее отличие {dev:.2%}")
+        self._check("arr_train", T("Train of packets: the peaks of Wlodarz's rule fade as e^(−λ₀/N)"), dev, None, "",
+                    info=True, group=ARRIVAL,
+                    note=T("ratios of neighbouring peaks: flux {flux} (≈ 1 expected, corrected for the spreading), "
+                           "Wlodarz {w} against e^(−λ₀/N) = {e:.3f} (Das & Struyve 2021, eqs. 24–25); the largest "
+                           "difference {dev:.2f} %", flux=join([round(float(v), 3) for v in r_flux], "; "),
+                           w=join([round(float(v), 3) for v in r_w], "; "), e=expect, dev=100 * dev))
 
     # --- the scene -------------------------------------------------------------------------------------------------------
     def engine_modules(self):
@@ -641,33 +664,34 @@ class Simulation(V11.Simulation):
         o = super()._plate_obj()
         if self.free:
             o["visible"] = False
-            o["label"] = "Пластины нет: свободный полёт"
+            o["label"] = T("No plate: free flight")
         return o
 
     def header(self):
         hd, extra = super().header()
-        title = "Время прихода частицы: правила в 2D"
-        hd["title"] = title
-        hd["text"] = ("Пакет частицы летит к плоскости детектора — свободно или через две щели. Прогон решает уравнение "
-                      "Шрёдингера на плоскости (x, z) и записывает на плоскости детектора ток, волну и её производную в "
-                      "каждый момент. Из них и из начального состояния прогон считает распределение времени прихода по "
-                      "каждому правилу: квантовый поток, первые прибытия частиц Бома, Ааронов–Бом–Киёвский, "
-                      "полуклассическое, поглощающая граница, экспоненциальные правила Влодажа и Маркевки–Шусса и "
-                      "мягкий детектор (второй прогон с поглощающим потенциалом). Квантовая механика не задаёт одно "
-                      "правило: где они расходятся, опыт мог бы их различить.")
+        hd["title"] = TITLE
+        hd["text"] = T("A particle's packet flies to a detecting plane, freely or through two slits. The run solves the "
+                       "Schrödinger equation on the plane (x, z) and records on the detecting plane the current, the "
+                       "wave and its derivative at every moment. From them and from the initial state the run computes "
+                       "the distribution of the arrival time by each rule: the quantum flux, the first arrivals of the "
+                       "Bohm particles, Aharonov–Bohm–Kijowski, the semiclassical rule, the absorbing boundary, the "
+                       "exponential rules of Wlodarz and of Marchewka–Schuss, and the soft detector (a second run with "
+                       "an absorbing potential). Quantum mechanics does not fix one rule: where they diverge, an "
+                       "experiment could tell them apart.")
         for o in hd["scene3d"]["objects"]:
             if o["id"] == "screen":
-                o["label"] = f"Плоскость детектора (z = {self.geo.L:g} λ): поток, накопленный за опыт"
+                o["label"] = T("Detecting plane (z = {L} λ): the flux accumulated over the experiment", L=self.geo.L)
         approx = list(hd["approximations"])
         if self.free:
-            approx = [a for a in approx if not a.startswith(("стенка", "щели бесконечно длинные"))]
-            approx.insert(0, "ничто не зависит от y: уравнение Шрёдингера решается на плоскости (x, z), трёхмерная "
-                             "волна — точное произведение ψ(x, z, t)·η(y, t) со свободным гауссовым η (замкнутая форма)")
-            approx.append("АБК, полуклассическое и поглощающая граница — для свободного полёта и разделимого состояния "
-                          "(поперечный пакет — наблюдатель); экспоненциальные правила обобщены на плоскость как поток "
-                          "Пуассона с плотностью λ(x, t), их время — интеграл по x")
-        approx.append("детектор плоскости в основном прогоне — поглощающий слой без отражения (идеальная плоскость "
-                      "прихода); правила «детекторов» считаются отдельно")
+            replaced = (V11.APPROX_SLITS["$t"], V11.APPROX_WALL["$t"])
+            approx = [a for a in approx if not (is_t(a) and a["$t"] in replaced)]
+            approx.insert(0, T("nothing depends on y: the Schrödinger equation is solved on the plane (x, z); the 3-D "
+                               "wave is the exact product ψ(x, z, t)·η(y, t) with a free Gaussian η (closed form)"))
+            approx.append(T("ABK, the semiclassical rule and the absorbing boundary: for free flight and a separable state "
+                            "(the transverse packet is a spectator); the exponential rules are generalised to the plane "
+                            "as a Poisson flow with the density λ(x, t), their time is an integral over x"))
+        approx.append(T("the plane's detector in the main run is an absorbing layer without reflection (an ideal plane "
+                        "of arrival); the rules of «detectors» are computed separately"))
         hd["approximations"] = approx
         rules = ["flux", "bohm"] + (["bohm_law", "abk", "sc", "abr"] if self.free else []) + ["wlodarz", "ms"] + \
                 (["soft"] if self.soft else [])
@@ -682,13 +706,15 @@ class Simulation(V11.Simulation):
 
 VIZ = {
     "id": "v12_arrival_times_2d",
-    "title": "Время прихода частицы: правила в 2D",
-    "summary": ("Когда частица придёт к детектору? Пакет летит к плоскости свободно или через две щели; прогон решает "
-                "уравнение Шрёдингера и по записи на плоскости и начальному состоянию считает распределение времени "
-                "прихода по квантовому потоку, траекториям Бома, Ааронову–Бому–Киёвскому, полуклассическому правилу, "
-                "поглощающей границе, правилам Влодажа и Маркевки–Шусса и мягкому детектору."),
-    "purpose": ("Квантовая механика не задаёт время прихода однозначно; мир показывает, где правила совпадают (вдали от "
-                "источника) и где расходятся: у источника, на цепочке пакетов, при обратном токе, за двумя щелями."),
+    "title": TITLE,
+    "summary": T("When does the particle arrive at the detector? A packet flies to a plane freely or through two slits; "
+                 "the run solves the Schrödinger equation and, from the record on the plane and the initial state, "
+                 "computes the distribution of the arrival time by the quantum flux, the Bohm trajectories, "
+                 "Aharonov–Bohm–Kijowski, the semiclassical rule, the absorbing boundary, the rules of Wlodarz and of "
+                 "Marchewka–Schuss, and the soft detector."),
+    "purpose": T("Quantum mechanics does not fix the arrival time uniquely; the world shows where the rules agree (far "
+                 "from the source) and where they diverge: near the source, for a train of packets, under backflow, "
+                 "behind two slits."),
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,

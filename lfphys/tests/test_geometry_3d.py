@@ -11,6 +11,7 @@ import pytest
 from lfphys.core import geometry as G
 from lfphys.core.optics import angular_spectrum as AS
 from lfphys.core.optics import aperture_fields as AF
+from lfphys.i18n import T
 
 LAM = 1.0
 K = 2 * math.pi / LAM
@@ -67,34 +68,38 @@ def test_slice_is_exact_on_grid_nodes_and_bounded_otherwise():
     assert np.nanmax(np.abs(vals - refq)) <= bound
 
 
-def test_modelling_modes():
+def test_modelling_modes(ru):
     full = G.Modelling("full3d")
     assert full.explorable(G.Plane.preset("yz", 3.0)) and not full.approximation and not full.approximations()
     xz = G.Plane.preset("xz")
-    sl = G.Modelling("slices", [xz], exact=True, reason="угловой спектр точен на любой координатной плоскости")
+    sl = G.Modelling("slices", [xz], exact=True, reason="the angular spectrum is exact on any coordinate plane")
     assert sl.explorable(G.Plane.preset("xz")) and not sl.explorable(G.Plane.preset("xy"))
-    assert sl.describe()["note"].startswith("только заданные срезы, каждый точен")
-    red = G.Modelling("slices", [xz], exact=False, reason="щель конечной длины считается как бесконечная")
-    assert red.approximation and "ПРИБЛИЖЕНИЕ" in red.describe()["note"]
+    assert str(sl.describe()["note"]).startswith("the given slices only, each exact")
+    assert ru(sl.describe()["note"]).startswith("только заданные срезы, каждый точен")
+    red = G.Modelling("slices", [xz], exact=False, reason="a slit of finite length is computed as infinite")
+    assert red.approximation and "APPROXIMATION" in str(red.describe()["note"])
+    assert "ПРИБЛИЖЕНИЕ" in ru(red.describe()["note"])
     with pytest.raises(ValueError):
         G.Modelling("slices", [])
 
 
-def test_each_slice_carries_its_own_exactness():
+def test_each_slice_carries_its_own_exactness(ru):
     """Review B1-12: one approximate plane among exact ones is flagged alone, with its reason and label."""
-    m = G.Modelling("slices", [G.Slice(G.Plane.preset("xz", 0.0), False, "щель принята бесконечной"),
+    m = G.Modelling("slices", [G.Slice(G.Plane.preset("xz", 0.0), False, "the slit is taken as infinite"),
                                G.Slice(G.Plane.preset("yz", 0.0)), G.Slice(G.Plane.preset("xy", 30.0))])
     assert m.approximation and not m.is_exact(G.Plane.preset("xz")) and m.is_exact(G.Plane.preset("xy", 30.0))
-    assert m.approximations() == ["срез y = 0: щель принята бесконечной"]
+    assert [str(a) for a in m.approximations()] == ["slice y = 0: the slit is taken as infinite"]
+    assert ru(m.approximations()[0]) == "срез y = 0: the slit is taken as infinite"  # the world's reason as given
     d = m.describe()
     assert [p["exact"] for p in d["planes"]] == [False, True, True]
-    assert [p["label"] for p in d["planes"]] == ["y = 0", "x = 0", "z = 30"]
-    assert "Остальные срезы точны" in d["note"]
-    only = G.Modelling("slices", [G.Slice(G.Plane.preset("xz"), False, "приближение")])
-    assert "Остальные" not in only.describe()["note"]
+    assert [str(p["label"]) for p in d["planes"]] == ["y = 0", "x = 0", "z = 30"]
+    assert "The other slices are exact" in str(d["note"]) and "Остальные срезы точны" in ru(d["note"])
+    only = G.Modelling("slices", [G.Slice(G.Plane.preset("xz"), False, "approximation")])
+    assert "other slices" not in str(only.describe()["note"])
+    assert hash(m.planes[0]) == hash(G.Slice(G.Plane.preset("xz", 0.0), False, T("the slit is taken as infinite")))
 
 
-def test_geometry_edge_cases():
+def test_geometry_edge_cases(ru):
     """Review B1-16 and B1-3: a plane's name follows its axes; a one-node axis is refused with a message; Grid.uniform
     puts node i at (i - n//2) d for odd and even n, as the angular spectrum does."""
     assert G.Plane((0, 0, 0), (1, 0, 0), (0, 0, 1)).name == "xz"
@@ -105,8 +110,8 @@ def test_geometry_edge_cases():
     for n in (5, 6):
         assert np.allclose(G.Grid.uniform(n, float(n)).axes[0], np.arange(n) - n // 2)
     ax = G.axial_plane(30.0)
-    assert G._label(ax) == "через ось z, φ = 30°" and G._label(G.Plane.from_normal((0.3, 0.2, 1.0))) == \
-        "произвольная плоскость"
+    assert str(G._label(ax)) == "through the z axis, φ = 30°" and ru(G._label(ax)) == "через ось z, φ = 30°"
+    assert ru(G._label(G.Plane.from_normal((0.3, 0.2, 1.0)))) == "произвольная плоскость"
     assert G.axial_plane(0.0).same_as(G.Plane.preset("xz")) and G.axial_plane(90.0).same_as(G.Plane.preset("yz"))
 
 
@@ -225,7 +230,7 @@ def test_finite_slit_reduced_to_2d_is_an_approximation_that_shrinks_with_length(
         errs.append(np.max(np.abs(exact - ref2d)) / np.max(np.abs(exact)))
     assert errs[0] > errs[1] > errs[2] > 0
     flag = G.Modelling("slices", [G.Plane.preset("xz")], exact=False,
-                       reason=f"щель длиной L считается бесконечной: ошибка {errs[-1]:.1e} при L = 14λ")
+                       reason=f"a slit of length L is computed as infinite: error {errs[-1]:.1e} at L = 14λ")
     assert flag.approximation
 
 

@@ -22,11 +22,12 @@ import numpy as np
 
 from lfphys.core import causality as K
 from lfphys.core.quantum import qubits as Q
+from lfphys.i18n import T
 from lfphys.theories.alternatives import local_hidden as LHV
 
-PAIR_LABEL = {"photon": "фотоны |Φ+⟩ (поляризация)", "spin": "спин ½, синглет"}
-MODEL_LABEL = {"polarization_model": "поляризационная модель ЛСП (фотоны)",
-               "sign_model": "знаковая модель Белла (спин ½)"}
+PAIR_LABEL = {"photon": T("photons |Φ+⟩ (polarisation)"), "spin": T("spin ½, singlet")}
+MODEL_LABEL = {"polarization_model": T("polarisation model of local hidden variables (photons)"),
+               "sign_model": T("Bell's sign model (spin ½)")}
 
 
 def spin_direction(theta: float) -> np.ndarray:
@@ -120,8 +121,10 @@ class Law:
         h = np.array([self.E_lhv(x, 0.0) for x in d])
         return d, q, h
 
-    def describe(self) -> str:
-        return PAIR_LABEL[self.pair] + (": квантовая механика" if self.law == "quantum" else ": " + MODEL_LABEL[self.model])
+    def describe(self) -> T:
+        if self.law == "quantum":
+            return T("{pair}: quantum mechanics", pair=PAIR_LABEL[self.pair])
+        return T("{pair}: {model}", pair=PAIR_LABEL[self.pair], model=MODEL_LABEL[self.model])
 
 
 # flags of a detected pair (bit set = space-like separation)

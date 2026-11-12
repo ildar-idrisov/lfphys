@@ -28,6 +28,7 @@ from lfphys.core.quantum import scene as QS  # noqa: E402
 from lfphys.theories.interpretations import bohm  # noqa: E402
 from p02_quantum import viz as P  # noqa: E402
 from p02_quantum.viz import EV, SCHEMA, TESLA, TU  # noqa: E402
+from lfphys.i18n import is_t, render  # noqa: E402
 
 V = "p02_quantum"
 
@@ -43,8 +44,13 @@ def failed(h):
     return [c["id"] for c in h.checks().values() if c.get("ok") is False]
 
 
+def errs(h):
+    """The run's error texts in English (a text travels as a T, its JSON form, or a plain string)."""
+    return [render(e) for e in h.errors()]
+
+
 def mean_pos(h, oid):
-    return np.array([h.of("frame")[-1]["now"][oid][f"⟨{c}⟩, нм"] for c in "xyz"[:h.sim.ndim]])
+    return np.array([h.of("frame")[-1]["now"][oid][f"⟨{c}⟩, nm"] for c in "xyz"[:h.sim.ndim]])
 
 
 @pytest.mark.parametrize("preset", list(SCHEMA.presets))
@@ -114,10 +120,10 @@ def test_a_position_measurement_collapses_the_wave_to_its_outcome():
     smin = h.sim.qs.measure_min_sigma(1)
     assert 0.8 < smin < 0.9
     h.action("measure", particle="o2", sigma=0.5)
-    assert any("слишком мало" in e for e in h.errors())
+    assert any("too small" in e for e in errs(h))
     h.action("measure", particle="o2", sigma=0.9)
     ev = [e for e in h.of("event") if e.get("kind") == "action" and e.get("name") == "measure"]
-    assert ev and "найдена" in ev[-1]["text"], h.errors()
+    assert ev and "found at" in render(ev[-1]["text"]), h.errors()
     x = np.array(h.of("marks")[-1]["pos"] if "pos" in h.of("marks")[-1] else [])
     h.runner._frame(0.0)
     rho = h.sim.qs.density()
@@ -138,7 +144,7 @@ def test_bohm_points_are_registered_by_the_detectors_they_enter():
     assert int(B["fly"].sum()) + len(keys) == 60 and keys
     assert set(keys) <= {"edges", f"detector {h.sim.ref['o2'][1]}"}
     now = h.of("frame")[-1]["now"]["o4"]
-    assert now["Бом: точек в полёте"] == f"{int(B['fly'].sum())} из 60"
+    assert render(now["Bohm: points in flight"]) == f"{int(B['fly'].sum())} of 60"
 
 
 def _double_slit_with(bohm_n, seed=3, extra=None):
@@ -193,7 +199,7 @@ def test_bohm_control_catches_an_inaccurate_interpolation(monkeypatch):
     def world():
         pr = {"dim": "2d", "n2": "256", "size": 80.0, "edges": "open",
               "scene": {"format": "lfscene", "version": 1, "objects": [
-                  {"type": "packet", "label": "Электрон",
+                  {"type": "packet", "label": "Electron",
                    "values": {"x": -15.0, "wavelength": 1.0, "sx": 2.5, "sy": 2.5, "bohm": 30}}]}}
         h = Harness(V, None, pr)
         _run_until(h, 4.0)
@@ -216,7 +222,7 @@ def test_a_jump_keeps_the_registered_bohm_points():
     """Review B6-Q5: an environment (20/ps) with the double slit's 300 points: at the jump the points registered so far
     stay registered and only those in flight are drawn again (their number unchanged); at the end the counts still
     follow the absorbed probabilities (the run's check, epoch by epoch)."""
-    env = {"type": "env", "label": "Среда", "values": {"rate": 20.0, "length": 2.0, "region": "all"}}
+    env = {"type": "env", "label": "Environment", "values": {"rate": 20.0, "length": 2.0, "region": "all"}}
     h = _double_slit_with(300, seed=4, extra=env)
     sim, qs = h.sim, h.sim.qs
     seen = []
@@ -271,14 +277,14 @@ def test_a_field_is_not_changed_under_a_charged_packet():
     run(h, h.sim.t + 1.0 * h.sim.default_speed, 5)
     fid = [o for o in h.sim.objects if h.sim.objects[o]["type"] == "bfield"][0]
     h.cmd("scene", op="set", id=fid, values={"Bz": 50.0})
-    assert any("поле нельзя менять" in e for e in h.errors()), h.errors()
+    assert any("the field cannot be changed" in e for e in errs(h)), errs(h)
     assert h.sim.objects[fid]["values"]["Bz"] == 100.0
     n_err = len(h.errors())
     h.cmd("scene", op="clear")
     assert len(h.errors()) == n_err and not h.sim.objects and not h.sim.qs.objects and not h.sim.qs.particles
     pr = copy.deepcopy(SCHEMA.presets["cyclotron"]["params"])
     pr["edges"] = "closed"
-    with pytest.raises(ValueError, match="замкнутые"):
+    with pytest.raises(ValueError, match="closed"):
         Harness(V, None, pr)
 
 
@@ -319,15 +325,16 @@ def test_the_inspector_shows_a_shapes_actual_height():
     h.runner._frame(0.0)
     now = h.of("frame")[-1]["now"]["o1"]
     w = 1.05 * QS.edge_min(80 / 256)
-    assert now["наибольшая высота потенциала, эВ"] == pytest.approx(0.5 * math.erf(1.5 / (2 * QS.edge_eps(w))), rel=1e-12)
-    assert now["наибольшая высота потенциала, эВ"] == pytest.approx(0.4733, abs=1e-4)
+    assert now["largest height of the potential, eV"] == pytest.approx(0.5 * math.erf(1.5 / (2 * QS.edge_eps(w))),
+                                                                      rel=1e-12)
+    assert now["largest height of the potential, eV"] == pytest.approx(0.4733, abs=1e-4)
 
 
 def test_a_refused_change_leaves_the_scene_as_it_was():
     h = Harness(V, "tunnel")
     before = [o["id"] for o in h.of("scene")[-1]["objects"]]
     h.cmd("scene", op="add", type="packet", values={"wavelength": 0.05})  # beyond the grid wherever it is placed
-    assert any("сетка" in e for e in h.errors()), h.errors()
+    assert any("grid" in e for e in errs(h)), errs(h)
     assert [o["id"] for o in h.of("scene")[-1]["objects"]] == before
     assert set(h.sim.qs.particles) == {1}
 
@@ -340,7 +347,7 @@ def test_a_change_at_the_current_moment_keeps_the_balance():
     run(h, h.sim.t + 4.0 * h.sim.default_speed, 20)
     assert not h.errors() and not failed(h)
     ab = h.of("frame")[-1]["now"]["o3"]
-    assert any(k.startswith("поглощено: «Детектор") for k in ab)
+    assert "“Detector (absorbing)" in render(ab["absorbed"]), ab
 
 
 def test_the_scene_file_starts_the_same_set_up():
@@ -383,7 +390,7 @@ def test_overflowing_values_are_refused_and_the_waves_stay_finite():
     h = Harness(V, "tunnel")
     h.cmd("scene", op="add", type="box", values={"x": 10.0, "sx": 2.0, "V": 1e308})
     assert h.errors()
-    with pytest.raises(ValueError, match="не конечны"):
+    with pytest.raises(ValueError, match="not finite"):
         h.sim._finite(QS.Box([10.0, 0.0], [2.0, None], math.inf, 1.0))
     run(h, h.sim.t + 1.0 * h.sim.default_speed, 3)
     assert np.isfinite(h.sim.qs.norm(1)) and np.all(np.isfinite(h.sim.qs.wave(1)))
@@ -430,15 +437,15 @@ def test_scene_changes_are_fast_and_retune_only_what_they_change():
 
 
 def test_a_packet_from_the_palette_lands_outside_the_wall():
-    """U4: «＋ Частица» in the double slit put the packet at (0, 0), inside the 3 eV wall, and the scene refused it (with a
-    reason about a «яма −3 эВ» not in the scene, U13). ``place`` moves it upstream to the first point the scene takes,
+    """U4: "+ Particle" in the double slit put the packet at (0, 0), inside the 3 eV wall, and the scene refused it (with a
+    reason about a "well −3 eV" not in the scene, U13). ``place`` moves it upstream to the first point the scene takes,
     and says so; a packet that fits nowhere is refused with what to change."""
     h = Harness(V, "double_slit")
     v = h.sim.place("packet", {})
     assert v["x"] < -2.0 and abs(v["y"]) < 1e-12
     h.cmd("scene", op="add", type="packet", values=v)
     assert not h.errors(), h.errors()
-    assert any(e.get("notify") and "свободное место" in e["text"] for e in h.of("event"))
+    assert any(e.get("notify") and "nearest free place" in render(e["text"]) for e in h.of("event"))
     # through the framework (as the palette sends it): the same
     h.cmd("scene", op="add", type="packet", values={"species": "neutron", "wavelength": 1.5})
     assert not h.errors(), h.errors()
@@ -446,8 +453,8 @@ def test_a_packet_from_the_palette_lands_outside_the_wall():
     h2 = Harness(V, "double_slit")
     with pytest.raises(ValueError) as e:
         h2.sim._add("packet", {"x": 0.0, "y": 3.0})
-    assert "внутри «Стенка с двумя щелями»" in str(e.value) and "Что изменить" in str(e.value), str(e.value)
-    assert "яма" not in str(e.value)
+    assert "inside “Wall with two slits”" in str(e.value) and "What to change" in str(e.value), str(e.value)
+    assert "well" not in str(e.value)
 
 
 def test_objects_wholly_outside_the_window_are_refused_and_far_packets_too():
@@ -459,13 +466,14 @@ def test_objects_wholly_outside_the_window_are_refused_and_far_packets_too():
                       ("flux", {"x": -1e6})):
         n_err = len(h.errors())
         h.cmd("scene", op="add", type=typ, values=vals)
-        assert len(h.errors()) == n_err + 1 and "вне окна" in h.errors()[-1], (typ, h.errors()[n_err:])
+        assert len(h.errors()) == n_err + 1 and "outside the window" in errs(h)[-1], (typ, errs(h)[n_err:])
     assert len(h.sim.objects) == n0
     h.cmd("scene", op="add", type="box", values={"x": 39.0, "sx": 6.0})  # partly outside: taken, with a note
-    assert len(h.sim.objects) == n0 + 1 and any("частично за краем" in e["text"] for e in h.of("event"))
+    assert len(h.sim.objects) == n0 + 1 and any("partly beyond the window's edge" in render(e["text"])
+                                                for e in h.of("event"))
     pid = next(k for k, o in h.sim.objects.items() if o["type"] == "packet")
     h.cmd("scene", op="set", id=pid, values={"x": 1e6})
-    assert "вне окна" in h.errors()[-1]
+    assert "outside the window" in errs(h)[-1]
     run(h, h.sim.t + h.sim.default_speed / 5, 3)
     assert all(np.isfinite(c["value"]) for c in h.of("check") if isinstance(c.get("value"), float))
     # the guard of _draw itself: no wave (all absorbed) or a wave that is not finite is said, not numpy's ValueError
@@ -478,23 +486,23 @@ def test_objects_wholly_outside_the_window_are_refused_and_far_packets_too():
 
     fake = type("F", (), {})()
     fake.qs, fake.rng, fake.ndim = FakeScene(), np.random.default_rng(1), 2
-    with pytest.raises(ValueError, match="волны частицы в окне нет"):
+    with pytest.raises(ValueError, match="the particle has no wave in the window"):
         P.Simulation._draw(fake, 1, 3)
     FakeScene.density = lambda self, pid: np.full(self.grid.shape, np.nan)
-    with pytest.raises(ValueError, match="перестала быть конечной"):
+    with pytest.raises(ValueError, match="no longer finite"):
         P.Simulation._draw(fake, 1, 3)
 
 
 def test_a_refused_removal_keeps_the_object_and_clear_still_works():
     """P28: removing the field of the cyclotron while its electron is in the window is refused (the engine's reason);
-    before, the object had already lost its reference and every later removal or «Очистить сцену» failed with
-    «Сцена: 'o1'». Now the refusal comes before anything is touched, the field stays and works, and «Очистить сцену»
+    before, the object had already lost its reference and every later removal or "Clear scene" failed with
+    "Scene: 'o1'". Now the refusal comes before anything is touched, the field stays and works, and "Clear scene"
     removes the particle first, then the field: all of it."""
     h = Harness(V, "cyclotron")
     run(h, h.sim.t + h.sim.default_speed / 5, 3)
     fid = next(k for k, o in h.sim.objects.items() if o["type"] == "bfield")
     h.cmd("scene", op="remove", id=fid)
-    assert "заряженная частица" in h.errors()[-1] and fid in h.sim.objects and fid in h.sim.ref
+    assert "charged particle" in errs(h)[-1] and fid in h.sim.objects and fid in h.sim.ref
     assert "bfield" in (h.of("scene")[-1].get("palette_state") or {})  # a second field cannot be added either
     n_err = len(h.errors())
     h.cmd("scene", op="clear")
@@ -522,12 +530,12 @@ def test_the_window_edges_change_at_the_current_moment():
     assert h.of("scene_export")[-1]["scene"]["laws"]["edges"] == "open"
     h2 = Harness(V, "cyclotron")
     h2.set(edges="closed")
-    assert "края окна не изменены" in h2.errors()[-1] and h2.sim.qs.edges is not None
+    assert "the window's edges were not changed" in errs(h2)[-1] and h2.sim.qs.edges is not None
 
 
 # --- plan P16.1: the grid and the window change in the same world (LB1) -------------------------------------------
 def _ev(h):
-    return [e["text"] for e in h.of("event")]
+    return [render(e["text"]) for e in h.of("event")]
 
 
 def test_the_grid_and_the_window_change_live_in_the_same_world():
@@ -545,7 +553,7 @@ def test_the_grid_and_the_window_change_live_in_the_same_world():
     assert not h.errors(), h.errors()
     assert len(h.of("header")) == 1 and h.sim.qs.grid.shape == (384, 384) and h.sim.d == pytest.approx(80 / 384)
     text = _ev(h)[-1]
-    assert "пересчитана точно (дополнением спектра нулями)" in text and "(не изменилась до округления)" in text, text
+    assert "resampled exactly (by padding the spectrum with zeros)" in text and "(unchanged to round-off)" in text, text
     from lfphys.core.quantum import schrodinger_nd as S
     old = S.Grid((256, 256), 80 / 256)
     assert np.max(np.abs(h.sim.qs.wave(1) - S.resample(w0, old, h.sim.qs.grid))) < 1e-14
@@ -555,10 +563,10 @@ def test_the_grid_and_the_window_change_live_in_the_same_world():
     h.set(size=100.0)
     assert not h.errors(), h.errors()
     assert h.sim.size == 100.0 and h.sim.d == pytest.approx(100 / 384) and h.sim.edge_w == pytest.approx(10.0)
-    assert "нулями за прежним окном" in _ev(h)[-1]
+    assert "zeros beyond the former window" in _ev(h)[-1]
     n_err = len(h.errors())
     h.set(n2="256")  # the wall's 0.995-nm edge on a 0.39-nm grid: refused (its physical edge is kept)
-    assert len(h.errors()) == n_err + 1 and "«Стенка с двумя щелями»" in h.errors()[-1]
+    assert len(h.errors()) == n_err + 1 and "“Wall with two slits”" in errs(h)[-1]
     n_err += 1
     h.set(size=80.0)
     h.set(n2="256")
@@ -579,16 +587,16 @@ def test_a_live_grid_change_is_refused_with_the_measured_fraction():
     h = Harness(V, "tunnel")
     run(h, h.sim.t + 1.0 * h.sim.default_speed, 4)
     w0 = h.sim.qs.wave(1).copy()
-    for vals, what in (({"size": 200.0}, "за полосой новой сетки"), ({"size": 30.0}, "вне нового окна")):
+    for vals, what in (({"size": 200.0}, "beyond the new grid's band"), ({"size": 30.0}, "outside the new window")):
         n = len(h.errors())
         h.set(**vals)
-        assert len(h.errors()) == n + 1 and "Сетка не изменена" in h.errors()[-1] and what in h.errors()[-1], \
-            h.errors()[-1]
+        assert len(h.errors()) == n + 1 and "Grid not changed" in errs(h)[-1] and what in errs(h)[-1], \
+            errs(h)[-1]
         assert h.sim.qs.grid.shape == (256, 256) and np.array_equal(h.sim.qs.wave(1), w0)
         assert h.of("live")[-1]["values"]["size"] == 80.0
     h2 = Harness(V, "double_slit")
     h2.set(n2="192")
-    assert "«Стенка с двумя щелями»" in h2.errors()[-1] and "край" in h2.errors()[-1], h2.errors()[-1]
+    assert "“Wall with two slits”" in errs(h2)[-1] and "edge" in errs(h2)[-1], errs(h2)[-1]
     assert h2.sim.qs.grid.shape == (256, 256)
 
 
@@ -657,7 +665,7 @@ def test_dragging_a_packet_moves_its_wave_and_keeps_the_norm():
     assert np.max(np.abs(qs.wave(1) - S.translate(w0, qs.grid, target - r0))) < 1e-13
     assert qs.norm(1) == pytest.approx(n0, rel=1e-13) and qs.absorbed(1) == pytest.approx(A0, rel=1e-13)
     assert np.allclose(h.sim.bohm["o4"]["X"][fly], X0[fly] + (target - r0), atol=1e-12)
-    assert "та же волна перенесена" in _ev(h)[-2], _ev(h)[-3:]
+    assert "the same wave moved by" in _ev(h)[-2], _ev(h)[-3:]
     run(h, h.sim.t + 2.0 * h.sim.default_speed, 10)
     assert not h.errors() and not failed(h), {k: h.checks()[k] for k in failed(h)}
 
@@ -683,7 +691,7 @@ def test_throwing_a_packet_gives_it_the_momentum_of_the_drag_velocity():
     assert "k₀ = m v/ħ" in _ev(h)[-2]
     w = h.sim.qs.wave(1).copy()
     h.cmd("scene", op="set", id="o3", values={"vx": 1e16})  # typed: not clamped by the player's throw limit
-    assert "сетка" in h.errors()[-1] and np.array_equal(h.sim.qs.wave(1), w)
+    assert "grid" in errs(h)[-1] and np.array_equal(h.sim.qs.wave(1), w)
     assert h.sim.objects["o3"]["values"]["vx"] == pytest.approx(v[0])
     hn = Harness(V, "tunnel")
     hn.cmd("scene", op="set", id="o3", values={"species": "neutron", "wavelength": 0.0})
@@ -705,7 +713,8 @@ def test_the_throws_limit_is_the_speed_the_grid_carries_here():
     pal = {o["type"]: o for o in h.of("header")[0]["playground"]["palette"]}
     assert pal["packet"]["handles"].get("velocity_max") == "v_max"
     units = {q["id"]: q["unit"] for q in pal["packet"]["params"]}
-    assert units["vx"] == "нм/с" and units["x"] == "нм" and units["wavelength"] == "нм" and units["theta"] == "°"
+    assert render(units["vx"]) == "nm/s" and render(units["x"]) == "nm" and render(units["wavelength"]) == "nm" \
+        and units["theta"] == "°"
     assert all(q["unit"] for t in pal.values() for q in t["params"] if q["type"] in ("float", "int")), \
         [(t["type"], q["id"]) for t in pal.values() for q in t["params"] if q["type"] in ("float", "int") and not q["unit"]]
     v = h.sim.objects["o3"]["values"]
@@ -714,14 +723,14 @@ def test_the_throws_limit_is_the_speed_the_grid_carries_here():
     assert abs(v["v_max"] * TU - k) < dkg
     h.cmd("scene", op="edit", id="o3", values={"vx": 0.9 * v["v_max"], "vy": 0.0})
     assert not h.errors(), h.errors()
-    assert "ограничен" not in _ev(h)[-2] and h.sim.qs.observables(1)["k"][0] == pytest.approx(0.9 * v["v_max"] * TU,
+    assert "limited" not in _ev(h)[-2] and h.sim.qs.observables(1)["k"][0] == pytest.approx(0.9 * v["v_max"] * TU,
                                                                                                 rel=1e-6)
     vm0 = h.sim.objects["o3"]["values"]["v_max"]
     h.cmd("scene", op="edit", id="o3", values={"vx": 3.0 * vm0, "vy": 0.0})  # a throw: clamped to v_max, said
     assert not h.errors(), h.errors()
     assert h.sim.qs.observables(1)["k"][0] == pytest.approx(vm0 * TU, rel=1e-6)
     h.cmd("scene", op="set", id="o3", values={"vx": 3.0 * vm0})  # typed: refused by the scene, with the limit
-    assert "сетка" in h.errors()[-1] and "можно не быстрее" in h.errors()[-1], h.errors()[-1]
+    assert "grid" in errs(h)[-1] and "no faster than" in errs(h)[-1], errs(h)[-1]
     vm = h.sim.objects["o3"]["values"]["v_max"]
     h.set(n2="384")
     assert h.sim.objects["o3"]["values"]["v_max"] > 1.4 * vm
@@ -750,12 +759,12 @@ def test_moving_a_wall_or_a_detector_moves_its_potential_now():
     h2.runner._frame(0.0)
     h2.sim.qs.particles[1].active, h2.sim.qs.particles[1].psi = False, None  # as if a detector had taken it
     h2.cmd("scene", op="edit", id="o2", values={"x": 3.0, "y": 0.0})
-    assert not h2.errors() and h2.sim.qs.particles[1].active and "приготовлен новый пакет" in _ev(h2)[-2]
+    assert not h2.errors() and h2.sim.qs.particles[1].active and "a new packet was prepared" in _ev(h2)[-2]
 
 
 # --- plan P16.3: measurables ------------------------------------------------------------------------------------------
 def test_measurables_are_declared_and_every_frame_carries_their_values():
-    """``measurables`` in every scene message (Russian labels and units; the world's totals, each particle's, each
+    """``measurables`` in every scene message (labels and units as texts; the world's totals, each particle's, each
     plane's and detector's); every frame's ``meas`` holds a value for each, in the units declared, the same as the
     scene's own readings: the probability in the window and absorbed, <H> (eV, as the energy check), <x> (nm, as
     ``now``), the detector's absorbed probability, a plane's flux now (1/fs); a quantity without a value is NaN with its
@@ -766,14 +775,14 @@ def test_measurables_are_declared_and_every_frame_carries_their_values():
     ids = {m["id"] for m in ms}
     assert {"norm", "absorbed", "regrid", "o4.norm", "o4.E", "o4.x", "o4.kx", "o4.v", "o2.P", "o2.in", "o2.n", "o3.J",
             "o3.F", "o3.J.o4"} <= ids
-    assert all(isinstance(m["label"], str) and isinstance(m["unit"], str) for m in ms)
-    assert next(m for m in ms if m["id"] == "o4.E")["unit"] == "эВ"
+    assert all(is_t(m["label"]) and (is_t(m["unit"]) or m["unit"] in ("", "σ")) for m in ms)
+    assert render(next(m for m in ms if m["id"] == "o4.E")["unit"]) == "eV"
     f = h.of("frame")[-1]
     meas = f["meas"]
     assert set(meas) == ids
     qs = h.sim.qs
     assert meas["o4.norm"] == pytest.approx(qs.norm(1), rel=1e-12)
-    assert meas["o4.x"] == pytest.approx(f["now"]["o4"]["⟨x⟩, нм"], rel=1e-12)
+    assert meas["o4.x"] == pytest.approx(f["now"]["o4"]["⟨x⟩, nm"], rel=1e-12)
     assert meas["o2.P"] == pytest.approx(qs.absorbed(1).get(f"detector {h.sim.ref['o2'][1]}", 0.0), rel=1e-12)
     assert meas["norm"] + meas["absorbed"] + meas["regrid"] == pytest.approx(1.0, abs=1e-12) and meas["regrid"] == 0.0
     assert meas["o3.J"] == pytest.approx(qs.particles[1].planes[h.sim.ref["o3"][1]]["J"] * P.FS, rel=1e-12)
@@ -784,8 +793,8 @@ def test_measurables_are_declared_and_every_frame_carries_their_values():
     h2 = Harness(V, "which_path")  # no Bohm points: the count is NaN with its reason (NaN travels as null)
     h2.runner._frame(0.0)
     f2 = h2.of("frame")[-1]
-    assert f2["meas"]["o3.n"] is None and "Бома" in f2["meas_note"]["o3.n"]
-    assert f2["meas"]["o4.coh"] == pytest.approx(f2["now"]["o4"]["метка: ⟨0|ρ|1⟩ (когерентность)"], abs=1e-15)
+    assert f2["meas"]["o3.n"] is None and "Bohm" in render(f2["meas_note"]["o3.n"])
+    assert f2["meas"]["o4.coh"] == pytest.approx(f2["now"]["o4"]["marker: ⟨0|ρ|1⟩ (coherence)"], abs=1e-15)
 
 
 def test_measurables_are_cheap():
@@ -809,12 +818,12 @@ def test_measurables_are_cheap():
     assert meas < 0.25 * per_frame * step
 
 
-# --- plan P16.1: «Новый мир» of the other dimension takes the scene over -------------------------------------------
+# --- plan P16.1: "New world" of the other dimension takes the scene over -------------------------------------------
 def test_a_new_world_of_the_other_dimension_takes_over_what_makes_sense():
     """The plane's set-up is the section z = 0 of one that does not change along z: into space its box, detector and
     disk go as a prism, a slab and a cylinder along z (unbounded in z); out of space only what crosses the plane, as its
     section (a sphere of radius 4.5 at z = 1 as the disk of radius sqrt(4.5^2 - 1)); a box above the plane, a wall
-    across z and a packet moving out of the plane are refused in Russian and listed in the notice; the world's time
+    across z and a packet moving out of the plane are refused in the owner's terms and listed in the notice; the world's time
     goes on."""
     pr = {"dim": "2d", "n2": "128", "size": 40.0, "edges": "open", "scene": {"format": "lfscene", "version": 1,
           "objects": [{"type": "box", "values": {"x": 5.0, "sx": 2.0, "sy": 6.0, "V": 0.5}},
@@ -829,13 +838,13 @@ def test_a_new_world_of_the_other_dimension_takes_over_what_makes_sense():
     assert s3.ndim == 3 and s3.t == pytest.approx(t0) and len(s3.objects) == 3
     vals = {o["type"]: o["values"] for o in s3.objects.values()}
     assert vals["box"]["sz"] == 0.0 and vals["ball"]["shape"] == "cylinder" and vals["detector"]["sz"] == 0.0
-    assert any("цилиндр" in n["text"] for n in h.of("notice"))
+    assert any("cylinder" in render(n["text"]) for n in h.of("notice"))
     # into space and back: the section z = 0
     s3_scene = {"format": "lfscene", "version": 1, "objects": [
-        {"type": "ball", "label": "Шар", "values": {"x": 10.0, "y": 10.0, "z": 1.0, "radius": 4.5, "V": 0.3}},
-        {"type": "box", "label": "Высоко", "values": {"x": 0.0, "z": 10.0, "sz": 2.0, "V": 0.3}},
-        {"type": "slit_wall", "label": "Поперёк z", "values": {"axis": "2", "position": 14.0}},
-        {"type": "packet", "label": "Вверх", "values": {"x": -5.0, "phi": 30.0, "wavelength": 8.0, "sx": 2.0,
+        {"type": "ball", "label": "Ball", "values": {"x": 10.0, "y": 10.0, "z": 1.0, "radius": 4.5, "V": 0.3}},
+        {"type": "box", "label": "High", "values": {"x": 0.0, "z": 10.0, "sz": 2.0, "V": 0.3}},
+        {"type": "slit_wall", "label": "Across z", "values": {"axis": "2", "position": 14.0}},
+        {"type": "packet", "label": "Upward", "values": {"x": -5.0, "phi": 30.0, "wavelength": 8.0, "sx": 2.0,
                                                         "sy": 2.0, "sz": 2.0}}]}
     h3 = Harness(V, None, {"dim": "3d", "n3": "48", "size": 40.0, "edges": "open", "scene": s3_scene})
     h3.cmd("new_world", params={"dim": "2d", "n2": "128", "size": 40.0}, carry=True)
@@ -843,9 +852,10 @@ def test_a_new_world_of_the_other_dimension_takes_over_what_makes_sense():
     ball = list(h3.sim.objects.values())[0]["values"]
     assert ball["radius"] == pytest.approx(math.sqrt(4.5 ** 2 - 1.0))
     note = [n for n in h3.of("notice") if n.get("carry")][-1]
-    refused = {o["label"]: " ".join(o["notes"]).lower() for o in note["carry"]["objects"] if o["how"] == "refused"}
-    assert "не пересекает плоскость" in refused["Высоко"] and "поперёк оси z" in refused["Поперёк z"]
-    assert "не в плоскости" in refused["Вверх"]
+    refused = {render(o["label"]): " ".join(render(x) for x in o["notes"]).lower() for o in note["carry"]["objects"]
+               if o["how"] == "refused"}
+    assert "does not cross the plane" in refused["High"] and "across the z axis" in refused["Across z"]
+    assert "out of the (x, y) plane" in refused["Upward"]
 
 
 # --- the record: live changes are continued from a checkpoint and repeated by a replay -----------------------------
@@ -923,7 +933,7 @@ def test_live_changes_are_deterministic_for_a_replay():
 # --- review LB1-p02-ux ---------------------------------------------------------------------------------------------
 def _free_world(x=-15.0, lam=2.5, extra=(), sig=2.5):
     return {"dim": "2d", "n2": "256", "size": 80.0, "edges": "open", "scene": {"format": "lfscene", "version": 1,
-            "objects": [{"type": "packet", "label": "Электрон", "values": {"x": x, "wavelength": lam, "sx": sig,
+            "objects": [{"type": "packet", "label": "Electron", "values": {"x": x, "wavelength": lam, "sx": sig,
                                                                          "sy": sig}}, *extra]}}
 
 
@@ -984,7 +994,7 @@ def test_a_drag_in_the_aharonov_bohm_preset_keeps_the_wave_or_is_refused():
     assert not h.errors(), h.errors()
     o1 = qs.observables(1)
     assert np.allclose(o1["k"], o["k"], atol=1e-6) and qs.kinetic_energy(1) == pytest.approx(T0, rel=1e-6)
-    assert "магнитный перенос" in _ev(h)[-2] and "та же волна перенесена" in _ev(h)[-2]
+    assert "magnetic translation" in _ev(h)[-2] and "the same wave moved by" in _ev(h)[-2]
     h2 = Harness(V, "aharonov_bohm")
     t0 = h2.sim.t
     while True:  # until the wave is in the slits (|psi|^2 at the lower slit)
@@ -997,7 +1007,7 @@ def test_a_drag_in_the_aharonov_bohm_preset_keeps_the_wave_or_is_refused():
     w = h2.sim.qs.wave(1).copy()
     r = h2.sim.qs.observables(1)["r"]
     h2.cmd("scene", op="edit", id="o4", values={"x": r[0], "y": r[1] + 6.0})
-    assert h2.errors() and "трубки «Трубка потока»" in h2.errors()[-1], h2.errors()
+    assert h2.errors() and "the tube “Flux tube”" in errs(h2)[-1], errs(h2)
     assert np.array_equal(h2.sim.qs.wave(1), w)
 
 
@@ -1006,7 +1016,7 @@ def test_a_throw_after_the_wall_is_clamped_by_the_world_not_refused():
     follows it (checked every 20 frames, the scene message sent again: far below the fresh packet's), a throw at it in
     each axis direction is taken as asked, and a throw beyond it — at the stale fresh packet's limit, as the player had
     clamped before — is clamped by the world to the fastest the scene takes in that direction and said so (the earlier
-    world refused both, «за её полосой оказалось бы 0,113 спектра»); a typed one is refused with that limit."""
+    world refused both, "0.113 of the spectrum would lie beyond its band"); a typed one is refused with that limit."""
     h = Harness(V, "double_slit")
     v0 = h.sim.objects["o4"]["values"]["v_max"]
     run(h, h.sim.t + 4.5 * h.sim.default_speed, 45)
@@ -1018,7 +1028,7 @@ def test_a_throw_after_the_wall_is_clamped_by_the_world_not_refused():
     r = h.sim.qs.observables(1)["r"]
     h.cmd("scene", op="edit", id="o4", values={"x": r[0], "y": r[1], "vx": -0.999 * vm, "vy": 0.0})
     assert not h.errors(), h.errors()
-    assert "ограничен" not in _ev(h)[-2], _ev(h)[-2]
+    assert "limited" not in _ev(h)[-2], _ev(h)[-2]
     h = Harness(V, "double_slit")
     run(h, h.sim.t + 4.5 * h.sim.default_speed, 15)
     r = h.sim.qs.observables(1)["r"]
@@ -1026,26 +1036,26 @@ def test_a_throw_after_the_wall_is_clamped_by_the_world_not_refused():
     h.cmd("scene", op="edit", id="o4", values={"x": r[0], "y": r[1], "vx": 0.999 * v0, "vy": 0.0})
     assert not h.errors(), h.errors()
     k = h.sim.qs.observables(1)["k"][0]
-    assert 0 < k < 0.999 * v0 * TU and "бросок ограничен" in _ev(h)[-2], _ev(h)[-2:]
+    assert 0 < k < 0.999 * v0 * TU and "the throw was limited" in _ev(h)[-2], _ev(h)[-2:]
     h.cmd("scene", op="set", id="o4", values={"vx": 0.999 * v0})
-    assert "можно не быстрее" in h.errors()[-1], h.errors()[-1]
+    assert "no faster than" in errs(h)[-1], errs(h)[-1]
 
 
 def test_a_new_world_carries_walls_tubes_planes_into_space_and_waves_in_the_same_space():
     """Review Q4 (+ the framework's carry hooks, LB1-F5): a plane's wall with slits, flux tube, flux plane, detector and
-    packet into space: all carried (the earlier world refused the wall and the plane with «Нет параметра «z»» and
+    packet into space: all carried (the earlier world refused the wall and the plane with "No parameter “z”" and
     carried 0 of the double slit's 4), the wall unbounded along z, the tube along z, the packet said to be prepared
     afresh (another dimension), one notice and no change noted for an object not carried. In the same space with a
     finer grid the wave itself goes (``carry_state``, ``Scene.adopt_wave``): the exact resampling of the old wave, its
     norm and absorbed records kept (norm + absorbed = 1), the checks pass after."""
     from lfphys.core.quantum import schrodinger_nd as S
     pr = {"dim": "2d", "n2": "128", "size": 40.0, "edges": "open", "scene": {"format": "lfscene", "version": 1,
-          "objects": [{"type": "slit_wall", "label": "Стенка", "values": {"position": 0.0, "thickness": 3.0, "V": 3.0,
-                                                                         "n_slits": 2, "width": 2.0, "spacing": 8.0}},
-                      {"type": "flux", "label": "Трубка", "values": {"x": 0.0, "y": 0.0, "flux": 0.5, "radius": 1.0}},
-                      {"type": "plane", "label": "Поток", "values": {"position": 8.0}},
-                      {"type": "detector", "label": "Экран", "values": {"x": 15.0, "sx": 3.0, "edge": 3.0}},
-                      {"type": "packet", "label": "Электрон", "values": {"x": -5.0, "wavelength": 4.0, "sx": 1.5,
+          "objects": [{"type": "slit_wall", "label": "Wall", "values": {"position": 0.0, "thickness": 3.0, "V": 3.0,
+                                                                       "n_slits": 2, "width": 2.0, "spacing": 8.0}},
+                      {"type": "flux", "label": "Tube", "values": {"x": 0.0, "y": 0.0, "flux": 0.5, "radius": 1.0}},
+                      {"type": "plane", "label": "Flux", "values": {"position": 8.0}},
+                      {"type": "detector", "label": "Screen", "values": {"x": 15.0, "sx": 3.0, "edge": 3.0}},
+                      {"type": "packet", "label": "Electron", "values": {"x": -5.0, "wavelength": 4.0, "sx": 1.5,
                                                                          "sy": 1.5}}]}}
     h = Harness(V, None, pr)
     run(h, h.sim.t + 1.0 * h.sim.default_speed, 3)
@@ -1053,10 +1063,12 @@ def test_a_new_world_carries_walls_tubes_planes_into_space_and_waves_in_the_same
     assert not h.errors(), h.errors()
     assert [o["type"] for o in h.sim.objects.values()] == ["slit_wall", "flux", "plane", "detector", "packet"]
     note = [n for n in h.of("notice") if n.get("carry")][-1]
-    how = {o["label"]: o for o in note["carry"]["objects"]}
-    assert how["Электрон"]["how"] == "restarted" and any("другая размерность" in x for x in how["Электрон"]["notes"])
-    assert any("вдоль z" in x for x in how["Стенка"]["notes"]) and any("вдоль z" in x for x in how["Трубка"]["notes"])
-    assert "Нет параметра" not in note["text"]
+    how = {render(o["label"]): o for o in note["carry"]["objects"]}
+    assert how["Electron"]["how"] == "restarted" and any("another dimension" in render(x)
+                                                         for x in how["Electron"]["notes"])
+    assert any("along z" in render(x) for x in how["Wall"]["notes"]) \
+        and any("along z" in render(x) for x in how["Tube"]["notes"])
+    assert "No parameter" not in render(note["text"])
     h2 = Harness(V, "tunnel")
     run(h2, h2.sim.t + 3.0 * h2.sim.default_speed, 10)
     w, A, g0 = h2.sim.qs.wave(1).copy(), h2.sim.qs.absorbed(1), h2.sim.qs.grid
@@ -1067,20 +1079,20 @@ def test_a_new_world_carries_walls_tubes_planes_into_space_and_waves_in_the_same
     assert np.max(np.abs(s2.qs.wave(pid) - S.resample(w, g0, s2.qs.grid))) < 1e-15
     assert sum(s2.qs.absorbed(pid).values()) == pytest.approx(sum(A.values()), rel=1e-12, abs=1e-15)
     note = [n for n in h2.of("notice") if n.get("carry")][-1]
-    assert {o["label"]: o["how"] for o in note["carry"]["objects"]}["Электрон"] == "state"
+    assert {render(o["label"]): o["how"] for o in note["carry"]["objects"]}["Electron"] == "state"
     run(h2, h2.sim.t + 1.0 * h2.sim.default_speed, 6)
     assert not failed(h2), {k: h2.checks()[k] for k in failed(h2)}
 
 
 def test_a_smaller_window_is_refused_where_its_layers_would_cover_the_wave():
     """Review Q6: the tunnel's window 80 -> 56 nm while the wave is mid-window put 2.7e-5 of it under the new 5.6-nm
-    layers, said as «отброшено 3,6·10⁻¹⁰»: now refused in the owner's terms (the layers would absorb it), nothing
+    layers, said as "3.6e-10 dropped": now refused in the owner's terms (the layers would absorb it), nothing
     changed; a window enlarged says what was inside the old layers."""
     h = Harness(V, "tunnel")
     run(h, h.sim.t + 1.0 * h.sim.default_speed, 4)
     w = h.sim.qs.wave(1).copy()
     h.set(size=56.0)
-    assert h.errors() and "поглощающими слоями нового окна" in h.errors()[-1], h.errors()
+    assert h.errors() and "the new window's absorbing layers" in errs(h)[-1], errs(h)
     assert np.array_equal(h.sim.qs.wave(1), w) and h.sim.size == 80.0
     h.set(n2="384", size=100.0)
     assert len(h.errors()) == 1 and h.sim.size == 100.0, h.errors()
@@ -1097,14 +1109,14 @@ def test_a_late_drag_with_open_edges_is_taken_and_says_what_was_in_the_layers():
     r = h.sim.qs.observables(1)["r"]
     h.cmd("scene", op="edit", id="o4", values={"x": r[0] - 3.0, "y": r[1]})
     assert not h.errors(), h.errors()
-    assert "в поглощающих слоях краёв была" in _ev(h)[-2] and "поглощающий слой с другой стороны" in _ev(h)[-2]
+    assert "the edges' absorbing layers held" in _ev(h)[-2] and "absorbing layer on the other side" in _ev(h)[-2]
 
 
 def test_prepare_where_the_wave_is_and_coarsen_with_the_edges():
-    """Review X11: «Приготовить пакет заново» «где волна сейчас» puts the fresh packet at <r> with <k> (the parameters
+    """Review X11: "Prepare the packet anew" "where the wave is now" puts the fresh packet at <r> with <k> (the parameters
     written; from the parameters it went back to the centre of preparation, 6.6 nm behind). Review X10: the double slit
     cannot go 256 -> 192 (the wall's edge 0 was frozen at 0.995 nm; the refusal names it and the action); the action
-    «Огрубить сетку с краями по ней» widens it to 1.05 x the new grid's narrowest edge and coarsens, the live values
+    "Coarsen the grid with edges to match" widens it to 1.05 x the new grid's narrowest edge and coarsens, the live values
     sent; the run's checks pass after."""
     h = Harness(V, "tunnel")
     run(h, h.sim.t + 2.0 * h.sim.default_speed, 6)
@@ -1116,28 +1128,28 @@ def test_prepare_where_the_wave_is_and_coarsen_with_the_edges():
     assert h.sim.objects["o3"]["values"]["x"] == pytest.approx(o["r"][0], rel=1e-9)
     h2 = Harness(V, "double_slit")
     h2.set(n2="192")
-    assert "Огрубить сетку с краями по ней" in h2.errors()[-1]
+    assert "Coarsen the grid with edges to match" in errs(h2)[-1]
     h2.action("coarsen", n="192")
     assert len(h2.errors()) == 1, h2.errors()
     qid = h2.sim.ref["o1"][1]
     assert h2.sim.qs.grid.shape == (192, 192) and h2.sim.qs.objects[qid].edge == pytest.approx(1.05 * QS.edge_min(80 / 192))
-    assert h2.of("live")[-1]["values"]["n2"] == "192" and "края с шириной 0 расширены" in _ev(h2)[-1]
+    assert h2.of("live")[-1]["values"]["n2"] == "192" and "the edges of width 0 widened" in _ev(h2)[-1]
     run(h2, h2.sim.t + 2.0 * h2.sim.default_speed, 10)
     assert not failed(h2), {k: h2.checks()[k] for k in failed(h2)}
 
 
 def test_refusal_and_label_texts_say_which_rule():
     """Review Q7: a free packet's coarsening refused by the resolution rule says the wave is finer than the grid holds
-    (not «рядом с тем, что на неё действует»); Q10: the regrid bank's label says a minus is a gain; X12: no doubled
-    parentheses and no «волна пересчитана» without waves."""
+    (not "next to what acts on it"); Q10: the regrid bank's label says a minus is a gain; X12: no doubled
+    parentheses and no "resampled" without waves."""
     h = Harness(V, None, _free_world(x=-10.0, lam=0.952, sig=3.0))  # k0 + 5 sigma_k < pi/d(192) < k0 + 6 sigma_k
     h.set(n2="192")
-    e = h.errors()[-1]
-    assert "мельче, чем передаёт новая сетка" in e and "рядом с тем" not in e, e
+    e = errs(h)[-1]
+    assert "is finer than the new grid" in e and "next to what acts" not in e, e
     ms = {m["id"]: m["label"] for m in h.of("scene")[-1]["measurables"]}
-    assert "минус — прибавилось" in ms["regrid"]
+    assert "a minus: added" in render(ms["regrid"])
     h.set(n2="384")
-    assert "(не изменилась до округления)" in _ev(h)[-1] and "((" not in _ev(h)[-1]
+    assert "(unchanged to round-off)" in _ev(h)[-1] and "((" not in _ev(h)[-1]
     he = Harness(V, None, {"dim": "2d", "n2": "256", "size": 80.0, "edges": "open"})
     he.set(n2="384")
-    assert "волн в окне нет" in _ev(he)[-1] and "пересчитана" not in _ev(he)[-1]
+    assert "no waves in the window" in _ev(he)[-1] and "resampled" not in _ev(he)[-1]

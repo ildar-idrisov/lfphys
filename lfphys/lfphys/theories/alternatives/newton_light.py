@@ -17,19 +17,22 @@ import math
 import numpy as np
 from scipy import optimize
 
+from lfphys.i18n import T
+
 from ...core.gravity.rays import ANGLE_TOL, MAX_STEPS, RaySet, _Recorder
 from ...core.numerics import moving_root
 from ..approx.newton import _wrap, crossings
 
 ABOUT = {
     "layer": "theories", "kind": "alternative",
-    "title": "Свет как ньютоновы корпускулы (Зольднер)",
-    "statement": "Частицы света со скоростью c вдали от тела движутся по гиперболам Кеплера в поле −GM r/r³; "
-                 "отклонение света вдвое меньше общепринятого.",
-    "validity": "опровергнуто при любом прицельном параметре: 0,875″ вместо измеренных 1,75″ у края Солнца "
-                "(Dyson, Eddington & Davidson 1920; РСДБ: γ = 1 с точностью 10⁻⁴)",
+    "title": T("Light as Newtonian corpuscles (Soldner)"),
+    "statement": T("Particles of light with the speed c far from the body move on Kepler hyperbolas in the field −GM "
+                   "r/r³; the deflection of light is half the accepted value."),
+    "validity": T("refuted at every impact parameter: 0.875″ instead of the measured 1.75″ at the limb of the Sun "
+                  "(Dyson, Eddington & Davidson 1920; VLBI: γ = 1 to 10⁻⁴)"),
     "basis": ["Soldner, Berliner Astron. Jahrbuch 1804", "Dyson, Eddington & Davidson, Phil. Trans. A 220, 291 (1920)"],
-    "conflicts": ["lfphys.core.gravity.schwarzschild: ОТО даёт вдвое большее отклонение света; измерения — за ОТО"],
+    "conflicts": [T("lfphys.core.gravity.schwarzschild: GR gives twice the deflection of light; the measurements "
+                    "favour GR")],
 }
 
 

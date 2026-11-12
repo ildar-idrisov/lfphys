@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
 """What if a Kerr-Newman hole's spin or charge changed at an instant under moving test bodies: a declared rule that
-carries the bodies over into the new metric (plan P16.1, the p01 playground's «что если»; review LB1-physics P5, P6).
+carries the bodies over into the new metric (plan P16.1, the p01 playground's “what if”; review LB1-physics P5, P6).
 
 Why outside the core. General relativity has no dynamics in which a stationary vacuum hole's spin or charge jumps
 while test bodies move around it: a real hole changes them only through what falls in or is radiated, at finite rates,
@@ -40,36 +40,44 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 from ...core.gravity import kerr_newman as KN
 
 ABOUT = {
     "layer": "theories", "kind": "alternative",
-    "title": "Что если спин или заряд дыры Керра–Ньюмена сменился мгновенно: правило переноса пробных тел",
-    "statement": "Объявленное правило (не закон): в момент смены (a, Q) каждое тело сохраняет координаты "
-                 "Бойера–Линдквиста (r, θ, φ), собственное время и импульс, измеренный местным наблюдателем с нулевым "
-                 "моментом (ZAMO; энергия — из массовой оболочки), т. е. и его скорость без ограничения ниже c; фотон — "
-                 "направление и частоту, измеренные ZAMO; E, L, p_r, p_θ и постоянная Картера — новые; учёт дрейфа "
-                 "начинается заново. Отказ: a² + Q² ≥ 1, активное тело внутри нового радиуса захвата; места "
-                 "наблюдателей, которых новая метрика не допускает.",
-    "validity": "только как объявленная модель «что если»: зависит от выбора координат — координаты Бойера–Линдквиста "
-                "разных (a, Q) не обозначают одни и те же физические места (при том же r меняются длина окружности "
-                "√(A/Σ) sin θ, собственное расстояние до горизонта, площадь сферы r); правила «сохранить длину "
-                "окружности» или «сохранить E, L, K» столь же допустимы и дают другие миры; пробные тела, дыра — "
-                "фон; захваченные тела остаются захваченными",
-    "basis": ["Bardeen, Press & Teukolsky, ApJ 178, 347 (1972): ZAMO (LNRF), ур. (3.9)–(3.10)",
-              "Adamo & Newman, Scholarpedia 9, 31791 (2014), arXiv:1410.6626: метрика Керра–Ньюмена, горизонты (3.18)"],
-    "conflicts": ["lfphys.core.gravity.kerr_newman: метрика стационарна; в ОТО спин и заряд дыры меняются только через "
-                  "падающее или излучаемое (с конечной скоростью), и тела движутся в зависящей от времени метрике, а "
-                  "не в двух стационарных, склеенных в один момент: у мгновенной смены нет установленной динамики; "
-                  "опыта, который бы проверял это правило, нет — это объявленный контрфактический сценарий",
-                  "правило зависит от координат (Бойер–Линдквист): «то же место» при другой метрике — выбор"],
+    "title": T("What if the spin or charge of a Kerr–Newman hole changed instantly: the rule that carries test bodies "
+               "over"),
+    "statement": T("A declared rule (not a law): at the moment (a, Q) changes, every body keeps its Boyer–Lindquist "
+                   "coordinates (r, θ, φ), its proper time and the momentum measured by the local "
+                   "zero-angular-momentum observer (ZAMO; the energy from the mass shell), i.e. its velocity as well, "
+                   "without capping it below c; a photon keeps the direction and the frequency measured by the ZAMO; "
+                   "E, L, p_r, p_θ and the Carter constant are new; the drift accounting starts anew. Refused: a² + "
+                   "Q² ≥ 1, an active body inside the new capture radius; observer positions the new metric does not "
+                   "allow."),
+    "validity": T("only as a declared “what if” model: it depends on the choice of coordinates, since the "
+                  "Boyer–Lindquist coordinates of different (a, Q) do not label the same physical places (at the same "
+                  "r the circumference √(A/Σ) sin θ, the proper distance to the horizon and the area of the sphere r "
+                  "change); the rules “keep the circumference” or “keep E, L, K” are just as admissible and give "
+                  "other worlds; test bodies, the hole is a background; captured bodies stay captured"),
+    "basis": [T("Bardeen, Press & Teukolsky, ApJ 178, 347 (1972): ZAMO (LNRF), Eqs. (3.9)–(3.10)"),
+              T("Adamo & Newman, Scholarpedia 9, 31791 (2014), arXiv:1410.6626: the Kerr–Newman metric, horizons "
+                "(3.18)")],
+    "conflicts": [T("lfphys.core.gravity.kerr_newman: the metric is stationary; in GR the hole's spin and charge "
+                    "change only through what falls in or is radiated (at a finite speed), and the bodies move in a "
+                    "time-dependent metric, not in two stationary ones glued together at one moment: an instant "
+                    "change has no established dynamics; no experiment tests this rule: it is a declared "
+                    "counterfactual scenario"),
+                  T("the rule depends on the coordinates (Boyer–Lindquist): “the same place” in another metric is a "
+                    "choice")],
 }
 
 
 class Refused(ValueError):
-    """A change the rule cannot make: ``key`` the body concerned (None for the hole), ``hint`` what to change (Russian)."""
+    """A change the rule cannot make: ``key`` the body concerned (None for the hole); the text and ``hint`` (what to
+    change) are translatable texts (``lfphys.i18n.T``)."""
 
-    def __init__(self, text: str, key=None, hint: str | None = None):
+    def __init__(self, text: T, key=None, hint: T | None = None):
         super().__init__(text)
         self.key, self.hint = key, hint
 
@@ -78,28 +86,30 @@ def check_hole(chi: float, q: float):
     """Refuse a hole the rule cannot carry bodies into: a² + Q² >= 1 (no horizon), a < 0 (the engine's convention)."""
     chi, q = float(chi), float(q)
     if not (math.isfinite(chi) and math.isfinite(q)):
-        raise Refused("спин и заряд — конечные числа")
+        raise Refused(T("spin and charge must be finite numbers"))
     if chi < 0.0:
-        raise Refused(f"спин a = {chi:g} < 0: направление вращения задаётся азимутом (a ≥ 0)")
+        raise Refused(T("spin a = {a} < 0: the direction of rotation is set by the azimuth (a ≥ 0)", a=chi))
     if chi * chi + q * q >= 1.0:
-        raise Refused(f"a² + Q² = {chi * chi + q * q:.4g} — не меньше 1: у дыры не было бы горизонта (голая "
-                      f"сингулярность)", hint="спин или заряд меньше")
+        raise Refused(T("a² + Q² = {s:.4g} is not below 1: the hole would have no horizon (a naked singularity)",
+                        s=chi * chi + q * q), hint=T("a smaller spin or charge"))
 
 
 def observer_refusal(kind: str, r: float, theta: float, chi: float, q: float):
     """Why an observer of ``kind`` ("static", "zamo", "circular") cannot stay at (r, theta) in the metric (chi, q):
-    (text, hint) in Russian, or None. Inside the horizon (with a margin of 1e-6 r+); a static one inside the
+    (text, hint) as translatable texts (``lfphys.i18n.T``), or None. Inside the horizon (with a margin of 1e-6 r+); a static one inside the
     ergosurface (no static observer there); a circular one inside the ISCO (its orbit unstable)."""
     r_plus = KN.horizons(chi, q)[0]
     if not r > r_plus * (1.0 + 1e-6):
-        return "оказался бы под новым горизонтом", "спин или заряд ближе к прежним"
+        return T("would end up under the new horizon"), T("spin or charge closer to the previous values")
     if kind == "static" and not np.isfinite(KN.static_clock_rate(r, theta, chi, q)):
-        return "неподвижный наблюдатель оказался бы внутри новой эргосферы", "спин меньше или наблюдатель дальше"
+        return (T("a static observer would end up inside the new ergosphere"),
+                T("a smaller spin or the observer farther out"))
     if kind == "circular":
         risco = KN.isco(chi, q, True)
         if r < risco:
-            return (f"наблюдатель на круговой орбите оказался бы внутри новой ISCO ({risco:.4g} G M/c²)",
-                    "спин больше или наблюдатель дальше")
+            return (T("an observer on a circular orbit would end up inside the new ISCO ({r:.4g} G M/c²)",
+                      r=float(risco)),
+                    T("a larger spin or the observer farther out"))
     return None
 
 
@@ -124,9 +134,10 @@ def carry(geo: KN.Geodesics, chi: float, q: float) -> dict:
     for i, k in enumerate(geo.keys):
         r, th, ph = (float(c) for c in bl[i])
         if st[i] == "active" and not r > r_plus + eps:
-            raise Refused(f"тело на r = {r:.6g} G M/c² оказалось бы под новым горизонтом или на радиусе захвата "
-                          f"(r₊ = {r_plus:.6g}, захват при r₊ + {eps:g})", key=k,
-                          hint="спин или заряд ближе к прежним, или сначала уберите это тело")
+            raise Refused(T("a body at r = {r:.6g} G M/c² would end up under the new horizon or at the capture "
+                            "radius (r₊ = {r_plus:.6g}, capture at r₊ + {eps})", r=r, r_plus=float(r_plus),
+                            eps=float(eps)), key=k,
+                          hint=T("spin or charge closer to the previous values, or remove this body first"))
         r_new = max(r, r_plus + eps) if st[i] == "captured" else r
         mu2 = 0.0 if photon[i] else 1.0
         hat = KN.zamo_frame_momentum(r, th, geo.chi, geo.q, pm[i])

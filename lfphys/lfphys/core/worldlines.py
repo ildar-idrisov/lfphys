@@ -28,12 +28,16 @@ from dataclasses import dataclass, field
 import numpy as np
 from scipy import integrate, optimize
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "kinematics",
-    "title": "Мировые линии и собственное время",
-    "statement": "Кусочно-инерциальные мировые линии и круговые орбиты; собственное время — интеграл хода часов "
-                 "по метрике законов мира (СТО: sqrt(1 - v²/c²); Шварцшильд: sqrt(f - (v_r²/f + v_t²)/c²)).",
-    "validity": "ход часов задаёт набор законов мира (lfphys.laws); общепринятый — lfphys.core.relativity",
+    "title": T("Worldlines and proper time"),
+    "statement": T("Piecewise inertial worldlines and circular orbits; proper time is the integral of the clock "
+                   "rate in the metric of the world's laws (SR: sqrt(1 - v²/c²); Schwarzschild: sqrt(f - (v_r²/f + "
+                   "v_t²)/c²))."),
+    "validity": T("the clock rate is set by the world's law set (lfphys.laws); the accepted one is "
+                  "lfphys.core.relativity"),
     "basis": ["lfphys.core.relativity.metric_clock_rate"],
     "conflicts": [],
 }

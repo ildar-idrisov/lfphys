@@ -46,6 +46,7 @@ from typing import Callable
 import numpy as np
 
 from .errors import owner_text
+from .i18n import T
 
 Emit = Callable[..., None]
 
@@ -75,12 +76,12 @@ class Simulation:
         raise NotImplementedError
 
     def action(self, name: str, args: dict) -> str:
-        """Apply an action at the current time; return a human-readable log line (Russian)."""
+        """Apply an action at the current time; return a human-readable log line (a text, ``lfviz.i18n.T``)."""
         raise ValueError(f"unknown action {name!r}")
 
     def engine_modules(self) -> list[str]:
         """The lfphys modules this world's physics comes from (ids like "core.relativity"), for the player's panel
-        «Физика этого мира» (core vs theories outside the core)."""
+        "Physics of this world" (core vs theories outside the core)."""
         return []
 
     def live_values(self) -> dict:
@@ -98,12 +99,12 @@ class Simulation:
     def view(self, args: dict) -> str:
         """A view request of the player that needs the engine (a slice plane in a 3-D scene, RULES.md §2.9): computes
         and emits what the view shows; never changes the world's physics. Returns a short text (or "")."""
-        raise ValueError("у этого мира нет запросов просмотра")
+        raise ValueError(T("this world has no view requests"))
 
     def set_live(self, values: dict) -> str:
         """Change live parameters at the current time (the experimenter rebuilds part of the set-up); return a log
         line. Must leave the world unchanged when it raises."""
-        raise ValueError("в этом мире нечего менять на ходу")
+        raise ValueError(T("nothing can be changed while this world runs"))
 
     def next_event_time(self) -> float | None:
         return None
@@ -119,7 +120,7 @@ class Simulation:
     @classmethod
     def check_params(cls, params: dict) -> None:
         """Refuse a combination of world parameters that cannot be built, cheaply and before anything is allocated:
-        raise ``lfviz.errors.Refusal(text, hint)`` (Russian: what is wrong, what to change). The server asks it before it starts a
+        raise ``lfviz.errors.Refusal(text, hint)`` (texts: what is wrong, what to change). The server asks it before it starts a
         run (the catalogue then shows the reason on the form) and the worker before a new world."""
 
     @classmethod
@@ -139,7 +140,7 @@ def _engine_info(sim) -> list[dict]:
         from lfphys import registry
         return registry.describe(names)
     except Exception as e:  # the panel must never break a run
-        return [{"id": "?", "layer": "?", "title": f"каталог движка недоступен: {e}"}]
+        return [{"id": "?", "layer": "?", "title": T("the engine's catalogue is not available: {error}", error=str(e))}]
 
 
 MakeWorld = Callable[[str | None, dict | None, int | None], tuple[Simulation, dict]]
@@ -208,7 +209,8 @@ class Runner:
         meta = dict(meta)
         clash = RUNNER_FRAME_KEYS & set(meta)
         if clash:  # review B4-1: a key of the runner silently overwrote a world's own field
-            raise ValueError(f"кадр мира содержит ключи плеера {sorted(clash)}: переименуйте их в frame() мира")
+            raise ValueError(T("the world's frame holds keys of the player {keys}: rename them in the world's frame()",
+                               keys=str(sorted(clash))))
         self.ckpt_dirty = True  # a world's frame() may change its state (v10 counts frames between its images)
         meta["type"] = "frame"
         meta["t"] = self.sim.t
@@ -235,9 +237,10 @@ class Runner:
             return
         self.gpu_hot = hot
         t = th.get("temp") if th.get("temp") is not None else th.get("last_temp")
-        text = (f"GPU 0 нагрелся ({t:.0f} °C): ядра движка считаются на CPU, пока он не остынет до "
-                f"{th['resume_c']:.0f} °C (медленнее; результаты CPU и GPU совпадают в пределах допусков)"
-                if hot else f"GPU 0 остыл ({t:.0f} °C): ядра движка снова могут считаться на GPU")
+        text = (T("GPU 0 is hot ({temp:.0f} °C): the engine's kernels run on the CPU until it cools to {resume:.0f} °C "
+                  "(slower; the results of the CPU and the GPU agree within the tolerances)", temp=t,
+                  resume=th["resume_c"])
+                if hot else T("GPU 0 has cooled ({temp:.0f} °C): the engine's kernels may run on the GPU again", temp=t))
         self.emit({"type": "notice", "t": self.sim.t, "text": text, "backend": _backend_info()})
 
     def _rate_sample(self):
@@ -317,7 +320,7 @@ class Runner:
         elif cmd == "next_event":
             te = self.sim.next_event_time()
             if te is None:
-                self.emit({"type": "notice", "t": self.sim.t, "text": "Впереди нет запланированных событий"})
+                self.emit({"type": "notice", "t": self.sim.t, "text": T("No scheduled events ahead")})
             else:
                 if te <= self.sim.t:  # an event at the current instant (review v01 R21): reveal it in place
                     self.sim.advance(self.sim.t)
@@ -332,7 +335,7 @@ class Runner:
             except Exception as e:  # any failure is a refused change, reported; the world goes on
                 self._refused(e, "action", label=self.action_labels.get(name) or name)
             else:
-                if text:  # a change that says nothing makes no empty line in «События» (review LB1-p02-ux X12)
+                if text:  # a change that says nothing makes no empty line in "Events" (review LB1-p02-ux X12)
                     self.emit({"type": "event", "kind": "action", "t": self.sim.t, "name": name,
                                "args": args.get("args") or {}, "text": text})
                 self.dirty = True
@@ -385,11 +388,11 @@ class Runner:
                 self.ckpt_writer.wait()  # the file is in place before the worker ends
             self.stopped = True
         else:
-            self.emit({"type": "error", "t": self.sim.t, "text": f"неизвестная команда {cmd!r}"})
+            self.emit({"type": "error", "t": self.sim.t, "text": T("unknown command {cmd}", cmd=repr(cmd))})
 
     def _refused(self, e: BaseException, context: str, **fmt):
         """Report a refused or failed command in the owner's terms (lfviz.errors): a refusal as it is; any other failure
-        as a short Russian sentence, its exception and traceback kept in ``detail`` and the worker's log (review
+        as a short sentence, its exception and traceback kept in ``detail`` and the worker's log (review
         UX-params P4)."""
         text, detail = owner_text(e, context, **fmt)
         self.emit({"type": "error", "t": self.sim.t, "text": text, **({"detail": detail} if detail else {})})
@@ -412,7 +415,7 @@ class Runner:
         self.sim.advance(self.sim.t)  # reveal what happens at the initial moment itself (t = 0 events)
 
     def start(self) -> bool:
-        """Show the first world (``_start_world``); when it fails the owner reads why («Мир не создан: …») and the
+        """Show the first world (``_start_world``); when it fails the owner reads why ("World not created: …") and the
         worker ends with the reason "world not built": the server keeps such a run as failed, never resumable (review
         UX-params P3: the worker died and every ⏺ repeated the failure). Its messages are not held: a world that takes
         long to show itself (v08's slices on the CPU) is drawn as it comes. False when it failed."""
@@ -429,13 +432,13 @@ class Runner:
         """A new world inside this run: new laws or initial conditions; the previous world stays in the record. A world
         that cannot be built, or fails to show itself, is refused as a whole: the previous world goes on."""
         if self.make_world is None:
-            self.emit({"type": "error", "t": self.sim.t, "text": "Новый мир здесь создать нельзя"})
+            self.emit({"type": "error", "t": self.sim.t, "text": T("A new world cannot be created here")})
             return
         params = args.get("params")
         export = getattr(self.sim, "carry_export", None)
         carried = None
         if args.get("carry") and export is not None:
-            # the scene carried over (plan P16.1, «перенести сцену»): the current world's export becomes the new world's
+            # the scene carried over (plan P16.1, "carry the scene over"): the current world's export becomes the new world's
             # initial scene, a parameter of the new world (its header holds it: a restore rebuilds the same world); the
             # heavy state its section gives (``carry_state``: atoms, a flow) goes to a file of the run named there with
             # its hash (review LB1-F5), so that a restore by replay reads the very same state
@@ -466,7 +469,7 @@ class Runner:
             sim.adopt_view(adopted)
         except Exception as e:  # noqa: BLE001 - the new world starts with its default view
             adopted = None
-            note = f"вид прежнего мира не перенесён: {owner_text(e)[0]}"
+            note = T("the previous world's view was not carried over: {why}", why=owner_text(e)[0])
         before = (self.sim, self.world, self.world_info, self.adopted_view, self.speed, self.rate_win,
                   self.action_labels)
         mark = self.out.mark() if self.out is not None else None
@@ -550,8 +553,8 @@ class Runner:
         extra = {"tag": tag} if force else {}
         if self.ckpt_dir is None or self.ckpt_failed == self.world:
             if force:
-                why = ("этот вычислитель не пишет сохранённых состояний" if self.ckpt_dir is None
-                       else "состояние этого мира сохранить нельзя (см. прежнее сообщение о сохранении)")
+                why = (T("this worker writes no saved states") if self.ckpt_dir is None
+                       else T("the state of this world cannot be saved (see the earlier message about saving)"))
                 self.emit({"type": "checkpoint", "t": self.sim.t, "world": self.world, "reason": reason, **extra,
                            "error": why})
             return
@@ -680,7 +683,7 @@ class Runner:
                 key = traceback.format_exc()
                 if key != self.last_error:  # the same failure again (e.g. after a command): once
                     # in the owner's terms, the traceback in the detail and the log (review UX-params P4, UX-ui U6)
-                    text, detail = owner_text(e, "advance", t=_fmt_t(self.sim.t))
+                    text, detail = owner_text(e, "advance", t=float(self.sim.t))
                     self.emit({"type": "error", "t": self.sim.t, "text": text, **({"detail": detail} if detail else {})})
                     self.last_error = key
                 self._state("error")
@@ -692,36 +695,29 @@ class Runner:
         self.emit({"type": "end", "t": self.sim.t, "reason": "stop"})
 
 
-def _fmt_t(t: float) -> str:
-    """A world time for the owner's text (seconds, with the unit)."""
-    try:
-        return f"{float(t):.6g} с".replace(".", ",")
-    except (TypeError, ValueError):
-        return str(t)
+_SCENE_OPS = {"remove": T("scene: an object is being removed"), "set": T("scene: an object is being changed"),
+              "edit": T("scene: an object is being moved"), "duplicate": T("scene: an object is being copied"),
+              "label": T("scene: an object is being renamed"), "clear": T("scene: being cleared")}
 
 
-_SCENE_OPS = {"add": "добавляется", "remove": "удаляется", "set": "меняется", "edit": "перемещается",
-              "duplicate": "копируется", "label": "переименовывается", "clear": "очищается сцена"}
-
-
-def _busy_what(cmd: str, args: dict, labels: dict) -> str:
+def _busy_what(cmd: str, args: dict, labels: dict):
     """What a computing command is doing, in the owner's words (the busy notice, review UX-ui U9)."""
     if cmd == "scene":
         op = args.get("op")
-        what = _SCENE_OPS.get(op, "меняется")
-        if op == "clear":
-            return "сцена: очищается"
-        return f"сцена: {what} объект" + (f" «{args.get('type')}»" if op == "add" and args.get("type") else "")
+        if op == "add":
+            return T("scene: an object “{type}” is being added", type=args["type"]) if args.get("type") \
+                else T("scene: an object is being added")
+        return _SCENE_OPS.get(op, T("scene: an object is being changed"))
     if cmd == "set":
-        return "установка перестраивается"
+        return T("the set-up is being rebuilt")
     if cmd == "action":
-        return f"действие «{labels.get(args.get('name')) or args.get('name')}»"
+        return T("action “{label}”", label=labels.get(args.get("name")) or args.get("name"))
     if cmd == "view":
-        return "строится срез"
+        return T("a slice is being built")
     if cmd == "new_world":
-        return "создаётся новый мир"
+        return T("a new world is being created")
     if cmd == "step":
-        return "шаг расчёта"
+        return T("a step of the computation")
     if cmd == "next_event":
-        return "расчёт до следующего события"
+        return T("computing up to the next event")
     return cmd

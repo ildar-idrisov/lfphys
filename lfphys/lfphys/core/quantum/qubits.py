@@ -24,15 +24,18 @@ import math
 import numpy as np
 from scipy import linalg
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Кубиты и спин ½: состояния, измерение, запутанность, корреляции Белла",
-    "statement": "Матрицы плотности, правило Борна и проекция Людерса, частичный след, энтропия, согласованность "
-                 "(concurrence), ларморова прецессия; корреляции синглета E(a,b) = −a·b и параметр CHSH до 2√2.",
-    "validity": "квантовая механика конечномерных систем",
+    "title": T("Qubits and spin ½: states, measurement, entanglement, Bell correlations"),
+    "statement": T("Density matrices, the Born rule and the Lüders projection, the partial trace, entropy, "
+                   "concurrence, Larmor precession; the singlet correlations E(a,b) = −a·b and the CHSH parameter up "
+                   "to 2√2."),
+    "validity": T("quantum mechanics of finite-dimensional systems"),
     "basis": ["Bell, Physics 1, 195 (1964)", "Clauser, Horne, Shimony, Holt, PRL 23, 880 (1969)",
               "Tsirelson, Lett. Math. Phys. 4, 93 (1980)", "Wootters, PRL 80, 2245 (1998)",
-              "опыты без лазеек: Hensen et al. 2015; Giustina et al. 2015; Shalm et al. 2015"],
+              T("loophole-free experiments: Hensen et al. 2015; Giustina et al. 2015; Shalm et al. 2015")],
     "conflicts": [],
 }
 

@@ -37,6 +37,7 @@ from pathlib import Path
 
 from . import checkpoint, limits, protocol, registry
 from .errors import owner_text
+from .i18n import T, join, text_of
 from .sim import Runner
 
 
@@ -109,13 +110,14 @@ def main(argv=None):
         from lfphys.core import backend as _backend
         backend_notes = _backend.configure(init.get("backend") or {})
     except Exception as e:  # noqa: BLE001 - the run goes on with the defaults
-        backend_notes = [f"настройки устройств не применены: {e}"]
+        backend_notes = [T("the device settings were not applied: {error}", error=text_of(e))]
     viz = registry.load(a.viz)
     rs = init.get("restore")
     t0 = float(rs.get("t_end", 0.0)) if rs else 0.0  # a failed restore is reported at the record's end (review C1-14)
     params, errors = viz["schema"].resolve(None, init.get("params") or {})
     if errors:
-        emit({"type": "error", "t": t0, "text": ("Мир не восстановлен: " if rs else "Мир не создан: ") + "; ".join(errors)})
+        emit({"type": "error", "t": t0, "text": T("{head}: {body}", head=T("World not restored") if rs else
+                                                    T("World not created"), body=join(errors, "; "))})
         emit({"type": "end", "t": t0, "reason": "bad parameters"})
         return 2
     seed = int(init.get("seed", 0))
@@ -131,7 +133,7 @@ def main(argv=None):
         """A new world of the same visualization (command new_world): defaults, then the preset, then values."""
         p, errs = viz["schema"].resolve(preset, values or {})
         if errs:
-            raise ValueError("; ".join(errs))
+            raise ValueError(join(errs, "; "))
         precheck(p)
         s = seed0 if seed in (None, "") else int(seed)
         return viz["simulation"](p, s, emit), {"preset": preset}
@@ -165,7 +167,8 @@ def main(argv=None):
         return r
 
     import time as _time
-    out.busy({"type": "busy", "on": True, "cmd": "build", "what": "мир восстанавливается" if rs else "строится мир",
+    out.busy({"type": "busy", "on": True, "cmd": "build",
+              "what": T("the world is being restored") if rs else T("the world is being built"),
               "t": t0, "wall": _time.time()})
     cp = (rs or {}).get("checkpoint")
     if cp:  # continue from the last state (owner, 2026-10-29): no recomputation of the record before it
@@ -179,20 +182,22 @@ def main(argv=None):
             traceback.print_exc()  # to worker.log
             if rs.get("complete") is False:  # a moving window lost the world's start: no rebuild (review B6-F2)
                 out.busy({"type": "busy", "on": False, "cmd": "build", "t": t0})
-                emit({"type": "error", "t": t0, "text": f"Сохранённое состояние не загрузилось ({type(e).__name__}: "
-                                                        f"{e}), а начало мира уже вышло из окна записи — продолжить "
-                                                        f"нельзя. Начните мир заново из файла сцены или сценария"})
+                emit({"type": "error", "t": t0, "detail": f"{type(e).__name__}: {e}"[:500],
+                      "text": T("The saved state did not load, and the world's start has already left the record's "
+                                "window — it cannot be continued. Start the world again from a scene file or a "
+                                "scenario")})
                 emit({"type": "end", "t": t0, "reason": "restore failed"})
                 return 4
-            emit({"type": "notice", "t": t0, "text": f"Сохранённое состояние не загрузилось ({type(e).__name__}: "
-                                                     f"{e}); мир пересчитывается от начала по записи"})
+            emit({"type": "notice", "t": t0, "detail": f"{type(e).__name__}: {e}"[:500],
+                  "text": T("The saved state did not load; the world is recomputed from its start along the record")})
         else:
             out.busy({"type": "busy", "on": False, "cmd": "build", "t": runner.sim.t})
             emit({"type": "resumed", "t": runner.sim.t, "how": "checkpoint", "tail_frames": n_tail})
             emit({"type": "notice", "t": runner.sim.t, "text": (
-                f"Мир продолжен с сохранённого состояния на t = {t_ck:.6g} с" + (
-                    f" (после него повторены {n_tail} кадров записи)" if n_tail else "")
-                + f"; запись идёт дальше с t = {runner.sim.t:.6g} с")})
+                T("The world continued from its saved state at t = {t0:.6g} s (then {n:d} frames of the record were "
+                  "repeated); the record goes on from t = {t1:.6g} s", t0=t_ck, n=n_tail, t1=runner.sim.t) if n_tail
+                else T("The world continued from its saved state at t = {t0:.6g} s; the record goes on from "
+                       "t = {t1:.6g} s", t0=t_ck, t1=runner.sim.t))})
             runner.run(start=False)
             return 0
     try:
@@ -218,9 +223,9 @@ def main(argv=None):
         out.busy({"type": "busy", "on": False, "cmd": "build", "t": runner.sim.t})
         n_cmd = sum(1 for c in rs.get("commands") or [] if "cmd" in c)
         emit({"type": "resumed", "t": runner.sim.t, "how": "replay"})
-        emit({"type": "notice", "t": runner.sim.t, "text": f"Мир восстановлен: пересчитан от начала по записи "
-                                                   f"({n_cmd} изменений установки) и продолжается с t = "
-                                                   f"{runner.sim.t:.6g} с"})
+        emit({"type": "notice", "t": runner.sim.t,
+              "text": T("World restored: recomputed from its start along the record ({n:d} changes of the set-up) "
+                        "and going on from t = {t:.6g} s", n=n_cmd, t=runner.sim.t)})
         runner.run(start=False)
     else:
         ok = runner.start()

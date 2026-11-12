@@ -20,13 +20,16 @@ import math
 import numpy as np
 from scipy import linalg
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Уравнение Шрёдингера в одном измерении",
-    "statement": "Унитарная эволюция волновой функции (метод расщепления оператора), стационарные состояния "
-                 "(спектральный метод Колберта–Миллера), наблюдаемые и ток вероятности, свободный гауссов пакет.",
-    "validity": "нерелятивистская частица без спина; на сетке — достаточно мелкий шаг и широкое окно (контроль "
-                "нормы и энергии в каждом запуске)",
+    "title": T("The Schrödinger equation in one dimension"),
+    "statement": T("Unitary evolution of the wave function (the split-operator method), stationary states (the "
+                   "Colbert–Miller spectral method), observables and the probability current, the free Gaussian "
+                   "packet."),
+    "validity": T("a non-relativistic spinless particle; on the grid, a fine enough step and a wide window (the norm "
+                  "and the energy are checked in every run)"),
     "basis": ["Schrödinger 1926", "Feit, Fleck, Steiger, J. Comput. Phys. 47, 412 (1982)",
               "Colbert & Miller, J. Chem. Phys. 96, 1982 (1992)"],
     "conflicts": [],

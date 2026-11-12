@@ -1,0 +1,34 @@
+{
+ "Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)…": {
+  "one": "Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} change of the set-up)…",
+  "other": "Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)…"
+ },
+ "Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)… The visualization's code changed since last time: the continuation is computed by the new version, the earlier part of the record by the old one": {
+  "one": "Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} change of the set-up)… The visualization's code changed since last time: the continuation is computed by the new version, the earlier part of the record by the old one",
+  "other": "Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)… The visualization's code changed since last time: the continuation is computed by the new version, the earlier part of the record by the old one"
+ },
+ "The world continued from its saved state at t = {t0:.6g} s (then {n:d} frames of the record were repeated); the record goes on from t = {t1:.6g} s": {
+  "one": "The world continued from its saved state at t = {t0:.6g} s (then {n:d} frame of the record was repeated); the record goes on from t = {t1:.6g} s",
+  "other": "The world continued from its saved state at t = {t0:.6g} s (then {n:d} frames of the record were repeated); the record goes on from t = {t1:.6g} s"
+ },
+ "World restored: recomputed from its start along the record ({n:d} changes of the set-up) and going on from t = {t:.6g} s": {
+  "one": "World restored: recomputed from its start along the record ({n:d} change of the set-up) and going on from t = {t:.6g} s",
+  "other": "World restored: recomputed from its start along the record ({n:d} changes of the set-up) and going on from t = {t:.6g} s"
+ },
+ "all {n:d} workers are busy with open runs: close the tab of one of them (it will be suspended and go on when you open it again)": {
+  "one": "the only worker is busy with an open run: close its tab (it will be suspended and go on when you open it again)",
+  "other": "all {n:d} workers are busy with open runs: close the tab of one of them (it will be suspended and go on when you open it again)"
+ },
+ "the mean over the last {window} ({n:d} readings {dt} apart)": {
+  "one": "the mean over the last {window} ({n:d} reading)",
+  "other": "the mean over the last {window} ({n:d} readings {dt} apart)"
+ },
+ "{n:d} days": {
+  "one": "{n:d} day",
+  "other": "{n:d} days"
+ },
+ "{n:d} readings {dt} apart": {
+  "one": "{n:d} reading",
+  "other": "{n:d} readings {dt} apart"
+ }
+}

@@ -23,8 +23,10 @@ import numpy as np
 from lfphys.core.gravity import arrivals, schwarzschild
 from lfphys.core.gravity import rays as light
 from lfphys.core.worldlines import Orbit, Piecewise, clock_rate
+from lfphys.i18n import T
 from lfphys.laws.light import Laws, flat_arrival
 from lfphys.theories.alternatives import newton_light
+from lfviz.errors import Refusal
 
 from . import checks
 from .apparatus import Apparatus, fmt_s
@@ -33,7 +35,7 @@ from .apparatus import Apparatus, fmt_s
 @dataclass
 class Obj:
     id: str
-    name: str
+    name: object  # a translatable text (lfphys.i18n.T)
     kind: str  # star | planet | observer | beacon | galaxy
     color: str
     wl: object
@@ -113,8 +115,13 @@ class World:
             # the ordinal of this image among the arrivals of the same flash at the same receiver
             k = sum(1 for r in self.revealed if r[0] == ev["rkey"][0] and r[1] == ev["rkey"][1])
             ev["image"] = k
-            if k:
-                ev["text"] = ev["text"].replace(": пришёл свет", f": пришёл свет (изображение {k + 1})", 1)
+            if k and "targs" in ev:
+                if ev["gr_clock"]:
+                    ev["text"] = T("{obj}: light from “{src}” arrived (image {k:d}) after {dt} of Schwarzschild "
+                                   "coordinate time (clock of “{obj}”: τ = {tau})", k=k + 1, **ev["targs"])
+                else:
+                    ev["text"] = T("{obj}: light from “{src}” arrived (image {k:d}) after {dt} (clock of “{obj}”: "
+                                   "τ = {tau})", k=k + 1, **ev["targs"])
             self.revealed.add(ev["rkey"])
         if not ev.get("silent"):
             meta = {"type": "event", "t": ev["t"], "kind": ev["kind"], "text": ev.get("text", "")}
@@ -150,17 +157,18 @@ class World:
         self.pulses.append(pulse)
         self.msg({"type": "pulse", "t": t, **pulse}, rays.blobs())
         self.msg({"type": "event", "t": t, "kind": "emit", "obj": src_id, "pulse": pid,
-                  "text": f"{src.name}: {label or 'вспышка'}"})
+                  "text": T("{obj}: {what}", obj=src.name, what=label or T("flash"))})
         for rid, obj in self.objects.items():
             if obj.receiver and rid != src_id:
                 self._schedule_arrivals(pulse, obj, t)
         return pulse
 
-    def plane_wave(self, t: float, x0: float, half_width: float, n: int, label: str = "плоская волна"):
+    def plane_wave(self, t: float, x0: float, half_width: float, n: int, label=None):
         """Parallel rays moving along +x from the line x = x0, |y| <= half_width (drawing and deflection)."""
         ys = np.linspace(-half_width, half_width, n)
         origins = np.stack([np.full(n, x0), ys], axis=1)
         dirs = np.tile([1.0, 0.0], (n, 1))
+        label = label or T("plane wave")
         rays = self._trace(origins, t, dirs, np.zeros(2))
         pid = f"p{len(self.pulses) + 1}"
         pulse = {"id": pid, "src": None, "t0": t, "origin": [x0, 0.0], "v": [0.0, 0.0], "kind": "plane", "n": n,
@@ -211,8 +219,8 @@ class World:
         if self.gr:
             r = float(np.linalg.norm(obj.wl.pos(max(t_from, pulse["t0"]))))
             if r <= 1.5 * self.rs:
-                self.notice(("ps", obj.id), f"«{obj.name}» внутри фотонной сферы (r ≤ 1.5 rs): приход света туда этот "
-                            "запуск не вычисляет (STATUS V-items)")
+                self.notice(("ps", obj.id), T("“{obj}” is inside the photon sphere (r ≤ 1.5 rs): this run does not "
+                                              "compute the arrival of light there (STATUS V-items)", obj=obj.name))
         for a in self._arrivals(pulse, obj.wl, t_from):
             if (pulse["id"], obj.id, a.get("key", "s0")) in self.revealed:
                 continue  # this image already arrived (a boost at the arrival instant must not repeat it)
@@ -227,9 +235,12 @@ class World:
         src = self.objects.get(pulse["src"])
         data = {"dt": dt, "tau": tau, "dir": a["dir"], "method": a.get("method", ""), "side": a.get("key", "s0")}
         chks = []
-        clock = " координатного времени Шварцшильда" if self.gr else ""
-        text = (f"{obj.name}: пришёл свет от «{src.name if src else '?'}» через {fmt_s(dt)}{clock} "
-                f"(часы «{obj.name}»: τ = {fmt_s(tau)})")
+        targs = {"obj": obj.name, "src": src.name if src else "?", "dt": fmt_s(dt), "tau": fmt_s(tau)}
+        if self.gr:
+            text = T("{obj}: light from “{src}” arrived after {dt} of Schwarzschild coordinate time (clock of "
+                     "“{obj}”: τ = {tau})", **targs)
+        else:
+            text = T("{obj}: light from “{src}” arrived after {dt} (clock of “{obj}”: τ = {tau})", **targs)
         if self.gr and src is not None:
             # flat-space time for the same coordinate separation and the Shapiro excess
             d = float(np.linalg.norm(obj.wl.pos(a["t"]) - np.asarray(pulse["origin"])))
@@ -239,8 +250,8 @@ class World:
             if abs(_cross(o, p)) < 1e-12 * np.linalg.norm(o) * np.linalg.norm(p) and float(o @ p) > 0 \
                     and a["image"] == 0 and not np.any(obj.wl.vel(a["t"])):
                 ref = checks.radial_light_time(np.linalg.norm(o), np.linalg.norm(p), self.rs, laws.c)
-                chks.append(_check(f"radial_{pulse['id']}_{obj.id}", "Время радиального полёта света (ОТО)",
-                                   dt, ref, "с", group="ОТО"))
+                chks.append(_check(f"radial_{pulse['id']}_{obj.id}", T("Time of flight of radial light (GR)"),
+                                   dt, ref, T("s"), group=T("GR")))
         elif not self.gr and laws.gravity == "none" and src is not None and laws.kinematics != "emission":
             xr = obj.wl.pos(a["t"])
             d = float(np.linalg.norm(xr - np.asarray(pulse["origin"])))
@@ -250,14 +261,16 @@ class World:
             vr = float(np.linalg.norm(obj.wl.vel(a["t"])))
             tol = 1e-9 + (4 * eps * (vr * abs(a["t"]) + float(np.linalg.norm(xr)) + float(np.linalg.norm(pulse["origin"])))
                           / (laws.c * dt) if dt > 0 else 0.0)
-            chks.append(_check(f"flat_{pulse['id']}_{obj.id}", f"Невязка решения: время полёта до «{obj.name}» и |Δx|/c",
-                               dt, d / laws.c, "с", group="Самосогласованность", tol=tol,
-                               note="не независимая проверка: остаток уравнения, которое решал запуск; время полёта "
-                                    "решено от события вспышки, а положение получателя берётся в абсолютный момент "
-                                    "прихода — допуск 1e-9 плюс 4ε(|v|·|t| + |x|)/(c·Δt) на округление абсолютных "
-                                    "времён и координат"))
+            chks.append(_check(f"flat_{pulse['id']}_{obj.id}",
+                               T("Residual of the solution: time of flight to “{obj}” and |Δx|/c", obj=obj.name),
+                               dt, d / laws.c, T("s"), group=T("Self-consistency"), tol=tol,
+                               note=T("not an independent check: the residual of the equation the run solved; the "
+                                      "time of flight is solved from the flash event, while the receiver's position "
+                                      "is taken at the absolute arrival time — tolerance {tol0:.0e} plus "
+                                      "4ε(|v|·|t| + |x|)/(c·Δt) for the rounding of absolute times and coordinates",
+                                      tol0=1e-9)))
         ev = {"t": a["t"], "kind": "arrival", "obj": obj.id, "pulse": pulse["id"], "image": a["image"],
-              "text": text, "data": data, "checks": chks, "deps": {obj.id},
+              "text": text, "targs": targs, "gr_clock": self.gr, "data": data, "checks": chks, "deps": {obj.id},
               "rkey": (pulse["id"], obj.id, a.get("key", "s0"))}
         if pulse.get("train"):
             ev["do"] = lambda pulse=pulse, obj=obj, tau=tau, a=a: self._train_arrival(pulse, obj, tau, a)
@@ -276,7 +289,8 @@ class World:
         k = train["k"]
         self.flash(train["src"], t, n_rays=max(36, self.n_rays // 6), kind="train",
                    train={"id": train["id"], "k": k, "period": train["period"]},
-                   label=f"импульс {k + 1}/{train['count']} (период {fmt_s(train['period'])} по часам источника)")
+                   label=T("pulse {k:d}/{n:d} (period {period} by the source's clock)", k=k + 1, n=train["count"],
+                           period=fmt_s(train["period"])))
         train["k"] += 1
         if train["k"] < train["count"]:
             self._schedule_train_next(train)
@@ -302,7 +316,8 @@ class World:
             ref, note = self._doppler_reference(pulse, obj, a)
             self.msg({"type": "check", "t": a["t"], **_check(
                 f"doppler_{tr['id']}_{obj.id}_{a.get('key', 's0')}",
-                f"Частота у «{obj.name}» / частота источника", ratio, ref, "", group="Доплер и красное смещение",
+                T("Frequency at “{obj}” / frequency of the source", obj=obj.name), ratio, ref, "",
+                group=T("Doppler effect and redshift"),
                 note=note)})
 
     def _doppler_reference(self, pulse, obj, a):
@@ -315,16 +330,17 @@ class World:
             if not np.any(vs) and not np.any(vr) and isinstance(src.wl, Piecewise):
                 re = np.linalg.norm(pulse["origin"])
                 rr = np.linalg.norm(obj.wl.pos(a["t"]))
-                return 1.0 / checks.gravitational_period_ratio(re, rr, self.rs), "статичные часы: √(f_прием/f_исп)⁻¹"
-            return None, "нет замкнутой формулы для этого движения"
+                return 1.0 / checks.gravitational_period_ratio(re, rr, self.rs), \
+                    T("static clocks: √(f_received/f_emitted)⁻¹")
+            return None, T("no closed form for this motion")
         o = np.asarray(pulse["origin"])
         p = obj.wl.pos(a["t"])
         collinear = abs(o[1]) < 1e-9 * (1 + abs(o[0])) and abs(p[1]) < 1e-9 * (1 + abs(p[0])) \
             and abs(vs[1]) == 0 and abs(vr[1]) == 0
         if not collinear or laws.gravity != "none":
-            return None, "эталон только для движения вдоль оси x"
+            return None, T("a reference only for motion along the x axis")
         s = 1 if p[0] > o[0] else -1
-        return checks.doppler_ratio(laws.kinematics, s, vs[0] / laws.c, vr[0] / laws.c), "продольный эффект Доплера"
+        return checks.doppler_ratio(laws.kinematics, s, vs[0] / laws.c, vr[0] / laws.c), T("longitudinal Doppler effect")
 
     # --- apparatus ----------------------------------------------------------------------------------
     def build_apparatus(self, obj: Obj, t: float):
@@ -360,9 +376,9 @@ class World:
             src = self.objects.get(pulse["src"])
             self.schedule({"t": t_known, "kind": "measure", "obj": obj.id, "pulse": pulse["id"],
                            "deps": {obj.id}, "gen": ap.gen,
-                           "text": f"{obj.name}: вспышка «{src.name if src else '?'}» случилась между концами "
-                                   "стержня — свет прошёл A и B в разные стороны, скорость по двум концам не "
-                                   "измеряется"})
+                           "text": T("{obj}: the flash of “{src}” went off between the ends of the rod — the light "
+                                     "passed A and B in opposite directions, so the two ends do not measure a speed",
+                                     obj=obj.name, src=src.name if src else "?")})
             return
         ref_a = a_list[0] if a_list[0].get("speed_lab", 1.0) > 0 and np.any(a_list[0]["dir"]) else b_list[0]
         u = np.asarray(ref_a["dir"]) * ref_a.get("speed_lab", self.laws.c)  # review R25: not from a zero vector
@@ -373,56 +389,60 @@ class World:
             return  # light not along the rod: the two passages do not measure its speed
         src = self.objects.get(pulse["src"])
         v_app = ap.wl_a.vel(ta)
-        ref, note = None, f"синхронизация: {'Эйнштейн' if ap.sync == 'einstein' else 'лабораторная'}"
+        ref, note = None, _sync_note(ap.sync)
         if ap.orient == "x" and v_app[1] == 0 and pulse["v"][1] == 0:
             s = 1 if res["order"] == "A→B" else -1
             ref = checks.one_way_speed(self.laws.kinematics, ap.sync, self.laws.c, v_app[0], s, pulse["v"][0])
-        text = (f"{obj.name}: свет от «{src.name if src else '?'}» прошёл стержень {res['order']}, "
-                f"измерено c = {res['speed']:.9g} м/с")
-        chk = _check(f"pass_{pulse['id']}_{obj.id}_{ap.gen}", f"{obj.name}: односторонняя скорость (внешний свет)",
-                     res["speed"], ref, "м/с", group="Скорость света", note=note)
+        text = T("{obj}: light from “{src}” passed the rod {order}, measured c = {c:.9g} m/s", obj=obj.name,
+                 src=src.name if src else "?", order=res["order"], c=res["speed"])
+        chk = _check(f"pass_{pulse['id']}_{obj.id}_{ap.gen}",
+                     T("{obj}: one-way speed (external light)", obj=obj.name),
+                     res["speed"], ref, T("m/s"), group=T("Speed of light"), note=note)
         self.schedule({"t": res["t_known"], "kind": "measure", "obj": obj.id, "pulse": pulse["id"], "text": text,
                        "data": res, "checks": [chk], "deps": {obj.id}, "gen": ap.gen,
                        "redeliver": {"type": "passing", "ta": ta, "tb": tb}})
 
-    def measure(self, obj_id: str, t: float) -> str:
+    def measure(self, obj_id: str, t: float) -> T:
         obj = self.objects[obj_id]
         if self.gr:
             return self._measure_local_gr(obj, t)
         ap = obj.apparatus
         if ap is None:
-            raise ValueError("у этого объекта нет прибора")
+            raise Refusal(T("“{obj}” has no apparatus", obj=obj.name),
+                          hint=T("choose an observer that carries a rod"))
         res = ap.round_trip(t)
         self.msg({"type": "signal", "t": t, "owner": obj_id, "gen": ap.gen, "kind": "measure", "pts": res["path"]})
         v = ap.wl_a.vel(t)
-        chks = [_check(f"rt_{obj_id}_{t:.17g}", f"{obj.name}: скорость туда-обратно (2L₀/Δτ)", res["rt"],
+        chks = [_check(f"rt_{obj_id}_{t:.17g}", T("{obj}: round-trip speed (2L₀/Δτ)", obj=obj.name), res["rt"],
                        checks.round_trip_speed(self.laws.kinematics, self.laws.c, float(np.linalg.norm(v)),
                                                transverse=(ap.orient == "y")) if (v[1] == 0) else None,
-                       "м/с", group="Скорость света", note="не зависит от синхронизации")]
-        txt = f"{obj.name}: туда-обратно c = {res['rt']:.9g} м/с"
+                       T("m/s"), group=T("Speed of light"), note=T("independent of the synchronisation"))]
         if "ab" in res:
             for key, s, lab in (("ab", 1, "A→B"), ("ba", -1, "B→A")):
                 ref = None
                 if ap.orient == "x" and v[1] == 0:
                     ref = checks.one_way_speed(self.laws.kinematics, ap.sync, self.laws.c, v[0], s, v[0])
-                chks.append(_check(f"ow{key}_{obj_id}_{t:.17g}", f"{obj.name}: в одну сторону {lab} (свой свет)",
-                                   res[key], ref, "м/с", group="Скорость света",
-                                   note=f"синхронизация: {'Эйнштейн' if ap.sync == 'einstein' else 'лабораторная'}"))
-            txt += f"; A→B {res['ab']:.9g}, B→A {res['ba']:.9g} м/с"
+                chks.append(_check(f"ow{key}_{obj_id}_{t:.17g}",
+                                   T("{obj}: one way {dir} (own light)", obj=obj.name, dir=lab),
+                                   res[key], ref, T("m/s"), group=T("Speed of light"), note=_sync_note(ap.sync)))
+            txt = T("{obj}: round trip c = {c:.9g} m/s; A→B {ab:.9g}, B→A {ba:.9g} m/s", obj=obj.name, c=res["rt"],
+                    ab=res["ab"], ba=res["ba"])
         else:
-            txt += "; односторонние скорости недоступны: часы B ещё не синхронизированы"
+            txt = T("{obj}: round trip c = {c:.9g} m/s; one-way speeds are not available: clock B is not "
+                    "synchronised yet", obj=obj.name, c=res["rt"])
         self.schedule({"t": res["t_known"], "kind": "measure", "obj": obj_id, "text": txt, "data": res,
                        "checks": chks, "deps": {obj_id}, "gen": ap.gen,
                        "redeliver": {"type": "round", "t1": t, "t2": res["t_reflect"], "label": obj.name}})
         self.schedule({"t": res["t_reflect"], "kind": "sync", "obj": obj_id, "gen": ap.gen,
                        "pos": ap.wl_b.pos(res["t_reflect"]).tolist(),
-                       "text": f"{obj.name}: измерительный импульс отражён от B"})
-        return f"{obj.name}: отправлен измерительный импульс по стержню"
+                       "text": T("{obj}: the measuring pulse reflected from B", obj=obj.name)})
+        return T("{obj}: a measuring pulse sent along the rod", obj=obj.name)
 
-    def _measure_local_gr(self, obj: Obj, t: float) -> str:
+    def _measure_local_gr(self, obj: Obj, t: float) -> T:
         """Local round trip over a short radial rod at a static observer (exact geodesics)."""
         if np.any(obj.wl.vel(t)):
-            raise ValueError("в ОТО локальное измерение сделано для покоящегося (статичного) наблюдателя")
+            raise Refusal(T("in GR the local measurement is made for an observer at rest (a static observer)"),
+                          hint=T("set the observer's speed to 0 first"))
         p = obj.wl.pos(t)
         r = float(np.linalg.norm(p))
         ell = 1e-3 * r  # proper length of the rod
@@ -442,21 +462,24 @@ class World:
         coord = self.laws.c * (1 - rs / r)
         # reference: the same finite radial rod in closed form (review R8); -> c as the rod shrinks
         ref = 2 * ell / (math.sqrt(1 - rs / r) * 2 * checks.radial_light_time(r, rb, rs, self.laws.c))
-        chk = _check(f"loc_{obj.id}_{t:.17g}", f"{obj.name}: локально измеренная скорость света (стержень "
-                     f"{ell:.3g} м, туда-обратно)", c_loc, ref, "м/с", group="ОТО",
-                     note=f"эталон — радиальное время по замкнутой формуле для этого стержня; при длине → 0 он → c "
-                          f"(отличие сейчас {(ref - self.laws.c) / self.laws.c:.2e}); координатная радиальная скорость "
-                          f"здесь c·(1−rs/r) = {coord:.9g} м/с")
+        chk = _check(f"loc_{obj.id}_{t:.17g}",
+                     T("{obj}: locally measured speed of light (rod {ell:.3g} m, round trip)", obj=obj.name, ell=ell),
+                     c_loc, ref, T("m/s"), group=T("GR"),
+                     note=T("reference: the radial time in closed form for this rod; as its length → 0 it → c "
+                            "(the difference now {d:.2e}); the coordinate radial speed here c·(1−rs/r) = {v:.9g} m/s",
+                            d=(ref - self.laws.c) / self.laws.c, v=coord))
         self.schedule({"t": t + i1 + i2, "kind": "measure", "obj": obj.id, "deps": {obj.id},
-                       "text": f"{obj.name}: локально c = {c_loc:.9g} м/с (координатная {coord:.9g})",
+                       "text": T("{obj}: locally c = {c:.9g} m/s (coordinate {v:.9g})", obj=obj.name, c=c_loc,
+                                 v=coord),
                        "checks": [chk]})
-        return f"{obj.name}: локальное измерение по радиальному стержню"
+        return T("{obj}: local measurement along a radial rod", obj=obj.name)
 
     # --- actions ------------------------------------------------------------------------------------
     def boost(self, obj_id: str, v_new, t: float):
         obj = self.objects[obj_id]
         if not obj.movable or not isinstance(obj.wl, Piecewise):
-            raise ValueError(f"«{obj.name}» нельзя разогнать")
+            raise Refusal(T("“{obj}” cannot be accelerated", obj=obj.name),
+                          hint=T("choose an observer or a rocket"))
         v_new = np.asarray(v_new, float)
         self._validate_path(obj, t, v_new)  # raises with the reason (review R10)
         old_ap = None
@@ -472,8 +495,9 @@ class World:
             # idealisation (review R12, stated in the README): a new mirror B' is taken to be at rest at L0 in the
             # new frame from this moment; the old mirror goes on inertially and light already sent goes on too
             self.msg({"type": "event", "t": t, "kind": "sync", "obj": obj_id,
-                      "text": f"{obj.name}: прибор пересобран в новой системе покоя (идеализация: новое зеркало B′ "
-                              "считается подготовленным заранее; старое зеркало летит дальше по инерции)"})
+                      "text": T("{obj}: the apparatus rebuilt in the new rest frame (an idealisation: the new mirror "
+                                "B′ is taken as prepared in advance; the old mirror flies on by inertia)",
+                                obj=obj.name)})
             for p in keep:
                 self._redeliver(obj, p.ev, old_ap, t)
             self.build_apparatus(obj, t)
@@ -498,8 +522,9 @@ class World:
             ta, tb = rd["ta"], rd["tb"]
             if max(ta, tb) > t_boost or t_sync is None or t_sync > t_boost:
                 self.msg({"type": "event", "t": t_boost, "kind": "measure", "obj": obj.id,
-                          "text": f"{obj.name}: замер внешнего света прерван — свет ещё не прошёл оба конца старого "
-                                  "прибора или его часы не были синхронизированы"})
+                          "text": T("{obj}: the measurement of external light interrupted — the light had not yet "
+                                    "passed both ends of the old apparatus, or its clocks were not synchronised",
+                                    obj=obj.name)})
                 return
             # B's reading leaves old B at tb and travels to A's new worldline
             rep = flat_arrival(laws, tb, wl_b.pos(tb), wl_b.vel(tb), obj.wl, t_boost)
@@ -511,8 +536,9 @@ class World:
             ev2["t"] = t_known
             ev2["deps"] = {obj.id}
             ev2["redeliver"] = dict(rd, wl_b=wl_b, t_sync=t_sync)
-            if "доставлен после смены" not in ev["text"]:
-                ev2["text"] = ev["text"] + " (результат доставлен после смены скорости A)"
+            if not ev.get("redelivered"):
+                ev2["text"] = T("{text} (the result delivered after A changed its speed)", text=ev["text"])
+                ev2["redelivered"] = True
             self.schedule(ev2)
         else:  # own round trip: the old mirror reflects at t2 (unchanged), the pulse returns to the new A
             t1, t2 = rd["t1"], rd["t2"]
@@ -522,12 +548,14 @@ class World:
             t3 = back["t"]
             ap = obj.apparatus
             rt = 2 * ap.L0 / (obj.wl.tau(t3) - obj.wl.tau(t1))
-            chk = _check(f"rt_{obj.id}_{t1:.17g}", f"{rd['label']}: туда-обратно, A сменил скорость во время замера",
-                         rt, None, "м/с", group="Скорость света",
-                         note="замкнутой формулы нет: A двигался по двум разным мировым линиям")
+            chk = _check(f"rt_{obj.id}_{t1:.17g}",
+                         T("{obj}: round trip, A changed its speed during the measurement", obj=rd["label"]),
+                         rt, None, T("m/s"), group=T("Speed of light"),
+                         note=T("no closed form: A moved along two different worldlines"))
             self.schedule({"t": t3, "kind": "measure", "obj": obj.id, "deps": {obj.id}, "checks": [chk],
                            "redeliver": dict(rd, wl_b=wl_b, t_sync=t_sync),
-                           "text": f"{rd['label']}: импульс вернулся к A после смены скорости, 2L₀/Δτ = {rt:.9g} м/с"})
+                           "text": T("{obj}: the pulse returned to A after the change of speed, 2L₀/Δτ = {v:.9g} m/s",
+                                     obj=rd["label"], v=rt)})
 
     def _validate_path(self, obj: Obj, t: float, v) -> None:
         """Refuse a boost whose straight future path crosses the body or, in GR, stops being timelike for the local
@@ -542,8 +570,8 @@ class World:
         s_star = max(-float(p0 @ v) / vv, 0.0)
         d_min = float(np.linalg.norm(p0 + v * s_star))
         if r_abs > 0 and d_min <= r_abs:
-            raise ValueError(f"при этой скорости «{obj.name}» влетит в тело (через {fmt_s(s_star)} по лаб. времени); "
-                             "выберите другое направление")
+            raise Refusal(T("at this speed “{obj}” would fly into the body (in {dt} of lab time)", obj=obj.name,
+                            dt=fmt_s(s_star)), hint=T("choose another direction"))
         if self.gr:
             scale = max(float(np.linalg.norm(p0)), self.scene_radius) / math.sqrt(vv)
             u = np.tan(np.linspace(0.0, 0.499 * math.pi, 4001)) * scale
@@ -553,9 +581,10 @@ class World:
                 try:
                     clock_rate(self.laws, self.rs, p0 + v * s, v)
                 except ValueError:
-                    raise ValueError(f"при постоянной координатной скорости «{obj.name}» через {fmt_s(s)} двигался "
-                                     "бы быстрее света для местного статичного наблюдателя; в ОТО «скорость» — "
-                                     "координатная (dx/dt Шварцшильда)") from None
+                    raise Refusal(T("at a constant coordinate speed “{obj}” would move faster than light for the "
+                                    "local static observer in {dt}; in GR the “speed” is the coordinate one "
+                                    "(Schwarzschild dx/dt)", obj=obj.name, dt=fmt_s(s)),
+                                  hint=T("choose a smaller speed or another direction")) from None
 
     # --- views --------------------------------------------------------------------------------------
     def frame_state(self, t: float) -> dict:
@@ -709,6 +738,10 @@ def _segment_hits_circle(p, q, R) -> bool:
     s = float(np.clip(-(p @ d) / L2, 0.0, 1.0))
     m = p + s * d
     return float(m @ m) < R * R
+
+
+def _sync_note(sync: str) -> T:
+    return T("synchronisation: Einstein's") if sync == "einstein" else T("synchronisation: laboratory")
 
 
 def _check(cid, label, value, ref, unit, group="", note="", tol=1e-9):

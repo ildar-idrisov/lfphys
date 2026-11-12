@@ -10,14 +10,16 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "theories", "kind": "approximation",
-    "title": "Лучевая (геометрическая) оптика: закон Снелла и матрицы ABCD",
-    "statement": "Луч — высота и угол; свободный промежуток, тонкая линза, преломление на границе — матрицы 2×2; "
-                 "формула линзы 1/s + 1/s' = 1/f.",
-    "validity": "размеры ≫ λ (нет дифракции); матрицы — малые углы (параксиальность)",
-    "basis": ["Born & Wolf, Principles of Optics, гл. 3–4"],
-    "conflicts": ["lfphys.core.optics: волновая оптика — дифракция и интерференция, которых лучи не дают"],
+    "title": T("Ray (geometrical) optics: Snell's law and ABCD matrices"),
+    "statement": T("A ray is a height and an angle; free space, a thin lens and refraction at an interface are 2×2 "
+                   "matrices; the lens formula 1/s + 1/s' = 1/f."),
+    "validity": T("sizes ≫ λ (no diffraction); the matrices: small angles (paraxiality)"),
+    "basis": [T("Born & Wolf, Principles of Optics, ch. 3–4")],
+    "conflicts": [T("lfphys.core.optics: wave optics: diffraction and interference, which rays do not give")],
 }
 
 

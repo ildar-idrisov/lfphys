@@ -15,6 +15,7 @@ from scipy import constants as sc
 from scipy import special
 
 from lfphys.core.quantum import central3d as C, radial
+from lfphys.i18n import T
 from lfphys.theories.models import cornell
 
 HBARC_GEV_FM = sc.hbar * sc.c / (1e9 * sc.e) / 1e-15  # 0.1973... GeV fm: fm per GeV^-1
@@ -22,7 +23,7 @@ HBAR_GEV_S = sc.hbar / (1e9 * sc.e)  # s per GeV^-1 of time
 N_GRID = 800  # radial solver: the drawn functions (N and 2N + 1 points, l = 0 extrapolated; radial.wavefunctions)
 N_REF = 1200  # the independent solve of the checks
 EPS = np.finfo(float).eps
-SYSTEMS = {"charm": ("чармоний cc̄", "m_c", "c"), "bottom": ("боттомоний bb̄", "m_b", "b")}
+SYSTEMS = {"charm": (T("charmonium cc̄"), "m_c", "c"), "bottom": (T("bottomonium bb̄"), "m_b", "b")}
 
 
 def mass(system: str) -> float:
@@ -46,7 +47,7 @@ def solve(system: str, L: int, n_states: int = 3, N: int = N_GRID):
                 a.flags.writeable = False
             return E, r, u, est, R
         R = 1.1 * need
-    raise ValueError(f"состояния L = {L} не помещаются в ящик {R:.3g} ГэВ⁻¹")
+    raise ValueError(T("the states with L = {L} do not fit into the box of {R:.3g} GeV⁻¹", L=L, R=R))
 
 
 def tables(system: str, specs, N: int = N_GRID):
@@ -65,7 +66,7 @@ def reference(system, specs, coefs, x, y, z, t, ref_tables, drawn_tables):
     of the two radial solves (|R_N - R_ref| <= |R_N - R_2N| / (1 - 2^-p) with the measured order p >= 2 of the
     solver's convergence, so 3 leaves room) times |Y|, plus the harmonics' round-off. The radial part of this
     comparison is therefore bounded by construction; the check tests the angular part, the phases and the plane's
-    geometry; the radial accuracy is the separate check «сходимость» against the picture's resolution."""
+    geometry; the radial accuracy is the separate check "Convergence" against the picture's resolution."""
     x, y, z = (np.asarray(a, float) for a in (x, y, z))
     rho_xy = np.hypot(x, y)
     r = np.hypot(rho_xy, z)

@@ -44,21 +44,24 @@ import math
 
 import numpy as np
 
+from ...i18n import T
 from .. import backend
 
 ABOUT = {
     "layer": "core", "kind": "numerics",
-    "title": "FDTD: датчики, спектры, потоки, сечения, дальнее поле",
-    "statement": "Поля в точках; бегущее дискретное преобразование Фурье на линиях, плоскостях и в объёмах; поток "
-                 "Пойнтинга через плоскости и замкнутые ящики (во времени и по частотам); сечения рассеяния, "
-                 "поглощения и экстинкции; преобразование ближнего поля в дальнее (2-D и 3-D) через эквивалентные "
-                 "токи на замкнутой поверхности.",
-    "validity": "второй порядок по ячейке (поля приводятся к центрам граней усреднением соседних узлов Йи, поэтому "
-                "плоскую волну сетки монитор видит слабее на множитель 1 − O((k dx)²), зависящий от направления; "
-                "нормальное падение — cos(k dx/2)); сечения — с точной или «мониторной» нормировкой падающей волны; "
-                "дальнее поле — функция Грина однородного фона без потерь",
-    "basis": ["теорема эквивалентности и векторные потенциалы в дальней зоне (выведено; проверено в тестах по "
-              "точным рядам цилиндра и Ми)", "асимптотика функции Ганкеля DLMF 10.17.5 (2-D)"],
+    "title": T("FDTD: probes, spectra, fluxes, cross sections, the far field"),
+    "statement": T("Fields at points; a running discrete Fourier transform on lines, planes and in volumes; the "
+                   "Poynting flux through planes and closed boxes (in time and per frequency); scattering, absorption "
+                   "and extinction cross sections; the near-to-far-field transform (2-D and 3-D) through equivalent "
+                   "currents on a closed surface."),
+    "validity": T("second order in the cell (the fields are brought to the face centres by averaging neighbouring Yee "
+                  "nodes, so the monitor sees the grid's plane wave weaker by a factor 1 − O((k dx)²) that depends on "
+                  "the direction; at normal incidence cos(k dx/2)); cross sections with the exact or the “monitor” "
+                  "normalisation of the incident wave; the far field by the Green's function of a homogeneous lossless "
+                  "background"),
+    "basis": [T("the equivalence theorem and the vector potentials in the far zone (derived; checked in the tests "
+                "against the exact series of the cylinder and of Mie)"),
+              T("the asymptotics of the Hankel function, DLMF 10.17.5 (2-D)")],
     "conflicts": [],
 }
 
@@ -78,7 +81,7 @@ class Gather:
             r = np.arange(a, b)
             if (r < 0).any() or (r >= n).any():
                 if not sim.periodic[u]:
-                    raise ValueError("область датчика выходит за сетку")
+                    raise ValueError(T("the monitor's region extends beyond the grid"))
                 if ph is not None:
                     k = np.floor_divide(r, n)  # how many periods
                     f = np.exp(1j * sim.bloch[u] * sim.shape[u] * sim.dx * k)

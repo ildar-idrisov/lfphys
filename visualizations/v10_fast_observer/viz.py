@@ -26,7 +26,9 @@ from scipy import constants as sc
 from lfphys.core import backend as B
 from lfphys.core import lorentz as LZ
 from lfphys.core import raytrace as RT
+from lfphys.i18n import T, join, text_of
 from lfphys.tools import colour as CO
+from lfviz.errors import Refusal
 from lfviz.params import Param, Schema
 from lfviz.sim import Simulation as BaseSimulation
 
@@ -39,59 +41,70 @@ IMG_FRAMES = 7        # frames between images while the world runs: 0.35 s of pl
 EPS = np.finfo(float).eps
 # a star is drawn into one pixel as bright as a surface of its temperature there at rest, times its flux factor
 
-SCENES = [("flyby", "куб и шар пролетают мимо наблюдателя"),
-          ("city", "наблюдатель летит по улице между башнями"),
-          ("sky", "небо чёрного тела и звёзды: диполь и аберрация"),
-          ("train", "длинный поезд проходит мимо столбов")]
-IMAGES = [("seen", "что видит наблюдатель (полная физика)"),
-          ("geometry", "для сравнения: только геометрия (цвет и яркость как в покое)"),
-          ("snapshot", "для сравнения: мгновенный снимок без времени света (так не видно)"),
-          ("doppler", "доплеровский множитель D (ложные цвета)"),
-          ("delay", "запаздывание света: когда излучён свет (ложные цвета)")]
+SCENES = [("flyby", T("a cube and a ball fly past the observer")),
+          ("city", T("the observer flies down a street between towers")),
+          ("sky", T("a black-body sky and stars: the dipole and aberration")),
+          ("train", T("a long train passes the posts"))]
+IMAGES = [("seen", T("what the observer sees (full physics)")),
+          ("geometry", T("for comparison: geometry only (colour and brightness as at rest)")),
+          ("snapshot", T("for comparison: an instantaneous snapshot without the light's travel time (not what is seen)")),
+          ("doppler", T("Doppler factor D (false colours)")),
+          ("delay", T("light delay: when the light was emitted (false colours)"))]
+CAMERAS = [("pinhole", T("ordinary (field of view)")), ("sky", T("whole sky (360° × 180° map)"))]
 
 
 def _p(*a, **k):
     return Param(*a, **k)
 
 
+def _vec(v):
+    """A vector of three numbers as a text: the separator follows the language (ru: decimal commas)."""
+    x, y, z = (float(c) for c in v)
+    return T("({x:.3f}, {y:.3f}, {z:.3f})", x=x, y=y, z=z)
+
+
+SCENE, OBSERVER, CAMERA, IMAGE = T("Scene"), T("Observer"), T("Camera"), T("Image")
 SCHEMA = Schema([
-    _p("scene", "Сцена", "select", "flyby", group="Сцена", options=SCENES),
-    _p("beta", "Скорость тел β (доля c)", "float", 0.9, group="Сцена", min=0.0, max=0.99,
+    _p("scene", SCENE, "select", "flyby", group=SCENE, options=SCENES),
+    _p("beta", T("Speed of the bodies β (fraction of c)"), "float", 0.9, group=SCENE, min=0.0, max=0.99,
        show_if={"scene": ["flyby", "train"]},
-       help="Тела движутся равномерно вдоль x; это параметр мира: мгновенно изменить скорость протяжённого тела "
-            "нельзя (это не было бы движением твёрдого тела)"),
-    _p("sky_T", "Температура неба, K", "float", 4000.0, group="Сцена", min=500.0, max=30000.0, log=True,
+       help=T("The bodies move uniformly along x; this is a world parameter: the speed of an extended body cannot be "
+              "changed instantly (that would not be a rigid motion)")),
+    _p("sky_T", T("Temperature of the sky, K"), "float", 4000.0, group=SCENE, min=500.0, max=30000.0, log=True,
        show_if={"scene": ["sky"]}),
-    _p("stars", "Звёзд", "int", 300, group="Сцена", min=0, max=2000, show_if={"scene": ["sky", "city"]}),
-    _p("obs_beta", "Скорость наблюдателя β", "float", 0.0, group="Наблюдатель", min=0.0, max=0.99, live=True,
-       help="Изменение — буст точечного наблюдателя в текущий момент: тот же свет, другие направления и частоты"),
-    _p("obs_theta", "Направление скорости наблюдателя: от оси z θ, °", "float", 0.0, group="Наблюдатель", min=0.0,
-       max=180.0, live=True),
-    _p("obs_phi", "Направление скорости наблюдателя: азимут φ, °", "float", 0.0, group="Наблюдатель", min=0.0,
+    _p("stars", T("Stars"), "int", 300, group=SCENE, min=0, max=2000, show_if={"scene": ["sky", "city"]}),
+    _p("obs_beta", T("Speed of the observer β"), "float", 0.0, group=OBSERVER, min=0.0, max=0.99, live=True,
+       help=T("A change is a boost of a point observer at the current moment: the same light, other directions and "
+              "frequencies")),
+    _p("obs_theta", T("Direction of the observer's velocity: from the z axis θ, °"), "float", 0.0, group=OBSERVER,
+       min=0.0, max=180.0, live=True),
+    _p("obs_phi", T("Direction of the observer's velocity: azimuth φ, °"), "float", 0.0, group=OBSERVER, min=0.0,
        max=360.0, live=True),
-    _p("camera", "Камера", "select", "pinhole", group="Камера", live=True,
-       options=[("pinhole", "обычная (поле зрения)"), ("sky", "всё небо (развёртка 360° × 180°)")]),
-    _p("fov", "Поле зрения по горизонтали, °", "float", 120.0, group="Камера", min=20.0, max=150.0, live=True,
+    _p("camera", CAMERA, "select", "pinhole", group=CAMERA, live=True, options=CAMERAS),
+    _p("fov", T("Horizontal field of view, °"), "float", 120.0, group=CAMERA, min=20.0, max=150.0, live=True,
        show_if={"camera": ["pinhole"]}),
-    _p("yaw", "Взгляд: поворот от оси z к оси x, °", "float", 0.0, group="Камера", min=-180.0, max=180.0, live=True),
-    _p("pitch", "Взгляд: вверх, °", "float", 0.0, group="Камера", min=-80.0, max=80.0, live=True),
-    _p("res", "Размер изображения", "select", "m", group="Камера", live=True,
-       options=[("s", "малый"), ("m", "средний"), ("l", "большой")]),
-    _p("image", "Изображение", "select", "seen", group="Изображение", live=True, options=IMAGES),
-    _p("exposure", "Экспозиция", "select", "fixed", group="Изображение", live=True,
-       options=[("fixed", "как для сцены в покое (видно, где ярче и где темнее)"),
-                ("auto", "по кадру (видны цвета, яркость выровнена)")]),
-    _p("ev", "Поправка экспозиции, ступени", "float", 0.0, group="Изображение", min=-8.0, max=8.0, live=True),
+    _p("yaw", T("View: turn from the z axis towards the x axis, °"), "float", 0.0, group=CAMERA, min=-180.0, max=180.0,
+       live=True),
+    _p("pitch", T("View: up, °"), "float", 0.0, group=CAMERA, min=-80.0, max=80.0, live=True),
+    _p("res", T("Image size"), "select", "m", group=CAMERA, live=True,
+       options=[("s", T("small size")), ("m", T("medium size")), ("l", T("large size"))]),
+    _p("image", IMAGE, "select", "seen", group=IMAGE, live=True, options=IMAGES),
+    _p("exposure", T("Exposure"), "select", "fixed", group=IMAGE, live=True,
+       options=[("fixed", T("as for the scene at rest (shows where it is brighter and where darker)")),
+                ("auto", T("per frame (the colours show, the brightness is evened out)"))]),
+    _p("ev", T("Exposure correction, stops"), "float", 0.0, group=IMAGE, min=-8.0, max=8.0, live=True),
 ], presets={
-    "terrell": {"label": "Пролёт куба и шара при β = 0,9: поворот Террелла, шар остаётся кругом", "params": {}},
-    "terrell_099": {"label": "То же при β = 0,99", "params": {"beta": 0.99}},
-    "city": {"label": "Полёт по улице при β = 0,9: аберрация, синий цвет впереди, яркость",
+    "terrell": {"label": T("A cube and a ball fly past at β = {b}: Terrell rotation, the ball stays a circle", b=0.9),
+                "params": {}},
+    "terrell_099": {"label": T("The same at β = {b}", b=0.99), "params": {"beta": 0.99}},
+    "city": {"label": T("Flight down a street at β = {b}: aberration, blue ahead, brightness", b=0.9),
              "params": {"scene": "city", "obs_beta": 0.9}},
-    "sky": {"label": "Небо 4000 K при β = 0,9: диполь, звёзды стягиваются вперёд",
+    "sky": {"label": T("A sky of {temp:d} K at β = {b}: the dipole, the stars crowd forward", temp=4000, b=0.9),
             "params": {"scene": "sky", "obs_beta": 0.9, "camera": "sky"}},
-    "train": {"label": "Поезд при β = 0,8 мимо столбов: удлинение и укорочение", "params": {"scene": "train", "beta": 0.8}},
-    "rest": {"label": "Сцена в покое (β = 0): обычная картинка, сверка трассировщика", "params": {"beta": 0.0}},
-    "snapshot": {"label": "Для сравнения: мгновенный снимок (сокращение Лоренца, которого не видно)",
+    "train": {"label": T("A train at β = {b} passing posts: stretching and shortening", b=0.8),
+              "params": {"scene": "train", "beta": 0.8}},
+    "rest": {"label": T("The scene at rest (β = 0): an ordinary picture, a check of the tracer"), "params": {"beta": 0.0}},
+    "snapshot": {"label": T("For comparison: an instantaneous snapshot (the Lorentz contraction that is not seen)"),
                  "params": {"image": "snapshot"}},
 })
 
@@ -113,41 +126,42 @@ def build_scene(p, rng):
     b = float(p.get("beta", 0.0))
     v = (b * C, 0.0, 0.0)
     floor = RT.Panel((0.0, -2.0, 20.0), (1.0, 0.0, 0.0), (0.0, 0.0, 1.0), half=(60.0, 60.0), cell=2.0,
-                     temps=(5200.0, 3400.0), name="пол (в покое)")
+                     temps=(5200.0, 3400.0), name=T("floor (at rest)"))
     bodies, stars, sky, x_obs = [], [], None, (0.0, 0.0, 0.0)
     if kind == "flyby":
         # the cube's faces coded: +x leading 9500 K (blue-white), -x trailing 3600 K (orange), -z facing the observer
         # 6500 K (white), +z far side 2600 K (red), top and bottom 5000 K
         cube = RT.Box((-3.0, 0.0, 8.0), (1.0, 1.0, 1.0), v, temps=(9500.0, 3600.0, 5000.0, 5000.0, 2600.0, 6500.0),
-                      alt=0.8, cells=4, name="куб")
-        ball = RT.Sphere((-10.0, 0.5, 11.0), 1.3, v, temps=(7000.0, 3800.0), cells=(6, 12), name="шар")
+                      alt=0.8, cells=4, name=T("cube"))
+        ball = RT.Sphere((-10.0, 0.5, 11.0), 1.3, v, temps=(7000.0, 3800.0), cells=(6, 12), name=T("ball"))
         bodies = [cube, ball, floor]
     elif kind == "train":
         train = RT.Box((-14.0, 0.0, 9.0), (12.0, 1.4, 1.6), v, temps=(9000.0, 3500.0, 5200.0, 5200.0, 4200.0, 6200.0),
-                       alt=0.75, cells=24, name="поезд")
-        posts = [RT.Box((x, 0.5, 6.0), (0.12, 2.5, 0.12), temps=(6800.0,) * 6, alt=1.0, cells=1, name=f"столб x = {x:g} м")
+                       alt=0.75, cells=24, name=T("train"))
+        posts = [RT.Box((x, 0.5, 6.0), (0.12, 2.5, 0.12), temps=(6800.0,) * 6, alt=1.0, cells=1,
+                        name=T("post x = {x} m", x=float(x)))
                  for x in np.arange(-30.0, 31.0, 6.0)]
         bodies = [train] + posts + [floor]
     elif kind == "city":
         for x in (-11.0, -5.5, 5.5, 11.0):
             for z in np.arange(10.0, 81.0, 10.0):
                 h = float(rng.uniform(2.0, 6.0))
-                T = float(rng.choice([4200.0, 5200.0, 6200.0, 7500.0]))
-                bodies.append(RT.Box((x, -2.0 + h, z), (2.0, h, 2.0), temps=(T,) * 6, alt=0.7, cells=3,
-                                     name=f"башня ({x:g}, {z:g})"))
+                Tk = float(rng.choice([4200.0, 5200.0, 6200.0, 7500.0]))
+                bodies.append(RT.Box((x, -2.0 + h, z), (2.0, h, 2.0), temps=(Tk,) * 6, alt=0.7, cells=3,
+                                     name=T("tower ({x}, {z})", x=float(x), z=float(z))))
         bodies.append(RT.Panel((0.0, -2.0, 40.0), (1.0, 0.0, 0.0), (0.0, 0.0, 1.0), half=(40.0, 80.0), cell=2.0,
-                               temps=(5200.0, 3400.0), name="улица (в покое)"))
+                               temps=(5200.0, 3400.0), name=T("street (at rest)")))
         x_obs = (0.0, 0.0, -5.0)
     elif kind == "sky":
         sky = float(p["sky_T"])
     else:
-        raise ValueError(f"неизвестная сцена {kind!r}")
+        raise ValueError(f"unknown scene {kind!r}")
     if kind in ("sky", "city"):
         n = int(p.get("stars", 0))
         d = rng.normal(size=(n, 3))
         d /= np.linalg.norm(d, axis=1, keepdims=True)
-        T = 10 ** rng.uniform(math.log10(3000.0), math.log10(12000.0), n)
-        stars = [(tuple(map(float, d[i])), float(T[i])) for i in range(n)]
+        Tk = 10 ** rng.uniform(math.log10(3000.0), math.log10(12000.0), n)
+        stars = [(tuple(map(float, d[i])), float(Tk[i])) for i in range(n)]
     return RT.Scene(bodies, sky=sky, stars=stars), x_obs
 
 
@@ -192,8 +206,8 @@ def mesh_of(body, n=None):
         hu, hv = (min(float(x), 100.0) for x in body.half)
         ku = int(min(81, 2 * round(hu / body.cell) + 1))
         kv = int(min(81, 2 * round(hv / body.cell) + 1))
-        S, T = np.meshgrid(np.linspace(-hu, hu, ku), np.linspace(-hv, hv, kv), indexing="ij")
-        V = (S[..., None] * np.asarray(body.u) + T[..., None] * np.asarray(body.v)).reshape(-1, 3)
+        S, Tt = np.meshgrid(np.linspace(-hu, hu, ku), np.linspace(-hv, hv, kv), indexing="ij")
+        V = (S[..., None] * np.asarray(body.u) + Tt[..., None] * np.asarray(body.v)).reshape(-1, 3)
         tri = []
         for i in range(ku - 1):
             for j in range(kv - 1):
@@ -201,8 +215,8 @@ def mesh_of(body, n=None):
                 tri += [(a, bb, d), (a, d, c)]
     V = np.asarray(V, float)
     # the temperature of each vertex: a point just inside the surface along the vertex (patterns are rest-frame)
-    T = RT.surface_temperature(body, V * (1 - 1e-9))
-    return V, np.asarray(tri, np.uint32), T
+    Tk = RT.surface_temperature(body, V * (1 - 1e-9))
+    return V, np.asarray(tri, np.uint32), Tk
 
 
 def _deflate(a):
@@ -237,8 +251,8 @@ class Simulation(BaseSimulation):
         self.Y_ref = float(self.table(np.array([self.T_ref]))[0, 1])
         self.meshes = {}
         for i, b in enumerate(self.scene.bodies):
-            V, tri, T = mesh_of(b)
-            self.meshes[i] = (V, tri, T)
+            V, tri, Tk = mesh_of(b)
+            self.meshes[i] = (V, tri, Tk)
         self.box = self._initial_box()
         span = max(self.box[1][k] - self.box[0][k] for k in range(3))
         # ~30 s of play for the bodies to cross 40 m (the fly-by), or for light to cross the scene 1.2 times
@@ -319,7 +333,8 @@ class Simulation(BaseSimulation):
             self.emit({"type": "box", "t": self.t, "box": [list(self.box[0]), list(self.box[1])]})
 
     # --- checks -----------------------------------------------------------------------------------------------------
-    def _check(self, cid, label, value, ref, unit="", note="", tol=1e-9, ok=None, info=False, group="Что видно"):
+    def _check(self, cid, label, value, ref, unit="", note="", tol=1e-9, ok=None, info=False, group=None):
+        group = T("What is seen") if group is None else group
         rel = None
         if ref is not None and value is not None and ref != 0:
             rel = (value - ref) / abs(ref)
@@ -347,10 +362,11 @@ class Simulation(BaseSimulation):
         same = bool(np.array_equal(np.where(r["body"] >= 0, r["body"], -1), who))
         f = np.isfinite(s)
         err = float(np.max(np.abs(r["s"][f] - s[f]) / s[f])) if f.any() else 0.0
-        self._check("rest_equal", "Сцена в покое: трассировщик против обычных лучей (расстояния, отн.)", err, 0.0, "",
-                    tol=4 * EPS, ok=same and err <= 4 * EPS, group="Сверка трассировщика",
-                    note=f"без скоростей преобразования Лоренца тождественны: те же тела в {int(f.sum())} пикселях, "
-                         f"те же расстояния; совпадение тел: {'да' if same else 'нет'}")
+        self._check("rest_equal", T("Scene at rest: the tracer against ordinary rays (distances, relative)"), err, 0.0,
+                    "", tol=4 * EPS, ok=same and err <= 4 * EPS, group=T("Check of the tracer"),
+                    note=T("without velocities the Lorentz transformations are identities: the same bodies in {n:d} "
+                           "pixels, the same distances; the bodies agree: {same}", n=int(f.sum()),
+                           same=T("yes") if same else T("no")))
 
     def _image_checks(self, ob, r, cam, final=False):
         """Checks of one image against closed forms: the sky's temperature, the stars' directions, emission times and
@@ -362,15 +378,16 @@ class Simulation(BaseSimulation):
             if m.any():
                 ref = RT.ref_sky_temperature(self.scene.sky, ob.u, cam.directions()[m], C)
                 err = float(np.max(np.abs(r["T_obs"][m] / ref - 1)))
-                out.append(("sky_T", "Небо: температура в каждом пикселе против T/(γ(1 − β cos θ′))", err, 16 * EPS * gu,
-                            f"{int(m.sum())} пикселей; γ² = {gu:.4g}; допуск 16 ε γ² (округление бустов)"))
+                out.append(("sky_T", T("Sky: the temperature in every pixel against T/(γ(1 − β cos θ′))"), err,
+                            16 * EPS * gu, T("{n:d} pixels; γ² = {g2:.4g}; tolerance 16 ε γ² (the round-off of the "
+                                             "boosts)", n=int(m.sum()), g2=gu)))
         if self.scene.stars:
             st = RT.star_images(self.scene, ob, C)
             s = np.array([x[0] for x in self.scene.stars])
             ref = RT.ref_aberration(s, ob.u, C)
             a = np.arctan2(np.linalg.norm(np.cross(st["d"], ref), axis=1), np.sum(st["d"] * ref, 1))
-            out.append(("stars", "Звёзды: видимые направления против формулы аберрации, рад", float(a.max()),
-                        16 * EPS * gu, f"{len(s)} звёзд; cos θ′ = (cos θ + β)/(1 + β cos θ)"))
+            out.append(("stars", T("Stars: the directions seen against the aberration formula, rad"), float(a.max()),
+                        16 * EPS * gu, T("{n:d} stars; cos θ′ = (cos θ + β)/(1 + β cos θ)", n=len(s))))
         for ib in self.moving:
             body = self.scene.bodies[ib]
             m = r["body"] == ib
@@ -380,10 +397,12 @@ class Simulation(BaseSimulation):
             g2 = gu * float(LZ.gamma_of(np.asarray(body.velocity), C)) ** 2
             e_t = float(np.max(np.abs(te - r["t_emit"][m]) / np.maximum(ob.t - te, 1e-300)))
             e_d = float(np.max(np.abs(D / r["D"][m] - 1)))
-            out.append((f"ret_{ib}", f"{body.name}: время излучения и множитель D против запаздывающего времени",
+            out.append((f"ret_{ib}", T("{body}: the emission time and the factor D against the retarded time",
+                                       body=body.name),
                         max(e_t, e_d), 64 * EPS * g2,
-                        f"{int(m.sum())} пикселей: время излучения (отн. ко времени пути света) {e_t:.1e}, D {e_d:.1e}; "
-                        f"эталон — lorentz.retarded_time для найденной точки тела и D = γ_н(1 − u·n)/(γ_т(1 − v·n))"))
+                        T("{n:d} pixels: emission time (relative to the light's travel time) {et:.1e}, D {ed:.1e}; "
+                          "reference: lorentz.retarded_time for the point of the body found and "
+                          "D = γ_o(1 − u·n)/(γ_b(1 − v·n))", n=int(m.sum()), et=e_t, ed=e_d)))
         heavy = final or self.seq <= 1 or self.seq % 20 == 0 or self.force_checks
         self.force_checks = False
         for ib in (self.moving if heavy else []):
@@ -400,17 +419,18 @@ class Simulation(BaseSimulation):
             P = np.linalg.norm((LZ.boost(np.asarray(body.velocity), C) @
                                 np.r_[C * ob.t, np.asarray(ob.x) - np.asarray(body.center)])[1:])
             tol = 64 * EPS * gu * float(LZ.gamma_of(np.asarray(body.velocity), C)) ** 2 * (1 + P / body.radius)
-            out.append((f"penrose_{ib}", f"{body.name}: контур — окружность (Пенроуз), рад", max(dev, cross), tol,
-                        f"контур найден делением отрезка пополам по лучам трассировщика (64 луча); отклонение от "
-                        f"окружности {dev:.1e}, от окружности lorentz.sphere_outline {cross:.1e}; угловой радиус "
-                        f"{math.degrees(rr):.4g}°"))
+            out.append((f"penrose_{ib}", T("{body}: the outline is a circle (Penrose), rad", body=body.name),
+                        max(dev, cross), tol,
+                        T("the outline found by bisection along the tracer's rays (64 rays); deviation from a circle "
+                          "{dev:.1e}, from the circle of lorentz.sphere_outline {cross:.1e}; angular radius {r:.4g}°",
+                          dev=float(dev), cross=cross, r=math.degrees(rr))))
         for cid, label, val, tol, note in out:
             prev = self.worst.get(cid)
             if final or prev is None or val > 2 * prev[0] or (val > tol) != (prev[0] > prev[1]):
                 self.worst[cid] = (max(val, prev[0] if prev else 0.0), tol)
                 w, wt = self.worst[cid]
                 self._check(cid, label, w, 0.0, "", tol=wt, ok=w <= wt,
-                            note=note + " (худшее значение по кадрам этого мира)")
+                            note=T("{note} (the worst value over the frames of this world)", note=note))
 
     def _energy_check(self, ob):
         """The sky camera of the sky scene: (1/4 pi) int (T'/T)^4 dOmega' against gamma^2 (1 + beta^2/3), with the
@@ -427,19 +447,19 @@ class Simulation(BaseSimulation):
         b = float(np.linalg.norm(ob.u) / C)
         ref = RT.ref_energy_density_factor(b)
         tol = abs(vals[0] - vals[1]) / ref + 1e-12
-        self._check("energy", "Плотность энергии неба для наблюдателя / в покое", vals[0], ref, "", tol=tol,
-                    note=f"сумма (T′/T)⁴ по пикселям с точными телесными углами против γ²(1 + β²/3) "
-                         f"(прожекторный эффект, проинтегрированный); допуск — оценка ошибки квадратуры по "
-                         f"половинному разрешению ({vals[1]:.8g})")
+        self._check("energy", T("Energy density of the sky for the observer / at rest"), vals[0], ref, "", tol=tol,
+                    note=T("the sum of (T′/T)⁴ over the pixels with exact solid angles against γ²(1 + β²/3) (the "
+                           "searchlight effect, integrated); tolerance: the quadrature's error estimated from half the "
+                           "resolution ({half:.8g})", half=vals[1]))
 
     # --- the image ---------------------------------------------------------------------------------------------------
     def _colours(self, r, mode, cam, ob):
         """sRGB of the image, the stars splatted where the image shows light."""
         if mode in ("doppler", "delay"):
             return self._false_colour(r, mode)
-        T = r["T_obs"] if mode == "seen" else r["T_rest"]
-        T = np.where(np.isfinite(T), T, 0.0)
-        XYZ = self.table(T)
+        Tk = r["T_obs"] if mode == "seen" else r["T_rest"]
+        Tk = np.where(np.isfinite(Tk), Tk, 0.0)
+        XYZ = self.table(Tk)
         if mode != "snapshot" and self.scene.stars:
             st = RT.star_images(self.scene, ob, C)
             ci, rj = cam.pixel_of(st["d"])
@@ -487,7 +507,8 @@ class Simulation(BaseSimulation):
         except ValueError as e:
             if self.inside != str(e):
                 self.inside = str(e)
-                self._msg({"type": "notice", "t": self.t, "text": f"{e} (t = {self.t / NS:.4g} нс)"})
+                self._msg({"type": "notice", "t": self.t, "text": T("{error} (t = {t:.4g} ns)", error=text_of(e),
+                                                                     t=self.t / NS)})
             return
         self.inside = None
         shown = snap if snap is not None else r
@@ -504,13 +525,13 @@ class Simulation(BaseSimulation):
         ret_meta, ret_pos, ret_rgb = [], [], []
         for ib in self.moving:
             body_ = self.scene.bodies[ib]
-            V, _, T = self.meshes[ib]
+            V, _, Tk = self.meshes[ib]
             te, xe, Dv = RT.retarded_points(body_, V, ob, C)
             dirs = RT.look_direction(ob, xe, C)
             tr = RT.trace_directions(self.scene, ob, dirs, C, aux=True)
             dist = np.linalg.norm(xe - np.asarray(ob.x), axis=1)
             vis = (tr["body"] == ib) & (np.abs(tr["s"] - dist) <= 1e-6 * dist)
-            Tv = T * Dv if mode == "seen" else T
+            Tv = Tk * Dv if mode == "seen" else Tk
             col = CO.to_display(self.table(Tv), k).astype(float)
             col = np.where(vis[:, None], col, 0.3 * col + 40)
             ret_meta.append({"id": f"ret{ib}", "from": int(sum(len(x) for x in ret_pos)), "count": int(len(V)),
@@ -527,9 +548,9 @@ class Simulation(BaseSimulation):
                              "gamma": float(LZ.gamma_of(np.asarray(ob.u), C))},
                 "bodies": [b.name for b in self.scene.bodies], "sky_T": self.scene.sky, "retarded": ret_meta,
                 "device": dev,
-                "fields": {"D": "log2(D) = (v − 1)/65534·32 − 16; 0 — нет света",
-                           "delay": "задержка = (v − 1)/65534·delay_max; 0 — свет не от тела",
-                           "T": "температура покоя, K (округлена)", "body": "номер тела; −1 небо; −2 ничего"}}
+                "fields": {"D": "log2(D) = (v - 1)/65534*32 - 16; 0: no light",
+                           "delay": "delay = (v - 1)/65534*delay_max; 0: the light is not from a body",
+                           "T": "rest temperature, K (rounded)", "body": "body number; -1 sky; -2 nothing"}}
         blobs = {"rgb": _deflate(rgb), "D": _deflate(_sub_filter(Dq)), "delay": _deflate(_sub_filter(dq)), "T": _deflate(Tq),
                  "body": _deflate(body)}
         if ret_pos:
@@ -551,8 +572,8 @@ class Simulation(BaseSimulation):
         buf, self._buf = self._buf, []
         static = {"pos": [], "idx": [], "rgb": [], "n": 0, "names": []}
         for i, b in enumerate(self.scene.bodies):
-            V, tri, T = self.meshes[i]
-            rgb = CO.to_display(self.table(T), 1.0 / self.Y_ref)
+            V, tri, Tk = self.meshes[i]
+            rgb = CO.to_display(self.table(Tk), 1.0 / self.Y_ref)
             if i not in self.moving and b.kind != "panel":
                 # bodies at rest (towers, posts): one layer
                 static["pos"].append(RT.lab_points(b, V, 0.0, C))
@@ -562,19 +583,22 @@ class Simulation(BaseSimulation):
                 static["names"].append(b.name)
                 continue
             self._msg({"type": "mesh", "t": self.t, "id": f"body{i}", "count": int(len(V)),
-                       "label": f"{b.name}: в лаборатории сейчас" + (" (сокращён)" if i in self.moving else ""),
+                       "label": T("{body}: in the lab now (contracted)", body=b.name) if i in self.moving else
+                       T("{body}: in the lab now", body=b.name),
                        "opacity": 0.35 if i in self.moving else 0.5,
                        "base": "rest" if i in self.moving else "lab"},
                       {"pos": (V if i in self.moving else RT.lab_points(b, V, 0.0, C)).astype(np.float32),
                        "idx": tri, "rgb": rgb})
             if i in self.moving:
                 self._msg({"type": "mesh", "t": self.t, "id": f"ret{i}", "count": int(len(V)),
-                           "label": f"{b.name}: откуда пришёл свет, видимый сейчас", "opacity": 1.0, "base": "lab"},
+                           "label": T("{body}: where the light seen now came from", body=b.name), "opacity": 1.0,
+                           "base": "lab"},
                           {"pos": RT.lab_points(b, V, 0.0, C).astype(np.float32), "idx": tri, "rgb": rgb})
         if static["n"]:
-            kinds = "башни" if self.kind == "city" else ("столбы" if self.kind == "train" else "тела")
+            kinds = T("towers") if self.kind == "city" else (T("posts") if self.kind == "train" else T("bodies"))
             self._msg({"type": "mesh", "t": self.t, "id": "static", "count": int(static["n"]),
-                       "label": f"{kinds} в покое ({len(static['names'])})", "opacity": 0.85, "base": "lab"},
+                       "label": T("{kinds} at rest ({n:d})", kinds=kinds, n=len(static["names"])), "opacity": 0.85,
+                       "base": "lab"},
                       {"pos": np.concatenate(static["pos"]).astype(np.float32),
                        "idx": np.concatenate(static["idx"]).astype(np.uint32), "rgb": np.concatenate(static["rgb"])})
         # the meshes first (the 3-D scene), then what was computed at the start (checks, the first image)
@@ -639,7 +663,7 @@ class Simulation(BaseSimulation):
     def set_live(self, values):
         merged, errors = SCHEMA.coerce_live(self.live, values)
         if errors:
-            raise ValueError("; ".join(errors))
+            raise Refusal(join(errors))
         u_new = self._u_of(merged)
         x, u_old, tau, _ = self._obs_state(self.t)
         cam = self.camera(merged)  # refuses a bad camera before anything changes
@@ -655,10 +679,10 @@ class Simulation(BaseSimulation):
         self._render_image()
         self.force_image = False
         b = float(np.linalg.norm(u_new) / C)
-        return (f"наблюдатель: β = {b:.4g}" + (f" вдоль ({', '.join(f'{c:.3f}' for c in u_new / max(b * C, 1e-300))})"
-                                                if b > 0 else " (покоится)") +
-                f"; камера: {cam.kind}, взгляд ({', '.join(f'{c:.3f}' for c in cam.forward)}); изображение: "
-                f"{dict(IMAGES)[merged['image']]}")
+        obs = T("observer: β = {b:.4g} along {dir}", b=b, dir=_vec(u_new / max(b * C, 1e-300))) if b > 0 else \
+            T("observer: at rest (β = 0)")
+        return T("{observer}; camera: {camera}, view {fwd}; image: {image}", observer=obs,
+                 camera=dict(CAMERAS)[merged["camera"]], fwd=_vec(cam.forward), image=dict(IMAGES)[merged["image"]])
 
     def engine_modules(self):
         return ["core.raytrace", "core.lorentz", "core.optics.radiation", "core.backend", "tools.colour"]
@@ -668,37 +692,38 @@ class Simulation(BaseSimulation):
         b = float(p.get("beta", 0.0)) if self.kind in ("flyby", "train") else 0.0
         cx = [0.5 * (self.box[0][k] + self.box[1][k]) for k in range(3)]
         objects = []
-        views = [["iso", "Изо", "Изометрия (F)"], ["side", "Сбоку", "Взгляд вдоль оси x"],
-                 ["top", "Сверху", "Взгляд сверху (вдоль оси y)"], ["beam", "Из-за наблюдателя", "Вдоль оси z"],
-                 ["back", "Навстречу", "Против оси z"]]
+        views = [["iso", T("Iso"), T("Isometric (F)")], ["side", T("Side"), T("View along the x axis")],
+                 ["top", T("Top"), T("View from above (along the y axis)")],
+                 ["beam", T("From behind the observer"), T("Along the z axis")],
+                 ["back", T("Facing"), T("Against the z axis")]]
         names = {i: bb.name for i, bb in enumerate(self.scene.bodies)}
         return {
-            "title": "Что видит быстрый наблюдатель: " + dict(SCENES)[self.kind],
-            "text": ("Изображение посчитано трассировкой лучей со временем света: каждый пиксель — фотон, "
-                     "преобразованный Лоренцем (аберрация); его прошлый световой луч найден до тела, которое его "
-                     "излучило (поворот Террелла–Пенроуза), а свет виден как чёрное тело при температуре D·T "
-                     "(доплеровский цвет и прожекторная яркость — точно). В 3D — лаборатория сейчас: тела в "
-                     "лоренцевом сокращении и места, откуда пришёл свет, видимый сейчас."),
+            "title": T("What a fast observer sees: {scene}", scene=dict(SCENES)[self.kind]),
+            "text": T("The image is computed by ray tracing with the light's travel time: every pixel is a photon, "
+                      "Lorentz-transformed (aberration); its past light ray is followed back to the body that emitted "
+                      "it (the Terrell–Penrose rotation), and the light is seen as a black body at the temperature D·T "
+                      "(the Doppler colour and the searchlight brightness, exactly). The 3-D view shows the lab now: "
+                      "the bodies Lorentz-contracted and the places the light seen now came from."),
             "actions": [],
-            "scene3d": {"box": [list(self.box[0]), list(self.box[1])], "units": "м", "objects": objects,
+            "scene3d": {"box": [list(self.box[0]), list(self.box[1])], "units": T("m"), "objects": objects,
                         "layers": [], "views": views,
                         "planes": {"max": 0, "center": cx, "defaults": {"1": [0, 1, 0], "2": [1, 0, 0], "3": [0, 0, 1]}}},
             "bodies": [{"id": i, "name": names[i], "kind": bb.kind, "beta": (np.asarray(bb.velocity) / C).tolist(),
                         "moving": i in self.moving} for i, bb in enumerate(self.scene.bodies)],
             "scene": {"kind": self.kind, "beta_bodies": b, "sky_T": self.scene.sky, "stars": len(self.scene.stars),
                       "T_ref": self.T_ref, "c": C},
-            "units": {"t": "с (лабораторное время; сцена длится сотни наносекунд)", "x": "м"},
+            "units": {"t": T("s (lab time; the scene lasts hundreds of nanoseconds)"), "x": T("m")},
         }, {}
 
 
 VIZ = {
     "id": "v10_fast_observer",
-    "title": "Что видит быстрый наблюдатель",
-    "summary": ("Изображение 3D-сцены для наблюдателя или тел при скоростях, близких к c: трассировка лучей со "
-                "временем света — аберрация, поворот Террелла–Пенроуза (шар остаётся кругом), цвета Доплера и "
-                "прожекторная яркость; в 3D — тела в лаборатории и места, откуда пришёл видимый свет."),
-    "purpose": ("Показать, что быстрые тела не выглядят сплюснутыми (сокращение Лоренца не видно — видно поворот), "
-                "а быстрый наблюдатель видит мир стянутым вперёд, голубым и ярким впереди."),
+    "title": T("What a fast observer sees"),
+    "summary": T("The image of a 3-D scene for an observer or bodies at speeds close to c: ray tracing with the light's "
+                 "travel time — aberration, the Terrell–Penrose rotation (the ball stays a circle), Doppler colours and "
+                 "the searchlight brightness; in 3-D, the bodies in the lab and the places the light seen came from."),
+    "purpose": T("To show that fast bodies do not look flattened (the Lorentz contraction is not seen, a rotation is), "
+                 "and that a fast observer sees the world crowded forward, blue and bright ahead."),
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,

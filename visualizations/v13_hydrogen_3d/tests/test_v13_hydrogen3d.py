@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
 from lfphys.core.quantum import hydrogen as H  # noqa: E402
+from lfphys.i18n import english, text_of  # noqa: E402
 from v13_hydrogen_3d.engine import atoms as A  # noqa: E402
 from v13_hydrogen_3d.viz import SCHEMA  # noqa: E402
 
@@ -130,8 +131,9 @@ def test_planes_any_orientation_three_at_most_each_checked_kept_and_coarse_when_
         h.cmd("view", op="plane", id=pid, origin=[0.2, 0.1, -0.3], normal=n)
     ids = h.checks()
     assert all(ids[f"slice_{p}"]["ok"] for p in (1, 2, 3)), [ids[f"slice_{p}"] for p in (1, 2, 3)]
+    n_err = len(h.errors())
     h.cmd("view", op="plane", id=4, normal=[0, 0, 1])
-    assert any("не больше" in e for e in h.errors())
+    assert len(h.errors()) == n_err + 1 and 4 not in h.sim.planes
     sl = [m for m in h.of("slice") if m["id"] == 2][-1]
     assert sl["verify"]["points"] >= 1 and sl["verify"]["ok"] and sl["units"] == "Å" and sl["depth"] is False
     h.cmd("view", op="remove", id=3)
@@ -163,15 +165,16 @@ def test_a_plane_placed_mid_period_gets_the_phases_reached_and_the_rest_later():
 
 
 @pytest.mark.parametrize("params,why", [
-    ({"mode": "super", "n": 2, "l": 1, "m": 0, "n2": 2, "l2": 1, "m2": 0}, "совпадает"),
+    ({"mode": "super", "n": 2, "l": 1, "m": 0, "n2": 2, "l2": 1, "m2": 0}, "equals the first"),
     ({"mode": "super", "n": 2, "l": 1, "m": 1, "real": False, "n2": 2, "l2": 1, "m2": 1, "real2": True},
-     "не ортогональны"),
+     "not orthogonal"),
 ])
 def test_schema_edges_are_refused_with_a_reason(params, why):
     p, err = SCHEMA.resolve(None, params)
     assert not err
-    with pytest.raises(ValueError, match=why):
+    with pytest.raises(ValueError) as e:
         Harness(V, None, params)
+    assert why in english(text_of(e.value))
 
 
 def test_largest_states_of_the_schema_build():
@@ -185,8 +188,8 @@ def test_largest_states_of_the_schema_build():
 
 
 @pytest.mark.parametrize("params,state,note", [
-    ({"n": 1}, (1, 0, 0), "взято l = 0"), ({"n": 2, "l": 2}, (2, 1, 0), "для l = 2 выберите n ≥ 3"),
-    ({"n": 3, "l": 1, "m": 2}, (3, 1, 1), "взято m = 1"), ({"l": 11, "m": -11}, (2, 1, -1), "взято m = -1"),
+    ({"n": 1}, (1, 0, 0), "l = 0 taken"), ({"n": 2, "l": 2}, (2, 1, 0), "for l = 2 choose n ≥ 3"),
+    ({"n": 3, "l": 1, "m": 2}, (3, 1, 1), "m = 1 taken"), ({"l": 11, "m": -11}, (2, 1, -1), "m = -1 taken"),
 ])
 def test_quantum_numbers_the_form_cannot_bound_are_fitted_and_said(params, state, note):
     """Review UX-params P10 (was: refused at the start, 102 of 235 combinations, hidden by the player): the world takes
@@ -195,12 +198,12 @@ def test_quantum_numbers_the_form_cannot_bound_are_fitted_and_said(params, state
     h = Harness(V, None, {**params, "ng": 64})
     hp = h.of("header")[-1]["params"]
     assert (hp["n"], hp["l"], hp["m"]) == state and not failed(h)
-    assert any(note in m["text"] for m in h.of("notice"))
+    assert any(note in english(m["text"]) for m in h.of("notice"))
     assert _fit_numbers(dict(hp)) == []
 
 
 def test_superposition_from_the_defaults_and_a_current_free_one():
-    """Review UX-params P10: «Суперпозиция» alone was refused (the second state's defaults were the first's); now the
+    """Review UX-params P10: "Superposition" alone was refused (the second state's defaults were the first's); now the
     second state defaults to 1s (2p_z + 1s oscillates at the 2p-1s frequency), and a first state of 1s takes 2p_z.
     P3 (world part): 2p_z + 2s, real states of one energy, have j = 0 and d rho/dt = 0 everywhere, and the continuity
     check divided by a zero scale («float division by zero» killed the worker); now it passes with a residual of
@@ -212,15 +215,15 @@ def test_superposition_from_the_defaults_and_a_current_free_one():
     assert not failed(h) and h.checks()["continuity"]["ok"]
     h = Harness(V, None, {"mode": "super", "n": 1, "ng": 64})
     hp = h.of("header")[-1]["params"]
-    assert (hp["n2"], hp["l2"], hp["m2"]) == (2, 1, 0) and any("взято 2p_z" in m["text"] for m in h.of("notice"))
+    assert (hp["n2"], hp["l2"], hp["m2"]) == (2, 1, 0) and any("2p_z taken" in english(m["text"]) for m in h.of("notice"))
     h = Harness(V, None, {"mode": "super", "n2": 2, "l2": 0, "ng": 64})
     h.run_to(1.0)
     c = h.checks()["continuity"]
-    assert c["ok"] and c["value"] == 0.0 and "ток равен нулю всюду" in c["note"]
+    assert c["ok"] and c["value"] == 0.0 and "the current is zero everywhere" in english(c["note"])
     h = Harness(V, None, {"mode": "super", "n2": 2, "l2": 0, "phase2": 90.0, "ng": 64})
     h.run_to(1.0)
     c = h.checks()["continuity"]
-    assert c["ok"] and "доля масштаба" in c["note"]
+    assert c["ok"] and "fraction of the scale" in english(c["note"])
 
 
 # --- the state is live: an ideal preparation at the current moment (review UX-ui U12) -----------------------------------
@@ -255,11 +258,11 @@ def test_a_state_set_live_is_prepared_in_the_same_world():
     c = h.checks()
     assert not failed(h), failed(h)
     for k in ("norm_1", "energy_1", "dipole", "continuity"):
-        assert c[k]["info"] and c[k]["value"] is None and "прежнее состояние" in c[k]["label"], k
+        assert c[k]["info"] and c[k]["value"] is None and "former state" in english(c[k]["label"]), k
     assert c["current"]["ok"] and c["norm_0"]["value"] == pytest.approx(1.0)
     assert h.sim.frame()[0]["t_prep"] == t_p and h.sim.live_values()["n"] == 3
     assert h.of("live")[-1]["values"]["l"] == 2
-    assert "приготовлено состояние 3d_z²" in h.of("event")[-1]["text"]
+    assert "prepared the state 3d_z²" in english(h.of("event")[-1]["text"])
 
 
 def test_a_superposition_prepared_mid_world_counts_its_period_from_the_preparation():
@@ -296,7 +299,7 @@ def test_a_refused_preparation_leaves_the_world_as_it_was():
     before = (h.sim.state, h.sim.t_prep, dict(h.sim.planes), h.sim.revealed, dict(h.sim.params), h.sim.box)
     n0 = len(h.msgs)
     h.set(n2=2, l2=1)
-    assert "совпадает" in h.errors()[-1]
+    assert "equals the first" in english(h.errors()[-1])
     assert (h.sim.state, h.sim.t_prep, dict(h.sim.planes), h.sim.revealed, dict(h.sim.params), h.sim.box) == before
     types = {m["type"] for m, _ in h.msgs[n0:]}
     assert "error" in types and types <= {"command", "error", "live"}, types
@@ -312,19 +315,19 @@ def test_the_planes_placed_stay_through_a_preparation_and_the_grid_is_live():
     h.set(n=4, l=3, m=1)
     planes = h.of("planes")[-1]["planes"]
     assert [p["id"] for p in planes] == [1, 2] and planes[1]["normal"] == [1.0, 0.0, 0.0]
-    assert h.checks()["slice_2"]["ok"] and "прежнее" not in h.checks()["slice_2"]["label"]
+    assert h.checks()["slice_2"]["ok"] and "former" not in english(h.checks()["slice_2"]["label"])
     t_p = h.sim.t_prep
     h.run_to(h.sim.t + 1e-16)
     h.set(ng="96")
     assert not h.errors(), h.errors()
     assert h.sim.ng == 96 and h.sim.t_prep == t_p and h.of("cloud")[-1]["dims"] == [96, 96, 96]
-    assert h.of("prepared")[-1]["keep_time"] and "состояние и его время те же" in h.of("event")[-1]["text"]
+    assert h.of("prepared")[-1]["keep_time"] and "the state and its time stay the same" in english(h.of("event")[-1]["text"])
 
 
 def test_the_atom_stays_a_world_parameter():
     h = Harness(V, "1s", {"ng": 64})
     h.set(atom="He+")
-    assert "параметр мира" in h.errors()[-1] and h.sim.params["atom"] == "H"
+    assert "Atom" in english(h.errors()[-1]) and h.sim.params["atom"] == "H"
 
 
 def test_a_preparation_is_continued_from_a_checkpoint_byte_for_byte(tmp_path):

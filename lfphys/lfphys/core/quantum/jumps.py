@@ -51,22 +51,23 @@ import numpy as np
 from scipy import linalg
 
 from lfphys.core.quantum.open_systems import check_times
+from lfphys.i18n import T
 
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Траектории квантовых скачков (метод Монте-Карло волновых функций)",
-    "statement": "Волновая функция эволюционирует с неэрмитовым H_eff = H − (i/2)Σ L†L до момента, когда квадрат "
-                 "нормы падает до случайного r, затем скачок ψ → L_mψ/‖L_mψ‖ с вероятностью ∝ ‖L_mψ‖²; среднее "
-                 "|ψ⟩⟨ψ| по траекториям равно решению уравнения Линдблада.",
-    "validity": "то же уравнение Линдблада (марковская динамика), H и L_m не зависят от времени; без ошибки шага по "
-                "времени (точная экспонента, момент скачка до округления); статистическая ошибка s/√N только при "
-                "многих вкладывающих траекториях, для редких событий — неасимптотический интервал Хёфдинга",
+    "title": T("Quantum jump trajectories (the Monte Carlo wave-function method)"),
+    "statement": T("The wave function evolves with the non-Hermitian H_eff = H − (i/2)Σ L†L until the squared norm "
+                   "falls to a random r, then jumps ψ → L_mψ/‖L_mψ‖ with probability ∝ ‖L_mψ‖²; the mean of |ψ⟩⟨ψ| "
+                   "over trajectories equals the solution of the Lindblad equation."),
+    "validity": T("the same Lindblad equation (Markovian dynamics), H and L_m independent of time; no time-step "
+                  "error (exact exponential, the jump time to round-off); the statistical error s/√N holds only when "
+                  "many trajectories contribute, for rare events a non-asymptotic Hoeffding interval"),
     "basis": ["Dalibard, Castin, Mølmer, PRL 68, 580 (1992); Castin, Dalibard, Mølmer, AIP Conf. Proc. 275, 143 "
               "(1993), arXiv:0805.4002",
               "Dum, Zoller, Ritsch, PRA 45, 4879 (1992)",
               "Plenio & Knight, Rev. Mod. Phys. 70, 101 (1998), eqs. (30), (66), (67)",
-              "Hoeffding, J. Am. Stat. Assoc. 58, 13 (1963), Theorem 1 — интервал для средних",
-              "lfphys/sources/verification_2026-10-29_p5.md — проверка цитат и выводов"],
+              T("Hoeffding, J. Am. Stat. Assoc. 58, 13 (1963), Theorem 1 — an interval for means"),
+              T("lfphys/sources/verification_2026-10-29_p5.md — check of the quotations and derivations")],
     "conflicts": [],
 }
 

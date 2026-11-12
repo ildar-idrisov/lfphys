@@ -15,11 +15,14 @@ import math
 import numpy as np
 from scipy import stats as sps
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": 'tools', "kind": 'statistics',
-    "title": 'Статистика смоделированных данных',
-    "statement": 'Оценка степени когерентности по гистограмме (пуассоновское МП, параметрический бутстрэп), χ², период полос.',
-    "validity": 'инструмент, не физика',
+    "title": T("Statistics of simulated data"),
+    "statement": T("The estimate of the degree of coherence from a histogram (Poisson maximum likelihood, parametric "
+                   "bootstrap), χ², the fringe period."),
+    "validity": T("a tool, not physics"),
     "basis": [],
     "conflicts": [],
 }

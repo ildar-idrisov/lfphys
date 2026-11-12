@@ -22,13 +22,17 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Плоские волны на границах сред и многослойные покрытия",
-    "statement": "Уравнения Френеля (s и p), углы Брюстера и полного внутреннего отражения, матрицы переноса для "
-                 "стопки слоёв (просветление, зеркала, интерферометр Фабри–Перо); баланс R + T + A = 1.",
-    "validity": "однородные изотропные линейные среды, плоские границы, плоская волна (уравнения Максвелла точно)",
-    "basis": ["Born & Wolf, Principles of Optics, §1.5–1.6", "Byrnes, arXiv:1603.02720 (метод матриц переноса)"],
+    "title": T("Plane waves at interfaces and multilayer coatings"),
+    "statement": T("Fresnel equations (s and p), Brewster's angle and the angle of total internal reflection, "
+                   "transfer matrices for a stack of layers (anti-reflection coatings, mirrors, the Fabry–Pérot "
+                   "interferometer); the balance R + T + A = 1."),
+    "validity": T("homogeneous isotropic linear media, flat interfaces, a plane wave (Maxwell's equations exactly)"),
+    "basis": ["Born & Wolf, Principles of Optics, §1.5–1.6",
+              T("Byrnes, arXiv:1603.02720 (the transfer-matrix method)")],
     "conflicts": [],
 }
 

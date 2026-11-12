@@ -16,7 +16,7 @@ OUT = Path(__file__).resolve().parents[1] / "player" / "js" / "tests" / "fixture
 
 def main():
     argparse.ArgumentParser(description=__doc__).parse_args()
-    msg = protocol.encode({"type": "probe", "text": "кириллица ✓", "v": float("inf")},
+    msg = protocol.encode({"type": "probe", "text": "кириллица ✓", "v": float("inf")},  # UTF-8, i18n-ok
                           {"f8": np.array([1.5, -2.25, 1e300]), "u1": np.array([1, 2, 3], np.uint8),
                            "f4": np.array([[0.5, 1.0, 2.0], [3.0, 4.0, 5.0]], np.float32),
                            "i4": np.array([-7, 8], np.int32)})

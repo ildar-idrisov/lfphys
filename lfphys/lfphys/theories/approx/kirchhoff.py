@@ -36,20 +36,24 @@ import math
 import numpy as np
 from scipy import special
 
+from lfphys.i18n import T
 from ...core.em import slit as _vslit
 from ...core.optics.scalar import hankel1
 
 ABOUT = {
     "layer": 'theories', "kind": 'approximation',
-    "title": 'Дифракция на щелях: точное распространение граничных значений Кирхгофа',
-    "statement": 'Поле на экране — точный двумерный интеграл Рэлея–Зоммерфельда (ядро — в core.optics.scalar) от поля в щелях, равного падающему (граничные условия Кирхгофа).',
-    "validity": 'щели шире ~10 λ: у узких щелей поле в щели не равно падающему; точное векторное решение для '
-                'идеально проводящего экрана — lfphys.core.em.slit (отличие от него порядка 1/(k·a), у щелей уже λ — '
-                'в разы, и зависит от поляризации)',
-    "basis": ['Born & Wolf, Principles of Optics, гл. 8.11'],
-    "conflicts": ['lfphys.theories.approx.paraxial: отличается при больших углах',
-                  'lfphys.core.em.slit: векторное решение экрана-проводника (обе поляризации); граничные значения '
-                  'Кирхгофа расходятся с ним у щелей уже ~10 λ (T и картина), не знают поляризации'],
+    "title": T("Diffraction by slits: exact propagation of Kirchhoff's boundary values"),
+    "statement": T("The field on the screen is the exact two-dimensional Rayleigh–Sommerfeld integral (its kernel is "
+                   "in core.optics.scalar) of the field in the slits, taken equal to the incident field (Kirchhoff's "
+                   "boundary conditions)."),
+    "validity": T("slits wider than ~10 λ: in narrow slits the field is not equal to the incident one; the exact "
+                  "vector solution for a perfectly conducting screen is lfphys.core.em.slit (the difference from it is "
+                  "of order 1/(k·a), several times for slits narrower than λ, and depends on the polarisation)"),
+    "basis": [T("Born & Wolf, Principles of Optics, ch. 8.11")],
+    "conflicts": [T("lfphys.theories.approx.paraxial: differs at large angles"),
+                  T("lfphys.core.em.slit: the vector solution for a conducting screen (both polarisations); "
+                    "Kirchhoff's boundary values depart from it for slits narrower than ~10 λ (T and the pattern) and "
+                    "know nothing of polarisation")],
 }
 
 

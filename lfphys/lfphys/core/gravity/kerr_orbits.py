@@ -40,18 +40,20 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 from .. import elliptic as EL
 from . import kerr
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Общие орбиты Керра: эксцентричные и наклонные (время Мино)",
-    "statement": "Связанные времениподобные геодезические Керра по (p, e, x = cos ι): E, L_z, Q (Шмидт 2002), "
-                 "корни потенциалов, r(λ) и θ(λ) в функциях Якоби (Фудзита–Хикида 2009; точки поворота — точно), "
-                 "основные частоты Υ_r, Υ_θ, Υ_φ, Γ и Ω_r, Ω_θ, Ω_φ, t(λ) и φ(λ) квадратурой; пошаговое "
-                 "продвижение орбиты с сохранением состояния.",
-    "validity": "пробная частица в вакуумном решении ОТО, 0 ≤ a < M; устойчивые связанные орбиты (p выше "
-                "сепаратрисы), 0 ≤ e < 1; без излучения (геодезическое движение)",
+    "title": T("General Kerr orbits: eccentric and inclined (Mino time)"),
+    "statement": T("Bound timelike Kerr geodesics by (p, e, x = cos ι): E, L_z, Q (Schmidt 2002), the roots of the "
+                   "potentials, r(λ) and θ(λ) in Jacobi functions (Fujita–Hikida 2009; turning points exact), the "
+                   "fundamental frequencies Υ_r, Υ_θ, Υ_φ, Γ and Ω_r, Ω_θ, Ω_φ, t(λ) and φ(λ) by quadrature; "
+                   "step-by-step advance of the orbit with its state kept."),
+    "validity": T("a test particle in the vacuum solution of GR, 0 ≤ a < M; stable bound orbits (p above the "
+                  "separatrix), 0 ≤ e < 1; no radiation (geodesic motion)"),
     "basis": ["Schmidt, Class. Quantum Grav. 19, 2743 (2002), App. B",
               "Fujita & Hikida, Class. Quantum Grav. 26, 135002 (2009)",
               "Drasco & Hughes, Phys. Rev. D 69, 044015 (2004)"],

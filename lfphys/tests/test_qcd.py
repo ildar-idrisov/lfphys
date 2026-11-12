@@ -145,7 +145,7 @@ def test_cornell_box_grows_for_large_states():
         assert max(abs(sp[x] - big[x]) for x in sp) < 1e-3  # GeV
 
 
-def test_landau_pole_reached_through_a_threshold_matching():
+def test_landau_pole_reached_through_a_threshold_matching(ru):
     """Review UX-params P5: alpha_s(M_Z) = 0.19 at 4 loops runs to 2.9 just above m_b; the 3-loop decoupling there takes it
     to 4.9, past ALPHA_MAX, so the next segment started beyond the pole event and DOP853 failed on the overflow ("RG
     integration failed", a raw refusal of v06). Now the pole is reported at m_b. Negative control: the world average and
@@ -165,6 +165,8 @@ def test_landau_pole_reached_through_a_threshold_matching():
     with pytest.raises(running.LandauPole) as e:
         running._evolve(4.0 / (4 * math.pi), math.log(4.0), math.log(1.0), 4, 4)
     assert e.value.mu == pytest.approx(2.0)
+    assert str(e.value) == "Landau pole: α_s diverges near μ ≈ 2 GeV (perturbation theory does not apply)"
+    assert ru(e.value.args[0]) == "полюс Ландау: α_s расходится около μ ≈ 2 ГэВ (теория возмущений неприменима)"
     # negative controls: nothing changes where the coupling stays perturbative or the pole is met by the event
     assert running.alpha_s(1.0, data.ALPHA_S_MZ[0], data.M_Z[0], th, 4) < running.ALPHA_MAX
     with pytest.raises(running.LandauPole) as e:

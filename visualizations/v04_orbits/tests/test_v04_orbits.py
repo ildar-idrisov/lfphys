@@ -12,6 +12,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
+from lfphys.i18n import render  # noqa: E402
 from v04_orbits.viz import MERCURY_GR_ARCSEC_PER_CENTURY, SCHEMA  # noqa: E402
 
 V = "v04_orbits"
@@ -100,7 +101,7 @@ def test_refused_change_leaves_the_world_as_it_was():
     h.run_to(0.5 * _scale(h))
     n_seg = len(h.of("segment"))
     h.set(r0=3.0)
-    assert h.errors() and "внутри тела" in h.errors()[-1]
+    assert h.errors() and "inside the body" in render(h.errors()[-1])
     assert h.of("live")[-1]["values"]["r0"] == 10.0
     assert len(h.of("segment")) == n_seg
     h.set(speed=1.59)  # still bound? the run says what it is; no error expected
@@ -123,7 +124,7 @@ def test_boost_changes_the_orbit_and_keeps_the_clock():
     h.run_to(3 * P)
     assert not h.errors() and not _bad_checks(h)
     h.action("boost", dv=2.0)
-    assert "Действие «Толчок» не выполнено" in h.errors()[-1]  # by its label (review UX-params P20)
+    assert "Action “Push” not done" in render(h.errors()[-1])  # by its label (review UX-params P20)
 
 
 def test_newton_world_is_flagged_and_its_ellipse_is_closed():
@@ -153,7 +154,7 @@ def test_inside_isco_the_perturbed_circle_falls_and_outside_it_stays_bound():
     h.run_to(20 * _scale(h))
     assert any(e.get("kind") == "horizon" for e in h.of("event"))
     out = [m for m in h.checks().values() if m["id"].endswith(".outcome")]
-    assert out and out[0]["ok"] and "ISCO" in out[0]["note"]
+    assert out and out[0]["ok"] and "outside the ISCO" in render(out[0]["note"])
     h2 = Harness(V, "plunge", {"r0": 7.0})
     assert h2.sim.info["kind"] == "bound"
     h2.run_to(5 * _scale(h2))
@@ -209,7 +210,7 @@ def test_new_world_in_the_same_run():
     h.cmd("new_world", preset="newton_ellipse")
     assert len(h.of("header")) == 2 and h.sim.law == "newton"
     h.cmd("new_world", params={"gravity": "GR", "radius_km": 5.0, "mass_msun": 10.0})  # R < 2M: refused
-    assert "Новый мир не создан" in h.errors()[-1]
+    assert "New world not created" in render(h.errors()[-1])
 
 
 def test_next_event_jumps_to_the_next_apsis():
@@ -303,7 +304,7 @@ def test_v4_1_boost_of_a_circle_gets_the_right_kind(preset, params, dv, kind, rp
 def test_v4_2_outward_unbound_launch_is_an_escape(law, r0, k, angle):
     h = Harness(V, "default", {"gravity": law, "r0": r0, "speed": k, "angle": angle})
     assert h.sim.info["kind"] == "escape"
-    assert "перицентр" not in h.of("event")[0]["text"]  # the periapsis behind the body is not quoted
+    assert "periapsis" not in render(h.of("event")[0]["text"])  # the periapsis behind the body is not quoted
     te = h.sim.track.next_event_after(0.0, {"horizon", "escape", "center", "surface"})
     h.run_to(1.0001 * te * h.sim.T_s)
     assert h.sim.track.end_event["kind"] == "escape"
@@ -453,7 +454,7 @@ def test_v4_14_ghost_end_reported_once():
 
 def test_v4_15_view_label():
     js = (Path(__file__).resolve().parents[1] / "web" / "view.js").read_text()
-    assert "у горизонта (r − 2M = 2·10⁻⁶ M; дальше t → ∞)" in js and "за горизонтом" not in js
+    assert 't("at the horizon (r − 2M = 2·10⁻⁶ M; beyond it t → ∞)")' in js and "beyond the horizon" not in js
 
 
 def test_v4_16_late_ghost_does_not_block():
@@ -466,7 +467,7 @@ def test_v4_16_late_ghost_does_not_block():
     h.set(ghost=True)
     assert _time.monotonic() - w0 < 1.0
     assert not h.sim.ghost.caught_up
-    assert any("досчитывается" in m["text"] for m in h.of("notice"))
+    assert any("computed from the start of the segment in parts" in render(m["text"]) for m in h.of("notice"))
     for _ in range(2000):  # the world goes on; the ghost catches up in slices
         if h.sim.ghost.caught_up:
             break

@@ -13,11 +13,13 @@ Astronomical values:
 
 from scipy import constants as sc
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "data",
-    "title": "Физические постоянные",
-    "statement": "Фундаментальные постоянные CODATA (scipy.constants) и номинальные астрономические значения МАС.",
-    "validity": "значения CODATA, поставляемые закреплённой версией scipy; МАС 2012 B2, МАС 2015 B3",
+    "title": T("Physical constants"),
+    "statement": T("CODATA fundamental constants (scipy.constants) and IAU nominal astronomical values."),
+    "validity": T("the CODATA values shipped with the pinned version of scipy; IAU 2012 B2, IAU 2015 B3"),
     "basis": ["CODATA (scipy.constants)", "IAU 2012 Resolution B2", "IAU 2015 Resolution B3"],
     "conflicts": [],
 }

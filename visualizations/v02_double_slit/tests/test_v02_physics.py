@@ -14,10 +14,25 @@ from harness import Harness  # noqa: E402
 
 from lfphys.core.quantum import marks, scattering  # noqa: E402
 from lfphys.core.quantum.particles import EV, C, H, make  # noqa: E402
+from lfphys.i18n import render  # noqa: E402
 from lfphys.theories.approx import kirchhoff, paraxial  # noqa: E402
 from lfphys.tools import stats  # noqa: E402
 
 V = "v02_double_slit"
+
+
+def _en(x):
+    """The English rendering of a text of the world (a translatable text, live or from the record, or a plain one)."""
+    return render(x)
+
+
+def _txt(exc):
+    """A refusal's text and hint in English (a refusal keeps them translatable; any other exception: its own text)."""
+    text = getattr(exc, "text", None)
+    if text is None:
+        return str(exc)
+    hint = getattr(exc, "hint", None)
+    return _en(text) + (" | " + _en(hint) if hint else "")
 
 
 # --- particles ------------------------------------------------------------------------------------------
@@ -99,7 +114,7 @@ def test_rs_budget_marks_unaffordable_columns_unverified():
     assert time.time() - t0 < 60
     seg = h.of("segment")[0]
     assert seg["z_paraxial_why"] == "cost" and seg["z_paraxial"] > 2 * h.sim.geom.a
-    assert any("не сверена" in a for a in seg["approx"])
+    assert any("not verified" in _en(a) for a in seg["approx"])
 
 
 def test_derivative_closed_form():
@@ -207,7 +222,7 @@ def test_born_modification_is_flagged_and_breaks_sorkin():
     h = Harness(V, "triple_mod")
     hd = h.of("header")[0]
     assert [m["id"] for m in hd["modifications"]] == ["born_p"]
-    s = [c for c in h.checks().values() if "Соркина" in c["label"]][0]
+    s = [c for c in h.checks().values() if "Sorkin" in _en(c["label"])][0]
     assert s["ok"] is False and s["value"] > 0.05
 
 
@@ -250,7 +265,7 @@ def test_apparatus_change_starts_new_segment_and_updates_actions():
     h.action("apparatus", wp_mode="qubit", wp_theta=90.0)
     h.run_to(0.4)
     segs = h.of("segment")
-    assert len(segs) == 2 and "детектор пути" in segs[1]["apparatus"]
+    assert len(segs) == 2 and "which-path detector" in _en(segs[1]["apparatus"])
     assert h.of("actions")
     coh = [c for c in h.checks().values() if c["id"] == "coh1"][0]
     assert coh["value"] < 1e-9
@@ -407,12 +422,13 @@ def test_map_shows_the_wave_before_the_analyzer():
     cv = sim.theory["curves"]["all"][np.abs(xc) < win]
     con = lambda v: (v.max() - v.min()) / (v.max() + v.min())  # noqa: E731
     assert con(last) < 0.1 and con(cv) > 0.8
-    assert any("до анализатора" in a for a in h.of("segment")[0]["approx"])
+    assert any("before the analyser" in _en(a) for a in h.of("segment")[0]["approx"])
 
 
 def test_R19_right_circular_has_s3_plus_one():
     from v02_double_slit.engine.experiment import state_label
-    assert "+1.00)" in state_label(np.array(marks.POL_STATES["R"], complex), "pol")
+    lab = state_label(np.array(marks.POL_STATES["R"], complex), "pol")
+    assert lab.msgid.startswith("Stokes") and lab.args["s3"] == pytest.approx(1.0) and _en(lab).endswith("+1.00)")
     chi = marks.sample_internal(np.random.default_rng(0), "pol", "custom", 1.0, (0.0, 45.0))
     assert np.allclose(chi, np.array(marks.POL_STATES["R"], complex))
 
@@ -471,7 +487,7 @@ def test_live_particle_change_removes_incompatible_elements():
     assert not h.errors()
     v = h.of("live")[-1]["values"]
     assert v["species"] == "electron" and v["el1"] == "none" and v["el2"] == "none"
-    assert any("снят" in m["text"] for m in h.of("notice"))
+    assert any("removed" in _en(m["text"]) for m in h.of("notice"))
     # an explicit impossible request is refused and nothing changes
     h.set(el1="polarizer")
     assert h.errors() and h.of("live")[-1]["values"]["el1"] == "none" and h.sim.particle.species == "electron"
@@ -480,7 +496,8 @@ def test_live_particle_change_removes_incompatible_elements():
 def test_laws_are_not_live():
     h = Harness(V, "photon_young")
     h.set(born_p=2.4)
-    assert "нельзя менять на ходу" in h.errors()[-1] and h.sim.laws.born_p == 2.0
+    # refused by the framework's schema (a law is a world parameter), naming the parameter by its label
+    assert "Born rule" in _en(h.errors()[-1]) and h.sim.laws.born_p == 2.0
 
 
 def test_source_change_lets_emitted_particles_fly_on_as_transitional():
@@ -691,7 +708,7 @@ def test_vector_mode_error_estimate_bounds_the_truncation_error():
         true = abs(V_[pol]["T"] / lim - 1)
         assert true < V_[pol]["err_T"] < 4 * true and V_[pol]["err"] < 4e-3
         ch = h.checks()[f"vconv{pol}0"]
-        assert ch["ok"] and ch["value"] == V_[pol]["err"] and "Ричардсона" in ch["note"]
+        assert ch["ok"] and ch["value"] == V_[pol]["err"] and "Richardson" in _en(ch["note"])
 
 
 def test_vector_mode_announces_its_width_limit_with_one_number():
@@ -699,9 +716,10 @@ def test_vector_mode_announces_its_width_limit_with_one_number():
     from lfviz import registry
     sch = registry.load(V)["schema"]
     par = sch.by_id["screen_model"]
-    assert "20.7 λ" in par.help and "k·a ≤ 130" in par.help
-    with pytest.raises(ValueError, match="20.7 λ"):
+    assert "20.7 λ" in _en(par.help) and "k·a ≤ 130" in _en(par.help)
+    with pytest.raises(ValueError) as e:
         Harness(V, None, {"screen_model": "pec"})
+    assert "20.7 λ" in _txt(e.value)
 
 
 def test_vector_mode_refusals():
@@ -714,9 +732,9 @@ def test_vector_mode_refusals():
 def test_vector_mode_with_marks_keeps_scalar_hits_and_says_so():
     h = Harness(V, "photon_eraser", {"screen_model": "pec", "a_um": 2.0, "d_um": 10.0, "L2_m": 0.1}, seed=2)
     seg = h.of("segment")[0]
-    assert seg["vector"]["hits"] == "scalar" and "метки" in seg["vector"]["why"]
+    assert seg["vector"]["hits"] == "scalar" and "marks" in _en(seg["vector"]["why"])
     assert {"all", "cl", "vec"} <= set(seg["curves"]) and "diff" not in seg["curves"]  # B8 C8: units differ, no strip
-    assert any("скалярной модели" in a for a in seg["approx"])
+    assert any("scalar model" in _en(a) for a in seg["approx"])
     h.run_to(5000 / 1000.0)
     assert h.sim.counts["reflected"] == 0
 
@@ -763,18 +781,20 @@ def test_a_vector_world_continues_from_its_checkpoint_as_the_original(tmp_path):
 
 # --- review UX-params (2026-11-04): P8, P15, P17, P18 ----------------------------------------------------------------
 def test_dark_counts_are_bounded_per_step_and_refused_far_above_the_source():
-    """P8: «Темновые отсчёты» = 1e12 1/s drew every dark count of a frame as an event (~2e9, 31 GB). Now a dark rate
+    """P8: “Dark counts” = 1e12 1/s drew every dark count of a frame as an event (~2e9, 31 GB). Now a dark rate
     above 100 per emitted particle is refused before anything is built (check_params, the world, a live change), saying
     what to change; below it every step holds at most ~STEP_EVENTS events. Negative control: the step of before
     (4000/rate) at the limit would hold 100 times more dark counts."""
     from v02_double_slit.viz import DARK_PER_PARTICLE_MAX, SCHEMA, STEP_EVENTS, Simulation
-    with pytest.raises(ValueError, match="Темновые отсчёты» до 1e\\+05"):
+    with pytest.raises(ValueError) as e:
         Simulation.check_params({**SCHEMA.defaults(), "dark_rate": 1e12})
-    with pytest.raises(ValueError, match="ложных отсчётов на одну частицу"):
+    assert "Dark counts” to 1e+05" in _txt(e.value)
+    with pytest.raises(ValueError) as e:
         Harness(V, None, {"dark_rate": 1e12})
+    assert "false counts per particle" in _txt(e.value)
     h = Harness(V, None, {})
     h.set(dark_rate=1e12)
-    assert "ложных отсчётов" in h.errors()[-1] and h.sim.dark_rate == 0.0  # refused, the world as it was
+    assert "false counts" in _en(h.errors()[-1]) and h.sim.dark_rate == 0.0  # refused, the world as it was
     rate = 1000.0
     h = Harness(V, None, {"dark_rate": DARK_PER_PARTICLE_MAX * rate}, seed=3)
     assert h.sim.max_step() == pytest.approx(STEP_EVENTS / (rate * (1 + DARK_PER_PARTICLE_MAX)))
@@ -791,7 +811,7 @@ def test_coherence_is_undefined_when_a_slit_is_dark():
     pass: the which-path marks give 0), stay defined and pass."""
     h = Harness(V, None, {"el1": "polarizer", "el2": "polarizer", "el1_angle": 0.0, "el2_angle": 90.0})
     c = h.checks()["coh0"]
-    assert c["value"] is None and c.get("info") and "щель 2 тёмная" in c["note"]
+    assert c["value"] is None and c.get("info") and "slit 2 is dark" in _en(c["note"])
     h.run_to(400 / 1000.0)
     st = h.sim.frame()[0]
     assert st.get("coh") is None or st["coh"].get("why")
@@ -801,24 +821,27 @@ def test_coherence_is_undefined_when_a_slit_is_dark():
 
 
 def test_refusals_name_the_choice_and_what_to_take():
-    """P17 / UX-ui U13: «элемент 'rot_y' не подходит для этой частицы», «щели №5 нет». Now the element by its label,
+    """P17 / UX-ui U13: the element was named by its id ('rot_y') and the slit by a bare number. Now the element by its label,
     the particle, and the choices that work (each of them builds). The schema marks the options per particle
     (option-level show_if, when the framework has it)."""
     import re
     import v02_double_slit.viz as VZ
     with pytest.raises(ValueError) as e:
         Harness(V, None, {"el1": "rot_y"})
-    text = str(e.value)
-    assert "«поворот спина вокруг y» у щели 1 не действует на фотон" in text and "rot_y" not in text
-    for lab in re.findall(r"«([^»]+)»", text.split("одно из:")[1]):
-        kind = next(k for k, v in VZ._ELEM_LABEL.items() if v == lab)
+    text = _txt(e.value)
+    assert "“spin rotation about y” at slit 1 does not act on a photon" in text and "rot_y" not in text
+    for lab in re.findall(r"“([^”]+)”", text.split("one of these for")[1].split(":", 1)[1]):
+        kind = next(k for k, v in VZ._ELEM_LABEL.items() if _en(v) == lab)
         Harness(V, None, {"el1": kind})
-    with pytest.raises(ValueError, match="от 1 до 2"):
+    with pytest.raises(ValueError) as e:
         Harness(V, None, {"wp_mode": "qubit", "wp_slit": 5})
-    with pytest.raises(ValueError, match="«Анализатор перед экраном» = нет"):
+    assert "from 1 to 2" in _txt(e.value)
+    with pytest.raises(ValueError) as e:
         Harness(V, "c60", {"analyzer": "on"})
-    with pytest.raises(ValueError, match="«Задать через»"):
+    assert "“Analyser in front of the screen” = none" in _txt(e.value)
+    with pytest.raises(ValueError) as e:
         Harness(V, None, {"energy_by": "speed"})
+    assert "“Set by”" in _txt(e.value)
     if VZ.OPTION_SHOW_IF:
         el1 = next(p for p in VZ.SCHEMA.to_json()["params"] if p["id"] == "el1")
         shown = {o["value"]: o.get("show_if") for o in el1["options"]}
@@ -827,21 +850,22 @@ def test_refusals_name_the_choice_and_what_to_take():
 
 
 def test_probe_recoil_and_grw_kicks_beyond_the_screen_are_refused_with_the_threshold():
-    """P18: «λ зонда» = 0.001 nm (50 keV electrons) allocated 2 GiB in one array of the screen's expectation (the
+    """P18: a probe λ of 0.001 nm (50 keV electrons) allocated 2 GiB in one array of the screen's expectation (the
     screen grid extended by the recoil, ±10.7 m); GRW λ = 1e12, r_C = 1e-3 nm overflowed numpy. Now refused before
     the allocation, with the shift, the grid and the probe wavelength that fits; that wavelength builds."""
     import re
     with pytest.raises(ValueError) as e:
         Harness(V, "electron_microscope", {"mic_lambda_nm": 0.001})
-    text = str(e.value)
-    assert "до ±10.7 м" in text and "ГБ" in text
-    lam = float(re.search(r"не меньше ~([\d.e+-]+) нм", text).group(1))
+    text = _txt(e.value)
+    assert "up to ±10.7 m" in text and "GB" in text
+    lam = float(re.search(r"at least ~([\d.e+-]+) nm", text).group(1))
     Harness(V, "electron_microscope", {"mic_lambda_nm": 1.05 * lam})
     h = Harness(V, "electron_eraser")
     h.set(wp_mode="microscope", mic_lambda_nm=0.001)
-    assert "сдвигаются" in h.errors()[-1] and h.sim.app.wp_mode == "qubit"  # refused, the world as it was
-    with pytest.raises(ValueError, match="ослабьте коллапс GRW"):
+    assert "are shifted" in _en(h.errors()[-1]) and h.sim.app.wp_mode == "qubit"  # refused, the world as it was
+    with pytest.raises(ValueError) as e:
         Harness(V, None, {"collapse": "grw", "grw_lambda": 1e12, "grw_rc_nm": 0.001, "species": "c60"})
+    assert "weaken the GRW collapse" in _txt(e.value)
 
 
 def test_honest_failures_are_marked_expected():
@@ -850,7 +874,7 @@ def test_honest_failures_are_marked_expected():
     from v02_double_slit.viz import SCHEMA as S2
     h = Harness(V, "triple_mod")
     c = h.checks()["sork0"]
-    assert c["ok"] is False and "правило Борна изменено" in c["expected"]
+    assert c["ok"] is False and "Born rule is changed" in _en(c["expected"])
     assert S2.presets["triple_mod"]["note"]
     c = Harness(V, "triple").checks()["sork0"]
     assert c["ok"] and not c.get("expected")

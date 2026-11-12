@@ -4,6 +4,7 @@
 // deflate-compressed), what it shows (the image's mode; a mode that is not what is seen is marked), its time, the
 // values under the cursor from the run's per-pixel data (the world's describe(i, j) callback), the angles of the
 // camera on its axes, and a PNG export. Drawing only: every number comes from the run.
+import { t } from "./i18n.js";
 import { el, fill, num, fresh2d } from "./ui.js";
 
 // deflate (zlib) bytes -> ArrayBuffer (the browser's DecompressionStream)
@@ -22,12 +23,12 @@ export function unsubRows(u16, W) {
   return out;
 }
 
-export function createImageWindow({ title = "Что видит наблюдатель", describe = null, overlay = null } = {}) {
-  const head = el("span", { class: "sw-title" }, title);
-  const png = el("button", { title: "Сохранить изображение (PNG, в разрешении расчёта)" }, "PNG");
+export function createImageWindow({ title = t("What the observer sees"), describe = null, overlay = null } = {}) {
+  const head = el("span", { class: "sw-title" }, t(title));
+  const png = el("button", { title: t("Save the image (PNG, at the computed resolution)") }, "PNG");
   const cv = el("canvas", { class: "sw-canvas" });
-  const status = el("div", { class: "sw-status" }, el("span", { class: "muted" }, "ждём изображение…"));
-  const readout = el("div", { class: "sw-readout mono" }, "наведите на изображение");
+  const status = el("div", { class: "sw-status" }, el("span", { class: "muted" }, t("waiting for the image…")));
+  const readout = el("div", { class: "sw-readout mono" }, t("point at the image"));
   const box = el("div", { class: "slicewin imgwin", style: { borderColor: "#7fb7ff", minHeight: "260px" } },
     el("div", { class: "sw-head" }, head, el("span", { class: "grow" }), png), cv, status, readout);
   const root = el("div", { class: "s3d-windows wide" }, box);
@@ -58,24 +59,24 @@ export function createImageWindow({ title = "Что видит наблюдат�
         g.fillText(num(a0 + f * (a1 - a0), 3), left + pw * f - 8, top + ph + 12);
         g.fillText(num(b1 - f * (b1 - b0), 3), 2, top + ph * f + 4);
       }
-      g.fillText(cam.axis_label || "", left, top + ph + 24);
+      g.fillText(t(cam.axis_label), left, top + ph + 24);
     } else if (cam.kind === "sky") {
       for (let q = 0; q <= 4; q++) g.fillText(`${-180 + 90 * q}°`, left + pw * q / 4 - 8, top + ph + 12);
       for (let q = 0; q <= 2; q++) g.fillText(`${90 - 90 * q}°`, 2, top + ph * q / 2 + 4);
-      g.fillText("долгота от направления взгляда (в системе наблюдателя)", left, top + ph + 24);
+      g.fillText(t("longitude from the direction of view (in the observer's frame)"), left, top + ph + 24);
     } else {
       const hf = (cam.fov || 90) / 2, th = Math.tan(hf * Math.PI / 180);
       for (const f of [0, 0.5, 1]) {
         const a = Math.atan((2 * f - 1) * th) * 180 / Math.PI;
         g.fillText(`${num(a, 3)}°`, left + pw * f - 8, top + ph + 12);
       }
-      g.fillText("угол от направления взгляда (в системе наблюдателя)", left, top + ph + 24);
+      g.fillText(t("angle from the direction of view (in the observer's frame)"), left, top + ph + 24);
       g.strokeStyle = "rgba(255,255,255,0.25)"; g.beginPath();
       g.moveTo(left + pw / 2 - 6, top + ph / 2); g.lineTo(left + pw / 2 + 6, top + ph / 2);
       g.moveTo(left + pw / 2, top + ph / 2 - 6); g.lineTo(left + pw / 2, top + ph / 2 + 6); g.stroke();
     }
     if (cur.meta.mode && cur.meta.mode !== "seen") {
-      const txt = cur.meta.mode_label || cur.meta.mode;
+      const txt = t(cur.meta.mode_label || cur.meta.mode);
       g.fillStyle = "rgba(0,0,0,0.65)"; g.fillRect(left, top, Math.min(pw, g.measureText(txt).width + 8), 16);
       g.fillStyle = "#ffd28a"; g.fillText(txt, left + 4, top + 11);
     }
@@ -91,18 +92,18 @@ export function createImageWindow({ title = "Что видит наблюдат�
     off.getContext("2d").putImageData(im, 0, 0);
     cur = { meta, fields };
     // the status is not an error in any mode (a mode other than "seen" is labelled on the image itself)
-    fill(status, el("span", { class: "muted" }, statusText || meta.mode_label || ""));
+    fill(status, el("span", { class: "muted" }, t(statusText || meta.mode_label)));
     draw();
   }
   function hover(e) {
     if (!cur || !geom) return;
     const r = cv.getBoundingClientRect(), x = e.clientX - r.left - geom.left, y = e.clientY - r.top - geom.top;
     const i = Math.floor(x / geom.pw * geom.W), j = Math.floor(y / geom.ph * geom.H);
-    if (i < 0 || j < 0 || i >= geom.W || j >= geom.H) { readout.textContent = "наведите на изображение"; return; }
-    readout.textContent = describe ? describe(cur.meta, cur.fields, i, j) : `пиксель (${i}, ${j})`;
+    if (i < 0 || j < 0 || i >= geom.W || j >= geom.H) { readout.textContent = t("point at the image"); return; }
+    readout.textContent = describe ? t(describe(cur.meta, cur.fields, i, j)) : t("pixel ({i:d}, {j:d})", { i, j });
   }
   cv.addEventListener("mousemove", hover);
-  cv.addEventListener("mouseleave", () => { readout.textContent = "наведите на изображение"; });
+  cv.addEventListener("mouseleave", () => { readout.textContent = t("point at the image"); });
   png.onclick = () => { if (cur) el("a", { href: off.toDataURL("image/png"), download: "observer.png" }).click(); };
   new ResizeObserver(draw).observe(cv);
 

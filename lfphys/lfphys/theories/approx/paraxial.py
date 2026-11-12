@@ -32,13 +32,18 @@ import math
 import numpy as np
 from scipy import special
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": 'theories', "kind": 'approximation',
-    "title": 'Параксиальная (френелевская) дифракция на щелях',
-    "statement": 'Поле за щелями — интеграл Френеля от поля в щелях (граничные условия Кирхгофа), в замкнутой форме через интегралы Френеля; производная по x для тока вероятности.',
-    "validity": 'z ≫ (x − x′)⁴ k / 8 (параксиальность) и щели шире ~10 λ (Кирхгоф); точность проверяется сверкой с точным распространением (kirchhoff.py)',
-    "basis": ['Born & Wolf, Principles of Optics, гл. 8'],
-    "conflicts": ['lfphys.core.optics.scalar: точное распространение отличается при больших углах и вблизи щелей'],
+    "title": T("Paraxial (Fresnel) diffraction by slits"),
+    "statement": T("The field behind the slits is the Fresnel integral of the field in the slits (Kirchhoff's "
+                   "boundary conditions), in closed form through the Fresnel integrals; the x derivative for the "
+                   "probability current."),
+    "validity": T("z ≫ (x − x′)⁴ k / 8 (paraxiality) and slits wider than ~10 λ (Kirchhoff); the accuracy is checked "
+                  "against exact propagation (kirchhoff.py)"),
+    "basis": [T("Born & Wolf, Principles of Optics, ch. 8")],
+    "conflicts": [T("lfphys.core.optics.scalar: exact propagation differs at large angles and near the slits")],
 }
 
 

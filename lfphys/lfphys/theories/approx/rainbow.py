@@ -36,21 +36,24 @@ import math
 import numpy as np
 from scipy import optimize, special
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "theories", "kind": "approximation",
-    "title": "Радуга лучевой оптики (Декарт) и теория Эйри",
-    "statement": "Угол отклонения луча с p хордами внутри шара; угол радуги Декарта для k внутренних отражений; тёмная "
-                 "полоса Александра; классическая интенсивность лучевых трубок с френелевскими множителями; теория "
-                 "Эйри: интенсивность Ai²(−z) у угла радуги, положения главной и дополнительных дуг.",
-    "validity": "x ≫ 1 (размер ≫ длины волны); Эйри — у угла радуги, |θ − θ_R| порядка x^(−2/3); хуже для "
-                "параллельной поляризации (рядом угол Брюстера внутреннего отражения); нет глории, поверхностных "
-                "волн и интерференции разных порядков",
+    "title": T("The rainbow of ray optics (Descartes) and Airy's theory"),
+    "statement": T("The deflection angle of a ray with p chords inside a sphere; Descartes's rainbow angle for k "
+                   "internal reflections; Alexander's dark band; the classical intensity of ray tubes with Fresnel "
+                   "factors; Airy's theory: the intensity Ai²(−z) near the rainbow angle, the positions of the primary "
+                   "and the supernumerary bows."),
+    "validity": T("x ≫ 1 (size ≫ wavelength); Airy: near the rainbow angle, |θ − θ_R| of order x^(−2/3); worse for "
+                  "parallel polarisation (Brewster's angle of the internal reflection is near); no glory, surface "
+                  "waves or interference between different orders"),
     "basis": ["Descartes, Les Météores (1637)", "Airy, Trans. Camb. Phil. Soc. 6, 379 (1838)",
-              "van de Hulst, Light Scattering by Small Particles (1957), гл. 13", "Nussenzveig, Sci. Am. 236 (4), 116 "
-              "(1977)"],
-    "conflicts": ["lfphys.core.optics.mie, mie_debye: точная волновая теория — у угла радуги лучи дают бесконечность, "
-                  "Эйри смещает максимум и даёт дополнительные дуги, но отличается от ряда Дебая (сильнее для "
-                  "параллельной поляризации); глорию и поверхностные волны даёт только точный ряд"],
+              T("van de Hulst, Light Scattering by Small Particles (1957), ch. 13"),
+              "Nussenzveig, Sci. Am. 236 (4), 116 (1977)"],
+    "conflicts": [T("lfphys.core.optics.mie, mie_debye: the exact wave theory: at the rainbow angle rays give "
+                    "infinity, Airy shifts the maximum and gives supernumerary bows but differs from the Debye series "
+                    "(more for parallel polarisation); only the exact series gives the glory and surface waves")],
 }
 
 

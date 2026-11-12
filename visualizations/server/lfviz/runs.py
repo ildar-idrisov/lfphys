@@ -55,6 +55,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import checkpoint as CK, limits, protocol, registry, devices
+from .i18n import T, is_t, join, text_of
 
 SETTINGS_NAME = "settings.json"  # the runs folder's own settings: the removal period chosen on the catalogue page
 KEEP_DAYS_MAX = 3650
@@ -291,7 +292,8 @@ class Run:
             self.save_meta()  # a crash right after a new world must not resume the previous one (review C1-16)
         elif typ == "error":
             errs = self.meta.setdefault("errors", [])
-            errs.append(str(meta.get("text", ""))[:2000])
+            text = meta.get("text", "")
+            errs.append(text if is_t(text) else str(text)[:2000])  # a text (T) stays one: the player renders it
             del errs[:-200]  # the passport keeps the latest 200 (review B6-F6)
             self.meta["n_errors"] = int(self.meta.get("n_errors", len(errs) - 1)) + 1  # all, for the slice below
         elif typ == "end" and meta.get("reason") == "world not built":  # its first world failed to show itself (P3)
@@ -317,13 +319,14 @@ class Run:
         by_server = st in ("stopped", "suspended")
         if self.rebuilding:  # the worker ended before its world was rebuilt
             if self.unapplied:  # review C1-2: say which changes were accepted but never applied
-                self._ingest(protocol.encode({"type": "error", "t": self.meta.get("sim_t", 0.0), "text": (
-                    "Не применено (запуск приостановлен, пока мир пересчитывался по записи): "
-                    + ", ".join(self.unapplied) + ". Повторите после ⏺.")}))
+                self._ingest(protocol.encode({"type": "error", "t": self.meta.get("sim_t", 0.0), "text": T(
+                    "Not applied (the run was suspended while the world was recomputed along the record): {cmds}. "
+                    "Repeat after ⏺.", cmds=", ".join(map(str, self.unapplied)))}))
             if not by_server:  # the rebuild failed: why, for the player (⏺ tries again)
                 k = int(self.meta.get("n_errors", 0)) - self.n_errors_at_resume
                 new = self.meta.get("errors", [])[-k:] if k > 0 else []
-                self.meta["resume_error"] = (new[-1] if new else f"вычислитель завершился с кодом {rc}")[:500]
+                last = new[-1] if new else T("the worker exited with code {code}", code=rc)
+                self.meta["resume_error"] = last if is_t(last) else str(last)[:500]
         self.rebuilding = False
         self.unapplied = []
         self.busy = None
@@ -412,11 +415,11 @@ class Run:
         unless it is the one that resumed the run (``first``): it could be applied only after the rebuild and would
         be lost if the run were suspended meanwhile (review C1-2)."""
         if not self.running:
-            raise RuntimeError("запуск не идёт")
+            raise RuntimeError(T("the run is not running"))
         name = cmd.get("cmd")
         if self.rebuilding and name in WORLD_COMMANDS and not first:
-            raise RuntimeError("мир ещё восстанавливается: изменение не принято — повторите его, когда запись "
-                               "продолжится")
+            raise RuntimeError(T("the world is still being restored: the change was not accepted — repeat it when "
+                                 "the record goes on"))
         line = json.dumps({"cmd": name, "args": cmd.get("args") or {}}, ensure_ascii=False)
         self.proc.stdin.write(line.encode() + b"\n")
         if self.busy and name in WORLD_COMMANDS:
@@ -450,8 +453,9 @@ class Run:
                 return
         self.command(cmd, source)
 
-    CANCEL_TEXT = {"scene": "изменение сцены", "set": "изменение установки", "action": "действие", "view": "срез",
-                   "new_world": "новый мир", "step": "шаг", "next_event": "расчёт до события"}
+    CANCEL_TEXT = {"scene": T("a change of the scene"), "set": T("a change of the set-up"), "action": T("an action"),
+                   "view": T("a slice"), "new_world": T("a new world"), "step": T("a step"),
+                   "next_event": T("the computation up to an event")}
 
     async def cancel(self, source: str = "") -> dict:
         """Cancel the computing command the worker is busy with (review UX-ui U9: a scene change could block a world
@@ -463,9 +467,11 @@ class Run:
         async with self.lock:
             b = self.busy
             if not self.running or not b or b.get("cmd") == "build":
-                raise RuntimeError("отменять нечего: мир сейчас ничего не считает (изменение уже применено)")
+                raise RuntimeError(T("nothing to cancel: the world is computing nothing now (the change is already "
+                                     "applied)"))
             if self.rebuilding:
-                raise RuntimeError("мир ещё восстанавливается: отменить можно изменение, а не восстановление")
+                raise RuntimeError(T("the world is still being restored: a change can be cancelled, not the "
+                                     "restoration"))
             sent = list(self.busy_sent)
             self.cancelling = True
             self.meta["state"] = "suspended"
@@ -488,17 +494,20 @@ class Run:
             self.busy_sent = []
             for v in list(self.viewers):
                 v.offer(protocol.encode({"type": "busy", "on": False, "cancelled": True}), False)
-        what = self.CANCEL_TEXT.get(b.get("cmd"), b.get("cmd") or "расчёт")
-        text = (f"Отменено: {b.get('what') or what}. Мир возвращён в момент перед этой командой (она не применена) и "
-                f"продолжается с него на паузе")
+        what = b.get("what") or self.CANCEL_TEXT.get(b.get("cmd"), b.get("cmd") or T("the computation"))
         if sent:
-            text += "; не применены и команды, посланные во время расчёта: " + ", ".join(sent)
+            text = T("Cancelled: {what}. The world is back at the moment before this command (it was not applied) "
+                     "and goes on from it, paused; the commands sent during the computation were not applied either: "
+                     "{cmds}", what=what, cmds=", ".join(map(str, sent)))
+        else:
+            text = T("Cancelled: {what}. The world is back at the moment before this command (it was not applied) "
+                     "and goes on from it, paused", what=what)
         log = self.meta.setdefault("commands", [])
         log.append({"wall": _now_iso(), "from": source, "cmd": "cancel", "args": {"cancelled": b}})
         try:
             await self.mgr.resume(self)
         except (RuntimeError, OverflowError) as e:
-            text += f". Продолжить сразу не удалось ({e}); ⏺ попробует ещё раз"
+            text = T("{text}. It could not go on at once ({why}); ⏺ will try again", text=text, why=text_of(e))
         self._ingest(protocol.encode({"type": "notice", "t": self.meta.get("sim_t", 0.0), "text": text}))
         return {"ok": True, "cancelled": b}
 
@@ -510,7 +519,7 @@ class Run:
         stale (review C1-16)."""
         heads = [i for i, e in enumerate(self.entries) if e.kind == "header"]
         if not heads and not self.headers:
-            raise RuntimeError("в записи нет ни одного мира: продолжать нечего")
+            raise RuntimeError(T("the record holds no world: there is nothing to go on with"))
         script = []
         ckpt, ckpt_at = None, 0  # the last usable checkpoint of this world and its place in the script
         env = CK.runtime_env()
@@ -667,17 +676,17 @@ class Run:
         good; off: the record goes on as a moving window again (what was kept stays). The window's length can be
         changed at the same time."""
         if not self.buffered:
-            raise RuntimeError("этот запуск пишется целиком: окно записи есть только у плейграунда")
+            raise RuntimeError(T("this run is recorded whole: only a playground has a record window"))
         b = self.meta["buffer"]
         if window_s is not None:
             w = float(window_s)
             if not 30 <= w <= 86400:
-                raise ValueError("окно записи: от 30 с до суток")
+                raise ValueError(T("the record window: from 30 s to a day"))
             b["window_s"] = w
         if window_mb is not None:
             w = float(window_mb)
             if not 16 <= w <= 65536:
-                raise ValueError("окно записи: от 16 МБ до 64 ГБ")
+                raise ValueError(T("the record window: from 16 MB to 64 GB"))
             b["window_mb"] = w
         if on is None:
             on = bool(b.get("recording"))
@@ -861,8 +870,8 @@ class RunManager:
         viz = self.viz(viz_id)
         params, errors = viz["schema"].resolve(preset, values)
         if errors:
-            e = ValueError("; ".join(errors))
-            e.fields = {er.pid: str(er) for er in errors if getattr(er, "pid", None)}  # the form marks these fields
+            e = ValueError(join(errors, "; "))
+            e.fields = {er.pid: er for er in errors if getattr(er, "pid", None)}  # the form marks these fields
             raise e
         if viz.get("kind") == "playground" and params.get("scene"):  # before a worker is spawned (review B6-F17)
             from .playground import check_scene
@@ -907,8 +916,8 @@ class RunManager:
             return
         idle = [r for r in self.runs.values() if r.running and not r.viewers and not r.rebuilding]
         if not idle:
-            raise OverflowError(f"все {self.max_workers} вычислителя заняты открытыми запусками: закройте вкладку "
-                                f"одного из них (он приостановится и продолжится, когда вы его откроете)")
+            raise OverflowError(T("all {n:d} workers are busy with open runs: close the tab of one of them (it will be "
+                                  "suspended and go on when you open it again)", n=self.max_workers))
         await min(idle, key=lambda r: r.last_viewer_time).suspend("room for another run")
 
     async def resume(self, run: Run, first: dict | None = None, source: str = "") -> bool:
@@ -919,14 +928,15 @@ class RunManager:
             if run.running:
                 return False
             if not run.meta.get("restorable"):
-                raise RuntimeError("эта запись сделана до версии, умеющей продолжать запуски: начните новый запуск с "
-                                   "теми же параметрами (кнопка «Новый мир» или каталог)")
+                raise RuntimeError(T("this record was made before the version that can continue runs: start a new run "
+                                     "with the same parameters (the “New world” button or the catalogue)"))
             w = run._latest_world()
             header, script, t_end, ckpt = w["header"], w["script"], w["t_end"], w["checkpoint"]
             if ckpt is None and not w["complete"]:
-                raise RuntimeError("продолжить нельзя: сохранённое состояние не подходит (код или версии библиотек "
-                                   "изменились), а начало мира уже вышло из окна записи — пересчитать его нечем. "
-                                   "Начните мир заново из файла сцены или из сценария")
+                raise RuntimeError(T("it cannot go on: the saved state does not fit (the code or the libraries' versions "
+                                     "changed), and the world's start has already left the record's window — there "
+                                     "is nothing to recompute it from. Start the world again from a scene file or a "
+                                     "scenario"))
             async with self._slots:
                 await self._make_room()
                 run._cut_to_index()
@@ -935,12 +945,15 @@ class RunManager:
                 prev = (run.meta.get("resumes") or [{}])[-1].get("code") or run.meta.get("code")
                 n_cmd = sum(1 for c in script if "cmd" in c)
                 if ckpt is not None:
-                    text = f"Продолжение с сохранённого состояния мира на t = {ckpt['t']:.6g} с…"
+                    text = T("Going on from the world's saved state at t = {t:.6g} s…", t=ckpt["t"])
+                elif code != prev:
+                    text = T("Going on: the world is recomputed from its start along the record up to t = {t:.6g} s "
+                             "({n:d} changes of the set-up)… The visualization's code changed since last time: the "
+                             "continuation is computed by the new version, the earlier part of the record by the old "
+                             "one", t=t_end, n=n_cmd)
                 else:
-                    text = (f"Продолжение: мир пересчитывается от начала по записи до t = {t_end:.6g} с ({n_cmd} "
-                            f"изменений установки)…" + (" Код визуализации изменился с прошлого раза: продолжение "
-                                                        "считается новой версией, прежняя часть записи — старой"
-                                                        if code != prev else ""))
+                    text = T("Going on: the world is recomputed from its start along the record up to t = {t:.6g} s "
+                             "({n:d} changes of the set-up)…", t=t_end, n=n_cmd)
                 run._ingest(protocol.encode({"type": "notice", "t": t_end, "text": text}))
                 init = {"params": header.get("params") or run.meta.get("params"), "seed": header.get("seed", 0),
                         "seed0": w["seed0"], "preset": header.get("preset"),
@@ -998,7 +1011,7 @@ class RunManager:
         run = self.get(rid)
         async with run.lock:
             if run.viewers:
-                raise RuntimeError("запуск открыт во вкладке: закройте её, затем удалите")
+                raise RuntimeError(T("the run is open in a tab: close it, then delete the run"))
             await run._stop("delete", "stopped")
             self._remove(run)
 
@@ -1074,7 +1087,7 @@ class RunManager:
     def keep_days_error(v) -> str | None:
         """Why ``v`` is not a removal period (None if it is): whole days from 1 to ``KEEP_DAYS_MAX``."""
         if isinstance(v, bool) or not isinstance(v, (int, float)) or not 1 <= v <= KEEP_DAYS_MAX or v != int(v):
-            return f"нужно целое число дней от 1 до {KEEP_DAYS_MAX}"
+            return T("a whole number of days from 1 to {max:d} is needed", max=KEEP_DAYS_MAX)
         return None
 
     def _saved_keep_days(self, default: float) -> float:
@@ -1095,7 +1108,7 @@ class RunManager:
         if err:
             raise ValueError(err)
         if not isinstance(confirm, (list, tuple)):
-            raise ValueError("confirm — список запусков, которые можно удалить")
+            raise ValueError(T("confirm is a list of the runs that may be removed"))
         days = int(days)
         would = [r.id for r in self._removable(days)]
         if set(would) - {str(c) for c in confirm}:

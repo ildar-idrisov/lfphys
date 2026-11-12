@@ -30,11 +30,13 @@ import math
 import numpy as np
 
 from lfphys.core.worldlines import Piecewise
+from lfphys.i18n import T
 from lfphys.laws.light import Laws, flat_arrival
+from lfviz.errors import Refusal
 
 
 class Apparatus:
-    def __init__(self, laws: Laws, owner: str, wl_a: Piecewise, L0: float, orient: str, sync: str):
+    def __init__(self, laws: Laws, owner, wl_a: Piecewise, L0: float, orient: str, sync: str):
         self.laws = laws
         self.owner = owner
         self.wl_a = wl_a
@@ -74,8 +76,9 @@ class Apparatus:
             # equal readings at equal lab time t (both clocks run at the same rate afterwards)
             self.offset_b = self.wl_a.tau(t) - self.wl_b.tau(t)
             self.t_sync_done = t
-            events.append({"t": t, "kind": "sync", "text": f"{self.owner}: часы B выставлены по лабораторной "
-                           "одновременности (операционно недоступно наблюдателю)"})
+            events.append({"t": t, "kind": "sync", "text": T(
+                "{obj}: clock B set by laboratory simultaneity (not available to the observer operationally)",
+                obj=self.owner)})
         else:
             t1 = t
             t2 = self.light(t1, "A", "B")
@@ -86,9 +89,10 @@ class Apparatus:
             self.sync_path = self.path([(t1, "A"), (t2, "B"), (t3, "A")])
             events += [
                 {"t": t2, "kind": "sync", "pos": self.wl_b.pos(t2).tolist(),
-                 "text": f"{self.owner}: сигнал синхронизации отражён от B"},
-                {"t": t3, "kind": "sync", "text": f"{self.owner}: часы B синхронизированы по Эйнштейну "
-                 f"(обмен занял {fmt_s(tau3 - tau1)} по часам A)"},
+                 "text": T("{obj}: the synchronisation signal reflected from B", obj=self.owner)},
+                {"t": t3, "kind": "sync", "text": T("{obj}: clock B synchronised by Einstein's convention (the "
+                                                    "exchange took {dt} by clock A)", obj=self.owner,
+                                                    dt=fmt_s(tau3 - tau1))},
             ]
         return events
 
@@ -112,7 +116,8 @@ class Apparatus:
         wl_d = self.wl_a if dst == "A" else self.wl_b
         res = flat_arrival(self.laws, t_emit, wl_s.pos(t_emit), wl_s.vel(t_emit), wl_d, t_emit)
         if res is None:
-            raise ValueError("свет не догоняет конец стержня")
+            raise Refusal(T("light does not catch up with the end of the rod"),
+                          hint=T("choose a slower observer or a faster light"))
         return res["t"]
 
     def round_trip(self, t: float) -> dict:
@@ -167,11 +172,19 @@ def _cos_in_rest_frame(laws: Laws, v_app, u_light, e_rest) -> float:
     return float(u @ e_rest / np.linalg.norm(u))
 
 
-def fmt_s(x: float) -> str:
+def fmt_s(x: float) -> T:
+    """A duration with a unit chosen by its size (the number stays an argument: the player formats it)."""
     a = abs(x)
     if a == 0:
-        return "0 с"
-    for unit, k in (("с", 1.0), ("мс", 1e-3), ("мкс", 1e-6), ("нс", 1e-9), ("пс", 1e-12)):
-        if a >= k:
-            return f"{x / k:.6g} {unit}"
-    return f"{x:.3e} с"
+        return T("{v:d} s", v=0)
+    if a >= 1.0:
+        return T("{v:.6g} s", v=x)
+    if a >= 1e-3:
+        return T("{v:.6g} ms", v=x * 1e3)
+    if a >= 1e-6:
+        return T("{v:.6g} µs", v=x * 1e6)
+    if a >= 1e-9:
+        return T("{v:.6g} ns", v=x * 1e9)
+    if a >= 1e-12:
+        return T("{v:.6g} ps", v=x * 1e12)
+    return T("{v:.3e} s", v=x)

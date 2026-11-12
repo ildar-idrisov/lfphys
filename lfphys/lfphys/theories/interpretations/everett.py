@@ -10,14 +10,17 @@ from __future__ import annotations
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "theories", "kind": "interpretation",
-    "title": "Многомировая интерпретация Эверетта: ветвление без коллапса",
-    "statement": "Измерение запутывает систему с прибором; все исходы реализуются в ветвях с весами |амплитуда|²; "
-                 "коллапса нет. Предсказания исходов совпадают с ядром.",
-    "validity": "те же предсказания для статистики исходов",
+    "title": T("Everett's many-worlds interpretation: branching without collapse"),
+    "statement": T("A measurement entangles the system with the apparatus; every outcome is realised in a branch "
+                   "with the weight |amplitude|²; there is no collapse. The predictions for outcomes agree with the "
+                   "core."),
+    "validity": T("the same predictions for the statistics of outcomes"),
     "basis": ["Everett, Rev. Mod. Phys. 29, 454 (1957)", "DeWitt, Physics Today 23, 30 (1970)"],
-    "conflicts": ["копенгагенская интерпретация: один исход и коллапс; Бом: одна траектория"],
+    "conflicts": [T("the Copenhagen interpretation: one outcome and collapse; Bohm: one trajectory")],
 }
 
 

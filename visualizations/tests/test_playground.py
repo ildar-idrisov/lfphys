@@ -17,6 +17,8 @@ from aiohttp.test_utils import TestClient, TestServer
 
 from lfviz import checkpoint, protocol, registry
 from lfviz.app import MGR, create_app
+from lfviz.i18n import T
+from lfviz.i18n import english as E
 from lfviz.sim import Runner
 
 HERE = Path(__file__).resolve().parent
@@ -58,12 +60,12 @@ def test_the_scene_is_changed_by_hand_at_the_current_moment():
     sc = _of(msgs, "scene")[-1]
     new = sc["objects"][-1]
     assert new["t_added"] == pytest.approx(0.5) and new["values"]["x"] == 3.0 and sc["rev"] == 1
-    assert _of(msgs, "event")[-1]["kind"] == "scene" and "добавлен" in _of(msgs, "event")[-1]["text"]
+    assert _of(msgs, "event")[-1]["kind"] == "scene" and "added" in E(_of(msgs, "event")[-1]["text"])
     run.handle({"cmd": "scene", "args": {"op": "set", "id": new["id"], "values": {"vx": -4.0}}})
     assert sim.state[new["id"]][2] == -4.0 and sim.objects[new["id"]]["values"]["vx"] == -4.0
     run.handle({"cmd": "scene", "args": {"op": "duplicate", "id": new["id"]}})
     dup = _of(msgs, "scene")[-1]["objects"][-1]
-    assert dup["label"].endswith("(копия)") and list(sim.state[dup["id"]]) == list(sim.state[new["id"]])
+    assert E(dup["label"]).endswith("(copy)") and list(sim.state[dup["id"]]) == list(sim.state[new["id"]])
     run.handle({"cmd": "scene", "args": {"op": "label", "id": dup["id"], "label": "B"}})
     assert sim.objects[dup["id"]]["label"] == "B"
     run.handle({"cmd": "scene", "args": {"op": "remove", "id": new["id"]}})
@@ -101,7 +103,7 @@ def test_the_scene_as_a_file_and_a_world_from_it():
     assert sim2.t == pytest.approx(0.7) and [o["values"] for o in sim2.objects.values()] == \
         [o["values"] for o in sim.objects.values()]
     assert all((sim2.state[k] == sim.state[k]).all() for k in sim.state)
-    with pytest.raises(ValueError, match="сцена другого раздела"):
+    with pytest.raises(ValueError, match="a scene of another section"):
         _world([], None, {"scene": {**ex, "viz": "p01_gravity"}})
     run.handle({"cmd": "new_world", "args": {"params": {"scene": ex}, "seed": 5}})
     assert _of(msgs, "header")[-1]["world"] == 2 and len(_of(msgs, "scene")[-1]["objects"]) == 3
@@ -303,7 +305,7 @@ async def _buffer(tmp_path, monkeypatch):
         from lfviz import checkpoint as CKmod
         monkeypatch.setattr(CKmod, "files_hash", lambda root, files: "another-code")
         r = await cl.post(f"/api/runs/{rid}/resume", json={})
-        assert r.status == 409 and "вышло из окна" in (await r.json())["error"]
+        assert r.status == 409 and "left the record's window" in (await r.json())["text"]
 
 
 def _age(run, s=10_000.0):
@@ -386,7 +388,7 @@ async def _resume_cases(tmp_path, monkeypatch):
         with monkeypatch.context() as mp:
             mp.setattr(CKmod, "files_hash", lambda root, files: "another-code")
             r = await cl.post(f"/api/runs/{rid}/resume", json={})
-            assert r.status == 409 and "вышло из окна" in (await r.json())["error"]
+            assert r.status == 409 and "left the record's window" in (await r.json())["text"]
         # B: the header trimmed, the checkpoint unloadable in the worker: an error, not a rebuild from a lost start
         rid, run = await new_run()
         await segs_at_least(run, 6)
@@ -402,7 +404,7 @@ async def _resume_cases(tmp_path, monkeypatch):
             if not run.running and run.meta.get("resume_error"):
                 break
             await asyncio.sleep(0.05)
-        assert "вышло из окна" in run.meta["resume_error"], run.meta.get("resume_error")
+        assert "left the record's window" in E(run.meta["resume_error"]), run.meta.get("resume_error")
         assert not any(e.is_frame for e in run.entries[n0:])
         # C: world 1 kept, world 2's header trimmed: the resume continues world 2 at its own time
         rid, run = await new_run()
@@ -444,10 +446,10 @@ def test_a_thermal_switch_in_the_middle_of_a_world_is_said(monkeypatch):
     run._thermal_note()
     run._thermal_note()
     notes = _of(msgs, "notice")
-    assert len(notes) == 1 and "83 °C" in notes[0]["text"] and "CPU" in notes[0]["text"] and "backend" in notes[0]
+    assert len(notes) == 1 and "83 °C" in E(notes[0]["text"]) and "CPU" in E(notes[0]["text"]) and "backend" in notes[0]
     state.update(hot=False, temp=69.0)
     run._thermal_note()
-    assert len(_of(msgs, "notice")) == 2 and "остыл" in _of(msgs, "notice")[-1]["text"]
+    assert len(_of(msgs, "notice")) == 2 and "has cooled" in E(_of(msgs, "notice")[-1]["text"])
 
 
 def test_place_palette_state_and_removals_asked_first():
@@ -463,16 +465,16 @@ def test_place_palette_state_and_removals_asked_first():
     class Placed(base):
         def place(self, kind, values):
             if values.get("x") == 99.0:
-                raise Refusal("там стенка", "сдвиньте x левее")
+                raise Refusal(T("a wall is there"), T("move x to the left"))
             if kind == "particle" and "position" not in values and not values.get("x"):
                 values["x"] = 4.0  # a free spot
             return values
 
         def palette_state(self):
-            return {"probe": "датчик уже есть" if any(o["type"] == "probe" for o in self.objects.values()) else None}
+            return {"probe": T("there is a probe already") if any(o["type"] == "probe" for o in self.objects.values()) else None}
 
         def can_remove(self, obj):
-            return "датчик закреплён" if obj["type"] == "probe" else None
+            return T("the probe is fixed") if obj["type"] == "probe" else None
 
     def emit(meta, blobs=None):
         msgs.append((meta, blobs))
@@ -480,7 +482,7 @@ def test_place_palette_state_and_removals_asked_first():
     sim = Placed(p, 3, emit)
     run = Runner(sim, emit, queue.Queue())
     run._start_world()
-    assert _of(msgs, "scene")[-1]["palette_state"] == {"probe": "датчик уже есть"}
+    assert _of(msgs, "scene")[-1]["palette_state"] == {"probe": {"$t": "there is a probe already"}}
     run.handle({"cmd": "scene", "args": {"op": "add", "type": "particle", "values": {}}})
     assert _of(msgs, "scene")[-1]["objects"][-1]["values"]["x"] == 4.0
     run.handle({"cmd": "scene", "args": {"op": "add", "type": "particle", "values": {"position": [1.5, -2.0, 0.0]}}})
@@ -489,12 +491,12 @@ def test_place_palette_state_and_removals_asked_first():
     n, rev = len(sim.objects), sim.rev
     run.handle({"cmd": "scene", "args": {"op": "add", "type": "particle", "values": {"x": 99.0}}})
     assert len(sim.objects) == n and sim.rev == rev
-    assert _of(msgs, "error")[-1]["text"] == "Сцена не изменена: там стенка. Что изменить: сдвиньте x левее"
+    assert E(_of(msgs, "error")[-1]["text"]) == "Scene not changed: a wall is there. What to change: move x to the left"
     probe = [o for o in sim.objects.values() if o["type"] == "probe"][0]
     run.handle({"cmd": "scene", "args": {"op": "remove", "id": probe["id"]}})
-    assert probe["id"] in sim.objects and "закреплён" in _of(msgs, "error")[-1]["text"]
+    assert probe["id"] in sim.objects and "is fixed" in E(_of(msgs, "error")[-1]["text"])
     run.handle({"cmd": "scene", "args": {"op": "clear"}})
-    assert len(sim.objects) == n and "сцену очистить нельзя" in _of(msgs, "error")[-1]["text"]
+    assert len(sim.objects) == n and "the scene cannot be cleared" in E(_of(msgs, "error")[-1]["text"])
     assert all(k in sim.state for k, o in sim.objects.items() if o["type"] == "particle")  # nothing half-removed
     # without the section's place: a clicked point goes to the type's x, y
     msgs2 = []
@@ -514,8 +516,8 @@ def test_a_parameter_named_position_is_kept():
     base = viz["simulation"]
 
     class WithPiston(base):
-        PALETTE = {**base.PALETTE, "piston": ObjectType("piston", "Поршень", "body",
-                                                        Schema([Param("position", "Положение, нм", "float", 10.0)]))}
+        PALETTE = {**base.PALETTE, "piston": ObjectType("piston", "Piston", "body",
+                                                        Schema([Param("position", "Position, nm", "float", 10.0)]))}
     msgs = []
 
     def emit(meta, blobs=None):

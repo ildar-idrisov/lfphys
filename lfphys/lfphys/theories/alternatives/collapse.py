@@ -18,15 +18,17 @@ import math
 import numpy as np
 from scipy import special
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "theories", "kind": "alternative",
-    "title": "Спонтанный коллапс GRW",
-    "statement": "Каждая частица спонтанно локализуется с частотой λ на а.е.м. гауссианом ширины r_C; для матрицы "
-                 "плотности — случайный толчок q ~ N(0, 1/(2r_C²)).",
-    "validity": "модификация квантовой динамики; параметры ограничены опытами (интерферометрия молекул, "
-                "аномальный нагрев, спонтанное рентгеновское излучение)",
+    "title": T("GRW spontaneous collapse"),
+    "statement": T("Every particle localises spontaneously at a rate λ per u by a Gaussian of width r_C; for the "
+                   "density matrix, a random kick q ~ N(0, 1/(2r_C²))."),
+    "validity": T("a modification of quantum dynamics; the parameters are bounded by experiments (molecule "
+                  "interferometry, anomalous heating, spontaneous X-ray emission)"),
     "basis": ["Ghirardi, Rimini, Weber, Phys. Rev. D 34, 470 (1986)", "Bassi et al., Rev. Mod. Phys. 85, 471 (2013)"],
-    "conflicts": ["lfphys.core.quantum: линейная квантовая механика без коллапса"],
+    "conflicts": [T("lfphys.core.quantum: linear quantum mechanics without collapse")],
 }
 
 

@@ -23,14 +23,17 @@ from __future__ import annotations
 
 import math
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Вращающаяся чёрная дыра (Керр): экваториальные орбиты",
-    "statement": "Горизонты, эргосфера, круговая фотонная орбита, предельно связанная орбита, ISCO "
-                 "(Бардин–Пресс–Тьюколски), энергия и момент круговых орбит; эффективность аккреции 1 − e_ISCO.",
-    "validity": "вакуумное решение ОТО, |a| ≤ M; экваториальная плоскость",
+    "title": T("Rotating black hole (Kerr): equatorial orbits"),
+    "statement": T("Horizons, ergosphere, circular photon orbit, marginally bound orbit, ISCO "
+                   "(Bardeen–Press–Teukolsky), energy and angular momentum of circular orbits; accretion efficiency 1 "
+                   "− e_ISCO."),
+    "validity": T("vacuum solution of GR, |a| ≤ M; equatorial plane"),
     "basis": ["Kerr, PRL 11, 237 (1963)", "Bardeen, Press, Teukolsky, ApJ 178, 347 (1972)",
-              "тень M87* и Sgr A* (EHT 2019, 2022) согласуется с Керром"],
+              T("the shadows of M87* and Sgr A* (EHT 2019, 2022) agree with Kerr")],
     "conflicts": [],
 }
 

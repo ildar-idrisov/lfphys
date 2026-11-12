@@ -13,15 +13,18 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Специальная теория относительности",
-    "statement": "Лоренц-инвариантность: скорость света одинакова во всех инерциальных системах; преобразования "
-                 "Лоренца, собственное время, аберрация, сложение скоростей, эффект Доплера, вращение Томаса–Вигнера.",
-    "validity": "плоское пространство-время; гравитация — в lfphys.core.gravity",
+    "title": T("Special relativity"),
+    "statement": T("Lorentz invariance: the speed of light is the same in all inertial frames; Lorentz "
+                   "transformations, proper time, aberration, velocity composition, the Doppler effect, the "
+                   "Thomas–Wigner rotation."),
+    "validity": T("flat spacetime; gravity is in lfphys.core.gravity"),
     "basis": ["Einstein, Ann. Phys. 17, 891 (1905)",
-              "проверки изотропии c (Michelson–Morley, Kennedy–Thorndike) и замедления времени (Ives–Stilwell, "
-              "мюоны в накопительных кольцах): нарушений не найдено"],
+              T("tests of the isotropy of c (Michelson–Morley, Kennedy–Thorndike) and of time dilation "
+                "(Ives–Stilwell, muons in storage rings): no violation found")],
     "conflicts": [],
 }
 

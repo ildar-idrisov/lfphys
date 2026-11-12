@@ -106,34 +106,36 @@ import numpy as np
 from scipy import constants as sc
 from scipy import integrate, optimize
 
+from lfphys.i18n import T
+
 from ..constants import C, G, YEAR_JULIAN
 
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Однородная изотропная вселенная (ФЛРУ): H(z), расстояния, возрасты, a(t)",
-    "statement": "Уравнения Фридмана ОТО для фотонов (из T_CMB), нейтрино (N_eff; массивные — точный интеграл "
-                 "Ферми–Дирака для плотности и давления), пылевидной материи, кривизны и космологической постоянной: "
-                 "E(z), H(z), параметры плотности и параметр замедления при z; сопутствующее, поперечное, угловое и "
-                 "фотометрическое расстояния, модуль расстояния; время назад, возраст, конформное время, горизонт "
-                 "частиц, звуковой горизонт; a(t) обращением t(a) и вторым путём — интегрированием уравнения "
-                 "ускорения; критическая плотность; параметры Planck 2018 как данные.",
-    "validity": "однородный фон без возмущений (рекомбинация не считается: z_*, z_drag — входные данные); "
-                "нейтрино — тепловые: массивный вид — газ Ферми–Дирака физической массы при температуре "
-                "(N_std/n)^(1/4)(4/11)^(1/3) T, N_std = 3.046 (стандартный нагрев), остаток N_eff — безмассовый "
-                "(разбиение CAMB/CosmoMC, по которому считался Planck 2018, при любом N_eff); спектральные "
-                "искажения неполного расцепления не учитываются: ω_ν на 0.10 % больше, чем у Mangano et al. 2005 "
-                "(Σm/93.14 эВ при 2.725 K, 93.09 эВ при 2.7255 K; у тепловой модели 92.99 эВ), а современное "
-                "N_eff = 3.0440 (Froustey et al. 2020); "
-                "интегралы — с оценкой погрешности, возвращаемой вместе со значением (запрос rtol = 1e-13 по "
-                "умолчанию); вдали от точек поворота, отскока и зависания оценка ≤ 1e-12 относительной, "
-                "фактическая ошибка против замкнутых форм и mpmath ≤ 2e-13 (измерено); вблизи них ошибка "
-                "определяется обусловленностью и оценка растёт вместе с ней, оставаясь верхней границей; "
-                "a(t) — относительная ошибка ≈ E·t·H0·u плюс E·(ошибка интеграла времени), a от ~1e-300 до "
-                "~1e300 (дальше — inf с предупреждением); тёмная энергия, отличная от Λ, — только через модель "
-                "вне ядра (theories.models.dark_energy); ΛCDM — стандартная модель с известными напряжениями: H0 "
-                "Planck 2018 против локальных измерений (3.6σ в аннотации статьи), DESI DR2 BAO + CMB предпочитает "
-                "w0 > −1, wa < 0 на 3.1σ (2.8–4.2σ со сверхновыми) — не опровержение Λ",
-    "basis": ["Friedmann 1922, 1924; Lemaître 1927; Robertson 1935; Walker 1937 (ОТО)",
+    "title": T("Homogeneous isotropic universe (FLRW): H(z), distances, ages, a(t)"),
+    "statement": T("Friedmann's equations of GR for photons (from T_CMB), neutrinos (N_eff; massive ones by the exact "
+                   "Fermi–Dirac integral for density and pressure), dust-like matter, curvature and the cosmological "
+                   "constant: E(z), H(z), the density parameters and the deceleration parameter at z; the comoving, "
+                   "transverse, angular-diameter and luminosity distances, the distance modulus; lookback time, age, "
+                   "conformal time, particle horizon, sound horizon; a(t) by inverting t(a) and by a second route, "
+                   "integrating the acceleration equation; the critical density; the Planck 2018 parameters as data."),
+    "validity": T("a homogeneous background without perturbations (recombination is not computed: z_* and z_drag are "
+                  "input data); thermal neutrinos: a massive species is a Fermi–Dirac gas of the physical mass at the "
+                  "temperature (N_std/n)^(1/4)(4/11)^(1/3) T, N_std = 3.046 (standard heating), the rest of N_eff is "
+                  "massless (the split of CAMB/CosmoMC, with which Planck 2018 was computed, for any N_eff); the "
+                  "spectral distortions of incomplete decoupling are not included: ω_ν is 0.10 % larger than in "
+                  "Mangano et al. 2005 (Σm/93.14 eV at 2.725 K, 93.09 eV at 2.7255 K; the thermal model gives 92.99 "
+                  "eV), and the current N_eff = 3.0440 (Froustey et al. 2020); the integrals come with an error "
+                  "estimate returned together with the value (requested rtol = 1e-13 by default); away from turning "
+                  "points, bounces and loitering the estimate is ≤ 1e-12 relative, and the actual error against "
+                  "closed forms and mpmath ≤ 2e-13 (measured); near them the error is set by the conditioning and the "
+                  "estimate grows with it, staying an upper bound; a(t): relative error ≈ E·t·H0·u plus E·(the error "
+                  "of the time integral), a from ~1e-300 to ~1e300 (beyond that, inf with a warning); dark energy "
+                  "other than Λ only through a model outside the core (theories.models.dark_energy); ΛCDM is the "
+                  "standard model with known tensions: H0 of Planck 2018 against local measurements (3.6σ in the "
+                  "paper's abstract), DESI DR2 BAO + CMB prefers w0 > −1, wa < 0 at 3.1σ (2.8–4.2σ with supernovae): "
+                  "not a refutation of Λ"),
+    "basis": [T("Friedmann 1922, 1924; Lemaître 1927; Robertson 1935; Walker 1937 (GR)"),
               "Hogg, arXiv:astro-ph/9905116 (1999), Eqs. (14)-(21), (25), (30)",
               "Carroll, Living Rev. Relativ. 4, 1 (2001), Eqs. (21), (36), (42)",
               "Komatsu et al., ApJS 192, 18 (2011), Eqs. (21)-(25): F(y) and its limits",

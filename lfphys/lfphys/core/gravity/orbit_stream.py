@@ -41,19 +41,21 @@ import mpmath as mp
 import numpy as np
 from scipy import integrate, optimize
 
+from lfphys.i18n import T
+
 from . import orbits
 
 ABOUT = {
     "layer": "core", "kind": "numerical solution",
-    "title": "Орбита тела в поле Шварцшильда: непрерывное интегрирование с событиями",
-    "statement": "Времениподобная геодезическая в экваториальной плоскости по кускам: уравнение Бине для u = M/r "
-                 "в масштабе начального радиуса вместе с t и τ; радиальные орбиты в собственном времени; перицентры, "
-                 "апоцентры, обороты, горизонт, поверхность и уход как события на плотном выходе DOP853; дрейф e "
-                 "по состоянию; вторая независимая схема (уравнения геодезических в τ) для проверки e, l и нормировки; "
-                 "собственное время падения квадратурой τ = ∫dr/√R(r).",
-    "validity": "пробное тело вне невращающегося сферического тела (r > R, r > 2M), экваториальная плоскость; "
-                "относительная точность интегрирования 1e-12",
-    "basis": ["уравнения орбит: lfphys.core.gravity.orbits (Schwarzschild 1916)",
+    "title": T("The orbit of a body in the Schwarzschild field: continuous integration with events"),
+    "statement": T("A timelike geodesic in the equatorial plane, piece by piece: Binet's equation for u = M/r scaled "
+                   "by the initial radius, together with t and τ; radial orbits in proper time; periapsides, "
+                   "apoapsides, turns, the horizon, the surface and escape as events on the dense output of DOP853; "
+                   "the drift of e from the state; a second independent scheme (the geodesic equations in τ) to check "
+                   "e, l and the normalisation; the proper time of a fall by the quadrature τ = ∫dr/√R(r)."),
+    "validity": T("a test body outside a non-rotating spherical body (r > R, r > 2M), equatorial plane; relative "
+                  "integration accuracy 1e-12"),
+    "basis": [T("orbit equations: lfphys.core.gravity.orbits (Schwarzschild 1916)"),
               "DOP853: Hairer, Nørsett, Wanner, Solving Ordinary Differential Equations I (scipy.integrate)"],
     "conflicts": [],
 }

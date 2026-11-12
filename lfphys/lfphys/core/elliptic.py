@@ -31,13 +31,15 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "numerics",
-    "title": "Эллиптические интегралы и функции Якоби (CPU и GPU)",
-    "statement": "R_F Карлсона удвоением (DLMF 19.36), F(φ|m) и K(m) для любого m < 1, sn, cn, dn при любом "
-                 "вещественном m (m < 0 — преобразованием DLMF 22.17), полный Π(n|m) через R_J; одни и те же "
-                 "поэлементные формулы на NumPy и CuPy.",
-    "validity": "математика; относительная ошибка ~1e-15 (тесты против mpmath)",
+    "title": T("Elliptic integrals and Jacobi functions (CPU and GPU)"),
+    "statement": T("Carlson's R_F by duplication (DLMF 19.36), F(φ|m) and K(m) for any m < 1, sn, cn, dn for any "
+                   "real m (m < 0 by the transformation DLMF 22.17), the complete Π(n|m) through R_J; the same "
+                   "elementwise formulas on NumPy and CuPy."),
+    "validity": T("mathematics; relative error ~1e-15 (tests against mpmath)"),
     "basis": ["NIST DLMF §19.2, §19.25, §19.36, §22.17", "Carlson, Numer. Algorithms 10, 13 (1995)"],
     "conflicts": [],
 }

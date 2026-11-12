@@ -17,15 +17,18 @@ import numpy as np
 from scipy import constants as sc
 from scipy import special
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Излучение абсолютно чёрного тела (закон Планка)",
-    "statement": "Спектральная яркость B_λ(T), B_ν(T); закон смещения Вина (через функцию Ламберта); "
-                 "закон Стефана–Больцмана σT⁴.",
-    "validity": "равновесное излучение; спектр реликтового фона — планковский: среднеквадратичные отклонения "
-                "меньше 5·10⁻⁵ от максимума (COBE/FIRAS, Fixsen et al. 1996)",
-    "basis": ["Planck 1900", "Fixsen et al., ApJ 473, 576 (1996), arXiv:astro-ph/9605054 (COBE/FIRAS, полный набор)",
-              "Mather et al., ApJ 420, 439 (1994) (COBE/FIRAS: отклонения < 0,3 % максимума, rms 0,01 %)"],
+    "title": T("Black-body radiation (Planck's law)"),
+    "statement": T("The spectral radiance B_λ(T), B_ν(T); Wien's displacement law (through the Lambert function); the "
+                   "Stefan–Boltzmann law σT⁴."),
+    "validity": T("equilibrium radiation; the spectrum of the cosmic microwave background is Planckian: rms "
+                  "deviations below 5·10⁻⁵ of the peak (COBE/FIRAS, Fixsen et al. 1996)"),
+    "basis": ["Planck 1900", T("Fixsen et al., ApJ 473, 576 (1996), arXiv:astro-ph/9605054 (COBE/FIRAS, the full data "
+                               "set)"),
+              T("Mather et al., ApJ 420, 439 (1994) (COBE/FIRAS: deviations < 0.3 % of the peak, rms 0.01 %)")],
     "conflicts": [],
 }
 

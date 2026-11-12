@@ -1,11 +1,12 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
 // v04 view: the orbit plane (trail of the body, the other theory's ghost, apsides, the special radii of the
-// Schwarzschild geometry, the central body) and the plots r(t) and 1 − dτ/dt; panels «Орбита» and «Часы».
+// Schwarzschild geometry, the central body) and the plots r(t) and 1 − dτ/dt; panels "Orbit" and "Clocks".
 // Everything drawn is data of the run: trail samples and apsides are messages revealed when the world's time
 // reached them, the current state comes with each frame, the special radii come from the engine (header).
 // The view only draws, scales and formats; it computes no physics.
 import { Plane } from "/static/js/canvas.js";
+import { t } from "/static/js/i18n.js";
 import { css, el, fresh2d, length, num, panel, time } from "/static/js/ui.js";
 
 const AU_M = 149597870700;
@@ -25,25 +26,25 @@ export function createView(ctx) {
 
   // --- DOM -----------------------------------------------------------------------------------------------
   const live = (id, label) => (ctx.liveControl ? ctx.liveControl(id, { label }) : null);
-  const btnPlus = el("button", { title: "Толчок: +5 % скорости вдоль движения (в текущий момент)" }, "толчок +5 %");
-  const btnMinus = el("button", { title: "Торможение: −5 % скорости вдоль движения" }, "−5 %");
-  const btnRelaunch = el("button", { title: "Запустить тело заново из начальных данных (r₀, скорость, угол)" }, "↻ запуск");
-  const quick = el("div", { class: "toolbar quick", title: "Запуск тела: меняется сразу (то же, что в панели слева)" },
-    el("span", { class: "muted" }, "Запуск:"), live("r0", "r₀, M"), live("speed", "скорость, × круговой"),
-    live("angle", "угол, °"), live("ghost", "призрак"), btnPlus, btnMinus, btnRelaunch);
+  const btnPlus = el("button", { title: t("Push: +{p} % of the speed along the motion (at the current moment)", { p: 5 }) }, t("push +{p} %", { p: 5 }));
+  const btnMinus = el("button", { title: t("Brake: −{p} % of the speed along the motion", { p: 5 }) }, t("−{p} %", { p: 5 }));
+  const btnRelaunch = el("button", { title: t("Launch the body again from the initial data (r₀, speed, angle)") }, t("↻ launch"));
+  const quick = el("div", { class: "toolbar quick", title: t("Launch of the body: changes apply at once (the same as in the panel on the left)") },
+    el("span", { class: "muted" }, t("Launch:")), live("r0", "r₀, M"), live("speed", t("speed, × circular")),
+    live("angle", t("angle, °")), live("ghost", t("ghost")), btnPlus, btnMinus, btnRelaunch);
   const cbAll = el("input", { type: "checkbox", checked: true });
   const cbRadii = el("input", { type: "checkbox", checked: true });
   const cbAps = el("input", { type: "checkbox", checked: true });
   const cbFollow = el("input", { type: "checkbox" });
   const cbHist = el("input", { type: "checkbox" });
-  const btnFit = el("button", { title: "Вписать орбиту текущего отрезка" }, "⌖ орбита");
-  const btnCenter = el("button", { title: "Вписать область у центра (до 12M)" }, "⌖ центр");
+  const btnFit = el("button", { title: t("Fit the orbit of the current segment") }, t("⌖ orbit"));
+  const btnCenter = el("button", { title: t("Fit the region near the centre (up to {r}M)", { r: 12 }) }, t("⌖ centre"));
   const toolbar = el("div", { class: "toolbar" },
-    el("label", { title: "Показывать следы прежних отрезков (бледно)" }, cbAll, " прежние отрезки"),
-    el("label", { title: "Горизонт 2M, фотонная сфера 3M, предельно связанная орбита 4M, ISCO 6M" }, cbRadii, " радиусы ОТО"),
-    el("label", {}, cbAps, " перицентры"),
-    el("label", { title: "Держать тело в центре вида" }, cbFollow, " следить за телом"),
-    el("label", { title: "Графики: вся история отрезка вместо последних оборотов" }, cbHist, " графики: весь отрезок"),
+    el("label", { title: t("Show the traces of earlier segments (faded)") }, cbAll, " ", t("earlier segments")),
+    el("label", { title: t("Horizon 2M, photon sphere 3M, marginally bound orbit 4M, ISCO 6M") }, cbRadii, " ", t("GR radii")),
+    el("label", {}, cbAps, " ", t("periapses")),
+    el("label", { title: t("Keep the body in the centre of the view") }, cbFollow, " ", t("follow the body")),
+    el("label", { title: t("Plots: the whole history of the segment instead of the last orbits") }, cbHist, " ", t("plots: whole segment")),
     btnFit, btnCenter);
   const cvOrb = el("canvas"), cvPlot = el("canvas");
   const ovOrb = el("div", { class: "overlay" }), ovPlot = el("div", { class: "overlay" });
@@ -53,7 +54,7 @@ export function createView(ctx) {
       el("div", {}, el("div", { class: "canvas-wrap" }, cvPlot, ovPlot))));
   const orbBox = el("div", {});
   const clockBox = el("div", {});
-  const rightPanels = [panel("Орбита", orbBox), panel("Часы", clockBox)];
+  const rightPanels = [panel(t("Orbit"), orbBox), panel(t("Clocks"), clockBox)];
 
   const plane = new Plane(cvOrb, { onChange: () => ctx.requestRender() });
   new ResizeObserver(() => ctx.requestRender()).observe(cvPlot);
@@ -82,13 +83,13 @@ export function createView(ctx) {
     if (withLag) c.lag.set(b.lag, c.n);
     c.n += m;
   }
-  function upTo(c, t) {  // number of samples with time <= t (samples are in time order)
+  function upTo(c, tw) {  // number of samples with time <= t (samples are in time order)
     if (!c) return 0;
     let lo = 0, hi = c.n;
-    while (lo < hi) { const m = (lo + hi) >> 1; if (c.t[m] <= t) lo = m + 1; else hi = m; }
+    while (lo < hi) { const m = (lo + hi) >> 1; if (c.t[m] <= tw) lo = m + 1; else hi = m; }
     return lo;
   }
-  function segAt(t) { let s = null; for (const g of segs) if (g.t <= t) s = g; return s || segs[0] || null; }
+  function segAt(tw) { let s = null; for (const g of segs) if (g.t <= tw) s = g; return s || segs[0] || null; }
   const M = () => (units ? units.M_m : 1);
   function lenM(rM) { return `${num(rM, 7)} M (${length(rM * M(), { au: AU_M }, 6)})`; }
   function tfmt(s, d = 7) {
@@ -140,11 +141,11 @@ export function createView(ctx) {
       g.fillText(label, plane.X(r * Math.cos(a)) + 3, plane.Y(r * Math.sin(a)) + 4); g.restore();
     }
   }
-  function drawOrbit(frame, t) {
+  function drawOrbit(frame, tw) {
     const g = plane.ctx;
     plane.clear();
     if (!H) return;
-    const s = segAt(t);
+    const s = segAt(tw);
     if (s && s.seg > fittedSeg && s.launch !== false) { fittedSeg = s.seg; fitSeg(s); }
     if (opt.follow && frame) { plane.cx = frame.x; plane.cy = frame.y; }
     plane.grid({ labelX: (v) => num(v, 4) + " M", labelY: (v) => num(v, 4) + " M" });
@@ -160,19 +161,19 @@ export function createView(ctx) {
     // special radii (from the engine: lfphys.core.gravity.kerr at zero spin)
     if (opt.radii && gr) {  // only outside the body: inside it the exterior (Schwarzschild) metric does not apply
       const sp = H.special, out = (r) => !(body.R > 0) || r > body.R;
-      if (out(sp.horizon)) circle(g, sp.horizon, "#868e96", null, `${num(sp.horizon, 3)}M горизонт`, null, -100);
-      if (out(sp.photon)) circle(g, sp.photon, "#ae3ec9", [4, 3], `${num(sp.photon, 3)}M фотонная сфера`, null, -75);
+      if (out(sp.horizon)) circle(g, sp.horizon, "#868e96", null, t("{r:.3g}M horizon", { r: sp.horizon }), null, -100);
+      if (out(sp.photon)) circle(g, sp.photon, "#ae3ec9", [4, 3], t("{r:.3g}M photon sphere", { r: sp.photon }), null, -75);
       if (out(sp.mb)) circle(g, sp.mb, "#1c7ed6", [1, 3], `${num(sp.mb, 3)}M`, null, -45);
       if (out(sp.isco)) circle(g, sp.isco, "#e8590c", [6, 4], `${num(sp.isco, 3)}M ISCO`, null, -20);
     }
     // trails: earlier segments faded
     const accent = css("--accent");
-    if (opt.allSegs) for (const [sg, c] of trails) if (!s || sg !== s.seg) polyline(g, c, upTo(c, t), css("--muted"), 1, null, 0.45);
+    if (opt.allSegs) for (const [sg, c] of trails) if (!s || sg !== s.seg) polyline(g, c, upTo(c, tw), css("--muted"), 1, null, 0.45);
     if (s) {
       const gc = gtrails.get(s.seg);
-      if (gc) polyline(g, gc, upTo(gc, t), "#f08c00", 1.3, [6, 5], 0.95);
+      if (gc) polyline(g, gc, upTo(gc, tw), "#f08c00", 1.3, [6, 5], 0.95);
       const c = trails.get(s.seg);
-      const n = upTo(c, t);
+      const n = upTo(c, tw);
       polyline(g, c, n, accent, 1.6, null, 1);
       // from the last revealed sample to the body's current position
       if (c && n && frame && frame.seg === s.seg) {
@@ -196,7 +197,7 @@ export function createView(ctx) {
         }
         g.restore();
       }
-      if (opt.apsides) drawApsides(g, s, t);
+      if (opt.apsides) drawApsides(g, s, tw);
     }
     // the body and the ghost
     if (frame && s && frame.seg === s.seg) {
@@ -213,7 +214,7 @@ export function createView(ctx) {
         g.strokeStyle = css("--bad"); g.lineWidth = 2;
         g.beginPath(); g.moveTo(X - 6, Y - 6); g.lineTo(X + 6, Y + 6); g.moveTo(X - 6, Y + 6); g.lineTo(X + 6, Y - 6); g.stroke();
         g.fillStyle = css("--bad"); g.font = "12px system-ui";
-        g.fillText(END_RU[frame.status] || frame.status, X + 9, Y - 8);
+        g.fillText(END_TEXT[frame.status] || frame.status, X + 9, Y - 8);
       }
       g.restore();
     }
@@ -224,12 +225,14 @@ export function createView(ctx) {
     g.beginPath(); g.moveTo(14, yb); g.lineTo(14 + bw, yb); g.stroke();
     g.fillText(`${num(wM, 3)} M = ${length(wM * M(), { au: AU_M }, 3)}`, 14, yb - 5); g.restore();
     const gi = s ? ghostInfo.get(s.seg) : null;
-    ovOrb.textContent = `Плоскость орбиты, вид сверху. Сплошная — орбита этого мира (${H.law === "GR" ? "ОТО" : "Ньютон"})` +
-      (gi ? `, пунктир — призрак (${gi.law === "GR" ? "ОТО" : "Ньютон"}) из тех же начальных данных` : "") +
-      ". Зелёная стрелка — начальная скорость. Колесо — масштаб, перетаскивание — сдвиг.";
+    ovOrb.textContent = gi
+      ? t("The orbit plane from above. Solid: the orbit of this world ({law}), dashed: the ghost ({ghost}) from the same initial data. The green arrow is the initial velocity. Wheel: zoom, drag: pan.",
+        { law: lawShort(H.law), ghost: lawShort(gi.law) })
+      : t("The orbit plane from above. Solid: the orbit of this world ({law}). The green arrow is the initial velocity. Wheel: zoom, drag: pan.",
+        { law: lawShort(H.law) });
   }
-  function drawApsides(g, s, t) {
-    const list = (apsides.get(s.seg) || []).filter((a) => a.t <= t);
+  function drawApsides(g, s, tw) {
+    const list = (apsides.get(s.seg) || []).filter((a) => a.t <= tw);
     const peri = list.filter((a) => a.kind === "peri"), apo = list.filter((a) => a.kind === "apo");
     g.save();
     g.fillStyle = css("--muted");
@@ -254,13 +257,13 @@ export function createView(ctx) {
       let deg = (a.phi * 180 / Math.PI) % 360;
       if (deg > 180) deg -= 360; else if (deg <= -180) deg += 360;
       if (Math.abs(deg) < 5e-7) deg = 0;  // below the display precision of the angle (the shift is shown separately)
-      let txt = `п${a.n}: φ = ${num(deg, 7)}°`;
-      if (a.n > 1 && peri.length && k === show.length - 1) txt += `, сдвиг от п${peri[0].n}: ${angFmt(a.shift)}`;
+      let txt = t("p{n:d}: φ = {phi:.7g}°", { n: a.n, phi: deg });
+      if (a.n > 1 && peri.length && k === show.length - 1) txt = t("{a}, shift from p{k:d}: {s}", { a: txt, k: peri[0].n, s: angFmt(a.shift) });
       const w = g.measureText(txt).width;
       g.fillText(txt, X + 7 + w > plane.w - 4 ? X - 7 - w : X + 7, Y - 6);
       lastXY = [X, Y];
     }
-    for (const a of (gapsides.get(s.seg) || []).filter((q) => q.t <= t).slice(-8)) {
+    for (const a of (gapsides.get(s.seg) || []).filter((q) => q.t <= tw).slice(-8)) {
       const X = plane.X(a.x), Y = plane.Y(a.y);
       g.strokeStyle = "#f08c00"; g.lineWidth = 1.2;
       g.beginPath(); g.moveTo(X, Y - 5); g.lineTo(X + 5, Y); g.lineTo(X, Y + 5); g.lineTo(X - 5, Y); g.closePath(); g.stroke();
@@ -275,14 +278,14 @@ export function createView(ctx) {
     if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
     const g = fresh2d(cv.getContext("2d"), dpr); return g;
   }
-  function drawPlots(frame, t) {
+  function drawPlots(frame, tw) {
     const g = setup(cvPlot), W = cvPlot.clientWidth, Hh = cvPlot.clientHeight;
     g.fillStyle = css("--canvas"); g.fillRect(0, 0, W, Hh);
-    const s = segAt(t);
+    const s = segAt(tw);
     if (!H || !s) return;
     const c = trails.get(s.seg), gc = gtrails.get(s.seg);
-    const n = upTo(c, t), ng = upTo(gc, t);
-    const t1 = t, t0 = opt.history ? s.t : Math.max(s.t, t - (s.t_window || (t - s.t)));
+    const n = upTo(c, tw), ng = upTo(gc, tw);
+    const t1 = tw, t0 = opt.history ? s.t : Math.max(s.t, tw - (s.t_window || (tw - s.t)));
     const left = 66, right = 10, top1 = 74, h1 = Math.max(40, (Hh - 140) / 2), top2 = top1 + h1 + 36, h2 = Math.max(40, Hh - top2 - 26);
     const span = Math.max(t1 - t0, 1e-300);
     const X = (tt) => left + (W - left - right) * (tt - t0) / span;
@@ -307,7 +310,7 @@ export function createView(ctx) {
     }
     series(g, gc, gi0, ng, X, (i) => Y1(gc.r[i]), "#f08c00", [6, 5]);
     series(g, c, i0, n, X, (i) => Y1(c.r[i]), css("--accent"), null);
-    if (frame && frame.seg === s.seg) dot(g, X(t), Y1(frame.r), css("--accent"));
+    if (frame && frame.seg === s.seg) dot(g, X(tw), Y1(frame.r), css("--accent"));
     // 1 − dτ/dt
     if (H.law === "GR") {
       let lo2 = Infinity, hi2 = -Infinity;
@@ -319,17 +322,19 @@ export function createView(ctx) {
       const Y2 = (v) => top2 + h2 * (1 - (v - lo2) / (hi2 - lo2));
       axes(g, left, top2, W - left - right, h2, lo2, hi2, (v) => num(v, 4), "1 − dτ/dt");
       series(g, c, i0, n, X, (i) => Y2(c.lag[i]), "#2b8a3e", null);
-      if (frame && frame.seg === s.seg) dot(g, X(t), Y2(frame.deficit), "#2b8a3e");
+      if (frame && frame.seg === s.seg) dot(g, X(tw), Y2(frame.deficit), "#2b8a3e");
     } else {
       g.fillStyle = css("--muted"); g.font = "12px system-ui";
-      g.fillText("Ньютон: время абсолютно —", left, top2 + 20);
-      g.fillText("часы тела идут как часы далёкого наблюдателя (dτ/dt = 1).", left, top2 + 38);
+      g.fillText(t("Newton: time is absolute:"), left, top2 + 20);
+      g.fillText(t("the body's clock runs like the distant observer's clock (dτ/dt = 1)."), left, top2 + 38);
     }
     // time axis
     g.fillStyle = css("--muted"); g.font = "11px system-ui";
     g.fillText(tfmt(t0, 5), left, Hh - 6);
     const tl = tfmt(t1, 5); g.fillText(tl, W - right - g.measureText(tl).width, Hh - 6);
-    ovPlot.textContent = `r(t) тела (пунктир — призрак) и отставание его часов 1 − dτ/dt; ось — время мира t${opt.history ? " (весь отрезок)" : " (последние обороты)"}.`;
+    ovPlot.textContent = opt.history
+      ? t("r(t) of the body (dashed: the ghost) and the lag of its clock 1 − dτ/dt; the axis is the world's time t (the whole segment).")
+      : t("r(t) of the body (dashed: the ghost) and the lag of its clock 1 − dτ/dt; the axis is the world's time t (the last orbits).");
   }
   function axes(g, x, y, w, h, lo, hi, fmt, title) {
     g.save(); g.strokeStyle = css("--line"); g.strokeRect(x, y, w, h);
@@ -357,71 +362,75 @@ export function createView(ctx) {
 
   // --- panels -----------------------------------------------------------------------------------------------
   function kv(rows) { return el("div", { class: "kv" }, rows.flatMap(([k, v]) => [el("span", {}, k), el("span", { class: "mono" }, v)])); }
-  function drawOrbPanel(frame, t) {
-    const s = segAt(t);
+  function drawOrbPanel(frame, tw) {
+    const s = segAt(tw);
     if (!H || !s) { orbBox.replaceChildren(); return; }
     const i = s.init, el2 = s.elements;
-    const peri = (apsides.get(s.seg) || []).filter((a) => a.kind === "peri" && a.t <= t);
+    const peri = (apsides.get(s.seg) || []).filter((a) => a.kind === "peri" && a.t <= tw);
     const last = peri.length ? peri[peri.length - 1] : null;
     const mean = peri.length >= 2 ? (peri[peri.length - 1].shift / (peri.length - 1)) : null;
-    const rows = [["Закон", H.law === "GR" ? "ОТО (Шварцшильд)" : "Ньютон (приближение)"],
-      ["Центральное тело", `${num(H.body.mass_msun, 6)} M☉, ` + (H.body.R > 0 ? `R = ${num(H.body.R, 6)} M (${num(H.body.R_km, 6)} км)` : (H.law === "GR" ? "чёрная дыра" : "точечная масса"))],
-      ["1 M = GM/c²", length(M(), { au: AU_M }, 6)], ["Отрезок", `${s.seg}: ${s.reason}`], ["Орбита", s.kind_text],
-      ["Старт", `r = ${lenM(i.r0)}`], ["Скорость", `${num(i.v, 7)} c = ${num(i.k, 6)} × круговой, угол ${num(i.alpha, 5)}°`]];
-    if (H.law === "GR") rows.push(["e (энергия на mc²)", num(s.e, 12)], ["e² − 1", num(s.em1, 8)], ["l (момент, M·c)", num(s.l, 10)]);
-    else rows.push(["E (на c²)", num(s.E, 10)], ["h (M·c)", num(s.h, 10)]);
-    if (s.r_peri && s.kind !== "plunge") rows.push(["Перицентр", lenM(s.r_peri)]);
-    if (s.r_apo) rows.push(["Апоцентр", lenM(s.r_apo)]);
-    if (el2) rows.push(["Эксцентриситет ε", num(el2.ecc, 8)], ["p (параметр)", lenM(el2.p)], ["a = p/(1 − ε²)", lenM(el2.a)]);
-    rows.push(["Перицентров пройдено", String(peri.length)]);
-    if (last && last.adv !== null) rows.push(["Смещение за последний оборот", angFmt(last.adv)]);
-    if (mean !== null) rows.push(["Смещение, среднее", angFmt(mean)]);
-    if (s.adv_exact !== null && s.adv_exact !== undefined) rows.push(["Точная формула (эталон)", angFmt(s.adv_exact)]);
-    if (last && last.dt) rows.push(["Радиальный период (t)", tfmt(last.dt)]);
-    if (frame && frame.n_lap) rows.push(["Оборотов по φ", String(frame.n_lap)]);
+    const rows = [[t("Law"), H.law === "GR" ? t("GR (Schwarzschild)") : t("Newton (approximation)")],
+      [t("Central body"), H.body.R > 0
+        ? t("{m:.6g} M☉, R = {R:.6g} M ({km:.6g} km)", { m: H.body.mass_msun, R: H.body.R, km: H.body.R_km })
+        : t("{m:.6g} M☉, {body}", { m: H.body.mass_msun, body: H.law === "GR" ? t("a black hole") : t("a point mass") })],
+      ["1 M = GM/c²", length(M(), { au: AU_M }, 6)], [t("Segment"), t("{seg:d}: {reason}", { seg: s.seg, reason: s.reason })], [t("Orbit"), t(s.kind_text)],
+      [t("Start"), `r = ${lenM(i.r0)}`], [t("Speed"), t("{v:.7g} c = {k:.6g} × circular, angle {a:.5g}°", { v: i.v, k: i.k, a: i.alpha })]];
+    if (H.law === "GR") rows.push([t("e (energy per mc²)"), num(s.e, 12)], ["e² − 1", num(s.em1, 8)], [t("l (angular momentum, M·c)"), num(s.l, 10)]);
+    else rows.push([t("E (per c²)"), num(s.E, 10)], ["h (M·c)", num(s.h, 10)]);
+    if (s.r_peri && s.kind !== "plunge") rows.push([t("Periapsis"), lenM(s.r_peri)]);
+    if (s.r_apo) rows.push([t("Apoapsis"), lenM(s.r_apo)]);
+    if (el2) rows.push([t("Eccentricity ε"), num(el2.ecc, 8)], [t("p (parameter)"), lenM(el2.p)], ["a = p/(1 − ε²)", lenM(el2.a)]);
+    rows.push([t("Periapses passed"), String(peri.length)]);
+    if (last && last.adv !== null) rows.push([t("Advance over the last orbit"), angFmt(last.adv)]);
+    if (mean !== null) rows.push([t("Advance, mean"), angFmt(mean)]);
+    if (s.adv_exact !== null && s.adv_exact !== undefined) rows.push([t("Exact formula (reference)"), angFmt(s.adv_exact)]);
+    if (last && last.dt) rows.push([t("Radial period (t)"), tfmt(last.dt)]);
+    if (frame && frame.n_lap) rows.push([t("Turns in φ"), String(frame.n_lap)]);
     const items = [kv(rows)];
     const gi = ghostInfo.get(s.seg);
     if (gi) {
-      const grow = [["Закон", gi.law === "GR" ? "ОТО" : "Ньютон"], ["Орбита", gi.kind_text]];
-      if (gi.r_peri && gi.kind !== "plunge") grow.push(["Перицентр", lenM(gi.r_peri)]);
-      if (gi.r_apo) grow.push(["Апоцентр", lenM(gi.r_apo)]);
-      const gp = (gapsides.get(s.seg) || []).filter((a) => a.t <= t);
-      grow.push(["Перицентров пройдено", String(gp.length)]);
-      items.push(el("h5", { style: { margin: "10px 0 4px" } }, "Призрак (пунктир)"), kv(grow));
+      const grow = [[t("Law"), lawShort(gi.law)], [t("Orbit"), t(gi.kind_text)]];
+      if (gi.r_peri && gi.kind !== "plunge") grow.push([t("Periapsis"), lenM(gi.r_peri)]);
+      if (gi.r_apo) grow.push([t("Apoapsis"), lenM(gi.r_apo)]);
+      const gp = (gapsides.get(s.seg) || []).filter((a) => a.t <= tw);
+      grow.push([t("Periapses passed"), String(gp.length)]);
+      items.push(el("h5", { style: { margin: "10px 0 4px" } }, t("Ghost (dashed)")), kv(grow));
     }
     orbBox.replaceChildren(...items);
   }
-  function drawClockPanel(frame, t) {
+  function drawClockPanel(frame, tw) {
     if (!H || !frame) { clockBox.replaceChildren(); return; }
-    const since = t - frame.t_launch;
-    const rows = [["t — время мира (далёкий наблюдатель)", tfmt(t, 10)], ["t с запуска тела", tfmt(since, 10)],
-      ["τ — часы тела с запуска", tfmt(frame.tau, 10)],
-      ["τ / t (среднее с запуска)", since > 0 ? num(frame.tau / since, 12) : "—"],
-      ["dτ/dt сейчас", num(frame.rate, 12)], ["1 − dτ/dt", num(frame.deficit, 10)]];
+    const since = tw - frame.t_launch;
+    const rows = [[t("t, the world's time (a distant observer)"), tfmt(tw, 10)], [t("t since the launch of the body"), tfmt(since, 10)],
+      [t("τ, the body's clock since the launch"), tfmt(frame.tau, 10)],
+      [t("τ / t (mean since the launch)"), since > 0 ? num(frame.tau / since, 12) : "—"],
+      [t("dτ/dt now"), num(frame.rate, 12)], ["1 − dτ/dt", num(frame.deficit, 10)]];
     if (H.law === "GR") {
-      rows.push(["   гравитация √(1 − 2M/r)", num(frame.grav, 12)], ["   движение √(1 − v²/c²)", num(frame.kin, 12)]);
+      rows.push(["   " + t("gravity √(1 − 2M/r)"), num(frame.grav, 12)], ["   " + t("motion √(1 − v²/c²)"), num(frame.kin, 12)]);
     }
-    rows.push(["r сейчас", lenM(frame.r)], ["Скорость (неподвижный наблюдатель)", frame.v === null || frame.v === undefined ? "—" : num(frame.v, 8) + " c"]);
-    if (frame.ghost) rows.push(["Часы призрака τ", tfmt(frame.ghost.tau, 10)]);
+    rows.push([t("r now"), lenM(frame.r)], [t("Speed (a static observer)"), frame.v === null || frame.v === undefined ? "—" : num(frame.v, 8) + " c"]);
+    if (frame.ghost) rows.push([t("Ghost's clock τ"), tfmt(frame.ghost.tau, 10)]);
     const items = [kv(rows)];
     if (H.law === "GR") items.push(el("div", { class: "help" },
-      "dτ/dt = (1 − 2M/r)/e вдоль геодезической — произведение гравитационного множителя (часы неподвижного наблюдателя на этом r) и множителя скорости относительно него."));
-    if (!frame.alive) items.push(el("div", { class: "st-bad" }, END_RU[frame.status] || frame.status));
-    if (frame.lag === true) items.push(el("div", { class: "st-bad" }, "Вычисление не успевает за выбранной скоростью: мир идёт медленнее."));
+      t("dτ/dt = (1 − 2M/r)/e along the geodesic: the product of the gravitational factor (the clock of a static observer at this r) and the factor of the speed relative to that observer.")));
+    if (!frame.alive) items.push(el("div", { class: "st-bad" }, END_TEXT[frame.status] || frame.status));
+    if (frame.lag === true) items.push(el("div", { class: "st-bad" }, t("The computation cannot keep up with the chosen speed: the world runs slower.")));
     clockBox.replaceChildren(...items);
   }
 
-  const END_RU = { horizon: "у горизонта (r − 2M = 2·10⁻⁶ M; дальше t → ∞)", surface: "упало на поверхность", center: "упало в центр", escape: "ушло на бесконечность" };
+  const END_TEXT = { horizon: t("at the horizon (r − 2M = 2·10⁻⁶ M; beyond it t → ∞)"), surface: t("fell onto the surface"),
+    center: t("fell into the centre"), escape: t("gone to infinity") };
+  const lawShort = (law) => (law === "GR" ? t("GR") : t("Newton"));
 
   return {
     center, rightPanels,
     help: () => el("div", {},
-      el("h4", {}, "Что на экране"),
-      el("p", {}, "Слева — плоскость орбиты сверху. Сплошная линия — орбита, рассчитанная в этом запуске по законам мира; она появляется по мере того, как время мира t (часы далёкого неподвижного наблюдателя) доходит до неё. Ромбы — перицентры (числа — их угол φ), квадраты — апоцентры; сплошной луч из центра — последний перицентр, пунктирный — первый: угол между ними — накопленное смещение перицентра. Пунктир оранжевым — «призрак»: орбита по другой теории (ОТО ↔ Ньютон) из тех же начальных данных; на мир он не влияет."),
-      el("p", {}, "Окружности (ОТО): горизонт 2M, фотонная сфера 3M (круговая орбита света), 4M — предельно связанная круговая орбита, ISCO 6M — внутренняя устойчивая круговая орбита; радиусы даёт движок (lfphys.core.gravity.kerr при нулевом вращении)."),
-      el("p", {}, "Справа — r(t) и отставание часов тела 1 − dτ/dt: часы тела идут медленнее из-за гравитации (√(1 − 2M/r)) и из-за скорости относительно неподвижного наблюдателя (√(1 − v²/c²))."),
-      el("p", {}, "Запуск тела (r₀, скорость в долях круговой, угол к касательной) меняется сразу: тело запускается заново в текущий момент мира с текущего направления на центр. «Толчок» мгновенно меняет скорость вдоль движения; часы тела при этом идут дальше. Закон тяготения, масса и радиус центрального тела — законы мира: их смена — новый мир в том же запуске."),
-      el("p", {}, "Падение за горизонт: для далёкого наблюдателя тело лишь асимптотически приближается к r = 2M (время t растёт логарифмически), а собственное время тела до горизонта конечно; расчёт останавливается при r − 2M = 2·10⁻⁶ M.")),
+      el("h4", {}, t("What is on the screen")),
+      el("p", {}, t("On the left: the orbit plane from above. The solid line is the orbit computed in this run by the world's laws; it appears as the world's time t (the clock of a distant static observer) reaches it. Diamonds are periapses (the numbers are their angle φ), squares apoapses; the solid ray from the centre is the latest periapsis, the dashed one the first: the angle between them is the accumulated periapsis advance. The orange dashed line is the “ghost”: the orbit under the other theory (GR ↔ Newton) from the same initial data; it does not affect the world.")),
+      el("p", {}, t("Circles (GR): the horizon 2M, the photon sphere 3M (the circular orbit of light), 4M the marginally bound circular orbit, the ISCO 6M the innermost stable circular orbit; the radii come from the engine (lfphys.core.gravity.kerr at zero spin).")),
+      el("p", {}, t("On the right: r(t) and the lag of the body's clock 1 − dτ/dt: the body's clock runs slower because of gravity (√(1 − 2M/r)) and because of its speed relative to the static observer (√(1 − v²/c²)).")),
+      el("p", {}, t("The launch of the body (r₀, the speed as a fraction of the circular one, the angle to the tangent) changes at once: the body is launched again at the world's current moment from its current direction to the centre. “Push” changes the speed along the motion instantly; the body's clock goes on. The law of gravitation and the mass and radius of the central body are the world's laws: changing them is a new world in the same run.")),
+      el("p", {}, t("A fall through the horizon: for a distant observer the body only approaches r = 2M asymptotically (the time t grows logarithmically), while the body's proper time to the horizon is finite; the computation stops at r − 2M = 2·10⁻⁶ M."))),
     reset() {
       H = null; units = null; liveVals = {}; segs = []; trails = new Map(); gtrails = new Map(); apsides = new Map();
       gapsides = new Map(); ghostInfo = new Map(); lastT = 0;  // fittedSeg kept: the same world keeps its view
@@ -461,13 +470,13 @@ export function createView(ctx) {
       }
       ctx.requestRender();
     },
-    render(frame, t) {
+    render(frame, tw) {
       if (!H) return;
-      lastT = t;
-      drawOrbit(frame, t);
-      drawPlots(frame, t);
-      drawOrbPanel(frame, t);
-      drawClockPanel(frame, t);
+      lastT = tw;
+      drawOrbit(frame, tw);
+      drawPlots(frame, tw);
+      drawOrbPanel(frame, tw);
+      drawClockPanel(frame, tw);
     },
   };
 }

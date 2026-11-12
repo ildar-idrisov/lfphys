@@ -56,23 +56,35 @@ import math
 
 import numpy as np
 
+from ...i18n import T, is_t
+
 ABOUT = {
     "layer": "core", "kind": "numerics",
-    "title": "FDTD: источники — импульсы, токи, плоская волна (полное/рассеянное поле)",
-    "statement": "Временные профили (гауссов импульс, модулированный гауссов, непрерывная волна с гладким "
-                 "включением, отсчёты); токовые источники J и M в точке, на линии/плоскости и в объёме (мягкие и "
-                 "жёсткие: жёсткое E задаётся после обновления E, жёсткое H — после обновления H); плоская волна "
-                 "методом полного/рассеянного поля, построенная как точная плоская волна сетки Йи (каждая частота с "
-                 "волновым вектором из дисперсионного соотношения сетки), так что утечка через границу — уровень "
-                 "округления плюс то, что отрезает начало счёта (хвост окна рядов).",
-    "validity": "плоская волна в однородном фоне без потерь у граней (тела на гранях отмечаются в checks()); для "
-                "импульса утечка ~0.3–0.4 хвоста окна: 2–3e-9 вдали от отсечки, у отсечки волны Блоха — предвестник, "
-                "хвост больше 1e-6 отвергается; для непрерывной волны — точно после включения, во время включения "
-                "огибающая идёт с дискретной групповой задержкой; в 3-D при наклонном падении ограничено памятью",
-    "basis": ["Schneider, Understanding the FDTD Method (2010), §3.10, §8.5, §9.5 (TF/SF); §7.4 (дисперсионное "
-              "соотношение схемы Йи, ур. 7.33–7.34)"],
+    "title": T("FDTD: sources (pulses, currents, a total-field/scattered-field plane wave)"),
+    "statement": T("Time profiles (a Gaussian pulse, a modulated Gaussian, a continuous wave with a smooth switch-on, "
+                   "samples); current sources J and M at a point, on a line or plane and in a volume (soft and hard: "
+                   "a hard E is set after the E update, a hard H after the H update); a plane wave by the "
+                   "total-field/scattered-field method, built as an exact plane wave of the Yee grid (every frequency "
+                   "with the wave vector from the grid's dispersion relation), so that the leak through the boundary is "
+                   "the round-off level plus what the start of the run cuts off (the tail of the series' window)."),
+    "validity": T("a plane wave in a homogeneous lossless background at the faces (bodies on the faces are flagged in "
+                  "checks()); for a pulse the leak is ~0.3–0.4 of the window's tail: 2–3e-9 away from a cut-off, at a "
+                  "Bloch wave's cut-off a precursor, a tail above 1e-6 is refused; a continuous wave is exact after "
+                  "its switch-on, while it switches on the envelope travels with the discrete group delay; in 3-D at "
+                  "oblique incidence limited by memory"),
+    "basis": [T("Schneider, Understanding the FDTD Method (2010), §3.10, §8.5, §9.5 (TF/SF); §7.4 (the dispersion "
+                "relation of Yee's scheme, eqs. 7.33–7.34)")],
     "conflicts": [],
 }
+
+
+def as_text(x):
+    """A label as given: a translatable text (``lfphys.i18n.T``; its JSON form from a saved state becomes a ``T``
+    again) or a string."""
+    if is_t(x):
+        return x if isinstance(x, T) else T(x)  # rebuilt from its JSON form (lfphys.i18n.T)
+    return str(x)
+
 
 TWO_PI = 2.0 * math.pi
 
@@ -99,7 +111,7 @@ class GaussianPulse(Profile):
     def __init__(self, width: float, t0: float | None = None, cutoff: float = 6.0):
         self.width = float(width)
         if not self.width > 0:
-            raise ValueError("ширина импульса > 0")
+            raise ValueError(T("pulse width > 0"))
         self.cutoff = float(cutoff)
         self.t0 = self.cutoff * self.width if t0 is None else float(t0)
 
@@ -124,10 +136,10 @@ class ModulatedGaussian(Profile):
                  t0: float | None = None, phase: float = 0.0, cutoff: float = 6.0):
         self.frequency = float(frequency)
         if (width is None) == (fwidth is None):
-            raise ValueError("модулированный импульс: задайте width или fwidth")
+            raise ValueError(T("modulated pulse: give width or fwidth"))
         self.width = float(width) if width is not None else 1.0 / (TWO_PI * float(fwidth))
         if not (self.width > 0 and self.frequency > 0):
-            raise ValueError("частота и ширина импульса > 0")
+            raise ValueError(T("pulse frequency and width > 0"))
         self.cutoff, self.phase = float(cutoff), float(phase)
         self.t0 = self.cutoff * self.width if t0 is None else float(t0)
 
@@ -157,7 +169,7 @@ class ContinuousWave(Profile):
     def __init__(self, frequency: float, ramp: float = 0.0, phase: float = 0.0):
         self.frequency, self.ramp, self.phase = float(frequency), float(ramp), float(phase)
         if not self.frequency > 0 or self.ramp < 0:
-            raise ValueError("частота > 0, время включения ≥ 0")
+            raise ValueError(T("frequency > 0, switch-on time ≥ 0"))
 
     def envelope(self, t):
         t = np.asarray(t, float)
@@ -181,7 +193,7 @@ class Samples(Profile):
         self.values = np.asarray(values, float).ravel()
         self.dt_s, self.t0 = float(dt), float(t0)
         if len(self.values) < 2 or not self.dt_s > 0:
-            raise ValueError("отсчёты: не меньше двух, шаг > 0")
+            raise ValueError(T("samples: at least two, step > 0"))
 
     def __call__(self, t):
         t = np.asarray(t, float)
@@ -210,7 +222,7 @@ class Custom(Profile):
         return self._end
 
     def params(self):
-        raise ValueError("профиль-функция не сохраняется в состоянии: задайте его отсчётами (Samples)")
+        raise ValueError(T("a profile given as a function is not saved in the state: give it as samples (Samples)"))
 
 
 def profile_from_params(d: dict) -> Profile:
@@ -224,7 +236,7 @@ def profile_from_params(d: dict) -> Profile:
         return ContinuousWave(d["frequency"], d.get("ramp", 0.0), d.get("phase", 0.0))
     if k == "samples":
         return Samples(d["values"], d["dt"], d.get("t0", 0.0))
-    raise ValueError(f"неизвестный профиль {k!r}")
+    raise ValueError(T("unknown profile {kind}", kind=repr(k)))
 
 
 def _as_profile(p) -> Profile:
@@ -232,7 +244,7 @@ def _as_profile(p) -> Profile:
         return p
     if callable(p):
         return Custom(p)
-    raise ValueError("профиль: объект Profile или функция f(t)")
+    raise ValueError(T("profile: a Profile object or a function f(t)"))
 
 
 # --- current sources --------------------------------------------------------------------------------------------------
@@ -247,9 +259,9 @@ class CurrentSource:
     def __init__(self, component: str, profile, position=None, region=None, amplitude=1.0, hard: bool = False,
                  label: str = ""):
         if component not in COMPONENTS:
-            raise ValueError(f"компонента источника: одна из {COMPONENTS}")
+            raise ValueError(T("source component: one of {options}", options=", ".join(COMPONENTS)))
         if (position is None) == (region is None):
-            raise ValueError("источник: точка position или область region (одно из двух)")
+            raise ValueError(T("source: a point (position) or a region (region), one of the two"))
         self.component = component
         self.profile = _as_profile(profile)
         if position is not None:
@@ -259,15 +271,15 @@ class CurrentSource:
             lo, hi = region
             self.region = (tuple(float(v) for v in lo), tuple(float(v) for v in hi))
             if len(self.region[0]) != len(self.region[1]) or any(h < l for l, h in zip(*self.region)):
-                raise ValueError("область источника: lo ≤ hi по каждой оси")
+                raise ValueError(T("source region: lo ≤ hi along every axis"))
         self.amplitude = amplitude
         self.hard = bool(hard)
-        self.label = str(label)
+        self.label = as_text(label)
 
     def params(self) -> dict:
         amp = self.amplitude
         if callable(amp):
-            raise ValueError("пространственный множитель-функция не сохраняется в состоянии")
+            raise ValueError(T("a spatial factor given as a function is not saved in the state"))
         amp = [float(np.real(amp)), float(np.imag(amp))]
         return {"type": "current", "component": self.component, "profile": self.profile.params(),
                 "region": [list(self.region[0]), list(self.region[1])], "amplitude": amp, "hard": self.hard,
@@ -348,12 +360,12 @@ class PlaneWave:
         lo, hi = box
         self.box = (tuple(float(v) for v in lo), tuple(float(v) for v in hi))
         if len(self.box[0]) != len(self.box[1]) or any(not h > l for l, h in zip(*self.box)):
-            raise ValueError("область полного поля: hi > lo по каждой оси")
+            raise ValueError(T("total-field region: hi > lo along every axis"))
         self.direction = direction
         self.polarization = polarization
         self.amplitude = float(amplitude)
         self.reference = None if reference is None else tuple(float(v) for v in reference)
-        self.label = str(label)
+        self.label = as_text(label)
 
     def params(self) -> dict:
         d = self.direction
@@ -376,4 +388,4 @@ def source_from_params(d: dict):
         box = ([float(v) for v in box[0]], [float(v) for v in box[1]])
         return PlaneWave(profile_from_params(d["profile"]), box, d["direction"], d["polarization"], d["amplitude"],
                          d["reference"], d.get("label", ""))
-    raise ValueError(f"неизвестный источник {d['type']!r}")
+    raise ValueError(T("unknown source {kind}", kind=repr(d["type"])))

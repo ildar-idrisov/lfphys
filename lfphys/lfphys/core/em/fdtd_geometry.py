@@ -44,22 +44,26 @@ import math
 
 import numpy as np
 
+from ...i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "numerics",
-    "title": "FDTD: тела и как узел сетки Йи получает их вещество",
-    "statement": "Формы (шар, цилиндр/диск, параллелепипед, полупространство, многоугольник/призма, маска) со знаковым "
-                 "расстоянием и нормалью; узел получает вещество ступенькой (по своей точке) или усреднением по "
-                 "ячейке (диагональ тензора Фарджадпура и др. — по их классификации схема VP-EP — с долей заполнения "
-                 "по касательной плоскости).",
-    "validity": "ступенька — 1-й порядок по размеру ячейки для кривых границ (2-й для плоской границы между узлами); "
-                "усреднение — 2-й порядок для плоских границ вдоль осей и для E вдоль оси цилиндра (TM), для E в "
-                "плоскости кривой границы в общем случае 1-й порядок (внедиагональные элементы тензора отброшены: "
-                "TE-цилиндр ε = 6 — 2.6, 1.4, 0.8 % при 40, 80, 160 ячейках на единицу) и при малом контрасте "
-                "немонотонно; проводники, PEC и диспергирующие тела — всегда ступенькой",
-    "basis": ["Farjadpour et al., Opt. Lett. 31, 2972 (2006), ур. (1) — анизотропное усреднение по подъячейкам; "
-              "его диагональ — схема VP-EP, по их оценке линейной сходимости в общем случае",
-              "Kottke, Farjadpour, Johnson, Phys. Rev. E 77, 036611 (2008) — обоснование, анизотропный случай",
-              "объём куба, отсечённого плоскостью: сумма по вершинам (свёртка равномерных распределений)"],
+    "title": T("FDTD: bodies and how a node of the Yee grid gets their material"),
+    "statement": T("Shapes (a sphere, a cylinder/disk, a box, a half-space, a polygon/prism, a mask) with a signed "
+                   "distance and a normal; a node gets its material by a staircase (by its own point) or by averaging "
+                   "over the cell (the diagonal of the tensor of Farjadpour et al., the scheme VP-EP in their "
+                   "classification, with the filling fraction from the tangent plane)."),
+    "validity": T("a staircase is 1st order in the cell size for curved surfaces (2nd for a flat surface between nodes); "
+                  "averaging is 2nd order for flat surfaces along the axes and for E along a cylinder's axis (TM), in "
+                  "general 1st order for E in the plane of a curved surface (the tensor's off-diagonal elements are "
+                  "dropped: a TE cylinder ε = 6 gives 2.6, 1.4, 0.8 % at 40, 80, 160 cells per unit) and non-monotonic "
+                  "at a small contrast; conductors, PEC and dispersive bodies are always a staircase"),
+    "basis": [T("Farjadpour et al., Opt. Lett. 31, 2972 (2006), eq. (1) — anisotropic averaging over subcells; its "
+                "diagonal is the scheme VP-EP, which by their estimate converges linearly in general"),
+              T("Kottke, Farjadpour, Johnson, Phys. Rev. E 77, 036611 (2008) — the justification, the anisotropic "
+                "case"),
+              T("the volume of a cube cut by a plane: a sum over the vertices (a convolution of uniform "
+                "distributions)")],
     "conflicts": [],
 }
 
@@ -89,13 +93,14 @@ class Shape:
 
     def _check(self, dim: int):
         if self.dims is not None and dim != self.dims:
-            raise ValueError(f"форма {self.kind} задана для {self.dims}-D, а мир {dim}-D")
+            raise ValueError(T("the shape {kind} is given for {dims}-D, but the world is {dim}-D", kind=self.kind,
+                               dims=int(self.dims), dim=int(dim)))
 
 
 def _as_vec(v, n=None):
     a = tuple(float(x) for x in v)
     if n is not None and len(a) != n:
-        raise ValueError(f"нужно {n} координат, дано {len(a)}")
+        raise ValueError(T("{n} coordinates needed, {m} given", n=int(n), m=len(a)))
     return a
 
 
@@ -106,7 +111,7 @@ class Sphere(Shape):
     def __init__(self, center, radius: float):
         self.center, self.radius = _as_vec(center, 3), float(radius)
         if not self.radius > 0:
-            raise ValueError("радиус шара > 0")
+            raise ValueError(T("sphere radius > 0"))
 
     def sdf(self, P):
         dx, dy, dz = (P[0] - self.center[0], P[1] - self.center[1], P[2] - self.center[2])
@@ -130,18 +135,18 @@ class Cylinder(Shape):
     def __init__(self, center, radius: float, axis: str = "z", height: float | None = None):
         self.center, self.radius = _as_vec(center), float(radius)
         if len(self.center) not in (2, 3):
-            raise ValueError("центр цилиндра: (x, y) или (x, y, z)")
+            raise ValueError(T("cylinder centre: (x, y) or (x, y, z)"))
         if not self.radius > 0:
-            raise ValueError("радиус цилиндра > 0")
+            raise ValueError(T("cylinder radius > 0"))
         if axis not in ("x", "y", "z"):
-            raise ValueError("ось цилиндра: x, y или z")
+            raise ValueError(T("cylinder axis: x, y or z"))
         self.axis = axis
         self.height = None if height is None else float(height)
         if self.height is not None and not self.height > 0:
-            raise ValueError("высота цилиндра > 0 (или None — бесконечный)")
+            raise ValueError(T("cylinder height > 0 (or None: infinite)"))
         self.dims = len(self.center)
         if self.dims == 2 and (axis != "z" or self.height is not None):
-            raise ValueError("в 2-D цилиндр — это диск (ось z, без высоты)")
+            raise ValueError(T("in 2-D a cylinder is a disk (axis z, no height)"))
 
     def sdf(self, P):
         if self.dims == 2:
@@ -196,9 +201,9 @@ class Box(Shape):
     def __init__(self, lo, hi):
         self.lo, self.hi = _as_vec(lo), _as_vec(hi)
         if len(self.lo) != len(self.hi) or len(self.lo) not in (2, 3):
-            raise ValueError("углы параллелепипеда: по 2 или 3 координаты")
+            raise ValueError(T("box corners: 2 or 3 coordinates each"))
         if any(not h > l for l, h in zip(self.lo, self.hi)):
-            raise ValueError("параллелепипед: hi > lo по каждой оси")
+            raise ValueError(T("box: hi > lo along every axis"))
         self.dims = len(self.lo)
 
     def sdf(self, P):
@@ -246,7 +251,7 @@ class HalfSpace(Shape):
         self.point = _as_vec(point)
         n = np.array(_as_vec(normal, len(self.point)))
         if not np.linalg.norm(n) > 0:
-            raise ValueError("нормаль полупространства ненулевая")
+            raise ValueError(T("the half-space's normal must be nonzero"))
         self.normal = tuple(float(v) for v in n / np.linalg.norm(n))
         self.dims = len(self.point)
 
@@ -277,13 +282,13 @@ class Polygon(Shape):
     def __init__(self, points, zmin: float | None = None, zmax: float | None = None):
         p = np.array(points, float)
         if p.ndim != 2 or p.shape[1] != 2 or len(p) < 3:
-            raise ValueError("многоугольник: не меньше трёх вершин (x, y)")
+            raise ValueError(T("polygon: at least three vertices (x, y)"))
         self.points = p
         self.zmin = None if zmin is None else float(zmin)
         self.zmax = None if zmax is None else float(zmax)
         self.dims = 2 if zmin is None and zmax is None else 3
         if self.dims == 3 and not (self.zmax is not None and self.zmin is not None and self.zmax > self.zmin):
-            raise ValueError("призма: zmin < zmax")
+            raise ValueError(T("prism: zmin < zmax"))
 
     def _sdf2(self, X, Y):
         p = self.points
@@ -344,14 +349,14 @@ class Mask(Shape):
 
     def __init__(self, inside=None, array=None, lo=None, hi=None, dims: int | None = None):
         if (inside is None) == (array is None):
-            raise ValueError("маска: функция inside или массив array (одно из двух)")
+            raise ValueError(T("mask: a function inside or an array array, one of the two"))
         self.fn = inside
         self.array = None if array is None else np.asarray(array, bool)
         self.lo = None if lo is None else _as_vec(lo)
         self.hi = None if hi is None else _as_vec(hi)
         if self.array is not None:
             if self.lo is None or self.hi is None or len(self.lo) != self.array.ndim:
-                raise ValueError("маска-массив: нужны углы lo и hi по числу осей массива")
+                raise ValueError(T("array mask: corners lo and hi with as many coordinates as the array has axes"))
             self.dims = self.array.ndim
         else:
             self.dims = dims
@@ -370,7 +375,7 @@ class Mask(Shape):
         return inb & self.array[tuple(np.broadcast_arrays(*idx))]
 
     def sdf(self, P):
-        raise ValueError("маска не задаёт расстояние до поверхности: только ступенька")
+        raise ValueError(T("a mask gives no distance to the surface: staircase only"))
 
     def bbox(self, dim):
         if self.array is not None:
@@ -379,7 +384,7 @@ class Mask(Shape):
 
     def params(self):
         if self.fn is not None:
-            raise ValueError("маска-функция не сохраняется в состоянии: задайте маску массивом (array, lo, hi)")
+            raise ValueError(T("a mask given as a function is not saved in the state: give the mask as an array (array, lo, hi)"))
         return {"kind": self.kind, "array": self.array.tolist(), "lo": list(self.lo), "hi": list(self.hi)}
 
 
@@ -397,7 +402,7 @@ def shape_from_params(d: dict) -> Shape:
         return Polygon(d["points"], d.get("zmin"), d.get("zmax"))
     if k == "mask":
         return Mask(array=np.array(d["array"], bool), lo=d["lo"], hi=d["hi"])
-    raise ValueError(f"неизвестная форма {k!r}")
+    raise ValueError(T("unknown shape {kind}", kind=repr(k)))
 
 
 # --- fill fraction of a cell cut by a plane ---------------------------------------------------------------------------

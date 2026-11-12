@@ -18,6 +18,8 @@ import math
 import numpy as np
 
 from lfphys.core.quantum.schrodinger1d import FreeGaussians
+from lfphys.i18n import T
+from lfviz.errors import Refusal
 from v11_double_slit_2d.engine import apparatus as AP11
 
 K0, E0, V0_SPEED, ABS_W = AP11.K0, AP11.E0, AP11.V0_SPEED, AP11.ABS_W
@@ -39,11 +41,12 @@ def packets(state: str, sigma_z: float, n_train: int = 4, sep: float = 30.0, D: 
     if state == "train":
         n = int(n_train)
         if sep < 6 * s:
-            raise ValueError(f"пакеты цепочки перекрываются: расстояние {sep:g} λ меньше 6σz = {6 * s:g} λ")
+            raise Refusal(T("the packets of the train overlap: the distance {sep} λ is less than 6σz = {m} λ", sep=float(sep),
+                            m=6 * s), T("take the distance at least 6σz or narrower packets"))
         return [(complex(np.exp(1j * K0 * j * sep)), -j * float(sep), K0, s) for j in range(n)]
     if state == "backflow":
         return [(BACKFLOW_AMP, 0.0, BACKFLOW_RATIO * K0, s), (1.0, -(1 / BACKFLOW_RATIO - 1) * float(D), K0, s)]
-    raise ValueError(f"неизвестное начальное состояние: {state}")
+    raise ValueError(f"unknown initial state: {state}")
 
 
 def overlap(fg: FreeGaussians, D: float) -> float:
@@ -70,7 +73,7 @@ def leave_time(fg: FreeGaussians, d: float, tail: float = 1e-4) -> float:
     while fg.cdf(d, hi)[0] > tail:
         lo, hi = hi, 2 * hi
         if hi > 1e6:
-            raise ValueError("состояние не уходит за плоскость детектора")
+            raise Refusal(T("the state does not move beyond the detecting plane"))
     for _ in range(40):
         mid = 0.5 * (lo + hi)
         if fg.cdf(d, mid)[0] > tail:
@@ -90,10 +93,11 @@ def screen_layer(k_lo: float, k_hi: float, R_max: float = 1e-5, T_max: float = 1
     from lfphys.core.quantum import schrodinger_nd as S
     k = np.linspace(max(k_lo, 0.05 * K0), k_hi, 9)
     for w, Wf in SCREEN_LAYERS:
-        R, T = S.layer_reflection(k, w, Wf * E0, 1.0)
-        if R.max() < R_max and T.max() < T_max:
+        R, Tr = S.layer_reflection(k, w, Wf * E0, 1.0)
+        if R.max() < R_max and Tr.max() < T_max:
             return w, Wf
-    raise ValueError(f"нет поглотителя для спектра [{k_lo:.3g}; {k_hi:.3g}] λ⁻¹: волна слишком медленная")
+    raise Refusal(T("no absorber for the spectrum [{lo:.3g}, {hi:.3g}] λ⁻¹: the wave is too slow", lo=float(k_lo),
+                    hi=float(k_hi)))
 
 
 class FreeGeometry(AP11.Geometry):

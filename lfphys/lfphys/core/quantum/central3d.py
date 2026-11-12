@@ -33,17 +33,19 @@ from typing import Callable
 import numpy as np
 from scipy.interpolate import CubicSpline
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Волновые функции центрального поля в 3D",
-    "statement": "ψ_nlm = R_nl(r)·Y_lm(θ, φ) из любой радиальной функции (замкнутая форма или таблица радиального "
-                 "решателя со сплайном); сферические гармоники устойчивыми рекуррентными формулами (комплексные и "
-                 "вещественные орбитали), суперпозиции с частотами Бора, ток вероятности, матричные элементы, "
-                 "моменты и энергия ⟨T⟩ + ⟨V⟩ квадратурами.",
-    "validity": "нерелятивистская частица без спина в центральном поле; табличная радиальная функция — с точностью "
-                "радиального решателя и сплайна (измеряется)",
-    "basis": ["Schrödinger 1926", "Condon & Shortley, The Theory of Atomic Spectra (1935): фазы Y_lm",
-              "Holmes & Featherstone, J. Geodesy 76, 279 (2002): нормированные рекуррентные формулы P_l^m"],
+    "title": T("Central-field wave functions in 3D"),
+    "statement": T("ψ_nlm = R_nl(r)·Y_lm(θ, φ) from any radial function (a closed form or a table of the radial "
+                   "solver with a spline); spherical harmonics by stable recurrences (complex and real orbitals), "
+                   "superpositions with Bohr frequencies, the probability current, matrix elements, moments and the "
+                   "energy ⟨T⟩ + ⟨V⟩ by quadrature."),
+    "validity": T("a non-relativistic spinless particle in a central field; a tabulated radial function is as "
+                  "accurate as the radial solver and the spline (measured)"),
+    "basis": ["Schrödinger 1926", T("Condon & Shortley, The Theory of Atomic Spectra (1935): phases of Y_lm"),
+              T("Holmes & Featherstone, J. Geodesy 76, 279 (2002): normalised recurrences for P_l^m")],
     "conflicts": [],
 }
 
@@ -65,7 +67,7 @@ def legendre_normalised(l: int, m: int, x, s=None):
     a_lm = sqrt((4l^2 - 1)/(l^2 - m^2)), b_lm = sqrt(((l-1)^2 - m^2)/(4(l-1)^2 - 1)). ``s`` = sqrt(1 - x^2) = sin theta
     when known (near the poles 1 - x^2 loses it: x = cos 1e-9 rounds to 1)."""
     if not (0 <= m <= l):
-        raise ValueError("нужно 0 ≤ m ≤ l")
+        raise ValueError(T("need 0 ≤ m ≤ l"))
     x = np.asarray(x, float)
     s = np.sqrt(np.clip((1.0 - x) * (1.0 + x), 0.0, None)) if s is None else np.abs(np.asarray(s, float))
     p = np.full(x.shape, 1.0 / math.sqrt(4 * math.pi))
@@ -104,7 +106,9 @@ def real_harm(l: int, m: int, theta, phi):
 
 
 def orbital_name(l: int, m: int, real: bool) -> str:
-    """A spectroscopic name of the angular part: s, p_z, p_x, d_xy, ... (real) or p(m = +1) ... (complex)."""
+    """A spectroscopic name of the angular part: s, p_z, p_x, d_xy, ... (real) or p, m = +1 ... (complex). A symbol, the
+    same in every language (a plain str: worlds join and slice it): a real orbital without a Cartesian name (l >= 4) is
+    named by its azimuthal factor, g, m = +4 (cos) for cos 4 phi and g, m = -4 (sin) for sin 4 phi."""
     letters = "spdfghik"
     base = letters[l] if l < len(letters) else f"l={l}"
     if not real:
@@ -113,7 +117,11 @@ def orbital_name(l: int, m: int, real: bool) -> str:
              (2, -2): "xy", (3, 0): "z³", (3, 1): "xz²", (3, -1): "yz²", (3, 2): "z(x²−y²)", (3, -2): "xyz",
              (3, 3): "x(x²−3y²)", (3, -3): "y(3x²−y²)"}
     sub = names.get((l, m))
-    return base if l == 0 else (f"{base}_{sub}" if sub else f"{base} (вещ., m = {m:+d})")
+    if l == 0:
+        return base
+    if sub:
+        return f"{base}_{sub}"
+    return f"{base}, m = {m:+d}" + ("" if m == 0 else " (cos)" if m > 0 else " (sin)")
 
 
 # --- radial functions ------------------------------------------------------------------------------------------------
@@ -130,7 +138,7 @@ class RadialTable:
     def __init__(self, r, u, l: int):
         r, u = np.asarray(r, float), np.asarray(u, float)
         if r[0] <= 0 or len(r) < 16:
-            raise ValueError("таблица начинается с r > 0 и содержит не меньше 16 точек")
+            raise ValueError(T("the table starts at r > 0 and has at least 16 points"))
         self.l = int(l)
         self.r_max = float(r[-1])
         f = u / r ** (self.l + 1)

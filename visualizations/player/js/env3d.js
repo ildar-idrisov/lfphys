@@ -1,11 +1,12 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
 // The 3-D environment of a world (owner, 2026-10-27; RULES.md §2.10), shared by every 3-D visualization: the scene
-// (scene3d.js) and the slice windows (slices.js) side by side, the panels «Слои сцены» and «Срез: положение и наклон»,
-// «＋ Срез» (the next plane through the middle, perpendicular to the planes there), previews while a plane is dragged,
+// (scene3d.js) and the slice windows (slices.js) side by side, the panels "Scene layers" and "Slice: position and tilt",
+// "＋ Slice" (the next plane through the middle, perpendicular to the planes there), previews while a plane is dragged,
 // the keys, and the messages of the 3-D protocol (volume, vectors, target, planes, slice, path, triads, marks, arrow,
 // mesh).
 // A visualization adds its own panels, help and frame drawing; it never computes what a plane shows.
+import { t } from "./i18n.js";
 import { el, fill } from "./ui.js";
 import { PLANE_COLORS, SCALES, anglesOfNormal, createScene3D, normalFromAngles } from "./scene3d.js";
 import { createSliceWindows } from "./slices.js";
@@ -19,12 +20,12 @@ export function createEnv3D(ctx, { logFloor = () => 1e-6, scale = "sqrt", plane2
   const SET = new Set(["volume", "box", "vectors", "target", "marks", "arrow", "mesh", "lines", "planes", "slice"]);
   const keyOf = (m) => (m.type === "box" || m.type === "planes" ? m.type : `${m.type}:${m.id}`);
   // why the planes cannot be changed now (an archived world, the cursor in the history, a rebuild), or ""
-  const roText = () => (ctx.readOnly ? ctx.readOnly() : ctx.isArchived && ctx.isArchived() ? "Это мир из записи: срезы менять нельзя." : "");
+  const roText = () => (ctx.readOnly ? ctx.readOnly() : ctx.isArchived && ctx.isArchived() ? t("This is a world from the record: its slices cannot be changed.") : "");
   const ro = () => !!roText();
   const maxPlanes = () => ((H && H.scene3d.planes) || {}).max ?? 3;
   const sendPlane = (id, fields) => {
     if (ro()) return;
-    windows.setBusy(id, "считается…");
+    windows.setBusy(id, t("computing…"));
     ctx.send("view", { op: "plane", id, ...fields });
   };
   const scene = createScene3D({
@@ -38,8 +39,8 @@ export function createEnv3D(ctx, { logFloor = () => 1e-6, scale = "sqrt", plane2
     onHighlight: (id) => scene.highlight(id),
     onRemove: (id) => { if (!ro()) ctx.send("view", { op: "remove", id }); },
   });
-  const addBtn = el("button", { class: "primary", title: "Добавить плоскость среза (до трёх): ставится в середину, перпендикулярно уже стоящим", onclick: addPlane }, "＋ Срез");
-  const scaleSel = el("select", { title: "Шкала яркости 3D-сцены" }, SCALES.map(([v, t]) => el("option", { value: v }, t)));
+  const addBtn = el("button", { class: "primary", title: t("Add a slice plane (up to three): it goes to the middle, perpendicular to those already there"), onclick: addPlane }, t("＋ Slice"));
+  const scaleSel = el("select", { class: "s3d-scale", title: t("The brightness scale of the 3-D scene") }, SCALES.map(([v, s]) => el("option", { value: v }, s)));
   scaleSel.value = scale;
   scaleSel.onchange = () => { scene.setScale(scaleSel.value, logFloor(H)); };
   scene.buildTools([addBtn, scaleSel]);
@@ -57,33 +58,33 @@ export function createEnv3D(ctx, { logFloor = () => 1e-6, scale = "sqrt", plane2
         // the density is an optical depth τ: that of the volume's densest line of sight along an axis of the region, the
         // same meaning in every world (review UX-3d A10)
         const dens = el("input", { type: "range", min: "0", max: "100", value: String(Math.round(33 * Math.log10(look.density / 0.05))),
-                                   title: "Плотность свечения: оптическая толщина самого плотного луча вдоль оси области (0,05…54; одинаково во всех мирах)" });
+                                   title: t("Glow density: the optical depth of the densest line of sight along an axis of the region ({lo}…{hi}; the same in every world)", { lo: 0.05, hi: 54 }) });
         dens.oninput = () => scene.setVolumeLook({ density: 0.05 * Math.pow(10, dens.value / 33) }, true);
-        const thr = el("input", { type: "range", min: "0", max: "100", value: String(Math.round(200 * look.threshold)), title: "Порог: слабее не показывать" });
+        const thr = el("input", { type: "range", min: "0", max: "100", value: String(Math.round(200 * look.threshold)), title: t("Threshold: weaker is not shown") });
         thr.oninput = () => scene.setVolumeLook({ threshold: thr.value / 200 }, true);
-        extra.push(el("div", { class: "s3d-sub" }, el("span", { class: "muted" }, "плотность"), dens, el("span", { class: "muted" }, "порог"), thr));
+        extra.push(el("div", { class: "s3d-sub" }, el("span", { class: "muted" }, t("density")), dens, el("span", { class: "muted" }, t("threshold")), thr));
       }
       if (L.kind === "vectors") {
-        const thr = el("input", { type: "range", min: "0", max: "100", value: "3", title: "Не показывать стрелки слабее этой доли" });
+        const thr = el("input", { type: "range", min: "0", max: "100", value: "3", title: t("Do not show arrows weaker than this fraction") });
         thr.oninput = () => scene.setVectorThreshold(L.id, thr.value / 100);
-        extra.push(el("div", { class: "s3d-sub" }, el("span", { class: "muted" }, "порог"), thr));
+        extra.push(el("div", { class: "s3d-sub" }, el("span", { class: "muted" }, t("threshold")), thr));
       }
       return el("div", {}, el("label", { class: "s3d-layer" }, cb, " ", L.label), extra);
     });
     const prow = scene.planes().map((P) => {
       const cb = el("input", { type: "checkbox" }); cb.checked = P.visible;
       cb.onchange = () => scene.setPlaneVisible(P.id, cb.checked);
-      return el("label", { class: "s3d-layer" }, cb, " ", el("span", { class: "sw-chip", style: { background: PLANE_COLORS[P.id] } }, String(P.id)), ` срез в 3D: ${(P.meta || {}).label || ""}`);
+      return el("label", { class: "s3d-layer" }, cb, " ", el("span", { class: "sw-chip", style: { background: PLANE_COLORS[P.id] } }, String(P.id)),  " " + t("slice in 3-D: {label}", { label: t((P.meta || {}).label) }));
     });
-    fill(layersBox, rows, prow, el("div", { class: "help" }, "Каждую часть можно выключить, чтобы видеть остальные. Окна срезов остаются."));
+    fill(layersBox, rows, prow, el("div", { class: "help" }, t("Each part can be switched off to see the others. The slice windows stay.")));
   }
 
   function drawPlanePanel() {
-    if (!H) { fill(planeBoxEl, el("div", { class: "muted" }, "Мир строится…")); return; }
-    if (maxPlanes() === 0) { fill(planeBoxEl, el("div", { class: "muted" }, "В этой сцене срезов нет: поля в ней не считаются.")); return; }
+    if (!H) { fill(planeBoxEl, el("div", { class: "muted" }, t("The world is being built…"))); return; }
+    if (maxPlanes() === 0) { fill(planeBoxEl, el("div", { class: "muted" }, t("This scene has no slices: no fields are computed in it."))); return; }
     const p = planes.find((q) => q.id === selected);
-    if (!p) { fill(planeBoxEl, el("div", { class: "muted" }, planes.length ? "Выберите срез: щелчок по плоскости в 3D или по её окну." : "Срезов нет: «＋ Срез».")); return; }
-    const box = H.scene3d.box, a = anglesOfNormal(p.normal), units = H.scene3d.units || "";
+    if (!p) { fill(planeBoxEl, el("div", { class: "muted" }, planes.length ? t("Choose a slice: click its plane in 3-D or its window.") : t("No slices: “＋ Slice”."))); return; }
+    const box = H.scene3d.box, a = anglesOfNormal(p.normal), units = t(H.scene3d.units);
     const inp = (v, lo, hi, step) => el("input", { type: "number", value: (+v).toFixed(3), min: lo, max: hi, step, style: { width: "6.5em" } });
     const xs = [0, 1, 2].map((i) => inp(p.origin[i], box[0][i], box[1][i], 0.01 * (box[1][i] - box[0][i])));
     const th = inp(a.theta, 0, 180, 1), ph = inp(a.phi, 0, 360, 1);
@@ -93,20 +94,20 @@ export function createEnv3D(ctx, { logFloor = () => 1e-6, scale = "sqrt", plane2
     for (const x of [...xs, th, ph, spd]) x.onchange = apply;
     auto.onchange = apply;
     const preset = (label, n, title) => el("button", { title, onclick: () => sendPlane(p.id, { normal: n }) }, label);
-    const names = (H.scene3d.coord_names || ["x", "y", "z"]);
+    const names = (H.scene3d.coord_names || ["x", "y", "z"]).map((n) => t(n));
     fill(planeBoxEl,
-      el("div", {}, el("span", { class: "sw-chip", style: { background: PLANE_COLORS[p.id] } }, String(p.id)), el("b", {}, ` ${p.label}`)),
+      el("div", {}, el("span", { class: "sw-chip", style: { background: PLANE_COLORS[p.id] } }, String(p.id)), el("b", {}, " " + t(p.label))),
       el("div", { class: "kv" },
-        el("span", {}, `центр ${names.join(", ")}, ${units}`), el("span", {}, xs),
-        el("span", {}, `наклон нормали от оси ${names[2]} θ, °`), th,
-        el("span", {}, "азимут нормали φ, °"), ph),
-      el("div", { class: "row" }, preset(`${names[1]} = c`, [0, -1, 0], `Плоскость ${names[0]}–${names[2]}`), preset(`${names[0]} = c`, [1, 0, 0], `Плоскость ${names[1]}–${names[2]}`),
-        preset(`${names[2]} = c`, [0, 0, 1], `Плоскость ${names[0]}–${names[1]}`),
-        el("button", { title: "Центр плоскости — в середину области", onclick: () => sendPlane(p.id, { origin: H.scene3d.planes.center }) }, "в центр"),
-        el("button", { title: "Убрать срез", onclick: () => ctx.send("view", { op: "remove", id: p.id }) }, "убрать"),
-        el("button", { title: "Вернуть срезы по умолчанию: один срез в середине", onclick: () => ctx.send("view", { op: "reset" }) }, "по умолчанию")),
-      el("div", { class: "row" }, el("label", {}, auto, " автосмещение по нормали"), el("span", { class: "muted" }, `скорость, ${units}/${H.scene3d.planes.time_unit || "с"}`), spd),
-      el("div", { class: "help" }, "Срез стоит, где его поставили, и сохраняется в новом мире этого запуска. Автосмещение (по умолчанию выключено) ведёт плоскость вдоль её нормали, пока идёт время мира («▶»); в движении срез грубый (без сверки), полный — когда автосмещение выключено. Мышью: стрелка двигает срез вдоль нормали (W), кольца наклоняют (E)."),
+        el("span", {}, t("centre {names}, {unit}", { names: names.join(", "), unit: units })), el("span", {}, xs),
+        el("span", {}, t("tilt of the normal from the axis {axis} θ, °", { axis: names[2] })), th,
+        el("span", {}, t("azimuth of the normal φ, °")), ph),
+      el("div", { class: "row" }, preset(`${names[1]} = c`, [0, -1, 0], t("The plane {a}–{b}", { a: names[0], b: names[2] })), preset(`${names[0]} = c`, [1, 0, 0], t("The plane {a}–{b}", { a: names[1], b: names[2] })),
+        preset(`${names[2]} = c`, [0, 0, 1], t("The plane {a}–{b}", { a: names[0], b: names[1] })),
+        el("button", { title: t("The plane's centre to the middle of the region"), onclick: () => sendPlane(p.id, { origin: H.scene3d.planes.center }) }, t("to the centre")),
+        el("button", { title: t("Remove the slice"), onclick: () => ctx.send("view", { op: "remove", id: p.id }) }, t("remove")),
+        el("button", { title: t("Back to the default slices: one slice in the middle"), onclick: () => ctx.send("view", { op: "reset" }) }, t("default"))),
+      el("div", { class: "row" }, el("label", {}, auto, " " + t("auto-shift along the normal")), el("span", { class: "muted" }, t("speed, {unit}/{time}", { unit: units, time: t(H.scene3d.planes.time_unit || "s") })), spd),
+      el("div", { class: "help" }, t("A slice stays where it was put and is kept in a new world of this run. The auto-shift (off by default) moves the plane along its normal while the world's time runs (“▶”); while moving the slice is coarse (not verified), full when the auto-shift is off. With the mouse: the arrow moves the slice along the normal (W), the rings tilt it (E).")),
       ro() ? el("div", { class: "warn" }, roText()) : null);
     if (ro()) for (const x of planeBoxEl.querySelectorAll("input,button")) x.disabled = true;
   }
@@ -119,7 +120,7 @@ export function createEnv3D(ctx, { logFloor = () => 1e-6, scale = "sqrt", plane2
   const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
   function nextNormal(id) {
     const def = H.scene3d.planes.defaults[String(id)], taken = planes.map((p) => unit(p.normal));
-    if (taken.every((t) => Math.abs(dot(t, def)) < 1e-6)) return def;
+    if (taken.every((tt) => Math.abs(dot(tt, def)) < 1e-6)) return def;
     if (taken.length === 1) {
       const n1 = taken[0], axes = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
       const e = axes.reduce((a, b) => (Math.abs(dot(a, n1)) <= Math.abs(dot(b, n1)) ? a : b));
@@ -153,8 +154,8 @@ export function createEnv3D(ctx, { logFloor = () => 1e-6, scale = "sqrt", plane2
     const s0 = Math.min(...ss), s1 = Math.max(...ss), t0 = Math.min(...ts), t1 = Math.max(...ts);
     const ns = 96, nt = 96, I = new Float32Array(ns * nt);
     for (let it = 0; it < nt; it++) for (let is = 0; is < ns; is++) {
-      const s = s0 + (s1 - s0) * is / (ns - 1), t = t0 + (t1 - t0) * it / (nt - 1);
-      I[it * ns + is] = scene.sampleVolume([0, 1, 2].map((i) => g.origin[i] + s * g.u[i] + t * g.v[i]));
+      const s = s0 + (s1 - s0) * is / (ns - 1), tt = t0 + (t1 - t0) * it / (nt - 1);
+      I[it * ns + is] = scene.sampleVolume([0, 1, 2].map((i) => g.origin[i] + s * g.u[i] + tt * g.v[i]));
     }
     // the volume's values are fractions of the VOLUME's peak: read them with the volume's own quantity (review B2-4)
     const last = windows.lastMeta ? windows.lastMeta(id) : null;
@@ -165,7 +166,7 @@ export function createEnv3D(ctx, { logFloor = () => 1e-6, scale = "sqrt", plane2
 
   window.addEventListener("editablechange", () => {  // the player's cursor or run state changed what may be edited
     addBtn.disabled = !H || ro() || planes.length >= maxPlanes();
-    addBtn.title = ro() ? roText() : "Добавить плоскость среза (до трёх): ставится в середину, перпендикулярно уже стоящим";
+    addBtn.title = ro() ? roText() : t("Add a slice plane (up to three): it goes to the middle, perpendicular to those already there");
     scene.select(selected);  // the gizmo only where planes can be moved
   });
 

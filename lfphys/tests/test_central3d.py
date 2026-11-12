@@ -59,11 +59,14 @@ def test_real_orbitals_are_the_cartesian_forms():
     assert np.max(np.abs(C.sph_harm(1, 1, th, ph) + (ref[(1, 1)] + 1j * ref[(1, -1)]) / math.sqrt(2))) < 1e-14
 
 
-def test_names_and_edges():
+def test_names_and_edges(ru):
     assert C.orbital_name(0, 0, True) == "s" and C.orbital_name(2, 2, True) == "d_x²−y²"
     assert C.orbital_name(1, -1, False) == "p, m = -1" and "m = +4" in C.orbital_name(5, 4, True)
-    with pytest.raises(ValueError):
+    # a real orbital without a Cartesian name is named by its azimuthal factor: a symbol, the same in every language
+    assert C.orbital_name(5, 4, True) == "h, m = +4 (cos)" and C.orbital_name(4, -3, True) == "g, m = -3 (sin)"
+    with pytest.raises(ValueError, match="need 0 ≤ m ≤ l") as e:
         C.legendre_normalised(2, 3, 0.5)
+    assert ru(e.value.args[0]) == "нужно 0 ≤ m ≤ l"
     r, th, ph = C.spherical(0.0, 0.0, 0.0)
     assert r == 0 and th == 0  # the origin: theta = 0 by convention, Y finite
     assert np.isfinite(C.sph_harm(3, 2, th, ph))

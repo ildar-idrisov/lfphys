@@ -173,7 +173,7 @@ def _slab_leak(f_par, fw, pol="tm"):
     return msf / mtf, w.checks()["tfsf_1"]["window_tail"]
 
 
-def test_bloch_slab_leak_near_the_cut_off():
+def test_bloch_slab_leak_near_the_cut_off(ru):
     """Review B8-fdtd F7. A pulse 1.2 +- 0.15 whose spectrum reaches the Bloch wave's cut-off (k_par = 2 pi x 0.6,
     cut-off f = 0.6) leaked 5.9e-6; the cause is not the FFT window's length (its tail, 1.8e-5, is the same for
     M = 4096 ... 65536) but the precursor of the spectrum cut sharply at the cut-off: the grid's wave is not zero at
@@ -181,8 +181,9 @@ def test_bloch_slab_leak_near_the_cut_off():
     the tail); a narrower band is accepted and leaks at the level of the profile's own cut-off. Away from the cut-off
     (k_par = 2 pi x 0.3) the leak stays 2-3e-9; k_par = 2 pi x 0.5 (tail 9.1e-7) is accepted with the leak below
     0.4 x the tail (measured 3.4e-7)."""
-    with pytest.raises(ValueError, match="начале счёта"):
+    with pytest.raises(ValueError, match="at the start of the run") as e:
         _slab_leak(0.6, 0.15)
+    assert "не равны нулю в начале счёта" in ru(e.value.args[0])
     leak, tail = _slab_leak(0.6, 0.08)
     assert leak < 1e-8 and tail < 1e-7, (leak, tail)
     leak, tail = _slab_leak(0.3, 0.15)

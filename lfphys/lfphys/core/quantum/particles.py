@@ -12,16 +12,20 @@ Masses: CODATA via scipy.constants (electron, neutron, atomic mass constant u). 
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from scipy import constants as sc
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": 'core', "kind": 'kinematics',
-    "title": 'Частицы и волновая кинематика',
-    "statement": 'Фотон: E = hν, p = E/c; массивная частица: p = √(E_k² + 2E_k mc²)/c, λ = h/p (де Бройль), групповая скорость pc²/E.',
-    "validity": 'релятивистская кинематика свободной частицы',
-    "basis": ['CODATA (scipy.constants)', 'AME 2020 (масса ⁴He)', 'Davisson–Germer 1927 (дифракция электронов)'],
+    "title": T("Particles and wave kinematics"),
+    "statement": T("Photon: E = hν, p = E/c; massive particle: p = √(E_k² + 2E_k mc²)/c, λ = h/p (de Broglie), group "
+                   "velocity pc²/E."),
+    "validity": T("relativistic kinematics of a free particle"),
+    "basis": ['CODATA (scipy.constants)', T("AME 2020 (the mass of ⁴He)"),
+              T("Davisson–Germer 1927 (electron diffraction)")],
     "conflicts": [],
 }
 
@@ -34,19 +38,19 @@ EV = sc.electron_volt
 
 SPECIES = {
     # id: (label, mass kg, charge in e, internal: "pol" | "spin" | None, nucleons)
-    "photon": ("Фотон", 0.0, 0, "pol", 0),
-    "electron": ("Электрон", sc.m_e, -1, "spin", 0),
-    "neutron": ("Нейтрон", sc.m_n, 0, "spin", 1),
-    "he4": ("Атом ⁴He", 4.002603254 * U, 0, None, 4),
-    "c60": ("Фуллерен ¹²C₆₀", 720.0 * U, 0, None, 720),
-    "custom": ("Своя частица", None, None, None, None),
+    "photon": (T("Photon"), 0.0, 0, "pol", 0),
+    "electron": (T("Electron"), sc.m_e, -1, "spin", 0),
+    "neutron": (T("Neutron"), sc.m_n, 0, "spin", 1),
+    "he4": (T("⁴He atom"), 4.002603254 * U, 0, None, 4),
+    "c60": (T("Fullerene ¹²C₆₀"), 720.0 * U, 0, None, 720),
+    "custom": (T("Custom particle"), None, None, None, None),
 }
 
 
 @dataclass(frozen=True)
 class Particle:
     species: str
-    label: str
+    label: T = field(compare=False)  # translatable text (lfphys.i18n); a dict, so kept out of hash and ==
     mass: float  # kg
     charge: float  # C
     internal: str | None  # "pol" (photon polarization), "spin" (spin 1/2) or None (no internal state)
@@ -77,7 +81,7 @@ def make(species: str, by: str, value: float, mass_u: float = 1.0, charge_e: flo
          spin_half: bool = False) -> Particle:
     """by: "lambda" (m), "ekin" (eV; photon: photon energy), "speed" (m/s, massive only), "freq" (Hz, photon)."""
     if species not in SPECIES:
-        raise ValueError(f"неизвестная частица {species}")
+        raise ValueError(T("unknown particle {species}", species=str(species)))
     label, m, q, internal, nuc = SPECIES[species]
     if species == "custom":
         m = mass_u * U
@@ -85,7 +89,7 @@ def make(species: str, by: str, value: float, mass_u: float = 1.0, charge_e: flo
         internal = "spin" if spin_half else None
         nuc = int(round(mass_u))
         if m <= 0:
-            raise ValueError("масса своей частицы должна быть > 0 (для безмассовой выберите фотон)")
+            raise ValueError(T("the mass of a custom particle must be > 0 (for a massless one choose the photon)"))
     q = q * E_CHARGE
     if m == 0.0:
         if by == "lambda":
@@ -95,7 +99,7 @@ def make(species: str, by: str, value: float, mass_u: float = 1.0, charge_e: flo
         elif by == "freq":
             lam = C / value
         else:
-            raise ValueError("для фотона задайте длину волны, энергию или частоту")
+            raise ValueError(T("for a photon give the wavelength, the energy or the frequency"))
         p = H / lam
         E = p * C
         return Particle(species, label, 0.0, 0.0, internal, 0, lam, p, E, E, C)
@@ -110,14 +114,14 @@ def make(species: str, by: str, value: float, mass_u: float = 1.0, charge_e: flo
     elif by == "speed":
         b = value / C
         if not 0 < b < 1:
-            raise ValueError("скорость массивной частицы должна быть в (0, c)")
+            raise ValueError(T("the speed of a massive particle must lie in (0, c)"))
         g = 1.0 / math.sqrt(1.0 - b * b)
         p = g * m * value
         E = g * mc2
     else:
-        raise ValueError("для массивной частицы задайте длину волны, кинетическую энергию или скорость")
+        raise ValueError(T("for a massive particle give the wavelength, the kinetic energy or the speed"))
     if p <= 0:
-        raise ValueError("импульс должен быть > 0")
+        raise ValueError(T("the momentum must be > 0"))
     lam = H / p
     v = p * C * C / E
     ekin = (p * C) ** 2 / (E + mc2)  # = E - mc^2 without cancellation (slow neutrons, molecules)

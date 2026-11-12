@@ -24,16 +24,18 @@ import math
 import numpy as np
 from scipy import integrate
 
+from lfphys.i18n import T
+
 
 ABOUT = {
     "layer": "theories", "kind": "approximation",
-    "title": "Ньютоново тяготение медленных тел: орбиты Кеплера",
-    "statement": "Движение тела в поле −GM r/r³: точные гиперболы и эллипсы Кеплера, численное интегрирование "
-                 "с проверкой по коническому сечению.",
-    "validity": "слабое поле и малые скорости: поправки порядка GM/(c²r) и v²/c² (смещение перицентра "
-                "6πGM/(c²p) за оборот — 43″ в столетие у Меркурия)",
+    "title": T("Newtonian gravity of slow bodies: Kepler orbits"),
+    "statement": T("The motion of a body in the field −GM r/r³: exact Kepler hyperbolas and ellipses, numerical "
+                   "integration checked against the conic section."),
+    "validity": T("weak field and low speeds: corrections of order GM/(c²r) and v²/c² (periapsis shift 6πGM/(c²p) per "
+                  "revolution, 43″ per century for Mercury)"),
     "basis": ["Kepler/Newton"],
-    "conflicts": ["lfphys.core.gravity.orbits: ОТО даёт прецессию перицентра и неустойчивость внутри 6GM/c²"],
+    "conflicts": [T("lfphys.core.gravity.orbits: GR gives periapsis precession and instability inside 6GM/c²")],
 }
 
 

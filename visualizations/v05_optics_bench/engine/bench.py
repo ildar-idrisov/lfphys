@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from lfphys.core.constants import C
+from lfphys.i18n import T
 from lfphys.core.optics import interfaces
 from lfphys.theories.approx import ray_optics
 
@@ -24,10 +25,11 @@ ARM_M = 0.30  # source -> structure and structure -> detector, metres (each arm 
 LAM_MIN, LAM_MAX = 300.0, 1600.0  # spectrum range, nm
 TH_MAX = 89.9  # degrees
 
-STRUCTS = [("interface", "граница двух сред"), ("ar", "просветляющий слой λ/4"), ("bragg", "брэгговское зеркало"),
-           ("fp", "Фабри–Перо (плёнка)"), ("metal", "металлическая плёнка"), ("tir", "полное внутреннее отражение")]
+STRUCTS = [("interface", T("boundary between two media")), ("ar", T("λ/4 anti-reflection layer")),
+           ("bragg", T("Bragg mirror")), ("fp", T("Fabry–Pérot (film)")), ("metal", T("metal film")),
+           ("tir", T("total internal reflection"))]
 STRUCT_LABEL = dict(STRUCTS)
-POL_LABEL = {"s": "s (TE)", "p": "p (TM)", "unpol": "неполяризованный (50/50 s и p)"}
+POL_LABEL = {"s": T("s (TE)"), "p": T("p (TM)"), "unpol": T("unpolarised (50/50 s and p)")}
 
 
 @dataclass
@@ -37,7 +39,7 @@ class Structure:
     n_out: float
     layers: list = field(default_factory=list)  # [(n complex, d nm, name, role)]
     notes: list = field(default_factory=list)
-    out_name: str = "среда выхода"
+    out_name: T = field(default_factory=lambda: T("exit medium"))
 
     @property
     def ns(self):
@@ -69,29 +71,32 @@ def build_structure(p: dict) -> Structure:
         pass
     elif kind == "ar":
         nf, lam0 = float(p["ar_n"]), float(p["lam0_nm"])
-        st.layers = [(nf, lam0 / (4 * nf), "плёнка λ/4", "film")]
+        st.layers = [(nf, lam0 / (4 * nf), T("λ/4 film"), "film")]
         ideal = math.sqrt(n0 * ns)
-        st.notes.append(f"Толщина λ₀/(4 n_f) = {lam0 / (4 * nf):.4g} нм; идеальный показатель √(n₀ n_s) = {ideal:.6g}.")
+        st.notes.append(T("Thickness λ₀/(4 n_f) = {d:.4g} nm; the ideal index √(n₀ n_s) = {ideal:.6g}.",
+                          d=lam0 / (4 * nf), ideal=ideal))
     elif kind == "bragg":
         nH, nL, N, lam0 = float(p["nH"]), float(p["nL"]), int(p["pairs"]), float(p["lam0_nm"])
         for _ in range(N):
             st.layers += [(nH, lam0 / (4 * nH), "H", "H"), (nL, lam0 / (4 * nL), "L", "L")]
-        st.notes.append(f"Порядок слоёв: среда падения, затем (H L)×{N}, затем подложка; каждый слой — λ₀/4 при "
-                        f"λ₀ = {lam0:g} нм (H: {lam0 / (4 * nH):.4g} нм, L: {lam0 / (4 * nL):.4g} нм).")
+        st.notes.append(T("Layer order: the incidence medium, then (H L)×{N:d}, then the substrate; every layer is "
+                          "λ₀/4 at λ₀ = {lam0} nm (H: {dH:.4g} nm, L: {dL:.4g} nm).",
+                          N=N, lam0=lam0, dH=lam0 / (4 * nH), dL=lam0 / (4 * nL)))
     elif kind == "fp":
-        st.layers = [(float(p["fp_n"]), float(p["fp_d_nm"]), "плёнка", "film")]
+        st.layers = [(float(p["fp_n"]), float(p["fp_d_nm"]), T("film"), "film")]
     elif kind == "metal":
-        st.layers = [(complex(float(p["metal_n"]), float(p["metal_k"])), float(p["metal_d_nm"]), "металл", "metal")]
+        st.layers = [(complex(float(p["metal_n"]), float(p["metal_k"])), float(p["metal_d_nm"]), T("metal"), "metal")]
     elif kind == "tir":
         gap = float(p["tir_gap_nm"])
         if gap > 0:  # a second prism of the same glass behind a gap of the rarer medium: frustrated TIR
-            st.layers = [(ns, gap, "зазор", "gap")]
+            st.layers = [(ns, gap, T("gap"), "gap")]
             st.n_out = n0
-            st.out_name = "вторая призма (n₀)"
+            st.out_name = T("second prism (n₀)")
         if n0 <= ns:
-            st.notes.append("n₀ ≤ n_s: полного внутреннего отражения нет (свет идёт в оптически более плотную среду).")
+            st.notes.append(T("n₀ ≤ n_s: there is no total internal reflection (the light goes into the optically "
+                              "denser medium)."))
     else:
-        raise ValueError(f"неизвестная структура {kind!r}")
+        raise ValueError(f"unknown structure {kind!r}")
     return st
 
 

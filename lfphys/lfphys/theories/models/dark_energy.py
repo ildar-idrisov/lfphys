@@ -17,24 +17,27 @@ from __future__ import annotations
 
 import numpy as np
 
+from lfphys.i18n import T
+
 from ...core.cosmology import flrw
 
 ABOUT = {
     "layer": "theories", "kind": "model",
-    "title": "Тёмная энергия с уравнением состояния w0–wa (CPL)",
-    "statement": "Компонента с w(a) = w0 + wa(1 − a) и плотностью ρ(a)/ρ(1) = a^(−3(1+w0+wa)) exp(−3wa(1 − a)) из "
-                 "уравнения непрерывности ОТО; подключается к фону ФЛРУ ядра (core.cosmology.flrw) вместо Λ; "
-                 "wa = 0 — постоянное w, (w0, wa) = (−1, 0) — космологическая постоянная.",
-    "validity": "только однородный фон; параметризация с двумя подгоночными постоянными, а не закон; при w < −1 "
-                "(фантом) не описывается одним каноническим скалярным полем",
+    "title": T("Dark energy with the w0–wa equation of state (CPL)"),
+    "statement": T("A component with w(a) = w0 + wa(1 − a) and the density ρ(a)/ρ(1) = a^(−3(1+w0+wa)) exp(−3wa(1 − "
+                   "a)) from the continuity equation of GR; it plugs into the core's FLRW background "
+                   "(core.cosmology.flrw) in place of Λ; wa = 0 is a constant w, (w0, wa) = (−1, 0) the cosmological "
+                   "constant."),
+    "validity": T("homogeneous background only; a parametrisation with two fitted constants, not a law; at w < −1 "
+                  "(phantom) it is not described by one canonical scalar field"),
     "basis": ["Chevallier & Polarski, Int. J. Mod. Phys. D 10, 213 (2001), Eqs. (30)-(31)",
               "Linder, Phys. Rev. Lett. 90, 091301 (2003), Eqs. (6)-(7)",
               "Planck Collaboration, A&A 641, A6 (2020), Sect. 7.4.1, Eq. (49)",
               "DESI Collaboration, Phys. Rev. D 112, 083515 (2025) (DR2 BAO), abstract"],
-    "conflicts": ["lfphys.core.cosmology.flrw: ядро содержит ΛCDM (w = −1, постоянная плотность); w0–wa — "
-                  "феноменологическое расширение за пределами ΛCDM. Данные не согласованы: Planck 2018 с BAO и "
-                  "сверхновыми совместим с Λ (w0 = −1.028 ± 0.031 при wa = 0), DESI DR2 BAO + CMB предпочитает "
-                  "w0 > −1, wa < 0 на 3.1σ (2.8–4.2σ со сверхновыми) — вопрос открыт"],
+    "conflicts": [T("lfphys.core.cosmology.flrw: the core holds ΛCDM (w = −1, constant density); w0–wa is a "
+                    "phenomenological extension beyond ΛCDM. The data disagree: Planck 2018 with BAO and supernovae "
+                    "is consistent with Λ (w0 = −1.028 ± 0.031 at wa = 0), DESI DR2 BAO + CMB prefers w0 > −1, wa < "
+                    "0 at 3.1σ (2.8–4.2σ with supernovae): the question is open")],
 }
 
 

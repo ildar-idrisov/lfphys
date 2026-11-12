@@ -10,20 +10,23 @@ Values are (value, uncertainty) in the units stated.
 
 from __future__ import annotations
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "data",
-    "title": "Измеренные и справочные значения (с источниками)",
-    "statement": "α_s(M_Z), M_Z, массы тяжёлых кварков, массы чармония и боттомония (PDG 2024); элементы орбиты "
-                 "Меркурия (NASA); проверки ОТО в Солнечной системе и у пульсара (Will 2014; Weisberg & Huang 2016); "
-                 "космологические параметры Planck 2018 (табл. 1 и 2) и температура реликтового излучения "
-                 "(Fixsen 2009); показатель преломления воды n(λ, T, ρ) (IAPWS R9-97) и плотность воды при 0,1 МПа "
-                 "(IAPWS SR6-08); номинальная эффективная температура Солнца (IAU 2015 B3).",
-    "validity": "значения с погрешностями источника; издание PDG 2026 отличается в отдельных строках (указано)",
+    "title": T("Measured and reference values (with sources)"),
+    "statement": T("α_s(M_Z), M_Z, the heavy quark masses, the charmonium and bottomonium masses (PDG 2024); the "
+                   "orbital elements of Mercury (NASA); tests of GR in the Solar System and at a pulsar (Will 2014; "
+                   "Weisberg & Huang 2016); the Planck 2018 cosmological parameters (Tables 1 and 2) and the "
+                   "temperature of the cosmic microwave background (Fixsen 2009); the refractive index of water n(λ, "
+                   "T, ρ) (IAPWS R9-97) and the density of water at 0.1 MPa (IAPWS SR6-08); the nominal effective "
+                   "temperature of the Sun (IAU 2015 B3)."),
+    "validity": T("values with the uncertainties of the source; the PDG 2026 edition differs in some lines (stated)"),
     "basis": ["PDG 2024: Phys. Rev. D 110, 030001", "NASA Mercury Fact Sheet (2024)",
               "Will, Living Rev. Relativ. 17, 4 (2014)", "Weisberg & Huang, ApJ 829, 55 (2016)",
               "Bertotti, Iess, Tortora, Nature 425, 374 (2003)",
               "Planck Collaboration, A&A 641, A6 (2020), Tables 1, 2", "Fixsen, ApJ 707, 916 (2009)",
-              "IAPWS R9-97 (1997): показатель преломления воды", "IAPWS SR6-08 (2011): жидкая вода при 0,1 МПа",
+              T("IAPWS R9-97 (1997): the refractive index of water"), T("IAPWS SR6-08 (2011): liquid water at 0.1 MPa"),
               "IAU 2015 Resolution B3 (Prša et al., AJ 152, 41, 2016)"],
     "conflicts": [],
 }

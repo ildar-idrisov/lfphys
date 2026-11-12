@@ -8,19 +8,20 @@
 // Debye terms, Descartes' and Airy's marks, the polarisation, and the sky's colour strip. Drawing only: every curve,
 // colour and number comes from the run.
 import { el, fill, fresh2d, num, panel } from "/static/js/ui.js";
+import { t, fmt, lang } from "/static/js/i18n.js";
 import { createEnv3D } from "/static/js/env3d.js";
 import { createImageWindow } from "/static/js/imagewin.js";
 
-const RANGES = [["all", "0–180°", 0, 180], ["bow", "радуга 120–150°", 118, 152], ["glory", "глория 160–180°", 160, 180],
-                ["fwd", "вперёд 0–20°", 0, 20]];
+const RANGES = [["all", "0–180°", 0, 180], ["bow", t("rainbow {a}–{b}°", { a: 120, b: 150 }), 118, 152],
+                ["glory", t("glory {a}–{b}°", { a: 160, b: 180 }), 160, 180], ["fwd", t("forward {a}–{b}°", { a: 0, b: 20 }), 0, 20]];
 const CURVES = {
-  mie: { label: "точный ряд Ми", color: "#ffffff", width: 1.5 },
-  deb0: { label: "p = 0: отражение (с дифракцией)", color: "#b8bcc8", dash: [4, 3] },
-  deb1: { label: "p = 1: проход насквозь", color: "#5ab0ff", dash: [] },
-  deb2: { label: "p = 2: одно внутреннее отражение", color: "#ffd23f", dash: [] },
-  deb3: { label: "p = 3: два внутренних отражения", color: "#e07bff", dash: [] },
-  airy2: { label: "Эйри p = 2", color: "#ff8a1f", dash: [2, 3] },
-  airy3: { label: "Эйри p = 3", color: "#ff5c7a", dash: [2, 3] },
+  mie: { label: t("the exact Mie series"), color: "#ffffff", width: 1.5 },
+  deb0: { label: t("p = 0: reflection (with diffraction)"), color: "#b8bcc8", dash: [4, 3] },
+  deb1: { label: t("p = 1: passage straight through"), color: "#5ab0ff", dash: [] },
+  deb2: { label: t("p = 2: one internal reflection"), color: "#ffd23f", dash: [] },
+  deb3: { label: t("p = 3: two internal reflections"), color: "#e07bff", dash: [] },
+  airy2: { label: t("Airy p = 2"), color: "#ff8a1f", dash: [2, 3] },
+  airy3: { label: t("Airy p = 3"), color: "#ff5c7a", dash: [2, 3] },
 };
 const SKY_HALF = 55;  // degrees from the antisolar point shown in the sky window (scattering angles 125-180)
 const SKY_PIX = 221;
@@ -31,21 +32,21 @@ export function createView(ctx) {
   const env = createEnv3D(ctx, { scale: "lin" });
   let H = null, monos = [], skyStarts = [], skies = [], nowFrame = null, drawnKey = "", range = "all";
   const hidden = new Set(["airy3"]);
-  const skyWin = createImageWindow({ title: "Небо вокруг антисолнечной точки: посчитанный цвет (Солнце за спиной)", describe: describeSky, overlay: skyOverlay });
+  const skyWin = createImageWindow({ title: t("The sky around the antisolar point: the computed colour (the Sun behind you)"), describe: describeSky, overlay: skyOverlay });
   const skyPanelBody = el("div", {});
   const cvPhase = el("canvas", { style: { width: "100%", height: "250px", display: "block", background: "#0b0e14", borderRadius: "4px" } });
   const cvPol = el("canvas", { style: { width: "100%", height: "150px", display: "block", background: "#0b0e14", borderRadius: "4px" } });
   const cvSky = el("canvas", { style: { width: "100%", height: "170px", display: "block", background: "#0b0e14", borderRadius: "4px" } });
-  const rangeSel = el("select", { title: "Диапазон углов рассеяния" }, RANGES.map(([v, t]) => el("option", { value: v }, t)));
+  const rangeSel = el("select", { title: t("Range of scattering angles") }, RANGES.map(([v, label]) => el("option", { value: v }, label)));
   rangeSel.onchange = () => { range = rangeSel.value; drawnKey = ""; draw(); };
   const dropBox = el("div", { class: "kv" }), legendBox = el("div", { class: "help" }), phaseHelp = el("div", { class: "help" }),
         polHelp = el("div", { class: "help" }), skyBox = el("div", { class: "help" });
-  const rightPanels = [panel("Капля и свет", dropBox),
-                       panel("Фазовая функция и ряд Дебая", el("div", {}, el("div", { class: "row" }, rangeSel), cvPhase, legendBox, phaseHelp)),
-                       panel("Поляризация", el("div", {}, cvPol, polHelp)),
-                       panel("Небо: цвет против угла рассеяния", el("div", {}, cvSky, skyBox)),
-                       panel("Небо вокруг антисолнечной точки", skyPanelBody),
-                       panel("Слои сцены", env.layersPanel), panel("Срез: положение и наклон", env.planePanel)];
+  const rightPanels = [panel(t("Drop and light"), dropBox),
+                       panel(t("Phase function and the Debye series"), el("div", {}, el("div", { class: "row" }, rangeSel), cvPhase, legendBox, phaseHelp)),
+                       panel(t("Polarisation"), el("div", {}, cvPol, polHelp)),
+                       panel(t("Sky: colour against the scattering angle"), el("div", {}, cvSky, skyBox)),
+                       panel(t("Sky around the antisolar point"), skyPanelBody),
+                       panel(t("Scene layers"), env.layersPanel), panel(t("Slice: position and tilt"), env.planePanel)];
 
   // --- what the cursor's time shows ----------------------------------------------------------------------------------
   const monoNow = () => { const s = nowFrame ? nowFrame.seq : Infinity; for (let k = monos.length - 1; k >= 0; k--) if (monos[k].meta.seq <= s) return monos[k]; return null; };
@@ -121,7 +122,7 @@ export function createView(ctx) {
       const col = p === "2" ? "#ffd23f" : "#e07bff";
       if (bw.theta >= a0 && bw.theta <= a1) {
         g.strokeStyle = col; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(X(bw.theta), top); g.lineTo(X(bw.theta), top + ph); g.stroke(); g.setLineDash([]);
-        g.fillStyle = col; g.font = "10px system-ui"; g.fillText(`Декарт p=${p}`, X(bw.theta) + 3, top + 10 + (p === "3" ? 12 : 0));
+        g.fillStyle = col; g.font = "10px system-ui"; g.fillText(t("Descartes p={p}", { p }), X(bw.theta) + 3, top + 10 + (p === "3" ? 12 : 0));
       }
       g.strokeStyle = "#ff8a1f";
       for (const a of bw.airy) if (a >= a0 && a <= a1) { g.beginPath(); g.moveTo(X(a), top + ph); g.lineTo(X(a), top + ph - 8); g.stroke(); }
@@ -133,7 +134,7 @@ export function createView(ctx) {
     g.fillStyle = "#9aa3ad"; g.font = "10px system-ui";
     for (let q = 0; q <= 4; q++) { const a = a0 + (a1 - a0) * q / 4; g.fillText(`${num(a, 4)}°`, X(a) - 10, top + ph + 12); }
     for (let lg = ymin; lg <= ymax; lg += (ymax - ymin > 8 ? 3 : 2)) g.fillText(`10${lg < 0 ? "⁻" : ""}${String(Math.abs(lg)).replace(/\d/g, (d) => "⁰¹²³⁴⁵⁶⁷⁸⁹"[d])}`, 2, Y(lg) + 3);
-    g.fillText("угол рассеяния θ", left + pw - 92, top + ph + 21);
+    g.fillText(t("scattering angle θ"), left + pw - 92, top + ph + 21);
   }
   function drawLegend(M) {
     if (!M) { fill(legendBox); fill(phaseHelp); return; }
@@ -142,15 +143,18 @@ export function createView(ctx) {
       el("input", { type: "checkbox", checked: !hidden.has(k), onchange: (e) => { if (e.target.checked) hidden.delete(k); else hidden.add(k); drawnKey = ""; drawLegend(M); draw(); } }),
       swatch(CURVES[k].color, CURVES[k].dash), CURVES[k].label)));
     const b = M.meta.bows || {};
-    const parts = ["Фазовая функция p(θ) = 4π (dσ/dΩ)/C_sca неполяризованного света (интеграл по сфере 4π), логарифмическая шкала. Белая — точный ряд Ми"
-                   + (M.meta.n_fine > M.blobs.theta.length ? `: среднее по ячейкам 0,05° из ${M.meta.n_fine} точек, серая полоса — мелкая интерференционная рябь внутри ячейки (её минимум и максимум)` : "") + "."];
+    const parts = [M.meta.n_fine > M.blobs.theta.length
+      ? t("The phase function p(θ) = 4π (dσ/dΩ)/C_sca of unpolarised light (the integral over the sphere is 4π), a logarithmic scale. White: the exact Mie series, the mean over cells of {c}° of {n} points; the grey band is the fine interference ripple inside a cell (its minimum and maximum).", { c: 0.05, n: M.meta.n_fine })
+      : t("The phase function p(θ) = 4π (dσ/dΩ)/C_sca of unpolarised light (the integral over the sphere is 4π), a logarithmic scale. White: the exact Mie series.")];
     const dbg = M.meta.debye || {};
-    if (dbg.diverging_orders) parts.push(`Цветные — члены ряда Дебая p = 0–3 той же капли. Для этой капли ряд расходится на ${dbg.diverging_orders} порядках (|R¹¹| > 1) и члены до ${num(dbg.amplification, 2)} раз больше полного ответа: это не пути света, а сокращающиеся слагаемые; белую кривую даёт их сумма в замкнутом виде.`);
-    else if (dbg.amplification > 10) parts.push(`Цветные — члены ряда Дебая p = 0–3 той же капли: здесь они до ${num(dbg.amplification, 2)} раз больше полного ответа и почти гасят друг друга (m близко к 1), поэтому по отдельности не похожи на белую кривую.`);
-    else parts.push("Цветные — члены ряда Дебая (той же капли): каждый — свет одного пути через каплю (p = 0–3 показаны; p ≥ 4 — остаток ряда); сумма всех p с интерференцией даёт белую кривую.");
-    if (b["2"]) parts.push(`Штрих — углы Декарта (лучи): p = 2 — ${num(b["2"].theta, 5)}°` + (b["3"] ? `, p = 3 — ${num(b["3"].theta, 5)}°` : "") + "; засечки снизу — максимумы теории Эйри (главный и дополнительные), треугольник — максимум члена p по ряду Дебая. Между дугами — полоса Александра (затенена).");
-    else parts.push("Для этой капли лучевой радуги нет (нужно 1 < m < 2 для p = 2).");
-    fill(phaseHelp, parts.map((t) => el("div", {}, t)));
+    if (dbg.diverging_orders) parts.push(t("Coloured: the terms p = 0–3 of the Debye series of the same drop. For this drop the series diverges at {n} orders (|R¹¹| > 1) and the terms are up to {a:.2g} times larger than the full answer: these are not paths of light but cancelling terms; the white curve is their sum in closed form.", { n: dbg.diverging_orders, a: dbg.amplification }));
+    else if (dbg.amplification > 10) parts.push(t("Coloured: the terms p = 0–3 of the Debye series of the same drop: here they are up to {a:.2g} times larger than the full answer and nearly cancel each other (m close to 1), so one by one they do not look like the white curve.", { a: dbg.amplification }));
+    else parts.push(t("Coloured: the terms of the Debye series (of the same drop): each is the light of one path through the drop (p = 0–3 shown; p ≥ 4 is the rest of the series); the sum of all p with their interference gives the white curve."));
+    if (b["2"]) parts.push(b["3"]
+      ? t("Dashed: Descartes' angles (rays): p = 2, {a:.5g}°; p = 3, {b:.5g}°; the ticks below are the maxima of Airy's theory (the main and the supernumerary ones), the triangle the maximum of the term p by the Debye series. Between the bows, Alexander's band (shaded).", { a: b["2"].theta, b: b["3"].theta })
+      : t("Dashed: Descartes' angle (rays): p = 2, {a:.5g}°; the ticks below are the maxima of Airy's theory (the main and the supernumerary ones), the triangle the maximum of the term p by the Debye series.", { a: b["2"].theta }));
+    else parts.push(t("This drop has no ray rainbow (p = 2 needs 1 < m < 2)."));
+    fill(phaseHelp, parts.map((x) => el("div", {}, x)));
   }
 
   // --- polarisation --------------------------------------------------------------------------------------------------
@@ -188,7 +192,7 @@ export function createView(ctx) {
     g.fillStyle = "#9aa3ad"; g.font = "10px system-ui";
     g.fillText("+1", 2, Y(1) + 8); g.fillText("0", 2, Y(0) + 3); g.fillText("−1", 2, Y(-1));
     for (let q = 0; q <= 4; q++) { const a = a0 + (a1 - a0) * q / 4; g.fillText(`${num(a, 4)}°`, X(a) - 10, top + ph + 12); }
-    fill(polHelp, el("div", {}, "Степень линейной поляризации P = (|S₁|² − |S₂|²)/(|S₁|² + |S₂|²) рассеянного неполяризованного света: + — поперёк плоскости рассеяния. Белая — одна капля (ряд Ми), жёлтый пунктир — только член p = 2 (свет радуги поляризован почти полностью), зелёная — облако капель в выбранном свете, взвешенная по яркости Y."));
+    fill(polHelp, el("div", {}, t("The degree of linear polarisation P = (|S₁|² − |S₂|²)/(|S₁|² + |S₂|²) of scattered unpolarised light: + across the scattering plane. White: one drop (the Mie series); yellow dashed: the term p = 2 only (the rainbow's light is polarised almost completely); green: the cloud of drops in the chosen light, weighted by the brightness Y.")));
   }
 
   // --- the sky ------------------------------------------------------------------------------------------------------
@@ -205,7 +209,7 @@ export function createView(ctx) {
       g.strokeStyle = "#e8e8e8"; g.lineWidth = 1; g.beginPath();
       for (let i = 0; i < nd; i++) { const xx = X(d0 + (d1 - d0) * i / (nd - 1)), yy = y0 + hh * (1 - Math.sqrt(Math.max(0, Yv[i]))); if (i) g.lineTo(xx, yy); else g.moveTo(xx, yy); }
       g.stroke();
-    } else { g.fillStyle = "#9aa3ad"; g.font = "11px system-ui"; g.fillText("ждём первую длину волны…", left + 8, top + 24); }
+    } else { g.fillStyle = "#9aa3ad"; g.font = "11px system-ui"; g.fillText(t("waiting for the first wavelength…"), left + 8, top + 24); }
     if (M) for (const [p, bw] of Object.entries(M.meta.bows || {})) {
       if (bw.theta < d0 || bw.theta > d1) continue;
       g.strokeStyle = p === "2" ? "#ffd23f" : "#e07bff"; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(X(bw.theta), top + band); g.lineTo(X(bw.theta), top + ph); g.stroke(); g.setLineDash([]);
@@ -214,14 +218,24 @@ export function createView(ctx) {
     g.fillStyle = "#9aa3ad"; g.font = "10px system-ui";
     for (let a = 130; a <= 180; a += 10) g.fillText(`${a}°`, X(a) - 9, top + ph + 12);
     g.fillText("Y", 4, top + band + 18);
-    const prog = st ? (S ? `${S.meta.k + 1} из ${st.n}` : `0 из ${st.n}`) : "—";
-    const lines = [st ? (st.mode === "white" ? `Солнечный свет: сложено длин волн — ${prog}` + (S ? ` (последняя ${num(S.meta.lam_nm, 4)} нм).` : ".") : `Одна длина волны ${S ? num(S.meta.lam_nm, 4) + " нм" : ""}: цвет — её спектральный цвет.`) : ""];
+    const done = S ? S.meta.k + 1 : 0;
+    const lines = [st ? (st.mode === "white"
+      ? (S ? t("Sunlight: wavelengths added {k} of {n} (the last {lam:.4g} nm).", { k: done, n: st.n, lam: S.meta.lam_nm }) : t("Sunlight: wavelengths added {k} of {n}.", { k: done, n: st.n }))
+      : (S ? t("One wavelength {lam:.4g} nm: the colour is its spectral colour.", { lam: S.meta.lam_nm }) : t("One wavelength: the colour is its spectral colour."))) : ""];
     if (S) {
-      const bw = (M && M.meta.bows) || {}, bowTxt = bw["2"] ? `; дуги по Декарту при ${num(M.meta.lam_nm, 4)} нм: основная ${num(bw["2"].theta, 5)}°` + (bw["3"] ? `, вторичная ${num(bw["3"].theta, 5)}°` : "") : "; лучевой радуги у этой капли нет";
-      lines.push(`Сверху — цвет света, рассеянного облаком капель под углом θ (антисолнечная точка — 180°${bowTxt}); снизу — яркость Y (корень). Узлов размера ${S.meta.n_nodes}, шаг по x ${num(S.meta.dx, 3)}` + (S.meta.coarse ? " (грубый: узлов не хватило — рябь и дополнительные дуги размыты в шум)" : "") + `; оценка ошибки суммы по размерам ~${num(S.meta.rel_err, 2)} максимума (по порядку величины)` + (S.meta.tail ? `, обрезка распределения на ±4σ отбросила ${num(S.meta.tail, 2)} его доли` : "") + ".");
-      lines.push("Цвет — сумма спектров с функциями CIE 1931 (аппроксимация Уаймена и др.), экспозиция по самому яркому углу, сжатие яркости для экрана.");
+      const bw = (M && M.meta.bows) || {};
+      const bowTxt = bw["2"] ? (bw["3"]
+        ? t("the bows by Descartes at {lam:.4g} nm: primary {a:.5g}°, secondary {b:.5g}°", { lam: M.meta.lam_nm, a: bw["2"].theta, b: bw["3"].theta })
+        : t("the bows by Descartes at {lam:.4g} nm: primary {a:.5g}°", { lam: M.meta.lam_nm, a: bw["2"].theta }))
+        : t("this drop has no ray rainbow");
+      const parts = [t("Above: the colour of the light scattered by the cloud of drops at the angle θ (the antisolar point is 180°; {bows}); below: the brightness Y (square root). Size nodes {n}, the step in x {dx:.3g}", { bows: bowTxt, n: S.meta.n_nodes, dx: S.meta.dx })];
+      if (S.meta.coarse) parts.push(t("coarse: too few nodes, the ripple and the supernumerary bows are washed into noise"));
+      parts.push(t("the error estimate of the sum over the sizes ~{e:.2g} of the maximum (by the order of magnitude)", { e: S.meta.rel_err }));
+      if (S.meta.tail) parts.push(t("the cut of the distribution at ±4σ dropped {f:.2g} of it", { f: S.meta.tail }));
+      lines.push(parts.join("; ") + ".");
+      lines.push(t("The colour is the sum of the spectra with the CIE 1931 functions (the approximation of Wyman et al.), the exposure set by the brightest angle, the brightness compressed for the screen."));
     }
-    fill(skyBox, lines.map((t) => el("div", {}, t)));
+    fill(skyBox, lines.map((x) => el("div", {}, x)));
   }
   function drawSkyImage() {
     if (!H) return;
@@ -242,16 +256,19 @@ export function createView(ctx) {
         for (let c = 0; c < 3; c++) rgb[o + c] = Math.round((cum[3 * (k1 + 1) + c] - cum[3 * k0 + c]) / cnt);
       }
     }
-    const meta = { shape: [n, n], mode: "seen", camera: { kind: "screen", alpha: [-SKY_HALF, SKY_HALF], beta: [-SKY_HALF, SKY_HALF], axis_label: "угол от антисолнечной точки, °" } };
-    skyWin.setImage(meta, rgb, { S, deg: H.sky.deg }, S ? `облако капель ${num(H.drop.r_um, 4)} мкм ± ${num(100 * H.drop.width, 3)} %; ${startNow() && startNow().mode === "white" ? "солнечный свет" : "одна длина волны"}` : "ждём первую длину волны…");
+    const meta = { shape: [n, n], mode: "seen", camera: { kind: "screen", alpha: [-SKY_HALF, SKY_HALF], beta: [-SKY_HALF, SKY_HALF], axis_label: t("angle from the antisolar point, °") } };
+    const white = startNow() && startNow().mode === "white";
+    skyWin.setImage(meta, rgb, { S, deg: H.sky.deg }, S ? (white
+      ? t("a cloud of drops {r:.4g} µm ± {w:.3g} %; sunlight", { r: H.drop.r_um, w: 100 * H.drop.width })
+      : t("a cloud of drops {r:.4g} µm ± {w:.3g} %; one wavelength", { r: H.drop.r_um, w: 100 * H.drop.width })) : t("waiting for the first wavelength…"));
   }
   function describeSky(meta, f, i, j) {
     const n = meta.shape[0], a = -SKY_HALF + (i + 0.5) / n * 2 * SKY_HALF, b = SKY_HALF - (j + 0.5) / n * 2 * SKY_HALF;
-    const rho = Math.hypot(a, b), th = 180 - rho, parts = [`от антисолнечной точки ${num(rho, 4)}°, угол рассеяния θ = ${num(th, 5)}°`];
+    const rho = Math.hypot(a, b), th = 180 - rho, parts = [t("{r:.4g}° from the antisolar point, scattering angle θ = {th:.5g}°", { r: rho, th })];
     if (f.S && f.deg) {
       const [d0, d1, nd] = f.deg, k = Math.round((th - d0) / (d1 - d0) * (nd - 1));
-      if (k >= 0 && k < nd) parts.push(`яркость Y = ${num(f.S.blobs.Y[k], 3)} максимума`, `поляризация P = ${num(f.S.blobs.pol[k], 3)}`);
-      else parts.push("вне посчитанных углов");
+      if (k >= 0 && k < nd) parts.push(t("brightness Y = {y:.3g} of the maximum", { y: f.S.blobs.Y[k] }), t("polarisation P = {p:.3g}", { p: f.S.blobs.pol[k] }));
+      else parts.push(t("outside the computed angles"));
     }
     return parts.join(" · ");
   }
@@ -271,14 +288,14 @@ export function createView(ctx) {
   function drawDrop(M) {
     if (!H) { fill(dropBox); return; }
     const d = H.drop, q = M ? M.meta.Q : null;
-    const rows = [["капли", `⟨r⟩ = ${num(d.r_um, 5)} мкм, разброс ${num(100 * d.width, 3)} %`],
-                  ["вещество", d.index === "water" ? `вода при ${num(d.t_c, 3)} °C (IAPWS)` : "заданный показатель"],
-                  ["среда", `n = ${num(d.n_medium, 5)}`]];
-    if (M) rows.push(["λ (одна капля)", `${num(M.meta.lam_nm, 4)} нм`], ["m относительно среды", `${num(M.meta.m[0], 7)}${M.meta.m[1] ? ` + ${num(M.meta.m[1], 3)}i` : ""}`],
-                     ["x = 2πa/λ", num(M.meta.x, 6)], ["членов ряда", String(M.meta.n_terms)],
+    const rows = [[t("drops"), t("⟨r⟩ = {r:.5g} µm, spread {w:.3g} %", { r: d.r_um, w: 100 * d.width })],
+                  [t("substance"), d.index === "water" ? t("water at {tc:.3g} °C (IAPWS)", { tc: d.t_c }) : t("a given index")],
+                  [t("surrounding medium"), `n = ${num(d.n_medium, 5)}`]];
+    if (M) rows.push([t("λ (one drop)"), t("{lam:.4g} nm", { lam: M.meta.lam_nm })], [t("m relative to the medium"), `${num(M.meta.m[0], 7)}${M.meta.m[1] ? ` + ${num(M.meta.m[1], 3)}i` : ""}`],
+                     ["x = 2πa/λ", num(M.meta.x, 6)], [t("terms of the series"), fmt(M.meta.n_terms, "d")],
                      ["Q_ext, Q_sca", `${num(q.Qext, 7)}, ${num(q.Qsca, 7)}`], ["Q_abs, Q_back", `${num(q.Qabs, 4)}, ${num(q.Qback, 4)}`],
-                     ["g (асимметрия)", num(q.g, 6)]);
-    rows.push(["ближнее поле", d.near ? "считается (срезы и объём)" : `не считается: x до ${num(d.x_max, 4)} > 45`]);
+                     [t("g (asymmetry)"), num(q.g, 6)]);
+    rows.push([t("near field"), d.near ? t("computed (slices and volume)") : t("not computed: x up to {x:.4g} > {lim}", { x: d.x_max, lim: 45 })]);
     fill(dropBox, rows.flatMap(([k, v]) => [el("span", {}, k), el("span", { class: "mono" }, v)]));
   }
 
@@ -293,11 +310,11 @@ export function createView(ctx) {
   return {
     center: env.center, rightPanels,
     help: () => el("div", {},
-      el("h4", {}, "Рассеяние света каплей"),
-      el("p", {}, "Плоская волна света (слева направо, вдоль z; поляризация вдоль x) падает на каплю. Движок решает уравнения Максвелла для шара точно — рядом Ми: коэффициенты aₙ, bₙ каждой парциальной волны, из них — амплитуды S₁(θ), S₂(θ), сечения, поляризация, а для малых капель — поле внутри и вокруг капли (слой «Поле |E|²» и срезы под любым углом)."),
-      el("p", {}, "Ряд Дебая раскладывает тот же ответ по путям света: p = 0 — отражение поверхностью (вместе с дифракцией), p = 1 — проход насквозь, p = 2 — одно отражение внутри (первичная радуга), p = 3 — два (вторичная). Лучевая оптика (лучи в 3D, угол Декарта) даёт радугу как сгущение лучей; теория Эйри — главную и дополнительные дуги; точный ряд показывает, где обе ошибаются и откуда глория у 180°."),
-      el("p", {}, "Небо: облако капель разного размера (гамма-распределение) в солнечном свете. С каждым шагом времени мира прибавляется одна длина волны: свет капель всех размеров при ней, умноженный на спектр Солнца (чёрное тело 5772 K), переводится в цвет; окно неба рисует этот цвет вокруг антисолнечной точки (Солнце за спиной наблюдателя). Дополнительные дуги видны у одинаковых капель и размываются при разбросе размеров; у мелких капель радуга белеет (туманная радуга), а у антисолнечной точки появляются кольца глории."),
-      el("p", {}, "Слева: «Свет» и «Длина волны» меняются сразу (капля пересчитывается, небо складывается заново); размер, разброс, вещество — в «Новый мир». Проверки справа. Значения коэффициентов проверяют «Ряд Дебая» (второй путь счёта тех же aₙ, bₙ) и «Уискомб» (движок против опубликованных чисел). «Угловая сумма при θ = 0», «Энергия» и «Матрица Мюллера» — тождества формы ряда: они проверяют угловые функции, квадратуру и арифметику, но верны и при неверных коэффициентах. Ещё: показатель воды IAPWS, граничные условия ближнего поля (сборка полей); сравнения с теорией Эйри и Декартом — для информации (≈).")),
+      el("h4", {}, t("Light scattered by a drop")),
+      el("p", {}, t("A plane wave of light (from left to right, along z; polarised along x) falls on a drop. The engine solves Maxwell's equations for a sphere exactly, by the Mie series: the coefficients aₙ, bₙ of every partial wave, and from them the amplitudes S₁(θ), S₂(θ), the cross sections, the polarisation, and for small drops the field inside and around the drop (the layer “Field |E|²” and slices at any angle).")),
+      el("p", {}, t("The Debye series splits the same answer by the paths of light: p = 0 is the reflection by the surface (together with diffraction), p = 1 the passage straight through, p = 2 one reflection inside (the primary rainbow), p = 3 two (the secondary). Ray optics (the rays in 3-D, Descartes' angle) gives the rainbow as a crowding of rays; Airy's theory gives the main and the supernumerary bows; the exact series shows where both are wrong and where the glory near 180° comes from.")),
+      el("p", {}, t("The sky: a cloud of drops of different sizes (a gamma distribution) in sunlight. With every step of the world's time one wavelength is added: the light of drops of all sizes at it, multiplied by the spectrum of the Sun (a black body at {T} K), is turned into a colour; the sky window paints this colour around the antisolar point (the Sun behind the observer). The supernumerary bows are seen for equal drops and blur when the sizes spread; for small drops the rainbow turns white (a fogbow), and the rings of the glory appear around the antisolar point.", { T: 5772 })),
+      el("p", {}, t("On the left: “Light” and “Wavelength” change at once (the drop is recomputed, the sky builds up anew); the size, the spread, the substance are in “New world”. The checks are on the right. The coefficients' values are tested by “Debye series” (a second route to the same aₙ, bₙ) and “Wiscombe” (the engine against published numbers). “Angular sum at θ = 0”, “Energy” and “Mueller matrix” are identities of the series' form: they test the angular functions, the quadrature and the arithmetic, but hold also for wrong coefficients. Also: the index of water by IAPWS, the boundary conditions of the near field (the assembly of the fields); the comparisons with Airy's theory and Descartes are for information (≈)."))),
     reset() { env.reset(); H = null; monos = []; skyStarts = []; skies = []; nowFrame = null; drawnKey = ""; },
     // key frames (player.js): the environment's own, and the lengths of the lists that only grow
     snapshot() { return { env: env.snapshot(), monos: monos.length, starts: skyStarts.length, skies: skies.length }; },

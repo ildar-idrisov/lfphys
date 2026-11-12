@@ -20,10 +20,13 @@ from __future__ import annotations
 import math
 
 import numpy as np
+from lfviz.errors import Refusal
 from lfviz.params import Param, Schema
 from lfviz.sim import Simulation as BaseSimulation
 
+from lfphys.core.constants import C
 from lfphys.core.optics import interfaces, thin_films
+from lfphys.i18n import T, join
 
 from .engine.bench import (ARM_M, P_5SIGMA, POL_LABEL, STRUCT_LABEL, STRUCTS, TH_MAX, Stream, Structure,
                            born_probs, brewster_from_rp, build_structure, critical_from_T, curves, field, field_grid,
@@ -39,72 +42,84 @@ def _p(*a, **k):
 
 SHOW = lambda *kinds: {"structure": list(kinds)}  # noqa: E731
 
+G_SRC, G_MED, G_STR = T("Source"), T("Media"), T("Structure")
+
 SCHEMA = Schema([
     # source
-    _p("lam_nm", "Длина волны λ, нм", "float", 633.0, group="Источник", min=300.0, max=1600.0),
-    _p("theta_deg", "Угол падения θ, °", "float", 45.0, group="Источник", min=0.0, max=TH_MAX,
-       help="Угол между лучом и нормалью к поверхности. Источник и оба детектора стоят на поворотном столе: при "
-            "повороте фотоны, уже летящие по старым путям, теряются (счёт «потеряно»)."),
-    _p("pol", "Поляризация", "select", "unpol", group="Источник",
-       options=[("s", POL_LABEL["s"] + ": E ⊥ плоскости падения"), ("p", POL_LABEL["p"] + ": E в плоскости падения"),
+    _p("lam_nm", T("Wavelength λ, nm"), "float", 633.0, group=G_SRC, min=300.0, max=1600.0),
+    _p("theta_deg", T("Angle of incidence θ, °"), "float", 45.0, group=G_SRC, min=0.0, max=TH_MAX,
+       help=T("The angle between the beam and the normal to the surface. The source and both detectors stand on a "
+              "rotary table: when it turns, the photons already flying along the old paths are lost (the count "
+              "“lost”).")),
+    _p("pol", T("Polarisation"), "select", "unpol", group=G_SRC,
+       options=[("s", T("s (TE): E ⊥ the plane of incidence")), ("p", T("p (TM): E in the plane of incidence")),
                 ("unpol", POL_LABEL["unpol"])]),
-    _p("rate", "Фотонов в секунду (время мира)", "float", 4e9, group="Источник", min=1.0, max=1e15, log=True,
-       help="Пуассоновский поток одиночных фотонов. Полёт по плечу 30 см занимает около 1 нс."),
+    _p("rate", T("Photons per second (world time)"), "float", 4e9, group=G_SRC, min=1.0, max=1e15, log=True,
+       help=T("A Poisson stream of single photons. The flight along an arm of {arm:.3g} cm takes about {t:.1g} ns.",
+              arm=ARM_M * 100, t=ARM_M / C * 1e9)),
     # media
-    _p("n0", "Среда падения n₀", "float", 1.0, group="Среды", min=1.0, max=4.0,
-       help="Показатель преломления среды, из которой приходит свет (действительный, без дисперсии)."),
-    _p("ns", "Среда выхода (подложка) n_s", "float", 1.5, group="Среды", min=1.0, max=4.0,
-       help="Среда за структурой. В режиме «полное внутреннее отражение» — более редкая среда за гранью призмы "
-            "(и среда зазора, если за ним стоит вторая призма)."),
+    _p("n0", T("Incidence medium n₀"), "float", 1.0, group=G_MED, min=1.0, max=4.0,
+       help=T("The refractive index of the medium the light comes from (real, no dispersion).")),
+    _p("ns", T("Exit medium (substrate) n_s"), "float", 1.5, group=G_MED, min=1.0, max=4.0,
+       help=T("The medium behind the structure. In the mode “total internal reflection”: the rarer medium beyond "
+              "the prism's face (and the medium of the gap, if a second prism stands behind it).")),
     # structure
-    _p("structure", "Структура", "select", "interface", group="Структура", options=STRUCTS,
-       help="Все структуры считаются одной и той же функцией движка: матрицы переноса (lfphys interfaces.stack)."),
-    _p("lam0_nm", "Расчётная длина волны λ₀, нм", "float", 550.0, group="Структура", min=300.0, max=1600.0,
-       show_if=SHOW("ar", "bragg"), help="Толщины слоёв — λ₀/(4n) каждый."),
-    _p("ar_n", "Показатель плёнки n_f", "float", 1.38, group="Структура", min=1.0, max=4.0, show_if=SHOW("ar"),
-       help="1.38 — как MgF₂ (иллюстративно); R(λ₀) = 0 при n_f = √(n₀ n_s)."),
-    _p("nH", "Высокий показатель n_H", "float", 2.3, group="Структура", min=1.0, max=4.0, show_if=SHOW("bragg")),
-    _p("nL", "Низкий показатель n_L", "float", 1.45, group="Структура", min=1.0, max=4.0, show_if=SHOW("bragg")),
-    _p("pairs", "Число пар N (слои H, L)", "int", 8, group="Структура", min=1, max=30, show_if=SHOW("bragg")),
-    _p("fp_n", "Показатель плёнки", "float", 2.3, group="Структура", min=1.0, max=4.0, show_if=SHOW("fp")),
-    _p("fp_d_nm", "Толщина плёнки, нм", "float", 2000.0, group="Структура", min=1.0, max=20000.0, log=True,
+    _p("structure", T("Structure"), "select", "interface", group=G_STR, options=STRUCTS,
+       help=T("Every structure is computed by one and the same function of the engine: transfer matrices (lfphys "
+              "interfaces.stack).")),
+    _p("lam0_nm", T("Design wavelength λ₀, nm"), "float", 550.0, group=G_STR, min=300.0, max=1600.0,
+       show_if=SHOW("ar", "bragg"), help=T("Every layer is λ₀/(4n) thick.")),
+    _p("ar_n", T("Film index n_f"), "float", 1.38, group=G_STR, min=1.0, max=4.0, show_if=SHOW("ar"),
+       help=T("{n} is like MgF₂ (illustrative); R(λ₀) = 0 at n_f = √(n₀ n_s).", n=1.38)),
+    _p("nH", T("High index n_H"), "float", 2.3, group=G_STR, min=1.0, max=4.0, show_if=SHOW("bragg")),
+    _p("nL", T("Low index n_L"), "float", 1.45, group=G_STR, min=1.0, max=4.0, show_if=SHOW("bragg")),
+    _p("pairs", T("Number of pairs N (layers H, L)"), "int", 8, group=G_STR, min=1, max=30, show_if=SHOW("bragg")),
+    _p("fp_n", T("Film index"), "float", 2.3, group=G_STR, min=1.0, max=4.0, show_if=SHOW("fp")),
+    _p("fp_d_nm", T("Film thickness, nm"), "float", 2000.0, group=G_STR, min=1.0, max=20000.0, log=True,
        show_if=SHOW("fp")),
-    _p("metal_n", "Металл: n (действительная часть показателя)", "float", 0.2, group="Структура", min=0.01, max=5.0,
+    _p("metal_n", T("Metal: n (the real part of the index)"), "float", 0.2, group=G_STR, min=0.01, max=5.0,
        show_if=SHOW("metal")),
-    _p("metal_k", "Металл: κ (мнимая часть, экстинкция)", "float", 3.3, group="Структура", min=0.0, max=20.0,
+    _p("metal_k", T("Metal: κ (the imaginary part, extinction)"), "float", 3.3, group=G_STR, min=0.0, max=20.0,
        show_if=SHOW("metal")),
-    _p("metal_d_nm", "Толщина металла, нм", "float", 30.0, group="Структура", min=0.1, max=500.0, log=True,
+    _p("metal_d_nm", T("Metal thickness, nm"), "float", 30.0, group=G_STR, min=0.1, max=500.0, log=True,
        show_if=SHOW("metal")),
-    _p("tir_gap_nm", "Зазор до второй призмы, нм (0 — призмы нет)", "float", 0.0, group="Структура", min=0.0,
+    _p("tir_gap_nm", T("Gap to a second prism, nm (0: no prism)"), "float", 0.0, group=G_STR, min=0.0,
        max=5000.0, show_if=SHOW("tir"),
-       help="Вторая призма из того же стекла n₀ за зазором из среды n_s: нарушенное полное отражение — свет "
-            "туннелирует через зазор."),
+       help=T("A second prism of the same glass n₀ behind a gap of the medium n_s: frustrated total reflection, the "
+              "light tunnels through the gap.")),
 ], presets={
-    "brewster": {"label": "Стекло n = 1.5 в воздухе под углом Брюстера (неполяризованный свет: отражаются только s)",
+    "brewster": {"label": T("Glass n = {n} in air at Brewster's angle (unpolarised light: only s is reflected)",
+                            n=1.5),
                  "params": {"structure": "interface", "n0": 1.0, "ns": 1.5, "theta_deg": 56.31, "pol": "unpol",
                             "lam_nm": 633.0}},
-    "tir": {"label": "Полное внутреннее отражение: стекло 1.5 → воздух, θ = 60° за критическим углом",
+    "tir": {"label": T("Total internal reflection: glass {n} → air, θ = {th}° beyond the critical angle", n=1.5,
+                       th=60),
             "params": {"structure": "tir", "n0": 1.5, "ns": 1.0, "theta_deg": 60.0, "pol": "unpol", "tir_gap_nm": 0.0,
                        "lam_nm": 633.0}},
-    "ftir": {"label": "Нарушенное полное отражение: зазор 200 нм до второй призмы (туннелирование фотонов)",
+    "ftir": {"label": T("Frustrated total reflection: a {gap} nm gap to a second prism (photon tunnelling)", gap=200),
              "params": {"structure": "tir", "n0": 1.5, "ns": 1.0, "theta_deg": 45.0, "pol": "s", "tir_gap_nm": 200.0,
                         "lam_nm": 633.0}},
-    "ar_mgf2": {"label": "Просветление стекла слоем λ/4 с n_f = 1.38 (как MgF₂, иллюстративно), λ₀ = 550 нм",
+    "ar_mgf2": {"label": T("Anti-reflection of glass by a λ/4 layer with n_f = {n} (like MgF₂, illustrative), "
+                           "λ₀ = {lam0} nm", n=1.38, lam0=550),
                 "params": {"structure": "ar", "n0": 1.0, "ns": 1.5, "ar_n": 1.38, "lam0_nm": 550.0, "lam_nm": 550.0,
                            "theta_deg": 0.0, "pol": "s"}},
-    "ar_ideal": {"label": "Просветление идеальным слоем λ/4: n_f = √1.5 ≈ 1.2247, R(λ₀) = 0",
+    "ar_ideal": {"label": T("Anti-reflection by an ideal λ/4 layer: n_f = √{ns} ≈ {nf:.5g}, R(λ₀) = 0", ns=1.5,
+                            nf=math.sqrt(1.5)),
                  "params": {"structure": "ar", "n0": 1.0, "ns": 1.5, "ar_n": math.sqrt(1.5), "lam0_nm": 550.0,
                             "lam_nm": 550.0, "theta_deg": 0.0, "pol": "s"}},
-    "bragg": {"label": "Брэгговское зеркало (H L)×8: n_H = 2.3, n_L = 1.45 (как TiO₂/SiO₂, иллюстративно) на стекле 1.52",
+    "bragg": {"label": T("Bragg mirror (H L)×{N:d}: n_H = {nH}, n_L = {nL} (like TiO₂/SiO₂, illustrative) on glass "
+                         "{ns}", N=8, nH=2.3, nL=1.45, ns=1.52),
               "params": {"structure": "bragg", "n0": 1.0, "ns": 1.52, "nH": 2.3, "nL": 1.45, "pairs": 8,
                          "lam0_nm": 550.0, "lam_nm": 550.0, "theta_deg": 0.0, "pol": "s"}},
-    "fp": {"label": "Фабри–Перо: плёнка n = 2.3 толщиной 2 мкм в воздухе (иллюстративно)",
+    "fp": {"label": T("Fabry–Pérot: a film n = {n}, {d} µm thick, in air (illustrative)", n=2.3, d=2),
            "params": {"structure": "fp", "n0": 1.0, "ns": 1.0, "fp_n": 2.3, "fp_d_nm": 2000.0, "lam_nm": 633.0,
                       "theta_deg": 0.0, "pol": "s"}},
-    "metal": {"label": "Металлическая плёнка 30 нм, n = 0.2 + 3.3i (как золото у 633 нм, иллюстративно) на стекле",
+    "metal": {"label": T("Metal film {d} nm, n = {n} + {k}i (like gold at {lam} nm, illustrative) on glass", d=30,
+                         n=0.2, k=3.3, lam=633),
               "params": {"structure": "metal", "n0": 1.0, "ns": 1.5, "metal_n": 0.2, "metal_k": 3.3,
                          "metal_d_nm": 30.0, "lam_nm": 633.0, "theta_deg": 0.0, "pol": "unpol"}},
-    "spr": {"label": "Плазмонный резонанс по Кречману: призма 1.5, металл 50 нм (n = 0.2 + 3.3i), воздух, p (иллюстративно)",
+    "spr": {"label": T("Surface plasmon resonance (Kretschmann): prism {n0}, metal {d} nm (n = {n} + {k}i), air, p "
+                       "(illustrative)", n0=1.5, d=50, n=0.2, k=3.3),
             "params": {"structure": "metal", "n0": 1.5, "ns": 1.0, "metal_n": 0.2, "metal_k": 3.3,
                        "metal_d_nm": 50.0, "lam_nm": 633.0, "theta_deg": 44.58, "pol": "p"}},
 })
@@ -137,11 +152,12 @@ class Simulation(BaseSimulation):
         self.times = flight_times(self.st)
         self.default_speed = self.times["t_in"] / 1.2  # one arm in about 1.2 s of wall time
         try:
-            self._new_segment("начало")
+            self._new_segment(T("start"))
         except ValueError:
             raise
         except Exception as e:  # reported as a refused world (the runner catches ValueError), never a crash
-            raise ValueError(f"мир не создан: {type(e).__name__}: {e}") from e
+            err = f"{type(e).__name__}: {e}"
+            raise Refusal(T("internal error of the world: {err}", err=err), detail=err) from e
 
     def engine_modules(self):
         return ["core.optics.interfaces", "core.optics.thin_films", "core.constants", "theories.approx.ray_optics"]
@@ -193,7 +209,9 @@ class Simulation(BaseSimulation):
             self._buf = outer
             if isinstance(e, ValueError):
                 raise
-            raise ValueError(f"{type(e).__name__}: {e} (мир оставлен прежним)") from e
+            err = f"{type(e).__name__}: {e}"
+            raise Refusal(T("internal error of the world: {err} (the world is left as it was)", err=err),
+                          detail=err) from e
         buf, self._buf = self._buf, outer
         for meta, blobs in buf:
             self._msg(meta, blobs)
@@ -209,30 +227,31 @@ class Simulation(BaseSimulation):
     def _set_live(self, values):
         new, errors = SCHEMA.coerce_live(self.params, values)
         if errors:
-            raise ValueError("; ".join(errors))
+            raise Refusal(join(errors))
         changed = [k for k in SCHEMA.live_ids() if not _same(new[k], self.params[k])]
         if not changed:
-            return "без изменений"
+            return T("no changes")
         st = build_structure(new)  # raises on a bad set-up; nothing of the world is touched before this point
-        desc = "; ".join(f"{SCHEMA.by_id[k].label}: {_fmt(SCHEMA.by_id[k], self.params[k])} → "
-                         f"{_fmt(SCHEMA.by_id[k], new[k])}" for k in changed)
+        desc = join([T("{label}: {old} → {new}", label=SCHEMA.by_id[k].label,
+                        old=_val(SCHEMA.by_id[k], self.params[k]), new=_val(SCHEMA.by_id[k], new[k]))
+                      for k in changed])
         notes = []
         path = any(k in PATH_FIELDS for k in changed) or st.n_out != self.st.n_out
         if path and len(self.flight):
             lost = len(self.flight)
             self.tot["lost"] += lost
             self.flight = Stream()
-            notes.append(f"пути пучков перестроены (среды или угол): фотонов в полёте потеряно {lost}")
+            notes.append(T("the beam paths were rebuilt (media or angle): photons in flight lost: {k:d}", k=lost))
         elif len(self.flight) and not any(k in SOURCE_FIELDS for k in changed):
             n0 = int(np.sum(self.flight.a["stage"] == 0))
             if n0:
-                notes.append(f"{n0} фотон(ов), ещё не долетевших до структуры, встретят уже новую структуру "
-                             "(переходные: в счёт нового отрезка не входят)")
+                notes.append(T("photons not yet at the structure: {k:d}; they will meet the new structure "
+                               "(transitional: not counted in the new segment)", k=n0))
         self.params = new
         self.st = st
         if "rate" in changed:
             self.t_next = self.t + float(self.rng.exponential(1.0 / new["rate"]))
-        self._new_segment("изменена установка: " + desc)
+        self._new_segment(T("set-up changed: {changes}", changes=desc))
         for text in notes:
             self._msg({"type": "notice", "t": self.t, "text": text})
         return desc
@@ -242,22 +261,22 @@ class Simulation(BaseSimulation):
 
     def _action(self, name, args):
         if name == "clear":
-            self._new_segment("новый отрезок: счётчики обнулены")
-            return "новый отрезок: счётчики обнулены, установка прежняя"
+            self._new_segment(T("new segment: the counters reset"))
+            return T("new segment: the counters reset, the set-up as it was")
         if name == "emit_one":
             self._emit_photons(np.array([self.t]))
-            return "источник выпустил один фотон"
-        raise ValueError(f"неизвестное действие {name!r}")
+            return T("the source emitted one photon")
+        raise ValueError(f"unknown action {name!r}")
 
     def _actions(self):
-        return [{"name": "emit_one", "label": "Выпустить один фотон", "args": [],
-                 "help": "Один фотон сейчас, сверх пуассоновского потока"},
-                {"name": "clear", "label": "Обнулить счётчики (новый отрезок)", "args": [],
-                 "help": "Установка та же; статистика начинается заново"}]
+        return [{"name": "emit_one", "label": T("Emit one photon"), "args": [],
+                 "help": T("One photon now, on top of the Poisson stream")},
+                {"name": "clear", "label": T("Reset the counters (new segment)"), "args": [],
+                 "help": T("The same set-up; the statistics start anew")}]
 
     # --- one segment: the run's own numbers for the current set-up ------------------------------------------
     def _title(self):
-        return "Оптический стол: " + STRUCT_LABEL[self.st.kind]
+        return T("Optical bench: {structure}", structure=STRUCT_LABEL[self.st.kind])
 
     def _new_segment(self, reason):
         if self.seg >= 0:
@@ -319,84 +338,97 @@ class Simulation(BaseSimulation):
 
     def _approximations(self, m_spec):
         st, pm = self.st, self.params["pol"]
-        out = ["Плоские волны и бесконечные плоские границы; среды однородные, изотропные, линейные и без дисперсии: "
-               "показатели заданы числами (комплексными для поглощения), одинаковыми для всех λ. Значения «как MgF₂, "
-               "TiO₂, золото» иллюстративны, это не табличные данные.",
-               "Фотоны по одному: судьба каждого (отражён, прошёл, поглощён) разыгрывается по правилу Борна с "
-               "вероятностями R, T, A, рассчитанными в этом запуске для его длины волны, угла и поляризации.",
-               "Полёт по плечам (30 см) — со скоростью c/n (без дисперсии фазовая и групповая скорости равны); время "
-               "внутри структуры (микроны) не учитывается.",
-               "Лучи на схеме — геометрическая оптика (закон Снелла), приближённо; в поглощающем слое — по "
-               "действительной части показателя. Структура нарисована в масштабе, плечи — нет.",
-               "Профиль |E|² — для s-поляризации (функция движка field_profile считает только s)."
-               + ("" if pm == "s" else " Сейчас источник " + ("p" if pm == "p" else "неполяризован")
-                  + ": показан профиль s-компоненты.")]
+        profile = {"s": T("The |E|² profile is for s polarisation (the engine's function field_profile computes s "
+                          "only)."),
+                   "p": T("The |E|² profile is for s polarisation (the engine's function field_profile computes s "
+                          "only). The source is now p: the profile shown is that of the s component."),
+                   "unpol": T("The |E|² profile is for s polarisation (the engine's function field_profile computes "
+                              "s only). The source is now unpolarised: the profile shown is that of the s "
+                              "component.")}[pm]
+        out = [T("Plane waves and infinite plane boundaries; homogeneous, isotropic, linear media without dispersion: "
+                 "the indices are given numbers (complex for absorption), the same for every λ. The values “like MgF₂, "
+                 "TiO₂, gold” are illustrative, not tabulated data."),
+               T("Photons one by one: the fate of each (reflected, transmitted, absorbed) is drawn by the Born rule "
+                 "with the probabilities R, T, A computed in this run for its wavelength, angle and polarisation."),
+               T("The flight along the arms ({arm:.3g} cm) is at the speed c/n (without dispersion the phase and group "
+                 "velocities are equal); the time inside the structure (microns) is not counted.", arm=ARM_M * 100),
+               T("The rays in the diagram are geometrical optics (Snell's law), approximate; in an absorbing layer, by "
+                 "the real part of the index. The structure is drawn to scale, the arms are not."),
+               profile]
         if pm == "unpol":
-            out.append("Неполяризованный источник — смесь 50/50 s- и p-фотонов: изотропная плоская структура их не "
-                       "смешивает, поэтому это то же, что матрица плотности ρ = I/2.")
+            out.append(T("An unpolarised source is a 50/50 mixture of s and p photons: an isotropic planar structure "
+                         "does not mix them, so this is the same as the density matrix ρ = I/2."))
         if m_spec >= 1600:
-            out.append("Спектр стопки очень частый: 1600 точек могут не разрешить все полосы на коротких волнах.")
+            out.append(T("The stack's spectrum is very dense: {m:d} points may not resolve every band at short "
+                         "wavelengths.", m=1600))
         out.extend(st.notes)
         return out
 
     def _segment_checks(self, s, cur, cv, th_B, th_c, th_c_face, face):
         p, st = self.params, self.st
         lam, th, pm = float(p["lam_nm"]), math.radians(p["theta_deg"]), p["pol"]
-        G = f"Отрезок {s}: {STRUCT_LABEL[st.kind]}"
-        CONS = f"Отрезок {s}: согласованность (тождества)"
+        G = T("Segment {seg:d}: {structure}", seg=s, structure=STRUCT_LABEL[st.kind])
+        CONS = T("Segment {seg:d}: consistency (identities)", seg=s)
 
         def mixed(fs, fp_):  # value for the source's polarization from per-polarization values
             return fs if pm == "s" else fp_ if pm == "p" else 0.5 * (fs + fp_)
 
         Rc, Tc, Ac = (mixed(cur["s"][k], cur["p"][k]) for k in ("R", "T", "A"))
         tot = Rc + Tc + Ac
-        self._check(f"sum{s}", "R + T + A = 1 (A = 1 − R − T по определению)", tot, 1.0, "", CONS, tol=1e-12,
+        self._check(f"sum{s}", T("R + T + A = 1 (A = 1 − R − T by definition)"), tot, 1.0, "", CONS, tol=1e-12,
                     ok=abs(tot - 1.0) <= 1e-12,
-                    note=f"R = {Rc:.10g}, T = {Tc:.10g}, A = {Ac:.3g}; тождество: поглощение в движке — остаток")
+                    note=T("R = {R:.10g}, T = {T:.10g}, A = {A:.3g}; an identity: the engine's absorption is the "
+                           "remainder", R=Rc, T=Tc, A=Ac))
         # energy: lossless structures conserve R + T; absorbing ones are passive, and their A is Joule heating
         if st.lossless:
             dev = max(float(np.max(np.abs(1.0 - cv[pre + "R" + q] - cv[pre + "T" + q])))
                       for pre in ("", "l") for q in ("s", "p"))
-            self._check(f"energy{s}", "Без потерь: max |1 − R − T| по всем рассчитанным углам и длинам волн (s и p)",
+            self._check(f"energy{s}", T("Lossless: max |1 − R − T| over every computed angle and wavelength (s and p)"),
                         dev, 0.0, "", G, ok=dev < 1e-10,
-                        note="R и T движок считает по отдельности из r и t; их сумма = 1 — закон сохранения энергии")
+                        note=T("the engine computes R and T separately, from r and t; their sum = 1 is the "
+                               "conservation of energy"))
         else:
             amin = min(float(np.min(cv[pre + "A" + q])) for pre in ("", "l") for q in ("s", "p"))
-            self._check(f"passive{s}", "Пассивная среда: наименьшее A по всем рассчитанным точкам", amin, None, "", G,
-                        ok=amin >= -1e-12, note="поглощение не может быть отрицательным (κ ≥ 0)")
+            self._check(f"passive{s}", T("Passive medium: the smallest A over every computed point"), amin, None, "",
+                        G, ok=amin >= -1e-12, note=T("absorption cannot be negative (κ ≥ 0)"))
             jl = thin_films.joule_absorption_s(st.ns, st.ds, lam, th)
             AJ = jl["A"]
             val = cur["s"]["R"] + cur["s"]["T"] + AJ
-            self._check(f"joule{s}", "R + T + A = 1 для s, где A — джоулево тепло k₀ Im(n²)∫|E|²dz / (n₀ cos θ)",
+            self._check(f"joule{s}", T("R + T + A = 1 for s, with A the Joule heat k₀ Im(n²)∫|E|²dz / (n₀ cos θ)"),
                         val, 1.0, "", G, tol=JOULE_TOL, ok=abs(val - 1.0) <= JOULE_TOL,
-                        note=f"A по полю |E|² запуска = {AJ:.10g}; 1 − R − T из r, t = {cur['s']['A']:.10g} "
-                             f"(теорема Пойнтинга: независимый путь); квадратура Гаусса–Лежандра, {jl['nodes']} узлов, "
-                             "шаг по толщине скин-слоя и периоду стоячей волны")
+                        note=T("A from the run's field |E|² = {AJ:.10g}; 1 − R − T from r, t = {A:.10g} (Poynting's "
+                               "theorem: an independent route); Gauss–Legendre quadrature, nodes: {nodes}, the step "
+                               "set by the skin depth and the period of the standing wave",
+                               AJ=AJ, A=cur["s"]["A"], nodes=jl["nodes"]))
         # Brewster: a single boundary
         if th_B is not None:
             ref = interfaces.brewster(st.n_in, st.n_out)
-            self._check(f"brew{s}", "Угол Брюстера: ноль r_p, найденный запуском", math.degrees(th_B),
-                        math.degrees(ref), "°", G, tol=1e-9, note=f"эталон arctg(n_выход/n₀) = arctg({st.n_out:g}/{st.n_in:g})")
+            self._check(f"brew{s}", T("Brewster's angle: the zero of r_p found by the run"), math.degrees(th_B),
+                        math.degrees(ref), "°", G, tol=1e-9,
+                        note=T("reference arctan(n_out/n₀) = arctan({nout}/{nin})", nout=st.n_out, nin=st.n_in))
             RpB = rta(face, lam, th_B, "p")["R"]
-            self._check(f"brewR{s}", "R_p при найденном угле Брюстера", RpB, 0.0, "", G, ok=RpB < 1e-24,
-                        note="p-фотоны там не отражаются: из неполяризованного пучка отражаются только s")
+            self._check(f"brewR{s}", T("R_p at the Brewster angle found"), RpB, 0.0, "", G, ok=RpB < 1e-24,
+                        note=T("p photons are not reflected there: of an unpolarised beam only s is reflected"))
         # critical angle and total reflection
         if th_c_face is not None:
             ref = interfaces.critical(st.n_in, float(p["ns"]))
-            lab = ("Критический угол грани: граница, за которой T запуска для грани без второй призмы = 0"
+            lab = (T("Critical angle of the face: the boundary beyond which the run's T for the face without the "
+                     "second prism = 0")
                    if st.kind == "tir" and st.layers else
-                   "Критический угол: граница, за которой T запуска для голой границы n₀ → n_s = 0 (волна в среде "
-                   "выхода затухает)")
+                   T("Critical angle: the boundary beyond which the run's T for the bare boundary n₀ → n_s = 0 (the "
+                     "wave in the exit medium decays)"))
             self._check(f"crit{s}", lab, math.degrees(th_c_face), None if ref is None else math.degrees(ref), "°", G,
-                        tol=1e-9, note=f"эталон arcsin(n_s/n₀) = arcsin({float(p['ns']):g}/{st.n_in:g})")
+                        tol=1e-9, note=T("reference arcsin(n_s/n₀) = arcsin({ns}/{nin})", ns=float(p["ns"]),
+                                         nin=st.n_in))
         if th_c is not None and st.lossless:
             beyond = list(np.linspace(math.degrees(th_c) + 1e-6, TH_MAX, 60))
             dev = max(abs(1.0 - rta(st, lam, math.radians(x), q)["R"]) for x in beyond for q in ("s", "p"))
-            self._check(f"tir{s}", "За критическим углом R = 1: max |1 − R| (s и p, 60 углов от θ_c до 89.9°)", dev, 0.0,
-                        "", G, ok=dev < 1e-12, note="без потерь: всё, что не прошло, отражено")
+            self._check(f"tir{s}", T("Beyond the critical angle R = 1: max |1 − R| (s and p, {k:d} angles from θ_c to "
+                                     "{th}°)", k=60, th=TH_MAX), dev, 0.0,
+                        "", G, ok=dev < 1e-12, note=T("lossless: whatever is not transmitted is reflected"))
             if th >= th_c:  # th_c is the first float angle at which the run's T = 0
-                self._check(f"tirnow{s}", "R при текущем угле (он за критическим)", Rc, 1.0, "", G, tol=1e-12,
-                            ok=abs(Rc - 1.0) <= 1e-12)
+                self._check(f"tirnow{s}", T("R at the current angle (it is beyond the critical one)"), Rc, 1.0, "", G,
+                            tol=1e-12, ok=abs(Rc - 1.0) <= 1e-12)
                 if not st.layers:
                     self._evan_check(s, G, lam, th)
         # quarter-wave antireflection
@@ -405,18 +437,20 @@ class Simulation(BaseSimulation):
             R0 = rta(st, lam0, 0.0, "s")["R"]
             ref = thin_films.quarter_wave_R(st.n_in, nf, st.n_out)
             ideal = math.sqrt(st.n_in * st.n_out)
-            self._check(f"ar{s}", "Просветление λ/4: R(λ₀, 0°) запуска", R0, ref, "", G, ok=abs(R0 - ref) <= 1e-12,
-                        tol=1e-12, note=f"эталон ((n₀n_s − n_f²)/(n₀n_s + n_f²))²; = 0 при n_f = √(n₀ n_s) = {ideal:.8g} "
-                                        f"(здесь n_f = {nf:.8g}); голая граница: {rta(face, lam0, 0.0, 's')['R']:.6g}")
+            self._check(f"ar{s}", T("Anti-reflection λ/4: the run's R(λ₀, 0°)"), R0, ref, "", G,
+                        ok=abs(R0 - ref) <= 1e-12, tol=1e-12,
+                        note=T("reference ((n₀n_s − n_f²)/(n₀n_s + n_f²))²; = 0 at n_f = √(n₀ n_s) = {ideal:.8g} "
+                               "(here n_f = {nf:.8g}); the bare boundary: {bare:.6g}", ideal=ideal, nf=nf,
+                               bare=rta(face, lam0, 0.0, "s")["R"]))
         # Bragg mirror
         if st.kind == "bragg":
             nH, nL, N, lam0 = float(p["nH"]), float(p["nL"]), int(p["pairs"]), float(p["lam0_nm"])
             R0 = rta(st, lam0, 0.0, "s")["R"]
             ref = thin_films.quarter_wave_stack_R(st.n_in, nH, nL, st.n_out, N)
-            self._check(f"bragg{s}", "Брэгговское зеркало: R(λ₀, 0°) запуска", R0, ref, "", G, tol=1e-10,
-                        note="эталон для порядка «среда, H, L, …, H, L, подложка»: "
-                             "R = ((n₀n_L^{2N} − n_s n_H^{2N})/(n₀n_L^{2N} + n_s n_H^{2N}))²; "
-                             f"N = {N}, 1 − R = {1 - R0:.4g}")
+            self._check(f"bragg{s}", T("Bragg mirror: the run's R(λ₀, 0°)"), R0, ref, "", G, tol=1e-10,
+                        note=T("reference for the order “medium, H, L, …, H, L, substrate”: "
+                               "R = ((n₀n_L^(2N) − n_s n_H^(2N))/(n₀n_L^(2N) + n_s n_H^(2N)))²; N = {N:d}, "
+                               "1 − R = {d:.4g}", N=N, d=1 - R0))
         # any single layer: the Airy sum of multiple reflections with complex Fresnel coefficients
         if len(st.layers) == 1:
             self._film_check(s, G, cur, lam, th)
@@ -427,9 +461,10 @@ class Simulation(BaseSimulation):
         if st.kind == "tir" and st.layers and th_c_face is not None and th > th_c_face:
             gap = st.layers[0][1]
             ref = mixed(*(thin_films.ftir_T(st.n_in, float(p["ns"]), gap, lam, th, q) for q in ("s", "p")))
-            self._check(f"ftir{s}", "Нарушенное полное отражение: T запуска (туннелирование через зазор)", Tc, ref, "", G,
-                        tol=1e-9, note="эталон 1/(1 + ((a² + b²)/(2ab))² sh²(κd)): s — a = k_z, b = κ; p — a = k_z/n₀², "
-                                       "b = κ/n_s²")
+            self._check(f"ftir{s}", T("Frustrated total reflection: the run's T (tunnelling through the gap)"), Tc,
+                        ref, "", G, tol=1e-9,
+                        note=T("reference 1/(1 + ((a² + b²)/(2ab))² sinh²(κd)): s: a = k_z, b = κ; p: a = k_z/n₀², "
+                               "b = κ/n_s²"))
 
     def _stat_check(self, s):
         """All three outcomes against the Born probabilities of the segment (review 2026-10-23, V5-4: the reflected
@@ -442,14 +477,16 @@ class Simulation(BaseSimulation):
         k = [c[x] for x in OUT_NAMES]
         pr = [c["p" + x] for x in OUT_NAMES]
         t = outcome_test(k, pr)
-        parts = [f"{x}: {kx} (ожидание {px * n:.1f}, z = {zx:+.2f})" if math.isfinite(zx)
-                 else f"{x}: {kx} (ожидание {px * n:.3g}: невозможный исход)"
+        parts = [T("{x}: {k:d} (expected {e:.1f}, z = {z:+.2f})", x=x, k=int(kx), e=px * n, z=zx)
+                 if math.isfinite(zx) else
+                 T("{x}: {k:d} (expected {e:.3g}: an impossible outcome)", x=x, k=int(kx), e=px * n)
                  for x, kx, px, zx in zip(OUT_NAMES, k, pr, t["z"])]
-        self._check(f"stat{s}", "Исходы R, T, A (счёт событий запуска) против вероятностей Борна: p-значение",
-                    t["p"], None, "", f"Отрезок {s}: статистика фотонов", ok=t["p"] >= P_5SIGMA,
-                    note=f"n = {n}; " + "; ".join(parts) + f". Точный биномиальный хвост каждого исхода, поправка "
-                         f"Бонферрони ({t['m']} исх.); провал при p < {P_5SIGMA:.2g} (как 5σ); χ² Пирсона = "
-                         f"{t['chi2']:.3g} при {t['dof']} ст. св. (для сведения)")
+        self._check(f"stat{s}", T("Outcomes R, T, A (the run's event counts) against the Born probabilities: p-value"),
+                    t["p"], None, "", T("Segment {seg:d}: photon statistics", seg=s), ok=t["p"] >= P_5SIGMA,
+                    note=T("n = {k:d}; {parts}. The exact binomial tail of each outcome, Bonferroni correction "
+                           "(outcomes: {m:d}); fails at p < {p5:.2g} (like 5σ); Pearson's χ² = {chi2:.3g} with "
+                           "{dof:d} degrees of freedom (for information)", k=int(n), parts=join(parts), m=t["m"],
+                           p5=P_5SIGMA, chi2=t["chi2"], dof=t["dof"]))
 
     # --- checks near the critical and grazing angles (review 2026-10-23, V5-2) --------------------------------
     def _evan_check(self, s, G, lam, th):
@@ -467,7 +504,7 @@ class Simulation(BaseSimulation):
         then shown for information."""
         st = self.st
         n0, n2 = st.n_in, st.n_out
-        cid, lab = f"evan{s}", "Затухающая волна: длина спада амплитуды по |E|² запуска"
+        cid, lab = f"evan{s}", T("Evanescent wave: the decay length of the amplitude from the run's |E|²")
         q = thin_films.evanescent_q(n0, n2, th)
         K = 1.0 + n2 * n2 / q if q > 0 else math.inf
         L_run, ln, z = None, None, None
@@ -481,24 +518,26 @@ class Simulation(BaseSimulation):
                     L_run = 2 * z / ln
         L_ref = thin_films.evanescent_length(n0, n2, lam, th) if q > 0 else None
         tol = (4.5 * K + 9 + 15 / (ln if ln else 1.0)) * U if math.isfinite(K) else math.inf
-        cond = f"число обусловленности K = n₀² sin²θ / (n₀² sin²θ − n_s²) = {K:.3g}" if math.isfinite(K) else \
-            "n₀ sin θ = n_s в пределах округления"
+        cond = T("the condition number K = n₀² sin²θ / (n₀² sin²θ − n_s²) = {K:.3g}", K=K) if math.isfinite(K) else \
+            T("n₀ sin θ = n_s within rounding")
         if tol > 1e-2:
-            self._check(cid, lab + " (для сведения)", L_run, L_ref, "нм", G, info=True,
-                        note=f"θ отличается от критического угла на величину порядка округления: {cond}, угол задаёт "
-                             "длину спада лишь с точностью ~K·2⁻⁵³ (первый порядок оценки ошибки тут неприменим); "
-                             + ("поле запуска за гранью не спадает (волна скользит вдоль грани)" if L_run is None
-                                else "длина по полю запуска показана для сведения"))
+            self._check(cid, T("{label} (for information)", label=lab), L_run, L_ref, T("nm"), G, info=True,
+                        note=T("θ differs from the critical angle by about a rounding: {cond}; the angle sets the decay "
+                               "length only to ~K·2⁻⁵³ (the first-order error estimate does not apply here); {tail}",
+                               cond=cond,
+                               tail=T("the run's field does not decay beyond the face (the wave slides along the face)")
+                               if L_run is None else T("the length from the run's field is shown for information")))
             return
         if L_run is None:
-            self._check(cid, lab, None, L_ref, "нм", G, ok=False, tol=tol,
-                        note=f"поле запуска за гранью не спадает, а эталон даёт конечную длину; {cond}")
+            self._check(cid, lab, None, L_ref, T("nm"), G, ok=False, tol=tol,
+                        note=T("the run's field does not decay beyond the face, while the reference gives a finite "
+                               "length; {cond}", cond=cond))
             return
         rel = (L_run - L_ref) / L_ref
-        self._check(cid, lab, L_run, L_ref, "нм", G, tol=tol, ok=abs(rel) <= tol,
-                    note=f"по |E|² на грани и на глубине {z:.4g} нм (ln отношения = {ln:.3g}); "
-                         f"эталон λ/(2π√(n₀² sin²θ − n_s²)), подкоренное — в 160-битной арифметике; допуск "
-                         f"(4,5K + 9 + 15/ln)·2⁻⁵³ из оценки ошибки округления, {cond}")
+        self._check(cid, lab, L_run, L_ref, T("nm"), G, tol=tol, ok=abs(rel) <= tol,
+                    note=T("from |E|² at the face and at the depth {z:.4g} nm (ln of the ratio = {ln:.3g}); reference "
+                           "λ/(2π√(n₀² sin²θ − n_s²)), the radicand in 160-bit arithmetic; tolerance "
+                           "(4.5K + 9 + 15/ln)·2⁻⁵³ from the round-off error estimate, {cond}", z=z, ln=ln, cond=cond))
 
     def _airy_checks(self, s, G, cv, lam, th, Tc):
         """Fabry-Perot film: the run's T at (lambda, theta) and over its spectrum against the Airy intensity formula
@@ -522,16 +561,17 @@ class Simulation(BaseSimulation):
         try:
             here = at(th, lam)
         except ValueError as e:
-            self._check(f"airy{s}", "Фабри–Перо: T запуска и формула Эйри", Tc, None, "", G,
-                        note=f"формула Эйри в интенсивностях здесь не применима: {e}")
+            self._check(f"airy{s}", T("Fabry–Pérot: the run's T and the Airy formula"), Tc, None, "", G,
+                        note=T("the Airy formula in intensities does not apply here: {why}", why=_airy_reason(e)))
             return
         ref = sum(here[q][0] for q in pols) / len(pols)
         bound = sum(here[q][1] for q in pols) / len(pols)
         ok = abs(Tc - ref) <= bound
         q0 = pols[0]
-        note = (f"эталон T = T_max/(1 + F sin²(Δ/2)), F = {here[q0][2]['F']:.6g}, T_max = {here[q0][2]['T_max']:.6g} "
-                f"({q0}); при n₀ = n_s это 1/(1 + F sin²(δ/2)); косинусы Снелла и фаза слоя — общие с матрицами; "
-                f"допуск |ΔT| ≤ {bound:.2g} — сумма оценок ошибки округления обоих путей")
+        note = T("reference T = T_max/(1 + F sin²(Δ/2)), F = {F:.6g}, T_max = {Tmax:.6g} ({pol}); at n₀ = n_s this is "
+                 "1/(1 + F sin²(δ/2)); Snell's cosines and the layer's phase are shared with the matrices; tolerance "
+                 "|ΔT| ≤ {bound:.2g}: the sum of the round-off error estimates of both routes",
+                 F=here[q0][2]["F"], Tmax=here[q0][2]["T_max"], pol=q0, bound=bound)
         side_th = th - 1e-3 if th > 1e-3 else None
         side = None
         if bound > 1e-9 and side_th is not None:
@@ -544,9 +584,10 @@ class Simulation(BaseSimulation):
                 refs = sum(side[q][0] for q in pols) / len(pols)
                 bs = sum(side[q][1] for q in pols) / len(pols)
                 ok = ok and abs(Ts - refs) <= bs
-                note += (f"; F велико (волна в плёнке почти скользит): пути сравнены и при θ − 0,001 рад: "
-                         f"|ΔT| = {abs(Ts - refs):.2g} при допуске {bs:.2g}")
-        self._check(f"airy{s}", "Фабри–Перо: T(λ, θ) запуска", Tc, ref, "", G,
+                note = T("{note}; F is large (the wave in the film almost grazes): the routes were also compared at "
+                         "θ − {d} rad: |ΔT| = {dT:.2g} with the tolerance {tol:.2g}", note=note, d=1e-3,
+                         dT=abs(Ts - refs), tol=bs)
+        self._check(f"airy{s}", T("Fabry–Pérot: the run's T(λ, θ)"), Tc, ref, "", G,
                     tol=bound / abs(ref) if ref else bound, ok=ok, note=note)
         # the whole spectrum at the current angle (the cosines do not depend on lambda: no dispersion)
         lg = cv["lam"]
@@ -557,7 +598,8 @@ class Simulation(BaseSimulation):
                 b = A["err_T"] + thin_films.stack_error_single_layer(st.n_in, n1, st.n_out, d, float(x), th, q)["err_T"]
                 e = abs(A["T"] - Tr)
                 dev, tol, ok = max(dev, e), max(tol, b), ok and e <= b
-        note = f"{len(lg)} длин волн при текущем угле; допуск в каждой точке — сумма оценок ошибки округления обоих путей"
+        note = T("wavelengths at the current angle: {k:d}; the tolerance at each point is the sum of the round-off "
+                 "error estimates of both routes", k=len(lg))
         if tol > 1e-9 and side is not None:
             dev_s, tol_s = 0.0, 0.0
             for q in pols:
@@ -567,8 +609,9 @@ class Simulation(BaseSimulation):
                                                                          q)["err_T"]
                     e = abs(A["T"] - rta(st, float(x), side_th, q)["T"])
                     dev_s, tol_s, ok = max(dev_s, e), max(tol_s, b), ok and e <= b
-            note += f"; и при θ − 0,001 рад: max |ΔT| = {dev_s:.2g} при допуске до {tol_s:.2g}"
-        self._check(f"airymax{s}", "Фабри–Перо: max |T − T_Эйри| по всему рассчитанному спектру", dev, 0.0, "",
+            note = T("{note}; and at θ − {d} rad: max |ΔT| = {dT:.2g} with the tolerance up to {tol:.2g}", note=note,
+                     d=1e-3, dT=dev_s, tol=tol_s)
+        self._check(f"airymax{s}", T("Fabry–Pérot: max |T − T_Airy| over the whole computed spectrum"), dev, 0.0, "",
                     G, tol=tol, ok=ok, note=note)
 
     def _film_check(self, s, G, cur, lam, th):
@@ -600,17 +643,20 @@ class Simulation(BaseSimulation):
             side = [compare(a_) for a_ in (th - 1e-3, th + 1e-3)]
         ok = all(w[2] for w in ([here] if here else []) + (side or []))
         diff, tol = (here[0], here[1]) if here else (max(w[0] for w in side), max(w[1] for w in side))
-        note = ("max |Δr|, |Δt| по s и p; матрицы переноса и суммирование отражений — разные пути (косинусы Снелла "
-                f"общие); допуск — сумма оценок ошибки округления обоих путей, {tol:.2g}")
+        note = T("max |Δr|, |Δt| over s and p; the transfer matrices and the sum of reflections are different routes "
+                 "(Snell's cosines shared); tolerance: the sum of the round-off error estimates of both routes, "
+                 "{tol:.2g}", tol=tol)
         if here is None:
-            note += ("; волна в слое сейчас скользит вдоль границ (cos θ₁ = 0): сумма отражений здесь 0/0 "
-                     "(устранимая особенность), поэтому сравнение — при θ ∓ 0,001 рад")
+            note = T("{note}; the wave in the layer now grazes along the boundaries (cos θ₁ = 0): the sum of "
+                     "reflections is 0/0 here (a removable singularity), so the comparison is at θ ∓ {d} rad",
+                     note=note, d=1e-3)
         elif side:
-            note += (f"; знаменатель суммы отражений мал (волна в слое почти скользит): допуск велик, поэтому пути "
-                     f"сравнены и при θ ∓ 0,001 рад: |Δ| ≤ {max(w[0] for w in side):.2g} при допуске "
-                     f"{max(w[1] for w in side):.2g}")
-        self._check(f"film{s}", "Один слой: r и t запуска = сумма многократных отражений (Эйри, комплексные "
-                    "коэффициенты Френеля)", diff, 0.0, "", G, tol=tol, ok=ok, note=note)
+            note = T("{note}; the denominator of the sum of reflections is small (the wave in the layer almost "
+                     "grazes): the tolerance is large, so the routes were also compared at θ ∓ {d} rad: "
+                     "|Δ| ≤ {dev:.2g} with the tolerance {tol:.2g}", note=note, d=1e-3,
+                     dev=max(w[0] for w in side), tol=max(w[1] for w in side))
+        self._check(f"film{s}", T("One layer: the run's r and t = the sum of multiple reflections (Airy, complex "
+                                  "Fresnel coefficients)"), diff, 0.0, "", G, tol=tol, ok=ok, note=note)
 
     # --- the photon stream ----------------------------------------------------------------------------
     def max_step(self):
@@ -778,13 +824,14 @@ class Simulation(BaseSimulation):
     def header(self):
         return {
             "title": self._title(),
-            "text": ("Источник выпускает фотоны по одному (пуассоновский поток) на плоскую структуру: границу двух сред, "
-                     "просветляющий слой, брэгговское зеркало, плёнку Фабри–Перо, металлическую плёнку или грань призмы "
-                     "(полное внутреннее отражение, с зазором — туннелирование). Для каждой установки запуск считает "
-                     "матрицами переноса движка lfphys амплитуды r, t и вероятности R, T, A, кривые R(θ), T(θ), R(λ), "
-                     "T(λ) и поле |E|² внутри структуры. Каждый фотон, долетев до структуры, получает судьбу по правилу "
-                     "Борна с этими вероятностями; узнаём её, когда он долетает до детектора (поглощённый — исчезает в "
-                     "структуре). Счётчики — накопление этих событий, рядом — ожидание запуска."),
+            "text": T("The source emits photons one by one (a Poisson stream) onto a planar structure: a boundary "
+                      "between two media, an anti-reflection layer, a Bragg mirror, a Fabry–Pérot film, a metal film or "
+                      "a prism's face (total internal reflection; with a gap, tunnelling). For every set-up the run "
+                      "computes, with the transfer matrices of the engine lfphys, the amplitudes r, t and the "
+                      "probabilities R, T, A, the curves R(θ), T(θ), R(λ), T(λ) and the field |E|² inside the "
+                      "structure. Every photon that reaches the structure gets its fate by the Born rule with these "
+                      "probabilities; we learn it when the photon reaches a detector (an absorbed one vanishes in the "
+                      "structure). The counters are the accumulation of these events, next to the run's expectation."),
             "modifications": SCHEMA.modifications(self.params),
             "actions": self._actions(),
             "arm_m": ARM_M, "t_in": self.times["t_in"], "rate": float(self.params["rate"]),
@@ -819,22 +866,36 @@ def _same(a, b):
     return a == b
 
 
-def _fmt(p, v):
+def _val(p, v):
+    """A parameter's value for a text: an option's label (a T) or the number itself (formatted by the viewer)."""
     if p.type == "select":
         return dict(p.options).get(v, v)
-    if isinstance(v, float):
-        return f"{v:.6g}"
-    return str(v)
+    return v
+
+
+def _airy_reason(e):
+    """Why the Airy intensity formula does not apply, from the engine's ValueError (thin_films.airy)."""
+    a = e.args[0] if e.args else ""
+    if isinstance(a, dict) and "$t" in a:
+        return a
+    s = str(e)
+    if "total reflection" in s:
+        return T("total reflection at a boundary of the film (no propagating wave in it)")
+    if "grazes" in s:
+        return T("the wave grazes inside the film (the formula is 0/0)")
+    if "real positive" in s:
+        return T("the formula needs real positive indices (a lossless film)")
+    return T("the engine's reason: {err}", err=s)
 
 
 VIZ = {
     "id": "v05_optics_bench",
-    "title": "Оптический стол: границы сред и покрытия",
-    "summary": ("Фотоны по одному на границу двух сред, просветляющий слой, брэгговское зеркало, плёнку Фабри–Перо, "
-                "металлическую плёнку, грань призмы (полное и нарушенное полное отражение). Угол Брюстера, критический "
-                "угол, спектры R(λ), T(λ), поле |E|² в слоях."),
-    "purpose": ("Как из уравнений Максвелла на границах (матрицы переноса) получаются отражение, пропускание и "
-                "поглощение, и как отдельные фотоны по правилу Борна складываются в эти доли."),
+    "title": T("Optical bench: boundaries and coatings"),
+    "summary": T("Photons one by one at a boundary between two media, an anti-reflection layer, a Bragg mirror, a "
+                 "Fabry–Pérot film, a metal film, a prism's face (total and frustrated total reflection). Brewster's "
+                 "angle, the critical angle, the spectra R(λ), T(λ), the field |E|² in the layers."),
+    "purpose": T("How reflection, transmission and absorption come out of Maxwell's equations at the boundaries "
+                 "(transfer matrices), and how single photons add up to these fractions by the Born rule."),
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,

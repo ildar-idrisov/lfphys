@@ -309,15 +309,15 @@ def test_a_new_time_step_at_the_same_nodes():
 def _channel(dye=1e-3):
     fl = lbm.Flow2D(size=(0.6, 0.12), dx=0.005, nu=1e-3, rho=1.0, u_max=0.3, dye=dye, device="cpu",
                     sides={"left": lbm.Inlet(velocity=0.2, profile="parabolic", ramp=0.2), "right": lbm.Outlet()})
-    fl.add_obstacle(lbm.Disk((0.15, 0.06), 0.02), interpolated=True, label="диск")
+    fl.add_obstacle(lbm.Disk((0.15, 0.06), 0.02), interpolated=True, label="disk")
     if dye:
-        fl.add_dye_source(lbm.Disk((0.05, 0.06), 0.006), label="краска")
+        fl.add_dye_source(lbm.Disk((0.05, 0.06), 0.006), label="dye")
     fl.record_forces(11)
     fl.advance(400)
     return fl
 
 
-def test_a_domain_grown_and_cropped_keeps_the_flow_and_its_books():
+def test_a_domain_grown_and_cropped_keeps_the_flow_and_its_books(ru):
     """Grown on the right by 0.1 m at the same spacing: the fluid of the present domain is its own (the nodes are the old
     ones: weights 0 and 1), so away from the old outlet the flow equals the same flow advanced one step on the old grid
     (to round-off of the decomposition); the new part moves with the inflow; the obstacle and the source keep their
@@ -342,8 +342,10 @@ def test_a_domain_grown_and_cropped_keeps_the_flow_and_its_books():
         assert abs(a.balance()[key]["relative_residual"]) < 1e-12
     # a crop through the body: refused, nothing changed
     f0, t0, s0, books = a.populations(), a.t, a.steps, a.balance()["lattice"]["books"]
-    with pytest.raises(ValueError, match="срезано"):
+    with pytest.raises(ValueError, match="would be cut by the edge") as e:
         a.remap(size=(0.16, 0.12))
+    assert str(e.value).startswith("body “disk” would be cut")
+    assert ru(e.value.args[0]).startswith("тело «disk»: его срезал бы край новой области")
     assert np.array_equal(a.populations(), f0) and (a.t, a.steps) == (t0, s0)
     assert a.balance()["lattice"]["books"] == books
     a.remap(size=(0.6, 0.12))
@@ -358,18 +360,20 @@ def test_a_domain_grown_and_cropped_keeps_the_flow_and_its_books():
         assert abs(a.balance()[key]["relative_residual"]) < 1e-12
 
 
-def test_refusals_leave_the_flow_as_it_was():
+def test_refusals_leave_the_flow_as_it_was(ru):
     """A mask obstacle cannot move to another grid; a grid the scheme cannot run (the grid Reynolds number of a coarse
     grid above the open-domain limit) is refused by the same checks as a new flow — all or nothing."""
     a = _channel(dye=None)
     f0, t0, dt0 = a.populations(), a.t, a.units.dt
-    with pytest.raises(ValueError, match="Рейнольдса ячейки"):
+    with pytest.raises(ValueError, match="grid Reynolds number") as e:
         a.remap(dx=0.04)
+    assert "число Рейнольдса ячейки" in ru(e.value.args[0])
     assert np.array_equal(a.populations(), f0) and a.t == t0 and a.units.dt == dt0 and a.nx == 120
     m = lbm.Flow2D((0.1, 0.05), 0.005, nu=1e-3, rho=1.0, u_max=0.1, device="cpu")
-    m.add_obstacle(lbm.Mask(lambda X, Y: (X - 0.05) ** 2 + (Y - 0.025) ** 2 < 0.01**2), label="маска")
-    with pytest.raises(ValueError, match="маской"):
+    m.add_obstacle(lbm.Mask(lambda X, Y: (X - 0.05) ** 2 + (Y - 0.025) ** 2 < 0.01**2), label="mask")
+    with pytest.raises(ValueError, match="given as a mask of nodes") as e:
         m.remap(dx=0.0025)
+    assert str(e.value).endswith("shifted: “mask”") and "заданные маской узлов" in ru(e.value.args[0])
     m.remap(u_max=0.12)  # the same nodes: a mask stays where it is
     assert m.u_max == 0.12
 

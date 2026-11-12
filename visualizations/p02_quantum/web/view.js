@@ -11,15 +11,16 @@
 // space the 3-D view stays the main view, with the slice z = 0 beside it. The grid and the window change at the current
 // moment (plan P16.1): the run's "grid" message (with a "box") gives the new axes; the plane's picture follows.
 // Drawing only: every number and picture comes from the run.
-import { el, fill, num, panel } from "/static/js/ui.js";
+import { el, fill, panel } from "/static/js/ui.js";
+import { t, fmt, lang } from "/static/js/i18n.js";
 import { createEnv3D } from "/static/js/env3d.js";
 import { createPlayground } from "/static/js/playground.js";
 
 const CATS = [
-  { id: "pot", label: "Потенциалы (барьеры, ямы, стенки, ловушки)", types: ["box", "ball", "slit_wall", "step", "trap"], opacity: 0.35 },
-  { id: "det", label: "Детекторы и метки пути", types: ["detector", "marker"], opacity: 0.25 },
-  { id: "fld", label: "Поля, трубки потока, среда", types: ["bfield", "flux", "env"], opacity: 0.15 },
-  { id: "pln", label: "Плоскости потока", types: ["plane"], opacity: 0.2 },
+  { id: "pot", label: t("Potentials (barriers, wells, walls, traps)"), types: ["box", "ball", "slit_wall", "step", "trap"], opacity: 0.35 },
+  { id: "det", label: t("Detectors and which-path markers"), types: ["detector", "marker"], opacity: 0.25 },
+  { id: "fld", label: t("Fields, flux tubes, environment"), types: ["bfield", "flux", "env"], opacity: 0.15 },
+  { id: "pln", label: t("Flux planes"), types: ["plane"], opacity: 0.2 },
 ];
 
 function hexRgb(h) { const s = h.replace("#", ""); return [0, 2, 4].map((i) => parseInt(s.slice(i, i + 2), 16)); }
@@ -31,17 +32,17 @@ export function createView(ctx) {
   // the layout: in a plane the wave's window fills the centre and the 3-D view is shown on request (review UX-ui U15)
   let show3d = false, plane = true;
   try { show3d = localStorage.getItem("p02.show3d") === "1"; } catch (e) { /* storage off: the default layout */ }
-  const layoutBtn = el("button", { title: "Показать или скрыть 3D-вид рядом с плоскостью опыта" });
+  const layoutBtn = el("button", { title: t("Show or hide the 3D view next to the experiment's plane") });
   const viewBox = el("div", {});
   function applyLayout() {
     const side = plane && !show3d;  // the window alone, across the whole centre
     env.scene.el.style.display = side ? "none" : "";
     env.windows.el.style.flex = side ? "1 1 100%" : "";
     env.windows.el.style.maxWidth = side ? "none" : "";
-    layoutBtn.textContent = show3d ? "Скрыть 3D-вид (плоскость опыта — во весь центр)" : "Показать 3D-вид рядом";
+    layoutBtn.textContent = show3d ? t("Hide the 3D view (the experiment's plane across the whole centre)") : t("Show the 3D view alongside");
     fill(viewBox, plane
-      ? [el("div", { class: "help" }, "Волна живёт в плоскости (x, y): её окно — главный вид. 3D-вид показывает ту же плоскость как пластину в пространстве с объектами сцены."), el("div", { class: "ctl" }, layoutBtn)]
-      : el("div", { class: "help" }, "Мир в объёме: главный вид — 3D-сцена, рядом — срез z = 0."));
+      ? [el("div", { class: "help" }, t("The wave lives in the (x, y) plane: its window is the main view. The 3D view shows the same plane as a plate in space with the scene's objects.")), el("div", { class: "ctl" }, layoutBtn)]
+      : el("div", { class: "help" }, t("A world in a volume: the main view is the 3D scene, beside it the slice z = 0.")));
     env.windows.redraw(); env.scene.requestRender();
   }
   layoutBtn.onclick = () => { show3d = !show3d; try { localStorage.setItem("p02.show3d", show3d ? "1" : "0"); } catch (e) { /* ignore */ } applyLayout(); };
@@ -50,8 +51,9 @@ export function createView(ctx) {
   let marks = [], pts = null;
   const pg = createPlayground(ctx, { onSelect: () => { env.windows.redraw(); env.scene.requestRender(); }, describeProbe, env });
 
+  // a probe's rows: the keys are the world's static msgids, the values numbers or texts (T)
   function describeProbe(o, r) {
-    return Object.entries(r).map(([k, v]) => [k, typeof v === "number" ? num(v, 6) : Array.isArray(v) ? v.map((x) => num(x, 4)).join(", ") : String(v)]);
+    return Object.entries(r).map(([k, v]) => [t(k), typeof v === "number" ? fmt(v, ".6g") : Array.isArray(v) ? v.map((x) => fmt(x, ".4g")).join("; ") : t(v)]);
   }
 
   // --- the scene's objects as meshes (boxes, cylinders, spheres), one mesh per category -------------------------------
@@ -119,7 +121,7 @@ export function createView(ctx) {
     if (key === gridKey) return;
     gridKey = key;
     if (G.ndim === 2) {  // the wave's plate spans the new window
-      env.scene.setObject({ id: "wave", label: "Волна |ψ|² (сумма по частицам)", kind: "panel", origin: [G.lo[0], G.lo[1], 0],
+      env.scene.setObject({ id: "wave", label: t("Wave |ψ|² (sum over the particles)"), kind: "panel", origin: [G.lo[0], G.lo[1], 0],
                             u: [G.hi[0] - G.lo[0], 0, 0], v: [0, G.hi[1] - G.lo[1], 0], visible: true });
     }
     shownWave = -1; shownVol = -1; shapesKey = ""; drawShapes();
@@ -127,13 +129,13 @@ export function createView(ctx) {
   }
 
   // --- the wave: accumulative pictures, the one shown is the last at or before the time shown --------------------------
-  function lastAt(list, t) {
+  function lastAt(list, tw) {
     let lo = 0, hi = list.length - 1, k = -1;
-    while (lo <= hi) { const m = (lo + hi) >> 1; if (list[m].t <= t + 1e-30) { k = m; lo = m + 1; } else hi = m - 1; }
+    while (lo <= hi) { const m = (lo + hi) >> 1; if (list[m].t <= tw + 1e-30) { k = m; lo = m + 1; } else hi = m - 1; }
     return k;
   }
-  function showWave(t) {
-    const k = lastAt(waves, t);
+  function showWave(tw) {
+    const k = lastAt(waves, tw);
     if (k < 0 || k === shownWave) return;
     shownWave = k;
     const w = waves[k], [nx, ny] = w.shape, I = new Float32Array(nx * ny), Iw = new Float32Array(nx * ny);
@@ -146,16 +148,18 @@ export function createView(ctx) {
     if (G.ndim === 2) env.scene.setPanelImage("wave", nx, ny, I);
     const z = G.ndim === 2 ? 0 : 0.5 * (G.lo[2] + G.hi[2]);
     const meta = { type: "slice", id: 1, s: [w.x[0], w.x[1], nx], tt: [w.y[0], w.y[1], ny], origin: [0, 0, z], u: [1, 0, 0], v: [0, 1, 0],
-                   normal: [0, 0, 1], units: "нм", coord_names: ["x", "y", "z"], depth: false, fixed: true,
-                   label: G.ndim === 2 ? "плоскость опыта" : "срез z = 0",
-                   title: G.ndim === 2 ? "Волна |ψ|² (сумма по частицам, доли пика)" : "Срез z = 0: |ψ|² (сумма по частицам, доли пика)",
-                   route_label: "уравнение Шрёдингера (Паули) на сетке, расщепление оператора", exact: true, approximation: false,
-                   verify: { note: `пик ${num(w.peak, 3)} нм⁻${G.ndim}, в окне ${num(w.total, 4)} вероятности (сумма по частицам)${Pw ? "; фаза — единственной частицы" : ""}` } };
+                   normal: [0, 0, 1], units: t("nm"), coord_names: ["x", "y", "z"], depth: false, fixed: true,
+                   label: G.ndim === 2 ? t("the experiment's plane") : t("slice z = 0"),
+                   title: G.ndim === 2 ? t("Wave |ψ|² (sum over the particles, share of the peak)") : t("Slice z = 0: |ψ|² (sum over the particles, share of the peak)"),
+                   route_label: t("the Schrödinger (Pauli) equation on a grid, operator splitting"), exact: true, approximation: false,
+                   verify: { note: (G.ndim === 2 ? t("peak {peak:.3g} nm⁻², {total:.4g} of the probability in the window (sum over the particles)", { peak: w.peak, total: w.total })
+                                                : t("peak {peak:.3g} nm⁻³, {total:.4g} of the probability in the window (sum over the particles)", { peak: w.peak, total: w.total }))
+                                   + (Pw ? t("; the phase: of the single particle") : "") } };
     env.windows.setSlice(1, meta, { I: Iw, phase: Pw });
     env.windows.setOverlay(1, overlay);
   }
-  function showVolume(t) {
-    const k = lastAt(vols, t);
+  function showVolume(tw) {
+    const k = lastAt(vols, tw);
     if (k < 0 || k === shownVol) return;
     shownVol = k;
     const V = vols[k], data = new Float32Array(V.data.length);
@@ -195,13 +199,13 @@ export function createView(ctx) {
   return {
     center: env.center,
     leftPanels: pg.leftPanels,
-    rightPanels: [panel("Вид", viewBox), ...pg.rightPanels, panel("Слои сцены", env.layersPanel)],
+    rightPanels: [panel(t("View"), viewBox), ...pg.rightPanels, panel(t("Scene layers"), env.layersPanel)],
     help: () => el("div", {},
-      el("h4", {}, "Плейграунд: квантовые частицы"),
-      el("p", {}, "Добавляйте из палитры частицы (волновые пакеты электрона, нейтрона, атомов), барьеры и ямы, стенки со щелями, ловушку, магнитное поле, трубку потока Ааронова–Бома, детекторы, метку пути, среду, плоскости потока — и меняйте их на ходу в инспекторе. Каждая частица — своя волна по уравнению Шрёдингера (Паули для спина); частицы не взаимодействуют."),
-      el("p", {}, "Картина — |ψ|², сумма по частицам (каждая — своя вероятность). Детекторы поглощают вероятность: сколько поглотил каждый — в «Датчиках» и в «сейчас» частицы. «Измерить положение» (действие) сжимает волну к исходу по правилу Борна; крестик — исход."),
-      el("p", {}, "Частицы Бома (параметр частицы) — интерпретация: точки, ведомые током вероятности; вошедшая в детектор точка им зарегистрирована и остановлена (тусклая)."),
-      el("p", {}, "Проверки: норма + поглощённое = 1, энергия замкнутой системы против строгой границы из ошибки шага, поток через плоскости, ошибка шага (компаньон), качество сетки, отражение краёв окна, стоимость шага.")),
+      el("h4", {}, t("Playground: quantum particles")),
+      el("p", {}, t("Add from the palette particles (wave packets of an electron, a neutron, atoms), barriers and wells, walls with slits, a trap, a magnetic field, an Aharonov–Bohm flux tube, detectors, a which-path marker, an environment, flux planes, and change them on the fly in the inspector. Every particle is its own wave by the Schrödinger equation (Pauli for spin); the particles do not interact.")),
+      el("p", {}, t("The picture is |ψ|², the sum over the particles (each its own probability). The detectors absorb probability: how much each absorbed is in “Probes” and in the particle's “now”. “Measure the position” (an action) collapses the wave to the outcome by the Born rule; a cross marks the outcome.")),
+      el("p", {}, t("Bohm particles (a particle's parameter) are an interpretation: points guided by the probability current; a point that enters a detector is registered by it and stopped (dim).")),
+      el("p", {}, t("Checks: norm + absorbed = 1, the energy of a closed system against the bound from the step error, the flux through the planes, the step error (a companion), the grid's quality, the reflection by the window's edges, the cost of a step."))),
     reset() { env.reset(); pg.reset(); H = null; G = null; gridRaw = null; gridKey = ""; volFresh = false; waves = []; vols = []; shownWave = -1; shownVol = -1; shapes = null; shapesKey = ""; marks = []; pts = null; },
     snapshot() { return { env: env.snapshot(), pg: pg.snapshot(), nw: waves.length, nv: vols.length, shapes, marks, grid: gridRaw }; },
     restore(k) {
@@ -224,16 +228,16 @@ export function createView(ctx) {
       else if (meta.type === "wave3d") vols.push({ t: meta.t, dims: meta.dims, data: blobs.data });
       else if (meta.type === "shapes") { shapes = meta.items; drawShapes(); }
     },
-    render(frame, t, blobs) {
+    render(frame, tNow, blobs) {
       if (!H || !frame) return;
       const k0 = shownWave;
-      showWave(t);  // a new picture redraws the window with its overlay
-      if (G.ndim === 3) showVolume(t);
+      showWave(tNow);  // a new picture redraws the window with its overlay
+      if (G.ndim === 3) showVolume(tNow);
       const pos = blobs.pos || new Float32Array(0), rgb = blobs.rgb || new Float32Array(0), rad = blobs.rad || new Float32Array(0);
       pts = { pos, rgb };
-      env.scene.setSpheres("bohm", pos, rad, rgb, { label: "Частицы Бома (интерпретация)" });
+      env.scene.setSpheres("bohm", pos, rad, rgb, { label: t("Bohm particles (interpretation)") });
       if (shownWave === k0) env.windows.redraw();  // the same picture: the overlay's points moved
-      pg.render(frame, t);
+      pg.render(frame, tNow);
       env.scene.requestRender();
     },
   };

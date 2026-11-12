@@ -50,21 +50,24 @@ import mpmath
 import numpy as np
 
 from lfphys.core.optics import interfaces
+from lfphys.i18n import T
 
 U = 2.0 ** -53  # unit round-off of binary64
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Тонкие плёнки: замкнутые формулы (Эйри, слой λ/4, брэгговское зеркало, туннелирование света)",
-    "statement": "Сумма многократных отражений в одном слое (комплексные коэффициенты Френеля); формула Эйри "
-                 "T = T_max/(1 + F sin²(Δ/2)); R четвертьволнового слоя и стопки (AB)^N на подложке; нарушенное полное "
-                 "отражение через зазор; глубина затухающей волны; поглощение как джоулево тепло по полю |E|². "
-                 "Независимый путь к числам метода матриц переноса.",
-    "validity": "однородные изотропные линейные среды, плоские границы, плоская волна (уравнения Максвелла точно); "
-                "формула Эйри в интенсивностях — для плёнки без потерь и без полного отражения на её границах",
-    "basis": ["Born & Wolf, Principles of Optics, §1.5–1.6 (стратифицированные среды), §7.6 (многолучевая "
-              "интерференция, формулы Эйри)",
-              "Macleod, Thin-Film Optical Filters (четвертьволновые слои и стопки)"],
+    "title": T("Thin films: closed forms (Airy, the λ/4 layer, the Bragg mirror, tunnelling of light)"),
+    "statement": T("The sum of multiple reflections in one layer (complex Fresnel coefficients); the Airy formula T = "
+                   "T_max/(1 + F sin²(Δ/2)); R of a quarter-wave layer and of a stack (AB)^N on a substrate; "
+                   "frustrated total reflection across a gap; the penetration depth of the evanescent wave; absorption "
+                   "as Joule heat from the field |E|². An independent route to the numbers of the transfer-matrix "
+                   "method."),
+    "validity": T("homogeneous isotropic linear media, flat interfaces, a plane wave (Maxwell's equations exactly); "
+                  "the Airy formula in intensities holds for a lossless film without total reflection at its "
+                  "interfaces"),
+    "basis": [T("Born & Wolf, Principles of Optics, §1.5–1.6 (stratified media), §7.6 (multiple-beam interference, "
+                "the Airy formulae)"),
+              T("Macleod, Thin-Film Optical Filters (quarter-wave layers and stacks)")],
     "conflicts": [],
 }
 

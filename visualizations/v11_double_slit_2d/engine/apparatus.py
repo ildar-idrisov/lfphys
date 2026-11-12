@@ -21,6 +21,8 @@ import math
 import numpy as np
 
 from lfphys.core.quantum import schrodinger_nd as S
+from lfphys.i18n import T
+from lfviz.errors import Refusal
 
 K0 = 2 * math.pi       # the packet's mean wavenumber (lambda = 1)
 V0_SPEED = K0          # its speed, hbar k0 / m
@@ -48,9 +50,9 @@ class Geometry:
         self.n_slits = int(slits)
         self.centers = [-0.5 * self.d, 0.5 * self.d] if self.n_slits == 2 else [0.0]
         if self.a >= self.d and self.n_slits == 2:
-            raise ValueError("щели перекрываются: ширина щели должна быть меньше расстояния между ними")
+            raise Refusal(T("the slits overlap: the slit width must be smaller than the distance between them"))
         if self.L <= self.w:
-            raise ValueError("экран должен стоять за пластиной")
+            raise Refusal(T("the screen must stand behind the plate"))
         # the screen: wide enough for the single-slit envelope to its 3rd zero (or 45 degrees), at least the
         # illuminated width
         th = math.asin(min(0.999, 3.0 / self.a)) if self.a > 3.0 else math.radians(45.0)
@@ -165,8 +167,9 @@ class MarkCalibration:
         if theta <= 0:
             return 0.0
         if theta > self.rotation[-1]:
-            raise ValueError(f"поворот метки на {math.degrees(theta):.0f}° в этом канале недостижим (не больше "
-                             f"{math.degrees(self.rotation[-1]):.0f}°: дальше одна из компонент не проходит щель)")
+            raise Refusal(T("a turn of the mark by {a:.0f}° cannot be reached in this channel (at most {m:.0f}°: beyond "
+                            "it one of the components does not pass the slit)", a=math.degrees(theta),
+                            m=math.degrees(self.rotation[-1])))
         return float(np.interp(theta, self.rotation, self.b))
 
 

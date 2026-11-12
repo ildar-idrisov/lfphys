@@ -23,11 +23,13 @@ from __future__ import annotations
 import math
 
 import numpy as np
+from lfviz.errors import Refusal
 from lfviz.params import Param, Schema
 from lfviz.sim import Simulation as BaseSimulation
 
 from lfphys.core.constants import AU, C, DAY, GM_SUN, R_SUN
 from lfphys.core.gravity import kerr, orbit_stream, orbits
+from lfphys.i18n import T, text_of
 from lfphys.theories.approx import ppn
 
 from .engine.body import GRTrack, NewtonTrack
@@ -49,72 +51,92 @@ APSIS_PHASE = 1e-14
 APSIS_PHASE_NEWTON = 2e-13  # Newton: the apsis direction ~ (integration error ~1e-12 relative)/eccentricity
 ARCSEC = math.pi / 180.0 / 3600.0
 
-LAWS = [("GR", "ОТО (Шварцшильд)"), ("newton", "Ньютон (приближение)")]
+LAWS = [("GR", T("GR (Schwarzschild)")), ("newton", T("Newton (approximation)"))]
 LIVE_INIT = ("r0", "speed", "angle")
+G_LAWS, G_BODY, G_LAUNCH, G_VIEW = T("Laws"), T("Central body"), T("Launch of the body"), T("Display")
 
 
 def _p(*a, **k):
     return Param(*a, **k)
 
 
+def _join(items, sep="; "):
+    """Several texts as one (a nested T: each part stays translatable)."""
+    items = [x for x in items if x]
+    if not items:
+        return None
+    out = items[0]
+    for x in items[1:]:
+        out = T("{a}; {b}", a=out, b=x) if sep == "; " else T("{a}, {b}", a=out, b=x)
+    return out
+
+
 SCHEMA = Schema([
-    _p("gravity", "Закон тяготения", "select", "GR", group="Законы", options=LAWS, standard="GR",
-       help="ОТО — общепринятая. Ньютоново тяготение — приближение слабого поля и малых скоростей; мир с ним "
-            "помечается как модифицированная физика."),
-    _p("mass_msun", "Масса центрального тела, M☉", "float", 10.0, group="Центральное тело", min=1.0, max=1e9,
-       log=True, help="Длина GM/c² (единица M) и время GM/c³ — от этой массы; GM☉ — номинальное значение МАС 2015 B3."),
-    _p("radius_km", "Радиус тела, км (0 — чёрная дыра)", "float", 0.0, group="Центральное тело", min=0.0, max=1e8,
-       help="В ОТО радиус должен быть больше 2M (иначе это чёрная дыра — задайте 0). Внешнее поле любого "
-            "сферического тела — решение Шварцшильда (теорема Биркгофа)."),
-    _p("r0", "Начальный радиус r₀, M (GM/c²)", "float", 20.0, group="Запуск тела", min=2.1, max=1e8, log=True,
-       live=True, help="Радиус старта в единицах M = GM/c². Изменение применяется сразу: тело запускается заново "
-                       "в текущий момент мира с текущего направления на центр."),
-    _p("speed", "Скорость, доля круговой", "float", 1.2, group="Запуск тела", min=0.0, max=1.6, live=True,
-       help="Скорость, измеренная неподвижным (статическим) наблюдателем в точке старта, в долях скорости "
-            "круговой орбиты там: √(M/(r−2M)) в ОТО, √(GM/r) у Ньютона. Ниже 3M круговых орбит нет — там доля "
-            "от скорости света."),
-    _p("angle", "Направление скорости, ° от касательной (+ наружу)", "float", 0.0, group="Запуск тела",
-       min=-90.0, max=90.0, live=True, help="0 — по касательной (против часовой стрелки), +90 — прямо от центра, "
-                                             "−90 — прямо к центру."),
-    _p("ghost", "Призрак другой теории", "bool", False, group="Отображение", live=True,
-       help="Орбита из тех же начальных данных (тот же r₀, та же скорость) по другой теории: в мире ОТО — "
-            "Ньютон, в мире Ньютона — ОТО. Пунктир; на мир не влияет."),
-    _p("time_units", "Время на панелях", "select", "si", group="Отображение", live=True,
-       options=[("si", "секунды (часы, сутки, годы)"), ("geo", "единицы GM/c³")]),
+    _p("gravity", T("Law of gravitation"), "select", "GR", group=G_LAWS, options=LAWS, standard="GR",
+       help=T("GR is the accepted theory. Newtonian gravity is the approximation of a weak field and low speeds; a "
+              "world with it is flagged as modified physics.")),
+    _p("mass_msun", T("Mass of the central body, M☉"), "float", 10.0, group=G_BODY, min=1.0, max=1e9,
+       log=True, help=T("The length GM/c² (the unit M) and the time GM/c³ follow from this mass; GM☉ is the IAU 2015 "
+                        "B3 nominal value.")),
+    _p("radius_km", T("Radius of the body, km (0: a black hole)"), "float", 0.0, group=G_BODY, min=0.0, max=1e8,
+       help=T("In GR the radius must be larger than 2M (otherwise the body is a black hole: set 0). The exterior "
+              "field of any spherical body is the Schwarzschild solution (Birkhoff's theorem).")),
+    _p("r0", T("Initial radius r₀, M (GM/c²)"), "float", 20.0, group=G_LAUNCH, min=2.1, max=1e8, log=True,
+       live=True, help=T("The starting radius in units of M = GM/c². A change applies at once: the body is launched "
+                         "again at the world's current moment, from its current direction to the centre.")),
+    _p("speed", T("Speed, fraction of the circular speed"), "float", 1.2, group=G_LAUNCH, min=0.0, max=1.6,
+       live=True,
+       help=T("The speed measured by a static observer at the starting point, as a fraction of the circular-orbit "
+              "speed there: √(M/(r−2M)) in GR, √(GM/r) for Newton. Below 3M there are no circular orbits: there it "
+              "is a fraction of the speed of light.")),
+    _p("angle", T("Direction of the velocity, ° from the tangent (+ outward)"), "float", 0.0, group=G_LAUNCH,
+       min=-90.0, max=90.0, live=True, help=T("0: along the tangent (anticlockwise), +90: straight away from the "
+                                              "centre, −90: straight towards the centre.")),
+    _p("ghost", T("Ghost of the other theory"), "bool", False, group=G_VIEW, live=True,
+       help=T("The orbit from the same initial data (the same r₀ and speed) under the other theory: Newton in a GR "
+              "world, GR in a Newton world. Dashed; it does not affect the world.")),
+    _p("time_units", T("Time on the panels"), "select", "si", group=G_VIEW, live=True,
+       options=[("si", T("seconds (hours, days, years)")), ("geo", T("units of GM/c³"))]),
 ], presets={
-    "default": {"label": "Чёрная дыра 10 M☉: розетка (перицентр 20M)", "params": {}},
-    "mercury": {"label": "Меркурий у Солнца (слабое поле, 43″/век)",
+    "default": {"label": T("Black hole {m} M☉: a rosette (periapsis {rp}M)", m=10, rp=20), "params": {}},
+    "mercury": {"label": T("Mercury at the Sun (weak field, {adv}″ per century)", adv=43),
                 "params": {"gravity": "GR", "mass_msun": 1.0, "radius_km": R_SUN / 1e3, "r0": MERCURY_R0,
                            "speed": MERCURY_K, "angle": 0.0},
-                "note": "a = 0.38709893 а.е., e = 0.20563069 (NASA NSSDCA, J2000), старт в перигелии; "
-                        "эталон ОТО 42.98″/век — Will 2014, Living Rev. Relativ. 17, 4, ур. (65)"},
-    "neutron_star": {"label": "Нейтронная звезда: сильная прецессия",
+                "note": T("a = {a:.8g} AU, e = {e:.8g} (NASA NSSDCA, J2000), the start at the perihelion; the GR "
+                          "reference {adv}″ per century: Will 2014, Living Rev. Relativ. 17, 4, Eq. (65)",
+                          a=MERCURY_A_AU, e=MERCURY_ECC, adv=MERCURY_GR_ARCSEC_PER_CENTURY)},
+    "neutron_star": {"label": T("Neutron star: strong precession"),
                      "params": {"gravity": "GR", "mass_msun": 1.4, "radius_km": 12.0, "r0": 10.0, "speed": 1.12,
                                 "angle": 0.0},
-                     "note": "иллюстративно: 1.4 M☉, R = 12 км ≈ 5.8M; перицентр 10M"},
-    "bh_isco": {"label": "Чёрная дыра: круговая орбита у ISCO (6.2M)",
+                     "note": T("illustrative: {m} M☉, R = {r} km ≈ {rm}M; periapsis {rp}M", m=1.4, r=12, rm=5.8,
+                               rp=10)},
+    "bh_isco": {"label": T("Black hole: a circular orbit near the ISCO ({r}M)", r=6.2),
                 "params": {"gravity": "GR", "mass_msun": 10.0, "radius_km": 0.0, "r0": 6.2, "speed": 1.0,
                            "angle": 0.0}},
-    "plunge": {"label": "Падение внутрь ISCO (5.5M, скорость −0.5 %)",
+    "plunge": {"label": T("Plunge inside the ISCO ({r}M, speed −{dv} %)", r=5.5, dv=0.5),
                "params": {"gravity": "GR", "mass_msun": 10.0, "radius_km": 0.0, "r0": 5.5, "speed": 0.995,
                           "angle": 0.0}},
-    "radial": {"label": "Радиальное падение с покоя с 20M (циклоида)",
+    "radial": {"label": T("Radial fall from rest at {r}M (cycloid)", r=20),
                "params": {"gravity": "GR", "mass_msun": 10.0, "radius_km": 0.0, "r0": 20.0, "speed": 0.0,
                           "angle": 0.0}},
-    "newton_ellipse": {"label": "Ньютон: замкнутый эллипс (призрак — ОТО)",
+    "newton_ellipse": {"label": T("Newton: a closed ellipse (ghost: GR)"),
                        "params": {"gravity": "newton", "mass_msun": 10.0, "radius_km": 0.0, "r0": 20.0,
                                   "speed": 1.2, "angle": 0.0, "ghost": True}},
 })
 
-KIND_RU = {"bound": "связанная (эллипс с прецессией)", "circular": "круговая", "plunge": "падение на центр",
-           "escape": "уход на бесконечность", "radial_fall": "радиальная: падение", "radial_escape": "радиальная: уход"}
-KIND_RU_NEWTON = {**KIND_RU, "bound": "связанная (эллипс Кеплера)"}
+KIND_TEXT = {"bound": T("bound (an ellipse with precession)"), "circular": T("circular"),
+             "plunge": T("a plunge into the centre"), "escape": T("escape to infinity"),
+             "radial_fall": T("radial: a fall"), "radial_escape": T("radial: escape")}
+KIND_TEXT_NEWTON = {**KIND_TEXT, "bound": T("bound (a Kepler ellipse)")}
+LAW_SHORT = {"GR": T("GR"), "newton": T("Newton")}
 
 
 def _kind_text(kind, law):
-    return (KIND_RU if law == "GR" else KIND_RU_NEWTON).get(kind, kind)
-END_RU = {"horizon": "падение за горизонт", "surface": "удар о поверхность тела", "center": "падение в центр",
-          "escape": "уход на бесконечность"}
+    return (KIND_TEXT if law == "GR" else KIND_TEXT_NEWTON).get(kind, kind)
+
+
+END_TEXT = {"horizon": T("a fall through the horizon"), "surface": T("an impact on the body's surface"),
+            "center": T("a fall into the centre"), "escape": T("escape to infinity")}
 
 
 def _due(n: int) -> bool:
@@ -128,19 +150,22 @@ def _same(a, b):
     return a == b
 
 
-def _fmt(v):
+def _val(k, v):
+    """A parameter's value as the change log shows it: yes/no, a select by its option's label, a number as a
+    number (formatted by the viewer's language)."""
     if isinstance(v, bool):
-        return "да" if v else "нет"
-    if isinstance(v, float):
-        return f"{v:.6g}"
-    return str(v)
+        return T("yes") if v else T("no")
+    p = SCHEMA.by_id[k]
+    if p.type == "select":
+        return dict((o[0], o[1]) for o in p.options).get(v, v)
+    return v
 
 
-def _angle_text(rad: float) -> str:
+def _angle_text(rad: float):
     a = abs(rad)
     if a < math.radians(1.0):
-        return f"{rad / ARCSEC:.6g}″"
-    return f"{math.degrees(rad):.6g}°"
+        return T("{v:.6g}″", v=rad / ARCSEC)
+    return T("{v:.6g}°", v=math.degrees(rad))
 
 
 class Simulation(BaseSimulation):
@@ -157,8 +182,9 @@ class Simulation(BaseSimulation):
         self.T_s = self.M_m / C     # seconds per GM/c^3
         self.R = p["radius_km"] * 1e3 / self.M_m  # body radius in M; 0 = black hole (GR) / point mass (Newton)
         if self.law == "GR" and 0.0 < self.R <= 2.0:
-            raise ValueError(f"радиус {p['radius_km']:.6g} км не больше 2M = {2 * self.M_m / 1e3:.6g} км: такое тело "
-                             "— чёрная дыра (задайте радиус 0)")
+            raise Refusal(T("radius {r:.6g} km is not larger than 2M = {rs:.6g} km: such a body is a black hole",
+                            r=p["radius_km"], rs=2 * self.M_m / 1e3),
+                          hint=T("set the radius to 0 (a black hole) or larger than {rs:.6g} km", rs=2 * self.M_m / 1e3))
         # special radii of the Schwarzschild geometry (the Kerr closed forms at zero spin)
         self.special = {"horizon": kerr.horizons(0.0)[0], "photon": kerr.photon_orbit(0.0),
                         "mb": kerr.marginally_bound(0.0), "isco": kerr.isco(0.0)}
@@ -167,7 +193,7 @@ class Simulation(BaseSimulation):
         self.track = self.ghost = None
         self.t_launch = 0.0
         init = self._launch_data(p, 0.0)
-        self._start_segment(init, "запуск тела", launch=True, ghost_on=bool(p["ghost"]))
+        self._start_segment(init, T("launch of the body"), launch=True, ghost_on=bool(p["ghost"]))
         dyn = self._period_estimate(self.track) or self.track.dyn
         self.default_speed = float(min(max(dyn * self.T_s / 8.0, self.speed_range[0]), self.speed_range[1]))
 
@@ -195,13 +221,15 @@ class Simulation(BaseSimulation):
     def _launch_data(self, p, phi0):
         r0 = float(p["r0"])
         if self.R > 0 and r0 <= self.R:
-            raise ValueError(f"r₀ = {r0:.6g}M внутри тела (радиус {self.R:.6g}M)")
+            raise Refusal(T("r₀ = {r0:.6g}M is inside the body (radius {R:.6g}M)", r0=r0, R=self.R),
+                          hint=T("set r₀ larger than {R:.6g}M", R=self.R))
         if self.law == "GR" and r0 <= 2.0:
-            raise ValueError("r₀ внутри горизонта")
+            raise Refusal(T("r₀ is inside the horizon"), hint=T("set r₀ larger than 2M"))
         k, alpha = float(p["speed"]), math.radians(float(p["angle"]))
         v = k * self._v_ref(r0, self.law)
         if self.law == "GR" and v >= 1.0:
-            raise ValueError(f"локальная скорость {v:.6g} c не меньше скорости света")
+            raise Refusal(T("the local speed {v:.6g} c is not below the speed of light", v=v),
+                          hint=T("lower the speed"))
         v_r, v_phi = v * math.sin(alpha), v * math.cos(alpha)
         if abs(v_phi) <= 1e-12 * v:
             v_phi = 0.0  # radial launch (cos 90 deg is not exactly zero in floating point)
@@ -213,9 +241,9 @@ class Simulation(BaseSimulation):
         args = (init["r0"], init["phi0"], init["v_r"], init["v_phi"])
         if law == "GR":
             if math.hypot(init["v_r"], init["v_phi"]) >= 1.0:
-                raise ValueError("для ОТО локальная скорость должна быть меньше c")
+                raise Refusal(T("in GR the local speed must be below c"))
             if init["r0"] <= 2.0:
-                raise ValueError("старт внутри горизонта")
+                raise Refusal(T("the start is inside the horizon"))
             return GRTrack(*args, t0=t0, tau0=tau0, r_stop=r_stop)
         return NewtonTrack(*args, t0=t0, tau0=tau0, r_stop=r_stop)
 
@@ -236,7 +264,7 @@ class Simulation(BaseSimulation):
             try:
                 ghost = self._make_track(self._other(), init, tg, tau0)
             except ValueError as e:
-                ghost_note = f"призрак не построен: {e}"
+                ghost_note = T("the ghost is not built: {why}", why=text_of(e))
         # commit
         self.seg += 1
         if launch:
@@ -256,8 +284,9 @@ class Simulation(BaseSimulation):
             self._msg({"type": "notice", "t": self.t, "text": ghost_note})
         if info["kind"] == "circular" and self.law == "GR" and init["r0"] < self.special["isco"]:
             self._msg({"type": "notice", "t": self.t,
-                       "text": f"Круговая орбита при r₀ = {init['r0']:.6g}M < ISCO = {self.special['isco']:g}M "
-                               "неустойчива: ошибки округления (~10⁻¹⁶) нарастают, и тело уйдёт с неё."})
+                       "text": T("The circular orbit at r₀ = {r0:.6g}M < ISCO = {isco:.6g}M is unstable: rounding "
+                                 "errors (~10⁻¹⁶) grow, and the body will leave it.",
+                                 r0=init["r0"], isco=self.special["isco"])})
         self.advance(self.t)  # what happens at the launch instant itself (e.g. a start at a turning point)
 
     def _orbit_info(self, track, init):
@@ -314,15 +343,15 @@ class Simulation(BaseSimulation):
         return {k: (float(v) if isinstance(v, (np.floating,)) else v) for k, v in i.items()}
 
     def _segment_text(self, reason, init, info):
-        law = "ОТО" if self.law == "GR" else "Ньютон"
-        s = (f"{reason[:1].upper() + reason[1:]}: r = {init['r0']:.6g}M, скорость {init['v']:.6g} c "
-             f"({init['k']:.4g} от круговой), угол {init['alpha']:.4g}°. {law}: орбита — {info['kind_text']}")
+        s = T("{reason:cap}: r = {r:.6g}M, speed {v:.6g} c ({k:.4g} of the circular speed), angle {a:.4g}°. {law}: "
+              "the orbit is {kind}", reason=reason, r=init["r0"], v=init["v"], k=init["k"], a=init["alpha"],
+              law=LAW_SHORT[self.law], kind=info["kind_text"])
         if info.get("r_peri") and (info["kind"] == "bound" or (info["kind"] == "escape" and (info.get("moving") or 0) <= 0)):
-            s += f", перицентр {info['r_peri']:.6g}M"  # (an outward escape never passes the periapsis behind it)
+            s = T("{a}, periapsis {r:.6g}M", a=s, r=info["r_peri"])  # (an outward escape never passes the periapsis behind it)
         if info.get("r_apo") and info["kind"] in ("bound", "plunge", "radial_fall"):
-            s += f", апоцентр {info['r_apo']:.6g}M"
+            s = T("{a}, apoapsis {r:.6g}M", a=s, r=info["r_apo"])
         if info.get("adv_exact"):
-            s += "; смещение перицентра за оборот (точная формула) " + _angle_text(info["adv_exact"])
+            s = T("{a}; periapsis advance per orbit (exact formula) {adv}", a=s, adv=_angle_text(info["adv_exact"]))
         return s
 
     def _period_estimate(self, track, init=None):
@@ -343,18 +372,19 @@ class Simulation(BaseSimulation):
     def set_live(self, values):
         new, errors = SCHEMA.coerce_live(self.params, values)
         if errors:
-            raise ValueError("; ".join(errors))
+            raise Refusal(_join(errors))
         changed = [k for k in SCHEMA.live_ids() if not _same(new[k], self.params[k])]
         if not changed:
-            return "без изменений"
-        desc = "; ".join(f"{SCHEMA.by_id[k].label}: {_fmt(self.params[k])} → {_fmt(new[k])}" for k in changed)
+            return T("no change")
+        desc = _join([T("{label}: {old} → {new}", label=SCHEMA.by_id[k].label, old=_val(k, self.params[k]),
+                        new=_val(k, new[k])) for k in changed])
         if any(k in LIVE_INIT for k in changed):
             init = self._launch_data(new, self._phi_now())
             ghost_on = bool(new["ghost"])
             old = self.params
             self.params = new  # _start_segment reads only init and ghost_on; restored if it raises
             try:
-                self._start_segment(init, "новые начальные данные (" + desc + ")", launch=True, ghost_on=ghost_on)
+                self._start_segment(init, T("new initial data ({what})", what=desc), launch=True, ghost_on=ghost_on)
             except ValueError:
                 self.params = old
                 raise
@@ -365,7 +395,7 @@ class Simulation(BaseSimulation):
                 try:  # the other theory from this segment's initial data, from the segment's start
                     self.ghost = self._make_track(self._other(), st, self.seg_t0 / self.T_s, self.seg_tau0)
                 except ValueError as e:
-                    raise ValueError(f"призрак не построен: {e}")
+                    raise Refusal(T("the ghost is not built: {why}", why=text_of(e))) from e
                 self._msg({"type": "ghost", "t": self.t, "seg": self.seg, "info": self._ghost_info(self.ghost)})
                 # its past up to now (a computation about the other theory), in slices: a late switch must not block
                 # the worker (review V4-16); what is not computed now follows in the next steps of the world
@@ -383,36 +413,38 @@ class Simulation(BaseSimulation):
     # --- actions ------------------------------------------------------------------------------------------------
     def _actions(self):
         return [
-            {"name": "boost", "label": "Толчок", "button": "толкнуть",
-             "help": "Мгновенное изменение скорости вдоль движения (в системе неподвижного наблюдателя в этой "
-                     "точке): доля текущей скорости, минус — торможение. Часы тела идут дальше.",
-             "args": [{"id": "dv", "label": "Δv, доля скорости", "type": "float", "default": 0.05, "min": -1.0,
-                       "max": 1.0}]},
-            {"name": "relaunch", "label": "Новый запуск тела",
-             "help": "Тело запускается заново из начальных данных панели «Запуск тела» (r₀, скорость, угол) в "
-                     "текущий момент, с текущего направления на центр; часы тела — с нуля.", "args": []},
+            {"name": "boost", "label": T("Push"), "button": T("push"),
+             "help": T("An instantaneous change of the speed along the motion (in the frame of the static observer "
+                       "at this point): a fraction of the current speed, negative to brake. The body's clock goes on."),
+             "args": [{"id": "dv", "label": T("Δv, fraction of the speed"), "type": "float", "default": 0.05,
+                       "min": -1.0, "max": 1.0}]},
+            {"name": "relaunch", "label": T("New launch of the body"),
+             "help": T("The body is launched again from the initial data of the panel “Launch of the body” (r₀, "
+                       "speed, angle) at the current moment, from its current direction to the centre; the body's "
+                       "clock starts from zero."), "args": []},
         ]
 
     def action(self, name, args):
         tg = self.t / self.T_s
         if name == "relaunch":
             init = self._launch_data(self.params, self._phi_now())
-            self._start_segment(init, "новый запуск тела", launch=True, ghost_on=bool(self.params["ghost"]))
-            return "тело запущено заново"
+            self._start_segment(init, T("a new launch of the body"), launch=True, ghost_on=bool(self.params["ghost"]))
+            return T("the body is launched again")
         if name == "boost":
             dv = float(args.get("dv", 0.05))
             if not -1.0 <= dv <= 1.0:
-                raise ValueError("Δv — доля скорости от −1 до 1")
+                raise Refusal(T("Δv is a fraction of the speed from −1 to 1"))
             if self.track.ended(tg):
-                raise ValueError("тела на орбите нет (" + END_RU.get(self.track.end_event["kind"], "") + ")")
+                raise Refusal(T("the body is no longer on its orbit ({end})",
+                                end=END_TEXT.get(self.track.end_event["kind"], "")))
             st = self.track.state(tg, exact=True)
             vr, vp = st["v_r"], st["v_phi"]
             if vr is None:
-                raise ValueError("состояние тела в этот момент не найдено")
+                raise Refusal(T("the body's state at this moment was not found"))
             v = math.hypot(vr, vp)
             if v == 0.0:
-                raise ValueError("тело покоится относительно неподвижного наблюдателя: направление движения "
-                                 "не определено")
+                raise Refusal(T("the body is at rest relative to the static observer: the direction of motion is "
+                                "undefined"))
             f = 1.0 + dv
             vr, vp = vr * f, vp * f
             if abs(vp) <= 1e-12 * abs(vr):
@@ -420,16 +452,17 @@ class Simulation(BaseSimulation):
             if abs(vr) <= 1e-12 * abs(vp):
                 vr = 0.0  # the dense-output state of a circular orbit has v_r ~ 1e-17: rounding (review V4-1)
             if self.law == "GR" and math.hypot(vr, vp) >= 1.0:
-                raise ValueError(f"после толчка скорость {math.hypot(vr, vp):.6g} c — не меньше c")
+                raise Refusal(T("after the push the speed would be {v:.6g} c, not below c", v=math.hypot(vr, vp)),
+                              hint=T("take a smaller Δv"))
             r = st["r"]
             vref = self._v_ref(r, self.law)
             init = {"r0": r, "phi0": st["phi"], "v_r": vr, "v_phi": vp, "v": math.hypot(vr, vp),
                     "k": math.hypot(vr, vp) / vref, "alpha": math.degrees(math.atan2(vr, abs(vp))) if vp or vr else 0.0,
                     "how": "boost"}
-            self._start_segment(init, f"толчок Δv = {dv:+.4g} скорости", launch=False,
+            self._start_segment(init, T("a push Δv = {dv:+.4g} of the speed", dv=dv), launch=False,
                                 ghost_on=bool(self.params["ghost"]))
-            return f"толчок: скорость {v:.6g} c → {math.hypot(vr, vp):.6g} c на r = {r:.6g}M"
-        raise ValueError(f"неизвестное действие {name!r}")
+            return T("push: speed {v0:.6g} c → {v1:.6g} c at r = {r:.6g}M", v0=v, v1=math.hypot(vr, vp), r=r)
+        raise Refusal(T("unknown action {name}", name=str(name)))
 
     # --- messages and checks --------------------------------------------------------------------------------------
     def _msg(self, meta, blobs=None):
@@ -454,8 +487,7 @@ class Simulation(BaseSimulation):
         self._msg(d)
 
     def _group(self):
-        law = "ОТО" if self.law == "GR" else "Ньютон"
-        return f"Отрезок {self.seg} ({law}, {self.info['kind_text']})"
+        return T("Segment {seg:d} ({law}, {kind})", seg=self.seg, law=LAW_SHORT[self.law], kind=self.info["kind_text"])
 
     # --- time ---------------------------------------------------------------------------------------------------
     def max_step(self):
@@ -480,19 +512,20 @@ class Simulation(BaseSimulation):
             gout, gevs = self.ghost.take(tg, budget=budget)
             if not self.ghost.caught_up and "ghost_lag" not in self.S["notes"]:
                 self.S["notes"].add("ghost_lag")
-                self._msg({"type": "notice", "t": self.t, "text": "Призрак досчитывается от начала отрезка по частям, "
-                           "пока мир идёт; до этого его след короче."})
+                self._msg({"type": "notice", "t": self.t,
+                           "text": T("The ghost is being computed from the start of the segment in parts while the "
+                                     "world runs; until then its trace is shorter.")})
             if gout is not None:
                 self._trail("gtrail", gout, rate=False)
             for e in gevs:
-                if e["kind"] in END_RU:
+                if e["kind"] in END_TEXT:
                     key = (e["kind"], round(e["t"], 6))
                     if key in self.S["ghost_ends"]:
                         continue  # the ghost was rebuilt after a toggle: its end is not reported twice (V4-14)
                     self.S["ghost_ends"].add(key)
-                    law = "ОТО" if self.ghost.theory == "GR" else "Ньютон"
                     self._msg({"type": "event", "t": e["t"] * self.T_s, "kind": "ghost",
-                               "text": f"Призрак ({law}): {END_RU[e['kind']]} на r = {e['r']:.6g}M"})
+                               "text": T("Ghost ({law}): {end} at r = {r:.6g}M", law=LAW_SHORT[self.ghost.theory],
+                                         end=END_TEXT[e["kind"]], r=e["r"])})
                 elif e["kind"] == "peri":
                     self._msg({"type": "gapsis", "t": e["t"] * self.T_s, "seg": self.seg,
                                "x": e["x"], "y": e["y"], "r": e["r"]})
@@ -525,9 +558,10 @@ class Simulation(BaseSimulation):
                        "r": e["r"], "phi": e["phi"], "adv": adv, "shift": shift,
                        "dt": (lst[-1]["t"] - lst[-2]["t"]) * self.T_s if n >= 2 else None})
             if k == "peri" and (n <= 3 or n % 100 == 0):
-                txt = f"Перицентр №{n}: r = {e['r']:.8g}M, φ = {math.degrees(e['phi']) % 360:.6g}°"
+                txt = T("Periapsis no. {k:d}: r = {r:.8g}M, φ = {phi:.6g}°", k=n, r=e["r"],
+                        phi=math.degrees(e["phi"]) % 360)
                 if adv is not None:
-                    txt += "; смещение за оборот " + _angle_text(adv)
+                    txt = T("{a}; advance per orbit {adv}", a=txt, adv=_angle_text(adv))
                 self._msg({"type": "event", "t": te, "kind": "periapsis", "text": txt})
             if k == "peri" and n >= 2 and _due(n):
                 self._checks_advance()
@@ -538,26 +572,29 @@ class Simulation(BaseSimulation):
             if self._mercury() and S["peri"] and S["apo"] and "merc" not in S["notes"]:
                 S["notes"].add("merc")
                 rp, ra = S["peri"][0]["r"], S["apo"][0]["r"]
-                self._check("merc_a", "Большая полуось (r_п + r_а)/2 по событиям орбиты ↔ Меркурий",
-                            0.5 * (rp + ra) * self.M_m / AU, MERCURY_A_AU, "а.е.", tol=1e-6,
-                            note="измерено: первые перицентр и апоцентр этого запуска; эталон — NASA NSSDCA Mercury "
-                                 "Fact Sheet (J2000); отличие O(M/r) ~ 3·10⁻⁸ — вклад ОТО в начальные данные")
-                self._check("merc_e", "Эксцентриситет (r_а − r_п)/(r_а + r_п) по событиям орбиты ↔ Меркурий",
+                self._check("merc_a", T("Semi-major axis (r_p + r_a)/2 from the orbit's events ↔ Mercury"),
+                            0.5 * (rp + ra) * self.M_m / AU, MERCURY_A_AU, T("AU"), tol=1e-6,
+                            note=T("measured: the first periapsis and apoapsis of this run; reference: NASA NSSDCA "
+                                   "Mercury Fact Sheet (J2000); the difference O(M/r) ~ 3·10⁻⁸ is GR's contribution "
+                                   "to the initial data"))
+                self._check("merc_e", T("Eccentricity (r_a − r_p)/(r_a + r_p) from the orbit's events ↔ Mercury"),
                             (ra - rp) / (ra + rp), MERCURY_ECC, "", tol=1e-6,
-                            note="измерено: первые перицентр и апоцентр этого запуска; эталон — NASA NSSDCA (J2000)")
+                            note=T("measured: the first periapsis and apoapsis of this run; reference: NASA NSSDCA "
+                                   "(J2000)"))
         elif k == "lap":
             S["laps"].append(e)
             if self.info["kind"] == "circular" and _due(len(S["laps"])):
                 self._checks_circular()
-        elif k in END_RU:
+        elif k in END_TEXT:
             v = math.hypot(e.get("v_r") or 0.0, e.get("v_phi") or 0.0)
             tau = e["tau"] * self.T_s  # the body's clock since its launch
-            txt = f"{END_RU[k][:1].upper() + END_RU[k][1:]}: r = {e['r']:.8g}M, собственное время тела τ = {tau:.6g} с"
+            txt = T("{end:cap}: r = {r:.8g}M, the body's proper time τ = {tau:.6g} s", end=END_TEXT[k], r=e["r"],
+                    tau=tau)
             if k == "horizon":
-                txt += (" (удалённый наблюдатель видит, как тело лишь асимптотически приближается к r = 2M; "
-                        "здесь расчёт остановлен при r − 2M = 2·10⁻⁶ M)")
+                txt = T("{a} (a distant observer sees the body only approach r = 2M asymptotically; here the "
+                        "computation stops at r − 2M = 2·10⁻⁶ M)", a=txt)
             if k == "surface":
-                txt += f", скорость удара {v:.6g} c (неподвижный наблюдатель у поверхности)"
+                txt = T("{a}, impact speed {v:.6g} c (a static observer at the surface)", a=txt, v=v)
             self._msg({"type": "event", "t": te, "kind": k, "text": txt})
             self._checks_end(e)
             self._check_outcome(k)
@@ -586,62 +623,70 @@ class Simulation(BaseSimulation):
                 return
             unit, sc = self._adv_unit(ref)
             tol = self._apsis_tol(ref)
-            self._check("adv", "Смещение перицентра за оборот: измерено по орбите ↔ точный эллиптический интеграл",
+            self._check("adv", T("Periapsis advance per orbit: measured on the orbit ↔ the exact elliptic integral"),
                         mean / sc, ref / sc, unit, tol=tol,
-                        note=f"угол между последовательными перицентрами (нули du/dφ на выходе интегратора) минус "
-                             f"360°, среднее по {orbits_n} обор.; эталон — lfphys.core.gravity.orbits."
-                             "periapsis_advance (4K(m)/√(2(u₃−u₁)) − 2π) от e² − 1 без потери точности")
+                        note=T("the angle between successive periapses (zeros of du/dφ in the integrator's output) "
+                               "minus 360°, the mean over the orbits observed ({turns:d}); reference: "
+                               "lfphys.core.gravity.orbits.periapsis_advance (4K(m)/√(2(u₃−u₁)) − 2π) from e² − 1 "
+                               "without loss of precision", turns=orbits_n))
             el = info["elements"]
             mp = 1.0 / el["p"]
             ecc = el["ecc"]
             c2 = (18.0 + ecc * ecc) / 4.0 * mp
             c3 = 5.0 / 12.0 * (54.0 + 9.0 * ecc * ecc) * mp * mp
             if mp <= 0.02:
-                self._check("ppn", "То же ↔ 6πM/p·[1 + (18 + ε²)/4·M/p] (слабое поле: PPN и следующий порядок)",
+                self._check("ppn", T("The same ↔ 6πM/p·[1 + (18 + ε²)/4·M/p] (weak field: PPN and the next order)"),
                             mean / sc, info["adv_series2"] / sc, unit, tol=1.5 * c3 + tol,
-                            note=f"M/p = {mp:.3g}; первый член 6πM/p = {info['adv_ppn'] / sc:.10g}{unit} — "
-                                 "lfphys.theories.approx.ppn (γ = β = 1); поправка второго порядка "
-                                 f"{c2:.3g} отн. и третий член (5/12)(54 + 9ε²)(M/p)² = {c3:.3g} — "
-                                 "lfphys.core.gravity.orbits.advance_series, сверено с точным интегралом "
-                                 "(lfphys/tests/test_relativity_gravity.py); допуск 1.5× третьего члена + численный")
+                            note=T("M/p = {mp:.3g}; the first term 6πM/p = {first:.10g}{unit}: "
+                                   "lfphys.theories.approx.ppn (γ = β = 1); the second-order correction {c2:.3g} "
+                                   "relative and the third term (5/12)(54 + 9ε²)(M/p)² = {c3:.3g}: "
+                                   "lfphys.core.gravity.orbits.advance_series, verified against the exact integral "
+                                   "(lfphys/tests/test_relativity_gravity.py); tolerance 1.5× the third term + the "
+                                   "numerical one", mp=mp, first=info["adv_ppn"] / sc, unit=unit, c2=c2, c3=c3))
             else:
                 ratio = mean / info["adv_ppn"]
-                self._check("ppn", f"6πM/p (PPN, первый порядок): здесь M/p = {mp:.3g} — вне области применимости",
+                self._check("ppn", T("6πM/p (PPN, first order): here M/p = {mp:.3g}, outside its domain of validity",
+                                     mp=mp),
                             info["adv_ppn"] / sc, None, unit,
-                            note=f"измеренное смещение в {ratio:.4g} раза больше: разложение по M/p в сильном поле "
-                                 "не работает (поправка следующего порядка ≈ " + f"{c2:.3g})")
+                            note=T("the measured advance is {ratio:.4g} times larger: the expansion in M/p does not "
+                                   "work in a strong field (the next-order correction ≈ {c2:.3g})", ratio=ratio, c2=c2))
             cent = mean * CENTURY_S / period / ARCSEC
             if mp > 0.02:
                 pass  # per century only means something in a weak field
             elif self._mercury():
-                self._check("century", "Смещение перигелия Меркурия за юлианское столетие (измерено)", cent,
-                            MERCURY_GR_ARCSEC_PER_CENTURY, "″/век", tol=2e-4,
-                            note="измерено: смещение за оборот × (36525 сут / радиальный период запуска); эталон "
-                                 "42.98″/век — Will 2014, Living Rev. Relativ. 17, 4, ур. (65), γ = β = 1, без J2 "
-                                 "Солнца (+0.03″); допуск — точность записи эталона (0.01″)")
+                self._check("century", T("Mercury's perihelion advance per Julian century (measured)"), cent,
+                            MERCURY_GR_ARCSEC_PER_CENTURY, T("″/century"), tol=2e-4,
+                            note=T("measured: the advance per orbit × ({days} days / the run's radial period); "
+                                   "reference {ref}″ per century: Will 2014, Living Rev. Relativ. 17, 4, Eq. (65), "
+                                   "γ = β = 1, without the Sun's J2 (+{j2}″); tolerance: the precision of the reference "
+                                   "as quoted ({prec}″)", days=36525, ref=MERCURY_GR_ARCSEC_PER_CENTURY, j2=0.03,
+                                   prec=0.01))
             else:
-                self._check("century", "Смещение перицентра за юлианское столетие (измерено)", cent, None, "″/век",
-                            note="смещение за оборот × (36525 сут / радиальный период)")
+                self._check("century", T("Periapsis advance per Julian century (measured)"), cent, None,
+                            T("″/century"), note=T("the advance per orbit × ({days} days / the radial period)",
+                                                   days=36525))
             ref_t = info.get("period_t_ref")
-            self._check("period", "Радиальный период (t), измерен ↔ квадратура 2∫e dr/((1 − 2M/r)√R)", period, ref_t,
-                        "с", tol=1e-9 + 2.0 * APSIS_PHASE / spread,
-                        note="время между перицентрами; эталон без дифференциальных уравнений — "
-                             "lfphys.core.gravity.orbits.radial_period (гладкая χ-квадратура по точкам поворота)")
+            self._check("period", T("Radial period (t), measured ↔ the quadrature 2∫e dr/((1 − 2M/r)√R)"), period,
+                        ref_t, T("s"), tol=1e-9 + 2.0 * APSIS_PHASE / spread,
+                        note=T("the time between periapses; a reference without differential equations: "
+                               "lfphys.core.gravity.orbits.radial_period (a smooth χ quadrature over the turning "
+                               "points)"))
             if self.S["second"] is None:
                 self._second_scheme_bound()
         else:
             ref_p = info["period_ref"]
             tol_a = 1e-9 + APSIS_PHASE_NEWTON / spread
-            self._check("adv", "Смещение перицентра за оборот (Ньютон) ↔ 0: эллипс замкнут", mean / ARCSEC, 0.0,
-                        "″", tol=tol_a / ARCSEC, ok=abs(mean) <= tol_a,
-                        note=f"угол между перицентрами (нули r·v) минус 360°, среднее по {orbits_n} обор.; "
-                             f"допуск {tol_a:.2g} рад (точность нахождения перицентров)")
+            self._check("adv", T("Periapsis advance per orbit (Newton) ↔ 0: the ellipse is closed"), mean / ARCSEC,
+                        0.0, "″", tol=tol_a / ARCSEC, ok=abs(mean) <= tol_a,
+                        note=T("the angle between periapses (zeros of r·v) minus 360°, the mean over the orbits "
+                               "observed ({turns:d}); tolerance {tol:.2g} rad (the precision of locating the "
+                               "periapses)", turns=orbits_n, tol=tol_a))
             if ref_p:
                 dE = self.track.drift["E"]
-                self._check("period", "Период (время между перицентрами) ↔ закон Кеплера 2π√(a³/GM)", period, ref_p,
-                            "с", tol=1e-8 + 2.0 * dE + 2.0 * APSIS_PHASE_NEWTON / spread,
-                            note="a = −GM/(2E) из начальных данных; допуск 10⁻⁸ + 2× измеренного дрейфа энергии "
-                                 f"({dE:.2g}: период интегрированной орбиты меняется на 1.5 δE/E)")
+                self._check("period", T("Period (the time between periapses) ↔ Kepler's law 2π√(a³/GM)"), period,
+                            ref_p, T("s"), tol=1e-8 + 2.0 * dE + 2.0 * APSIS_PHASE_NEWTON / spread,
+                            note=T("a = −GM/(2E) from the initial data; tolerance 10⁻⁸ + 2× the measured energy drift "
+                                   "({dE:.2g}: the period of the integrated orbit changes by 1.5 δE/E)", dE=dE))
             self._checks_newton_conservation()
 
     def _checks_turning(self, e, which):
@@ -650,22 +695,26 @@ class Simulation(BaseSimulation):
             return
         el = info["elements"]
         ref = el["r_peri"] if which == "peri" else el["r_apo"]
-        lab = "Перицентр" if which == "peri" else "Апоцентр"
+        lab = (T("Periapsis: r at the event du/dφ = 0 on the orbit ↔ the root of f(u) (a turning point)")
+               if which == "peri" else
+               T("Apoapsis: r at the event du/dφ = 0 on the orbit ↔ the root of f(u) (a turning point)"))
         # the reference is computed from e^2 - 1 itself (review V4-7), its roots at 30 digits; what remains is the
         # rounding of the cubic's coefficients, amplified where two turning points come together (near the ISCO)
         cond = (info.get("u_cond") or {}).get(which) or 1.0
         sens = (info.get("u_sens") or {}).get(which) or 0.0
         drift = abs(e["em1_state"] - info["em1"]) / abs(info["em1"])
         tol = 1e-11 + 4.0 * 2.2e-16 * cond + 2.0 * sens * drift
-        self._check("r_" + which, f"{lab}: r в событии du/dφ = 0 по орбите ↔ корень f(u) (точка поворота)",
-                    e["r"], ref, "M", tol=tol,
-                    note="эталон — lfphys.core.gravity.orbits.elements от e² − 1 (без потери точности), корни кубики "
-                         "с 30 знаками; допуск 10⁻¹¹ + 4ε·κ + 2·s·δ: κ = Σ|членов f|/(|f′(u)|·u) = "
-                         f"{cond:.3g} (обусловленность корня), δ = {drift:.2g} — измеренный дрейф e² − 1 в этом "
-                         f"событии (строка ниже), s = {sens:.3g} — насколько он сдвигает точку поворота")
-        self._check("em1", "e² − 1 по состоянию тела в точке поворота ↔ начальное (дрейф интегрирования)",
+        self._check("r_" + which, lab, e["r"], ref, "M", tol=tol,
+                    note=T("reference: lfphys.core.gravity.orbits.elements from e² − 1 (without loss of precision), "
+                           "the cubic's roots to 30 digits; tolerance 10⁻¹¹ + 4ε·κ + 2·s·δ: κ = Σ|terms of "
+                           "f|/(|f′(u)|·u) = {cond:.3g} (the root's conditioning), δ = {drift:.2g} the measured drift "
+                           "of e² − 1 at this event (the row below), s = {sens:.3g} how much it moves the turning "
+                           "point", cond=cond, drift=drift, sens=sens))
+        self._check("em1", T("e² − 1 from the body's state at the turning point ↔ the initial one (the integration "
+                             "drift)"),
                     e["em1_state"], info["em1"], "", tol=1e-9,
-                    note="первый интеграл e² − 1 = l²(u'² + u² − 2u³) − 2u по (u, du/dφ) интегратора, u = M/r")
+                    note=T("the first integral e² − 1 = l²(u'² + u² − 2u³) − 2u from the integrator's (u, du/dφ), "
+                           "u = M/r"))
 
     def _second_scheme_bound(self):
         """The same initial data integrated by the independent scheme (geodesic equations in proper time)."""
@@ -680,10 +729,11 @@ class Simulation(BaseSimulation):
         if len(g["peri_phi"]) >= 2:
             sec = abs(g["peri_phi"][1] - g["peri_phi"][0]) - 2 * math.pi
             unit, sc = self._adv_unit(ref)
-            self._check("adv2", "Смещение за первый оборот: вторая схема (уравнения геодезических в τ) ↔ основная",
+            self._check("adv2", T("Advance over the first orbit: the second scheme (geodesic equations in τ) ↔ the "
+                                  "main one"),
                         sec / sc, main / sc, unit, tol=2.0 * self._apsis_tol(ref),
-                        note="lfphys.core.gravity.orbit_stream.geodesic_tau: (t, r, φ) по символам Кристоффеля, "
-                             "e, l и нормировка не навязаны")
+                        note=T("lfphys.core.gravity.orbit_stream.geodesic_tau: (t, r, φ) from the Christoffel symbols; "
+                               "e, l and the normalisation are not imposed"))
         self._drift_checks(g)
 
     def _drift_checks(self, g):
@@ -694,15 +744,18 @@ class Simulation(BaseSimulation):
         floor = g["binding_floor"] or 0.0
         tol = max(1e-9, 100.0 * floor)
         eb, nb = g["e_drift_binding"], g["norm_drift_binding"]
-        self._check("drift_e", "Вторая схема: дрейф e² относительно энергии связи |e² − 1|", eb, None, "",
-                    tol=tol, ok=eb is not None and eb <= tol,
-                    note=f"максимум |e² − e₀²|/|e₀² − 1| по орбите, |e² − 1| = {abs(g['em1']):.3g}; предел точности "
-                         f"переменных ~{floor:.1g}; допуск {tol:.2g}")
-        self._check("drift_l", "Вторая схема: дрейф l = r² dφ/dτ", g["l_drift"], None, "", tol=1e-9,
+        self._check("drift_e", T("Second scheme: the drift of e² relative to the binding energy |e² − 1|"), eb, None,
+                    "", tol=tol, ok=eb is not None and eb <= tol,
+                    note=T("the maximum of |e² − e₀²|/|e₀² − 1| over the orbit, |e² − 1| = {em1:.3g}; the precision "
+                           "limit of the variables ~{floor:.1g}; tolerance {tol:.2g}", em1=abs(g["em1"]), floor=floor,
+                           tol=tol))
+        self._check("drift_l", T("Second scheme: the drift of l = r² dφ/dτ"), g["l_drift"], None, "", tol=1e-9,
                     ok=g["l_drift"] <= 1e-9,
-                    note="относительный, максимум по орбите; в основной схеме (Бине) l — параметр уравнения")
-        self._check("drift_n", "Вторая схема: нормировка |u·u + 1| относительно |e² − 1|", nb, None, "", tol=tol,
-                    ok=nb is not None and nb <= tol, note=f"максимум по орбите; допуск {tol:.2g}")
+                    note=T("relative, the maximum over the orbit; in the main scheme (Binet) l is a parameter of the "
+                           "equation"))
+        self._check("drift_n", T("Second scheme: the normalisation |u·u + 1| relative to |e² − 1|"), nb, None, "",
+                    tol=tol, ok=nb is not None and nb <= tol,
+                    note=T("the maximum over the orbit; tolerance {tol:.2g}", tol=tol))
 
     def _checks_circular(self):
         """Circle checks. «Circular» is granted up to a relative spread s = (r_apo - r_peri)/r_peri of 1e-6; the mean
@@ -720,21 +773,26 @@ class Simulation(BaseSimulation):
             if "left" not in self.S["notes"]:
                 self.S["notes"].add("left")
                 self._msg({"type": "notice", "t": self.t,
-                           "text": f"Тело уходит с круговой орбиты (отклонение r до {self.S['maxdev']:.2g} r₀ после "
-                                   f"{n} обор.; разброс точек поворота {s:.2g}): неустойчивость — проверки круга "
-                                   "дальше не ведутся."})
+                           "text": T("The body is leaving its circular orbit (r deviates by up to {dev:.2g} r₀, orbits "
+                                     "completed: {turns:d}; the spread of the turning points {s:.2g}): an instability, "
+                                     "the circle's checks stop here.", dev=self.S["maxdev"], turns=n, s=s)})
             return
         dt = e["t"] * self.T_s - self.seg_t0
         dtau = (e["tau"] - self.seg_tau0) * self.T_s
-        note_s = f"; орбита круговая с разбросом точек поворота s = {s:.2g}, допуск включает 3s"
+
+        def note_s(base):
+            return T("{a}; the orbit is circular with a spread of the turning points s = {s:.2g}, the tolerance "
+                     "includes 3s", a=base, s=s)
+
         if self.law == "GR":
             tol = 1e-10 + 3.0 * s
-            self._check("rate", "dτ/dt на круговой орбите: Δτ/Δt по орбите ↔ √(1 − 3M/r)", dtau / dt,
+            self._check("rate", T("dτ/dt on a circular orbit: Δτ/Δt on the orbit ↔ √(1 − 3M/r)"), dtau / dt,
                         self.info["rate_circ"], "", tol=tol,
-                        note=f"собственное время тела за {n} обор. к координатному; эталон — замкнутая формула"
-                             + note_s)
-            self._check("period", "Период обращения (t) ↔ 2π√(r³/GM) (точно для круговой геодезической)", dt / n,
-                        self.info["period_ref"], "с", tol=tol, note="время одного оборота по φ, среднее" + note_s)
+                        note=note_s(T("the body's proper time over the orbits observed ({turns:d}) to the coordinate "
+                                      "time; reference: the closed form", turns=n)))
+            self._check("period", T("Orbital period (t) ↔ 2π√(r³/GM) (exact for a circular geodesic)"), dt / n,
+                        self.info["period_ref"], T("s"), tol=tol,
+                        note=note_s(T("the time of one turn in φ, the mean")))
             if self.S["second"] is None:
                 g = orbit_stream.geodesic_tau(r0, self.init["v_r"], self.init["v_phi"], dtau / self.T_s,
                                               r_stop=self.R if self.R > 0 else 2.0)
@@ -742,13 +800,14 @@ class Simulation(BaseSimulation):
                 dr = float(np.max(np.abs(g["r"] - r0)) / r0)
                 stable = r0 > self.special["isco"]
                 lim = (1e-9 if stable else 1e-6) + 1.5 * s
-                self._check("circ2", "Вторая схема: отклонение r от r₀ за оборот", dr, None, "", tol=lim, ok=dr < lim,
-                            note="уравнения геодезических в τ из тех же начальных данных" + note_s)
+                self._check("circ2", T("Second scheme: the departure of r from r₀ over an orbit"), dr, None, "",
+                            tol=lim, ok=dr < lim, note=note_s(T("geodesic equations in τ from the same initial data")))
                 self._drift_checks(g)
         else:
             tol = 1e-8 + 3.0 * s
-            self._check("period", "Период обращения ↔ 2π√(r³/GM) (Кеплер)", dt / n, 2 * math.pi * r0**1.5 * self.T_s,
-                        "с", tol=tol, note="время одного оборота по φ, среднее" + note_s)
+            self._check("period", T("Orbital period ↔ 2π√(r³/GM) (Kepler)"), dt / n,
+                        2 * math.pi * r0**1.5 * self.T_s, T("s"), tol=tol,
+                        note=note_s(T("the time of one turn in φ, the mean")))
             self._checks_newton_conservation()
 
     def _checks_newton_conservation(self):
@@ -758,12 +817,12 @@ class Simulation(BaseSimulation):
         d = self.track.drift
         E0 = abs(self.track.E0)
         tol_E = 1e-9 * d["scale"] / E0
-        self._check("energy", "Энергия E = v²/2 − GM/r: дрейф по орбите", d["E"], None, "", tol=tol_E,
+        self._check("energy", T("Energy E = v²/2 − GM/r: the drift over the orbit"), d["E"], None, "", tol=tol_E,
                     ok=d["E"] <= tol_E,
-                    note=f"относительно |E|, максимум по всем точкам интегрирования; допуск 10⁻⁹ наибольшего члена "
-                         f"v²/2 + GM/r на орбите (в {d['scale'] / E0:.3g} раз больше |E|)")
-        self._check("angmom", "Момент h = x·v_y − y·v_x: дрейф по орбите", d["h"], None, "", tol=1e-9,
-                    ok=d["h"] <= 1e-9, note="относительный, максимум; допуск 10⁻⁹")
+                    note=T("relative to |E|, the maximum over all integration points; tolerance 10⁻⁹ of the largest "
+                           "term v²/2 + GM/r on the orbit ({ratio:.3g} times |E|)", ratio=d["scale"] / E0))
+        self._check("angmom", T("Angular momentum h = x·v_y − y·v_x: the drift over the orbit"), d["h"], None, "",
+                    tol=1e-9, ok=d["h"] <= 1e-9, note=T("relative, the maximum; tolerance 10⁻⁹"))
 
     def _checks_end(self, e):
         k = e["kind"]
@@ -779,32 +838,34 @@ class Simulation(BaseSimulation):
                 rs = e["r"]
                 eta = math.acos(2.0 * rs / r0 - 1.0)
                 ref = math.sqrt(r0**3 / 8.0) * (eta + math.sin(eta)) * self.T_s
-                self._check("fall_tau", f"Собственное время падения с покоя до r = {rs:.10g}M ↔ циклоида", tau, ref,
-                            "с", tol=1e-9, note="τ = √(r₀³/8M)(η + sin η), r = r₀(1 + cos η)/2 — точное решение "
-                                                "радиального падения")
+                self._check("fall_tau", T("Proper time of the fall from rest to r = {r:.10g}M ↔ the cycloid", r=rs),
+                            tau, ref, T("s"), tol=1e-9,
+                            note=T("τ = √(r₀³/8M)(η + sin η), r = r₀(1 + cos η)/2: the exact solution of the radial "
+                                   "fall"))
             else:
                 ref = None
                 nr = self.info.get("nearest_root")
                 on_double = bool(self.info.get("double_root")) or (
                     bool(self.info.get("start_turning")) and nr is not None and nr < 1e-6)
-                note = ("эталон без дифференциальных уравнений: R = e² − (1 − 2M/r)(1 + l²/r²), "
-                        "lfphys.core.gravity.orbit_stream.plunge_proper_time")
+                note = T("a reference without differential equations: R = e² − (1 − 2M/r)(1 + l²/r²), "
+                         "lfphys.core.gravity.orbit_stream.plunge_proper_time")
                 if on_double:
-                    note = ("эталона нет: старт на (почти) двойном корне R(r) — на неустойчивой круговой орбите; "
-                            "время до падения задаётся ростом ошибок округления, интеграл ∫dr/√R расходится")
+                    note = T("no reference: the start is at an (almost) double root of R(r), on an unstable circular "
+                             "orbit; the time to the fall is set by the growth of rounding errors, and the integral "
+                             "∫dr/√R diverges")
                 else:
                     try:
                         ref = orbit_stream.plunge_proper_time(self.track.em1, self.track.l, init["r0"], init["v_r"],
                                                               e["r"], self.info.get("r_apo")) * self.T_s
                     except ValueError:
                         pass
-                self._check("fall_tau", f"Собственное время до r = {e['r']:.10g}M ↔ квадратура ∫dr/√R(r)", tau, ref,
-                            "с", tol=1e-9, note=note)
+                self._check("fall_tau", T("Proper time to r = {r:.10g}M ↔ the quadrature ∫dr/√R(r)", r=e["r"]), tau,
+                            ref, T("s"), tol=1e-9, note=note)
             if k == "surface":
                 v = math.hypot(e["v_r"], e["v_phi"])
                 ref = orbit_stream.local_speed_from_e(self.R, self.track.e)
-                self._check("impact", "Скорость удара (неподвижный наблюдатель у поверхности) ↔ √(1 − (1 − 2M/R)/e²)",
-                            v, ref, "c", tol=1e-9, note="по состоянию интегратора в момент r = R")
+                self._check("impact", T("Impact speed (a static observer at the surface) ↔ √(1 − (1 − 2M/R)/e²)"),
+                            v, ref, "c", tol=1e-9, note=T("from the integrator's state at r = R"))
 
     def _check_outcome(self, k):
         """The end the run observed against the kind predicted from the turning points at the start of the segment
@@ -817,14 +878,14 @@ class Simulation(BaseSimulation):
         if unstable_circle:
             expect = fall | {"escape"}
         ok = expect is not None and k in expect
-        pred = {"plunge": "падение", "radial_fall": "падение", "escape": "уход", "radial_escape": "уход",
-                "bound": "связанная — конца нет", "circular": "круговая"}.get(kind, kind)
-        note = "предсказание — по точкам поворота в начале отрезка (lfphys.core.gravity.orbit_stream)"
+        pred = {"plunge": T("a fall"), "radial_fall": T("a fall"), "escape": T("escape"), "radial_escape": T("escape"),
+                "bound": T("bound: no end"), "circular": T("circular")}.get(kind, kind)
+        note = T("the prediction is from the turning points at the start of the segment (lfphys.core.gravity.orbit_stream)")
         if unstable_circle or (kind == "plunge" and self.law == "GR" and self.special["photon"] < r0 < self.special["isco"]):
-            note += (f"; r₀ = {r0:.4g}M < ISCO = {self.special['isco']:g}M (lfphys.core.gravity.kerr.isco(0)): "
-                     "вне ISCO такое же возмущение даёт связанную орбиту (тест v04)")
-        self._check("outcome", f"Исход орбиты: предсказан «{pred}», наблюдён «{END_RU.get(k, k)}»", None, None, "",
-                    ok=ok, note=note)
+            note = T("{a}; r₀ = {r0:.4g}M < ISCO = {isco:.6g}M (lfphys.core.gravity.kerr.isco(0)): outside the ISCO the "
+                     "same perturbation gives a bound orbit (test v04)", a=note, r0=r0, isco=self.special["isco"])
+        self._check("outcome", T("Outcome of the orbit: predicted “{pred}”, observed “{seen}”", pred=pred,
+                                 seen=END_TEXT.get(k, k)), None, None, "", ok=ok, note=note)
 
     def _mercury(self):
         """The Mercury reference applies only to its own initial data (preset values, unchanged)."""
@@ -867,18 +928,17 @@ class Simulation(BaseSimulation):
         return None if te is None else te * self.T_s
 
     def header(self):
-        law = "ОТО" if self.law == "GR" else "Ньютон"
-        body = "чёрная дыра" if self.R == 0 and self.law == "GR" else (
-            "точечная масса" if self.R == 0 else f"тело радиусом {self.params['radius_km']:.6g} км")
+        body = T("a black hole") if self.R == 0 and self.law == "GR" else (
+            T("a point mass") if self.R == 0 else T("a body of radius {r:.6g} km", r=self.params["radius_km"]))
         return {
-            "title": f"Орбиты и часы: {law}, {self.msun:.6g} M☉, {body}",
-            "text": ("Пробное тело в экваториальной плоскости центрального тела. Орбита считается в этом запуске из "
-                     "начальных данных: в ОТО — точная геодезическая Шварцшильда (уравнение орбиты вместе с "
-                     "координатным временем t и собственным временем τ тела), в мире Ньютона — ньютонова орбита. "
-                     "Запуск показывает орбиту по мере того, как время мира t (часы далёкого неподвижного "
-                     "наблюдателя) доходит до неё; перицентры, их смещение, часы тела — измерения запуска. "
-                     "Замкнутые формулы ОТО — только эталоны в «Проверках». Изменение r₀, скорости или угла "
-                     "запускает тело заново в текущий момент; «Толчок» меняет скорость на ходу."),
+            "title": T("Orbits and clocks: {law}, {m:.6g} M☉, {body}", law=LAW_SHORT[self.law], m=self.msun, body=body),
+            "text": T("A test body in the equatorial plane of the central body. The orbit is computed in this run from "
+                      "the initial data: in GR the exact Schwarzschild geodesic (the orbit equation together with the "
+                      "coordinate time t and the body's proper time τ), in a Newton world the Newtonian orbit. The run "
+                      "shows the orbit as the world's time t (the clock of a distant static observer) reaches it; the "
+                      "periapses, their advance and the body's clock are the run's measurements. GR's closed forms "
+                      "are only references in “Checks”. A change of r₀, the speed or the angle launches the body "
+                      "again at the current moment; “Push” changes the speed on the fly."),
             "modifications": SCHEMA.modifications(self.params),
             "law": self.law,
             "units": {"M_m": self.M_m, "T_s": self.T_s, "au_m": AU, "gm": self.gm},
@@ -890,12 +950,12 @@ class Simulation(BaseSimulation):
 
 VIZ = {
     "id": "v04_orbits",
-    "title": "Орбиты и часы: ОТО и Ньютон",
-    "summary": ("Тело на орбите вокруг звезды или чёрной дыры: прецессия перицентра (Меркурий 43″/век, нейтронная "
-                "звезда, ISCO), падение за горизонт, собственное время тела против времени далёкого наблюдателя; "
-                "сравнение с ньютоновой орбитой из тех же начальных данных."),
-    "purpose": ("Увидеть, как из уравнений движения ОТО получаются прецессия, неустойчивость орбит у ISCO и замедление "
-                "часов, и чем от этого отличается Ньютон; законы можно намеренно заменить ньютоновыми."),
+    "title": T("Orbits and clocks: general relativity and Newton"),
+    "summary": T("A body orbiting a star or a black hole: the periapsis precession (Mercury {adv}″ per century, a "
+                 "neutron star, the ISCO), the fall through the horizon, the body's proper time against the time of a "
+                 "distant observer; a comparison with the Newtonian orbit from the same initial data.", adv=43),
+    "purpose": T("To see how GR's equations of motion give the precession, the instability of orbits near the ISCO and "
+                 "the slowing of clocks, and how Newton differs; the laws can be deliberately replaced by Newton's."),
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,

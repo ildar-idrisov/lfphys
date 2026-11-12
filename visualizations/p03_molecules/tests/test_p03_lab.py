@@ -9,6 +9,7 @@ lfphys/tests/test_md_deform.py."""
 
 import math
 import queue
+import re
 import sys
 import time
 from pathlib import Path
@@ -19,12 +20,36 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
+from lfphys.i18n import english, is_t, msgids, text_of  # noqa: E402
 from lfviz import registry  # noqa: E402
+from lfviz.i18n import catalogue  # noqa: E402
 from lfviz.sim import Runner  # noqa: E402
 from p03_molecules.viz import KELVIN, NM, U  # noqa: E402
 
 V = "p03_molecules"
-CYR = set("абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ")
+ENGINE = ("jammed", "overlap: an inserted", "Traceback", "bond would", "piston needs", "it has no wall", "outside the walls on axis")
+RU = catalogue("ru")
+
+
+class _Text(str):
+    """An English rendering that remembers the text it renders (``translated`` checks the text itself)."""
+
+
+def en(x):
+    """A text as the player shows it in English (numbers in Python's format)."""
+    s = _Text(english(x))
+    s.raw = x
+    return s
+
+
+def translated(x):
+    """The owner's text: a translatable text whose every part has a Russian translation, with none of the engine's
+    English sentences (review UX-ui U13)."""
+    x = getattr(x, "raw", x)
+    ids = msgids(x) if is_t(x) else set()
+    return bool(ids) and all(i in RU or not re.search(r"[A-Za-z]", re.sub(r"\{\w+(?::[^{}]*)?\}", "", i)) for i in ids) \
+        and not any(w in english(x) for w in ENGINE)
+
 
 
 def run(h, ps, n=10):
@@ -33,10 +58,6 @@ def run(h, ps, n=10):
         h.run_to(t0 + ps * 1e-12 * k / n)
         h.runner._frame(0.0)
 
-
-def russian(text):
-    return any(c in CYR for c in text) and not any(w in text for w in ("periodic", "overlap", "jammed", "particle",
-                                                                        "axis ", "Traceback", "bond would"))
 
 
 def added(h, typ):
@@ -95,9 +116,9 @@ def test_live_box_affine_books_its_work_and_shows_the_new_box():
     b = md.energy_balance()
     assert b["W_box"] == pytest.approx(md.energy() - E0, rel=1e-9)
     assert abs(b["residual"] - res0) < 1e-9
-    ev = h.of("event")[-1]["text"]
-    assert "работа над системой" in ev and "−P·ΔV" in ev and "температура" in ev and russian(ev)
-    assert "скачком" in ev and "не квазистатичен" in ev
+    ev = en(h.of("event")[-1]["text"])
+    assert "the work on the system" in ev and "−P·ΔV" in ev and "temperature" in ev and translated(ev)
+    assert "by a jump" in ev and "not quasi-static" in ev
     box = h.of("box")[-1]["box"]
     assert box[1][0] == pytest.approx(10.5) and box[1][1] == pytest.approx(12.0)
     assert h.of("live")[-1]["values"]["Lx"] == 10.5
@@ -118,30 +139,30 @@ def test_live_box_refusals_leave_the_world_bit_for_bit():
     st = h.sim.md.state_dict()
     Lx = h.sim.live["Lx"]
     h.set(Lx=Lx * 0.7)
-    e = h.errors()[-1]
-    assert "перекрылись бы" in e and "сейчас можно до" in e and russian(e), e
+    e = en(h.errors()[-1])
+    assert "would overlap" in e and "now it can go to" in e and translated(e), e
     assert same_world(h.sim.md, st) and h.sim.live["Lx"] == Lx and h.of("live")[-1]["values"]["Lx"] == Lx
     h.set(box_mode="wall", Ly=h.sim.live["Ly"] + 1.0)
-    assert "периодическая" in h.errors()[-1] and russian(h.errors()[-1])
+    assert "periodic" in en(h.errors()[-1]) and translated(en(h.errors()[-1]))
     h.set(Lz=3.0)
-    assert "в плоскости нет оси z" in h.errors()[-1]
+    assert "a plane has no axis z" in en(h.errors()[-1])
 
     m = Harness(V, "molecules")
     m.set(box_time_ps=0.0)
     m.set(Lx=5.0 * 1.2)
-    assert "связи молекул" in m.errors()[-1] and "10 %" in m.errors()[-1] and russian(m.errors()[-1])
+    assert "the molecules' bonds" in en(m.errors()[-1]) and "10 %" in en(m.errors()[-1]) and translated(en(m.errors()[-1]))
     m.set(Lx=5.0 * 1.05)
     assert len(m.errors()) == 1, m.errors()
 
     p = Harness(V, "piston")
     p.set(Ly=17.0)
-    assert "поршень" in p.errors()[-1] and russian(p.errors()[-1])
+    assert "piston" in en(p.errors()[-1]) and translated(en(p.errors()[-1]))
     p.set(box_mode="wall", Ly=17.0)        # the piston's upper stop: allowed
     assert len(p.errors()) == 1, p.errors()
     p.set(Ly=9.0)                          # below the piston's face
-    assert "поршень" in p.errors()[-1]
+    assert "piston" in en(p.errors()[-1])
     p.set(Lx=8.0)                          # the gas is in the whole width: atoms beyond the moved wall
-    assert "остались бы атомы" in p.errors()[-1] and russian(p.errors()[-1])
+    assert "atoms would be left behind" in en(p.errors()[-1]) and translated(en(p.errors()[-1]))
 
 
 def test_live_box_wall_mode_is_a_free_expansion():
@@ -155,7 +176,7 @@ def test_live_box_wall_mode_is_a_free_expansion():
     h.set(box_mode="wall", Lx=20.0)
     assert not h.errors(), h.errors()
     assert h.sim.md.energy() == E0 and h.sim.md.energy_balance()["W_box"] == 0.0
-    assert "работы над системой нет" in h.of("event")[-1]["text"]
+    assert "no work on the system" in en(h.of("event")[-1]["text"])
     run(h, 20.0, 10)
     assert np.max(h.sim.md.positions()[:, 0]) * NM > 12.0
 
@@ -164,8 +185,8 @@ def test_hard_world_box_only_by_a_wall():
     h = Harness(V, None, {"dynamics": "hard", "boundary": "walls"})
     h.cmd("scene", op="add", type="gas", values={"n": 30, "sx": 5.0, "sy": 5.0, "x": 3.0, "y": 3.0})
     h.set(Lx=14.0)
-    e = h.errors()[-1]
-    assert "аффинное" in e and "сдвинуть стенку" in e and russian(e)
+    e = en(h.errors()[-1])
+    assert "affine" in e and "move the upper wall" in e and translated(e)
     h.set(box_mode="wall", Lx=14.0)
     assert len(h.errors()) == 1 and h.sim.md.L[0] * NM == pytest.approx(14.0)
     run(h, 2.0, 4)
@@ -183,15 +204,15 @@ def test_switch_hard_to_soft_and_back_keeps_atoms_and_states_the_jump():
     md = h.sim.md
     k, x, v, t = md.keys.copy(), md.positions() % md.L, md.velocities().copy(), md.t
     assert set(h.sim.palette_state()) >= {"molecule", "piston", "thermostat", "gravity"}
-    assert russian(h.sim.palette_state()["piston"])
+    assert translated(en(h.sim.palette_state()["piston"]))
     h.set(dynamics="forces")
     assert not h.errors(), h.errors()
     md = h.sim.md
     assert not h.sim.hard and type(md).__name__ == "MD"
     assert np.array_equal(md.keys, k) and np.allclose(md.positions(), x, atol=1e-12)
     assert np.array_equal(md.velocities(), v) and md.t == t
-    ev = h.of("event")[-1]["text"]
-    assert "появилась потенциальная энергия" in ev and russian(ev)
+    ev = en(h.of("event")[-1]["text"])
+    assert "potential energy appeared" in ev and translated(ev)
     assert "molecule" not in h.sim.palette_state()
     assert "lfphys.core.md.hard" not in [e["module"] if isinstance(e, dict) and "module" in e else e
                                          for e in h.sim.engine_modules()]
@@ -201,22 +222,22 @@ def test_switch_hard_to_soft_and_back_keeps_atoms_and_states_the_jump():
     h.set(dynamics="hard")
     err = h.errors()
     if err:      # a pair inside contact at this moment: the refusal names the count and the way out
-        assert "пар атомов ближе σ" in err[-1] and "уменьшите плотность" in err[-1] and russian(err[-1])
+        assert "pairs of atoms closer than σ" in en(err[-1]) and "lower the density" in en(err[-1]) and translated(en(err[-1]))
         assert not h.sim.hard
     else:
-        assert h.sim.hard and "потенциальная энергия" in h.of("event")[-1]["text"]
+        assert h.sim.hard and "potential energy" in en(h.of("event")[-1]["text"])
 
 
 def test_switch_to_hard_names_what_blocks_it_and_restores_bit_for_bit():
     h = Harness(V, "molecules")
     st = h.sim.md.state_dict()
     h.set(dynamics="hard")
-    e = h.errors()[-1]
-    assert "молекулы «Молекулы X₂»" in e and russian(e), e
+    e = en(h.errors()[-1])
+    assert "molecules “Molecules X₂”" in e and translated(e), e
     assert same_world(h.sim.md, st) and not h.sim.hard and h.of("live")[-1]["values"]["dynamics"] == "forces"
     p = Harness(V, "melting")
     p.set(dynamics="hard")
-    assert "термостат «Нагрев 120 K»" in p.errors()[-1]
+    assert "the thermostat “Heating to 120 K”" in en(p.errors()[-1])
 
 
 def test_switch_overlap_refusal_counts_pairs():
@@ -225,8 +246,8 @@ def test_switch_overlap_refusal_counts_pairs():
     h.cmd("scene", op="add", type="crystal", values={"density": 0.95, "T": 120.0})
     run(h, 1.0, 4)
     h.set(dynamics="hard")
-    e = h.errors()[-1]
-    assert "пар атомов ближе σ" in e and "ближайшая" in e and russian(e), e
+    e = en(h.errors()[-1])
+    assert "pairs of atoms closer than σ" in e and "the closest" in e and translated(e), e
 
 
 # --- handles: a drag and a throw (P16.2) -------------------------------------------------------------------------------
@@ -241,7 +262,7 @@ def test_palette_declares_handles():
     assert pal["atom"]["handles"]["velocity"] == ["throw_vx", "throw_vy"]
     assert pal["gas"]["handles"]["velocity_max"] == pytest.approx(500.0 * 1e9)
     for t in ("gas", "crystal", "atom", "molecule"):     # every type with a throw shows it in m/s
-        assert pal[t]["handles"]["velocity_display"] == {"unit": "м/с", "factor": pytest.approx(1e-9)}
+        assert pal[t]["handles"]["velocity_display"] == {"unit": "m/s", "factor": pytest.approx(1e-9)}
     assert pal["probe"]["handles"] == {"position": ["x", "y"], "size": "r"}
     assert pal["piston"]["handles"]["position"] == {"param": "position", "axis_param": "axis"}
     assert "handles" not in pal["wall"] and "handles" not in pal["thermostat"]
@@ -277,8 +298,8 @@ def test_drag_moves_a_group_as_a_whole_and_a_throw_gives_its_centre_a_velocity()
     assert np.allclose(c1 - c0, [2.0, -1.0], atol=1e-6)
     h.cmd("scene", op=_op(), id=gid, values={"throw_vx": 300.0e9, "throw_vy": -100.0e9})   # nm/s: 300, −100 m/s
     assert not h.errors(), h.errors()
-    log = [m.get("text", "") for m in h.of("event") if m.get("name") == "edit"][-1]
-    assert "м/с" in log and "нм/с" not in log and "300" in log, log      # logged in m/s (velocity_display)
+    log = english([m.get("text", "") for m in h.of("event") if m.get("name") == "edit"][-1])
+    assert "m/s" in log and "nm/s" not in log and "300" in log, log      # logged in m/s (velocity_display)
     assert h.sim.objects[gid]["values"]["vx"] == pytest.approx(300.0)
     vc = h.sim.md.velocities().mean(axis=0) * U.velocity_m_s
     assert np.allclose(vc, [300.0, -100.0], atol=1e-9)
@@ -297,11 +318,11 @@ def test_a_drag_onto_other_atoms_or_through_a_wall_is_refused():
     st = h.sim.md.state_dict()
     at = frame(h)["at"]
     h.cmd("scene", op=_op(), id=a, values={"x": at[b][0], "y": at[b][1]})
-    e = h.errors()[-1]
-    assert "ближе σ к атомам других объектов" in e and russian(e), e
+    e = en(h.errors()[-1])
+    assert "closer than σ to atoms of other objects" in e and translated(e), e
     h.cmd("scene", op=_op(), id=a, values={"x": -3.0, "y": at[a][1]})
-    e = h.errors()[-1]
-    assert "за стенкой" in e and "центр по x от" in e, e
+    e = en(h.errors()[-1])
+    assert "beyond the wall" in e and "the centre along x from" in e, e
     assert same_world(h.sim.md, st)
 
 
@@ -353,9 +374,9 @@ def test_every_positioned_object_is_in_at_and_every_measurable_in_meas():
     ids = [m["id"] for m in ms]
     assert len(set(ids)) == len(ids)
     for m in ms:
-        assert isinstance(m["id"], str) and isinstance(m["label"], str) and isinstance(m["unit"], str)
+        assert isinstance(m["id"], str) and is_t(m["label"]) and is_t(m["unit"])
         assert m["of"] is None or m["of"] in h.sim.objects
-        assert any(c in CYR for c in m["label"])
+        assert translated(m["label"]) and translated(m["unit"])
     sc = h.of("scene")[-1]
     if "measurables" in sc:
         assert [m["id"] for m in sc["measurables"]] == ids
@@ -403,10 +424,10 @@ def test_scene_carried_from_a_volume_into_a_plane_and_back():
     laws = {**sc["laws"], "dim": "2d", "Lx": 14.0, "Ly": 14.0}
     w = Harness(V, None, {**laws, "scene": {**sc, "carry": True}})
     types = [o["type"] for o in w.sim.objects.values()]
-    notes = [m["text"] for m in w.of("notice")]
+    notes = [en(m["text"]) for m in w.of("notice")]
     assert "molecule" in types and "probe" in types and "wall" not in types, notes
-    if any("перенесена" in t for t in notes):     # the framework's notice names what was not carried and why
-        assert any("в плоскости нет оси z" in t.lower() for t in notes), notes
+    if any("carried into the new world" in t for t in notes):     # the framework's notice names what was not carried and why
+        assert any("a plane has no axis z" in t.lower() for t in notes), notes
     run(w, 0.3, 2)
     assert not w.errors(), w.errors()
     w.cmd("scene", op="export")
@@ -479,8 +500,8 @@ def test_live_box_over_a_time_is_a_ramp_with_its_work_and_an_end_event():
     W0 = h.sim.md.energy_balance()["W_box"]
     h.set(Lx=10.5)
     assert not h.errors(), h.errors()
-    ev = h.of("event")[-1]["text"]
-    assert "аффинно за 10 пс" in ev and "грани ящика движутся" in ev and "тепловая скорость" in ev and russian(ev), ev
+    ev = en(h.of("event")[-1]["text"])
+    assert "affinely in 10 ps" in ev and "the box's faces move" in ev and "thermal speed" in ev and translated(ev), ev
     assert h.of("box")[-1]["box"][1][0] == pytest.approx(12.0)          # the region the change spans
     run(h, 4.0, 4)
     f = frame(h)
@@ -489,8 +510,8 @@ def test_live_box_over_a_time_is_a_ramp_with_its_work_and_an_end_event():
     run(h, 8.0, 4)
     md = h.sim.md
     assert not md.ramp_running() and md.L[0] * NM == pytest.approx(10.5) and h.sim.box[0] * NM == pytest.approx(10.5)
-    end = [m["text"] for m in h.of("event") if "изменение ящика закончено" in m.get("text", "")]
-    assert len(end) == 1 and "работа над системой W" in end[0] and "−∫P dV" in end[0] and "температура" in end[0], end
+    end = [en(m["text"]) for m in h.of("event") if "the change of the box finished" in en(m.get("text", ""))]
+    assert len(end) == 1 and "the work on the system W" in end[0] and "−∫P dV" in end[0] and "temperature" in end[0], end
     r = md.box_ramp()
     assert md.energy_balance()["W_box"] - W0 == pytest.approx(r["W"], rel=1e-9)
     assert h.of("box")[-1]["box"][1][0] == pytest.approx(10.5)
@@ -507,8 +528,8 @@ def test_a_new_size_stops_the_change_running_and_a_too_fast_one_is_refused():
     L_mid = h.sim.md.L[0] * NM
     assert 11.0 < L_mid < 12.0
     h.set(Ly=11.0)                            # a new size while the first runs: it stops where it is, said
-    ev = h.of("event")[-1]["text"]
-    assert "изменение ящика остановлено (задан новый размер)" in ev and russian(ev), ev
+    ev = en(h.of("event")[-1]["text"])
+    assert "the change of the box stopped (a new size was set)" in ev and translated(ev), ev
     r = h.sim.md.box_ramp()     # a new change from where the box is to both live sizes
     assert r["running"] and r["L0"][0] * NM == pytest.approx(L_mid, abs=0.02)
     assert np.allclose(np.array(r["L1"]) * NM, [11.0, 11.0])
@@ -516,10 +537,10 @@ def test_a_new_size_stops_the_change_running_and_a_too_fast_one_is_refused():
     n = len(h.errors())
     h.set(Lx=8.0)
     e = h.errors()[n:]
-    assert e and "слишком быстро" in e[-1] and "не меньше" in e[-1] and russian(e[-1]), e
+    assert e and "too fast" in en(e[-1]) and "at least" in en(e[-1]) and translated(en(e[-1])), e
     h.set(box_time_ps=30.0)
     h.set(Lx=1.5)                              # 300 atoms in 1.5 × 11 nm: beyond close packing at σ
-    assert "плотной упаковки" in h.errors()[-1] and russian(h.errors()[-1]), h.errors()[-1]
+    assert "close packing" in en(h.errors()[-1]) and translated(en(h.errors()[-1])), en(h.errors()[-1])
 
 
 def test_switching_to_hard_spheres_stops_the_change_and_says_so():
@@ -528,11 +549,11 @@ def test_switching_to_hard_spheres_stops_the_change_and_says_so():
     h.set(box_time_ps=50.0, Lx=33.0)
     run(h, 2.0, 2)
     h.set(dynamics="hard")
-    ev = [m["text"] for m in h.of("event")][-1]
+    ev = [en(m["text"]) for m in h.of("event")][-1]
     if h.errors():
-        assert "перекрылись бы" in h.errors()[-1]
+        assert "would overlap" in en(h.errors()[-1])
         return
-    assert "переход к твёрдым шарам" in ev and "динамика: твёрдые" in ev, ev
+    assert "the switch to hard spheres" in ev and "dynamics: hard" in ev, ev
     assert 30.0 < h.sim.md.L[0] * NM < 33.0
 
 
@@ -546,19 +567,19 @@ def test_wall_mode_next_to_a_soft_wall_states_its_work():
     h.set(box_mode="wall", Ly=6.15)
     assert not h.errors(), h.errors()
     W = h.sim.md.energy_balance()["W_box"] - W0
-    ev = h.of("event")[-1]["text"]
-    assert W != 0.0 and "мягкая стенка" in ev and "работа над системой W" in ev and "работы над системой нет" not in ev
-    assert f"{abs(U.to_kJ_mol(W)):.3g}".replace(".", ",")[:4] in ev, ev
+    ev = en(h.of("event")[-1]["text"])
+    assert W != 0.0 and "the soft wall" in ev and "the work on the system W" in ev and "no work on the system" not in ev
+    assert f"{abs(U.to_kJ_mol(W)):.3g}"[:4] in ev, ev
     # the control: specular walls over empty space - no work, said so
     g = Harness(V, None, {"dim": "2d", "Lx": 6.0, "Ly": 6.0, "boundary": "walls"})
     g.cmd("scene", op="add", type="gas", values={"n": 20, "T": 150.0, "x": 3.0, "y": 2.0, "sx": 5.0, "sy": 3.0})
     g.set(box_mode="wall", Ly=6.15)
-    assert "работы над системой нет" in g.of("event")[-1]["text"]
+    assert "no work on the system" in en(g.of("event")[-1]["text"])
 
 
 # --- the bisection respects the bond limit (review LB1-physics P13) -----------------------------------------------
 def test_the_size_named_after_an_overlap_respects_the_bond_limit(monkeypatch):
-    """The bisection behind «сейчас можно до …» (``_box_refusal`` after an overlap) tries every size with the 10 % bond
+    """The bisection behind “now it can go to …” (``_box_refusal`` after an overlap) tries every size with the 10 % bond
     limit of the change itself (review P13), so the size it names is one the bonds allow. The engine checks the bonds
     at the asked size before the overlap, so in p03 an overlap refusal is reached only within the limit; the
     bisection is driven here directly with a 30 % change of a box with molecules: with the limit the named size stays
@@ -578,7 +599,7 @@ def test_the_size_named_after_an_overlap_respects_the_bond_limit(monkeypatch):
     L = L0 * np.array([0.7, 1.0])
     e = h.sim._box_refusal(ValueError("overlap: an inserted particle's potential energy 99 exceeds"), L, "affine")
     import re
-    fit = float(re.search(r"Lx ≈ ([\d,]+) нм", str(e)).group(1).replace(",", "."))
+    fit = float(re.search(r"Lx ≈ ([\d.]+) nm", english(text_of(e))).group(1))
     assert len(seen) == 10 and all(q == pytest.approx(0.10) for q in seen), seen
     assert 1.0 - fit / (L0[0] * NM) <= 0.10 + 1e-3, fit
     seen.clear()
@@ -617,7 +638,7 @@ def test_switch_in_a_walled_box_keeps_the_region_of_the_centres():
     h.set(dynamics="hard")
     assert not h.errors(), h.errors()
     assert h.sim.md.walls_on == "centre" and np.array_equal(h.sim.md.positions(), x0)
-    assert "область центров и плотность не изменились" in h.of("event")[-1]["text"]
+    assert "the centres' region and the density did not change" in en(h.of("event")[-1]["text"])
     h.set(dynamics="forces")
     assert np.array_equal(h.sim.md.positions(), x0) and not h.errors()
     assert Harness(V, None, {"dynamics": "hard", "boundary": "walls"}).sim.md.walls_on == "centre"
@@ -645,8 +666,8 @@ def test_the_largest_throw_is_resolved_by_the_default_step(dim, q):
     vc = h.sim.md.velocities().mean(axis=0)[0] * U.velocity_m_s
     assert vc == pytest.approx(500.0, rel=1e-9)
     h.cmd("scene", op="set", id=gid, values={"vx": 1500.0})
-    e = h.errors()[-1]
-    assert "не разрешает удары" in e and "Шаг по времени" in e and russian(e), e
+    e = en(h.errors()[-1])
+    assert "does not resolve the atoms' collisions" in e and "Time step" in e and translated(e), e
 
 
 # --- the scene carried into a new world with its state (review LB1-framework F5) ------------------------------------
@@ -658,7 +679,7 @@ def _new_world(h, **params):
 def test_a_new_world_of_the_same_space_takes_the_atoms_as_they_are():
     """The reviewer's case: a 3-D argon gas, the boundary periodic → walls (a law that is not live), the same box. The
     atoms keep their places and velocities bit for bit, T and the energy at the same time are the old world's, the
-    random generator continues; the notice says the gas went «с состоянием» and the world's state was taken over.
+    random generator continues; the notice says the gas went “with its state” and the world's state was taken over.
     The control (another space): into a plane the atoms are made again from the parameters, and the notice says why."""
     h = Harness(V, None, {"dim": "3d", "Lx": 12.0, "Ly": 12.0, "Lz": 12.0, "boundary": "periodic"})
     h.cmd("scene", op="add", type="gas", values={"n": 1500, "T": 300.0})
@@ -676,7 +697,7 @@ def test_a_new_world_of_the_same_space_takes_the_atoms_as_they_are():
     assert md.kinetic_energy() == K0 and md.t == pytest.approx(t0 * 1e12 / PS, rel=1e-12)   # the solver at the scene's t
     rows = {r["id"]: r for r in note["carry"]["objects"]}
     assert rows[gid]["how"] == "state" and note["carry"]["world"]["how"] == "state", note["carry"]
-    assert "случайная последовательность" in note["text"] and "продолжена" in note["text"], note["text"]
+    assert "random sequence" in en(note["text"]) and "continues" in en(note["text"]), en(note["text"])
     run(h, 0.3, 2)
     assert not h.errors(), h.errors()
     g = Harness(V, None, {"dim": "3d", "Lx": 12.0, "Ly": 12.0, "Lz": 12.0})
@@ -684,7 +705,7 @@ def test_a_new_world_of_the_same_space_takes_the_atoms_as_they_are():
     run(g, 0.1, 1)
     plane = _new_world(g, dim="2d")
     r = plane["carry"]["objects"][0]
-    assert r["how"] == "restarted" and "другая размерность" in plane["text"], plane["text"]
+    assert r["how"] == "restarted" and "another dimension" in en(plane["text"]), en(plane["text"])
     assert g.sim.md.n == 100 and g.sim.ndim == 2
 
 
@@ -697,15 +718,15 @@ def test_molecules_and_the_piston_carry_their_state():
     x0, v0, nb0 = md.positions().copy(), md.velocities().copy(), len(md.topology()["bonds"])
     note = _new_world(h, boundary="walls")
     md = h.sim.md
-    assert np.array_equal(md.velocities(), v0) and len(md.topology()["bonds"]) == nb0, note["text"]
-    assert note["carry"]["objects"][0]["how"] == "state", note["text"]
+    assert np.array_equal(md.velocities(), v0) and len(md.topology()["bonds"]) == nb0, en(note["text"])
+    assert note["carry"]["objects"][0]["how"] == "state", en(note["text"])
     L = md.L
     d = md.positions() - x0
     d -= L * np.rint(d / L)                       # the same place, or a whole molecule moved in from a face
     same = np.all(d == 0.0, axis=1)
     assert same.mean() > 0.6 and np.max(np.abs(d)) < 2.0, (same.mean(), np.max(np.abs(d)))
     if not same.all():
-        assert "сдвинуты внутрь целиком" in note["text"], note["text"]
+        assert "moved inside as a whole" in en(note["text"]), en(note["text"])
     run(h, 0.2, 2)
     assert not h.errors(), h.errors()
 
@@ -715,9 +736,9 @@ def test_molecules_and_the_piston_carry_their_state():
     X, Vp = pi["X"], pi["V"]
     note = _new_world(p, boundary="slab")
     q = p.sim.md.piston()
-    assert q is not None and q["X"] == X and q["V"] == Vp, (note["text"], q)
-    rows = {r["label"]: r["how"] for r in note["carry"]["objects"]}
-    assert rows["Поршень"] == "state" and rows["Аргон"] == "state", rows
+    assert q is not None and q["X"] == X and q["V"] == Vp, (en(note["text"]), q)
+    rows = {en(r["label"]): r["how"] for r in note["carry"]["objects"]}
+    assert rows["Piston"] == "state" and rows["Argon"] == "state", rows
 
 
 def test_a_smaller_box_starts_the_atoms_again_and_says_why():
@@ -728,5 +749,5 @@ def test_a_smaller_box_starts_the_atoms_again_and_says_why():
     run(h, 0.2, 1)
     note = _new_world(h, Lx=6.0, boundary="slab")
     r = note["carry"]["objects"][0]
-    assert r["how"] == "restarted" and "начаты заново из параметров" in note["text"], note
+    assert r["how"] == "restarted" and "started anew from the parameters" in en(note["text"]), note
     assert np.max(h.sim.md.positions()[:, 0]) * NM <= 6.0

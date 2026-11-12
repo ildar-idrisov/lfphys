@@ -21,24 +21,26 @@ import numpy as np
 
 from ...core.quantum import schrodinger_nd as SND
 from ..approx.paraxial import current, slit_amplitudes
+from lfphys.i18n import T
 
 ABOUT = {
     "layer": "theories", "kind": "interpretation",
-    "title": "Интерпретация де Бройля–Бома: траектории по току вероятности",
-    "statement": "Частица имеет траекторию: dx/dz = Im(Ψ†∂Ψ)/(k|Ψ|²) за щелями (параксиально) или "
-                 "dr/dt = (ħ/m) Im(ψ†∇ψ)/(ψ†ψ) − (q/m)A для волны, зависящей от времени, в 1-D, 2-D и 3-D (для спинора "
-                 "— по Бому–Шиллеру–Томно); начальные положения распределены по |ψ|², поэтому предсказания для "
-                 "положений совпадают с правилом Борна.",
-    "validity": "чистое состояние без декогеренции; при смеси — линии усреднённого тока ансамбля",
+    "title": T("The de Broglie–Bohm interpretation: trajectories along the probability current"),
+    "statement": T("A particle has a trajectory: dx/dz = Im(Ψ†∂Ψ)/(k|Ψ|²) behind slits (paraxial) or dr/dt = (ħ/m) "
+                   "Im(ψ†∇ψ)/(ψ†ψ) − (q/m)A for a time-dependent wave in 1-D, 2-D and 3-D (for a spinor, after "
+                   "Bohm–Schiller–Tiomno); initial positions are distributed by |ψ|², so the predictions for "
+                   "positions agree with the Born rule."),
+    "validity": T("a pure state without decoherence; for a mixture, the lines of the ensemble's mean current"),
     "basis": ["Bohm, Phys. Rev. 85, 166 (1952)", "Kocsis et al., Science 332, 1170 (2011)",
-              "Bohm, Schiller, Tiomno, Nuovo Cimento Suppl. 1, 48 (1955) — уравнение Паули",
-              "Philippidis, Dewdney, Hiley, Nuovo Cimento B 52, 15 (1979) — траектории за двумя щелями"],
-    "conflicts": ["копенгагенская интерпретация: траекторий нет; многомировая: траекторий нет, есть ветви",
-                  "теория относительности (lfphys.core.relativity, core.causality): для запутанных частиц закон "
-                  "ведения нелокален — скорость одной частицы зависит от мгновенного положения другой, нужна "
-                  "выделенная слоистость пространства-времени; лоренц-инвариантных траекторий нет, хотя "
-                  "наблюдаемые предсказания с СТО согласуются (Bell, Speakable and Unspeakable in Quantum "
-                  "Mechanics, 1987; Dürr et al., Proc. R. Soc. A 470, 20130699 (2014))"],
+              T("Bohm, Schiller, Tiomno, Nuovo Cimento Suppl. 1, 48 (1955) — the Pauli equation"),
+              T("Philippidis, Dewdney, Hiley, Nuovo Cimento B 52, 15 (1979) — trajectories behind two slits")],
+    "conflicts": [T("the Copenhagen interpretation: there are no trajectories; the many-worlds one: no trajectories, "
+                    "there are branches"),
+                  T("relativity (lfphys.core.relativity, core.causality): for entangled particles the guidance law "
+                    "is non-local — the velocity of one particle depends on the instantaneous position of the other, "
+                    "a preferred foliation of space-time is needed; there are no Lorentz-invariant trajectories, "
+                    "although the observable predictions agree with special relativity (Bell, Speakable and "
+                    "Unspeakable in Quantum Mechanics, 1987; Dürr et al., Proc. R. Soc. A 470, 20130699 (2014))")],
 }
 
 

@@ -476,12 +476,13 @@ def test_state_round_trip_continues_bit_identically():
         assert fl.forces() == o.forces()
 
 
-def test_refusals_and_the_blow_up_guard():
-    with pytest.raises(ValueError, match="Маха"):
+def test_refusals_and_the_blow_up_guard(ru):
+    with pytest.raises(ValueError, match="Mach number") as e:
         lbm.Flow2D((0.1, 0.1), 1e-3, nu=1e-4, u_max=1.0, mach=0.35)
+    assert ru(e.value.args[0]).startswith("число Маха")
     with pytest.raises(ValueError, match="τ"):
         lbm.Flow2D((0.1, 0.1), 1e-3, nu=1e-9, dt=1e-3)
-    with pytest.raises(ValueError, match="Рейнольдса"):  # closed: 25 accepted, open: 10
+    with pytest.raises(ValueError, match="grid Reynolds number"):  # closed: 25 accepted, open: 10
         lbm.Flow2D((0.1, 0.1), 1e-3, nu=1e-6, u_max=0.02, mach=0.1, sides={"left": lbm.Inlet(0.02),
                                                                            "right": lbm.Outlet()})
     lbm.Flow2D((0.1, 0.1), 1e-3, nu=1e-6, u_max=0.02, mach=0.1)
@@ -491,8 +492,9 @@ def test_refusals_and_the_blow_up_guard():
     U = np.random.default_rng(1).normal(size=(2, 32, 32)) * 0.3  # Ma ~ 1 at tau = 0.501: blows up
     fl.set_flow(velocity=(U[0], U[1]))
     s1 = fl.populations()
-    with pytest.raises(lbm.Unstable, match="восстановлено"):
+    with pytest.raises(lbm.Unstable, match="the state was restored") as e:
         fl.advance(3000)
+    assert "imposed" not in str(e.value) and "состояние восстановлено" in ru(e.value.args[0])
     assert np.array_equal(fl.populations(), s1) and fl.steps == 5 and not np.array_equal(s0, s1)
 
 
@@ -589,7 +591,7 @@ def test_an_inlet_edit_that_keeps_its_velocity_keeps_the_inflow_and_a_new_veloci
     assert fl.flow_rates()["left"] < 1e-3 * q0
 
 
-def test_a_fluid_at_rest_in_a_body_force_stays_at_rest_also_with_an_outlet():
+def test_a_fluid_at_rest_in_a_body_force_stays_at_rest_also_with_an_outlet(ru):
     """Review B7 L6. A body force switched on: the fluid takes the hydrostatic density at once (c_s^2 grad rho = rho0
     g, lattice) and the outlet the hydrostatic part along its side, so the rest state is steady: after 20 s max |u| <
     1e-8 m/s (8.8e-10 measured). Negative control: an outlet at one density along its side (the former rule) drives a
@@ -609,8 +611,9 @@ def test_a_fluid_at_rest_in_a_body_force_stays_at_rest_also_with_an_outlet():
     assert np.nanmax(box(uniform_outlet=True).speed()) > 0.05
     big = lbm.Flow2D((2.2, 0.41), 0.005, nu=1e-3, rho=1.0, u_max=0.45, mach=0.1, device="cpu")
     s0 = big.state_dict()
-    with pytest.raises(ValueError, match="объёмная сила"):
+    with pytest.raises(ValueError, match="body force") as e:
         big.set_gravity((0.0, -9.81))  # g H / c_s^2 = 0.199: deviation 0.099 > 0.045
+    assert ru(e.value.args[0]).startswith("объёмная сила (0, -9.81) м/с²")
     assert big.gravity == (0.0, 0.0) and np.array_equal(big.populations(), s0["f"])
     g_lim = 2 * lbm.RHO_DEV_MAX * lbm.CS2 * big.units.dx**2 / big.units.dt**2 / big.size[1]  # deviation g_lat H / 2 c_s^2
     big.set_gravity((0.0, -0.999 * g_lim))
@@ -619,14 +622,15 @@ def test_a_fluid_at_rest_in_a_body_force_stays_at_rest_also_with_an_outlet():
     assert max(1 - lo, hi - 1) < lbm.MACH_MAX**2 and big.checks()["compressibility"]["ok"]
 
 
-def test_the_outlet_pressure_is_checked_and_named_when_the_flow_fails():
+def test_the_outlet_pressure_is_checked_and_named_when_the_flow_fails(ru):
     """Review B7 L7. An outlet pressure whose lattice density deviates by more than RHO_DEV_MAX (the scale c_s^2 rho
     (dx/dt)^2 = 20.25 Pa here: 10 Pa is a density 1.49) is refused; at the limit the reflected step stays within the
     running check (0.089 measured over 6 s). A blow-up names the imposed outlet pressure."""
     fl = lbm.Flow2D((1.1, 0.2), 0.005, nu=1e-3, rho=1.0, u_max=0.45, mach=0.1, device="cpu")
     for p in (10.0, 1.0):
-        with pytest.raises(ValueError, match="давление выхода"):
+        with pytest.raises(ValueError, match="outlet pressure") as e:
             fl.set_side("right", lbm.Outlet(p))
+        assert "давление выхода (right)" in ru(e.value.args[0])
     p_lim = lbm.RHO_DEV_MAX * lbm.CS2 * fl.units.rho * fl.units.c**2
     fl.set_side("right", lbm.Outlet(0.999 * p_lim))
     dev = 0.0
@@ -638,8 +642,9 @@ def test_the_outlet_pressure_is_checked_and_named_when_the_flow_fails():
     bad = lattice(32, 32, 0.501, sides={"right": lbm.Outlet(0.01)})
     U = np.random.default_rng(1).normal(size=(2, 32, 32)) * 0.3
     bad.set_flow(velocity=(U[0], U[1]))
-    with pytest.raises(lbm.Unstable, match="давление на выходе"):
+    with pytest.raises(lbm.Unstable, match=r"imposed: outlet pressure \(right\)") as e:
         bad.advance(3000)
+    assert "заданы давление на выходе (right)" in ru(e.value.args[0])
 
 
 def test_a_coefficient_length_set_back_to_zero_is_the_default_again():

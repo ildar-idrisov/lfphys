@@ -26,6 +26,7 @@ import numpy as np
 from lfphys.core import data as D
 from lfphys.core import geometry as G
 from lfphys.core.optics import mie, mie_debye as DB, mie_poly as MP
+from lfphys.i18n import T, join
 from lfphys.theories.approx import rainbow as RB
 from lfviz.errors import Refusal
 from lfviz.params import Param, Schema
@@ -63,40 +64,47 @@ def _p(*a, **k):
 
 WATER = {"index": ["water"]}
 CUSTOM = {"index": ["custom"]}
+G_DROPS, G_LIGHT = T("Drops"), T("Light")
 SCHEMA = Schema([
-    _p("radius_um", "Радиус капли ⟨r⟩, мкм", "float", 150.0, group="Капли", min=0.05, max=1000.0, log=True,
-       help="Капли дождя — 0,1–1 мм, тумана — 5–50 мкм, облака — 2–20 мкм. Ближнее поле считается для капель до "
-            "~2,7 мкм (x ≤ 45 на всех длинах волн)"),
-    _p("width", "Разброс размеров σ/⟨r⟩", "float", 0.02, group="Капли", min=0.0, max=0.3,
-       help="Гамма-распределение размеров с этим относительным разбросом; 0 — все капли одного размера"),
-    _p("index", "Вещество капли", "select", "water", group="Капли",
-       options=[("water", "вода: показатель IAPWS R9-97 (с дисперсией)"),
-                ("custom", "заданный показатель n + iκ (без дисперсии)")]),
-    _p("t_c", "Температура воды, °C", "float", 10.0, group="Капли", min=0.0, max=40.0, show_if=WATER),
-    _p("n_re", "n — действительная часть показателя", "float", 1.5, group="Капли", min=0.2, max=10.0, show_if=CUSTOM),
-    _p("n_im", "κ — мнимая часть (поглощение, ≥ 0)", "float", 0.0, group="Капли", min=0.0, max=10.0, show_if=CUSTOM),
-    _p("n_medium", "Показатель среды вокруг", "float", 1.0, group="Капли", min=1.0, max=1.6,
-       help="1 — вакуум; показатель капли берётся относительно среды"),
-    _p("n_lam", "Длин волн белого света (380–760 нм)", "select", 24, group="Расчёт",
+    _p("radius_um", T("Drop radius ⟨r⟩, µm"), "float", 150.0, group=G_DROPS, min=0.05, max=1000.0, log=True,
+       help=T("Rain drops are {r1}–{r2} mm, fog drops {f1}–{f2} µm, cloud drops {c1}–{c2} µm. The near field is "
+              "computed for drops up to ~{rn} µm (x ≤ {xn} at every wavelength)", r1=0.1, r2=1, f1=5, f2=50, c1=2,
+              c2=20, rn=2.7, xn=45)),
+    _p("width", T("Spread of the sizes σ/⟨r⟩"), "float", 0.02, group=G_DROPS, min=0.0, max=0.3,
+       help=T("A gamma distribution of the sizes with this relative spread; 0: all drops of one size")),
+    _p("index", T("Substance of the drop"), "select", "water", group=G_DROPS,
+       options=[("water", T("water: the index of IAPWS R9-97 (with dispersion)")),
+                ("custom", T("a given index n + iκ (without dispersion)"))]),
+    _p("t_c", T("Water temperature, °C"), "float", 10.0, group=G_DROPS, min=0.0, max=40.0, show_if=WATER),
+    _p("n_re", T("n, the real part of the index"), "float", 1.5, group=G_DROPS, min=0.2, max=10.0, show_if=CUSTOM),
+    _p("n_im", T("κ, the imaginary part (absorption, ≥ 0)"), "float", 0.0, group=G_DROPS, min=0.0, max=10.0,
+       show_if=CUSTOM),
+    _p("n_medium", T("Index of the medium around"), "float", 1.0, group=G_DROPS, min=1.0, max=1.6,
+       help=T("1 is vacuum; the drop's index is taken relative to the medium")),
+    _p("n_lam", T("Wavelengths of white light ({lo}–{hi} nm)", lo=380, hi=760), "select", 24, group=T("Computation"),
        options=[(8, "8"), (16, "16"), (24, "24"), (32, "32")]),
-    _p("light", "Свет", "select", "white", group="Свет", live=True,
-       options=[("white", "солнечный (белый): чёрное тело 5772 K"), ("mono", "одна длина волны")]),
-    _p("lam_nm", "Длина волны, нм", "float", 550.0, group="Свет", live=True, min=380.0, max=760.0,
-       help="Для одной капли (фазовая функция, ряд Дебая, ближнее поле) и для неба в режиме одной длины волны"),
+    _p("light", T("Light"), "select", "white", group=G_LIGHT, live=True,
+       options=[("white", T("sunlight (white): a black body at {T} K", T=5772)), ("mono", T("one wavelength"))]),
+    _p("lam_nm", T("Wavelength, nm"), "float", 550.0, group=G_LIGHT, live=True, min=380.0, max=760.0,
+       help=T("For one drop (the phase function, the Debye series, the near field) and for the sky in the "
+              "one-wavelength mode")),
 ], presets={
-    "rainbow": {"label": "Радуга: капли 0,15 мм ± 2 % в солнечном свете — основная и вторичная дуги, полоса "
-                         "Александра, дополнительные дуги", "params": {}},
-    "supernumerary": {"label": "Дополнительные дуги: одинаковые капли 0,1 мм ± 0,5 %",
+    "rainbow": {"label": T("Rainbow: drops of {r} mm ± {w} % in sunlight: the primary and secondary bows, Alexander's "
+                           "band, the supernumerary bows", r=0.15, w=2), "params": {}},
+    "supernumerary": {"label": T("Supernumerary bows: equal drops of {r} mm ± {w} %", r=0.1, w=0.5),
                       "params": {"radius_um": 100.0, "width": 0.005}},
-    "big_drops": {"label": "Крупные капли 0,3 мм ± 10 %: дополнительные дуги размыты (тяжёлый расчёт, ~минута)",
+    "big_drops": {"label": T("Large drops of {r} mm ± {w} %: the supernumerary bows are washed out (a heavy "
+                             "computation, ~a minute)", r=0.3, w=10),
                   "params": {"radius_um": 300.0, "width": 0.10, "n_lam": 16}},
-    "fogbow": {"label": "Туманная радуга: капли 15 мкм ± 15 % — широкая белая дуга",
+    "fogbow": {"label": T("Fogbow: drops of {r} µm ± {w} %, a wide white bow", r=15, w=15),
                "params": {"radius_um": 15.0, "width": 0.15}},
-    "glory": {"label": "Глория: облачные капли 8 мкм ± 10 % — цветные кольца у антисолнечной точки",
+    "glory": {"label": T("Glory: cloud drops of {r} µm ± {w} %, coloured rings around the antisolar point", r=8, w=10),
               "params": {"radius_um": 8.0, "width": 0.10}},
-    "near": {"label": "Ближнее поле: капля 1 мкм в свете 550 нм — фокус внутри и за каплей",
+    "near": {"label": T("Near field: a drop of {r} µm in light of {lam} nm, the focus inside and behind the drop", r=1,
+                        lam=550),
              "params": {"radius_um": 1.0, "width": 0.0, "light": "mono", "n_lam": 8}},
-    "absorbing": {"label": "Поглощающий шар 2 мкм, n = 1,6 + 0,05i: внутренние лучи гаснут, радуги нет",
+    "absorbing": {"label": T("An absorbing sphere of {r} µm, n = {n} + {k}i: the inner rays die out, no rainbow", r=2,
+                             n=1.6, k=0.05),
                   "params": {"radius_um": 2.0, "width": 0.05, "index": "custom", "n_re": 1.6, "n_im": 0.05}},
 })
 
@@ -110,12 +118,13 @@ def _check_matched(p, lam_nm):
     m = DR.index(p, lam_nm)
     if abs(m - 1.0) < M_MATCHED:
         n_drop = abs(m * float(p["n_medium"]))
-        raise Refusal(f"капля почти неотличима от среды на {lam_nm:g} нм: её показатель {n_drop:.7g} против "
-                      f"показателя среды {float(p['n_medium']):g} (m = {m.real:.7g}{m.imag:+.2g}i, |m − 1| < 10⁻³); "
-                      "она почти ничего не рассеивает (рассеяние ∝ |m − 1|²), а проверки ряда (ряд Дебая, энергия) "
-                      "здесь не выдерживают точности",
-                      "измените показатель капли или «Показатель среды вокруг» так, чтобы |m − 1| ≥ 10⁻³, или "
-                      "возьмите другую длину волны")
+        raise Refusal(T("the drop is almost indistinguishable from the medium at {lam} nm: its index {nd:.7g} against "
+                        "the medium's index {nm} (m = {mr:.7g}{mi:+.2g}i, |m − 1| < {lim}); it scatters almost "
+                        "nothing (the scattering ∝ |m − 1|²), and the series' checks (the Debye series, the energy) "
+                        "do not hold their accuracy here", lam=float(lam_nm), nd=n_drop, nm=float(p["n_medium"]),
+                        mr=float(m.real), mi=float(m.imag), lim=M_MATCHED),
+                      hint=T("change the drop's index or “{medium}” so that |m − 1| ≥ {lim}, or choose another "
+                             "wavelength", medium=SCHEMA.by_id["n_medium"].label, lim=M_MATCHED))
 
 
 class Simulation(SlicePlanes, BaseSimulation):
@@ -132,7 +141,8 @@ class Simulation(SlicePlanes, BaseSimulation):
         self.params = p = dict(params)
         self._buf = []
         if p["index"] == "custom" and float(p["n_im"]) < 0:
-            raise ValueError("κ ≥ 0: поглощающее вещество (время exp(−iωt))")
+            raise Refusal(T("κ ≥ 0 is required: an absorbing substance (the time factor exp(−iωt))"),
+                          hint=T("set κ to zero or above"))
         self.r_um = float(p["radius_um"])
         self.width = float(p["width"])
         self.n_med = float(p["n_medium"])
@@ -141,7 +151,9 @@ class Simulation(SlicePlanes, BaseSimulation):
         self.x_max = float(mie.size_parameter(self.r_um, DR.LAM_MIN * 1e-3, self.n_med))
         self.near = self.x_max <= X_NEAR
         if float(mie.size_parameter(self.r_um * (1 + 3 * self.width), DR.LAM_MIN * 1e-3, self.n_med)) > 2e4:
-            raise ValueError("капли слишком крупные: x > 2·10⁴ на 380 нм (предел проверенной точности ряда)")
+            raise Refusal(T("the drops are too large: x > {xmax} at {lam} nm (the limit of the series' verified "
+                            "accuracy)", xmax=2e4, lam=380),
+                          hint=T("decrease the drop radius or the spread of the sizes"))
         self._ang = None   # the angular functions of the sky window (a cache, rebuilt after a checkpoint)
         self.seq = 0       # the set-up's number (a live change starts a new one)
         self.sky_seq = 0
@@ -259,32 +271,33 @@ class Simulation(SlicePlanes, BaseSimulation):
                    "r_um": self.r_um, "debye": {"diverging_orders": self.debye_div, "amplification": self.debye_amp}},
                   blobs)
         if self.debye_div or self.debye_amp > 10.0:
-            what = (f"ряд Дебая расходится на {self.debye_div} порядках (|R¹¹| > 1: так бывает у слабо поглощающей "
-                    f"капли с m ≈ 1)" if self.debye_div else
-                    "члены почти гасят друг друга (так бывает при m ≈ 1: дифракция против прохода почти без "
-                    "преломления)")
-            amp = f"{self.debye_amp:.2g}".replace(".", ",")
+            what = (T("the Debye series diverges at {n:d} orders (|R¹¹| > 1: this happens for a weakly absorbing drop "
+                      "with m ≈ 1)", n=int(self.debye_div)) if self.debye_div else
+                    T("the terms nearly cancel each other (this happens at m ≈ 1: diffraction against a passage with "
+                      "almost no refraction)"))
             self._msg({"type": "notice", "t": self.t,
-                       "text": f"Члены ряда Дебая p = 0–3 этой капли до {amp} раз больше полного ответа: {what}. "
-                               f"Цветные кривые — не пути света, а слагаемые, которые сокращаются; верна их сумма в "
-                               f"замкнутом виде (проверка «Ряд Дебая»)."})
+                       "text": T("The terms p = 0–3 of the Debye series of this drop are up to {amp:.2g} times larger "
+                                 "than the full answer: {what}. The coloured curves are not paths of light but terms "
+                                 "that cancel; their sum in closed form is right (the check “Debye series”).",
+                                 amp=float(self.debye_amp), what=what)})
         # the polar surfaces (2-deg bin means of the fine grid)
         edges = np.concatenate([[-1e-9], 0.5 * (POLAR_DEG[1:] + POLAR_DEG[:-1]), [180.0 + 1e-9]])
         p1, _, _ = DR.bin_mean(fine_deg, f1, edges)
         p2, _, _ = DR.bin_mean(fine_deg, f2, edges)
-        for mode, label, vis in (("u", "Рассеянный свет, неполяризованный падающий (лог. шкала, 5 порядков)", True),
-                                 ("x", "Рассеянный свет при поляризации падающего вдоль x", False),
-                                 ("y", "Рассеянный свет при поляризации падающего вдоль y", False)):
+        for mode, label, vis in (("u", T("Scattered light, unpolarised incident light (log scale, {n:d} decades)",
+                                         n=5), True),
+                                 ("x", T("Scattered light, the incident light polarised along x"), False),
+                                 ("y", T("Scattered light, the incident light polarised along y"), False)):
             pos, idx, rgb = DR.polar_mesh(POLAR_DEG, p2, p1, mode)
             self._msg({"type": "mesh", "t": self.t, "id": f"polar_{mode}", "count": int(len(pos)), "opacity": 0.55,
                        "visible": vis, "label": label}, {"pos": pos, "idx": idx, "rgb": rgb})
         pts, col = DR.ray_fans(mr)
         self._msg({"type": "lines", "t": self.t, "id": "rays",
-                   "label": (f"Лучи (геометрическая оптика, m = {mr:.4g}): серые — отражение p = 0, голубые — "
-                             f"проход p = 1, жёлтые — одно внутреннее отражение p = 2, лиловые — два, p = 3"
-                             + ("; яркие — лучи Декарта" if bows else "; лучей Декарта нет (радуга p = 2 только при "
-                                                                      "1 < m < 2)")
-                             + ("; при m < 1 внутрь входят лишь лучи с b < m" if mr < 1.0 else ""))},
+                   "label": join([T("Rays (geometric optics, m = {m:.4g}): grey, reflection p = 0; blue, passage "
+                                    "p = 1; yellow, one internal reflection p = 2; violet, two, p = 3", m=float(mr)),
+                                  T("bright: Descartes' rays") if bows else
+                                  T("no Descartes' rays (a rainbow p = 2 only at 1 < m < 2)"),
+                                  T("at m < 1 only the rays with b < m enter") if mr < 1.0 else ""])},
                   {"pts": pts.reshape(-1), "rgb": col.reshape(-1)})
         self._mono_checks(a, b, q, dd)
 
@@ -297,75 +310,85 @@ class Simulation(SlicePlanes, BaseSimulation):
         x, m = self.x, self.m
         N = len(a)
         S1, S2 = mie.amplitudes(a, b, np.array([0.0]))
-        self._check("theorem", "Угловая сумма при θ = 0 против Q_ext (оптическая теорема в форме ряда)", q["Qext"],
-                    4.0 / x ** 2 * float(S1[0].real), tol=100 * N * EPS, group="Капля: точный ряд",
-                    note=f"тождество формы ряда (πₙ(1) = τₙ(1) = n(n+1)/2): верно для любых коэффициентов, проверяет "
-                         f"угловые функции и сумму при θ = 0, а не aₙ, bₙ; N = {N} членов, допуск — 100 N ε округления")
+        G_SERIES = T("Drop: the exact series")
+        self._check("theorem", T("Angular sum at θ = 0 against Q_ext (the optical theorem in the series' form)"),
+                    q["Qext"], 4.0 / x ** 2 * float(S1[0].real), tol=100 * N * EPS, group=G_SERIES,
+                    note=T("an identity of the series' form (πₙ(1) = τₙ(1) = n(n+1)/2): it holds for any coefficients "
+                           "and tests the angular functions and the sum at θ = 0, not aₙ, bₙ; N = {N:d} terms, "
+                           "tolerance: 100 N ε of round-off", N=N))
         if m.imag == 0 and N <= N_QUAD:
             r = mie.angular_integrals(a, b, x)
-            self._check("energy", "Энергия: рассеянное по всем углам против Q_ext (капля не поглощает)", r["Qsca"],
-                        q["Qext"], tol=r["rel_bound"], group="Капля: точный ряд",
-                        note=f"∫(|S₁|² + |S₂|²) по сфере — квадратура Фейера (второе правило, {r['n_nodes']} узлов, "
-                             f"точна для этих многочленов) против Q_ext из коэффициентов. При вещественном m это "
-                             f"тождество формы ряда (каждое aₙ = A/(A − iB) с вещественными A, B, Re aₙ = |aₙ|² при "
-                             f"любых Dₙ, ψₙ, χₙ): проверяет угловые функции, суммы и квадратуру, не коэффициенты. "
-                             f"Допуск — выведенная граница округления u(x²Q²_ext/(2Q_sca) + 8N + 16): узлы — "
-                             f"округлённые косинусы под пиком вперёд ширины ~1/x²")
+            self._check("energy", T("Energy: scattered over all angles against Q_ext (the drop does not absorb)"),
+                        r["Qsca"], q["Qext"], tol=r["rel_bound"], group=G_SERIES,
+                        note=T("∫(|S₁|² + |S₂|²) over the sphere by Fejér's quadrature (the second rule, {k:d} nodes, "
+                               "exact for these polynomials) against Q_ext from the coefficients. At a real m this is "
+                               "an identity of the series' form (every aₙ = A/(A − iB) with real A, B, Re aₙ = |aₙ|² "
+                               "for any Dₙ, ψₙ, χₙ): it tests the angular functions, the sums and the quadrature, not "
+                               "the coefficients. Tolerance: the derived bound of round-off "
+                               "u(x²Q²_ext/(2Q_sca) + 8N + 16): the nodes are rounded cosines under the forward peak "
+                               "of width ~1/x²", k=int(r["n_nodes"])))
         elif m.imag == 0:
             dev = max(float(np.max(np.abs(a.real - np.abs(a) ** 2))), float(np.max(np.abs(b.real - np.abs(b) ** 2))))
             tol = 16 * mie.U
-            self._check("energy", "Энергия: Re aₙ = |aₙ|², Re bₙ = |bₙ|² (капля не поглощает)", dev, 0.0, tol=tol,
-                        ok=dev <= tol, group="Капля: точный ряд",
-                        note=f"наибольшее отклонение по {N} порядкам. Тождество формы ряда: верно при любых Dₙ, ψₙ, "
-                             f"χₙ, пока счёт вещественный — проверяет, что в коэффициенты не попала мнимая часть, а не "
-                             f"их значения. Допуск 16u: вещественная часть знаменателя совпадает с числителем бит в "
-                             f"бит, остаётся округление комплексного деления. Квадратура по углам — до N = {N_QUAD}")
+            self._check("energy", T("Energy: Re aₙ = |aₙ|², Re bₙ = |bₙ|² (the drop does not absorb)"), dev, 0.0,
+                        tol=tol, ok=dev <= tol, group=G_SERIES,
+                        note=T("the largest deviation over {N:d} orders. An identity of the series' form: it holds for "
+                               "any Dₙ, ψₙ, χₙ as long as the computation is real; it tests that no imaginary part got "
+                               "into the coefficients, not their values. Tolerance 16u: the real part of the "
+                               "denominator equals the numerator bit for bit, what remains is the round-off of the "
+                               "complex division. The angular quadrature is used up to N = {nq:d}", N=N, nq=N_QUAD))
         c = DB.check_against_mie(m, x, c=dd)
         k = int(np.argmax(c["err"] / c["tol"]))
-        self._check("debye", "Ряд Дебая: сумма всех p против коэффициентов Ми (второй путь счёта)", c["max_err"], 0.0,
-                    tol=float(c["tol"][k]), ok=c["ok"], group="Капля: точный ряд",
-                    note=f"(1 − R²² − T²¹T¹²/(1 − R¹¹))/2 по отношениям функций Ханкеля и вронскиану против aₙ, bₙ "
-                         f"ряда Ми (Dₙ вниз, ψₙ по Миллеру, χₙ вверх), по всем {c['N']} порядкам, в долях "
-                         f"наибольшего коэффициента: проверка значений коэффициентов. Допуск по порядкам "
-                         f"u(1000N + 32x|daₙ/dx|/max|a|) (обусловленность у узких резонансов; mie_debye.ACCURACY): "
-                         f"от {float(c['tol'].min()):.1e} до {float(c['tol'].max()):.1e}; наибольшее отношение "
-                         f"отклонения к допуску {c['worst']:.2g} (порядок {k + 1})")
+        self._check("debye", T("Debye series: the sum over all p against the Mie coefficients (a second route)"),
+                    c["max_err"], 0.0, tol=float(c["tol"][k]), ok=c["ok"], group=G_SERIES,
+                    note=T("(1 − R²² − T²¹T¹²/(1 − R¹¹))/2 from the ratios of the Hankel functions and the Wronskian "
+                           "against aₙ, bₙ of the Mie series (Dₙ downwards, ψₙ by Miller, χₙ upwards), over all "
+                           "{N:d} orders, as fractions of the largest coefficient: a test of the coefficients' values. "
+                           "The tolerance per order u(1000N + 32x|daₙ/dx|/max|a|) (the conditioning at narrow "
+                           "resonances; mie_debye.ACCURACY): from {lo:.1e} to {hi:.1e}; the largest ratio of the "
+                           "deviation to the tolerance {w:.2g} (order {k:d})", N=int(c["N"]),
+                           lo=float(c["tol"].min()), hi=float(c["tol"].max()), w=float(c["worst"]), k=k + 1))
         w = mie.wiscombe_self_test()
-        self._check("wiscombe", "Движок против опубликованных значений Уискомба (1979, x = 100, m = 1,5 и 1,5 − 0,1i)",
-                    w["worst"], None, tol=1.0, ok=w["worst"] <= 1.0, group="Капля: точный ряд",
-                    note=f"{w['n']} напечатанных величин (Q_ext, Q_sca, g, S₁(0), S₁(90°), S₂(90°), S₁(180°)) — "
-                         f"наибольшее отклонение в половинах последнего напечатанного знака (≤ 1 — совпадает): "
-                         f"проверка значений коэффициентов по опубликованным числам, для двух шаров, не для этой "
-                         f"капли")
+        self._check("wiscombe", T("The engine against Wiscombe's published values (1979, x = {x:d}, m = {m1} and "
+                                  "{m1} − {k}i)", x=100, m1=1.5, k=0.1),
+                    w["worst"], None, tol=1.0, ok=w["worst"] <= 1.0, group=G_SERIES,
+                    note=T("{n:d} printed quantities (Q_ext, Q_sca, g, S₁(0), S₁(90°), S₂(90°), S₁(180°)): the largest "
+                           "deviation in halves of the last printed digit (≤ 1: agrees); a test of the coefficients' "
+                           "values against published numbers, for two spheres, not for this drop", n=int(w["n"])))
         r = mie.mueller(*mie.amplitudes(a, b, np.radians(DISP_DEG[::10])))
         dev = float(np.max(np.abs(r["S11"] ** 2 - r["S12"] ** 2 - r["S33"] ** 2 - r["S34"] ** 2) / r["S11"] ** 2))
-        self._check("mueller", "Матрица Мюллера: S11² = S12² + S33² + S34² (тождество)", dev, 0.0, tol=1e-10,
-                    ok=dev <= 1e-10, group="Капля: точный ряд",
-                    note="верно для любых комплексных S₁, S₂ (матрица одной частицы чистая): проверяет только "
-                         "арифметику mie.mueller; наибольшее отклонение по 361 углу, отн.")
+        self._check("mueller", T("Mueller matrix: S11² = S12² + S33² + S34² (an identity)"), dev, 0.0, tol=1e-10,
+                    ok=dev <= 1e-10, group=G_SERIES,
+                    note=T("it holds for any complex S₁, S₂ (the matrix of one particle is pure): it tests only the "
+                           "arithmetic of mie.mueller; the largest deviation over {n:d} angles, rel.", n=361))
         if self.params["index"] == "water":
             lam, n_tab = D.IAPWS97_RINDEX_CHECK_0C_01MPA[1]
             n_eng = float(D.water_index(lam * 1e3, 0.0))
-            self._check("water", "Показатель воды IAPWS при 589 нм и 0 °C против таблицы проверки (табл. 3)", n_eng,
-                        n_tab, tol=1e-6 / n_tab, ok=abs(n_eng - n_tab) <= 1e-6, group="Вода",
-                        note=f"плотность — IAPWS SR6-08; этот мир: n({self.lam_nm:g} нм, {self.params['t_c']:g} °C) = "
-                             f"{abs(self.m * self.n_med):.6f}")
+            self._check("water", T("Index of water by IAPWS at {lam} nm and {tc} °C against the verification table "
+                                   "(Table 3)", lam=589, tc=0), n_eng,
+                        n_tab, tol=1e-6 / n_tab, ok=abs(n_eng - n_tab) <= 1e-6, group=T("Water"),
+                        note=T("the density by IAPWS SR6-08; this world: n({lam} nm, {tc} °C) = {n:.6f}",
+                               lam=self.lam_nm, tc=float(self.params["t_c"]), n=abs(self.m * self.n_med)))
         transparent = abs(m.imag) <= 1e-6 and x >= 50.0
-        for p, name in ((2, "первичная"), (3, "вторичная")):
+        G_BOW = T("Rainbow")
+        for p, label in ((2, T("Rainbow p = {p:d} (primary): the maximum of the Debye term against Airy's maximum", p=2)),
+                         (3, T("Rainbow p = {p:d} (secondary): the maximum of the Debye term against Airy's maximum",
+                               p=3))):
             if transparent and p in self.bows and p in self.measured_bows:
                 bw = self.bows[p]
                 d = self.measured_bows[p] - bw["airy"][0]
-                self._check(f"bow{p}", f"Радуга p = {p} ({name}): максимум члена Дебая против максимума Эйри",
-                            self.measured_bows[p], bw["airy"][0], "°", tol=None, info=True, group="Радуга",
-                            note=f"максимум |S^({p})|² по ряду Дебая (сетка 0,05°) — {self.measured_bows[p]:.3f}°, "
-                                 f"разница с Эйри {d:+.3f}°; угол Декарта {bw['theta']:.3f}°, первый максимум Эйри "
-                                 f"{bw['airy'][0]:.3f}° (сдвиг ~x^(−2/3) в светлую сторону); при x = {x:.4g} теория "
-                                 f"Эйри — приближение")
+                self._check(f"bow{p}", label,
+                            self.measured_bows[p], bw["airy"][0], "°", tol=None, info=True, group=G_BOW,
+                            note=T("the maximum of |S^({p:d})|² by the Debye series (grid {step}°): {mb:.3f}°, the "
+                                   "difference from Airy {d:+.3f}°; Descartes' angle {th:.3f}°, Airy's first maximum "
+                                   "{ai:.3f}° (shifted by ~x^(−2/3) to the bright side); at x = {x:.4g} Airy's theory "
+                                   "is an approximation", p=p, step=0.05, mb=self.measured_bows[p], d=d,
+                                   th=bw["theta"], ai=bw["airy"][0], x=x))
         if abs(m.imag) <= 1e-6 and 2 in self.bows and 3 in self.bows:
-            self._check("alexander", "Полоса Александра между дугами (углы рассеяния по Декарту)",
-                        self.bows[2]["theta"] - self.bows[3]["theta"], None, "°", tol=None, info=True, group="Радуга",
-                        note=f"вторичная {self.bows[3]['theta']:.3f}°, первичная {self.bows[2]['theta']:.3f}°: между "
-                             f"ними лучи p = 2 и 3 не выходят")
+            self._check("alexander", T("Alexander's band between the bows (scattering angles by Descartes)"),
+                        self.bows[2]["theta"] - self.bows[3]["theta"], None, "°", tol=None, info=True, group=G_BOW,
+                        note=T("secondary {s:.3f}°, primary {p:.3f}°: between them the rays p = 2 and 3 do not come "
+                               "out", s=self.bows[3]["theta"], p=self.bows[2]["theta"]))
 
     # --- the near field -----------------------------------------------------------------------------------------------
     def _volume(self):
@@ -378,7 +401,8 @@ class Simulation(SlicePlanes, BaseSimulation):
         self.vol_peak = peak
         self._msg({"type": "volume", "t": self.t, "id": "field", "dims": [NV, NV, NV],
                    "quantity": {"label": "|E|²/|E₀|²", "unit": "", "peak": peak},
-                   "note": f"|E|² падающего плюс рассеянного (снаружи) и внутреннего поля, сетка {NV}³"},
+                   "note": T("|E|² of the incident plus the scattered (outside) and the internal field, a grid of "
+                             "{n:d}³", n=NV)},
                   {"data": (I / peak).astype(np.float32).reshape(-1)})
         # the boundary conditions on the drop's surface (24 points)
         k = np.arange(24)
@@ -394,12 +418,13 @@ class Simulation(SlicePlanes, BaseSimulation):
         s = float(np.abs(fo["E"]).max())
         err = max(float(np.abs(tE).max()), float(np.abs(tH).max()) / abs(self.m)) / s
         tol = 20 * self.x * abs(self.m) ** 2 * d + 1e-11
-        self._check("boundary", "Ближнее поле: касательные E и H непрерывны на поверхности капли", err, 0.0, tol=tol,
-                    ok=err <= tol, group="Ближнее поле",
-                    note="24 точки поверхности, поле в 10⁻¹⁰ a снаружи и внутри; допуск — изменение поля на этом "
-                         "зазоре (20 x |m|² · 10⁻¹⁰) плюс округление. Проверяет сборку полей (сферические гармоники, "
-                         "внутренние cₙ, dₙ, Z·H) против aₙ, bₙ; сами Dₙ, ψₙ, χₙ входят в обе стороны согласованно — "
-                         "их значения проверяет «Ряд Дебая»")
+        self._check("boundary", T("Near field: the tangential E and H are continuous on the drop's surface"), err, 0.0,
+                    tol=tol, ok=err <= tol, group=T("Near field"),
+                    note=T("{n:d} points of the surface, the field {d} a outside and inside; tolerance: the change of "
+                           "the field over this gap (20 x |m|² · {d}) plus round-off. It tests the assembly of the "
+                           "fields (the spherical harmonics, the internal cₙ, dₙ, Z·H) against aₙ, bₙ; Dₙ, ψₙ, χₙ "
+                           "themselves enter both sides consistently: their values are tested by “Debye series”",
+                           n=24, d=d))
 
     def _plane_slice(self, pid, pl, s_rng, t_rng, coarse):
         n = 61 if coarse else NS
@@ -408,7 +433,7 @@ class Simulation(SlicePlanes, BaseSimulation):
         P = G.plane_points(pl, s, t)
         f = mie.near_field(self.m, self.x, P)
         E = f["E"]
-        ver = {"points": 0, "note": "грубый срез при автосмещении, без сверки"}
+        ver = {"points": 0, "note": T("a coarse slice while auto-moving, not verified")}
         if not coarse:
             ver = self._verify_plane(pl)
         return {"s": s, "t": t, "E": E, "verify": ver, "plane": pl, "coarse": coarse}
@@ -420,7 +445,8 @@ class Simulation(SlicePlanes, BaseSimulation):
         n = np.asarray(pl.normal, float)
         dist = float(o @ n)
         if abs(dist) >= 0.999:
-            return {"points": 0, "note": "плоскость не пересекает каплю: сверять на поверхности нечего"}
+            return {"points": 0, "note": T("the plane does not cut the drop: there is nothing to verify on the "
+                                           "surface")}
         c = dist * n
         rr = math.sqrt(1 - dist * dist)
         u, v = np.asarray(pl.u, float), np.asarray(pl.v, float)
@@ -445,10 +471,11 @@ class Simulation(SlicePlanes, BaseSimulation):
                 "s": [float(sl["s"][0]), float(sl["s"][-1]), len(sl["s"])],
                 "tt": [float(sl["t"][0]), float(sl["t"][-1]), len(sl["t"])],
                 "origin": pd["origin"], "u": pd["u"], "v": pd["v"], "normal": pd["normal"], "label": pd["label"],
-                "peak": peak, "route": "mie", "route_label": "ряд Ми: падающая волна + рассеянное поле снаружи, "
-                                                             "внутреннее поле внутри капли; фаза — arg Eₓ",
+                "peak": peak, "route": "mie", "route_label": T("the Mie series: the incident wave + the scattered "
+                                                               "field outside, the internal field inside the drop; "
+                                                               "the phase is arg Eₓ"),
                 "exact": True, "approximation": False, "reason": "", "verify": sl["verify"],
-                "verify_title": "непрерывность касательного E на окружности, где срез пересекает каплю",
+                "verify_title": T("continuity of the tangential E on the circle where the slice cuts the drop"),
                 "units": "a", "depth": False,
                 "quantity": {"label": "|E|²/|E₀|²", "unit": "", "peak": peak}}
         blobs = {"I": (I / peak).astype(np.float32)}
@@ -457,14 +484,15 @@ class Simulation(SlicePlanes, BaseSimulation):
         self._msg(meta, blobs)
         ver = sl["verify"]
         if ver.get("points"):
-            self._check(f"plane_{pid}", f"Срез {pid}: касательное E на поверхности капли непрерывно", ver["max_err"],
-                        0.0, tol=ver["tol"], ok=ver["ok"], group="Ближнее поле",
-                        note="12 точек окружности пересечения среза с каплей, в 10⁻¹⁰ a снаружи и внутри")
+            self._check(f"plane_{pid}", T("Slice {id}: the tangential E on the drop's surface is continuous", id=pid),
+                        ver["max_err"], 0.0, tol=ver["tol"], ok=ver["ok"], group=T("Near field"),
+                        note=T("{n:d} points of the circle where the slice cuts the drop, {d} a outside and inside",
+                               n=12, d=1e-10))
 
     def _plane_removed(self, pid, sl):
         if sl and sl["verify"].get("points"):
-            self._check(f"plane_{pid}", f"Срез {pid}: убран", None, None, info=True, group="Ближнее поле",
-                        note="последняя сверка этого среза — в записи запуска")
+            self._check(f"plane_{pid}", T("Slice {id}: removed", id=pid), None, None, info=True, group=T("Near field"),
+                        note=T("the last verification of this slice is in the run's record"))
 
     # --- the cloud in sunlight ----------------------------------------------------------------------------------------
     def _sky_lams(self):
@@ -542,32 +570,41 @@ class Simulation(SlicePlanes, BaseSimulation):
 
     def _sky_done(self):
         lams, _ = self._sky_lams()
-        self._check("sky_sum", "Небо: оценка ошибки суммы по размерам (наибольшая по длинам волн)", self.sky_err, None,
-                    tol=None, info=True, group="Облако капель",
-                    note=f"наибольшая по углам разность двух чередующихся половинных сумм по размерам, в долях "
-                         f"максимума ⟨dσ/dΩ⟩: оценка наибольшей ошибки по порядку величины (на пресетах настоящая "
-                         f"наибольшая ошибка 0,1–3 этой оценки), не граница и не ошибка в каждом угле; узкие резонансы "
-                         f"ряда шаг по размеру не разрешает"
-                         + (f". Не входит: обрезка распределения на ±4σ — отрезано {self.sky_tail:.1e} вероятности, её "
-                            f"смещение ≲ 3 этой доли максимума" if self.width > 0 else "; капли одного размера")
-                         + ("; грубая выборка размеров (шаг по x до " + f"{self.sky_coarse_dx:.2g}".replace(".", ",")
-                            + "): рябь и дополнительные дуги здесь размыты в шум" if self.sky_coarse_dx else ""))
+        G_CLOUD = T("Cloud of drops")
+        head = T("the largest over the angles difference of two alternating half-sums over the sizes, as fractions of "
+                 "the maximum of ⟨dσ/dΩ⟩: an estimate of the largest error by its order of magnitude (on the presets the "
+                 "true largest error is {lo}–{hi} of this estimate), not a bound and not the error at every angle; the "
+                 "step in size does not resolve the series' narrow resonances", lo=0.1, hi=3)
+        if self.width > 0:
+            head = T("{head}. Not included: the cut of the distribution at ±4σ, which removes {tail:.1e} of the "
+                     "probability; its bias is ≲ 3 of this fraction of the maximum", head=head, tail=self.sky_tail)
+        else:
+            head = T("{head}; drops of one size", head=head)
+        self._check("sky_sum", T("Sky: the error estimate of the sum over the sizes (the largest over the wavelengths)"),
+                    self.sky_err, None, tol=None, info=True, group=G_CLOUD,
+                    note=join([head, T("a coarse sampling of the sizes (a step in x up to {dx:.2g}): the ripple and the "
+                                       "supernumerary bows are washed into noise here", dx=self.sky_coarse_dx)
+                               if self.sky_coarse_dx else ""]))
         Y = self.Ysum
         lo = (SKY_DEG >= 132.0) & (SKY_DEG <= 145.0)
         if lo.any() and 2 in self.bows and self.live["light"] == "white" and self.params["index"] == "water":
             k = int(np.argmax(np.where(lo, Y, -np.inf)))
             d550 = RB.descartes(float(DR.index(self.params, 550.0).real), 2)
             th_d = math.degrees(d550["theta"])
-            self._check("sky_bow", "Небо: самый яркий угол основной дуги (белый свет) против Декарта при 550 нм",
-                        float(SKY_DEG[k]), th_d, "°", tol=None, info=True, group="Облако капель",
-                        note=f"яркость Y по {len(lams)} длинам волн, размер {self.r_um:g} мкм ± "
-                             f"{100 * self.width:g} %: максимум на {float(SKY_DEG[k]) - th_d:+.2f}° от угла Декарта — "
-                             f"смещён в светлую сторону на сдвиг Эйри и размыт по длинам волн")
+            self._check("sky_bow", T("Sky: the brightest angle of the primary bow (white light) against Descartes at "
+                                     "{lam} nm", lam=550),
+                        float(SKY_DEG[k]), th_d, "°", tol=None, info=True, group=G_CLOUD,
+                        note=T("the brightness Y over {n:d} wavelengths, the size {r} µm ± {w} %: the maximum is "
+                               "{d:+.2f}° from Descartes' angle, shifted to the bright side by Airy's shift and blurred "
+                               "over the wavelengths", n=len(lams), r=self.r_um, w=100 * self.width,
+                               d=float(SKY_DEG[k]) - th_d))
         self._msg({"type": "event", "t": self.t, "kind": "sky",
-                   "text": f"небо досчитано: {len(lams)} длин волн, капли {self.r_um:g} мкм ± {100 * self.width:g} %"})
+                   "text": T("the sky is complete: {n:d} wavelengths, drops of {r} µm ± {w} %", n=len(lams), r=self.r_um,
+                             w=100 * self.width)})
 
     # --- checks and messages ---------------------------------------------------------------------------------------
-    def _check(self, cid, label, value, ref, unit="", note="", tol=1e-9, ok=None, info=False, group="Капля"):
+    def _check(self, cid, label, value, ref, unit="", note="", tol=1e-9, ok=None, info=False, group=None):
+        group = T("Drop") if group is None else group
         rel = None
         if ref is not None and value is not None and ref != 0:
             rel = (value - ref) / abs(ref)
@@ -588,9 +625,10 @@ class Simulation(SlicePlanes, BaseSimulation):
     def after_header(self):
         buf, self._buf = self._buf, None
         self._msg({"type": "arrow", "t": self.t, "id": "incident", "from": [0.0, 0.0, -2.45], "vec": [0.0, 0.0, 1.0],
-                   "label": "падающий свет (вдоль +z)", "layer": "Падающая волна", "color": "#ffe9a0"})
+                   "label": T("incident light (along +z)"), "layer": T("Incident wave"), "color": "#ffe9a0"})
         self._msg({"type": "arrow", "t": self.t, "id": "polarisation", "from": [0.0, 0.0, -2.2], "vec": [0.6, 0.0, 0.0],
-                   "label": "поляризация E вдоль x", "layer": "Поляризация падающей волны", "color": "#7fb7ff"})
+                   "label": T("polarisation E along x"), "layer": T("Polarisation of the incident wave"),
+                   "color": "#7fb7ff"})
         for meta, blobs in buf:
             self.emit(meta, blobs)
 
@@ -622,7 +660,7 @@ class Simulation(SlicePlanes, BaseSimulation):
     def set_live(self, values):
         merged, errors = SCHEMA.coerce_live(self.live, values)
         if errors:
-            raise ValueError("; ".join(errors))
+            raise ValueError(join(errors))
         old = self.live
         self.live = merged
         try:
@@ -630,8 +668,9 @@ class Simulation(SlicePlanes, BaseSimulation):
         except Exception:
             self.live = old
             raise
-        what = "солнечный свет" if merged["light"] == "white" else f"одна длина волны {float(merged['lam_nm']):g} нм"
-        return f"свет: {what}; капля при {float(merged['lam_nm']):g} нм — заново"
+        lam = float(merged["lam_nm"])
+        what = T("sunlight") if merged["light"] == "white" else T("one wavelength {lam} nm", lam=lam)
+        return T("light: {what}; the drop at {lam} nm computed anew", what=what, lam=lam)
 
     def engine_modules(self):
         mods = ["core.optics.mie", "core.optics.mie_debye", "core.optics.mie_poly", "core.optics.radiation",
@@ -642,48 +681,53 @@ class Simulation(SlicePlanes, BaseSimulation):
 
     def header(self):
         p = self.params
-        mat = ("вода" if p["index"] == "water" else f"n = {float(p['n_re']):g} + {float(p['n_im']):g}i")
-        approximations = ["однократное рассеяние разреженным облаком капель: интенсивности капель складываются",
-                          "солнечный свет — чёрное тело 5772 K (без линий поглощения и атмосферы); угловой размер "
-                          "Солнца (0,5°) не учтён: дуги в небе ещё размыты на полградуса",
-                          "капли — шары (крупные капли дождя сплюснуты)"]
+        mat = (T("water") if p["index"] == "water" else
+               T("n = {n} + {k}i", n=float(p["n_re"]), k=float(p["n_im"])))
+        approximations = [T("single scattering by a sparse cloud of drops: the drops' intensities add up"),
+                          T("sunlight is a black body at {T} K (without absorption lines and the atmosphere); the "
+                            "angular size of the Sun ({sun}°) is not taken into account: the bows in the sky are "
+                            "blurred by another half a degree", T=5772, sun=0.5),
+                          T("the drops are spheres (large rain drops are flattened)")]
         if p["index"] == "water":
-            approximations.append("вода без поглощения: IAPWS даёт только действительную часть показателя (поэтому "
-                                  "узкие резонансы ряда здесь уже, чем у настоящей воды)")
+            approximations.append(T("water without absorption: IAPWS gives only the real part of the index (so the "
+                                    "series' narrow resonances are narrower here than in real water)"))
         if self.n_med == 1.0:
-            def deg(v):
-                return f"{v:+.2f}".replace("-", "−").replace(".", ",") + "°"
-            approximations.append("среда вокруг капли — вакуум (n = 1): в воздухе показатель капли относительно среды "
-                                  "меньше в n_воздуха раз, и углы дуг сдвигаются на доли градуса (для воды при 10 °C и "
-                                  f"550 нм: p = 2 на {deg(AIR_SHIFT[0])}, p = 3 на {deg(AIR_SHIFT[1])} при "
-                                  "иллюстративном n_воздуха − 1 = 2,77·10⁻⁴)")
+            approximations.append(T("the medium around the drop is vacuum (n = 1): in air the drop's index relative to "
+                                    "the medium is n_air times smaller, and the angles of the bows shift by fractions "
+                                    "of a degree (for water at {tc} °C and {lam} nm: p = 2 by {s2:+.2f}°, p = 3 by "
+                                    "{s3:+.2f}° for an illustrative n_air − 1 = {na})", tc=10, lam=550,
+                                    s2=AIR_SHIFT[0], s3=AIR_SHIFT[1], na=2.77e-4))
         else:
-            approximations.append(f"среда — однородная, прозрачная, без дисперсии: n = {self.n_med:g}")
+            approximations.append(T("the medium is homogeneous, transparent, without dispersion: n = {n}",
+                                    n=self.n_med))
         if self.width > 0:
-            approximations.append("размеры — гамма-распределение, обрезанное на ±4σ (отрезанная доля — в проверке "
-                                  "«Небо: оценка ошибки»)")
+            approximations.append(T("the sizes have a gamma distribution cut at ±4σ (the fraction cut off is in the "
+                                    "check “Sky: the error estimate”)"))
             nd = MP.size_nodes(self.r_um, self.width, DR.LAM_MIN * 1e-3, self.n_med, max_nodes=MAX_NODES)
             if nd["coarse"]:
-                dx = f"{nd['dx']:.2g}".replace(".", ",")
-                approximations.append(f"грубая выборка размеров: на коротких волнах шаг по x до {dx} (нужно ≤ 0,25, "
-                                      f"узлов не больше {MAX_NODES}) — рябь интенсивности и дополнительные дуги в небе "
-                                      f"размыты в шум, расчёт тяжёлый")
-        objects = [{"id": "drop", "label": f"Капля ({mat}), радиус a = {self.r_um:g} мкм — в сцене радиус 1",
+                approximations.append(T("a coarse sampling of the sizes: at short wavelengths the step in x is up to "
+                                        "{dx:.2g} (≤ {need} is needed, at most {nmax:d} nodes): the ripple of the "
+                                        "intensity and the supernumerary bows in the sky are washed into noise, the "
+                                        "computation is heavy", dx=float(nd["dx"]), need=0.25, nmax=MAX_NODES))
+        objects = [{"id": "drop", "label": T("Drop ({mat}), radius a = {r} µm; in the scene the radius is 1", mat=mat,
+                                             r=self.r_um),
                     "kind": "sphere", "center": [0.0, 0.0, 0.0], "radius": 1.0, "visible": True}]
         layers = []
         if self.near:
-            layers.append({"id": "field", "label": "Поле |E|² в объёме (внутри и вокруг капли)", "kind": "volume",
-                           "visible": True, "look": {"density": 0.6, "threshold": 0.05}})
-        views = [["iso", "Изо", "Изометрия (F)", [0.45, -0.75, -0.5]],
-                 ["side", "Сбоку", "Плоскость xz: свет слева направо, поляризация вверх", [0.0, -1.0, 0.0]],
-                 ["back", "К Солнцу спиной", "Взгляд наблюдателя радуги: вдоль света, Солнце за спиной",
+            layers.append({"id": "field", "label": T("Field |E|² in the volume (inside and around the drop)"),
+                           "kind": "volume", "visible": True, "look": {"density": 0.6, "threshold": 0.05}})
+        views = [["iso", T("Iso"), T("Isometric (F)"), [0.45, -0.75, -0.5]],
+                 ["side", T("Side"), T("The plane xz: the light from left to right, the polarisation up"),
+                  [0.0, -1.0, 0.0]],
+                 ["back", T("Back to the Sun"), T("The view of a rainbow's observer: along the light, the Sun behind"),
                   [0.0, 0.0, -1.0]]]
         return {
-            "title": f"Рассеяние света каплей: {mat}, ⟨r⟩ = {self.r_um:g} мкм",
-            "text": ("Точный ряд Ми для одной капли: фазовая функция, поляризация, рассеянный свет поверхностью вокруг "
-                     "капли, ближнее поле для малых капель; ряд Дебая разделяет отражённый свет (p = 0), прошедший "
-                     "(p = 1) и отражённый внутри (p = 2 — первичная радуга, p = 3 — вторичная). Облако капель в "
-                     "солнечном свете: цвет неба против угла рассеяния складывается длина волны за длиной волны."),
+            "title": T("Light scattered by a drop: {mat}, ⟨r⟩ = {r} µm", mat=mat, r=self.r_um),
+            "text": T("The exact Mie series for one drop: the phase function, the polarisation, the scattered light as "
+                      "a surface around the drop, the near field of small drops; the Debye series separates the "
+                      "reflected light (p = 0), the transmitted (p = 1) and the light reflected inside (p = 2, the "
+                      "primary rainbow; p = 3, the secondary). A cloud of drops in sunlight: the colour of the sky "
+                      "against the scattering angle builds up wavelength after wavelength."),
             "actions": [],
             "approximations": approximations,
             "scene3d": {"box": [list(BOX[0]), list(BOX[1])], "units": "a", "objects": objects, "layers": layers,
@@ -693,18 +737,20 @@ class Simulation(SlicePlanes, BaseSimulation):
             "drop": {"r_um": self.r_um, "width": self.width, "index": p["index"], "t_c": float(p["t_c"]),
                      "n_medium": self.n_med, "near": self.near, "x_max": self.x_max},
             "sky": {"deg": [float(SKY_DEG[0]), float(SKY_DEG[-1]), len(SKY_DEG)], "t_lam": T_LAM},
-            "units": {"t": "с (время мира: одна длина волны за 0,5 с)", "x": "a"},
+            "units": {"t": T("s (the world's time: one wavelength per {t} s)", t=T_LAM), "x": "a"},
         }, {}
 
 
 VIZ = {
     "id": "v17_mie_scattering",
-    "title": "Рассеяние Ми на капле: радуга и глория",
-    "summary": ("Точный ряд Ми для капли воды: фазовая функция и поляризация, ряд Дебая (отражение, проход, внутренние "
-                "отражения) против лучей Декарта и теории Эйри, ближнее поле малой капли; облако капель в солнечном "
-                "свете — цвет неба: радуга, дополнительные дуги, полоса Александра, глория."),
-    "purpose": ("Увидеть, откуда берутся радуга и её дополнительные дуги, чем волновая теория отличается от лучевой, "
-                "почему дуги размываются у капель разного размера и откуда у антисолнечной точки глория."),
+    "title": T("Mie scattering by a drop: the rainbow and the glory"),
+    "summary": T("The exact Mie series for a water drop: the phase function and the polarisation, the Debye series "
+                 "(reflection, passage, internal reflections) against Descartes' rays and Airy's theory, the near "
+                 "field of a small drop; a cloud of drops in sunlight, the colour of the sky: the rainbow, the "
+                 "supernumerary bows, Alexander's band, the glory."),
+    "purpose": T("See where the rainbow and its supernumerary bows come from, how the wave theory differs from the ray "
+                 "theory, why the bows blur for drops of different sizes, and where the glory around the antisolar "
+                 "point comes from."),
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,

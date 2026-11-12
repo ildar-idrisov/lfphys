@@ -1,11 +1,11 @@
 <!doctype html>
 <!-- SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
      SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0 -->
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>lfphys · лицензия и отказ от гарантий</title>
+<title data-t>lfphys · licence and disclaimer</title>
 <link rel="stylesheet" href="/static/assets/chrome.css">
 <style>
   .legal pre { white-space: pre-wrap; font-size: 12.5px; max-height: 60vh; overflow: auto; background: var(--panel);
@@ -17,40 +17,13 @@
 </head>
 <body>
 <div class="topbar">
-  <a href="/" title="К каталогу визуализаций и запусков">← Каталог</a>
-  <span class="title">Лицензия, цитирование и отказ от гарантий</span>
+  <a href="/" data-t-title title="To the catalogue of visualizations and runs" data-t>← Catalogue</a>
+  <span class="title" data-t>Licence, citation and disclaimer</span>
   <span class="grow"></span>
-  <button id="theme" title="Тема (T)">◐</button>
+  <button id="theme" data-t-title title="Theme (T)">◐</button>
 </div>
-<div class="page legal">
-  <h2>Исследовательский инструмент — без гарантий</h2>
-  <p>Движок lfphys и визуализации — исследовательские инструменты. Их модели, реализация, численные методы и результаты
-    могут содержать ошибки. Проверки рядом с результатами и тесты движка подтверждают заявленные случаи в заявленных
-    пределах, а не правильность любой задачи. Прежде чем опираться на результат, проверьте исходные данные, применимость
-    модели, сходимость и сам результат. Программа предоставляется «как есть», без каких-либо гарантий; поддержка и
-    исправления не обещаются (раздел 8 лицензии).</p>
-  <h2>Кратко об условиях</h2>
-  <ul>
-    <li><b>Код</b> (движок, сервер, плеер, визуализации) — lfphys Research Licence 1.0: только некоммерческие
-      исследования, учёба и преподавание. Исходный код открыт для чтения (source-available), но это не open source.</li>
-    <li><b>Коммерческое использование</b> кем угодно — компанией, университетом или институтом, работающим на компанию,
-      частным лицом — только по отдельному письменному соглашению с автором (idrisov.sci@gmail.com).</li>
-    <li><b>Ваши результаты</b> (числа, данные, рисунки и снимки ваших запусков) — ваши. Если программа посчитала,
-      смоделировала, нарисовала или проверила что-то, о чём сообщает ваша публикация, <b>ссылка на неё обязательна</b>:
-      автор (Ildar Idrisov), название (lfphys), версия и код этой сборки — <span id="cite" class="mono">…</span>.
-      Снимки своих запусков и короткие отрывки кода можно публиковать в любых изданиях, также под CC BY, с подписью
-      «Ildar Idrisov, lfphys &lt;версия&gt;». Нельзя выдавать результаты за проверенные или одобренные автором.
-      Продавать наборы данных, состоящие в основном из результатов программы, — только по соглашению.</li>
-    <li><b>Документация и рисунки автора</b> — CC BY-NC-SA 4.0; рисунки и короткие цитаты можно публиковать в научных
-      изданиях, в том числе коммерческих издательств, с указанием автора и версии.</li>
-    <li><b>Доступ по сети</b>: кто даёт пользоваться копией программы через сеть, обязан показывать им эту страницу.</li>
-    <li><b>Сторонний код</b>: three.js r185.1 (лицензия MIT) — трёхмерная сцена плеера; на него условия выше не
-      распространяются.</li>
-  </ul>
-  <p class="muted">Это краткое изложение; действуют полные тексты ниже (на английском).</p>
-  <h2>Полные тексты</h2>
-  <div id="texts"></div>
-</div>
+<!-- the summary is written by legal.js in the viewer's language (its texts are msgids with inline markup) -->
+<div class="page legal" id="legal"></div>
 <script type="module" src="/static/js/legal.js"></script>
 </body>
 </html>

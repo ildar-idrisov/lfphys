@@ -14,16 +14,17 @@ from scipy import constants as sc
 from scipy import special
 
 from lfphys.core.quantum import hydrogen as H
+from lfphys.i18n import T
 
 ANGSTROM = 1e-10
 EPS = np.finfo(float).eps
 
 # id: (label, Z, nucleus mass kg, nucleus mark)
 ATOMS = {
-    "H": ("водород ¹H: электрон и протон", 1, sc.m_p, "p⁺"),
-    "D": ("дейтерий ²H: электрон и дейтрон", 1, sc.physical_constants["deuteron mass"][0], "d⁺"),
-    "He+": ("ион ⁴He⁺: электрон и α-частица (Z = 2)", 2, sc.physical_constants["alpha particle mass"][0], "α²⁺"),
-    "Ps": ("позитроний: электрон и позитрон (μ = mₑ/2)", 1, sc.m_e, "e⁺"),
+    "H": (T("hydrogen ¹H: an electron and a proton"), 1, sc.m_p, "p⁺"),
+    "D": (T("deuterium ²H: an electron and a deuteron"), 1, sc.physical_constants["deuteron mass"][0], "d⁺"),
+    "He+": (T("the ion ⁴He⁺: an electron and an α particle (Z = {Z})", Z=2), 2, sc.physical_constants["alpha particle mass"][0], "α²⁺"),
+    "Ps": (T("positronium: an electron and a positron (μ = mₑ/2)"), 1, sc.m_e, "e⁺"),
 }
 
 

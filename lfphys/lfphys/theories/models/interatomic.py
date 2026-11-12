@@ -69,34 +69,37 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "theories", "kind": "model",
-    "title": "Межатомные потенциалы: Леннард-Джонс, WCA, мягкие сферы, связи, углы, стенки",
-    "statement": "Феноменологические потенциалы для молекулярной динамики ядра (core.md): Леннард-Джонс 12-6 с "
-                 "обрезкой (сдвиг энергии или линейный сдвиг силы; правило смешивания Лоренца–Бертло или "
-                 "геометрическое; поправки дальнего хвоста), WCA, мягкое отталкивание (гармоническое, Герц), "
-                 "гармоническая связь и FENE, гармонический угол (по углу или по косинусу), стенки Леннард-Джонса "
-                 "9-3 (3-D) и 10-4 (2-D), выведенные интегрированием 12-6 по полупространству; параметры аргона. "
-                 "Сила — точный градиент энергии.",
-    "validity": "подогнанные формы: отталкивание r^-12 не выведено (истинное близко к экспоненциальному), у аргона яма "
-                "мельче и шире 12-6, нет трёхчастичных сил (Аксильрод–Теллер) и квантовых поправок (для лёгких атомов "
-                "и низких T); связи гармонические (не рвутся; FENE рвёт шаг), углы гармонические; стенка — "
-                "сплошная среда атомов стенки. Параметры аргона воспроизводят второй вириальный коэффициент и "
-                "свойства жидкости с точностью процентов",
+    "title": T("Interatomic potentials: Lennard-Jones, WCA, soft spheres, bonds, angles, walls"),
+    "statement": T("Phenomenological potentials for the core's molecular dynamics (core.md): Lennard-Jones 12-6 with "
+                   "a cut-off (energy shift or linear force shift; the Lorentz–Berthelot or the geometric mixing "
+                   "rule; long-range tail corrections), WCA, soft repulsion (harmonic, Hertz), the harmonic and the "
+                   "FENE bond, the harmonic angle (in the angle or in its cosine), Lennard-Jones walls 9-3 (3-D) and "
+                   "10-4 (2-D), derived by integrating 12-6 over a half-space; argon parameters. The force is the "
+                   "exact gradient of the energy."),
+    "validity": T("fitted forms: the r^-12 repulsion is not derived (the true one is close to exponential), argon's "
+                  "well is shallower and wider than 12-6, no three-body forces (Axilrod–Teller) and no quantum "
+                  "corrections (for light atoms and low T); bonds are harmonic (they do not break; FENE breaks the "
+                  "step), angles harmonic; a wall is a continuum of wall atoms. The argon parameters reproduce the "
+                  "second virial coefficient and the liquid's properties to within per cent"),
     "basis": ["Lennard-Jones, Proc. R. Soc. A 106, 463 (1924)",
               "Weeks, Chandler & Andersen, J. Chem. Phys. 54, 5237 (1971)",
               "Kremer & Grest, J. Chem. Phys. 92, 5057 (1990): FENE + WCA",
-              "Steele, Surf. Sci. 36, 317 (1973): стенка 9-3 (здесь выведена заново)",
-              "NIST SRS: эталоны LJ (усечение 3σ + хвост; линейный сдвиг силы 2.5σ)",
-              "аргон: Hirschfelder, Curtiss & Bird (через arXiv:2511.14399); CIAAW"],
-    "conflicts": ["реальный аргон: потенциал Азиза (HFDID) и трёхчастичная поправка Аксильрода–Теллера дают "
-                  "давление и критическую точку иначе, чем 12-6 (критическая T для 12-6 — 1.312 ε/k, т.е. 157 K "
-                  "против 150.7–150.9 K у аргона по NIST WebBook)",
-                  "обрезанный и сдвинутый потенциал — другая модель, чем полный 12-6: фазовая диаграмма зависит от "
-                  "r_c (3-D: критическая T при линейном сдвиге силы 2.5σ — 0.937, тройная точка 0.560 — у полного "
-                  "1.312 и 0.687; 2-D: у полного 0.515, у обрезанного на 2.5σ со сдвигом энергии 0.459, тройная "
-                  "около 0.42 — жидкость и пар на плоскости сосуществуют лишь в узком интервале)",
-                  "гармоническая связь не рвётся и не ангармонична (Морзе, квантовые колебания при ħω > kT)"],
+              T("Steele, Surf. Sci. 36, 317 (1973): the 9-3 wall (derived anew here)"),
+              T("NIST SRS: LJ references (truncation 3σ + tail; linear force shift 2.5σ)"),
+              T("argon: Hirschfelder, Curtiss & Bird (via arXiv:2511.14399); CIAAW")],
+    "conflicts": [T("real argon: the Aziz potential (HFDID) and the Axilrod–Teller three-body correction give the "
+                    "pressure and the critical point differently from 12-6 (the critical T of 12-6 is 1.312 ε/k, i.e. "
+                    "157 K, against 150.7–150.9 K for argon by the NIST WebBook)"),
+                  T("a cut and shifted potential is another model than the full 12-6: the phase diagram depends on "
+                    "r_c (3-D: the critical T with the linear force shift at 2.5σ is 0.937, the triple point 0.560 — "
+                    "for the full one 1.312 and 0.687; 2-D: 0.515 for the full one, 0.459 for the one cut at 2.5σ "
+                    "with an energy shift, the triple point about 0.42 — liquid and vapour coexist in the plane only "
+                    "in a narrow interval)"),
+                  T("a harmonic bond neither breaks nor is anharmonic (Morse, quantum vibrations at ħω > kT)")],
 }
 
 _SHIFTS = ("energy", "force", "none")

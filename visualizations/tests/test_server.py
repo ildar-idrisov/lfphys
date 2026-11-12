@@ -15,6 +15,7 @@ from aiohttp.test_utils import TestClient, TestServer
 
 from lfviz import protocol, registry
 from lfviz.app import MGR, create_app
+from lfviz.i18n import T, english
 from lfviz.params import Param, Schema
 
 
@@ -32,7 +33,7 @@ def test_protocol_round_trip_and_alignment():
 
 
 def test_schema_resolve_and_modifications():
-    s = Schema([Param("law", "Закон", "select", "std", options=[("std", "s"), ("mod", "m")], standard="std"),
+    s = Schema([Param("law", "Law", "select", "std", options=[("std", "s"), ("mod", "m")], standard="std"),
                 Param("c", "c", "float", 1.0, standard=1.0, min=0.1, max=10),
                 Param("n", "n", "int", 3, min=1, max=5)],
                presets={"p": {"label": "P", "params": {"law": "mod"}}})
@@ -140,7 +141,7 @@ async def _run_api(tmp_path):
         heads = [protocol.peek_meta(m) for _, m in protocol.iter_stream(data, len(protocol.MAGIC))]
         assert sum(1 for h in heads if h["type"] == "header") == 1
         # continued from the state saved at the suspension (owner, 2026-10-29), not recomputed
-        assert any(h["type"] == "notice" and "Мир продолжен с сохранённого состояния" in h.get("text", "") for h in heads)
+        assert any(h["type"] == "notice" and "The world continued from its saved state" in english(h.get("text", "")) for h in heads)
         ts = [h["t"] for h in heads if h["type"] == "frame"]
         assert ts == sorted(ts) and ts[-1] > t_susp
         r = await cl.delete(f"/api/runs/{rid}")
@@ -167,7 +168,7 @@ async def _worker_error(tmp_path):
             await asyncio.sleep(0.1)
         # review UX-params P1: the run is failed (not resumable: it has no world), and says why in the owner's terms
         assert meta["state"] == "failed", meta["state"]
-        assert meta["errors"][-1].startswith("Мир не создан: ") and "Traceback" not in meta["errors"][-1]
+        assert english(meta["errors"][-1]).startswith("World not created: ") and "Traceback" not in english(meta["errors"][-1])
         row = [x for x in await (await cl.get("/api/runs")).json() if x["id"] == rid][0]
         assert row["error"] == meta["errors"][-1]  # the run list shows the reason
         ws = await cl.ws_connect(f"/ws/runs/{rid}")
@@ -274,7 +275,7 @@ async def _legal(tmp_path):
     app = create_app(tmp_path)
     async with TestClient(TestServer(app)) as cl:
         page = await cl.get("/legal")
-        assert page.status == 200 and "без гарантий" in await page.text()
+        assert page.status == 200 and "Licence, citation and disclaimer" in await page.text()
         texts = {}
         for name in ("LICENSE.md", "NOTICE", "PUBLICATIONS.md", "COMMERCIAL.md", "LICENSE-DOCS.txt", "three.js-LICENSE"):
             r = await cl.get(f"/legal/{name}")
@@ -397,7 +398,7 @@ async def _new_world_in_same_run(tmp_path):
         await asyncio.sleep(0.5)
         await cl.post(f"/api/runs/{rid}/stop", json={})
         meta = await (await cl.get(f"/api/runs/{rid}")).json()
-        assert len(meta["worlds"]) == 2 and any("Новый мир не создан" in e for e in meta.get("errors", []))
+        assert len(meta["worlds"]) == 2 and any("New world not created" in english(e) for e in meta.get("errors", []))
         data = (tmp_path / rid / "stream.lfrec").read_bytes()
         heads = [protocol.peek_meta(m) for _, m in protocol.iter_stream(data, len(protocol.MAGIC))]
         heads = [h for h in heads if h["type"] == "header"]
@@ -431,7 +432,7 @@ async def _settings_api(tmp_path, monkeypatch):
         assert body["notes"] and json.loads((tmp_path / "settings.local.json").read_text())["kernels"]
         assert (await (await cl.get("/api/settings")).json())["kernels"]["optics.angular_spectrum"]["precision"] == "fp32"
         r = await cl.get("/settings")
-        assert r.status == 200 and "Устройства и точность" in await r.text()
+        assert r.status == 200 and "Devices and precision" in await r.text()
         # a run carries the settings in force at its start: in its passport and in its header
         r = await cl.post("/api/runs", json={"viz": "v06_qcd", "preset": "standard", "seed": 3})
         rid = (await r.json())["id"]
@@ -504,7 +505,7 @@ async def _settings_hardening(tmp_path, monkeypatch):
         # a run with its own devices: validated, recorded in its passport, the file unchanged
         r = await cl.post("/api/runs", json={"viz": "v06_qcd", "preset": "standard", "seed": 3,
                                              "backend": {"kernels": {"optics.angular_spectrum": "gpu"}}})
-        assert r.status == 400 and "устройства" in (await r.json())["error"]
+        assert r.status == 400 and "devices" in (await r.json())["text"]
         r = await cl.post("/api/runs", json={"viz": "v06_qcd", "preset": "standard", "seed": 3, "backend": {
             "kernels": {"optics.angular_spectrum": {"device": "cpu", "precision": "fp32"}}}})
         rid = (await r.json())["id"]
@@ -531,7 +532,7 @@ def test_view_command_is_refused_by_worlds_without_views_and_never_changes_the_w
     n_err = len(h.errors())
     h.cmd("view", op="plane", id=1)
     # in the owner's terms (review UX-ui U13): what was not done, then the world's own reason
-    assert len(h.errors()) == n_err + 1 and h.errors()[-1].startswith("Срез не построен: у этого мира нет запросов")
+    assert len(h.errors()) == n_err + 1 and english(h.errors()[-1]).startswith("Slice not built: this world has no view requests")
 
 
 async def _approximations_follow_the_world(tmp_path):
@@ -598,10 +599,10 @@ async def _resume_races_and_failures(tmp_path):
         run = mgr.get(rid)
         assert mgr.n_running() == 1 and run.meta["resumed"] == 1
         assert sum(1 for m in _messages(run.stream_path) if m["type"] == "notice"
-                   and m["text"].startswith("Продолжение")) == 1
+                   and english(m["text"]).startswith("Going on")) == 1
         run.rebuilding = True  # as while a long record is replayed
         r = await cl.post(f"/api/runs/{rid}/command", json={"cmd": "set", "args": {"values": {}}})
-        assert r.status == 409 and "восстанавливается" in (await r.json())["error"]
+        assert r.status == 409 and "being restored" in (await r.json())["text"]
         assert (await cl.post(f"/api/runs/{rid}/command", json={"cmd": "pause"})).status == 200
         run.rebuilding = False
         ws = await cl.ws_connect(f"/ws/runs/{rid}")
@@ -638,7 +639,7 @@ async def _resume_races_and_failures(tmp_path):
         mgr.runs[rid] = run = mgr._load_one(run.dir)
         assert (await cl.post(f"/api/runs/{rid}/command", json={"cmd": "play"})).status == 200
         meta = await _wait_state(cl, rid, lambda m: m["state"] != "running")
-        assert meta["state"] == "suspended" and "renamed_param" in meta["resume_error"]
+        assert meta["state"] == "suspended" and "renamed_param" in english(meta["resume_error"])
         assert run.meta["sim_t"] > 0  # the failure is reported at the record's end, not at t = 0
         # ... is tried again by the next ⏺ once its cause is gone
         n = len(run.entries)
@@ -648,7 +649,7 @@ async def _resume_races_and_failures(tmp_path):
         assert len(run.entries) == n
         assert (await cl.post(f"/api/runs/{rid}/command", json={"cmd": "play"})).status == 200
         meta = await _wait_state(cl, rid, lambda m: not m.get("resume_error") and m["state"] == "running"
-                                 and any("Мир восстановлен" in (x.get("text") or "") for x in _messages(run.stream_path)))
+                                 and any("World restored" in english(x.get("text") or "") for x in _messages(run.stream_path)))
         await cl.post(f"/api/runs/{rid}/stop", json={})
 
 
@@ -674,10 +675,10 @@ async def _resume_from_checkpoint(tmp_path, monkeypatch):
         t_ck = ck[-1]["t"]
         assert (await cl.post(f"/api/runs/{rid}/command", json={"cmd": "play"})).status == 200
         await _wait_state(cl, rid, lambda m: m["state"] == "running" and m.get("sim_t", 0) > t_ck)
-        texts = [m.get("text") or "" for m in _messages(run.stream_path)]
-        assert any("Продолжение с сохранённого состояния" in x for x in texts)
-        assert any("Мир продолжен с сохранённого состояния" in x for x in texts)
-        assert not any("Мир восстановлен" in x for x in texts)
+        texts = [english(m.get("text") or "") for m in _messages(run.stream_path)]
+        assert any("Going on from the world's saved state" in x for x in texts)
+        assert any("The world continued from its saved state" in x for x in texts)
+        assert not any("World restored" in x for x in texts)
         assert run.meta["resumes"][-1]["from"] == "checkpoint"
         # without its file: rebuilt from the record
         await cl.post(f"/api/runs/{rid}/stop", json={})
@@ -685,7 +686,7 @@ async def _resume_from_checkpoint(tmp_path, monkeypatch):
             f.unlink()
         assert (await cl.post(f"/api/runs/{rid}/command", json={"cmd": "play"})).status == 200
         await _wait_state(cl, rid, lambda m: m["state"] == "running" and any(
-            "Мир восстановлен" in (x.get("text") or "") for x in _messages(run.stream_path))
+            "World restored" in english(x.get("text") or "") for x in _messages(run.stream_path))
             and (m.get("resumes") or [{}])[-1].get("from") == "replay")
         # the code changed since the checkpoint was written: rebuilt from the record
         await cl.post(f"/api/runs/{rid}/stop", json={})
@@ -768,7 +769,7 @@ async def _record_is_the_truth(tmp_path):
         # the suspension saved world 2's state: the run continues from it (owner, 2026-10-29), not from world 1
         assert w["checkpoint"] is not None and Path(w["checkpoint"]["file"]).name.startswith("w2-")
         assert (await cl.post(f"/api/runs/{rid}/command", json={"cmd": "play"})).status == 200
-        await _wait_state(cl, rid, lambda m: any("Мир продолжен с сохранённого состояния" in (x.get("text") or "")
+        await _wait_state(cl, rid, lambda m: any("The world continued from its saved state" in english(x.get("text") or "")
                                                  for x in _messages(rec)))
         await asyncio.sleep(0.5)
         await cl.post(f"/api/runs/{rid}/stop", json={})
@@ -827,30 +828,31 @@ def test_parameter_refusals_are_in_the_owners_words():
     """UX-params P2: a refused value names the parameter by its label and unit, says what is allowed, and carries the
     parameter's id for the form; an emptied field is not read as 0. P17: an option may carry its own show_if."""
     from lfviz.params import Param, ParamError, Schema
-    sch = Schema([Param("lam_nm", "Длина волны λ, нм", "float", 633.0, min=300.0, max=1600.0, live=True),
-                  Param("n", "Число щелей", "int", 2, min=1, max=10),
-                  Param("species", "Частица", "select", "photon", options=[("photon", "фотон"), ("electron", "электрон")]),
-                  Param("mark", "Метка пути", "select", "pol", standard="pol",
-                        options=[("pol", "поляризатор"), ("mic", "микроскоп", {"species": ["electron"]})])],
-                 presets={"a": {"label": "Сценарий А", "params": {}}})
+    sch = Schema([Param("lam_nm", T("Wavelength λ, nm"), "float", 633.0, min=300.0, max=1600.0, live=True),
+                  Param("n", T("Number of slits"), "int", 2, min=1, max=10),
+                  Param("species", T("Particle"), "select", "photon", options=[("photon", T("photon")), ("electron", T("electron"))]),
+                  Param("mark", T("Path mark"), "select", "pol", standard="pol",
+                        options=[("pol", T("polarizer")), ("mic", T("microscope"), {"species": ["electron"]})])],
+                 presets={"a": {"label": T("Scenario A"), "params": {}}})
     _, errs = sch.resolve(None, {"lam_nm": 2000})
-    assert errs == ["«Длина волны λ, нм»: 2000 — больше наибольшего 1600; можно от 300 до 1600"]
+    assert [str(e) for e in errs] == ["“Wavelength λ, nm”: 2000 is above the maximum 1600; allowed: from 300 to 1600"]
     assert isinstance(errs[0], ParamError) and errs[0].pid == "lam_nm"
     _, errs = sch.resolve(None, {"lam_nm": ""})
-    assert errs[0] == "«Длина волны λ, нм»: поле пустое — введите число от 300 до 1600"
+    assert str(errs[0]) == "“Wavelength λ, nm”: the field is empty — enter a number from 300 to 1600"
     _, errs = sch.resolve(None, {"n": "abc", "species": "neutron"})
-    assert errs[0].startswith("«Число щелей»: «abc» — не целое число") and "нет варианта «neutron»" in errs[1]
+    assert str(errs[0]).startswith("“Number of slits”: “abc” is not a whole number") and \
+        "there is no option “neutron”" in str(errs[1])
     _, errs = sch.resolve("zzz", {})
-    assert errs == ["нет сценария «zzz»; есть: «Сценарий А»"]
+    assert [str(e) for e in errs] == ["there is no scenario “zzz”; there are: “Scenario A”"]
     _, errs = sch.coerce_live({"lam_nm": 633.0}, {"lam_nm": 100.0, "n": 3})
-    assert "меньше наименьшего 300" in errs[0] and "«Число щелей» нельзя менять на ходу" in errs[1]
+    assert "is below the minimum 300" in str(errs[0]) and "“Number of slits” cannot be changed while the world runs" in str(errs[1])
     for e in errs:
         assert not any(w in e for w in ("max", "min", "cannot", "unknown", "lam_nm:"))
     opts = sch.by_id["mark"].to_json()["options"]
-    assert opts == [{"value": "pol", "label": "поляризатор"},
-                    {"value": "mic", "label": "микроскоп", "show_if": {"species": ["electron"]}}]
+    assert opts == [{"value": "pol", "label": {"$t": "polarizer"}},
+                    {"value": "mic", "label": {"$t": "microscope"}, "show_if": {"species": ["electron"]}}]
     params, errs = sch.resolve(None, {"mark": "mic", "species": "electron"})
-    assert not errs and sch.modifications(params)[0]["value"] == "микроскоп"  # 3-tuples in the modified-physics list
+    assert not errs and sch.modifications(params)[0]["value"] == {"$t": "microscope"}  # 3-tuples in the modified-physics list
 
 
 def test_owner_text_of_refusals_and_failures():
@@ -858,21 +860,25 @@ def test_owner_text_of_refusals_and_failures():
     ValueError keeps its own text; known English library sentences are put into the owner's terms; any other exception
     is a short Russian sentence — its type and own text only as a one-line detail, never a traceback."""
     from lfviz.errors import Refusal, owner_text
-    t, d = owner_text(Refusal("пакет внутри стенки", hint="сдвиньте его по x"), "scene")
-    assert t == "Сцена не изменена: пакет внутри стенки. Что изменить: сдвиньте его по x" and d is None
-    assert owner_text(ValueError("ОТО требует СТО"), "build") == ("Мир не создан: ОТО требует СТО", None)
+    t, d = owner_text(Refusal(T("the packet is inside the wall"), hint=T("move it along x")), "scene")
+    assert str(t) == "Scene not changed: the packet is inside the wall. What to change: move it along x" and d is None
+    t, d = owner_text(ValueError(T("GR needs SR")), "build")
+    assert str(t) == "World not created: GR needs SR" and d is None and t["a"]["body"] == {"$t": "GR needs SR"}
     t, d = owner_text(ValueError("Probabilities contain NaN"), "scene")
-    assert "вероятности стали не числами" in t and d == "ValueError: Probabilities contain NaN"
+    assert "probabilities became not-a-number" in str(t) and d == "ValueError: Probabilities contain NaN"
     try:
         1 / 0
     except ZeroDivisionError as e:
-        t, d = owner_text(e, "advance", t="1,5 с")
-    assert t.startswith("Расчёт мира остановился на t = 1,5 с: внутренняя ошибка мира — деление на ноль (ZeroDivisionError)")
-    assert "запуск сохранён" in t and "Мир на паузе" in t and "Traceback" not in t + d and "\n" not in d
+        t, d = owner_text(e, "advance", t=1.5)
+    t = str(t)
+    assert t.startswith("The world's computation stopped at t = 1.5 s: internal error of the world — division by zero "
+                        "(ZeroDivisionError)")
+    assert "the run is saved" in t and "The world is paused" in t and "Traceback" not in t + d and "\n" not in d
     t, d = owner_text(MemoryError("Unable to allocate 591. GiB for an array with shape (440, 180400000)"), "build")
-    assert t.startswith("Мир не создан: не хватает памяти (запрошено 591 ГиБ)") and "Что изменить" in t
+    assert str(t).startswith("World not created: out of memory (asked for 591 GB)") and "What to change" in str(t)
     t, _ = owner_text(KeyError("o1"), "scene")
-    assert t == "Сцена не изменена: внутренняя ошибка мира — KeyError — запуск сохранён, можно вернуться назад или изменить параметры"
+    assert str(t) == ("Scene not changed: internal error of the world — KeyError — the run is saved; you can go back or "
+                      "change the parameters")
 
 
 def _toy_runner(out_stream, after_header_fails=False):
@@ -915,7 +921,8 @@ def test_a_world_that_fails_to_show_itself_is_not_built(tmp_path, monkeypatch):
     assert r.start() is False
     msgs = _decoded(s)
     assert [m["type"] for m in msgs][-2:] == ["error", "end"] and msgs[-1]["reason"] == "world not built"
-    assert msgs[-2]["text"].startswith("Мир не создан: внутренняя ошибка мира — деление на ноль (ZeroDivisionError)")
+    assert english(msgs[-2]["text"]).startswith("World not created: internal error of the world — division by zero "
+                                                "(ZeroDivisionError)")
     s2 = io.BytesIO()
     r2 = _toy_runner(s2)
     assert r2.start() is True
@@ -923,7 +930,8 @@ def test_a_world_that_fails_to_show_itself_is_not_built(tmp_path, monkeypatch):
     r2.handle({"cmd": "new_world", "args": {"params": {"drag": 0.5}}})
     new = _decoded(s2)[n0:]
     assert [m["type"] for m in new] == ["busy", "busy", "command", "error"], [m["type"] for m in new]
-    assert new[-1]["text"].startswith("Новый мир не создан: внутренняя ошибка мира") and "Прежний мир продолжается" in new[-1]["text"]
+    assert english(new[-1]["text"]).startswith("New world not created: internal error of the world") and \
+        "The previous world goes on" in english(new[-1]["text"])
     assert r2.sim is sim0 and r2.world == 1
     r2.handle({"cmd": "new_world", "args": {"params": {"drag": 0.25}}})
     assert r2.world == 2 and [m["type"] for m in _decoded(s2)].count("header") == 2
@@ -937,18 +945,18 @@ def test_a_world_that_fails_to_show_itself_is_not_built(tmp_path, monkeypatch):
                     break
                 await asyncio.sleep(0.05)
             # what a worker writes when its first world fails to show itself (Runner.start), then it ends by itself
-            run._ingest(protocol.encode({"type": "error", "t": 0.0, "text": "Мир не создан: проба"}))
+            run._ingest(protocol.encode({"type": "error", "t": 0.0, "text": T("World not created: a probe")}))
             run._ingest(protocol.encode({"type": "end", "t": 0.0, "reason": "world not built"}))
             run.proc.kill()
             await asyncio.wait_for(asyncio.shield(run._reader), 30)
-            assert run.meta["state"] == "failed" and run.summary()["error"] == "Мир не создан: проба"
+            assert run.meta["state"] == "failed" and run.summary()["error"] == {"$t": "World not created: a probe"}
             ws = await cl.ws_connect(f"/ws/runs/{run.id}")
             while True:
                 m, _ = protocol.decode((await asyncio.wait_for(ws.receive(), 30)).data)
                 if m["type"] == "history_end":
                     break
             await ws.close()
-            assert m["resumable"] is False and m["start_error"] == "Мир не создан: проба"
+            assert m["resumable"] is False and m["start_error"] == {"$t": "World not created: a probe"}
     asyncio.run(server_side())
 
 
@@ -966,7 +974,7 @@ def test_a_computing_command_is_announced_and_written_as_one_piece(monkeypatch):
     r.handle({"cmd": "play", "args": {}})
     new = _decoded(s)[n0:]
     assert [m["type"] for m in new] == ["busy", "busy", "command", "scene", "event", "state"]
-    assert new[0]["on"] is True and new[0]["what"] == "сцена: добавляется объект «particle»" and new[1]["on"] is False
+    assert new[0]["on"] is True and english(new[0]["what"]) == "scene: an object “particle” is being added" and new[1]["on"] is False
     assert "busy" in __import__("lfviz.runs", fromlist=["NOT_RECORDED"]).NOT_RECORDED
 
 
@@ -981,12 +989,12 @@ async def _cancel(tmp_path):
                 break
             await asyncio.sleep(0.05)
         r = await cl.post(f"/api/runs/{rid}/cancel")
-        assert r.status == 409 and "отменять нечего" in (await r.json())["error"]
+        assert r.status == 409 and "nothing to cancel" in (await r.json())["text"]
         await cl.post(f"/api/runs/{rid}/command", json={"cmd": "pause"})
         await asyncio.sleep(0.5)
         n = len(run.entries)
         # the worker announces a command it computes; the cancel is decided before its end arrives
-        run._ingest(protocol.encode({"type": "busy", "on": True, "cmd": "scene", "what": "сцена: добавляется объект",
+        run._ingest(protocol.encode({"type": "busy", "on": True, "cmd": "scene", "what": T("scene: an object is being added"),
                                      "wall": 0.0, "t": run.meta.get("sim_t", 0.0)}))
         assert [x for x in await (await cl.get("/api/runs")).json() if x["id"] == rid][0]["busy"]["cmd"] == "scene"
         res = await (await cl.post(f"/api/runs/{rid}/cancel")).json()
@@ -998,8 +1006,8 @@ async def _cancel(tmp_path):
         assert run.running and run.meta["state"] == "running" and run.busy is None
         kinds = [protocol.peek_meta(run._read(e, {})).get("type") for e in run.entries[n:]]
         assert "notice" in kinds and "header" not in kinds  # resumed: the same world, from its record
-        texts = [protocol.peek_meta(run._read(e, {})).get("text", "") for e in run.entries[n:]]
-        assert any(t.startswith("Отменено: сцена: добавляется объект") for t in texts)
+        texts = [english(protocol.peek_meta(run._read(e, {})).get("text", "")) for e in run.entries[n:]]
+        assert any(t.startswith("Cancelled: scene: an object is being added") for t in texts)
         await cl.post(f"/api/runs/{rid}/stop")
 
 
@@ -1021,22 +1029,23 @@ def test_workers_hold_a_memory_budget(tmp_path, monkeypatch):
     out = subprocess.run([sys.executable, "-c", code], env={**__import__("os").environ, limits.ENV: str(600 * 2**20)},
                          capture_output=True, text=True, timeout=60).stdout
     assert out.startswith("MemoryError"), out
-    assert owner_text(MemoryError(out[12:]), "set")[0].startswith("Изменение не применено: не хватает памяти")
+    assert str(owner_text(MemoryError(out[12:]), "set")[0]).startswith("Change not applied: out of memory")
     assert 2**30 <= limits.default_budget(3) <= 8 * 2**30
-    assert limits.fmt_bytes(591 * 2**30) == "591 ГБ" and limits.fmt_bytes(6.56 * 2**30) == "6,56 ГБ"
+    assert str(limits.fmt_bytes(591 * 2**30)) == "591 GB" and str(limits.fmt_bytes(6.56 * 2**30)) == "6.56 GB"
+    assert limits.fmt_bytes(591 * 2**30) == {"$t": "{n:.3g} GB", "a": {"n": 591.0}}  # the number for the viewer
 
     monkeypatch.setenv("LFVIZ_EXTRA", str(Path(__file__).resolve().parent / "playgrounds"))
     sim_cls = registry.load("p99_toy")["simulation"]
     monkeypatch.setattr(sim_cls, "estimate_bytes", classmethod(
-        lambda cls, p: (80 * 2**30, "сетка 440 × 180 400 000 узлов", "уменьшите nx") if p.get("drag") else None), raising=False)
+        lambda cls, p: (80 * 2**30, T("a grid of {nx:d} × {ny:d} nodes", nx=440, ny=180400000), T("reduce nx")) if p.get("drag") else None), raising=False)
 
     async def go():
         app = create_app(tmp_path / "runs", max_workers=2, worker_mem_gb=1.5)
         async with TestClient(TestServer(app)) as cl:
             r = await cl.post("/api/runs", json={"viz": "p99_toy", "params": {"drag": 0.1}})
             j = await r.json()
-            assert r.status == 400 and j["error"] == ("Сетка 440 × 180 400 000 узлов потребует около 80 ГБ памяти, а "
-                                                      "вычислителю отведено 1,5 ГБ. Что изменить: уменьшите nx")
+            assert r.status == 400 and j["text"] == ("A grid of 440 × 180400000 nodes would need about 80 GB of memory, "
+                                                     "while the worker is given 1.5 GB. What to change: reduce nx")
             assert not list((tmp_path / "runs").glob("*/meta.json"))  # nothing was started
             rid = (await (await cl.post("/api/runs", json={"viz": "p99_toy", "preset": "two"})).json())["id"]
             run = app[MGR].get(rid)
@@ -1060,7 +1069,7 @@ def test_a_check_refusal_of_parameters_is_said_at_the_start(tmp_path, monkeypatc
 
     def check(cls, p):
         if p.get("drag", 0) > 1:
-            raise Refusal("сопротивление больше 1 остановит частицы за один шаг", "возьмите «Сопротивление» ≤ 1")
+            raise Refusal(T("a drag above 1 stops the particles within one step"), T("take “Drag” ≤ 1"))
     monkeypatch.setattr(sim_cls, "check_params", classmethod(check), raising=False)
 
     async def go():
@@ -1068,10 +1077,10 @@ def test_a_check_refusal_of_parameters_is_said_at_the_start(tmp_path, monkeypatc
         async with TestClient(TestServer(app)) as cl:
             r = await cl.post("/api/runs", json={"viz": "p99_toy", "params": {"drag": 2.0}})
             j = await r.json()
-            assert r.status == 400 and j["error"].endswith("Что изменить: возьмите «Сопротивление» ≤ 1")
+            assert r.status == 400 and j["text"].endswith("What to change: take “Drag” ≤ 1")
             r = await cl.post("/api/runs", json={"viz": "p99_toy", "params": {"drag": -1}})
             j = await r.json()
-            assert r.status == 400 and j["fields"] == {"drag": j["error"]} and "меньше наименьшего 0" in j["error"]
+            assert r.status == 400 and j["fields"] == {"drag": j["error"]} and "is below the minimum 0" in j["text"]
     asyncio.run(go())
 
 
@@ -1098,6 +1107,6 @@ def test_a_slice_plane_asked_beyond_the_box_stays_a_step_inside():
     w = W()
     w._init_planes()
     text = w.view({"op": "plane", "id": 1, "origin": [0, 0, 50.0], "normal": [0, 0, 1]})
-    assert w.planes[1]["origin"][2] == pytest.approx(9.9) and "у края" in text
+    assert w.planes[1]["origin"][2] == pytest.approx(9.9) and "at the edge" in str(text)
     text = w.view({"op": "plane", "id": 1, "origin": [0, 0, 3.0], "normal": [0, 0, 1]})
-    assert w.planes[1]["origin"][2] == pytest.approx(3.0) and "у края" not in text
+    assert w.planes[1]["origin"][2] == pytest.approx(3.0) and "at the edge" not in str(text)

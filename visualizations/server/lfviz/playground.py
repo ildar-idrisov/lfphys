@@ -30,7 +30,7 @@ A section subclasses ``PlaygroundSimulation`` and gives:
   are, ``position`` going to the type's ``x``, ``y``, ``z``. ``palette_state() -> {kind: None | reason}`` — the palette
   types the world cannot take now and why (Russian, with what to change), sent in every ``scene`` message (after each
   change and in a new world); the player disables those buttons and shows the reason. ``can_remove(obj) -> None |
-  reason`` — asked before a removal and for every object before «Очистить сцену» removes any, so that a refusal leaves
+  reason`` — asked before a removal and for every object before "Clear the scene" removes any, so that a refusal leaves
   the scene whole. All of them are deterministic (a restore repeats them), cheap, and never change the world's state.
 
 Direct manipulation (plan P16.2; the integrator's API of 2026-11-11): a palette type may declare ``handles`` — the
@@ -40,7 +40,7 @@ edit {id, values}: only those parameters), applied through the same path as ``se
 raises). Every object with a position is reported in the frame's ``at[id]`` (world units) by the section. A section may
 also give ``measurables()`` (plan P16.3): the quantities its instruments can record, sent in every ``scene`` message.
 
-A new world that keeps the scene (plan P16.1, «перенести сцену»): ``new_world`` with ``carry`` puts the current world's
+A new world that keeps the scene (plan P16.1, "carry the scene over"): ``new_world`` with ``carry`` puts the current world's
 export (``carry_export``: the scene file's data with the objects' ids) into the new world's ``params["scene"]`` marked
 ``carry`` (``sim.Runner``); ``start_scene`` then re-adds each object through ``place`` and the add path, under its old id
 (review LB1-F15), and skips those the new world refuses. The carried scene is part of the new world's parameters (its
@@ -92,6 +92,7 @@ from pathlib import Path
 import numpy as np
 
 from .errors import Refusal, owner_text
+from .i18n import T, is_t, join
 from .params import Param, Schema
 from .sim import Simulation
 
@@ -208,26 +209,31 @@ def prune_carry(world: int, folder: Path | None = None) -> None:
 
 def load_carry(ref):
     """The carried state a new world's parameters name (``store_carry``'s reference): from this process, else from the
-    run's folder, checked against its SHA-256. Raises ValueError (in Russian) when it is not there or not the same."""
+    run's folder, checked against its SHA-256. Raises ValueError (a text for the owner) when it is not there or not the
+    same."""
     if not isinstance(ref, dict) or not isinstance(ref.get("sha256"), str):
-        raise ValueError("ссылка на перенесённое состояние повреждена")
+        raise ValueError(T("the reference to the carried state is damaged"))
     sha = ref["sha256"]
     if sha in _carry_cache:
         return _carry_cache[sha]
     name = ref.get("file")
     if not isinstance(name, str) or not CARRY_NAME.match(name) or _carry_dir is None:
-        raise ValueError("перенесённое состояние прежнего мира не сохранено в папке запуска — этот мир не восстановить")
+        raise ValueError(T("the previous world's carried state is not saved in the run's folder — this world cannot be "
+                           "restored"))
     try:
         data = (_carry_dir / name).read_bytes()
     except OSError as e:
-        raise ValueError(f"файл перенесённого состояния {name} не найден — этот мир не восстановить") from e
+        raise ValueError(T("the file of the carried state {name} is not found — this world cannot be restored",
+                           name=name)) from e
     if hashlib.sha256(data).hexdigest() != sha:
-        raise ValueError(f"файл перенесённого состояния {name} изменён — этот мир не восстановить")
+        raise ValueError(T("the file of the carried state {name} was changed — this world cannot be restored", name=name))
     _carry_cache[sha] = unpack_state(data)
     return _carry_cache[sha]
 
 
-# --- numbers for the owner's texts (review LB1-p02-ux X6: one Russian format in the events and the player) ----------------
+# --- numbers for the owner's texts (review LB1-p02-ux X6). Since the i18n (2026-11-12) numbers are passed as arguments of
+# a text (``T("x = {x:.4g}", x=...)``) and formatted by the player in the viewer's language; ``fmt`` is kept for the
+# worlds' older texts and the tests ---------------------------------------------------------------------------------
 _SUP = str.maketrans("-0123456789", "⁻⁰¹²³⁴⁵⁶⁷⁸⁹")
 
 
@@ -259,13 +265,18 @@ def fmt(v, digits: int = 4) -> str:
     return ("−" if x < 0 else "") + whole + ("," + frac if frac else "")
 
 
-def unit_of(p) -> str:
-    """A parameter's unit: its ``unit``, else the one its label carries after a comma («Центр пакета: x, нм»)."""
+def unit_of(p):
+    """A parameter's unit: its ``unit``, else the one its label carries after a comma ("Packet centre: x, nm"). For a
+    label that is a text (``T``) the unit is the part of its rendering after the last comma (the placeholder format
+    ``{label:unit}``), so it follows the viewer's language."""
     if p is None:
         return ""
     if getattr(p, "unit", ""):
         return p.unit
-    m = re.search(r",\s*([^,(]+?)\s*(\(|$)", p.label or "")
+    lab = p.label or ""
+    if is_t(lab):
+        return T("{label:unit}", label=lab) if re.search(r",\s*([^,(]+?)\s*(\(|$)", lab["$t"]) else ""
+    m = re.search(r",\s*([^,(]+?)\s*(\(|$)", lab)
     return m.group(1) if m else ""
 
 
@@ -346,11 +357,12 @@ def check_handles(handles, schema: Schema, typ: str = "") -> dict:
         if "velocity" not in out:
             raise ValueError(f"{where}: velocity_display needs a velocity")
         f = vd.get("factor") if isinstance(vd, dict) else None
-        if not isinstance(vd, dict) or set(vd) != {"unit", "factor"} or not isinstance(vd["unit"], str) \
-                or not vd["unit"].strip() or len(vd["unit"]) > 24 or isinstance(f, bool) \
-                or not isinstance(f, (int, float)) or not math.isfinite(f) or f <= 0:
+        unit = vd.get("unit") if isinstance(vd, dict) else None
+        if not isinstance(vd, dict) or set(vd) != {"unit", "factor"} \
+                or not (is_t(unit) or (isinstance(unit, str) and unit.strip() and len(unit) <= 24)) \
+                or isinstance(f, bool) or not isinstance(f, (int, float)) or not math.isfinite(f) or f <= 0:
             raise ValueError(f"{where}: velocity_display is {{'unit': <short text>, 'factor': <positive number>}}")
-        out["velocity_display"] = {"unit": vd["unit"].strip(), "factor": float(f)}
+        out["velocity_display"] = {"unit": unit if is_t(unit) else unit.strip(), "factor": float(f)}
     ids = handle_ids(out)
     if len(set(ids)) != len(ids):
         raise ValueError(f"{where}: a parameter is named twice")
@@ -406,25 +418,26 @@ def check_scene(scene, viz_id: str, carried_ok: bool = False) -> None:
     list of objects with a string type, the time a finite number in [0, T_MAX]. A file never names a carried state
     (``carry_file``: only a new world made by the runner does, ``carried_ok``). Raises ValueError with the reason."""
     if not isinstance(scene, dict):
-        raise ValueError("файл сцены — объект JSON")
+        raise ValueError(T("a scene file is a JSON object"))
     if "carry_file" in scene and not carried_ok:
-        raise ValueError("файл сцены не может ссылаться на перенесённое состояние другого мира")
+        raise ValueError(T("a scene file cannot refer to the carried state of another world"))
     if scene.get("format", FORMAT) != FORMAT or not isinstance(scene.get("version", FORMAT_VERSION), int) \
             or int(scene.get("version", FORMAT_VERSION)) > FORMAT_VERSION:
-        raise ValueError("это не файл сцены этого плейграунда (или более новой версии)")
+        raise ValueError(T("this is not a scene file of this playground (or it is of a newer version)"))
     if scene.get("viz") not in (None, viz_id):
-        raise ValueError(f"сцена другого раздела ({scene.get('viz')}), а это {viz_id}")
+        raise ValueError(T("a scene of another section ({other}), and this is {this}", other=str(scene.get("viz")),
+                           this=viz_id))
     objs = scene.get("objects", [])
     if not isinstance(objs, list) or not all(isinstance(o, dict) and isinstance(o.get("type"), str) for o in objs):
-        raise ValueError("объекты сцены — список объектов с полем type")
+        raise ValueError(T("the scene's objects are a list of objects with the field type"))
     for o in objs:
         if not isinstance(o.get("values", {}), dict) or not isinstance(o.get("state") or {}, dict):
-            raise ValueError("значения и состояние объекта — объекты JSON")
+            raise ValueError(T("an object's values and state are JSON objects"))
     t = scene.get("t", 0.0)
     if t is None:
         t = 0.0
     if isinstance(t, bool) or not isinstance(t, (int, float)) or not (0.0 <= float(t) <= T_MAX):
-        raise ValueError(f"время сцены — число от 0 до {T_MAX:g} с")
+        raise ValueError(T("the scene's time is a number from 0 to {max:g} s", max=T_MAX))
 
 
 def scene_time(params: dict) -> float:
@@ -433,10 +446,10 @@ def scene_time(params: dict) -> float:
     return float(sc.get("t") or 0.0) if isinstance(sc, dict) else 0.0
 
 
-def scene_param(help_text: str = "") -> Param:
+def scene_param(help_text="") -> Param:
     """The world parameter that carries a scene to start from (a preset's or a loaded file's); hidden in the forms."""
-    return Param("scene", "Начальная сцена", "json", None, group="Сцена", hidden=True,
-                 help=help_text or "Объекты, с которых начинается мир (сценарий или загруженный файл сцены)")
+    return Param("scene", T("Initial scene"), "json", None, group=T("Scene"), hidden=True,
+                 help=help_text or T("The objects the world starts with (a scenario or a loaded scene file)"))
 
 
 class PlaygroundSimulation(Simulation):
@@ -496,13 +509,13 @@ class PlaygroundSimulation(Simulation):
         return values
 
     def palette_state(self) -> dict:
-        """{palette type: None, or why the world cannot take it now} (Russian, with what to change: «нужны стенки:
-        Новый мир → Границы»); the player disables those buttons with the reason. Cheap; never changes the world."""
+        """{palette type: None, or why the world cannot take it now} (a text, with what to change: "walls are needed:
+        New world → Boundaries"); the player disables those buttons with the reason. Cheap; never changes the world."""
         return {}
 
     def can_remove(self, obj: dict) -> str | None:
         """Why ``obj`` cannot be removed now (Russian), or None. Asked before a removal and for every object before
-        «Очистить сцену» removes any, so that a refusal leaves the scene whole."""
+        "Clear the scene" removes any, so that a refusal leaves the scene whole."""
         return None
 
     def carry_state(self) -> dict | None:
@@ -517,19 +530,20 @@ class PlaygroundSimulation(Simulation):
         adapted, or what starts afresh, with ``carry_note``; raise to start the world's own state afresh (the reason
         goes into the notice). Deterministic (a restore repeats it)."""
 
-    def carry_note(self, text: str, obj: dict | None = None, restarted: bool = False) -> None:
+    def carry_note(self, text, obj: dict | None = None, restarted: bool = False) -> None:
         """During a carry-over (``place``, ``on_add``, ``carry_world``): what the new world did with the carried state —
         an adaptation, or (``restarted``) a state it could not take and started afresh from the parameters. ``obj`` None:
         the object being carried, or the world in ``carry_world``. Outside a carry nothing happens."""
         log = self._carry_log
-        if log is None or not str(text).strip():
+        if log is None or not (is_t(text) or str(text).strip()):
             return
         key = log["current"] if obj is None else log["by_id"].get(obj.get("id"), log["current"])
-        log["notes"].setdefault(key, []).append(("restarted" if restarted else "adapted", str(text).strip()))
+        log["notes"].setdefault(key, []).append(("restarted" if restarted else "adapted",
+                                                 text if is_t(text) else str(text).strip()))
 
     def measurables(self) -> list:
         """The quantities the instruments can record (plan P16.3; the integrator's API of 2026-11-11, §2): a list of
-        {"id", "label" (Russian), "unit" (Russian, display), "of": an object id or None for the world, "group"?}. Sent
+        {"id", "label" (a text), "unit" (a text, display), "of": an object id or None for the world, "group"?}. Sent
         in every ``scene`` message (after each change, in a new world, at each segment start); every frame then carries
         their values in ``meas`` ({id: number}, NaN with the reason in ``meas_note`` when undefined). Cheap,
         deterministic, never changes the world."""
@@ -592,7 +606,7 @@ class PlaygroundSimulation(Simulation):
         self._loading = True
         try:
             for i, o in enumerate(objs):
-                label = str(o.get("label") or o.get("type"))[:80]
+                label = _lab(o.get("label") or o.get("type"))
                 was = o.get("id") if isinstance(o.get("id"), str) else None
                 st = o.get("state") if o.get("state") is not None else heavy_objs.get(was) if was else None
                 row = {"id": was, "label": label, "how": "refused", "notes": [], "changed": {}}
@@ -621,7 +635,8 @@ class PlaygroundSimulation(Simulation):
             try:
                 self.carry_world((heavy or {}).get("world"), laws)
             except Exception as e:  # noqa: BLE001 - the world's own state starts afresh, said in the notice
-                log["notes"].setdefault("world", []).append(("restarted", f"начато заново — {owner_text(e)[0]}"))
+                log["notes"].setdefault("world", []).append(("restarted", T("started afresh — {why}",
+                                                                                         why=owner_text(e)[0])))
             said = log["notes"].get("world", [])
             world = {"how": ("restarted" if any(k == "restarted" for k, _ in said) else
                              "state" if (heavy or {}).get("world") is not None else "none"), "notes": said}
@@ -635,13 +650,13 @@ class PlaygroundSimulation(Simulation):
 
     def _type(self, name) -> ObjectType:
         if name not in self.PALETTE:
-            raise ValueError(f"в этом разделе нет объектов «{name}»")
+            raise ValueError(T("this section has no objects “{name}”", name=str(name)))
         return self.PALETTE[name]
 
     def _values(self, ot: ObjectType, values: dict) -> dict:
         v, errors = ot.schema.resolve(None, values)
         if errors:
-            raise ValueError("; ".join(errors))
+            raise ValueError(join(errors, "; "))
         return v
 
     def _add(self, typ, values: dict, state: dict | None = None, label: str | None = None, oid=None) -> dict:
@@ -649,16 +664,16 @@ class PlaygroundSimulation(Simulation):
         of the framework's form, else a new one is given."""
         ot = self._type(typ)
         if len(self.objects) >= self.MAX_OBJECTS:
-            raise ValueError(f"в сцене уже {self.MAX_OBJECTS} объектов: больше нельзя")
+            raise ValueError(T("the scene already holds {n:d} objects: no more can be added", n=self.MAX_OBJECTS))
         if ot.limit is not None and sum(1 for o in self.objects.values() if o["type"] == typ) >= ot.limit:
-            raise ValueError(f"«{ot.label}»: не больше {ot.limit} в сцене")
+            raise ValueError(T("“{label}”: at most {n:d} in a scene", label=ot.label, n=ot.limit))
         keep = isinstance(oid, str) and OBJ_ID.match(oid) and oid not in self.objects
         if not keep:
             while f"o{self.next_id}" in self.objects:
                 self.next_id += 1
             oid = f"o{self.next_id}"
         n = sum(1 for o in self.objects.values() if o["type"] == typ) + 1
-        obj = {"id": oid, "type": typ, "kind": ot.kind, "label": str(label or f"{ot.label} {n}")[:80],
+        obj = {"id": oid, "type": typ, "kind": ot.kind, "label": _lab(label or T("{type} {n:d}", type=ot.label, n=n)),
                "values": self._values(ot, values), "t_added": self.t}
         self.on_add(obj, state)  # raises: nothing was added
         self.objects[oid] = obj
@@ -679,20 +694,21 @@ class PlaygroundSimulation(Simulation):
             ot = self._type(typ)
             values = self._placed(typ, ot, dict(args.get("values") or {}))
             obj = self._add(typ, values, args.get("state"), args.get("label"))
-            text = f"добавлен объект «{obj['label']}»"
+            text = T("object “{label}” added", label=obj["label"])
         elif op == "duplicate":
             src = self._obj(args.get("id"))
             values = {**src["values"], **(args.get("values") or {})}
-            obj = self._add(src["type"], values, self.object_state(src), args.get("label") or f"{src['label']} (копия)")
-            text = f"«{obj['label']}» — копия «{src['label']}»"
+            obj = self._add(src["type"], values, self.object_state(src),
+                            args.get("label") or T("{label} (copy)", label=src["label"]))
+            text = T("“{label}” is a copy of “{src}”", label=obj["label"], src=src["label"])
         elif op == "remove":
             obj = self._obj(args.get("id"))
             why = self.can_remove(obj)
             if why:
-                raise ValueError(f"«{obj['label']}» сейчас удалить нельзя: {why}")
+                raise ValueError(T("“{label}” cannot be removed now: {why}", label=obj["label"], why=why))
             self.on_remove(obj)
             del self.objects[obj["id"]]
-            text = f"удалён объект «{obj['label']}»"
+            text = T("object “{label}” removed", label=obj["label"])
         elif op == "set":
             obj = self._obj(args.get("id"))
             ot = self._type(obj["type"])
@@ -707,27 +723,29 @@ class PlaygroundSimulation(Simulation):
             except Exception:
                 obj["values"] = old
                 raise
-            text = f"«{obj['label']}»: " + "; ".join(_setting(ot.schema.by_id.get(k), k, v) for k, v in changed.items())
+            text = T("“{label}”: {changes}", label=obj["label"],
+                     changes=join([_setting(ot.schema.by_id.get(k), k, v) for k, v in changed.items()], "; "))
         elif op == "edit":
             text = self._edit(args)
             if not text:
                 return ""
         elif op == "label":
             obj = self._obj(args.get("id"))
-            obj["label"] = str(args.get("label") or obj["label"])[:80]
-            text = f"переименован объект: «{obj['label']}»"
+            obj["label"] = _lab(args.get("label") or obj["label"])
+            text = T("object renamed: “{label}”", label=obj["label"])
         elif op == "clear":
             # every object is asked first: a refused clear leaves the scene whole (review UX-params P28)
             why = [(o["label"], self.can_remove(o)) for o in self.objects.values()]
-            why = [f"«{lab}»: {w}" for lab, w in why if w]
+            why = [T("“{label}”: {why}", label=lab, why=w) for lab, w in why if w]
             if why:
-                raise ValueError("сцену очистить нельзя — " + "; ".join(why) + ". Удалите сначала то, что мешает")
+                raise ValueError(T("the scene cannot be cleared — {why}. Remove first what is in the way",
+                                   why=join(why, "; ")))
             for obj in list(self.objects.values()):
                 self.on_remove(obj)
                 del self.objects[obj["id"]]
-            text = "сцена очищена"
+            text = T("the scene cleared")
         else:
-            raise ValueError(f"неизвестная операция со сценой {op!r}")
+            raise ValueError(T("unknown scene operation {op}", op=repr(op)))
         self.rev += 1
         self.emit_scene()
         return text
@@ -742,15 +760,15 @@ class PlaygroundSimulation(Simulation):
         allowed = ot.handle_ids()
         vals = args.get("values")
         if not allowed:
-            raise Refusal(f"«{obj['label']}» нельзя перетаскивать: у объекта этого типа нет положения, которое можно "
-                          f"двигать рукой", hint="меняйте его параметры в инспекторе")
+            raise Refusal(T("“{label}” cannot be dragged: an object of this type has no position to move by hand",
+                            label=obj["label"]), hint=T("change its parameters in the inspector"))
         if not isinstance(vals, dict) or not vals:
-            raise ValueError(f"«{obj['label']}»: перетаскивание без новых значений")
+            raise ValueError(T("“{label}”: a drag without new values", label=obj["label"]))
         extra = [k for k in vals if k not in allowed]
         if extra:
-            raise Refusal(f"«{obj['label']}»: перетаскивание меняет только положение и скорость, а не "
-                          + ", ".join(f"«{_label(ot, k)}»" for k in extra),
-                          hint="остальные параметры меняйте в инспекторе")
+            raise Refusal(T("“{label}”: a drag changes only the position and the velocity, not {params}",
+                            label=obj["label"], params=join([T("“{label}”", label=_label(ot, k)) for k in extra], ", ")),
+                          hint=T("change the other parameters in the inspector"))
         old = copy.deepcopy(obj["values"])
         new = self._values(ot, {**old, **vals})
         h = ot.handles or {}
@@ -776,10 +794,11 @@ class PlaygroundSimulation(Simulation):
         # the parameters, no labels inside the brackets, a noun (no participle to agree with the object's gender)
         parts = []
         if any(k in changed for k in pos):
-            parts.append(f"перемещение: {axis} = {_vec(ot, new, pos)}" if axis else f"перемещение в {_vec(ot, new, pos)}")
+            parts.append(T("move: {axis} = {vec}", axis=axis, vec=_vec(ot, new, pos)) if axis
+                         else T("move to {vec}", vec=_vec(ot, new, pos)))
         vd = h.get("velocity_display")  # the throw in the unit the type shows (the edit stays in world units)
         if any(k in changed for k in vel):
-            parts.append(f"бросок: v = {_vec(ot, new, vel, vd)}")
+            parts.append(T("throw: v = {vec}", vec=_vec(ot, new, vel, vd)))
         # the player clamps the hand's speed already and says what it gave (``asked``); the world clamps too (a REST
         # edit). A clamp is said only when one happened: here, or in the player (the speed sent is the largest one and
         # the hand's was more); ``asked`` is a finite positive number or ignored
@@ -794,11 +813,13 @@ class PlaygroundSimulation(Simulation):
             gave = asked if (asked is not None and asked > vm and (clamped or abs(sent - vm) <= 2e-3 * vm)) \
                 else clamped[0] if clamped else None
             if gave is not None:
-                u = vd["unit"] if vd else unit_of(ot.schema.by_id.get(vel[0]))
+                u = _unit(vd["unit"] if vd else unit_of(ot.schema.by_id.get(vel[0])))
                 k = vd["factor"] if vd else 1.0
-                parts[-1] += (f" — ограничено наибольшей скоростью {fmt(vm * k)}{' ' + u if u else ''} (рука дала "
-                              f"{fmt(gave * k)}; уменьшите масштаб броска)")
-        return f"«{obj['label']}»: " + "; ".join(parts)
+                parts[-1] = (T("{part} — clamped to the largest speed {vmax:.4g} {unit} (the hand gave {gave:.4g}; "
+                               "reduce the throw scale)", part=parts[-1], vmax=vm * k, unit=u, gave=gave * k) if u
+                             else T("{part} — clamped to the largest speed {vmax:.4g} (the hand gave {gave:.4g}; reduce "
+                                    "the throw scale)", part=parts[-1], vmax=vm * k, gave=gave * k))
+        return T("“{label}”: {changes}", label=obj["label"], changes=join(parts, "; "))
 
     @staticmethod
     def _velocity_max(h: dict, values: dict) -> float | None:
@@ -828,7 +849,7 @@ class PlaygroundSimulation(Simulation):
         parameter (p03's piston has a scalar one) and is kept as it is."""
         values = self.place(typ, values)
         if not isinstance(values, dict):
-            raise ValueError("раздел вернул не значения объекта")
+            raise ValueError(T("the section returned something that is not an object's values"))
         pos = values.get("position")
         if _is_point(pos):
             del values["position"]
@@ -839,7 +860,7 @@ class PlaygroundSimulation(Simulation):
 
     def _obj(self, oid) -> dict:
         if oid not in self.objects:
-            raise ValueError(f"в сцене нет объекта {oid!r}")
+            raise ValueError(T("the scene has no object {id}", id=repr(oid)))
         return self.objects[oid]
 
     def scene_meta(self) -> dict:
@@ -848,7 +869,7 @@ class PlaygroundSimulation(Simulation):
                             for o in self.objects.values()]}
         # the palette types the world cannot take now, with the reason: the player disables those buttons (U7, U22)
         try:
-            st = {str(k): str(v) for k, v in (self.palette_state() or {}).items() if v}
+            st = {str(k): (v if is_t(v) else str(v)) for k, v in (self.palette_state() or {}).items() if v}
         except Exception:  # noqa: BLE001 - a hint must never break the scene message
             st = {}
         if st:
@@ -868,9 +889,9 @@ class PlaygroundSimulation(Simulation):
             return []
         out = []
         for m in raw:
-            ok = (isinstance(m, dict) and isinstance(m.get("id"), str) and isinstance(m.get("label"), str)
-                  and isinstance(m.get("unit", ""), str) and (m.get("of") is None or isinstance(m.get("of"), str))
-                  and isinstance(m.get("group", ""), str))
+            ok = (isinstance(m, dict) and isinstance(m.get("id"), str) and _text(m.get("label"))
+                  and _text(m.get("unit", "")) and (m.get("of") is None or isinstance(m.get("of"), str))
+                  and _text(m.get("group", "")))
             if not ok:
                 print(f"lfviz.playground: measurable dropped (not id/label/unit/of/group): {m!r}"[:300], file=sys.stderr)
                 continue
@@ -940,9 +961,9 @@ class PlaygroundSimulation(Simulation):
         self.n_frames += 1
         return self.n_frames % self.CHECK_FRAMES == 1
 
-    def running_check(self, cid: str, label: str, value, ref, tol: float, unit: str = "", note: str = "",
-                      group: str = "Законы сохранения", ok: bool | None = None, info: bool = False,
-                      expected: str = "") -> None:
+    def running_check(self, cid: str, label, value, ref, tol: float, unit="", note="",
+                      group=T("Conservation laws"), ok: bool | None = None, info: bool = False,
+                      expected="") -> None:
         """``expected``: why a failure of this check is expected here (a «what if» law, a scene outside an
         approximation): the player draws such a failure as expected, with the reason (review UX-params P23)."""
         rel = None
@@ -955,7 +976,7 @@ class PlaygroundSimulation(Simulation):
         if info:
             d["info"] = True
         if expected:
-            d["expected"] = str(expected)
+            d["expected"] = expected if is_t(expected) else str(expected)
         self.emit(d)
 
 
@@ -965,39 +986,63 @@ def _is_point(v) -> bool:
         isinstance(c, (int, float)) and not isinstance(c, bool) for c in v)
 
 
-def _g(v) -> str:
-    """A number for the scene's log (the player's Russian format: ``fmt``)."""
-    return fmt(v)
+def _lab(x):
+    """An object's label: a text (``T``, e.g. a palette type's label with its number) or the owner's own words (a plain
+    string, at most 80 characters)."""
+    return x if is_t(x) else str(x)[:80]
 
 
-def _setting(p, pid: str, v) -> str:
-    """«label = value unit» for the log (review LB1-p02-ux X12): the label without its explanation in brackets, a
-    select by its option's name, a number in the player's format with the unit when the label does not carry it."""
+def _text(x) -> bool:
+    """A text field of the API: a plain string or a ``T``."""
+    return isinstance(x, str) or is_t(x)
+
+
+def _nums(vals) -> T:
+    """Numbers for the scene's log, each with 4 significant digits in the viewer's format: "a; b; c"."""
+    return T("; ".join("{v%d:.4g}" % i for i in range(len(vals))), **{f"v{i}": float(v) for i, v in enumerate(vals)})
+
+
+def _setting(p, pid: str, v):
+    """"label = value unit" for the log (review LB1-p02-ux X12): a select by its option's name, a number in the
+    player's format with the unit when the label does not carry it. A plain label loses its explanation in brackets."""
     if p is None:
-        return f"{pid} = {v}"
-    lab = re.sub(r"\s*\([^()]*\)\s*$", "", p.label or pid).strip() or pid
+        return T("{param} = {value}", param=pid, value=v)
+    lab = p.label or pid
+    if isinstance(lab, str):
+        lab = re.sub(r"\s*\([^()]*\)\s*$", "", lab).strip() or pid
     if p.type == "select":
         name = next((o[1] for o in (p.options or []) if o[0] == v), v)
-        return f"{lab}: {name}"
+        return T("{label}: {option}", label=lab, option=name if is_t(name) else str(name))
     if p.type == "bool":
-        return f"{lab}: {'да' if v else 'нет'}"
+        return T("{label}: yes", label=lab) if v else T("{label}: no", label=lab)
     if isinstance(v, (int, float)) and not isinstance(v, bool):
-        u = p.unit if p.unit and p.unit not in lab else ""
-        return f"{lab} = {fmt(v)}" + (f" {u}" if u else "")
-    return f"{lab} = {v}"
+        u = p.unit if p.unit and str(p.unit) not in str(lab) else ""  # compared in English (T or plain string)
+        return T("{label} = {value:.4g} {unit}", label=lab, value=v, unit=_unit(u)) if u \
+            else T("{label} = {value:.4g}", label=lab, value=v)
+    return T("{label} = {value}", label=lab, value=v if is_t(v) else str(v))
 
 
-def _vec(ot: ObjectType, values: dict, ids: list, display: dict | None = None) -> str:
-    """Handle values for the log: «(−10,81; 8,378) нм» when they share a unit, else each with its own; ``display``
+def _unit(u):
+    """A unit for a text: a plain-string unit ("m/s") is a msgid too (the player looks it up; a neutral one such as
+    "Å" passes as it is)."""
+    return T(u) if isinstance(u, str) and u.strip() else u
+
+
+def _vec(ot: ObjectType, values: dict, ids: list, display: dict | None = None):
+    """Handle values for the log: "(−10.81; 8.378) nm" when they share a unit, else each with its own; ``display``
     ({unit, factor}: a type's ``velocity_display``) shows them in that unit."""
     if display:
-        body = "; ".join(fmt(float(values[k]) * display["factor"]) for k in ids)
-        return (f"({body})" if len(ids) > 1 else body) + f" {display['unit']}"
+        body = _nums([float(values[k]) * display["factor"] for k in ids])
+        return T("({v}) {unit}" if len(ids) > 1 else "{v} {unit}", v=body, unit=_unit(display["unit"]))
     units = [unit_of(ot.schema.by_id.get(k)) for k in ids]
-    if len(set(units)) == 1:
-        body = "; ".join(fmt(values[k]) for k in ids)
-        return (f"({body})" if len(ids) > 1 else body) + (f" {units[0]}" if units[0] else "")
-    return "(" + "; ".join(fmt(values[k]) + (f" {u}" if u else "") for k, u in zip(ids, units)) + ")"
+    if all(u == units[0] for u in units):
+        body = _nums([values[k] for k in ids])
+        if units[0]:
+            return T("({v}) {unit}" if len(ids) > 1 else "{v} {unit}", v=body, unit=_unit(units[0]))
+        return T("({v})", v=body) if len(ids) > 1 else body
+    parts = [T("{v:.4g} {unit}", v=float(values[k]), unit=_unit(u)) if u else T("{v:.4g}", v=float(values[k]))
+             for k, u in zip(ids, units)]
+    return T("({v})", v=join(parts, "; "))
 
 
 def _close(a, b) -> bool:
@@ -1029,52 +1074,68 @@ def _changed(sent: dict, now: dict, hidden: set | frozenset = frozenset()) -> di
     return out
 
 
-def _names(rows) -> str:
-    return ", ".join(f"«{r['label']}»" for r in rows)
+def _names(rows):
+    return join([T("“{label}”", label=r["label"]) for r in rows], ", ")
 
 
-def _carry_report(objs: list, rows: list, world: dict, t_now: float) -> tuple[str, dict]:
+def _num_or(v):
+    return T("{v:.4g}", v=v) if isinstance(v, (int, float)) and not isinstance(v, bool) else v if is_t(v) else str(v)
+
+
+def _sentences(head, parts):
+    """A head and its parts as sentences: "Head. Part one. Part two" (each part starts with a capital)."""
+    if not parts:
+        return head
+    return T("{p0}" + "".join(". {p%d:cap}" % i for i in range(1, len(parts) + 1)),
+             **{f"p{i}": x for i, x in enumerate([head, *parts])})
+
+
+def _carry_report(objs: list, rows: list, world: dict, t_now: float):
     """The notice of a carry-over (review LB1-F5): what went with its state, what was rebuilt from its parameters (no
     state of its own; a state not carried, with the reason), what the new world changed, what it refused, and the world's
     own state. Returns the text and the same as data."""
     by = {k: [r for r in rows if r["how"] == k] for k in ("state", "params", "restarted", "refused")}
-    note = lambda r: "; ".join(x for _, x in r["notes"])  # noqa: E731
+    note = lambda r: join([x for _, x in r["notes"]], "; ")  # noqa: E731
     parts = []
     if not objs:
-        head = "Новый мир: сцена прежнего мира была пуста — переносить нечего"
+        head = T("New world: the previous world's scene was empty — nothing to carry over")
     else:
         n = len(rows) - len(by["refused"])
-        head = (f"Сцена перенесена в новый мир: все объекты ({n})" if not by["refused"]
-                else f"Сцена перенесена в новый мир: {n} из {len(rows)} объектов")
+        head = (T("The scene was carried into the new world: all objects ({n:d})", n=n) if not by["refused"]
+                else T("The scene was carried into the new world: {n:d} of {total:d} objects", n=n, total=len(rows)))
         if by["state"]:
-            parts.append("с состоянием — " + _names(by["state"]))
+            parts.append(T("with their state — {names}", names=_names(by["state"])))
         if by["params"]:
-            parts.append("по параметрам (своего состояния нет) — " + _names(by["params"]))
+            parts.append(T("by their parameters (no state of their own) — {names}", names=_names(by["params"])))
         if by["restarted"]:
-            parts.append("состояние не перенесено, начато заново из параметров — " + ", ".join(
-                f"«{r['label']}»" + (f" ({note(r)})" if note(r) else "") for r in by["restarted"]))
+            parts.append(T("the state not carried, started afresh from the parameters — {names}", names=join(
+                [T("“{label}” ({note})", label=r["label"], note=note(r)) if r["notes"]
+                 else T("“{label}”", label=r["label"]) for r in by["restarted"]], ", ")))
         adapted = []
         for r in rows:
             if r["how"] == "refused":
                 continue
-            ch = [f"{k} {_g(a) if isinstance(a, (int, float)) and not isinstance(a, bool) else a} → "
-                  + ("отброшено" if b is None else _g(b) if isinstance(b, (int, float)) and not isinstance(b, bool) else str(b))
+            ch = [T("{param} {old} → dropped", param=k, old=_num_or(a)) if b is None
+                  else T("{param} {old} → {new}", param=k, old=_num_or(a), new=_num_or(b))
                   for k, (a, b) in r["changed"].items()]
             ad = [x for k, x in r["notes"] if k == "adapted"]
             if ch or (ad and r["how"] != "restarted"):
-                adapted.append(f"«{r['label']}»: " + "; ".join(ch + (ad if r["how"] != "restarted" else [])))
+                adapted.append(T("“{label}”: {changes}", label=r["label"],
+                                 changes=join(ch + (ad if r["how"] != "restarted" else []), "; ")))
         if adapted:
-            parts.append("изменено при переносе — " + " | ".join(adapted))
+            parts.append(T("changed in the carry-over — {items}", items=join(adapted, " | ")))
         if by["refused"]:
-            parts.append("не перенесены: " + "; ".join(f"«{r['label']}» — {note(r)}" for r in by["refused"]))
+            parts.append(T("not carried: {items}", items=join(
+                [T("“{label}” — {note}", label=r["label"], note=note(r)) for r in by["refused"]], "; ")))
     wn = [x for _, x in world["notes"]]
     if world["how"] == "state":
-        parts.append("состояние мира перенесено" + (": " + "; ".join(wn) if wn else ""))
+        parts.append(T("the world's state carried over: {notes}", notes=join(wn, "; ")) if wn
+                     else T("the world's state carried over"))
     elif world["how"] == "restarted":
-        parts.append("состояние мира: " + "; ".join(wn))  # the section's notes say what started afresh
+        parts.append(T("the world's state: {notes}", notes=join(wn, "; ")))  # the section's notes: what started afresh
     elif wn:
-        parts.append("мир: " + "; ".join(wn))
-    text = head + "".join(". " + p[:1].upper() + p[1:] for p in parts)
+        parts.append(T("the world: {notes}", notes=join(wn, "; ")))
+    text = _sentences(head, parts)
     data = {"t": t_now, "objects": [{"id": r.get("new_id") or r["id"], "was": r["id"], "label": r["label"],
                                      "how": r["how"], "notes": [x for _, x in r["notes"]], "changed": r["changed"]} for r in rows],
             "world": {"how": world["how"], "notes": wn}}
@@ -1083,7 +1144,9 @@ def _carry_report(objs: list, rows: list, world: dict, t_now: float) -> tuple[st
 
 def plain(x):
     """A scene export as plain JSON data (NumPy numbers and arrays a section may leave in a state become numbers and
-    lists), so that it can travel as a world parameter."""
+    lists), so that it can travel as a world parameter. A text (``T``) stays one."""
+    if is_t(x):
+        return T(x)
     if isinstance(x, dict):
         return {str(k): plain(v) for k, v in x.items()}
     if isinstance(x, (list, tuple)):

@@ -20,6 +20,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
+from lfphys.i18n import english, text_of  # noqa: E402
+
 from v16_optical_vortices.viz import NB, SCHEMA  # noqa: E402
 
 V = "v16_optical_vortices"
@@ -119,14 +121,14 @@ def test_spin_orbit_split_of_the_exact_tight_beam_and_the_paraxial_model():
     assert am["ez"] > 0.2  # the longitudinal field of tight focusing
     hd = ex.of("header")[0]
     # the LG_{0,1} waist at w0 = 0.6 lambda puts 0.66 % of its power beyond q = k: labelled (review O2)
-    assert any("обрезан на q = k" in a for a in hd["approximations"]) and "обрезан" in hd["title"]
+    assert any("cut at q = k" in english(a) for a in hd["approximations"]) and "cut at q = k" in english(hd["title"])
     assert abs(ex.checks()["kept"]["value"] - (1 - 0.0066476)) < 1e-6
     px = Harness(V, "tight_par", {})
     amp = px.of("am")[0]
     # the paraxial model's spin computed from its own field (review O9): sigma, by construction of u e_sigma
     assert abs(amp["L"] - amp["l"]) < 1e-3 and abs(amp["S"] - amp["sigma"]) < 1e-9
     assert not px.checks()["am_S"].get("info") and px.checks()["am_S"]["ok"]
-    assert any("параксиальная" in a for a in px.of("header")[0]["approximations"])
+    assert any("paraxial" in english(a) for a in px.of("header")[0]["approximations"])
     assert all(s["approximation"] for s in px.of("slice"))
 
 
@@ -171,8 +173,8 @@ def test_detector_negative_control_measures_another_frequency_for_another_l():
 
 
 def test_parax_check_is_the_transverse_difference_and_of_second_order():
-    """Review O1: the check «Параксиальная мода против точного поля» compares the transverse components (E_z, which the
-    mode lacks, is the check «Продольное поле»): doubling w0 divides it by 4 (second order, measured 4.1), while
+    """Review O1: the check "Paraxial mode against the exact field" compares the transverse components (E_z, which the
+    mode lacks, is the check "Longitudinal field"): doubling w0 divides it by 4 (second order, measured 4.1), while
     E_z / |E| halves (first order). Negative control: the old all-component value (= max |E_z|) only halves."""
     out = {}
     for w0 in (1.5, 3.0):
@@ -188,18 +190,21 @@ def test_sources_beyond_q_k_are_labelled_or_refused():
     more than 1e-4 of the waist's power is labelled (header, title, check «kept»); the default world drops nothing;
     a plate world states its evanescent near field (no refusal for it: the beam is the plate's exact far field), but
     one whose incident Gaussian is itself mostly evanescent is refused."""
-    with pytest.raises(ValueError, match="затухающие волны"):
+    with pytest.raises(ValueError) as e:
         Harness(V, "lg3", {"l": 6, "p": 3, "w0": 0.3, "lam": 1.6, "rot": "none"})
-    with pytest.raises(ValueError, match="затухающие волны"):
+    assert "evanescent waves" in english(text_of(e.value))
+    with pytest.raises(ValueError) as e:
         Harness(V, "lg3", {"l": 1, "w0": 0.3, "lam": 1.0, "rot": "none"})  # 47 % beyond k
-    with pytest.raises(ValueError, match="не пучок"):  # the plate's incident Gaussian: 50 % beyond k
+    assert "evanescent waves" in english(text_of(e.value))
+    with pytest.raises(ValueError) as e:  # the plate's incident Gaussian: 50 % beyond k
         Harness(V, "spp", {"l": 6, "w0": 0.3, "lam": 1.6, "rot": "none"})
+    assert "is not a beam" in english(text_of(e.value))
     h = Harness(V, "lg3", {"rot": "none"})
-    assert not any("обрезан" in a for a in h.of("header")[0]["approximations"])
+    assert not any("cut at q = k" in english(a) for a in h.of("header")[0]["approximations"])
     assert h.checks()["kept"]["value"] > 1 - 1e-12
     sp = Harness(V, "spp", {"rot": "none"})
     hd = sp.of("header")[0]
-    assert any("затухающих волн за пластинкой" in a for a in hd["approximations"])
+    assert any("no evanescent waves behind the plate" in english(a) for a in hd["approximations"])
     ev = sp.sim.beam.ev_near
     assert 0 < ev[2] < ev[1] < sp.sim.beam.dropped
 
@@ -220,7 +225,7 @@ def test_angular_momentum_checks_are_checks_where_the_window_holds():
     assert sp.of("am")[0]["miss"] < 1e-3
     for cid in ("am_J", "am_S", "am_L", "am_flux", "am_S_flux", "am_L_flux"):
         assert not cs[cid].get("info") and cs[cid]["ok"], (cid, cs[cid])
-    assert cs["am_poynting"].get("info") and "R^−1/2" in cs["am_poynting"]["note"]
+    assert cs["am_poynting"].get("info") and "R^−1/2" in english(cs["am_poynting"]["note"])
 
 
 def test_cost_guard_refuses_with_an_estimate_before_building():
@@ -230,8 +235,9 @@ def test_cost_guard_refuses_with_an_estimate_before_building():
     for params in ({"gen": "spp", "l": 6, "w0": 6.0, "lam": 0.4, "zspan": 3.0},
                    {"gen": "spp", "l": 2, "w0": 6.0, "lam": 1.0, "zspan": 1.5}):
         t0 = time.time()
-        with pytest.raises(ValueError, match="слишком дорог"):
+        with pytest.raises(ValueError) as e:
             Harness(V, "lg3", params)
+        assert "too expensive" in english(text_of(e.value))
         assert time.time() - t0 < 5.0
     from v16_optical_vortices.engine import apparatus as A
     h = Harness(V, "lg3", {"rot": "none"})
@@ -288,7 +294,7 @@ def test_poynting_flow_lines_carry_their_step_error():
 
 
 def test_fork_from_the_defaults_takes_a_waist_its_orders_separate_with():
-    """Review UX-params P11: «Голограмма-вилка» alone was refused for every period (the default waist 1.5 µm, the LG
+    """Review UX-params P11: "Fork hologram" alone was refused for every period (the default waist 1.5 µm, the LG
     modes', spreads faster than the orders separate: tan θ1 must exceed 9/(k w0)), and its advice could not be
     followed. Now the world takes the smallest waist with a 20 % margin (0.1 µm steps) and says so; the header carries
     it; the result is the preset's (4 µm at Λ = 2.5 µm) and its checks pass. A waist given wide enough is kept; a period
@@ -300,7 +306,7 @@ def test_fork_from_the_defaults_takes_a_waist_its_orders_separate_with():
     hp = h.of("header")[-1]["params"]
     k, tan = 2 * math.pi / 1.0, (1 / 2.5) / math.sqrt(1 - (1 / 2.5) ** 2)
     assert hp["w0"] == 4.0 == math.ceil(1.2 * 9 / (k * tan) * 10) / 10
-    assert any("Мир взял w0 = 4 мкм" in m["text"] for m in h.of("notice"))
+    assert any("The world took w0 = 4 µm" in english(m["text"]) for m in h.of("notice"))
     h.run_to(1.0)
     assert not failed(h)
     assert 9 / (k * 1.5) > tan  # the default waist: the orders would not separate (the old refusal)
@@ -308,7 +314,8 @@ def test_fork_from_the_defaults_takes_a_waist_its_orders_separate_with():
     assert h.of("header")[-1]["params"]["w0"] == 5.0 and not h.of("notice")
     with pytest.raises(ValueError) as e:
         Harness(V, None, {"gen": "fork", "period": 8.0})
-    p_max = float(re.search(r"до ([\d.]+) мкм или меньше", str(e.value)).group(1))
+    p_max = float(re.search(r"to ([\d.]+) µm or less", english(text_of(e.value))).group(1))
     Harness(V, None, {"gen": "fork", "period": p_max})  # the named period builds
-    with pytest.raises(ValueError, match="больше 1 мкм"):
+    with pytest.raises(ValueError) as e:
         Harness(V, None, {"gen": "fork", "period": 1.0})
+    assert "longer than 1 µm" in english(text_of(e.value))

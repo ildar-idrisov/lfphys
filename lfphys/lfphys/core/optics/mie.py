@@ -61,23 +61,26 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Рассеяние света шаром: точный ряд Лоренца–Ми",
-    "statement": "Коэффициенты aₙ, bₙ (и внутренние cₙ, dₙ) однородного шара с комплексным показателем m в "
-                 "непоглощающей среде и идеально проводящего шара; факторы эффективности Q_ext, Q_sca, Q_abs, "
-                 "Q_back, Q_pr и параметр асимметрии g; амплитуды S₁(θ), S₂(θ), элементы матрицы Мюллера S11, S12, "
-                 "S33, S34 и степень линейной поляризации; ближние поля E и H внутри и снаружи шара (векторные "
-                 "сферические гармоники).",
-    "validity": "уравнения Максвелла точно для однородного изотропного шара и плоской волны; численно от релеевского "
-                "предела (x ~ 1e-6) до x = 2·10⁴; счёт обратно устойчив по x: коэффициенты точны для x, сдвинутого на "
-                "несколько единиц последнего разряда, погрешность ≤ u(4N·max|aₖ| + 8x|daₙ/dx|) — вдали от узких "
-                "резонансов ~10⁻¹³–10⁻¹² наибольшего коэффициента, на пике резонанса ширины Γ по x — до ~x·u/Γ "
-                "(обусловленность задачи, например 6·10⁻³ при Γ = 1,5·10⁻¹¹, x ≈ 1000); таблицы Уискомба "
-                "воспроизведены во всех 6 знаках",
-    "basis": ["Mie, Ann. Phys. 330, 377 (1908)", "Bohren & Huffman, Absorption and Scattering of Light by Small "
-              "Particles (Wiley 1983), гл. 4", "Wiscombe, NCAR/TN-140+STR (1979): число членов, тестовые таблицы",
-              "Lentz, Appl. Opt. 15, 668 (1976): цепная дробь для Dₙ"],
+    "title": T("Light scattering by a sphere: the exact Lorenz–Mie series"),
+    "statement": T("The coefficients aₙ, bₙ (and the internal cₙ, dₙ) of a homogeneous sphere with a complex "
+                   "refractive index m in a non-absorbing medium and of a perfectly conducting sphere; the efficiency "
+                   "factors Q_ext, Q_sca, Q_abs, Q_back, Q_pr and the asymmetry parameter g; the amplitudes S₁(θ), "
+                   "S₂(θ), the Mueller matrix elements S11, S12, S33, S34 and the degree of linear polarisation; the "
+                   "near fields E and H inside and outside the sphere (vector spherical harmonics)."),
+    "validity": T("Maxwell's equations exactly for a homogeneous isotropic sphere and a plane wave; numerically from "
+                  "the Rayleigh limit (x ~ 1e-6) to x = 2·10⁴; the computation is backward stable in x: the "
+                  "coefficients are exact for x shifted by a few units in the last place, error ≤ u(4N·max|aₖ| + "
+                  "8x|daₙ/dx|): away from narrow resonances ~10⁻¹³–10⁻¹² of the largest coefficient, at the peak of a "
+                  "resonance of width Γ in x up to ~x·u/Γ (the conditioning of the problem, e.g. 6·10⁻³ at Γ = "
+                  "1.5·10⁻¹¹, x ≈ 1000); Wiscombe's tables are reproduced to all 6 digits"),
+    "basis": ["Mie, Ann. Phys. 330, 377 (1908)",
+              T("Bohren & Huffman, Absorption and Scattering of Light by Small Particles (Wiley 1983), ch. 4"),
+              T("Wiscombe, NCAR/TN-140+STR (1979): the number of terms, test tables"),
+              T("Lentz, Appl. Opt. 15, 668 (1976): the continued fraction for Dₙ")],
     "conflicts": [],
 }
 

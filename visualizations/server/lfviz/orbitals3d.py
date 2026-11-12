@@ -42,7 +42,8 @@ import numpy as np
 
 from lfphys.core import geometry as G
 from lfphys.core.quantum import central3d as C
-from lfviz.params import _num  # «2,5·10⁻¹⁶»: numbers in the owner's texts
+from lfphys.i18n import T, is_t
+from lfviz.errors import Refusal
 from lfviz.planes3d import SlicePlanes
 from lfviz.sim import Simulation as BaseSimulation
 
@@ -52,7 +53,7 @@ BOX_FRAC = 1e-3  # the scene's cube holds the sphere with 1 - BOX_FRAC of the pr
 SLICE_N = {False: 160, True: 96}  # longest side of a slice: stationary / superposition (per phase: the record's size)
 AUTO_N = 64
 DEFAULT_NORMALS = {1: (0.0, -1.0, 0.0), 2: (0.0, 0.0, 1.0), 3: (1.0, 0.0, 0.0)}
-RETIRED = " — прежнее состояние"  # a check of a state prepared over (review UX-ui U12)
+RETIRED = "{label} — former state"  # the msgid of a check of a state prepared over (review UX-ui U12)
 
 
 def deflate(a) -> np.ndarray:
@@ -60,8 +61,8 @@ def deflate(a) -> np.ndarray:
 
 
 class OrbitalWorld(SlicePlanes, BaseSimulation):
-    group = "Волновая функция"
-    route_label = "точно для этой плоскости: ψ в её точках"
+    group = T("Wave function")
+    route_label = T("exact for this plane: ψ at its points")
 
     def __init__(self, params, seed, emit):
         super().__init__(params, seed, emit)
@@ -76,7 +77,8 @@ class OrbitalWorld(SlicePlanes, BaseSimulation):
         sp = self.state
         freqs = sp.frequencies()
         if len(freqs) > 1:
-            raise ValueError("суперпозиция — не больше двух уровней энергии (один период Бора)")
+            raise Refusal(T("a superposition here holds at most two energy levels (one Bohr period)"),
+                          hint=T("choose two states of two energies at most"))
         self.omega = freqs[0] if freqs else 0.0  # rad per computational time unit
         self.nb = NB if self.omega > 0 else 1
         self.period = 2 * math.pi / self.omega * self.tu if self.omega > 0 else math.inf  # seconds
@@ -147,13 +149,14 @@ class OrbitalWorld(SlicePlanes, BaseSimulation):
         self._msg({"type": "cloud", "t": self.t, "id": "cloud", "bin": k, "nb": self.nb,
                    "t_bin": self._t_bin(k) * self.tu, "dims": [self.ng] * 3, "enc": "sqrt-u8", "codec": "deflate",
                    "peak": self.peak / self.Lu**3,
-                   "note": "√(|ψ|²/пик) в 8 битах (разрешение 3D-текстуры); точные значения — в срезах"},
+                   "note": T("√(|ψ|²/peak) in 8 bits (the 3-D texture's resolution); exact values are in the slices")},
                   {"data": deflate(q)})
         tk = self._t_bin(k)
         j = C.current(self.state, *self.gpos, t=tk, mu=self.mu, hbar=self.hbar)
         if np.max(np.abs(j)) > 0:
             self._msg({"type": "vectors", "t": self.t, "id": "current", "bin": k, "count": int(self.gpos.shape[1]),
-                       "note": "ток вероятности j = (ħ/μ) Im(ψ*∇ψ); длина ~ √|j| по наибольшему в этот момент"},
+                       "note": T("probability current j = (ħ/μ) Im(ψ*∇ψ); length ~ √|j| scaled to the largest at "
+                                 "this moment")},
                       {"pos": (self.gpos.T * self.Lu).astype(np.float32), "vec": j.T.astype(np.float32)})
         self._check_current(k, j)
         if self.nb > 1:
@@ -231,7 +234,7 @@ class OrbitalWorld(SlicePlanes, BaseSimulation):
         k_now = self.bin_at(self.t)
         ks = [k_now] if coarse else list(range(max(self.revealed, 1)))
         bins = {k: self._slice_values(pl, s, t, k) for k in ks}
-        ver = {"points": 0, "note": "автосмещение: грубый срез, без сверки; полный — когда автосмещение выключено"}
+        ver = {"points": 0, "note": T("auto-move: a coarse slice, not verified; the full one when auto-move is off")}
         if not coarse:
             ver = self._verify(bins[k_now], k_now)
         self._rev += 1
@@ -263,15 +266,20 @@ class OrbitalWorld(SlicePlanes, BaseSimulation):
         ver = sl["verify"]
         if ver.get("points"):
             pl = sl["plane"]
-            when = "" if self.nb == 1 else f", фаза {ver['bin'] + 1} из {self.nb}"
-            self._check(f"slice_{pid}", f"Срез {pid} ({G._label(pl)}{when}): ψ в {ver['points']} точках против "
-                                        f"независимого расчёта", ver["max_err"], 0.0, tol=ver["tol"], ok=ver["ok"],
-                        note=self.verify_note + "; разность и допуск — доли √(пика |ψ|²)")
+            if self.nb == 1:
+                label = T("Slice {id} ({plane}): ψ at {n} points against an independent calculation", id=pid,
+                          plane=G._label(pl), n=ver["points"])
+            else:
+                label = T("Slice {id} ({plane}, phase {k} of {nb}): ψ at {n} points against an independent calculation",
+                          id=pid, plane=G._label(pl), k=ver["bin"] + 1, nb=self.nb, n=ver["points"])
+            self._check(f"slice_{pid}", label, ver["max_err"], 0.0, tol=ver["tol"], ok=ver["ok"],
+                        note=T("{ref}; the difference and the tolerance are fractions of √(peak |ψ|²)",
+                               ref=self.verify_note))
 
     def _plane_removed(self, pid, sl):
         if sl and sl["verify"].get("points"):
-            self._check(f"slice_{pid}", f"Срез {pid}: убран", None, None, info=True,
-                        note="последняя сверка этого среза — в записи запуска")
+            self._check(f"slice_{pid}", T("Slice {id}: removed", id=pid), None, None, info=True,
+                        note=T("the last verification of this slice is in the run's record"))
 
     def _send_slice(self, pid, k):
         sl = self.slices[pid]
@@ -282,14 +290,16 @@ class OrbitalWorld(SlicePlanes, BaseSimulation):
         pd = self.planes.get(pid) or {}
         pl = sl["plane"]
         ver = sl["verify"] if k == sl.get("vbin") else {"points": 0, "note": (
-            f"сверен срез фазы {sl['vbin'] + 1}" if sl["verify"].get("points") else sl["verify"].get("note", ""))}
+            T("verified: the slice of phase {k}", k=sl["vbin"] + 1) if sl["verify"].get("points")
+            else sl["verify"].get("note", ""))}
         meta = {"type": "slice", "t": self.t, "id": pid, "shape": list(I.shape), "coarse": bool(sl["coarse"]),
                 "s": [float(sl["s"][0]), float(sl["s"][-1]), len(sl["s"])],
                 "tt": [float(sl["t"][0]), float(sl["t"][-1]), len(sl["t"])],
                 "origin": pd.get("origin", [float(c) for c in pl.origin]), "u": pd.get("u", list(pl.u)),
                 "v": pd.get("v", list(pl.v)), "normal": pd.get("normal", [float(c) for c in pl.normal]),
                 "label": pd.get("label", G._label(pl)), "peak": self.peak / self.Lu**3, "route": "exact",
-                "route_label": self.route_label + ("" if self.nb == 1 else f" (фаза {k + 1} из {self.nb})"),
+                "route_label": self.route_label if self.nb == 1 else T("{route} (phase {k} of {nb})",
+                                                                        route=self.route_label, k=k + 1, nb=self.nb),
                 "exact": True, "approximation": False, "reason": "", "verify": ver,
                 "verify_title": self.verify_note, "units": self.units, "depth": False, "window_est": 0.0,
                 "bin": k, "nb": self.nb, "t_bin": self._t_bin(k) * self.tu, "rev": sl["rev"]}
@@ -323,25 +333,27 @@ class OrbitalWorld(SlicePlanes, BaseSimulation):
         if len(sp.orbitals) == 1:
             o = sp.orbitals[0]
             if o.real or o.m == 0:
-                self._check("current", "Ток вероятности вещественной функции равен нулю", jmax, 0.0, tol=0.0,
-                            ok=jmax == 0.0, note="Im(ψ*∇ψ) = 0 точно: стрелок нет")
+                self._check("current", T("The probability current of a real function is zero"), jmax, 0.0, tol=0.0,
+                            ok=jmax == 0.0, note=T("Im(ψ*∇ψ) = 0 exactly: no arrows"))
                 return
             jc = C.azimuthal_current(o, x, y, z, self.mu, self.hbar)
             j2 = C.current(sp, x, y, z, 0.0, self.mu, self.hbar, h=2e-5 * self.rb)
             trunc = float(np.max(np.abs(j - j2))) * 4 / 3  # O(h^2): the step h against 2h estimates the truncation
             tol = trunc + 64 * np.finfo(float).eps * float(np.max(np.abs(sp.psi(x, y, z)) ** 2)) / (1e-5 * self.rb)
             d = float(np.max(np.abs(j - jc)))
-            self._check("current", f"Ток вероятности: кольца вокруг оси z (m = {o.m:+d}) против замкнутой формулы",
+            self._check("current", T("Probability current: rings around the z axis (m = {m:+d}) against the closed form",
+                                     m=int(o.m)),
                         d / jmax, 0.0, tol=tol / jmax, ok=d <= tol,
-                        note="рисуемый ток — центральные разности ψ; эталон j = (ħm/μ)|ψ|²φ̂/ρ; доля max|j|; "
-                             "допуск — оценка усечения (шаг h против 2h) и округления")
+                        note=T("the drawn current comes from central differences of ψ; reference j = (ħm/μ)|ψ|²φ̂/ρ; "
+                               "fraction of max|j|; tolerance: an estimate of truncation (step h against 2h) and "
+                               "round-off"))
             return
         if self._cont_done or k not in (0, self.nb // 4):
             return
-        T = 2 * math.pi / self.omega if self.omega > 0 else 2 * math.pi * self.hbar / abs(sp.orbitals[0].energy)
+        Tp = 2 * math.pi / self.omega if self.omega > 0 else 2 * math.pi * self.hbar / abs(sp.orbitals[0].energy)
         tk = self._t_bin(k)
         rho = lambda tt: np.abs(sp.psi(x, y, z, tt)) ** 2  # noqa: E731
-        ht = 1e-4 * T
+        ht = 1e-4 * Tp
         drho = (rho(tk + ht) - rho(tk - ht)) / (2 * ht)
         if self.nb > 1:
             # rho = A + |B| cos(omega t - phi): at t = 0 or a quarter period later |d rho/dt| is at least 1/sqrt 2
@@ -366,28 +378,28 @@ class OrbitalWorld(SlicePlanes, BaseSimulation):
         roundoff = 4 * np.finfo(float).eps * float(np.max(rho(tk))) * self.hbar / self.mu / (1e-2 * h0 * h0)
         tol = float(np.max(np.abs(r2 - r1))) + 2 * roundoff  # a pure truncation error grows 4x when h doubles
         scale = max(float(np.max(np.abs(drho))), jmax / self.rb_state)
-        what = "∂ρ/∂t + ∇·j = 0" if self.nb > 1 else "∇·j = 0 (одна энергия: ∂ρ/∂t = 0)"
+        what = "∂ρ/∂t + ∇·j = 0" if self.nb > 1 else T("∇·j = 0 (one energy: ∂ρ/∂t = 0)")
+        label = T("Continuity equation {eq} at the arrows' nodes", eq=what)
         if scale == 0.0:
             # review UX-params P3: real states of one energy with real coefficients (2p_z + 2s): j = 0 and d rho/dt = 0
             # everywhere, so the identity holds term by term; the share of the scale divided by zero and killed the
             # worker («float division by zero»). The residual itself must then be exactly zero
-            self._check("continuity", f"Уравнение непрерывности {what} в узлах стрелок", res, 0.0, tol=0.0,
-                        ok=res == 0.0,
-                        note="ток равен нулю всюду и ∂ρ/∂t = 0 (вещественные состояния одной энергии с вещественными "
-                             "коэффициентами): тождество выполняется почленно, невязка — ровно 0")
+            self._check("continuity", label, res, 0.0, tol=0.0, ok=res == 0.0,
+                        note=T("the current is zero everywhere and ∂ρ/∂t = 0 (real states of one energy with real "
+                               "coefficients): the identity holds term by term, the residual is exactly 0"))
             return
-        self._check("continuity", f"Уравнение непрерывности {what} в узлах стрелок", res / scale, 0.0,
-                    tol=tol / scale, ok=res <= tol,
-                    note=f"доля масштаба {scale:.2e} (max|∂ρ/∂t| или max|j|/⟨r⟩); производные — центральные разности "
-                         f"по t, x, y, z с шагами h и 2h: невязка должна быть ошибкой усечения (расти вчетверо с "
-                         f"шагом), допуск — |невязка(2h) − невязка(h)| + округление")
+        self._check("continuity", label, res / scale, 0.0, tol=tol / scale, ok=res <= tol,
+                    note=T("fraction of the scale {scale:.2e} (max|∂ρ/∂t| or max|j|/⟨r⟩); the derivatives are central "
+                           "differences in t, x, y, z with steps h and 2h: the residual must be a truncation error "
+                           "(growing fourfold with the step); tolerance: |residual(2h) − residual(h)| + round-off",
+                           scale=scale))
 
     def _dipole_ref(self):
-        """<1| r |2> (complex 3-vector, computational units) and how it was obtained (a world may give a closed
-        form); default: the quadrature of central3d."""
+        """<1| r |2> (complex 3-vector, computational units), how it was obtained and whether that is a closed form (a
+        world may give one); default: the quadrature of central3d."""
         a, b = self.state.orbitals
-        return C.dipole(a, b, self.r_max), "матричный элемент ⟨1|r|2⟩ — квадратура (радиальные панели × точное " \
-                                            "правило по углам)"
+        return C.dipole(a, b, self.r_max), T("the matrix element ⟨1|r|2⟩ by quadrature (radial panels × an exact "
+                                             "angular rule)"), False
 
     def _check_dipole(self, k):
         """<r>(t_k) of the run's own psi(t) by 3-D quadrature against 2 Re(c1* c2 <1|r|2> e^{-i omega t})."""
@@ -395,27 +407,33 @@ class OrbitalWorld(SlicePlanes, BaseSimulation):
         tk = self._t_bin(k)
         r, wr = C.radial_quadrature(self.r_max, 300)
         lmax = max(o.l for o in sp.orbitals) + 1
-        T, P, W = C.angular_quadrature(lmax + 1)
-        R3, T3 = r[:, None], T[None, :]
+        Th, P, W = C.angular_quadrature(lmax + 1)
+        R3, T3 = r[:, None], Th[None, :]
         X, Y, Z = R3 * np.sin(T3) * np.cos(P), R3 * np.sin(T3) * np.sin(P), R3 * np.cos(T3)
         w = wr[:, None] * r[:, None] ** 2 * W[None, :]
         dens = np.abs(sp.psi(X, Y, Z, tk)) ** 2
         got = np.array([np.sum(w * dens * X), np.sum(w * dens * Y), np.sum(w * dens * Z)])
-        D, how = self._dipole_ref()
-        closed = not how.startswith("матричный элемент ⟨1|r|2⟩ — квадратура")
+        D, how, closed = self._dipole_ref()
         (c1, c2), (o1, o2) = sp.c, sp.orbitals
         ref = 2 * np.real(np.conj(c1) * c2 * D * np.exp(-1j * (o2.energy - o1.energy) * tk / self.hbar))
         err = float(np.max(np.abs(got - ref)))
         amp = float(np.max(np.abs(D))) * 2 * abs(c1 * c2) or 1.0
         i = int(np.argmax(np.abs(D)))
-        self._check("dipole", f"⟨{'xyz'[i]}⟩ в фазе {k + 1} из {self.nb} (t = {tk * self.tu:.4g} с) — по облаку "
-                              f"этого запуска против 2Re(c₁*c₂⟨1|r|2⟩e^(−iωt))", float(got[i] * self.Lu),
-                    float(ref[i] * self.Lu), self.units, tol=1e-9, ok=err <= 1e-9 * amp, info=not closed,
-                    note=f"⟨r⟩(t) — 3D-квадратура |ψ(t)|²; эталон: частота Бора ω = ΔE/ħ и {how}; "
-                         f"допуск 1e-9 амплитуды колебания (квадратуры точны до ~1e-13)" + (
-                             "" if closed else "; эталон из тех же орбиталей, что и облако: это сверка "
-                             "согласованности зависимости от времени и квадратур, а не самих функций (их проверяют "
-                             "энергия, ⟨r⟩, узлы, непрерывность тока и срезы; review B4-9)"))
+        if closed:
+            note = T("⟨r⟩(t) by a 3-D quadrature of |ψ(t)|²; reference: the Bohr frequency ω = ΔE/ħ and {how}; "
+                     "tolerance {tol:.0e} of the oscillation's amplitude (the quadratures are exact to ~{acc:.0e})",
+                     how=how, tol=1e-9, acc=1e-13)
+        else:
+            note = T("⟨r⟩(t) by a 3-D quadrature of |ψ(t)|²; reference: the Bohr frequency ω = ΔE/ħ and {how}; "
+                     "tolerance {tol:.0e} of the oscillation's amplitude (the quadratures are exact to ~{acc:.0e}); "
+                     "the reference uses the same orbitals as the cloud: this verifies the consistency of the time "
+                     "dependence and of the quadratures, not the functions themselves (those are checked by the "
+                     "energy, ⟨r⟩, the nodes, the current's continuity and the slices; review B4-9)",
+                     how=how, tol=1e-9, acc=1e-13)
+        self._check("dipole", T("⟨{axis}⟩ in phase {k} of {nb} (t = {t:.4g} s), from this run's cloud, against "
+                                "2Re(c₁*c₂⟨1|r|2⟩e^(−iωt))", axis="xyz"[i], k=k + 1, nb=self.nb, t=tk * self.tu),
+                    float(got[i] * self.Lu), float(ref[i] * self.Lu), self.units, tol=1e-9, ok=err <= 1e-9 * amp,
+                    info=not closed, note=note)
 
     def _check_period(self):
         """When the time reaches T: the density at T equals that at 0 (to round-off): the reuse of the phases after
@@ -424,11 +442,12 @@ class OrbitalWorld(SlicePlanes, BaseSimulation):
         aT = self._phases(2 * math.pi / self.omega)
         dT = np.abs(sum(ak * p for ak, p in zip(aT, self._grid_psi))) ** 2
         err = float(np.max(np.abs(dT - d)) / self.peak)
-        self._check("period", "Облако через период Бора T совпадает с облаком в t = 0", err, 0.0, tol=1e-12,
+        self._check("period", T("The cloud one Bohr period T later equals the cloud at t = 0"), err, 0.0, tol=1e-12,
                     ok=err <= 1e-12, info=True,
-                    note=f"T = 2πħ/ΔE = {self.period:.4g} с; доля пика; тождество (e^(−iE_k T/ħ) по построению): "
-                         f"подтверждает, что после первого периода можно показывать уже посчитанные фазы (кадр "
-                         f"называет свою), физику не проверяет (review B4-9)")
+                    note=T("T = 2πħ/ΔE = {T:.4g} s; fraction of the peak; an identity (e^(−iE_k T/ħ) by "
+                           "construction): it confirms that after the first period the phases already computed can be "
+                           "shown (each frame names its own); it does not test the physics (review B4-9)",
+                           T=self.period))
         self.period_checked = True
 
     # --- messages -------------------------------------------------------------------------------------------------------
@@ -473,12 +492,13 @@ class OrbitalWorld(SlicePlanes, BaseSimulation):
             stale = [(cid, lab) for cid, lab in old.items() if cid not in self._check_ids]
             retire = []
             for cid, lab in stale:
-                lab = lab if lab.endswith(RETIRED) else lab + RETIRED
+                lab = lab if is_t(lab) and lab["$t"] == RETIRED else T("{label} — former state", label=lab)
                 retire.append(({"type": "check", "t": self.t, "id": cid, "label": lab, "value": None, "ref": None,
                                 "unit": "", "rel": None, "group": self.group, "tol": 0.0, "info": True,
-                                "note": f"состояние приготовлено заново в t = {_num(float(f'{self.t:.6g}'))} с; эта сверка относилась к "
-                                        f"прежнему (её значения — в записи до этого момента); если она относится и к "
-                                        f"новому, она появится, когда до неё дойдёт время"}, None))
+                                "note": T("the state was prepared anew at t = {t} s; this check belonged to the former "
+                                          "one (its values are in the record before this moment); if it applies to "
+                                          "the new one too, it will appear when the time reaches it",
+                                          t=float(f"{self.t:.6g}"))}, None))
                 self._check_ids[cid] = lab
             self._buf = None
         except Exception:
@@ -493,11 +513,11 @@ class OrbitalWorld(SlicePlanes, BaseSimulation):
 
     def scene(self, objects):
         b = self.box[1][0]
-        layers = [{"id": "cloud", "label": "Облако |ψ|² (плотность вероятности)", "kind": "volume", "visible": True,
+        layers = [{"id": "cloud", "label": T("Cloud |ψ|² (probability density)"), "kind": "volume", "visible": True,
                    "look": {"density": 0.9, "threshold": 0.01}},
-                  {"id": "current", "label": "Ток вероятности (стрелки)", "kind": "vectors", "visible": True}]
+                  {"id": "current", "label": T("Probability current (arrows)"), "kind": "vectors", "visible": True}]
         return {"box": [list(self.box[0]), list(self.box[1])], "units": self.units, "objects": objects,
                 "layers": layers, "planes": {"max": 3, "center": [0.0, 0.0, 0.0],
                                              "defaults": {str(i): list(v) for i, v in DEFAULT_NORMALS.items()},
-                                             "time_unit": f"({self.default_speed:.3g} с)"},
+                                             "time_unit": T("({v:.3g} s)", v=self.default_speed)},
                 "half": b}

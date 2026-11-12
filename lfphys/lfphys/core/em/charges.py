@@ -82,30 +82,34 @@ import numpy as np
 from scipy import constants as sc
 from scipy import special
 
+from ...i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Поля и излучение движущихся точечных зарядов",
-    "statement": "Поля Льенара–Вихерта (скоростная и излучательная части) и потенциалы заряда на заданной мировой "
-                 "линии с точным решением для запаздывающего времени; мощность Лармора и Льенара, угловое "
-                 "распределение (на единицу запаздывающего и на единицу наблюдаемого времени); поле равномерно "
-                 "движущегося заряда (Хевисайд); синхротронное излучение: критическая частота, F(x), G(x), спектр и "
-                 "две поляризации, угловое и спектральное распределение; гармоники циклотронного излучения (Шотт).",
-    "validity": "классическая электродинамика точечного заряда в вакууме, досветовая мировая линия; реакция излучения "
-                "на движение не учитывается (мировая линия задана); синхротронный спектр через F(x) — "
-                "ультрарелятивистский предел (γ ≫ 1), гармоники Шотта — точно при любом β < 1. Двойная точность: β "
-                "передаётся числом, и 1 − β², 1 − n·β теряют разряды — относительная ошибка полей и мощности Льенара "
-                "порядка 1e-16·γ² (измерено: ~4e-8 при γ = 1e4, ~1e-4 при γ = 1e6, ~1e-2 при γ = 1e7); запаздывающее "
-                "время разрешено до ошибки округления g = cτ − R, ~4ε(cτ + |x| + |r|) + ε|v||t′| (вдали от начала "
-                "координат и у горизонта точность падает, оценка возвращается)",
-    "basis": ["Fitzpatrick, Classical Electromagnetism (лекции, ур. 12.203–12.358)",
-              "Jackson, Classical Electrodynamics, 3-е изд., гл. 14",
+    "title": T("Fields and radiation of moving point charges"),
+    "statement": T("The Liénard–Wiechert fields (the velocity and radiation parts) and potentials of a charge on a given "
+                   "worldline with the exact solution for the retarded time; the Larmor and Liénard power, the angular "
+                   "distribution (per unit of retarded and per unit of observed time); the field of a uniformly moving "
+                   "charge (Heaviside); synchrotron radiation: the critical frequency, F(x), G(x), the spectrum and the "
+                   "two polarizations, the angular and spectral distribution; the harmonics of cyclotron radiation "
+                   "(Schott)."),
+    "validity": T("classical electrodynamics of a point charge in vacuum, a subluminal worldline; the radiation "
+                  "reaction on the motion is not included (the worldline is given); the synchrotron spectrum through "
+                  "F(x) is the ultrarelativistic limit (γ ≫ 1), Schott's harmonics are exact at any β < 1. Double "
+                  "precision: β is passed as a number, and 1 − β², 1 − n·β lose digits, so the relative error of the "
+                  "fields and of Liénard's power is of order 1e-16·γ² (measured: ~4e-8 at γ = 1e4, ~1e-4 at γ = 1e6, "
+                  "~1e-2 at γ = 1e7); the retarded time is resolved to the round-off of g = cτ − R, "
+                  "~4ε(cτ + |x| + |r|) + ε|v||t′| (far from the origin and near the horizon the accuracy drops; the "
+                  "estimate is returned)"),
+    "basis": [T("Fitzpatrick, Classical Electromagnetism (lectures, eqs. 12.203–12.358)"),
+              T("Jackson, Classical Electrodynamics, 3rd ed., ch. 14"),
               "X-ray Data Booklet (LBNL), §2.1 (K.-J. Kim)",
-              "PDG, Electromagnetic relations, ур. 7.10–7.19",
-              "Schott, Electromagnetic Radiation (Cambridge, 1912), ур. 128–130"],
-    "conflicts": ["этот же модуль: synchrotron_F, synchrotron_G, synchrotron_spectrum, synchrotron_angular_spectrum — "
-                  "предел γ ≫ 1 (непрерывный спектр) гармоник Шотта harmonic_power / harmonic_angular_power, точных "
-                  "при любом β < 1; отличие порядка 1/γ² (измерено: 4e-3 при γ = 10 и 1e-3 при γ = 20 на ω_c); оба "
-                  "пути даны для сравнения"],
+              T("PDG, Electromagnetic relations, eqs. 7.10–7.19"),
+              T("Schott, Electromagnetic Radiation (Cambridge, 1912), eqs. 128–130")],
+    "conflicts": [T("this module itself: synchrotron_F, synchrotron_G, synchrotron_spectrum, "
+                    "synchrotron_angular_spectrum are the limit γ ≫ 1 (a continuous spectrum) of Schott's harmonics "
+                    "harmonic_power / harmonic_angular_power, which are exact at any β < 1; they differ by order 1/γ² "
+                    "(measured: 4e-3 at γ = 10 and 1e-3 at γ = 20 at ω_c); both paths are given for comparison")],
 }
 
 C = sc.c

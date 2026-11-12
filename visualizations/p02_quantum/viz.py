@@ -34,6 +34,7 @@ import numpy as np
 import scipy.constants as sc
 
 from lfphys.core.quantum import scene as QS
+from lfphys.i18n import T, is_t, join, text_of
 from lfphys.theories.interpretations import bohm
 from lfviz import limits
 from lfviz.errors import Refusal
@@ -72,30 +73,34 @@ def _p(*a, **k):
 
 
 SCHEMA = Schema([
-    _p("dim", "Пространство", "select", "2d", group="Законы", options=[("2d", "плоскость (x, y)"), ("3d", "объём (x, y, z)")],
-       help="Уравнение Шрёдингера (Паули) решается на плоскости или в объёме; другое пространство — новый мир"),
-    _p("n2", "Точек сетки по оси", "select", "256", group="Сетка", show_if={"dim": ["2d"]}, live=True,
+    _p("dim", T("Space"), "select", "2d", group=T("Laws"),
+       options=[("2d", T("plane (x, y)")), ("3d", T("volume (x, y, z)"))],
+       help=T("The Schrödinger (Pauli) equation is solved in a plane or in a volume; another space is a new world")),
+    _p("n2", T("Grid points per axis"), "select", "256", group=T("Grid"), show_if={"dim": ["2d"]}, live=True,
        options=[(s, s) for s in ("128", "192", "256", "384", "512")],
-       help="Шаг сетки = размер окна / число точек; сетка должна передавать длину волны и края фигур. Меняется на "
-            "ходу: волна пересчитывается на новую сетку точно (дополнением её спектра нулями). Грубее — только когда "
-            "соблюдены три правила: (1) за новой полосой волновых чисел меньше 10⁻⁶ нормы волны; (2) новая сетка "
-            "ещё передаёт волну: |k| + 6σ_k ≤ π/шаг, а рядом с потенциалом или полем — ≤ ⅔·π/шаг (с энергией, "
-            "которую потенциал может перевести в движение); (3) края объектов не уже ≈ 3 шагов новой сетки (край «0» "
-            "заморожен на ширине, с которой объект добавлен; действие «Огрубить сетку с краями по ней» расширит такие "
-            "края разом). Иначе отказ с причиной и числом"),
-    _p("n3", "Точек сетки по оси", "select", "64", group="Сетка", show_if={"dim": ["3d"]}, live=True,
+       help=T("Grid step = window size / number of points; the grid must resolve the wavelength and the shapes' edges. "
+              "Changes on the fly: the wave is resampled onto the new grid exactly (by padding its spectrum with "
+              "zeros). A coarser grid only when three rules hold: (1) less than 10⁻⁶ of the wave's norm lies beyond "
+              "the new band of wavenumbers; (2) the new grid still resolves the wave: |k| + 6σ_k ≤ π/step, and next to "
+              "a potential or a field ≤ ⅔·π/step (with the energy the potential can turn into motion); (3) the objects' "
+              "edges are not narrower than ≈ 3 steps of the new grid (an edge “0” is frozen at the width the object "
+              "was added with; the action “Coarsen the grid with edges to match” widens such edges at once). "
+              "Otherwise a refusal with the reason and the number")),
+    _p("n3", T("Grid points per axis"), "select", "64", group=T("Grid"), show_if={"dim": ["3d"]}, live=True,
        options=[(s, s) for s in ("48", "64", "96", "128")],
-       help="Шаг сетки = размер окна / число точек. Меняется на ходу, как и в плоскости"),
-    _p("size", "Размер окна, нм", "float", 80.0, group="Сетка", unit="нм", min=2.0, max=1e5, log=True, live=True,
-       help="Окно — квадрат (куб) с центром в нуле. Меняется на ходу (шаг сетки — размер / число точек): больше — "
-            "когда волна у граней окна почти пуста (меньше 10⁻⁶ нормы в 4 крайних ячейках), меньше — когда вне нового "
-            "окна и под его новыми поглощающими слоями (при открытых краях) меньше 10⁻⁶ её вероятности; иначе отказ с "
-            "этой долей. Слои краёв — 10 % окна (в объёме 15 %): с окном они сдвигаются"),
-    _p("edges", "Края окна", "select", "open", group="Законы", live=True,
-       options=[("open", "открыты: поглощают (уходящая волна не возвращается)"),
-                ("closed", "замкнуты: периодичны (волна выходит с другой стороны)")],
-       help="Меняется на ходу, в текущий момент (поглощённое краями до того остаётся поглощённым); заряженная частица "
-            "рядом с полем — только при открытых краях"),
+       help=T("Grid step = window size / number of points. Changes on the fly, as in the plane")),
+    _p("size", T("Window size, nm"), "float", 80.0, group=T("Grid"), unit=T("nm"), min=2.0, max=1e5, log=True,
+       live=True,
+       help=T("The window is a square (a cube) centred at zero. Changes on the fly (grid step = size / number of "
+              "points): larger when the wave is almost empty at the window's faces (less than 10⁻⁶ of the norm in the "
+              "4 outermost cells), smaller when less than 10⁻⁶ of its probability lies outside the new window and "
+              "under its new absorbing layers (with open edges); otherwise a refusal with that share. The edges' "
+              "layers are 10 % of the window (15 % in a volume): they move with the window")),
+    _p("edges", T("Window edges"), "select", "open", group=T("Laws"), live=True,
+       options=[("open", T("open: absorbing (an outgoing wave does not come back)")),
+                ("closed", T("closed: periodic (the wave leaves on the other side)"))],
+       help=T("Changes on the fly, at the current moment (what the edges absorbed before stays absorbed); a charged "
+              "particle next to a field only with open edges")),
     scene_param(),
 ], presets={})
 
@@ -105,65 +110,66 @@ def _scene(objs):
 
 
 SCHEMA.presets.update({
-    "double_slit": {"label": "Двухщелевой опыт: электрон, стенка с двумя щелями, детектор-экран, частицы Бома",
+    "double_slit": {"label": T("Double slit: an electron, a wall with two slits, a detector screen, Bohm particles"),
                     "params": {"dim": "2d", "n2": "256", "size": 80.0, "edges": "open", "scene": _scene([
-                        {"type": "slit_wall", "label": "Стенка с двумя щелями",
+                        {"type": "slit_wall", "label": T("Wall with two slits"),
                          "values": {"position": 0.0, "thickness": 2.0, "V": 3.0, "n_slits": 2, "width": 2.0,
                                     "spacing": 10.0}},
-                        {"type": "detector", "label": "Экран", "values": {"x": 30.0, "sx": 4.0, "sy": 0.0, "edge": 3.0}},
-                        {"type": "plane", "label": "Поток за щелями", "values": {"position": 15.0}},
-                        {"type": "packet", "label": "Электрон",
+                        {"type": "detector", "label": T("Screen"), "values": {"x": 30.0, "sx": 4.0, "sy": 0.0, "edge": 3.0}},
+                        {"type": "plane", "label": T("Flux behind the slits"), "values": {"position": 15.0}},
+                        {"type": "packet", "label": T("Electron"),
                          "values": {"x": -20.0, "wavelength": 2.0, "sx": 2.5, "sy": 4.0, "bohm": 60}}])}},
     # the slits are 12-nm channels and the marker fills the upper one, 10 nm along the beam, its edges across inside the
     # wall (no lens), c = 0.021 eV = 5.6 % of the electron's energy: the transmitted wave's marker turns to P(1) = 0.95
     # (|coherence| 0.04); the screen's visibility near the centre falls from 0.94 to 0.18 (review B6-Q9: the earlier
     # 3 x 3 nm marker at the thin wall acted as a +-0.12 eV lens and left 0.61); what remains is the packet's spread of
     # speeds (the marker turns by the time spent in it)
-    "which_path": {"label": "Метка пути в верхней щели: полосы почти гаснут (видность 0,94 → 0,18)",
+    "which_path": {"label": T("Which-path marker in the upper slit: the fringes almost vanish (visibility {v0} → {v1})",
+                                v0=0.94, v1=0.18),
                    "params": {"dim": "2d", "n2": "256", "size": 80.0, "edges": "open", "scene": _scene([
-                       {"type": "slit_wall", "label": "Стенка с двумя щелями-каналами",
+                       {"type": "slit_wall", "label": T("Wall with two slit channels"),
                         "values": {"position": 2.0, "thickness": 12.0, "V": 3.0, "n_slits": 2, "width": 2.0,
                                    "spacing": 10.0}},
-                       {"type": "marker", "label": "Метка в верхнем канале",
+                       {"type": "marker", "label": T("Marker in the upper channel"),
                         "values": {"x": 2.0, "y": 5.0, "sx": 10.0, "sy": 4.0, "rate": 0.032, "edge": 1.0}},
-                       {"type": "detector", "label": "Экран", "values": {"x": 30.0, "sx": 4.0, "sy": 0.0, "edge": 3.0}},
-                       {"type": "packet", "label": "Электрон",
+                       {"type": "detector", "label": T("Screen"), "values": {"x": 30.0, "sx": 4.0, "sy": 0.0, "edge": 3.0}},
+                       {"type": "packet", "label": T("Electron"),
                         "values": {"x": -20.0, "wavelength": 2.0, "sx": 2.5, "sy": 4.0}}])}},
     # the tube inside the wall between the slits (3 nm thick: its field e^{-r^2/R^2} is e^{-9} at the wall's faces):
     # the screen's pattern is the ideal half-fringe shift 2 (S1 + S2) - P0 to 3.4e-4 of its peak (review B6-Q10: the
     # tube behind the wall, in the beams' overlap, left 5.6 %)
-    "aharonov_bohm": {"label": "Ааронов–Бом: трубка потока h/2e в стенке между щелями сдвигает полосы на половину",
+    "aharonov_bohm": {"label": T("Aharonov–Bohm: a flux tube h/2e in the wall between the slits shifts the fringes by half"),
                       "params": {"dim": "2d", "n2": "256", "size": 80.0, "edges": "open", "scene": _scene([
-                          {"type": "slit_wall", "label": "Стенка с двумя щелями",
+                          {"type": "slit_wall", "label": T("Wall with two slits"),
                            "values": {"position": 0.0, "thickness": 3.0, "V": 3.0, "n_slits": 2, "width": 2.0,
                                       "spacing": 10.0}},
-                          {"type": "flux", "label": "Трубка потока", "values": {"x": 0.0, "y": 0.0, "flux": 0.5,
+                          {"type": "flux", "label": T("Flux tube"), "values": {"x": 0.0, "y": 0.0, "flux": 0.5,
                                                                                 "radius": 0.5}},
-                          {"type": "detector", "label": "Экран", "values": {"x": 30.0, "sx": 4.0, "sy": 0.0, "edge": 3.0}},
-                          {"type": "packet", "label": "Электрон",
+                          {"type": "detector", "label": T("Screen"), "values": {"x": 30.0, "sx": 4.0, "sy": 0.0, "edge": 3.0}},
+                          {"type": "packet", "label": T("Electron"),
                            "values": {"x": -20.0, "wavelength": 2.0, "sx": 2.5, "sy": 4.0}}])}},
-    "tunnel": {"label": "Туннелирование: пакет на тонкий барьер выше своей энергии",
+    "tunnel": {"label": T("Tunnelling: a packet against a thin barrier above its energy"),
                "params": {"dim": "2d", "n2": "256", "size": 80.0, "edges": "open", "scene": _scene([
-                   {"type": "box", "label": "Барьер", "values": {"x": 0.0, "sx": 1.5, "sy": 0.0, "V": 0.5}},
-                   {"type": "plane", "label": "Поток за барьером", "values": {"position": 6.0}},
-                   {"type": "packet", "label": "Электрон",
+                   {"type": "box", "label": T("Barrier"), "values": {"x": 0.0, "sx": 1.5, "sy": 0.0, "V": 0.5}},
+                   {"type": "plane", "label": T("Flux behind the barrier"), "values": {"position": 6.0}},
+                   {"type": "packet", "label": T("Electron"),
                     "values": {"x": -20.0, "wavelength": 2.0, "sx": 2.5, "sy": 4.0, "bohm": 40}}])}},
-    "trap": {"label": "Гармоническая ловушка: смещённый пакет качается (энергия сохраняется), измерение положения",
+    "trap": {"label": T("Harmonic trap: a displaced packet oscillates (energy conserved), a position measurement"),
              "params": {"dim": "2d", "n2": "128", "size": 60.0, "edges": "open", "scene": _scene([
-                 {"type": "trap", "label": "Ловушка", "values": {"hw": 20.0}},
-                 {"type": "packet", "label": "Электрон",
+                 {"type": "trap", "label": T("Trap"), "values": {"hw": 20.0}},
+                 {"type": "packet", "label": T("Electron"),
                   "values": {"x": 6.0, "y": 2.0, "wavelength": 0.0, "sx": 1.38, "sy": 1.38}}])}},
-    "cyclotron": {"label": "Электрон в магнитном поле 100 Тл: круговая орбита, спин вдоль поля",
+    "cyclotron": {"label": T("An electron in a 100 T magnetic field: a circular orbit, spin along the field"),
                   "params": {"dim": "2d", "n2": "256", "size": 80.0, "edges": "open", "scene": _scene([
-                      {"type": "bfield", "label": "Поле Bz", "values": {"Bz": 100.0}},
-                      {"type": "packet", "label": "Электрон",
+                      {"type": "bfield", "label": T("Field Bz"), "values": {"Bz": 100.0}},
+                      {"type": "packet", "label": T("Electron"),
                        "values": {"x": 0.0, "y": -10.0, "wavelength": 4.0, "sx": 3.0, "sy": 3.0, "bohm": 30}}])}},
     # lambda = 4 nm: next to the ball the wave's wavenumbers (|k| + 6 sigma_k = 3.07/nm) stay within 2/3 of the grid's
     # band (3.35/nm); with lambda = 3 nm (3.59/nm) the scene now refuses it (review B6-Q4)
-    "ball_3d": {"label": "3-D: электрон рассеивается на шаре",
+    "ball_3d": {"label": T("3-D: an electron scatters off a ball"),
                 "params": {"dim": "3d", "n3": "64", "size": 40.0, "edges": "open", "scene": _scene([
-                    {"type": "ball", "label": "Шар", "values": {"x": 4.0, "radius": 3.0, "V": 1.0}},
-                    {"type": "packet", "label": "Электрон",
+                    {"type": "ball", "label": T("Ball"), "values": {"x": 4.0, "radius": 3.0, "V": 1.0}},
+                    {"type": "packet", "label": T("Electron"),
                      "values": {"x": -5.0, "wavelength": 4.0, "sx": 2.0, "sy": 2.0, "sz": 2.0, "bohm": 30}}])}},
 })
 
@@ -172,27 +178,32 @@ COLORS = {"barrier": "#ff922b", "well": "#4dabf7", "detector": "#51cf66", "field
           "marker": "#f783ac", "env": "#a9744f", "plane": "#3bc9db", "particle": "#ffd43b"}
 
 
-def _xyz(ndim, label="Центр", defaults=(0.0, 0.0, 0.0)):
-    return [_p(c, f"{label}: {c}, нм", "float", float(defaults[i]), min=-1e6, max=1e6) for i, c in enumerate("xyz"[:ndim])]
-
-
-def _sizes(ndim, defaults=(4.0, 4.0, 4.0), help_text="0 — без границ вдоль этой оси"):
-    return [_p(f"s{c}", f"Размер по {c}, нм", "float", float(defaults[i]), min=0.0, max=1e6, help=help_text)
+def _xyz(ndim, region=False, defaults=(0.0, 0.0, 0.0)):
+    if region:
+        return [_p(c, T("Region centre: {c}, nm", c=c), "float", float(defaults[i]), min=-1e6, max=1e6)
+                for i, c in enumerate("xyz"[:ndim])]
+    return [_p(c, T("Centre: {c}, nm", c=c), "float", float(defaults[i]), min=-1e6, max=1e6)
             for i, c in enumerate("xyz"[:ndim])]
 
 
-EDGE = _p("edge", "Ширина края, нм", "float", 0.0, min=0.0, max=1e6,
-          help="Расстояние, на котором потенциал растёт от 10 % до 90 % (физическая длина); 0 — самый резкий край, "
-               "который передаёт сетка в момент добавления (≈ 3 шага); при смене сетки на ходу край сохраняет свою "
-               "ширину (объект остаётся тем же)")
+def _sizes(ndim, defaults=(4.0, 4.0, 4.0)):
+    return [_p(f"s{c}", T("Size along {c}, nm", c=c), "float", float(defaults[i]), min=0.0, max=1e6,
+               help=T("0: unbounded along this axis")) for i, c in enumerate("xyz"[:ndim])]
+
+
+EDGE = _p("edge", T("Edge width, nm"), "float", 0.0, min=0.0, max=1e6,
+          help=T("The distance over which the potential rises from 10 % to 90 % (a physical length); 0 is the sharpest "
+                 "edge the grid resolves at the moment of adding (≈ 3 steps); a change of the grid on the fly keeps the "
+                 "edge's width (the object stays the same)"))
 
 
 # the display unit of every parameter by its id (Param.unit; the labels say it too): set on every palette schema
-UNIT_OF = {"x": "нм", "y": "нм", "z": "нм", "sx": "нм", "sy": "нм", "sz": "нм", "edge": "нм", "mass_u": "а.е.м.",
-           "wavelength": "нм", "theta": "°", "phi": "°", "V": "эВ", "radius": "нм", "position": "нм", "thickness": "нм",
-           "width": "нм", "spacing": "нм", "offset": "нм", "hw": "мэВ", "Bx": "Тл", "By": "Тл", "Bz": "Тл",
-           "grad": "Тл/нм", "flux": "h/e", "W": "эВ", "length": "нм", "vx": "нм/с", "vy": "нм/с", "vz": "нм/с",
-           "v_max": "нм/с", "bohm": "точек", "n_slits": "щелей"}
+UNIT_OF = {"x": T("nm"), "y": T("nm"), "z": T("nm"), "sx": T("nm"), "sy": T("nm"), "sz": T("nm"), "edge": T("nm"),
+           "mass_u": T("u"), "wavelength": T("nm"), "theta": "°", "phi": "°", "V": T("eV"), "radius": T("nm"),
+           "position": T("nm"), "thickness": T("nm"), "width": T("nm"), "spacing": T("nm"), "offset": T("nm"),
+           "hw": T("meV"), "Bx": T("T"), "By": T("T"), "Bz": T("T"), "grad": T("T/nm"), "flux": "h/e", "W": T("eV"),
+           "length": T("nm"), "vx": T("nm/s"), "vy": T("nm/s"), "vz": T("nm/s"), "v_max": T("nm/s"),
+           "bohm": T("points"), "n_slits": T("slits")}
 
 
 def _with_units(schema: Schema, own: dict | None = None) -> Schema:
@@ -204,85 +215,94 @@ def _with_units(schema: Schema, own: dict | None = None) -> Schema:
 
 def palette(ndim: int) -> dict:
     axes = AXES[:ndim]
-    spin = _p("spin", "Спин (для частиц со спином ½)", "select", "+z",
-              options=[("+z", "↑ по z"), ("-z", "↓ по z"), ("+x", "→ по x"), ("-x", "← по x"), ("+y", "по +y"),
-                       ("-y", "по −y")])
+    spin = _p("spin", T("Spin (for particles of spin ½)"), "select", "+z",
+              options=[("+z", T("↑ along z")), ("-z", T("↓ along z")), ("+x", T("→ along x")),
+                       ("-x", T("← along x")), ("+y", T("along +y")), ("-y", T("along −y"))])
     packet = Schema([
-        _p("species", "Частица", "select", "electron",
-           options=[("electron", "электрон (заряд −e, спин ½)"), ("neutron", "нейтрон (спин ½)"),
-                    ("he4", "атом ⁴He"), ("c60", "фуллерен C₆₀"), ("atom", "атом заданной массы")]),
-        _p("mass_u", "Масса атома, а.е.м.", "float", 7.0, min=1e-3, max=1e6, log=True, show_if={"species": ["atom"]}),
-        *[_p(c, f"Центр при приготовлении: {c}, нм", "float", 0.0, min=-1e6, max=1e6,
-             help="Где пакет приготовлен (перетаскивание пишет сюда точку, куда перенесена волна); дальше волна "
-                  "движется сама — где она сейчас, показывает ⟨" + c + "⟩ в инспекторе") for c in "xyz"[:ndim]],
-        _p("wavelength", "Длина волны де Бройля, нм (0 — в покое)", "float", 2.0, min=0.0, max=1e6,
-           help="Импульс ħk, k = 2π/λ; сетка должна передавать волну: |k| + 3/σ ≤ π/шаг. После броска — 2π/|⟨k⟩| "
-                "среднего волнового вектора всей волны (у волны из нескольких частей это не длина волны ни одной из "
-                "них)"),
-        _p("theta", "Направление в плоскости xy, °", "float", 0.0, min=-360.0, max=360.0),
-        *([_p("phi", "Наклон к плоскости xy, °", "float", 0.0, min=-90.0, max=90.0)] if ndim == 3 else []),
-        *[_p(f"s{c}", f"Ширина σ по {c}, нм", "float", 3.0, min=1e-3, max=1e6, help="σ распределения |ψ|²")
-          for c in "xyz"[:ndim]],
+        _p("species", T("Particle"), "select", "electron",
+           options=[("electron", T("electron (charge −e, spin ½)")), ("neutron", T("neutron (spin ½)")),
+                    ("he4", T("⁴He atom")), ("c60", T("fullerene C₆₀")), ("atom", T("atom of a given mass"))]),
+        _p("mass_u", T("Atom mass, u"), "float", 7.0, min=1e-3, max=1e6, log=True, show_if={"species": ["atom"]}),
+        *[_p(c, T("Centre at preparation: {c}, nm", c=c), "float", 0.0, min=-1e6, max=1e6,
+             help=T("Where the packet was prepared (a drag writes here the point the wave was moved to); then the wave "
+                    "moves by itself: where it is now, ⟨{c}⟩ in the inspector shows", c=c)) for c in "xyz"[:ndim]],
+        _p("wavelength", T("de Broglie wavelength, nm (0: at rest)"), "float", 2.0, min=0.0, max=1e6,
+           help=T("Momentum ħk, k = 2π/λ; the grid must resolve the wave: |k| + 3/σ ≤ π/step. After a throw: 2π/|⟨k⟩| "
+                  "of the mean wave vector of the whole wave (for a wave of several parts this is the wavelength of "
+                  "none of them)")),
+        _p("theta", T("Direction in the xy plane, °"), "float", 0.0, min=-360.0, max=360.0),
+        *([_p("phi", T("Inclination to the xy plane, °"), "float", 0.0, min=-90.0, max=90.0)] if ndim == 3 else []),
+        *[_p(f"s{c}", T("Width σ along {c}, nm", c=c), "float", 3.0, min=1e-3, max=1e6,
+             help=T("σ of the distribution |ψ|²")) for c in "xyz"[:ndim]],
         _p("spin", spin.label, "select", "+z", options=spin.options,
            show_if={"species": ["electron", "neutron"]}),
-        _p("bohm", "Частицы Бома (траектории)", "int", 0, min=0, max=300,
-           help="Ансамбль точек, ведомых током вероятности этой волны (интерпретация де Бройля–Бома); начальные "
-                "положения — по |ψ|²"),
+        _p("bohm", T("Bohm particles (trajectories)"), "int", 0, min=0, max=300,
+           help=T("An ensemble of points guided by this wave's probability current (the de Broglie–Bohm "
+                  "interpretation); their initial positions drawn from |ψ|²")),
         # the velocity of a throw (the player's handle; world units: nm per second of the world's time), kept in step
         # with lambda and the direction: v = hbar k0 / m (on_add, on_set)
-        *[_p(f"v{c}", f"Скорость: v{c}, нм/с", "float", 0.0, min=-1e18, max=1e18, hidden=True,
-             help="= ħk₀/m; задаётся броском") for c in "xyz"[:ndim]],
+        *[_p(f"v{c}", T("Velocity: v{c}, nm/s", c=c), "float", 0.0, min=-1e18, max=1e18, hidden=True,
+             help=T("= ħk₀/m; set by a throw")) for c in "xyz"[:ndim]],
         # the largest speed a throw may give this packet's wave now in any direction (``_set_vmax``; kept by the world)
-        _p("v_max", "Наибольшая скорость броска, нм/с", "float", 0.0, min=0.0, max=1e30, hidden=True,
-           help="Быстрее сетка не передаст волну здесь и сейчас (бросок быстрее мир ограничит, сказав об этом)")])
+        _p("v_max", T("Largest throw speed, nm/s"), "float", 0.0, min=0.0, max=1e30, hidden=True,
+           help=T("The grid would not resolve a faster wave here and now (the world limits a faster throw and says "
+                  "so)"))])
+    height = T("Height, eV (negative: a well)")
     box = Schema([*_xyz(ndim), *_sizes(ndim, (2.0, 0.0, 0.0)),
-                  _p("V", "Высота, эВ (минус — яма)", "float", 0.5, min=-1e4, max=1e4), EDGE])
-    ball = Schema([*_xyz(ndim), _p("radius", "Радиус, нм", "float", 3.0, min=1e-3, max=1e6),
-                   _p("V", "Высота, эВ (минус — яма)", "float", 0.5, min=-1e4, max=1e4),
-                   *([_p("shape", "Форма", "select", "sphere", options=[("sphere", "шар"),
-                                                                       ("cylinder", "цилиндр вдоль z")])]
+                  _p("V", height, "float", 0.5, min=-1e4, max=1e4), EDGE])
+    ball = Schema([*_xyz(ndim), _p("radius", T("Radius, nm"), "float", 3.0, min=1e-3, max=1e6),
+                   _p("V", height, "float", 0.5, min=-1e4, max=1e4),
+                   *([_p("shape", T("Shape"), "select", "sphere", options=[("sphere", T("ball")),
+                                                                          ("cylinder", T("cylinder along z"))])]
                      if ndim == 3 else []), EDGE])
-    wall = Schema([_p("axis", "Стенка поперёк оси", "select", "0", options=axes),
-                   _p("position", "Положение стенки, нм", "float", 0.0, min=-1e6, max=1e6),
-                   _p("thickness", "Толщина, нм", "float", 2.0, min=1e-3, max=1e6),
-                   _p("V", "Высота, эВ", "float", 3.0, min=-1e4, max=1e4),
-                   _p("n_slits", "Число щелей", "int", 2, min=0, max=8),
-                   _p("width", "Ширина щели, нм", "float", 2.0, min=1e-3, max=1e6),
-                   _p("spacing", "Расстояние между центрами щелей, нм", "float", 10.0, min=0.0, max=1e6),
-                   _p("offset", "Сдвиг щелей вдоль стенки, нм", "float", 0.0, min=-1e6, max=1e6), EDGE])
-    step = Schema([_p("axis", "Ступенька вдоль оси", "select", "0", options=axes),
-                   _p("position", "Положение, нм", "float", 0.0, min=-1e6, max=1e6), _p("V", "Высота, эВ", "float", 0.2, min=-1e4, max=1e4), EDGE])
-    trap = Schema([*_xyz(ndim), _p("hw", "Энергия кванта ħω для массы электрона, мэВ", "float", 20.0, min=1e-6, max=1e5,
-                                    help="V = m_e ω² r²/2 — один потенциал для всех частиц (для массы m частота "
-                                         "ω·√(m_e/m))")])
-    region = [_p("region", "Область", "select", "all", options=[("all", "вся сцена"), ("box", "прямоугольная")]),
+    wall = Schema([_p("axis", T("Wall across the axis"), "select", "0", options=axes),
+                   _p("position", T("Wall position, nm"), "float", 0.0, min=-1e6, max=1e6),
+                   _p("thickness", T("Thickness, nm"), "float", 2.0, min=1e-3, max=1e6),
+                   _p("V", T("Height, eV"), "float", 3.0, min=-1e4, max=1e4),
+                   _p("n_slits", T("Number of slits"), "int", 2, min=0, max=8),
+                   _p("width", T("Slit width, nm"), "float", 2.0, min=1e-3, max=1e6),
+                   _p("spacing", T("Distance between the slits' centres, nm"), "float", 10.0, min=0.0, max=1e6),
+                   _p("offset", T("Shift of the slits along the wall, nm"), "float", 0.0, min=-1e6, max=1e6), EDGE])
+    step = Schema([_p("axis", T("Step along the axis"), "select", "0", options=axes),
+                   _p("position", T("Position, nm"), "float", 0.0, min=-1e6, max=1e6),
+                   _p("V", T("Height, eV"), "float", 0.2, min=-1e4, max=1e4), EDGE])
+    trap = Schema([*_xyz(ndim), _p("hw", T("Quantum energy ħω for the electron's mass, meV"), "float", 20.0, min=1e-6,
+                                    max=1e5,
+                                    help=T("V = m_e ω² r²/2: one potential for all particles (for a mass m the "
+                                           "frequency is ω·√(m_e/m))"))])
+    region = [_p("region", T("Region"), "select", "all", options=[("all", T("the whole scene")),
+                                                                  ("box", T("rectangular"))]),
               *[_p(q.id, q.label, q.type, q.default, min=q.min, max=q.max, show_if={"region": ["box"]})
-                for q in _xyz(ndim, "Центр области")],
+                for q in _xyz(ndim, region=True)],
               *[_p(q.id, q.label, q.type, q.default if q.default else 10.0, min=0.0, max=q.max,
                    show_if={"region": ["box"]}, help=q.help) for q in _sizes(ndim, (10.0, 10.0, 10.0))],
               _p("edge", EDGE.label, "float", 0.0, min=0.0, max=EDGE.max, show_if={"region": ["box"]}, help=EDGE.help)]
-    bfield = Schema([_p("Bx", "Bx, Тл", "float", 0.0, min=-1e5, max=1e5), _p("By", "By, Тл", "float", 0.0, min=-1e5, max=1e5),
-                     _p("Bz", "Bz, Тл", "float", 10.0, min=-1e5, max=1e5),
-                     _p("grad", "Градиент g, Тл/нм (Bx = Bx₀ − g·(x − x_c), By = By₀ + g·(y − y_c))", "float", 0.0,
+    bfield = Schema([_p("Bx", T("Bx, T"), "float", 0.0, min=-1e5, max=1e5),
+                     _p("By", T("By, T"), "float", 0.0, min=-1e5, max=1e5),
+                     _p("Bz", T("Bz, T"), "float", 10.0, min=-1e5, max=1e5),
+                     _p("grad", T("Gradient g, T/nm (Bx = Bx₀ − g·(x − x_c), By = By₀ + g·(y − y_c))"), "float", 0.0,
                         min=-1e4, max=1e4,
-                        help="Неоднородное поле с div B = 0 и rot B = 0 около центра области (x_c, y_c; у поля во всей "
-                             "сцене — около нуля): действует на спин; для заряда — только однородное Bz"),
+                        help=T("A non-uniform field with div B = 0 and curl B = 0 around the region's centre (x_c, "
+                               "y_c; for a field over the whole scene, around zero): it acts on the spin; on a charge "
+                               "only a uniform Bz")),
                      *region])
-    flux = Schema([_p("x", "Центр: x, нм", "float", 0.0, min=-1e6, max=1e6),
-                   _p("y", "Центр: y, нм", "float", 0.0, min=-1e6, max=1e6),
-                   _p("flux", "Поток, в квантах h/e", "float", 0.5, min=-1e4, max=1e4),
-                   _p("radius", "Радиус трубки, нм", "float", 1.0, min=1e-3, max=1e6)])
+    flux = Schema([_p("x", T("Centre: {c}, nm", c="x"), "float", 0.0, min=-1e6, max=1e6),
+                   _p("y", T("Centre: {c}, nm", c="y"), "float", 0.0, min=-1e6, max=1e6),
+                   _p("flux", T("Flux, in quanta h/e"), "float", 0.5, min=-1e4, max=1e4),
+                   _p("radius", T("Tube radius, nm"), "float", 1.0, min=1e-3, max=1e6)])
     det = Schema([*_xyz(ndim), *_sizes(ndim, (4.0, 0.0, 0.0)),
-                  _p("W", "Сила поглощения W₀, эВ (0 — по энергии частиц)", "float", 0.0, min=0.0, max=1e6), EDGE])
+                  _p("W", T("Absorption strength W₀, eV (0: by the particles' energy)"), "float", 0.0, min=0.0,
+                     max=1e6), EDGE])
     marker = Schema([*_xyz(ndim), *_sizes(ndim, (3.0, 3.0, 0.0)),
-                     _p("rate", "Скорость поворота метки, рад/фс", "float", 1.0, min=-1e4, max=1e4,
-                        help="Пока частица в области, метка поворачивается |0⟩ → cos|0⟩ + sin|1⟩"), EDGE])
-    env = Schema([_p("rate", "Частота локализаций λ, 1/пс", "float", 10.0, min=1e-9, max=1e9),
-                  _p("length", "Длина локализации a, нм", "float", 2.0, min=1e-3, max=1e6), *region])
-    plane = Schema([_p("axis", "Плоскость поперёк оси", "select", "0", options=axes),
-                    _p("position", "Положение, нм", "float", 10.0, min=-1e6, max=1e6)])
+                     _p("rate", T("Marker's turning rate, rad/fs"), "float", 1.0, min=-1e4, max=1e4,
+                        help=T("While the particle is in the region, the marker turns |0⟩ → cos|0⟩ + sin|1⟩")), EDGE])
+    env = Schema([_p("rate", T("Localization rate λ, 1/ps"), "float", 10.0, min=1e-9, max=1e9),
+                  _p("length", T("Localization length a, nm"), "float", 2.0, min=1e-3, max=1e6), *region])
+    plane = Schema([_p("axis", T("Plane across the axis"), "select", "0", options=axes),
+                    _p("position", T("Position, nm"), "float", 10.0, min=-1e6, max=1e6)])
     for sch, own in ((packet, None), (box, None), (ball, None), (wall, None), (step, None), (trap, None), (bfield, None),
-                     (flux, None), (det, None), (marker, {"rate": "рад/фс"}), (env, {"rate": "1/пс"}), (plane, None)):
+                     (flux, None), (det, None), (marker, {"rate": T("rad/fs")}), (env, {"rate": T("1/ps")}),
+                     (plane, None)):
         _with_units(sch, own)
     xyz = list("xyz"[:ndim])
     pos = {"position": xyz}
@@ -290,36 +310,39 @@ def palette(ndim: int) -> dict:
     vmax = {"velocity_max": "v_max"} if "velocity_max" in getattr(PG, "HANDLE_KEYS", ()) else {}
     axis_pos = {"position": {"param": "position", "axis_param": "axis"}}
     return {
-        "packet": ObjectType("packet", "Частица (волновой пакет)", "particle", packet, limit=6, color=COLORS["particle"],
-                             help="Гауссов пакет; своя волна у каждой частицы, частицы не взаимодействуют. Перетаскивание "
-                                  "переносит его волну в текущий момент (та же волна в новом месте), бросок задаёт "
-                                  "скорость (k₀ = m v / ħ)",
+        "packet": ObjectType("packet", T("Particle (wave packet)"), "particle", packet, limit=6,
+                             color=COLORS["particle"],
+                             help=T("A Gaussian packet; every particle has its own wave, the particles do not "
+                                    "interact. A drag moves its wave at the current moment (the same wave in a new "
+                                    "place), a throw sets the velocity (k₀ = m v / ħ)"),
                              handles={**pos, "velocity": [f"v{c}" for c in xyz], "size": "sx", **vmax}),
-        "box": ObjectType("box", "Барьер или яма (ящик)", "potential", box, color=COLORS["barrier"],
+        "box": ObjectType("box", T("Barrier or well (a box)"), "potential", box, color=COLORS["barrier"],
                           handles={**pos, "size": "sx"}),
-        "ball": ObjectType("ball", "Шар (круг)", "potential", ball, color=COLORS["barrier"],
+        "ball": ObjectType("ball", T("Ball (a disc)"), "potential", ball, color=COLORS["barrier"],
                            handles={**pos, "size": "radius"}),
-        "slit_wall": ObjectType("slit_wall", "Стенка со щелями", "potential", wall, color=COLORS["barrier"],
+        "slit_wall": ObjectType("slit_wall", T("Wall with slits"), "potential", wall, color=COLORS["barrier"],
                                 handles={**axis_pos, "size": "thickness"}),
-        "step": ObjectType("step", "Ступенька", "potential", step, color=COLORS["barrier"], handles=axis_pos),
-        "trap": ObjectType("trap", "Гармоническая ловушка", "potential", trap, color=COLORS["well"], handles=pos),
-        "bfield": ObjectType("bfield", "Магнитное поле", "field", bfield, color=COLORS["field"],
-                             help="На спин — через магнитный момент; на заряд — через векторный потенциал (только Bz "
-                                  "в плоскости, поле вдоль оси в объёме)", handles={**pos, "size": "sx"}),
-        "flux": ObjectType("flux", "Трубка потока (Ааронов–Бом)", "field", flux, color=COLORS["flux"],
-                           help="Поле только внутри трубки; снаружи — векторный потенциал",
-                           handles={"position": ["x", "y"], "size": "radius"}),
-        "detector": ObjectType("detector", "Детектор (поглощает)", "detector", det, color=COLORS["detector"],
-                               help="Поглощённая им вероятность считается для каждой частицы",
-                               handles={**pos, "size": "sx"}),
-        "marker": ObjectType("marker", "Метка пути", "detector", marker, color=COLORS["marker"],
-                             help="Двухуровневый прибор (Энглерт): поворачивается, пока частица в области",
+        "step": ObjectType("step", T("Potential step"), "potential", step, color=COLORS["barrier"], handles=axis_pos),
+        "trap": ObjectType("trap", T("Harmonic trap"), "potential", trap, color=COLORS["well"], handles=pos),
+        "bfield": ObjectType("bfield", T("Magnetic field"), "field", bfield, color=COLORS["field"],
+                             help=T("On the spin through the magnetic moment; on a charge through the vector "
+                                    "potential (only Bz in a plane, a field along an axis in a volume)"),
                              handles={**pos, "size": "sx"}),
-        "env": ObjectType("env", "Среда (декогеренция)", "field", env, limit=1, color=COLORS["env"],
-                          help="Среда локализует частицу случайными скачками (уравнение Линдблада, квантовые скачки)",
+        "flux": ObjectType("flux", T("Flux tube (Aharonov–Bohm)"), "field", flux, color=COLORS["flux"],
+                           help=T("The field only inside the tube; outside, the vector potential"),
+                           handles={"position": ["x", "y"], "size": "radius"}),
+        "detector": ObjectType("detector", T("Detector (absorbing)"), "detector", det, color=COLORS["detector"],
+                               help=T("The probability it absorbs is counted for every particle"),
+                               handles={**pos, "size": "sx"}),
+        "marker": ObjectType("marker", T("Which-path marker"), "detector", marker, color=COLORS["marker"],
+                             help=T("A two-level device (Englert): it turns while the particle is in the region"),
+                             handles={**pos, "size": "sx"}),
+        "env": ObjectType("env", T("Environment (decoherence)"), "field", env, limit=1, color=COLORS["env"],
+                          help=T("The environment localizes the particle by random jumps (the Lindblad equation, "
+                                 "quantum jumps)"),
                           handles={**pos, "size": "sx"}),
-        "plane": ObjectType("plane", "Плоскость потока", "probe", plane, limit=4, color=COLORS["plane"],
-                            help="Поток вероятности через плоскость, проинтегрированный по времени", handles=axis_pos),
+        "plane": ObjectType("plane", T("Flux plane"), "probe", plane, limit=4, color=COLORS["plane"],
+                            help=T("The probability flux through the plane, integrated over time"), handles=axis_pos),
     }
 
 
@@ -329,21 +352,24 @@ SPIN = {"+z": [1, 0], "-z": [0, 1], "+x": [1 / math.sqrt(2), 1 / math.sqrt(2)],
 
 
 def _pt(c, digits=3):
-    """A point in the owner's notation: «(−20; 0,5)»; a coordinate below 1e-9 of the largest one (round-off) as 0."""
+    """A point as a text: (x, y) or (x, y, z) (in Russian with semicolons); a coordinate below 1e-9 of the largest one
+    (round-off) as 0. ``digits``: 3 or 4 significant digits."""
     c = [float(x) for x in c]
     big = max([abs(x) for x in c] + [1e-300])
-    return "(" + "; ".join("0" if abs(x) < 1e-9 * big or abs(x) < 1e-12 else _f(x, digits) for x in c) + ")"
+    c = [0.0 if abs(x) < 1e-9 * big or abs(x) < 1e-12 else x for x in c]
+    if len(c) == 2:
+        return T("({x:.4g}, {y:.4g})", x=c[0], y=c[1]) if digits >= 4 else T("({x:.3g}, {y:.3g})", x=c[0], y=c[1])
+    if len(c) == 3:
+        return (T("({x:.4g}, {y:.4g}, {z:.4g})", x=c[0], y=c[1], z=c[2]) if digits >= 4
+                else T("({x:.3g}, {y:.3g}, {z:.3g})", x=c[0], y=c[1], z=c[2]))
+    return T("({x:.4g})", x=c[0]) if digits >= 4 else T("({x:.3g})", x=c[0])
 
 
-def _f(x, digits=4) -> str:
-    """A number as the owner reads it: «0,3125», «2·10⁻¹⁷»."""
-    x = float(x)
-    if x != 0 and math.isfinite(x) and (abs(x) >= 1e6 or abs(x) < 1e-3):
-        m, e = f"{x:.{max(digits - 1, 1)}e}".split("e")
-        m = m.rstrip("0").rstrip(".")
-        sup = str(int(e)).translate(str.maketrans("-0123456789", "⁻⁰¹²³⁴⁵⁶⁷⁸⁹"))
-        return f"{m}·10{sup}".replace(".", ",")
-    return f"{x:.{digits}g}".replace(".", ",")
+def _mid(x) -> str:
+    """The msgid of an engine's text (a T, or an exception raised with one), else its plain text: what the world matches
+    the engine's reasons by."""
+    t = text_of(x)
+    return t["$t"] if is_t(t) else str(t)
 
 
 def _rgb(hexcol):
@@ -453,12 +479,12 @@ class Simulation(PlaygroundSimulation):
             slits = [[float(v["offset"]) + (j - 0.5 * (k - 1)) * float(v["spacing"]), float(v["width"])]
                      for j in range(k)]
             if int(v["axis"]) >= n:
-                raise ValueError("в плоскости нет оси z")
+                raise Refusal(T("a plane has no z axis"))
             return QS.SlitWall(int(v["axis"]), float(v["position"]), float(v["thickness"]), v["V"] / EV, slits,
                                edge)
         if t == "step":
             if int(v["axis"]) >= n:
-                raise ValueError("в плоскости нет оси z")
+                raise Refusal(T("a plane has no z axis"))
             return QS.Step(int(v["axis"]), float(v["position"]), v["V"] / EV, edge)
         if t == "trap":
             omega = float(v["hw"]) * 1e-3 / EV  # hbar omega in units of energy = omega in units of 1/time (hbar = 1)
@@ -489,7 +515,7 @@ class Simulation(PlaygroundSimulation):
             lo, hi = self._region(v)
             return QS.Localization(float(v["rate"]) * 1e12 * TU, float(v["length"]), lo=lo, hi=hi,
                                    edge=edge if lo is not None else None)
-        raise ValueError(f"нет объекта «{t}»")
+        raise Refusal(T("no object “{type}”", type=t))
 
     def _finite(self, ob):
         """Refuse an object whose values on the grid are not finite (a value that overflows in the scene's units would
@@ -500,7 +526,7 @@ class Simulation(PlaygroundSimulation):
                 [ob.field(g)] if isinstance(ob, (QS.MagneticField, QS.FluxTube)) else \
                 [ob.b(g)] if isinstance(ob, QS.PathMarker) else []
         if not all(np.all(np.isfinite(a)) for a in arrs):
-            raise ValueError("значения объекта на сетке не конечны (слишком большие числа)")
+            raise Refusal(T("the object's values on the grid are not finite (numbers too large)"))
         return ob
 
     def _packet(self, v) -> QS.Packet:
@@ -539,8 +565,8 @@ class Simulation(PlaygroundSimulation):
             th = 0.25 * math.pi * (x + 1.0)
             wt = w * np.cos(th) * (np.sin(th) if self.ndim == 3 else 1.0)
             wt = wt / wt.sum()
-            R, T = QS.EdgeLayers(width=self.edge_w, strength=float(W0)).reflection(np.append(k * np.cos(th), 0.5 * k), m)
-            self._remember(key, (float(np.sum(wt * R[:-1])), float(np.sum(wt * T[:-1])), float(R[-1])))
+            R, Tr = QS.EdgeLayers(width=self.edge_w, strength=float(W0)).reflection(np.append(k * np.cos(th), 0.5 * k), m)
+            self._remember(key, (float(np.sum(wt * R[:-1])), float(np.sum(wt * Tr[:-1])), float(R[-1])))
         return self._cache[key]
 
     def _remember(self, key, value):
@@ -585,10 +611,10 @@ class Simulation(PlaygroundSimulation):
         for m in masses:
             ks = [k for k, mm in waves if mm == m]
             if det is None or ax is None:
-                R, T = QS.EdgeLayers(width=self.edge_w, strength=1.0).reflection(ks, m, strengths=W0s)
+                R, Tr = QS.EdgeLayers(width=self.edge_w, strength=1.0).reflection(ks, m, strengths=W0s)
             else:
-                R, T = QS.Detector(det.lo, det.hi, 1.0, det.edge).reflection(ks, m, axis=ax, strengths=W0s)
-            worst = np.maximum(worst, np.max(R + T, axis=1))
+                R, Tr = QS.Detector(det.lo, det.hi, 1.0, det.edge).reflection(ks, m, axis=ax, strengths=W0s)
+            worst = np.maximum(worst, np.max(R + Tr, axis=1))
         W = float(W0s[int(np.argmin(worst))])  # the first of equal minima, as before
         self._remember(key, W)
         return W
@@ -681,11 +707,11 @@ class Simulation(PlaygroundSimulation):
             note, self._placed_note = self._placed_note, None
             if note and note[0] == tuple(self._vec(obj["values"])) and not self._loading:
                 self.emit({"type": "event", "kind": "scene", "t": self.t, "notify": True,
-                           "text": f"«{obj['label']}»: {note[1]}"})
+                           "text": T("“{label}”: {note}", label=obj["label"], note=note[1])})
         elif t == "plane":
             v = obj["values"]
             if int(v["axis"]) >= self.ndim:
-                raise ValueError("в плоскости нет оси z")
+                raise Refusal(T("a plane has no z axis"))
             self.ref[obj["id"]] = ("plane", self.qs.add_plane(int(v["axis"]), float(v["position"])))
         else:
             ob = self._finite(self._object(obj))
@@ -700,7 +726,7 @@ class Simulation(PlaygroundSimulation):
     def on_remove(self, obj):
         # the engine first, the reference after it (review UX-params P28: a removal the scene refused, e.g. a field
         # while a charged particle is in the window, had already dropped the reference and every later removal or
-        # «Очистить сцену» failed with «Сцена: 'o1'»)
+        # "Clear scene" failed with "Scene: 'o1'")
         kind, qid = self.ref[obj["id"]]
         if kind == "particle":
             self.qs.remove_particle(qid)
@@ -722,7 +748,7 @@ class Simulation(PlaygroundSimulation):
         elif kind == "plane":
             v = obj["values"]
             if int(v["axis"]) >= self.ndim:
-                raise ValueError("в плоскости нет оси z")
+                raise Refusal(T("a plane has no z axis"))
             new = self.qs.add_plane(int(v["axis"]), float(v["position"]))
             self.qs.remove_plane(qid)
             self.ref[obj["id"]] = ("plane", new)
@@ -751,9 +777,9 @@ class Simulation(PlaygroundSimulation):
         position is the point given (for a charged particle by the magnetic translation, refused where none keeps the
         wave: next to a flux tube's path or across a field's edge — review LB1-p02-ux Q1, Q2), given the momentum that
         makes its mean kinetic wavenumber the one given — a thrown velocity v becomes k0 = m v / hbar (the wavelength
-        and direction follow). A throw (a drag's release, op «edit») faster than the scene takes there and then is
+        and direction follow). A throw (a drag's release, op "edit") faster than the scene takes there and then is
         clamped to the fastest it takes in that direction (``Scene.kick_limit``, the scene's own tests) and said so; a
-        velocity typed in the inspector (op «set») is refused with that limit. Only the Bohm points changed: the wave
+        velocity typed in the inspector (op "set") is refused with that limit. Only the Bohm points changed: the wave
         goes on (review B6-F16). Anything else (the species, the widths, the spin), or a particle without a wave (taken
         by a detector), prepares a fresh packet from the values."""
         v = obj["values"]
@@ -782,8 +808,8 @@ class Simulation(PlaygroundSimulation):
             self._set_momentum(v, pk.k, mass, direction=False)
             self._seed_bohm(obj)
             if not other:
-                self._note = (f"«{lab}»: волны не было (частица зарегистрирована детектором) — приготовлен новый пакет в "
-                              f"{_pt(self._vec(v))} нм")
+                self._note = T("“{label}”: there was no wave (the particle was registered by a detector); a new "
+                               "packet was prepared at {at} nm", label=lab, at=_pt(self._vec(v)))
             return
         o = qs.observables(qid)
         mass = p.species.mass
@@ -794,8 +820,10 @@ class Simulation(PlaygroundSimulation):
             out = [i for i in range(nd) if not wl[i] <= target[i] < wh[i]]
             if out:
                 i = out[0]
-                raise Refusal(f"«{lab}»: точка {_pt(target)} нм вне окна (по оси {'xyz'[i]} окно от {_f(wl[i])} до "
-                              f"{_f(wh[i])} нм)", hint="переносите волну внутрь окна")
+                raise Refusal(T("“{label}”: the point {at} nm is outside the window (along {axis} the window runs "
+                                "from {lo:.4g} to {hi:.4g} nm)", label=lab, at=_pt(target), axis="xyz"[i],
+                                lo=float(wl[i]), hi=float(wh[i])),
+                              hint=T("move the wave inside the window"))
             shift = target - np.array(o["r"])
             if float(np.max(np.abs(shift))) <= 1e-9 * self.d:  # the same place again (a throw from where it is)
                 shift = None
@@ -811,10 +839,12 @@ class Simulation(PlaygroundSimulation):
         if shift is not None and self.open:  # review LB1-p02-ux Q8: what a move puts into the far side's layer
             leak = self._far_leak(qs.wave(qid), shift, float(np.linalg.norm(o["k"])), mass)
             if leak > QS.REGRID_TOL:
-                raise Refusal(f"«{lab}»: так волну не перенести — часть её перешла бы через грань окна в поглощающий слой "
-                              f"с другой стороны и, идя внутрь, прошла бы его: внутрь окна попало бы до {_f(leak, 2)} "
-                              f"её вероятности (оценка ВКБ при нормальном падении), больше допуска "
-                              f"{_f(QS.REGRID_TOL)}", hint="переносите на меньшее расстояние или от края окна")
+                raise Refusal(T("“{label}”: the wave cannot be moved this way: part of it would cross the window's "
+                                "face into the absorbing layer on the other side and, going inwards, pass through it: "
+                                "up to {leak:.2g} of its probability would get into the window (a WKB estimate at "
+                                "normal incidence), more than the tolerance {tol:.4g}", label=lab, leak=leak,
+                                tol=QS.REGRID_TOL),
+                              hint=T("move it a shorter distance or away from the window's edge"))
         try:
             rep = qs.transform_particle(qid, shift=shift, dk=dk)
         except ValueError as e:
@@ -838,35 +868,44 @@ class Simulation(PlaygroundSimulation):
             B["Xc"][B["flyc"]] = self._wrap(B["Xc"][B["flyc"]] + shift)
         parts = []
         if shift is not None:
-            parts.append(f"та же волна перенесена на {_pt(shift)} нм: ⟨r⟩ {_pt(rep['r_before'])} → "
-                         f"{_pt(rep['r_after'])} нм"
-                         + (" (магнитный перенос: кинетическая часть волны сохранена)" if p.species.charge != 0
-                            and qs._arr["A"] is not None else ""))
+            if p.species.charge != 0 and qs._arr["A"] is not None:
+                parts.append(T("the same wave moved by {shift} nm: ⟨r⟩ {r0} → {r1} nm (a magnetic translation: the "
+                               "kinetic part of the wave kept)", shift=_pt(shift), r0=_pt(rep["r_before"]),
+                               r1=_pt(rep["r_after"])))
+            else:
+                parts.append(T("the same wave moved by {shift} nm: ⟨r⟩ {r0} → {r1} nm", shift=_pt(shift),
+                               r0=_pt(rep["r_before"]), r1=_pt(rep["r_after"])))
         if kt is not None:
             kk = float(np.linalg.norm(kt))
             vk = [float(x) / mass / TU * 1e-12 for x in kt]  # km/s
-            how = (f"брошена: v = {_pt(vk, 4)} км/с → k₀ = m v/ħ = {_pt(kt)} нм⁻¹" if thrown
-                   else f"получила импульс: k₀ = {_pt(kt)} нм⁻¹")
-            parts.append(f"{how}, λ = {_f(2 * math.pi / kk) if kk > 0 else '∞'} нм (было ⟨k⟩ = {_pt(rep['k_before'])} "
-                         f"нм⁻¹)")
+            how = (T("thrown: v = {v} km/s → k₀ = m v/ħ = {k} nm⁻¹", v=_pt(vk, 4), k=_pt(kt)) if thrown
+                   else T("given a momentum: k₀ = {k} nm⁻¹", k=_pt(kt)))
+            if kk > 0:
+                parts.append(T("{how}, λ = {lam:.4g} nm (was ⟨k⟩ = {k0} nm⁻¹)", how=how, lam=2 * math.pi / kk,
+                               k0=_pt(rep["k_before"])))
+            else:
+                parts.append(T("{how}, λ = ∞ (was ⟨k⟩ = {k0} nm⁻¹)", how=how, k0=_pt(rep["k_before"])))
             if asked is not None:
                 va = float(np.linalg.norm(asked)) / mass / TU * 1e-12
-                parts[-1] += (f"; бросок ограничен: просили {_f(va, 4)} км/с, быстрее {_f(kk / mass / TU * 1e-12, 4)} "
-                              f"км/с в этом направлении сетка здесь и сейчас не передаёт волну")
+                parts[-1] = T("{text}; the throw was limited: {asked:.4g} km/s asked, the grid here and now does not "
+                              "resolve the wave faster than {vmax:.4g} km/s in this direction", text=parts[-1],
+                              asked=va, vmax=kk / mass / TU * 1e-12)
         if not parts:
             return
-        tail = [f"вероятность в окне {_f(rep['norm_before'], 6)} сохранена",
-                f"энергия ⟨H⟩ {_f(rep['E_before'] * EV)} → {_f(rep['E_after'] * EV)} эВ"]
+        tail = [T("probability in the window {p:.6g} kept", p=float(rep["norm_before"])),
+                T("energy ⟨H⟩ {e0:.4g} → {e1:.4g} eV", e0=rep["E_before"] * EV, e1=rep["E_after"] * EV)]
         if rep.get("T_before") is not None and rep.get("T_after") is not None:
-            tail.append(f"кинетическая ⟨(p − qA)²⟩/2m {_f(rep['T_before'] * EV)} → {_f(rep['T_after'] * EV)} эВ")
+            tail.append(T("kinetic ⟨(p − qA)²⟩/2m {e0:.4g} → {e1:.4g} eV", e0=rep["T_before"] * EV,
+                          e1=rep["T_after"] * EV))
         if rep.get("in_layers", 0.0) > 1e-6 and shift is not None:
-            tail.append(f"в поглощающих слоях краёв была {_f(rep['in_layers'], 2)} её вероятности (уходящая волна) — "
-                        f"перенесена вместе с волной")
+            tail.append(T("the edges' absorbing layers held {p:.2g} of its probability (an outgoing wave): moved "
+                          "along with the wave", p=float(rep["in_layers"])))
         if rep.get("far_layer", 0.0) > 1e-12:
-            tail.append(f"{_f(rep['far_layer'], 2)} вероятности перешло через грань в поглощающий слой с другой стороны "
-                        f"окна — его поглотит слой (внутрь пройдёт не больше {_f(leak, 2)})")
-        self._note = (f"«{lab}»: " + "; ".join(parts) + "; " + "; ".join(tail)
-                      + ". Свежий пакет — действие «Приготовить пакет заново»")
+            tail.append(T("{p:.2g} of the probability crossed a face into the absorbing layer on the other side of "
+                          "the window: the layer will absorb it (at most {leak:.2g} gets inside)",
+                          p=float(rep["far_layer"]), leak=leak))
+        self._note = T("“{label}”: {what}. A fresh packet: the action “Prepare the packet anew”", label=lab,
+                       what=join(parts + tail, "; "))
 
     def _far_leak(self, psi, shift, kk, mass):
         """The share of a wave that a move by ``shift`` carries across a face into the far side's absorbing layer and
@@ -906,31 +945,38 @@ class Simulation(PlaygroundSimulation):
     def _move_refusal(self, obj, e, shift=None, kt=None):
         """The scene's refusal of a packet's move or impulse in the owner's terms: which test refused (the window's
         face, the magnetic translation, the grid's band, the resolution next to what acts on the particle) and whether
-        the place or the speed is the cause (review LB1-p02-ux Q5: «там или с этой скоростью» left the owner guessing)."""
+        the place or the speed is the cause (review LB1-p02-ux Q5: "there or at this speed" left the owner guessing)."""
         lab, what = obj["label"], getattr(e, "what", None)
         if what == "wrap":
-            return Refusal(f"«{lab}»: так волну не перенести — {_f(e.value, 3)} её вероятности перешло бы через грань "
-                           f"окна внутрь окна с другой стороны (сетка периодична)", detail=str(e),
-                           hint="переносите на меньшее расстояние или ближе к середине окна; или увеличьте окно "
-                                "(«Размер окна» меняется на ходу)")
+            return Refusal(T("“{label}”: the wave cannot be moved this way: {p:.3g} of its probability would cross a "
+                             "window face into the window on the other side (the grid is periodic)", label=lab,
+                             p=float(e.value)), detail=str(e),
+                           hint=T("move it a shorter distance or closer to the window's middle; or enlarge the window "
+                                  "(“Window size” changes on the fly)"))
         if what == "gauge":
             why = []
             for oid_q, pr in sorted((getattr(e, "tubes", None) or {}).items()):
                 if pr > 1e-12:
-                    why.append(f"путь трубки «{self._label_of('object', oid_q)}» относительно волны проходит через неё "
-                               f"(там {_f(pr, 2)} её вероятности): поток, который охватывают части волны, изменился бы")
+                    why.append(T("the path of the tube “{tube}” relative to the wave passes through it ({p:.2g} of "
+                                 "its probability there): the flux the wave's parts enclose would change",
+                                 tube=self._label_of("object", oid_q), p=float(pr)))
             for oid_q in getattr(e, "fields", None) or []:
-                why.append(f"поле «{self._label_of('object', oid_q)}» там, куда переносится волна, не то, что там, где "
-                           f"она была")
+                why.append(T("the field “{field}” where the wave is moved to is not the one where it was",
+                             field=self._label_of("object", oid_q)))
             if not why:
-                why.append("магнитное поле в новом месте не то же, что в прежнем")
+                why.append(T("the magnetic field at the new place is not the same as at the old one"))
             dT = getattr(e, "dT", float("nan"))
-            return Refusal(f"«{lab}»: ту же волну так не перенести — " + "; ".join(why)
-                           + (f". Её кинетическая энергия изменилась бы на {_f(100 * dT, 2)} %" if math.isfinite(dT)
-                              else "") + f", кинетическое поле (p − qA)ψ — на долю {_f(e.value, 2)}", detail=str(e),
-                           hint="перенесите так, чтобы трубка относительно волны обошла её, или туда, где поле то же; "
-                                "начать заново — действие «Приготовить пакет заново» (центр из параметров или где волна "
-                                "сейчас)")
+            hint = T("move it so that the tube goes round it relative to the wave, or to where the field is the same; to "
+                     "start afresh: the action “Prepare the packet anew” (the centre from the parameters or where the "
+                     "wave is now)")
+            if math.isfinite(dT):
+                return Refusal(T("“{label}”: the same wave cannot be moved this way: {why}. Its kinetic energy would "
+                                 "change by {dT:.2g} %, the kinetic field (p − qA)ψ by a share of {share:.2g}",
+                                 label=lab, why=join(why, "; "), dT=100 * dT, share=float(e.value)),
+                               detail=str(e), hint=hint)
+            return Refusal(T("“{label}”: the same wave cannot be moved this way: {why}; the kinetic field (p − qA)ψ "
+                             "would change by a share of {share:.2g}", label=lab, why=join(why, "; "),
+                             share=float(e.value)), detail=str(e), hint=hint)
         if what in ("alias", "resolution"):
             # the place or the speed: the throw's limit there (a = None: the place refuses even at rest)
             a = None
@@ -941,27 +987,34 @@ class Simulation(PlaygroundSimulation):
                     a = None
             place = kt is None or a is None
             mass = self.qs.particles[self.ref[obj["id"]][1]].species.mass
-            where = ("в новом месте " if shift is not None and place else "здесь " if place else "")
+            where = (T("at the new place") if shift is not None and place else T("here") if place else None)
+            K, lim = float(getattr(e, "K", float("nan"))), float(getattr(e, "lim", float("nan")))
             if what == "alias":
-                text = (f"«{lab}»: с такой скоростью сетка (шаг {_f(self.d)} нм) волну не передаст — за её полосой "
-                        f"оказалось бы {_f(e.value, 3)} спектра волны")
+                text = T("“{label}”: at such a speed the grid (step {d:.4g} nm) will not resolve the wave: {p:.3g} of "
+                         "the wave's spectrum would lie beyond its band", label=lab, d=self.d, p=float(e.value))
+            elif getattr(e, "inter", True) and where is not None:
+                text = T("“{label}”: {where} the grid (step {d:.4g} nm) does not resolve the wave next to what acts on "
+                         "it: its wavenumbers reach {K:.3g} nm⁻¹, while next to a potential or a field the grid "
+                         "resolves ≤ {lim:.3g} nm⁻¹ (⅔·π/step)", label=lab, where=where, d=self.d, K=K, lim=lim)
             elif getattr(e, "inter", True):
-                text = (f"«{lab}»: {where}сетка (шаг {_f(self.d)} нм) не передаёт волну рядом с тем, что на неё "
-                        f"действует: её волновые числа доходят до {_f(getattr(e, 'K', float('nan')), 3)} нм⁻¹, а рядом с "
-                        f"потенциалом или полем сетка передаёт ≤ {_f(getattr(e, 'lim', float('nan')), 3)} нм⁻¹ (⅔·π/шаг)")
+                text = T("“{label}”: the grid (step {d:.4g} nm) does not resolve the wave next to what acts on it: its "
+                         "wavenumbers reach {K:.3g} nm⁻¹, while next to a potential or a field the grid resolves "
+                         "≤ {lim:.3g} nm⁻¹ (⅔·π/step)", label=lab, d=self.d, K=K, lim=lim)
             else:
-                text = (f"«{lab}»: волна мельче, чем передаёт сетка (шаг {_f(self.d)} нм): её волновые числа доходят до "
-                        f"{_f(getattr(e, 'K', float('nan')), 3)} нм⁻¹ при π/шаг = {_f(getattr(e, 'lim', float('nan')), 3)} "
-                        f"нм⁻¹")
+                text = T("“{label}”: the wave is finer than the grid (step {d:.4g} nm) resolves: its wavenumbers reach "
+                         "{K:.3g} nm⁻¹ at π/step = {lim:.3g} nm⁻¹", label=lab, d=self.d, K=K, lim=lim)
             if kt is not None and not place:
                 vmax = a * float(np.linalg.norm(kt)) / mass / TU * 1e-12
-                text += f". Причина — скорость: в этом направлении сейчас можно не быстрее {_f(vmax, 4)} км/с"
-                hint = "бросьте медленнее (меньше масштаб броска или больше λ) или сделайте сетку мельче («Точек сетки по оси» — на ходу)"
+                text = T("{text}. The cause is the speed: in this direction no faster than {v:.4g} km/s now",
+                         text=text, v=vmax)
+                hint = T("throw slower (a smaller throw scale or a larger λ) or make the grid finer (“Grid points per "
+                         "axis”, on the fly)")
             elif shift is not None:
-                text += ". Причина — место: туда волну не перенести даже покоящейся"
-                hint = "переносите дальше от потенциала или сделайте сетку мельче («Точек сетки по оси» — на ходу)"
+                text = T("{text}. The cause is the place: the wave cannot be moved there even at rest", text=text)
+                hint = T("move it farther from the potential or make the grid finer (“Grid points per axis”, on the "
+                         "fly)")
             else:
-                hint = "медленнее частица, ниже потенциал или мельче сетка («Точек сетки по оси» — на ходу)"
+                hint = T("a slower particle, a lower potential or a finer grid (“Grid points per axis”, on the fly)")
             return Refusal(text, detail=str(e), hint=hint)
         return e
 
@@ -985,15 +1038,15 @@ class Simulation(PlaygroundSimulation):
 
     # --- placement, the palette, removals (review UX-ui U4, U7, U8, U13; UX-params P28) ----------------------------
     def can_remove(self, obj):
-        """Why the object cannot be removed now (the engine's own test, nothing changed), or None. In «Очистить сцену»
+        """Why the object cannot be removed now (the engine's own test, nothing changed), or None. In "Clear scene"
         the particles go first, so a field can then go too."""
         ref = self.ref.get(obj["id"])
         if ref is None or ref[0] != "object" or self._clearing:
             return None
         why = self.qs.removal_reason(ref[1])
-        if why and "заряженная частица" in why:
-            return "пока в окне заряженная частица, поле не выключить (импульс индукции зависит от устройства магнита) " \
-                   "— сначала уберите частицу"
+        if why and "charged particle" in _mid(why):
+            return T("while a charged particle is in the window, the field cannot be switched off (the impulse of the "
+                     "induced field depends on how the magnet is built): remove the particle first")
         return why
 
     def _window(self):
@@ -1007,75 +1060,87 @@ class Simulation(PlaygroundSimulation):
         if obj["type"] == "trap":  # its potential fills the window wherever its centre is: the centre must be inside
             c = self._vec(obj["values"])
             if any(not (wl[i] <= c[i] <= wh[i]) for i in range(self.ndim)):
-                raise Refusal(f"центр ловушки {_pt(c, 4)} нм вне окна "
-                              f"({wl[0]:.4g} … {wh[0]:.4g} нм по каждой оси)", hint="поставьте центр внутрь окна")
+                raise Refusal(T("the trap's centre {at} nm is outside the window ({lo:.4g} … {hi:.4g} nm along "
+                                "every axis)", at=_pt(c, 4), lo=float(wl[0]), hi=float(wh[0])),
+                              hint=T("put the centre inside the window"))
             return
         lo, hi = ob.bbox(self.ndim)
         lo, hi = np.asarray(lo, float), np.asarray(hi, float)
         out = [i for i in range(self.ndim) if hi[i] < wl[i] or lo[i] > wh[i]]
         if out:
             i = out[0]
-            raise Refusal(f"«{obj['label']}» целиком вне окна по оси {'xyz'[i]}: объект от {lo[i]:.4g} до {hi[i]:.4g} нм, "
-                          f"окно от {wl[i]:.4g} до {wh[i]:.4g} нм", hint="поставьте его внутрь окна")
+            raise Refusal(T("“{label}” is wholly outside the window along {axis}: the object runs from {lo:.4g} to "
+                            "{hi:.4g} nm, the window from {wlo:.4g} to {whi:.4g} nm", label=obj["label"],
+                            axis="xyz"[i], lo=float(lo[i]), hi=float(hi[i]), wlo=float(wl[i]), whi=float(wh[i])),
+                          hint=T("put it inside the window"))
         part = [i for i in range(self.ndim) if (lo[i] < wl[i] and np.isfinite(lo[i])) or (hi[i] > wh[i] and np.isfinite(hi[i]))]
         if part and not self._loading:
             self.emit({"type": "event", "kind": "scene", "t": self.t, "notify": True,
-                       "text": f"«{obj['label']}» частично за краем окна по оси {'xyz'[part[0]]}: за краем он не "
-                               f"действует (окно от {wl[part[0]]:.4g} до {wh[part[0]]:.4g} нм)"})
+                       "text": T("“{label}” is partly beyond the window's edge along {axis}: beyond the edge it does "
+                                 "not act (the window runs from {lo:.4g} to {hi:.4g} nm)", label=obj["label"],
+                                 axis="xyz"[part[0]], lo=float(wl[part[0]]), hi=float(wh[part[0]]))})
 
     def _refusal(self, obj, e):
         """The engine's refusal of an object in the owner's terms (review UX-ui U13)."""
-        text = str(e)
-        if "сетка не передаёт" in text:
-            return Refusal(f"с «{obj['label']}» сетка (шаг {self.d:.3g} нм) не передаёт волну частицы: рядом с ним "
-                           f"её волновые числа выходят за 2/3 полосы сетки", detail=text,
-                           hint="ниже потенциал или медленнее частица (больше λ); или мельче сетка — «Точек сетки по оси» "
-                                "(меняется на ходу)")
-        if "заряженная частица" in text and "поле нельзя менять" in text:
-            return Refusal("поле нельзя менять, пока в окне заряженная частица: импульс индукции при переключении "
-                           "зависит от устройства магнита", detail=text, hint="задайте поле до частицы или уберите частицу")
+        text, mid = str(e), _mid(e)
+        if mid.startswith("the grid does not carry the wave"):
+            return Refusal(T("with “{label}” the grid (step {d:.3g} nm) does not resolve the particle's wave: next to "
+                             "it the wave's wavenumbers go beyond 2/3 of the grid's band", label=obj["label"], d=self.d),
+                           detail=text,
+                           hint=T("a lower potential or a slower particle (a larger λ); or a finer grid: “Grid points "
+                                  "per axis” (changes on the fly)"))
+        if mid.startswith("the field cannot be changed while the charged particle"):
+            return Refusal(T("the field cannot be changed while a charged particle is in the window: the impulse of "
+                             "the induced field at the switch depends on how the magnet is built"), detail=text,
+                           hint=T("set the field before the particle or remove the particle"))
         return e
 
     def _packet_refusal(self, obj, pk, e):
         """A packet refused by the engine, said for this scene: where it sits and what is there (review UX-ui U13: a
-        packet inside the double slit's wall was refused for a «яма −3 эВ» that was not in the scene)."""
+        packet inside the double slit's wall was refused for a "well −3 eV" that was not in the scene)."""
         text = str(e)
-        if "сетка не передаёт" not in text:
+        if not _mid(e).startswith("the grid does not carry the wave"):
             return e
         g = self.qs.grid
         sig = np.asarray(pk.sigma, float)
         kn = math.pi / np.asarray(g.d, float)
         if np.any(np.abs(np.asarray(pk.k, float)) + QS.PACKET_NYQUIST / (2 * sig) > kn):
             kmax = float(np.min(kn - QS.PACKET_NYQUIST / (2 * sig)))
-            return Refusal(f"волна частицы мельче, чем передаёт сетка (шаг {self.d:.3g} нм): нужно λ больше "
-                           + (f"{2 * math.pi / kmax:.3g} нм" if kmax > 0 else "— при этой ширине σ никакая не годится"),
-                           detail=text, hint=("увеличьте длину волны λ" + (" или ширину σ" if kmax <= 0 else "")
-                                              + "; или мельче сетка — «Точек сетки по оси» (меняется на ходу)"))
+            if kmax > 0:
+                return Refusal(T("the particle's wave is finer than the grid (step {d:.3g} nm) resolves: λ must be "
+                                 "larger than {lam:.3g} nm", d=self.d, lam=2 * math.pi / kmax), detail=text,
+                               hint=T("increase the wavelength λ; or a finer grid: “Grid points per axis” (changes on "
+                                      "the fly)"))
+            return Refusal(T("the particle's wave is finer than the grid (step {d:.3g} nm) resolves: at this width σ "
+                             "no wavelength will do", d=self.d), detail=text,
+                           hint=T("increase the wavelength λ or the width σ; or a finer grid: “Grid points per axis” "
+                                  "(changes on the fly)"))
         c = self._vec(obj["values"])
         V = self.qs.potential(pk.species)
         ic = tuple(int(np.clip(np.rint((c[a] - g.axes[a][0]) / g.d[a]), 0, g.shape[a] - 1)) for a in range(self.ndim))
         E = float(np.sum(np.asarray(pk.k, float) ** 2)) / (2 * pk.species.mass)
         Vc = float(V[ic]) - float(V.min())
         spot = self._free_spot(pk, c)
-        hint = (f"поставьте пакет в свободное место, например {_pt(spot)} нм"
-                if spot is not None else "уменьшите энергию частицы (больше λ) или потенциал")
+        hint = (T("put the packet in a free place, e.g. {at} nm", at=_pt(spot)) if spot is not None
+                else T("lower the particle's energy (a larger λ) or the potential"))
         if Vc > max(E, 1e-12):
             where = self._what_at(c)
-            return Refusal(f"центр пакета {_pt(c)} нм внутри {where}: там потенциал "
-                           f"{Vc * EV:.3g} эВ при кинетической энергии частицы {E * EV:.3g} эВ — сетка такую волну не "
-                           f"передаёт", detail=text, hint=hint)
-        return Refusal(f"сетка (шаг {self.d:.3g} нм) не передаёт волну этой частицы рядом с потенциалами сцены",
-                       detail=text, hint=hint + "; или мельче сетка — «Точек сетки по оси» (меняется на ходу)")
+            return Refusal(T("the packet's centre {at} nm is inside {where}: the potential there is {V:.3g} eV at the "
+                             "particle's kinetic energy {E:.3g} eV; the grid does not resolve such a wave", at=_pt(c),
+                             where=where, V=Vc * EV, E=E * EV), detail=text, hint=hint)
+        return Refusal(T("the grid (step {d:.3g} nm) does not resolve this particle's wave next to the scene's "
+                         "potentials", d=self.d), detail=text,
+                       hint=T("{hint}; or a finer grid: “Grid points per axis” (changes on the fly)", hint=hint))
 
     def _what_at(self, c):
-        """The label of the potential object whose box holds the point c («области потенциала» if none)."""
+        """The potential object whose box holds the point c, as a text (“a potential's region” if none)."""
         for oid, (kind, qid) in self.ref.items():
             ob = self.qs.objects.get(qid) if kind == "object" else None
             if isinstance(ob, QS.Shape):
                 lo, hi = ob.bbox(self.ndim)
                 if all(lo[i] <= c[i] <= hi[i] for i in range(self.ndim)):
-                    return f"«{self.objects[oid]['label']}»"
-        return "области потенциала"
+                    return T("“{label}”", label=self.objects[oid]["label"])
+        return T("a potential's region")
 
     def _free_spot(self, pk, c0):
         """The nearest point to c0 (the packet's own direction backwards first, then the other directions, in steps of
@@ -1147,9 +1212,9 @@ class Simulation(PlaygroundSimulation):
         if spot is None:
             return full  # refused when added, with the reason (_packet_refusal)
         full.update({c: spot[i] for i, c in enumerate("xyz"[:self.ndim])})
-        self._placed_note = (tuple(spot), f"в {_pt(c0)} нм сцена пакет не берёт ("
-                                          f"{self._what_at(c0)} или край окна) — поставлен в ближайшее свободное место "
-                                          f"{_pt(spot)} нм")
+        self._placed_note = (tuple(spot), T("the scene does not take the packet at {at} nm ({where} or the window's "
+                                            "edge): it was put at the nearest free place {spot} nm", at=_pt(c0),
+                                            where=self._what_at(c0), spot=_pt(spot)))
         return full
 
     def _cnote(self, text, obj=None, restarted=False):
@@ -1170,7 +1235,7 @@ class Simulation(PlaygroundSimulation):
         return src if src in ("2d", "3d") else None
 
     def _carried(self, kind, values):
-        """An object of a world of the other dimension carried over (plan P16.1: «Новый мир» with «перенести сцену»):
+        """An object of a world of the other dimension carried over (plan P16.1: "New world" with "carry the scene"):
         a plane's set-up is the section z = 0 of a set-up that does not change along z, so into space its objects go as
         that: boxes, detectors, markers and regions unbounded along z (sz = 0), a disk as a cylinder along z, walls,
         steps and flux planes across x or y as they are (unbounded along z), a flux tube along z, a trap of the same
@@ -1192,21 +1257,23 @@ class Simulation(PlaygroundSimulation):
                 v.setdefault("z", 0.0)
             if kind in ("box", "detector", "marker") or (kind in ("env", "bfield") and v.get("region", "box") == "box"):
                 v.setdefault("sz", 0.0)
-                self._cnote("неограничен вдоль z (сечение z = 0 — прежняя плоская фигура)")
+                self._cnote(T("unbounded along z (its section z = 0 is the former plane figure)"))
             elif kind == "ball":
                 v.setdefault("shape", "cylinder")
-                self._cnote("круг плоскости — цилиндр вдоль z")
+                self._cnote(T("the plane's disc becomes a cylinder along z"))
             elif kind in ("slit_wall", "step", "plane"):
-                self._cnote("неограничен вдоль z" + (" (щели — прорези вдоль z)" if kind == "slit_wall" else ""))
+                self._cnote(T("unbounded along z (the slits are cuts along z)") if kind == "slit_wall"
+                            else T("unbounded along z"))
             elif kind == "flux":
-                self._cnote("трубка вдоль z")
+                self._cnote(T("the tube runs along z"))
             elif kind == "trap":
-                self._cnote("в объёме держит и вдоль z (движение в плоскости x, y то же: ловушка разделяется по осям)")
+                self._cnote(T("in a volume it also holds along z (the motion in the x, y plane is the same: the trap "
+                              "separates by axes)"))
             elif kind == "packet":
                 v.setdefault("sz", float(v.get("sy", 3.0)))
                 v.setdefault("phi", 0.0)
                 v.setdefault("vz", 0.0)
-                self._cnote(f"ширина вдоль z σz = {_f(v['sz'])} нм (у волны плоскости её нет)")
+                self._cnote(T("width along z σz = {sz:.4g} nm (a plane's wave has none)", sz=float(v["sz"])))
             return v
         z = float(v.pop("z", 0.0) or 0.0)
         sz = float(v.pop("sz", 0.0) or 0.0)
@@ -1214,37 +1281,43 @@ class Simulation(PlaygroundSimulation):
         v.pop("vz", None)
         shape = v.pop("shape", "sphere")
         if kind in ("slit_wall", "step", "plane") and str(v.get("axis")) == "2":
-            raise Refusal("стоит поперёк оси z — в плоскости (x, y) такого нет", hint="поставьте его поперёк x или y")
+            raise Refusal(T("it stands across the z axis: the (x, y) plane has no such thing"),
+                          hint=T("put it across x or y"))
         if kind in ("box", "detector", "marker") or (kind in ("env", "bfield") and v.get("region") == "box"):
             if sz > 0 and abs(z) > 0.5 * sz:
-                raise Refusal(f"не пересекает плоскость z = 0 (по z от {_f(z - sz / 2)} до {_f(z + sz / 2)} нм)",
-                              hint="сдвиньте его к z = 0 в прежнем мире")
+                raise Refusal(T("it does not cross the plane z = 0 (along z from {lo:.4g} to {hi:.4g} nm)",
+                                lo=z - sz / 2, hi=z + sz / 2),
+                              hint=T("move it to z = 0 in the previous world"))
             if sz > 0:
-                self._cnote(f"сечение z = 0, в плоскости неограничен вдоль z (был {_f(sz)} нм)")
+                self._cnote(T("the section z = 0; in the plane unbounded along z (it was {sz:.4g} nm)", sz=sz))
         elif kind == "ball":
             if shape == "sphere":
                 R = float(v.get("radius", 3.0))
                 if abs(z) >= R:
-                    raise Refusal(f"шар не пересекает плоскость z = 0 (центр z = {_f(z)} нм, радиус {_f(R)} нм)",
-                                  hint="сдвиньте его к z = 0 в прежнем мире")
+                    raise Refusal(T("the ball does not cross the plane z = 0 (centre z = {z:.4g} nm, radius {R:.4g} "
+                                    "nm)", z=z, R=R),
+                                  hint=T("move it to z = 0 in the previous world"))
                 v["radius"] = math.sqrt(R * R - z * z)
-                self._cnote(f"сечение шара плоскостью z = 0 — круг радиуса {_f(v['radius'])} нм (в плоскости — "
-                            f"цилиндр вдоль z)")
+                self._cnote(T("the ball's section by the plane z = 0 is a disc of radius {R:.4g} nm (in the plane, a "
+                              "cylinder along z)", R=float(v["radius"])))
         elif kind == "packet":
             if abs(phi) > 1e-9:
-                raise Refusal(f"движется не в плоскости (x, y): наклон φ = {_f(phi)}°", hint="φ = 0 в прежнем мире")
+                raise Refusal(T("it moves out of the (x, y) plane: inclination φ = {phi:.4g}°", phi=phi),
+                              hint=T("φ = 0 in the previous world"))
             if abs(z) > 2 * max(sz, 1e-12):
-                raise Refusal(f"центр пакета вне плоскости z = 0 (z = {_f(z)} нм при σz = {_f(sz)} нм)",
-                              hint="центр ближе к z = 0 в прежнем мире")
+                raise Refusal(T("the packet's centre is off the plane z = 0 (z = {z:.4g} nm at σz = {sz:.4g} nm)",
+                                z=z, sz=sz),
+                              hint=T("the centre closer to z = 0 in the previous world"))
         elif kind == "trap" and abs(z) > 0:
-            self._cnote(f"центр z = {_f(z)} нм отброшен: мир плоский")
+            self._cnote(T("centre z = {z:.4g} nm dropped: the world is a plane", z=z))
         return v
 
     def after_header(self):
         super().after_header()
         if self._carry_notes:  # only with a framework that has no ``carry_note`` (its notice says it otherwise)
-            self.emit({"type": "notice", "t": self.t, "text": "Перенесено из мира другого пространства с изменениями: "
-                       + "; ".join(self._carry_notes)})
+            self.emit({"type": "notice", "t": self.t,
+                       "text": T("Carried from a world of the other space with changes: {notes}",
+                                 notes=join(self._carry_notes, "; "))})
             self._carry_notes = []
 
     # --- the carry-over's state (review LB1-F5; the framework's hooks of 2026-11-11) ----------------------------------
@@ -1258,7 +1331,7 @@ class Simulation(PlaygroundSimulation):
         return key
 
     def _key_in(self, key):
-        """A carried key in this world: the same detector if it was carried, else «in the earlier world»."""
+        """A carried key in this world: the same detector if it was carried, else "in the earlier world"."""
         if isinstance(key, str) and key.startswith("obj:"):
             r = self.ref.get(key[4:])
             if r and r[0] == "object" and isinstance(self.qs.objects.get(r[1]), QS.Detector):
@@ -1300,28 +1373,30 @@ class Simulation(PlaygroundSimulation):
         if isinstance(state, dict) and state.get("ndim") == self.ndim and ("psi" in state or not state.get("active")):
             self._carry_waves[obj["id"]] = state
         else:
-            self._cnote("волна приготовлена заново из параметров: "
-                        + ("другая размерность" if isinstance(state, dict) and state.get("ndim") != self.ndim
-                           else "её состояния прежний мир не передал"), obj, restarted=True)
+            self._cnote(T("the wave was prepared afresh from the parameters: another dimension")
+                        if isinstance(state, dict) and state.get("ndim") != self.ndim
+                        else T("the wave was prepared afresh from the parameters: the previous world gave no state of "
+                               "it"), obj, restarted=True)
 
     def carry_world(self, state, laws):
         """After the carried objects (review LB1-F5): the random generators and the measured points of the previous
         world (same dimension), then each carried wave adopted (``Scene.adopt_wave``: resampled exactly to this grid,
         refused as a live change of the grid is — then a fresh packet, said), with its absorbed records (a detector that
-        was not carried: «в прежнем мире»); Bohm points drawn again from the wave."""
+        was not carried: "in the previous world"); Bohm points drawn again from the wave."""
         if isinstance(state, dict) and state.get("ndim") == self.ndim:
             try:
                 self.rng.bit_generator.state = state["rng"]
                 self.qs.rng.bit_generator.state = state["qs_rng"]
             except (KeyError, TypeError, ValueError):
-                self._cnote("случайные исходы (измерения, скачки среды, точки Бома) — новый генератор этого мира",
-                            restarted=True)
+                self._cnote(T("random outcomes (measurements, the environment's jumps, Bohm points): a new generator "
+                              "of this world"), restarted=True)
             self.marks = [list(m) for m in state.get("marks") or []]
             if self.marks:
                 self._emit_marks()
         elif state is not None:
-            self._cnote("случайные исходы (измерения, скачки среды, точки Бома) — новый генератор этого мира: другая "
-                        "размерность; отмеченные исходы измерений не перенесены", restarted=True)
+            self._cnote(T("random outcomes (measurements, the environment's jumps, Bohm points): a new generator of "
+                          "this world: another dimension; the marked outcomes of measurements were not carried"),
+                        restarted=True)
         waves, self._carry_waves = self._carry_waves, {}
         for oid, st in waves.items():
             obj = self.objects.get(oid)
@@ -1342,21 +1417,23 @@ class Simulation(PlaygroundSimulation):
                                          active=bool(st.get("active")),
                                          detected=self._key_in(st["detected"]) if st.get("detected") else None)
             except ValueError as e:
-                self._cnote(f"волна приготовлена заново из параметров: на этой сетке её не передать — {e}", obj,
-                            restarted=True)
+                self._cnote(T("the wave was prepared afresh from the parameters: this grid cannot carry it: {why}",
+                              why=text_of(e)), obj, restarted=True)
                 continue
             if not st.get("active"):
                 self.bohm.pop(oid, None)
-                self._cnote("частица была зарегистрирована детектором — так и осталась", obj)
+                self._cnote(T("the particle had been registered by a detector, and so it stays"), obj)
                 continue
             if list(st["shape"]) != list(self.qs.grid.shape) or not np.allclose(st["d"], self.qs.grid.d):
-                self._cnote(f"волна пересчитана на сетку этого мира точно (шаг {_f(st['d'][0])} → {_f(self.d)} нм; "
-                            f"отброшено {_f(max(rep['dropped'], 0.0), 2)})", obj)
+                self._cnote(T("the wave resampled exactly onto this world's grid (step {d0:.4g} → {d1:.4g} nm; "
+                              "{drop:.2g} dropped)", d0=float(st["d"][0]), d1=self.d,
+                              drop=max(float(rep["dropped"]), 0.0)), obj)
             if "carried" in banked:
-                self._cnote(f"поглощённое в прежнем мире ({_f(banked['carried'], 3)}) — отдельной строкой баланса", obj)
+                self._cnote(T("what was absorbed in the previous world ({p:.3g}) is a separate line of the balance",
+                              p=float(banked["carried"])), obj)
             if obj["values"].get("bohm"):
                 self._seed_bohm(obj)
-                self._cnote("частицы Бома взяты заново по |ψ|²", obj)
+                self._cnote(T("Bohm particles drawn again from |ψ|²"), obj)
             self._set_vmax(obj)
         self._tune()
 
@@ -1368,7 +1445,8 @@ class Simulation(PlaygroundSimulation):
         out = {}
         charged = [p for p in self.qs.particles.values() if p.active and p.species.charge != 0]
         if any(self.qs.norm(p.id) > 1e-12 for p in charged):
-            out["bfield"] = "пока в окне заряженная частица, поле не добавить: задайте поле до частицы или уберите её"
+            out["bfield"] = T("while a charged particle is in the window, a field cannot be added: set the field "
+                              "before the particle or remove it")
         if self.ndim != 2:
             return out
         key = (self.rev, self.open, tuple(sorted(self.qs.particles)), float(self.qs.dt))
@@ -1382,11 +1460,12 @@ class Simulation(PlaygroundSimulation):
                     obj = {"type": typ, "values": ot.schema.resolve(None, vals)[0], "label": ot.label}
                     why = self.qs.addition_reason(self._object(obj))
                 except ValueError as e:
-                    why = str(e)
+                    why = text_of(e)
                 if why:
-                    got[typ] = ("с ним сетка не передаст волну частицы сцены (её энергия вырастет): уменьшите энергию "
-                                "частицы или задайте объект слабее после добавления; или мельче сетка — «Точек сетки по оси» (на ходу)"
-                                if "сетка не передаёт" in why else why)
+                    got[typ] = (T("with it the grid would not resolve the wave of a particle in the scene (its energy "
+                                  "would grow): lower the particle's energy or make the object weaker after adding it; "
+                                  "or a finer grid: “Grid points per axis” (on the fly)")
+                                if _mid(why).startswith("the grid does not carry the wave") else why)
             self._ps_key, self._ps = key, got
         out.update(self._ps)
         return out
@@ -1403,24 +1482,26 @@ class Simulation(PlaygroundSimulation):
         edges change sent together are one change of the engine (both or neither)."""
         new, errors = SCHEMA.coerce_live(self.params, values)
         if errors:
-            raise ValueError("; ".join(str(e) for e in errors))
+            raise Refusal(join(errors, "; "))
         nk, other = ("n2", "n3") if self.ndim == 2 else ("n3", "n2")
         if new[other] != self.params[other]:
-            raise Refusal(f"«Точек сетки по оси» для {'объёма' if other == 'n3' else 'плоскости'} в этом мире не действует: "
-                          f"мир {'плоский' if self.ndim == 2 else 'объёмный'}",
-                          hint="другое пространство — новый мир («Пространство»)")
+            raise Refusal(T("“Grid points per axis” of a volume does not act in this world: the world is a plane")
+                          if other == "n3" else
+                          T("“Grid points per axis” of a plane does not act in this world: the world is a volume"),
+                          hint=T("another space is a new world (“Space”)"))
         grid = int(new[nk]) != int(self.params[nk]) or float(new["size"]) != float(self.params["size"])
         if grid:
             return self._regrid(int(new[nk]), float(new["size"]), new["edges"] == "open", new)
         if new["edges"] == self.params["edges"]:
-            return "без изменений"
+            return T("no change")
         want = new["edges"] == "open"
         edges = QS.EdgeLayers(width=self.edge_w, strength=float(self._auto_W())) if want else None
         why = self.qs.edges_reason(edges)
         if why:
-            raise Refusal("края окна не изменены: " + ("заряженная частица рядом с полем допускается только при открытых "
-                                                       "краях" if "заряженная" in why else why),
-                          hint="уберите частицу или поле" if "заряженная" in why else None, detail=why)
+            if "charged particle" in _mid(why):
+                raise Refusal(T("the window's edges were not changed: a charged particle next to a field is allowed "
+                                "only with open edges"), hint=T("remove the particle or the field"), detail=str(why))
+            raise Refusal(T("the window's edges were not changed: {why}", why=why), detail=str(why))
         self.qs.set_edges(edges)
         old = self.params["edges"]
         self.params = new
@@ -1432,7 +1513,7 @@ class Simulation(PlaygroundSimulation):
                 B["X"] = self._wrap(B["X"])
         self.emit_scene()  # the approximations and the drawn edges follow
         lab = {o[0]: o[1] for o in SCHEMA.by_id["edges"].options}
-        return f"Края окна: {lab[old]} → {lab[new['edges']]}"
+        return T("Window edges: {old} → {new}", old=lab[old], new=lab[new["edges"]])
 
     def _regrid(self, n, size, want_open, new_params):
         """The grid of n points per axis over a window of ``size`` nm now, in the same world (plan P16.1): the step
@@ -1481,100 +1562,134 @@ class Simulation(PlaygroundSimulation):
         self.emit_wave()
         same_window = abs(n * d - old_n * old_d) <= 1e-12 * size
         same_step = abs(d - old_d) <= 1e-12 * d
-        route = ("дополнением спектра нулями" if same_window and n > old_n else
-                 "отбрасыванием спектра за новой полосой" if same_window else
-                 "теми же отсчётами" + (", дополненными нулями" if n > old_n else " внутри нового окна") if same_step else
-                 "значениями её интерполянта (полоса сетки) в новых точках" + (", нулями за прежним окном"
-                                                                               if size > old_size else ""))
+        route = (T("by padding the spectrum with zeros") if same_window and n > old_n else
+                 T("by dropping the spectrum beyond the new band") if same_window else
+                 (T("by the same samples, padded with zeros") if n > old_n
+                  else T("by the same samples inside the new window")) if same_step else
+                 T("by the values of its interpolant (the grid's band) at the new points, zeros beyond the former "
+                   "window") if size > old_size else
+                 T("by the values of its interpolant (the grid's band) at the new points"))
         waves = [pid for kind, pid in self.ref.values() if kind == "particle" and pid in rep["particles"]]
-        parts = [f"Сетка: {old_n} → {n} точек по оси, шаг {_f(old_d)} → {_f(d)} нм, окно {_f(old_size)} → {_f(size)} нм"
-                 + (f" — волна пересчитана точно ({route})" if waves else " (волн в окне нет)")]
+        if waves:
+            parts = [T("Grid: {n0:d} → {n1:d} points per axis, step {d0:.4g} → {d1:.4g} nm, window {s0:.4g} → {s1:.4g} "
+                       "nm: the wave resampled exactly ({route})", n0=int(old_n), n1=int(n), d0=old_d, d1=d,
+                       s0=old_size, s1=size, route=route)]
+        else:
+            parts = [T("Grid: {n0:d} → {n1:d} points per axis, step {d0:.4g} → {d1:.4g} nm, window {s0:.4g} → {s1:.4g} "
+                       "nm (no waves in the window)", n0=int(old_n), n1=int(n), d0=old_d, d1=d, s0=old_size, s1=size)]
         for oid, (kind, pid) in self.ref.items():
             r = rep["particles"].get(pid) if kind == "particle" else None
             if not r:
                 continue
             dE = (r["E_after"] - r["E_before"]) * EV if r["E_before"] is not None and r["E_after"] is not None else None
             dn = r["norm_after"] - r["norm_before"]
-            drop = ("не изменилась до округления" if abs(dn) <= 64 * np.finfo(float).eps else
-                    f"отброшено {_f(-dn, 2)}" if dn < 0 else f"больше на {_f(dn, 2)} от квадратуры новой сетки")
-            parts.append(f"«{self.objects[oid]['label']}»: вероятность в окне {_f(r['norm_before'], 7)} → "
-                         f"{_f(r['norm_after'], 7)} ({drop}), энергия ⟨H⟩ "
-                         f"{_f(r['E_before'] * EV, 6)} → {_f(r['E_after'] * EV, 6)} эВ"
-                         + (f" (ΔE = {_f(dE, 2)} эВ)" if dE is not None else ""))
+            drop = (T("unchanged to round-off") if abs(dn) <= 64 * np.finfo(float).eps else
+                    T("{p:.2g} dropped", p=-dn) if dn < 0 else T("larger by {p:.2g} from the new grid's quadrature", p=dn))
+            part = T("“{label}”: probability in the window {p0:.7g} → {p1:.7g} ({drop}), energy ⟨H⟩ {e0:.6g} → "
+                     "{e1:.6g} eV", label=self.objects[oid]["label"], p0=float(r["norm_before"]),
+                     p1=float(r["norm_after"]), drop=drop, e0=r["E_before"] * EV, e1=r["E_after"] * EV)
+            if dE is not None:
+                part = T("{text} (ΔE = {dE:.2g} eV)", text=part, dE=dE)
             # the absorbing layers moved with the window (review LB1-p02-ux Q6)
             if r.get("in_layers", 0.0) > 1e-9 and size > old_size:
-                parts[-1] += (f"; в прежних поглощающих слоях была {_f(r['in_layers'], 2)} её вероятности — эта часть, "
-                              f"уже ослабленная слоями, теперь внутри окна")
+                part = T("{text}; the former absorbing layers held {p:.2g} of its probability: this part, already "
+                         "weakened by the layers, is now inside the window", text=part, p=float(r["in_layers"]))
             if r.get("in_new_layers", 0.0) > 1e-9:
-                parts[-1] += (f"; в новых поглощающих слоях — {_f(r['in_new_layers'], 2)} её вероятности (их поглотят "
-                              f"края" + (f"; из них вне прежних слоёв {_f(r['exposed'], 2)}" if r.get("exposed", 0.0) >
-                                         1e-12 else "") + ")")
-        parts.append(f"шаг по времени {_f(old_dt / FS)} → {_f(self.qs.dt / FS)} фс")
+                if r.get("exposed", 0.0) > 1e-12:
+                    part = T("{text}; in the new absorbing layers: {p:.2g} of its probability (the edges will absorb "
+                             "it; {q:.2g} of it outside the former layers)", text=part, p=float(r["in_new_layers"]),
+                             q=float(r["exposed"]))
+                else:
+                    part = T("{text}; in the new absorbing layers: {p:.2g} of its probability (the edges will absorb "
+                             "it)", text=part, p=float(r["in_new_layers"]))
+            parts.append(part)
+        parts.append(T("time step {t0:.4g} → {t1:.4g} fs", t0=old_dt / FS, t1=self.qs.dt / FS))
         if self.open:
-            parts.append(f"края окна: поглощающие слои {_f(edge_w)} нм, W₀ = {_f(self.qs.edges.strength * EV)} эВ"
-                         + (" (открыты)" if old_edges != "open" else ""))
+            parts.append(T("window edges: absorbing layers {w:.4g} nm, W₀ = {W:.4g} eV (opened)", w=edge_w,
+                           W=self.qs.edges.strength * EV) if old_edges != "open" else
+                         T("window edges: absorbing layers {w:.4g} nm, W₀ = {W:.4g} eV", w=edge_w,
+                           W=self.qs.edges.strength * EV))
         elif old_edges == "open":
-            parts.append("края окна замкнуты (периодичны)")
+            parts.append(T("window edges closed (periodic)"))
         if cut:
-            parts.append(f"точек Бома за новым окном: {cut} (отброшены с вероятностью, которую отрезало окно)")
-        return "; ".join(parts)
+            parts.append(T("Bohm points beyond the new window: {n:d} (dropped with the probability the window cut "
+                           "off)", n=int(cut)))
+        return join(parts, "; ")
 
     def _regrid_refusal(self, e, n, size):
         """The engine's refusal of a new grid in the owner's terms: which particle, object or plane, the measured
         fraction against the tolerance, and what to change."""
         tol = QS.REGRID_TOL
         what = getattr(e, "what", None)
-        head = f"Сетка не изменена ({n} точек по оси, окно {_f(size)} нм)"
+        head = T("Grid not changed ({n:d} points per axis, window {size:.4g} nm)", n=int(n), size=size)
         lab = None
         if getattr(e, "pid", None) is not None:
             lab = next((self.objects[o]["label"] for o, (k, q) in self.ref.items() if k == "particle" and q == e.pid), None)
+        coarsen = T("coarsen when the wave is slower (a larger λ) or wider; or keep the grid finer")
         if what == "spectrum":
-            return Refusal(f"{head}: в спектре волны «{lab}» за полосой новой сетки — {_f(e.value, 3)} её нормы, больше "
-                           f"допуска {_f(tol)}: огрубление их отбросило бы", detail=str(e),
-                           hint="огрубляйте, когда волна медленнее (больше λ) или шире; или оставьте сетку мельче")
+            return Refusal(T("{head}: {p:.3g} of the norm of the wave “{label}” lies beyond the new grid's band, more "
+                             "than the tolerance {tol:.4g}: coarsening would drop it", head=head, p=float(e.value),
+                             label=lab, tol=tol), detail=str(e), hint=coarsen)
         if what == "outside":
-            return Refusal(f"{head}: вне нового окна — {_f(e.value, 3)} вероятности «{lab}», больше допуска {_f(tol)}: "
-                           f"уменьшение окна её отбросило бы", detail=str(e),
-                           hint="уменьшайте окно меньше или когда волна уйдёт из отрезаемой части (её поглотят края или "
-                                "детекторы)")
+            return Refusal(T("{head}: {p:.3g} of the probability of “{label}” lies outside the new window, more than the "
+                             "tolerance {tol:.4g}: shrinking the window would drop it", head=head, p=float(e.value),
+                             label=lab, tol=tol), detail=str(e),
+                           hint=T("shrink the window less, or once the wave has left the part cut off (the edges or the "
+                                  "detectors will absorb it)"))
         if what == "layers":
-            return Refusal(f"{head}: под поглощающими слоями нового окна оказалось бы {_f(e.value, 3)} вероятности "
-                           f"«{lab}», которая сейчас вне слоёв, больше допуска {_f(tol)}: слои краёв (10 % окна) "
-                           f"сдвинулись бы на волну и поглотили её", detail=str(e),
-                           hint="уменьшайте окно, когда волна отойдёт от краёв, или не так сильно; или замкните края")
+            return Refusal(T("{head}: {p:.3g} of the probability of “{label}”, now outside the layers, would lie under "
+                             "the new window's absorbing layers, more than the tolerance {tol:.4g}: the edges' layers "
+                             "(10 % of the window) would move onto the wave and absorb it", head=head,
+                             p=float(e.value), label=lab, tol=tol), detail=str(e),
+                           hint=T("shrink the window once the wave has moved away from the edges, or less; or close the "
+                                  "edges"))
         if what == "resolution":
             lab = next((self.objects[o]["label"] for o, (k, q) in self.ref.items() if k == "particle" and q == e.pid),
-                       "частицы")
+                       T("(unnamed particle)"))
             if getattr(e, "inter", True):
-                return Refusal(f"{head}: новая сетка (шаг {_f(size / n)} нм) не передаёт волну «{lab}» рядом с тем, что "
-                               f"на неё действует: её волновые числа доходят до {_f(e.K, 3)} нм⁻¹"
-                               + (" (с энергией, которую потенциал может перевести в движение)" if e.conv else "")
-                               + f", а рядом с потенциалом или полем сетка передаёт ≤ {_f(e.lim, 3)} нм⁻¹ (⅔·π/шаг)",
-                               detail=str(e), hint="оставьте сетку мельче или уменьшите энергию частицы")
-            return Refusal(f"{head}: волна «{lab}» мельче, чем передаёт новая сетка (шаг {_f(size / n)} нм): её волновые "
-                           f"числа |k| + 6σ_k доходят до {_f(e.K, 3)} нм⁻¹ при π/шаг = {_f(e.lim, 3)} нм⁻¹",
-                           detail=str(e), hint="огрубляйте, когда волна медленнее (больше λ) или шире; или оставьте "
-                                               "сетку мельче")
+                if e.conv:
+                    text = T("{head}: the new grid (step {d:.4g} nm) does not resolve the wave “{label}” next to what "
+                             "acts on it: its wavenumbers reach {K:.3g} nm⁻¹ (with the energy the potential can turn "
+                             "into motion), while next to a potential or a field the grid resolves ≤ {lim:.3g} nm⁻¹ "
+                             "(⅔·π/step)", head=head, d=size / n, label=lab, K=float(e.K), lim=float(e.lim))
+                else:
+                    text = T("{head}: the new grid (step {d:.4g} nm) does not resolve the wave “{label}” next to what "
+                             "acts on it: its wavenumbers reach {K:.3g} nm⁻¹, while next to a potential or a field the "
+                             "grid resolves ≤ {lim:.3g} nm⁻¹ (⅔·π/step)", head=head, d=size / n, label=lab,
+                             K=float(e.K), lim=float(e.lim))
+                return Refusal(text, detail=str(e), hint=T("keep the grid finer or lower the particle's energy"))
+            return Refusal(T("{head}: the wave “{label}” is finer than the new grid (step {d:.4g} nm) resolves: its "
+                             "wavenumbers |k| + 6σ_k reach {K:.3g} nm⁻¹ at π/step = {lim:.3g} nm⁻¹", head=head,
+                             label=lab, d=size / n, K=float(e.K), lim=float(e.lim)), detail=str(e), hint=coarsen)
         if what == "face":
-            return Refusal(f"{head}: у граней окна — {_f(e.value, 3)} вероятности «{lab}», больше допуска {_f(tol)}: сетка "
-                           f"периодична, эта часть волны продолжается с другой стороны окна, и в большем окне её "
-                           f"продолжение оборвалось бы", detail=str(e),
-                           hint="увеличивайте окно, когда волна отойдёт от граней (при открытых краях её поглотят слои)")
+            return Refusal(T("{head}: {p:.3g} of the probability of “{label}” lies at the window's faces, more than the "
+                             "tolerance {tol:.4g}: the grid is periodic, this part of the wave continues on the other "
+                             "side of the window, and in a larger window its continuation would be cut off", head=head,
+                             p=float(e.value), label=lab, tol=tol), detail=str(e),
+                           hint=T("enlarge the window once the wave has moved away from the faces (with open edges the "
+                                  "layers will absorb it)"))
         if getattr(e, "oid", None) is not None:
             ko = next((k for k, (kd, q) in self.ref.items() if kd == "object" and q == e.oid), None)
             o = self.objects[ko]["label"] if ko else "?"
             auto = ko in self.auto_edge
-            return Refusal(f"{head}: «{o}» на новой сетке не передаётся — {str(e).split(': ', 1)[-1]}"
-                           + (f" (у него «Ширина края» 0 — заморожена на {_f(self.auto_edge[ko], 3)} нм, с которыми он "
-                              f"добавлен)" if auto else ""), detail=str(e),
-                           hint=("действие «Огрубить сетку с краями по ней» расширит такие края всех объектов разом "
-                                 "(потенциал изменится); или задайте краю ширину сами, или оставьте сетку мельче" if auto
-                                 else "задайте объекту больший край (или большую длину) или оставьте сетку мельче"))
+            why = text_of(e)
+            if is_t(why) and "reason" in (why.get("a") or {}):  # the engine's "object #n on the new grid: <reason>"
+                why = why["a"]["reason"]
+            if auto:
+                return Refusal(T("{head}: the new grid does not carry “{label}”: {why} (its “Edge width” is 0, frozen "
+                                 "at the {w:.3g} nm it was added with)", head=head, label=o, why=why,
+                                 w=float(self.auto_edge[ko])), detail=str(e),
+                               hint=T("the action “Coarsen the grid with edges to match” widens such edges of all the "
+                                      "objects at once (the potential changes); or set the edge's width yourself, or "
+                                      "keep the grid finer"))
+            return Refusal(T("{head}: the new grid does not carry “{label}”: {why}", head=head, label=o, why=why),
+                           detail=str(e),
+                           hint=T("give the object a wider edge (or a greater length) or keep the grid finer"))
         if getattr(e, "plane", None) is not None:
             o = next((self.objects[k]["label"] for k, (kd, q) in self.ref.items() if kd == "plane" and q == e.plane), "?")
-            return Refusal(f"{head}: «{o}» оказалась бы вне нового окна или у его края", detail=str(e),
-                           hint="сдвиньте плоскость потока внутрь нового окна или уберите её")
-        return Refusal(f"{head}: {e}")
+            return Refusal(T("{head}: “{label}” would be outside the new window or at its edge", head=head, label=o),
+                           detail=str(e), hint=T("move the flux plane inside the new window or remove it"))
+        return Refusal(T("{head}: {why}", head=head, why=text_of(e)), detail=str(e))
 
     def emit_grid(self):
         """The grid in force (``header``'s ``grid``) and the scene's box, after a live change: the view's axes, the
@@ -1606,8 +1721,9 @@ class Simulation(PlaygroundSimulation):
         # + the objects' arrays the scene keeps between changes (QS.OBJ_CACHE_DOUBLES per point)
         per_point = (12 + QS.OBJ_CACHE_DOUBLES) * 8 + 6 * (2 * 16 + 8 + 3 * 32 + 2 * 16)
         return (pts * per_point,
-                f"сетка {n}{'²' if ndim == 2 else '³'} = {pts:,} точек и до 6 частиц".replace(",", " "),
-                "уменьшите число точек сетки по оси")
+                T("grid {n:d}² = {pts:d} points and up to 6 particles", n=n, pts=pts) if ndim == 2 else
+                T("grid {n:d}³ = {pts:d} points and up to 6 particles", n=n, pts=pts),
+                T("reduce the number of grid points per axis"))
 
     def object_state(self, obj):
         # the wave is not kept in a scene file (a 2-D wave is megabytes): a particle starts again as its packet
@@ -1716,10 +1832,11 @@ class Simulation(PlaygroundSimulation):
         g = self.qs.grid
         w = self.qs.density(pid).ravel()
         tot = float(w.sum())
-        if not (math.isfinite(tot) and tot > 0.0):  # review UX-params P29: numpy's «Probabilities contain NaN»
-            raise ValueError("частиц Бома не из чего взять: волны частицы в окне нет (она поглощена или ушла)"
-                             if math.isfinite(tot) else "волна частицы перестала быть конечной: частицы Бома не "
-                             "засеять — задайте пакет заново")
+        if not (math.isfinite(tot) and tot > 0.0):  # review UX-params P29: numpy's "Probabilities contain NaN"
+            raise Refusal(T("there is nothing to draw Bohm particles from: the particle has no wave in the window (it "
+                            "was absorbed or has left)") if math.isfinite(tot) else
+                          T("the particle's wave is no longer finite: Bohm particles cannot be seeded; prepare the "
+                            "packet anew"))
         idx = self.rng.choice(w.size, size=n, p=w / tot)
         ii = np.unravel_index(idx, g.shape)
         return np.stack([g.axes[a][ii[a]] + (self.rng.random(n) - 0.5) * g.d[a] for a in range(self.ndim)], axis=1)
@@ -1907,21 +2024,24 @@ class Simulation(PlaygroundSimulation):
             o = R[oid]
             nrm = o["norm"]
             ab = o["A"]
-            r = {"в окне (вероятность)": nrm}
-            for k, a in sorted(ab.items()):
-                r[f"поглощено: {self._det_label(k)}"] = a
+            # the inspector's rows (framework: now[id] = {label: value}): the labels are static English msgids (the
+            # player translates them); what names an object goes into the value, as a text
+            r = {"in the window (probability)": nrm}
+            if ab:
+                r["absorbed"] = join([T("{where}: {p:.6g}", where=self._det_label(k), p=float(a))
+                                      for k, a in sorted(ab.items())], "; ")
             if p.active and nrm > 1e-300 and o["r"] is not None:
-                for a in range(self.ndim):
-                    r[f"⟨{'xyz'[a]}⟩, нм"] = o["r"][a]
-                r["скорость |⟨v⟩|, км/с"] = self._speed_kms(o, p)
+                for a, key in zip(range(self.ndim), ("⟨x⟩, nm", "⟨y⟩, nm", "⟨z⟩, nm")):
+                    r[key] = o["r"][a]
+                r["speed |⟨v⟩|, km/s"] = self._speed_kms(o, p)
                 if p.species.spin_half and p.kind != "marker":
-                    r["спин ⟨σ⟩"] = [float(c) for c in qs.spin(qid)]
+                    r["spin ⟨σ⟩"] = _pt([float(c) for c in qs.spin(qid)], 4)
                 if p.kind == "marker":
                     m = qs.marker_state(qid)
-                    r["метка: ⟨0|ρ|1⟩ (когерентность)"] = float(abs(m[0, 1]))
-                    r["метка: P(1)"] = float(m[1, 1].real)
+                    r["marker: ⟨0|ρ|1⟩ (coherence)"] = float(abs(m[0, 1]))
+                    r["marker: P(1)"] = float(m[1, 1].real)
             elif not p.active:
-                r["состояние"] = f"зарегистрирована: {self._det_label(p.detected)}"
+                r["state"] = T("registered: {where}", where=self._det_label(p.detected))
             now[oid] = r
         for i, (oid, B) in enumerate(self.bohm.items()):
             c = BOHM_RGB[i % len(BOHM_RGB)]
@@ -1933,29 +2053,28 @@ class Simulation(PlaygroundSimulation):
                 for key in B["key"]:
                     if key is not None:
                         cnt[key] = cnt.get(key, 0) + 1
-                now[oid]["Бом: точек в полёте"] = f"{int(B['fly'].sum())} из {B['n']}"
-                for key, k in sorted(cnt.items()):
-                    now[oid][f"Бом: зарегистрировал {self._det_label(key)}"] = f"{k} из {B['n']}"
+                now[oid]["Bohm: points in flight"] = T("{k:d} of {n:d}", k=int(B["fly"].sum()), n=int(B["n"]))
+                if cnt:
+                    now[oid]["Bohm: registered"] = join([T("{where}: {k:d} of {n:d}", where=self._det_label(key), k=k,
+                                                           n=int(B["n"])) for key, k in sorted(cnt.items())], "; ")
         for oid, (kind, qid) in self.ref.items():
             ob = qs.objects.get(qid) if kind == "object" else None
             if isinstance(ob, QS.Shape) and ob.peak(self.ndim) is not None:
                 # a shape narrower than its edges does not reach its nominal height (review B6-Q14)
-                now[oid] = {"наибольшая высота потенциала, эВ": ob.peak(self.ndim) * EV,
-                            "заданная высота, эВ": float(ob.height) * EV}
+                now[oid] = {"largest height of the potential, eV": ob.peak(self.ndim) * EV,
+                            "height set, eV": float(ob.height) * EV}
         for oid, (kind, qid) in self.ref.items():
             o = self.objects[oid]
             if kind == "plane":
-                pr = {}
-                for poid, (pk, pid) in self.ref.items():
-                    if pk == "particle" and qs.particles[pid].planes.get(qid):
-                        pr[f"поток за время, {self.objects[poid]['label']}"] = qs.particles[pid].planes[qid]["F"]
-                probes[oid] = pr
+                rows = [T("“{label}”: {v:.6g}", label=self.objects[poid]["label"],
+                          v=float(qs.particles[pid].planes[qid]["F"]))
+                        for poid, (pk, pid) in self.ref.items() if pk == "particle" and qs.particles[pid].planes.get(qid)]
+                probes[oid] = {"flux over time": join(rows, "; ")} if rows else {}
             elif o["type"] == "detector":
-                pr = {}
-                for poid, (pk, pid) in self.ref.items():
-                    if pk == "particle":
-                        pr[f"поглотил из «{self.objects[poid]['label']}»"] = R[poid]["A"].get(f"detector {qid}", 0.0)
-                probes[oid] = pr
+                rows = [T("“{label}”: {v:.6g}", label=self.objects[poid]["label"],
+                          v=float(R[poid]["A"].get(f"detector {qid}", 0.0)))
+                        for poid, (pk, pid) in self.ref.items() if pk == "particle"]
+                probes[oid] = {"absorbed from": join(rows, "; ")} if rows else {}
         meas, note = self._measure(R)
         if self.check_due():
             self.checks()
@@ -2030,50 +2149,57 @@ class Simulation(PlaygroundSimulation):
         the window and absorbed, <H>, <r>, <p - qA>/hbar, |<v>|, a spin's <sigma> or a marker's coherence; per flux
         plane the flux now and integrated since the scene's last change; per detector the probability it absorbed and
         the probability in its region now, and the Bohm points it registered; per marker the probability in its
-        region. Russian labels and units; values in those units in every frame's ``meas`` (``measure``)."""
+        region. Labels and units as texts (T); values in those units in every frame's ``meas`` (``measure``)."""
         out = []
 
-        def add(id_, label, unit="", of=None, group="Мир"):
-            out.append({"id": id_, "label": label, "unit": unit, "of": of, "group": group})
-        add("norm", "Вероятность в окне (сумма по частицам)")
-        add("absorbed", "Поглощено детекторами и краями (сумма по частицам)")
-        add("regrid", "Изменение нормы сменой сетки или окна: отброшено (минус — прибавилось от квадратуры новой "
-                      "сетки; сумма по частицам)")
+        def add(id_, label, unit="", of=None, group=None):
+            out.append({"id": id_, "label": label, "unit": unit, "of": of,
+                        "group": T("World") if group is None else group})
+        add("norm", T("Probability in the window (sum over the particles)"))
+        add("absorbed", T("Absorbed by the detectors and the edges (sum over the particles)"))
+        add("regrid", T("Change of the norm by a change of the grid or the window: dropped (a minus: added by the new "
+                        "grid's quadrature; sum over the particles)"))
         parts = [(oid, qid) for oid, (k, qid) in self.ref.items() if k == "particle"]
         for oid, qid in parts:
             lab = self.objects[oid]["label"]
             p = self.qs.particles[qid]
-            add(f"{oid}.norm", f"«{lab}»: вероятность в окне", of=oid, group=lab)
-            add(f"{oid}.absorbed", f"«{lab}»: поглощено детекторами и краями", of=oid, group=lab)
-            add(f"{oid}.E", f"«{lab}»: энергия ⟨H⟩", "эВ", of=oid, group=lab)
+            add(f"{oid}.norm", T("“{label}”: probability in the window", label=lab), of=oid, group=lab)
+            add(f"{oid}.absorbed", T("“{label}”: absorbed by the detectors and the edges", label=lab), of=oid,
+                group=lab)
+            add(f"{oid}.E", T("“{label}”: energy ⟨H⟩", label=lab), T("eV"), of=oid, group=lab)
             for c in "xyz"[:self.ndim]:
-                add(f"{oid}.{c}", f"«{lab}»: ⟨{c}⟩", "нм", of=oid, group=lab)
+                add(f"{oid}.{c}", T("“{label}”: ⟨{c}⟩", label=lab, c=c), T("nm"), of=oid, group=lab)
             for c in "xyz"[:self.ndim]:
-                add(f"{oid}.k{c}", f"«{lab}»: ⟨p{c} − qA{c}⟩/ħ", "нм⁻¹", of=oid, group=lab)
-            add(f"{oid}.v", f"«{lab}»: скорость |⟨v⟩|", "км/с", of=oid, group=lab)
+                add(f"{oid}.k{c}", T("“{label}”: ⟨p{c} − qA{c}⟩/ħ", label=lab, c=c), T("nm⁻¹"), of=oid, group=lab)
+            add(f"{oid}.v", T("“{label}”: speed |⟨v⟩|", label=lab), T("km/s"), of=oid, group=lab)
             if p.species.spin_half and p.kind != "marker":
                 for c in "xyz":
-                    add(f"{oid}.s{c}", f"«{lab}»: спин ⟨σ{c}⟩", of=oid, group=lab)
+                    add(f"{oid}.s{c}", T("“{label}”: spin ⟨σ{c}⟩", label=lab, c=c), of=oid, group=lab)
             if p.kind == "marker":
-                add(f"{oid}.coh", f"«{lab}»: метка пути, когерентность |⟨0|ρ|1⟩|", of=oid, group=lab)
+                add(f"{oid}.coh", T("“{label}”: which-path marker, coherence |⟨0|ρ|1⟩|", label=lab), of=oid,
+                    group=lab)
         for oid, (kind, qid) in self.ref.items():
             o = self.objects[oid]
             lab = o["label"]
             if kind == "plane":
-                add(f"{oid}.J", f"«{lab}»: поток вероятности сейчас (сумма по частицам)", "1/фс", of=oid, group=lab)
-                add(f"{oid}.F", f"«{lab}»: поток за время с последнего изменения сцены (сумма по частицам)", of=oid,
-                    group=lab)
+                add(f"{oid}.J", T("“{label}”: probability flux now (sum over the particles)", label=lab), T("1/fs"),
+                    of=oid, group=lab)
+                add(f"{oid}.F", T("“{label}”: flux over the time since the scene's last change (sum over the "
+                                  "particles)", label=lab), of=oid, group=lab)
                 for poid, pq in parts:
-                    add(f"{oid}.J.{poid}", f"«{lab}»: поток «{self.objects[poid]['label']}» сейчас", "1/фс", of=oid,
-                        group=lab)
+                    add(f"{oid}.J.{poid}", T("“{label}”: flux of “{particle}” now", label=lab,
+                                             particle=self.objects[poid]["label"]), T("1/fs"), of=oid, group=lab)
             elif o["type"] == "detector":
-                add(f"{oid}.P", f"«{lab}»: поглотил (сумма по частицам)", of=oid, group=lab)
-                add(f"{oid}.in", f"«{lab}»: вероятность в его области сейчас (сумма по частицам)", of=oid, group=lab)
-                add(f"{oid}.n", f"«{lab}»: зарегистрировано частиц Бома", "точек", of=oid, group=lab)
+                add(f"{oid}.P", T("“{label}”: absorbed (sum over the particles)", label=lab), of=oid, group=lab)
+                add(f"{oid}.in", T("“{label}”: probability in its region now (sum over the particles)", label=lab),
+                    of=oid, group=lab)
+                add(f"{oid}.n", T("“{label}”: Bohm particles registered", label=lab), T("points"), of=oid, group=lab)
                 for poid, pq in parts:
-                    add(f"{oid}.P.{poid}", f"«{lab}»: поглотил из «{self.objects[poid]['label']}»", of=oid, group=lab)
+                    add(f"{oid}.P.{poid}", T("“{label}”: absorbed from “{particle}”", label=lab,
+                                             particle=self.objects[poid]["label"]), of=oid, group=lab)
             elif o["type"] == "marker":
-                add(f"{oid}.in", f"«{lab}»: вероятность в области метки сейчас (сумма по частицам)", of=oid, group=lab)
+                add(f"{oid}.in", T("“{label}”: probability in the marker's region now (sum over the particles)",
+                                   label=lab), of=oid, group=lab)
         return out
 
     def measure(self) -> dict:
@@ -2083,7 +2209,7 @@ class Simulation(PlaygroundSimulation):
         return self._measure()[0]
 
     def _measure(self, R=None):
-        """(``measure``'s values, the reasons of the NaNs {id: Russian text}); ``R`` the particles' readings when the
+        """(``measure``'s values, the reasons of the NaNs {id: text}); ``R`` the particles' readings when the
         frame has them."""
         qs = self.qs
         R = self._readings() if R is None else R
@@ -2109,8 +2235,8 @@ class Simulation(PlaygroundSimulation):
             if p.kind == "marker":
                 keys.append(f"{oid}.coh")
             if o["E"] is None:
-                why = ("частица зарегистрирована детектором: волны нет" if not p.active else
-                       "волны в окне не осталось")
+                why = (T("the particle was registered by a detector: there is no wave") if not p.active else
+                       T("no wave is left in the window"))
                 for k in keys:
                     m[k], note[k] = nan, why
                 continue
@@ -2153,21 +2279,22 @@ class Simulation(PlaygroundSimulation):
                     if self.bohm:
                         m[f"{oid}.n"] = float(sum(1 for B in self.bohm.values() for k in B["key"] if k == key))
                     else:
-                        m[f"{oid}.n"], note[f"{oid}.n"] = nan, "нет частиц Бома (параметр частицы «Частицы Бома»)"
+                        m[f"{oid}.n"], note[f"{oid}.n"] = nan, T("no Bohm particles (the particle's parameter “Bohm "
+                                                                 "particles (trajectories)”)")
         return m, note
 
     def _det_label(self, key):
         if key == "edges":
-            return "края окна"
+            return T("the window's edges")
         if key == "regrid":
-            return "смена сетки или окна (отброшено; минус — прибавилось от квадратуры)"
+            return T("a change of the grid or the window (dropped; a minus: added by the quadrature)")
         if key == "carried":
-            return "в прежнем мире (до переноса сцены)"
+            return T("in the previous world (before the scene was carried)")
         if key and key.startswith("detector "):
             q = int(key.split()[1])
             for oid, (kind, qid) in self.ref.items():
                 if kind == "object" and qid == q:
-                    return f"«{self.objects[oid]['label']}»"
+                    return T("“{label}”", label=self.objects[oid]["label"])
         return str(key)
 
     def emit_wave(self):
@@ -2212,64 +2339,74 @@ class Simulation(PlaygroundSimulation):
                 continue
             r, lab = res[pid], self.objects[oid]["label"]
             bal = r["balance"]
-            self.running_check(f"balance_{oid}", f"«{lab}»: норма + поглощённое (= 1)", 1.0 + bal, 1.0,
+            self.running_check(f"balance_{oid}", T("“{label}”: norm + absorbed (= 1)", label=lab), 1.0 + bal, 1.0,
                                r["balance_tol"], ok=abs(bal) <= r["balance_tol"],
-                               note=f"вероятность в окне {r['norm']:.6g} и поглощённая детекторами и краями; "
-                                    f"допуск — округление, 32 ε на шаг")
+                               note=T("probability in the window {p:.6g} and absorbed by the detectors and the edges; "
+                                      "the tolerance is round-off, 32 ε per step", p=float(r["norm"])))
             if not r["active"]:
                 continue
             e = r["energy"]
             if e["closed"]:
-                self.running_check(f"energy_{oid}", f"«{lab}»: энергия ⟨H⟩ (замкнутая система)", e["E"] * EV,
-                                   e["E_ref"] * EV, e["bound"] / max(abs(e["E_ref"]), 1e-300), unit="эВ",
-                                   ok=abs(e["drift"]) <= e["bound"],
-                                   note=f"против ⟨H⟩ в t = {e['since'] * TU:.4g} с; граница 2‖Hψ‖e + e²‖H‖ при оценке "
-                                        f"ошибки шага e компаньоном (шаг dt против двух dt/2 каждые {ERROR_EVERY} "
-                                        f"шагов): граница при этой оценке, не строгая")
+                self.running_check(f"energy_{oid}", T("“{label}”: energy ⟨H⟩ (a closed system)", label=lab),
+                                   e["E"] * EV, e["E_ref"] * EV, e["bound"] / max(abs(e["E_ref"]), 1e-300),
+                                   unit=T("eV"), ok=abs(e["drift"]) <= e["bound"],
+                                   note=T("against ⟨H⟩ at t = {t:.4g} s; the bound 2‖Hψ‖e + e²‖H‖ with the step error e "
+                                          "estimated by a companion (a step dt against two dt/2 every {n:d} steps): a "
+                                          "bound at this estimate, not a strict one", t=e["since"] * TU,
+                                          n=int(ERROR_EVERY)))
             else:
-                self.running_check(f"energy_{oid}", f"«{lab}»: энергия ⟨H⟩ (не сохраняется: поглощение или среда)",
-                                   e["E"] * EV, None, 0.0, unit="эВ", info=True,
-                                   note="в открытой системе энергия частицы в окне меняется законно")
+                self.running_check(f"energy_{oid}", T("“{label}”: energy ⟨H⟩ (not conserved: absorption or an "
+                                                      "environment)", label=lab),
+                                   e["E"] * EV, None, 0.0, unit=T("eV"), info=True,
+                                   note=T("in an open system the particle's energy in the window changes lawfully"))
             se = r["step_error"]
-            self.running_check(f"steperr_{oid}", f"«{lab}»: ошибка шага по времени (накопленная оценка)",
+            self.running_check(f"steperr_{oid}", T("“{label}”: time-step error (accumulated estimate)", label=lab),
                                se["accumulated"], None, 0.0, info=True,
-                               note=f"локальная {se['local']:.3g} на шаг (шаг dt против двух dt/2, ×4/3, каждые "
-                                    f"{ERROR_EVERY} шагов сцены), сумма по шагам — оценка глобальной ошибки "
-                                    f"‖ψ − ψ_точн‖ в главном порядке, не граница (двухщелевой опыт: оценка 3,7·10⁻³ "
-                                    f"при истинной 2,6·10⁻⁴)")
+                               note=T("local {loc:.3g} per step (a step dt against two dt/2, ×4/3, every {n:d} scene "
+                                      "steps); the sum over the steps estimates the global error ‖ψ − ψ_exact‖ to "
+                                      "leading order, not a bound (the double slit: an estimate of {e1:.2g} at a true "
+                                      "{e2:.2g})", loc=float(se["local"]), n=int(ERROR_EVERY), e1=3.7e-3, e2=2.6e-4))
             for plid, pl in r["planes"].items():
                 po = next((o for o, (k, q) in self.ref.items() if k == "plane" and q == plid), None)
                 if po is None:
                     continue
-                self.running_check(f"flux_{oid}_{po}", f"«{lab}» через «{self.objects[po]['label']}»: поток за "
-                                   f"время против прибыли вероятности за плоскостью", pl["flux_integral"],
-                                   pl["delta_beyond"], 0.0, info=True,
-                                   note=("расхождение — порядка dt² (у схемы расщепления свой ток)" if pl["valid"]
-                                         else "среда делает скачки: баланс через плоскость не проверяется"))
-            self.running_check(f"grid_{oid}", f"«{lab}»: доля вероятности на краю спектра сетки", r["spectral_tail"],
-                               None, 0.0, info=True, group="Сетка",
-                               note="в верхней трети волновых чисел (|k| > 2/3·π/шаг); сцена не допускает волну, чьи "
-                                    "волновые числа (|k| + 6σ_k и энергия от потенциала) рядом с потенциалом выходят "
-                                    "за 2/3·π/шаг — здесь остаются хвосты от краёв фигур и затухающая волна в высоких "
-                                    "стенках (двухщелевой опыт: до 4·10⁻⁵, стенка 30 эВ: 1,7·10⁻⁴), а у "
-                                    "недопущенной ямы −3 эВ было 0,25")
-            self.running_check(f"face_{oid}", f"«{lab}»: плотность на гранях окна (доля пика)", r["window_face"],
-                               None, 0.0, info=True, group="Сетка",
-                               note="сетка периодична: волна на грани выходит с другой стороны (у открытых краёв её "
-                                    "поглощают слои)")
+                self.running_check(f"flux_{oid}_{po}", T("“{label}” through “{plane}”: the flux over time against the "
+                                                         "gain of probability beyond the plane", label=lab,
+                                                         plane=self.objects[po]["label"]),
+                                   pl["flux_integral"], pl["delta_beyond"], 0.0, info=True,
+                                   note=(T("the difference is of order dt² (the splitting scheme has its own current)")
+                                         if pl["valid"] else
+                                         T("the environment makes jumps: the balance through the plane is not "
+                                           "checked")))
+            self.running_check(f"grid_{oid}", T("“{label}”: share of probability at the edge of the grid's spectrum",
+                                                label=lab), r["spectral_tail"],
+                               None, 0.0, info=True, group=T("Grid"),
+                               note=T("in the upper third of the wavenumbers (|k| > 2/3·π/step); the scene does not "
+                                      "admit a wave whose wavenumbers (|k| + 6σ_k and the energy from the potential) go "
+                                      "beyond 2/3·π/step next to a potential; what remains here are tails from the "
+                                      "shapes' edges and the evanescent wave in high walls (the double slit: up to "
+                                      "{a:.2g}, a 30 eV wall: {b:.2g}), while the well of −3 eV that was not admitted "
+                                      "had {c:.2g}", a=4e-5, b=1.7e-4, c=0.25))
+            self.running_check(f"face_{oid}", T("“{label}”: density at the window's faces (share of the peak)",
+                                                label=lab), r["window_face"],
+                               None, 0.0, info=True, group=T("Grid"),
+                               note=T("the grid is periodic: a wave at a face leaves on the other side (with open "
+                                      "edges the layers absorb it)"))
             if self.open:
                 p = qs.particles[pid]
                 kk = float(np.linalg.norm(p.packet.k))
                 if kk > 0:
-                    R, T, R60 = self._edge_RT(kk, p.species.mass, qs.edges.strength)
+                    R, Tr, R60 = self._edge_RT(kk, p.species.mass, qs.edges.strength)
                     R0 = float(qs.edge_reflection([kk], p.species.mass)[0][0])
-                    self.running_check(f"edgeR_{oid}", f"«{lab}»: отражение от краёв окна (среднее по углам падения)",
-                                       R, None, 0.0, info=True, group="Сетка",
-                                       note=f"взвешено потоком к грани по всем направлениям (почти касательные волны "
-                                            f"отражает любой слой); по нормали {R0:.2g}, под 60° {R60:.2g}; утечка "
-                                            f"сквозь слой (в среднем) {T:.2g}; стационарные матрицы переноса слоя "
-                                            f"W₀ = {qs.edges.strength * EV:.3g} эВ, ширина {self.edge_w:.3g} нм, при "
-                                            f"|k| пакета")
+                    self.running_check(f"edgeR_{oid}", T("“{label}”: reflection by the window's edges (mean over the "
+                                                         "angles of incidence)", label=lab),
+                                       R, None, 0.0, info=True, group=T("Grid"),
+                                       note=T("weighted by the flux to the face over all directions (any layer "
+                                              "reflects almost grazing waves); at normal incidence {R0:.2g}, at 60° "
+                                              "{R60:.2g}; the leak through the layer (on average) {Tl:.2g}; stationary "
+                                              "transfer matrices of the layer W₀ = {W:.3g} eV, width {w:.3g} nm, at "
+                                              "the packet's |k|", R0=R0, R60=float(R60), Tl=float(Tr),
+                                              W=qs.edges.strength * EV, w=self.edge_w))
         self._bohm_checks()
         for oid, (kind, qid) in self.ref.items():
             ob = qs.objects.get(qid) if kind == "object" else None
@@ -2281,26 +2418,29 @@ class Simulation(PlaygroundSimulation):
             if oid not in self._detR:  # the same until the scene changes (cleared by _tune)
                 worst = None
                 for k, m in self._waves():
-                    R, T = ob.reflection([k], m, axis=ax)
-                    if worst is None or R[0] + T[0] > worst[0] + worst[1]:
-                        worst = (float(R[0]), float(T[0]), k)
+                    R, Tr = ob.reflection([k], m, axis=ax)
+                    if worst is None or R[0] + Tr[0] > worst[0] + worst[1]:
+                        worst = (float(R[0]), float(Tr[0]), k)
                 self._detR[oid] = worst
             worst = self._detR[oid]
             if worst:
-                self.running_check(f"detR_{oid}", f"«{self.objects[oid]['label']}»: отражение детектора (по нормали "
-                                   f"к оси {'xyz'[ax]})", worst[0], None, 0.0, info=True, group="Сетка",
-                                   note=f"утечка сквозь него {worst[1]:.3g}; худшее по волновым числам частиц (k = "
-                                        f"{worst[2]:.3g} нм⁻¹); стационарные матрицы переноса его профиля, "
-                                        f"W₀ = {ob.strength * EV:.3g} эВ")
+                self.running_check(f"detR_{oid}", T("“{label}”: the detector's reflection (normal to the {axis} axis)",
+                                                    label=self.objects[oid]["label"], axis="xyz"[ax]),
+                                   worst[0], None, 0.0, info=True, group=T("Grid"),
+                                   note=T("the leak through it {leak:.3g}; the worst over the particles' wavenumbers "
+                                          "(k = {k:.3g} nm⁻¹); stationary transfer matrices of its profile, W₀ = "
+                                          "{W:.3g} eV", leak=worst[1], k=float(worst[2]), W=ob.strength * EV))
         # the estimate only: the measured seconds depend on the wall clock (a world continued from its checkpoint must
-        # emit the same messages); the actual speed is the player's «факт» next to the speed
+        # emit the same messages); the actual speed is the player's "actual" next to the speed
         c = qs.cost_estimate()
         rt = qs.dt * TU / c["per_step_s"] if c["per_step_s"] > 0 else None
-        self.running_check("cost", f"Счёт: секунд на шаг ({'GPU 0' if c['device'] == 'gpu' else 'CPU'}, оценка)",
-                           c["per_step_s"], None, 0.0, info=True, group="Расчёт", unit="с",
-                           note=f"{c['points']} точек, шаг {qs.dt / FS:.3g} фс; предел реального времени "
-                                f"≈ {rt:.3g} с мира в секунду; оценка по измеренным скоростям ядра (RATES), "
-                                f"фактическая скорость — у ползунка скорости" if rt else c["note"])
+        self.running_check("cost", T("Computation: seconds per step ({device}, estimate)",
+                                     device="GPU 0" if c["device"] == "gpu" else "CPU"),
+                           c["per_step_s"], None, 0.0, info=True, group=T("Computation"), unit=T("s"),
+                           note=T("{points:d} points, step {dt:.3g} fs; the real-time limit ≈ {rt:.3g} s of the world "
+                                  "per second; an estimate from the kernel's measured rates (RATES), the actual speed "
+                                  "is next to the speed slider", points=int(c["points"]), dt=qs.dt / FS, rt=rt)
+                           if rt else c["note"])
 
     def _bohm_checks(self):
         """Bohm points measured in the run (review B6-Q1, as v11): the control's deviation and the registrations against
@@ -2318,14 +2458,17 @@ class Simulation(PlaygroundSimulation):
                 med = float(np.median(d))
                 fate = B["fate"] + sum(1 for j in range(C) if B["key"][j] is not None and B["keyc"][j] is not None
                                        and B["key"][j] != B["keyc"][j])
-                self.running_check(f"bohm_acc_{oid}", f"«{lab}»: точность траекторий Бома (контроль, медиана)", med,
-                                   None, tol, unit="нм", group="Бом", ok=med <= tol and fate <= 1,
-                                   note=f"{C} точек ансамбля проинтегрированы ещё раз в той же волне: интерполяция "
-                                        f"порядка {CONTROL_ORDER} вместо 8, допуски шага по времени в {CONTROL_TIGHT} "
-                                        f"раза строже; медиана расхождения {med:.2g} нм против половины шага сетки "
-                                        f"{tol:.3g} нм (на чём сетка знает |ψ|²); наибольшее за запуск "
-                                        f"{B['dmax']:.2g} нм (у узлов волны траектории чувствительны: отдельные "
-                                        f"расходятся и без ошибки); другой поглотитель у {fate} (допустимо 1)")
+                self.running_check(f"bohm_acc_{oid}", T("“{label}”: accuracy of the Bohm trajectories (control, "
+                                                        "median)", label=lab), med,
+                                   None, tol, unit=T("nm"), group=T("Bohm"), ok=med <= tol and fate <= 1,
+                                   note=T("{C:d} points of the ensemble integrated once more in the same wave: "
+                                          "interpolation of order {order:d} instead of 8, the time step's tolerances "
+                                          "{tight:d} times tighter; the median deviation {med:.2g} nm against half the "
+                                          "grid step {tol:.3g} nm (what the grid knows |ψ|² on); the largest in the run "
+                                          "{dmax:.2g} nm (near the wave's nodes the trajectories are sensitive: single "
+                                          "ones diverge even without an error); a different absorber for {fate:d} "
+                                          "(1 allowed)", C=int(C), order=int(CONTROL_ORDER), tight=int(CONTROL_TIGHT),
+                                          med=med, tol=tol, dmax=float(B["dmax"]), fate=int(fate)))
             rows = self._bohm_expected(B, pid)
             if not rows:
                 continue
@@ -2338,33 +2481,38 @@ class Simulation(PlaygroundSimulation):
                                                          min(1.0, 2 * min(float(stats.poisson.cdf(n, mu)),
                                                                           float(stats.poisson.sf(n - 1, mu)))))
                 worst = min(worst, pv)
-                parts.append(f"{self._det_label(key)}: {n} при ожидаемых {mu:.1f} ± {math.sqrt(max(var, 0.0)):.1f}")
+                parts.append(T("{where}: {n:d} at an expected {mu:.1f} ± {sd:.1f}", where=self._det_label(key),
+                               n=int(n), mu=float(mu), sd=math.sqrt(max(var, 0.0))))
             z = float(math.sqrt(2) * special.erfcinv(max(worst, 1e-300)))
-            self.running_check(f"bohm_reg_{oid}", f"«{lab}»: регистрации частиц Бома против поглощённой вероятности",
-                               z, None, 5.0, unit="σ", group="Бом", ok=worst >= BOHM_P,
-                               note="; ".join(parts) + f" из {B['n']}; эквивариантность с поглощением: точки, "
-                                    f"поглощаемые со скоростью 2W, остаются распределены по |ψ|², и детектор "
-                                    f"поглощает их долю, равную поглощённой им вероятности; допуск 5σ двустороннего "
-                                    f"биномиального (Пуассона при малых числах) разброса; худшее отклонение {z:.2g}σ")
+            self.running_check(f"bohm_reg_{oid}", T("“{label}”: registrations of Bohm particles against the absorbed "
+                                                    "probability", label=lab),
+                               z, None, 5.0, unit="σ", group=T("Bohm"), ok=worst >= BOHM_P,
+                               note=T("{rows} of {n:d}; equivariance with absorption: points absorbed at the rate 2W "
+                                      "stay distributed by |ψ|², and a detector absorbs a share of them equal to the "
+                                      "probability it absorbed; the tolerance is 5σ of the two-sided binomial (Poisson "
+                                      "for small numbers) spread; the worst deviation {z:.2g}σ",
+                                      rows=join(parts, "; "), n=int(B["n"]), z=z))
 
     # --- header and the scene's drawing --------------------------------------------------------------------------
     def header(self):
         grid, (lo, hi) = self._grid_info()
         objects = []
         if self.ndim == 2:
-            objects.append({"id": "wave", "label": "Волна |ψ|² (сумма по частицам)", "kind": "panel",
+            objects.append({"id": "wave", "label": T("Wave |ψ|² (sum over the particles)"), "kind": "panel",
                             "origin": [lo[0], lo[1], 0.0], "u": [hi[0] - lo[0], 0.0, 0.0],
                             "v": [0.0, hi[1] - lo[1], 0.0], "visible": True})
-        layers = ([{"id": "wave3d", "label": "Волна |ψ|² в объёме (сумма по частицам)", "kind": "volume",
+        layers = ([{"id": "wave3d", "label": T("Wave |ψ|² in the volume (sum over the particles)"), "kind": "volume",
                     "visible": True, "look": {"density": 3.0, "threshold": 0.01}}] if self.ndim == 3 else [])
         return {
-            "title": "Плейграунд: квантовые частицы",
-            "text": ("Волновые пакеты частиц в сцене из потенциалов, полей и детекторов. Каждая частица — своя волна "
-                     "по уравнению Шрёдингера (Паули для спина), частицы не взаимодействуют. Всё добавляется и меняется "
-                     "в текущий момент; детекторы поглощают вероятность, измерение положения — действие."),
+            "title": T("Playground: quantum particles"),
+            "text": T("Wave packets of particles in a scene of potentials, fields and detectors. Every particle is its "
+                      "own wave by the Schrödinger equation (Pauli for spin); the particles do not interact. "
+                      "Everything is added and changed at the current moment; the detectors absorb probability, a "
+                      "position measurement is an action."),
             "actions": self._actions(),
             "approximations": self._approx(),
-            "scene3d": {"box": [lo, hi], "units": "нм", "objects": objects, "layers": layers,
+            # the axes' unit: a plain msgid (a static field the 3-D environment puts into its axis labels)
+            "scene3d": {"box": [lo, hi], "units": "nm", "objects": objects, "layers": layers,
                         "coord_names": ["x", "y", "z"], "up": [0, 0, 1],
                         "planes": {"max": 0, "center": [0.0, 0.0, 0.0], "defaults": {"1": [0, 0, 1]}}},
             "grid": grid,
@@ -2374,27 +2522,29 @@ class Simulation(PlaygroundSimulation):
         }, {}
 
     def _approx(self):
-        a = ["нерелятивистские частицы (уравнение Шрёдингера, спин ½ — уравнение Паули); частицы не взаимодействуют",
-             "края фигур гладкие: ширина края — физическая длина, не меньше трёх шагов сетки",
-             "детекторы — поглощающие области (комплексный потенциал); их отражение — в проверках"]
+        a = [T("non-relativistic particles (the Schrödinger equation; spin ½: the Pauli equation); the particles do "
+               "not interact"),
+             T("the shapes' edges are smooth: an edge's width is a physical length, no less than three grid steps"),
+             T("detectors are absorbing regions (a complex potential); their reflection is in the checks")]
         if self.ndim == 2:
-            a.append("плоскость: поле меняется только в ней (изменение вне плоскости, которого требуют уравнения "
-                     "Максвелла, не учитывается — точно для однородных полей)")
+            a.append(T("a plane: the field changes only in it (the change out of the plane that Maxwell's equations "
+                       "require is not included: exact for uniform fields)"))
         if self.open:
-            a.append("открытые края окна — поглощающие слои (их отражение, среднее по углам падения, для каждой "
-                     "частицы — в проверках)")
+            a.append(T("the window's open edges are absorbing layers (their reflection, the mean over the angles of "
+                       "incidence, for every particle is in the checks)"))
         else:
-            a.append("замкнутые края: окно периодично (волна, ушедшая за край, входит с другой стороны); заряженная "
-                     "частица рядом с магнитным полем или трубкой потока не допускается — на грани окна был бы слой "
-                     "поля, которого нет на сцене")
+            a.append(T("closed edges: the window is periodic (a wave that leaves over an edge comes in on the other "
+                       "side); a charged particle next to a magnetic field or a flux tube is not admitted: at the "
+                       "window's face there would be a layer of field that is not in the scene"))
         if self.bohm:
-            a.append("частицы Бома — интерпретация де Бройля–Бома (траектории по току вероятности), не следствие "
-                     "уравнения Шрёдингера; в поглотителе точка поглощается со скоростью 2W (так она остаётся "
-                     "распределена по |ψ|² среди непоглощённых); после измерения ансамбль заново берётся из |ψ|², "
-                     "после скачка среды — только непоглощённые точки")
+            a.append(T("Bohm particles are the de Broglie–Bohm interpretation (trajectories along the probability "
+                       "current), not a consequence of the Schrödinger equation; in an absorber a point is absorbed at "
+                       "the rate 2W (so that it stays distributed by |ψ|² among those not absorbed); after a "
+                       "measurement the ensemble is drawn from |ψ|² again, after a jump of the environment only the "
+                       "points not absorbed"))
         if any(o["type"] == "env" for o in self.objects.values()):
-            a.append("среда — марковская модель локализации (уравнение Линдблада с гауссовыми операторами), не "
-                     "конкретный газ или излучение")
+            a.append(T("the environment is a Markovian model of localization (the Lindblad equation with Gaussian "
+                       "operators), not a specific gas or radiation"))
         return a
 
     def _actions(self):
@@ -2402,46 +2552,51 @@ class Simulation(PlaygroundSimulation):
         parts = [{"value": oid, "label": self.objects[oid]["label"]} for oid, (k, q) in self.ref.items()
                  if k == "particle" and self.qs.particles[q].active]
         if parts:
-            acts.append({"name": "measure", "label": "Измерить положение", "button": "измерить",
-                         "help": "Нерезкое измерение положения с разрешением σ (гауссовы операторы Крауса): исход — точка "
-                                 "по правилу Борна или «уже поглощена детектором»; волна сжимается к исходу",
-                         "args": [{"id": "particle", "label": "Частица", "type": "select", "default": parts[0]["value"],
-                                   "options": parts},
-                                  {"id": "sigma", "label": "Разрешение σ, нм", "type": "float",
+            acts.append({"name": "measure", "label": T("Measure the position"), "button": T("measure"),
+                         "help": T("An unsharp measurement of the position with resolution σ (Gaussian Kraus "
+                                   "operators): the outcome is a point by the Born rule or “already absorbed by a "
+                                   "detector”; the wave collapses to the outcome"),
+                         "args": [{"id": "particle", "label": T("Particle"), "type": "select",
+                                   "default": parts[0]["value"], "options": parts},
+                                  {"id": "sigma", "label": T("Resolution σ, nm"), "type": "float",
                                    "default": round(max(1.0, 2 * self.d), 3), "min": self.d}]})
         every = [{"value": oid, "label": self.objects[oid]["label"]} for oid, (k, q) in self.ref.items()
                  if k == "particle"]
         if every:
-            acts.append({"name": "prepare", "label": "Приготовить пакет заново", "button": "приготовить",
-                         "help": "Свежий гауссов пакет в текущий момент (ширины, спин и частица — из параметров): прежняя "
-                                 "волна и её учёт поглощённого отбрасываются (перетаскивание и бросок, наоборот, сохраняют "
-                                 "волну). Где: центр при приготовлении и λ из параметров — или где волна сейчас: центр "
-                                 "⟨r⟩ и импульс ⟨p − qA⟩ — средние всей волны (у волны из нескольких частей ⟨r⟩ может "
-                                 "оказаться между ними)",
-                         "args": [{"id": "particle", "label": "Частица", "type": "select", "default": every[0]["value"],
-                                   "options": every},
-                                  {"id": "where", "label": "Где", "type": "select", "default": "values",
-                                   "options": [{"value": "values", "label": "центр и λ из параметров"},
-                                               {"value": "now", "label": "где волна сейчас (⟨r⟩, ⟨k⟩)"}]}]})
+            acts.append({"name": "prepare", "label": T("Prepare the packet anew"), "button": T("prepare"),
+                         "help": T("A fresh Gaussian packet at the current moment (the widths, the spin and the particle "
+                                   "from the parameters): the former wave and its record of what was absorbed are "
+                                   "dropped (a drag and a throw, by contrast, keep the wave). Where: the centre at "
+                                   "preparation and λ from the parameters, or where the wave is now: the centre ⟨r⟩ and "
+                                   "the momentum ⟨p − qA⟩ are the means of the whole wave (for a wave of several parts "
+                                   "⟨r⟩ may lie between them)"),
+                         "args": [{"id": "particle", "label": T("Particle"), "type": "select",
+                                   "default": every[0]["value"], "options": every},
+                                  {"id": "where", "label": T("Where"), "type": "select", "default": "values",
+                                   "options": [{"value": "values", "label": T("centre and λ from the parameters")},
+                                               {"value": "now", "label": T("where the wave is now (⟨r⟩, ⟨k⟩)")}]}]})
         nk = "n2" if self.ndim == 2 else "n3"
         coarser = [o[0] for o in SCHEMA.by_id[nk].options if int(o[0]) < int(self.params[nk])]
         if coarser:
-            acts.append({"name": "coarsen", "label": "Огрубить сетку с краями по ней", "button": "огрубить",
-                         "help": "Сетка грубее, когда края объектов с «Шириной края» 0 («самый резкий край сетки», "
-                                 "заморожен на ширине, с которой объект добавлен) уже, чем передаёт новая сетка: такие края "
-                                 "расширяются до ≈ 3 шагов новой сетки (потенциал объектов меняется: края шире), затем "
-                                 "волна пересчитывается точно. Отказ — ничего не меняется",
-                         "args": [{"id": "n", "label": "Точек сетки по оси", "type": "select", "default": coarser[-1],
+            acts.append({"name": "coarsen", "label": T("Coarsen the grid with edges to match"), "button": T("coarsen"),
+                         "help": T("A coarser grid when the edges of objects with “Edge width” 0 (“the sharpest edge "
+                                   "of the grid”, frozen at the width the object was added with) are narrower than the "
+                                   "new grid resolves: such edges widen to ≈ 3 steps of the new grid (the objects' "
+                                   "potential changes: the edges get wider), then the wave is resampled exactly. A "
+                                   "refusal changes nothing"),
+                         "args": [{"id": "n", "label": T("Grid points per axis"), "type": "select",
+                                   "default": coarser[-1],
                                    "options": [{"value": c, "label": c} for c in coarser]}]})
         return acts
 
     def _coarsen(self, n):
-        """«Огрубить сетку с краями по ней» (review LB1-p02-ux X10): the edges set to 0 that the grid of ``n`` points
+        """"Coarsen the grid with edges to match" (review LB1-p02-ux X10): the edges set to 0 that the grid of ``n`` points
         does not resolve are widened to 1.05 x its narrowest edge (``auto_edge``: the objects' potentials change, said),
         then the grid changes (``_regrid``); a refusal undoes the widened edges (nothing changed)."""
         nk = "n2" if self.ndim == 2 else "n3"
         if n >= int(self.params[nk]):
-            raise Refusal(f"сетка из {n} точек по оси не грубее нынешней ({self.params[nk]})", hint="выберите меньше точек")
+            raise Refusal(T("a grid of {n:d} points per axis is not coarser than the present one ({now})", n=int(n),
+                            now=self.params[nk]), hint=T("choose fewer points"))
         want = 1.05 * QS.edge_min(self.size / n)
         wide = [oid for oid, w in self.auto_edge.items() if w < want and oid in self.ref]
         saved = {oid: self.auto_edge[oid] for oid in wide}
@@ -2463,8 +2618,9 @@ class Simulation(PlaygroundSimulation):
             raise
         self.emit({"type": "live", "t": self.t, "values": self.live_values()})
         if wide:
-            text += "; края с шириной 0 расширены по новой сетке (потенциал изменился): " + ", ".join(
-                f"«{self.objects[o]['label']}» {_f(saved[o], 3)} → {_f(want, 3)} нм" for o in wide)
+            text = T("{text}; the edges of width 0 widened to the new grid (the potential changed): {objects}",
+                     text=text, objects=join([T("“{label}” {w0:.3g} → {w1:.3g} nm", label=self.objects[o]["label"],
+                                               w0=float(saved[o]), w1=want) for o in wide], ", "))
         return text
 
     def action(self, name, args):
@@ -2472,15 +2628,15 @@ class Simulation(PlaygroundSimulation):
             nk = "n2" if self.ndim == 2 else "n3"
             n = int(args.get("n") or 0)
             if str(n) not in [o[0] for o in SCHEMA.by_id[nk].options]:
-                raise Refusal(f"нет сетки из {n} точек по оси", hint="выберите из списка")
+                raise Refusal(T("there is no grid of {n:d} points per axis", n=int(n)), hint=T("choose from the list"))
             text = self._coarsen(n)
             self.emit({"type": "actions", "t": self.t, "actions": self._actions()})
             return text
         if name not in ("measure", "prepare"):
-            raise ValueError(f"нет действия {name!r}")
+            raise Refusal(T("no action “{name}”", name=str(name)))
         oid = args.get("particle")
         if oid not in self.ref or self.ref[oid][0] != "particle":
-            raise ValueError("нет такой частицы")
+            raise Refusal(T("no such particle"))
         pid = self.ref[oid][1]
         lab = self.objects[oid]["label"]
         if name == "prepare":
@@ -2491,8 +2647,8 @@ class Simulation(PlaygroundSimulation):
             if where == "now":  # the packet's centre and momentum from the wave now (review LB1-p02-ux X11)
                 o = self.qs.observables(pid)
                 if o["r"] is None or not o["norm"] > 0:
-                    raise Refusal(f"«{lab}»: волны в окне нет — взять центр и импульс не из чего",
-                                  hint="приготовьте пакет из параметров")
+                    raise Refusal(T("“{label}”: there is no wave in the window: nothing to take the centre and the "
+                                    "momentum from", label=lab), hint=T("prepare the packet from the parameters"))
                 for i, c in enumerate("xyz"[:self.ndim]):
                     v[c] = float(f"{o['r'][i]:.10g}")
                 self._set_momentum(v, o["k"], self.qs.particles[pid].species.mass)
@@ -2511,29 +2667,33 @@ class Simulation(PlaygroundSimulation):
                 self.emit_scene()
             self.emit({"type": "actions", "t": self.t, "actions": self._actions()})
             kk = float(np.linalg.norm(pk.k))
-            return (f"«{lab}»: приготовлен свежий пакет в {_pt(self._vec(v))} нм, λ = "
-                    f"{_f(2 * math.pi / kk) if kk > 0 else '∞'} нм"
-                    + (" — где была волна (её средние ⟨r⟩ и ⟨p − qA⟩)" if where == "now" else " — из параметров"))
+            lam = T("λ = {lam:.4g} nm", lam=2 * math.pi / kk) if kk > 0 else T("λ = ∞")
+            if where == "now":
+                return T("“{label}”: a fresh packet prepared at {at} nm, {lam}: where the wave was (its means ⟨r⟩ and "
+                         "⟨p − qA⟩)", label=lab, at=_pt(self._vec(v)), lam=lam)
+            return T("“{label}”: a fresh packet prepared at {at} nm, {lam}: from the parameters", label=lab,
+                     at=_pt(self._vec(v)), lam=lam)
         out = self.qs.measure(pid, float(args.get("sigma", 1.0)), self.rng)
         self._tune()  # the wave's spectrum widened by 1/(4 sigma^2): the step follows (review B6-Q4)
         if out["outcome"] == "absorbed":
             self.bohm.pop(oid, None)
-            text = f"«{lab}»: уже поглощена — {self._det_label(out['detector'])} (вероятность {out['p']:.3g})"
+            text = T("“{label}”: already absorbed: {where} (probability {p:.3g})", label=lab,
+                     where=self._det_label(out["detector"]), p=float(out["p"]))
         else:
             x = [float(c) for c in out["x"]]
             self.marks.append(x + [0.0] * (3 - self.ndim))
             self._emit_marks()
             if oid in self.bohm:
                 self._seed_bohm(self.objects[oid])
-            text = (f"«{lab}» найдена в ({', '.join(f'{c:.3g}' for c in x)}) нм ± σ (была в окне с вероятностью "
-                    f"{out['p_flight']:.3g})")
+            text = T("“{label}” found at {at} nm ± σ (it was in the window with probability {p:.3g})", label=lab,
+                     at=_pt(x), p=float(out["p_flight"]))
         self.emit({"type": "actions", "t": self.t, "actions": self._actions()})
         return text
 
     def _emit_marks(self):
         z = 0.03 * self.size if self.ndim == 2 else 0.0
         P = np.array([[m[0], m[1], m[2] if self.ndim == 3 else z] for m in self.marks], np.float32)
-        self.emit({"type": "marks", "t": self.t, "id": "measured", "label": "Исходы измерений положения"},
+        self.emit({"type": "marks", "t": self.t, "id": "measured", "label": T("Outcomes of position measurements")},
                   {"pos": P.reshape(-1)})
 
     def shapes(self):
@@ -2604,12 +2764,13 @@ class Simulation(PlaygroundSimulation):
 
 VIZ = {
     "id": "p02_quantum",
-    "title": "Квантовые частицы",
-    "summary": ("Песочница квантовой механики: волновые пакеты электронов, нейтронов и атомов в сцене из барьеров, ям, "
-                "стенок со щелями, ловушек, магнитных полей и трубок потока; детекторы, метка пути, среда, измерение."),
-    "purpose": ("Собрать опыт и посмотреть, как ведёт себя волна: туннелирование, интерференция и её исчезновение при "
-                "метке пути или в среде, сдвиг Ааронова–Бома, прецессия спина, циклотронная орбита, измерение "
-                "положения; норма, поток и энергия проверяются вживую."),
+    "title": T("Quantum particles"),
+    "summary": T("A quantum mechanics sandbox: wave packets of electrons, neutrons and atoms in a scene of barriers, "
+                 "wells, walls with slits, traps, magnetic fields and flux tubes; detectors, a which-path marker, an "
+                 "environment, measurement."),
+    "purpose": T("Build an experiment and see how the wave behaves: tunnelling, interference and its loss under a "
+                 "which-path marker or in an environment, the Aharonov–Bohm shift, spin precession, a cyclotron orbit, "
+                 "a position measurement; the norm, the flux and the energy are checked live."),
     "version": "0.1",
     "schema": SCHEMA,
     "simulation": Simulation,

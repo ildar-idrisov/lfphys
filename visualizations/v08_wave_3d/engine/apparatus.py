@@ -35,6 +35,7 @@ import numpy as np
 from lfphys.core import geometry as G
 from lfphys.core.optics import angular_spectrum as AS
 from lfphys.core.optics import aperture_fields as AF
+from lfphys.i18n import T
 
 TOL = 2e-3  # window error allowed in the drawing, fraction of the peak amplitude: below one of 256 colour levels
 SAFETY = 1.5
@@ -160,9 +161,18 @@ class Window:
     plane: np.ndarray | None = None  # fp64 field on z_max with the chosen window (what the drawing is, in fp64)
     abs_err: float = 0.0  # estimated error in field units (the tolerance of checks at points anywhere)
 
-    def describe(self) -> str:
-        how = "с ограничением полосы" if self.band_limit else "обычная сумма"
-        return f"окно ×{self.pad}, {how}; оценка ошибки {self.est:.1e} пика"
+    def describe(self) -> T:
+        how = T("band-limited sum") if self.band_limit else T("plain sum")
+        return T("window ×{pad:d}, {how}; error estimate {est:.1e} of the peak", pad=int(self.pad), how=how,
+                 est=float(self.est))
+
+
+class WindowError(ValueError):
+    """No window within the tolerance: ``text`` what is wrong, ``hint`` what to change (translatable texts)."""
+
+    def __init__(self, text: T, hint: T):
+        super().__init__(str(text))
+        self.text, self.hint = text, hint
 
 
 NZ_CHECK = 12  # depths of the window measurement on the two central longitudinal planes
@@ -198,7 +208,7 @@ def choose_window(src: AS.Spectral, dx: float, k: float, zmax: float, tol: float
                   m_max: int = M_MAX) -> Window:
     """The smallest window (pad 2, 4, 8, ...) and the sum (plain or band-limited) whose estimate is within ``tol``:
     SAFETY * max|U_p - U_2p| / max|U| over the plane z_max and the planes y = 0 and x = 0 at NZ_CHECK depths (review
-    C1); ValueError with the measurements when none is, with the comparison window up to ``m_max`` points per axis."""
+    C1); WindowError (a ValueError) with the measurements when none is, with the comparison window up to ``m_max`` points per axis."""
     n = max(src.shape)
     zs = check_depths(dx, k, zmax)
     prev = {bl: _measured(src, dx, k, zmax, zs, 2, bl) for bl in (False, True)}
@@ -220,11 +230,12 @@ def choose_window(src: AS.Spectral, dx: float, k: float, zmax: float, tol: float
         if passing:
             return passing.get(False) or passing[True]
         p *= 2
-    raise ValueError(
-        f"окно расчёта мало для глубины z_max = {zmax:g} мкм: свет, ушедший под большими углами, возвращается "
-        f"периодическими копиями источника; лучшее, что достижимо при окне до {m_max // 2} точек на ось, — "
-        f"{best.describe()}, а нужно ≤ {tol:.0e}. Уменьшите z_max или возьмите источник шире (свет уходит под "
-        f"меньшими углами)")
+    raise WindowError(
+        T("the computation window is too small for the depth z_max = {zmax} µm: light that left at large angles comes "
+          "back as periodic copies of the source; the best reachable with a window of up to {m:d} points per axis is "
+          "{best}, and at most {tol:.0e} is needed", zmax=float(zmax), m=int(m_max // 2), best=best.describe(),
+          tol=float(tol)),
+        T("reduce z_max or take a wider source (light then leaves at smaller angles)"))
 
 
 # --- slices on planes of any orientation (owner, 2026-10-27) ---------------------------------------------------------
@@ -306,7 +317,7 @@ def verify_slice(p, k, pl, s, t, U, z_near, tol_abs, max_points=3):
     if p["source"] == "circle":
         cand = cand[np.hypot(P[cand[:, 0], cand[:, 1], 0], P[cand[:, 0], cand[:, 1], 1]) < 1e-9]
     if not len(cand):
-        return {"points": 0, "note": "у этого источника нет точного значения в точках этой плоскости"}
+        return {"points": 0, "note": T("this source has no exact value at the points of this plane")}
     order = np.argsort(-I[cand[:, 0], cand[:, 1]])
     picks = [cand[order[0]]] + ([cand[order[len(order) // 3]], cand[order[2 * len(order) // 3]]] if len(order) > 2 else [])
     worst, rel = 0.0, 0.0

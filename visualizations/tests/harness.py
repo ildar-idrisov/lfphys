@@ -6,6 +6,7 @@ from __future__ import annotations
 import queue
 
 from lfviz import protocol, registry
+from lfviz.i18n import join
 from lfviz.sim import Runner
 
 
@@ -21,7 +22,7 @@ class Harness:
         def make_world(pr, values, sd):
             p, errs = viz["schema"].resolve(pr, values or {})
             if errs:
-                raise ValueError("; ".join(errs))
+                raise ValueError(join(errs, "; "))
             return viz["simulation"](p, seed if sd is None else int(sd), self.emit), {"preset": pr}
 
         self.runner = Runner(sim, self.emit, self.q, make_world=make_world, world_info={"preset": preset})
@@ -60,4 +61,5 @@ class Harness:
         return out
 
     def errors(self):
+        """The errors' texts (a T as the player gets it: {"$t", "a"}, or a plain string)."""
         return [m["text"] for m in self.of("error")]

@@ -29,6 +29,7 @@ import numpy as np
 
 from lfphys.core import constants as K
 from lfphys.core.gravity import gw_quadrupole as GW, kerr_newman as KN, nbody as NB, pn_binary as PN
+from lfphys.i18n import T, is_t, join, text_of
 from lfphys.theories.alternatives import kn_change_whatif as WHATIF
 from lfviz.errors import Refusal
 from lfviz.params import Param, Schema
@@ -256,45 +257,47 @@ class Clock:
 
 
 SCHEMA = Schema([
-    _p("laws", "Законы мира", "select", "newton", group="Законы", standard=None,
-       options=[("newton", "Ньютон: N тел"), ("pn", "ОТО: двойная (постньютоновская, с излучением волн)"),
-                ("kerr", "ОТО: тела и свет у чёрной дыры Керра–Ньюмена")],
-       help="Какими законами считается мир; другие законы — новый мир"),
-    _p("m_total", "Полная масса новой двойной, M☉", "float", 20.0, group="Двойная (ОТО)", min=0.1, max=1e10,
+    _p("laws", T("World laws"), "select", "newton", group=T("Laws"), standard=None,
+       options=[("newton", T("Newton: N bodies")), ("pn", T("GR: a binary (post-Newtonian, radiating waves)")),
+                ("kerr", T("GR: bodies and light near a Kerr–Newman black hole"))],
+       help=T("The laws the world is computed by; other laws make a new world")),
+    _p("m_total", T("Total mass of a new binary, M☉"), "float", 20.0, group=T("Binary (GR)"), min=0.1, max=1e10,
        log=True, show_if={"laws": ["pn"]},
-       help="Масса двойной, добавленной без своей массы; масса — свойство самой двойной: меняется в её инспекторе в "
-            "текущий момент (длины в G m/c², время в G m/c³)"),
-    _p("m_hole", "Масса чёрной дыры в начале, M☉", "float", 10.0, group="Чёрная дыра", min=0.1, max=1e10, log=True,
-       show_if={"laws": ["kerr"]},
-       help="Дыра — объект сцены: её масса, спин и заряд меняются в её инспекторе в текущий момент (длины в G M/c², "
-            "время в G M/c³)"),
-    _p("spin", "Спин a/M в начале", "float", 0.9, group="Чёрная дыра", min=0.0, max=0.998, show_if={"laws": ["kerr"]}),
-    _p("charge", "Заряд Q/M в начале (геометрические единицы)", "float", 0.0, group="Чёрная дыра", min=0.0, max=0.99,
-       show_if={"laws": ["kerr"]}, help="a² + Q² < 1: иначе нет горизонта"),
-    _p("collisions", "Столкновения тел", "select", "merge", group="Законы", show_if={"laws": ["newton"]}, live=True,
-       options=[("merge", "сливаются (импульс и масса сохраняются)"), ("pass", "проходят друг сквозь друга")],
-       help="Меняется на ходу, в текущий момент: тела уже в касании при «проходят» летят дальше, при «сливаются» — "
-            "сливаются сразу"),
+       help=T("The mass of a binary added without its own mass; the mass is a property of the binary itself: it is "
+              "changed in its inspector at the current moment (lengths in G m/c², time in G m/c³)")),
+    _p("m_hole", T("Black hole mass at the start, M☉"), "float", 10.0, group=T("Black hole"), min=0.1, max=1e10,
+       log=True, show_if={"laws": ["kerr"]},
+       help=T("The hole is an object of the scene: its mass, spin and charge are changed in its inspector at the "
+              "current moment (lengths in G M/c², time in G M/c³)")),
+    _p("spin", T("Spin a/M at the start"), "float", 0.9, group=T("Black hole"), min=0.0, max=0.998,
+       show_if={"laws": ["kerr"]}),
+    _p("charge", T("Charge Q/M at the start (geometric units)"), "float", 0.0, group=T("Black hole"), min=0.0,
+       max=0.99, show_if={"laws": ["kerr"]}, help=T("a² + Q² < 1: otherwise there is no horizon")),
+    _p("collisions", T("Collisions of bodies"), "select", "merge", group=T("Laws"), show_if={"laws": ["newton"]},
+       live=True,
+       options=[("merge", T("merge (momentum and mass conserved)")), ("pass", T("pass through each other"))],
+       help=T("Changes on the fly, at the current moment: with “pass through” bodies already in contact fly on, with "
+              "“merge” they merge at once")),
     scene_param(),
 ], presets={
-    "sun_earth": {"label": "Солнце и Земля (круговая орбита 1 а.е.)", "params": {"laws": "newton", "scene": {
+    "sun_earth": {"label": T("The Sun and the Earth (circular orbit of 1 au)"), "params": {"laws": "newton", "scene": {
         "format": "lfscene", "version": 1, "objects": [
-            {"type": "star", "label": "Солнце", "values": {"mass": 1.0, "radius": 1.0}},
-            {"type": "planet", "label": "Земля", "values": {"mass": 1.0, "radius": 1.0, "x": 1.0}},
-            {"type": "field", "label": "Датчик у Земли", "values": {"x": 1.02}}]}}},
-    "inner": {"label": "Солнце, Меркурий, Венера, Земля, Марс, Юпитер (круговые орбиты)", "params": {
+            {"type": "star", "label": T("Sun"), "values": {"mass": 1.0, "radius": 1.0}},
+            {"type": "planet", "label": T("Earth"), "values": {"mass": 1.0, "radius": 1.0, "x": 1.0}},
+            {"type": "field", "label": T("Probe near the Earth"), "values": {"x": 1.02}}]}}},
+    "inner": {"label": T("The Sun, Mercury, Venus, the Earth, Mars, Jupiter (circular orbits)"), "params": {
         "laws": "newton", "scene": {"format": "lfscene", "version": 1, "objects": [
-            {"type": "star", "label": "Солнце", "values": {"mass": 1.0}},
-            {"type": "planet", "label": "Меркурий", "values": {"mass": 0.0553, "radius": 0.383, "x": 0.387,
-                                                               "color": "#ced4da"}},
-            {"type": "planet", "label": "Венера", "values": {"mass": 0.815, "radius": 0.949, "x": 0.723,
-                                                             "color": "#ffd43b"}},
-            {"type": "planet", "label": "Земля", "values": {"mass": 1.0, "radius": 1.0, "x": 1.0}},
-            {"type": "planet", "label": "Марс", "values": {"mass": 0.107, "radius": 0.532, "x": 1.524,
-                                                           "color": "#ff6b6b"}},
-            {"type": "planet", "label": "Юпитер", "values": {"mass": 317.8, "radius": 11.21, "x": 5.203,
-                                                             "color": "#ff922b"}}]}}},
-    "pythagorean": {"label": "Пифагорова задача трёх тел (Бурау): массы 3, 4, 5 в покое — тесные сближения",
+            {"type": "star", "label": T("Sun"), "values": {"mass": 1.0}},
+            {"type": "planet", "label": T("Mercury"), "values": {"mass": 0.0553, "radius": 0.383, "x": 0.387,
+                                                                "color": "#ced4da"}},
+            {"type": "planet", "label": T("Venus"), "values": {"mass": 0.815, "radius": 0.949, "x": 0.723,
+                                                              "color": "#ffd43b"}},
+            {"type": "planet", "label": T("Earth"), "values": {"mass": 1.0, "radius": 1.0, "x": 1.0}},
+            {"type": "planet", "label": T("Mars"), "values": {"mass": 0.107, "radius": 0.532, "x": 1.524,
+                                                             "color": "#ff6b6b"}},
+            {"type": "planet", "label": T("Jupiter"), "values": {"mass": 317.8, "radius": 11.21, "x": 5.203,
+                                                                "color": "#ff922b"}}]}}},
+    "pythagorean": {"label": T("Pythagorean three-body problem (Burrau): masses 3, 4, 5 at rest — close encounters"),
                     "params": {"laws": "newton", "collisions": "pass", "scene": {
                         "format": "lfscene", "version": 1, "objects": [
                             {"type": "star", "label": "m = 3", "values": {"mass": 3.0, "radius": 0.001, "x": 1.0,
@@ -306,34 +309,36 @@ SCHEMA = Schema([
                             {"type": "star", "label": "m = 5", "values": {"mass": 5.0, "radius": 0.001, "x": 1.0,
                                                                            "y": -1.0, "vmode": "manual",
                                                                            "color": "#74c0fc"}}]}}},
-    "hole_stars": {"label": "Ньютоновская чёрная дыра 1000 M☉ и звёзды: орбиты и захват", "params": {
+    "hole_stars": {"label": T("A Newtonian black hole of 1000 M☉ and stars: orbits and capture"), "params": {
         "laws": "newton", "scene": {"format": "lfscene", "version": 1, "objects": [
-            {"type": "hole", "label": "Чёрная дыра", "values": {"mass": 1000.0}},
-            {"type": "star", "label": "Звезда 1", "values": {"mass": 1.0, "x": 2.0, "vmode": "circular"}},
-            {"type": "star", "label": "Звезда 2", "values": {"mass": 2.0, "x": -3.5, "vmode": "circular",
-                                                              "color": "#74c0fc"}},
-            {"type": "star", "label": "Падающая звезда", "values": {"mass": 1.0, "x": 0.0, "y": 4.0,
+            {"type": "hole", "label": T("Black hole"), "values": {"mass": 1000.0}},
+            {"type": "star", "label": T("Star 1"), "values": {"mass": 1.0, "x": 2.0, "vmode": "circular"}},
+            {"type": "star", "label": T("Star 2"), "values": {"mass": 2.0, "x": -3.5, "vmode": "circular",
+                                                               "color": "#74c0fc"}},
+            {"type": "star", "label": T("Falling star"), "values": {"mass": 1.0, "x": 0.0, "y": 4.0,
                                                                      "vmode": "manual", "vx": 20.0,
                                                                      "color": "#ff6b6b"}}]}}},
-    "kerr_orbits": {"label": "У чёрной дыры (a = 0,9): тела на орбитах, лучи света, часы наблюдателей", "params": {
-        "laws": "kerr", "m_hole": 10.0, "spin": 0.9, "charge": 0.0, "scene": {"format": "lfscene", "version": 1,
-                                                                              "objects": [
-            {"type": "body", "label": "На ISCO-близкой орбите", "values": {"r": 3.0}},
-            {"type": "body", "label": "Наклонная орбита", "values": {"r": 8.0, "theta": 70.0, "vmode": "zamo",
-                                                                     "v_phi": 0.42, "v_theta": 0.08,
-                                                                     "color": "#74c0fc"}},
-            {"type": "body", "label": "Падает", "values": {"r": 12.0, "phi": 200.0, "vmode": "zamo", "v_phi": 0.1,
-                                                           "color": "#ff6b6b"}},
-            {"type": "light", "label": "Луч мимо дыры", "values": {"r": 20.0, "psi": 14.0}},
-            {"type": "light", "label": "Луч у фотонной орбиты", "values": {"r": 20.0, "phi": 90.0, "psi": 8.5}},
-            {"type": "observer", "label": "Неподвижный на r = 4", "values": {"kind": "static", "r": 4.0}},
-            {"type": "observer", "label": "На круговой орбите r = 6", "values": {"kind": "circular", "r": 6.0,
-                                                                                 "phi": 120.0}}]}}},
-    "pn_inspiral": {"label": "ОТО: двойная 10 + 10 M☉ с расстояния 20 G m/c² и детектор волн (сближение)",
+    "kerr_orbits": {"label": T("Near a black hole (a = {a}): bodies on orbits, light rays, observers' clocks", a=0.9),
+                    "params": {"laws": "kerr", "m_hole": 10.0, "spin": 0.9, "charge": 0.0, "scene": {
+                        "format": "lfscene", "version": 1, "objects": [
+            {"type": "body", "label": T("On a near-ISCO orbit"), "values": {"r": 3.0}},
+            {"type": "body", "label": T("Inclined orbit"), "values": {"r": 8.0, "theta": 70.0, "vmode": "zamo",
+                                                                      "v_phi": 0.42, "v_theta": 0.08,
+                                                                      "color": "#74c0fc"}},
+            {"type": "body", "label": T("Falling in"), "values": {"r": 12.0, "phi": 200.0, "vmode": "zamo",
+                                                                  "v_phi": 0.1, "color": "#ff6b6b"}},
+            {"type": "light", "label": T("Ray past the hole"), "values": {"r": 20.0, "psi": 14.0}},
+            {"type": "light", "label": T("Ray near the photon orbit"), "values": {"r": 20.0, "phi": 90.0, "psi": 8.5}},
+            {"type": "observer", "label": T("Static at r = {r}", r=4), "values": {"kind": "static", "r": 4.0}},
+            {"type": "observer", "label": T("On a circular orbit at r = {r}", r=6),
+             "values": {"kind": "circular", "r": 6.0, "phi": 120.0}}]}}},
+    "pn_inspiral": {"label": T("GR: a binary of {m1} + {m2} M☉ from a separation of {r} G m/c² and a wave detector "
+                               "(inspiral)", m1=10, m2=10, r=20),
                     "params": {"laws": "pn", "m_total": 20.0, "scene": {"format": "lfscene", "version": 1, "objects": [
                         {"type": "binary", "values": {"q": 1.0, "r0": 20.0}},
                         {"type": "detector", "values": {"distance": 400.0, "iota": 30.0}}]}}},
-    "pn_eccentric": {"label": "ОТО: эксцентрическая двойная 30 + 10 M☉ (e = 0,5), прецессия перицентра",
+    "pn_eccentric": {"label": T("GR: an eccentric binary of {m1} + {m2} M☉ (e = {e}), periastron precession",
+                                m1=30, m2=10, e=0.5),
                      "params": {"laws": "pn", "m_total": 40.0, "scene": {"format": "lfscene", "version": 1, "objects": [
                          {"type": "binary", "values": {"q": 0.3333333333333333, "r0": 25.0, "start": "ellipse",
                                                        "e": 0.5, "m_total": 40.0}},
@@ -342,7 +347,7 @@ SCHEMA = Schema([
 
 
 # --- the scene a world starts from: a preset, a file, or the previous world's (carried over: P16.1) ---------------
-LAWS_RU = {"newton": "Ньютон: N тел", "pn": "ОТО: двойная", "kerr": "ОТО: у чёрной дыры Керра–Ньюмена"}
+LAWS_NAME = {"newton": T("Newton: N bodies"), "pn": T("GR: a binary"), "kerr": T("GR: near a Kerr–Newman black hole")}
 
 
 def _carry(objs, src, dst, params):
@@ -356,31 +361,32 @@ def _carry(objs, src, dst, params):
     keep, why = [], []
 
     def no(o, text):
-        why.append(f"«{o.get('label') or o.get('type')}» — {text}")
+        why.append(T("“{label}” — {why}", label=o.get("label") or o.get("type"), why=text))
     if src == "newton" and dst == "kerr":
         holes = sorted([o for o in objs if o.get("type") == "hole"], key=lambda o: -float((o.get("values") or {})
                                                                                           .get("mass", 0.0)))
         if holes:
             h = holes[0]
-            keep.append({"type": "kn_hole", "label": h.get("label") or "Чёрная дыра",
+            keep.append({"type": "kn_hole", "label": h.get("label") or T("Black hole"),
                          "values": {"mass": float((h.get("state") or {}).get("m", (h.get("values") or {}).get("mass",
                                                                                                                10.0)))}})
         for o in objs:
             if holes and o is holes[0]:
                 continue
-            no(o, "у дыры Керра–Ньюмена тела — пробные, в единицах G M/c² (1 а.е. ≈ 10⁷ G M/c² у дыры 10 M☉): "
-                  "ньютоновские тела и датчики туда не переносятся; добавьте пробные тела у дыры")
+            no(o, T("near a Kerr–Newman hole bodies are test bodies, in units of G M/c² (1 au ≈ 10⁷ G M/c² for a "
+                    "10 M☉ hole): Newtonian bodies and probes are not carried there; add test bodies near the hole"))
     elif src == "kerr" and dst == "newton":
         for o in objs:
             if o.get("type") == "kn_hole":
                 mh = float((o.get("values") or {}).get("mass", 10.0))
-                keep.append({"type": "hole", "label": o.get("label") or "Чёрная дыра",
+                keep.append({"type": "hole", "label": o.get("label") or T("Black hole"),
                              "values": {"mass": mh, "x": 0.0, "y": 0.0, "z": 0.0, "vmode": "manual", "vx": 0.0,
                                         "vy": 0.0, "vz": 0.0},
                              "state": {"x": [0.0, 0.0, 0.0], "v": [0.0, 0.0, 0.0], "m": mh}})
             else:
-                no(o, "пробные тела, свет и часы у дыры — в единицах G M/c² (километры): в мире Ньютона (а.е.) они "
-                      "были бы в самой дыре; свет и часы ОТО там не определены")
+                no(o, T("test bodies, light and clocks near the hole are in units of G M/c² (kilometres): in a "
+                        "Newtonian world (au) they would be inside the hole itself; GR light and clocks are not defined "
+                        "there"))
     elif src == "pn" and dst == "newton":
         for o in objs:
             st, v = o.get("state") or {}, o.get("values") or {}
@@ -389,16 +395,17 @@ def _carry(objs, src, dst, params):
                 m1, m2 = m / (1.0 + q), m * q / (1.0 + q)
                 L = m * K.GM_SUN / K.C ** 2 / K.AU            # au per G m/c^2
                 x, w = np.asarray(st["x"], float), np.asarray(st["v"], float) * K.C / 1e3  # c -> km/s
-                for lab, mm, f in ((" — тело 1", m1, m2 / m), (" — тело 2", m2, -m1 / m)):
+                for k, mm, f in ((1, m1, m2 / m), (2, m2, -m1 / m)):
                     p, u = f * x * L, f * w
-                    keep.append({"type": "hole", "label": (o.get("label") or "Двойная") + lab,
+                    keep.append({"type": "hole", "label": T("{label} — body {k}", label=o.get("label") or T("Binary"),
+                                                            k=k),
                                  "values": {"mass": mm, "x": float(p[0]), "y": float(p[1]), "z": float(p[2]),
                                             "vmode": "manual", "vx": float(u[0]), "vy": float(u[1]), "vz": float(u[2])},
                                  # the state as it is (a place() of the framework's carry-over must not move it)
                                  "state": {"x": p.tolist(), "v": (u * KMS).tolist(), "m": mm}})
             else:
-                no(o, "детектор волн — в мире Ньютона гравитационных волн нет" if o.get("type") == "detector"
-                   else "нет состояния двойной")
+                no(o, T("a wave detector: a Newtonian world has no gravitational waves") if o.get("type") == "detector"
+                   else T("no state of the binary"))
     elif src == "newton" and dst == "pn":
         mass = [o for o in objs if o.get("type") in ("star", "planet", "hole") and o.get("state")]
         mass.sort(key=lambda o: -float(o["state"].get("m", 0.0)))
@@ -410,20 +417,21 @@ def _carry(objs, src, dst, params):
             x = (np.asarray(a["x"], float) - np.asarray(b["x"], float)) / Lm
             vv = (np.asarray(a["v"], float) - np.asarray(b["v"], float)) * K.AU / YR / K.C
             r, q = float(np.linalg.norm(x)), float(b["m"]) / float(a["m"])
-            pair = f"«{used[0].get('label')}» и «{used[1].get('label')}»"
+            pair = T("“{a}” and “{b}”", a=used[0].get("label"), b=used[1].get("label"))
             if 8.0 <= r <= 2000.0 and q >= 0.05:
                 keep.append({"type": "binary", "label": pair, "values": {"q": q, "r0": r, "start": "ellipse",
                                                                          "m_total": m},
                              "state": {"x": x.tolist(), "v": vv.tolist(), "status": "running"}})
             else:
-                why.append(f"{pair} — расстояние {r:.3g} G m/c² вне диапазона двойной ОТО (8 … 2000 G m/c²)"
-                           + (f", отношение масс {q:.3g} < 0,05" if q < 0.05 else ""))
+                why.append(T("{pair} — the separation {r:.3g} G m/c² is outside the range of a GR binary "
+                             "({lo} … {hi} G m/c²){more}", pair=pair, r=r, lo=8, hi=2000,
+                             more=T(", the mass ratio {q:.3g} < {qmin}", q=q, qmin=0.05) if q < 0.05 else ""))
         for o in objs:
             if not any(o is u for u in used):
-                no(o, "в мире двойной ОТО — одна двойная и детекторы волн")
+                no(o, T("a GR binary world holds one binary and wave detectors"))
     else:
         for o in objs:
-            no(o, f"в мире законов «{LAWS_RU.get(dst, dst)}» такого объекта нет")
+            no(o, T("a world of the laws “{laws}” has no such object", laws=LAWS_NAME.get(dst, dst)))
     return keep, why
 
 
@@ -445,7 +453,7 @@ def prepare_scene(scene, params):
         holes = [o for o in objs if isinstance(o, dict) and o.get("type") == "kn_hole"]
         rest = [o for o in objs if not (isinstance(o, dict) and o.get("type") == "kn_hole")]
         world = {"mass": float(params["m_hole"]), "spin": float(params["spin"]), "charge": float(params["charge"])}
-        hole = dict(holes[0]) if holes else {"type": "kn_hole", "label": "Чёрная дыра"}
+        hole = dict(holes[0]) if holes else {"type": "kn_hole", "label": T("Black hole")}
         hv = dict(hole.get("values") or {})
         # a carried-over hole of the same laws takes the new world's mass, spin and charge (the dialog's); a file's keeps
         # its own; one made from another world's hole keeps its mass and takes the world's spin and charge
@@ -471,7 +479,7 @@ class Simulation(PlaygroundSimulation):
         laws = params["laws"]
         mode = {"newton": NewtonMode, "pn": PNMode, "kerr": KerrMode}.get(laws)
         if mode is None:
-            raise ValueError(f"законы «{laws}» ещё не подключены")
+            raise ValueError(f"laws {laws!r} are not connected yet")
         self.mode = mode(self)
         self.PALETTE = self.mode.palette()
         self.start_scene()
@@ -509,7 +517,7 @@ class Simulation(PlaygroundSimulation):
         return self.mode.measure_now()[0]
 
     def scene(self, args):
-        """The framework's scene command; «Очистить сцену» in the hole's world clears everything but the hole (the
+        """The framework's scene command; "Clear scene" in the hole's world clears everything but the hole (the
         world is the hole's: removing it would be a new world)."""
         if args.get("op") == "clear" and isinstance(self.mode, KerrMode):
             rest = [o for o in self.objects.values() if o["type"] != "kn_hole"]
@@ -518,7 +526,7 @@ class Simulation(PlaygroundSimulation):
                 del self.objects[o["id"]]
             self.rev += 1
             self.emit_scene()
-            return "сцена очищена (дыра осталась: мир считается вокруг неё)"
+            return T("scene cleared (the hole stays: the world is computed around it)")
         return super().scene(args)
 
     def start_scene(self):
@@ -544,19 +552,20 @@ class Simulation(PlaygroundSimulation):
         (``nbody.NBody.set_collisions``)."""
         new, errors = SCHEMA.coerce_live(self.params, values)
         if errors:
-            raise ValueError("; ".join(str(e) for e in errors))
+            raise Refusal(join([text_of(e) for e in errors]))
         changed = [k for k in values if new.get(k) != self.params.get(k)]
         if not changed:
-            return "без изменений"
+            return T("no change")
         if "collisions" in changed:
             if not isinstance(self.mode, NewtonMode):
-                raise Refusal("столкновения задаются только у ньютоновских тел", hint="законы «Ньютон: N тел»")
+                raise Refusal(T("collisions are set only for Newtonian bodies"), hint=T("the laws “Newton: N bodies”"))
             self.mode.set_collisions(new["collisions"])
         old = self.params
         self.params = new
         p = SCHEMA.by_id
         names = {k: {o[0]: o[1] for o in p[k].options} for k in changed}
-        return "; ".join(f"{p[k].label}: {names[k].get(old[k], old[k])} → {names[k].get(new[k], new[k])}" for k in changed)
+        return join([T("{label}: {old} → {new}", label=p[k].label, old=names[k].get(old[k], old[k]),
+                       new=names[k].get(new[k], new[k])) for k in changed])
 
     def rekey(self):
         self.mode.emit_trails(full=True)
@@ -586,8 +595,9 @@ class Simulation(PlaygroundSimulation):
         super().after_header()
         self.mode.after_header()
         if getattr(self, "_carry_notes", None):
-            self.emit({"type": "notice", "t": self.t, "text": "Перенос сцены в мир других законов: не перенесены — "
-                       + "; ".join(self._carry_notes) + " (что имеет смысл, переведено: см. сцену)"})
+            self.emit({"type": "notice", "t": self.t, "text": T(
+                "Scene carried into a world of other laws: not carried — {list} (what makes sense was translated: see "
+                "the scene)", list=join(self._carry_notes))})
 
     def engine_modules(self):
         return self.mode.engine_modules()
@@ -606,69 +616,67 @@ HOLE_RGB = [0.80, 0.76, 1.0]  # a Newtonian hole's sphere: light, with its name 
 
 
 def _years(sec):
-    """A duration in years, the owner's way («0,05 года», «1 год», «12 лет»)."""
-    t = f"{sec / YR:.3g}"
-    v = float(t)
-    if v.is_integer():
-        n = int(abs(v))
-        word = "год" if n % 10 == 1 and n % 100 != 11 else "года" if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14 else "лет"
-    else:
-        word = "года"
-    return t.replace(".", ",") + " " + word
+    """A duration in years (the plural form chosen by the catalogue from the number); the number is rounded to
+    the 3 digits shown, so that the plural form agrees with it."""
+    return T("{n:.3g} years", n=float(f"{sec / YR:.3g}"))
 
 
-def _num(x, digits=4):
-    return f"{x:.{digits}g}".replace(".", ",")
+def _pt(v, unit=None):
+    """A point (x, y, z) in a unit (au by default) as a text: its numbers are arguments."""
+    return T("({x:.4g}, {y:.4g}, {z:.4g}) {unit}", x=float(v[0]), y=float(v[1]), z=float(v[2]),
+             unit=T("au") if unit is None else unit)
 
 
-def _fmt(v):
-    return "; ".join(_num(c) for c in v)
-
-
-def _pos(label="Положение"):
+def _pos(label=None):
     # bounded (review B6-F6: a finite value that overflows in the solver broke every frame): 10^6 au
-    return [_p(c, f"{label}: {c}, а.е.", "float", 0.0, min=-1e6, max=1e6) for c in "xyz"]
+    label = T("Position") if label is None else label
+    return [_p(c, T("{what}: {c}, au", what=label, c=c), "float", 0.0, min=-1e6, max=1e6) for c in "xyz"]
 
 
 def _vel(default_mode="circular"):
-    return [_p("vmode", "Скорость", "select", default_mode,
-               options=[("circular", "круговая орбита вокруг центра масс остальных (остальные получают отдачу)"),
-                        ("manual", "задать vx, vy, vz")],
-               help="Круговая — в момент добавления (или смены скорости): относительная орбита тела и остальных "
-                    "как двух тел круговая для любой массы тела, остальные получают общую отдачу, центр масс системы "
-                    "не сдвигается; плоскость орбиты — ближайшая к xy (против часовой стрелки, если смотреть с +z)"),
-            *[_p(c, f"{c}, км/с", "float", 0.0, min=-2.9979e5, max=2.9979e5, show_if={"vmode": ["manual"]},
-                 help="Ньютоновская механика: скорость меньше скорости света (и много меньше — для точности)")
+    return [_p("vmode", T("Velocity"), "select", default_mode,
+               options=[("circular", T("circular orbit around the others' centre of mass (the others recoil)")),
+                        ("manual", T("set vx, vy, vz"))],
+               help=T("Circular — at the moment of adding (or of a change of the velocity): the relative orbit of the "
+                      "body and the others as two bodies is circular for any mass of the body, the others get a common "
+                      "recoil, the system's centre of mass does not move; the orbit's plane is the one closest to xy "
+                      "(counter-clockwise seen from +z)")),
+            *[_p(c, T("{c}, km/s", c=c), "float", 0.0, min=-2.9979e5, max=2.9979e5, show_if={"vmode": ["manual"]},
+                 help=T("Newtonian mechanics: the speed is below the speed of light (and far below it, for accuracy)"))
               for c in ("vx", "vy", "vz")]]
 
 
-# a throw in the scene (P16.2) sends the velocity in the scene's units per world second (а.е./с); hidden: the body's own
-# velocity is shown in km/s (vmode «задать», vx, vy, vz), set from the throw
-THROW = [_p(c, f"Бросок: {c[1:]}, а.е./с", "float", 0.0, min=-1.0, max=1.0, hidden=True) for c in ("tvx", "tvy", "tvz")]
-REF = _p("ref", "Расстояние в приборах — до", "select", "dominant", options=[
-    ("dominant", "самого массивного другого тела"), ("com", "центра масс системы"), ("origin", "начала координат")],
-    help="Для приборов (P16.3): расстояние этого тела до выбранного; элементы орбиты (a, e, период) — всегда "
-         "относительно самого массивного другого тела (две массы как задача двух тел)")
-COLOR = _p("color", "Цвет", "select", "#ffd43b", options=[("#ffd43b", "жёлтый"), ("#ff922b", "оранжевый"),
-                                                         ("#ff6b6b", "красный"), ("#74c0fc", "голубой"),
-                                                         ("#8ce99a", "зелёный"), ("#e9ecef", "белый"),
-                                                         ("#b197fc", "фиолетовый"), ("#ced4da", "серый")])
-STAR = Schema([_p("mass", "Масса, M☉", "float", 1.0, min=1e-4, max=1e3, log=True),
-               _p("radius", "Радиус, R☉", "float", 1.0, min=1e-3, max=2000.0, log=True),
+# a throw in the scene (P16.2) sends the velocity in the scene's units per world second (au/s); hidden: the body's own
+# velocity is shown in km/s (vmode "set", vx, vy, vz), set from the throw
+THROW = [_p(c, T("Throw: {c}, au/s", c=c[1:]), "float", 0.0, min=-1.0, max=1.0, hidden=True)
+         for c in ("tvx", "tvy", "tvz")]
+REF = _p("ref", T("Distance in the instruments — to"), "select", "dominant", options=[
+    ("dominant", T("the most massive other body")), ("com", T("the system's centre of mass")),
+    ("origin", T("the origin"))],
+    help=T("For the instruments (P16.3): the distance of this body to the chosen point; the orbital elements (a, e, "
+           "period) are always relative to the most massive other body (two masses as a two-body problem)"))
+COLOR = _p("color", T("Colour"), "select", "#ffd43b", options=[("#ffd43b", T("yellow")), ("#ff922b", T("orange")),
+                                                              ("#ff6b6b", T("red")), ("#74c0fc", T("light blue")),
+                                                              ("#8ce99a", T("green")), ("#e9ecef", T("white")),
+                                                              ("#b197fc", T("violet")), ("#ced4da", T("grey"))])
+STAR = Schema([_p("mass", T("Mass, M☉"), "float", 1.0, min=1e-4, max=1e3, log=True),
+               _p("radius", T("Radius, R☉"), "float", 1.0, min=1e-3, max=2000.0, log=True),
                *_pos(), *_vel(), COLOR, REF, *THROW])
-PLANET = Schema([_p("mass", "Масса, M⊕", "float", 1.0, min=1e-6, max=1e4, log=True),
-                 _p("radius", "Радиус, R⊕", "float", 1.0, min=1e-3, max=30.0, log=True),
-                 *[q if q.id != "x" else _p("x", "Положение: x, а.е.", "float", 1.0, min=-1e6, max=1e6) for q in _pos()], *_vel(),
-                 _p("color", "Цвет", "select", "#74c0fc", options=COLOR.options), REF, *THROW])
-HOLE = Schema([_p("mass", "Масса, M☉", "float", 10.0, min=1e-2, max=1e10, log=True), *_pos(), *_vel(), REF, *THROW])
-TEST = Schema([*[q if q.id != "x" else _p("x", "Положение: x, а.е.", "float", 2.0, min=-1e6, max=1e6) for q in _pos()], *_vel(),
-               _p("color", "Цвет", "select", "#e9ecef", options=COLOR.options), REF, *THROW])
+PLANET = Schema([_p("mass", T("Mass, M⊕"), "float", 1.0, min=1e-6, max=1e4, log=True),
+                 _p("radius", T("Radius, R⊕"), "float", 1.0, min=1e-3, max=30.0, log=True),
+                 *[q if q.id != "x" else _p("x", T("{what}: {c}, au", what=T("Position"), c="x"), "float", 1.0,
+                                            min=-1e6, max=1e6) for q in _pos()], *_vel(),
+                 _p("color", T("Colour"), "select", "#74c0fc", options=COLOR.options), REF, *THROW])
+HOLE = Schema([_p("mass", T("Mass, M☉"), "float", 10.0, min=1e-2, max=1e10, log=True), *_pos(), *_vel(), REF, *THROW])
+TEST = Schema([*[q if q.id != "x" else _p("x", T("{what}: {c}, au", what=T("Position"), c="x"), "float", 2.0,
+                                          min=-1e6, max=1e6) for q in _pos()], *_vel(),
+               _p("color", T("Colour"), "select", "#e9ecef", options=COLOR.options), REF, *THROW])
 # the largest throw a Newtonian body takes from the player: 0.05 c in au per second (the player clamps to it and says so);
 # the world itself accepts up to 0.1 c (Newtonian mechanics then errs by v^2/c^2 <= 1 %: typed values may lie there) and
 # refuses from 0.1 c with the reason; the hidden parameters' range is wider only so that this refusal is the one shown
 # (review LB1-physics P15)
 BODY_HANDLES = {"position": ["x", "y", "z"], "velocity": ["tvx", "tvy", "tvz"], "velocity_max": 0.05 * 299792458.0 / 1.495978707e11}
-FIELD = Schema([*_pos("Точка")])
+FIELD = Schema([*_pos(T("Point"))])
 
 
 def _rgb(hexcol):
@@ -695,23 +703,25 @@ class NewtonMode(Trails):
         self._placed_note = None  # (type, x, y, z, text) of a body ``place`` moved, announced when it is added
 
     def palette(self):
-        # handles (P16.2): a drag moves a body (its velocity kept), a throw sets its velocity (the scene's а.е./с)
-        return {"star": _otype("star", "Звезда", "body", STAR, color="#ffd43b", handles=BODY_HANDLES,
-                               help="Масса и радиус в солнечных; поверхность звезды — граница столкновения; по умолчанию — на "
-                                    "круговой орбите вокруг центра масс остальных (одна — в покое)"),
-                "planet": _otype("planet", "Планета", "body", PLANET, color="#74c0fc", handles=BODY_HANDLES,
-                                 help="Масса и радиус в земных; по умолчанию — на круговой орбите"),
-                "hole": _otype("hole", "Чёрная дыра (ньютоновская масса)", "body", HOLE, color="#343a40",
+        # handles (P16.2): a drag moves a body (its velocity kept), a throw sets its velocity (the scene's au/s)
+        return {"star": _otype("star", T("Star"), "body", STAR, color="#ffd43b", handles=BODY_HANDLES,
+                               help=T("Mass and radius in solar units; the star's surface is the collision boundary; by "
+                                      "default on a circular orbit around the others' centre of mass (a single one at "
+                                      "rest)")),
+                "planet": _otype("planet", T("Planet"), "body", PLANET, color="#74c0fc", handles=BODY_HANDLES,
+                                 help=T("Mass and radius in Earth units; by default on a circular orbit")),
+                "hole": _otype("hole", T("Black hole (Newtonian mass)"), "body", HOLE, color="#343a40",
                                handles=BODY_HANDLES,
-                               help="Точечная масса с радиусом Шварцшильда как радиусом захвата: приближение "
-                                    "Ньютона, не ОТО (для ОТО — законы «тела и свет у чёрной дыры»); что её "
-                                    "коснётся, она поглощает, и её радиус — радиус Шварцшильда новой массы; по "
-                                    "умолчанию — на круговой орбите вокруг центра масс остальных"),
-                "test": _otype("test", "Пробное тело (без массы)", "particle", TEST, color="#e9ecef",
-                               handles=BODY_HANDLES, help="Чувствует притяжение, само не притягивает"),
-                "field": _otype("field", "Датчик поля и приливов", "probe", FIELD, limit=8, color="#f06595",
+                               help=T("A point mass with its Schwarzschild radius as the capture radius: a Newtonian "
+                                      "approximation, not GR (for GR: the laws “bodies and light near a black hole”); "
+                                      "it absorbs whatever touches it, and its radius is the Schwarzschild radius of "
+                                      "the new mass; by default on a circular orbit around the others' centre of "
+                                      "mass")),
+                "test": _otype("test", T("Test body (massless)"), "particle", TEST, color="#e9ecef",
+                               handles=BODY_HANDLES, help=T("Feels gravity, does not attract itself")),
+                "field": _otype("field", T("Field and tide probe"), "probe", FIELD, limit=8, color="#f06595",
                                 handles={"position": ["x", "y", "z"]},
-                                help="Ускорение свободного падения и приливное растяжение в точке")}
+                                help=T("The free-fall acceleration and the tidal stretching at a point"))}
 
     def t_yr(self):
         return self.sim.t / YR
@@ -770,8 +780,8 @@ class NewtonMode(Trails):
         e = np.cross([0.0, 0.0, 1.0], d)
         en = float(np.linalg.norm(e))
         if not (dist > 0.0 and en > 1e-9 * dist):
-            raise ValueError("круговая орбита: тело на оси z, проходящей через центр масс остальных тел, — плоскость "
-                             "орбиты не определена; сдвиньте его по x или y")
+            raise Refusal(T("circular orbit: the body is on the z axis through the other bodies' centre of mass — the "
+                            "orbit's plane is undefined"), hint=T("move it along x or y"))
         e /= en
         vrel = math.sqrt(G_AU * (M + m) / dist)
         Vs = cv if key is None else (M * cv + m * V[keys.index(key)]) / (M + m)
@@ -785,9 +795,10 @@ class NewtonMode(Trails):
             return fn(*args, **kw)
         except ValueError as e:
             if "same point" in str(e):
-                raise ValueError("тело оказалось бы точно в той же точке, что и другое: две точечные массы в одной "
-                                 "точке (бесконечная сила) — так нельзя (копия массивного тела «в текущий момент» "
-                                 "ложится на оригинал; добавьте тело из палитры в другом месте)") from None
+                raise Refusal(T("the body would be at exactly the same point as another: two point masses at one "
+                                "point (an infinite force) are not allowed (a copy of a massive body “at the current "
+                                "moment” lies on its original)"),
+                              hint=T("add a body from the palette at another place")) from None
             raise
 
     def _contact_radius(self, obj, m, R):
@@ -807,8 +818,8 @@ class NewtonMode(Trails):
             d = float(np.linalg.norm(X[i] - x))
             if d == 0.0 or d <= CLEAR * (Rc + float(Rb[i])):
                 lab = self.sim.objects[k]["label"] if k in self.sim.objects else str(k)
-                return f"в точке ({_fmt(x)}) а.е. уже «{lab}»" if d == 0.0 else \
-                    f"точка ({_fmt(x)}) а.е. слишком близко к «{lab}» (касание сразу)"
+                return T("“{label}” is already at the point {p}", label=lab, p=_pt(x)) if d == 0.0 else \
+                    T("the point {p} is too close to “{label}” (contact at once)", p=_pt(x), label=lab)
         if vmode == "circular":
             idx = [i for i, k in enumerate(keys) if k != skip]
             mo = nb.masses()[idx]
@@ -816,7 +827,8 @@ class NewtonMode(Trails):
                 c = (mo[:, None] * X[idx]).sum(0) / mo.sum()
                 dd = np.asarray(x, float) - c
                 if not float(np.linalg.norm(np.cross([0.0, 0.0, 1.0], dd))) > 1e-9 * max(float(np.linalg.norm(dd)), 1e-300):
-                    return f"точка ({_fmt(x)}) а.е. на оси z через центр масс остальных: плоскость круговой орбиты не определена"
+                    return T("the point {p} is on the z axis through the others' centre of mass: the plane of a "
+                             "circular orbit is undefined", p=_pt(x))
         return None
 
     def free_spot(self, x, Rc, vmode=None, skip=None):
@@ -856,12 +868,12 @@ class NewtonMode(Trails):
         x0 = np.array([full["x"], full["y"], full["z"]], float)
         x, why = self.free_spot(x0, self._contact_radius({"type": kind}, m, R), full.get("vmode"))
         if x is None:
-            raise Refusal(f"рядом с ({_fmt(x0)}) а.е. нет свободного места: {why}",
-                          hint="задайте положение x, y, z дальше от других тел")
+            raise Refusal(T("no free place near {p}: {why}", p=_pt(x0), why=why),
+                          hint=T("set the position x, y, z farther from the other bodies"))
         full.update(x=float(x[0]), y=float(x[1]), z=float(x[2]))
         self._placed_note = None if why is None else (
             kind, full["x"], full["y"], full["z"],
-            f"{why} — поставлено в ближайшее свободное место ({_fmt(x)}) а.е.")
+            T("{why} — placed at the nearest free place {p}", why=why, p=_pt(x)))
         return full
 
     def _free_check(self, obj, x, m, R, rpm):
@@ -869,9 +881,9 @@ class NewtonMode(Trails):
         why = self._blocker(x, self._contact_radius(obj, m, R), obj["values"].get("vmode"))
         if why is not None and not self.sim._loading:
             y, _ = self.free_spot(x, self._contact_radius(obj, m, R), obj["values"].get("vmode"))
-            raise Refusal(f"«{obj['label']}» не поставлено: {why}",
-                          hint=(f"задайте положение, например ({_fmt(y)}) а.е." if y is not None
-                                else "задайте положение дальше от других тел"))
+            raise Refusal(T("“{label}” not placed: {why}", label=obj["label"], why=why),
+                          hint=(T("set the position, e.g. {p}", p=_pt(y)) if y is not None
+                                else T("set the position farther from the other bodies")))
 
     def _mass_radius(self, obj):
         v = obj["values"]
@@ -900,8 +912,9 @@ class NewtonMode(Trails):
                 if why is not None and y is not None:
                     x = y
                     self._placed_note = (obj["type"], obj["values"].get("x"), obj["values"].get("y"),
-                                         obj["values"].get("z"), f"копия поставлена рядом, в ({_fmt(y)}) а.е., с той же "
-                                         f"скоростью: на месте оригинала две точечные массы совпали бы")
+                                         obj["values"].get("z"),
+                                         T("the copy is placed next to it, at {p}, with the same velocity: at the "
+                                           "original's place two point masses would coincide", p=_pt(y)))
         else:
             x = np.array([v["x"], v["y"], v["z"]], float)
             self._free_check(obj, x, m, R, rpm)
@@ -922,7 +935,7 @@ class NewtonMode(Trails):
         if note and note[:4] == (obj["type"], obj["values"].get("x"), obj["values"].get("y"), obj["values"].get("z")) \
                 and not self.sim._loading:
             self.sim.emit({"type": "event", "kind": "scene", "t": self.sim.t, "notify": True,
-                           "text": f"«{obj['label']}»: {note[4]}"})
+                           "text": T("“{label}”: {note}", label=obj["label"], note=note[4])})
 
     def on_remove(self, obj):
         if self.nb.has(obj["id"]):
@@ -958,12 +971,13 @@ class NewtonMode(Trails):
         changes = {k: kw}
         if any(v.get(c) != old.get(c) for c in ("tvx", "tvy", "tvz")):
             # a throw (P16.2): the velocity in the scene's units per world second becomes the body's own (km/s,
-            # «задать»); the others keep theirs (a throw is not a circular start)
+            # "set"); the others keep theirs (a throw is not a circular start)
             tv = np.array([v["tvx"], v["tvy"], v["tvz"]], float)
             speed = float(np.linalg.norm(tv)) * K.AU
             if not speed < 0.1 * K.C:
-                raise Refusal(f"скорость броска {speed / 1e3:.4g} км/с — не меньше 0,1 скорости света: ньютоновская "
-                              f"механика здесь неприменима", hint="бросьте медленнее или уменьшите масштаб броска")
+                raise Refusal(T("the throw's speed {v:.4g} km/s is not below {f} of the speed of light: Newtonian "
+                                "mechanics does not apply here", v=speed / 1e3, f=0.1),
+                              hint=T("throw slower or reduce the throw scale"))
             kms = tv * K.AU / 1e3
             obj["values"] = {**v, "vmode": "manual", "vx": float(kms[0]), "vy": float(kms[1]), "vz": float(kms[2])}
             v = obj["values"]
@@ -997,9 +1011,10 @@ class NewtonMode(Trails):
         ext = float(np.max(np.abs(X))) * 1.15 if len(X) else 0.0
         size = 2.0 ** math.ceil(math.log2(ext)) if math.isfinite(ext) and ext > 0.0 else self.box_h
         self.box_cap = BOX_GROWTH * max(size, 1.5)
-        approx = (["чёрная дыра — ньютоновская точечная масса с радиусом Шварцшильда как радиусом захвата (не ОТО)"]
-                  if any(o["type"] == "hole" for o in self.sim.objects.values()) else [])
-        self.sim.emit({"type": "approx", "t": self.sim.t, "approximations": ["ньютоновская гравитация точечных масс"] + approx})
+        approx = ([T("a black hole is a Newtonian point mass with its Schwarzschild radius as the capture radius "
+                     "(not GR)")] if any(o["type"] == "hole" for o in self.sim.objects.values()) else [])
+        self.sim.emit({"type": "approx", "t": self.sim.t,
+                       "approximations": [T("Newtonian gravity of point masses")] + approx})
 
     def set_collisions(self, policy):
         self._sync()
@@ -1009,6 +1024,11 @@ class NewtonMode(Trails):
 
     def palette_state(self):
         return {}
+
+    def _name(self, k):
+        """An object's label by its key (the key itself when it is gone)."""
+        o = self.sim.objects.get(k)
+        return o["label"] if o else k
 
     def _write_back(self, obj, m, R):
         """A merged body's mass and radius into its parameters (in its units) where the parameters' ranges allow it
@@ -1038,21 +1058,25 @@ class NewtonMode(Trails):
                     del objs[gone]
                 written = kept in objs and self._write_back(objs[kept], e["m"], e["radius"])
                 self.sim.rev += 1
-                since = (f" через {_years(e['t'] * YR - young[0]['t_added'])} после добавления «{young[0]['label']}»"
-                         if young else "")
-                verb = "столкнулись: дыра поглотила тело" if hole else "столкнулись и слились"
-                # a toast too (review UX-ui U4: a star added inside the Sun vanished with one line in «События»)
+                since = (T(" {dt} after “{label}” was added", dt=_years(e["t"] * YR - young[0]["t_added"]),
+                           label=young[0]["label"]) if young else "")
+                verb = T("collided: the hole absorbed the body") if hole else T("collided and merged")
+                # a toast too (review UX-ui U4: a star added inside the Sun vanished with one line in "Events")
                 self.sim.emit({"type": "event", "kind": "merge", "t": e["t"] * YR, "notify": True,
-                               "text": f"«{la}» и «{lb}» {verb}{since}: масса {_num(e['m'])} M☉, "
-                                       f"остался «{objs[kept]['label'] if kept in objs else kept}»"
-                                       + ("" if written else " (масса вне диапазона параметров объекта: в инспекторе "
-                                                            "прежние, в мире и в файле сцены — слитые)")})
+                               "text": T("“{a}” and “{b}” {verb}{since}: mass {m:.4g} M☉, “{kept}” remains{more}",
+                                         a=la, b=lb, verb=verb, since=since, m=float(e["m"]),
+                                         kept=objs[kept]["label"] if kept in objs else kept,
+                                         more="" if written else T(
+                                             " (the mass is outside the range of the object's parameters: the "
+                                             "inspector shows the former ones, the world and the scene file the "
+                                             "merged ones)"))})
                 self.sim.emit_scene()
                 self.ref = None
                 self.mark = None
             elif e["kind"] == "contact":
                 self.sim.emit({"type": "event", "kind": "contact", "t": e["t"] * YR,
-                               "text": f"касание: {e['keys'][0]} и {e['keys'][1]} проходят друг сквозь друга"})
+                               "text": T("contact: “{a}” and “{b}” pass through each other",
+                                         a=self._name(e["keys"][0]), b=self._name(e["keys"][1]))})
 
     STEPS_PER_CALL = 16  # integrator steps per advance call: the runner keeps its frame budget (no long stall)
 
@@ -1087,9 +1111,10 @@ class NewtonMode(Trails):
         now = {}
         M = nb.masses() if keys else np.zeros(0)
         for i, k in enumerate(keys):
-            now[k] = {"x, y, z, а.е.": ", ".join(f"{c:.6g}" for c in X[i]),
-                      "скорость, км/с": float(np.linalg.norm(V[i])) / KMS,
-                      "масса, M☉": float(M[i]), "радиус, а.е.": float(rad[i])}
+            now[k] = {"x, y, z, au": T("{x:.6g}, {y:.6g}, {z:.6g}", x=float(X[i][0]), y=float(X[i][1]),
+                                       z=float(X[i][2])),
+                      "speed, km/s": float(np.linalg.norm(V[i])) / KMS,
+                      "mass, M☉": float(M[i]), "radius, au": float(rad[i])}
         probes = {}
         for o in objs.values():
             if o["type"] != "field":
@@ -1097,12 +1122,12 @@ class NewtonMode(Trails):
             pt = np.array([[o["values"]["x"], o["values"]["y"], o["values"]["z"]]], float)
             if nb.n and nb.masses().sum() > 0:
                 g = nb.acceleration_at(pt)[0] * K.AU / YR ** 2
-                T = nb.tidal_tensor_at(pt)[0] / YR ** 2
-                lam = np.linalg.eigvalsh(T)
-                probes[o["id"]] = {"g, м/с²": float(np.linalg.norm(g)),
-                                   "прилив: растяжение, 1/с²": float(lam[-1]), "прилив: сжатие, 1/с²": float(lam[0])}
+                tid = nb.tidal_tensor_at(pt)[0] / YR ** 2
+                lam = np.linalg.eigvalsh(tid)
+                probes[o["id"]] = {"g, m/s²": float(np.linalg.norm(g)),
+                                   "tide: stretching, 1/s²": float(lam[-1]), "tide: compression, 1/s²": float(lam[0])}
             else:
-                probes[o["id"]] = {"g, м/с²": 0.0}
+                probes[o["id"]] = {"g, m/s²": 0.0}
         d = {"steps": nb.step_count}
         at = {k: [float(c) for c in X[i]] for i, k in enumerate(keys) if k in objs}
         at.update({o["id"]: [float(o["values"][c]) for c in "xyz"] for o in objs.values() if o["type"] == "field"})
@@ -1122,30 +1147,37 @@ class NewtonMode(Trails):
     L_SI = K.M_SUN * K.AU ** 2 / YR       # kg m^2 / s per M_sun au^2 / yr
 
     def measurables(self):
-        out = [{"id": "E", "label": "Полная энергия системы", "unit": "Дж", "of": None, "group": "Сохранение"},
-               {"id": "dE", "label": "Уход энергии с последнего изменения сцены (доля Σ½mv² + Σ G mᵢmⱼ/rᵢⱼ)",
-                "unit": "", "of": None, "group": "Сохранение"},
-               {"id": "L", "label": "Момент импульса системы |L|", "unit": "кг·м²/с", "of": None, "group": "Сохранение"},
-               {"id": "dL", "label": "Уход момента импульса с последнего изменения сцены (доля Σ|r × m v|)", "unit": "",
-                "of": None, "group": "Сохранение"}]
-        to = {"dominant": "до самого массивного другого тела", "com": "до центра масс системы",
-              "origin": "до начала координат"}
+        cons = T("Conservation")
+        out = [{"id": "E", "label": T("Total energy of the system"), "unit": T("J"), "of": None, "group": cons},
+               {"id": "dE", "label": T("Energy drift since the scene's last change (fraction of Σ½mv² + Σ G mᵢmⱼ/rᵢⱼ)"),
+                "unit": "", "of": None, "group": cons},
+               {"id": "L", "label": T("Angular momentum of the system |L|"), "unit": T("kg·m²/s"), "of": None,
+                "group": cons},
+               {"id": "dL", "label": T("Angular momentum drift since the scene's last change (fraction of Σ|r × m v|)"),
+                "unit": "", "of": None, "group": cons}]
+        to = {"dominant": T("to the most massive other body"), "com": T("to the system's centre of mass"),
+              "origin": T("to the origin")}
+        probes, bodies, orbits = T("Probes"), T("Bodies"), T("Orbits")
         for o in self.sim.objects.values():
             oid, lab = o["id"], o["label"]
             if o["type"] == "field":
-                out += [{"id": f"{oid}.g", "label": f"«{lab}»: ускорение свободного падения g", "unit": "м/с²",
-                         "of": oid, "group": "Датчики"},
-                        {"id": f"{oid}.tide", "label": f"«{lab}»: прилив, растяжение", "unit": "1/с²", "of": oid,
-                         "group": "Датчики"}]
+                out += [{"id": f"{oid}.g", "label": T("“{label}”: free-fall acceleration g", label=lab),
+                         "unit": T("m/s²"), "of": oid, "group": probes},
+                        {"id": f"{oid}.tide", "label": T("“{label}”: tide, stretching", label=lab), "unit": T("1/s²"),
+                         "of": oid, "group": probes}]
                 continue
-            out += [{"id": f"{oid}.dist", "label": f"«{lab}»: расстояние {to[o['values'].get('ref', 'dominant')]}",
-                     "unit": "а.е.", "of": oid, "group": "Тела"},
-                    {"id": f"{oid}.speed", "label": f"«{lab}»: скорость", "unit": "км/с", "of": oid, "group": "Тела"},
-                    {"id": f"{oid}.a", "label": f"«{lab}»: большая полуось (относительно самого массивного другого)",
-                     "unit": "а.е.", "of": oid, "group": "Орбиты"},
-                    {"id": f"{oid}.e", "label": f"«{lab}»: эксцентриситет", "unit": "", "of": oid, "group": "Орбиты"},
-                    {"id": f"{oid}.P", "label": f"«{lab}»: период (задача двух тел)", "unit": "годы", "of": oid,
-                     "group": "Орбиты"}]
+            out += [{"id": f"{oid}.dist", "label": T("“{label}”: distance {to}", label=lab,
+                                                     to=to[o["values"].get("ref", "dominant")]),
+                     "unit": T("au"), "of": oid, "group": bodies},
+                    {"id": f"{oid}.speed", "label": T("“{label}”: speed", label=lab), "unit": T("km/s"), "of": oid,
+                     "group": bodies},
+                    {"id": f"{oid}.a", "label": T("“{label}”: semi-major axis (relative to the most massive other "
+                                                  "body)", label=lab),
+                     "unit": T("au"), "of": oid, "group": orbits},
+                    {"id": f"{oid}.e", "label": T("“{label}”: eccentricity", label=lab), "unit": "", "of": oid,
+                     "group": orbits},
+                    {"id": f"{oid}.P", "label": T("“{label}”: period (two-body problem)", label=lab),
+                     "unit": T("years"), "of": oid, "group": orbits}]
         return out
 
     def measure_now(self, probes=None):
@@ -1165,10 +1197,10 @@ class NewtonMode(Trails):
                 m["dL"] = float(np.linalg.norm(Lv - self.ref["L"])) / Ls
             else:
                 m["dE"] = m["dL"] = nan
-                notes["dE"] = notes["dL"] = "отсчёт начинается с первой проверки после изменения сцены"
+                notes["dE"] = notes["dL"] = T("counted from the first check after the scene's change")
         else:
             m["E"] = m["L"] = m["dE"] = m["dL"] = nan
-            notes["E"] = notes["L"] = notes["dE"] = notes["dL"] = "в сцене нет тел"
+            notes["E"] = notes["L"] = notes["dE"] = notes["dL"] = T("no bodies in the scene")
         keys = nb.keys
         X, V, M = (nb.positions(), nb.velocities(), nb.masses()) if keys else (None, None, None)
         com = (M[:, None] * X).sum(0) / M.sum() if keys and M.sum() > 0 else np.zeros(3)
@@ -1179,17 +1211,17 @@ class NewtonMode(Trails):
                 pr = (probes or {}).get(oid)
                 if pr is None:
                     pt = np.array([[o["values"][c] for c in "xyz"]], float)
-                    pr = {"g, м/с²": 0.0}
+                    pr = {"g, m/s²": 0.0}
                     if nb.n and nb.masses().sum() > 0:
-                        pr = {"g, м/с²": float(np.linalg.norm(nb.acceleration_at(pt)[0] * K.AU / YR ** 2)),
-                              "прилив: растяжение, 1/с²": float(np.linalg.eigvalsh(nb.tidal_tensor_at(pt)[0] / YR ** 2)[-1])}
-                m[f"{oid}.g"] = pr["g, м/с²"]
-                m[f"{oid}.tide"] = pr.get("прилив: растяжение, 1/с²", 0.0)
+                        pr = {"g, m/s²": float(np.linalg.norm(nb.acceleration_at(pt)[0] * K.AU / YR ** 2)),
+                              "tide: stretching, 1/s²": float(np.linalg.eigvalsh(nb.tidal_tensor_at(pt)[0] / YR ** 2)[-1])}
+                m[f"{oid}.g"] = pr["g, m/s²"]
+                m[f"{oid}.tide"] = pr.get("tide: stretching, 1/s²", 0.0)
                 continue
             if oid not in keys:
                 for q in ("dist", "speed", "a", "e", "P"):
                     m[f"{oid}.{q}"] = nan
-                    notes[f"{oid}.{q}"] = "тела нет в расчёте (слилось с другим)"
+                    notes[f"{oid}.{q}"] = T("the body is not in the computation (merged with another)")
                 continue
             i = keys.index(oid)
             m[f"{oid}.speed"] = float(np.linalg.norm(V[i])) / KMS
@@ -1203,11 +1235,11 @@ class NewtonMode(Trails):
                 m[f"{oid}.dist"] = float(np.linalg.norm(X[i] - X[d]))
             else:
                 m[f"{oid}.dist"] = nan
-                notes[f"{oid}.dist"] = "нет другого массивного тела"
+                notes[f"{oid}.dist"] = T("no other massive body")
             if d is None:
                 for q in ("a", "e", "P"):
                     m[f"{oid}.{q}"] = nan
-                    notes[f"{oid}.{q}"] = "нет другого массивного тела: орбиты нет"
+                    notes[f"{oid}.{q}"] = T("no other massive body: no orbit")
                 continue
             r, v = X[i] - X[d], V[i] - V[d]
             mu = G_AU * (M[i] + M[d])
@@ -1220,7 +1252,8 @@ class NewtonMode(Trails):
                 m[f"{oid}.a"], m[f"{oid}.P"] = a, 2.0 * math.pi * math.sqrt(a ** 3 / mu)
             else:
                 m[f"{oid}.a"] = m[f"{oid}.P"] = nan
-                notes[f"{oid}.a"] = notes[f"{oid}.P"] = "не связано с самым массивным телом (парабола или гипербола)"
+                notes[f"{oid}.a"] = notes[f"{oid}.P"] = T("not bound to the most massive body (a parabola or a "
+                                                          "hyperbola)")
         return m, notes
 
     def checks(self):
@@ -1248,52 +1281,56 @@ class NewtonMode(Trails):
             self.ref["err"] += abs(comp.energy() - E)
             self.ref["n_comp"] += every
             size = float(np.max(np.abs(nb.positions()))) or 1.0
-            self.sim.running_check("companion", "Численная ошибка положений (против расчёта с вдвое меньшим η)",
+            self.sim.running_check("companion", T("Numerical error of the positions (against a run with half the η)"),
                                    dx / size, None, tol=0.0, info=True,
-                                   note=f"интервал с t = {self.mark['t_out'] * YR:.6g} с пересчитан с параметром точности "
-                                        f"η = {nb.eta / 2:g} вместо {nb.eta:g}: наибольшее различие положений {dx:.3g} "
-                                        f"а.е., доля размера системы — оценка ошибки расчёта на интервале (шаг ∝ √η: "
-                                        f"с η/2 он в √2 раз короче, а ошибка схемы 4-го порядка — примерно в 4 раза "
-                                        f"меньше, измерено 4,05–4,11)")
+                                   note=T("the interval from t = {t:.6g} s recomputed with the accuracy parameter "
+                                          "η = {eta2} instead of {eta}: the largest difference of the positions "
+                                          "{dx:.3g} au, as a fraction of the system's size, estimates the "
+                                          "computation's error on the interval (the step ∝ √η: with η/2 it is √2 "
+                                          "times shorter, and the error of the 4th-order scheme about 4 times smaller, "
+                                          "measured {lo}–{hi})", t=self.mark["t_out"] * YR, eta2=nb.eta / 2,
+                                          eta=nb.eta, dx=dx, lo=4.05, hi=4.11))
         if self.n_checks % every == 0:
             self.mark = nb.state_dict()
         u = 2.0 ** -53
-        self.sim.running_check("momentum", "Импульс системы (сохраняется: силы попарно противоположны)",
+        self.sim.running_check("momentum", T("Momentum of the system (conserved: the forces are pairwise opposite)"),
                                float(np.linalg.norm(P - self.ref["P"])) / pscale, 0.0, tol=1e-12,
                                ok=float(np.linalg.norm(P - self.ref["P"])) <= 1e-12 * pscale,
-                               note="изменение |P| с последнего изменения сцены, относительно Σ|m v|; допуск 10⁻¹² "
-                                    "(округление сумм сил)")
+                               note=T("the change of |P| since the scene's last change, relative to Σ|m v|; tolerance "
+                                      "10⁻¹² (rounding of the sums of forces)"))
         dE = abs(E - self.ref["E"])
         # the companion's measured energy error per interval, scaled to all the intervals since the scene's change
         err = self.ref["err"] * max(self.ref["n"], 1) / max(self.ref["n_comp"], 1)
         tolE = 3.0 * err + 1e3 * u * abs(E)
         S = self.ref["S"] or 1.0  # S = 0: E is exactly 0 and stays so; the change is shown absolute
-        self.sim.running_check("energy", "Энергия системы (сохраняется)", (E - self.ref["E"]) / S, 0.0,
+        self.sim.running_check("energy", T("Energy of the system (conserved)"), (E - self.ref["E"]) / S, 0.0,
                                tol=tolE / S, ok=dE <= tolE or self.ref["err"] == 0.0,
-                               note="изменение энергии с последнего изменения сцены относительно Σ½mv² + Σ G mᵢmⱼ/rᵢⱼ "
-                                    "(в тот момент; полная энергия может быть нулевой); допуск — трижды ошибка "
-                                    "энергии, измеренная компаньоном (тот же интервал с η/2: его ошибка вчетверо "
-                                    "меньше, так что ошибка счёта не больше 4/3 их разности; "
-                                    + ("каждый интервал" if every == 1 else f"каждый {every}-й интервал, отнесённая "
-                                       "ко всем пройденным") + ")"
-                                    + (" (компаньон ещё не считался)" if self.ref["err"] == 0.0 else ""))
+                               note=T("the change of the energy since the scene's last change relative to Σ½mv² + "
+                                      "Σ G mᵢmⱼ/rᵢⱼ (at that moment; the total energy may be zero); tolerance: three "
+                                      "times the energy error measured by the companion (the same interval with η/2: "
+                                      "its error is four times smaller, so the computation's error is at most 4/3 of "
+                                      "their difference; {every}){more}",
+                                      every=T("every interval") if every == 1 else T(
+                                          "every {k}th interval, scaled to all the intervals passed", k=every),
+                                      more=T(" (the companion has not run yet)") if self.ref["err"] == 0.0 else ""))
         dL = float(np.linalg.norm(L - self.ref["L"]))
         X, V, m = nb.positions(), nb.velocities(), nb.masses()
         Ls = float(np.sum(m * np.linalg.norm(np.cross(X, V), axis=1))) or 1.0  # sum |r x m v|: the system's total L may be 0
-        self.sim.running_check("angular", "Момент импульса системы (сохраняется)", dL / Ls, 0.0, tol=0.0, info=True,
-                               note="изменение L с последнего изменения сцены относительно Σ|r × m v| (полный момент "
-                                    "может быть нулевым); схема Эрмита сохраняет момент не точно, а с ошибкой порядка "
-                                    "схемы, как энергию")
+        self.sim.running_check("angular", T("Angular momentum of the system (conserved)"), dL / Ls, 0.0, tol=0.0,
+                               info=True,
+                               note=T("the change of L since the scene's last change relative to Σ|r × m v| (the total "
+                                      "angular momentum may be zero); the Hermite scheme conserves it not exactly but "
+                                      "to the order of the scheme, like the energy"))
 
     def header(self):
-        return {"title": "Плейграунд: ньютоновские N тел",
-                "approximations": ["ньютоновская гравитация точечных масс"],
-                "scene3d": {"box": self._box(), "units": "а.е.", "objects": [], "layers": [],
+        return {"title": T("Playground: Newtonian N bodies"),
+                "approximations": [T("Newtonian gravity of point masses")],
+                "scene3d": {"box": self._box(), "units": T("au"), "objects": [], "layers": [],
                             "planes": {"max": 0, "center": [0, 0, 0], "defaults": {}}, "up": [0.0, 0.0, 1.0],
-                            "views": [["iso", "Изо", "Изометрия (F)", [0.5, -0.7, 0.5]],
-                                      ["pole", "Сверху", "Вдоль оси z: плоскость xy", [0.0, 0.0, 1.0]],
-                                      ["side", "Сбоку", "Плоскость xy с ребра", [0.0, -1.0, 0.0]]]},
-                "units": {"t": "с", "x": "а.е."}}
+                            "views": [["iso", T("Iso"), T("Isometric (F)"), [0.5, -0.7, 0.5]],
+                                      ["pole", T("Top"), T("Along the z axis: the xy plane"), [0.0, 0.0, 1.0]],
+                                      ["side", T("Side"), T("The xy plane edge-on"), [0.0, -1.0, 0.0]]]},
+                "units": {"t": T("s"), "x": T("au")}}
 
     def after_header(self):
         pass
@@ -1303,54 +1340,59 @@ class NewtonMode(Trails):
 
 
 # --- bodies, light and clocks around a Kerr-Newman black hole -----------------------------------------------------
-KBODY = Schema([_p("r", "Расстояние r, G M/c²", "float", 10.0, min=1.0, max=1000.0, log=True,
-                   help="Бойер–Линдквист; должно быть вне горизонта"),
-                _p("theta", "Полярный угол θ, °", "float", 90.0, min=1.0, max=179.0, help="90° — экватор"),
-                _p("phi", "Азимут φ, °", "float", 0.0, min=0.0, max=360.0),
-                _p("vmode", "Скорость", "select", "circular", options=[
-                    ("circular", "круговая орбита в экваторе (по вращению)"),
-                    ("circular_retro", "круговая орбита в экваторе (против вращения)"),
-                    ("zamo", "задать скорость, измеренную наблюдателем без момента (ZAMO), в долях c")]),
-                _p("v_r", "v_r / c (наружу)", "float", 0.0, min=-0.99, max=0.99, show_if={"vmode": ["zamo"]}),
-                _p("v_theta", "v_θ / c (к южному полюсу)", "float", 0.0, min=-0.99, max=0.99,
+KBODY = Schema([_p("r", T("Distance r, G M/c²"), "float", 10.0, min=1.0, max=1000.0, log=True,
+                   help=T("Boyer–Lindquist; must be outside the horizon")),
+                _p("theta", T("Polar angle θ, °"), "float", 90.0, min=1.0, max=179.0, help=T("90° is the equator")),
+                _p("phi", T("Azimuth φ, °"), "float", 0.0, min=0.0, max=360.0),
+                _p("vmode", T("Velocity"), "select", "circular", options=[
+                    ("circular", T("circular orbit in the equator (prograde)")),
+                    ("circular_retro", T("circular orbit in the equator (retrograde)")),
+                    ("zamo", T("set the velocity measured by a zero-angular-momentum observer (ZAMO), in units of "
+                               "c"))]),
+                _p("v_r", T("v_r / c (outwards)"), "float", 0.0, min=-0.99, max=0.99, show_if={"vmode": ["zamo"]}),
+                _p("v_theta", T("v_θ / c (towards the south pole)"), "float", 0.0, min=-0.99, max=0.99,
                    show_if={"vmode": ["zamo"]}),
-                _p("v_phi", "v_φ / c (по вращению)", "float", 0.3, min=-0.99, max=0.99, show_if={"vmode": ["zamo"]}),
-                _p("color", "Цвет", "select", "#e9ecef", options=COLOR.options)])
+                _p("v_phi", T("v_φ / c (prograde)"), "float", 0.3, min=-0.99, max=0.99, show_if={"vmode": ["zamo"]}),
+                _p("color", T("Colour"), "select", "#e9ecef", options=COLOR.options)])
 # a drag (P16.2) moves the object in the drawing coordinates (x + i y = sqrt(r^2 + a^2) sin theta e^(i phi), z = r cos
 # theta, in G M/c^2): hidden parameters, turned into r, theta, phi; a throw sends the velocity in them per world second
-KXYZ = [_p(c, f"Положение в сцене: {c}, G M/c²", "float", 0.0, min=-1e4, max=1e4, hidden=True) for c in "xyz"]
-KTHROW = [_p(c, f"Бросок: {c[1:]}", "float", 0.0, min=-1e12, max=1e12, hidden=True, unit="(G M/c²)/с")
+KXYZ = [_p(c, T("Position in the scene: {c}, G M/c²", c=c), "float", 0.0, min=-1e4, max=1e4, hidden=True)
+        for c in "xyz"]
+KTHROW = [_p(c, T("Throw: {c}", c=c[1:]), "float", 0.0, min=-1e12, max=1e12, hidden=True, unit=T("(G M/c²)/s"))
           for c in ("tvx", "tvy", "tvz")]
 # the largest throw the player gives a body (review LB1-p02-ux X4): half the speed of light in the drawing coordinates,
 # 0.5 G M/c² per G M/c³ = 0.5 / T per world second (set by the world from the hole's mass; a brisk flick gives half of it);
 # near the hole the speed the local ZAMO measures is larger (1/alpha), and a throw at 0.99 c or more by it is refused
-KVMAX = _p("tv_max", "Наибольшая скорость броска", "float", 1.0, min=0.0, max=1e15, hidden=True, unit="(G M/c²)/с")
+KVMAX = _p("tv_max", T("Largest throw speed"), "float", 1.0, min=0.0, max=1e15, hidden=True, unit=T("(G M/c²)/s"))
 KBODY = Schema([*KBODY.params, *KXYZ, *KTHROW, KVMAX])
 THROW_C = 0.5  # the throw limit in units of c (drawing coordinates)
-KHOLE = Schema([_p("mass", "Масса M, M☉", "float", 10.0, min=0.1, max=1e10, log=True,
-                   help="Меняется в текущий момент как смена масштаба (G = c = M = 1): тела в единицах M остаются где "
-                        "были и с теми же скоростями, метры и секунды пересчитываются (тело на r = 6 M при M ×2 — вдвое "
-                        "дальше в километрах); собственное время тел и часы наблюдателей в секундах сохраняются"),
-                _p("spin", "Спин a/M", "float", 0.9, min=0.0, max=0.998,
-                   help="Меняется в текущий момент только как модель «что если» (у смены метрики под движущимися телами "
-                        "нет установленной динамики): каждое тело сохраняет положение (r, θ, φ) и скорость, измеренную "
-                        "местным наблюдателем без момента (ZAMO); E, L и постоянная Картера пересчитываются; мир "
-                        "помечается как модель"),
-                _p("charge", "Заряд Q/M (геометрические единицы)", "float", 0.0, min=0.0, max=0.99,
-                   help="Как спин: на ходу — модель «что если»; a² + Q² < 1, иначе нет горизонта")])
-KLIGHT = Schema([_p("r", "Расстояние r, G M/c²", "float", 15.0, min=1.0, max=1000.0, log=True),
-                 _p("theta", "Полярный угол θ, °", "float", 90.0, min=1.0, max=179.0),
-                 _p("phi", "Азимут φ, °", "float", 0.0, min=0.0, max=360.0),
-                 _p("psi", "Направление в плоскости r–φ, ° от «внутрь»", "float", 20.0, min=-180.0, max=180.0,
-                    help="0° — прямо к дыре; 90° — по вращению; измерено наблюдателем без момента (ZAMO)"),
-                 _p("elev", "Наклон к экватору, °", "float", 0.0, min=-89.0, max=89.0), *KXYZ])
-KOBS = Schema([_p("kind", "Наблюдатель", "select", "static", options=[
-                   ("static", "неподвижный (держится двигателем; только вне эргосферы)"),
-                   ("zamo", "без момента импульса (ZAMO: увлекается вращением)"),
-                   ("circular", "на круговой орбите в экваторе (свободно падает)")]),
-               _p("r", "Расстояние r, G M/c²", "float", 6.0, min=1.0, max=1000.0, log=True),
-               _p("theta", "Полярный угол θ, °", "float", 90.0, min=1.0, max=179.0),
-               _p("phi", "Азимут φ, °", "float", 45.0, min=0.0, max=360.0), *KXYZ])
+KHOLE = Schema([_p("mass", T("Mass M, M☉"), "float", 10.0, min=0.1, max=1e10, log=True,
+                   help=T("Changes at the current moment as a change of scale (G = c = M = 1): bodies in units of M "
+                          "stay where they were with the same velocities, metres and seconds are recomputed (a body at "
+                          "r = 6 M is twice as far in kilometres when M doubles); the bodies' proper times and the "
+                          "observers' clocks in seconds are kept")),
+                _p("spin", T("Spin a/M"), "float", 0.9, min=0.0, max=0.998,
+                   help=T("Changes at the current moment only as a “what if” model (a change of the metric under "
+                          "moving bodies has no established dynamics): every body keeps its position (r, θ, φ) and "
+                          "the velocity measured by the local zero-angular-momentum observer (ZAMO); E, L and Carter's "
+                          "constant are recomputed; the world is flagged as a model")),
+                _p("charge", T("Charge Q/M (geometric units)"), "float", 0.0, min=0.0, max=0.99,
+                   help=T("Like the spin: on the fly it is a “what if” model; a² + Q² < 1, otherwise there is no "
+                          "horizon"))])
+KLIGHT = Schema([_p("r", T("Distance r, G M/c²"), "float", 15.0, min=1.0, max=1000.0, log=True),
+                 _p("theta", T("Polar angle θ, °"), "float", 90.0, min=1.0, max=179.0),
+                 _p("phi", T("Azimuth φ, °"), "float", 0.0, min=0.0, max=360.0),
+                 _p("psi", T("Direction in the r–φ plane, ° from “inwards”"), "float", 20.0, min=-180.0, max=180.0,
+                    help=T("0° straight at the hole; 90° prograde; measured by a zero-angular-momentum observer "
+                           "(ZAMO)")),
+                 _p("elev", T("Inclination to the equator, °"), "float", 0.0, min=-89.0, max=89.0), *KXYZ])
+KOBS = Schema([_p("kind", T("Observer"), "select", "static", options=[
+                   ("static", T("static (held by an engine; only outside the ergosphere)")),
+                   ("zamo", T("zero angular momentum (ZAMO: dragged by the rotation)")),
+                   ("circular", T("on a circular orbit in the equator (in free fall)"))]),
+               _p("r", T("Distance r, G M/c²"), "float", 6.0, min=1.0, max=1000.0, log=True),
+               _p("theta", T("Polar angle θ, °"), "float", 90.0, min=1.0, max=179.0),
+               _p("phi", T("Azimuth φ, °"), "float", 45.0, min=0.0, max=360.0), *KXYZ])
 
 
 SUB0 = 0.05      # G M/c^3: the first sub-step of a Kerr world after a body is added (then measured)
@@ -1366,14 +1408,15 @@ class KerrMode(Trails):
         p = sim.params
         self.a, self.q = float(p["spin"]), float(p["charge"])
         if self.a ** 2 + self.q ** 2 >= 1.0:
-            raise ValueError("a² + Q² должно быть меньше 1: иначе у дыры нет горизонта (голая сингулярность)")
+            raise Refusal(T("a² + Q² must be below 1: otherwise the hole has no horizon (a naked singularity)"),
+                          hint=T("a smaller spin or charge"))
         self.M = float(p["m_hole"])  # M_sun: the hole object's mass (P16.1), the world's parameter at the start
         self.gm = self.M * K.GM_SUN
         self.T = self.gm / K.C ** 3  # s per G M / c^3
         self.clk = Clock(self.T)     # the world's seconds <-> t in units of M (a change of M rescales the seconds)
         self.geo = KN.Geodesics(self.a, self.q, rtol=1e-10, t=0.0, capture_eps=1e-4, r_escape=2e3)
         self.hole_id = None          # the hole's object in the scene (always there: the world is the hole's)
-        self.model = []              # the «what if» changes of the metric made so far (flagged as a model)
+        self.model = []              # the "what if" changes of the metric made so far (flagged as a model)
         self.peri = {}               # key -> the last two periapsis passages (world seconds, as recorded; cleared when
         #                              the hole changes: review LB1-physics P10): the radial period
         self.default_speed = 10.0 * self.T  # 10 G M/c^3 of the world per second
@@ -1393,24 +1436,25 @@ class KerrMode(Trails):
         hole = Schema([q if q.id not in ("mass", "spin", "charge") else
                        Param(**{**q.__dict__, "default": float(p[{"mass": "m_hole"}.get(q.id, q.id)])})
                        for q in KHOLE.params])
-        return {"kn_hole": _otype("kn_hole", "Чёрная дыра Керра–Ньюмена", "body", hole, limit=1, color="#343a40",
-                                  help="Дыра этого мира (в начале координат): её масса меняется в текущий момент как "
-                                       "смена масштаба, спин и заряд — как модель «что если»; убрать её нельзя — мир "
-                                       "считается вокруг неё"),
-                "body": _otype("body", "Пробное тело", "particle", KBODY, color="#e9ecef",
+        return {"kn_hole": _otype("kn_hole", T("Kerr–Newman black hole"), "body", hole, limit=1, color="#343a40",
+                                  help=T("The hole of this world (at the origin): its mass changes at the current "
+                                         "moment as a change of scale, its spin and charge as a “what if” model; it "
+                                         "cannot be removed: the world is computed around it")),
+                "body": _otype("body", T("Test body"), "particle", KBODY, color="#e9ecef",
                                handles={"position": ["x", "y", "z"], "velocity": ["tvx", "tvy", "tvz"],
                                         "velocity_max": "tv_max"},
-                               help="Тело без собственного поля и заряда: движется по геодезической; свои часы. "
-                                    "Смена положения или скорости запускает его заново с текущего момента, смена "
-                                    "цвета — нет; брошенное мышью — со скоростью броска, измеренной наблюдателем без "
-                                    "момента (ZAMO)"),
-                "light": _otype("light", "Луч света", "light", KLIGHT, color="#ffd43b",
+                               help=T("A body without its own field or charge: it moves on a geodesic; it has its own "
+                                      "clock. A change of its position or velocity starts it afresh from the current "
+                                      "moment, a change of colour does not; one thrown with the mouse starts with the "
+                                      "throw's velocity as measured by a zero-angular-momentum observer (ZAMO)")),
+                "light": _otype("light", T("Light ray"), "light", KLIGHT, color="#ffd43b",
                                 handles={"position": ["x", "y", "z"]},
-                                help="Фотон, испущенный в момент добавления: изотропная геодезическая"),
-                "observer": _otype("observer", "Наблюдатель с часами", "observer", KOBS, limit=8, color="#4dabf7",
+                                help=T("A photon emitted at the moment it is added: a null geodesic")),
+                "observer": _otype("observer", T("Observer with a clock"), "observer", KOBS, limit=8, color="#4dabf7",
                                    handles={"position": ["x", "y", "z"]},
-                                   help="Часы наблюдателя против часов далёкого наблюдателя; на круговой орбите — "
-                                        "только не ближе ISCO (ближе орбита неустойчива)")}
+                                   help=T("The observer's clock against the clock of a distant observer; on a "
+                                          "circular orbit only not closer than the ISCO (closer the orbit is "
+                                          "unstable)"))}
 
     def t_m(self):
         return self.clk.geo(self.sim.t)
@@ -1437,7 +1481,8 @@ class KerrMode(Trails):
             if state:  # a file or a copy: its clock reading and place then (the reading in units of the state's M)
                 M0 = float(state.get("M", self.M))
                 if M0 != self.M:
-                    self.sim.carry_note(f"масса дыры {M0:.6g} → {self.M:.6g} M☉: показание часов в секундах сохранено")
+                    self.sim.carry_note(T("hole mass {m0:.6g} → {m1:.6g} M☉: the clock reading in seconds is kept",
+                                          m0=M0, m1=self.M))
                 self.obs[obj["id"]] = (self.t_m(), float(state["tau"]) * M0 / self.M, float(state["phi"]))
             else:
                 self.obs[obj["id"]] = (self.t_m(), 0.0, math.radians(v["phi"]))
@@ -1451,20 +1496,24 @@ class KerrMode(Trails):
                                key=obj["id"], tau=state.get("tau", 0.0), status=state.get("status", "active"),
                                K0=state.get("K0"), budget=state.get("budget", (0.0, 0.0)))
         elif r <= self.r_plus * (1.0 + 1e-6):
-            raise ValueError(f"r = {r:g} G M/c² — под горизонтом (r₊ = {self.r_plus:.5g})")
+            raise Refusal(T("r = {r} G M/c² is under the horizon (r₊ = {rp:.5g})", r=r, rp=self.r_plus),
+                          hint=T("place it farther from the hole"))
         elif obj["type"] == "body":
             if v["vmode"] in ("circular", "circular_retro"):
                 if abs(v["theta"] - 90.0) > 1e-9:
-                    raise ValueError("круговая орбита — только в экваторе (θ = 90°)")
+                    raise Refusal(T("a circular orbit lies only in the equator (θ = 90°)"),
+                                  hint=T("set θ = 90° or another velocity"))
                 co = KN.circular_orbit(r, self.a, self.q, v["vmode"] == "circular")
                 if not np.isfinite(co["dtau_dt"]):
-                    raise ValueError(f"на r = {r:g} G M/c² нет круговой орбиты для тела (внутри фотонной орбиты)")
+                    raise Refusal(T("at r = {r} G M/c² there is no circular orbit for a body (inside the photon "
+                                    "orbit)", r=r), hint=T("place it farther from the hole"))
                 z = KN.zamo(r, th, self.a, self.q)
                 vel = (0.0, 0.0, float((co["Omega"] - z["omega"]) * z["varpi"] / z["alpha"]))
             else:
                 vel = (float(v["v_r"]), float(v["v_theta"]), float(v["v_phi"]))
                 if vel[0] ** 2 + vel[1] ** 2 + vel[2] ** 2 >= 1.0:
-                    raise ValueError("скорость не меньше скорости света")
+                    raise Refusal(T("the speed is not below the speed of light"),
+                                  hint=T("make |v| / c below 1"))
             self.geo.add_body(r, th, ph, vel, key=obj["id"])
         else:
             psi, el = math.radians(v["psi"]), math.radians(v["elev"])
@@ -1486,16 +1535,16 @@ class KerrMode(Trails):
         M0 = float(st.get("M", self.M))
         if M0 != self.M:
             st["tau"] = float(st.get("tau", 0.0)) * M0 / self.M
-            self.sim.carry_note(f"масса дыры {M0:.6g} → {self.M:.6g} M☉: на прежнем месте в единицах M, собственное время в "
-                            f"секундах сохранено")
+            self.sim.carry_note(T("hole mass {m0:.6g} → {m1:.6g} M☉: at the same place in units of M, the proper "
+                                  "time in seconds kept", m0=M0, m1=self.M))
         chi0, q0 = float(st.get("chi", self.a)), float(st.get("q", self.q))
         if (chi0, q0) == (self.a, self.q):
             return st
         r0, th = float(st["r"]), float(st["theta"])
         eps = self.geo.capture_eps
         if st.get("status", "active") == "active" and not r0 > self.r_plus + eps:
-            self.sim.carry_note(f"было на r = {r0:.5g} G M/c², под горизонтом новой дыры (r₊ = {self.r_plus:.5g}): начато "
-                            f"заново из своих параметров", restarted=True)
+            self.sim.carry_note(T("was at r = {r:.5g} G M/c², under the new hole's horizon (r₊ = {rp:.5g}): started "
+                                  "afresh from its parameters", r=r0, rp=self.r_plus), restarted=True)
             return None
         r1 = max(r0, self.r_plus + eps) if st.get("status") == "captured" else r0
         hat = KN.zamo_frame_momentum(r0, th, chi0, q0, np.asarray(st["p"], float))
@@ -1504,9 +1553,9 @@ class KerrMode(Trails):
         st.update(r=r1, p=KN.momentum_from_frame(r1, th, self.a, self.q, np.array([e, *sp])).tolist(),
                   budget=(0.0, 0.0))
         st.pop("K0", None)
-        self.sim.carry_note(f"в метрике этой дыры (a {chi0:.4g} → {self.a:.4g}, Q {q0:.4g} → {self.q:.4g}) начато с прежнего "
-                        f"места (r, θ, φ) и с импульсом, который измерял местный наблюдатель без момента (ZAMO); E, L и "
-                        f"постоянная Картера — новые")
+        self.sim.carry_note(T("in this hole's metric (a {a0:.4g} → {a1:.4g}, Q {q0:.4g} → {q1:.4g}) started from the "
+                              "same place (r, θ, φ) with the momentum its local zero-angular-momentum observer (ZAMO) "
+                              "measured; E, L and Carter's constant are new", a0=chi0, a1=self.a, q0=q0, q1=self.q))
         return st
 
     def _xyz_from_bl(self, obj):
@@ -1522,8 +1571,9 @@ class KerrMode(Trails):
         r, th, ph = (float(np.asarray(u)) for u in KN.from_cartesian(float(v["x"]), float(v["y"]), float(v["z"]),
                                                                        self.a))
         if not r > self.r_plus * (1.0 + 1e-6):
-            raise Refusal(f"«{obj['label']}»: точка ({_fmt([v['x'], v['y'], v['z']])}) G M/c² — под горизонтом "
-                          f"(r₊ = {self.r_plus:.4g})", hint="перетащите дальше от дыры")
+            raise Refusal(T("“{label}”: the point {p} is under the horizon (r₊ = {rp:.4g})", label=obj["label"],
+                            p=_pt([v["x"], v["y"], v["z"]], T("G M/c²")), rp=self.r_plus),
+                          hint=T("drag it farther from the hole"))
         th = 90.0 if v.get("vmode", v.get("kind")) in ("circular", "circular_retro") else min(max(math.degrees(th), 1.0), 179.0)
         obj["values"] = {**v, "r": min(max(r, 1.0), 1000.0), "theta": th, "phi": math.degrees(ph) % 360.0}
         self._xyz_from_bl(obj)
@@ -1547,8 +1597,9 @@ class KerrMode(Trails):
         vz = np.array([math.sqrt(float(z["Sigma"]) / float(z["Delta"])) * dr / al, math.sqrt(float(z["Sigma"])) * dth / al,
                        float(z["varpi"]) * (dph - float(z["omega"])) / al])
         if not float(np.linalg.norm(vz)) < 0.99:
-            raise Refusal(f"«{obj['label']}»: скорость броска, измеренная местным наблюдателем, {float(np.linalg.norm(vz)):.3g} c "
-                          f"— не меньше 0,99 c", hint="бросьте медленнее или уменьшите масштаб броска")
+            raise Refusal(T("“{label}”: the throw's speed measured by the local observer, {v:.3g} c, is not below "
+                            "{vmax} c", label=obj["label"], v=float(np.linalg.norm(vz)), vmax=0.99),
+                          hint=T("throw slower or reduce the throw scale"))
         return vz
 
     def place(self, kind, values):
@@ -1561,8 +1612,8 @@ class KerrMode(Trails):
             return values
         r, th, ph = (float(np.asarray(u)) for u in KN.from_cartesian(*[float(c) for c in pos[:3]], self.a))
         if not r > self.r_plus * (1.0 + 1e-6):
-            raise Refusal(f"точка ({_fmt(pos[:3])}) G M/c² — под горизонтом (r₊ = {self.r_plus:.4g})",
-                          hint="щёлкните дальше от дыры")
+            raise Refusal(T("the point {p} is under the horizon (r₊ = {rp:.4g})", p=_pt(pos[:3], T("G M/c²")),
+                            rp=self.r_plus), hint=T("click farther from the hole"))
         values.update(r=min(max(r, 1.0), 1000.0), theta=min(max(math.degrees(th), 1.0), 179.0),
                       phi=math.degrees(ph) % 360.0)
         if kind in ("body", "observer") and values.get("vmode", values.get("kind", "circular")) in (
@@ -1571,19 +1622,21 @@ class KerrMode(Trails):
         return values
 
     def palette_state(self):
-        return {"kn_hole": "дыра в этом мире одна и уже в сцене: её масса, спин и заряд — в её инспекторе"} \
+        return {"kn_hole": T("this world has one hole and it is in the scene: its mass, spin and charge are in its "
+                             "inspector")} \
             if self.hole_id is not None else {}
 
     def can_remove(self, obj):
         if obj["type"] == "kn_hole":
-            return "мир считается вокруг этой дыры (другая дыра — новый мир)"
+            return T("the world is computed around this hole (another hole is a new world)")
         return None
 
-    # --- the hole (P16.1): its mass a change of units, its spin and charge a declared «what if» -----------------------
+    # --- the hole (P16.1): its mass a change of units, its spin and charge a declared "what if" -----------------------
     def init_hole(self, M, a, q):
         """The hole a world starts with (its scene's hole object), before any body is placed in its metric."""
         if a * a + q * q >= 1.0:
-            raise ValueError("a² + Q² должно быть меньше 1: иначе у дыры нет горизонта (голая сингулярность)")
+            raise Refusal(T("a² + Q² must be below 1: otherwise the hole has no horizon (a naked singularity)"),
+                          hint=T("a smaller spin or charge"))
         self.a, self.q, self.M = float(a), float(q), float(M)
         self.geo = KN.Geodesics(self.a, self.q, rtol=1e-10, t=self.geo.t, capture_eps=1e-4, r_escape=2e3)
         self.r_plus, self.r_isco = KN.horizons(self.a, self.q)[0], KN.isco(self.a, self.q, True)
@@ -1598,7 +1651,7 @@ class KerrMode(Trails):
         of units — every body keeps its place and velocity in units of M, the world's seconds per unit of M change (the
         geometric clock goes on: ``Clock``), proper times and observers' readings in seconds are kept, and lengths in
         metres scale with M. Spin and charge: no established dynamics changes a metric under moving bodies; offered as a
-        model «what if», flagged: each body keeps its Boyer-Lindquist place (r, theta, phi), its proper time and the
+        model "what if", flagged: each body keeps its Boyer-Lindquist place (r, theta, phi), its proper time and the
         3-velocity its local ZAMO measures (a ray: its direction), and gets the E, L and Carter's K of that in the new
         metric (their drift accounting restarts); refused when a body, a ray or an observer would be inside the new
         capture radius, a static observer inside the new ergosurface or a circular one inside the new ISCO. Returns the
@@ -1606,14 +1659,14 @@ class KerrMode(Trails):
         v = obj["values"]
         M, a, q = float(v["mass"]), float(v["spin"]), float(v["charge"])
         if a * a + q * q >= 1.0:
-            raise Refusal(f"a² + Q² = {a * a + q * q:.4g} — не меньше 1: у дыры не было бы горизонта (голая "
-                          f"сингулярность)", hint="спин или заряд меньше")
+            raise Refusal(T("a² + Q² = {s:.4g} is not below 1: the hole would have no horizon (a naked singularity)",
+                            s=a * a + q * q), hint=T("a smaller spin or charge"))
         texts = []
         if (a, q) != (self.a, self.q):
             texts.append(self._what_if_metric(a, q))
         if M != self.M:
             texts.append(self._rescale_mass(M))
-        return "; ".join(t for t in texts if t) or None
+        return join([t for t in texts if t]) or None
 
     def _shown(self):
         """(keys, drawing positions, velocities per world second) of the moving bodies now (the trails' kinks)."""
@@ -1624,7 +1677,7 @@ class KerrMode(Trails):
         return tuple(g.keys[i] for i in rows), X, self._vel(rows) / self.T
 
     def _what_if_metric(self, a, q):
-        """The declared «what if» of the hole's spin and charge changed now (``theories.alternatives.kn_change_whatif``,
+        """The declared "what if" of the hole's spin and charge changed now (``theories.alternatives.kn_change_whatif``,
         review LB1-physics P5): the engine's rule carries the bodies over (Boyer-Lindquist place, proper time and
         ZAMO-measured momentum kept; a photon's ZAMO frequency kept; no speed limit below c, review P6), or refuses with
         the body named; the observers keep their place and clock (refused where the new metric has no such observer).
@@ -1637,7 +1690,8 @@ class KerrMode(Trails):
             out = WHATIF.carry(g, a, q)
         except WHATIF.Refused as e:
             lab = objs[e.key]["label"] if e.key in objs else e.key
-            raise Refusal((f"«{lab}»: " if e.key is not None else "") + str(e), hint=e.hint) from e
+            raise Refusal(T("“{label}”: {why}", label=lab, why=text_of(e)) if e.key is not None else text_of(e),
+                          hint=e.hint) from e
         new, r_plus = out["geodesics"], out["r_plus"]
         tm = self.t_m()
         anchors = {}
@@ -1645,7 +1699,7 @@ class KerrMode(Trails):
             ov = objs[oid]["values"]
             why = WHATIF.observer_refusal(ov["kind"], float(ov["r"]), math.radians(ov["theta"]), a, q)
             if why is not None:
-                raise Refusal(f"наблюдатель «{objs[oid]['label']}»: {why[0]}", hint=why[1])
+                raise Refusal(T("observer “{label}”: {why}", label=objs[oid]["label"], why=why[0]), hint=why[1])
             tau_o, ph_o = self._obs_now(oid, ov, tm)
             anchors[oid] = (tm, tau_o, ph_o)
         pre = self._shown()
@@ -1665,23 +1719,26 @@ class KerrMode(Trails):
             self.after_header()
         if not moving:
             return None
-        self.model.append(f"a/M {a0:.4g} → {a:.4g}, Q/M {q0:.4g} → {q:.4g} при t = {self.sim.t:.6g} с")
+        self.model.append(T("a/M {a0:.4g} → {a1:.4g}, Q/M {q0:.4g} → {q1:.4g} at t = {t:.6g} s", a0=a0, a1=a, q0=q0,
+                            q1=q, t=self.sim.t))
         self.sim.emit({"type": "approx", "t": self.sim.t, "approximations": self._approx()})
         nums = ""
         if out["bodies"]:
             bmax = max(out["bodies"], key=lambda b: abs(b["E_new"] - b["E"]) / max(abs(b["E"]), 1e-300))
             lab = objs[bmax["key"]]["label"] if bmax["key"] in objs else bmax["key"]
             gmax = max(out["bodies"], key=lambda b: b["gamma"] if not b["photon"] else 0.0)
-            nums = (f"; энергия E сильнее всего изменилась у «{lab}»: {bmax['E']:.6g} → {bmax['E_new']:.6g}; длина "
-                    f"окружности через тела при тех же r, θ изменилась до {100 * out['max_dvarpi']:.3g} %")
-            if not gmax["photon"]:
-                nums += f"; наибольший γ по ZAMO {gmax['gamma']:.4g} сохранён (ограничения скорости нет)"
-        return (f"МОДЕЛЬ «что если» (lfphys.theories.alternatives.kn_change_whatif): спин {a0:.4g} → {a:.4g}, заряд "
-                f"{q0:.4g} → {q:.4g} — у смены метрики под движущимися телами нет установленной динамики; каждое тело "
-                f"сохранило координаты Бойера–Линдквиста (r, θ, φ) — в другой метрике это не то же физическое место, "
-                f"правило зависит от координат —, собственное время и импульс, измеренный местным наблюдателем без "
-                f"момента (ZAMO; свет — направление и частоту); E, L и постоянная Картера пересчитаны в новой метрике, "
-                f"их проверка — заново{nums}; горизонт r₊ = {r_plus:.5g} G M/c², ISCO {self.r_isco:.5g}")
+            nums = T("; the energy E changed most for “{label}”: {e0:.6g} → {e1:.6g}; the circumference through the "
+                     "bodies at the same r, θ changed by up to {pct:.3g} %{gamma}", label=lab, e0=bmax["E"],
+                     e1=bmax["E_new"], pct=100 * out["max_dvarpi"],
+                     gamma="" if gmax["photon"] else T("; the largest γ by the ZAMO, {g:.4g}, is kept (no speed "
+                                                       "limit)", g=gmax["gamma"]))
+        return T("“WHAT IF” MODEL (lfphys.theories.alternatives.kn_change_whatif): spin {a0:.4g} → {a1:.4g}, charge "
+                 "{q0:.4g} → {q1:.4g} — a change of the metric under moving bodies has no established dynamics; every "
+                 "body kept its Boyer–Lindquist coordinates (r, θ, φ) — in another metric this is not the same physical "
+                 "place, the rule depends on the coordinates —, its proper time and the momentum measured by its local "
+                 "zero-angular-momentum observer (ZAMO; light: its direction and frequency); E, L and Carter's constant "
+                 "are recomputed in the new metric, their check starts anew{nums}; horizon r₊ = {rp:.5g} G M/c², ISCO "
+                 "{risco:.5g}", a0=a0, a1=a, q0=q0, q1=q, nums=nums, rp=r_plus, risco=self.r_isco)
 
     def _rescale_mass(self, M):
         T0, T1 = self.T, M * K.GM_SUN / K.C ** 3
@@ -1704,18 +1761,20 @@ class KerrMode(Trails):
         self.M, self.gm, self.T = M, M * K.GM_SUN, T1
         self.sim.speed_range = self.speed_range = (1e-3 * T1, 1e5 * T1)
         self.trail_kink(self.sim.t, pre, self._shown())
-        return (f"масса дыры {M0:.6g} → {M:.6g} M☉ — смена масштаба (G = c = M = 1): тела в единицах M на прежних местах и "
-                f"с прежними скоростями; G M/c² = {km0:.6g} → {self.gm / K.C ** 2 / 1e3:.6g} км, G M/c³ = "
-                f"{T0 * 1e6:.6g} → {T1 * 1e6:.6g} мкс; собственное время тел и часы наблюдателей в секундах сохранены; "
-                f"движение в секундах мира теперь в {T1 / T0:.4g} раза медленнее (скорость показа — прежняя)")
+        return T("hole mass {m0:.6g} → {m1:.6g} M☉: a change of scale (G = c = M = 1): bodies in units of M at the "
+                 "same places with the same velocities; G M/c² = {l0:.6g} → {l1:.6g} km, G M/c³ = {t0:.6g} → {t1:.6g} "
+                 "µs; the bodies' proper times and the observers' clocks in seconds are kept; motion in the world's "
+                 "seconds is now {f:.4g} times slower (the playback speed is unchanged)", m0=M0, m1=M, l0=km0,
+                 l1=self.gm / K.C ** 2 / 1e3, t0=T0 * 1e6, t1=T1 * 1e6, f=T1 / T0)
 
     def _approx(self):
-        out = ["пробные тела и свет: без собственного поля и заряда (дыра — неизменный фон)"]
+        out = [T("test bodies and light: without their own field or charge (the hole is a fixed background)")]
         if self.model:
-            out.append("МОДЕЛЬ «что если» (не установленная физика; lfphys.theories.alternatives.kn_change_whatif): "
-                       "метрика дыры менялась под движущимися телами — " + "; ".join(self.model)
-                       + "; тела сохраняли координаты Бойера–Линдквиста (правило зависит от координат), собственное "
-                         "время и импульс, измеренный ZAMO (свет — направление и частоту)")
+            out.append(T("“WHAT IF” MODEL (not established physics; lfphys.theories.alternatives.kn_change_whatif): the "
+                         "hole's metric was changed under moving bodies — {changes}; the bodies kept their "
+                         "Boyer–Lindquist coordinates (the rule depends on the coordinates), their proper time and the "
+                         "momentum measured by the ZAMO (light: its direction and frequency)",
+                         changes=join(self.model)))
         return out
 
     def _vel(self, rows):
@@ -1754,16 +1813,23 @@ class KerrMode(Trails):
     def _observer_check(self, v):
         r, th = float(v["r"]), math.radians(v["theta"])
         if r <= self.r_plus * (1.0 + 1e-6):
-            raise ValueError("наблюдатель под горизонтом")
+            raise Refusal(T("the observer is under the horizon"), hint=T("place it farther from the hole"))
         if v["kind"] == "static" and not np.isfinite(KN.static_clock_rate(r, th, self.a, self.q)):
-            raise ValueError("внутри эргосферы неподвижным быть нельзя: всё увлекается вращением дыры")
+            raise Refusal(T("nothing can be static inside the ergosphere: everything is dragged by the hole's "
+                            "rotation"), hint=T("place it farther from the hole or choose another observer"))
         if v["kind"] == "circular":
             if abs(v["theta"] - 90.0) > 1e-9:
-                raise ValueError("круговая орбита — только в экваторе (θ = 90°)")
+                raise Refusal(T("a circular orbit lies only in the equator (θ = 90°)"),
+                              hint=T("set θ = 90° or another observer"))
             if r < self.r_isco:  # review B6-G19: not integrated, it would stay on an unstable orbit for ever
-                raise ValueError(f"внутри ISCO (r < {self.r_isco:.5g} G M/c²) круговая орбита неустойчива: свободно "
-                                 "падающий наблюдатель на ней не удержится (пробное тело там можно запустить и "
-                                 "посмотреть, как оно уходит с неё)")
+                raise Refusal(T("inside the ISCO (r < {r:.5g} G M/c²) a circular orbit is unstable: a freely falling "
+                                "observer cannot stay on it (a test body can be launched there to watch it leave the "
+                                "orbit)", r=self.r_isco), hint=T("place it farther from the hole"))
+
+    def _name(self, k):
+        """An object's label by its key (the key itself when it is gone)."""
+        o = self.sim.objects.get(k)
+        return o["label"] if o else k
 
     def _rate(self, v):
         """dtau/dt of an observer (constant: each kind is stationary)."""
@@ -1872,13 +1938,15 @@ class KerrMode(Trails):
         for e in events:
             lab = objs[e["key"]]["label"] if e["key"] in objs else e["key"]
             if e["kind"] == "captured":
-                extra = f"; по своим часам — τ = {e['tau_horizon']:.6g} G M/c³" if "tau_horizon" in e else ""
+                extra = (T("; by its own clock τ = {tau:.6g} G M/c³", tau=e["tau_horizon"]) if "tau_horizon" in e
+                         else "")
                 self.sim.emit({"type": "event", "kind": "captured", "t": self.clk.sec(e["t"]),
-                               "text": f"«{lab}» пересёк горизонт: для далёкого наблюдателя — никогда, движение "
-                                       f"остановлено у r₊ + 10⁻⁴{extra}"})
+                               "text": T("“{label}” crossed the horizon: for a distant observer never; its motion is "
+                                         "stopped at r₊ + 10⁻⁴{extra}", label=lab, extra=extra)})
             elif e["kind"] == "escaped":
                 self.sim.emit({"type": "event", "kind": "escaped", "t": self.clk.sec(e["t"]),
-                               "text": f"«{lab}» ушёл на r = {e['r']:.4g} G M/c²: дальше не прослеживается"})
+                               "text": T("“{label}” went off to r = {r:.4g} G M/c²: not followed further",
+                                         label=lab, r=e["r"])})
 
     def max_step(self):
         """A few sub-steps per call: the runner keeps its frame budget."""
@@ -1922,12 +1990,12 @@ class KerrMode(Trails):
         bl = g.bl() if keys else None
         for i, k in enumerate(keys):
             now[k] = {"r, G M/c²": float(bl[i, 0]), "θ, °": math.degrees(float(bl[i, 1])),
-                      "состояние": {"active": "движется", "captured": "у горизонта (захвачено)",
-                                    "escaped": "ушло далеко"}[st[i]],
-                      "E (на единицу массы)": float(c["E"][i]), "L, G M/c": float(c["L"][i]),
-                      "K (постоянная Картера)": float(c["K"][i])}
+                      "state": {"active": T("moving"), "captured": T("at the horizon (captured)"),
+                                "escaped": T("gone far away")}[st[i]],
+                      "E (per unit mass)": float(c["E"][i]), "L, G M/c": float(c["L"][i]),
+                      "K (Carter's constant)": float(c["K"][i])}
             if not g.is_photon()[i]:
-                now[k]["собственное время τ, с"] = float(tau[i]) * self.T
+                now[k]["proper time τ, s"] = float(tau[i]) * self.T
         tm = self.t_m()
         for o in objs.values():
             if o["type"] != "observer":
@@ -1935,8 +2003,8 @@ class KerrMode(Trails):
             v = o["values"]
             rate = self._rate(v)
             reading = self._obs_now(o["id"], v, tm)[0]
-            probes[o["id"]] = {"часы наблюдателя τ, с": reading * self.T, "часы далёкого t, с": self.sim.t,
-                               "ход dτ/dt": rate}
+            probes[o["id"]] = {"observer's clock τ, s": reading * self.T, "distant clock t, s": self.sim.t,
+                               "clock rate dτ/dt": rate}
             ids.append(o["id"])
             xo = self._obs_xyz(o["id"], v, tm)[None]
             X = np.vstack([X, xo]) if len(X) else xo
@@ -1969,35 +2037,38 @@ class KerrMode(Trails):
 
     # --- measurables (P16.3) -----------------------------------------------------------------------------------------
     def measurables(self):
-        out = [{"id": "dK", "label": "Наибольший уход постоянной Картера K у тел (доля K)", "unit": "", "of": None,
-                "group": "Сохранение"},
-               {"id": "dmu2", "label": "Наибольшее отклонение массовой оболочки p·p = −μ²", "unit": "", "of": None,
-                "group": "Сохранение"}]
+        cons, bodies, orbits, clocks = T("Conservation"), T("Bodies"), T("Orbits"), T("Clocks")
+        out = [{"id": "dK", "label": T("Largest drift of Carter's constant K of the bodies (fraction of K)"), "unit": "",
+                "of": None, "group": cons},
+               {"id": "dmu2", "label": T("Largest deviation from the mass shell p·p = −μ²"), "unit": "", "of": None,
+                "group": cons}]
         for o in self.sim.objects.values():
             oid, lab, t = o["id"], o["label"], o["type"]
             if t in ("body", "light"):
-                out += [{"id": f"{oid}.r", "label": f"«{lab}»: расстояние до дыры r (Бойер–Линдквист)", "unit": "G M/c²",
-                         "of": oid, "group": "Тела"},
-                        {"id": f"{oid}.r_km", "label": f"«{lab}»: расстояние до дыры r", "unit": "км", "of": oid,
-                         "group": "Тела"}]
+                out += [{"id": f"{oid}.r", "label": T("“{label}”: distance to the hole r (Boyer–Lindquist)", label=lab),
+                         "unit": T("G M/c²"), "of": oid, "group": bodies},
+                        {"id": f"{oid}.r_km", "label": T("“{label}”: distance to the hole r", label=lab),
+                         "unit": T("km"), "of": oid, "group": bodies}]
             if t == "body":
-                out += [{"id": f"{oid}.speed", "label": f"«{lab}»: скорость, измеренная местным наблюдателем (ZAMO)",
-                         "unit": "доля c", "of": oid, "group": "Тела"},
-                        {"id": f"{oid}.E", "label": f"«{lab}»: энергия E на единицу массы", "unit": "", "of": oid,
-                         "group": "Сохранение"},
-                        {"id": f"{oid}.L", "label": f"«{lab}»: момент импульса L на единицу массы", "unit": "G M/c",
-                         "of": oid, "group": "Сохранение"},
-                        {"id": f"{oid}.a", "label": f"«{lab}»: полуось (r_p + r_a)/2 по точкам поворота", "unit": "G M/c²",
-                         "of": oid, "group": "Орбиты"},
-                        {"id": f"{oid}.e", "label": f"«{lab}»: эксцентриситет (r_a − r_p)/(r_a + r_p)", "unit": "",
-                         "of": oid, "group": "Орбиты"},
-                        {"id": f"{oid}.Tr", "label": f"«{lab}»: радиальный период (между перицентрами, измерен)",
-                         "unit": "с", "of": oid, "group": "Орбиты"}]
+                out += [{"id": f"{oid}.speed", "label": T("“{label}”: speed measured by the local observer (ZAMO)",
+                                                          label=lab),
+                         "unit": T("fraction of c"), "of": oid, "group": bodies},
+                        {"id": f"{oid}.E", "label": T("“{label}”: energy E per unit mass", label=lab), "unit": "",
+                         "of": oid, "group": cons},
+                        {"id": f"{oid}.L", "label": T("“{label}”: angular momentum L per unit mass", label=lab),
+                         "unit": "G M/c", "of": oid, "group": cons},
+                        {"id": f"{oid}.a", "label": T("“{label}”: semi-axis (r_p + r_a)/2 from the turning points",
+                                                      label=lab), "unit": T("G M/c²"), "of": oid, "group": orbits},
+                        {"id": f"{oid}.e", "label": T("“{label}”: eccentricity (r_a − r_p)/(r_a + r_p)", label=lab),
+                         "unit": "", "of": oid, "group": orbits},
+                        {"id": f"{oid}.Tr", "label": T("“{label}”: radial period (between periapsis passages, "
+                                                       "measured)", label=lab),
+                         "unit": T("s"), "of": oid, "group": orbits}]
             elif t == "observer":
-                out += [{"id": f"{oid}.tau", "label": f"«{lab}»: показание часов", "unit": "с", "of": oid,
-                         "group": "Часы"},
-                        {"id": f"{oid}.rate", "label": f"«{lab}»: ход часов dτ/dt", "unit": "", "of": oid,
-                         "group": "Часы"}]
+                out += [{"id": f"{oid}.tau", "label": T("“{label}”: clock reading", label=lab), "unit": T("s"),
+                         "of": oid, "group": clocks},
+                        {"id": f"{oid}.rate", "label": T("“{label}”: clock rate dτ/dt", label=lab), "unit": "",
+                         "of": oid, "group": clocks}]
         return out
 
     def _turning_points(self, r, E, L, K):
@@ -2028,7 +2099,7 @@ class KerrMode(Trails):
             m["dK"], m["dmu2"] = float(np.max(np.abs(c["dK"]) / sK)), float(np.max(np.abs(c["dmu2"])))
         else:
             m["dK"] = m["dmu2"] = nan
-            notes["dK"] = notes["dmu2"] = "нет тел"
+            notes["dK"] = notes["dmu2"] = T("no bodies")
         bl = g.bl() if g.n else None
         vz = g.zamo_velocity() if g.n else None
         km = self.gm / K.C ** 2 / 1e3
@@ -2051,7 +2122,7 @@ class KerrMode(Trails):
             tp = self._turning_points(float(bl[i, 0]), float(c["E"][i]), float(c["L"][i]), float(c["K"][i]))
             if tp is None:
                 m[f"{oid}.a"] = m[f"{oid}.e"] = nan
-                notes[f"{oid}.a"] = notes[f"{oid}.e"] = "движение не связанное (E ≥ 1 или нет второй точки поворота)"
+                notes[f"{oid}.a"] = notes[f"{oid}.e"] = T("unbound motion (E ≥ 1 or no second turning point)")
             else:
                 m[f"{oid}.a"], m[f"{oid}.e"] = 0.5 * (tp[0] + tp[1]), (tp[1] - tp[0]) / (tp[1] + tp[0])
             pp = self.peri.get(oid, ())
@@ -2059,8 +2130,9 @@ class KerrMode(Trails):
                 m[f"{oid}.Tr"] = pp[1] - pp[0]
             else:
                 m[f"{oid}.Tr"] = nan
-                notes[f"{oid}.Tr"] = ("нужны два прохождения перицентра (знак p_r с − на +) при одной и той же дыре: "
-                                      "после смены её массы, спина или заряда период измеряется заново")
+                notes[f"{oid}.Tr"] = T("two periapsis passages (the sign of p_r from − to +) with the same hole are "
+                                       "needed: after a change of its mass, spin or charge the period is measured "
+                                       "anew")
         return m, notes
 
     def checks(self):
@@ -2078,41 +2150,43 @@ class KerrMode(Trails):
         rK, rm = np.abs(c["dK"]) / bK, np.abs(c["dmu2"]) / bm
         i, j = int(np.argmax(rK)), int(np.argmax(rm))
         sK = max(abs(float(c["K"][i] - c["dK"][i])), 1.0)
-        self.sim.running_check("carter", "Постоянная Картера K каждого тела (сохраняется)", float(abs(c["dK"][i])) / sK,
+        self.sim.running_check("carter", T("Carter's constant K of every body (conserved)"),
+                               float(abs(c["dK"][i])) / sK,
                                0.0, tol=float(bK[i]) / sK, ok=bool(np.all(rK <= 1.0)),
-                               note=f"отн. изменение K с начала движения у тела, ближайшего к своему пределу "
-                                    f"({g.keys[i]}, {int(c['steps'][i])} шагов); предел — сумма по его шагам "
-                                    f"допустимых локальных ошибок DOP853 (rtol = {g.rtol:g}), пересчитанных в K: "
-                                    f"√6·rtol·Σ|∂K/∂yₖ|·масштабₖ, плюс округление; E и L сохраняются точно (t и φ — "
-                                    f"циклические координаты)")
-        self.sim.running_check("shell", "Массовая оболочка p·p = −μ² (сохраняется)", float(abs(c["dmu2"][j])), 0.0,
+                               note=T("the relative change of K since the start of the motion for the body closest to "
+                                      "its limit (“{label}”, {n:d} steps); the limit is the sum over its steps of the "
+                                      "allowed local errors of DOP853 (rtol = {rtol}) converted into K: "
+                                      "√6·rtol·Σ|∂K/∂yₖ|·scaleₖ, plus rounding; E and L are conserved exactly (t and φ "
+                                      "are cyclic coordinates)", label=self._name(g.keys[i]), n=int(c["steps"][i]),
+                                      rtol=g.rtol))
+        self.sim.running_check("shell", T("Mass shell p·p = −μ² (conserved)"), float(abs(c["dmu2"][j])), 0.0,
                                tol=float(bm[j]), ok=bool(np.all(rm <= 1.0)),
-                               note=f"отклонение μ² от 1 (тела) или 0 (свет) у тела, ближайшего к своему пределу "
-                                    f"({g.keys[j]}); предел — как у K, по градиенту μ²: у горизонта он растёт как "
-                                    f"1/Δ вместе с членами P²/Δ")
+                               note=T("the deviation of μ² from 1 (bodies) or 0 (light) for the body closest to its "
+                                      "limit (“{label}”); the limit as for K, by the gradient of μ²: near the horizon "
+                                      "it grows as 1/Δ together with the terms P²/Δ", label=self._name(g.keys[j])))
 
     def header(self):
         a, q = self.a, self.q
         rp, rm = KN.horizons(a, q)
-        return {"title": "Плейграунд: тела и свет у чёрной дыры Керра–Ньюмена (её масса, спин и заряд — в инспекторе "
-                         "дыры)",
+        return {"title": T("Playground: bodies and light near a Kerr–Newman black hole (its mass, spin and charge are "
+                           "in the hole's inspector)"),
                 "approximations": self._approx(),
                 "hole": {"r_plus": rp, "r_minus": rm},
-                "scene3d": {"box": self._box(), "units": "G M/c²", "objects": [], "layers": [],
+                "scene3d": {"box": self._box(), "units": T("G M/c²"), "objects": [], "layers": [],
                             "planes": {"max": 0, "center": [0, 0, 0], "defaults": {}}, "up": [0.0, 0.0, 1.0],
-                            "views": [["iso", "Изо", "Изометрия (F)", [0.55, -0.7, 0.45]],
-                                      ["pole", "С полюса", "Вдоль оси вращения", [0.0, 0.0, 1.0]],
-                                      ["side", "С ребра", "Экватор с ребра", [0.0, -1.0, 0.0]]]},
-                "units": {"t": "с", "x": f"G M/c² = {self.gm / K.C ** 2:.4g} м"}}
+                            "views": [["iso", T("Iso"), T("Isometric (F)"), [0.55, -0.7, 0.45]],
+                                      ["pole", T("From the pole"), T("Along the rotation axis"), [0.0, 0.0, 1.0]],
+                                      ["side", T("Edge-on"), T("The equator edge-on"), [0.0, -1.0, 0.0]]]},
+                "units": {"t": T("s"), "x": T("G M/c² = {L:.4g} m", L=self.gm / K.C ** 2)}}
 
     def after_header(self):
         """The hole: horizon, ergosurface, the equatorial photon orbits and the ISCO, from the metric."""
         a, q, sim = self.a, self.q, self.sim
         for mid, r_of, rgb, op, label in (
                 ("horizon", lambda T: np.full_like(T, self.r_plus), (12, 12, 16), 1.0,
-                 f"Горизонт r₊ = {self.r_plus:.6g} G M/c²"),
+                 T("Horizon r₊ = {r:.6g} G M/c²", r=self.r_plus)),
                 ("ergo", lambda T: KN.ergosurface(T, a, q), (120, 90, 200), 0.18,
-                 "Эргосфера (внутри неё ничто не может покоиться)")):
+                 T("Ergosphere (nothing can be at rest inside it)"))):
             X, Y, Z = KN.surface(r_of, a, 33, 64)
             pos = np.stack([X, Y, Z], -1).reshape(-1, 3).astype(np.float32)
             nt, npn = X.shape
@@ -2131,42 +2205,44 @@ class KerrMode(Trails):
             pts.append(np.stack([x, y, z], -1)); col.append(np.tile(c, (len(ph), 1)))
             pts.append(np.full((1, 3), np.nan)); col.append(np.zeros((1, 3)))
         sim.emit({"type": "lines", "t": sim.t, "id": "orbits",
-                  "label": "Круговые орбиты в экваторе: фотонные (по и против вращения) и ISCO (по вращению)"},
+                  "label": T("Circular orbits in the equator: photon orbits (prograde and retrograde) and the ISCO "
+                             "(prograde)")},
                  {"pts": np.concatenate(pts).astype(np.float32).reshape(-1),
                   "rgb": np.concatenate(col).astype(np.float32).reshape(-1)})
 
     def engine_modules(self):
-        # the «what if» of the hole's spin and charge is the engine's declared alternative (review LB1-physics P5): listed
+        # the "what if" of the hole's spin and charge is the engine's declared alternative (review LB1-physics P5): listed
         # with the world, since the hole's inspector offers it at any moment (the panel is sent with the header)
         return ["core.gravity.kerr_newman", "theories.alternatives.kn_change_whatif"]
 
 
 # --- the post-Newtonian binary ----------------------------------------------------------------------------------
 BINARY = Schema([
-    _p("q", "Отношение масс m₂/m₁", "float", 1.0, min=0.05, max=1.0),
-    _p("r0", "Начальное расстояние, G m/c²", "float", 20.0, min=8.0, max=2000.0, log=True,
-       help="Гармонические координаты; с полными уравнениями — дальше границы, где их реакция излучения ещё "
-            "упорядоченный ряд (≈ 10,6 G m/c² при q = 1 … 13 при q = 0,05)"),
-    _p("start", "Начальная орбита", "select", "quasi", options=[
-        ("quasi", "квазикруговая (радиальная скорость адиабатического сближения)"),
-        ("ellipse", "эллиптическая: перицентр r₀, эксцентриситет e (ньютоновские элементы)")]),
-    _p("e", "Эксцентриситет e", "float", 0.3, min=0.0, max=0.9, show_if={"start": ["ellipse"]}),
-    _p("orders", "Порядки уравнений", "select", "all", options=[
-        ("all", "1ПН + 2ПН + реакция излучения 2,5ПН и 3,5ПН"), ("rr", "Ньютон + реакция излучения 2,5ПН"),
-        ("cons", "1ПН + 2ПН без излучения (сохраняется энергия)")]),
-    _p("r_stop", "Остановить при расстоянии, G m/c²", "float", 6.0, min=2.5, max=50.0,
-       help="Ближе постньютоновское приближение кончается: слияние им не описывается. Полные уравнения "
-            "останавливаются не ближе границы, где их реакция излучения перестаёт быть упорядоченным рядом "
-            "(≈ 10,6–13 G m/c², считается при старте двойной)"),
-    _p("m_total", "Полная масса m, M☉", "float", 20.0, min=0.1, max=1e10, log=True,
-       help="Меняется в текущий момент как смена масштаба (G = c = m = 1): двойная продолжает ту же орбиту в единицах "
-            "m, метры, секунды, частота волн и их амплитуда у детектора пересчитываются; другие параметры начинают "
-            "двойную заново"),
+    _p("q", T("Mass ratio m₂/m₁"), "float", 1.0, min=0.05, max=1.0),
+    _p("r0", T("Initial separation, G m/c²"), "float", 20.0, min=8.0, max=2000.0, log=True,
+       help=T("Harmonic coordinates; with the full equations beyond the limit where their radiation reaction is still "
+              "an ordered series (≈ {r1} G m/c² at q = {q1} … {r2} at q = {q2})", r1=10.6, q1=1, r2=13, q2=0.05)),
+    _p("start", T("Initial orbit"), "select", "quasi", options=[
+        ("quasi", T("quasi-circular (the radial velocity of the adiabatic inspiral)")),
+        ("ellipse", T("elliptic: periapsis r₀, eccentricity e (Newtonian elements)"))]),
+    _p("e", T("Eccentricity e"), "float", 0.3, min=0.0, max=0.9, show_if={"start": ["ellipse"]}),
+    _p("orders", T("Orders of the equations"), "select", "all", options=[
+        ("all", T("1PN + 2PN + radiation reaction {a}PN and {b}PN", a=2.5, b=3.5)),
+        ("rr", T("Newton + radiation reaction {a}PN", a=2.5)),
+        ("cons", T("1PN + 2PN without radiation (the energy is conserved)"))]),
+    _p("r_stop", T("Stop at the separation, G m/c²"), "float", 6.0, min=2.5, max=50.0,
+       help=T("Closer, the post-Newtonian approximation ends: it does not describe the merger. The full equations stop "
+              "not closer than the limit where their radiation reaction stops being an ordered series (≈ {r1}–{r2} "
+              "G m/c², computed when the binary starts)", r1=10.6, r2=13)),
+    _p("m_total", T("Total mass m, M☉"), "float", 20.0, min=0.1, max=1e10, log=True,
+       help=T("Changes at the current moment as a change of scale (G = c = m = 1): the binary continues the same orbit "
+              "in units of m, metres, seconds, the waves' frequency and their amplitude at the detector are recomputed; "
+              "other parameters start the binary afresh")),
 ])
 DETECTOR = Schema([
-    _p("distance", "Расстояние до источника, Мпк", "float", 400.0, min=1e-6, max=1e5, log=True),
-    _p("iota", "Наклон орбиты к лучу зрения ι, °", "float", 30.0, min=0.0, max=180.0),
-    _p("phi", "Азимут Φ, °", "float", 0.0, min=0.0, max=360.0),
+    _p("distance", T("Distance to the source, Mpc"), "float", 400.0, min=1e-6, max=1e5, log=True),
+    _p("iota", T("Inclination of the orbit to the line of sight ι, °"), "float", 30.0, min=0.0, max=180.0),
+    _p("phi", T("Azimuth Φ, °"), "float", 0.0, min=0.0, max=360.0),
 ])
 ORDERS = {"all": (1, 2, 2.5, 3.5), "rr": (2.5,), "cons": (1, 2)}
 ALL_ORDERS = ORDERS["all"]
@@ -2198,12 +2274,14 @@ class PNMode(Trails):
     def palette(self):
         sch = Schema([q if q.id != "m_total" else Param(**{**q.__dict__, "default": float(self.sim.params["m_total"])})
                       for q in BINARY.params])
-        return {"binary": ObjectType("binary", "Двойная (две компактные массы)", "body", sch, limit=1,
+        return {"binary": ObjectType("binary", T("Binary (two compact masses)"), "body", sch, limit=1,
                                      color="#f08c00",
-                                     help="Две массы на постньютоновской орбите; изменение параметров (кроме массы) "
-                                          "начинает двойную заново с текущего момента; масса — смена масштаба"),
-                "detector": ObjectType("detector", "Детектор волн", "probe", DETECTOR, limit=4, color="#1c7ed6",
-                                       help="Наблюдатель на расстоянии R под наклоном ι: h₊, h× по квадрупольной формуле")}
+                                     help=T("Two masses on a post-Newtonian orbit; a change of the parameters (except "
+                                            "the mass) starts the binary afresh from the current moment; the mass is a "
+                                            "change of scale")),
+                "detector": ObjectType("detector", T("Wave detector"), "probe", DETECTOR, limit=4, color="#1c7ed6",
+                                       help=T("An observer at the distance R at the inclination ι: h₊, h× by the "
+                                              "quadrupole formula"))}
 
     def _start(self, obj, state=None):
         v = obj["values"]
@@ -2229,10 +2307,12 @@ class PNMode(Trails):
         r0 = float(np.linalg.norm(st["x"]))
         if not stopped and r0 <= r_eff:
             if r_rr > float(v["r_stop"]):
-                raise ValueError(f"начальное расстояние не больше {r_rr:.4g} G m/c²: ближе реакция излучения полных "
-                                 f"уравнений (2,5ПН + 3,5ПН) уже не упорядоченный ряд, а у r ≈ 9,1 она меняет знак — "
-                                 f"начните дальше или выберите порядки «Ньютон + 2,5ПН»")
-            raise ValueError(f"начальное расстояние не больше «остановить при» ({v['r_stop']} G m/c²)")
+                raise Refusal(T("the initial separation is not above {r:.4g} G m/c²: closer, the radiation reaction "
+                                "of the full equations ({a}PN + {b}PN) is no longer an ordered series, and at "
+                                "r ≈ {rs} it changes sign", r=r_rr, a=2.5, b=3.5, rs=9.1),
+                              hint=T("start farther or choose the orders “Newton + {a}PN”", a=2.5))
+            raise Refusal(T("the initial separation is not above “stop at” ({r} G m/c²)", r=v["r_stop"]),
+                          hint=T("start farther or stop closer"))
         xx = (float(np.linalg.norm(np.cross(st["x"], st["v"]))) / (r0 * r0)) ** (2.0 / 3.0)
         self.bin = {"id": obj["id"], "st": st, "nu": nu, "orders": o, "status": "stopped" if stopped else "running",
                     "circular": v["start"] == "quasi", "E0": self._energy(st, nu, o), "E_rad": 0.0, "E_rad1": 0.0,
@@ -2244,8 +2324,9 @@ class PNMode(Trails):
         self.sim.emit({"type": "box", "t": self.sim.t, "box": self._box(r0)})
         if r_rr > float(v["r_stop"]):
             self.sim.emit({"type": "notice", "t": self.sim.t,
-                           "text": f"Полные уравнения (ν = {nu:.4g}) будут остановлены у r = {r_rr:.4g} G m/c²: ближе их "
-                                   f"реакция излучения уже не упорядоченный ряд (см. README p01)"})
+                           "text": T("The full equations (ν = {nu:.4g}) will be stopped at r = {r:.4g} G m/c²: closer, "
+                                     "their radiation reaction is no longer an ordered series (see the README of p01)",
+                                     nu=nu, r=r_rr)})
 
     @staticmethod
     def _energy(st, nu, orders):
@@ -2297,10 +2378,11 @@ class PNMode(Trails):
         self.default_speed = 200.0 * self.T
         self.sim.speed_range = self.speed_range = (1e-2 * self.T, 1e6 * self.T)
         self.trail_kink(self.sim.t, pre, self._shown())
-        return (f"полная масса двойной {m0:.6g} → {m:.6g} M☉ — смена масштаба (G = c = m = 1): орбита в единицах m "
-                f"продолжается как была; G m/c² = {L0 / 1e3:.6g} → {self.L / 1e3:.6g} км, G m/c³ = {T0 * 1e6:.6g} → "
-                f"{self.T * 1e6:.6g} мкс; частота волн и амплитуда у детекторов пересчитаны (∝ 1/m и ∝ m); движение в "
-                f"секундах мира теперь в {self.T / T0:.4g} раза медленнее (скорость показа — прежняя)")
+        return T("total mass of the binary {m0:.6g} → {m1:.6g} M☉: a change of scale (G = c = m = 1): the orbit in "
+                 "units of m continues as it was; G m/c² = {l0:.6g} → {l1:.6g} km, G m/c³ = {t0:.6g} → {t1:.6g} µs; "
+                 "the waves' frequency and amplitude at the detectors are recomputed (∝ 1/m and ∝ m); motion in the "
+                 "world's seconds is now {f:.4g} times slower (the playback speed is unchanged)", m0=m0, m1=m,
+                 l0=L0 / 1e3, l1=self.L / 1e3, t0=T0 * 1e6, t1=self.T * 1e6, f=self.T / T0)
 
     def _shown(self):
         """(trail keys, both bodies' positions, their velocities per world second) now: the trails' kinks."""
@@ -2346,14 +2428,14 @@ class PNMode(Trails):
             b["status"] = "stopped"
             self._trail_append(b["st"]["t"], b["st"]["x"], b["st"]["v"], force=True)  # the trails end where it stopped
             if b["r_rr"] > b["r_stop_set"]:
-                text = (f"Двойная сблизилась до {b['r_stop']:.4g} G m/c²: ближе реакция излучения этих уравнений "
-                        f"(2,5ПН + 3,5ПН, гармоническая калибровка) перестаёт быть упорядоченным рядом — отброшенное "
-                        f"в ней больше учтённой поправки 1ПН, а у r ≈ 9,1 она меняет знак (орбита набирала бы "
-                        f"энергию). Последние витки и слияние постньютоновские уравнения не описывают — движение "
-                        f"остановлено")
+                text = T("The binary has come to {r:.4g} G m/c²: closer, the radiation reaction of these equations "
+                         "({a}PN + {b}PN, harmonic gauge) stops being an ordered series — what it drops exceeds the "
+                         "1PN correction it carries, and at r ≈ {rs} it changes sign (the orbit would gain energy). "
+                         "The post-Newtonian equations do not describe the last orbits and the merger: the motion is "
+                         "stopped", r=b["r_stop"], a=2.5, b=3.5, rs=9.1)
             else:
-                text = (f"Двойная сблизилась до {b['r_stop']:.4g} G m/c²: постньютоновское приближение здесь "
-                        f"кончается, слияние им не описывается — движение остановлено")
+                text = T("The binary has come to {r:.4g} G m/c²: the post-Newtonian approximation ends here, it does "
+                         "not describe the merger: the motion is stopped", r=b["r_stop"])
             self.sim.emit({"type": "event", "kind": "merger", "t": self.clk.sec(b["st"]["t"]), "text": text,
                            "notify": True})
 
@@ -2413,17 +2495,17 @@ class PNMode(Trails):
         omega = float(np.linalg.norm(np.cross(x, v))) / r ** 2
         f_gw = 2.0 * omega / (2.0 * math.pi) / self.T
         el = PN.newtonian_elements(x, v)
-        now[b["id"]] = {"расстояние r, G m/c²": r, "эксцентриситет (оскулирующий)": float(el["e"]),
-                        "частота волн f, Гц": f_gw, "энергия E/μ (2ПН)": float(PN.energy(x, v, nu)),
-                        "состояние": "считается" if b["status"] == "running"
-                        else f"остановлена у r = {b['r_stop']:.4g} G m/c²"}
+        now[b["id"]] = {"separation r, G m/c²": r, "eccentricity (osculating)": float(el["e"]),
+                        "wave frequency f, Hz": f_gw, "energy E/μ (2PN)": float(PN.energy(x, v, nu)),
+                        "state": T("running") if b["status"] == "running"
+                        else T("stopped at r = {r:.4g} G m/c²", r=b["r_stop"])}
         for o in sim.objects.values():
             if o["type"] != "detector":
                 continue
             dv = o["values"]
             hp, hx = GW.binary_waveform(x, v, nu, math.radians(dv["iota"]), math.radians(dv["phi"]))
             s = GW.strain_scale(self.gm, float(dv["distance"]) * MPC)
-            probes[o["id"]] = {"h₊": float(hp) * s, "h×": float(hx) * s, "f волн, Гц": f_gw}
+            probes[o["id"]] = {"h₊": float(hp) * s, "h×": float(hx) * s, "wave f, Hz": f_gw}
         pos = np.array([y1, y2], np.float32).reshape(-1)
         rad = np.array([2.0 * X1, 2.0 * (1.0 - X1)], np.float32)  # each body's Schwarzschild radius, G m/c²
         rgb = np.array([[1.0, 0.65, 0.2], [0.6, 0.8, 1.0]], np.float32).reshape(-1)
@@ -2436,30 +2518,31 @@ class PNMode(Trails):
     # --- measurables (P16.3) -----------------------------------------------------------------------------------------
     def measurables(self):
         out = []
+        binary, cons, waves = T("Binary"), T("Conservation"), T("Waves")
         for o in self.sim.objects.values():
             oid, lab = o["id"], o["label"]
             if o["type"] == "binary":
-                out += [{"id": f"{oid}.r", "label": f"«{lab}»: расстояние между телами r (гармонические координаты)",
-                         "unit": "км", "of": oid, "group": "Двойная"},
-                        {"id": f"{oid}.r_m", "label": f"«{lab}»: расстояние между телами r", "unit": "G m/c²", "of": oid,
-                         "group": "Двойная"},
-                        {"id": f"{oid}.phase", "label": f"«{lab}»: орбитальная фаза (накопленная)", "unit": "рад",
-                         "of": oid, "group": "Двойная"},
-                        {"id": f"{oid}.f", "label": f"«{lab}»: частота волн 2Ω/2π", "unit": "Гц", "of": oid,
-                         "group": "Двойная"},
-                        {"id": f"{oid}.e", "label": f"«{lab}»: эксцентриситет (оскулирующий, ньютоновский)", "unit": "",
-                         "of": oid, "group": "Двойная"},
-                        {"id": f"{oid}.E", "label": f"«{lab}»: энергия орбиты E/μ (2ПН)", "unit": "", "of": oid,
-                         "group": "Сохранение"},
-                        {"id": f"{oid}.dE", "label": f"«{lab}»: потеря энергии с начала (доля |E₀|)", "unit": "",
-                         "of": oid, "group": "Сохранение"},
-                        {"id": f"{oid}.J", "label": f"«{lab}»: момент импульса орбиты |x × v| на μ (ньютоновский)",
-                         "unit": "G m/c", "of": oid, "group": "Сохранение"}]
+                out += [{"id": f"{oid}.r", "label": T("“{label}”: separation of the bodies r (harmonic coordinates)",
+                                                      label=lab), "unit": T("km"), "of": oid, "group": binary},
+                        {"id": f"{oid}.r_m", "label": T("“{label}”: separation of the bodies r", label=lab),
+                         "unit": "G m/c²", "of": oid, "group": binary},
+                        {"id": f"{oid}.phase", "label": T("“{label}”: orbital phase (accumulated)", label=lab),
+                         "unit": T("rad"), "of": oid, "group": binary},
+                        {"id": f"{oid}.f", "label": T("“{label}”: wave frequency 2Ω/2π", label=lab), "unit": T("Hz"),
+                         "of": oid, "group": binary},
+                        {"id": f"{oid}.e", "label": T("“{label}”: eccentricity (osculating, Newtonian)", label=lab),
+                         "unit": "", "of": oid, "group": binary},
+                        {"id": f"{oid}.E", "label": T("“{label}”: orbital energy E/μ (2PN)", label=lab), "unit": "",
+                         "of": oid, "group": cons},
+                        {"id": f"{oid}.dE", "label": T("“{label}”: energy lost since the start (fraction of |E₀|)",
+                                                       label=lab), "unit": "", "of": oid, "group": cons},
+                        {"id": f"{oid}.J", "label": T("“{label}”: orbital angular momentum |x × v| per μ (Newtonian)",
+                                                      label=lab), "unit": "G m/c", "of": oid, "group": cons}]
             elif o["type"] == "detector":
-                out += [{"id": f"{oid}.hp", "label": f"«{lab}»: амплитуда h₊ у детектора", "unit": "", "of": oid,
-                         "group": "Волны"},
-                        {"id": f"{oid}.hx", "label": f"«{lab}»: амплитуда h× у детектора", "unit": "", "of": oid,
-                         "group": "Волны"}]
+                out += [{"id": f"{oid}.hp", "label": T("“{label}”: amplitude h₊ at the detector", label=lab),
+                         "unit": "", "of": oid, "group": waves},
+                        {"id": f"{oid}.hx", "label": T("“{label}”: amplitude h× at the detector", label=lab),
+                         "unit": "", "of": oid, "group": waves}]
         return out
 
     def measure_now(self):
@@ -2470,7 +2553,7 @@ class PNMode(Trails):
             for o in objs.values():
                 if o["type"] == "detector":
                     m[f"{o['id']}.hp"] = m[f"{o['id']}.hx"] = nan
-                    notes[f"{o['id']}.hp"] = notes[f"{o['id']}.hx"] = "двойной нет"
+                    notes[f"{o['id']}.hp"] = notes[f"{o['id']}.hx"] = T("there is no binary")
             return m, notes
         x, v, nu, oid = b["st"]["x"], b["st"]["v"], b["nu"], b["id"]
         r = float(np.linalg.norm(x))
@@ -2496,10 +2579,10 @@ class PNMode(Trails):
         E = self._energy(b["st"], b["nu"], b["orders"])
         x = 1.0 / float(np.linalg.norm(b["st"]["x"]))
         if 2.5 not in b["orders"]:  # without radiation reaction the energy of the conservative orders is conserved
-            self.sim.running_check("energy", "Энергия орбиты без излучения", E, b["E0"], tol=1e-9,
+            self.sim.running_check("energy", T("Orbital energy without radiation"), E, b["E0"], tol=1e-9,
                                    ok=abs(E - b["E0"]) <= 1e-9 * abs(b["E0"]) + 10.0 * x ** 3 * abs(b["E0"]),
-                                   note="энергия 2ПН (Kidder 1995) сохраняется уравнениями 1ПН + 2ПН до O(x³) (3ПН нет) "
-                                        "и точности интегрирования")
+                                   note=T("the 2PN energy (Kidder 1995) is conserved by the 1PN + 2PN equations up "
+                                          "to O(x³) (there is no 3PN) and the accuracy of the integration"))
             return
         loss = b["nu"] * (b["E0"] - E)  # E is per reduced mass mu = nu m (m = 1)
         if b["circular"] and b["orders"] == ALL_ORDERS and b["E_rad1"] > 0.0:
@@ -2510,38 +2593,42 @@ class PNMode(Trails):
             # (ratio < 0) fails it, since the bound is < 1 while x < 1/(2|c1|) ~ 0.11 (the run stops before)
             c1, xm = flux_c1(b["nu"]), b["x_max"]
             tol = abs(c1) * xm / (1.0 + c1 * xm)
-            self.sim.running_check("balance", "Баланс: убыль энергии орбиты / поток волн 1ПН", ratio, 1.0,
+            self.sim.running_check("balance", T("Balance: the orbit's energy loss / the 1PN wave flux"), ratio, 1.0,
                                    tol=tol, ok=abs(ratio - 1.0) <= tol,
-                                   note=f"поток круговой орбиты к 1ПН точности по x = (mΩ)^(2/3) (Blanchet 2014, ур. 314, "
-                                        f"без хвостового члена, которого нет в локальных уравнениях); остаток реакции "
-                                        f"излучения уравнений — порядка x² (её поправки 2ПН нет: измерено −35,5 x² при "
-                                        f"малых x); допуск — пока ряд упорядочен, остаток не больше учтённой поправки "
-                                        f"1ПН: |c₁| x/(1 + c₁ x), c₁ = −1247/336 − 35ν/12, x ≈ {xm:.3g} — наибольшее "
-                                        f"за запуск; рост энергии (отношение < 0) не проходит")
+                                   note=T("the flux of a circular orbit to 1PN accuracy in x = (mΩ)^(2/3) (Blanchet "
+                                          "2014, Eq. 314, without the tail term, which the local equations lack); the "
+                                          "remainder of the equations' radiation reaction is of order x² (its 2PN "
+                                          "correction is absent: measured {c2} x² at small x); tolerance: while the "
+                                          "series is ordered, the remainder is not larger than the 1PN correction it "
+                                          "carries: |c₁| x/(1 + c₁ x), c₁ = −1247/336 − 35ν/12, x ≈ {x:.3g}, the "
+                                          "largest in the run; a growth of the energy (a ratio < 0) fails",
+                                          c2=-35.5, x=xm))
         elif b["E_rad"] > 0.0:
             ratio = loss / b["E_rad"]
-            self.sim.running_check("balance", "Баланс: убыль энергии / излучённое (квадрупольная формула)", ratio, 1.0,
+            self.sim.running_check("balance", T("Balance: energy loss / radiated (quadrupole formula)"), ratio, 1.0,
                                    tol=0.0, info=True,
-                                   note=f"излучённое — квадрупольная формула ведущего порядка по посчитанной орбите; "
-                                        f"с реакцией излучения только 2,5ПН совпадение точное, с полными уравнениями — до "
-                                        f"поправок порядка x ≈ {x:.3g} (около 7x при ν = 1/4)")
+                                   note=T("the radiated energy is the leading-order quadrupole formula on the computed "
+                                          "orbit; with the {a}PN radiation reaction alone they agree exactly, with the "
+                                          "full equations up to corrections of order x ≈ {x:.3g} (about 7x at "
+                                          "ν = 1/4)", a=2.5, x=x))
 
     def header(self):
         r0 = 20.0
         if self.bin is not None:
             r0 = float(np.linalg.norm(self.bin["st"]["x"]))
-        return {"title": f"Плейграунд: двойная в ОТО (m = {self.sim.params['m_total']:.4g} M☉)",
-                "approximations": ["постньютоновские уравнения движения (1ПН, 2ПН; реакция излучения 2,5ПН, 3,5ПН), "
-                                   "без спинов и приливов; волны — квадрупольная формула ведущего порядка",
-                                   "полные уравнения останавливаются там, где их реакция излучения перестаёт быть "
-                                   "упорядоченным рядом (≈ 10,6–13 G m/c² по отношению масс): последние витки и "
-                                   "слияние не показываются"],
+        return {"title": T("Playground: a binary in GR (m = {m:.4g} M☉)", m=self.sim.params["m_total"]),
+                "approximations": [T("post-Newtonian equations of motion (1PN, 2PN; radiation reaction {a}PN, {b}PN), "
+                                     "without spins and tides; waves by the leading-order quadrupole formula", a=2.5,
+                                     b=3.5),
+                                   T("the full equations stop where their radiation reaction stops being an ordered "
+                                     "series (≈ {r1}–{r2} G m/c² depending on the mass ratio): the last orbits and the "
+                                     "merger are not shown", r1=10.6, r2=13)],
                 "scene3d": {"box": self._box(r0), "units": "G m/c²", "objects": [], "layers": [],
                             "planes": {"max": 0, "center": [0, 0, 0], "defaults": {}}, "up": [0.0, 0.0, 1.0],
-                            "views": [["iso", "Изо", "Изометрия (F)", [0.5, -0.7, 0.5]],
-                                      ["pole", "Сверху", "Вдоль момента орбиты", [0.0, 0.0, 1.0]],
-                                      ["side", "С ребра", "Плоскость орбиты с ребра", [0.0, -1.0, 0.0]]]},
-                "units": {"t": "с", "x": f"G m/c² = {self.L:.4g} м"}}
+                            "views": [["iso", T("Iso"), T("Isometric (F)"), [0.5, -0.7, 0.5]],
+                                      ["pole", T("Top"), T("Along the orbit's angular momentum"), [0.0, 0.0, 1.0]],
+                                      ["side", T("Edge-on"), T("The orbit's plane edge-on"), [0.0, -1.0, 0.0]]]},
+                "units": {"t": T("s"), "x": T("G m/c² = {L:.4g} m", L=self.L)}}
 
     def after_header(self):
         pass
@@ -2552,11 +2639,12 @@ class PNMode(Trails):
 
 VIZ = {
     "id": "p01_gravity",
-    "title": "Космос и гравитация",
-    "summary": ("Песочница гравитации: звёзды, планеты, чёрные дыры, пробные тела и свет; ньютоновские N тел, "
-                "двойная в ОТО с излучением гравитационных волн, геодезические у чёрной дыры Керра–Ньюмена."),
-    "purpose": ("Собрать систему тел и посмотреть, как она движется: орбиты, сближения, захваты, сближение двойной "
-                "из-за излучения волн, движение света и часов у вращающейся чёрной дыры; законы сохранения — вживую."),
+    "title": T("Space and gravity"),
+    "summary": T("A gravity sandbox: stars, planets, black holes, test bodies and light; Newtonian N bodies, a binary in "
+                 "GR radiating gravitational waves, geodesics near a Kerr–Newman black hole."),
+    "purpose": T("Build a system of bodies and watch it move: orbits, close encounters, captures, a binary's inspiral "
+                 "through the radiation of waves, the motion of light and clocks near a rotating black hole; the "
+                 "conservation laws checked live."),
     "version": "0.1",
     "schema": SCHEMA,
     "simulation": Simulation,

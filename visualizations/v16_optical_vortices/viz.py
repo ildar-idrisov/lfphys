@@ -29,6 +29,7 @@ from lfphys.core import geometry as G
 from lfphys.core.optics import angular_spectrum as AS
 from lfphys.core.optics import beams as B
 from lfphys.core.optics import beams_rotation as ROT
+from lfphys.i18n import T, join
 from lfphys.theories.approx import beams_paraxial as PX
 from lfphys.theories.approx import beams_thin_masks as TM
 from lfviz.errors import Refusal
@@ -51,50 +52,57 @@ def _p(*a, **k):
     return Param(*a, **k)
 
 
+G_BEAM, G_HOLO, G_ROT = T("Beam"), T("Hologram"), T("Rotation")
 SCHEMA = Schema([
-    _p("gen", "Источник вихря", "select", "mode", group="Пучок",
-       options=[("mode", "мода Лагерра–Гаусса LG_pl (перетяжка в z = 0)"),
-                ("spp", "гауссов пучок за спиральной фазовой пластинкой (z = 0)"),
-                ("fork", "гауссов пучок на голограмме-«вилке» (z = 0)")]),
-    _p("l", "Топологический заряд l", "int", 3, group="Пучок", min=-6, max=6),
-    _p("p", "Радиальный индекс p", "int", 0, group="Пучок", min=0, max=3, show_if={"gen": ["mode"]}),
-    _p("w0", "Перетяжка w0, мкм", "float", 1.5, group="Пучок", min=0.3, max=6.0,
-       help="Ширина спектра источника (моды LG или гауссова пучка за пластинкой). Точная модель берёт из спектра только "
-            "распространяющиеся волны (q ≤ k): при w0 ≲ λ это уже не перетяжка названного источника — мир помечается, "
-            "а при потере больше 10 % мощности источника не строится."),
-    _p("lam", "Длина волны λ, мкм", "float", 1.0, group="Пучок", min=0.4, max=1.6),
-    _p("pol", "Поляризация", "select", "+1", group="Пучок", show_if=BEAMS,
-       options=[("+1", "круговая, σ = +1"), ("-1", "круговая, σ = −1"), ("lin", "линейная (x)")]),
-    _p("model", "Модель пучка", "select", "exact", group="Пучок", show_if=BEAMS,
-       options=[("exact", "точная: векторное решение уравнений Максвелла"),
-                ("paraxial", "параксиальная (приближение): мода × однородная поляризация")]),
-    _p("zspan", "Длина области, в z_R", "float", 1.5, group="Пучок", min=0.4, max=3.0, show_if=BEAMS),
-    _p("period", "Период голограммы Λ, мкм", "float", 2.5, group="Голограмма", min=1.0, max=8.0,
+    _p("gen", T("Source of the vortex"), "select", "mode", group=G_BEAM,
+       options=[("mode", T("a Laguerre–Gauss mode LG_pl (the waist at z = 0)")),
+                ("spp", T("a Gaussian beam behind a spiral phase plate (z = 0)")),
+                ("fork", T("a Gaussian beam on a “fork” hologram (z = 0)"))]),
+    _p("l", T("Topological charge l"), "int", 3, group=G_BEAM, min=-6, max=6),
+    _p("p", T("Radial index p"), "int", 0, group=G_BEAM, min=0, max=3, show_if={"gen": ["mode"]}),
+    _p("w0", T("Waist w0, µm"), "float", 1.5, group=G_BEAM, min=0.3, max=6.0,
+       help=T("The width of the source's spectrum (of the LG mode or of the Gaussian beam behind the plate). The exact "
+              "model takes only the propagating waves (q ≤ k) of the spectrum: at w0 ≲ λ it is no longer the waist "
+              "of the named source, and the world is marked; when more than {p} % of the source's power is lost, it "
+              "is not built.", p=10)),
+    _p("lam", T("Wavelength λ, µm"), "float", 1.0, group=G_BEAM, min=0.4, max=1.6),
+    _p("pol", T("Polarisation"), "select", "+1", group=G_BEAM, show_if=BEAMS,
+       options=[("+1", T("circular, σ = +1")), ("-1", T("circular, σ = −1")), ("lin", T("linear (x)"))]),
+    _p("model", T("Beam model"), "select", "exact", group=G_BEAM, show_if=BEAMS,
+       options=[("exact", T("exact: a vector solution of Maxwell's equations")),
+                ("paraxial", T("paraxial (an approximation): a mode × a uniform polarisation"))]),
+    _p("zspan", T("Length of the region, in z_R"), "float", 1.5, group=G_BEAM, min=0.4, max=3.0, show_if=BEAMS),
+    _p("period", T("Hologram period Λ, µm"), "float", 2.5, group=G_HOLO, min=1.0, max=8.0,
        show_if={"gen": ["fork"]}),
-    _p("kind", "Голограмма", "select", "binary", group="Голограмма", show_if={"gen": ["fork"]},
-       options=[("amplitude", "амплитудная (1 + cos)/2"), ("binary", "бинарная амплитудная"),
-                ("blazed", "фазовая с блеском (всё в 1-й порядок)")]),
-    _p("rot", "Вращающийся элемент", "select", "disc", group="Вращение", show_if=BEAMS,
-       options=[("disc", "шероховатый диск, детектор за фильтром мод ±l (Лавери 2013)"),
-                ("dove", "призма Дове в плече интерферометра (Куртиаль 1998)"), ("none", "нет")]),
-    _p("f_rot", "Частота вращения f, Гц", "float", 5.0, group="Вращение", min=0.0, max=40.0, live=True,
-       show_if=ROTS, help="Меняется на ходу: новая серия измерений начинается с этого момента."),
-    _p("t_show", "Оптическая фаза на экране: период, мс времени мира", "float", 400.0, group="Время", min=40.0,
-       max=4000.0, help="Свет с частотой ~10¹⁵ Гц показан замедленно: один оптический период за это время мира."),
+    _p("kind", T("Hologram"), "select", "binary", group=G_HOLO, show_if={"gen": ["fork"]},
+       options=[("amplitude", T("amplitude (1 + cos)/2")), ("binary", T("binary amplitude")),
+                ("blazed", T("blazed phase (all into the 1st order)"))]),
+    _p("rot", T("Rotating element"), "select", "disc", group=G_ROT, show_if=BEAMS,
+       options=[("disc", T("a rough disc, the detector behind a ±l mode filter (Lavery 2013)")),
+                ("dove", T("a Dove prism in an arm of an interferometer (Courtial 1998)")), ("none", T("none"))]),
+    _p("f_rot", T("Rotation frequency f, Hz"), "float", 5.0, group=G_ROT, min=0.0, max=40.0, live=True,
+       show_if=ROTS, help=T("Changes on the fly: a new series of measurements starts at this moment.")),
+    _p("t_show", T("Optical phase on the screen: the period, ms of the world's time"), "float", 400.0,
+       group=T("Time"), min=40.0, max=4000.0,
+       help=T("Light at a frequency of ~{f} Hz is shown slowed: one optical period per this time of the world.",
+              f=1e15)),
 ], presets={
-    "lg3": {"label": "LG₀³, σ = +1: три винтовых фронта, точная модель, вращающийся диск", "params": {}},
-    "tight": {"label": "Острая фокусировка: l = 1, σ = −1, w0 = 0,6 λ — продольное поле и спин-орбитальное расщепление",
+    "lg3": {"label": T("LG₀³, σ = +1: three helical fronts, the exact model, a rotating disc"), "params": {}},
+    "tight": {"label": T("Tight focusing: l = 1, σ = −1, w0 = {w} λ: the longitudinal field and the spin-orbit "
+                         "splitting", w=0.6),
               "params": {"l": 1, "pol": "-1", "w0": 0.6, "zspan": 1.5, "rot": "none"}},
-    "tight_par": {"label": "То же в параксиальной модели (приближение): чего она не видит",
+    "tight_par": {"label": T("The same in the paraxial model (an approximation): what it does not see"),
                   "params": {"l": 1, "pol": "-1", "w0": 0.6, "zspan": 1.5, "rot": "none", "model": "paraxial"}},
-    "lg_p2": {"label": "LG₂¹: три кольца, фронты со скачками фазы на узлах", "params": {"l": 1, "p": 2, "w0": 1.2}},
-    "spp": {"label": "Спиральная фазовая пластинка, l = 2: заряд 2, не одна мода LG; орбитальный момент скалярного поля "
-                     "2ħ на фотон, у векторного L_z = l + σ(1 − ⟨cos θ⟩)",
+    "lg_p2": {"label": T("LG₂¹: three rings, fronts with phase jumps at the nodes"),
+              "params": {"l": 1, "p": 2, "w0": 1.2}},
+    "spp": {"label": T("Spiral phase plate, l = {l}: charge {l}, not a single LG mode; the scalar field's orbital "
+                       "angular momentum is {l}ħ per photon, the vector field's L_z = l + σ(1 − ⟨cos θ⟩)", l=2),
             "params": {"gen": "spp", "l": 2, "w0": 1.5}},
-    "dove": {"label": "Призма Дове вращается: сдвиг частоты 2|l|f у пучка l = 2", "params": {"l": 2, "rot": "dove"}},
-    "l0": {"label": "Контроль: гауссов пучок без вихря (l = 0) — биений нет", "params": {"l": 0}},
-    "lin": {"label": "Линейная поляризация, l = 1: J_z = l в среднем, спин нулевой", "params": {"l": 1, "pol": "lin"}},
-    "fork": {"label": "Голограмма-«вилка», l = 1: порядок m несёт заряд m·l",
+    "dove": {"label": T("A Dove prism rotates: a frequency shift 2|l|f for the beam l = {l}", l=2),
+             "params": {"l": 2, "rot": "dove"}},
+    "l0": {"label": T("Control: a Gaussian beam without a vortex (l = 0): no beat"), "params": {"l": 0}},
+    "lin": {"label": T("Linear polarisation, l = 1: J_z = l on average, zero spin"), "params": {"l": 1, "pol": "lin"}},
+    "fork": {"label": T("A “fork” hologram, l = 1: the order m carries the charge m·l"),
              "params": {"gen": "fork", "l": 1, "w0": 4.0, "period": 2.5}},
 })
 
@@ -195,33 +203,36 @@ class Simulation(SlicePlanes, BaseSimulation):
         p = self.params
         w_ask, period = float(p["w0"]), float(p["period"])
         if self.lam / period >= 1:
-            raise Refusal(f"период голограммы Λ = {period:g} мкм не больше длины волны λ = {self.lam:g} мкм: первый "
-                          "порядок не распространяется (sin θ₁ = λ/Λ ≥ 1)",
-                          f"выберите период Λ больше {self.lam:g} мкм (или λ меньше {period:g} мкм)")
+            raise Refusal(T("the hologram period Λ = {P} µm is not longer than the wavelength λ = {lam} µm: the first "
+                            "order does not propagate (sin θ₁ = λ/Λ ≥ 1)", P=period, lam=self.lam),
+                          hint=T("choose a period Λ longer than {lam} µm (or λ shorter than {P} µm)", lam=self.lam,
+                                 P=period))
         # review UX-params P11: the default waist (1.5 µm, the LG modes') is too narrow for any Λ of the form, so
-        # «Голограмма-вилка» alone was refused, with advice that could not be followed; the world now takes the
-        # smallest waist that works (the preset «fork»: 4 µm at Λ = 2.5) and says so
+        # "Fork hologram" alone was refused, with advice that could not be followed; the world now takes the
+        # smallest waist that works (the preset "fork": 4 µm at Λ = 2.5) and says so
         fit = self._fork_waist(w_ask, period)
         if fit is None:
             ok = [pp for pp in np.arange(round(period, 2) - 0.01, self.lam, -0.01) if self._fork_waist(w_ask, pp)]
             s = self.lam / period
             ang = math.degrees(math.asin(min(s, 1.0)))
-            raise Refusal(f"с периодом Λ = {period:g} мкм при λ = {self.lam:g} мкм порядки голограммы не разойдутся ни при "
-                          f"какой перетяжке до {SCHEMA.by_id['w0'].max:g} мкм (угол первого порядка {ang:.3g}° слишком "
-                          "мал для расходимости пучка или область не помещается в сетку)",
-                          f"уменьшите период Λ до {ok[0]:.3g} мкм или меньше" if ok else
-                          "возьмите другую длину волны")
+            raise Refusal(T("with the period Λ = {P} µm at λ = {lam} µm the orders of the hologram do not separate at "
+                            "any waist up to {wmax} µm (the first order's angle {ang:.3g}° is too small for the beam's "
+                            "divergence, or the region does not fit into the grid)", P=period, lam=self.lam,
+                            wmax=SCHEMA.by_id["w0"].max, ang=ang),
+                          hint=T("decrease the period Λ to {P:.3g} µm or less", P=float(ok[0])) if ok else
+                          T("choose another wavelength"))
         w0, z_end = fit
         fork = A.Fork(self.l, w0, self.lam, period, p["kind"], z_end)
         if w0 != w_ask:
             p["w0"] = w0
             tan = math.tan(math.asin(self.lam / period))
-            self._msg({"type": "notice", "t": 0.0, "text": (
-                f"Голограмма-«вилка»: при перетяжке {w_ask:g} мкм пучок расходится быстрее, чем расходятся порядки "
-                f"(угол первого порядка {math.degrees(math.atan(tan)):.3g}° при Λ = {period:g} мкм, расходимость "
-                f"λ/(πw0) = {math.degrees(self.lam / (math.pi * w_ask)):.3g}°) — порядки не разошлись бы. Мир взял "
-                f"w0 = {w0:g} мкм, наименьшую, при которой они расходятся с запасом 20 %: пучок шире, область длиннее "
-                f"(до z = {z_end:.3g} мкм). Меньший период Λ позволяет более узкий пучок.")})
+            self._msg({"type": "notice", "t": 0.0, "text": T(
+                "Fork hologram: at the waist {w:.6g} µm the beam spreads faster than the orders separate (the first "
+                "order's angle {a1:.3g}° at Λ = {P} µm, the divergence λ/(πw0) = {div:.3g}°): the orders would not "
+                "separate. The world took w0 = {w0:.6g} µm, the smallest at which they separate with a margin of "
+                "{m} %: the beam is wider, the region longer (up to z = {z:.3g} µm). A smaller period Λ allows a "
+                "narrower beam.", w=w_ask, a1=math.degrees(math.atan(tan)), P=period,
+                div=math.degrees(self.lam / (math.pi * w_ask)), w0=w0, m=20, z=z_end)})
         self.fork = fork
         z_end = fork.z1
         f = self.fork
@@ -239,19 +250,19 @@ class Simulation(SlicePlanes, BaseSimulation):
     # --- the scene ----------------------------------------------------------------------------------------------
     def _scene(self):
         lo, hi = self.box
-        objects, layers = [], [{"id": "light", "label": "Интенсивность |E|² (объём, посчитан)", "kind": "volume",
+        objects, layers = [], [{"id": "light", "label": T("Intensity |E|² (a volume, computed)"), "kind": "volume",
                                 "visible": True, "look": {"density": 0.9, "threshold": 0.03}}]
         W = hi[0] - lo[0]
         if self.fork is None and self.params["gen"] == "mode":
-            objects.append({"id": "waist", "label": "Перетяжка пучка (z = 0): w0", "kind": "disk", "z": 0.0,
+            objects.append({"id": "waist", "label": T("Beam waist (z = 0): w0"), "kind": "disk", "z": 0.0,
                             "w": float(self.params["w0"]), "size": [W, W], "visible": False})
         if self.det is not None:
             L = hi[2] - lo[2]
-            objects.append({"id": "detector", "label": "Детектор (одномодовый, дальняя зона)" if self.rot == "disc"
-                            else "Детектор: оба плеча интерферометра", "kind": "box",
+            objects.append({"id": "detector", "label": T("Detector (single-mode, far zone)") if self.rot == "disc"
+                            else T("Detector: both arms of the interferometer"), "kind": "box",
                             "center": [0.0, 0.0, hi[2] - 0.03 * L], "size": [0.12 * W, 0.12 * W, 0.02 * L],
-                            "color": "#9fe870", "opacity": 0.8, "text": "детектор", "visible": True})
-        return {"box": [list(lo), list(hi)], "units": "мкм", "objects": objects, "layers": layers,
+                            "color": "#9fe870", "opacity": 0.8, "text": T("detector"), "visible": True})
+        return {"box": [list(lo), list(hi)], "units": T("µm"), "objects": objects, "layers": layers,
                 "planes": {"max": MAX_PLANES, "center": list(self.plane_center),
                            "defaults": {str(i): list(v) for i, v in DEFAULT_NORMALS.items()}}}
 
@@ -263,7 +274,8 @@ class Simulation(SlicePlanes, BaseSimulation):
             V = A.volume(self.beam, self.z_end)
         self._msg({"type": "volume", "t": self.t, "id": "light", "dims": list(V.shape),
                    "box": [list(lo), list(hi)],
-                   "note": "|E|² / пик на сетке 56³ (за вращающимся элементом не считается); точные значения — в срезах"},
+                   "note": T("|E|² / peak on a grid of {n:d}³ (not computed behind the rotating element); the exact "
+                             "values are in the slices", n=int(V.shape[0]))},
                   {"data": V})
         if self.fork is not None:
             f = self.fork
@@ -284,7 +296,7 @@ class Simulation(SlicePlanes, BaseSimulation):
                 for j in range(n - 1):
                     a = i * n + j
                     idx += [a, a + n, a + n + 1, a, a + n + 1, a + 1]
-            self._msg({"type": "mesh", "t": self.t, "id": "hologram", "label": "Голограмма-«вилка» (z = 0)",
+            self._msg({"type": "mesh", "t": self.t, "id": "hologram", "label": T("Fork hologram (z = 0)"),
                        "count": int(len(pos)), "base": "lab", "opacity": 0.95},
                       {"pos": pos.astype(np.float32), "idx": np.array(idx, np.uint32),
                        "rgb": np.clip(rgb, 0, 255).astype(np.uint8).reshape(-1, 3)})
@@ -294,18 +306,18 @@ class Simulation(SlicePlanes, BaseSimulation):
             h_max = abs(self.l) * self.lam / 0.5  # the plate's step for n = 1.5
             pos, idx, rgb = A.spp_mesh(self.l, self.lam, 0.9 * bm.half, exaggerate=0.04 * (bm.z1 - bm.z0) / h_max)
             self._msg({"type": "mesh", "t": self.t, "id": "plate", "base": "lab",
-                       "label": "Спиральная фазовая пластинка (z = 0; толщина преувеличена)", "count": int(len(pos)),
+                       "label": T("Spiral phase plate (z = 0; the thickness exaggerated)"), "count": int(len(pos)),
                        "opacity": 0.75}, {"pos": pos, "idx": idx, "rgb": rgb})
         if self.rot == "disc":
             pos, idx, rgb = A.disc_mesh(min(self.det.r_max, 0.95 * bm.half), 0.01 * (bm.z1 - bm.z0),
                                         rgb_fn=A.surface_rgb(self.det.surface))
             self._msg({"type": "mesh", "t": self.t, "id": "rotor", "base": "rest", "label":
-                       "Вращающийся шероховатый диск", "count": int(len(pos)), "opacity": 0.85},
+                       T("Rotating rough disc"), "count": int(len(pos)), "opacity": 0.85},
                       {"pos": pos, "idx": idx, "rgb": rgb})
         elif self.rot == "dove":
             h = min(2 * self.det.X.max(), 1.8 * bm.half)
             pos, idx, rgb = A.prism_mesh(0.08 * (bm.z1 - bm.z0), h, 0.8 * h)
-            self._msg({"type": "mesh", "t": self.t, "id": "rotor", "base": "rest", "label": "Вращающаяся призма Дове",
+            self._msg({"type": "mesh", "t": self.t, "id": "rotor", "base": "rest", "label": T("Rotating Dove prism"),
                        "count": int(len(pos)), "opacity": 0.6}, {"pos": pos, "idx": idx, "rgb": rgb})
         self._flow_lines()
         if self.has_helix:
@@ -328,7 +340,7 @@ class Simulation(SlicePlanes, BaseSimulation):
             self.flow_err = float(np.max(np.hypot(*(fine[:, :, :2] - coarse[:, :, :2]).transpose(2, 0, 1)))) / bm.w0
             pts, rgb = A.lines_message(self.flowP, (1.0, 0.82, 0.25))
             self._msg({"type": "lines", "t": self.t, "id": "flowP", "visible": True,
-                       "label": "Линии потока энергии (вектор Пойнтинга, посчитаны)"}, {"pts": pts, "rgb": rgb})
+                       "label": T("Energy flow lines (the Poynting vector, computed)")}, {"pts": pts, "rgb": rgb})
         if bm.model == "exact":
             jo = A.orbital_current(bm, bm.lam / 60)
         elif self.params["gen"] == "mode":  # the paraxial mode's current (Im(u* grad_T u)/k, |u|^2), closed form
@@ -339,7 +351,7 @@ class Simulation(SlicePlanes, BaseSimulation):
         self.flowO = B.trace_lines(jo, starts, self.z_end, steps)
         pts, rgb = A.lines_message(self.flowO, (0.35, 0.9, 1.0))
         self._msg({"type": "lines", "t": self.t, "id": "flowO",
-                   "label": "Линии орбитального (канонического) тока p_o", "visible": bm.model != "exact"},
+                   "label": T("Lines of the orbital (canonical) current p_o"), "visible": bm.model != "exact"},
                   {"pts": pts, "rgb": rgb})
         self.flow_meta = (starts, zs, r_pk)
 
@@ -349,11 +361,12 @@ class Simulation(SlicePlanes, BaseSimulation):
         a, b = A.helix_region(self.beam, self.z_end)
         self._msg({"type": "helix", "t": self.t, "bin": k, "nb": NB, "t_bin": k * self.T_show / NB,
                    "count": int(len(pos)), "region": [a, b],
-                   "label": f"Поверхности равной фазы arg ψ = ωt (участок z = {a:.3g}…{b:.3g} мкм)"},
+                   "label": T("Surfaces of equal phase arg ψ = ωt (the stretch z = {a:.3g}…{b:.3g} µm)", a=a, b=b)},
                   {"pos": pos, "idx": idx, "rgb": rgb})
 
     # --- checks -----------------------------------------------------------------------------------------------------
-    def _check(self, cid, label, value, ref, unit="", note="", tol=1e-9, ok=None, info=False, group="Пучок"):
+    def _check(self, cid, label, value, ref, unit="", note="", tol=1e-9, ok=None, info=False, group=None):
+        group = G_BEAM if group is None else group
         rel = None
         if ref is not None and value is not None and ref != 0:
             rel = (value - ref) / abs(ref)
@@ -368,24 +381,28 @@ class Simulation(SlicePlanes, BaseSimulation):
     def _checks_beam(self):
         bm = self.beam
         # 1. the table against the direct route (measured when the world was built)
-        self._check("table", "Таблица поля против прямого расчёта (24 точки + 18 на ярком кольце)", self.table_err,
-                    0.0, "",
+        self._check("table", T("Field table against the direct calculation ({n1:d} points + {n2:d} on the bright ring)",
+                               n1=24, n2=18), self.table_err, 0.0, "",
                     tol=1e-4, ok=self.table_err <= 1e-4,
-                    note=("бикубические сплайны огибающих по таблице r × z против " +
-                          ("прямой квадратуры векторного пучка" if bm.model == "exact" else
-                           "замкнутой формы / интеграла Френеля") + "; доля пика |E|"))
+                    note=T("bicubic splines of the envelopes on the table r × z against the direct quadrature of the "
+                           "vector beam; fraction of the peak |E|") if bm.model == "exact" else
+                    T("bicubic splines of the envelopes on the table r × z against the closed form / the Fresnel "
+                      "integral; fraction of the peak |E|"))
         if bm.model == "exact":
             # what the propagating beam keeps of the named source (review B8-beams, O2)
-            self._check("kept", "Доля мощности источника, которую несёт пучок (распространяющиеся волны, q ≤ k)",
-                        bm.kept, 1.0, "", info=True,
-                        note=(f"из спектра источника (Парсеваль для преобразования Ганкеля); не распространяется "
-                              f"{bm.dropped:.2e} мощности перетяжки LG: поле на z = 0 отличается от названного на "
-                              f"{math.sqrt(bm.dropped):.2g} в норме L2"
-                              + ("; мир помечен" if bm.dropped >= A.DROP_LABEL else "")
-                              + f"; больше {100 * A.DROP_REFUSE:.3g} % — мир не строится") if bm.gen == "mode" else
-                             (f"из спектра поля за пластинкой (Парсеваль): {bm.dropped:.2e} его мощности на z = 0 — "
-                              f"затухающие волны ближнего поля особой точки; на расстоянии λ от пластинки их "
-                              f"{bm.ev_near[1]:.2e}, 2λ — {bm.ev_near[2]:.2e}; пучок — точное дальнее поле"))
+            if bm.gen == "mode":
+                note = join([T("from the source's spectrum (Parseval for the Hankel transform); {d:.2e} of the power of "
+                               "the LG waist does not propagate: the field at z = 0 differs from the named one by "
+                               "{n:.2g} in the L2 norm", d=bm.dropped, n=math.sqrt(bm.dropped)),
+                             T("the world is marked") if bm.dropped >= A.DROP_LABEL else "",
+                             T("above {p:.3g} % the world is not built", p=100 * A.DROP_REFUSE)])
+            else:
+                note = T("from the spectrum of the field behind the plate (Parseval): {d:.2e} of its power at z = 0 is "
+                         "in evanescent waves of the near field of the singular point; at the distance λ from the "
+                         "plate they are {e1:.2e}, at 2λ {e2:.2e}; the beam is the exact far field", d=bm.dropped,
+                         e1=bm.ev_near[1], e2=bm.ev_near[2])
+            self._check("kept", T("Fraction of the source's power the beam carries (propagating waves, q ≤ k)"),
+                        bm.kept, 1.0, "", info=True, note=note)
         # 2. the angular momentum per photon, measured on the plane z_am: the waist (LG), or 2 lambda behind the plate,
         # before the light the plate's singular centre sends to wide angles has left the window
         z_am = self.zc if self.params["gen"] == "mode" else bm.z0 + 2 * bm.lam
@@ -397,7 +414,7 @@ class Simulation(SlicePlanes, BaseSimulation):
         sb = self.sigma_bar
         am = {"l": self.l, "sigma": sb, "z": z_am}
         dx = float(x[1] - x[0])
-        per = "на фотон на единицу длины"
+        G_AM = T("Angular momentum")
         if bm.model == "exact":
             E, H = bm.fields(X, Y, Z)
             hz = bm.lam / 40
@@ -414,54 +431,63 @@ class Simulation(SlicePlanes, BaseSimulation):
             miss = max(0.0, 1.0 - m["W"] / W_spec)
             tol = max(2e-4, 4 * (abs(self.l) + 2) * miss)
             wide = miss > 1e-3  # the window misses too much: the comparison is shown for information
-            why = (f"; ОКНО НЕ ВМЕЩАЕТ свет под большими углами (доля энергии вне окна {miss:.1e}): сравнение для "
-                   f"сведения" if wide else "")
+            why = (T("the WINDOW DOES NOT HOLD the light at large angles (the fraction of the energy outside the window "
+                     "{m:.1e}): a comparison for information", m=miss) if wide else "")
             am.update({"L": m["L"], "S": m["S"], "J": m["J"], "flux_J": m["flux_J"], "J_poynting": m["J_poynting_per_photon"],
                        "S_flux": m["flux_S"], "L_flux": m["flux_L"], "S_flux_ref": ref["S_flux"],
                        "L_flux_ref": ref["L_flux"], "J_poynting_ref": ref["J_poynting"],
                        "L_ref": ref["L"], "S_ref": ref["S"], "J_ref": ref["J"], "cos": ref["cos_mean"], "miss": miss})
-            win = (f"плотности Берри на сетке {n}² в окне ±{bm.am_half:.3g} мкм; допуск — 4(|l| + 2) × доля энергии "
-                   f"вне окна ({miss:.1e})")
-            for key, lab in (("J", f"Полный момент J_z = L_z + S_z {per}"),
-                             ("S", f"Спин S_z {per} (каноническое разделение, Блиох и др. 2010)"),
-                             ("L", f"Орбитальный момент L_z {per} (каноническое разделение)")):
-                self._check(f"am_{key}", lab + f" (измерен по полю на плоскости z = {z_am:.3g} мкм)", m[key], ref[key],
+            win = T("Berry densities on a grid {n:d}² in the window ±{h:.3g} µm; tolerance: 4(|l| + 2) × the fraction "
+                    "of the energy outside the window ({m:.1e})", n=n, h=bm.am_half, m=miss)
+            for key, lab in (("J", T("Total angular momentum J_z = L_z + S_z per photon per unit length (measured from "
+                                     "the field on the plane z = {z:.3g} µm)", z=z_am)),
+                             ("S", T("Spin S_z per photon per unit length (the canonical split, Bliokh et al. 2010; "
+                                     "measured from the field on the plane z = {z:.3g} µm)", z=z_am)),
+                             ("L", T("Orbital angular momentum L_z per photon per unit length (the canonical split; "
+                                     "measured from the field on the plane z = {z:.3g} µm)", z=z_am))):
+                self._check(f"am_{key}", lab, m[key], ref[key],
                             "ħ", tol=tol, ok=None if wide else abs(m[key] - ref[key]) <= tol, info=wide,
-                            group="Момент импульса",
-                            note=f"эталон из спектра: J = l + σ, S = σ⟨cos θ⟩, L = l + σ(1 − ⟨cos θ⟩), "
-                                 f"⟨cos θ⟩ = {ref['cos_mean']:.6f}; {win}; разделение на спин и орбиту зависит от "
-                                 f"определения — по потоку (Барнетт) ниже" + why)
-            self._check("am_flux", "Поток момента / поток энергии × ω (тензор натяжений)", m["flux_J"], ref["J"],
-                        "ħ", tol=tol, ok=None if wide else abs(m["flux_J"] - ref["J"]) <= tol, info=wide,
-                        group="Момент импульса",
-                        note="момент, переносимый через плоскость, на фотон, прошедший через неё: l + σ точно" + why)
+                            group=G_AM,
+                            note=join([T("the reference from the spectrum: J = l + σ, S = σ⟨cos θ⟩, "
+                                         "L = l + σ(1 − ⟨cos θ⟩), ⟨cos θ⟩ = {c:.6f}; {win}; the split into spin and "
+                                         "orbit depends on the definition: by the flux (Barnett) below",
+                                         c=ref["cos_mean"], win=win), why]))
+            self._check("am_flux", T("Angular momentum flux / energy flux × ω (the stress tensor)"), m["flux_J"],
+                        ref["J"], "ħ", tol=tol, ok=None if wide else abs(m["flux_J"] - ref["J"]) <= tol, info=wide,
+                        group=G_AM,
+                        note=join([T("the angular momentum carried through the plane per photon crossing it: exactly "
+                                     "l + σ"), why]))
             flux_notes = {
-                "S_flux": "другое опубликованное определение: спиновый поток σ/(2ω)∫|E_⊥|² dA (Монтейру и др. 2009, "
-                          "ур. 33), измерен как −∫Im(E_⊥*·H_⊥) dA/(2ω); эталон σ⟨(1 + cos²θ)/2⟩/⟨cos θ⟩ (|спин| > 1, "
-                          "сдвиг от σ в другую сторону, чем у канонического S_z); от определения не зависит только "
-                          "J_z = l + σ",
-                "L_flux": "поток момента (тензор натяжений) минус спиновый поток Барнетта, на фотон через плоскость; "
-                          "эталон l + σ − σ⟨(1 + cos²θ)/2⟩/⟨cos θ⟩"}
-            for key, mkey, lab in (("S_flux", "flux_S", "Спин по потоку через плоскость на фотон (разделение Барнетта)"),
-                                   ("L_flux", "flux_L", "Орбита по потоку через плоскость на фотон (разделение Барнетта)")):
+                "S_flux": T("another published definition: the spin flux σ/(2ω)∫|E_⊥|² dA (Monteiro et al. 2009, "
+                            "Eq. 33), measured as −∫Im(E_⊥*·H_⊥) dA/(2ω); reference σ⟨(1 + cos²θ)/2⟩/⟨cos θ⟩ (|spin| > "
+                            "1, a shift from σ the other way than the canonical S_z's); only J_z = l + σ does not "
+                            "depend on the definition"),
+                "L_flux": T("the angular momentum flux (the stress tensor) minus Barnett's spin flux, per photon "
+                            "through the plane; reference l + σ − σ⟨(1 + cos²θ)/2⟩/⟨cos θ⟩")}
+            for key, mkey, lab in (("S_flux", "flux_S", T("Spin from the flux through the plane per photon (Barnett's "
+                                                          "split)")),
+                                   ("L_flux", "flux_L", T("Orbit from the flux through the plane per photon (Barnett's "
+                                                          "split)"))):
                 self._check(f"am_{key}", lab, m[mkey], ref[key], "ħ", tol=tol,
-                            ok=None if wide else abs(m[mkey] - ref[key]) <= tol, info=wide, group="Момент импульса",
-                            note=flux_notes[key] + "; " + win + why)
+                            ok=None if wide else abs(m[mkey] - ref[key]) <= tol, info=wide, group=G_AM,
+                            note=join([flux_notes[key], win, why]))
             # the Poynting moment weights the r^-3/2 tails of a spectrum cut at q = k more than the densities above: in
             # a window of half-width R its error falls only as R^-1/2 (measured for the tight preset: 5.6e-3, 4.6e-3,
             # 4.0e-3, 3.2e-3 at R = 10, 15, 20, 30 lambda), so for such a spectrum it is a comparison, not a check
             pinfo = wide or bm.edge >= 1e-6
-            self._check("am_poynting", f"Момент по Пойнтингу ∫(r × P)_z {per}", m["J_poynting_per_photon"],
-                        ref["J_poynting"], "ħ", tol=tol,
+            self._check("am_poynting", T("Poynting angular momentum ∫(r × P)_z per photon per unit length"),
+                        m["J_poynting_per_photon"], ref["J_poynting"], "ħ", tol=tol,
                         ok=None if pinfo else abs(m["J_poynting_per_photon"] - ref["J_poynting"]) <= tol, info=pinfo,
-                        group="Момент импульса",
-                        note=f"эталон l + σ + (σ/2)⟨sin²θ/cos θ⟩ = {ref['J_poynting']:.7f}: отличается от L_z + S_z на "
-                             f"½ d/dz ∫ r·S_⊥ dA; при одной спиральности S = σP/ω, и этот член одинаков на всех "
-                             f"плоскостях z — свойство углового спектра, есть и в перетяжке"
-                             + (why if wide else "")
-                             + (f"; спектр обрезан на q = k (на краю {bm.edge:.2g} максимума): хвосты поля ∝ r^−3/2, "
-                                f"в окне этот момент сходится лишь как R^−1/2 — сравнение для сведения"
-                                if bm.edge >= 1e-6 and not wide else ""))
+                        group=G_AM,
+                        note=join([T("reference l + σ + (σ/2)⟨sin²θ/cos θ⟩ = {j:.7f}: it differs from L_z + S_z by "
+                                     "½ d/dz ∫ r·S_⊥ dA; with one helicity S = σP/ω, and this term is the same on "
+                                     "every plane z: a property of the angular spectrum, present in the waist too",
+                                     j=ref["J_poynting"]),
+                                   why,
+                                   T("the spectrum is cut at q = k (at the edge {e:.2g} of the maximum): the field's "
+                                     "tails ∝ r^−3/2, and in the window this moment converges only as R^−1/2: a "
+                                     "comparison for information", e=bm.edge)
+                                   if bm.edge >= 1e-6 and not wide else ""]))
             # the power through planes (exact field): the energy flux is the same at every z
             fl, misses = [], []
             for zz in (z_am, 0.5 * (z_am + self.z_end), self.z_end):
@@ -471,13 +497,15 @@ class Simulation(SlicePlanes, BaseSimulation):
             dev = (max(fl) - min(fl)) / max(fl)
             ptol = max(1e-6, 3 * max(misses))
             pwide = max(misses) > 1e-3
-            self._check("power", "Мощность через плоскости z: одна и та же", dev, 0.0, "", tol=ptol,
+            self._check("power", T("Power through the planes z: one and the same"), dev, 0.0, "", tol=ptol,
                         ok=None if pwide else dev <= ptol, info=pwide,
-                        note=f"P_z, проинтегрированный по окну на трёх глубинах: {', '.join(f'{v:.6g}' for v in fl)}; "
-                             f"допуск — 3 × наибольшая доля энергии вне окна ({max(misses):.1e})"
-                             + ("; свет под большими углами уходит из окна: для сведения" if pwide else ""))
-            self._check("ez", "Продольное поле max|E_z| / max|E| (плоскость z_c)", Ezf, None, "", info=True,
-                        note=f"в параксиальной картине его нет; первого порядка, ~1/(k w0) = {1 / (bm.k * bm.w0):.3g}")
+                        note=join([T("P_z integrated over the window at three depths: {p1:.6g}, {p2:.6g}, {p3:.6g}; "
+                                     "tolerance: 3 × the largest fraction of the energy outside the window ({m:.1e})",
+                                     p1=fl[0], p2=fl[1], p3=fl[2], m=max(misses)),
+                                   T("the light at large angles leaves the window: for information") if pwide else ""]))
+            self._check("ez", T("Longitudinal field max|E_z| / max|E| (the plane z_c)"), Ezf, None, "", info=True,
+                        note=T("there is none in the paraxial picture; first order, ~1/(k w0) = {v:.3g}",
+                               v=1 / (bm.k * bm.w0)))
             am["ez"] = Ezf
             # where the paraxial picture fails: the paraxial mode against the exact field at points of z_c — the
             # transverse components (second order); E_z, first order, is the check above (review B8-beams, O1)
@@ -488,11 +516,13 @@ class Simulation(SlicePlanes, BaseSimulation):
                 Pa = Pa[None] * A.pol_vector(self.params["pol"])[:, None]
                 d = float(np.max(np.abs(Ex[:2] - Pa[:2])) / np.max(np.abs(Pa)))
                 am["parax_diff"] = d
-                self._check("parax", "Параксиальная мода против точного поля: поперечные компоненты (плоскость z_c)",
+                self._check("parax", T("Paraxial mode against the exact field: the transverse components (the plane "
+                                       "z_c)"),
                             d, None, "", info=True,
-                            note=f"наибольшее отличие E_x, E_y, доля пика; второй порядок — растёт как (λ/w0)² = "
-                                 f"{(bm.lam / bm.w0) ** 2:.3g} (измерено: ×4 при w0/2); продольное поле E_z, которого "
-                                 f"у моды нет, первого порядка (λ/w0) — проверка «Продольное поле»")
+                            note=T("the largest difference of E_x, E_y, fraction of the peak; second order: it grows "
+                                   "as (λ/w0)² = {v:.3g} (measured: ×4 at w0/2); the longitudinal field E_z, which the "
+                                   "mode does not have, is first order (λ/w0): the check “Longitudinal field”",
+                                   v=(bm.lam / bm.w0) ** 2))
         else:
             psi = bm.psi(X, Y, Z)
             Lm = B.scalar_oam_per_photon(psi, x, x)
@@ -500,22 +530,24 @@ class Simulation(SlicePlanes, BaseSimulation):
             E, H = bm.fields(X, Y, Z)
             Sm = bm.k * float(np.sum(B.spin_density(E, H, bm.k)[2])) / float(np.sum(B.energy_density(E, H)))
             am.update({"L": Lm, "S": Sm, "J": Lm + Sm, "L_ref": self.l, "S_ref": sb, "J_ref": self.l + sb})
-            self._check("am_L", f"Орбитальный момент L_z {per} (измерен по полю на плоскости z = {z_am:.3g} мкм)", Lm,
-                        self.l, "ħ", tol=2e-4, ok=abs(Lm - self.l) <= 2e-4, group="Момент импульса",
-                        note="∫Im(ψ*∂_φψ) dA / ∫|ψ|² dA, производные спектральные; в параксиальной модели L_z = l")
-            self._check("am_S", f"Спин S_z {per} (по полю модели на той же плоскости)", Sm, sb, "ħ", tol=1e-9,
-                        ok=abs(Sm - sb) <= 1e-9, group="Момент импульса",
-                        note="ω∫S_z dA / ∫w dA для u·e_σ (плотности Берри): σ̄ при однородной поляризации — так модель "
-                             "устроена; точная модель покажет расщепление; допуск — округление")
+            self._check("am_L", T("Orbital angular momentum L_z per photon per unit length (measured from the field on "
+                                  "the plane z = {z:.3g} µm)", z=z_am), Lm,
+                        self.l, "ħ", tol=2e-4, ok=abs(Lm - self.l) <= 2e-4, group=G_AM,
+                        note=T("∫Im(ψ*∂_φψ) dA / ∫|ψ|² dA, spectral derivatives; in the paraxial model L_z = l"))
+            self._check("am_S", T("Spin S_z per photon per unit length (from the model's field on the same plane)"), Sm,
+                        sb, "ħ", tol=1e-9, ok=abs(Sm - sb) <= 1e-9, group=G_AM,
+                        note=T("ω∫S_z dA / ∫w dA for u·e_σ (Berry densities): σ̄ at a uniform polarisation, as the "
+                               "model is built; the exact model shows the splitting; tolerance: round-off"))
         self.am = am
         self._msg({"type": "am", "t": self.t, **{k: (float(v) if v is not None else None) for k, v in am.items()}})
         # 3. the topological charge on the plane z_c
         r_ring = A.ring_radius(bm, self.zc)
         q = B.charge_on_circle(lambda xx, yy: bm.psi(xx, yy, np.full_like(xx, self.zc)), 0.0, 0.0,
                                max(r_ring, 0.05 * bm.w0), 720)
-        self._check("charge", "Топологический заряд: обход фазы ψ вокруг оси (z_c)", q, float(self.l), "",
-                    tol=1e-6, ok=abs(q - self.l) < 1e-6,
-                    note=f"сумма скачков фазы по окружности r = {r_ring:.3g} мкм (самое яркое кольцо), 720 точек; эталон — l")
+        self._check("charge", T("Topological charge: the winding of the phase of ψ around the axis (z_c)"), q,
+                    float(self.l), "", tol=1e-6, ok=abs(q - self.l) < 1e-6,
+                    note=T("the sum of the phase jumps around the circle r = {r:.3g} µm (the brightest ring), {npts:d} "
+                           "points; reference: l", r=r_ring, npts=720))
         # 4. the Gouy phase on the ring (or the axis) at z = min(z_R, end)
         zg = min(bm.zr, 0.98 * self.z_end) if self.params["gen"] == "mode" else None
         if zg is not None and zg > 0:
@@ -530,15 +562,18 @@ class Simulation(SlicePlanes, BaseSimulation):
             ref = float(np.angle(np.exp(1j * ref)))  # in (-pi, pi], as the measured phase
             d = float(np.angle(np.exp(1j * (meas - ref))))
             exact = bm.model == "exact"
-            self._check("gouy", f"Фаза Гюи: arg ψ на {'оси' if rho == 0 else 'кольце r = w/√2'} при z = {zg:.3g} мкм",
-                        meas, ref, "рад", tol=1e-3, ok=None if exact else abs(d) < 1e-3, info=exact,
-                        note=f"эталон ρ²z/z_R − (2p+|l|+1)·arctan(z/z_R) (параксиальная формула); отличие {d:.2e} рад"
-                             + ("; у точного поля — непараксиальная поправка" if exact else ""))
+            label = (T("Gouy phase: arg ψ on the axis at z = {z:.3g} µm", z=zg) if rho == 0 else
+                     T("Gouy phase: arg ψ on the ring r = w/√2 at z = {z:.3g} µm", z=zg))
+            self._check("gouy", label, meas, ref, T("rad"), tol=1e-3, ok=None if exact else abs(d) < 1e-3, info=exact,
+                        note=join([T("reference ρ²z/z_R − (2p+|l|+1)·arctan(z/z_R) (the paraxial formula); the "
+                                     "difference {d:.2e} rad", d=d),
+                                   T("the exact field has a non-paraxial correction") if exact else ""]))
         # 5. the equiphase sheets: |l| of them
         if self.helix_grid is not None:
             nsheets = A.sheet_count(self.helix_grid)
-            self._check("sheets", "Число винтовых поверхностей равной фазы", nsheets, float(abs(self.l)), "",
-                        tol=0.02, note="среднее число пересечений arg ψ = const по азимуту в ярких ячейках (z, r)")
+            self._check("sheets", T("Number of helical surfaces of equal phase"), nsheets, float(abs(self.l)), "",
+                        tol=0.02, note=T("the mean number of crossings of arg ψ = const along the azimuth in the bright "
+                                         "cells (z, r)"))
         # 6. the flow lines' twist: the paraxial orbital current against the closed-form spiral
         starts, zs, r_pk = self.flow_meta
         if self.params["gen"] == "mode":
@@ -548,15 +583,18 @@ class Simulation(SlicePlanes, BaseSimulation):
                 xr, yr = PX.flow_line(self.l, r0, a0, zs, self.flowO[i, :, 2], bm.k, bm.w0)
                 worst = max(worst, float(np.max(np.hypot(self.flowO[i, :, 0] - xr, self.flowO[i, :, 1] - yr))))
             par = bm.model != "exact"
-            self._check("flow", "Линии орбитального тока против параксиальной спирали φ(z)", worst / bm.w0, 0.0, "",
+            self._check("flow", T("Orbital current lines against the paraxial spiral φ(z)"), worst / bm.w0, 0.0, "",
                         tol=2e-3, ok=(worst / bm.w0 <= 2e-3) if par else None, info=not par,
-                        note="наибольшее отклонение, доля w0; спираль: ρ = r/w(z) постоянно, φ − φ0 = l/(2ρ²)·(ψ − ψ0)"
-                             + ("" if par else " — у точного поля отличие показывает непараксиальность"))
+                        note=T("the largest deviation, fraction of w0; the spiral: ρ = r/w(z) constant, "
+                               "φ − φ0 = l/(2ρ²)·(ψ − ψ0)") if par else
+                        T("the largest deviation, fraction of w0; the spiral: ρ = r/w(z) constant, "
+                          "φ − φ0 = l/(2ρ²)·(ψ − ψ0); for the exact field the difference shows the non-paraxiality"))
         if self.flow_err is not None:
-            self._check("flow_step", "Линии потока энергии (Пойнтинг): ошибка интегрирования", self.flow_err, None, "",
+            self._check("flow_step", T("Energy flow lines (Poynting): the integration error"), self.flow_err, None, "",
                         info=True,
-                        note=f"RK4, {FLOW_STEPS} шагов по z; две линии пересчитаны с вдвое меньшим шагом — наибольшее "
-                             f"расхождение, доля w0 (оценка ошибки линий на сцене)")
+                        note=T("RK4, {steps:d} steps in z; two lines recomputed with half the step: the largest "
+                               "difference, fraction of w0 (an estimate of the error of the lines in the scene)",
+                               steps=FLOW_STEPS))
 
     def _checks_fork(self):
         f = self.fork
@@ -564,33 +602,35 @@ class Simulation(SlicePlanes, BaseSimulation):
         for m, xm, q in orders:
             if TM.fork_order_coefficient(f.kind, m) == 0:
                 continue
-            self._check(f"order_{m}", f"Порядок m = {m:+d} (x = {xm:.3g} мкм): топологический заряд", float(q),
-                        float(m * f.l), "", tol=0.0, ok=q == m * f.l,
-                        note="сумма зарядов ячеек сетки в круге радиуса 1,3 w(z) вокруг порядка (обход по его границе); эталон m·l")
+            self._check(f"order_{m}", T("Order m = {m:+d} (x = {x:.3g} µm): topological charge", m=int(m), x=xm),
+                        float(q), float(m * f.l), "", tol=0.0, ok=q == m * f.l,
+                        note=T("the sum of the charges of the grid cells in the circle of radius {f} w(z) around the "
+                               "order (the winding along its boundary); reference m·l", f=1.3))
         sh = f.shares()
         self.fork_shares = sh
         for m in sh["orders"]:
             if m not in (-1, 0, 1):
                 continue
             v, r = sh["meas"][m], sh["ref"][m]
-            self._check(f"frac_{m}", f"Порядок m = {m:+d}: доля распространяющейся мощности", v, r, "",
+            self._check(f"frac_{m}", T("Order m = {m:+d}: fraction of the propagating power", m=int(m)), v, r, "",
                         tol=sh["tol"], ok=abs(v - r) <= sh["tol"],
-                        note=f"измерена по угловому спектру поля за маской (ячейка |k_x + mK| < K/2; по Парсевалю та же "
-                             f"на любой плоскости z); эталон — замкнутая форма той же тонкой маски на той же сетке k "
-                             f"(каждый порядок — гауссов пучок за пластинкой заряда m·l, сдвинутый на −mK; их хвосты "
-                             f"∝ q^−2 перекрываются); без перекрытия было бы |c_m|²/Σ|c_j|² = {sh['ideal'][m]:.4f}; "
-                             f"допуск — 2 × наложение спектра сеткой, оценённое по замкнутой форме с периодическими "
-                             f"образами ({sh['alias']:.1e})"
-                             + (f"; бинарная маска — ряд Фурье до полосы сетки, |m| ≤ {f.m_band}" if f.kind == "binary"
-                                else ""))
+                        note=join([T("measured from the angular spectrum of the field behind the mask (the cell "
+                                     "|k_x + mK| < K/2; by Parseval the same on every plane z); reference: the closed "
+                                     "form of the same thin mask on the same grid in k (each order is a Gaussian beam "
+                                     "behind a plate of charge m·l, shifted by −mK; their tails ∝ q^−2 overlap); "
+                                     "without the overlap it would be |c_m|²/Σ|c_j|² = {ideal:.4f}; tolerance: 2 × the "
+                                     "aliasing of the spectrum by the grid, estimated from the closed form with "
+                                     "periodic images ({alias:.1e})", ideal=sh["ideal"][m], alias=sh["alias"]),
+                                   T("the binary mask is a Fourier series up to the grid's band, |m| ≤ {mb:d}",
+                                     mb=int(f.m_band)) if f.kind == "binary" else ""]))
 
     # --- slice planes (lfviz.planes3d hooks) -------------------------------------------------------------------------
     def _plane_points(self, pl, s_rng, t_rng, ns, nt):
         s = np.linspace(s_rng[0], s_rng[1], ns)
         t = np.linspace(t_rng[0], t_rng[1], nt)
-        S, T = np.meshgrid(s, t)  # (nt, ns)
+        S, Tt = np.meshgrid(s, t)  # (nt, ns)
         o, u, v = (np.asarray(a, float) for a in (pl.origin, pl.u, pl.v))
-        P = o[:, None, None] + u[:, None, None] * S + v[:, None, None] * T
+        P = o[:, None, None] + u[:, None, None] * S + v[:, None, None] * Tt
         lo, hi = (np.asarray(b, float) for b in self.box)
         inside = np.all((P >= lo[:, None, None] - 1e-9) & (P <= hi[:, None, None] + 1e-9), axis=0)
         return s, t, P, inside
@@ -605,9 +645,11 @@ class Simulation(SlicePlanes, BaseSimulation):
         I = np.sum(np.abs(E) ** 2, axis=0)
         psi = self.beam.psi(None, None, None, E) * np.exp(-1j * self.beam.k * z)
         I[~inside] = np.nan
-        ver = {"points": 0, "note": "грубый срез (автосмещение), без сверки"} if coarse else self._verify(P, I, inside)
+        ver = ({"points": 0, "note": T("a coarse slice (auto-move), not verified")} if coarse
+               else self._verify(P, I, inside))
         return {"s": s, "t": t, "I": I, "phase": np.angle(psi), "coarse": coarse, "verify": ver, "plane": pl,
-                "route": "таблица точного поля" if self.beam.model == "exact" else "ПРИБЛИЖЕНИЕ: параксиальная модель",
+                "route": T("the table of the exact field") if self.beam.model == "exact" else
+                T("APPROXIMATION: the paraxial model"),
                 "exact": self.beam.model == "exact"}
 
     def _verify(self, P, I, inside):
@@ -649,12 +691,14 @@ class Simulation(SlicePlanes, BaseSimulation):
             si = np.argsort(ss)
             s, vals = ss[si], line[:, si]
         else:
-            raise ValueError("у голограммы срезы считаются только вдоль осей: z = c, y = c или x = c")
+            raise Refusal(T("the hologram's slices are computed only along the axes: z = c, y = c or x = c"),
+                          hint=T("turn the plane perpendicular to the x, y or z axis"))
         I = np.abs(vals) ** 2
         z_of = o[2] + np.outer(t, np.ones(len(s))) * np.asarray(pl.v)[2]
         return {"s": np.asarray(s), "t": np.asarray(t), "I": I, "phase": np.angle(vals * np.exp(-1j * f.k * z_of)),
-                "coarse": coarse, "verify": {"points": 0, "note": "точный путь углового спектра (тот же, что объём)"},
-                "plane": pl, "route": "угловой спектр (точно для этой плоскости)", "exact": True}
+                "coarse": coarse, "verify": {"points": 0, "note": T("the exact route of the angular spectrum (the "
+                                                                     "same as the volume's)")},
+                "plane": pl, "route": T("angular spectrum (exact for this plane)"), "exact": True}
 
     def _plane_emit(self, pid):
         sl = self.slices[pid]
@@ -665,10 +709,11 @@ class Simulation(SlicePlanes, BaseSimulation):
                 "s": [float(sl["s"][0]), float(sl["s"][-1]), len(sl["s"])],
                 "tt": [float(sl["t"][0]), float(sl["t"][-1]), len(sl["t"])],
                 "origin": pd["origin"], "u": pd["u"], "v": pd["v"], "normal": pd["normal"], "label": pd["label"],
-                "peak": peak, "route": "plane", "route_label": sl["route"] + "; фаза — arg(ψ e^{−ikz}) (огибающая)",
+                "peak": peak, "route": "plane",
+                "route_label": T("{route}; the phase is arg(ψ e^{−ikz}) (the envelope)", route=sl["route"]),
                 "exact": sl["exact"], "approximation": not sl["exact"],
-                "reason": "" if sl["exact"] else "параксиальная модель пучка (мир выбран так)",
-                "verify": sl["verify"], "verify_title": "|E|² в точках плоскости против прямого расчёта",
+                "reason": "" if sl["exact"] else T("the paraxial beam model (the world is chosen so)"),
+                "verify": sl["verify"], "verify_title": T("|E|² at points of the plane against the direct calculation"),
                 "z_near": 0.0, "window_est": 0.0}
         blobs = {"I": (I / max(peak, 1e-300)).astype(np.float32)}
         if not sl["coarse"]:
@@ -676,9 +721,10 @@ class Simulation(SlicePlanes, BaseSimulation):
         self._msg(meta, blobs)
         ver = sl["verify"]
         if ver.get("points"):
-            self._check(f"plane_{pid}", f"Срез {pid} ({pd['label']}): |E|² в {ver['points']} точках против прямого "
-                                        f"расчёта", ver["max_err"], 0.0, "", tol=ver["tol"], ok=ver["ok"],
-                        group="Срезы", note="доля пика среза; допуск — 4 × ошибка таблицы")
+            self._check(f"plane_{pid}", T("Slice {id} ({plane}): |E|² at {n} points against the direct calculation",
+                                          id=pid, plane=pd["label"], n=ver["points"]),
+                        ver["max_err"], 0.0, "", tol=ver["tol"], ok=ver["ok"],
+                        group=T("Slices"), note=T("fraction of the slice's peak; tolerance: 4 × the error of the table"))
 
     def _plane_preview(self, pid, pl, s_rng, t_rng):
         sl = self._plane_slice(pid, pl, s_rng, t_rng, True)
@@ -693,8 +739,8 @@ class Simulation(SlicePlanes, BaseSimulation):
 
     def _plane_removed(self, pid, sl):
         if sl and sl["verify"].get("points"):
-            self._check(f"plane_{pid}", f"Срез {pid}: убран", None, None, "", info=True, group="Срезы",
-                        note="последняя сверка этого среза — в записи запуска")
+            self._check(f"plane_{pid}", T("Slice {id}: removed", id=pid), None, None, "", info=True, group=T("Slices"),
+                        note=T("the last verification of this slice is in the run's record"))
 
     # --- the rotating element and its detector ------------------------------------------------------------------------
     def _omega(self):
@@ -751,27 +797,31 @@ class Simulation(SlicePlanes, BaseSimulation):
         depth = ROT.modulation_depth(v)
         ref = self._beat_ref()
         n_meas = len(self.samples) // A.WINDOW
-        what = "диск: интенсивность за фильтром мод ±l" if self.rot == "disc" else "призма: мощность двух плеч"
+        what = T("disc: the intensity behind the ±l mode filter") if self.rot == "disc" else T(
+            "prism: the power of the two arms")
         if ref == 0:
-            self._check("beat", "Биения на детекторе: глубина модуляции (их нет)", depth, 0.0, "", tol=1e-6,
-                        ok=depth <= 1e-6, group="Вращение",
-                        note=f"{what}; {A.WINDOW} отсчётов; эталон: при l = 0 или f = 0 частота не сдвигается")
+            self._check("beat", T("Beat at the detector: the modulation depth (there is none)"), depth, 0.0, "",
+                        tol=1e-6, ok=depth <= 1e-6, group=G_ROT,
+                        note=T("{what}; {n:d} samples; reference: at l = 0 or f = 0 the frequency is not shifted",
+                               what=what, n=A.WINDOW))
             f_meas = 0.0
         else:
             f_meas = ROT.peak_frequency(v, dt, positive=True, exclude_dc=True) / (2 * math.pi)
-            self._check("beat", "Биения на детекторе: частота по спектру отсчётов", f_meas, ref, "Гц",
-                        tol=1e-3, group="Вращение",
-                        note=f"{what}; {A.WINDOW} отсчётов за два оборота, пик спектра; эталон 2|l|·f "
-                             f"(глубина модуляции {depth:.3g})")
+            self._check("beat", T("Beat at the detector: the frequency from the spectrum of the samples"), f_meas, ref,
+                        T("Hz"), tol=1e-3, group=G_ROT,
+                        note=T("{what}; {n:d} samples over two turns, the peak of the spectrum; reference 2|l|·f (the "
+                               "modulation depth {d:.3g})", what=what, n=A.WINDOW, d=depth))
         s_meas = ROT.peak_frequency(c, dt) / (2 * math.pi)
         s_ref = self._shift_ref()
-        self._check("shift", ("Сдвиг частоты света на оси (по комплексной амплитуде)" if self.rot == "disc" else
-                              "Сдвиг частоты повёрнутого пучка (по их перекрытию)"), s_meas, s_ref, "Гц",
+        self._check("shift", (T("Frequency shift of the light on the axis (from the complex amplitude)")
+                              if self.rot == "disc" else
+                              T("Frequency shift of the turned beam (from their overlap)")), s_meas, s_ref, T("Hz"),
                     tol=1e-3 if s_ref else 1e-6 * max(self.f_rot, 1.0),
                     ok=(abs(s_meas) < 1e-6 * max(self.f_rot, 1.0)) if s_ref == 0 else None,
-                    group="Вращение",
-                    note=("−l·f: свет, рассеянный на ось, взял гармонику n = −l поверхности" if self.rot == "disc" else
-                          "l_вых·2f, l_вых = −l: изображение повёрнуто на удвоенный угол призмы и отражено"))
+                    group=G_ROT,
+                    note=(T("−l·f: the light scattered onto the axis took the harmonic n = −l of the surface")
+                          if self.rot == "disc" else
+                          T("l_out·2f, l_out = −l: the image is turned by twice the prism's angle and mirrored")))
         f, P = ROT.spectrum(v - v.mean(), dt, pad=8)
         keep = f >= 0
         fh = f[keep] / (2 * math.pi)
@@ -782,7 +832,8 @@ class Simulation(SlicePlanes, BaseSimulation):
                    "shift_meas": s_meas, "shift_ref": s_ref, "depth": depth, "f_rot": self.f_rot},
                   {"f": fh[sel].astype(np.float32), "P": (Pk[sel] / max(float(Pk.max()), 1e-300)).astype(np.float32)})
         self._msg({"type": "event", "t": self.t, "kind": "measure",
-                   "text": f"измерение {n_meas}: биения {f_meas:.4g} Гц (эталон {ref:.4g}), сдвиг {s_meas:.4g} Гц"})
+                   "text": T("measurement {k:d}: beat {f:.4g} Hz (reference {ref:.4g}), shift {s:.4g} Hz", k=n_meas,
+                             f=f_meas, ref=ref, s=s_meas)})
 
     # --- messages and time ----------------------------------------------------------------------------------------------
     def _msg(self, meta, blobs=None):
@@ -844,10 +895,10 @@ class Simulation(SlicePlanes, BaseSimulation):
 
     def set_live(self, values):
         if self.fork is not None or self.rot == "none":
-            raise ValueError("в этом мире нет вращающегося элемента: нечего менять на ходу")
+            raise Refusal(T("this world has no rotating element: there is nothing to change on the fly"))
         merged, errors = SCHEMA.coerce_live({"f_rot": self.f_rot}, values)
         if errors:
-            raise ValueError("; ".join(errors))
+            raise ValueError(join(errors))
         f_new = float(merged["f_rot"])
         self.angle = self._angle_at(self.t)
         self.t_angle = self.t
@@ -856,7 +907,8 @@ class Simulation(SlicePlanes, BaseSimulation):
         self.seg_t0 = self.t
         self.seg_n = 0
         self.samples = []
-        return f"частота вращения f = {f_new:.4g} Гц с t = {self.t * 1e3:.4g} мс: новая серия измерений"
+        return T("rotation frequency f = {f:.4g} Hz from t = {t:.4g} ms: a new series of measurements", f=f_new,
+                 t=self.t * 1e3)
 
     def view_state(self):
         return SlicePlanes.view_state(self)
@@ -876,30 +928,35 @@ class Simulation(SlicePlanes, BaseSimulation):
         p = self.params
         approximations = []
         if self.fork is not None:
-            approximations.append("голограмма — тонкая маска в плоскости z = 0 (дальше распространение точное)")
+            approximations.append(T("the hologram is a thin mask in the plane z = 0 (the propagation beyond it is "
+                                    "exact)"))
         else:
             bm0 = self.beam
             if bm0.model == "paraxial":
-                approximations.append(
-                    f"параксиальная модель пучка: мода × однородная поляризация (ошибка поперечного поля ~ (λ/w0)² = "
-                    f"{(bm0.lam / bm0.w0) ** 2:.2g}, продольного поля нет — у точного оно ~ λ/(πw0) = "
-                    f"{bm0.lam / (math.pi * bm0.w0):.2g})")
+                approximations.append(T(
+                    "the paraxial beam model: a mode × a uniform polarisation (the error of the transverse field ~ "
+                    "(λ/w0)² = {e:.2g}; there is no longitudinal field, while the exact one has ~ λ/(πw0) = {ez:.2g})",
+                    e=(bm0.lam / bm0.w0) ** 2, ez=bm0.lam / (math.pi * bm0.w0)))
             elif bm0.dropped >= A.DROP_LABEL and p["gen"] == "mode":
-                approximations.append(
-                    f"спектр источника обрезан на q = k: {100 * bm0.dropped:.3g} % мощности перетяжки LG — затухающие "
-                    f"волны, их у пучка нет; w0 — ширина спектра, а не измеренная перетяжка (поле на z = 0 отличается "
-                    f"от названного на {100 * math.sqrt(bm0.dropped):.3g} % в норме L2)")
+                approximations.append(T(
+                    "the source's spectrum is cut at q = k: {p:.3g} % of the power of the LG waist is in evanescent "
+                    "waves, which the beam does not have; w0 is the width of the spectrum, not a measured waist (the "
+                    "field at z = 0 differs from the named one by {d:.3g} % in the L2 norm)", p=100 * bm0.dropped,
+                    d=100 * math.sqrt(bm0.dropped)))
             elif bm0.dropped >= A.DROP_LABEL:
-                approximations.append(
-                    f"у пучка нет затухающих волн за пластинкой: на z = 0 это {100 * bm0.dropped:.3g} % мощности (ближнее "
-                    f"поле особой точки в центре пластинки), на расстоянии λ — {100 * bm0.ev_near[1]:.3g} %, 2λ — "
-                    f"{100 * bm0.ev_near[2]:.3g} %; дальше пучок — точное дальнее поле тонкой пластинки")
+                approximations.append(T(
+                    "the beam has no evanescent waves behind the plate: at z = 0 they are {p:.3g} % of the power (the "
+                    "near field of the singular point at the centre of the plate), at the distance λ {p1:.3g} %, at "
+                    "2λ {p2:.3g} %; farther on the beam is the exact far field of the thin plate",
+                    p=100 * bm0.dropped, p1=100 * bm0.ev_near[1], p2=100 * bm0.ev_near[2]))
             if p["gen"] == "spp":
-                approximations.append("спиральная пластинка — тонкая маска exp(ilφ) в плоскости z = 0")
+                approximations.append(T("the spiral plate is a thin mask exp(ilφ) in the plane z = 0"))
             if self.rot == "disc":
-                approximations.append("шероховатый диск — тонкий фазовый экран, скалярно (поляризация не участвует)")
+                approximations.append(T("the rough disc is a thin phase screen, scalar (the polarisation takes no "
+                                        "part)"))
             elif self.rot == "dove":
-                approximations.append("призма Дове — идеальный поворот изображения, поляризация не меняется")
+                approximations.append(T("the Dove prism is an ideal turn of the image; the polarisation does not "
+                                        "change"))
         bm = self.beam
         info = {}
         if bm is not None:
@@ -915,36 +972,39 @@ class Simulation(SlicePlanes, BaseSimulation):
         sub = str.maketrans("0123456789-", "₀₁₂₃₄₅₆₇₈₉₋")
         sup = str.maketrans("0123456789-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻")
         lg_name = "LG" + str(int(p["p"])).translate(sub) + str(self.l).translate(sup)
-        title = {"mode": f"Оптический вихрь: {lg_name}", "spp": f"Спиральная пластинка, l = {self.l}",
-                 "fork": f"Голограмма-«вилка», l = {self.l}"}[p["gen"]]
+        title = {"mode": T("Optical vortex: {name}", name=lg_name), "spp": T("Spiral plate, l = {l:d}", l=self.l),
+                 "fork": T("Fork hologram, l = {l:d}", l=self.l)}[p["gen"]]
         cut = bm is not None and bm.model == "exact" and bm.dropped >= A.DROP_LABEL and p["gen"] == "mode"
         return {
-            "title": title + ("" if bm is None else ((", точный векторный пучок" + (" (спектр обрезан на q = k)" if cut
-                                                                                   else "")) if bm.model == "exact" else
-                                                     ", параксиальная модель")),
-            "text": ("Пучок с фазой e^{ilφ}: поверхности равной фазы — l переплетённых винтов, поток энергии "
-                     "закручивается вокруг оси, каждый фотон несёт орбитальный момент. Всё на сцене посчитано движком: "
-                     "поле пучка, винтовые фронты (их фазы открываются по ходу времени), объём интенсивности, линии "
-                     "потока, срезы. Вращающийся элемент сдвигает частоту света на величину, пропорциональную l: "
-                     "детектор копит отсчёты, по их спектру измеряются биения и сравниваются с формулой."),
+            "title": title if bm is None else (
+                (T("{title}, the exact vector beam (the spectrum cut at q = k)", title=title) if cut else
+                 T("{title}, the exact vector beam", title=title)) if bm.model == "exact" else
+                T("{title}, the paraxial model", title=title)),
+            "text": T("A beam with the phase e^{ilφ}: the surfaces of equal phase are l intertwined helices, the energy "
+                      "flow twists around the axis, every photon carries orbital angular momentum. Everything in the "
+                      "scene is computed by the engine: the beam's field, the helical fronts (their phases are revealed "
+                      "as the time goes on), the volume of the intensity, the flow lines, the slices. The rotating "
+                      "element shifts the frequency of the light by an amount proportional to l: the detector collects "
+                      "samples, and the beat is measured from their spectrum and compared with the formula."),
             "actions": [],
             "approximations": approximations,
             "scene3d": self._scene(),
             "beam": info,
             "t_show": self.T_show, "nb": NB,
-            "units": {"x": "мкм", "z": "мкм", "t": "с (время мира; оптическая фаза показана замедленно)"},
+            "units": {"x": T("µm"), "z": T("µm"), "t": T("s (the world's time; the optical phase is shown slowed)")},
         }, {}
 
 
 VIZ = {
     "id": "v16_optical_vortices",
-    "title": "Оптические вихри: пучки Лагерра–Гаусса, орбитальный момент, вращательный Доплер",
-    "summary": ("Винтовые фронты пучка с фазой e^{ilφ}, закрученный поток энергии, срезы с фазой на цветовом круге; "
-                "орбитальный и спиновый момент на фотон, измеренные по полю (точное векторное решение или "
-                "параксиальная модель); вращающийся диск или призма Дове сдвигают частоту — биения на детекторе "
-                "измеряются по спектру отсчётов."),
-    "purpose": ("Показать, что такое орбитальный момент света, где параксиальная картина перестаёт работать (острая "
-                "фокусировка: продольное поле, обмен между спином и орбитой) и как вращение даёт сдвиг частоты lΩ."),
+    "title": T("Optical vortices: Laguerre–Gauss beams, orbital angular momentum, the rotational Doppler effect"),
+    "summary": T("The helical fronts of a beam with the phase e^{ilφ}, the twisted energy flow, slices with the phase "
+                 "on a colour wheel; the orbital and spin angular momentum per photon measured from the field (the "
+                 "exact vector solution or the paraxial model); a rotating disc or a Dove prism shifts the frequency, "
+                 "and the beat at the detector is measured from the spectrum of the samples."),
+    "purpose": T("Show what the orbital angular momentum of light is, where the paraxial picture stops working (tight "
+                 "focusing: the longitudinal field, the exchange between spin and orbit) and how rotation gives the "
+                 "frequency shift lΩ."),
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,

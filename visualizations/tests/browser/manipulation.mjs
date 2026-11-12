@@ -19,9 +19,10 @@
 //     -w /lf/visualizations lfphys-viz python3 server/serve.py --host 0.0.0.0 --port 8479 --max-workers 2
 //   docker run --rm --init --shm-size=2g --network host -v <a scratch dir with node_modules/playwright@1.58.2>:/pw \
 //     -v <engine>/visualizations/tests/browser:/t:ro -w /pw mcr.microsoft.com/playwright:v1.58.2-jammy \
-//     sh -c "cp /t/manipulation.mjs /pw/ && node /pw/manipulation.mjs 8591 [1600x1000,1280x800] [p99_toy,p01_gravity,...]"
+//     -e LFVIZ_LANG=en|ru sh -c "cp /t/*.mjs /pw/ && node /pw/manipulation.mjs 8591 [1600x1000,1280x800] [p99_toy,p01_gravity,...]"
 // Prints one JSON line per check and "all passed" or the number failed (exit code 1).
 import { chromium } from "playwright";
+import { LANG, esc, hasMsgid, inLang, loadI18n } from "./lfi18n.mjs";
 
 const port = process.argv[2] || "8591";
 const SIZES = (process.argv[3] || "1600x1000,1280x800").split(",").map((s) => s.split("x").map(Number));
@@ -32,6 +33,8 @@ const post = async (u, b) => (await fetch(base + u, { method: "POST", headers: {
 const get = async (u) => (await fetch(base + u)).json();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const cmd = (id, c, a) => post(`/api/runs/${id}/command`, { cmd: c, args: a || {} });
+// the language under test (LFVIZ_LANG, en by default): what the page shows is the player's own rendering of a msgid
+const { t: tr } = await loadI18n(base);
 
 // the run's record: every message's JSON part (u32 length | message; a message: u32 json length | JSON | blobs)
 async function record(id) {
@@ -60,7 +63,7 @@ const br = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-u
 
 // --- page helpers -----------------------------------------------------------------------------------------------------
 async function openRun(page, id) {
-  await page.goto(`${base}/run?id=${id}`);
+  await page.goto(inLang(`${base}/run?id=${id}`));
   await page.waitForFunction(() => window.__lfPlayer && window.__lfPlayer.frames() > 0 && window.__lfManip, null, { timeout: 120000 });
   await sleep(1500);
 }
@@ -122,7 +125,7 @@ async function toy([W, H]) {
     await sleep(300);
   }
   const page = await br.newPage({ viewport: { width: W, height: H } });
-  page.on("pageerror", (e) => errs.push(`pageerror: ${e.message}`));
+  page.on("pageerror", (e) => errs.push(`pageerror: ${e.message} ${(e.stack || "").split("\n").slice(1, 3).join(" ")}`.slice(0, 400)));
   page.on("console", (m) => { if (m.type() === "error") errs.push(`console: ${m.text()}`.slice(0, 300)); });
   await openRun(page, id);
   await page.screenshot({ path: `${OUT}/manip_toy_${tag}_before.png` });
@@ -133,8 +136,9 @@ async function toy([W, H]) {
   await sleep(300);
   const sel = await page.evaluate(() => ({ sel: window.__lfManip.selected(), markers: document.querySelector(".s3d-view").__scene3d.markers(),
     spec: document.querySelector(".s3d-view").__scene3d.markerSpec("sel"),
-    insp: document.querySelector('input[title="Имя объекта"]')?.value }));
-  check(`${tag} select: click picks the object, marker with its name, inspector follows`, sel.sel === "o2" && sel.markers.includes("sel") && sel.spec.text === "Частица 2" && sel.insp === "Частица 2", sel);
+    insp: document.querySelector(".pg-insp-name")?.value }));
+  const name2 = tr({ $t: "{type} {n:d}", a: { type: { $t: "Particle" }, n: 2 } });
+  check(`${tag} select: click picks the object, marker with its name, inspector follows`, sel.sel === "o2" && sel.markers.includes("sel") && sel.spec.text === name2 && sel.insp === name2, sel);
 
   // 2. drag in the 3-D view: lands under the pointer, one edit with the position only, the camera unmoved
   const cam0 = await camera(page);
@@ -178,7 +182,7 @@ async function toy([W, H]) {
   const exp = disp.map((d) => d / (d2.T / 1000) / 2.0 * 1.5);
   const cos = (exp[0] * vel[0] + exp[1] * vel[1] + exp[2] * vel[2]) / (Math.hypot(...exp) * Math.hypot(...vel));
   const ratio = Math.hypot(...vel) / Math.hypot(...exp);
-  check(`${tag} throw: velocity shown next to the cursor while throwing`, /^бросок: v = \(/.test(d2.mid.text || "") && /×1,5/.test(d2.mid.text) && d2.mid.vel, { text: d2.mid.text });
+  check(`${tag} throw: velocity shown next to the cursor while throwing`, (d2.mid.text || "").startsWith(tr("throw: v = {v} {unit} (×{k:.3g}{auto})", { v: "", unit: "", k: 1, auto: "" }).split(" ")[0]) && (d2.mid.text || "").includes("×" + tr({ $t: "{k:.3g}", a: { k: 1.5 } })) && d2.mid.vel, { text: d2.mid.text });
   check(`${tag} throw: one edit with position and velocity in world units per world time (rate 2, scale 1.5)`,
     edits(await record(id), "o2").length === n2 + 1 && vel.every(Number.isFinite) && cos > 0.97 && ratio > 0.6 && ratio < 1.6,
     { vel, expected: exp, cos, ratio, T: d2.T, rate });
@@ -187,7 +191,7 @@ async function toy([W, H]) {
   // 4b. the automatic scale (reviews LB1-F14, LB1-p02-ux X4): from the world's own scale — a flick of the view's width
   //     per wall second throws across the region (10 m) in 2 wall seconds at the playback rate (1), never above half the
   //     largest speed (the toy particle's vmax, 12 m/s) — so |v| = min(10 / (2 × 1), 12 / 2) × (px per s) / (view px)
-  await page.click(".pg-manip button:has-text('авто')");
+  await page.click(".pg-manip .pg-auto");
   const vmax = 12, W3 = await page.evaluate(() => document.querySelector(".s3d-view canvas").clientWidth);
   const vAuto = Math.min(10 / (2 * 1.0), vmax / 2);
   const qa = await scr3(page, "o1");
@@ -197,7 +201,7 @@ async function toy([W, H]) {
   const ea = edits(await record(id), "o1").at(-1), va = ea ? [ea.args.values.vx, ea.args.values.vy, ea.args.values.vz] : [NaN];
   const pxs = Math.hypot(130, 40) * 13 / 14 / (da.T / 1000), expA = vAuto * pxs / W3, ratioA = Math.hypot(...va) / expA;
   check(`${tag} throw, automatic scale from the region and the rate: |v| ≈ min(R/(2 s·rate), vmax/2) × (px/s) / (view width px)`,
-    edits(await record(id), "o1").length === na + 1 && /, авто\)/.test(da.mid || "") && ratioA > 0.6 && ratioA < 1.6 && !("asked" in (ea?.args || {})),
+    edits(await record(id), "o1").length === na + 1 && (da.mid || "").includes(", " + tr("auto") + ")") && ratioA > 0.6 && ratioA < 1.6 && !("asked" in (ea?.args || {})),
     { v: va, expected: expA, ratio: ratioA, text: da.mid });
   // 4c. a throw faster than the world carries is clamped to velocity_max and says so (readout and log)
   await page.fill(".pg-manip input[type=number]", "200");
@@ -208,17 +212,19 @@ async function toy([W, H]) {
   await idle(page); await sleep(400);
   const rb = await record(id), eb = edits(rb, "o2").at(-1), vb = [eb.args.values.vx, eb.args.values.vy, eb.args.values.vz];
   const evb = rb.filter((m) => m.type === "event" && m.name === "edit" && m.args.id === "o2").at(-1);
-  check(`${tag} throw clamped to velocity_max: |v| = 12 m/s, «ограничено до … уменьшите масштаб броска» in the readout and the log`,
-    Math.abs(Math.hypot(...vb) - vmax) < 0.01 && eb.args.asked > vmax && /ограничено до 12 м\/с: уменьшите масштаб броска/.test(db.mid || "")
-      && /ограничено наибольшей скоростью 12 м\/с \(рука дала [^)]*; уменьшите масштаб броска\)/.test(evb?.text || "")
-      && !/рука дала 12;/.test(evb?.text || ""),
-    { v: vb, asked: eb.args.asked, text: db.mid, log: evb?.text });
+  const clampTxt = tr("clamped to {vmax:.3g} {unit}: reduce the throw scale", { vmax: 12, unit: tr("m/s") });
+  check(`${tag} throw clamped to velocity_max: |v| = 12 m/s, "clamped to … reduce the throw scale" in the readout and the log`,
+    Math.abs(Math.hypot(...vb) - vmax) < 0.01 && eb.args.asked > vmax && (db.mid || "").includes(clampTxt)
+      && hasMsgid(evb?.text, "— clamped to the largest speed {vmax:.4g} {unit} (the hand gave {gave:.4g}")
+      && Number((/"gave":([-\d.e+]+)/.exec(JSON.stringify(evb?.text)) || [])[1]) > 12,
+    { v: vb, asked: eb.args.asked, text: db.mid, log: tr(evb?.text) });
   // 4d. review LB1-F13: the hand stops before the release — the readout follows it while the pointer rests (no stale
   //     «ограничено»), the throw sent is slow and unclamped, and the log says no clamp
   {
     await cmd(id, "scene", { op: "edit", id: "o2", values: { x: 1, y: 0, z: 0, vx: 0, vy: 0, vz: 0 } });  // at rest in view
     await sleep(800);
     const q = await scr3(page, "o2"), nd = edits(await record(id), "o2").length;
+    const clampWord = tr("clamped to {vmax:.3g} {unit}: reduce the throw scale", { vmax: 0, unit: "" }).split(" ")[0];
     await page.mouse.move(q[0], q[1]); await page.mouse.down(); await page.keyboard.down("Shift");
     for (let k = 1; k <= 8; k++) { await page.mouse.move(q[0] + 6 * k, q[1] - 3 * k); await sleep(16); }
     const during = await page.evaluate(() => window.__lfManip.text());
@@ -229,9 +235,9 @@ async function toy([W, H]) {
     const rd = await record(id), ed = edits(rd, "o2").at(-1), vd = [ed.args.values.vx, ed.args.values.vy, ed.args.values.vz];
     const evd = rd.filter((m) => m.type === "event" && m.name === "edit" && m.args.id === "o2" && m.t >= ed.t).at(-1);
     check(`${tag} F13: a resting pointer clears the clamp in the readout; the throw sent is not clamped, the log says none`,
-      edits(rd, "o2").length === nd + 1 && /ограничено/.test(during) && !/ограничено/.test(rest) && Math.hypot(...vd) < vmax
-        && !("asked" in ed.args) && !/ограничено/.test(evd?.text || "x ограничено"),
-      { during, rest, v: vd, log: evd?.text });
+      edits(rd, "o2").length === nd + 1 && during.includes(clampWord) && !rest.includes(clampWord) && Math.hypot(...vd) < vmax
+        && !("asked" in ed.args) && !!evd && !hasMsgid(evd.text, "clamped"),
+      { during, rest, v: vd, log: tr(evd?.text) });
   }
   // 4e. a type that shows its throws in another unit (velocity_display; integrator, 2026-11-12): the toy's cloud, in
   //     cm/s (factor 100) while its parameters and the edit are in m/s — the readout at the release and the log in cm/s,
@@ -251,14 +257,16 @@ async function toy([W, H]) {
       await idle(page); await sleep(400);
       const rc = await record(id), ec = edits(rc, cl).at(-1), sent = ec ? [ec.args.values.vx, ec.args.values.vy] : [];
       const evc = rc.filter((m) => m.type === "event" && m.name === "edit" && m.args.id === cl).at(-1);
-      const nums = (/v = \(([^)]*)\) см\/с/.exec(shown) || [, ""])[1].split(";").map((t) => Number(t.trim().replace("−", "-").replace(",", ".")));
+      const cms = tr("cm/s"), ms = tr("m/s");
+      const nums = (new RegExp(`v = \\(([^)]*)\\) ${esc(cms)}`).exec(shown) || [, ""])[1].split(";").map((x) => Number(x.trim().replace(/[\s\u202f]/g, "").replace("−", "-").replace(",", ".")));
       const okNums = nums.length === 2 && sent.length === 2 && nums.every((x, i) => Math.abs(x - 100 * sent[i]) <= 0.01 * Math.max(1, Math.abs(x)) + 0.06);
-      check(`${tag} velocity_display: readout and log in см/с, the edit in m/s (readout = 100 × sent)`,
-        edits(rc, cl).length === nc + 1 && okNums && /бросок: v = \([^)]*\) см\/с/.test(evc?.text || "") && !/м\/с/.test(shown.replace("см/с", "")),
-        { shown, sent, log: evc?.text });
+      check(`${tag} velocity_display: readout and log in cm/s, the edit in m/s (readout = 100 × sent)`,
+        edits(rc, cl).length === nc + 1 && okNums && hasMsgid(evc?.text, "throw: v = {vec}") && JSON.stringify(evc?.text).includes('"cm/s"')
+          && !shown.replace(cms, "").includes(ms),
+        { shown, sent, log: tr(evc?.text) });
     }
   }
-  await page.click(".pg-manip button:has-text('авто')");
+  await page.click(".pg-manip .pg-auto");
   // a throw seen in the middle (for the screenshot), then cancelled with Esc
   {
     const q = await scr3(page, "o1");
@@ -269,7 +277,7 @@ async function toy([W, H]) {
     await idle(page);
   }
 
-  // 5. a refusal: dragged out of the region — the world's Russian text, the ghost snaps back, nothing changed
+  // 5. a refusal: dragged out of the region — the world's text, the ghost snaps back, nothing changed
   const pBefore = await page.evaluate(() => window.__lfManip.at("o1"));
   const s1 = await scr3(page, "o1");
   const target = await page.evaluate(([x0, y0]) => {  // a screen point whose drag-plane point is outside |c| <= 5
@@ -293,10 +301,11 @@ async function toy([W, H]) {
   await sleep(400);
   const rec5 = await record(id), err5 = rec5.filter((m) => m.type === "error");
   const pAfter = await page.evaluate(() => window.__lfManip.at("o1"));
-  check(`${tag} refusal: Russian text shown, ghost snaps back, object unchanged`, target && err5.length === nErr0 + 1 && /вне области игрушки/.test(err5.at(-1).text)
-    && /вне области игрушки/.test(toast) && snapped && pAfter.every((v, i) => Math.abs(v - pBefore[i]) < 1e-12)
+  const outside = tr("“{label}”: the point is outside the toy's region (|{axes}| > {half:g} m)", { label: "", axes: "", half: 5 }).split(":")[1].split("(")[0].trim();
+  check(`${tag} refusal: the world's text shown, ghost snaps back, object unchanged`, target && err5.length === nErr0 + 1 && hasMsgid(err5.at(-1).text, "the point is outside the toy's region")
+    && toast.includes(outside) && snapped && pAfter.every((v, i) => Math.abs(v - pBefore[i]) < 1e-12)
     && !(await page.evaluate(() => document.querySelector(".s3d-view").__scene3d.markers().includes("ghost"))),
-  { error: err5.at(-1)?.text, toast: toast.slice(0, 160) });
+  { error: tr(err5.at(-1)?.text), toast: toast.slice(0, 160) });
 
   // 6. Esc cancels a drag: no edit
   const s3p = await scr3(page, "o3");
@@ -332,14 +341,14 @@ async function toy([W, H]) {
   await idle(page); await sleep(500);
   const e8 = edits(await record(id), wall).at(-1), aw1 = await page.evaluate((i) => window.__lfManip.at(i), wall);
   check(`${tag} axis "y": only the coordinate sent, moved along y, Shift ignored, axis shown`, e8 && Object.keys(e8.args.values).join() === "position"
-    && aw1[0] === aw0[0] && aw1[2] === aw0[2] && Math.abs(aw1[1] - e8.args.values.position) < 1e-12 && aw1[1] !== aw0[1] && d8.mid.axis && /вдоль оси не делается/.test(d8.mid.text),
+    && aw1[0] === aw0[0] && aw1[2] === aw0[2] && Math.abs(aw1[1] - e8.args.values.position) < 1e-12 && aw1[1] !== aw0[1] && d8.mid.axis && d8.mid.text.includes(tr("(there is no throw along an axis)")),
   { values: e8?.args.values, text: d8.mid.text });
   const mw = await scrWin(page, mirror);
   const nm = edits(await record(id), mirror).length;
   if (mw) {
     await dragPath(page, mw, [mw[0] + 40, mw[1] - 20]);
     await sleep(400);
-    check(`${tag} axis 2 across the window's plane: refused there with the reason, no edit`, edits(await record(id), mirror).length === nm && /поперёк плоскости этого окна/.test(await toastText(page)));
+    check(`${tag} axis 2 across the window's plane: refused there with the reason, no edit`, edits(await record(id), mirror).length === nm && (await toastText(page)).toLowerCase().includes(tr("the axis {axis} crosses the plane of this window: drag “{label}” in the 3-D scene or in another window", { axis: "z", label: "" }).split(":")[0].toLowerCase()));
   } else check(`${tag} axis 2 across the window's plane: the mirror is in the window`, false);
   const sm = await scr3(page, mirror), am0 = await page.evaluate((i) => window.__lfManip.at(i), mirror);
   await dragPath(page, sm, [sm[0] + 60, sm[1] + 10]);
@@ -368,36 +377,37 @@ async function toy([W, H]) {
   const n10 = edits(await record(id)).length;
   if (q10) await dragPath(page, q10, [q10[0] + 50, q10[1] + 40]);
   await sleep(600);
-  check(`${tag} read-only history: no edit, the reason shown`, q10 && edits(await record(id)).length === n10 && /прошлое/.test(await toastText(page)), { toast: (await toastText(page)).slice(0, 120) });
+  check(`${tag} read-only history: no edit, the reason shown`, q10 && edits(await record(id)).length === n10 && (await toastText(page)).includes(tr("You are looking at the experiment's past: slices and the scene are changed at the end of the record (⏭).")), { toast: (await toastText(page)).slice(0, 120) });
   await page.evaluate(() => window.__lfPlayer.goTo(1e9)); await sleep(800);
   await page.screenshot({ path: `${OUT}/manip_toy_${tag}_after.png` });
 
-  // 11. «Новый мир» with «перенести сцену» (on by default): the plane z = 0 world takes what it can and names the rest
+  // 11. "New world" with "carry the scene over" (on by default): the plane z = 0 world takes what it can and names the rest
   const before11 = await page.evaluate(() => window.__lfManip.objects());
-  await page.click("h4:has-text('Новый мир')");
+  await page.click(`h4:has-text("${tr("New world: laws and initial conditions").split(":")[0]}")`);
   await sleep(300);
   const box = await page.evaluate(() => { const c = document.querySelector(".pg-carry input"); return c ? { checked: c.checked, disabled: c.disabled } : null; });
   await page.evaluate(() => {
-    const sel = [...document.querySelectorAll("select")].find((s) => [...s.options].some((o) => /плоскость z = 0/.test(o.textContent)));
-    sel.value = [...sel.options].find((o) => /плоскость z = 0/.test(o.textContent)).value;
+    const sel = [...document.querySelectorAll(".field[data-pid=ndim] select")][0];
+    sel.value = "2";
     sel.dispatchEvent(new Event("change", { bubbles: true }));
   });
-  await page.click("button:has-text('Начать новый мир')");
+  await page.click(`button:has-text("${tr("▶ Start a new world").replace("▶ ", "")}")`);
   const w2 = await waitFor(async () => (await record(id)).filter((m) => m.type === "header").length >= 2, 30000);
   await sleep(1500);
-  const rec11 = await record(id), note = rec11.filter((m) => m.type === "notice" && /Сцена перенесена/.test(m.text)).at(-1);
+  const rec11 = await record(id), note = rec11.filter((m) => m.type === "notice" && hasMsgid(m.text, "The scene was carried into the new world")).at(-1);
   const head2 = rec11.filter((m) => m.type === "header").at(-1);
   const after11 = await page.evaluate(() => window.__lfManip.objects());
   const expectGone = before11.filter((o) => o.type === "mirror" || (o.type === "particle" && o.values.z)).map((o) => o.label);
-  check(`${tag} «перенести сцену»: on by default, the 2-D world takes the rest and names what it refuses`,
-    box && box.checked && !box.disabled && w2 && head2.params.scene.carry === true && note && /Не перенесены: /.test(note.text)
+  const noteText = note ? tr(note.text) : "";
+  check(`${tag} "carry the scene over": on by default, the 2-D world takes the rest and names what it refuses`,
+    box && box.checked && !box.disabled && w2 && head2.params.scene.carry === true && note && hasMsgid(note.text, "not carried: {items}")
     // what went how (review LB1-F5): the particles with their state, the probe by its parameters, the world's own state
-    && (!after11.some((o) => o.type === "particle") || /С состоянием — «Частица/.test(note.text))
-    && /По параметрам \(своего состояния нет\) — «Датчик/.test(note.text)
-    && /Состояние мира перенесено/.test(note.text) && Array.isArray(note.carry?.objects)
-    && expectGone.every((l) => note.text.includes(`«${l}»`)) && after11.length === before11.length - expectGone.length
-    && /Не перенесены/.test(await toastText(page)),
-  { note: note?.text.slice(0, 300), before: before11.map((o) => o.label), after: after11.map((o) => o.label) });
+    && (!after11.some((o) => o.type === "particle") || hasMsgid(note.text, "with their state — {names}"))
+    && hasMsgid(note.text, "by their parameters (no state of their own) — {names}")
+    && hasMsgid(note.text, "the world's state carried over") && Array.isArray(note.carry?.objects)
+    && expectGone.every((l) => noteText.includes(tr(l))) && after11.length === before11.length - expectGone.length
+    && (await toastText(page)).toLowerCase().includes(tr("not carried: {items}", { items: "" }).trim().slice(0, -1).toLowerCase()),
+  { note: noteText.slice(0, 300), before: before11.map((o) => tr(o.label)), after: after11.map((o) => tr(o.label)) });
   await page.screenshot({ path: `${OUT}/manip_toy_${tag}_carried.png` });
   check(`${tag} no page errors`, !errs.length, { errs: errs.slice(0, 5) });
   await page.close();
@@ -414,7 +424,7 @@ async function world(viz, [W, H]) {
   await waitFor(async () => (await get(`/api/runs/${id}`)).state === "running", 120000);
   await sleep(1500);
   const page = await br.newPage({ viewport: { width: W, height: H } });
-  page.on("pageerror", (e) => errs.push(`pageerror: ${e.message}`));
+  page.on("pageerror", (e) => errs.push(`pageerror: ${e.message} ${(e.stack || "").split("\n").slice(1, 3).join(" ")}`.slice(0, 400)));
   page.on("console", (m) => { if (m.type() === "error") errs.push(`console: ${m.text()}`.slice(0, 300)); });
   await openRun(page, id);
   await page.screenshot({ path: `${OUT}/manip_${viz}_${W}x${H}_before.png` });
@@ -444,11 +454,11 @@ async function world(viz, [W, H]) {
     if (applied && where === "window") {  // the window's selection ring follows the object to where it was put
       const ring = await page.evaluate(() => window.__lfManip.ringInWindow(1)), now = await scrWin(page, o.id);
       const r = await page.evaluate(() => { const c = [...document.querySelectorAll(".s3d-windows")].map((e) => e.__slices).filter(Boolean).find((w) => w.helper(1)); return c ? c.helper(1).el.getBoundingClientRect().toJSON() : null; });
-      check(`${tag}: the window's selection ring follows «${o.label}»`, ring && now && Math.hypot(r.left + ring[0] - now[0], r.top + ring[1] - now[1]) < 1.5, { ring, now });
+      check(`${tag}: the window's selection ring follows "${tr(o.label)}"`, ring && now && Math.hypot(r.left + ring[0] - now[0], r.top + ring[1] - now[1]) < 1.5, { ring, now });
     }
-    check(`${tag}: ${throwIt ? "throw" : "drag"} «${o.label}» (${o.type}) in the ${where}: one edit, ${applied ? "applied" : refused ? "refused (ghost snapped back)" : "?"}`,
+    check(`${tag}: ${throwIt ? "throw" : "drag"} "${tr(o.label)}" (${o.type}) in the ${where}: one edit, ${applied ? "applied" : refused ? "refused (ghost snapped back)" : "?"}`,
       e.length === n0 + 1 && keys.every((k) => k in vals) && (applied || (refused && snapped)) && (!throwIt || o.h.velocity.every((k) => k in vals)),
-      { values: vals, text: d.mid, error: refused ? rec.filter((m) => m.type === "error").at(-1).text.slice(0, 200) : undefined });
+      { values: vals, text: d.mid, error: refused ? tr(rec.filter((m) => m.type === "error").at(-1).text).slice(0, 200) : undefined });
     did++;
   }
   if (!did) check(`${tag}: an object with a handle could be reached on the screen`, false);

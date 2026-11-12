@@ -30,17 +30,20 @@ import math
 import numpy as np
 from scipy import constants as sc
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Водородоподобный атом: уровни Шрёдингера и Дирака, волновые функции",
-    "statement": "Уровни с приведённой массой (Шрёдингер) и тонкая структура (точная формула Дирака с поправкой "
-                 "отдачи ядра Баркера–Гловера); точные волновые функции R_nl·Y_lm (полиномы Лагерра, любые n), "
-                 "моменты ⟨r^k⟩ в замкнутой форме.",
-    "validity": "без лэмбовского сдвига и сверхтонкой структуры (КЭД, ядро). Частота 1S–2S водорода против измерения: "
-                "Дирак с отдачей +2,9·10⁻⁶ (это лэмбовский сдвиг), Шрёдингер −9,3·10⁻⁶ (нет тонкой структуры)",
+    "title": T("Hydrogen-like atom: Schrödinger and Dirac levels, wave functions"),
+    "statement": T("Levels with the reduced mass (Schrödinger) and the fine structure (the exact Dirac formula with "
+                   "the Barker–Glover nuclear recoil correction); exact wave functions R_nl·Y_lm (Laguerre "
+                   "polynomials, any n), moments ⟨r^k⟩ in closed form."),
+    "validity": T("no Lamb shift and no hyperfine structure (QED, the nucleus). The hydrogen 1S–2S frequency against "
+                  "the measurement: Dirac with recoil +2.9·10⁻⁶ (this is the Lamb shift), Schrödinger −9.3·10⁻⁶ (no "
+                  "fine structure)"),
     "basis": ["Dirac, Proc. R. Soc. A 117, 610 (1928)", "Sommerfeld 1916",
               "Barker & Glover, Phys. Rev. 99, 317 (1955); Eides, Grotch, Shelyuto, Phys. Rep. 342, 63 (2001), Eq. 2.5",
-              "Parthey et al., PRL 107, 203001 (2011): частота 1S–2S", "CODATA (α, массы)",
+              T("Parthey et al., PRL 107, 203001 (2011): the 1S–2S frequency"), T("CODATA (α, masses)"),
               "Bethe & Salpeter, Quantum Mechanics of One- and Two-Electron Atoms (1957): R_nl, ⟨r^k⟩"],
     "conflicts": [],
 }
@@ -95,7 +98,7 @@ def level(n: int, Z: int = 1, mu: float = sc.m_e) -> float:
 
 def _check_nl(n, l):
     if not (n >= 1 and 0 <= l < n):
-        raise ValueError(f"нужно n ≥ 1 и 0 ≤ l < n (n = {n}, l = {l})")
+        raise ValueError(T("need n ≥ 1 and 0 ≤ l < n (n = {n}, l = {l})", n=float(n), l=float(l)))
 
 
 def radial(n: int, l: int, r, Z: float = 1.0, a: float = 1.0):
@@ -154,7 +157,7 @@ def expectation(n: int, l: int, k: int, Z: float = 1.0, a: float = 1.0) -> float
         return Z / (a * n * n)
     if k == -2:
         return Z * Z / (a * a * n**3 * (l + 0.5))
-    raise ValueError("замкнутые формулы есть для k = −2, −1, 1, 2")
+    raise ValueError(T("closed forms exist only for k = −2, −1, 1, 2"))
 
 
 def orbital(n: int, l: int, m: int, Z: float = 1.0, a: float = 1.0, real: bool = False):
@@ -162,7 +165,7 @@ def orbital(n: int, l: int, m: int, Z: float = 1.0, a: float = 1.0, real: bool =
     from .central3d import Orbital, orbital_name
     _check_nl(n, l)
     if abs(m) > l:
-        raise ValueError(f"нужно |m| ≤ l (m = {m}, l = {l})")
+        raise ValueError(T("need |m| ≤ l (m = {m}, l = {l})", m=float(m), l=float(l)))
     return Orbital(lambda r: radial(n, l, r, Z, a), l, m, real, -Z * Z / (2.0 * n * n),
                    f"{n}{orbital_name(l, m, real)}")
 

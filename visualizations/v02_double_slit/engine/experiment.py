@@ -25,12 +25,29 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from lfphys.core.quantum import marks
+from lfphys.i18n import T
 from lfphys.core.quantum.particles import C, E_CHARGE, H, U, Particle
 from lfphys.core.quantum.scattering import dipole_directions
 from lfphys.theories.alternatives import born_rule, collapse
 from lfphys.theories.approx import paraxial
 
 FLAG_DARK, FLAG_R1, FLAG_READ, FLAG_SCAT, FLAG_REC, FLAG_MIX = 1, 2, 4, 8, 16, 32
+
+#: the elements at the slits by their short names (the parameter forms add which particle they act on)
+ELEMENT_NAMES = {"none": T("none"), "polarizer": T("polariser"), "hwp": T("λ/2 plate"), "qwp": T("λ/4 plate"),
+                 "rot_y": T("spin rotation about y"), "filter": T("spin filter"), "phase": T("phase shift"),
+                 "block": T("shutter")}
+
+
+def _join(items, sep="; "):
+    """Texts joined into one text (nested pairs, so that every language joins them its own way)."""
+    items = [x for x in items if x]
+    if not items:
+        return None
+    out = items[0]
+    for x in items[1:]:
+        out = T("{a}; {b}", a=out, b=x) if sep == "; " else T("{a}, {b}", a=out, b=x)
+    return out
 
 
 @dataclass
@@ -74,22 +91,24 @@ class Apparatus:
     rate: float = 1000.0
     seg: int = 0
 
-    def describe(self, internal) -> str:
+    def describe(self, internal) -> T:
         parts = []
         for j, (kind, ang) in enumerate(self.elements):
             if kind != "none":
-                parts.append(f"щель {j + 1}: {kind} {ang:g}°")
+                parts.append(T("slit {j:d}: {elem} {a:g}°", j=j + 1, elem=ELEMENT_NAMES.get(kind, kind), a=float(ang)))
         if self.analyzer[0] != "none":
-            parts.append(f"анализатор {self.analyzer[1]:g}°")
+            parts.append(T("analyser {a:g}°", a=float(self.analyzer[1])))
         if self.wp_mode == "qubit":
-            rd = {"none": "не читается", "path": "читается в базисе пути",
-                  "angle": f"читается в базисе {self.wp_read_angle:g}°"}[self.wp_read]
-            parts.append(f"детектор пути у щели {self.wp_slit + 1}, θ = {self.wp_theta:g}°, {rd}")
+            rd = {"none": T("not read"), "path": T("read in the path basis"),
+                  "angle": T("read in the {a:g}° basis", a=float(self.wp_read_angle))}[self.wp_read]
+            parts.append(T("which-path detector at slit {j:d}, θ = {th:g}°, {read}", j=self.wp_slit + 1,
+                           th=float(self.wp_theta), read=rd))
         if self.wp_mode == "microscope":
-            parts.append(f"микроскоп: λ = {self.mic_lambda * 1e9:g} нм, p = {self.mic_prob:g}")
+            parts.append(T("microscope: λ = {lam:g} nm, p = {p:g}", lam=float(self.mic_lambda * 1e9),
+                           p=float(self.mic_prob)))
         if self.ab_flux:
-            parts.append(f"поток А–Б {self.ab_flux:g} h/e")
-        return "; ".join(parts) if parts else "без наблюдателя и элементов"
+            parts.append(T("Aharonov–Bohm flux {f:g} h/e", f=float(self.ab_flux)))
+        return _join(parts) or T("no observer and no elements")
 
 
 @dataclass
@@ -349,10 +368,10 @@ class Experiment:
                       "mixed": int((mixed & detected).sum())}
         for q in range(min(story_n, n)):
             i = idx[q]
-            fate = ("отражена или рассеяна назад экраном-проводником" if reflected[q] else
-                    "прошла щели, но мимо экрана" if missed[q] else
-                    "дошла, но не зарегистрирована (эффективность детектора)" if (hit[q] and not detected[q]) else
-                    f"зарегистрирована в x = {xpos[q] * 1e6:.4g} мкм (векторный экран: поток энергии TE/TM)")
+            fate = (T("reflected or scattered back by the conducting screen") if reflected[q] else
+                    T("passed the slits but missed the screen") if missed[q] else
+                    T("arrived but was not registered (detector efficiency)") if (hit[q] and not detected[q]) else
+                    T("registered at x = {x:.4g} µm (vector screen: TE/TM energy flux)", x=float(xpos[q] * 1e6)))
             out.stories.append(self.story(b, i, fate, None))
         return out
 
@@ -395,10 +414,12 @@ class Experiment:
                       "mixed": int((mixed & detected).sum())}
         for q in range(min(story_n, n)):
             i = idx[q]
-            fate = ("поглощена анализатором перед экраном" if absorbed_an[q] else "прошла мимо экрана" if missed[q]
-                    else "дошла, но не зарегистрирована (эффективность детектора)" if (hit[q] and not detected[q])
-                    else f"зарегистрирована в x = {xpos[q] * 1e6:.4g} мкм" + (f", показание детектора пути: {r_out[q]}"
-                                                                           if nR > 1 else ""))
+            fate = (T("absorbed by the analyser in front of the screen") if absorbed_an[q] else
+                    T("missed the screen") if missed[q] else
+                    T("arrived but was not registered (detector efficiency)") if (hit[q] and not detected[q]) else
+                    T("registered at x = {x:.4g} µm, which-path detector reading: {r:d}", x=float(xpos[q] * 1e6),
+                      r=int(r_out[q])) if nR > 1 else
+                    T("registered at x = {x:.4g} µm", x=float(xpos[q] * 1e6)))
             out.stories.append(self.story(b, i, fate, G_full[q]))
         return out
 
@@ -484,9 +505,9 @@ def state_label(chi, internal):
         s1 = (abs(a) ** 2 - abs(b) ** 2) / s0
         s2 = 2 * (a * np.conj(b)).real / s0
         s3 = 2 * (a * np.conj(b)).imag / s0
-        return f"Стокс ({s1:+.2f}, {s2:+.2f}, {s3:+.2f})"
+        return T("Stokes ({s1:+.2f}, {s2:+.2f}, {s3:+.2f})", s1=float(s1), s2=float(s2), s3=float(s3))
     s0 = abs(a) ** 2 + abs(b) ** 2
     sx = 2 * (np.conj(a) * b).real / s0
     sy = 2 * (np.conj(a) * b).imag / s0
     sz = (abs(a) ** 2 - abs(b) ** 2) / s0
-    return f"спин ({sx:+.2f}, {sy:+.2f}, {sz:+.2f})"
+    return T("spin ({sx:+.2f}, {sy:+.2f}, {sz:+.2f})", sx=float(sx), sy=float(sy), sz=float(sz))

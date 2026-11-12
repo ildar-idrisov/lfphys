@@ -26,13 +26,16 @@ import math
 import numpy as np
 from scipy import stats as sps
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "tools", "kind": "statistics",
-    "title": "Статистика опыта Белла",
-    "statement": "Оценка корреляции E и её стандартной ошибки по счётам совпадений, CHSH-параметр S и его ошибка, "
-                 "разность маргинальных вероятностей (проверка отсутствия сигнала), χ² точек против эталона.",
-    "validity": "инструмент, не физика; ошибки — нормальное приближение (N ≳ 30 на ячейку)",
-    "basis": ["биномиальная и мультиномиальная статистика; CHSH: Clauser, Horne, Shimony, Holt, PRL 23, 880 (1969)"],
+    "title": T("Statistics of a Bell experiment"),
+    "statement": T("The estimate of the correlation E and its standard error from coincidence counts, the CHSH "
+                   "parameter S and its error, the difference of marginal probabilities (a check of no signalling), "
+                   "χ² of the points against a reference."),
+    "validity": T("a tool, not physics; the errors use the normal approximation (N ≳ 30 per cell)"),
+    "basis": [T("binomial and multinomial statistics; CHSH: Clauser, Horne, Shimony, Holt, PRL 23, 880 (1969)")],
     "conflicts": [],
 }
 

@@ -42,27 +42,30 @@ The heavy part (all pixels at once) runs on the CPU or on GPU 0 (``lfphys.core.b
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
+
+from lfphys.i18n import T
 
 from . import backend
 from . import lorentz as LZ
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Что видит быстрый наблюдатель: трассировка лучей со временем света",
-    "statement": "Изображение сцены для наблюдателя с любой скоростью: каждый пиксель — фотон, преобразованный "
-                 "Лоренцем (аберрация); его прошлый световой луч пересекается точно с мировыми трубками тел "
-                 "(сфера, ящик, прямоугольник) в их системах покоя (время света, поворот Террелла–Пенроуза); "
-                 "поверхности излучают как чёрные тела, наблюдатель видит чёрное тело при D·T (цвет Доплера и "
-                 "прожекторный эффект — точно); небо и звёзды в бесконечности.",
-    "validity": "специальная теория относительности, плоское пространство-время; тела твёрдые в своих системах покоя "
-                "и движутся равномерно; излучение — равновесное (чёрное тело), изотропное в системе тела; "
-                "геометрическая оптика (размеры много больше длины волны)",
+    "title": T("What a fast observer sees: ray tracing with light travel time"),
+    "statement": T("The image of a scene for an observer at any speed: every pixel is a photon Lorentz-transformed "
+                   "(aberration); its past light ray is intersected exactly with the world tubes of the bodies "
+                   "(sphere, box, rectangle) in their rest frames (light travel time, the Terrell–Penrose rotation); "
+                   "surfaces radiate as black bodies, the observer sees a black body at D·T (Doppler colour and the "
+                   "searchlight effect exactly); the sky and the stars at infinity."),
+    "validity": T("special relativity, flat spacetime; bodies rigid in their rest frames and moving uniformly; "
+                  "radiation in equilibrium (a black body), isotropic in the body's frame; geometric optics (sizes "
+                  "much larger than the wavelength)"),
     "basis": ["Penrose, Proc. Camb. Phil. Soc. 55, 137 (1959); Terrell, Phys. Rev. 116, 1041 (1959)",
-              "McKinley & Doherty, Am. J. Phys. 47, 309 (1979): излучение движущегося чёрного тела, T' = D T",
-              "Peebles & Wilkinson, Phys. Rev. 174, 2168 (1968): дипольная анизотропия фона при движении",
+              T("McKinley & Doherty, Am. J. Phys. 47, 309 (1979): the radiation of a moving black body, T' = D T"),
+              T("Peebles & Wilkinson, Phys. Rev. 174, 2168 (1968): the dipole anisotropy of the background for a "
+                "moving observer"),
               "Jackson, Classical Electrodynamics, 3rd ed. (1999), § 11.3"],
     "conflicts": [],
 }
@@ -74,7 +77,7 @@ KERNEL = "relativity.raytrace"
 def _axes(a):
     A = np.eye(3) if a is None else np.asarray(a, float).reshape(3, 3)
     if np.max(np.abs(A.T @ A - np.eye(3))) > 1e-9:
-        raise ValueError("оси тела должны быть ортонормированы")
+        raise ValueError("body axes must be orthonormal")
     return A
 
 
@@ -88,7 +91,7 @@ class Sphere:
     temps: tuple = (6500.0, 3500.0)
     cells: tuple = (6, 12)
     axes: tuple | None = None
-    name: str = "сфера"
+    name: T | str = field(default_factory=lambda: T("sphere"), compare=False)
     kind = "sphere"
 
 
@@ -104,7 +107,7 @@ class Box:
     alt: float = 0.75
     cells: int = 4
     axes: tuple | None = None
-    name: str = "ящик"
+    name: T | str = field(default_factory=lambda: T("box"), compare=False)
     kind = "box"
 
 
@@ -119,7 +122,7 @@ class Panel:
     velocity: tuple = (0.0, 0.0, 0.0)
     temps: tuple = (5500.0, 3000.0)
     cell: float = 1.0
-    name: str = "плоскость"
+    name: T | str = field(default_factory=lambda: T("plane"), compare=False)
     kind = "panel"
 
 
@@ -157,7 +160,7 @@ class Camera:
         f = f / np.linalg.norm(f)
         r = np.cross(f, np.asarray(self.up, float))
         if np.linalg.norm(r) < 1e-12:
-            raise ValueError("направление «вверх» камеры параллельно направлению взгляда")
+            raise ValueError("the camera's up direction is parallel to its look direction")
         r = r / np.linalg.norm(r)
         return r, np.cross(r, f), f
 
@@ -172,7 +175,7 @@ class Camera:
         a, b = self._angles()
         if self.kind == "pinhole":
             if not 0 < self.fov < 179:
-                raise ValueError("поле зрения камеры-обскуры: от 0 до 179°")
+                raise ValueError(T("pinhole camera field of view: from 0 to 179°"))
             th = math.tan(math.radians(self.fov) / 2)
             x = (2 * a - 1) * th
             y = (1 - 2 * b) * th * self.height / self.width
@@ -182,12 +185,12 @@ class Camera:
             lon, lat = (2 * a - 1) * math.pi, (0.5 - b) * math.pi
             cl = np.cos(lat)[..., None]
             return cl * (np.sin(lon)[..., None] * r + np.cos(lon)[..., None] * f) + np.sin(lat)[..., None] * up
-        raise ValueError(f"неизвестная камера {self.kind!r}")
+        raise ValueError(f"unknown camera {self.kind!r}")
 
     def solid_angles(self):
         """(H, W) exact solid angle of each pixel of a "sky" camera."""
         if self.kind != "sky":
-            raise ValueError("телесные углы пикселей — только для камеры всего неба")
+            raise ValueError("pixel solid angles exist only for the whole-sky camera")
         lat_edges = math.pi * (0.5 - np.arange(self.height + 1) / self.height)
         band = np.sin(lat_edges[:-1]) - np.sin(lat_edges[1:])
         return np.repeat((band * 2 * math.pi / self.width)[:, None], self.width, axis=1)
@@ -250,7 +253,7 @@ def _hit_sphere(xp, body, P, Q):
     r = float(body.radius)
     cc = float(P @ P) - r * r
     if cc <= 0:
-        raise ValueError(f"наблюдатель внутри тела «{body.name}»: изнутри изображение не строится")
+        raise ValueError(T("the observer is inside the body “{name}”: no image is built from inside", name=body.name))
     a = xp.sum(Q * Q, axis=-1)
     b = Q @ xp.asarray(P)
     disc = b * b - a * cc
@@ -264,7 +267,7 @@ def _hit_box(xp, body, P, Q):
     h = np.asarray(body.half, float)
     Pb = A.T @ P
     if np.all(np.abs(Pb) < h):
-        raise ValueError(f"наблюдатель внутри тела «{body.name}»: изнутри изображение не строится")
+        raise ValueError(T("the observer is inside the body “{name}”: no image is built from inside", name=body.name))
     Qb = Q @ xp.asarray(A)
     tn = xp.full(Q.shape[:-1], -xp.inf)
     tf = xp.full(Q.shape[:-1], xp.inf)
@@ -346,7 +349,7 @@ def _trace(xp, scene: Scene, observer: Observer, d, c: float, mode: str, only=No
         K = xp.concatenate([xp.zeros(d.shape[:-1] + (1,)), d], axis=-1) @ Bu_inv.T
         k0 = None
     else:
-        raise ValueError(f"неизвестный режим {mode!r}")
+        raise ValueError(f"unknown mode {mode!r}")
     best = xp.full(d.shape[:-1], xp.inf)
     who = xp.full(d.shape[:-1], -1, dtype=xp.int32)
     cache = {}
@@ -419,7 +422,8 @@ def trace_directions(scene: Scene, observer: Observer, d, c: float = 1.0, mode: 
         if not backend.is_out_of_memory(e):
             raise
         backend.release()
-        backend.choose(KERNEL, size, check=check, force="cpu", why="GPU: не хватило памяти, пересчитано на CPU", aux=aux)
+        backend.choose(KERNEL, size, check=check, force="cpu", why=T("GPU: not enough memory, recomputed on the CPU"),
+                       aux=aux)
         res = _trace(np, scene, observer, d, c, mode, only)
     finally:
         if ch.device == "gpu":
@@ -508,7 +512,7 @@ def outline(scene: Scene, observer: Observer, ib: int, c: float = 1.0, n: int = 
     _, xe, _ = retarded_points(body, np.zeros((1, 3)), observer, c)
     a = look_direction(observer, xe, c)[0]
     if not np.isfinite(trace_directions(scene, observer, a[None], c, only=[ib], check=True)["s"][0]):
-        raise ValueError("направление на запаздывающий центр не попадает в тело")
+        raise ValueError(T("the direction to the retarded centre misses the body"))
     e1 = np.cross(a, [1.0, 0.0, 0.0] if abs(a[0]) < 0.9 else [0.0, 1.0, 0.0])
     e1 /= np.linalg.norm(e1)
     e2 = np.cross(a, e1)
@@ -518,7 +522,7 @@ def outline(scene: Scene, observer: Observer, ib: int, c: float = 1.0, n: int = 
     far = trace_directions(scene, observer, np.cos(hi)[:, None] * a + np.sin(hi)[:, None] * w, c, only=[ib],
                            check=True)["s"]
     if np.any(np.isfinite(far)):
-        raise ValueError("контур не замкнут: тело занимает почти всё небо")
+        raise ValueError(T("the outline is not closed: the body fills almost the whole sky"))
     for _ in range(iters):
         mid = 0.5 * (lo + hi)
         s = trace_directions(scene, observer, np.cos(mid)[:, None] * a + np.sin(mid)[:, None] * w, c, only=[ib],
@@ -547,7 +551,7 @@ def static_render(scene: Scene, eye, d):
     who = np.full(d.shape[:-1], -1)
     for ib, body in enumerate(scene.bodies):
         if np.any(np.asarray(body.velocity, float) != 0):
-            raise ValueError("static_render: только тела в покое")
+            raise ValueError("static_render: bodies at rest only")
         s = _HIT[body.kind](np, body, np.asarray(eye, float) - np.asarray(body.center, float), d)
         closer = s < best
         best, who = np.where(closer, s, best), np.where(closer, ib, who)
@@ -573,13 +577,13 @@ def _bench(size: int, xp, cplx):
 
 
 backend.register(backend.KernelSpec(
-    KERNEL, "Трассировка лучей со временем света",
-    "что видит быстрый наблюдатель: аберрация каждого пикселя, пересечение прошлого светового луча с мировыми "
-    "трубками тел, доплеровская температура (v10)",
+    KERNEL, T("Ray tracing with light travel time"),
+    T("what a fast observer sees: the aberration of every pixel, the intersection of the past light ray with the "
+      "bodies' world tubes, the Doppler temperature (v10)"),
     gpu=True,
     precisions={"fp64": {"allowed": True}},
     crossover=256 * 256 * 12,
-    crossover_note=("измерено 2026-10-28 на RTX 2080 Ti против двух потоков CPU, fp64, с пересылкой результатов "
-                    "(размер = пиксели × тела): GPU быстрее с 256×256 пикселей при 12 телах (×3,8), ×7 на 512×512; "
-                    "ниже — CPU (накладные расходы запуска ядер); «Измерить заново» уточняет"),
+    crossover_note=T("measured 2026-10-28 on an RTX 2080 Ti against two CPU threads, fp64, results transferred back "
+                     "(size = pixels × bodies): the GPU is faster from 256×256 pixels with 12 bodies (×3.8), ×7 at "
+                     "512×512; below that, the CPU (kernel launch overheads); “Measure again” refines this"),
     bench=_bench, bench_sizes=(32 * 32 * 12, 64 * 64 * 12, 128 * 128 * 12, 256 * 256 * 12, 512 * 512 * 12)))

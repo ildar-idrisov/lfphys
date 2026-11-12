@@ -52,7 +52,8 @@ from pathlib import Path
 
 from aiohttp import WSMsgType, web
 
-from . import __version__, devices, registry
+from . import __version__, devices, i18n, registry
+from .i18n import T, text_of
 from .runs import RunManager
 
 PLAYER = registry.ROOT / "player"
@@ -71,11 +72,11 @@ def client_command(body) -> dict:
     """[LB1 F6] A command from a client (REST or WebSocket): an object {cmd, args?} with a command name, never one of
     the server's own; ValueError (400) or PermissionError (403) with the owner's text otherwise."""
     if not isinstance(body, dict) or not isinstance(body.get("cmd"), str):
-        raise ValueError("команда — объект {cmd, args}")
+        raise ValueError(T("a command is an object {cmd, args}"))
     if body["cmd"] in SERVER_ONLY:
-        raise PermissionError(f"команду «{body['cmd']}» посылает только сам сервер")
+        raise PermissionError(T("only the server itself sends the command “{cmd}”", cmd=body["cmd"]))
     if body.get("args") is not None and not isinstance(body["args"], dict):
-        raise ValueError("«args» команды — объект")
+        raise ValueError(T("a command's “args” is an object"))
     return body
 
 
@@ -83,8 +84,9 @@ def _json(data, status=200):
     return web.json_response(data, status=status, dumps=lambda d: json.dumps(d, ensure_ascii=False))
 
 
-def _err(text, status=400):
-    return _json({"error": text}, status)
+def _err(text, status=400, **extra):
+    """An error for an API client: ``{"error": <T or text>, "text": <English>}`` (RULES.md «Languages and i18n»)."""
+    return _json(i18n.error_body(text, **extra), status)
 
 
 @web.middleware
@@ -112,7 +114,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
             try:
                 out.append(registry.describe(mgr.viz(vid)))
             except Exception as e:  # a broken visualization must not hide the others
-                out.append({"id": vid, "title": vid, "error": f"{type(e).__name__}: {e}",
+                out.append({"id": vid, "title": vid, "error": T("the visualization does not load: {error}", error=f"{type(e).__name__}: {e}"),
                             "kind": "playground" if vid.startswith("p") else "demo"})  # under its mode (B6-F24)
         return _json(out)
 
@@ -120,19 +122,19 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
         try:
             return _json(registry.describe(mgr.viz(request.match_info["viz"])))
         except KeyError:
-            return _err("нет такой визуализации", 404)
+            return _err(T("there is no such visualization"), 404)
 
     async def viz_file(request):
         vid = request.match_info["viz"]
         if vid not in registry.viz_ids():
-            return _err("нет такой визуализации", 404)
+            return _err(T("there is no such visualization"), 404)
         try:
             base = (registry.folder(vid) / "web").resolve()
         except KeyError:
-            return _err("нет такой визуализации", 404)
+            return _err(T("there is no such visualization"), 404)
         target = (base / request.match_info["path"]).resolve()
         if base not in target.parents or not target.is_file():
-            return _err("нет файла", 404)
+            return _err(T("there is no such file"), 404)
         return web.FileResponse(target)
 
     async def runs_list(request):
@@ -142,19 +144,19 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
         try:
             body = await request.json()
         except json.JSONDecodeError:
-            return _err("тело запроса не JSON")
+            return _err(T("the request body is not JSON"))
         if not isinstance(body, dict):
-            return _err("тело запроса — объект JSON")
+            return _err(T("the request body is a JSON object"))
         vid = body.get("viz")
         if vid not in registry.viz_ids():
-            return _err("нет такой визуализации", 404)
+            return _err(T("there is no such visualization"), 404)
         try:  # devices and precision for this run: the settings file, with the start form's overrides (plan P11)
             bset, bnotes = await devices.for_run(body.get("backend"))
         except ValueError as e:
-            return _err(f"устройства: {e}", 400)
+            return _err(T("devices: {error}", error=text_of(e)), 400)
         except Exception as e:  # noqa: BLE001
             log.warning("run devices: %s", e)
-            return _err("движок не проверил выбор устройств (подробности — в журнале сервера)", 500)
+            return _err(T("the engine did not check the choice of devices (details in the server's log)"), 500)
         seed = body.get("seed")
         try:
             seed = None if seed in (None, "") else int(seed)
@@ -162,12 +164,12 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
                                   label=str(body.get("label", ""))[:200], source=request.remote or "",
                                   backend=bset, backend_notes=bnotes)
         except OverflowError as e:
-            return _err(str(e), 409)
+            return _err(text_of(e), 409)
         except ValueError as e:  # refused parameters (by their labels: review UX-ui U13, UX-params P2) or a refused
             # combination / memory estimate of the world (P1, P8): the catalogue shows it on the form, by field
             from .errors import owner_text
             fields = getattr(e, "fields", None) or {}
-            return _json({"error": owner_text(e)[0] if not fields else str(e), "fields": fields}, 400)
+            return _err(owner_text(e)[0] if not fields else text_of(e), 400, fields=fields)
         return _json({"id": run.id})
 
     def _run(request):
@@ -177,7 +179,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
         try:
             r = _run(request)
         except KeyError:
-            return _err("нет такого запуска", 404)
+            return _err(T("there is no such run"), 404)
         out = dict(r.meta)
         out.update(r.summary())
         return _json(out)
@@ -188,13 +190,14 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
             body = client_command(await request.json())
             await r.command_resuming(body, request.remote or "")
         except KeyError:
-            return _err("нет такого запуска", 404)
+            return _err(T("there is no such run"), 404)
         except PermissionError as e:  # [LB1 F6]
-            return _err(str(e), 403)
+            return _err(text_of(e), 403)
         except (RuntimeError, OverflowError) as e:
-            return _err(str(e), 409)
+            return _err(text_of(e), 409)
         except ValueError as e:  # not JSON, or not a command [LB1 F6]
-            return _err("тело запроса не JSON" if isinstance(e, (json.JSONDecodeError, UnicodeDecodeError)) else str(e))
+            return _err(T("the request body is not JSON") if isinstance(e, (json.JSONDecodeError, UnicodeDecodeError))
+                        else text_of(e))
         return _json({"ok": True})
 
     async def run_cancel(request):
@@ -203,9 +206,9 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
             r = _run(request)
             res = await r.cancel(request.remote or "")
         except KeyError:
-            return _err("нет такого запуска", 404)
+            return _err(T("there is no such run"), 404)
         except (RuntimeError, OverflowError) as e:
-            return _err(str(e), 409)
+            return _err(text_of(e), 409)
         return _json(res)
 
     async def run_stop(request):
@@ -214,7 +217,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
         try:
             r = _run(request)
         except KeyError:
-            return _err("нет такого запуска", 404)
+            return _err(T("there is no such run"), 404)
         await r.suspend("user")
         return _json({"ok": True, "state": r.meta.get("state")})
 
@@ -223,9 +226,9 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
             r = _run(request)
             await mgr.resume(r)
         except KeyError:
-            return _err("нет такого запуска", 404)
+            return _err(T("there is no such run"), 404)
         except (RuntimeError, OverflowError) as e:
-            return _err(str(e), 409)
+            return _err(text_of(e), 409)
         return _json({"ok": True})
 
     async def run_keep(request):
@@ -233,7 +236,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
             r = _run(request)
             body = await request.json()
         except KeyError:
-            return _err("нет такого запуска", 404)
+            return _err(T("there is no such run"), 404)
         r.meta["keep"] = bool(body.get("keep", True))
         r.save_meta()
         return _json({"ok": True, "keep": r.meta["keep"]})
@@ -242,16 +245,16 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
         try:
             await mgr.delete(request.match_info["id"])
         except KeyError:
-            return _err("нет такого запуска", 404)
+            return _err(T("there is no such run"), 404)
         except RuntimeError as e:
-            return _err(str(e), 409)
+            return _err(text_of(e), 409)
         return _json({"ok": True})
 
     async def run_stream(request):
         try:
             r = _run(request)
         except KeyError:
-            return _err("нет такого запуска", 404)
+            return _err(T("there is no such run"), 404)
         if not r.buffered:
             return web.FileResponse(r.stream_path, headers={
                 "Content-Disposition": f'attachment; filename="{r.id}.lfrec"'})
@@ -288,29 +291,29 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
             body = await request.json()
             # validated (review B6-F12): an object; "on" a JSON boolean, unchanged when absent; the window numbers
             if not isinstance(body, dict):
-                raise ValueError("тело запроса — объект JSON")
+                raise ValueError(T("the request body is a JSON object"))
             on = body.get("on")
             if on is not None and not isinstance(on, bool):
-                raise ValueError("«on» — true или false")
+                raise ValueError(T("“on” is true or false"))
             for k in ("window_s", "window_mb"):
                 v = body.get(k)
                 if v is not None and (isinstance(v, bool) or not isinstance(v, (int, float))):
-                    raise ValueError(f"«{k}» — число")
+                    raise ValueError(T("“{key}” is a number", key=k))
             return _json(r.set_recording(on, body.get("window_s"), body.get("window_mb")))
         except KeyError:
-            return _err("нет такого запуска", 404)
+            return _err(T("there is no such run"), 404)
         except json.JSONDecodeError:
-            return _err("тело запроса не JSON")
+            return _err(T("the request body is not JSON"))
         except ValueError as e:
-            return _err(str(e), 400)
+            return _err(text_of(e), 400)
         except RuntimeError as e:
-            return _err(str(e), 409)
+            return _err(text_of(e), 409)
 
     async def ws_run(request):
         try:
             r = _run(request)
         except KeyError:
-            return _err("нет такого запуска", 404)
+            return _err(T("there is no such run"), 404)
         ws = web.WebSocketResponse(heartbeat=20.0, max_msg_size=1 << 20)
         await ws.prepare(request)
         viewer = r.add_viewer(ws)
@@ -321,7 +324,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
                     try:
                         await r.command_resuming(client_command(json.loads(msg.data)), request.remote or "")
                     except (ValueError, PermissionError, RuntimeError, OverflowError) as e:  # [LB1 F6] also refused
-                        await ws.send_str(json.dumps({"error": str(e)}, ensure_ascii=False))
+                        await ws.send_str(json.dumps(i18n.error_body(text_of(e)), ensure_ascii=False))
                 elif msg.type in (WSMsgType.ERROR, WSMsgType.CLOSE):
                     break
         finally:
@@ -347,7 +350,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
         try:
             info = await devices.probe()
         except Exception as e:
-            return _err(f"движок не сообщил устройства: {e}", 500)
+            return _err(T("the engine did not report its devices: {error}", error=text_of(e)), 500)
         return _json({**info, "settings": devices.load()})
 
     async def api_settings_get(request):
@@ -355,18 +358,18 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
 
     async def api_settings_put(request):
         if (request.content_length or 0) > devices.MAX_BYTES:
-            return _err(f"настройки длиннее {devices.MAX_BYTES // 1024} КБ", 413)
+            return _err(T("the settings are longer than {n:d} KB", n=devices.MAX_BYTES // 1024), 413)
         try:
             body = await request.json()
         except json.JSONDecodeError:
-            return _err("тело запроса не JSON")
+            return _err(T("the request body is not JSON"))
         try:
             clean, notes = await devices.update(body)
         except ValueError as e:
-            return _err(f"настройки: {e}")
+            return _err(T("settings: {error}", error=text_of(e)))
         except Exception as e:  # noqa: BLE001  (the message only: the traceback goes to the server log)
             log.warning("settings: %s", e)
-            return _err("движок не проверил настройки (подробности — в журнале сервера)", 500)
+            return _err(T("the engine did not check the settings (details in the server's log)"), 500)
         return _json({"settings": clean, "notes": notes})
 
     async def api_calibrate(request):
@@ -374,7 +377,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
             s = await devices.calibrate()
         except Exception as e:  # noqa: BLE001
             log.warning("calibrate: %s", e)
-            return _err("замер не удался (подробности — в журнале сервера)", 500)
+            return _err(T("the measurement failed (details in the server's log)"), 500)
         return _json(s)
 
     # --- the removal period of runs (owner, 2026-10-29: set on the catalogue page, kept on the server) ------------
@@ -385,15 +388,15 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
         try:
             body = await request.json()
         except json.JSONDecodeError:
-            return _err("тело запроса не JSON")
+            return _err(T("the request body is not JSON"))
         if not isinstance(body, dict) or set(body) - {"keep_days", "confirm"}:
-            return _err("нужен объект {keep_days, confirm?}")
+            return _err(T("an object {keep_days, confirm?} is needed"))
         try:
             res = mgr.set_keep_days(body.get("keep_days"), body.get("confirm") or [])
         except ValueError as e:
-            return _err(str(e))
+            return _err(text_of(e))
         if "would_remove" in res:
-            return _json({**res, "error": f"срок {body['keep_days']} дн. сразу удалит запуски: подтвердите"}, 409)
+            return _err(T("a period of {n} days would remove runs at once: confirm", n=body["keep_days"]), 409, **res)
         if res["removed"]:
             log.info("removed by the new period of %s days: %s", res["keep_days"], res["removed"])
         return _json(res)
@@ -407,11 +410,23 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
     async def legal_text(request):
         path = LEGAL.get(request.match_info["name"])
         if path is None or not path.is_file():
-            return _err("нет такого текста", 404)
+            return _err(T("there is no such text"), 404)
         return web.Response(text=path.read_text(encoding="utf-8"), content_type="text/plain", charset="utf-8")
 
     async def index(request):
         return web.FileResponse(PLAYER / "index.html")
+
+    async def api_i18n(request):
+        """The merged catalogue of a language (lfviz.i18n): {lang, messages}; cached until a catalogue file changes."""
+        code = request.match_info["lang"]
+        try:
+            body, etag = i18n.payload(code)
+        except KeyError:
+            return _err(i18n.T("No interface language {lang}; there are: {langs}", lang=code,
+                               langs=", ".join(i18n.LANGS)), 404)
+        if request.headers.get("If-None-Match") == etag:
+            return web.Response(status=304, headers={"ETag": etag})
+        return web.Response(body=body, content_type="application/json", charset="utf-8", headers={"ETag": etag})
 
     async def run_page(request):
         return web.FileResponse(PLAYER / "run.html")
@@ -430,6 +445,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
     app.router.add_static("/static/", PLAYER, show_index=False)
     app.router.add_get("/viz/{viz}/{path:.+}", viz_file)
     app.router.add_get("/api/health", health)
+    app.router.add_get("/api/i18n/{lang}", api_i18n)
     app.router.add_get("/api/viz", viz_list)
     app.router.add_get("/api/viz/{viz}", viz_one)
     app.router.add_get("/api/runs", runs_list)

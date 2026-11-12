@@ -54,22 +54,27 @@ import math
 import numpy as np
 from scipy import linalg
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Двухуровневый атом: осцилляции Раби, оптические уравнения Блоха, решения Торри",
-    "statement": "H = −Δ|e⟩⟨e| + (Ω/2)σ_x; P_e = (Ω²/W²)sin²(Wt/2), W = √(Ω² + Δ²); уравнения Блоха с T1, "
-                 "T2 ≤ 2T1 и их стационарное решение; переходные решения Торри (резонанс при любых T1, T2; T1 = T2 "
-                 "при любой расстройке) и общее точное решение; распределение интервалов между фотонами флуоресценции.",
-    "validity": "двухуровневое приближение (остальные уровни далеко), дипольное приближение; приближение вращающейся "
-                "волны: Ω, |Δ| ≪ ω0 (поправка — сдвиг Блоха–Зигерта Ω²/(4ω0)); для кругового поля в "
-                "лабораторной системе точно; затухание — марковское (уравнение Линдблада, core.quantum.open_systems)",
+    "title": T("Two-level atom: Rabi oscillations, optical Bloch equations, Torrey solutions"),
+    "statement": T("H = −Δ|e⟩⟨e| + (Ω/2)σ_x; P_e = (Ω²/W²)sin²(Wt/2), W = √(Ω² + Δ²); the Bloch equations with T1, "
+                   "T2 ≤ 2T1 and their steady state; Torrey's transient solutions (on resonance for any T1, T2; T1 = "
+                   "T2 at any detuning) and the general exact solution; the distribution of intervals between "
+                   "fluorescence photons."),
+    "validity": T("the two-level approximation (the other levels far away), the dipole approximation; the "
+                  "rotating-wave approximation: Ω, |Δ| ≪ ω0 (the correction is the Bloch–Siegert shift Ω²/(4ω0)); "
+                  "exact for a circular field in the laboratory frame; damping is Markovian (the Lindblad equation, "
+                  "core.quantum.open_systems)"),
     "basis": ["Rabi, Phys. Rev. 51, 652 (1937)", "Bloch, Phys. Rev. 70, 460 (1946)",
-              "Torrey, Phys. Rev. 76, 1059 (1949) — по изложению Steck, §5.5.2 (сама статья не загружалась)",
-              "Steck, Quantum and Atom Optics, rev. 0.16.11 (2026), гл. 5: (5.26), (5.54)–(5.60), (5.124)–(5.138), "
-              "(5.149)–(5.177), (5.556)",
+              T("Torrey, Phys. Rev. 76, 1059 (1949) — as presented by Steck, §5.5.2 (the paper itself was not "
+                "retrieved)"),
+              T("Steck, Quantum and Atom Optics, rev. 0.16.11 (2026), ch. 5: (5.26), (5.54)–(5.60), (5.124)–(5.138), "
+                "(5.149)–(5.177), (5.556)"),
               "Plenio & Knight, Rev. Mod. Phys. 70, 101 (1998), eqs. (30), (66), (67)",
-              "Bloch & Siegert, Phys. Rev. 57, 522 (1940) — по Steck (5.556)",
-              "lfphys/sources/verification_2026-10-29_p5.md — проверка цитат и выводов"],
+              T("Bloch & Siegert, Phys. Rev. 57, 522 (1940) — after Steck (5.556)"),
+              T("lfphys/sources/verification_2026-10-29_p5.md — check of the quotations and derivations")],
     "conflicts": [],
 }
 

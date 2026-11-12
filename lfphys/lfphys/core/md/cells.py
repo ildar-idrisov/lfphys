@@ -24,15 +24,18 @@ import itertools
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "numerics",
-    "title": "Поиск соседей: списки ячеек и списки пар Верле",
-    "statement": "Все пары частиц ближе заданного радиуса (с минимальным образом по периодическим осям), каждая "
-                 "пара один раз, в детерминированном порядке; ячейки и половинный трафарет соседних ячеек, "
-                 "векторизовано (NumPy).",
-    "validity": "точно (полный список пар) при r ≤ L/2 по периодическим осям; список Верле с запасом skin полон, "
-                "пока ни одна частица не сместилась больше чем на skin/2",
-    "basis": ["Allen & Tildesley, Computer Simulation of Liquids (2nd ed., 2017), §5.3: списки ячеек и списки Верле"],
+    "title": T("Neighbour search: cell lists and Verlet pair lists"),
+    "statement": T("All pairs of particles closer than a given radius (with the minimum image along periodic axes), "
+                   "each pair once, in a deterministic order; cells and a half stencil of neighbouring cells, "
+                   "vectorised (NumPy)."),
+    "validity": T("exact (the complete pair list) for r ≤ L/2 along periodic axes; a Verlet list with a skin is "
+                  "complete while no particle has moved more than skin/2"),
+    "basis": [T("Allen & Tildesley, Computer Simulation of Liquids (2nd ed., 2017), §5.3: cell lists and Verlet "
+                "lists")],
     "conflicts": [],
 }
 

@@ -27,19 +27,22 @@ import mpmath as mp
 import numpy as np
 from scipy import integrate, special
 
+from lfphys.i18n import T
+
 from ..constants import C
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Орбиты тел в поле Шварцшильда (времениподобные геодезические)",
-    "statement": "Сохраняются удельные энергия e и момент l; уравнение орбиты u'' = 1/l² − u + 3u²; смещение "
-                 "перицентра — точный эллиптический интеграл; круговые орбиты, ISCO 6M, фотонная сфера 3M, "
-                 "собственное и координатное время вдоль орбиты.",
-    "validity": "пробное тело вне невращающегося сферического тела (r > R, r > 2M)",
-    "basis": ["Schwarzschild 1916", "Hagihara 1931 (эллиптические интегралы геодезических)",
-              "смещение перигелия Меркурия 42.98″/век (Will, Living Rev. Relativ. 17, 4 (2014))",
-              "пульсар PSR B1913+16 (Weisberg & Huang, ApJ 829, 55 (2016)) проверяет динамику двух тел (1PN с "
-              "полной массой, излучение), а не орбиту пробной частицы; она — в core.gravity.pn_binary (с B5)"],
+    "title": T("Orbits of bodies in the Schwarzschild field (timelike geodesics)"),
+    "statement": T("The specific energy e and angular momentum l are conserved; the orbit equation u'' = 1/l² − u + "
+                   "3u²; the periapsis shift is an exact elliptic integral; circular orbits, the ISCO at 6M, the "
+                   "photon sphere at 3M, proper and coordinate time along the orbit."),
+    "validity": T("a test body outside a non-rotating spherical body (r > R, r > 2M)"),
+    "basis": ["Schwarzschild 1916", T("Hagihara 1931 (elliptic integrals of the geodesics)"),
+              T("Mercury's perihelion shift 42.98″/century (Will, Living Rev. Relativ. 17, 4 (2014))"),
+              T("the pulsar PSR B1913+16 (Weisberg & Huang, ApJ 829, 55 (2016)) tests two-body dynamics (1PN with "
+                "the total mass, radiation), not the orbit of a test particle; that is in core.gravity.pn_binary "
+                "(since B5)")],
     "conflicts": [],
 }
 

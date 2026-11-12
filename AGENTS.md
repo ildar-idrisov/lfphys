@@ -98,6 +98,15 @@ lfphys Research Licence 1.0; the Licensor is the owner as an individual (residen
 > делай демы по записям на github pages, закрепи это как правило, при появлении нового нужно добавлять автоматически
 > везде где нужно
 
+> так же переработай основной интейфейс запуска, чтобы при входе было понятно что к чему, сейчас при входе сложно
+> ориетироваться и выбирать визуализацию, они все накиданы в одном месте списком. все должно быть понятно без
+> усложнений, и чем ниже уровень пользователя тем понятнее интерфейс и сама визуализация без сложных вариантов например
+> по модицикации физики. если запуск сделан с сервера, то появляется возможность запустить реалтайм расчеты или
+> воспроизвести сохраненную запись. если страница открывается с github pages, то только воспроизведение сохраненной
+> записи. в github pages визуализации для школьников, студентов, исследователей работают по записям. плейграунд должен
+> быть отмечен серым с информацией, что работает только с запущенного сервера. представь, что это доп материалы для
+> обучения в виде визуализаций, а исследовательская часть и плейграунды для изучения сложных физических законов
+
 ## 2. Layout
 
 | path | content |
@@ -185,7 +194,7 @@ lfphys Research Licence 1.0; the Licensor is the owner as an individual (residen
     students (their curriculum, ordinary experiments, a simpler interface), for university students (stronger
     experiments of the university courses), for researchers (specialised experiments not done before, worth studying —
     e.g. new set-ups of the double slit), and playgrounds (free laboratories). A visualization belongs to one audience;
-    a topic that serves several audiences gets a visualization per audience at its level. The plan: `lfphys/PLAN.md`.
+    a topic that serves several audiences gets a visualization per audience at its level. The plan: `lfphys/PLAN.md` P17.
 15. **Demonstrations on the public site from recordings; everything new registered everywhere automatically (owner,
     2026-11-12).** The public site (GitHub Pages) plays recorded runs of the demonstrations in the browser without a
     server; the playgrounds, which compute live, run locally (Docker, GPU optional). Whatever is added — a world, a
@@ -193,6 +202,12 @@ lfphys Research Licence 1.0; the Licensor is the owner as an individual (residen
     the README and the guides in every language (with its picture), the site with its recordings, the translations.
     The registry of worlds and the site's build generate these from one source, and a check fails when anything is
     missing (`visualizations/RULES.md`).
+16. **The start page: audience first, simpler for lower levels (owner, 2026-11-12).** The entry page leads by
+    audience (school, university, research, playgrounds), framed as learning materials, with research and playgrounds
+    for studying the harder laws. The lower the level, the simpler the interface and the visualization: no modified
+    physics or advanced options for school. Served by a local server, a demonstration offers a live computation or a
+    saved recording; on the public site only recordings play, and the playgrounds are shown greyed out with a note that
+    they work only with a running server.
 
 ## 4. Boundary with the research projects (owner, 2026-10-24)
 

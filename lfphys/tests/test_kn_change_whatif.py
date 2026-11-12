@@ -111,9 +111,10 @@ def test_no_limit_below_c_near_the_horizon():
     assert abs(clamped - v) > 1e-6
 
 
-def test_refusals_leave_the_world_as_it_was():
+def test_refusals_leave_the_world_as_it_was(ru):
     """No horizon (a^2 + Q^2 >= 1) and an active body inside the new capture radius are refused (``Refused`` naming the
-    body); the old geodesics are untouched; a captured body stays captured just outside the new, larger horizon."""
+    body, its texts translatable); the old geodesics are untouched; a captured body stays captured just outside the new,
+    larger horizon."""
     g = KN.Geodesics(0.9, 0.0, capture_eps=1e-4)
     rp = KN.horizons(0.9, 0.0)[0]
     g.add_body(rp + 0.05, math.pi / 2, 0.0, v=[-0.2, 0.0, 0.0], key="near")
@@ -121,10 +122,12 @@ def test_refusals_leave_the_world_as_it_was():
     d0 = g.state_dict()
     with pytest.raises(WI.Refused) as e:
         WI.carry(g, 0.9, 0.5)
-    assert e.value.key is None and "горизонт" in str(e.value)
+    assert e.value.key is None and "horizon" in str(e.value)
+    assert "горизонт" in ru(e.value.args[0]) and ru(e.value.hint) == "спин или заряд меньше"
     with pytest.raises(WI.Refused) as e:
         WI.carry(g, 0.0, 0.0)  # r+ = 2 > the body's r
     assert e.value.key == "near" and e.value.hint
+    assert "capture radius" in str(e.value) and "радиусе захвата" in ru(e.value.args[0])
     assert g.state_dict() == d0
     g.advance(200.0)
     assert g.status()[0] == "captured"
@@ -141,3 +144,10 @@ def test_observer_refusal():
     assert WI.observer_refusal("circular", 5.0, math.pi / 2, 0.5, 0.0) is None  # ISCO 4.233
     assert WI.observer_refusal("zamo", 1.5, math.pi / 2, 0.0, 0.0) is not None
     assert WI.observer_refusal("zamo", 1.5, math.pi / 2, 0.9, 0.0) is None
+
+
+def test_observer_refusal_texts_are_translatable(ru):
+    text, hint = WI.observer_refusal("circular", 5.0, math.pi / 2, 0.0, 0.0)
+    assert str(text) == "an observer on a circular orbit would end up inside the new ISCO (6 G M/c²)"
+    assert ru(text) == "наблюдатель на круговой орбите оказался бы внутри новой ISCO (6 G M/c²)"
+    assert ru(hint) == "спин больше или наблюдатель дальше"

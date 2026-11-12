@@ -16,4 +16,4 @@ def test_numeric_select_value_sent_as_text_is_taken_as_the_option():
 
 def test_a_text_that_is_no_option_is_still_refused_in_russian():
     params, errors = _schema("v13_hydrogen_3d").resolve(None, {"ng": "65"})
-    assert errors and "нет варианта" in errors[0]
+    assert errors and "there is no option" in str(errors[0])

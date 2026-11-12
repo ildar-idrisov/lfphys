@@ -33,19 +33,15 @@ from lfphys.core import backend
 from lfphys.core.quantum import particles
 from lfphys.core.quantum import schrodinger_nd as S
 from lfphys.core.quantum.schrodinger1d import FreeGaussians
+from lfphys.i18n import T, is_t, join
 from lfphys.theories.interpretations import bohm
+from lfviz.errors import Refusal
 from lfviz.params import Param, Schema
-from lfviz.params import _num as num_ru  # «0,001», «2·10⁻⁵»: numbers in the owner's texts
-
-
-def _n(x, digits=4) -> str:
-    """A number for the owner's texts, rounded to ``digits`` significant digits."""
-    return num_ru(float(f"{float(x):.{digits}g}"))
 from lfviz.sim import Simulation as BaseSimulation
 
 from .engine import apparatus as AP
 
-GRIDS = [("coarse", "грубая: λ/5"), ("normal", "обычная: λ/6"), ("fine", "мелкая: λ/8")]
+GRIDS = [("coarse", T("coarse: λ/5")), ("normal", T("normal: λ/6")), ("fine", T("fine: λ/8"))]
 H_OF = {"coarse": 1 / 5, "normal": 1 / 6, "fine": 1 / 8}
 DT_E0 = 0.1            # time step: E0 dt = 0.1 rad per step at the mean energy
 COMP_GRID = 1.2        # the companion's grid step relative to the run's (and its time step is 2 dt)
@@ -79,71 +75,95 @@ def _p(*a, **k):
 
 
 LIVE_PLATE = ("a", "d", "w", "V0")  # the plate's parameters changed at the current moment (review UX-ui U12)
-LIVE_PLATE_HELP = ("Меняется на ходу: пластина перестраивается в текущий момент, окно опыта, экран и пакет остаются; "
-                   "часть волны, уже бывшая там, где стенка изменилась, чувствует изменение сразу (это число — в событии). "
-                   "Щели должны остаться внутри экрана, пластина — между источником и экраном.")
+LIVE_PLATE_HELP = T("Changes on the fly: the plate is rebuilt at the current moment, the experiment's window, the screen "
+                    "and the packet stay; the part of the wave already where the wall changed feels the change at once "
+                    "(the event gives this number). The slits must stay inside the screen, the plate between the source "
+                    "and the screen.")
+# units (texts, so that a parameter's label and its unit are compared as texts by the forms)
+LAM, E0_UNIT, DEG, PM = T("λ"), T("E₀"), T("°"), T("pm")
+NO_CHANGE = T("no change")  # what set_live returns when nothing changed (v12 compares it)
+# the approximations of the header that v12's free flight replaces (compared by msgid)
+APPROX_SLITS = T("the slits are infinitely long along y: the Schrödinger equation is solved on the plane (x, z); the "
+                 "3-D wave is the exact product ψ(x, z, t)·η(y, t) with a free Gaussian η (closed form)")
+APPROX_WALL = T("the wall is a potential barrier of finite height and thickness, with edges smoothed over a grid step")
+COMPUTATION, BOHM, COMPARISON = T("Computation"), T("Bohm"), T("Comparison")
 PLATE_FREE = 3.0       # edge widths kept free between a slit's outer edge and the screen's edge, and between the plate's
                        # faces and the source's layer or the screen's face (a live plate; the window is the world's)
 
 
+# the engine's names of the particles (lfphys.core.quantum.particles)
+PARTICLES = [("electron", T("Electron")), ("neutron", T("Neutron")), ("he4", T("⁴He atom")), ("c60", T("Fullerene ¹²C₆₀"))]
+PARTICLE, PLATE, SCREEN, PACKET = T("Particle"), T("Plate"), T("Screen"), T("Packet")
+BOHM_TRAJECTORIES, SETUP = T("Bohm trajectories"), T("Set-up")
 SCHEMA = Schema([
-    _p("particle", "Частица", "select", "electron", group="Частица",
-       options=[("electron", "электрон"), ("neutron", "нейтрон"), ("he4", "атом ⁴He"), ("c60", "фуллерен C₆₀")]),
-    _p("lam_pm", "Длина волны де Бройля λ, пм", "float", 100.0, unit="пм", group="Частица", min=20.0, max=5000.0,
-       log=True, help="задаёт физический масштаб: все длины опыта — в λ"),
+    _p("particle", PARTICLE, "select", "electron", group=PARTICLE, options=PARTICLES),
+    _p("lam_pm", T("de Broglie wavelength λ, pm"), "float", 100.0, unit=PM, group=PARTICLE, min=20.0, max=5000.0,
+       log=True, help=T("sets the physical scale: every length of the experiment is in λ")),
     # the plate is live (review UX-ui U12): rebuilt at the current moment inside the window built for the world
-    _p("a", "Ширина щели a, λ", "float", 2.0, unit="λ", group="Пластина", min=0.5, max=20.0, live=True, help=LIVE_PLATE_HELP),
-    _p("d", "Расстояние между щелями d (центр — центр), λ", "float", 8.0, unit="λ", group="Пластина", min=1.0, max=60.0,
-       live=True, help=LIVE_PLATE_HELP),
-    _p("w", "Толщина пластины w, λ", "float", 2.0, unit="λ", group="Пластина", min=0.5, max=10.0, live=True,
+    _p("a", T("Slit width a, λ"), "float", 2.0, unit=LAM, group=PLATE, min=0.5, max=20.0, live=True,
        help=LIVE_PLATE_HELP),
-    _p("V0", "Высота стенки V₀, в E₀", "float", 4.0, unit="E₀", group="Пластина", min=1.5, max=8.0, live=True,
-       help="потенциальная энергия частицы в материале пластины, в единицах её кинетической энергии E₀. " + LIVE_PLATE_HELP),
-    _p("edge", "Ширина краёв стенки и поля метки, λ", "float", 0.2, unit="λ", group="Пластина", min=0.1, max=1.0,
-       help="потенциал стенки и поле метки нарастают на этой длине (tanh); не меньше шага сетки"),
-    _p("L", "Расстояние до экрана L, λ", "float", 50.0, unit="λ", group="Экран", min=5.0, max=200.0),
-    _p("sigma_x", "Пакет: ширина поперёк σx, λ", "float", 8.0, unit="λ", group="Пакет", min=1.0, max=40.0),
-    _p("sigma_z", "Пакет: длина вдоль σz, λ", "float", 5.0, unit="λ", group="Пакет", min=2.0, max=20.0,
-       help="разброс импульса Δk/k = 1/(4π σz/λ)"),
-    _p("sigma_y", "Пакет: ширина вдоль y σy, λ", "float", 3.0, unit="λ", group="Пакет", min=0.5, max=40.0,
-       help="вдоль щелей ничего не меняется, поэтому волна — точное произведение ψ(x, z, t)·η(y, t): η — свободный "
-            "гауссов пакет, он только расплывается"),
-    _p("mark", "Метка пути в щели B", "select", "none", group="Метка пути и наблюдатель",
-       options=[("none", "нет"), ("spin", "спин частицы: поле в щели B поворачивает спин ½ (электрон, нейтрон)"),
-                ("detector", "наблюдатель: детектор пути у щели B (двухуровневый, модель Энглерта; любая частица)")],
-       help="волна получает вторую компоненту: спин частицы или состояние детектора; пока частица в щели B, она "
-            "поворачивается на угол θ — путь помечен, интерференция гаснет (в модели двух путей как |cos(θ/2)|)"),
-    _p("grid", "Сетка", "select", "normal", group="Расчёт", options=GRIDS),
-    _p("n_bohm", "Частиц Бома в ансамбле", "int", 2000, group="Траектории Бома", min=100, max=8000),
-    _p("n_tracks", "Из них рисовать траекторий", "int", 120, group="Траектории Бома", min=10, max=400),
-    _p("slit_a", "Щель A (x = −d/2) открыта", "bool", True, group="Установка", live=True),
-    _p("slit_b", "Щель B (x = +d/2) открыта", "bool", True, group="Установка", live=True),
-    _p("mark_deg", "Метка в щели B: поворот θ, °", "float", 0.0, unit="°", group="Установка", min=0.0, max=360.0,
+    _p("d", T("Distance between the slits d (centre to centre), λ"), "float", 8.0, unit=LAM, group=PLATE, min=1.0,
+       max=60.0, live=True, help=LIVE_PLATE_HELP),
+    _p("w", T("Plate thickness w, λ"), "float", 2.0, unit=LAM, group=PLATE, min=0.5, max=10.0, live=True,
+       help=LIVE_PLATE_HELP),
+    _p("V0", T("Wall height V₀, in E₀"), "float", 4.0, unit=E0_UNIT, group=PLATE, min=1.5, max=8.0, live=True,
+       help=T("the particle's potential energy in the plate's material, in units of its kinetic energy E₀. {live}",
+              live=LIVE_PLATE_HELP)),
+    _p("edge", T("Width of the wall's and the mark field's edges, λ"), "float", 0.2, unit=LAM, group=PLATE, min=0.1,
+       max=1.0, help=T("the wall's potential and the mark's field rise over this length (tanh); not less than the grid "
+                       "step")),
+    _p("L", T("Distance to the screen L, λ"), "float", 50.0, unit=LAM, group=SCREEN, min=5.0, max=200.0),
+    _p("sigma_x", T("Packet: width across σx, λ"), "float", 8.0, unit=LAM, group=PACKET, min=1.0, max=40.0),
+    _p("sigma_z", T("Packet: length along σz, λ"), "float", 5.0, unit=LAM, group=PACKET, min=2.0, max=20.0,
+       help=T("the momentum spread Δk/k = 1/(4π σz/λ)")),
+    _p("sigma_y", T("Packet: width along y σy, λ"), "float", 3.0, unit=LAM, group=PACKET, min=0.5, max=40.0,
+       help=T("nothing changes along the slits, so the wave is the exact product ψ(x, z, t)·η(y, t): η is a free "
+              "Gaussian packet, it only spreads")),
+    _p("mark", T("Path mark in slit B"), "select", "none", group=T("Path mark and observer"),
+       options=[("none", T("none")),
+                ("spin", T("the particle's spin: a field in slit B turns the spin ½ (electron, neutron)")),
+                ("detector", T("an observer: a path detector at slit B (two-level, Englert's model; any particle)"))],
+       help=T("the wave gets a second component: the particle's spin or the detector's state; while the particle is "
+              "in slit B, it turns by the angle θ: the path is marked and the interference fades (in the two-path "
+              "model as |cos(θ/2)|)")),
+    _p("grid", T("Grid"), "select", "normal", group=COMPUTATION, options=GRIDS),
+    _p("n_bohm", T("Bohm particles in the ensemble"), "int", 2000, group=BOHM_TRAJECTORIES, min=100, max=8000),
+    _p("n_tracks", T("Trajectories of them to draw"), "int", 120, group=BOHM_TRAJECTORIES, min=10, max=400),
+    _p("slit_a", T("Slit A (x = −d/2) open"), "bool", True, group=SETUP, live=True),
+    _p("slit_b", T("Slit B (x = +d/2) open"), "bool", True, group=SETUP, live=True),
+    _p("mark_deg", T("Mark in slit B: turn θ, °"), "float", 0.0, unit=DEG, group=SETUP, min=0.0, max=360.0,
        live=True, show_if={"mark": ["spin", "detector"]},
-       help="поворот спина (или состояния детектора) основной поперечной моды щели B при средней скорости; связь "
-            "откалибрована по этой моде: 0 — пути не различить, 180° — основная мода помечена полностью; часть волны "
-            "поворачивается иначе (вероятно, высшие моды узкой щели и разброс скоростей), поэтому полосы гаснут не до нуля"),
-    _p("flux", "Поток Ааронова–Бома между щелями Φ/Φ₀", "float", 0.0, group="Установка", min=-2.0, max=2.0,
-       live=True, help="тонкая трубка магнитного потока внутри пластины между щелями; только заряженные частицы"),
+       help=T("the turn of the spin (or of the detector's state) of slit B's main transverse mode at the mean speed; "
+              "the coupling is calibrated on this mode: 0 means the paths cannot be told apart, 180° means the main "
+              "mode is fully marked; a part of the wave turns differently (likely the higher modes of a narrow slit "
+              "and the speed spread), so the fringes do not fade to zero")),
+    _p("flux", T("Aharonov–Bohm flux between the slits Φ/Φ₀"), "float", 0.0, group=SETUP, min=-2.0, max=2.0,
+       live=True, help=T("a thin tube of magnetic flux inside the plate between the slits; charged particles only")),
 ], presets={
-    "narrow": {"label": "Узкие щели a = 2λ: дифракция на большие углы, параксиальная теория не годится", "params": {}},
-    "wide": {"label": "Щели a = 6λ в тонкой высокой стенке: ближе к параксиальной теории (отличие ~λ/a)",
+    "narrow": {"label": T("Narrow slits a = {a}λ: diffraction to large angles, the paraxial theory fails", a=2),
+               "params": {}},
+    "wide": {"label": T("Slits a = {a}λ in a thin high wall: closer to the paraxial theory (a difference ~λ/a)", a=6),
              "params": {"a": 6.0, "d": 12.0, "w": 0.5, "V0": 8.0, "L": 72.0, "sigma_x": 15.0}},
-    "mark180": {"label": "Метка пути: спин в щели B повёрнут на 180° — полосы почти гаснут, траектории пересекают ось",
+    "mark180": {"label": T("Path mark: the spin in slit B turned by {th}°: the fringes almost fade, the trajectories "
+                           "cross the axis", th=180),
                 "params": {"mark": "spin", "mark_deg": 180.0}},
-    "mark90": {"label": "Частичная метка: поворот на 90°, видность cos 45°",
+    "mark90": {"label": T("A partial mark: a turn by {th}°, visibility cos {h}°", th=90, h=45),
                "params": {"mark": "spin", "mark_deg": 90.0}},
-    "observer": {"label": "Наблюдатель у щели B: детектор пути (θ = 180°) у атома ⁴He без спина — полосы почти гаснут",
+    "observer": {"label": T("An observer at slit B: a path detector (θ = {th}°) for a ⁴He atom without spin: the "
+                            "fringes almost fade", th=180),
                  "params": {"particle": "he4", "mark": "detector", "mark_deg": 180.0}},
-    "ab": {"label": "Эффект Ааронова–Бома: поток Φ₀/2 между щелями сдвигает полосы на полпериода",
+    "ab": {"label": T("The Aharonov–Bohm effect: a flux Φ₀/2 between the slits shifts the fringes by half a period"),
            "params": {"flux": 0.5}},
-    "single": {"label": "Одна щель (B закрыта): огибающая без полос", "params": {"slit_b": False}},
+    "single": {"label": T("One slit (B closed): the envelope without fringes"), "params": {"slit_b": False}},
 })
+
+
+TITLE = T("Double slit (long slits, 3-D): the exact Schrödinger equation and Bohm trajectories")
 
 
 class Simulation(BaseSimulation):
     label_slits = True                 # Bohm particles are labelled by the slit they cross (v12's free flight: no plate)
-    BACK_LABEL = "отражено пластиной"  # what is absorbed before the plate's middle plane
+    BACK_LABEL = T("reflected by the plate")  # what is absorbed before the plate's middle plane
     SCHEMA = SCHEMA                    # the world's schema: its live parameters are this world's (v12 has its own)
     FIXED_LIVE: dict = {}              # live values of v11's set-up that a world built on it does not offer (v12)
 
@@ -154,17 +174,19 @@ class Simulation(BaseSimulation):
         self.part = particles.make(p["particle"], "lambda", float(p["lam_pm"]) * 1e-12)
         self.charged = self.part.charge != 0
         if abs(float(p["flux"])) > 0 and not self.charged:
-            raise ValueError("поток Ааронова–Бома действует только на заряженные частицы (электрон)")
+            raise Refusal(T("the Aharonov–Bohm flux acts only on charged particles (the electron)"))
         self.mark = p.get("mark", "none")
         if float(p["mark_deg"]) and self.mark == "none":
-            raise ValueError("метка пути выключена: выберите в «Метка пути в щели B» спин частицы или детектор")
+            raise Refusal(T("the path mark is off"), T("choose the particle's spin or the detector in «Path mark in slit B»"))
         if self.mark == "spin" and self.part.internal != "spin":
-            raise ValueError(f"у частицы «{self.part.label}» нет спина ½ (внутреннего состояния в движке нет): метка "
-                             f"пути спином для неё не определена — выберите электрон или нейтрон, или детектор пути")
+            raise Refusal(T("the particle «{particle}» has no spin ½ (the engine has no internal state for it): a path "
+                            "mark by spin is not defined for it", particle=self.part.label),
+                          T("choose the electron or the neutron, or the path detector"))
         self.geo = self._geometry(p)
         if self.geo.edge < self.geo.h * (1 - 1e-9):
-            raise ValueError(f"края стенки ({self.geo.edge:g} λ) уже шага сетки ({self.geo.h:.3g} λ): сетка их не "
-                             f"разрешает — выберите сетку мельче или края шире")
+            raise Refusal(T("the wall's edges ({e} λ) are narrower than the grid step ({h:.3g} λ): the grid does not "
+                            "resolve them", e=self.geo.edge, h=self.geo.h),
+                          T("choose a finer grid or wider edges"))
         self.g = self.geo.grid()
         g = self.g
         self.tunit = AP.time_unit(self.part.mass, self.part.lam)  # seconds of the world per unit of computation
@@ -200,7 +222,7 @@ class Simulation(BaseSimulation):
         self.iL_c = int(np.argmin(np.abs(self.g_c.axes[1] - self.geo.L)))
         H_c = self._hamiltonian(self.live, self.g_c, self.W_c)
         self.comp = S.SplitOperator(H_c, 2 * self.dt, track_absorbed=True, force_cpu=self.prop.device == "cpu",
-                                    why="как основной прогон")
+                                    why=T("as the main run"))
         psi0 = self._packet(H, g)
         self.psi = self.prop.put(psi0)
         self.psi_c = self.comp.put(self._packet(H_c, self.g_c))
@@ -316,9 +338,11 @@ class Simulation(BaseSimulation):
         est = self.cost_estimate()
         lim = COST_LIMIT[self.prop.device]
         if est > lim:
-            raise ValueError(f"опыт слишком тяжёл: ~{est / 60:.0f} мин счёта на {'GPU 0' if self.prop.device == 'gpu' else 'CPU'} "
-                             f"(предел {lim / 60:.0f} мин; сетка {self.g.shape[0]}×{self.g.shape[1]}, ~"
-                             f"{self.t_end_est / self.pair:.0f} пар шагов): уменьшите экран, пакет или выберите сетку грубее")
+            raise Refusal(T("the experiment is too heavy: ~{m:.0f} min of computation on {device} (the limit is "
+                            "{lim:.0f} min; grid {nx:d}×{nz:d}, ~{pairs:.0f} pairs of steps)", m=est / 60,
+                            device="GPU 0" if self.prop.device == "gpu" else "CPU", lim=lim / 60,
+                            nx=int(self.g.shape[0]), nz=int(self.g.shape[1]), pairs=self.t_end_est / self.pair),
+                          T("reduce the screen or the packet, or choose a coarser grid"))
         self.est_cost = est
 
     # --- the set-up ---------------------------------------------------------------------------------------------------
@@ -362,27 +386,30 @@ class Simulation(BaseSimulation):
         fit inside them — its slits inside the screen, its faces between the source's layer and the screen's face, each
         with PLATE_FREE edge widths to spare. Refused in the owner's terms otherwise; nothing is changed here."""
         import copy
-        from lfviz.errors import Refusal
         g0 = self.geo
         if g0.n_slits == 0:
-            raise Refusal("в свободном полёте пластины нет: её ширину, расстояние, толщину и высоту менять не у чего",
-                          "выберите «Полёт: через две щели» (новый мир)")
+            raise Refusal(T("there is no plate in free flight: there is nothing whose width, distance, thickness or "
+                            "height could change"), T("choose the flight «through two slits» (a new world)"))
         a, d, w = float(live["a"]), float(live["d"]), float(live["w"])
         free = PLATE_FREE * g0.edge
         if g0.n_slits == 2 and a >= d:  # the rule of the world's construction (apparatus.Geometry)
-            raise Refusal(f"щели сливаются: ширина щели a = {_n(a)} λ не меньше расстояния между их центрами "
-                          f"d = {_n(d)} λ", f"возьмите a меньше {_n(d)} λ или d больше {_n(a)} λ")
+            raise Refusal(T("the slits merge: the slit width a = {a:.4g} λ is not smaller than the distance between "
+                            "their centres d = {d:.4g} λ", a=a, d=d),
+                          T("take a smaller than {d:.4g} λ or d larger than {a:.4g} λ", a=a, d=d))
         outer = (0.5 * d if g0.n_slits == 2 else 0.0) + 0.5 * a
         if outer + free > g0.screen_half:
             room = g0.screen_half - free
-            raise Refusal(f"щель выходит за экран: её внешний край на |x| = {_n(outer)} λ, экран этого мира — до "
-                          f"|x| = {_n(g0.screen_half)} λ (окно опыта задано при создании мира)",
-                          f"возьмите d/2 + a/2 не больше {_n(room)} λ, или шире экран — новый мир с другими a, d или L")
+            raise Refusal(T("a slit goes beyond the screen: its outer edge is at |x| = {o:.4g} λ, this world's screen "
+                            "reaches |x| = {s:.4g} λ (the experiment's window is set when the world is created)",
+                            o=outer, s=g0.screen_half),
+                          T("take d/2 + a/2 at most {r:.4g} λ, or a wider screen: a new world with other a, d or L",
+                            r=room))
         z_back = g0.z_min + AP.ABS_W
         if 0.5 * w + free > min(-z_back, g0.L):
-            raise Refusal(f"пластина толщиной {_n(w)} λ не помещается в окно опыта: её грани на ±{_n(0.5 * w)} λ, "
-                          f"источник начинается на z = {_n(z_back)} λ, экран на z = {_n(g0.L)} λ",
-                          f"возьмите толщину не больше {_n(2 * (min(-z_back, g0.L) - free))} λ")
+            raise Refusal(T("a plate {w:.4g} λ thick does not fit into the experiment's window: its faces are at "
+                            "±{h:.4g} λ, the source starts at z = {zb:.4g} λ, the screen is at z = {L:.4g} λ", w=w,
+                            h=0.5 * w, zb=z_back, L=g0.L),
+                          T("take the thickness at most {m:.4g} λ", m=2 * (min(-z_back, g0.L) - free)))
         geo = copy.copy(g0)
         geo.a, geo.d, geo.w = a, d, w
         geo.centers = [-0.5 * d, 0.5 * d] if geo.n_slits == 2 else [0.0]
@@ -391,14 +418,15 @@ class Simulation(BaseSimulation):
     def set_live(self, values):
         new, errors = self.SCHEMA.coerce_live(self.live, values)
         if errors:
-            raise ValueError("; ".join(errors))
+            raise Refusal(join(errors))
         if abs(float(new["flux"])) > 0 and not self.charged:
-            raise ValueError("поток Ааронова–Бома действует только на заряженные частицы")
+            raise Refusal(T("the Aharonov–Bohm flux acts only on charged particles"))
         if float(new["mark_deg"]) and not self.spinor:
-            raise ValueError("метки пути в этом мире нет: выберите спин или детектор в «Метка пути в щели B» (новый мир)")
+            raise Refusal(T("there is no path mark in this world"),
+                          T("choose the spin or the detector in «Path mark in slit B» (a new world)"))
         changed = [k for k in values if new.get(k) != self.live.get(k)]
         if not changed:
-            return "без изменений"
+            return NO_CHANGE
         plate = [k for k in changed if k in LIVE_PLATE]
         old_geo, old_cal = self.geo, self.mark_cal
         if plate:
@@ -415,8 +443,8 @@ class Simulation(BaseSimulation):
         sudden = self._sudden(self.prop.H, H) if plate else None
         self.prop.rebuild(V=H.V, W=H.W, A=H.A, b=H.b, keep=())
         self.comp.rebuild(V=H_c.V, W=H_c.W, A=H_c.A, b=H_c.b, keep=())
-        desc = "; ".join(f"{self.SCHEMA.by_id[k].label}: {self._fmt(k, self.live[k])} → {self._fmt(k, new[k])}"
-                         for k in changed)
+        desc = [T("{label}: {old} → {new}", label=self.SCHEMA.by_id[k].label, old=self._fmt(k, self.live[k]),
+                  new=self._fmt(k, new[k])) for k in changed]
         self.live = new
         if plate:
             if self.mark_cal is not None:  # the mark is measured just behind the new plate, from this moment on
@@ -425,19 +453,22 @@ class Simulation(BaseSimulation):
                 self.mark_flux = np.zeros(2)
             self._wall_check()
             if self.tau == 0.0:
-                desc += (f"; мир ещё не считал: опыт — как с этой пластиной с самого начала (у изменённой стенки "
-                         f"начальный пакет держит {_n(sudden, 2)} вероятности)")
+                desc.append(T("the world has not computed yet: the experiment is as with this plate from the very "
+                              "start (next to the changed wall the initial packet holds {p:.2g} of the probability)",
+                              p=sudden))
             elif sudden >= 1e-12:
-                desc += (f"; там, где стенка изменилась, было {_n(sudden, 2)} вероятности — на эту часть волны "
-                         f"изменение подействовало сразу (внезапно); остальная встретит новую пластину")
+                desc.append(T("where the wall changed there was {p:.2g} of the probability: on this part of the wave "
+                              "the change acted at once (suddenly); the rest will meet the new plate", p=sudden))
             else:
-                desc += "; волны там, где стенка изменилась, ещё не было (< 10⁻¹²): дальше — как с новой пластиной"
+                desc.append(T("there was no wave yet where the wall changed (< 10⁻¹²): from now on as with the new "
+                              "plate"))
             if self.mark_cal is not None:
-                desc += "; доля метки за щелью B измеряется заново"
+                desc.append(T("the mark's share behind slit B is measured anew"))
+        desc = join(desc)
         self.events.append((self.t, desc))
         self._msg({"type": "setup", "t": self.t, "live": dict(new), "plate": self._plate_obj(),
                    "observer": self._observer_obj(), "geometry": self._plate_geometry()})
-        return desc + " (действует с этого момента)"
+        return T("{change} (acts from this moment on)", change=desc)
 
     def _sudden(self, H_old, H_new) -> float:
         """The probability in the wave now where the plate's potential (or the mark's field in slit B) changes by more
@@ -457,10 +488,15 @@ class Simulation(BaseSimulation):
         return {"a": geo.a, "d": geo.d, "w": geo.w, "V0": float(self.live["V0"]), "centers": list(geo.centers)}
 
     def _fmt(self, k, v):
+        """A live value with its unit, as a text (the number formatted by the viewer's language)."""
         if isinstance(v, bool):
-            return "открыта" if v else "закрыта"
+            return T("open") if v else T("closed")
         unit = self.SCHEMA.by_id[k].unit if k in self.SCHEMA.by_id else ""
-        return num_ru(float(f"{float(v):.6g}")) + (f" {unit}" if unit and unit != "°" else unit)
+        if not unit:
+            return float(v)
+        if (unit.get("$t") if is_t(unit) else unit) == "°":
+            return T("{v}°", v=float(v))
+        return T("{v} {unit}", v=float(v), unit=unit)
 
     # --- time ----------------------------------------------------------------------------------------------------------
     def max_step(self):
@@ -472,7 +508,7 @@ class Simulation(BaseSimulation):
         while not self.done and self.tau + self.pair <= tau_t + 1e-12:
             self._pair()
         if not self.done and self.tau >= self.t_end_est * 4:
-            self._finish("время вышло: волна задержалась в окне")
+            self._finish(T("time is up: the wave lingered in the window"))
 
     def _pair(self):
         """Two steps of the wave (dt), one of the companion (2 dt), one RK4 step of the Bohm ensemble over 2 dt."""
@@ -507,9 +543,9 @@ class Simulation(BaseSimulation):
         if self.n_pairs % SCREEN_EVERY == 0:
             self._screen()
             if pr.norm(self.psi) < END_NORM and not np.any(self.fate == 0):
-                self._finish("волна ушла из окна")
+                self._finish(T("the wave has left the window"))
             elif pr.norm(self.psi) < END_NORM * 0.01:
-                self._finish("волна ушла из окна")
+                self._finish(T("the wave has left the window"))
 
     def _bohm(self, a, b, c):
         act = np.flatnonzero(self.fate == 0)
@@ -629,8 +665,9 @@ class Simulation(BaseSimulation):
                         "A": int(((self.fate == 1) & (self.slit == 1)).sum()), "B": int(((self.fate == 1) & (self.slit == 2)).sum()),
                         "crossed_axis": int(self.crossed_axis.sum()), "max_substeps": self.max_sub}}
         self._msg({"type": "event", "t": self.t, "kind": "done",
-                   "text": f"картина на экране завершена ({why}): на экран {frac['screen']:.4f}, {self.BACK_LABEL} "
-                           f"{frac['back']:.4f}, ушло вбок {frac['side']:.4f}"})
+                   "text": T("the pattern on the screen is complete ({why}): to the screen {s:.4f}, {back_label} "
+                             "{b:.4f}, went sideways {side:.4f}", why=why, s=frac["screen"], back_label=self.BACK_LABEL,
+                             b=frac["back"], side=frac["side"])})
         mk = self._mark_measured()
         if mk is not None:
             res["mark"] = {**mk, "theta_nominal_deg": float(self.live["mark_deg"]),
@@ -698,7 +735,8 @@ class Simulation(BaseSimulation):
         return out
 
     # --- checks -----------------------------------------------------------------------------------------------------------
-    def _check(self, cid, label, value, ref, unit="", note="", tol=1e-9, ok=None, info=False, group="Двухщелевой опыт"):
+    def _check(self, cid, label, value, ref, unit="", note="", tol=1e-9, ok=None, info=False, group=None):
+        group = T("Double slit") if group is None else group
         rel = None
         if ref is not None and value is not None and ref != 0:
             rel = (value - ref) / abs(ref)
@@ -713,9 +751,10 @@ class Simulation(BaseSimulation):
     def _static_checks(self):
         g = self.g
         kmax = math.pi / g.d[0]
-        self._check("grid_k", "Сетка разрешает волну: k_max / k₀", kmax / AP.K0, None, "", ok=kmax / AP.K0 >= 2.4,
-                    group="Расчёт", note=f"шаг сетки λ/{1 / g.d[0]:.3g}; k_max = π/шаг; нужно ≥ 2,4·k₀ (спектр пакета и "
-                                         f"затухание в стенке)")
+        self._check("grid_k", T("The grid resolves the wave: k_max / k₀"), kmax / AP.K0, None, "", ok=kmax / AP.K0 >= 2.4,
+                    group=COMPUTATION,
+                    note=T("grid step λ/{n:.3g}; k_max = π/step; at least {r}·k₀ is needed (the packet's spectrum and the "
+                           "decay in the wall)", n=1 / g.d[0], r=2.4))
         self._wall_check()
         # absorbers: the reflection of the layers for the beam (normal) and the screen's widest angle
         th = self._widest_angle()
@@ -725,12 +764,13 @@ class Simulation(BaseSimulation):
         R_o, T_o = S.layer_reflection(kk * math.cos(th), sw, sW, 1.0)
         self.R_layer = float(max(R_n.max(), R_o.max()))
         self.T_layer = float(max(T_n.max(), T_o.max()))
-        self._check("absorbers", "Детекторы: отражение и утечка поглощающих слоёв", self.R_layer, None, "",
-                    ok=self.R_layer < 1e-3 and self.T_layer < 1e-3, group="Расчёт",
-                    note=f"матрицы переноса для слоя экрана −iW (ширина {self.geo.screen_w:g} λ, W = {self.geo.screen_W:g} "
-                         f"E0·(s/ширина)²) при k ∈ [{kk.min() / AP.K0:.2f}; {kk.max() / AP.K0:.2f}] k₀, по нормали и под "
-                         f"наибольшим углом {math.degrees(th):.0f}°: "
-                         f"R ≤ {self.R_layer:.1e}, утечка ≤ {self.T_layer:.1e}")
+        self._check("absorbers", T("Detectors: reflection and leakage of the absorbing layers"), self.R_layer, None, "",
+                    ok=self.R_layer < 1e-3 and self.T_layer < 1e-3, group=COMPUTATION,
+                    note=T("transfer matrices for the screen's layer −iW (width {w} λ, W = {W} E0·(s/width)²) at "
+                           "k ∈ [{k0:.2f}, {k1:.2f}] k₀, along the normal and at the largest angle {th:.0f}°: "
+                           "R ≤ {R:.1e}, leakage ≤ {lk:.1e}", w=self.geo.screen_w, W=self.geo.screen_W,
+                           k0=kk.min() / AP.K0, k1=kk.max() / AP.K0, th=math.degrees(th), R=self.R_layer,
+                           lk=self.T_layer))
 
     def _wall_check(self):
         """The decay in the wall resolved by the grid (at the start and after every live change of the plate)."""
@@ -740,27 +780,32 @@ class Simulation(BaseSimulation):
         Emax = 0.5 * kmax * kmax
         V0 = float(self.live["V0"]) * AP.E0
         kap = math.sqrt(2 * (V0 - AP.E0)) if V0 > AP.E0 else 0.0
-        self._check("grid_wall", "Затухание в стенке разрешено сеткой: κ/k_max", kap / kmax, None, "",
-                    ok=kap < kmax and V0 < Emax, group="Расчёт",
-                    note=f"κ = √(2(V0 − E0)) = {kap:.3g} λ⁻¹ (V0 = {float(self.live['V0']):g} E0); прохождение сквозь "
-                         f"толщину w = {self.geo.w:g} λ ≈ e^(−2κw) = {math.exp(-2 * kap * self.geo.w):.1e}")
+        self._check("grid_wall", T("The decay in the wall is resolved by the grid: κ/k_max"), kap / kmax, None, "",
+                    ok=kap < kmax and V0 < Emax, group=COMPUTATION,
+                    note=T("κ = √(2(V0 − E0)) = {kap:.3g} λ⁻¹ (V0 = {v0} E0); transmission through the thickness "
+                           "w = {w} λ ≈ e^(−2κw) = {tr:.1e}", kap=kap, v0=float(self.live["V0"]), w=self.geo.w,
+                           tr=math.exp(-2 * kap * self.geo.w)))
 
     def _final_checks(self, xs, P, Pc, tot, frac, absorbed):
         g, geo = self.g, self.geo
         lost = abs(self.prop.norm(self.psi) + float(absorbed.sum()) - 1.0)
-        self._check("norm", "Норма + поглощённое = 1", lost, 0.0, "", tol=1e-9, ok=lost < 1e-9, group="Расчёт",
-                    note="шаги расщепления унитарны; поглощение учитывается в каждой точке")
+        self._check("norm", T("Norm + absorbed = 1"), lost, 0.0, "", tol=1e-9, ok=lost < 1e-9, group=COMPUTATION,
+                    note=T("the splitting steps are unitary; the absorption is counted at every point"))
         rho_m = P / g.d[0]
         pk = float(rho_m.max()) if rho_m.max() > 0 else 1.0
         err_num = float(np.max(np.abs(rho_m - Pc))) / pk
         coarser = self.g_c.d[0] > g.d[0]
-        self._check("numerics", "Сетка и шаг по времени: ошибка картины на экране (оценка по прогону на соседней "
-                                "сетке с шагом 2dt)", err_num, None, "", ok=err_num < 1e-2, group="Расчёт",
-                    note=f"параллельный прогон на сетке λ/{1 / self.g_c.d[0]:.3g} ({'в 1,2 раза грубее' if coarser else 'в 1,2 раза мельче: грубее края не разрешаются'}) "
-                         f"с шагом по времени 2dt; наибольшая разность плотностей на экране в долях пика — оценка "
-                         f"ошибки этого прогона (λ/{1 / g.d[0]:.3g}, dt = {self.dt:.3g}, E0·dt = {DT_E0}) с запасом: у "
-                         f"спутника шаг по времени вдвое больше; края стенки и поля — {geo.edge:g} λ на обеих сетках "
-                         f"(review B3-2); цель < 1 %"),
+        self._check("numerics", T("Grid and time step: the error of the pattern on the screen (estimated from a run on a "
+                                  "neighbouring grid with the step 2dt)"), err_num, None, "", ok=err_num < 1e-2,
+                    group=COMPUTATION,
+                    note=T("a parallel run on the grid λ/{nc:.3g} ({rel}) with the time step 2dt; the largest difference "
+                           "of the densities on the screen as a fraction of the peak estimates the error of this run "
+                           "(λ/{n:.3g}, dt = {dt:.3g}, E0·dt = {e0dt}) with a margin: the companion's time step is "
+                           "twice as large; the edges of the wall and of the field are {edge} λ on both grids (review "
+                           "B3-2); the target is < 1 %", nc=1 / self.g_c.d[0], n=1 / g.d[0], dt=self.dt, e0dt=DT_E0,
+                           edge=geo.edge,
+                           rel=T("{f} times coarser", f=COMP_GRID) if coarser else
+                           T("{f} times finer: a coarser grid would not resolve the edges", f=COMP_GRID)))
         err_dt = err_num
         rho = self.prop.density(self.psi) * g.dV
         scr = float(absorbed[self.regions["beyond"]].sum()) + float(rho[self.regions["beyond"]].sum())
@@ -770,10 +815,11 @@ class Simulation(BaseSimulation):
         # gone; v12 stops while ~1e-4 is still near the face)
         face = float(rho[:, self.iL].sum())
         tol = self.R_layer * max(scr, 1e-12) + 3 * err_dt * scr + face + 1e-6
-        self._check("flux_absorbed", "Поток через грань экрана против вероятности, ушедшей за неё", through, scr, "",
-                    tol=tol / max(scr, 1e-12), ok=d <= tol, group="Расчёт",
-                    note="∫∫ j_z dx dt на передней грани экрана (по всей ширине окна) против поглощённого за ней (и "
-                         "оставшегося там); допуск — отражение слоя и численная ошибка (сверка «Сетка и шаг»)")
+        self._check("flux_absorbed", T("Flux through the screen's face against the probability that went beyond it"),
+                    through, scr, "", tol=tol / max(scr, 1e-12), ok=d <= tol, group=COMPUTATION,
+                    note=T("∫∫ j_z dx dt at the screen's front face (over the window's whole width) against what was "
+                           "absorbed beyond it (and what is left there); tolerance: the layer's reflection and the "
+                           "numerical error (the check «Grid and time step»)"))
         if frac["screen"] > 0:
             self._bohm_checks(xs, P, tot)
             self._y_checks(P)
@@ -785,8 +831,8 @@ class Simulation(BaseSimulation):
         N = len(self.fate)
         n = len(hits)
         if n < 20:
-            self._check("bohm_born", "Траектории Бома против картины", None, None, "", info=True, group="Бом",
-                        note=f"на экран пришло {n} частиц: мало для сравнения")
+            self._check("bohm_born", T("Bohm trajectories against the pattern"), None, None, "", info=True, group=BOHM,
+                        note=T("{n:d} particles reached the screen: too few for a comparison", n=n))
             return
         Q = np.where(self.on_screen, P, 0.0)
         F = np.cumsum(Q) / Q.sum()
@@ -794,29 +840,32 @@ class Simulation(BaseSimulation):
         emp = np.searchsorted(np.sort(hits), edges, side="right") / n
         D = float(np.max(np.abs(emp - F)))
         crit = 1.95 / math.sqrt(n)
-        self._check("bohm_born", "Попадания частиц Бома против картины потока (Колмогоров–Смирнов)", D, None, "",
-                    ok=D < crit, group="Бом",
-                    note=f"{n} попаданий; расстояние между их распределением по x и картиной потока; критическое "
-                         f"значение 99,9 %: 1,95/√n = {crit:.3g} (эквивариантность: старт по |ψ|² → попадания по потоку)")
+        self._check("bohm_born", T("Hits of the Bohm particles against the flux pattern (Kolmogorov–Smirnov)"), D, None,
+                    "", ok=D < crit, group=BOHM,
+                    note=T("{n:d} hits; the distance between their distribution in x and the flux pattern; the "
+                           "critical value at {p} %: {c}/√n = {crit:.3g} (equivariance: starts by |ψ|² → hits by the "
+                           "flux)", n=n, p=99.9, c=1.95, crit=crit))
         K = self.Kc
         both = (self.fate[:K] == 1) & (self.fate_c == 1)
         changed = int((self.fate[:K] != self.fate_c).sum())
         if both.any():
             dx = np.abs(self.hit_x[:K][both] - self.hit_c[both])
             p95, mx = float(np.percentile(dx, 95)), float(dx.max())
-            fringe = f" (период полос {(self.geo.L - 0.5 * self.geo.w) / self.geo.d:.3g} λ)" if self.geo.d else ""
-            self._check("bohm_accuracy", "Траектории Бома: точность интегрирования (95 % попаданий), λ", p95, None, "λ",
-                        ok=p95 < BOHM_P95 and changed <= max(1, K // 50), group="Бом",
-                        note=f"{K} частиц проинтегрированы ещё раз в той же волне в {CONTROL_TIGHT} раза строже; из {int(both.sum())} "
-                             f"попавших в обоих случаях 95 % отличаются не больше чем на {p95:.2g} λ, наибольшее — "
-                             f"{mx:.2g} λ{fringe}; судьба (экран, отражение, вбок) другая у "
-                             f"{changed}; цель: 95 % < {BOHM_P95:g} λ и не больше 2 % другой судьбы (review B3-4)")
+            fringe = T(" (fringe period {p:.3g} λ)", p=(self.geo.L - 0.5 * self.geo.w) / self.geo.d) if self.geo.d else ""
+            self._check("bohm_accuracy", T("Bohm trajectories: integration accuracy (95 % of the hits), λ"), p95, None,
+                        LAM, ok=p95 < BOHM_P95 and changed <= max(1, K // 50), group=BOHM,
+                        note=T("{K:d} particles integrated again in the same wave, {tight:d} times more tightly; of the "
+                               "{both:d} that hit in both cases, 95 % differ by at most {p95:.2g} λ, the largest by "
+                               "{mx:.2g} λ{fringe}; the fate (screen, reflection, sideways) differs for {changed:d}; "
+                               "target: 95 % < {target} λ and at most 2 % of another fate (review B3-4)", K=K,
+                               tight=CONTROL_TIGHT, both=int(both.sum()), p95=p95, mx=mx, fringe=fringe,
+                               changed=changed, target=BOHM_P95))
         p_scr = tot
         pc = min(max(p_scr, 0.5 / N), 1 - 0.5 / N)  # the binomial spread stays finite when all particles arrive
         sd = math.sqrt(pc * (1 - pc) / N)
-        self._check("bohm_fraction", "Доля частиц Бома на экране против вероятности", n / N, p_scr, "",
-                    tol=3.3 * sd / max(p_scr, 1e-12), group="Бом",
-                    note=f"N = {N}; допуск 3,3σ биномиального разброса")
+        self._check("bohm_fraction", T("Fraction of the Bohm particles on the screen against the probability"), n / N,
+                    p_scr, "", tol=3.3 * sd / max(p_scr, 1e-12), group=BOHM,
+                    note=T("N = {N:d}; tolerance {k}σ of the binomial spread", N=N, k=3.3))
 
     def _y_motion(self, y0, tau):
         """The y of Bohm particles by a second method (review C1-11): the guidance equation dy/dt = j/|eta|^2 in the
@@ -851,11 +900,12 @@ class Simulation(BaseSimulation):
         marg = self.flux_xy.sum(axis=1) * dy
         pk = float(np.max(np.abs(Px))) or 1.0
         dev = float(np.max(np.abs(marg - Px)) / pk)
-        self._check("screen_y", "Экран P(x, y): сумма по y против картины P(x)", dev, None, "", ok=dev < 1e-3,
-                    group="Расчёт",
-                    note=f"Σ_y P(x, y) Δy против потока в экран по x; {NY_SCREEN} полос по y на ±{self.y_half:.3g} λ, "
-                         f"|η(y, t)|² свободного гауссова множителя (σy = {self.sy:g} λ при t = 0); доля пика; цель < 1e-3 "
-                         f"(обрезка хвостов η краями сцены и шаг полос)")
+        self._check("screen_y", T("Screen P(x, y): the sum over y against the pattern P(x)"), dev, None, "",
+                    ok=dev < 1e-3, group=COMPUTATION,
+                    note=T("Σ_y P(x, y) Δy against the flux into the screen in x; {ny:d} bins in y over ±{yh:.3g} λ, "
+                           "|η(y, t)|² of the free Gaussian factor (σy = {sy} λ at t = 0); a fraction of the peak; the "
+                           "target is < 1e-3 (the tails of η cut by the scene's edges, and the bins' step)", ny=NY_SCREEN,
+                           yh=self.y_half, sy=self.sy))
         hit = self.fate == 1
         hy = self.hit_y[hit]
         n = len(hy)
@@ -864,13 +914,13 @@ class Simulation(BaseSimulation):
             spread = self.sy * np.sqrt(1.0 + (tau / (2.0 * self.sy ** 2)) ** 2)  # eta's width at each hit
             dev = float(np.max(np.abs(hy - self._y_motion(self.Y0[hit], tau)) / spread))
             grow = float(np.median(spread) / self.sy - 1.0)
-            self._check("bohm_y_motion", "Движение частиц Бома по y: попадания против уравнения ведения в η", dev, None,
-                        "", ok=dev < Y_MOTION_TOL, group="Бом",
-                        note=f"{n} попаданий; y каждого — y₀·σy(t)/σy (точная формула прогона) против dy/dt = j/|η|², "
-                             f"проинтегрированного методом Рунге–Кутты 4-го порядка в волне η этого прогона от старта до "
-                             f"момента попадания (второй метод); наибольшая разность в ширинах η в момент попадания; цель "
-                             f"< {Y_MOTION_TOL:g} (ошибка интегрирования); за полёт η расплывается на {100 * grow:.3g} % "
-                             f"(медиана)")
+            self._check("bohm_y_motion", T("Motion of the Bohm particles in y: the hits against the guidance equation "
+                                           "in η"), dev, None, "", ok=dev < Y_MOTION_TOL, group=BOHM,
+                        note=T("{n:d} hits; the y of each is y₀·σy(t)/σy (the run's exact formula) against dy/dt = "
+                               "j/|η|² integrated by the 4th-order Runge–Kutta method in this run's wave η from the start "
+                               "to the moment of the hit (a second method); the largest difference in widths of η at the "
+                               "moment of the hit; the target is < {tol} (the integration's error); during the flight η "
+                               "spreads by {g:.3g} % (median)", n=n, tol=Y_MOTION_TOL, g=100 * grow))
         if n < 20:
             return
         Py = np.clip(self.flux_xy, 0, None).sum(axis=0)
@@ -881,12 +931,13 @@ class Simulation(BaseSimulation):
         emp = np.searchsorted(np.sort(hy), edges, side="right") / n
         D = float(np.max(np.abs(emp - F)))
         crit = 1.95 / math.sqrt(n)
-        self._check("bohm_y", "Попадания частиц Бома по y против картины P(x, y) (Колмогоров–Смирнов)", D, None, "",
-                    ok=D < crit, group="Бом",
-                    note=f"{n} попаданий; эталон — распределение по y потока в экран, Σ_t J(x, t)|η(y, t)|²; критическое "
-                         f"значение 99,9 %: 1,95/√n = {crit:.3g}. Проверяет старты по |η₀|²; движение по y так не "
-                         f"различить (η за полёт расплывается на {100 * grow:.3g} %) — его проверяет «Движение частиц "
-                         f"Бома по y»")
+        self._check("bohm_y", T("Hits of the Bohm particles in y against the pattern P(x, y) (Kolmogorov–Smirnov)"), D,
+                    None, "", ok=D < crit, group=BOHM,
+                    note=T("{n:d} hits; the reference is the distribution in y of the flux into the screen, "
+                           "Σ_t J(x, t)|η(y, t)|²; the critical value at {p} %: {c}/√n = {crit:.3g}. It checks the starts "
+                           "by |η₀|²; the motion in y cannot be told this way (η spreads by {g:.3g} % during the "
+                           "flight): the check «Motion of the Bohm particles in y» does that", n=n, p=99.9, c=1.95,
+                           crit=crit, g=100 * grow))
 
     def _symmetric(self):
         L = self.live
@@ -903,37 +954,40 @@ class Simulation(BaseSimulation):
             # Phi -> -Phi with x -> -x is the mirror image; -Phi = Phi - k Phi0 is the same physics (gauge): at a
             # half-integer flux the pattern is symmetric. The gauge identity holds to the grid's error (tests: ~1e-5
             # at lambda/6 for a tube the wave cannot reach)
-            self._check("symmetry_ab", "Поток Φ₀/2 (полуцелый): картина симметрична, P(x) = P(−x)", asym, 0.0, "",
-                        tol=1e-4, ok=asym < 1e-4, group="Расчёт",
-                        note="зеркало x → −x переворачивает поток, а потоки Φ и Φ − Φ₀ физически одинаковы (калибровка): "
-                             "при полуцелом Φ/Φ₀ картина симметрична; допуск — ошибка сетки калибровочного тождества")
+            self._check("symmetry_ab", T("Flux Φ₀/2 (half-integer): the pattern is symmetric, P(x) = P(−x)"), asym, 0.0,
+                        "", tol=1e-4, ok=asym < 1e-4, group=COMPUTATION,
+                        note=T("the mirror x → −x reverses the flux, and the fluxes Φ and Φ − Φ₀ are physically the same "
+                               "(gauge): at a half-integer Φ/Φ₀ the pattern is symmetric; tolerance: the grid's error of "
+                               "the gauge identity"))
         if not self._symmetric():
             return
-        self._check("symmetry", "Симметричная установка: картина симметрична, P(x) = P(−x)", asym, 0.0, "", tol=1e-8,
-                    ok=asym < 1e-8, group="Расчёт", note="сетка симметрична по x (x = 0 — узел); допуск — округление")
+        self._check("symmetry", T("Symmetric set-up: the pattern is symmetric, P(x) = P(−x)"), asym, 0.0, "", tol=1e-8,
+                    ok=asym < 1e-8, group=COMPUTATION,
+                    note=T("the grid is symmetric in x (x = 0 is a node); tolerance: round-off"))
         if not self.label_slits:
             return
         c = int(self.crossed_axis.sum())
-        self._check("no_crossing", "Траектории Бома не пересекают ось симметрии за пластиной", float(c), 0.0, "",
-                    ok=c == 0, group="Бом",
-                    note="у симметричной волны v_x = 0 на оси: траектории из щели A остаются слева, из B — справа "
-                         "(свойство теории Бома для этой установки)")
+        self._check("no_crossing", T("Bohm trajectories do not cross the symmetry axis behind the plate"), float(c), 0.0,
+                    "", ok=c == 0, group=BOHM,
+                    note=T("for a symmetric wave v_x = 0 on the axis: the trajectories from slit A stay on the left, "
+                           "those from B on the right (a property of Bohm's theory for this set-up)"))
 
     def _reference_checks(self, xs, P):
         refs = (self.final or {}).get("refs") or {}
         m = self.on_screen
         Pn = np.zeros_like(P)
         Pn[m] = P[m] / np.trapezoid(P[m], xs[m]) if P[m].sum() > 0 else 0
-        for key, label in (("paraxial", "параксиальная теория (Френель, граничные условия Кирхгофа)"),
-                           ("kirchhoff", "точное распространение граничных условий Кирхгофа (Рэлей–Зоммерфельд)")):
+        for key, label in (("paraxial", T("paraxial theory (Fresnel, Kirchhoff's boundary conditions)")),
+                           ("kirchhoff", T("exact propagation of Kirchhoff's boundary conditions (Rayleigh–Sommerfeld)"))):
             if key not in refs:
                 continue
             R = np.asarray(refs[key])
             dev = float(np.max(np.abs(Pn[m] - R[m])) / max(R[m].max(), 1e-300))
-            self._check(f"ref_{key}", f"Картина против приближения: {label}", dev, None, "", info=True,
-                        group="Сравнение",
-                        note="наибольшее отличие нормированных картин в долях пика; приближение — не эталон: точный "
-                             "расчёт здесь — решение уравнения Шрёдингера")
+            self._check(f"ref_{key}", T("Pattern against an approximation: {label}", label=label), dev, None, "",
+                        info=True, group=COMPARISON,
+                        note=T("the largest difference of the normalised patterns as a fraction of the peak; the "
+                               "approximation is not the reference: the exact computation here is the solution of the "
+                               "Schrödinger equation"))
         L = self.live
         if self.geo.n_slits == 2 and bool(L["slit_a"]) and bool(L["slit_b"]) and not self.events:
             period = (self.geo.L - 0.5 * self.geo.w) / self.geo.d
@@ -941,25 +995,27 @@ class Simulation(BaseSimulation):
             ph, coh = self._two_path()
             mk = self._mark_measured()
             th = float(L["mark_deg"])
-            mark_note = (f"метка: поворот θ = {th:g}° основной поперечной моды щели B при средней скорости (связь "
-                         f"откалибрована по этой моде матрицами переноса, review B4-3), |⟨m_A|m_B⟩| = |cos(θ/2)|; "
-                         f"измерено в прогоне: доля компоненты «вниз» в потоке сразу за щелью B "
-                         f"{mk['down_fraction']:.3f} (при чистом повороте было бы sin²(θ/2) = "
-                         f"{math.sin(math.radians(th) / 2) ** 2:.3f}: волна за щелью повёрнута неравномерно)"
-                         if mk else "метки нет")
-            self._check("visibility", "Видность полос у оси против двух путей |⟨m_B|m_A⟩|", V, abs(coh), "",
-                        info=True, group="Сравнение",
-                        note=f"фурье-компонента картины на частоте полос (период λL/d = {period:.3g} λ, окно Ханна "
-                             f"±2 периода); {mark_note}; огибающая, разброс скоростей и смесь поперечных мод в щели "
-                             f"(они поворачивают метку по-разному) снижают видность")
+            mark_note = (T("the mark: a turn θ = {th}° of slit B's main transverse mode at the mean speed (the coupling "
+                           "calibrated on this mode by transfer matrices, review B4-3), |⟨m_A|m_B⟩| = |cos(θ/2)|; "
+                           "measured in the run: the share of the «down» component in the flux just behind slit B "
+                           "{down:.3f} (a pure rotation would give sin²(θ/2) = {pure:.3f}: the wave behind the slit is "
+                           "turned unevenly)", th=th, down=mk["down_fraction"],
+                           pure=math.sin(math.radians(th) / 2) ** 2) if mk else T("no mark"))
+            self._check("visibility", T("Fringe visibility near the axis against two paths |⟨m_B|m_A⟩|"), V, abs(coh),
+                        "", info=True, group=COMPARISON,
+                        note=T("the Fourier component of the pattern at the fringe frequency (period λL/d = {p:.3g} λ, a "
+                               "Hann window of ±2 periods); {mark}; the envelope, the speed spread and the mix of "
+                               "transverse modes in the slit (they turn the mark differently) lower the visibility",
+                               p=period, mark=mark_note))
             if self.charged and float(L["flux"]):
                 shift = 2 * math.pi * float(L["flux"]) * np.sign(self.part.charge)
-                self._check("ab_phase", "Сдвиг полос потоком Ааронова–Бома: фаза полос у оси минус 2πΦ/Φ₀ (по модулю "
-                                        "2π)", math.remainder(phi - shift, 2 * math.pi), 0.0, "рад", info=True,
-                            group="Сравнение",
-                            note=f"фаза фурье-компоненты картины на частоте полос {phi:+.4f} рад (у симметричной "
-                                 f"картины без потока — 0) против модели двух путей 2πΦ/Φ₀·sign(q) = {shift:+.4f} рад: "
-                                 f"полосы сдвигаются на Φ/Φ₀ периода; разность взята по модулю 2π (review B3-9)")
+                self._check("ab_phase", T("Fringe shift by the Aharonov–Bohm flux: the fringes' phase near the axis minus "
+                                          "2πΦ/Φ₀ (modulo 2π)"), math.remainder(phi - shift, 2 * math.pi), 0.0, T("rad"),
+                            info=True, group=COMPARISON,
+                            note=T("the phase of the pattern's Fourier component at the fringe frequency {phi:+.4f} rad "
+                                   "(0 for a symmetric pattern without flux) against the two-path model "
+                                   "2πΦ/Φ₀·sign(q) = {shift:+.4f} rad: the fringes move by Φ/Φ₀ of a period; the "
+                                   "difference is taken modulo 2π (review B3-9)", phi=float(phi), shift=float(shift)))
 
     # --- messages ------------------------------------------------------------------------------------------------------------
     def _msg(self, meta, blobs=None):
@@ -1024,7 +1080,7 @@ class Simulation(BaseSimulation):
         yh = self.y_half
         holes = [{"rect": [c - 0.5 * geo.a, c + 0.5 * geo.a, -0.97 * yh, 0.97 * yh]}
                  for c, op in zip(geo.centers, (self.live["slit_a"], self.live["slit_b"])) if op]
-        return {"id": "plate", "label": "Пластина с двумя щелями (вдоль y)", "kind": "plate", "z": 0.0,
+        return {"id": "plate", "label": T("Plate with two slits (along y)"), "kind": "plate", "z": 0.0,
                 "size": [2 * geo.x_half, 2 * yh], "holes": holes, "visible": True}
 
     def _observer_obj(self):
@@ -1034,10 +1090,11 @@ class Simulation(BaseSimulation):
             return None
         geo, th = self.geo, float(self.live["mark_deg"])
         dist = math.sin(math.radians(th) / 2) ** 2
-        who = "Наблюдатель: детектор пути у щели B" if self.mark == "detector" else "Метка пути: поле, поворачивающее спин в щели B"
+        who = T("Observer: a path detector at slit B") if self.mark == "detector" else \
+            T("Path mark: a field turning the spin in slit B")
         return {"id": "observer", "label": who, "kind": "box", "center": [geo.centers[1], 0.0, 0.0],
                 "size": [geo.a, 1.94 * self.y_half, geo.w], "color": "#ff8a1f", "opacity": 0.12 + 0.5 * dist,
-                "text": f"{'детектор' if self.mark == 'detector' else 'спин'}: θ = {th:g}°",
+                "text": T("{who}: θ = {th}°", who=T("detector") if self.mark == "detector" else T("spin"), th=th),
                 "text_size": 0.03 * (geo.z_max - geo.z_min), "visible": True}
 
     def header(self):
@@ -1045,39 +1102,39 @@ class Simulation(BaseSimulation):
         x0, x1 = float(g.axes[0][0]), float(g.axes[0][-1])
         z0, z1 = float(g.axes[1][0]), float(g.axes[1][-1])
         objects = [self._plate_obj(), *([self._observer_obj()] if self._observer_obj() else []),
-                   {"id": "incident", "label": "Падающий пакет (задан)", "kind": "incident",
+                   {"id": "incident", "label": T("Incident packet (given)"), "kind": "incident",
                     "z0": geo.z_src - 2 * geo.sz, "z1": -0.5 * geo.w, "lam": 4.0, "size": [4 * geo.sx, 2 * self.y_half],
                     "visible": False},
-                   {"id": "screen", "label": f"Экран (z = {geo.L:g} λ): поток, накопленный за опыт", "kind": "target",
+                   {"id": "screen", "label": T("Screen (z = {L} λ): the flux accumulated over the experiment", L=geo.L),
+                    "kind": "target",
                     "z": float(self.zL), "size": [2 * geo.screen_half, 2 * self.y_half], "visible": True},
-                   {"id": "wave", "label": "Волна |ψ|² в плоскости опыта (y = 0)", "kind": "panel",
+                   {"id": "wave", "label": T("Wave |ψ|² in the plane of the experiment (y = 0)"), "kind": "panel",
                     "origin": [x0, 0.0, z0], "u": [x1 - x0, 0.0, 0.0], "v": [0.0, 0.0, z1 - z0], "visible": False}]
         lam = part.lam
-        approx = ["щели бесконечно длинные вдоль y: уравнение Шрёдингера решается на плоскости (x, z), трёхмерная волна — "
-                  "точное произведение ψ(x, z, t)·η(y, t) со свободным гауссовым η (замкнутая форма)",
-                  "стенка — потенциальный барьер конечной высоты и толщины с краями, сглаженными на шаг сетки",
-                  "детекторы — поглощающие слои (модель); их отражение и утечка — в проверках"]
+        approx = [APPROX_SLITS, APPROX_WALL,
+                  T("the detectors are absorbing layers (a model); their reflection and leakage are in the checks")]
         if self.mark == "detector":
-            approx.append("наблюдатель — двухуровневый детектор у щели B (модель Энглерта): пока частица в щели, его "
-                          "состояние поворачивается на θ (для средней скорости); сам прибор не моделируется")
+            approx.append(T("the observer is a two-level detector at slit B (Englert's model): while the particle is in "
+                            "the slit, its state turns by θ (for the mean speed); the device itself is not modelled"))
         if part.v / 2.998e8 > 0.01:
-            approx.append(f"нерелятивистское уравнение Шрёдингера при β = {part.v / 2.998e8:.3f}: длины и картина "
-                          f"точны для данной λ, время — с ошибкой ~β²/2")
+            approx.append(T("the non-relativistic Schrödinger equation at β = {b:.3f}: the lengths and the pattern are "
+                            "exact for the given λ, the time has an error ~β²/2", b=part.v / 2.998e8))
         return {
-            "title": "Двухщелевой опыт (длинные щели, 3D): точное уравнение Шрёдингера и траектории Бома",
-            "text": ("Пакет частицы летит на пластину с двумя щелями и дальше на экран. Прогон решает уравнение "
-                     "Шрёдингера на всей плоскости (x, z): отражение пластиной, волна в щелях, дифракция на любые углы; "
-                     "экран и края поглощают. Картина на экране — вероятность, втекающая в экран, копится по мере "
-                     "прихода волны. Ансамбль частиц идёт по траекториям Бома той же волны; каждая помечена щелью, "
-                     "через которую прошла. Установку можно менять на ходу: закрыть щель, включить метку пути (спин частицы "
-                     "или наблюдатель — детектор у щели B), поток Ааронова–Бома. Вдоль щелей (ось y) ничего не меняется: "
-                     "трёхмерная волна — точное произведение посчитанной волны на плоскости и свободного гауссова пакета "
-                     "по y; в 3D она показана объёмом, частицы и траектории — во всех трёх координатах, экран — картиной "
-                     "P(x, y)."),
+            "title": TITLE,
+            "text": T("A particle's packet flies at a plate with two slits and on to a screen. The run solves the "
+                      "Schrödinger equation on the whole plane (x, z): reflection by the plate, the wave in the slits, "
+                      "diffraction to any angle; the screen and the edges absorb. The pattern on the screen is the "
+                      "probability flowing into the screen, accumulated as the wave arrives. An ensemble of particles "
+                      "follows the Bohm trajectories of the same wave; each is marked by the slit it went through. The "
+                      "set-up can be changed on the fly: close a slit, switch on a path mark (the particle's spin or an "
+                      "observer, a detector at slit B), the Aharonov–Bohm flux. Nothing changes along the slits (the y "
+                      "axis): the 3-D wave is the exact product of the wave computed on the plane and a free Gaussian "
+                      "packet in y; in 3-D it is shown as a volume, the particles and the trajectories in all three "
+                      "coordinates, the screen as the pattern P(x, y)."),
             "actions": [],
             "approximations": approx,
-            "scene3d": {"box": [[x0, -self.y_half, z0], [x1, self.y_half, z1]], "units": "λ", "objects": objects,
-                        "layers": [{"id": "wave3d", "label": "Волна |ψ|² в объёме: ψ(x, z, t)·η(y, t)", "kind": "volume",
+            "scene3d": {"box": [[x0, -self.y_half, z0], [x1, self.y_half, z1]], "units": LAM, "objects": objects,
+                        "layers": [{"id": "wave3d", "label": T("Wave |ψ|² in the volume: ψ(x, z, t)·η(y, t)"), "kind": "volume",
                                     "visible": True, "look": {"density": 3.0, "threshold": 0.01}}],
                         "coord_names": ["x", "y", "z"],
                         "planes": {"max": 0, "center": [0.0, 0.0, 0.0], "defaults": {"1": [0, 1, 0], "2": [1, 0, 0], "3": [0, 0, 1]}}},
@@ -1090,19 +1147,20 @@ class Simulation(BaseSimulation):
                          "spin": self.spinor, "mark": self.mark},
             "device": {"wave": self.prop.device, "reason": self.prop.choice.reason},
             "n_bohm": int(len(self.fate)), "n_tracks": self.K,
-            "units": {"x": "λ", "t": "с (мировые часы)"},
+            "units": {"x": LAM, "t": T("s (the world clock)")},
         }, {}
 
 
 VIZ = {
     "id": "v11_double_slit_2d",
-    "title": "Двухщелевой опыт (длинные щели, 3D): точное уравнение Шрёдингера и траектории Бома",
-    "summary": ("Пакет частицы проходит две щели в стенке конечной толщины и попадает на экран; волна считается на всей "
-                "плоскости без параксиального приближения, картина копится по мере прихода; ансамбль частиц идёт по "
-                "траекториям Бома с метками щели; метка пути спином, закрытие щели и поток Ааронова–Бома — на ходу; в 3D "
-                "— волна объёмом, частицы и картина P(x, y) (вдоль длинных щелей волна — точное произведение)."),
-    "purpose": ("Настоящий двухщелевой опыт: где ломается параксиальная теория (узкие щели, большие углы), как "
-                "метка пути гасит интерференцию и как идут траектории Бома."),
+    "title": TITLE,
+    "summary": T("A particle's packet passes two slits in a wall of finite thickness and reaches a screen; the wave is "
+                 "computed on the whole plane without the paraxial approximation, the pattern accumulates as the wave "
+                 "arrives; an ensemble of particles follows the Bohm trajectories, marked by their slit; a path mark by "
+                 "spin, closing a slit and the Aharonov–Bohm flux act on the fly; in 3-D, the wave as a volume, the "
+                 "particles and the pattern P(x, y) (along the long slits the wave is an exact product)."),
+    "purpose": T("A real double-slit experiment: where the paraxial theory breaks down (narrow slits, large angles), how "
+                 "a path mark erases the interference, and how the Bohm trajectories run."),
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,

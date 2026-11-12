@@ -11,12 +11,14 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Рассеяние фотона диполем",
-    "statement": "Угловое распределение (3/8π)(1 − (n·p)²); передача импульса ħk_p(n_i − n); остаточная когерентность "
-                 "двух путей ⟨exp(i k_p (n_i − n)_x d)⟩.",
-    "validity": "один фотон, дипольное приближение (размер ≪ λ), продольная отдача не учитывается",
+    "title": T("Photon scattering by a dipole"),
+    "statement": T("The angular distribution (3/8π)(1 − (n·p)²); the momentum transfer ħk_p(n_i − n); the residual "
+                   "coherence of two paths ⟨exp(i k_p (n_i − n)_x d)⟩."),
+    "validity": T("a single photon, the dipole approximation (size ≪ λ), longitudinal recoil neglected"),
     "basis": ["Jackson, Classical Electrodynamics, §9.2", "Chapman et al., PRL 75, 3783 (1995)"],
     "conflicts": [],
 }

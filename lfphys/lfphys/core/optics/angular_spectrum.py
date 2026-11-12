@@ -46,17 +46,18 @@ from typing import Callable
 
 import numpy as np
 
+from lfphys.i18n import T
 from .. import backend
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Распространение поля угловым спектром (2-D и 3-D)",
-    "statement": "Поле в плоскости z — сумма плоских волн exp(i(k_t·r + k_z z)), k_z = √(k² − k_t²); затухающие "
-                 "компоненты убывают. Точно для заданного поля в плоскости z = 0; в 3-D — поперечные плоскости, весь "
-                 "объём или точные продольные срезы.",
-    "validity": "однородная среда; на сетке — поле, ограниченное по спектру, окно с запасом (дополнение нулями)",
-    "basis": ["Goodman, Introduction to Fourier Optics, гл. 3.10",
-              "Matsushima & Shimobaba, Opt. Express 17, 19662 (2009) — ограничение полосы"],
+    "title": T("Field propagation by the angular spectrum (2-D and 3-D)"),
+    "statement": T("The field in the plane z is a sum of plane waves exp(i(k_t·r + k_z z)), k_z = √(k² − k_t²); "
+                   "evanescent components decay. Exact for a given field in the plane z = 0; in 3-D: transverse "
+                   "planes, the whole volume or exact longitudinal slices."),
+    "validity": T("homogeneous medium; on a grid: a band-limited field and a window with a margin (zero padding)"),
+    "basis": [T("Goodman, Introduction to Fourier Optics, ch. 3.10"),
+              T("Matsushima & Shimobaba, Opt. Express 17, 19662 (2009) — band limiting")],
     "conflicts": [],
 }
 
@@ -72,16 +73,17 @@ def _bench(size: int, xp, cplx):
 
 
 backend.register(backend.KernelSpec(
-    KERNEL, "Угловой спектр (распространение волны)",
-    "точное распространение скалярной волны в 2-D и 3-D: БПФ поля, фазовый множитель, обратное БПФ",
+    KERNEL, T("Angular spectrum (wave propagation)"),
+    T("exact propagation of a scalar wave in 2-D and 3-D: FFT of the field, a phase factor, inverse FFT"),
     gpu=True,
     precisions={"fp64": {"allowed": True},
-                "fp32": {"allowed": True, "bound": 1e-5, "use": "только для рисования (проверки всегда в fp64)",
-                         "domain": "k·z ≤ 2000 рад, до 1024 точек на ось (фаза — в fp64)",
+                "fp32": {"allowed": True, "bound": 1e-5, "use": T("for drawing only (checks always in fp64)"),
+                         "domain": T("k·z ≤ 2000 rad, up to 1024 points per axis (the phase in fp64)"),
                          "evidence": "tests/test_backend.py::test_angular_spectrum_fp32_within_its_bound"}},
     crossover=128 * 128,
-    crossover_note=("измерено 2026-10-27 на RTX 2080 Ti против одного потока CPU, fp64, с пересылкой поля: GPU быстрее с "
-                    "128×128 точек (×2), до ×9 на 2048×2048; «Измерить заново» уточняет"),
+    crossover_note=T("measured 2026-10-27 on an RTX 2080 Ti against one CPU thread, fp64, with the field "
+                     "transferred: the GPU is faster from 128×128 points (×2), up to ×9 at 2048×2048; “Measure again” "
+                     "refines this"),
     bench=_bench, bench_sizes=(32 * 32, 64 * 64, 128 * 128, 256 * 256, 512 * 512, 1024 * 1024, 2048 * 2048)))
 
 
@@ -180,7 +182,7 @@ def _run(U0, spacing, k, z, pad, check, band_limit, body):
         if ch.device != "gpu" or not backend.is_out_of_memory(e):
             raise
         backend.release()
-        ch = backend.choose(KERNEL, size, check=check, force="cpu", why="памяти GPU не хватило → CPU")
+        ch = backend.choose(KERNEL, size, check=check, force="cpu", why=T("not enough GPU memory → CPU"))
         return body(ch, *_setup(U0, spacing, k, m, ch, band_limit), m)
     finally:
         if ch.device == "gpu":

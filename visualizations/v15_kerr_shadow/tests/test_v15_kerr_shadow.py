@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
 from lfphys.core.gravity import kerr, kerr_null as KN, kerr_shadow as KS  # noqa: E402
+from lfphys.i18n import english, text_of  # noqa: E402
 from lfphys.theories.alternatives import johannsen_metric as JP  # noqa: E402
 from v15_kerr_shadow.viz import SCAN_M, SCHEMA  # noqa: E402
 
@@ -125,7 +126,7 @@ def test_edge_and_pixels_are_held_to_derived_bounds():
     c = h.checks()
     assert c["edge"]["ok"] and c["edge"]["value"] <= c["edge"]["tol"] < 1e-12
     assert c["pixels"]["ok"]
-    margin = float(c["pixels"]["note"].split("дальше ")[1].split(" M")[0].replace(",", "."))
+    margin = c["pixels"]["note"]["a"]["margin"]
     assert margin < 1e-3
 
 
@@ -179,8 +180,9 @@ def test_a_what_if_world_computes_the_edge_and_refuses_an_irregular_metric():
     assert Harness(V, "m87", SMALL).of("header")[-1]["modifications"] == []
     d_dev, d_kerr = h.checks()["eht"]["value"], h.checks()["eht_kerr"]["value"]
     assert abs(d_kerr) <= 1e-15 and d_dev > 0.05  # alpha13 = 3 makes the shadow larger than Kerr's
-    with pytest.raises(ValueError, match="не регулярна"):
+    with pytest.raises(ValueError) as e:
         Harness(V, None, {"metric": "jp", "a13": -10.0, "chi": 0.0, **SMALL})
+    assert "is not regular" in english(text_of(e.value))
 
 
 def test_rays_and_scene():
@@ -203,21 +205,22 @@ def test_rays_and_scene():
 
 
 def test_refusals_of_the_what_if_metric_name_the_values_it_takes():
-    """Review UX-params P6 / UX-ui U13: an irregular metric or one without a single photon shell was refused in English
-    («the metric is not regular…», «the photon shell is not a single band…»). Now the refusal is Russian, names what
-    fails and, for each deviation (the others as they are), the values the world takes; a value inside the named
-    interval builds, one just outside is refused (the interval's end is the edge, within the bisection's 1e-4)."""
+    """Review UX-params P6 / UX-ui U13: an irregular metric or one without a single photon shell was refused with the
+    engine's own sentence («the metric is not regular…», «the photon shell is not a single band…»). Now the refusal is
+    the world's text in the viewer's language, names what fails and, for each deviation (the others as they are), the
+    values the world takes; a value inside the named interval builds, one just outside is refused (the interval's end
+    is the edge, within the bisection's 1e-4)."""
     import re
-    cases = [({"metric": "jp", "a13": -10.0}, "не регулярна", "α₁₃ — от "),
-             ({"metric": "jp", "a22": 10.0}, "det g обращается в нуль", "α₂₂ — от "),
-             ({"metric": "jp", "a13": 10.0, "chi": 0.998}, "не образуют одну полосу", "α₁₃ — от ")]
+    cases = [({"metric": "jp", "a13": -10.0}, "is not regular", "α₁₃: from "),
+             ({"metric": "jp", "a22": 10.0}, "det g vanishes", "α₂₂: from "),
+             ({"metric": "jp", "a13": 10.0, "chi": 0.998}, "do not form one band", "α₁₃: from ")]
     for vals, what, tip in cases:
         with pytest.raises(ValueError) as e:
             Harness(V, None, {**vals, **SMALL})
-        text = str(e.value)
-        assert what in text and tip in text and not re.search(r"[A-Za-z]{4,}", text.replace("Johannsen", "")), text
+        text = english(text_of(e.value))
+        assert what in text and tip in text and not re.search("[\u0400-\u04ff]", text), text
         pid = {"α₁₃": "a13", "α₂₂": "a22"}[tip[:3]]
-        lo, hi = (float(x.replace("−", "-")) for x in re.search(tip + r"(\S+) до (\S+?)[;,]", text).groups())
+        lo, hi = (float(x) for x in re.search(tip + r"(\S+) to (\S+?)[;,]", text).groups())
         inside = 0.5 * (lo + hi)
         Harness(V, None, {**vals, pid: inside, **SMALL})  # builds
         edge = hi if abs(vals[pid] - hi) < abs(vals[pid] - lo) else lo
@@ -230,7 +233,7 @@ def test_refusals_of_the_what_if_metric_name_the_values_it_takes():
                           ("a12", "alpha12", (-1.47, 10.0))):
         (a, b), = JP.admissible_intervals(0.9, key, {}, SCHEMA.by_id[pid].min, SCHEMA.by_id[pid].max)
         assert a == pytest.approx(ref[0], abs=6e-3) and b == pytest.approx(ref[1], abs=6e-3)
-        h = SCHEMA.by_id[pid].help.replace(",", ".").replace("−", "-")
+        h = english(SCHEMA.by_id[pid].help)
         assert f"{ref[0]:.2f}" in h
 
 
@@ -251,5 +254,4 @@ def test_a_what_if_metric_with_a_band_without_circular_orbits_builds():
     assert hole["isco_pro"] == pytest.approx(float(r0), rel=1e-12)
     co = JP.circular_orbits(0.0, JP.Deviation(-3.0, -1.399, 3.612))
     assert co["E_isco_pro"] == pytest.approx(float(e0), rel=1e-12) and co["L_isco_pro"] == 0.0
-    assert "края области" in " ".join(m.get("label", "") for m in h.of("lines")) or \
-        "край области" in " ".join(m.get("label", "") for m in h.of("lines"))
+    assert "the edge of the region" in " ".join(english(m.get("label", "")) for m in h.of("lines"))

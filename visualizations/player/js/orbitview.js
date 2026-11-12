@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
 // The view of the 3-D wave-function worlds (v13 hydrogen, v14 quarkonium; server: lfviz/orbitals3d.py), over the
 // shared 3-D environment (env3d.js): the cloud |ψ|², the probability current, the slice planes, and the panels
-// «Состояние», «Радиальное распределение» and «Уровни энергии». A superposition's cloud, current and slices come per
+// "State", "Radial distribution" and "Energy levels". A superposition's cloud, current and slices come per
 // phase of its period (`bin`), revealed by the run as its time reaches them; a frame names the phase it shows, so
 // that a viewer who scrolls back sees the cloud of that moment. Drawing only: every value comes from the run.
+import { t } from "./i18n.js";
 import { el, fill, num, panel, css, fresh2d } from "./ui.js";
 import { createEnv3D } from "./env3d.js";
 import { inflate } from "./imagewin.js";
@@ -16,9 +17,9 @@ export function createOrbitView(ctx, { describeAtom = () => [], levelColumns = [
   const stateBox = el("div", {}), phaseBox = el("div", { class: "kv" });
   const cvRad = el("canvas", { style: { width: "100%", height: "150px", display: "block" } });
   const cvLev = el("canvas", { style: { width: "100%", height: "190px", display: "block" } });
-  const rightPanels = [panel("Состояние", el("div", {}, stateBox, phaseBox)),
-                       panel("Радиальное распределение r²|R(r)|²", cvRad), panel("Уровни энергии", cvLev),
-                       panel("Слои сцены", env.layersPanel), panel("Срез: положение и наклон", env.planePanel)];
+  const rightPanels = [panel(t("State"), el("div", {}, stateBox, phaseBox)),
+                       panel(t("Radial distribution r²|R(r)|²"), cvRad), panel(t("Energy levels"), cvLev),
+                       panel(t("Scene layers"), env.layersPanel), panel(t("Slice: position and tilt"), env.planePanel)];
   let H = null, radial = null, want = 0;
   let clouds = new Map(), vecs = new Map(), slices = new Map(), shown = { cloud: -1, vec: -1 };
   const COLORS = ["#ff8a1f", "#22b8ff"];
@@ -78,28 +79,28 @@ export function createOrbitView(ctx, { describeAtom = () => [], levelColumns = [
   // --- panels ------------------------------------------------------------------------------------------------------------
   function drawState() {
     if (!H) return;
-    const unit = H.energy_unit || "", rows = [];
+    const unit = t(H.energy_unit), rows = [];
     for (const [i, s] of (H.states || []).entries()) {
       rows.push(el("div", { style: { marginTop: i ? "6px" : "0" } },
         H.states.length > 1 ? el("span", { class: "sw-chip", style: { background: COLORS[i] } }, String(i + 1)) : null,
-        el("b", {}, ` ${s.label}`), el("span", { class: "muted" }, s.real ? " (вещественная)" : (s.l ? " (комплексная, e^{imφ})" : ""))));
-      const kv = [el("span", {}, `${energyName}`), el("span", { class: "mono" }, `${num(s.E, 7)} ${unit}`)];
-      if (H.states.length > 1) kv.push(el("span", {}, "вес |c|², фаза"), el("span", { class: "mono" }, `${num(s.w, 4)}, ${num(s.phase_deg, 4)}°`));
-      kv.push(el("span", {}, "⟨r⟩ (квадратура)"), el("span", { class: "mono" }, `${num(s.r_mean_quad, 7)} ${H.scene3d.units}` + (s.r_mean !== undefined && s.r_mean !== null ? ` · формула ${num(s.r_mean, 7)}` : "")));
-      for (const [k, v, u] of s.extra || []) kv.push(el("span", {}, k), el("span", { class: "mono" }, `${num(v, 6)} ${u || ""}`));
+        el("b", {}, " " + t(s.label)), el("span", { class: "muted" }, s.real ? " " + t("(real)") : (s.l ? " " + t("(complex, e^{imφ})") : ""))));
+      const kv = [el("span", {}, t(energyName)), el("span", { class: "mono" }, `${num(s.E, 7)} ${unit}`)];
+      if (H.states.length > 1) kv.push(el("span", {}, t("weight |c|², phase")), el("span", { class: "mono" }, `${num(s.w, 4)}, ${num(s.phase_deg, 4)}°`));
+      kv.push(el("span", {}, t("⟨r⟩ (quadrature)")), el("span", { class: "mono" }, `${num(s.r_mean_quad, 7)} ${t(H.scene3d.units)}` + (s.r_mean !== undefined && s.r_mean !== null ? " · " + t("formula {v}", { v: num(s.r_mean, 7) }) : "")));
+      for (const [k, v, u] of s.extra || []) kv.push(el("span", {}, t(k)), el("span", { class: "mono" }, `${typeof v === "number" ? num(v, 6) : t(v)} ${t(u)}`));
       rows.push(el("div", { class: "kv" }, kv));
     }
     fill(stateBox, describeAtom(H), rows);
   }
-  function drawPhase(meta, t) {
+  function drawPhase(meta, tNow) {
     if (!H) return;
-    if (!(H.nb > 1)) { fill(phaseBox, el("span", {}, "время"), el("span", { class: "muted" }, "стационарное состояние: облако не меняется, вращается лишь фаза ψ")); return; }
+    if (!(H.nb > 1)) { fill(phaseBox, el("span", {}, t("time")), el("span", { class: "muted" }, t("a stationary state: the cloud does not change, only the phase of ψ turns"))); return; }
     // the phases the run had revealed by this frame's moment (a frame of the record may be an earlier one)
-    const tt = t ?? (meta ? meta.t : undefined);
+    const tt = tNow ?? (meta ? meta.t : undefined);
     const k = meta ? meta.bin : 0, have = Number.isFinite(tt) ? Math.min(H.nb, Math.floor(tt / H.period * H.nb + 1e-9) + 1) : clouds.size;
-    fill(phaseBox, el("span", {}, "период Бора T"), el("span", { class: "mono" }, `${num(H.period, 5)} с (ħω = ${num(H.omega_E, 6)} ${H.energy_unit})`),
-      el("span", {}, "фаза на рисунке"), el("span", { class: "mono" }, `${k + 1} из ${H.nb}` + (Number.isFinite(tt) ? ` · t/T = ${num(tt / H.period, 4)}` : "")),
-      el("span", {}, "фаз открыто"), el("span", { class: have < H.nb ? "warn" : "muted" }, have < H.nb ? `${have} к этому моменту: остальные — когда до них дойдёт время` : "все: дальше облако повторяется"));
+    fill(phaseBox, el("span", {}, t("Bohr period T")), el("span", { class: "mono" }, `${t("{t:.5g} s", { t: H.period })} (ħω = ${num(H.omega_E, 6)} ${t(H.energy_unit)})`),
+      el("span", {}, t("phase in the picture")), el("span", { class: "mono" }, t("{k:d} of {n:d}", { k: k + 1, n: H.nb }) + (Number.isFinite(tt) ? ` · t/T = ${num(tt / H.period, 4)}` : "")),
+      el("span", {}, t("phases revealed")), el("span", { class: have < H.nb ? "warn" : "muted" }, have < H.nb ? t("{n:d} by this moment: the others when the time reaches them", { n: have }) : t("all: from here on the cloud repeats")));
   }
   function sizeCanvas(cv) {
     const dpr = Math.min(window.devicePixelRatio || 1, 2), W = cv.clientWidth, Hh = cv.clientHeight;
@@ -125,7 +126,7 @@ export function createOrbitView(ctx, { describeAtom = () => [], levelColumns = [
     }
     g.fillStyle = css("--muted") || "#999"; g.font = "10px system-ui";
     for (let q = 0; q <= 4; q++) g.fillText(num(rmax * q / 4, 3), X(rmax * q / 4) - 6, Hh - 9);
-    g.fillText(`r, ${meta.units}   (штрих — ⟨r⟩)`, left + 4, Hh - 1);
+    g.fillText(`r, ${t(meta.units)}   ` + t("(dashes — ⟨r⟩)"), left + 4, Hh - 1);
   }
   function drawLevels() {
     const c = sizeCanvas(cvLev); if (!c || !H) return;
@@ -137,7 +138,7 @@ export function createOrbitView(ctx, { describeAtom = () => [], levelColumns = [
     if (H.levels_top !== undefined) hi = Math.max(hi, H.levels_top);
     const pad = 0.04 * (hi - lo || 1), Y = (E) => top + (Hh - top - bot) * (1 - (E - lo + pad) / (hi - lo + 2 * pad));
     g.font = "10px system-ui"; g.fillStyle = css("--muted") || "#999";
-    columns.forEach((t, i) => g.fillText(t, left + cw * i + cw / 2 - 4, 11));
+    columns.forEach((c, i) => g.fillText(t(c), left + cw * i + cw / 2 - 4, 11));
     const keys = (H.states || []).map((s) => s.key);
     const at = {};
     for (const v of L) {
@@ -148,21 +149,21 @@ export function createOrbitView(ctx, { describeAtom = () => [], levelColumns = [
         g.strokeStyle = css("--muted") || "#999"; g.setLineDash([2, 2]); g.lineWidth = 1;
         g.beginPath(); g.moveTo(x0, Y(v.data)); g.lineTo(x1, Y(v.data)); g.stroke(); g.setLineDash([]);
       }
-      if (v.label) { g.fillStyle = css("--muted") || "#999"; g.fillText(v.label, x1 - g.measureText(v.label).width, y - 2); }
+      if (v.label) { const lab = t(v.label); g.fillStyle = css("--muted") || "#999"; g.fillText(lab, x1 - g.measureText(lab).width, y - 2); }
       at[v.key] = [(x0 + x1) / 2, y];
     }
     g.fillStyle = css("--muted") || "#999";
-    g.fillText(`${num(hi, 4)}`, 2, Y(hi) + 3); g.fillText(`${num(lo, 4)}`, 2, Y(lo) + 3); g.fillText(H.energy_unit || "", 2, Hh / 2);
+    g.fillText(`${num(hi, 4)}`, 2, Y(hi) + 3); g.fillText(`${num(lo, 4)}`, 2, Y(lo) + 3); g.fillText(t(H.energy_unit), 2, Hh / 2);
     if (keys.length === 2 && at[keys[0]] && at[keys[1]] && keys[0] !== keys[1]) {  // the Bohr frequency of the pair
       const [a, b] = [at[keys[0]], at[keys[1]]];
       g.strokeStyle = css("--ink") || "#ddd"; g.lineWidth = 1; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
-      g.fillStyle = css("--ink") || "#ddd"; g.fillText(`ħω = ${num(H.omega_E, 4)} ${H.energy_unit}`, Math.min(a[0], b[0]) + 4, (a[1] + b[1]) / 2);
+      g.fillStyle = css("--ink") || "#ddd"; g.fillText(`ħω = ${num(H.omega_E, 4)} ${t(H.energy_unit)}`, Math.min(a[0], b[0]) + 4, (a[1] + b[1]) / 2);
     }
   }
 
   return {
     center: env.center, rightPanels,
-    help: () => el("div", {}, ...help.map((p, i) => (i === 0 ? el("h4", {}, p) : el("p", {}, p)))),
+    help: () => el("div", {}, ...help.map((p, i) => (i === 0 ? el("h4", {}, t(p)) : el("p", {}, t(p))))),
     reset() { env.reset(); H = null; radial = null; want = 0; clouds = new Map(); vecs = new Map(); slices = new Map(); shown = { cloud: -1, vec: -1 }; },
     onHeader(meta) {
       env.onHeader(meta); H = meta; clouds = new Map(); vecs = new Map(); slices = new Map(); shown = { cloud: -1, vec: -1 }; want = 0;
@@ -175,10 +176,10 @@ export function createOrbitView(ctx, { describeAtom = () => [], levelColumns = [
       if (meta.type === "radial") { radial = { meta, P: blobs.P }; drawRadial(); return; }
       env.onMessage(meta, blobs);
     },
-    render(meta, t) {
+    render(meta, tt) {
       if (!H || !meta) return;
       if (meta.bin !== want) { want = meta.bin; showPhase(); }
-      drawPhase(meta, t);
+      drawPhase(meta, tt);
       env.scene.requestRender();
     },
   };

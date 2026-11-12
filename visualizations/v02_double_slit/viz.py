@@ -25,12 +25,14 @@ from lfviz.sim import Simulation as BaseSimulation
 from lfphys.core.em import slit as vslit
 from lfphys.core.quantum import marks, scattering
 from lfphys.core.quantum.particles import EV, H, C, SPECIES, make
+from lfphys.i18n import T, is_t
 from lfphys.theories.approx import kirchhoff, paraxial
 from lfphys.theories.approx import paraxial_ensemble as ens
 from lfphys.theories.interpretations import bohm
 from lfphys.tools import stats
 
-from .engine.experiment import FLAG_DARK, FLAG_MIX, Apparatus, Experiment, Geometry, Laws, Source
+from .engine.experiment import (ELEMENT_NAMES, FLAG_DARK, FLAG_MIX, Apparatus, Experiment, Geometry, Laws,
+                                Source, _join)
 
 
 def _p(*a, **k):
@@ -39,7 +41,7 @@ def _p(*a, **k):
 
 def _option_show_if_supported() -> bool:
     """Whether the framework takes options (value, label, show_if) (review UX-params P17, accepted 2026-11-05): until it
-    does, the options are given as pairs and the world's Russian refusals are the only guard."""
+    does, the options are given as pairs and the world's refusals are the only guard."""
     try:
         sch = Schema([Param("_t", "t", "select", "a", standard="a",
                             options=[("a", "A", {"_t": ["a"]}), ("b", "B", {"_t": ["b"]})])])
@@ -64,10 +66,11 @@ SPIN = {"species": ["electron", "neutron", "custom"]}
 POLARIZABLE = {"species": ["photon", "electron", "neutron", "custom"]}
 MASSIVE = {"species": ["electron", "neutron", "he4", "c60", "custom"]}
 MIC_SPECIES = ("electron", "he4", "c60", "custom")  # charged (Thomson) or polarisable (Rayleigh) dipole scatterers
-ELEM_OPTIONS = _opts([("none", "нет"), ("polarizer", "поляризатор (фотон)", PHOT),
-                      ("hwp", "λ/2 пластинка (фотон)", PHOT), ("qwp", "λ/4 пластинка (фотон)", PHOT),
-                      ("rot_y", "поворот спина вокруг y (спин ½)", SPIN),
-                      ("filter", "спиновый фильтр (спин ½)", SPIN), ("phase", "фазовый сдвиг"), ("block", "заслонка")])
+ELEM_OPTIONS = _opts([("none", T("none")), ("polarizer", T("polariser (photon)"), PHOT),
+                      ("hwp", T("λ/2 plate (photon)"), PHOT), ("qwp", T("λ/4 plate (photon)"), PHOT),
+                      ("rot_y", T("spin rotation about y (spin ½)"), SPIN),
+                      ("filter", T("spin filter (spin ½)"), SPIN), ("phase", T("phase shift")),
+                      ("block", T("shutter"))])
 # which elements act on which internal state (lfphys.core.quantum.marks.element_matrix)
 ELEM_FOR = {"pol": ("polarizer", "hwp", "qwp", "phase", "block"), "spin": ("rot_y", "filter", "phase", "block"),
             None: ("phase", "block")}
@@ -86,171 +89,192 @@ STEP_EVENTS = 4000.0
 # particle can get on its way (the microscope's recoil, GRW hits, the source's width); its FFT convolution doubles it.
 # At most this many bytes for that computation (a λ_probe of 0.001 nm asked for 2 GiB in one array)
 SCREEN_BYTES_MAX = 1.0 * 2 ** 30
+# vector mode: slits wider than this (k a = 130: 20.7 wavelengths) are refused (the cost of the solution: ~17 s for a
+# thin screen, ~21 s for a thick one at the cap, measured in the processing of review B8; for such slits the scalar and
+# vector results differ by O(1/(k a)))
+VEC_KA_MAX = 130.0
+VEC_WIDTH_MAX = VEC_KA_MAX / (2 * math.pi)  # the same limit in wavelengths (20.7)
+
+_G_PART, _G_SRC, _G_SLITS = T("Particle"), T("Source"), T("Slits and screen")
+_G_OBS, _G_LAWS, _G_SHOW = T("Observer and elements"), T("Laws (modifications)"), T("Display")
 
 SCHEMA = Schema([
-    _p("species", "Частица", "select", "photon", group="Частица",
+    _p("species", T("Particle"), "select", "photon", group=_G_PART,
        options=[(k, v[0]) for k, v in SPECIES.items()]),
-    _p("energy_by", "Задать через", "select", "lambda", group="Частица",
-       options=_opts([("lambda", "длину волны"), ("ekin", "энергию (фотон: hν; частица: кинетическую)"),
-                      ("speed", "скорость (массивная)", MASSIVE), ("freq", "частоту (фотон)", PHOT)])),
-    _p("lam_nm", "Длина волны, нм", "float", 632.8, group="Частица", min=1e-6, max=1e9, log=True,
+    _p("energy_by", T("Set by"), "select", "lambda", group=_G_PART,
+       options=_opts([("lambda", T("wavelength")), ("ekin", T("energy (photon: hν; particle: kinetic)")),
+                      ("speed", T("speed (massive)"), MASSIVE), ("freq", T("frequency (photon)"), PHOT)])),
+    _p("lam_nm", T("Wavelength, nm"), "float", 632.8, group=_G_PART, min=1e-6, max=1e9, log=True,
        show_if={"energy_by": ["lambda"]}),
-    _p("ekin_ev", "Энергия, эВ", "float", 50000.0, group="Частица", min=1e-12, max=1e12, log=True,
+    _p("ekin_ev", T("Energy, eV"), "float", 50000.0, group=_G_PART, min=1e-12, max=1e12, log=True,
        show_if={"energy_by": ["ekin"]}),
-    _p("speed_ms", "Скорость, м/с", "float", 200.0, group="Частица", min=1e-6, max=2.99e8, log=True,
+    _p("speed_ms", T("Speed, m/s"), "float", 200.0, group=_G_PART, min=1e-6, max=2.99e8, log=True,
        show_if={"energy_by": ["speed"]}),
-    _p("freq_thz", "Частота, ТГц", "float", 473.6, group="Частица", min=1e-6, max=1e12, log=True,
+    _p("freq_thz", T("Frequency, THz"), "float", 473.6, group=_G_PART, min=1e-6, max=1e12, log=True,
        show_if={"energy_by": ["freq"]}),
-    _p("dlam_rel", "Ширина спектра σ (ln λ)", "float", 0.0, group="Частица", min=0.0, max=0.3,
-       help="Логнормальный спектр: ln λ распределён нормально с этой шириной; каждая частица получает свою длину "
-            "волны и свою групповую скорость (временная когерентность)."),
-    _p("mass_u", "Масса, а.е.м.", "float", 1.0, group="Частица", min=1e-6, max=1e9, log=True,
+    _p("dlam_rel", T("Spectral width σ (ln λ)"), "float", 0.0, group=_G_PART, min=0.0, max=0.3,
+       help=T("A log-normal spectrum: ln λ is normally distributed with this width; each particle gets its own "
+              "wavelength and its own group velocity (temporal coherence).")),
+    _p("mass_u", T("Mass, u"), "float", 1.0, group=_G_PART, min=1e-6, max=1e9, log=True,
        show_if={"species": ["custom"]}),
-    _p("charge_e", "Заряд, e", "float", 0.0, group="Частица", min=-100, max=100, show_if={"species": ["custom"]}),
-    _p("spin_half", "Спин ½", "bool", False, group="Частица", show_if={"species": ["custom"]}),
-    _p("pol_state", "Поляризация", "select", "H", group="Частица", show_if=PHOT,
-       options=[("H", "H (вдоль x, поперёк щелей)"), ("V", "V (вдоль щелей)"), ("D", "D (+45°)"), ("A", "A (−45°)"),
-                ("R", "R (круговая)"), ("L", "L (круговая)"), ("custom", "своя (азимут, эллиптичность)"),
-                ("unpol", "неполяризованный")]),
-    _p("spin_state", "Спин", "select", "up_z", group="Частица", show_if=SPIN,
-       options=[("up_z", "↑ по z (по пучку)"), ("down_z", "↓ по z"), ("up_x", "↑ по x"), ("down_x", "↓ по x"),
-                ("up_y", "↑ по y"), ("down_y", "↓ по y"), ("unpol", "неполяризованный")]),
-    _p("pol_degree", "Степень поляризации", "float", 1.0, group="Частица", min=0.0, max=1.0, show_if=POLARIZABLE),
-    _p("pol_psi", "Азимут, °", "float", 0.0, group="Частица", min=-180, max=180, show_if={"pol_state": ["custom"]}),
-    _p("pol_chi", "Эллиптичность, °", "float", 0.0, group="Частица", min=-45, max=45, show_if={"pol_state": ["custom"]}),
+    _p("charge_e", T("Charge, e"), "float", 0.0, group=_G_PART, min=-100, max=100, show_if={"species": ["custom"]}),
+    _p("spin_half", T("Spin ½"), "bool", False, group=_G_PART, show_if={"species": ["custom"]}),
+    _p("pol_state", T("Polarisation"), "select", "H", group=_G_PART, show_if=PHOT,
+       options=[("H", T("H (along x, across the slits)")), ("V", T("V (along the slits)")), ("D", T("D (+45°)")),
+                ("A", T("A (−45°)")), ("R", T("R (circular)")), ("L", T("L (circular)")),
+                ("custom", T("custom (azimuth, ellipticity)")), ("unpol", T("unpolarised"))]),
+    _p("spin_state", T("Spin"), "select", "up_z", group=_G_PART, show_if=SPIN,
+       options=[("up_z", T("↑ along z (along the beam)")), ("down_z", T("↓ along z")), ("up_x", T("↑ along x")),
+                ("down_x", T("↓ along x")), ("up_y", T("↑ along y")), ("down_y", T("↓ along y")),
+                ("unpol", T("unpolarised"))]),
+    _p("pol_degree", T("Degree of polarisation"), "float", 1.0, group=_G_PART, min=0.0, max=1.0, show_if=POLARIZABLE),
+    _p("pol_psi", T("Azimuth, °"), "float", 0.0, group=_G_PART, min=-180, max=180, show_if={"pol_state": ["custom"]}),
+    _p("pol_chi", T("Ellipticity, °"), "float", 0.0, group=_G_PART, min=-45, max=45,
+       show_if={"pol_state": ["custom"]}),
     # source
-    _p("L1_m", "Источник: расстояние до щелей, м (0 = плоская волна)", "float", 0.0, group="Источник", min=0.0,
-       max=1e3, help="0 — плоская волна (источник на бесконечности); ширина источника тогда не используется."),
-    _p("src_width_um", "Источник: ширина, мкм", "float", 0.0, group="Источник", min=0.0, max=1e6,
-       help="Каждая частица вылетает из своей точки источника: пространственная когерентность."),
-    _p("rate", "Частиц в секунду (время мира)", "float", 1000.0, group="Источник", min=1e-6, max=1e15, log=True),
+    _p("L1_m", T("Source: distance to the slits, m (0 = plane wave)"), "float", 0.0, group=_G_SRC, min=0.0,
+       max=1e3, help=T("0: a plane wave (the source at infinity); the source's width is then not used.")),
+    _p("src_width_um", T("Source: width, µm"), "float", 0.0, group=_G_SRC, min=0.0, max=1e6,
+       help=T("Each particle leaves from its own point of the source: spatial coherence.")),
+    _p("rate", T("Particles per second (world time)"), "float", 1000.0, group=_G_SRC, min=1e-6, max=1e15, log=True),
     # slits and screen
-    _p("n_slits", "Число щелей", "int", 2, group="Щели и экран", min=1, max=12),
-    _p("a_um", "Ширина щели, мкм", "float", 20.0, group="Щели и экран", min=1e-4, max=1e5, log=True),
-    _p("d_um", "Период щелей (между центрами), мкм", "float", 100.0, group="Щели и экран", min=1e-4, max=1e6,
+    _p("n_slits", T("Number of slits"), "int", 2, group=_G_SLITS, min=1, max=12),
+    _p("a_um", T("Slit width, µm"), "float", 20.0, group=_G_SLITS, min=1e-4, max=1e5, log=True),
+    _p("d_um", T("Slit period (centre to centre), µm"), "float", 100.0, group=_G_SLITS, min=1e-4, max=1e6,
        log=True),
-    _p("L2_m", "Расстояние до экрана, м", "float", 1.0, group="Щели и экран", min=1e-6, max=1e4, log=True),
-    _p("screen_um", "Полуширина экрана, мкм (0 = авто)", "float", 0.0, group="Щели и экран", min=0.0, max=1e8),
-    _p("pixel_um", "Пиксель детектора, мкм (0 = авто)", "float", 0.0, group="Щели и экран", min=0.0, max=1e6),
-    _p("screen_model", "Модель экрана со щелями", "select", "kirchhoff", group="Щели и экран",
-       options=[("kirchhoff", "скалярная: граничные условия Кирхгофа"),
-                ("pec", "идеальный проводник: векторная дифракция (щели до 20.7 λ)")],
-       help="Скалярная — поле в щели равно падающему (по умолчанию). Идеальный проводник — векторное решение для "
-            "экрана из идеального проводника толщины t: только фотоны, плоская монохроматическая волна и щели не шире "
-            "20.7 λ (k·a ≤ 130; щель 20 мкм по умолчанию при 632.8 нм — 31.6 λ — не подходит, её отличие от скалярной "
-            "порядка 1/(k·a) < 1 %); обе поляризации (E вдоль щелей — TE, поперёк — TM), попадания — по потоку энергии "
-            "этого решения; скалярная кривая показывается рядом."),
-    _p("screen_t_um", "Толщина экрана, мкм (0 — бесконечно тонкий)", "float", 0.0, group="Щели и экран", min=0.0,
+    _p("L2_m", T("Distance to the screen, m"), "float", 1.0, group=_G_SLITS, min=1e-6, max=1e4, log=True),
+    _p("screen_um", T("Screen half-width, µm (0 = auto)"), "float", 0.0, group=_G_SLITS, min=0.0, max=1e8),
+    _p("pixel_um", T("Detector pixel, µm (0 = auto)"), "float", 0.0, group=_G_SLITS, min=0.0, max=1e6),
+    _p("screen_model", T("Model of the slit screen"), "select", "kirchhoff", group=_G_SLITS,
+       options=[("kirchhoff", T("scalar: Kirchhoff boundary conditions")),
+                ("pec", T("perfect conductor: vector diffraction (slits up to {w:.1f} λ)", w=VEC_WIDTH_MAX))],
+       help=T("Scalar: the field in a slit equals the incident one (the default). Perfect conductor: the vector "
+              "solution for a screen of a perfect conductor of thickness t; photons only, a plane monochromatic wave "
+              "and slits no wider than {w:.1f} λ (k·a ≤ {ka:.0f}; the default slit of {a:g} µm at {lam:g} nm, "
+              "{r:.1f} λ, does not qualify, and its difference from the scalar result is of order 1/(k·a) < 1 %); "
+              "both polarisations (E along the slits: TE, across them: TM); hits follow the energy flux of this "
+              "solution; the scalar curve is shown next to it.",
+              w=VEC_WIDTH_MAX, ka=VEC_KA_MAX, a=20.0, lam=632.8, r=20.0e-6 / 632.8e-9)),
+    _p("screen_t_um", T("Screen thickness, µm (0 = infinitely thin)"), "float", 0.0, group=_G_SLITS, min=0.0,
        max=1e5, show_if={"screen_model": ["pec"]}),
-    _p("eff", "Эффективность детектора", "float", 1.0, group="Щели и экран", min=0.0, max=1.0),
-    _p("dark_rate", "Темновые отсчёты, 1/с", "float", 0.0, group="Щели и экран", min=0.0, max=1e12,
-       help="Ложные срабатывания экрана, равномерно по нему. Не больше 100 на одну частицу источника (иначе экран "
-            "показывает только шум): при 1000 частиц/с — до 10⁵ 1/с."),
-    # observer and elements (initial state; changeable in the run by the action «Изменить установку»)
-    _p("wp_mode", "Наблюдатель пути", "select", "none", group="Наблюдатель и элементы",
-       options=_opts([("none", "нет"), ("qubit", "детектор-кубит у щели (модель Энглерта)"),
-                      ("microscope", "рассеяние фотона (микроскоп Гейзенберга)",
+    _p("eff", T("Detector efficiency"), "float", 1.0, group=_G_SLITS, min=0.0, max=1.0),
+    _p("dark_rate", T("Dark counts, 1/s"), "float", 0.0, group=_G_SLITS, min=0.0, max=1e12,
+       help=T("False counts of the screen, uniform over it. At most {k:g} per particle of the source (otherwise the "
+              "screen shows only noise): at {r:g} particles/s, up to {d:g} 1/s.",
+              k=DARK_PER_PARTICLE_MAX, r=1000.0, d=1000.0 * DARK_PER_PARTICLE_MAX)),
+    # observer and elements (the initial state; changeable in the run: live parameters)
+    _p("wp_mode", T("Which-path observer"), "select", "none", group=_G_OBS,
+       options=_opts([("none", T("none")), ("qubit", T("qubit detector at a slit (Englert's model)")),
+                      ("microscope", T("photon scattering (Heisenberg's microscope)"),
                        {"species": list(MIC_SPECIES)})])),
-    _p("wp_slit", "Детектор у щели №", "int", 1, group="Наблюдатель и элементы", min=1, max=12,
+    _p("wp_slit", T("Detector at slit no."), "int", 1, group=_G_OBS, min=1, max=12,
        show_if={"wp_mode": ["qubit"]}),
-    _p("wp_theta", "Связь детектора θ, ° (90 = полная метка пути)", "float", 90.0, group="Наблюдатель и элементы",
+    _p("wp_theta", T("Detector coupling θ, ° (90 = a full which-path mark)"), "float", 90.0, group=_G_OBS,
        min=0, max=180, show_if={"wp_mode": ["qubit"]}),
-    _p("wp_read", "Показание детектора", "select", "none", group="Наблюдатель и элементы",
+    _p("wp_read", T("Detector reading"), "select", "none", group=_G_OBS,
        show_if={"wp_mode": ["qubit"]},
-       options=[("none", "не читается"), ("path", "читается в базисе пути"), ("angle", "читается в повёрнутом базисе (ластик)")]),
-    _p("wp_read_angle", "Угол базиса чтения, °", "float", 45.0, group="Наблюдатель и элементы", min=-180, max=180,
+       options=[("none", T("not read")), ("path", T("read in the path basis")),
+                ("angle", T("read in a rotated basis (eraser)"))]),
+    _p("wp_read_angle", T("Readout basis angle, °"), "float", 45.0, group=_G_OBS, min=-180, max=180,
        show_if={"wp_read": ["angle"]}),
-    _p("mic_lambda_nm", "Фотон-зонд: длина волны, нм", "float", 1000.0, group="Наблюдатель и элементы",
+    _p("mic_lambda_nm", T("Probe photon: wavelength, nm"), "float", 1000.0, group=_G_OBS,
        min=1e-3, max=1e9, log=True, show_if={"wp_mode": ["microscope"]}),
-    _p("mic_prob", "Вероятность рассеяния на частицу", "float", 1.0, group="Наблюдатель и элементы", min=0, max=1,
+    _p("mic_prob", T("Scattering probability per particle"), "float", 1.0, group=_G_OBS, min=0, max=1,
        show_if={"wp_mode": ["microscope"]}),
-    _p("mic_dir", "Направление пучка-зонда", "select", "y", group="Наблюдатель и элементы",
-       show_if={"wp_mode": ["microscope"]}, options=[("x", "x (поперёк щелей)"), ("y", "y (вдоль щелей)"), ("z", "z (по пучку)")]),
-    _p("mic_pol", "Ось диполя (поляризация зонда)", "select", "z", group="Наблюдатель и элементы",
-       show_if={"wp_mode": ["microscope"]}, options=[("x", "x"), ("y", "y"), ("z", "z")]),
-    _p("mic_record", "Регистрация рассеянного фотона", "select", "all", group="Наблюдатель и элементы",
+    _p("mic_dir", T("Probe beam direction"), "select", "y", group=_G_OBS,
        show_if={"wp_mode": ["microscope"]},
-       options=[("none", "не регистрируется"), ("all", "регистрируется направление (4π)"),
-                ("cone", "линза на оси z (конус)")]),
-    _p("mic_cone_deg", "Полуугол линзы, °", "float", 30.0, group="Наблюдатель и элементы", min=0.1, max=90,
+       options=[("x", T("x (across the slits)")), ("y", T("y (along the slits)")), ("z", T("z (along the beam)"))]),
+    _p("mic_pol", T("Dipole axis (probe polarisation)"), "select", "z", group=_G_OBS,
+       show_if={"wp_mode": ["microscope"]}, options=[("x", "x"), ("y", "y"), ("z", "z")]),
+    _p("mic_record", T("Recording of the scattered photon"), "select", "all", group=_G_OBS,
+       show_if={"wp_mode": ["microscope"]},
+       options=[("none", T("not recorded")), ("all", T("direction recorded (4π)")),
+                ("cone", T("a lens on the z axis (cone)"))]),
+    _p("mic_cone_deg", T("Lens half-angle, °"), "float", 30.0, group=_G_OBS, min=0.1, max=90,
        show_if={"mic_record": ["cone"]}),
-    _p("el1", "Элемент у щели 1", "select", "none", group="Наблюдатель и элементы", options=ELEM_OPTIONS),
-    _p("el1_angle", "Щель 1: угол / фаза, °", "float", 0.0, group="Наблюдатель и элементы", min=-360, max=360),
-    _p("el2", "Элемент у щели 2", "select", "none", group="Наблюдатель и элементы", options=ELEM_OPTIONS),
-    _p("el2_angle", "Щель 2: угол / фаза, °", "float", 0.0, group="Наблюдатель и элементы", min=-360, max=360),
-    _p("analyzer", "Анализатор перед экраном", "select", "none", group="Наблюдатель и элементы",
-       options=[("none", "нет"), ("on", "поляризатор / спиновый фильтр")]),
-    _p("analyzer_angle", "Угол анализатора, °", "float", 45.0, group="Наблюдатель и элементы", min=-180, max=180,
+    _p("el1", T("Element at slit {j:d}", j=1), "select", "none", group=_G_OBS, options=ELEM_OPTIONS),
+    _p("el1_angle", T("Slit {j:d}: angle / phase, °", j=1), "float", 0.0, group=_G_OBS, min=-360, max=360),
+    _p("el2", T("Element at slit {j:d}", j=2), "select", "none", group=_G_OBS, options=ELEM_OPTIONS),
+    _p("el2_angle", T("Slit {j:d}: angle / phase, °", j=2), "float", 0.0, group=_G_OBS, min=-360, max=360),
+    _p("analyzer", T("Analyser in front of the screen"), "select", "none", group=_G_OBS,
+       options=[("none", T("none")), ("on", T("polariser / spin filter"))]),
+    _p("analyzer_angle", T("Analyser angle, °"), "float", 45.0, group=_G_OBS, min=-180, max=180,
        show_if={"analyzer": ["on"]}),
-    _p("ab_flux", "Магнитный поток между щелями 1 и 2, h/e", "float", 0.0, group="Наблюдатель и элементы",
-       min=-100, max=100, help="Эффект Ааронова–Бома: только для заряженных частиц."),
+    _p("ab_flux", T("Magnetic flux between slits 1 and 2, h/e"), "float", 0.0, group=_G_OBS,
+       min=-100, max=100, help=T("The Aharonov–Bohm effect: charged particles only.")),
     # laws
-    _p("born_p", "Показатель в правиле Борна P ∝ |ψ|^p", "float", 2.0, group="Законы (модификации)", min=0.5,
-       max=6.0, standard=2.0, help="2 — квантовая механика. Иное значение — модификация (проверка Соркина: 3 щели)."),
-    _p("collapse", "Коллапс", "select", "none", group="Законы (модификации)", standard="none",
-       options=[("none", "нет (линейная квантовая механика)"), ("grw", "спонтанный коллапс GRW"),
-                ("slit", "принудительный выбор щели (без интерференции)")]),
-    _p("grw_lambda", "GRW: частота на единицу массы (а.е.м.), 1/с", "float", 1e-16, group="Законы (модификации)", min=1e-30,
+    _p("born_p", T("Exponent in the Born rule P ∝ |ψ|^p"), "float", 2.0, group=_G_LAWS, min=0.5,
+       max=6.0, standard=2.0,
+       help=T("{p:g} is quantum mechanics. Any other value is a modification (Sorkin's test: three slits).", p=2.0)),
+    _p("collapse", T("Collapse"), "select", "none", group=_G_LAWS, standard="none",
+       options=[("none", T("none (linear quantum mechanics)")), ("grw", T("spontaneous collapse (GRW)")),
+                ("slit", T("forced choice of a slit (no interference)"))]),
+    _p("grw_lambda", T("GRW: rate per unit mass (u), 1/s"), "float", 1e-16, group=_G_LAWS, min=1e-30,
        max=1e12, log=True, show_if={"collapse": ["grw"]}),
-    _p("grw_rc_nm", "GRW: ширина локализации, нм", "float", 100.0, group="Законы (модификации)", min=1e-3, max=1e9,
+    _p("grw_rc_nm", T("GRW: localisation width, nm"), "float", 100.0, group=_G_LAWS, min=1e-3, max=1e9,
        log=True, show_if={"collapse": ["grw"]}),
     # display
-    _p("n_bohm", "Линий тока (траекторий Бома)", "int", 40, group="Отображение", min=0, max=200),
+    _p("n_bohm", T("Number of flow lines (Bohm trajectories)"), "int", 40, group=_G_SHOW, min=0, max=200),
 ], presets={
-    "photon_young": {"label": "Фотоны 633 нм, две щели (Юнг, по одному фотону)", "params": {}},
-    "photon_pol_marks": {"label": "Фотоны D: поляризаторы H и V на щелях — метка пути",
+    "photon_young": {"label": T("Photons {lam:g} nm, two slits (Young, one photon at a time)", lam=633.0),
+                     "params": {}},
+    "photon_pol_marks": {"label": T("Photons D: polarisers H and V on the slits, a which-path mark"),
                          "params": {"pol_state": "D", "el1": "polarizer", "el1_angle": 0, "el2": "polarizer",
                                     "el2_angle": 90}},
-    "photon_eraser": {"label": "Квантовый ластик: метки H/V + анализатор 45°",
+    "photon_eraser": {"label": T("Quantum eraser: H/V marks + {a:g}° analyser", a=45.0),
                       "params": {"pol_state": "D", "el1": "polarizer", "el1_angle": 0, "el2": "polarizer",
                                  "el2_angle": 90, "analyzer": "on", "analyzer_angle": 45}},
-    "photon_eraser_minus": {"label": "Квантовый ластик: анализатор −45° (антиполосы)",
+    "photon_eraser_minus": {"label": T("Quantum eraser: analyser at {a:g}° (anti-fringes)", a=-45.0),
                             "params": {"pol_state": "D", "el1": "polarizer", "el1_angle": 0, "el2": "polarizer",
                                        "el2_angle": 90, "analyzer": "on", "analyzer_angle": -45}},
-    "photon_partial": {"label": "Фотоны: широкий источник (частичная когерентность)",
+    "photon_partial": {"label": T("Photons: a wide source (partial coherence)"),
                        "params": {"L1_m": 0.5, "src_width_um": 2000.0}},
-    "photon_qubit": {"label": "Фотоны: детектор-кубит пути, θ = 90°",
+    "photon_qubit": {"label": T("Photons: a which-path qubit detector, θ = {th:g}°", th=90.0),
                      "params": {"wp_mode": "qubit", "wp_theta": 90}},
-    "electron": {"label": "Электроны 50 кэВ (иллюстративно: щели 0.1 мкм через 0.5 мкм, экран 1 м)",
+    "electron": {"label": T("Electrons {e:g} keV (illustrative: slits {a:g} µm wide, {d:g} µm apart, screen at "
+                            "{L:g} m)", e=50.0, a=0.1, d=0.5, L=1.0),
                  "params": {"species": "electron", "energy_by": "ekin", "ekin_ev": 50000.0, "a_um": 0.1,
                             "d_um": 0.5, "L2_m": 1.0}},
-    "electron_qubit": {"label": "Электроны + детектор пути (θ = 90°, не читается)",
+    "electron_qubit": {"label": T("Electrons + which-path detector (θ = {th:g}°, not read)", th=90.0),
                        "params": {"species": "electron", "energy_by": "ekin", "ekin_ev": 50000.0, "a_um": 0.1,
                                   "d_um": 0.5, "L2_m": 1.0, "wp_mode": "qubit", "wp_theta": 90}},
-    "electron_weak": {"label": "Электроны + слабый детектор (θ = 30°)",
+    "electron_weak": {"label": T("Electrons + a weak detector (θ = {th:g}°)", th=30.0),
                       "params": {"species": "electron", "energy_by": "ekin", "ekin_ev": 50000.0, "a_um": 0.1,
                                  "d_um": 0.5, "L2_m": 1.0, "wp_mode": "qubit", "wp_theta": 30}},
-    "electron_eraser": {"label": "Электроны: детектор пути читается в базисе 45° (ластик)",
+    "electron_eraser": {"label": T("Electrons: the which-path detector read in the {a:g}° basis (eraser)", a=45.0),
                         "params": {"species": "electron", "energy_by": "ekin", "ekin_ev": 50000.0, "a_um": 0.1,
                                    "d_um": 0.5, "L2_m": 1.0, "wp_mode": "qubit", "wp_theta": 90,
                                    "wp_read": "angle", "wp_read_angle": 45}},
-    "electron_microscope": {"label": "Электроны + рассеяние фотона (микроскоп Гейзенберга, λ = 1 мкм)",
+    "electron_microscope": {"label": T("Electrons + photon scattering (Heisenberg's microscope, λ = {lam:g} µm)",
+                                       lam=1.0),
                             "params": {"species": "electron", "energy_by": "ekin", "ekin_ev": 50000.0, "a_um": 0.1,
                                        "d_um": 0.5, "L2_m": 1.0, "wp_mode": "microscope",
                                        "mic_lambda_nm": 1000.0}},
-    "electron_ab": {"label": "Электроны: эффект Ааронова–Бома (поток ½ h/e)",
+    "electron_ab": {"label": T("Electrons: the Aharonov–Bohm effect (flux ½ h/e)"),
                     "params": {"species": "electron", "energy_by": "ekin", "ekin_ev": 50000.0, "a_um": 0.1,
                                "d_um": 0.5, "L2_m": 1.0, "ab_flux": 0.5}},
-    "neutron": {"label": "Холодные нейтроны 2 нм (иллюстративно)",
+    "neutron": {"label": T("Cold neutrons {lam:g} nm (illustrative)", lam=2.0),
                 "params": {"species": "neutron", "lam_nm": 2.0, "a_um": 5.0, "d_um": 25.0, "L2_m": 5.0,
                            "rate": 100.0}},
-    "c60": {"label": "Фуллерены C60, 200 м/с, решётка из 10 щелей (иллюстративно)",
+    "c60": {"label": T("Fullerenes C60, {v:g} m/s, a grating of {n:d} slits (illustrative)", v=200.0, n=10),
             "params": {"species": "c60", "energy_by": "speed", "speed_ms": 200.0, "n_slits": 10, "a_um": 0.05,
                        "d_um": 0.1, "L2_m": 1.25, "rate": 100.0}},
-    "c60_grw": {"label": "C60 с усиленным коллапсом GRW (модификация)",
+    "c60_grw": {"label": T("C60 with enhanced GRW collapse (modification)"),
                 "params": {"species": "c60", "energy_by": "speed", "speed_ms": 200.0, "n_slits": 2, "a_um": 0.05,
                            "d_um": 0.1, "L2_m": 1.25, "rate": 100.0, "collapse": "grw", "grw_lambda": 3.0,
                            "grw_rc_nm": 100.0}},
-    "vector_narrow": {"label": "Векторная дифракция: щели 0.5 мкм в проводящем экране 0.2 мкм, поляризация D",
-                      "note": "Щели ~λ: скалярная параксиальная картина здесь неверна, и её сравнение с точным "
-                              "интегралом не проходит — ожидаемо; ответ мира — векторное решение",
+    "vector_narrow": {"label": T("Vector diffraction: {a:g} µm slits in a {t:g} µm conducting screen, polarisation D",
+                                 a=0.5, t=0.2),
+                      "note": T("Slits of about λ: the scalar paraxial pattern is wrong here, and its comparison with "
+                                "the exact integral fails, as expected; the world's answer is the vector solution"),
                       "params": {"screen_model": "pec", "screen_t_um": 0.2, "a_um": 0.5, "d_um": 3.0, "L2_m": 0.01,
                                  "pol_state": "D"}},
-    "triple": {"label": "Три щели: проверка правила Борна (Соркин)", "params": {"n_slits": 3}},
-    "triple_mod": {"label": "Три щели при P ∝ |ψ|^2.4 (модификация)", "params": {"n_slits": 3, "born_p": 2.4},
-                   "note": "Правило Борна изменено: параметр Соркина отличен от нуля — проверка не проходит ожидаемо, "
-                           "это и есть следствие модификации"},
-    "slit_collapse": {"label": "Принудительный выбор щели (модификация)", "params": {"collapse": "slit"}},
+    "triple": {"label": T("Three slits: a test of the Born rule (Sorkin)"), "params": {"n_slits": 3}},
+    "triple_mod": {"label": T("Three slits with P ∝ |ψ|^{p:g} (modification)", p=2.4),
+                   "params": {"n_slits": 3, "born_p": 2.4},
+                   "note": T("The Born rule is changed: Sorkin's parameter is not zero, and the check fails as "
+                             "expected; that is the consequence of the modification")},
+    "slit_collapse": {"label": T("Forced choice of a slit (modification)"), "params": {"collapse": "slit"}},
 })
 
 
@@ -263,10 +287,6 @@ APP_FIELDS = ["wp_mode", "wp_slit", "wp_theta", "wp_read", "wp_read_angle", "mic
 SETUP_REBUILD = ("species", "energy_by", "lam_nm", "ekin_ev", "speed_ms", "freq_thz", "mass_u", "charge_e",
                  "spin_half", "n_slits", "a_um", "d_um", "L1_m", "L2_m", "screen_um", "pixel_um", "screen_model",
                  "screen_t_um")
-# vector mode: slits wider than this (k a = 130: 20.7 wavelengths) are refused (the cost of the solution: ~17 s for a
-# thin screen, ~21 s for a thick one at the cap, measured in the processing of review B8; for such slits the scalar and
-# vector results differ by O(1/(k a)))
-VEC_KA_MAX = 130.0
 SOURCE_FIELDS = ("dlam_rel", "pol_state", "spin_state", "pol_degree", "pol_psi", "pol_chi", "src_width_um")
 DETECTOR_FIELDS = ("eff", "dark_rate")
 LAW_FIELDS = ("born_p", "collapse", "grw_lambda", "grw_rc_nm")
@@ -306,7 +326,7 @@ class Simulation(BaseSimulation):
         self.default_speed = max(min(40.0 / self.app.rate, 1e9), 1e-15)
         self._buf = []
         self._z_par_why = "dev"
-        self._new_segment("начало")
+        self._new_segment(T("start"))
 
     def _build(self, p):
         """Particle, slits, screen grid, source and experiment from the parameters; touches no state, so a refused
@@ -316,14 +336,16 @@ class Simulation(BaseSimulation):
                  "freq": p["freq_thz"] * 1e12}[by]
         try:
             pt = make(p["species"], by, value, p["mass_u"], p["charge_e"], p["spin_half"])
-        except ValueError as e:  # the core's Russian text, with what to choose (P17)
-            raise Refusal(str(e), "выберите в «Задать через» длину волны, энергию или "
-                          + ("частоту" if p["species"] == "photon" else "скорость")) from e
+        except ValueError as e:  # the core's own text, with what to choose (P17)
+            raise Refusal(_exc_text(e), T("choose the wavelength, the energy or the frequency in “Set by”")
+                          if p["species"] == "photon" else
+                          T("choose the wavelength, the energy or the speed in “Set by”")) from e
         n = int(p["n_slits"])
         a = p["a_um"] * 1e-6
         d = p["d_um"] * 1e-6
         if n > 1 and d <= a:
-            raise ValueError("период щелей должен быть больше ширины щели")
+            raise Refusal(T("the slit period must be larger than the slit width"),
+                          T("increase “Slit period” or reduce “Slit width”"))
         L1 = math.inf if p["L1_m"] == 0 else p["L1_m"]
         L2 = p["L2_m"]
         lam = pt.lam
@@ -376,10 +398,10 @@ class Simulation(BaseSimulation):
     def set_live(self, values):
         new, errors = SCHEMA.coerce_live(self.params, values)
         if errors:
-            raise ValueError("; ".join(errors))
+            raise Refusal(_join(errors))
         changed = [k for k in SCHEMA.live_ids() if not _same(new[k], self.params[k])]
         if not changed:
-            return "без изменений"
+            return T("no changes")
         rebuild = any(k in SETUP_REBUILD for k in changed)
         b = self._build(new) if (rebuild or any(k in SOURCE_FIELDS + DETECTOR_FIELDS for k in changed)) else None
         pt = b["particle"] if b else self.particle
@@ -397,7 +419,8 @@ class Simulation(BaseSimulation):
         _check_rates(new)
         self._check_screen_cost(app, b)
         # commit (nothing above changed the world)
-        desc = "; ".join(f"{SCHEMA.by_id[k].label}: {_fmt(self.params[k])} → {_fmt(new[k])}" for k in changed)
+        desc = _join([T("{label}: {old} → {new}", label=SCHEMA.by_id[k].label, old=_val(k, self.params[k]),
+                        new=_val(k, new[k])) for k in changed])
         if b is not None:
             if rebuild:
                 lost = sum(int(np.sum(bb.stage < 2)) for bb in self.batches)
@@ -405,7 +428,7 @@ class Simulation(BaseSimulation):
                 self.batches = []
                 self.pending_stories = [st for st in self.pending_stories if st["t_det"] <= self.t]
                 if lost:
-                    notes.append(f"установка перестроена: частиц в полёте потеряно {lost}")
+                    notes.append(T("the set-up is rebuilt: particles in flight lost: {n:d}", n=int(lost)))
             else:
                 self.src_epoch += 1
             self._adopt(b)
@@ -413,7 +436,7 @@ class Simulation(BaseSimulation):
         self.dark_rate = new["dark_rate"]
         self.app = app
         self.t_next = self.t + self.rng.exponential(1.0 / app.rate)
-        self._new_segment("изменена установка: " + desc)
+        self._new_segment(T("set-up changed: {desc}", desc=desc))
         for text in notes:
             self._msg({"type": "notice", "t": self.t, "text": text})
         return desc
@@ -428,30 +451,34 @@ class Simulation(BaseSimulation):
         for j, (kk, aa) in enumerate([(f["el1"], f["el1_angle"]), (f["el2"], f["el2_angle"])]):
             if j < n and kk != "none":
                 if kk not in ELEM_FOR[internal]:  # P17: by its label, and what does act on this particle
-                    ok = ", ".join(f"«{_ELEM_LABEL[e]}»" for e in ELEM_FOR[internal])
-                    raise Refusal(f"«{_ELEM_LABEL[kk]}» у щели {j + 1} не действует на {who}"
-                                  + {"pol": " (у фотона поляризация)", "spin": " (у частицы спин ½)",
-                                     None: " (у частицы нет ни поляризации, ни спина)"}[internal],
-                                  f"выберите для «Элемент у щели {j + 1}» одно из: {ok}")
+                    ok = _join([T("“{x}”", x=_ELEM_LABEL[e]) for e in ELEM_FOR[internal]], ", ")
+                    why = {"pol": T("a photon has polarisation"), "spin": T("the particle has spin ½"),
+                           None: T("the particle has neither polarisation nor spin")}[internal]
+                    raise Refusal(T("“{elem}” at slit {j:d} does not act on {who} ({why})", elem=_ELEM_LABEL[kk],
+                                    j=j + 1, who=who, why=why),
+                                  T("choose one of these for “Element at slit {j:d}”: {ok}", j=j + 1, ok=ok))
                 marks.element_matrix(kk, aa, internal)
                 els[j] = (kk, float(aa))
         if f["analyzer"] == "on" and internal is None:
-            raise Refusal(f"у частицы «{pt.label}» нет внутреннего состояния (поляризации или спина): анализатору не "
-                          "на что действовать", "выберите «Анализатор перед экраном» = нет")
+            raise Refusal(T("the particle “{p}” has no internal state (polarisation or spin): the analyser has "
+                            "nothing to act on", p=pt.label),
+                          T("choose “Analyser in front of the screen” = none"))
         if f["wp_mode"] == "microscope":
             if pt.species not in MIC_SPECIES:
-                raise Refusal("рассеяние фотона-зонда здесь задаётся дипольной диаграммой: она есть у заряженных "
-                              "(томсоновское) и поляризуемых (рэлеевское) частиц, а не у частицы "
-                              f"«{pt.label}»", "выберите «Наблюдатель пути» = детектор-кубит, или метки поляризацией/"
-                              "спином в «Элемент у щели»")
+                raise Refusal(T("the probe photon's scattering is given here by a dipole pattern: charged (Thomson) "
+                                "and polarisable (Rayleigh) particles have one, the particle “{p}” has not", p=pt.label),
+                              T("choose “Which-path observer” = qubit detector, or marks by polarisation or spin in "
+                                "“Element at slit”"))
             if f["mic_pol"] == f["mic_dir"]:
-                raise Refusal("поляризация (ось диполя) зонда не может совпадать с направлением его распространения",
-                              f"выберите «Ось диполя» не {f['mic_dir']}")
+                raise Refusal(T("the probe's polarisation (its dipole axis) cannot coincide with its direction of "
+                                "propagation"),
+                              T("choose a “Dipole axis” other than {axis}", axis=str(f["mic_dir"])))
         if not (1 <= int(f["wp_slit"]) <= n):
-            raise Refusal(f"детектор пути у щели №{int(f['wp_slit'])}, а щелей {n}",
-                          f"выберите «Детектор у щели №» от 1 до {n}")
+            raise Refusal(T("the which-path detector is at slit no. {k:d}, but there are {n:d} slits",
+                            k=int(f["wp_slit"]), n=int(n)),
+                          T("choose “Detector at slit no.” from 1 to {n:d}", n=int(n)))
         if float(f["rate"]) <= 0:
-            raise ValueError("темп источника должен быть > 0")
+            raise Refusal(T("the source's rate must be above 0"), T("set “Particles per second” above 0"))
         return Apparatus(els, (f["analyzer"], float(f["analyzer_angle"])), f["wp_mode"], int(f["wp_slit"]) - 1,
                          float(f["wp_theta"]), f["wp_read"], float(f["wp_read_angle"]), f["mic_lambda_nm"] * 1e-9,
                          float(f["mic_prob"]), f["mic_dir"], f["mic_pol"], f["mic_record"], float(f["mic_cone_deg"]),
@@ -468,8 +495,9 @@ class Simulation(BaseSimulation):
                 "ab_flux": a.ab_flux, "rate": a.rate}
 
     def _actions(self):
-        # the apparatus, the source, the slits and the screen are live parameters (panel «Установка»)
-        return [{"name": "clear", "label": "Очистить экран", "help": "новый отрезок, установка та же", "args": []}]
+        # the apparatus, the source, the slits and the screen are live parameters (the player's set-up panel)
+        return [{"name": "clear", "label": T("Clear the screen"), "help": T("a new segment, the same set-up"),
+                 "args": []}]
 
     # --- messages -------------------------------------------------------------------------------------
     def _msg(self, meta, blobs=None):
@@ -538,23 +566,26 @@ class Simulation(BaseSimulation):
                 from lfviz.limits import require
             except ImportError:  # pragma: no cover - a framework without the memory budget
                 return
-            require(nbytes, "ожидаемая картина на экране (сетка экрана, расширенная на сдвиги частиц)",
-                    "уменьшите сдвиги частиц: длиннее λ зонда, слабее коллапс GRW, уже источник")
+            require(nbytes, T("the expected pattern on the screen (the screen grid extended by the particles' "
+                              "shifts)"),
+                    T("reduce the particles' shifts: a longer probe λ, a weaker GRW collapse, a narrower source"))
             return
         half = 0.5 * (g.x[-1] - g.x[0])
-        what = (f"частицы сдвигаются на пути к экрану до ±{_len_text(sh)} при экране ±{_len_text(half)}: ожидаемой "
-                f"картине нужна сетка {n_e:.3g} точек (~{nbytes / 2 ** 30:.3g} ГБ, предел мира "
-                f"{SCREEN_BYTES_MAX / 2 ** 30:g} ГБ)")
+        what = T("the particles are shifted on their way to the screen by up to ±{shift} with a screen of ±{half}: the "
+                 "expected pattern needs a grid of {n:.3g} points (~{gb:.3g} GB; the world's limit is {lim:g} GB)",
+                 shift=_len_text(sh), half=_len_text(half), n=float(n_e), gb=nbytes / 2 ** 30,
+                 lim=SCREEN_BYTES_MAX / 2 ** 30)
         frac = (SCREEN_BYTES_MAX / nbytes)
         hints = []
         if app.wp_mode == "microscope" and model.p > 0:
-            hints.append(f"возьмите длину волны фотона-зонда не меньше ~{app.mic_lambda / frac * 1e9:.3g} нм "
-                         "(отдача зонда ∝ 1/λ)")
+            hints.append(T("take the probe photon's wavelength at least ~{lam:.3g} nm (the probe's recoil ∝ 1/λ)",
+                           lam=app.mic_lambda / frac * 1e9))
         if model.grw > 0:
-            hints.append("ослабьте коллапс GRW (меньше частота λ или больше ширина r_C) — толчки GRW сдвигают частицы")
+            hints.append(T("weaken the GRW collapse (a smaller rate λ or a larger width r_C): GRW kicks shift the "
+                           "particles"))
         if model.s > 0:
-            hints.append("сузьте источник или отодвиньте его")
-        raise Refusal(what, "; ".join(hints) or "уменьшите сдвиги частиц")
+            hints.append(T("narrow the source or move it farther away"))
+        raise Refusal(what, _join(hints) or T("reduce the particles' shifts"))
 
     def _avg_grams(self, analyzer=True):
         """Ensemble Gram matrices (exact for the source's density matrix): per readout, and unread. analyzer=False:
@@ -679,8 +710,9 @@ class Simulation(BaseSimulation):
             if dmax > 3 * err_screen * float(np.max(sig)):
                 curves["diff"] = sig - sig_k
             else:
-                diff_note = (f"разность вектор − скаляр (не более {dmax / max(float(np.max(sig)), 1e-300):.2g} максимума) "
-                             f"не больше утроенной оценки ошибки метода ({err_screen:.2g}): не показана")
+                diff_note = T("the difference vector − scalar (at most {d:.2g} of the maximum) is not above three "
+                              "times the estimated error of the method ({e:.2g}): not shown",
+                              d=dmax / max(float(np.max(sig)), 1e-300), e=float(err_screen))
             if wH > 1e-12 and wV > 1e-12:
                 curves["vTM"] = eff * _rebin(g.x, wH * V["J_TM"] / unit, edges)
                 curves["vTE"] = eff * _rebin(g.x, wV * V["J_TE"] / unit, edges)
@@ -690,9 +722,9 @@ class Simulation(BaseSimulation):
             ssig = curves["all"] - dark_per_bin
             tot_v, tot_s = float(np.sum(vsig)), float(np.sum(ssig))
             curves["vec"] = vsig * (tot_s / tot_v if tot_v > 0 else 0.0) + dark_per_bin
-            why = ("изменённые законы (показатель Борна, коллапс) заданы только для скалярной модели"
-                   if not V["hits"] else "метки пути, элементы у щелей или анализатор не имеют векторного аналога в "
-                                         "движке")
+            why = (T("the changed laws (the Born exponent, a collapse) are defined only for the scalar model")
+                   if not V["hits"] else
+                   T("which-path marks, elements at the slits or an analyser have no vector counterpart in the engine"))
         pt_mix = wH * V["Pt_TM"] + wV * V["Pt_TE"]
         on_scr = float(np.sum(0.5 * (Jmix[1:] + Jmix[:-1])) * g.dx)
         vinfo = {"hits": "vector" if self._vec_hits else "scalar", "why": why, "t": V["t"], "W": V["W"], "n": g.n,
@@ -706,46 +738,54 @@ class Simulation(BaseSimulation):
     def _vector_checks(self, vi):
         V = self.exp.vec
         s = self.seg
-        grp = f"Отрезок {s}: векторный экран (идеальный проводник)"
-        for pol, lab in (("TE", "E вдоль щелей (TE)"), ("TM", "H вдоль щелей (TM)")):
+        grp = T("Segment {s:d}: vector screen (perfect conductor)", s=s)
+        for pol, lab in (("TE", T("E along the slits (TE)")), ("TM", T("H along the slits (TM)"))):
             d = V[pol]
-            self._check(f"vbal{pol}{s}", f"Баланс мощности {lab}: P_прош + P_назад − экстинкция (оптическая теорема "
-                        "экрана), отн.", d["rel"], 0.0, "", grp, ok=abs(d["rel"]) < 1e-8,
-                        note=f"P_прош = {d['P_t']:.6g}, P_назад = {d['P_b']:.6g}, экстинкция = {d['ext']:.6g} "
-                             "(единицы потока падающей волны × м)")
+            self._check(f"vbal{pol}{s}", T("Power balance, {pol}: P_trans + P_back − extinction (the screen's optical "
+                                           "theorem), rel.", pol=lab), d["rel"], 0.0, "", grp, ok=abs(d["rel"]) < 1e-8,
+                        note=T("P_trans = {pt:.6g}, P_back = {pb:.6g}, extinction = {ext:.6g} (units of the incident "
+                               "wave's flux × m)", pt=float(d["P_t"]), pb=float(d["P_b"]), ext=float(d["ext"])))
             if d["rel_modes"] is not None:
-                self._check(f"vmod{pol}{s}", f"Мощность мод в щели = прошедшей мощности {lab}, отн.", d["rel_modes"],
+                self._check(f"vmod{pol}{s}", T("Power of the modes in the slit = transmitted power, {pol}, rel.",
+                                               pol=lab), d["rel_modes"],
                             0.0, "", grp, ok=abs(d["rel_modes"]) < 1e-8,
-                            note="поток через выходное сечение щели по модам и по дальнему полю за экраном")
+                            note=T("the flux through the slit's exit cross-section by the modes and by the far field "
+                                   "behind the screen"))
             lv = d["levels"]
             if d["err_kind"] == "exponential":
-                how = (f"базис с краевыми условиями (тонкий экран), сходится экспоненциально: оценка — изменение от "
-                       f"{lv[0]} до {lv[1]} функций на щель (больше ошибки при {lv[1]})")
+                how = T("a basis with edge conditions (thin screen), converging exponentially: the estimate is the "
+                        "change from {a:d} to {b:d} functions per slit (larger than the error at {b:d})",
+                        a=int(lv[0]), b=int(lv[1]))
             else:
                 po = d["err_order"]
-                how = (f"волноводные моды, сходятся алгебраически (углы экрана): экстраполяция Ричардсона по {lv[0]}, "
-                       f"{lv[1]}, {lv[2]} модам на щель (подблоки одного оператора), порядок "
-                       + (f"{po:.2f} наблюдён, взят в [0.5, 1]" if po is not None else "не определён, взят 0.5")
-                       + "; измерено: оценка в 1.4–3 раза выше истинной ошибки")
-            self._check(f"vconv{pol}{s}", f"Оценка ошибки метода {lab}: усечение по числу мод (T и поток на экране), "
-                        "отн.", d["err"], None, "", grp, ok=d["err"] < VEC_ERR_TOL,
-                        note=f"{how}; T: {d['err_T']:.2g}, поток на экране: {d['err_screen']:.2g}. Допуск "
-                             f"{VEC_ERR_TOL:g} — меньше пикселя кривой ожидания (≈ 200 пикс.) и ниже того, что χ² "
-                             "гистограммы заметит до ~3·10⁶ отсчётов. Это оценка, не строгая граница")
-        self._check(f"vT{s}", "Пропускание на ширину щели: TE / TM / Кирхгоф (скаляр)", vi["T_TE"], None, "", grp,
-                    note=f"T_TE = {vi['T_TE']:.5g}, T_TM = {vi['T_TM']:.5g}, T_Кирхгоф = {vi['T_K']:.5g} "
-                         "(1 — геометрическая оптика широкой щели)")
+                order = (T("{po:.2f} observed, taken within [{lo:g}, {hi:g}]", po=float(po), lo=0.5, hi=1.0)
+                         if po is not None else T("not determined, {lo:g} taken", lo=0.5))
+                how = T("waveguide modes, converging algebraically (the screen's corners): Richardson extrapolation over "
+                        "{a:d}, {b:d}, {c:d} modes per slit (sub-blocks of one operator), order {order}; measured: the "
+                        "estimate is {f1:g}–{f2:g} times the true error", a=int(lv[0]), b=int(lv[1]), c=int(lv[2]),
+                        order=order, f1=1.4, f2=3.0)
+            self._check(f"vconv{pol}{s}", T("Estimated error of the method, {pol}: truncation in the number of modes "
+                                            "(T and the flux on the screen), rel.", pol=lab),
+                        d["err"], None, "", grp, ok=d["err"] < VEC_ERR_TOL,
+                        note=T("{how}; T: {et:.2g}, flux on the screen: {es:.2g}. Tolerance {tol:g}: less than a pixel "
+                               "of the expected curve (≈ {px:d} px) and below what the histogram's χ² would notice "
+                               "before ~{n:.2g} counts. This is an estimate, not a strict bound", how=how,
+                               et=float(d["err_T"]), es=float(d["err_screen"]), tol=VEC_ERR_TOL, px=200, n=3e6))
+        self._check(f"vT{s}", T("Transmission per slit width: TE / TM / Kirchhoff (scalar)"), vi["T_TE"], None, "", grp,
+                    note=T("T_TE = {te:.5g}, T_TM = {tm:.5g}, T_Kirchhoff = {k:.5g} (1: the geometrical optics of a "
+                           "wide slit)", te=float(vi["T_TE"]), tm=float(vi["T_TM"]), k=float(vi["T_K"])))
         if vi["screen_frac"] is not None:
-            self._check(f"vscr{s}", "Доля прошедшей мощности, попадающая на экран", vi["screen_frac"], None, "", grp,
-                        note="остальное уходит за края конечного экрана")
+            self._check(f"vscr{s}", T("Share of the transmitted power that reaches the screen"), vi["screen_frac"],
+                        None, "", grp, note=T("the rest leaves past the edges of the finite screen"))
         g, pt = self.geom, self.particle
         if V["t"] == 0 and pt.k * g.a < 0.3 and g.n == 1:
             for pol in ("TE", "TM"):
                 ref = vslit.rayleigh_narrow_transmission(pt.k, g.a, pol)
-                self._check(f"vray{pol}{s}", f"Узкая щель в тонком экране: T_{pol} против предела Рэлея (1897)",
+                self._check(f"vray{pol}{s}", T("Narrow slit in a thin screen: T_{pol} against Rayleigh's limit (1897)",
+                                               pol=pol),
                             V[pol]["T"], ref, "", grp, tol=0.05,
-                            note="ведущий член при k·a ≪ 1; поправка порядка (k·a)² (измерено: 3.8 % для TE при "
-                                 "k·a = 0.3)")
+                            note=T("the leading term at k·a ≪ 1; a correction of order (k·a)² (measured: {pc:g} % for "
+                                   "TE at k·a = {ka:g})", pc=3.8, ka=0.3))
 
     def _mc_ensemble(self, rng, M=1500):
         """Monte-Carlo expectation for the nonlinear Born-exponent modification (each realisation normalised)."""
@@ -837,85 +877,101 @@ class Simulation(BaseSimulation):
 
     def _approximations(self, model, coherent, z_ok):
         g, pt, app = self.geom, self.particle, self.app
-        out = ["Плоская (2-D) геометрия: щели бесконечно длинные вдоль y; координата y точки на экране — только для показа."]
+        out = [T("A plane (2-D) geometry: the slits are infinitely long along y; the y coordinate of a point on the "
+                 "screen is for display only.")]
         V = self.exp.vec
         if V is None:
-            out += ["Параксиальная оптика Френеля с граничными условиями Кирхгофа (поле в щели = падающему); сверка с "
-                    "точным интегралом Рэлея–Зоммерфельда — в «Проверках».",
-                    "Поляризация входит через метки; в параксиальном режиме обе поляризации распространяются одинаково."]
+            out += [T("Paraxial Fresnel optics with Kirchhoff boundary conditions (the field in a slit equals the "
+                      "incident one); compared with the exact Rayleigh–Sommerfeld integral in “Checks”."),
+                    T("Polarisation enters through the marks; in the paraxial regime both polarisations propagate "
+                      "alike.")]
         else:
             th = V["t"] * 1e6
-            meth = ("базис с краевыми условиями, экспоненциальная сходимость" if V["TE"]["method"] == "edge" else
-                    "волноводные моды в щелях, алгебраическая сходимость")
-            out.append(f"Экран — идеальный проводник толщиной {th:.4g} мкм" + (" (бесконечно тонкий)" if th == 0 else "")
-                       + f": векторное решение lfphys.core.em.slit ({meth}; оценка ошибки усечения — в «Проверках») "
-                       "для обеих поляризаций — E вдоль щелей (TE, V) и E поперёк щелей (TM, H); потерь и плазмонов "
-                       "реального металла нет. Расстояние до экрана отсчитывается от выходной грани.")
+            meth = (T("a basis with edge conditions, exponential convergence") if V["TE"]["method"] == "edge" else
+                    T("waveguide modes in the slits, algebraic convergence"))
+            out.append(T("The screen is a perfect conductor {t:.4g} µm thick: the vector solution lfphys.core.em.slit "
+                         "({method}; the truncation error estimated in “Checks”) for both polarisations, E along the "
+                         "slits (TE, V) and E across them (TM, H); no losses and no plasmons of a real metal. The "
+                         "distance to the screen is counted from the exit face.", t=float(th), method=meth)
+                       if th != 0 else
+                       T("The screen is an infinitely thin perfect conductor: the vector solution lfphys.core.em.slit "
+                         "({method}; the truncation error estimated in “Checks”) for both polarisations, E along the "
+                         "slits (TE, V) and E across them (TM, H); no losses and no plasmons of a real metal. The "
+                         "distance to the screen is counted from the exit face.", method=meth))
             if getattr(self, "_vec_hits", False):
-                out.append(f"Попадания — по потоку энергии векторного решения через плоскость экрана: фотон источника "
-                           f"падает на полосу шириной n·d = {V['W'] * 1e6:.4g} мкм, проходит с вероятностью P_прош/(n·d), "
-                           "иначе отражается или рассеивается назад экраном; TE и TM складываются с весами поляризации "
-                           "источника (у потока нет перекрёстного члена TE–TM)."
-                           + (" При одной щели ширина полосы — условная: период d (иначе не используемый); от неё "
-                              "зависят доля прошедших фотонов и число отражённых, но не картина на экране."
-                              if g.n == 1 else ""))
-                out.append("Скалярная кривая (синяя) — граничные значения Кирхгофа, распространённые точно (интеграл "
-                           "Рэлея–Зоммерфельда), в тех же единицах и с той же эффективностью детектора; разность — "
-                           "вектор минус скаляр, показывается, только если она больше утроенной оценки ошибки метода.")
+                out.append(T("Hits follow the energy flux of the vector solution through the screen's plane: a "
+                             "photon of the source falls on a strip n·d = {w:.4g} µm wide and passes with the "
+                             "probability P_trans/(n·d); otherwise the screen reflects or scatters it back; TE and TM "
+                             "add with the weights of the source's polarisation (the flux has no TE–TM cross term).",
+                             w=float(V["W"] * 1e6)))
+                if g.n == 1:
+                    out.append(T("With one slit the strip's width is nominal: the period d (otherwise unused). The "
+                                 "share of transmitted photons and the number reflected depend on it, the pattern on "
+                                 "the screen does not."))
+                out.append(T("The scalar curve (blue): Kirchhoff's boundary values propagated exactly (the "
+                             "Rayleigh–Sommerfeld integral), in the same units and with the same detector efficiency; "
+                             "the difference is vector minus scalar, shown only where it exceeds three times the "
+                             "estimated error of the method."))
             else:
-                out.append("Попадания разыгрываются по скалярной модели (параксиальная оптика, Кирхгоф): метки пути, "
-                           "элементы у щелей, анализатор или изменённые законы не имеют векторного аналога в движке. "
-                           "Векторная кривая (синяя) — только форма: поток векторного решения тех же щелей без "
-                           "элементов и анализатора, нормированный на ту же сумму, что и оранжевая (единицы у них "
-                           "разные); разность не показывается.")
-            out.append("Карта волны у щелей и линии тока — скалярная модель (параксиальная, Кирхгоф): векторного "
-                       "ближнего поля и линий потока энергии в этой визуализации нет.")
+                out.append(T("Hits are drawn from the scalar model (paraxial optics, Kirchhoff): which-path marks, "
+                             "elements at the slits, an analyser or changed laws have no vector counterpart in the "
+                             "engine. The vector curve (blue) is a shape only: the flux of the vector solution for the "
+                             "same slits without elements and analyser, normalised to the same sum as the orange one "
+                             "(their units differ); the difference is not shown."))
+            out.append(T("The map of the wave at the slits and the flow lines are the scalar model (paraxial, "
+                         "Kirchhoff): this visualization has no vector near field and no lines of energy flow."))
         if z_ok > 2 * g.a * 1.01:
             if self._z_par_why == "cost":
-                out.append(f"Карта у щелей до z ≈ {z_ok:.3g} м не сверена с точным решением: точный интеграл там "
-                           f"слишком дорог (k·a = {pt.k * g.a:.3g}); заштрихована как непроверенная.")
+                out.append(T("The map at the slits up to z ≈ {z:.3g} m is not verified against the exact solution: "
+                             "the exact integral is too costly there (k·a = {ka:.3g}); hatched as unverified.",
+                             z=float(z_ok), ka=float(pt.k * g.a)))
             else:
-                out.append(f"Карта у щелей до z ≈ {z_ok:.3g} м неточна (отличие от точного решения > 1 %): заштрихована.")
+                out.append(T("The map at the slits up to z ≈ {z:.3g} m is inaccurate (it differs from the exact "
+                             "solution by > 1 %): hatched.", z=float(z_ok)))
         step0 = 2 * self._map_w0 / (self._map_nxi - 1)
         if step0 > 0.5 * g.a:
-            out.append(f"У щелей сечение карты не разрешает отдельные щели (шаг {step0:.3g} м > a/2); там же сверка с "
-                       "точным решением идёт по 61 точке сечения и разрешена не лучше.")
+            out.append(T("At the slits the map's cross-section does not resolve the single slits (step {st:.3g} m > "
+                         "a/2); the comparison with the exact solution there uses {n:d} points of the cross-section "
+                         "and is resolved no better.", st=float(step0), n=61))
         if g.a < 10 * pt.lam and V is None:
-            out.append("Щель уже 10 длин волн: граничное условие Кирхгофа неточно — для фотонов есть векторный режим "
-                       "(«Модель экрана со щелями» → «идеальный проводник»).")
+            out.append(T("A slit narrower than 10 wavelengths: Kirchhoff's boundary condition is inaccurate; for "
+                         "photons there is the vector mode (“Model of the slit screen” → “perfect conductor”)."))
         if self.pts_per_fringe < 8:
-            out.append(f"Сетка экрана: {self.pts_per_fringe:.1f} точки на самую частую полосу (< 8) — картина "
-                       "недоразрешена.")
+            out.append(T("Screen grid: {p:.1f} points on the finest fringe (< 8): the pattern is under-resolved.",
+                         p=float(self.pts_per_fringe)))
         if app.wp_mode == "microscope":
-            out.append("Микроскоп: рассеяние одного фотона в плоскости щелей, дипольная диаграмма "
-                       "(томсоновская/рэлеевская), продольная отдача не учитывается; «регистрация направления» — "
-                       "фотон в задней фокальной плоскости линзы (направление, а не изображение щелей).")
+            out.append(T("Microscope: one photon scattered in the plane of the slits, a dipole pattern "
+                         "(Thomson or Rayleigh), the longitudinal recoil neglected; “direction recorded” means the "
+                         "photon in the lens's back focal plane (a direction, not an image of the slits)."))
         if self.laws.collapse == "grw":
-            out.append("GRW: удары во время полёта от щелей до экрана как случайные толчки (точно для распределения "
-                       "на экране); удары до щелей не моделируются; линии тока не показываются.")
+            out.append(T("GRW: hits during the flight from the slits to the screen as random kicks (exact for the "
+                         "distribution on the screen); hits before the slits are not modelled; flow lines are not "
+                         "shown."))
             if pt.mass == 0:
-                out.append("GRW не действует на безмассовую частицу.")
+                out.append(T("GRW does not act on a massless particle."))
         if self.laws.born_p != 2.0:
-            out.append("Модификация правила Борна: положение — из |ψ|^p, нормированного на конечном экране; вероятность "
-                       "дойти до экрана — по |ψ|²; параметр Соркина — по ненормированным I^(p/2). Ожидание — Монте-Карло "
-                       f"по {self.M_last} частицам.")
+            out.append(T("A modification of the Born rule: the position from |ψ|^p normalised on the finite screen; "
+                         "the probability of reaching the screen from |ψ|²; the Sorkin parameter from the "
+                         "unnormalised I^(p/2). The expectation is a Monte Carlo over {n:d} particles.",
+                         n=int(self.M_last)))
         if not coherent:
-            out.append("Линии тока при декогеренции — линии усреднённого тока ансамбля, а не траектории Бома одной "
-                       "частицы.")
+            out.append(T("With decoherence the flow lines are lines of the ensemble's averaged current, not Bohm "
+                         "trajectories of one particle."))
         if self.source.dlam_rel > 0:
-            out.append("Спектр логнормальный; каждая частица летит со своей групповой скоростью.")
-        out.append("Анализатор и базис чтения детектора действуют в момент прихода частицы к экрану; элементы у щелей, "
-                   "детектор пути и микроскоп — в момент прохождения щелей.")
+            out.append(T("A log-normal spectrum; each particle flies with its own group velocity."))
+        out.append(T("The analyser and the detector's readout basis act when the particle arrives at the screen; the "
+                     "elements at the slits, the which-path detector and the microscope act when it passes the "
+                     "slits."))
         if app.analyzer[0] != "none":
-            out.append("Анализатор стоит вплотную перед экраном: карта и линии тока показывают волну до анализатора, "
-                       "гистограмма и ожидание на экране — после него.")
+            out.append(T("The analyser stands right in front of the screen: the map and the flow lines show the wave "
+                         "before the analyser, the histogram and the expectation on the screen after it."))
         return out
 
     def _segment_checks(self, model, Gr, Gf, Pens, mc):
         g, pt, ex = self.geom, self.particle, self.exp
         s = self.seg
-        grp = f"Отрезок {s}"
-        cons = f"Отрезок {s}: согласованность (тождества)"
+        grp = T("Segment {s:d}", s=s)
+        cons = T("Segment {s:d}: consistency (identities)", s=s)
         fresh = self._setup_fresh  # first segment of this particle and geometry: their own checks again
         self._setup_fresh = False
         if fresh:
@@ -935,37 +991,42 @@ class Simulation(BaseSimulation):
                 elif by == "speed":
                     v = P["speed_ms"]
                     ref, how = H * math.sqrt(1 - (v / C) ** 2) / (pt.mass * v), "h√(1−v²/c²)/(mv)"
-            self._check("lam", "Длина волны частицы", pt.lam * 1e9, None if ref is None else ref * 1e9, "нм",
-                        "Частица", note=(f"эталон: {how}" if ref else "задана напрямую")
-                        + f"; E_k = {pt.Ekin / EV:.6g} эВ, v = {pt.v:.6g} м/с")
-            self._check("grid", "Разрешение экрана: точек на самую частую полосу", self.pts_per_fringe, None, "",
-                        "Частица", ok=self.pts_per_fringe >= 8,
-                        note="нужно ≥ 8, иначе картина и ожидание согласны между собой, но не с физикой (review R15)")
+            self._check("lam", T("Wavelength of the particle"), pt.lam * 1e9, None if ref is None else ref * 1e9,
+                        T("nm"), _G_PART,
+                        note=T("{how}; E_k = {ek:.6g} eV, v = {v:.6g} m/s",
+                               how=T("reference: {f}", f=how) if ref else T("given directly"),
+                               ek=float(pt.Ekin / EV), v=float(pt.v)))
+            self._check("grid", T("Screen resolution: points on the finest fringe"), self.pts_per_fringe, None, "",
+                        _G_PART, ok=self.pts_per_fringe >= 8,
+                        note=T("≥ {k:d} are needed; otherwise the pattern and the expectation agree with each other "
+                               "but not with physics (review R15)", k=8))
         # paraxial accuracy at the screen vs exact Rayleigh-Sommerfeld (per-slit fields kept for the run)
         if self._rs_screen is None:
             xs = g.x[:: max(1, len(g.x) // 400)]
             self._rs_screen = False if kirchhoff.cost(xs, g.L2, pt.k, g.slits, g.a, g.L1) > RS_BUDGET else \
                 (kirchhoff.slit_fields(xs, g.L2, pt.k, g.slits, g.a, g.L1), paraxial.slit_amplitudes(xs, g.L2, pt.k, g.slits, g.a, g.L1))
         if self._rs_screen is False:
-            self._check(f"rs{s}", "Параксиальное приближение на экране: отличие от точного интеграла Рэлея–Зоммерфельда",
-                        None, None, "", grp, ok=None,
-                        note=f"не вычислено: точный интеграл для этой геометрии слишком дорог (k·a = {pt.k * g.a:.3g})")
+            self._check(f"rs{s}", _RS_LABEL, None, None, "", grp, ok=None,
+                        note=T("not computed: the exact integral is too costly for this geometry (k·a = {ka:.3g})",
+                               ka=float(pt.k * g.a)))
         else:
             Gd = Gf if np.trace(Gf).real > 0 else np.eye(g.n)
             dev, _ = kirchhoff.deviation(*self._rs_screen, Gd)
-            self._check(f"rs{s}", "Параксиальное приближение на экране: отличие от точного интеграла Рэлея–Зоммерфельда",
-                        dev, 0.0, "", grp, ok=dev < 0.01,
-                        note="максимальное отличие нормированных картин; > 1 % — геометрия вне параксиальной области",
-                        expected=(f"экран-проводник: ответ этого мира — векторное решение; скалярная параксиальная "
-                                  f"картина — только для сравнения, а щели {g.a * 1e6:.3g} мкм ≈ "
-                                  f"{g.a / pt.lam:.2g} λ лежат вне параксиальной области")
+            self._check(f"rs{s}", _RS_LABEL, dev, 0.0, "", grp, ok=dev < 0.01,
+                        note=T("the largest difference of the normalised patterns; > 1 %: the geometry is outside "
+                               "the paraxial region"),
+                        expected=T("conducting screen: this world's answer is the vector solution; the scalar paraxial "
+                                   "pattern is for comparison only, and slits of {a:.3g} µm ≈ {r:.2g} λ lie outside "
+                                   "the paraxial region", a=float(g.a * 1e6), r=float(g.a / pt.lam))
                         if ex.vec is not None and dev >= 0.01 else None)
         if g.a < 10 * pt.lam and ex.vec is None:
-            self._msg({"type": "notice", "t": self.t, "text": "Щель уже 10 длин волн: граничное условие Кирхгофа "
-                       "(поле в щели = падающее) неточно. Для фотонов — векторное решение: «Модель экрана со щелями» → "
-                       "«идеальный проводник» (плоская монохроматическая волна)."})
+            self._msg({"type": "notice", "t": self.t, "text": T(
+                "A slit narrower than 10 wavelengths: Kirchhoff's boundary condition (the field in the slit equals the "
+                "incident one) is inaccurate. For photons there is the vector solution: “Model of the slit screen” → "
+                "“perfect conductor” (a plane monochromatic wave).")})
         if self.pts_per_fringe < 8 and fresh:
-            self._msg({"type": "notice", "t": self.t, "text": "Сетка экрана недоразрешает полосы (< 8 точек на полосу)."})
+            self._msg({"type": "notice", "t": self.t,
+                       "text": T("The screen grid under-resolves the fringes (< 8 points per fringe).")})
         # fringe period of the computed pattern vs lambda L2 / d (two slits, far field); the scalar model's checks,
         # left out when the hits come from the vector screen
         if g.n == 2 and not getattr(self, "_vec_hits", False):
@@ -976,18 +1037,20 @@ class Simulation(BaseSimulation):
             guess = pt.lam * g.L2 / g.d
             per = stats.fringe_period_from_curve(g.x, Pb, Pe, guess, max(0.6 * pt.lam * g.L2 / g.a, 3 * guess))
             if per is not None:
-                self._check(f"per{s}", "Период полос (по рассчитанной картине)", per * 1e6,
-                            guess * 1e6 if fres < 0.05 else None, "мкм", grp, tol=2e-3,
-                            note=(f"эталон λL/d (дальняя зона, d²/λL = {fres:.3g})" if fres < 0.05
-                                  else f"ближняя зона (d²/λL = {fres:.3g}): простой формулы нет"))
+                self._check(f"per{s}", T("Fringe period (from the computed pattern)"), per * 1e6,
+                            guess * 1e6 if fres < 0.05 else None, T("µm"), grp, tol=2e-3,
+                            note=(T("reference λL/d (far zone, d²/λL = {f:.3g})", f=float(fres)) if fres < 0.05
+                                  else T("near zone (d²/λL = {f:.3g}): no simple formula", f=float(fres))))
             # Englert duality (identity for pure marks)
             ops_V, ops_D = self._englert(Gf)
             if ops_V is not None:
                 pure = self.source.pol_degree >= 1 and self.source.pol_state != "unpol"
-                self._check(f"eng{s}", "Энглерт: V² + D² для меток пути", ops_V**2 + ops_D**2, 1.0 if pure else None,
-                            "", cons, ok=None if pure else (ops_V**2 + ops_D**2 <= 1 + 1e-9),
-                            note=f"V = {ops_V:.6f}, D = {ops_D:.6f}; = 1 для чистых меток тождественно, ≤ 1 всегда"
-                            + ("; метки у экрана, после анализатора" if self.app.analyzer[0] != "none" else ""))
+                self._check(f"eng{s}", T("Englert: V² + D² for the which-path marks"), ops_V**2 + ops_D**2,
+                            1.0 if pure else None, "", cons, ok=None if pure else (ops_V**2 + ops_D**2 <= 1 + 1e-9),
+                            note=_join([T("V = {v:.6f}, D = {d:.6f}; = 1 identically for pure marks, ≤ 1 always",
+                                          v=float(ops_V), d=float(ops_D)),
+                                        T("the marks at the screen, after the analyser")
+                                        if self.app.analyzer[0] != "none" else None]))
             # degree of coherence of the run's own expectation (constrained fit) vs independent references
             gam_e, _ = self._coherence(Pens.sum(axis=0), smooth=True)
             self.gamma_expected = gam_e
@@ -995,38 +1058,42 @@ class Simulation(BaseSimulation):
             undefined = self._coherence_undefined()
             gam_m = abs(g12) / math.sqrt(g11 * g22) if g11 > 0 and g22 > 0 and not undefined else None
             if undefined and not mc:  # P15: no fit is shown where gamma_12 means nothing
-                self._check(f"coh{s}", "Степень когерентности щелей |γ₁₂| ожидаемой картины запуска", None, None, "",
-                            grp, note=f"не определена: {undefined}", info=True)
+                self._check(f"coh{s}", _COH_LABEL, None, None, "", grp, note=T("undefined: {why}", why=undefined),
+                            info=True)
             elif gam_e is not None and not mc:
-                ref, note, tol_abs, group = None, "", None, grp
+                ref, note, tol_abs, group = None, None, None, grp
                 if self.laws.collapse == "slit":
                     ref, tol_abs = 0.0, 1e-9
-                    note = "модификация: принудительный выбор щели убирает перекрёстные члены — ожидается 0"
+                    note = T("modification: the forced choice of a slit removes the cross terms; 0 is expected")
                 elif not model.shifts and self.source.dlam_rel == 0 and gam_m is not None:
                     ref, tol_abs, group = gam_m, 1e-6, cons
-                    note = "эталон |⟨m₂|m₁⟩|/(|m₁||m₂|) по меткам пути; ожидание построено из тех же меток (тождество)"
+                    note = T("reference |⟨m₂|m₁⟩|/(|m₁||m₂|) from the which-path marks; the expectation is built from "
+                             "the same marks (an identity)")
                 elif self.app.wp_mode == "microscope" and gam_m is not None and not model.s and not model.grw:
                     kp = 2 * math.pi / self.app.mic_lambda
                     gd = scattering.dipole_coherence(kp * g.d, _axis(self.app.mic_dir), _axis(self.app.mic_pol))
                     ref = gam_m * abs((1 - self.app.mic_prob) + self.app.mic_prob * gd)
                     tol_abs = 0.02
-                    note = (f"эталон |1 − p + p⟨e^(iΔk_x d)⟩| по диполю (Chapman et al. 1995), k_p d = {kp * g.d:.4g}; "
-                            "он не учитывает сдвиг огибающей отдачей — допуск 0.02 на это приближение эталона")
+                    note = T("reference |1 − p + p⟨e^(iΔk_x d)⟩| for a dipole (Chapman et al. 1995), k_p d = {kd:.4g}; "
+                             "it ignores the shift of the envelope by the recoil: a tolerance of {tol:g} for this "
+                             "approximation of the reference", kd=float(kp * g.d), tol=tol_abs)
                 elif self.laws.collapse == "grw" and not model.s and self.app.wp_mode != "microscope" and gam_m is not None \
                         and self.source.dlam_rel == 0:
                     Lam = self.exp.grw_rate() * g.L2 / pt.v
                     rc = self.laws.grw_rc
                     ref = gam_m * math.exp(-Lam * (1 - math.sqrt(math.pi) * rc / g.d * math.erf(g.d / (2 * rc))))
                     tol_abs = 0.02
-                    note = ("эталон GRW для ударов в полёте: exp(−Λ[1 − (√π r_C/d) erf(d/2r_C)]), Λ = λ (m/u) L₂/v; "
-                            "допуск 0.02 — сдвиг огибающей толчками")
+                    note = T("GRW reference for hits in flight: exp(−Λ[1 − (√π r_C/d) erf(d/2r_C)]), "
+                             "Λ = λ (m/u) L₂/v; a tolerance of {tol:g}: the shift of the envelope by the kicks",
+                             tol=tol_abs)
                 elif model.s > 0 and self.app.wp_mode != "microscope" and self.laws.collapse == "none" \
                         and self.source.dlam_rel == 0 and gam_m is not None:
                     ref = gam_m * abs(np.sinc(g.src_width * g.d / (pt.lam * g.L1)))
                     tol_abs = 0.02
-                    note = "эталон ван Циттерта–Цернике |sinc(s·d/(λ L₁))|; допуск 0.02 — сдвиг огибающей точкой источника"
-                self._check(f"coh{s}", "Степень когерентности щелей |γ₁₂| ожидаемой картины запуска", gam_e, ref, "",
-                            group, note=note or "фит рассчитанной картины по базису щелей (огибающие — из меток)",
+                    note = T("van Cittert–Zernike reference |sinc(s·d/(λ L₁))|; a tolerance of {tol:g}: the shift of "
+                             "the envelope by the source point", tol=tol_abs)
+                self._check(f"coh{s}", _COH_LABEL, gam_e, ref, "", group,
+                            note=note or T("fit of the computed pattern on the slits' basis (envelopes from the marks)"),
                             ok=None if ref is None else abs(gam_e - ref) <= tol_abs)
         # Sorkin parameter (three slits; identity under the Born rule)
         if g.n == 3:
@@ -1040,13 +1107,14 @@ class Simulation(BaseSimulation):
             ABC, AB, BC, AC = I([0, 1, 2]), I([0, 1]), I([1, 2]), I([0, 2])
             A_, B_, C_ = I([0]), I([1]), I([2])
             S = float(np.sum(np.abs(ABC - AB - BC - AC + A_ + B_ + C_)) / np.sum(ABC))
-            self._check(f"sork{s}", "Параметр Соркина ∫|I_ABC − I_AB − I_BC − I_AC + I_A + I_B + I_C| / ∫I_ABC", S,
-                        0.0, "", cons if self.laws.born_p == 2.0 else grp, ok=S < 1e-9,
-                        note="0 тождественно при правиле Борна (интерференция только попарная); ≠ 0 — следствие "
-                             "модификации",
+            self._check(f"sork{s}", T("Sorkin parameter ∫|I_ABC − I_AB − I_BC − I_AC + I_A + I_B + I_C| / ∫I_ABC"),
+                        S, 0.0, "", cons if self.laws.born_p == 2.0 else grp, ok=S < 1e-9,
+                        note=T("0 identically under the Born rule (interference is only pairwise); ≠ 0: a "
+                               "consequence of the modification"),
                         expected=None if self.laws.born_p == 2.0 else
-                        f"правило Борна изменено (P ∝ |ψ|^{self.laws.born_p:g}): ненулевой параметр Соркина — "
-                        "вычисленное следствие модификации, его и показывает опыт")
+                        T("the Born rule is changed (P ∝ |ψ|^{p:g}): a non-zero Sorkin parameter is the computed "
+                          "consequence of the modification, and the experiment shows exactly that",
+                          p=float(self.laws.born_p)))
         # no-signalling: the SAMPLED screen marginal does not depend on reading the detector (review R7)
         if self.theory["nR"] > 1:
             rngn = np.random.default_rng([self.seed, 99, self.seg])
@@ -1058,10 +1126,12 @@ class Simulation(BaseSimulation):
             Pr = Ir.sum(axis=1) / np.maximum(Ir.sum(axis=(1, 2))[:, None], 1e-300)
             Pu = Iu[:, 0] / np.maximum(Iu.sum(axis=(1, 2))[:, None], 1e-300)
             dif = float(np.max(np.abs(Pr - Pu)) / np.max(Pu))
-            self._check(f"nosig{s}", "Без сигнала: распределение на экране с чтением детектора = без чтения", dif, 0.0, "",
+            self._check(f"nosig{s}", T("No signalling: the distribution on the screen with the detector read = "
+                                       "without reading"), dif, 0.0, "",
                         cons if self.laws.born_p == 2.0 else grp, ok=dif < 1e-10,
-                        note="при правиле Борна — тождество (полнота базиса чтения); при модификации отличие — "
-                             "вычисленное следствие: чтение детектора меняло бы картину (сигнализация)")
+                        note=T("under the Born rule an identity (the readout basis is complete); under a modification "
+                               "a difference is a computed consequence: reading the detector would change the pattern "
+                               "(signalling)"))
 
     def _englert(self, Gf):
         # both from the marks themselves (a forced-collapse modification is a law, not a mark)
@@ -1107,21 +1177,21 @@ class Simulation(BaseSimulation):
         """Why |gamma_12| = |G12|/sqrt(G11 G22) cannot be measured here, or None (review UX-params P15: crossed
         polarisers in the slits gave |gamma| = 1.108, a fit of rounding noise). A slit whose transmission is below
         COH_DARK of the other's passes nothing (cos^2 90° = 3.7e-33): there is nothing to interfere with, G12/sqrt(G11 G22)
-        is 0/0. A screen grid that does not resolve the fringes (the check «Разрешение экрана», < 8 points on the
+        is 0/0. A screen grid that does not resolve the fringes (the check “Screen resolution”, < 8 points on the
         finest fringe) gives a fit of aliased curves."""
         if self.geom.n != 2:
             return None
         g11, g22 = float(self.Gavg[0, 0].real), float(self.Gavg[1, 1].real)
         hi = max(g11, g22)
         if not hi > 0:
-            return "обе щели тёмные: за ними ничего нет"
+            return T("both slits are dark: nothing passes them")
         if min(g11, g22) <= COH_DARK * hi:
             j = 1 if g11 < g22 else 2
-            return (f"щель {j} тёмная (пропускает {min(g11, g22) / hi:.1e} от другой): интерферировать не с чем, "
-                    "|γ₁₂| = |G₁₂|/√(G₁₁G₂₂) — неопределённость 0/0")
+            return T("slit {j:d} is dark (it passes {r:.1e} of the other's): there is nothing to interfere with, "
+                     "|γ₁₂| = |G₁₂|/√(G₁₁G₂₂) is the indeterminate form 0/0", j=j, r=min(g11, g22) / hi)
         if self.pts_per_fringe < 8:
-            return (f"сетка экрана не разрешает полосы ({self.pts_per_fringe:.2g} точки на самую частую полосу < 8, "
-                    "проверка «Разрешение экрана»): фит по такой картине ничего не значит")
+            return T("the screen grid does not resolve the fringes ({p:.2g} points on the finest fringe < 8, check "
+                     "“Screen resolution”): a fit of such a pattern means nothing", p=float(self.pts_per_fringe))
         return None
 
     def _coherence_err(self, h, dark):
@@ -1158,7 +1228,7 @@ class Simulation(BaseSimulation):
             self.counts["emitted"] += len(te)
             self.batches.append(b)
         # 2. slit plane, with the apparatus present now; 3. screen, with the apparatus present now
-        T, X, Y, F, K, S, P = [], [], [], [], [], [], []
+        TD, X, Y, F, K, S, P = [], [], [], [], [], [], []
         for b in self.batches:
             idx = np.nonzero((b.stage == 0) & (b.t_slit <= t_target))[0]
             if len(idx):
@@ -1167,7 +1237,7 @@ class Simulation(BaseSimulation):
                 self.counts["scattered"] += int(b.scat[idx].sum())
                 self.counts["grw_hits"] += int(b.hits[idx].sum())
                 for i in idx[b.absorbed[idx]][:2]:
-                    self.pending_stories.append(ex.story(b, i, "поглощена элементом у щели", None))
+                    self.pending_stories.append(ex.story(b, i, T("absorbed by an element at a slit"), None))
                 b.stage[idx[b.absorbed[idx]]] = 2
             idx = np.nonzero((b.stage == 1) & (b.t_det <= t_target))[0]
             chunk = max(4, int(2e6 // (g.n * len(g.x))))
@@ -1181,7 +1251,7 @@ class Simulation(BaseSimulation):
                     self.counts[k2] = self.counts.get(k2, 0) + v
                 self.pending_stories.extend(out.stories)
                 if len(out.t_det):
-                    T.append(out.t_det); X.append(out.x); Y.append(out.y); F.append(out.flags); K.append(out.kick)
+                    TD.append(out.t_det); X.append(out.x); Y.append(out.y); F.append(out.flags); K.append(out.kick)
                     S.append(out.seg); P.append(out.pid)
                 b.stage[sub] = 2
         self.batches = [b for b in self.batches if np.any(b.stage < 2)]
@@ -1189,13 +1259,13 @@ class Simulation(BaseSimulation):
         if self.dark_rate > 0 and t_target > self.t:
             nd = rng.poisson(self.dark_rate * (t_target - self.t))
             if nd:
-                T.append(np.sort(self.t + rng.random(nd) * (t_target - self.t)))
+                TD.append(np.sort(self.t + rng.random(nd) * (t_target - self.t)))
                 X.append(rng.uniform(g.x[0], g.x[-1], nd)); Y.append((rng.random(nd) - 0.5).astype(np.float32))
                 F.append(np.full(nd, FLAG_DARK, np.uint8)); K.append(np.zeros(nd, np.float32))
                 S.append(np.full(nd, self.seg, np.uint16)); P.append(np.full(nd, 0xFFFFFFFF, np.uint32))
                 self.counts["dark"] += nd
-        if T:
-            Tc = np.concatenate(T)
+        if TD:
+            Tc = np.concatenate(TD)
             order = np.argsort(Tc, kind="stable")
             arrs = {"t": Tc[order], "x": np.concatenate(X)[order], "y": np.concatenate(Y)[order],
                     "f": np.concatenate(F)[order], "k": np.concatenate(K)[order], "s": np.concatenate(S)[order],
@@ -1257,14 +1327,14 @@ class Simulation(BaseSimulation):
             return self.set_live({k: v for k, v in args.items() if k in APP_FIELDS})
         if name == "clear":
             self.app = Apparatus(**{**self.app.__dict__, "seg": self.seg + 1})
-            self._new_segment("очистка экрана")
-            return "новый отрезок: экран очищен, установка прежняя"
-        raise ValueError(f"неизвестное действие {name!r}")
+            self._new_segment(T("screen cleared"))
+            return T("a new segment: the screen is cleared, the set-up is the same")
+        raise Refusal(T("unknown action {name}", name=repr(name)))
 
     def _setup_info(self):
         """What the view needs about the current set-up (it changes with live parameters)."""
         g, pt = self.geom, self.particle
-        return {"title": "Двухщелевой опыт: " + pt.label, "particle": pt.describe(),
+        return {"title": T("Double-slit experiment: {particle}", particle=pt.label), "particle": pt.describe(),
                 "geometry": {"n": g.n, "a": g.a, "d": g.d, "L1": None if math.isinf(g.L1) else g.L1, "L2": g.L2,
                              "slits": g.slits.tolist(), "src_width": g.src_width, "pixel": g.pixel,
                              "nbins": self._nbins(), "half": float(g.x[-1])},
@@ -1275,14 +1345,15 @@ class Simulation(BaseSimulation):
         mods = SCHEMA.modifications(self.params)
         d = pt.describe()
         return {
-            "title": "Двухщелевой опыт: " + pt.label,
-            "text": ("Источник выпускает частицы по одной (пуассоновский поток). Каждая частица — своя волна за щелями "
-                     "(своя длина волны, точка источника, внутреннее состояние, отдача от рассеянного фотона); у щелей "
-                     "на неё действуют элементы и наблюдатель, перед экраном — анализатор; место на экране — по правилу "
-                     "Борна с её метками; картина — накопление этих событий. Слева — вид сверху: ожидаемая волна "
-                     "(ансамбль запуска), частицы в полёте, линии тока. Справа — экран и гистограмма с ожиданием "
-                     "запуска. «Изменить установку» начинает новый отрезок; частицы, пролетевшие щели до изменения и "
-                     "пришедшие после, помечены как переходные."),
+            "title": T("Double-slit experiment: {particle}", particle=pt.label),
+            "text": T("The source emits particles one at a time (a Poisson stream). Each particle is its own wave behind "
+                      "the slits (its own wavelength, source point, internal state, recoil from a scattered photon); at "
+                      "the slits the elements and the observer act on it, in front of the screen the analyser; its "
+                      "place on the screen follows the Born rule with its marks; the pattern is the accumulation of "
+                      "these events. Left: the view from above, the expected wave (the run's ensemble), the particles "
+                      "in flight, the flow lines. Right: the screen and the histogram with the run's expectation. A "
+                      "change of the set-up starts a new segment; particles that passed the slits before the change "
+                      "and arrived after it are marked as transitional."),
             "particle": d, "modifications": mods,
             "geometry": {"n": g.n, "a": g.a, "d": g.d, "L1": None if math.isinf(g.L1) else g.L1, "L2": g.L2,
                          "slits": g.slits.tolist(), "src_width": g.src_width, "pixel": g.pixel, "nbins": self._nbins(),
@@ -1293,22 +1364,39 @@ class Simulation(BaseSimulation):
         }, {"x": g.x}
 
 
-_ELEM_LABEL = {o[0]: o[1].split(" (")[0] for o in ELEM_OPTIONS}
+_ELEM_LABEL = ELEMENT_NAMES  # an element by its short name (refusals, notices, the segment's description)
+_RS_LABEL = T("Paraxial approximation on the screen: difference from the exact Rayleigh–Sommerfeld integral")
+_COH_LABEL = T("Degree of coherence of the slits |γ₁₂| of the run's expected pattern")
 
 
 def _who(pt):
-    """The particle in the owner's words, in the accusative after «на»."""
-    return {"photon": "фотон", "electron": "электрон", "neutron": "нейтрон", "he4": "атом ⁴He",
-            "c60": "фуллерен C₆₀"}.get(pt.species, f"частицу «{pt.label}»")
+    """The particle as the object of “does not act on …” (a text of its own per particle, so that each language
+    can put it in the right case)."""
+    return {"photon": T("a photon"), "electron": T("an electron"), "neutron": T("a neutron"),
+            "he4": T("a ⁴He atom"), "c60": T("a C₆₀ fullerene")}.get(pt.species,
+                                                                    T("the particle “{p}”", p=pt.label))
+
+
+def _exc_text(e):
+    """The text of an exception of the engine: its translatable text when it carries one, else its own words."""
+    a = e.args[0] if e.args else None
+    return a if is_t(a) else str(e)
 
 
 def _len_text(x):
-    """A length in the owner's units."""
-    a = abs(x)
-    for unit, k in (("км", 1e3), ("м", 1.0), ("мм", 1e-3), ("мкм", 1e-6), ("нм", 1e-9)):
-        if a >= k:
-            return f"{x / k:.3g} {unit}"
-    return f"{x * 1e12:.3g} пм"
+    """A length with the unit that suits it."""
+    a, x = abs(x), float(x)
+    if a >= 1e3:
+        return T("{v:.3g} km", v=x / 1e3)
+    if a >= 1.0:
+        return T("{v:.3g} m", v=x)
+    if a >= 1e-3:
+        return T("{v:.3g} mm", v=x * 1e3)
+    if a >= 1e-6:
+        return T("{v:.3g} µm", v=x * 1e6)
+    if a >= 1e-9:
+        return T("{v:.3g} nm", v=x * 1e9)
+    return T("{v:.3g} pm", v=x * 1e12)
 
 
 def _check_rates(p):
@@ -1316,11 +1404,12 @@ def _check_rates(p):
     record; at 1e12 1/s one frame drew ~2e9 of them). Cheap: used by ``check_params`` as well."""
     rate, dark = float(p["rate"]), float(p["dark_rate"])
     if rate > 0 and dark > DARK_PER_PARTICLE_MAX * rate:
-        raise Refusal(f"темновых отсчётов {dark:.3g} 1/с при источнике {rate:.3g} частиц/с — это {dark / rate:.3g} "
-                      f"ложных отсчётов на одну частицу: экран показал бы только шум, а каждый отсчёт — событие записи "
-                      f"(предел {DARK_PER_PARTICLE_MAX:g} на частицу)",
-                      f"уменьшите «Темновые отсчёты» до {DARK_PER_PARTICLE_MAX * rate:.3g} 1/с или увеличьте «Частиц в "
-                      f"секунду» до {dark / DARK_PER_PARTICLE_MAX:.3g}")
+        raise Refusal(T("{dark:.3g} dark counts per second with a source of {rate:.3g} particles/s: that is {r:.3g} "
+                        "false counts per particle; the screen would show only noise, and every count is an event of "
+                        "the record (the limit is {lim:g} per particle)", dark=dark, rate=rate, r=dark / rate,
+                        lim=DARK_PER_PARTICLE_MAX),
+                      T("reduce “Dark counts” to {d:.3g} 1/s or increase “Particles per second” to {n:.3g}",
+                        d=DARK_PER_PARTICLE_MAX * rate, n=dark / DARK_PER_PARTICLE_MAX))
 
 
 def _same(a, b):
@@ -1329,11 +1418,15 @@ def _same(a, b):
     return a == b
 
 
-def _fmt(v):
+def _val(pid, v):
+    """A parameter's value as the event of a change shows it: a choice by its label, yes/no, a number as it is."""
     if isinstance(v, bool):
-        return "да" if v else "нет"
-    if isinstance(v, float):
-        return f"{v:.6g}"
+        return T("yes") if v else T("no")
+    par = SCHEMA.by_id[pid]
+    if par.type == "select":
+        return next((o[1] for o in par.options if o[0] == v), str(v))
+    if isinstance(v, (int, float)):
+        return v
     return str(v)
 
 
@@ -1348,16 +1441,17 @@ def _fit_apparatus(f, pt, n):
         try:
             marks.element_matrix(f[ek], f[ak], pt.internal)
         except ValueError:
-            notes.append(f"«{_ELEM_LABEL[f[ek]]}» у щели {j + 1} снят: не действует на {_who(pt)}")
+            notes.append(T("“{elem}” at slit {j:d} removed: it does not act on {who}", elem=_ELEM_LABEL[f[ek]],
+                           j=j + 1, who=_who(pt)))
             f[ek] = "none"
     if f["analyzer"] == "on" and pt.internal is None:
-        notes.append("анализатор снят: у этой частицы нет внутреннего состояния")
+        notes.append(T("analyser removed: this particle has no internal state"))
         f["analyzer"] = "none"
     if f["wp_mode"] == "microscope" and pt.species not in MIC_SPECIES:
-        notes.append("микроскоп выключен: дипольное рассеяние зонда не задано для этой частицы")
+        notes.append(T("microscope switched off: the probe's dipole scattering is not defined for this particle"))
         f["wp_mode"] = "none"
     if not (1 <= int(f["wp_slit"]) <= n):
-        notes.append(f"детектор пути перенесён к щели 1 (щелей теперь {n})")
+        notes.append(T("which-path detector moved to slit 1 (there are {n:d} slits now)", n=int(n)))
         f["wp_slit"] = 1
     return f, notes
 
@@ -1372,16 +1466,19 @@ VEC_EST_POINTS = 201  # screen points of the error estimate of the flux (a subsa
 def _vector_check(pt, g, p):
     """The set-ups the vector model covers (cheap; every build, also when the solution is reused)."""
     if pt.species != "photon":
-        raise ValueError("экран-проводник (векторная дифракция) задан только для фотонов")
+        raise Refusal(T("the conducting screen (vector diffraction) is defined for photons only"),
+                      T("choose “Model of the slit screen” = scalar, or photons"))
     if math.isfinite(g.L1):
-        raise ValueError("экран-проводник: падающая волна должна быть плоской (расстояние источника 0)")
+        raise Refusal(T("conducting screen: the incident wave must be plane"),
+                      T("set “Source: distance to the slits” to 0"))
     if p["dlam_rel"] > 0:
-        raise ValueError("экран-проводник: источник должен быть монохроматическим (ширина спектра 0)")
+        raise Refusal(T("conducting screen: the source must be monochromatic"), T("set “Spectral width σ” to 0"))
     k = pt.k
     if k * g.a > VEC_KA_MAX:
-        raise ValueError(f"экран-проводник: щель шире {VEC_KA_MAX / (2 * math.pi):.1f} λ (k·a = {k * g.a:.0f} > "
-                         f"{VEC_KA_MAX:.0f}) — векторное решение здесь не считается (дорого); скалярная модель для таких "
-                         "щелей отличается от векторной на величину порядка 1/(k·a)")
+        raise Refusal(T("conducting screen: the slit is wider than {w:.1f} λ (k·a = {ka:.0f} > {kmax:.0f}); the vector "
+                        "solution is not computed here (too costly); for such slits the scalar model differs from the "
+                        "vector one by an amount of order 1/(k·a)", w=VEC_WIDTH_MAX, ka=float(k * g.a), kmax=VEC_KA_MAX),
+                      T("make the slits narrower or the wavelength longer, or choose the scalar model"))
 
 
 def _vector_screen(pt, g, p, laws, cache=None):
@@ -1447,8 +1544,9 @@ def _vector_screen(pt, g, p, laws, cache=None):
                     "modes": int(sol.modes[0]), "method": sol.method}
     pmax = max(out["Pt_TE"], out["Pt_TM"]) / W
     if pmax > 1:
-        raise ValueError(f"экран-проводник: прошедшая мощность больше падающей на полосу n·d ({pmax:.3g} > 1) — сечение "
-                         "захвата щели шире периода; увеличьте период щелей")
+        raise Refusal(T("conducting screen: the transmitted power is larger than the power falling on the strip n·d "
+                        "({p:.3g} > 1); the slit's capture cross-section is wider than the period", p=float(pmax)),
+                      T("increase the slit period"))
     return out, cache
 
 
@@ -1474,12 +1572,13 @@ def _rebin(x, P, edges):
 
 VIZ = {
     "id": "v02_double_slit",
-    "title": "Двухщелевой опыт",
-    "summary": ("Частицы по одной через щели: фотон (энергия, частота, поляризация), электрон, нейтрон, атом, C60. "
-                "Наблюдатель пути (кубит-детектор, рассеяние фотона), метки поляризацией/спином, квантовый ластик, "
-                "эффект Ааронова–Бома, линии тока."),
-    "purpose": ("Исследование поведения частицы и причин интерференции и её исчезновения; законы можно намеренно менять "
-                "(показатель в правиле Борна, спонтанный коллапс GRW, принудительный выбор щели)."),
+    "title": T("The double-slit experiment"),
+    "summary": T("Particles one at a time through slits: a photon (energy, frequency, polarisation), an electron, a "
+                 "neutron, an atom, C60. A which-path observer (a qubit detector, photon scattering), marks by "
+                 "polarisation or spin, the quantum eraser, the Aharonov–Bohm effect, flow lines."),
+    "purpose": T("A study of how a particle behaves and of why interference appears and disappears; the laws can be "
+                 "changed on purpose (the exponent in the Born rule, GRW spontaneous collapse, a forced choice of "
+                 "slit)."),
     "version": "1.2",
     "schema": SCHEMA,
     "simulation": Simulation,

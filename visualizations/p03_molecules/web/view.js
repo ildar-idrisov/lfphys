@@ -8,6 +8,7 @@
 // bond-orientational order with the mean-square displacement and the molecules' mode temperatures; the shared
 // playground panels. Drawing only: every number is the run's.
 import { el, fresh2d, num, panel } from "/static/js/ui.js";
+import { t, fmt } from "/static/js/i18n.js";
 import { createEnv3D } from "/static/js/env3d.js";
 import { createPlayground } from "/static/js/playground.js";
 
@@ -63,30 +64,30 @@ export function createView(ctx) {
   const pg = createPlayground(ctx, { onSelect: () => env.scene.requestRender(), describeProbe });
   const cv = () => el("canvas", { style: { width: "100%", height: "150px", display: "block", background: "#0b0e14", borderRadius: "4px" } });
   const cVel = cv(), cRdf = cv(), cRho = cv(), cT = cv(), cP = cv(), cE = cv(), cOrd = cv(), cMsd = cv(), cMode = cv();
-  const pLabel = el("div", { class: "help" }, "Давление"), ordLabel = el("div", { class: "help" }, "Ориентационный порядок связей");
-  const modeBox = el("div", {}, el("div", { class: "help" }, "Температуры мод молекул, K: поступательная (оранжевая), вращательная (зелёная), колебательная кинетическая (голубая), потенциальная связей (розовая), углов (жёлтая) — при равнораспределении равны"), cMode);
+  const pLabel = el("div", { class: "help" }, t("Pressure")), ordLabel = el("div", { class: "help" }, t("Bond-orientational order"));
+  const modeBox = el("div", {}, el("div", { class: "help" }, t("Mode temperatures of the molecules, K: translational (orange), rotational (green), vibrational kinetic (blue), potential of the bonds (pink), of the angles (yellow); equal at equipartition")), cMode);
   const statBox = el("div", { class: "kv" });
   const charts = el("div", {},
-    el("div", { class: "help" }, "Компоненты скорости, делённые на √(kT/m) своего вещества (столбцы), против нормального распределения — распределения Максвелла (линия)"), cVel,
-    el("div", { class: "help" }, "Радиальная функция распределения g(r): строение вещества (газ ≈ 1, жидкость — затухающие пики, кристалл — острые пики)"), cRdf,
-    el("div", { class: "help" }, "Плотность ρσ^d по высоте y (слои около σ): жидкость и пар — две ступени, газ в поле — плавный спад"), cRho,
-    el("div", { class: "help" }, "Температура, K"), cT, pLabel, cP,
-    el("div", { class: "help" }, "Энергия на атом, кДж/моль"), cE,
+    el("div", { class: "help" }, t("Velocity components divided by √(kT/m) of their substance (bars) against the normal distribution, the Maxwell distribution (line)")), cVel,
+    el("div", { class: "help" }, t("Radial distribution function g(r): the structure of the matter (gas ≈ 1, liquid: damped peaks, crystal: sharp peaks)")), cRdf,
+    el("div", { class: "help" }, t("Density ρσ^d along the height y (layers of about σ): liquid and vapour show two steps, a gas in a field a smooth decline")), cRho,
+    el("div", { class: "help" }, t("Temperature, K")), cT, pLabel, cP,
+    el("div", { class: "help" }, t("Energy per atom, kJ/mol")), cE,
     ordLabel, cOrd,
-    el("div", { class: "help" }, "Средний квадрат смещения атомов с последнего изменения сцены, нм² (растёт линейно — атомы диффундируют, как в жидкости; почти постоянен — колеблются у мест, как в кристалле)"), cMsd,
+    el("div", { class: "help" }, t("Mean-square displacement of the atoms since the last change of the scene, nm² (grows linearly: the atoms diffuse, as in a liquid; nearly constant: they vibrate about their places, as in a crystal)")), cMsd,
     modeBox, statBox);
 
   function describeProbe(o, r) {
-    return Object.entries(r).map(([k, v]) => [k, typeof v === "number" ? num(v, 5) : String(v)]);
+    return Object.entries(r).map(([k, v]) => [t(k), typeof v === "number" ? fmt(v, ".5g") : t(v)]);
   }
 
-  function lastAt(t) {
+  function lastAt(tNow) {
     let lo = 0, hi = stats.length - 1, k = -1;
-    while (lo <= hi) { const m = (lo + hi) >> 1; if (stats[m].t <= t + 1e-30) { k = m; lo = m + 1; } else hi = m - 1; }
+    while (lo <= hi) { const m = (lo + hi) >> 1; if (stats[m].t <= tNow + 1e-30) { k = m; lo = m + 1; } else hi = m - 1; }
     return k;
   }
-  function drawCharts(t) {
-    const k = lastAt(t);
+  function drawCharts(tNow) {
+    const k = lastAt(tNow);
     if (k === drawnStats) return;
     drawnStats = k;
     if (k < 0) return;
@@ -95,36 +96,36 @@ export function createView(ctx) {
       const n = s.vh.length, x = [], y = [], gx = [], gy = [];
       for (let i = 0; i < n; i++) { x.push(-4 + (i + 0.5) * 8 / n); y.push(s.vh[i]); }
       for (let i = 0; i <= 160; i++) { const z = -4 + 8 * i / 160; gx.push(z); gy.push(Math.exp(-z * z / 2) / Math.sqrt(2 * Math.PI)); }
-      chart(cVel, [{ x, y, color: "#74c0fc", bars: true }, { x: gx, y: gy, color: "#ffd43b", width: 2 }], { xlabel: "v / √(kT/m)", yr: [0, 0.5] });
+      chart(cVel, [{ x, y, color: "#74c0fc", bars: true }, { x: gx, y: gy, color: "#ffd43b", width: 2 }], { xlabel: "v / √(kT/m)", yr: [0, 0.5] });  // symbols only
     } else chart(cVel, [], { xlabel: "v / √(kT/m)" });  // every chart drawn at every cursor: a key frame and a rebuild agree
-    if (s.rdf_r) chart(cRdf, [{ x: Array.from(s.rdf_r), y: Array.from(s.rdf_g), color: "#8ce99a" }, { x: [s.rdf_r[0], s.rdf_r[s.rdf_r.length - 1]], y: [1, 1], color: "#3d4450" /* solid: a dashed line was drawn differently after a key frame than after a rebuild (B7 browser check) */ }], { xlabel: "r, нм" });
-    else chart(cRdf, [], { xlabel: "r, нм" });
+    if (s.rdf_r) chart(cRdf, [{ x: Array.from(s.rdf_r), y: Array.from(s.rdf_g), color: "#8ce99a" }, { x: [s.rdf_r[0], s.rdf_r[s.rdf_r.length - 1]], y: [1, 1], color: "#3d4450" /* solid: a dashed line was drawn differently after a key frame than after a rebuild (B7 browser check) */ }], { xlabel: t("r, nm") });
+    else chart(cRdf, [], { xlabel: t("r, nm") });
     if (s.rho_y && s.rho_y.length) {
       const nb = s.rho_y.length, y = [], r = [];
       for (let i = 0; i < nb; i++) { y.push((i + 0.5) * s.rho_y_nm / nb); r.push(s.rho_y[i]); }
-      chart(cRho, [{ x: y, y: r, color: "#74c0fc" }], { xlabel: "y, нм" });
-    } else chart(cRho, [], { xlabel: "y, нм" });
+      chart(cRho, [{ x: y, y: r, color: "#74c0fc" }], { xlabel: t("y, nm") });
+    } else chart(cRho, [], { xlabel: t("y, nm") });
     const ts = stats.slice(0, k + 1), tt = ts.map((q) => q.t * 1e12);
-    chart(cT, [{ x: tt, y: ts.map((q) => q.T_K), color: "#ff922b" }], { xlabel: "t, пс" });
-    pLabel.textContent = `Давление: ${s.p_kind || "вириал"}`;
-    chart(cP, [{ x: tt, y: ts.map((q) => q.p), color: "#b197fc" }], { xlabel: `t, пс (${s.p_unit})` });
-    chart(cE, [{ x: tt, y: ts.map((q) => q.e), color: "#e9ecef" }], { xlabel: "t, пс" });
-    ordLabel.textContent = `Ориентационный порядок связей ${s.order_kind || ""} (соседи ближе 1,5σ): 1 (ψ6) или 0,575 (Q6 у ГЦК) — кристалл, ~1/√N — жидкость или газ`;
-    chart(cOrd, [{ x: tt, y: ts.map((q) => (q.order === null || q.order === undefined) ? NaN : q.order), color: "#ffd43b" }], { xlabel: "t, пс", yr: [0, 1] });
-    chart(cMsd, [{ x: tt, y: ts.map((q) => (q.msd === null || q.msd === undefined) ? NaN : q.msd), color: "#f783ac" }], { xlabel: "t, пс (нм²)" });
+    chart(cT, [{ x: tt, y: ts.map((q) => q.T_K), color: "#ff922b" }], { xlabel: t("t, ps") });
+    pLabel.textContent = t("Pressure: {kind}", { kind: s.p_kind ? t(s.p_kind) : t("virial") });
+    chart(cP, [{ x: tt, y: ts.map((q) => q.p), color: "#b197fc" }], { xlabel: t("t, ps ({unit})", { unit: t(s.p_unit) }) });
+    chart(cE, [{ x: tt, y: ts.map((q) => q.e), color: "#e9ecef" }], { xlabel: t("t, ps") });
+    ordLabel.textContent = t("Bond-orientational order {kind} (neighbours closer than {rc}σ): 1 (ψ6) or {q6} (Q6 of fcc) for a crystal, ~1/√N for a liquid or a gas", { kind: s.order_kind || "", rc: 1.5, q6: 0.575 });
+    chart(cOrd, [{ x: tt, y: ts.map((q) => (q.order === null || q.order === undefined) ? NaN : q.order), color: "#ffd43b" }], { xlabel: t("t, ps"), yr: [0, 1] });
+    chart(cMsd, [{ x: tt, y: ts.map((q) => (q.msd === null || q.msd === undefined) ? NaN : q.msd), color: "#f783ac" }], { xlabel: t("t, ps (nm²)") });
     const md = ts.filter((q) => q.modes);
     modeBox.style.display = md.length ? "" : "none";
     if (md.length) {
       const mt = md.map((q) => q.t * 1e12), col = { translation: "#ff922b", rotation: "#8ce99a", vibration: "#74c0fc", bonds: "#f783ac", angles: "#ffd43b" };
-      chart(cMode, Object.keys(col).filter((p) => md.some((q) => q.modes[p] !== null && q.modes[p] !== undefined)).map((p) => ({ x: mt, y: md.map((q) => (q.modes[p] === null || q.modes[p] === undefined) ? NaN : q.modes[p]), color: col[p] })), { xlabel: "t, пс" });
+      chart(cMode, Object.keys(col).filter((p) => md.some((q) => q.modes[p] !== null && q.modes[p] !== undefined)).map((p) => ({ x: mt, y: md.map((q) => (q.modes[p] === null || q.modes[p] === undefined) ? NaN : q.modes[p]), color: col[p] })), { xlabel: t("t, ps") });
     }
     statBox.replaceChildren(
-      el("div", {}, el("span", {}, "температура"), el("b", {}, s.T_K === null ? "—" : `${num(s.T_K, 4)} K`)),
-      el("div", {}, el("span", {}, "давление"), el("b", {}, s.p === null ? "—" : `${num(s.p, 4)} ${s.p_unit}`)),
-      el("div", {}, el("span", {}, "энергия на атом"), el("b", {}, `${num(s.e, 4)} кДж/моль`)),
-      el("div", {}, el("span", {}, "КС до Максвелла"), el("b", {}, s.ks && s.ks.D !== null && s.ks.D !== undefined ? `${num(s.ks.D, 3)} (граница ${num(s.ks.bound, 3)})` : "—")),
-      el("div", {}, el("span", {}, `порядок ${s.order_kind || ""}`), el("b", {}, s.order === null || s.order === undefined ? "—" : num(s.order, 3))),
-      el("div", {}, el("span", {}, "ср. кв. смещение"), el("b", {}, s.msd === null || s.msd === undefined ? "—" : `${num(s.msd, 3)} нм²`)));
+      el("div", {}, el("span", {}, t("temperature")), el("b", {}, s.T_K === null ? "—" : t("{v:.4g} K", { v: s.T_K }))),
+      el("div", {}, el("span", {}, t("pressure")), el("b", {}, s.p === null ? "—" : t("{v:.4g} {unit}", { v: s.p, unit: t(s.p_unit) }))),
+      el("div", {}, el("span", {}, t("energy per atom")), el("b", {}, t("{v:.4g} kJ/mol", { v: s.e }))),
+      el("div", {}, el("span", {}, t("KS to Maxwell")), el("b", {}, s.ks && s.ks.D !== null && s.ks.D !== undefined ? t("{d:.3g} (bound {b:.3g})", { d: s.ks.D, b: s.ks.bound }) : "—")),
+      el("div", {}, el("span", {}, t("order {kind}", { kind: s.order_kind || "" })), el("b", {}, s.order === null || s.order === undefined ? "—" : fmt(s.order, ".3g"))),
+      el("div", {}, el("span", {}, t("mean-square displacement")), el("b", {}, s.msd === null || s.msd === undefined ? "—" : t("{v:.3g} nm²", { v: s.msd }))));
   }
 
   function drawBox() {
@@ -137,11 +138,11 @@ export function createView(ctx) {
   return {
     center: env.center,
     leftPanels: pg.leftPanels,
-    rightPanels: [panel("Статистика", charts), ...pg.rightPanels, panel("Слои сцены", env.layersPanel)],
+    rightPanels: [panel(t("Statistics"), charts), ...pg.rightPanels, panel(t("Scene layers"), env.layersPanel)],
     help: () => el("div", {},
-      el("h4", {}, "Плейграунд: частицы и молекулы"),
-      el("p", {}, "Добавляйте газ, кристалл, отдельные атомы и молекулы, меняйте стенки (зеркальные, мягкие, тепловые — тепловые ванны), ставьте поршень, термостаты, поле и термометры — в текущий момент. Атомы движутся по законам Ньютона с модельным взаимодействием (Леннард-Джонс, только отталкивание или твёрдые шары)."),
-      el("p", {}, "«Статистика»: распределение скоростей против распределения Максвелла, радиальная функция распределения g(r), плотность по высоте, температура, давление и энергия со временем, ориентационный порядок (ψ6 / Q6) и средний квадрат смещения (кристалл или жидкость), температуры мод молекул. Проверки: баланс энергии (первое начало: теплота ванн и работа поршня), импульс (изменение с последней правки против границы округления), расстояние до распределения Максвелла, у твёрдых дисков — фактор сжимаемости против уравнения состояния.")),
+      el("h4", {}, t("Playground: particles and molecules")),
+      el("p", {}, t("Add a gas, a crystal, single atoms and molecules, change the walls (specular, soft, thermal: heat baths), put a piston, thermostats, a field and thermometers, all at the current moment. The atoms move by Newton's laws with a model interaction (Lennard-Jones, repulsion only, or hard spheres).")),
+      el("p", {}, t("“Statistics”: the velocity distribution against the Maxwell distribution, the radial distribution function g(r), the density along the height, the temperature, the pressure and the energy over time, the orientational order (ψ6 / Q6) and the mean-square displacement (crystal or liquid), the molecules' mode temperatures. Checks: the energy balance (the first law: the baths' heat and the piston's work), the momentum (its change since the last edit against the rounding bound), the distance to the Maxwell distribution, for hard disks the compressibility factor against the equation of state."))),
     reset() { env.reset(); pg.reset(); H = null; stats = []; drawnStats = -1; shapesKey = ""; },
     snapshot() { return { env: env.snapshot(), pg: pg.snapshot(), ns: stats.length }; },
     restore(k) { env.restore(k.env); pg.restore(k.pg); stats.length = k.ns; drawnStats = -1; },
@@ -151,7 +152,7 @@ export function createView(ctx) {
       if (env.onMessage(meta, blobs)) return;
       if (meta.type === "stats") stats.push({ t: meta.t, T_K: meta.T_K, p: meta.p, p_unit: meta.p_unit, p_kind: meta.p_kind, e: meta.e_kJ_mol, ks: meta.ks, rdf_r: blobs.rdf_r, rdf_g: blobs.rdf_g, vh: blobs.vh, rho_y: blobs.rho_y, rho_y_nm: meta.rho_y_nm, order: meta.order, order_kind: meta.order_kind, msd: meta.msd_nm2, modes: meta.modes });
     },
-    render(frame, t, blobs) {
+    render(frame, tNow, blobs) {
       if (!H || !frame) return;
       const n = frame.n || 0, d = H.md.ndim, box = frame.box_nm, q = blobs.q || new Uint16Array(0), sp = blobs.sp || new Uint8Array(0);
       const pos = new Float32Array(3 * n), rad = new Float32Array(n), rgb = new Float32Array(3 * n);
@@ -161,7 +162,7 @@ export function createView(ctx) {
         const s = sp[i] || 0, c = cols[s] || [0.6, 0.8, 1];
         rad[i] = radii[s] || 0.17; rgb[3 * i] = c[0]; rgb[3 * i + 1] = c[1]; rgb[3 * i + 2] = c[2];
       }
-      env.scene.setSpheres("atoms", pos, rad, rgb, { label: "Атомы", minFrac: 0.0 });
+      env.scene.setSpheres("atoms", pos, rad, rgb, { label: t("Atoms"), minFrac: 0.0 });
       if (blobs.bonds && blobs.bonds.length) {
         const b = blobs.bonds, P = [], C = [];
         for (let k = 0; k + 1 < b.length; k += 2) {
@@ -172,7 +173,7 @@ export function createView(ctx) {
           P.push(pos[3 * i], pos[3 * i + 1], pos[3 * i + 2], pos[3 * j], pos[3 * j + 1], pos[3 * j + 2], NaN, NaN, NaN);
           C.push(0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0, 0, 0);
         }
-        env.scene.setLines("bonds", new Float32Array(P), new Float32Array(C), { label: "Связи молекул" });
+        env.scene.setLines("bonds", new Float32Array(P), new Float32Array(C), { label: t("Bonds of the molecules") });
       }
       if (frame.piston_nm !== null && frame.piston_nm !== undefined) {  // the piston's face: a frame across its axis
         const a = frame.piston_axis || 1, o = [0, 1, 2].filter((k) => k !== a && k < Math.max(d, 2)), P = [];
@@ -181,9 +182,9 @@ export function createView(ctx) {
         const cs = [corner(0, 0), corner(U0, 0), corner(U0, V0), corner(0, V0), corner(0, 0)];
         for (const c of cs) P.push(...c);
         P.push(NaN, NaN, NaN);
-        env.scene.setLines("piston", new Float32Array(P), new Float32Array(P.map(() => 0.85)), { label: "Поршень" });
+        env.scene.setLines("piston", new Float32Array(P), new Float32Array(P.map(() => 0.85)), { label: t("Piston") });
       } else if (env.scene.removeLayer) env.scene.removeLayer("piston");  // a removed piston leaves no frame behind
-      // the walled faces (an axis made walled by a «Стенка» or the piston at the current moment: review UX-ui U7)
+      // the walled faces (an axis made walled by a "Wall" or the piston at the current moment: review UX-ui U7)
       const walled = frame.walled || [];
       if (walled.length) {
         const P = [], C = [];
@@ -196,10 +197,10 @@ export function createView(ctx) {
             P.push(NaN, NaN, NaN); C.push(0, 0, 0);
           }
         }
-        env.scene.setLines("walls", new Float32Array(P), new Float32Array(C), { label: "Стенки ящика" });
+        env.scene.setLines("walls", new Float32Array(P), new Float32Array(C), { label: t("Walls of the box") });
       } else if (env.scene.removeLayer) env.scene.removeLayer("walls");
-      drawCharts(t);
-      pg.render(frame, t);
+      drawCharts(tNow);
+      pg.render(frame, tNow);
       env.scene.requestRender();
     },
   };

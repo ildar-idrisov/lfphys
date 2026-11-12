@@ -4,6 +4,7 @@
 // probes as small spheres and the walls as thin boxes at the run's positions (frame `at`, `pos`, `rad`), and the plane
 // z = 0 as a fixed window (no field is computed there: an empty picture under the objects' marks), so that the
 // framework's direct manipulation can be tested in the scene and in a window (plan P16.2). Drawing only.
+import { t } from "/static/js/i18n.js";
 import { el } from "/static/js/ui.js";
 import { createEnv3D } from "/static/js/env3d.js";
 import { createPlayground } from "/static/js/playground.js";
@@ -19,9 +20,9 @@ export function createView(ctx) {
   function planeWindow() {
     const h = H.toy.half;
     env.windows.setSlice(1, { type: "slice", id: 1, s: [-h, h, N], tt: [-h, h, N], origin: [0, 0, 0], u: [1, 0, 0], v: [0, 1, 0],
-      normal: [0, 0, 1], units: "м", coord_names: ["x", "y", "z"], depth: false, fixed: true, label: "плоскость z = 0",
-      title: "Плоскость z = 0 (игрушка: поле не считается)", route_label: "только положения объектов", exact: true,
-      quantity: { label: "—", unit: "", peak: 1 }, verify: { note: "метки — положения объектов из кадра" } },
+      normal: [0, 0, 1], units: "m", coord_names: ["x", "y", "z"], depth: false, fixed: true, label: t("the plane z = 0"),
+      title: t("The plane z = 0 (toy: no field is computed)"), route_label: t("only the objects' positions"), exact: true,
+      quantity: { label: "—", unit: "", peak: 1 }, verify: { note: t("the marks are the objects' positions from the frame") } },
     { I: new Float32Array(N * N), phase: null });
     env.windows.setOverlay(1, overlay);
   }
@@ -66,18 +67,18 @@ export function createView(ctx) {
     restore(k) { env.restore(k.env); pg.restore(k.pg); },
     onHeader(meta) { H = meta; env.onHeader(meta); pg.onHeader(meta); planeWindow(); },
     onMessage(meta, blobs) { if (pg.onMessage(meta, blobs)) return; env.onMessage(meta, blobs); },
-    render(f, t, blobs) {
+    render(f, tt, blobs) {
       if (!H || !f) return;
       frame = f;
       const pos = blobs.pos || new Float32Array(0), n = pos.length / 3, rgb = new Float32Array(3 * n);
       for (let i = 0; i < n; i++) rgb.set([0.3, 0.67, 0.97], 3 * i);
-      env.scene.setSpheres("particles", pos, blobs.rad || new Float32Array(n), rgb, { label: "Частицы" });
+      env.scene.setSpheres("particles", pos, blobs.rad || new Float32Array(n), rgb, { label: t("Particles") });
       const probes = pg.objects().filter((o) => o.type === "probe" && f.at && f.at[o.id]);
       const pp = new Float32Array(probes.flatMap((o) => f.at[o.id])), pr = new Float32Array(probes.length).fill(0.12);
-      env.scene.setSpheres("probes", pp, pr, new Float32Array(probes.flatMap(() => [1, 0.57, 0.17])), { label: "Датчики" });
+      env.scene.setSpheres("probes", pp, pr, new Float32Array(probes.flatMap(() => [1, 0.57, 0.17])), { label: t("Probes") });
       drawWalls();
-      out.textContent = JSON.stringify({ t, ids: f.ids, pos: Array.from(pos) });
-      pg.render(f, t, blobs);
+      out.textContent = JSON.stringify({ t: tt, ids: f.ids, pos: Array.from(pos) });
+      pg.render(f, tt, blobs);
       env.windows.redraw();
       env.scene.requestRender();
     },

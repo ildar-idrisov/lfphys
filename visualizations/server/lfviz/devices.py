@@ -23,6 +23,7 @@ import time
 from pathlib import Path
 
 from . import registry
+from .i18n import T, is_t
 
 SETTINGS_FILE = registry.ROOT / "settings.local.json"
 MAX_BYTES = 64 * 1024  # a settings body or an override larger than this is refused
@@ -44,27 +45,27 @@ def shape_error(s, allow=("kernels", "crossover")) -> str | None:
     """Why ``s`` is not a settings object (None if it is): {"kernels": {name: {"device": str, "precision": str}},
     "crossover": {name: int > 0 | null}}."""
     if not isinstance(s, dict):
-        return "настройки — объект JSON"
+        return T("the settings are a JSON object")
     extra = sorted(set(s) - set(allow))
     if extra:
-        return f"неизвестные поля: {', '.join(map(str, extra))}"
+        return T("unknown fields: {names}", names=", ".join(map(str, extra)))
     if len(json.dumps(s)) > MAX_BYTES:
-        return f"настройки длиннее {MAX_BYTES // 1024} КБ"
+        return T("the settings are longer than {n:d} KB", n=MAX_BYTES // 1024)
     ks = s.get("kernels")
     if ks is not None:
         if not isinstance(ks, dict):
-            return "kernels — объект: ядро → {device, precision}"
+            return T("kernels is an object: kernel → {device, precision}")
         for name, v in ks.items():
             if (not isinstance(v, dict) or set(v) - {"device", "precision"}
                     or not all(isinstance(x, str) for x in v.values())):
-                return f"kernels[{name!r}] — объект {{device: строка, precision: строка}}"
+                return T("kernels[{name}] is an object {device: string, precision: string}", name=repr(name))
     cs = s.get("crossover")
     if cs is not None:
         if not isinstance(cs, dict):
-            return "crossover — объект: ядро → целое > 0 или null"
+            return T("crossover is an object: kernel → an integer > 0 or null")
         for name, v in cs.items():
             if v is not None and (isinstance(v, bool) or not isinstance(v, int) or not 0 < v <= 10**12):
-                return f"crossover[{name!r}] = {v!r}: нужно целое > 0 или null"
+                return T("crossover[{name}] = {value}: an integer > 0 or null is needed", name=repr(name), value=repr(v))
     return None
 
 
@@ -100,18 +101,18 @@ async def _backend(*args: str, stdin: str | None = None, timeout: float = 60.0) 
         out, err = await asyncio.wait_for(proc.communicate(None if stdin is None else stdin.encode()), timeout)
     except asyncio.TimeoutError:
         proc.kill()
-        raise RuntimeError("движок не ответил вовремя")
+        raise RuntimeError(T("the engine did not answer in time"))
     if proc.returncode == 2:  # malformed settings: the engine's message (argparse errors also exit 2, without it)
         try:
             msg = json.loads(out.decode())["error"]
         except (ValueError, KeyError, TypeError):
             msg = None
         if msg:
-            raise ValueError(msg)
+            raise ValueError(T(msg) if is_t(msg) else msg)
     if proc.returncode != 0:
         log.warning("lfphys.core.backend %s: exit %s\n%s", " ".join(args), proc.returncode,
                     err.decode(errors="replace")[-4000:])
-        raise RuntimeError(f"движок завершился с кодом {proc.returncode} (подробности — в журнале сервера)")
+        raise RuntimeError(T("the engine exited with code {code:d} (details in the server's log)", code=proc.returncode))
     return json.loads(out.decode())
 
 

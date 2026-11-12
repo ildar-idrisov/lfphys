@@ -65,31 +65,35 @@ import time
 
 import numpy as np
 
+from lfphys.i18n import T
+
 from . import cells
 from .system import _probe, crystal_sites, free_sites, lattice, random_sites
 
 ABOUT = {
     "layer": "core", "kind": "numerical solution",
-    "title": "Твёрдые диски и шары: событийная молекулярная динамика",
-    "statement": "Абсолютно упругие гладкие твёрдые диски (2-D) и шары (3-D) разных диаметров и масс: точная "
-                 "динамика столкновений по календарю событий (столкновения, пересечения ячеек, стенки); давление по "
-                 "импульсам столкновений (теорема вириала) и по импульсу, переданному стенкам; тепловые стенки — "
-                 "тепловая баня; стенки — на поверхности шаров или на их центрах (как у непрерывных сил); изменения в "
-                 "текущий момент (размер ящика — сдвигом стенки по пустому месту); "
-                 "передача частиц от непрерывных сил и обратно (те же ключи, положения, скорости, стенки, время; к "
-                 "твёрдым — только без перекрытий); состояние продолжает счёт бит в бит.",
-    "validity": "точная классическая механика упругих твёрдых тел (ошибка — округление времён столкновений); как "
-                "модель атомов — без притяжения и мягкости (модель); без поля и поршня",
+    "title": T("Hard disks and spheres: event-driven molecular dynamics"),
+    "statement": T("Perfectly elastic smooth hard disks (2-D) and spheres (3-D) of different diameters and masses: "
+                   "exact collision dynamics by an event calendar (collisions, cell crossings, walls); the pressure "
+                   "from the collision impulses (the virial theorem) and from the momentum given to the walls; thermal "
+                   "walls as a heat bath; walls at the spheres' surfaces or at their centres (as for continuous "
+                   "forces); changes at the current moment (the box size by moving a wall through empty space); "
+                   "handing particles over from continuous forces and back (the same keys, positions, velocities, "
+                   "walls, time; to hard ones only without overlaps); the state continues the computation bit for "
+                   "bit."),
+    "validity": T("exact classical mechanics of elastic hard bodies (the error is the rounding of the collision "
+                  "times); as a model of atoms without attraction and softness (a model); no field and no piston"),
     "basis": ["Alder & Wainwright, J. Chem. Phys. 27, 1208 (1957); 31, 459 (1959)",
-              "Rapaport, The Art of Molecular Dynamics Simulation (2nd ed., 2004), гл. 14",
-              "Erpenbeck & Wood, J. Stat. Phys. 35, 321 (1984): Z из МД (NVE → NVT)",
-              "Kolafa & Rottner, Mol. Phys. 104, 3435 (2006), arXiv:cond-mat/0608356: Z дисков, поправка ансамбля",
-              "Kolafa, Labík & Malijevský, PCCP 6, 2335 (2004): Z шаров (данные авторов)",
-              "Clisby & McCoy, J. Stat. Phys. 122, 15 (2006): вириальные коэффициенты B2–B10"],
-    "conflicts": ["как модель атомов (вещества) твёрдые шары — не аргон и не Леннард-Джонс: нет притяжения — нет "
-                  "перехода жидкость–пар и критической точки, только жидкость–кристалл (у дисков — через гексатическую "
-                  "фазу); нет мягкости — теплоёмкость и уравнение состояния иные (theories.models.interatomic: LJ, "
-                  "WCA)"],
+              T("Rapaport, The Art of Molecular Dynamics Simulation (2nd ed., 2004), ch. 14"),
+              T("Erpenbeck & Wood, J. Stat. Phys. 35, 321 (1984): Z from MD (NVE → NVT)"),
+              T("Kolafa & Rottner, Mol. Phys. 104, 3435 (2006), arXiv:cond-mat/0608356: Z of disks, the ensemble "
+                "correction"),
+              T("Kolafa, Labík & Malijevský, PCCP 6, 2335 (2004): Z of spheres (the authors' data)"),
+              T("Clisby & McCoy, J. Stat. Phys. 122, 15 (2006): virial coefficients B2–B10")],
+    "conflicts": [T("as a model of atoms (of matter) hard spheres are neither argon nor Lennard-Jones: no attraction, "
+                    "so no liquid–vapour transition and no critical point, only liquid–crystal (for disks through the "
+                    "hexatic phase); no softness, so the heat capacity and the equation of state differ "
+                    "(theories.models.interatomic: LJ, WCA)")],
 }
 
 _FORMAT = "lfphys.hardspheres/1"

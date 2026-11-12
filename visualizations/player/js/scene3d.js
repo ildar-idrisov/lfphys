@@ -21,6 +21,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "/static/vendor/three-0.185.1/OrbitControls.js";
 import { TransformControls } from "/static/vendor/three-0.185.1/TransformControls.js";
+import { t } from "./i18n.js";
 import { el, fill, num } from "./ui.js";
 
 export const PLANE_COLORS = { 1: "#ff8a1f", 2: "#22b8ff", 3: "#d65cff" };
@@ -47,7 +48,7 @@ export function transfer(v, scale, floor = 1e-6) {
   return Math.min(1, v);
 }
 
-export const SCALES = [["sqrt", "амплитуда"], ["lin", "интенсивность"], ["log", "логарифм"]];
+export const SCALES = [["sqrt", t("amplitude")], ["lin", t("intensity")], ["log", t("logarithm")]];
 
 // the cut of a plane (origin o, normal n, in-plane axes u, v) by the box: polygon in (s, t), sorted around its centre
 export function planeBox(o, n, u, v, box) {
@@ -81,8 +82,8 @@ export function horizontalAxes(n) {
 }
 
 export function normalFromAngles(thetaDeg, phiDeg) {
-  const t = thetaDeg * Math.PI / 180, p = phiDeg * Math.PI / 180;
-  return [Math.sin(t) * Math.cos(p), Math.sin(t) * Math.sin(p), Math.cos(t)];
+  const tt = thetaDeg * Math.PI / 180, p = phiDeg * Math.PI / 180;
+  return [Math.sin(tt) * Math.cos(p), Math.sin(tt) * Math.sin(p), Math.cos(tt)];
 }
 export function anglesOfNormal(n) {
   const L = Math.hypot(...n);
@@ -110,9 +111,9 @@ export function axesOfUp(up) {
 function lutTexture() {
   const d = new Uint8Array(256 * 4);
   for (let i = 0; i < 256; i++) { d[4 * i] = LUT[3 * i]; d[4 * i + 1] = LUT[3 * i + 1]; d[4 * i + 2] = LUT[3 * i + 2]; d[4 * i + 3] = 255; }
-  const t = new THREE.DataTexture(d, 256, 1, THREE.RGBAFormat);
-  t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearFilter; t.needsUpdate = true;
-  return t;
+  const tt = new THREE.DataTexture(d, 256, 1, THREE.RGBAFormat);
+  tt.magFilter = THREE.LinearFilter; tt.minFilter = THREE.LinearFilter; tt.needsUpdate = true;
+  return tt;
 }
 
 // free the GPU memory of an object tree (geometries, materials, their textures): removing an object from the scene does
@@ -138,6 +139,7 @@ function disposeTree(obj) {
 // `px` is the label's height in CSS pixels; `center` the anchor in the label ([0, 1]²; e.g. [0.5, 1.6]: centred, below
 // the point); the scale is set from the canvas's height by the scene (updateLabelScale)
 function labelSprite(text, color = "#c8d0da", px = 16, center = [0.5, 0.5], onTop = false) {
+  text = t(text);  // a msgid or a text the world sent (T)
   const c = document.createElement("canvas"), g = c.getContext("2d");
   g.font = "28px system-ui"; const w = Math.ceil(g.measureText(text).width) + 12;
   c.width = w; c.height = 40;
@@ -455,8 +457,8 @@ function arrow3d(dir, origin, length, color, headLength, headWidth) {
   return g;
 }
 
-const VIEWS = [["iso", "Изо", "Изометрия (F — показать содержимое)"], ["side", "Сбоку", ""],
-               ["top", "Сверху", ""], ["beam", "С источника", ""], ["back", "С мишени", ""]];
+const VIEWS = [["iso", t("Iso"), t("Isometric (F — show the content)")], ["side", t("Side"), ""],
+               ["top", t("Top"), ""], ["beam", t("From the source"), ""], ["back", t("From the target"), ""]];
 
 // layers of three.js used by the passes: L0 opaque (depth pass), L1 the volume, L2 translucent surfaces, L4 their
 // depth-only twins (the split of the volume)
@@ -471,8 +473,8 @@ function ringTexture(dashed) {
   if (dashed) g.setLineDash([14, 10]);
   g.beginPath(); g.arc(64, 64, 58, 0, 2 * Math.PI); g.stroke();
   if (dashed) { g.setLineDash([]); g.fillStyle = "rgba(255,255,255,0.18)"; g.beginPath(); g.arc(64, 64, 55, 0, 2 * Math.PI); g.fill(); }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
-  return t;
+  const tt = new THREE.CanvasTexture(c); tt.colorSpace = THREE.SRGBColorSpace;
+  return tt;
 }
 
 export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly = () => false } = {}) {
@@ -574,16 +576,16 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     let any = false;
     const cam = camera.position, sph = new THREE.Sphere();
     const visit = (o) => {
-      const t = o.userData.translucent;
-      if (!t || !o.isMesh || !o.visible) return;
+      const tt = o.userData.translucent;
+      if (!tt || !o.isMesh || !o.visible) return;
       let p = o, vis = true;
       while (p) { if (!p.visible) { vis = false; break; } p = p.parent; }
       if (!vis) return;
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
       sph.copy(g.boundingSphere).applyMatrix4(o.matrixWorld);
       const key = sph.center.distanceTo(cam) - sph.radius;
-      o.userData.sortKey = key; if (t.twin) t.twin.userData.sortKey = key;
-      if (t.split) any = true;
+      o.userData.sortKey = key; if (tt.twin) tt.twin.userData.sortKey = key;
+      if (tt.split) any = true;
     };
     for (const L of S.layers.values()) if (L.visible) L.obj.traverse(visit);
     return any;
@@ -647,6 +649,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
 
   // --- layers: every element of the scene can be switched off on its own ---------------------------------------
   function addLayer(id, label, obj, visible = true, kind = "object") {
+    label = t(label);  // a msgid or a text the world sent (T): shown in the viewer's language
     const old = S.layers.get(id);
     if (old) { scene.remove(old.obj); if (old.obj !== obj) disposeTree(old.obj); visible = old.visible; }
     if (S.userVis.has(id)) visible = S.userVis.get(id);  // the experimenter's choice survives a rebuilt scene
@@ -654,7 +657,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     obj.traverse((o) => { if (o.isSprite && o.userData.label) updateLabelScale(o); });
     scene.add(obj);
     S.layers.set(id, { id, label, obj, visible, kind });
-    // the panel «Слои сцены» only when the set of layers changed, not when a layer's object was replaced (A17)
+    // the panel "Scene layers" only when the set of layers changed, not when a layer's object was replaced (A17)
     if (!old || old.label !== label || old.kind !== kind) layersChanged();
     updateLegend();
     requestRender();
@@ -807,7 +810,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
       }
       const mk = (txt, px, pri, color) => { const s = labelSprite(txt, color, px); s.userData.pri = pri; g.add(s); S.frameLabels.push(s); updateLabelScale(s); return s; };
       const ticks = vals.map((v, i) => ({ v, s: mk(num(v, 3), 14, i === 0 || i === vals.length - 1 ? 1 : 2, "#8b96a3") }));
-      return { k, ticks, name: mk(`${names[k]}, ${units}`, 16, 0, "#c8d0da") };
+      return { k, ticks, name: mk(`${t(names[k])}, ${t(units)}`, 16, 0, "#c8d0da") };
     });
     S.frameLabels.sort((p, q) => p.userData.pri - q.userData.pri);
     S.frameBox = { lo: [...lo], hi: [...hi] };
@@ -834,7 +837,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
         if (!best || score > best.score) best = { m, ms, score };
       }
       const show = !!best && Math.hypot(dx, dy) > 24;
-      for (const t of A.ticks) t.s.userData.hide = !show;
+      for (const tt of A.ticks) tt.s.userData.hide = !show;
       A.name.userData.hide = !show;
       if (!show) continue;
       // outward on screen: from the box's middle toward the edge, at right angles to the axis
@@ -846,7 +849,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
         const Lb = s.userData.label, w = Lb.px * Lb.aspect, h = Lb.px;
         s.center.set(0.5 - ox * (0.5 + gap / w), 0.5 + oy * (0.5 + gap / h));
       };
-      for (const t of A.ticks) { const p = [...best.m]; p[k] = t.v; t.s.position.copy(P2T(p)); anchor(t.s, 4); }
+      for (const tt of A.ticks) { const p = [...best.m]; p[k] = tt.v; tt.s.position.copy(P2T(p)); anchor(tt.s, 4); }
       const pm = [...best.m]; A.name.position.copy(P2T(pm)); anchor(A.name, A.ticks.length ? 22 : 6);
     }
   }
@@ -916,7 +919,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     }
     const L = (o.z1 - o.z0) * 0.9;
     g.add(arrow3d(new THREE.Vector3(1, 0, 0), P2T([0, -H * 0.42, o.z0]), L, 0x7fb7ff, 0.12 * L, 0.05 * L));
-    const s = labelSprite("падающая волна (задана)", "#9cc8ff", 16, [0.5, 1.2]); s.position.copy(P2T([0, -H * 0.5, o.z0])); g.add(s);
+    const s = labelSprite(t("incident wave (given)"), "#9cc8ff", 16, [0.5, 1.2]); s.position.copy(P2T([0, -H * 0.5, o.z0])); g.add(s);
     return g;
   }
   function disk(o) {
@@ -938,7 +941,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
       const ph = Math.PI * k / 12;
       for (let j = 0; j < 64; j++) {
         const t0 = 2 * Math.PI * j / 64, t1 = 2 * Math.PI * (j + 1) / 64;
-        const p = (t) => new THREE.Vector3(r * Math.cos(t) * Math.cos(ph), r * Math.sin(t), r * Math.cos(t) * Math.sin(ph)).add(c);
+        const p = (tt) => new THREE.Vector3(r * Math.cos(tt) * Math.cos(ph), r * Math.sin(tt), r * Math.cos(tt) * Math.sin(ph)).add(c);
         seg(p(t0), p(t1));
       }
     }
@@ -946,7 +949,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
       const th = Math.PI * k / 8;
       for (let j = 0; j < 64; j++) {
         const t0 = 2 * Math.PI * j / 64, t1 = 2 * Math.PI * (j + 1) / 64;
-        const p = (t) => new THREE.Vector3(r * Math.sin(th) * Math.cos(t), r * Math.cos(th), r * Math.sin(th) * Math.sin(t)).add(c);
+        const p = (tt) => new THREE.Vector3(r * Math.sin(th) * Math.cos(tt), r * Math.cos(th), r * Math.sin(th) * Math.sin(tt)).add(c);
         seg(p(t0), p(t1));
       }
     }
@@ -969,7 +972,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
 
   // --- computed paths, gyroscope triads, marks, arrows, the moving body (e.g. v09) --------------------------------------
   // a polyline revealed as the run's time reaches it: points [from, from + count) of path `id` (accumulative)
-  function appendPath(id, from, pts, { label = "Путь (посчитан)", color = 0x4fd1c5 } = {}) {
+  function appendPath(id, from, pts, { label = t("Path (computed)"), color = 0x4fd1c5 } = {}) {
     let P = S.paths.get(id);
     if (!P) {
       const geo = new THREE.BufferGeometry();
@@ -1000,7 +1003,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
   }
   const AXIS_COLORS = [new THREE.Color(0xff5a5a), new THREE.Color(0x5adc78), new THREE.Color(0x5aa0ff)];
   // small triads (accumulative): mats are 3x3 row-major, its columns the axes in physics coordinates
-  function addTriads(id, pos, mats, { label = "Оси гироскопов вдоль пути" } = {}) {
+  function addTriads(id, pos, mats, { label = t("Gyroscope axes along the path") } = {}) {
     let L = S.layers.get(id);
     if (!L) { const g = new THREE.Group(); addLayer(id, label, g, true, "triads"); L = S.layers.get(id); }
     const n = pos.length / 3, len = (S.size || 1) * 0.035;
@@ -1021,7 +1024,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     wideFrom(segs, { width: 2 });
     requestRender();
   }
-  function setMarks(id, pos, { label = "Отметки", color = 0xffffff } = {}) {
+  function setMarks(id, pos, { label = t("Marks"), color = 0xffffff } = {}) {
     const g = new THREE.Group(), size = (S.size || 1) * 0.009;
     const geo = new THREE.SphereGeometry(size, 16, 12), mat = litMaterial({ color });
     for (let i = 0; i < pos.length / 3; i++) { const m = new THREE.Mesh(geo, mat); m.position.copy(P2T([pos[3 * i], pos[3 * i + 1], pos[3 * i + 2]])); g.add(m); }
@@ -1042,7 +1045,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     addLayer(id, label, g, true, "arrow");
   }
   // the moving body: a marker, its gyroscope triad, its spin and thrust (one per world; replaced on every frame)
-  function setBody(id, { pos, O, spin, thrust }, { label = "Корабль: гироскопы, спин, тяга" } = {}) {
+  function setBody(id, { pos, O, spin, thrust }, { label = t("Craft: gyroscopes, spin, thrust") } = {}) {
     let L = S.layers.get(id);
     // sized by the scene: made again when the scene's box changed since (review CK-1: through a key frame the craft
     // kept the size of the box it was first drawn with)
@@ -1118,7 +1121,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
   }
   // an observer: a marker, its velocity (arrow, length ~ beta) and the lab directions from which the light at its
   // image's border arrives (the field of view as seen in the lab; computed by the run)
-  function setObserver(id, { pos, beta, cone }, { label = "Наблюдатель: скорость и поле зрения (в лаборатории)" } = {}) {
+  function setObserver(id, { pos, beta, cone }, { label = t("Observer: velocity and field of view (in the lab)") } = {}) {
     let L = S.layers.get(id);
     // sized by the scene: made again when the scene's box changed since (else its size would depend on when the
     // layer was first drawn, not on the time shown)
@@ -1226,7 +1229,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     if (S.frame) { scene.remove(S.frame); disposeTree(S.frame); }
     S.frame = buildFrame(box, S.desc.units || "", S.desc.coord_names); scene.add(S.frame);
     if (!S.userMoved) refit();
-    else showNote("Область расширилась — F: показать содержимое, Shift+F: всю область");
+    else showNote(t("The region grew — F: show the content, Shift+F: the whole region"));
     requestRender();
   }
   let noteT = null;
@@ -1454,7 +1457,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     P.poly = poly;
     if (poly.length >= 3) {
       P.outline.geometry.dispose();
-      P.outline.geometry = new THREE.BufferGeometry().setFromPoints(poly.map(([s, t]) => new THREE.Vector3(s, t, 0)));
+      P.outline.geometry = new THREE.BufferGeometry().setFromPoints(poly.map(([s, tt]) => new THREE.Vector3(s, tt, 0)));
       const ss = poly.map((q) => q[0]), ts = poly.map((q) => q[1]);
       P.rectST = [Math.min(...ss), Math.max(...ss), Math.min(...ts), Math.max(...ts)];
     }
@@ -1566,7 +1569,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     const gu = T2P(new THREE.Vector3(1, 0, 0).applyQuaternion(P.group.quaternion)), gv = T2P(new THREE.Vector3(0, 1, 0).applyQuaternion(P.group.quaternion));
     const polyG = planeBox(origin, ax.n, gu, gv, S.box);
     P.outline.geometry.dispose();
-    P.outline.geometry = new THREE.BufferGeometry().setFromPoints(polyG.map(([s, t]) => new THREE.Vector3(s, t, 0)));
+    P.outline.geometry = new THREE.BufferGeometry().setFromPoints(polyG.map(([s, tt]) => new THREE.Vector3(s, tt, 0)));
     const ss = polyG.map((q) => q[0]), ts = polyG.map((q) => q[1]);
     fitRect(P, [Math.min(...ss), Math.max(...ss), Math.min(...ts), Math.max(...ts)]);
     onPlaneMoving && onPlaneMoving(P.id, { origin, normal: ax.n, u: ax.u, v: ax.v, poly });
@@ -1721,8 +1724,8 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
         mesh.getMatrixAt(i, m); m.decompose(c, qq, s);
         const r = s.x, oc = ray.ray.origin.clone().sub(c), b = oc.dot(ray.ray.direction), cc = oc.lengthSq() - r * r, h = b * b - cc;
         if (h < 0) continue;
-        const t = -b - Math.sqrt(h);
-        if (t > 0 && t < best) { best = t; hit = ray.ray.at(t, new THREE.Vector3()); }
+        const tt = -b - Math.sqrt(h);
+        if (tt > 0 && tt < best) { best = tt; hit = ray.ray.at(tt, new THREE.Vector3()); }
       }
     }
     if (hit) return hit;
@@ -1785,13 +1788,13 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     if (S.plane2d !== null) {
       const D = presetDirs(), lying = Math.abs(D.top[0][S.plane2d]) > 0.5 && Math.abs(vdot(U, D.top[0])) > 0.9;
       const ax = [0, 1, 2].filter((k) => k !== S.plane2d).map((k) => n[k]);
-      return [["iso", "Изо", "Плоскость мира под углом (F — показать содержимое)"],
-              ["top", lying ? "Сверху" : "Спереди", `Плоскость ${ax[0]}–${ax[1]} прямо, ${ax[0]} вправо — как в окне`],
-              ["side", "С ребра", "Плоскость мира с ребра"]];
+      return [["iso", t("Iso"), t("The world's plane at an angle (F — show the content)")],
+              ["top", lying ? t("Top") : t("Front"), t("The plane {a}–{b} face on, {a} to the right — as in the window", { a: t(ax[0]), b: t(ax[1]) })],
+              ["side", t("Edge"), t("The world's plane edge on")]];
     }
-    return [["iso", "Изо", "Изометрия (F — показать содержимое)"], ["side", "Сбоку", `Вид сбоку: плоскость ${name(R)}–${name(U)}`],
-            ["top", "Сверху", `Вид сверху, вдоль оси ${name(U)}: плоскость ${name(R)}–${name(F)}`],
-            ["beam", "С источника", `Вдоль оси ${name(R)}, от её начала`], ["back", "С мишени", `Навстречу оси ${name(R)}`]];
+    return [["iso", t("Iso"), t("Isometric (F — show the content)")], ["side", t("Side"), t("Side view: the plane {a}–{b}", { a: t(name(R)), b: t(name(U)) })],
+            ["top", t("Top"), t("Top view, along the axis {u}: the plane {a}–{b}", { u: t(name(U)), a: t(name(R)), b: t(name(F)) })],
+            ["beam", t("From the source"), t("Along the axis {a}, from its start", { a: t(name(R)) })], ["back", t("From the target"), t("Against the axis {a}", { a: t(name(R)) })]];
   }
   // fit: the camera at direction d (three, unit, from the target) such that the 8 corners of [lo, hi] (physics) are inside
   // the canvas less the toolbar and the hint (review UX-3d A4: the corners, not a bounding sphere)
@@ -1841,13 +1844,13 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
       if (v) d = v.map((c) => -c);
     }
     if (!d || Math.hypot(...d) === 0) [d, upHint] = D[name] || D.iso;
-    let t = P2T(vunit(d)).normalize();
+    let tt = P2T(vunit(d)).normalize();
     // looking along the up direction: a small tilt keeps the camera's orientation defined, with upHint up on screen
-    if (Math.abs(t.dot(camera.up)) > 0.999999) {
+    if (Math.abs(tt.dot(camera.up)) > 0.999999) {
       const h = P2T(upHint || vlin([-1, S.axes.F])).normalize();
-      t = t.addScaledVector(h, -2e-3 * Math.sign(t.dot(camera.up))).normalize();
+      tt = tt.addScaledVector(h, -2e-3 * Math.sign(tt.dot(camera.up))).normalize();
     }
-    return t;
+    return tt;
   }
   // the region and the apparatus in it (a screen may be wider than the region): what a view frames
   function regionBounds() {
@@ -1935,14 +1938,14 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     if (!any) return;
     const g = legendCv.getContext("2d");
     for (let i = 0; i < 128; i++) { const c = Math.round(i / 127 * 255); g.fillStyle = `rgb(${LUT[3 * c]},${LUT[3 * c + 1]},${LUT[3 * c + 2]})`; g.fillRect(i, 0, 1, 10); }
-    const sc = { sqrt: "амплитуда √(I/Iмакс)", lin: "интенсивность I/Iмакс", log: "логарифм I/Iмакс" }[S.scale] || S.scale;
+    const sc = { sqrt: t("amplitude √(I/Imax)"), lin: t("intensity I/Imax"), log: t("logarithm of I/Imax") }[S.scale] || S.scale;
     const lo = S.scale === "log" ? `10^${Math.round(Math.log10(S.floor))}` : "0";
-    fill(legend, el("div", { class: "s3d-legend-t" }, sc), legendCv, el("div", { class: "s3d-legend-ax" }, el("span", {}, lo), el("span", {}, "1 (пик)")));
+    fill(legend, el("div", { class: "s3d-legend-t" }, sc), legendCv, el("div", { class: "s3d-legend-ax" }, el("span", {}, lo), el("span", {}, t("1 (peak)"))));
   }
   function updateHint() {
     const slices = ((S.desc && S.desc.planes) || {}).max !== 0;
-    hint.textContent = "ЛКМ — повернуть · ПКМ или Shift+ЛКМ — сдвинуть · колесо — к курсору · двойной щелчок — центр вращения · F — всё содержимое, Shift+F — вся область"
-      + (slices ? " · срез: щелчок — выбрать, W — двигать, E — наклонять" : "");
+    hint.textContent = t("Left button — rotate · right button or Shift+left — pan · wheel — towards the cursor · double click — centre of rotation · F — all the content, Shift+F — the whole region")
+      + (slices ? " · " + t("slice: click — select, W — move, E — tilt") : "");
   }
 
   // keyboard: W move, E rotate, F frame the content (Shift+F the region), Escape deselect, Delete remove (handled by the
@@ -1952,9 +1955,9 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
   document.addEventListener("keydown", (e) => {
     if (!root.isConnected || e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.tagName === "TEXTAREA") return;
-    if (e.key === "w" || e.key === "W" || e.key === "ц" || e.key === "Ц") { gizmo.setMode("translate"); gizmoHandles(); toolsState(); }
-    else if (e.key === "e" || e.key === "E" || e.key === "у" || e.key === "У") { gizmo.setMode("rotate"); gizmoHandles(); toolsState(); }
-    else if (e.key === "f" || e.key === "F" || e.key === "а" || e.key === "А") frameAll(e.shiftKey ? "box" : "content");
+    if (e.code === "KeyW" || e.key === "w" || e.key === "W") { gizmo.setMode("translate"); gizmoHandles(); toolsState(); }
+    else if (e.code === "KeyE" || e.key === "e" || e.key === "E") { gizmo.setMode("rotate"); gizmoHandles(); toolsState(); }
+    else if (e.code === "KeyF" || e.key === "f" || e.key === "F") frameAll(e.shiftKey ? "box" : "content");
     else if (e.key === "Escape") select(null);
     else return;
     e.preventDefault(); e.stopPropagation();
@@ -1963,13 +1966,13 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
   function toolsState() { for (const [m, b] of Object.entries(modeBtns)) b.classList.toggle("on", gizmo.mode === m); }
   function buildTools(extra = []) {
     S.extraTools = extra;
-    modeBtns.translate = el("button", { class: "toggle on", title: "Двигать выбранный срез вдоль его нормали (стрелка; W)", onclick: () => { gizmo.setMode("translate"); gizmoHandles(); toolsState(); } }, "✥ Двигать");
-    modeBtns.rotate = el("button", { class: "toggle", title: "Наклонять выбранный срез (два кольца; E)", onclick: () => { gizmo.setMode("rotate"); gizmoHandles(); toolsState(); } }, "⟳ Наклонять");
+    modeBtns.translate = el("button", { class: "toggle on s3d-move", title: t("Move the selected slice along its normal (arrow; W)"), onclick: () => { gizmo.setMode("translate"); gizmoHandles(); toolsState(); } }, t("✥ Move"));
+    modeBtns.rotate = el("button", { class: "toggle s3d-tilt", title: t("Tilt the selected slice (two rings; E)"), onclick: () => { gizmo.setMode("rotate"); gizmoHandles(); toolsState(); } }, t("⟳ Tilt"));
     const vbtn = (name, label, title) => el("button", { title, onclick: () => view(name) }, label);
     fill(tools, ...extra, modeBtns.translate, modeBtns.rotate,
       el("span", { class: "sep" }),
       ...(S.viewDefs || VIEWS).map(([name, label, title]) => vbtn(name, label, title)),
-      el("button", { title: "Сохранить снимок 3D-вида (PNG)", onclick: () => { draw(true); const a = el("a", { href: renderer.domElement.toDataURL("image/png"), download: "scene3d.png" }); a.click(); } }, "📷"));
+      el("button", { title: t("Save a snapshot of the 3-D view (PNG)"), onclick: () => { draw(true); const a = el("a", { href: renderer.domElement.toDataURL("image/png"), download: "scene3d.png" }); a.click(); } }, "📷"));
   }
   buildTools();
   updateHint();
@@ -2028,7 +2031,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
   // many computed polylines at once (e.g. v11: Bohm trajectories), revealed as the run's time reaches them: point
   // `from` of each of the n tracks (xyz: n x 3, NaN where a track has ended or not begun); colours per track
   // (n x 3, 0..1), which may change (setTrackColors) and recolour the whole track
-  function appendTracks(id, xyz, colors, { label = "Траектории (посчитаны)" } = {}) {
+  function appendTracks(id, xyz, colors, { label = t("Trajectories (computed)") } = {}) {
     const n = xyz.length / 3;
     let T = S.tracks.get(id);
     if (!T) {
@@ -2113,7 +2116,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
   }
   // a cloud of points replaced on every call (e.g. v11: the particles now), drawn as round shaded points; NaN positions
   // are left out
-  function setPoints(id, xyz, colors, { label = "Частицы сейчас", size = 0.006 } = {}) {
+  function setPoints(id, xyz, colors, { label = t("Particles now"), size = 0.006 } = {}) {
     let L = S.layers.get(id);
     const usz = (S.size || 1) * size * 0.45;  // the old squares' size on screen (three's points scale), a little larger
     if (L && L.obj.material.uniforms.uSize.value !== usz) L.obj.material.uniforms.uSize.value = usz;  // the box changed
@@ -2141,7 +2144,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
   // spheres replaced on every call (a playground's bodies: lfviz.playground): pos n x 3, radius n (physics units; drawn
   // at least minFrac of the scene's size so that a star or a planet far smaller than its orbit stays visible), rgb n x 3
   // (0..1, sRGB); one instanced mesh of exact lit sphere impostors, rebuilt only when the count grows
-  function setSpheres(id, pos, radius, rgb, { label = "Тела", minFrac = 0.006, visible = true } = {}) {
+  function setSpheres(id, pos, radius, rgb, { label = t("Bodies"), minFrac = 0.006, visible = true } = {}) {
     const n = pos.length / 3;
     let L = S.layers.get(id);
     if (L && L.obj.userData.cap < n) { removeLayer(id); L = null; }
@@ -2185,7 +2188,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
   function restoreAppends(k) {
     for (const [id, T] of S.tracks) {  // checked first: nothing is cut when a key frame cannot be restored
       const s = k.tracks.get(id);
-      if (s && s.last.length !== T.last.length) throw new Error(`траектории ${id}: другое число треков`);
+      if (s && s.last.length !== T.last.length) throw new Error(`tracks ${id}: another number of tracks`);
     }
     for (const [id, P] of [...S.paths]) {
       const n = k.paths.get(id);

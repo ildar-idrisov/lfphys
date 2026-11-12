@@ -119,6 +119,7 @@ import time
 
 import numpy as np
 
+from ...i18n import T
 from .. import backend
 from . import fdtd_geometry as geo
 from . import fdtd_monitors as mon
@@ -126,46 +127,50 @@ from . import fdtd_sources as src
 from .fdtd_geometry import Box, Cylinder, HalfSpace, Mask, Polygon, Sphere  # noqa: F401 (public API)
 from .fdtd_sources import (ContinuousWave, CurrentSource, Custom, GaussianPulse, ModulatedGaussian,  # noqa: F401
                            PlaneWave, Samples, yee_frequency, yee_normal_wavenumber, yee_wavenumber)
+from .fdtd_sources import as_text
 
 ABOUT = {
     "layer": "core", "kind": "numerical solution",
-    "title": "Уравнения Максвелла во времени: метод FDTD (сетка Йи) в 2-D и 3-D",
-    "statement": "Уравнения Максвелла в линейных изотропных средах (диэлектрики, магнетики, проводники, "
-                 "диспергирующие среды Друде, Лоренца и Дебая, идеальный проводник) решаются схемой Йи: 2-D (TM и TE) "
-                 "и 3-D; поглощающие слои CPML, стенки PEC и PMC, периодические стороны с фазой Блоха; точечные и "
-                 "протяжённые токи, плоская волна методом полного/рассеянного поля; спектры, потоки Пойнтинга, "
-                 "энергия, поглощение, сечения рассеяния и дальнее поле; правки сцены во время счёта.",
-    "validity": "классическая электродинамика линейных изотропных сред (нет нелинейности, анизотропии, "
-                "движущихся сред); погрешность схемы — численная дисперсия второго порядка (точное дисперсионное "
-                "соотношение сетки проверено до 6e-15); границы тел: ступенька (1-й порядок для кривых; PEC-цилиндр "
-                "TM −1.6…−2.0 % при 40 ячейках на единицу) или усреднение по ячейке — только диагональ тензора "
-                "Фарджадпура (по их классификации схема VP-EP): 2-й порядок для плоских границ вдоль осей и для E "
-                "вдоль оси цилиндра (TM), для E в плоскости кривой границы в общем случае 1-й порядок (цилиндр ε = 6, "
-                "TE: 2.6 → 1.4 → 0.8 % при 40/80/160 ячейках); монитор потока видит плоскую волну слабее на "
-                "множитель 1 − O((k dx)²) (cos(k dx/2) при нормальном падении), поэтому сечения даются в двух "
-                "нормировках — по точной интенсивности и по интенсивности, измеренной тем же монитором (как в Meep); "
-                "диэлектрический цилиндр m = 1.5 при 40 ячейках: TM +0.03…+0.06 % / +0.10…+0.37 %, TE −0.12…+0.29 % / "
-                "−0.07…+0.60 %; шар при 32 ячейках −0.01…+0.76 % / +0.16…+0.84 % от Ми (ошибка схемы и ошибка "
-                "монитора на рассеянных волнах одного порядка и не разделены); отражение плоской границы на грубой "
-                "сетке — до ~11 % R при 10 ячейках на длину волны в среде (собственная ошибка схемы, второй порядок); "
-                "CPML −88…−95 дБ при 10 ячейках от нормали до ~70°, у скользящего падения (81–87°) лишь −75…−52 дБ — "
-                "там нужно 16–20 ячеек; длина оси — ближайшая реализуемая на сетке (между стенками PEC и PMC — "
-                "нечётное число полуячеек; отклонение от заданной показывает checks()); устойчивость проверяется до "
-                "счёта по каждой среде и по картам узлов (двойной корень на единичной окружности не виден); "
-                "диспергирующие среды — модели пользователя (полюса), ε(ω) схемы отличается от модели на O(Δt²); "
-                "energy() не включает энергию поляризации",
-    "basis": ["Yee, IEEE Trans. Antennas Propag. 14, 302 (1966) — схема",
-              "Schneider, Understanding the FDTD Method (2010) — дисперсионное соотношение (7.34), «магический» шаг "
-              "(§7.4), отражение от границы на сетке (7.72), (7.90), TF/SF (§3.10, §8.5)",
-              "Roden & Gedney, Microw. Opt. Technol. Lett. 27, 334 (2000) — CPML (формулы по двум открытым статьям); "
-              "оценка σ_max: Corbino, arXiv:2603.19056, ур. (29), со ссылкой на Taflove & Hagness",
-              "Farjadpour et al., Opt. Lett. 31, 2972 (2006), ур. (1) — усреднение на границах (движок берёт "
-              "диагональ: схема VP-EP по их классификации)",
-              "Young, IEEE Trans. Antennas Propag. 43, 422 (1995) — явная схема полюсов Лоренца/Друде; Joseph, Hagness "
-              "& Taflove, Opt. Lett. 16, 1412 (1991) — трапеция Дебая (обе статьи не получены; схемы — как их "
-              "приводит Bidégaray-Fesquet)",
-              "Bidégaray-Fesquet, SIAM J. Numer. Anal. 46, 2551 (2008), arXiv:math/0506289 — устойчивость этих схем "
-              "(матрица перехода совпадает с amplification_radius; достаточные условия — в отказе)"],
+    "title": T("Maxwell's equations in time: the FDTD method (Yee grid) in 2-D and 3-D"),
+    "statement": T("Maxwell's equations in linear isotropic media (dielectrics, magnetic materials, conductors, Drude, "
+                   "Lorentz and Debye dispersive media, the perfect electric conductor) are solved by Yee's scheme: 2-D "
+                   "(TM and TE) and 3-D; CPML absorbing layers, PEC and PMC walls, periodic sides with a Bloch phase; "
+                   "point and extended currents, a plane wave by the total-field/scattered-field method; spectra, "
+                   "Poynting fluxes, energy, absorption, scattering cross sections and the far field; edits of the scene "
+                   "during the run."),
+    "validity": T("classical electrodynamics of linear isotropic media (no nonlinearity, anisotropy or moving media); "
+                  "the scheme's error is the grid's numerical dispersion, second order (the grid's exact dispersion "
+                  "relation is checked to 6e-15); body surfaces: a staircase (1st order for curved ones; a PEC cylinder "
+                  "TM −1.6…−2.0 % at 40 cells per unit) or averaging over the cell, only the diagonal of Farjadpour's "
+                  "tensor (the scheme VP-EP in their classification): 2nd order for flat surfaces along the axes and for "
+                  "E along a cylinder's axis (TM), in general 1st order for E in the plane of a curved surface (a "
+                  "cylinder ε = 6, TE: 2.6 → 1.4 → 0.8 % at 40/80/160 cells); the flux monitor sees a plane wave weaker "
+                  "by a factor 1 − O((k dx)²) (cos(k dx/2) at normal incidence), so cross sections come in two "
+                  "normalisations: by the exact intensity and by the intensity the same monitor measures (as in Meep); "
+                  "a dielectric cylinder m = 1.5 at 40 cells: TM +0.03…+0.06 % / +0.10…+0.37 %, TE −0.12…+0.29 % / "
+                  "−0.07…+0.60 %; a sphere at 32 cells −0.01…+0.76 % / +0.16…+0.84 % of Mie (the scheme's error and the "
+                  "monitor's error on the scattered waves are of the same order and are not separated); reflection from "
+                  "a flat interface on a coarse grid up to ~11 % of R at 10 cells per wavelength in the medium (the "
+                  "scheme's own error, second order); CPML −88…−95 dB at 10 cells from normal incidence to ~70°, at "
+                  "grazing incidence (81–87°) only −75…−52 dB, which needs 16–20 cells; an axis length is the nearest "
+                  "one realisable on the grid (between PEC and PMC walls an odd number of half cells; checks() shows "
+                  "the deviation from the request); stability is checked before the run for every medium and over the "
+                  "node maps (a double root on the unit circle is not seen); dispersive media are the user's models "
+                  "(poles), the scheme's ε(ω) differs from the model by O(Δt²); energy() does not include the "
+                  "polarization energy"),
+    "basis": [T("Yee, IEEE Trans. Antennas Propag. 14, 302 (1966) — the scheme"),
+              T("Schneider, Understanding the FDTD Method (2010) — the dispersion relation (7.34), the “magic” time "
+                "step (§7.4), reflection from an interface on the grid (7.72), (7.90), TF/SF (§3.10, §8.5)"),
+              T("Roden & Gedney, Microw. Opt. Technol. Lett. 27, 334 (2000) — CPML (the formulas as two open papers "
+                "give them); the estimate of σ_max: Corbino, arXiv:2603.19056, eq. (29), citing Taflove & Hagness"),
+              T("Farjadpour et al., Opt. Lett. 31, 2972 (2006), eq. (1) — averaging at surfaces (the engine takes the "
+                "diagonal: the scheme VP-EP in their classification)"),
+              T("Young, IEEE Trans. Antennas Propag. 43, 422 (1995) — the explicit scheme of Lorentz/Drude poles; "
+                "Joseph, Hagness & Taflove, Opt. Lett. 16, 1412 (1991) — the Debye trapezoid (neither paper was "
+                "obtained; the schemes as Bidégaray-Fesquet gives them)"),
+              T("Bidégaray-Fesquet, SIAM J. Numer. Anal. 46, 2551 (2008), arXiv:math/0506289 — the stability of these "
+                "schemes (the transition matrix agrees with amplification_radius; the sufficient conditions are quoted "
+                "in the refusal)")],
     "conflicts": [],
 }
 
@@ -179,7 +184,19 @@ MIN_BLOCK_CELLS = 65536
 
 
 class Unstable(RuntimeError):
-    """The world's parameters make the scheme unstable (raised before any step), or the fields blew up."""
+    """The world's parameters make the scheme unstable (raised before any step), or the fields blew up. Its message is
+    a translatable text (``lfphys.i18n.T``) in ``args[0]``."""
+
+
+#: where a monitor's box lies relative to the total-field boxes (``FDTD._tf_relation``), for the refusals
+_REL = {"tf": T("inside the total-field region"), "sf": T("in the scattered-field region"),
+        "mixed": T("across the boundary of the total-field region"), None: T("in the scattered-field region")}
+
+
+def _num(x) -> float | str:
+    """A number for a text's argument: a float, or "∞" for a non-finite value (JSON has no infinity)."""
+    x = float(x)
+    return x if math.isfinite(x) else ("∞" if x > 0 else "−∞")
 
 
 # --- units ------------------------------------------------------------------------------------------------------------
@@ -223,7 +240,7 @@ class Drude:
     def __init__(self, plasma_frequency: float, gamma: float = 0.0):
         self.fp, self.gamma = float(plasma_frequency), float(gamma)
         if not self.fp > 0 or self.gamma < 0:
-            raise ValueError("Друде: плазменная частота > 0, затухание ≥ 0")
+            raise ValueError(T("Drude: plasma frequency > 0, damping ≥ 0"))
 
     def ode(self):  # (w0^2, gamma, s) of P'' + gamma P' + w0^2 P = s E
         return 0.0, TWO_PI * self.gamma, (TWO_PI * self.fp) ** 2
@@ -243,7 +260,7 @@ class Lorentz:
     def __init__(self, delta_eps: float, frequency: float, gamma: float = 0.0):
         self.de, self.f0, self.gamma = float(delta_eps), float(frequency), float(gamma)
         if not self.f0 > 0 or self.gamma < 0:
-            raise ValueError("Лоренц: резонансная частота > 0, затухание ≥ 0")
+            raise ValueError(T("Lorentz: resonance frequency > 0, damping ≥ 0"))
 
     def ode(self):
         w0 = TWO_PI * self.f0
@@ -265,7 +282,7 @@ class Debye:
     def __init__(self, delta_eps: float, tau: float):
         self.de, self.tau = float(delta_eps), float(tau)
         if not self.tau > 0:
-            raise ValueError("Дебай: время релаксации > 0")
+            raise ValueError(T("Debye: relaxation time > 0"))
 
     def chi(self, f):
         w = TWO_PI * np.asarray(f, float)
@@ -290,12 +307,12 @@ class Medium:
         self.eps, self.mu, self.sigma = float(eps), float(mu), float(sigma)
         self.poles = tuple(poles)
         self.is_pec = bool(pec)
-        self.label = str(label)
+        self.label = as_text(label)
         if not (self.eps > 0 and self.mu > 0 and self.sigma >= 0):
-            raise ValueError("среда: eps > 0, mu > 0, sigma ≥ 0")
+            raise ValueError(T("medium: eps > 0, mu > 0, sigma ≥ 0"))
         for p in self.poles:
             if not isinstance(p, (Drude, Lorentz, Debye)):
-                raise ValueError("полюса среды: Drude, Lorentz или Debye")
+                raise ValueError(T("the medium's poles: Drude, Lorentz or Debye"))
 
     @classmethod
     def pec(cls, label: str = "PEC"):
@@ -352,7 +369,7 @@ class Medium:
                    d.get("label", ""))
 
 
-VACUUM = Medium(label="вакуум")
+VACUUM = Medium(label=T("vacuum"))
 
 
 def _medium_key(m: Medium) -> str:
@@ -568,9 +585,10 @@ RATES = {
            "gpu": [(32 ** 3, 1.22e-4), (64 ** 3, 1.29e-4), (96 ** 3, 3.77e-4), (128 ** 3, 8.44e-4),
                    (192 ** 3, 2.78e-3), (256 ** 3, 6.52e-3)]},
 }
-RATES_NOTE = ("измерено 2026-11-04 (вакуум, периодические стороны): CPU (NumPy, до 4 потоков) 2-D 64²…4096² — "
-              "0.06…178 мс/шаг, 3-D 32³…256³ — 0.75…498 мс/шаг; GPU 0 (RTX 2080 Ti, fp64) 2-D 0.06…2.7 мс/шаг, "
-              "3-D 0.12…6.5 мс/шаг; GPU быстрее с 128² в 2-D (×2.3; ×67 на 4096²) и с 32³ в 3-D (×6; ×76 на 256³)")
+RATES_NOTE = T("measured 2026-11-04 (vacuum, periodic sides): CPU (NumPy, up to 4 threads) 2-D 64²…4096²: "
+               "0.06…178 ms/step, 3-D 32³…256³: 0.75…498 ms/step; GPU 0 (RTX 2080 Ti, fp64) 2-D 0.06…2.7 ms/step, "
+               "3-D 0.12…6.5 ms/step; the GPU is faster from 128² in 2-D (×2.3; ×67 at 4096²) and from 32³ in 3-D "
+               "(×6; ×76 at 256³)")
 
 
 def _interp_rate(key: str, dev: str, cells: int) -> float:
@@ -612,14 +630,14 @@ class FDTD:
                  background: Medium | None = None, averaging: str = "subpixel", device: str = "auto"):
         size = tuple(float(s) for s in size)
         if len(size) not in (2, 3) or any(not s > 0 for s in size):
-            raise ValueError("размер области: (Lx, Ly) или (Lx, Ly, Lz), все > 0")
+            raise ValueError(T("domain size: (Lx, Ly) or (Lx, Ly, Lz), all > 0"))
         self.dim = len(size)
         self.dx = float(dx)
         if not self.dx > 0:
             raise ValueError("dx > 0")
         if self.dim == 2:
             if pol not in ("tm", "te", "both"):
-                raise ValueError("поляризация в 2-D: tm, te или both")
+                raise ValueError(T("polarization in 2-D: tm, te or both"))
             self.pol = pol
             comps = {"tm": ("ez", "hx", "hy"), "te": ("ex", "ey", "hz"), "both": COMPS}[pol]
         else:
@@ -629,11 +647,11 @@ class FDTD:
         self.courant = float(courant)
         self.dt = self.courant * self.dx
         if averaging not in ("subpixel", "staircase"):
-            raise ValueError("усреднение: subpixel или staircase")
+            raise ValueError(T("averaging: subpixel or staircase"))
         self.averaging = averaging
         self.background = VACUUM if background is None else background
         if not self.background.plain:
-            raise ValueError("фон: среда без полюсов, проводимости и не PEC")
+            raise ValueError(T("background: a medium without poles or conductivity, not PEC"))
         self.device_mode = device
         self._pml_spec = _as_pml(pml)
         # boundaries
@@ -646,15 +664,15 @@ class FDTD:
             lo, hi = _side_kinds(bd[AXES[u]])
             for k in (lo, hi):
                 if k not in ("pml", "pec", "pmc", "periodic"):
-                    raise ValueError(f"граница {k!r}: pml, pec, pmc или periodic")
+                    raise ValueError(T("boundary {kind}: pml, pec, pmc or periodic", kind=repr(k)))
             if (lo == "periodic") != (hi == "periodic"):
-                raise ValueError("периодическая граница — с обеих сторон оси")
+                raise ValueError(T("a periodic boundary must be on both sides of an axis"))
             self.boundary[AXES[u]] = (lo, hi)
         bl = [0.0, 0.0, 0.0] if bloch is None else [float(v) for v in bloch] + [0.0] * (3 - len(bloch))
         self.bloch = np.array(bl[:3])
         for u in range(self.dim):
             if self.bloch[u] != 0 and self.boundary[AXES[u]][0] != "periodic":
-                raise ValueError(f"фаза Блоха только на периодической оси ({AXES[u]})")
+                raise ValueError(T("a Bloch phase only on a periodic axis ({axis})", axis=AXES[u]))
         self.complex = bool(np.any(self.bloch != 0))
         # grid
         self.shape, self.off, self.npml, self.periodic = [], [], [], []
@@ -680,7 +698,7 @@ class FDTD:
             else:
                 m = int(round(size[u] / self.dx))
             if m < 1:
-                raise ValueError(f"ось {AXES[u]}: меньше одной ячейки")
+                raise ValueError(T("axis {axis}: less than one cell", axis=AXES[u]))
             elo = {"pec": 0.0, "pmc": 0.5, "pml": float(P), "periodic": 0.0}[lo]
             ehi = {"pec": 0.0, "pmc": 0.5, "pml": float(P), "periodic": 0.0}[hi]
             if (lo, hi) == ("pml", "pmc"):
@@ -689,7 +707,7 @@ class FDTD:
                 ehi = P + 0.5
             n = int(math.ceil(m + elo + ehi - 1e-9))
             if lo != "periodic" and n < 2:
-                raise ValueError(f"ось {AXES[u]}: непериодическая ось короче двух ячеек")
+                raise ValueError(T("axis {axis}: a non-periodic axis shorter than two cells", axis=AXES[u]))
             self.shape.append(n)
             self.off.append(elo)
             self.npml.append((P if lo == "pml" else 0, P if hi == "pml" else 0))
@@ -722,7 +740,7 @@ class FDTD:
                     t.append((v, s, sign))
             self._terms[c] = t
         self._media_check_cache = {}
-        self._check_medium(self.background, "фон")
+        self._check_medium(self.background, T("background"), background=True)
         # state
         self.xp, self.device = np, "cpu"
         dtype = complex if self.complex else float
@@ -791,14 +809,16 @@ class FDTD:
             self._media_check_cache[key] = rho
         return rho
 
-    def _check_medium(self, m: Medium, what: str):
+    def _check_medium(self, m: Medium, what, background: bool = False):
+        """Refuse a medium in which the scheme is unstable; ``what`` names it for the refusal (a text), ``background``:
+        it is the world's background (then the vacuum Courant limit scaled by its index applies too)."""
         if m.is_pec:
             return
         rho = self._medium_radius(m)
         # a defective eigenvalue at the exact limit (|lambda| = 1, a Jordan block) is computed with an error of
         # ~sqrt(eps); a growing mode just beyond the limit has |lambda| - 1 ~ sqrt(excess): 1e-6 separates them (so a
         # double root exactly on the unit circle, linear growth at isolated parameter values, is not detected here)
-        if rho > 1.0 + 1e-6 or (what == "фон" and self.courant > self.courant_limit * math.sqrt(m.eps * m.mu) * (1 + 1e-12)):
+        if rho > 1.0 + 1e-6 or (background and self.courant > self.courant_limit * math.sqrt(m.eps * m.mu) * (1 + 1e-12)):
             nmin = math.sqrt(m.eps * m.mu)
             hint = ""
             if m.poles:
@@ -807,16 +827,18 @@ class FDTD:
                 # Debye-Joseph scheme (the engine's trapezoid)
                 d = sum(1 for u in range(self.dim) if self.deriv[u])
                 s_inf = self.courant / math.sqrt(m.eps * m.mu)
-                hint = (f"; достаточные условия из литературы для одного полюса (Bidégaray-Fesquet 2008, табл. 7 и §5; "
-                        f"схема Янга): число Куранта со скоростью c∞ = 1/√(ε∞μ) не больше 1/√2 в 1-D и 1/2 в 2-D "
-                        f"(здесь {s_inf:.4g}, осей с производной {d}; для 3-D в статье нет) и для каждого полюса "
-                        f"Лоренца ω0·Δt ≤ 2/√(2εs/ε∞ − 1), εs = ε∞ + Δε (для полюса Друде, предел ω0 → 0 при "
-                        f"Δε·ω0² = ωp², "
-                        f"выведено здесь: ωp·Δt ≤ √(2ε∞)); для полюса Дебая (трапеция Джозефа и др.) — условие вакуума")
-            raise Unstable(f"схема неустойчива в среде {what} ({m.label or 'без имени'}): спектральный радиус шага "
-                           f"{rho:.6g} > 1 при числе Куранта S = cΔt/dx = {self.courant:g} (предел вакуума "
-                           f"{self.courant_limit:.4g}, для ε∞μ = {nmin ** 2:.4g} — {self.courant_limit * nmin:.4g}"
-                           f"{hint}). Уменьшите courant или dx")
+                hint = T("; sufficient conditions from the literature for a single pole (Bidégaray-Fesquet 2008, "
+                         "Table 7 and §5; Young's scheme): the Courant number with the speed c∞ = 1/√(ε∞μ) at most "
+                         "1/√2 in 1-D and 1/2 in 2-D (here {s:.4g}, axes with a derivative: {d}; the paper has none "
+                         "for 3-D), and for every Lorentz pole ω0·Δt ≤ 2/√(2εs/ε∞ − 1), εs = ε∞ + Δε (for a Drude "
+                         "pole, the limit ω0 → 0 at Δε·ω0² = ωp², derived here: ωp·Δt ≤ √(2ε∞)); for a Debye pole "
+                         "(the trapezoid of Joseph et al.) the vacuum condition", s=float(s_inf), d=int(d))
+            raise Unstable(T("the scheme is unstable in the medium {what} ({label}): the spectral radius of a step "
+                             "is {rho:.6g} > 1 at the Courant number S = cΔt/dx = {S} (vacuum limit {lim:.4g}, for "
+                             "ε∞μ = {n2:.4g}: {limn:.4g}{hint}). Reduce courant or dx",
+                             what=what, label=m.label or T("unnamed"), rho=float(rho), S=self.courant,
+                             lim=_num(self.courant_limit), n2=float(nmin ** 2), limn=_num(self.courant_limit * nmin),
+                             hint=hint))
 
     def _node_courant_bounds(self, mats, coef):
         """Two sufficient Courant limits from the actual node maps (review B8-fdtd F11: E nodes of one medium next to H
@@ -917,24 +939,24 @@ class FDTD:
         body ("subpixel" applies only to plain dielectric/magnetic media)."""
         shape._check(self.dim)
         if not isinstance(medium, Medium):
-            raise ValueError("вещество тела: Medium")
+            raise ValueError(T("the body's material: a Medium"))
         bid = self._next_body
         new = dict(self._bodies)
-        new[bid] = {"shape": shape, "medium": medium, "label": str(label), "averaging": averaging}
+        new[bid] = {"shape": shape, "medium": medium, "label": as_text(label), "averaging": averaging}
         self._apply_bodies(new)
         self._next_body += 1
         return bid
 
     def remove_body(self, bid: int):
         if bid not in self._bodies:
-            raise KeyError(f"нет тела {bid}")
+            raise KeyError(f"no body {bid}")
         new = dict(self._bodies)
         del new[bid]
         self._apply_bodies(new)
 
     def update_body(self, bid: int, shape=None, medium: Medium | None = None, label: str | None = None):
         if bid not in self._bodies:
-            raise KeyError(f"нет тела {bid}")
+            raise KeyError(f"no body {bid}")
         b = dict(self._bodies[bid])
         if shape is not None:
             shape._check(self.dim)
@@ -942,18 +964,18 @@ class FDTD:
         if medium is not None:
             b["medium"] = medium
         if label is not None:
-            b["label"] = str(label)
+            b["label"] = as_text(label)
         new = dict(self._bodies)
         new[bid] = b
         self._apply_bodies(new)
 
     def set_background(self, medium: Medium):
         if not medium.plain:
-            raise ValueError("фон: среда без полюсов, проводимости и не PEC")
+            raise ValueError(T("background: a medium without poles or conductivity, not PEC"))
         old = self.background
         self.background = medium
         try:
-            self._check_medium(medium, "фон")
+            self._check_medium(medium, T("background"), background=True)
             self._apply_bodies(dict(self._bodies))
         except Exception:
             self.background = old
@@ -967,7 +989,7 @@ class FDTD:
     def _apply_bodies(self, new: dict):
         """Rebuild the materials for a new body set, all or nothing."""
         for b in new.values():
-            self._check_medium(b["medium"], b["label"] or b["shape"].kind)
+            self._check_medium(b["medium"], b["label"] or T("a body of shape {kind}", kind=b["shape"].kind))
         old = self._bodies
         self._bodies = new
         try:
@@ -1077,7 +1099,7 @@ class FDTD:
             if all(m is not x for x in media):
                 media.append(m)
         if len(media) > 32000:
-            raise ValueError("слишком много разных сред")
+            raise ValueError(T("too many different media"))
         media_index = {id(m): i for i, m in enumerate(media)}
         dt = self.dt
         coef, mats, disp = {}, {}, {}
@@ -1150,11 +1172,12 @@ class FDTD:
         simple, gersh = self._node_courant_bounds(mats, coef)
         node_limit = max(simple, gersh or 0.0)
         if self.courant > node_limit * (1 + 1e-12):
-            raise Unstable(f"схема неустойчива на стыке сред: узлы E одной среды рядом с узлами H другой дают скорость "
-                           f"больше, чем в каждой среде; достаточный предел по картам узлов S ≤ {node_limit:.4g} "
-                           f"(по min ε узлов E и min μ узлов H: {simple:.4g}; по Гершгорину: "
-                           f"{(gersh if gersh is not None else math.inf):.4g}), а S = {self.courant:g}. Уменьшите "
-                           f"courant или dx, либо измените среды (ε < 1 или μ < 1)")
+            raise Unstable(T("the scheme is unstable at an interface of media: E nodes of one medium next to H nodes "
+                             "of another give a speed higher than in either medium; the sufficient limit from the node "
+                             "maps is S ≤ {lim:.4g} (by min ε of the E nodes and min μ of the H nodes: {simple:.4g}; by "
+                             "Gershgorin: {gersh:.4g}), but S = {S}. Reduce courant or dx, or change the media (ε < 1 "
+                             "or μ < 1)", lim=_num(node_limit), simple=_num(simple),
+                             gersh=_num(gersh if gersh is not None else math.inf), S=self.courant))
         self._node_limit = node_limit
         self._media = media
         self._media_index = media_index
@@ -1195,7 +1218,7 @@ class FDTD:
 
     def remove_source(self, sid: int):
         if sid not in self._sources:
-            raise KeyError(f"нет источника {sid}")
+            raise KeyError(f"no source {sid}")
         del self._sources[sid]
 
     def sources(self) -> list[dict]:
@@ -1218,17 +1241,17 @@ class FDTD:
             elif isinstance(s, PlaneWave):
                 rec.update(self._build_tfsf(s))
             else:
-                raise ValueError("источник: CurrentSource или PlaneWave")
+                raise ValueError(T("source: a CurrentSource or a PlaneWave"))
             if self.device == "gpu":
                 self._source_to(rec, self.xp)
 
     def _build_current(self, s: CurrentSource) -> dict:
         c = s.component
         if c not in self.comps:
-            raise ValueError(f"компоненты {c} нет в этом мире (поляризация {self.pol})")
+            raise ValueError(T("this world has no component {comp} (polarization {pol})", comp=c, pol=self.pol))
         lo, hi = s.region
         if len(lo) != self.dim:
-            raise ValueError(f"источник: {self.dim} координаты")
+            raise ValueError(T("source: {n} coordinates", n=self.dim))
         ranges, zero_ext = [], 0
         for u in range(3):
             if u >= self.dim:
@@ -1245,7 +1268,7 @@ class FDTD:
                 ranges.append(np.arange(a, b + 1))
             r = ranges[-1]
             if len(r) == 0 or r.min() < 0 or r.max() >= self.shape[u]:
-                raise ValueError(f"источник вне сетки по оси {AXES[u]}")
+                raise ValueError(T("the source is outside the grid along axis {axis}", axis=AXES[u]))
         I = np.meshgrid(*ranges, indexing="ij")
         idx = np.ravel_multi_index([i.ravel() for i in I], self.shape)
         idx_u, first = np.unique(idx, return_index=True)
@@ -1257,7 +1280,7 @@ class FDTD:
             w = np.full(len(idx_u), amp, dtype=complex if (self.complex or np.iscomplexobj(amp)) else float)
         if np.iscomplexobj(w) and not self.complex:
             if np.any(np.imag(w) != 0):
-                raise ValueError("комплексная амплитуда источника — только в мире с фазой Блоха (комплексные поля)")
+                raise ValueError(T("a complex source amplitude only in a world with a Bloch phase (complex fields)"))
             w = np.real(w)
         if not s.hard:
             w = w / self.dx ** zero_ext
@@ -1274,11 +1297,11 @@ class FDTD:
         comps = self.comps if components is None else tuple(components)
         p = tuple(float(v) for v in point)
         if len(p) != self.dim:
-            raise ValueError(f"точка датчика: {self.dim} координаты")
+            raise ValueError(T("probe point: {n} coordinates", n=self.dim))
         items = []
         for c in comps:
             if c not in self.comps:
-                raise ValueError(f"компоненты {c} нет в этом мире")
+                raise ValueError(T("this world has no component {comp}", comp=c))
             corner, wts = [], []
             for u in range(3):
                 if u >= self.dim:
@@ -1301,7 +1324,7 @@ class FDTD:
                         ii = (a, b, cc)
                         for u in range(3):
                             if not (0 <= ii[u] < self.shape[u]):
-                                raise ValueError("датчик вне сетки")
+                                raise ValueError(T("the probe is outside the grid"))
                         idx.append(np.ravel_multi_index(ii, self.shape))
                         w.append(wa * wb * wc)
             items.append((c, np.array(idx), np.array(w)))
@@ -1318,7 +1341,7 @@ class FDTD:
         accs = {}
         for c in comps:
             if c not in self.comps:
-                raise ValueError(f"компоненты {c} нет в этом мире")
+                raise ValueError(T("this world has no component {comp}", comp=c))
             ranges = []
             for u in range(3):
                 if u >= self.dim:
@@ -1331,7 +1354,7 @@ class FDTD:
                     a = b = int(round(self.index_of(lo[u], u, off)))
                 a, b = max(a, 0), min(b, self.shape[u] - 1)
                 if b < a:
-                    raise ValueError(f"область DFT пуста по оси {AXES[u]} для {c}")
+                    raise ValueError(T("the DFT region is empty along axis {axis} for {comp}", axis=AXES[u], comp=c))
                 ranges.append((a, b + 1))
             g = mon.Gather(self, c, ranges)
             accs[c] = mon.Accumulator(self, g, freqs, c[0] == "h")
@@ -1344,14 +1367,14 @@ class FDTD:
     def _faces_of(self, region, freqs, closed: bool, direction=None):
         lo, hi = region
         if len(lo) != self.dim or len(hi) != self.dim:
-            raise ValueError(f"область: {self.dim} координаты")
+            raise ValueError(T("region: {n} coordinates", n=self.dim))
         idx_lo = [int(round(self.index_of(lo[u], u))) if u < self.dim else 0 for u in range(3)]
         idx_hi = [int(round(self.index_of(hi[u], u))) if u < self.dim else 1 for u in range(3)]
         faces = []
         if closed:
             for u in range(self.dim):
                 if idx_hi[u] <= idx_lo[u]:
-                    raise ValueError("замкнутый ящик: hi > lo по каждой оси")
+                    raise ValueError(T("closed box: hi > lo along every axis"))
             for v in range(self.dim):
                 cells = [(idx_lo[u], idx_hi[u]) if u < self.dim else (0, 1) for u in range(3)]
                 for p, sign in ((idx_lo[v], -1), (idx_hi[v], +1)):
@@ -1360,12 +1383,12 @@ class FDTD:
         else:
             flat = [u for u in range(self.dim) if idx_hi[u] == idx_lo[u]]
             if len(flat) != 1:
-                raise ValueError("плоскость потока: ровно одна ось с нулевой протяжённостью")
+                raise ValueError(T("flux plane: exactly one axis of zero extent"))
             v = flat[0]
             cells = [(idx_lo[u], idx_hi[u]) if u < self.dim else (0, 1) for u in range(3)]
             for u in range(self.dim):
                 if u != v and cells[u][1] <= cells[u][0]:
-                    raise ValueError("плоскость потока: hi > lo по поперечным осям")
+                    raise ValueError(T("flux plane: hi > lo along the transverse axes"))
             sign = 1 if direction is None else (1 if direction > 0 else -1)
             self._check_plane(v, idx_lo[v])
             faces.append(mon.Face(self, v, idx_lo[v], cells, sign, freqs))
@@ -1373,7 +1396,7 @@ class FDTD:
 
     def _check_plane(self, v, p):
         if not self.periodic[v] and not (1 <= p <= self.shape[v] - 1):
-            raise ValueError(f"плоскость потока на границе сетки по оси {AXES[v]}")
+            raise ValueError(T("the flux plane lies on the grid's boundary along axis {axis}", axis=AXES[v]))
 
     def add_flux(self, region, freqs=None, closed: bool | None = None, direction=None) -> int:
         """Poynting flux through a plane (``region`` with one zero extent; ``direction`` +1/-1 along its normal) or a
@@ -1401,7 +1424,7 @@ class FDTD:
 
     def remove_monitor(self, mid: int):
         if mid not in self._monitors:
-            raise KeyError(f"нет датчика {mid}")
+            raise KeyError(f"no monitor {mid}")
         del self._monitors[mid]
 
     def monitors(self) -> list[dict]:
@@ -1471,14 +1494,14 @@ class FDTD:
         ``cross_sections`` (the box's fields are averaged to the face centres like the flux monitor's)."""
         m = self._monitors[mid]
         if m["kind"] != "near2far":
-            raise ValueError("не монитор дальнего поля")
+            raise ValueError(T("not a far-field monitor"))
         if normalisation not in ("exact", "monitor"):
-            raise ValueError("нормировка: exact или monitor")
+            raise ValueError(T("normalisation: exact or monitor"))
         rel = self._tf_relation(m["region"])
         if rel not in (None, "sf"):
-            raise ValueError(f"ящик дальнего поля {mid} должен лежать всеми гранями в области рассеянного поля (с "
-                             f"запасом в ячейку), а он {rel}: в дальнее поле вошла бы падающая волна (review B8-fdtd "
-                             f"F12)")
+            raise ValueError(T("the far-field box {id} must lie with all its faces in the scattered-field region "
+                               "(with a cell's margin), but it lies {where}: the incident wave would enter the far "
+                               "field (review B8-fdtd F12)", id=int(mid), where=_REL[rel]))
         fs = m["freqs"]
         bg = self.background
         eta = math.sqrt(bg.mu / bg.eps)
@@ -1561,7 +1584,7 @@ class FDTD:
         from .fdtd_tfsf import monitor_factor
         rec = self._plane_wave_rec()
         if rec is None:
-            raise ValueError("нет плоской волны")
+            raise ValueError(T("no plane wave"))
         return monitor_factor(self, rec, freqs, self._monitor_axis(rec, axis))
 
     def incident_intensity(self, freqs, start_step: int = 0, normalisation: str = "exact", axis=None):
@@ -1573,10 +1596,10 @@ class FDTD:
         measures it, Meep's "normalisation run" in closed form. Dividing a flux measured by the monitor by it cancels
         the monitor's own bias exactly for plane waves along that axis (reflection, transmission; review B8-fdtd F5)."""
         if normalisation not in ("exact", "monitor"):
-            raise ValueError("нормировка: exact или monitor")
+            raise ValueError(T("normalisation: exact or monitor"))
         rec = self._plane_wave_rec()
         if rec is None:
-            raise ValueError("нет плоской волны")
+            raise ValueError(T("no plane wave"))
         G = self._incident_dft(freqs, start_step)
         bg = self.background
         f = np.asarray(freqs, float)
@@ -1605,19 +1628,22 @@ class FDTD:
         out = {}
         ref = None
         if self._plane_wave_rec() is None:
-            raise ValueError("нет плоской волны")
+            raise ValueError(T("no plane wave"))
         for key, mid in (("sca", scattered), ("tot", total)):
             if mid is None:
                 continue
             m = self._monitors[mid]
             if m["kind"] != "flux" or not m["closed"] or m["freqs"] is None:
-                raise ValueError("нужен замкнутый ящик потока с частотами")
+                raise ValueError(T("a closed flux box with frequencies is needed"))
             rel = self._tf_relation(m["region"])
             want = "sf" if key == "sca" else "tf"
             if rel != want:
-                raise ValueError(f"ящик потока {mid} должен лежать {'вне' if key == 'sca' else 'внутри'} области "
-                                 f"полного поля всеми гранями (с запасом в ячейку), а он {rel}: сечение было бы "
-                                 f"неверным (review B8-fdtd F12)")
+                raise ValueError(T("the flux box {id} must lie with all its faces outside the total-field region "
+                                   "(with a cell's margin), but it lies {where}: the cross section would be wrong "
+                                   "(review B8-fdtd F12)", id=int(mid), where=_REL[rel]) if key == "sca" else
+                                 T("the flux box {id} must lie with all its faces inside the total-field region "
+                                   "(with a cell's margin), but it lies {where}: the cross section would be wrong "
+                                   "(review B8-fdtd F12)", id=int(mid), where=_REL[rel]))
             fs = m["freqs"]
             I = self.incident_intensity(fs, m["start"], normalisation)
             P = sum(f.flux_spectrum() for f in m["faces"])
@@ -1640,7 +1666,7 @@ class FDTD:
         (1/2) sum omega Im(eps_d(omega)) |E|^2 dV with the scheme's own eps_d of each node's medium."""
         m = self._monitors[mid]
         if m["kind"] != "dft":
-            raise ValueError("нужен монитор DFT")
+            raise ValueError(T("a DFT monitor is needed"))
         fs = m["freqs"]
         P = np.zeros(len(fs))
         for c, acc in m["accs"].items():
@@ -1697,13 +1723,13 @@ class FDTD:
         """Set a component on its nodes (initial conditions; ``values`` broadcastable to the grid's 2-D or 3-D shape,
         or a callable of the node coordinates). E at t, H at t - dt/2 (the solver's staggering)."""
         if comp not in self.comps:
-            raise ValueError(f"компоненты {comp} нет в этом мире")
+            raise ValueError(T("this world has no component {comp}", comp=comp))
         if callable(values):
             X = np.meshgrid(*self.coords(comp), indexing="ij")
             values = values(*X)
         a = np.asarray(values)
         if np.iscomplexobj(a) and not self.complex:
-            raise ValueError("комплексное поле — только в мире с фазой Блоха")
+            raise ValueError(T("a complex field only in a world with a Bloch phase"))
         a = np.broadcast_to(a, self.shape[:self.dim]).reshape(self.shape).astype(complex if self.complex else float)
         self.F[comp] = self.xp.asarray(a.copy()) if self.device == "gpu" else a.copy()
         if comp[0] == "e":
@@ -1719,7 +1745,7 @@ class FDTD:
     def field(self, comp: str) -> np.ndarray:
         """A component on its own nodes over the whole grid (absorbing layers included): 2-D arrays (nx, ny) in 2-D."""
         if comp not in self.comps:
-            raise ValueError(f"компоненты {comp} нет в этом мире")
+            raise ValueError(T("this world has no component {comp}", comp=comp))
         a = backend.to_numpy(self.F[comp]).copy()
         return a[..., 0] if self.dim == 2 else a
 
@@ -1785,7 +1811,7 @@ class FDTD:
             if kind == "|S|":
                 return np.sqrt(S[0] ** 2 + S[1] ** 2 + S[2] ** 2)
             return S["xyz".index(kind[1])]
-        raise ValueError("вид снимка: компонента, |E|^2, |H|^2, Sx, Sy, Sz, |S|")
+        raise ValueError(T("snapshot kind: a component, |E|^2, |H|^2, Sx, Sy, Sz, |S|"))
 
     def material_map(self, kind: str = "eps", interior: bool = True) -> np.ndarray:
         """At the nodes of Ez (2-D TM, 3-D) or Ex (2-D TE), interior only: "eps" (eps_inf as the node has it, averaged
@@ -1813,10 +1839,10 @@ class FDTD:
         for _ in range(n):
             self._step()
             if self.steps % 256 == 0 and not self._healthy():
-                raise Unstable(f"поля стали нечисловыми к t = {self.t:.6g} (шаг {self.steps})")
+                raise Unstable(T("the fields became non-numeric by t = {t:.6g} (step {step})", t=float(self.t), step=int(self.steps)))
         # and at the end of every call (review B8-fdtd F20: short calls never reached a multiple of 256)
         if self.steps % 256 != 0 and not self._healthy():
-            raise Unstable(f"поля стали нечисловыми к t = {self.t:.6g} (шаг {self.steps})")
+            raise Unstable(T("the fields became non-numeric by t = {t:.6g} (step {step})", t=float(self.t), step=int(self.steps)))
         if self.device == "gpu":
             self.xp.cuda.Device(0).synchronize()
         self._timing["steps"] += n
@@ -2047,8 +2073,8 @@ class FDTD:
         cf = co["cb"] if kind_e else (co["db"] if cf_arr else dummy["d"])
         cfs = 0.0 if (kind_e or cf_arr) else float(co["db"])
         ca = co["ca"] if ca_arr else dummy["d"]
-        T = np.complex128 if self.complex else np.float64
-        ph = [T(self.phase[t[k][0]]) if (t[k] is not None and self.complex) else T(1.0) for k in (1, 2)]
+        scal = np.complex128 if self.complex else np.float64
+        ph = [scal(self.phase[t[k][0]]) if (t[k] is not None and self.complex) else scal(1.0) for k in (1, 2)]
         (S1, psi1, b1, a1, k1, lo1, hi1, _), (S2, psi2, b2, a2, k2, lo2, hi2, _) = args_terms
         block = 256
         grid = ((self.N + block - 1) // block,)
@@ -2182,7 +2208,7 @@ class FDTD:
             cross = backend.settings()["crossover"].get(KERNEL, backend.kernels()[KERNEL].crossover)
             size = max(self.N, cross or 0)
         ch = backend.choose(KERNEL, size, footprint=self._footprint(), force=force,
-                            why="выбрано для этого мира" if force else "")
+                            why=T("chosen for this world") if force else "")
         self._reason = ch.reason
         if ch.device != self.device:
             self._move(ch.device, ch.xp)
@@ -2253,17 +2279,19 @@ class FDTD:
                "geometry": {"requested": [self.size_requested[u] for u in range(self.dim)],
                             "realised": [self.interior[u] for u in range(self.dim)], "ok": geo_ok}}
         if not geo_ok:
-            out["geometry"]["note"] = ("область отличается от заданной: длина оси — ближайшая реализуемая на сетке "
-                                       "(целое число ячеек; между стенками PEC и PMC — нечётное число полуячеек)")
+            out["geometry"]["note"] = T("the domain differs from the request: an axis length is the nearest one "
+                                        "realisable on the grid (a whole number of cells; between PEC and PMC walls an "
+                                        "odd number of half cells)")
         for sid, rec in self._sources.items():
             if rec["kind"] == "tfsf":
                 bad = self._tfsf_foreign_nodes(rec)
                 d = {"window_tail": rec.get("tail", 0.0), "omitted_energy": rec.get("omitted", 0.0),
                      "foreign_nodes_at_faces": bad, "ok": bad == 0}
                 if bad:
-                    d["note"] = (f"{bad} узлов с поправками на гранях области полного поля не в фоновой среде (тело "
-                                 f"пересекает грань или подходит к ней ближе полуячейки): падающая волна там не "
-                                 f"точна, утечка не на уровне округления")
+                    d["note"] = T("correction nodes on the faces of the total-field region that are not in the "
+                                  "background medium: {n} (a body crosses a face or comes closer to it than half a "
+                                  "cell): the incident wave is not exact there, the leak is above the round-off level",
+                                  n=int(bad))
                 out[f"tfsf_{sid}"] = d
         for mid, m in self._monitors.items():
             if m["kind"] in ("flux", "near2far"):
@@ -2367,7 +2395,7 @@ class FDTD:
     @classmethod
     def from_state_dict(cls, d: dict, device: str | None = None) -> "FDTD":
         if d.get("format") != FORMAT:
-            raise ValueError(f"не состояние {FORMAT}")
+            raise ValueError(T("not a state of {format}", format=FORMAT))
         size = d["size"]
         o = cls.__new__(cls)
         o.__init__(size, d["dx"], pol=d["pol"], courant=d["courant"],
@@ -2375,12 +2403,12 @@ class FDTD:
                    bloch=d["bloch"] if any(d["bloch"]) else None, background=Medium.from_params(d["background"]),
                    averaging=d["averaging"], device="cpu")
         if list(o.shape) != list(d["shape"]):
-            raise ValueError("сетка восстановленного мира не совпала с сохранённой")
+            raise ValueError(T("the grid of the restored world does not match the saved one"))
         o.size_requested = list(d.get("size_requested", o.size_requested))
         o._bodies = {}
         for b in d["bodies"]:
             o._bodies[int(b["id"])] = {"shape": geo.shape_from_params(b["shape"]), "medium": Medium.from_params(
-                b["medium"]), "label": b["label"], "averaging": b["averaging"]}
+                b["medium"]), "label": as_text(b["label"]), "averaging": b["averaging"]}
         o._next_body, o._next_source, o._next_monitor = d["next"]
         o._build_materials(first=True)
         for s in d["sources"]:
@@ -2396,7 +2424,7 @@ class FDTD:
         for c, dd in d["disp"].items():
             od = o.disp[c]
             if not np.array_equal(od["idx"], dd["idx"]):
-                raise ValueError("дисперсные узлы не совпали")
+                raise ValueError(T("the dispersive nodes do not match"))
             for k in ("P", "Pm", "PD"):
                 od[k] = np.array(dd[k])
         for m in d["monitors"]:
@@ -2478,15 +2506,17 @@ def _bench(size: int, xp, cplx):
 
 
 backend.register(backend.KernelSpec(
-    KERNEL, "Электромагнитное поле (FDTD, сетка Йи)",
-    "шаг уравнений Максвелла: обновление E и H с CPML (песочница «Электричество и магнетизм», оптика)",
+    KERNEL, T("Electromagnetic field (FDTD, Yee grid)"),
+    T("a step of Maxwell's equations: the E and H updates with CPML (the playground “Electricity and magnetism”, "
+      "optics)"),
     gpu=True,
     precisions={"fp64": {"allowed": True},
                 "fp32": {"allowed": False,
-                         "why": "не проверено: накопление ошибки округления за 10⁴–10⁵ шагов и потоки энергии "
-                                "(разности) — fp32 не предлагается"}},
+                         "why": T("not checked: round-off accumulates over 10⁴–10⁵ steps and in the energy fluxes "
+                                  "(differences); fp32 is not offered")}},
     crossover=128 * 128,
-    crossover_note=("измерено 2026-11-04 на RTX 2080 Ti против CPU контейнера (NumPy, 4 потока), fp64, мир в вакууме: "
-                    "2-D TM — равны на 64², GPU ×2.3 на 128², ×19 на 512², ×67 на 4096²; 3-D — ×6 на 32³, ×25 на "
-                    "64³, ×76 на 256³; источники и датчики добавляют свои запуски ядер; «Измерить заново» уточняет"),
+    crossover_note=T("measured 2026-11-04 on an RTX 2080 Ti against the container's CPU (NumPy, 4 threads), fp64, a "
+                     "world in vacuum: 2-D TM equal at 64², the GPU ×2.3 at 128², ×19 at 512², ×67 at 4096²; 3-D ×6 at "
+                     "32³, ×25 at 64³, ×76 at 256³; sources and probes add kernel launches of their own; “Measure "
+                     "again” refines this"),
     bench=_bench, bench_sizes=(64 * 64, 128 * 128, 256 * 256, 512 * 512, 1024 * 1024, 2048 * 2048)))

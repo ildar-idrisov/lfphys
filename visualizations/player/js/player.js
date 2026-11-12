@@ -8,7 +8,7 @@
 // A run holds one or more worlds. Live parameters (the set-up an experimenter can change while the world runs)
 // apply at once, at the current moment of the world, without an "apply" button. Laws and initial conditions are
 // fixed for a world; changing them starts a new world inside the same run (the previous worlds stay in the record
-// and can be looked at with the «Мир» switch in the top bar).
+// and can be looked at with the world switch in the top bar).
 //
 // Transport (owner, 2026-10-28): ⏺ records — the world is computed further and its frames are added to the history;
 // ⏮ ◀ ▶ ⏭ and the timeline move along the history. Whatever the cursor points at is shown exactly as it was then:
@@ -16,6 +16,7 @@
 // (syncView). With the cursor at the end, recording is shown live. There is no stop: a run idle without viewers is
 // suspended by the server and resumed (rebuilt from its record) when ⏺ is pressed again.
 import { connectRun, getJSON, postJSON } from "./api.js";
+import { lang, t } from "./i18n.js";
 import { control, el, fill, initTheme, modal, num, panel, paramForm, time, toast, toggleTheme } from "./ui.js";
 
 initTheme();
@@ -55,13 +56,13 @@ const archived = () => S.w !== latest();
 const liveParams = () => S.viz.schema.params.filter((p) => p.live);
 
 async function main() {
-  if (!runId) { document.body.replaceChildren(el("div", { class: "page" }, "Не указан запуск: /run?id=…")); return; }
+  if (!runId) { document.body.replaceChildren(el("div", { class: "page" }, t("No run given: /run?id=…"))); return; }
   try {
     S.meta = await getJSON(`/api/runs/${encodeURIComponent(runId)}`);
     S.viz = await getJSON(`/api/viz/${encodeURIComponent(S.meta.viz)}`);
-  } catch (e) { document.body.replaceChildren(el("div", { class: "page" }, "Запуск не найден: " + e.message)); return; }
-  document.title = `${S.viz.title} · ${runId}`;
-  $("title").textContent = S.viz.title;
+  } catch (e) { document.body.replaceChildren(el("div", { class: "page" }, t("Run not found: {why}", { why: e.message }))); return; }
+  document.title = `${t(S.viz.title)} · ${runId}`;
+  $("title").textContent = t(S.viz.title);
   $("runid").textContent = runId;
   $("keep").textContent = S.meta.keep ? "★" : "☆";
   const mod = await import(`/viz/${S.meta.viz}/view.js`);
@@ -70,9 +71,9 @@ async function main() {
     send: (cmd, args) => send(cmd, args),
     set: (values) => sendSet(values),
     liveControl: (id, opts) => boundControl(id, opts),
-    setScene: (text) => { $("scene").textContent = text || ""; },
+    setScene: (text) => { $("scene").textContent = t(text); },
     requestRender, time, num,
-    jumpTo: (t) => jumpToTime(t),
+    jumpTo: (tt) => jumpToTime(tt),
     isArchived: () => archived(),  // a world from the record: views must not send view commands for it
     // why the view may not change what the run computes now (slice planes), or "": only at the end of the history of
     // the current world (review C1-7); the event "editablechange" says when it changed
@@ -92,7 +93,7 @@ async function main() {
   S.view = mod.createView(ctx);
   layout();
   bindTransport();
-  S.conn = connectRun(runId, { onOpen: reset, onMessage: onMessage, onClose: () => setStatus("dead", "связь оборвалась — переподключение…") });
+  S.conn = connectRun(runId, { onOpen: reset, onMessage: onMessage, onClose: () => setStatus("dead", t("connection lost — reconnecting…")) });
   requestAnimationFrame(loop);
 }
 
@@ -100,36 +101,36 @@ async function main() {
 function layout() {
   S.banner = el("div", { class: "banner", style: { display: "none" } });
   S.liveBox = el("div", {});
-  S.actionsBox = el("div", {}, el("div", { class: "muted" }, "ждём запуск…"));
+  S.actionsBox = el("div", {}, el("div", { class: "muted" }, t("waiting for the run…")));
   S.worldBox = el("div", {});
   const left = $("left"), right = $("right");
   const pg = S.viz.kind === "playground";
   left.replaceChildren(S.banner);
   if (liveParams().length) {  // a playground's live laws too (integrator, 2026-11-05)
-    left.append(panel(pg ? "Законы мира — меняются сразу" : "Установка — меняется сразу", el("div", {},
-      el("div", { class: "help" }, pg ? "Изменение применяется сразу, в текущий момент мира, к уже идущей сцене; остальные законы — в «Новый мир»."
-        : "Любое изменение применяется сразу, в текущий момент мира, и начинает новый отрезок опыта. Кнопки «применить» нет."),
+    left.append(panel(pg ? t("Laws of the world — change at once") : t("Set-up — changes at once"), el("div", {},
+      el("div", { class: "help" }, pg ? t("A change applies at once, at the world's current moment, to the scene already running; the other laws are in “New world”.")
+        : t("Any change applies at once, at the world's current moment, and starts a new stretch of the experiment. There is no “apply” button.")),
       S.liveBox)));
   }
-  // «Действия» only when the world has actions at the cursor (review UX-ui U23: an empty panel came first)
-  S.actionsPanel = panel("Действия", el("div", {}, el("div", { class: "help" }, "Совершаются в текущий момент мира; следствия распространяются от этого события."), S.actionsBox));
+  // "Actions" only when the world has actions at the cursor (review UX-ui U23: an empty panel came first)
+  S.actionsPanel = panel(t("Actions"), el("div", {}, el("div", { class: "help" }, t("Done at the world's current moment; the consequences spread from that event.")), S.actionsBox));
   left.append(
     S.actionsPanel,
     ...(S.view.leftPanels || []),
-    panel(liveParams().length ? "Новый мир: законы и начальные условия" : "Новый мир: сценарий, законы, начальные условия", S.worldBox,
+    panel(liveParams().length ? t("New world: laws and initial conditions") : t("New world: scenario, laws, initial conditions"), S.worldBox,
       { closed: liveParams().length > 0 || pg }),  // a playground's scene is built in this world: closed (U23)
   );
   S.checksBox = el("div", { class: "checks" });
   S.eventsBox = el("div", { class: "events" });
   S.infoBox = el("div", {});
   S.engineBox = el("div", { class: "engine" });
-  S.enginePanel = panel("Физика этого мира", S.engineBox, { closed: true });
+  S.enginePanel = panel(t("Physics of this world"), S.engineBox, { closed: true });
   right.replaceChildren(
-    panel("Проверки: вычислено ↔ эталон", el("div", {}, el("div", { class: "help" }, "Слева — величина, вычисленная в этом запуске из его событий; справа — замкнутая формула общепринятой физики (или объявленной модификации). ✓ — совпадение в пределах численной точности."), S.checksBox)),
+    panel(t("Checks: computed ↔ reference"), el("div", {}, el("div", { class: "help" }, t("On the left, the quantity computed in this run from its events; on the right, the closed formula of accepted physics (or of the declared modification). ✓ — agreement within the numerical precision.")), S.checksBox)),
     S.enginePanel,
     ...(S.view.rightPanels || []),
-    panel("События", S.eventsBox),
-    panel("О запуске", S.infoBox, { closed: true }),
+    panel(t("Events"), S.eventsBox),
+    panel(t("About the run"), S.infoBox, { closed: true }),
   );
   $("center").replaceChildren(S.view.center);
   $("theme").onclick = toggleTheme;
@@ -159,9 +160,9 @@ function liveValues() {  // the live set-up in force at the time shown (the late
   const W = curWorld();
   if (!W) return {};
   if (atEnd()) return { ...(W.header.params || {}), ...W.live };
-  const t = currentT();
+  const tt = currentT();
   let v = {};
-  for (const h of W.liveHist) { if (h.t <= t + 1e-12 * Math.abs(t)) v = h.values; else break; }
+  for (const h of W.liveHist) { if (h.t <= tt + 1e-12 * Math.abs(tt)) v = h.values; else break; }
   return { ...(W.header.params || {}), ...v };
 }
 const atEnd = () => S.idx >= S.frames.length - 1;
@@ -178,8 +179,9 @@ function renderLive() {
   const vals = liveValues();
   const groups = new Map();
   for (const p of liveParams()) {
-    if (!groups.has(p.group)) groups.set(p.group, []);
-    groups.get(p.group).push(p);
+    const g = t(p.group);  // a text: grouped by its rendering
+    if (!groups.has(g)) groups.set(g, []);
+    groups.get(g).push(p);
   }
   const blocks = [];
   for (const [g, list] of groups) {
@@ -230,21 +232,21 @@ function send(cmd, args) {
   if (S.suspended && RESUMING.includes(cmd) && S.pending !== "resume") setPending("resume");
   S.conn.send(cmd, args);
   if (cmd === "scene" && (args || {}).op !== "export") {  // shown at once; the worker's "busy" notice follows (U9)
-    S.sent = { cmd, what: SCENE_WHAT[(args || {}).op] || "сцена меняется", since: performance.now() };
+    S.sent = { cmd, what: SCENE_WHAT()[(args || {}).op] || t("scene: an object is being changed"), since: performance.now() };
     renderBusy();
   }
 }
-const SCENE_WHAT = { add: "сцена: добавляется объект", remove: "сцена: удаляется объект", set: "сцена: меняется объект",
-  edit: "сцена: перемещается объект", duplicate: "сцена: копируется объект", label: "сцена: переименовывается объект",
-  clear: "сцена: очищается" };
+const SCENE_WHAT = () => ({ add: t("scene: an object is being added"), remove: t("scene: an object is being removed"),
+  set: t("scene: an object is being changed"), edit: t("scene: an object is being moved"),
+  duplicate: t("scene: an object is being copied"), label: t("scene: an object is being renamed"), clear: t("scene: being cleared") });
 
 // what the world computes now: the local pending state, or the worker's own notice with the time it has taken and a
 // way out (✕: the command is cancelled, the world goes back to just before it; review UX-ui U9)
 let busyTimer = null, busyEls = null;
 function renderBusy() {
   const b = S.busy || S.sent, box = $("busy");
-  const local = S.pending === "world" ? "создаётся новый мир…" : S.pending === "set" ? "перестраивается установка…"
-    : S.pending === "resume" ? "продолжение: мир восстанавливается…" : "";
+  const local = S.pending === "world" ? t("a new world is being created…") : S.pending === "set" ? t("the set-up is being rebuilt…")
+    : S.pending === "resume" ? t("going on: the world is being restored…") : "";
   const state = b ? "b:" + (b.cmd || "") : local ? "l:" + S.pending : "";
   if (state !== S.busyState) { S.busyState = state; window.dispatchEvent(new Event("busychange")); }  // views: only on a change
   if (!b && !local) { box.style.display = "none"; clearInterval(busyTimer); busyTimer = null; return; }
@@ -255,16 +257,16 @@ function renderBusy() {
   }
   S.busyShown = true;
   box.style.display = "";
-  const text = b ? b.what || "мир считает" : local;
+  const text = b ? t(b.what) || t("the world is computing") : local;
   // the text and the button are kept and updated in place: a click on ✕ must not meet a rebuilt button (cf. U14)
   if (!busyEls) {
-    busyEls = { text: el("span", {}), cancel: el("button", { class: "cancel", title: "Отменить: мир вернётся в момент перед этим изменением (оно не применится)", onclick: cancelBusy }, "✕ отменить") };
+    busyEls = { text: el("span", {}), cancel: el("button", { class: "cancel", title: t("Cancel: the world goes back to the moment before this change (it is not applied)"), onclick: cancelBusy }, t("✕ cancel")) };
   }
   if (busyEls.text.parentNode !== box) box.replaceChildren(busyEls.text, busyEls.cancel);
-  const t = text + (secs >= 1 ? ` · ${Math.floor(secs)} с` : "…");
-  if (busyEls.text.textContent !== t) busyEls.text.textContent = t;
+  const shown = text + (secs >= 1 ? " · " + t("{t:d} s", { t: Math.floor(secs) }) : "…");
+  if (busyEls.text.textContent !== shown) busyEls.text.textContent = shown;
   busyEls.cancel.style.display = S.busy && S.busy.cmd !== "build" && secs >= 1 ? "" : "none";
-  box.title = S.busy ? "Мир считает; кадры и другие команды ждут. «✕ отменить» вернёт мир в момент перед этим изменением." : "";
+  box.title = S.busy ? t("The world is computing; frames and other commands wait. “✕ cancel” takes the world back to the moment before this change.") : "";
   if (!busyTimer) busyTimer = setInterval(renderBusy, 250);
 }
 async function cancelBusy() {
@@ -273,30 +275,30 @@ async function cancelBusy() {
     const r = await fetch(`/api/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST" });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) toast(j.error || r.statusText, "notice", 5000);
-  } catch (e) { toast("Отмена: " + e.message); }
+  } catch (e) { toast(t("Cancel: {why}", { why: e.message })); }
 }
 
 function editBlock() {
-  if (archived()) return "Это мир из записи: ни срезы, ни сцену в нём менять нельзя.";
-  if (S.ended) return "Это старая запись: менять нельзя.";
-  if (!atEnd()) return "Вы смотрите прошлое опыта: срезы и сцену меняют в конце записи (⏭).";
-  if (S.pending === "resume") return "Мир восстанавливается: срезы и сцену — когда запись продолжится.";
+  if (archived()) return t("This is a world from the record: neither its slices nor its scene can be changed.");
+  if (S.ended) return t("This is an old record: it cannot be changed.");
+  if (!atEnd()) return t("You are looking at the experiment's past: slices and the scene are changed at the end of the record (⏭).");
+  if (S.pending === "resume") return t("The world is being restored: slices and the scene when the record goes on.");
   return "";
 }
 
 function sendSet(values, ctl) {
-  if (S.ended || archived()) { toast("Это запись: изменить уже нельзя", "notice", 3000); refreshLive(); return; }
-  if (!atEnd()) { toast("Вы смотрите прошлое опыта: установку можно менять в конце записи (⏭)", "notice", 4000); refreshLive(); return; }
-  if (S.pending === "resume") { toast("Мир восстанавливается: установку можно менять, когда запись продолжится", "notice", 4000); refreshLive(); return; }
+  if (S.ended || archived()) { toast(t("This is a record: it cannot be changed any more"), "notice", 3000); refreshLive(); return; }
+  if (!atEnd()) { toast(t("You are looking at the experiment's past: the set-up can be changed at the end of the record (⏭)"), "notice", 4000); refreshLive(); return; }
+  if (S.pending === "resume") { toast(t("The world is being restored: the set-up can be changed when the record goes on"), "notice", 4000); refreshLive(); return; }
   send("set", { values });
   if (ctl) ctl.pending(true);
   if (S.pending !== "resume") setPending("set");
 }
 
 function sendAction(name, args) {
-  if (S.ended || archived()) { toast("Это запись: действия недоступны", "notice", 3000); return; }
-  if (!atEnd()) { toast("Вы смотрите прошлое опыта: действия — в конце записи (⏭)", "notice", 4000); return; }
-  if (S.pending === "resume") { toast("Мир восстанавливается: действия — когда запись продолжится", "notice", 4000); return; }
+  if (S.ended || archived()) { toast(t("This is a record: actions are not available"), "notice", 3000); return; }
+  if (!atEnd()) { toast(t("You are looking at the experiment's past: actions at the end of the record (⏭)"), "notice", 4000); return; }
+  if (S.pending === "resume") { toast(t("The world is being restored: actions when the record goes on"), "notice", 4000); return; }
   send("action", { name, args });
 }
 
@@ -314,7 +316,7 @@ function renderActions(actions) {
   box.replaceChildren();
   const off = !!editBlock();
   if (S.actionsPanel) S.actionsPanel.style.display = actions && actions.length ? "" : "none";
-  if (!actions || !actions.length) { box.append(el("div", { class: "muted" }, "Нет действий")); return; }
+  if (!actions || !actions.length) { box.append(el("div", { class: "muted" }, t("No actions"))); return; }
   for (const a of actions) {
     const help = a.help ? el("div", { class: "help" }, a.help) : null;
     // live action: an argument selects the object (key), the others apply at once (e.g. the speed of an observer)
@@ -349,7 +351,7 @@ function renderActions(actions) {
     if (a.args.length === 1 && a.args[0].type === "select" && a.args[0].options.length <= 8) {
       const arg = a.args[0];
       box.append(el("div", { class: "action" }, el("div", { class: "name" }, a.label), help,
-        el("div", { class: "btnrow" }, arg.options.map((o) => el("button", { disabled: off, title: `${a.label}: ${o.label}`,
+        el("div", { class: "btnrow" }, arg.options.map((o) => el("button", { disabled: off, title: `${t(a.label)}: ${t(o.label)}`,
           onclick: () => sendAction(a.name, { [arg.id]: o.value }) }, o.label)))));
       continue;
     }
@@ -366,7 +368,7 @@ function renderActions(actions) {
       return c.el;
     });
     box.append(el("div", { class: "action" }, el("div", { class: "name" }, a.label), help, fields,
-      el("button", { class: "primary", disabled: off, onclick: () => sendAction(a.name, { ...vals }) }, "▶ " + (a.button || a.label))));
+      el("button", { class: "primary", disabled: off, onclick: () => sendAction(a.name, { ...vals }) }, "▶ " + t(a.button || a.label))));
   }
 }
 
@@ -381,27 +383,27 @@ function renderWorldPanel() {
   const live = curWorld().live || {};
   const values = { ...params, ...live };
   let preset = "";
-  const schema = { ...S.viz.schema, params: S.viz.schema.params.map((p) => (p.live ? { ...p, group: `${p.group || "Законы"} — меняются и на ходу (сейчас как в этом мире)` } : p)) };
+  const schema = { ...S.viz.schema, params: S.viz.schema.params.map((p) => (p.live ? { ...p, group: t("{group} — also change on the go (now as in this world)", { group: p.group ? t(p.group) : t("Laws") }) } : p)) };
   const form = paramForm(schema, values, {});
-  const presetSel = el("select", {}, el("option", { value: "" }, "— установка как сейчас —"),
+  const presetSel = el("select", {}, el("option", { value: "" }, t("— the set-up as now —")),
     S.viz.schema.presets.map((p) => el("option", { value: p.id }, p.label)));
   const note = el("div", { class: "help" });
-  const seed = el("input", { type: "text", placeholder: `затравка (сейчас ${W.header.seed})`, style: { width: "100%" } });
+  const seed = el("input", { type: "text", placeholder: t("seed (now {seed})", { seed: String(W.header.seed) }), style: { width: "100%" } });
   const playground = !!W.header.playground;
   // a playground's scene carried into the new world (plan P16.1): on by default; a scenario brings its own scene
   const carry = el("input", { type: "checkbox", checked: true });
-  const carryRow = playground ? el("label", { class: "ctl pg-carry", title: "Объекты текущей сцены переходят в новый мир. Их состояние (положения, скорости, поле) идёт с ними там, где раздел умеет его перенести; сообщение после переноса скажет, что перенесено с состоянием, что начато заново из параметров, что изменено и что новый мир не принял" },
-    carry, " перенести сцену") : null;
+  const carryRow = playground ? el("label", { class: "ctl pg-carry", title: t("The objects of the current scene go into the new world. Their state (positions, velocities, a field) goes with them where the section can carry it; the message after the carry-over says what went with its state, what started afresh from its parameters, what was changed and what the new world refused") },
+    carry, " " + t("carry the scene over")) : null;
   const showNote = () => {
     const pr = S.viz.schema.presets.find((x) => x.id === preset);
     if (carryRow) { carry.disabled = !!preset; carryRow.classList.toggle("muted", !!preset); }
     note.textContent = preset
-      ? "Новый мир начнётся из сценария «" + presetSel.selectedOptions[0].textContent + "» с законами из формы ниже."
-        + (pr && pr.note ? " " + pr.note : "")  // what the scenario shows, e.g. a check that fails on purpose (P23)
+      ? t("The new world starts from the scenario “{name}” with the laws of the form below.", { name: presetSel.selectedOptions[0].textContent })
+        + (pr && pr.note ? " " + t(pr.note) : "")  // what the scenario shows, e.g. a check that fails on purpose (P23)
       : playground ? (carry.checked
-        ? "Новый мир начнётся с законами из формы ниже, со сценой этого мира в его текущий момент. Сообщение после переноса скажет, что перенесено с состоянием, что начато заново из параметров (если раздел не умеет перенести состояние), что изменено и что новый мир не принял."
-        : "Новый мир начнётся с пустой сцены с законами из формы ниже (текущую сцену можно сохранить в «Сцена: файл» и загрузить).")
-        : (liveParams().length ? "Установка (источник, щели, наблюдатель…) перейдёт в новый мир как сейчас; меняются законы и начальные условия из формы." : "");
+        ? t("The new world starts with the laws of the form below and with this world's scene at its current moment. The message after the carry-over says what went with its state, what started afresh from its parameters (where the section cannot carry the state), what was changed and what the new world refused.")
+        : t("The new world starts from an empty scene with the laws of the form below (the current scene can be saved in “Scene: file” and loaded)."))
+        : (liveParams().length ? t("The set-up (source, slits, observer…) goes into the new world as it is now; the laws and initial conditions of the form change.") : "");
   };
   carry.onchange = showNote;
   presetSel.onchange = () => {
@@ -422,16 +424,16 @@ function renderWorldPanel() {
     if (playground && !preset && carry.checked) body.carry = true;
     const sd = seed.value.trim();
     if (sd) body.seed = Number(sd);
-    if (S.pending === "resume") { toast("Мир восстанавливается: новый мир — когда запись продолжится", "notice", 4000); return; }
+    if (S.pending === "resume") { toast(t("The world is being restored: a new world when the record goes on"), "notice", 4000); return; }
     send("new_world", body);
     if (S.pending !== "resume") setPending("world");
-  } }, "▶ Начать новый мир");
+  } }, t("▶ Start a new world"));
   showNote();
   fill(S.worldBox,
-    el("div", { class: "help" }, "Законы и начальные условия нельзя изменить внутри идущего мира: история, посчитанная при других законах, — другая история. Новый мир начинается в этом же запуске; прежние остаются в записи (переключатель «Мир» вверху)."),
-    el("div", { class: "ctl" }, el("label", {}, "Сценарий"), presetSel), carryRow, note,
+    el("div", { class: "help" }, t("Laws and initial conditions cannot be changed inside a running world: a history computed under other laws is another history. A new world starts in this same run; the earlier ones stay in the record (the world switch at the top).")),
+    el("div", { class: "ctl" }, el("label", {}, t("Scenario")), presetSel), carryRow, note,
     form.el,
-    el("div", { class: "ctl" }, el("label", {}, "Затравка случайных чисел"), seed),
+    el("div", { class: "ctl" }, el("label", {}, t("Random seed")), seed),
     el("div", { style: { marginTop: "8px" } }, go));
 }
 
@@ -448,7 +450,7 @@ function newWorld(meta, blobs) {
               prefix: 0, nOn: 0, keys: [], keyStride: 1,  // messages [0, prefix) all fed; nOn fed in all; key frames
               lastSet: new Map() };  // the latest message of each set-like (type, id) in the record (repeats: U1)
   // settings of devices that the engine adjusted for this run (e.g. a GPU asked for but not available)
-  for (const n of ((meta.backend || {}).notes || [])) W.events.push({ t: meta.t || 0, kind: "notice", text: "ℹ устройства: " + n });
+  for (const n of ((meta.backend || {}).notes || [])) W.events.push({ t: meta.t || 0, kind: "notice", text: { $t: "ℹ devices: {note}", a: { note: n } } });
   const follow = S.w === latest() || S.w < 0;
   S.worlds.push(W);
   renderWorldSelect();
@@ -470,23 +472,23 @@ function showWorld(i) {
   S.idx = S.frames.length - 1; S.live = true; S.hist = 0;
   rebuildView(W, currentT());
   if (archived()) updateRate(null);  // the measured speed belongs to the live world (review B4-11)
-  $("scene").textContent = W.header.title || "";
+  $("scene").textContent = t(W.header.title);
   renderAtCursor(W);
   renderLive();
   renderWorldPanel();
   renderInfo();
   renderWorldSelect();
   S.banner.style.display = archived() ? "" : "none";
-  S.banner.replaceChildren("Вы смотрите мир ", String(W.n), " из записи — менять его нельзя. ",
-    el("button", { onclick: () => showWorld(latest()) }, "к текущему миру"));
+  S.banner.replaceChildren(t("You are looking at world {n:d} from the record — it cannot be changed. ", { n: W.n }),
+    el("button", { onclick: () => showWorld(latest()) }, t("to the current world")));
   S.checksDirty = S.eventsDirty = S.dirty = true;
   updateTransport();
 }
 
 // --- the view at the time shown: fed the record's messages up to it; when going back, restored from its nearest key
 // frame (a view with snapshot() / restore()) or rebuilt from the record (a view without) --------------------------------
-function rebuildView(W, t) {
-  const k = S.viewOwner === W && S.view.restore ? keyBefore(W, t) : null;
+function rebuildView(W, tt) {
+  const k = S.viewOwner === W && S.view.restore ? keyBefore(W, tt) : null;
   const t0 = performance.now();
   if (k) {
     try {
@@ -494,7 +496,7 @@ function rebuildView(W, t) {
       const L = W.viewMsgs;
       for (let i = k.i; i < L.length; i++) L[i].on = false;
       W.prefix = W.nOn = W.scan = k.i; W.maxOn = k.maxOn;
-      feedView(W, t);
+      feedView(W, tt);
       DBG.fromKey++; DBG.lastMs = performance.now() - t0; DBG.lastFed = W.prefix - k.i;
       return;
     } catch (e) { console.error("key frame not restored, rebuilding from the record:", e); DBG.keyFailed++; }
@@ -504,7 +506,7 @@ function rebuildView(W, t) {
   S.viewOwner = W;
   for (const m of W.viewMsgs) m.on = false;
   W.maxOn = -Infinity; W.scan = 0; W.prefix = 0; W.nOn = 0; W.keys = []; W.keyStride = 1;
-  feedView(W, t);
+  feedView(W, tt);
   DBG.full++; DBG.lastMs = performance.now() - t0; DBG.lastFed = W.prefix;
 }
 // for automated tests of the page: how the view was last brought to the cursor, and a rebuild from the record on demand
@@ -514,15 +516,16 @@ window.__lfPlayer = {
   goTo: (i) => goTo(i),
   rebuildFromRecord: () => { const W = curWorld(); S.viewOwner = null; rebuildView(W, currentT()); S.dirty = true; },
   redraw: () => { S.dirty = true; },
+  replaying: () => S.replaying,  // the record is still being loaded (language-neutral, for the tests)
 };
 // the latest key frame at or before t that the view's present state contains (it holds the messages in order up to a
 // later point; a key frame records how long its data were then)
-function keyBefore(W, t) {
+function keyBefore(W, tt) {
   if (W.nOn !== W.prefix) return null;  // the view holds messages out of order: only a rebuild is safe
-  const eps = 1e-12 * Math.abs(t);
+  const eps = 1e-12 * Math.abs(tt);
   for (let j = W.keys.length - 1; j >= 0; j--) {
     const k = W.keys[j];
-    if (k.i <= W.prefix && k.maxOn <= t + eps) return k;
+    if (k.i <= W.prefix && k.maxOn <= tt + eps) return k;
   }
   return null;
 }
@@ -539,14 +542,14 @@ function takeKey(W) {
     W.keys = W.keys.filter((k) => { const b = Math.floor(k.i / s2); if (seen.has(b)) return false; seen.add(b); return true; });
   }
 }
-function feedView(W, t) {
-  const L = W.viewMsgs, eps = 1e-12 * Math.abs(t), keyed = !!(S.view.snapshot && S.view.restore);
+function feedView(W, tt) {
+  const L = W.viewMsgs, eps = 1e-12 * Math.abs(tt), keyed = !!(S.view.snapshot && S.view.restore);
   let first = -1;
   for (let i = W.scan; i < L.length; i++) {
     const m = L[i];
     if (m.on) continue;
     const tm = m.meta.t ?? 0;
-    if (tm <= t + eps) {
+    if (tm <= tt + eps) {
       m.on = true; W.maxOn = Math.max(W.maxOn, tm); W.nOn++;
       try { S.view.onMessage(m.meta, m.blobs); } catch (e) { console.error(e); }
       if (i === W.prefix) {
@@ -558,32 +561,32 @@ function feedView(W, t) {
   }
   W.scan = first < 0 ? L.length : first;
 }
-function syncView(t) {
+function syncView(tt) {
   const W = curWorld();
   if (!W) return;
-  if (W.maxOn > t + 1e-12 * Math.abs(t)) rebuildView(W, t);  // the view holds something from later
-  else feedView(W, t);
+  if (W.maxOn > tt + 1e-12 * Math.abs(tt)) rebuildView(W, tt);  // the view holds something from later
+  else feedView(W, tt);
 }
 
 // the latest value of a time-indexed list at or before t
-function asOf(list, t) {
-  const eps = 1e-12 * Math.abs(t);
+function asOf(list, tt) {
+  const eps = 1e-12 * Math.abs(tt);
   let v = list[0].v;
-  for (const h of list) { if (h.t <= t + eps) v = h.v; else break; }
+  for (const h of list) { if (h.t <= tt + eps) v = h.v; else break; }
   return v;
 }
-function renderAtCursor(W) {  // the top bar's approximations, «Физика этого мира» and the actions, as of the cursor
-  const t = currentT();
-  renderPhysics(W.header.modifications || [], asOf(W.approxHist, t));
-  renderEngine(asOf(W.engineHist, t));
-  renderActions(asOf(W.actionsHist, t));
+function renderAtCursor(W) {  // the top bar's approximations, "Physics of this world" and the actions, as of the cursor
+  const tt = currentT();
+  renderPhysics(W.header.modifications || [], asOf(W.approxHist, tt));
+  renderEngine(asOf(W.engineHist, tt));
+  renderActions(asOf(W.actionsHist, tt));
 }
 
 function renderWorldSelect() {
   const sel = $("world");
   sel.style.display = S.worlds.length > 1 ? "" : "none";
   sel.replaceChildren(...S.worlds.map((W, i) => el("option", { value: i },
-    `Мир ${W.n}${i === latest() ? " (текущий)" : ""}: ${(W.header.title || "").replace(/^[^:]*:\s*/, "")}`)));
+    t(i === latest() ? "World {n:d} (current): {title}" : "World {n:d}: {title}", { n: W.n, title: t(W.header.title).replace(/^[^:]*:\s*/, "") }))));
   sel.value = String(Math.max(0, S.w));
 }
 
@@ -597,11 +600,11 @@ function reset() {
   S.viewOwner = null;
   setPending(null);
   S.checksDirty = S.eventsDirty = true;
-  setStatus("", "загрузка записи…");
+  setStatus("", t("loading the record…"));
 }
 
 function onMessage({ meta, blobs }) {
-  window.lfInstruments?.message(meta, blobs, { t: currentT, w: () => S.w, n: () => S.worlds.length });  // [LB1 P16.3 instruments] the «Приборы» panel (instruments.js)
+  window.lfInstruments?.message(meta, blobs, { t: currentT, w: () => S.w, n: () => S.worlds.length });  // [LB1 P16.3 instruments] the "Instruments" panel (instruments.js)
   if (meta.type === "header") { newWorld(meta, blobs); if (S.pending === "world") setPending(null); return; }
   if (meta.type === "state") {
     S.playing = meta.playing; S.speed = meta.speed; S.speedRange = meta.speed_range || S.speedRange;
@@ -610,7 +613,7 @@ function onMessage({ meta, blobs }) {
       if (S.pending === "resume") setPending(null);
     }
     updateTransport(); renderSpeedTicks(); if (!S.playing) updateRate(null);
-    if (meta.reason === "no_viewers" && !S.replaying) toast("Запуск был на паузе: не было зрителей", "notice", 4000);
+    if (meta.reason === "no_viewers" && !S.replaying) toast(t("The run was paused: there were no viewers"), "notice", 4000);
     return;
   }
   if (meta.type === "history_start") {
@@ -621,8 +624,8 @@ function onMessage({ meta, blobs }) {
   if (meta.type === "history_end") {
     S.replaying = false;
     S.histStride = 1;
-    S.resumeError = meta.resume_error || null;
-    S.startError = meta.start_error || null;  // the first world was refused: said in the status and «События» (P1)
+    S.resumeError = meta.resume_error ? t(meta.resume_error) : null;
+    S.startError = meta.start_error ? t(meta.start_error) : null;  // the first world was refused: said in the status and "Events" (P1)
     if (!meta.live) {  // nothing computes now: a suspended run goes on when ⏺ is pressed, an old record cannot
       S.playing = false; S.suspended = !!meta.resumable; S.ended = !meta.resumable;
       if (S.worlds.length) showWorld(S.w);
@@ -647,7 +650,7 @@ function onMessage({ meta, blobs }) {
   }
   if (meta.type === "closed") {
     S.playing = false; S.suspended = meta.state === "suspended"; S.ended = !S.suspended;
-    S.resumeError = meta.resume_error || null;
+    S.resumeError = meta.resume_error ? t(meta.resume_error) : null;
     S.busy = null; S.sent = null; S.busyShown = false;
     if (!S.worlds.length) S.startError = S.startError || (S.runNotes.find((n) => n.kind === "error") || {}).text || null;
     if (S.pending) setPending(null);  // nothing computes any more: nothing is pending (review C1-8)
@@ -661,8 +664,8 @@ function onMessage({ meta, blobs }) {
   const W = S.worlds[latest()];
   if (!W) {  // before any world: a refused start says why here (review UX-params P1: it was dropped)
     if (meta.type === "error" || meta.type === "notice") {
-      S.runNotes.push({ t: meta.t || 0, kind: meta.type, text: (meta.type === "error" ? "" : "ℹ ") + meta.text, detail: meta.detail });
-      if (meta.type === "error") { S.startError = meta.text; if (S.pending === "world") setPending(null); }
+      S.runNotes.push({ t: meta.t || 0, kind: meta.type, text: (meta.type === "error" ? "" : "ℹ ") + t(meta.text), detail: meta.detail });
+      if (meta.type === "error") { S.startError = t(meta.text); if (S.pending === "world") setPending(null); }
       if (!S.replaying) toast(meta.text, meta.type === "error" ? "error" : "notice", meta.type === "error" ? 15000 : 6000);
       S.eventsDirty = true; updateTransport();
     }
@@ -713,7 +716,7 @@ function onMessage({ meta, blobs }) {
       if (S.sent && !S.busy) { S.sent = null; renderBusy(); }
       break;
     case "notice":
-      W.events.push({ t: meta.t, kind: "notice", text: "ℹ " + meta.text });
+      W.events.push({ t: meta.t, kind: "notice", text: "ℹ " + t(meta.text), detail: meta.detail });
       if (shown) S.eventsDirty = true;
       if (!S.replaying) toast(meta.text, "notice", 6000);
       break;
@@ -764,7 +767,7 @@ function addFrame(W, f, shown) {
   f.n = W.nArrived;
   W.nArrived += S.replaying ? S.histStride : 1;
   const F = W.frames, follow = !shown || (S.live && !S.hist);
-  const t = shown && !follow ? currentT() : 0;
+  const tt = shown && !follow ? currentT() : 0;
   if (F.length && F[F.length - 1].n % W.stride !== 0) F.pop();
   F.push(f);
   if (F.length > MAX_FRAMES) {
@@ -773,51 +776,53 @@ function addFrame(W, f, shown) {
     for (let i = 0; i < F.length; i++) if (F[i].n % W.stride === 0 || i === F.length - 1) F[j++] = F[i];
     F.length = j;
   }
-  if (shown && !follow) S.idx = frameIndexAt(t);
+  if (shown && !follow) S.idx = frameIndexAt(tt);
 }
-function frameIndexAt(t) {  // the last frame at or before t
+function frameIndexAt(tt) {  // the last frame at or before tt
   const F = S.frames;
   let lo = 0, hi = F.length - 1;
   if (hi < 0) return -1;
-  if (t <= F[0].t) return 0;
-  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (F[mid].t <= t) lo = mid; else hi = mid - 1; }
+  if (tt <= F[0].t) return 0;
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (F[mid].t <= tt) lo = mid; else hi = mid - 1; }
   return lo;
 }
 
-const short = (t, n) => (String(t).length > n ? String(t).slice(0, n - 1) + "…" : String(t));
+const short = (s, n) => (String(s).length > n ? String(s).slice(0, n - 1) + "…" : String(s));
 function renderPhysics(mods, approx) {
   const box = $("physics");
+  const val = (v) => (typeof v === "number" ? num(v) : t(v));  // a modified law's value: a number or an option's label
+  approx = (approx || []).map((a) => t(a));
   box.replaceChildren(...[mods.length
-    ? el("span", { class: "badge mod", title: "Модифицированная физика:\n" + mods.map((m) => `${m.label}: ${m.value} (общепринято: ${m.standard})`).join("\n") },
-        "МОДИФ. ФИЗИКА: " + short(`${mods[0].label} = ${mods[0].value}`, 40) + (mods.length > 1 ? ` (+${mods.length - 1})` : ""))
-    : el("span", { class: "badge std", title: "Все законы — общепринятые" }, "стандартная физика"),
+    ? el("span", { class: "badge mod", title: t("Modified physics:") + "\n" + mods.map((m) => t("{label}: {value} (accepted: {standard})", { label: t(m.label), value: val(m.value), standard: val(m.standard) })).join("\n") },
+        t("MODIFIED PHYSICS: ") + short(`${t(mods[0].label)} = ${val(mods[0].value)}`, 40) + (mods.length > 1 ? ` (+${mods.length - 1})` : ""))
+    : el("span", { class: "badge std", title: t("All laws are the accepted ones") }, t("standard physics")),
     // approximations the world itself flags (owner, 2026-10-24: «помечать там, где это приближение»)
-    (approx || []).length ? el("span", { class: "badge mod", title: approx.join("\n") },
-      " ПРИБЛИЖЕНИЕ: " + (approx[0].length > 48 ? approx[0].slice(0, 46) + "…" : approx[0]) + (approx.length > 1 ? ` (+${approx.length - 1})` : "")) : null]
+    approx.length ? el("span", { class: "badge mod", title: approx.join("\n") },
+      t(" APPROXIMATION: ") + (approx[0].length > 48 ? approx[0].slice(0, 46) + "…" : approx[0]) + (approx.length > 1 ? ` (+${approx.length - 1})` : "")) : null]
     .filter(Boolean));
 }
 
 // the engine modules this world's physics comes from: the core (established physics) and, outside it, the
 // approximations, interpretations, models and alternatives (lfphys/LAYERS.md)
-const KIND_RU = { approximation: "приближение", interpretation: "интерпретация", model: "модель", alternative: "альтернатива" };
+const KIND = () => ({ approximation: t("approximation"), interpretation: t("interpretation"), model: t("model"), alternative: t("alternative") });
 function renderEngine(list) {
   list = list || [];
   const core = list.filter((d) => d.layer === "core"), th = list.filter((d) => d.layer === "theories");
   const rest = list.filter((d) => d.layer !== "core" && d.layer !== "theories");
   S.enginePanel.querySelector("h4").firstChild.textContent =
-    list.length ? `Физика этого мира: ядро ${core.length} · вне ядра ${th.length}` : "Физика этого мира";
+    list.length ? t("Physics of this world: core {core:d} · outside the core {other:d}", { core: core.length, other: th.length }) : t("Physics of this world");
   const item = (d) => el("div", { class: "eng " + d.layer + (d.kind === "alternative" ? " alt" : "") },
-    el("div", {}, el("b", {}, d.title || d.id), d.layer === "theories" ? el("span", { class: "badge" }, " " + (KIND_RU[d.kind] || d.kind)) : null),
-    d.statement ? el("div", { class: "muted" }, d.statement) : null,
-    d.validity ? el("div", { class: "muted" }, "Где верно: " + d.validity) : null,
-    (d.conflicts || []).map((c) => el("div", { class: "conf" }, "⚠ " + c)),
+    el("div", {}, el("b", {}, t(d.title) || d.id), d.layer === "theories" ? el("span", { class: "badge" }, " " + (KIND()[d.kind] || t(d.kind))) : null),
+    d.statement ? el("div", { class: "muted" }, t(d.statement)) : null,
+    d.validity ? el("div", { class: "muted" }, t("Where it holds: {validity}", { validity: t(d.validity) })) : null,
+    (d.conflicts || []).map((c) => el("div", { class: "conf" }, "⚠ " + t(c))),
     el("div", { class: "mono muted" }, "lfphys." + d.id));
   fill(S.engineBox,
-    el("div", { class: "help" }, "Откуда физика этого мира: ядро движка lfphys — установленная и подтверждённая физика; вне ядра — широко используемые приближения, интерпретации и модели (у каждой названо, где она расходится с ядром) и альтернативы для опытов «что если»."),
-    core.length ? el("h5", {}, "Ядро") : null, core.map(item),
-    th.length ? el("h5", {}, "Вне ядра") : null, th.map(item),
-    rest.length ? el("h5", {}, "Наборы законов и инструменты") : null, rest.map(item),
-    list.length ? null : el("div", { class: "muted" }, "Визуализация не сообщила модули движка."));
+    el("div", { class: "help" }, t("Where the physics of this world comes from: the core of the lfphys engine is established and confirmed physics; outside the core are widely used approximations, interpretations and models (each names where it departs from the core) and alternatives for “what if” experiments.")),
+    core.length ? el("h5", {}, t("Core")) : null, core.map(item),
+    th.length ? el("h5", {}, t("Outside the core")) : null, th.map(item),
+    rest.length ? el("h5", {}, t("Sets of laws and tools")) : null, rest.map(item),
+    list.length ? null : el("div", { class: "muted" }, t("The visualization reported no engine modules.")));
 }
 
 function renderInfo() {
@@ -826,17 +831,17 @@ function renderInfo() {
   const used = Object.entries((h.backend || {}).used || {});
   const dv = (u) => `${u.device === "gpu" ? "GPU" : "CPU"}, ${u.precision}`;
   const devText = used.length
-    ? used.map(([k, u]) => `${k}: рисунок — ${u.drawn ? dv(u.drawn) : "—"}; проверки — ${u.check ? dv(u.check) : "—"}`).join("; ")
-    : "все расчёты этого мира — на CPU (ядер с GPU-реализацией он не вызывал)";
+    ? used.map(([k, u]) => t("{kernel}: drawing — {drawn}; checks — {check}", { kernel: k, drawn: u.drawn ? dv(u.drawn) : "—", check: u.check ? dv(u.check) : "—" })).join("; ")
+    : t("all computations of this world are on the CPU (it called no kernels with a GPU implementation)");
   const over = (m.backend_settings || {}).override;
-  const rows = [["Запуск", m.id], ["Визуализация", `${m.viz} (версия ${m.version})`], ["Код", m.code],
-    ["Устройства", devText + (over ? " (выбор устройств задан для этого запуска)" : "")],
-    ["Мир", `${(curWorld() || {}).n || 1} из ${S.worlds.length}`], ["Затравка", h.seed ?? m.seed],
-    ["Создан", m.created], ["Сценарий", h.preset || m.preset || "свои параметры"], ["Python", m.python]];
+  const rows = [[t("Run"), m.id], [t("Visualization"), t("{id} (version {version})", { id: m.viz, version: String(m.version) })], [t("Code"), m.code],
+    [t("Devices"), devText + (over ? " " + t("(the choice of devices was set for this run)") : "")],
+    [t("World"), t("{n:d} of {total:d}", { n: (curWorld() || {}).n || 1, total: S.worlds.length })], [t("Seed"), h.seed ?? m.seed],
+    [t("Created"), m.created], [t("Scenario"), h.preset || m.preset || t("own parameters")], ["Python", m.python]];
   fill(S.infoBox,
     h.text ? el("p", {}, h.text) : null,
     el("div", { class: "kv" }, rows.flatMap(([k, v]) => [el("span", {}, k), el("span", { class: "mono" }, String(v ?? ""))])),
-    el("p", {}, el("a", { href: `/api/runs/${runId}/stream` }, "Скачать запись (.lfrec)"), " · ", el("a", { href: `/api/runs/${runId}`, target: "_blank" }, "паспорт запуска (JSON)")));
+    el("p", {}, el("a", { href: `/api/runs/${runId}/stream` }, t("Download the record (.lfrec)")), " · ", el("a", { href: `/api/runs/${runId}`, target: "_blank" }, t("the run's passport (JSON)"))));
 }
 
 // --- render loop ----------------------------------------------------------------------------------
@@ -848,8 +853,8 @@ function loop() {
   // intermediate states of a long record cost seconds (found while processing review C1); history_end draws once
   if (S.dirty && S.header && !S.replaying) {
     S.dirty = false;
-    const f = S.frames[S.idx], t = currentT();
-    syncView(t);
+    const f = S.frames[S.idx], tt = currentT();
+    syncView(tt);
     if (f) {
       try { S.view.render(f.meta, f.t, f.blobs); } catch (e) { console.error(e); }
       $("time").textContent = "t = " + time(f.t, 9);
@@ -858,10 +863,10 @@ function loop() {
     S.eventsDirty = true;
     // what depends on the time shown: the check versions computed by then, the set-up in force, the actions, the
     // approximations and the engine modules in force, the controls' availability
-    const W = curWorld(), eps = 1e-12 * Math.abs(t);
-    const upTo = (list) => { let n = 0; for (const h of list) { if (h.t <= t + eps) n++; else break; } return n; };
+    const W = curWorld(), eps = 1e-12 * Math.abs(tt);
+    const upTo = (list) => { let n = 0; for (const h of list) { if (h.t <= tt + eps) n++; else break; } return n; };
     let nc = 0;
-    for (const vs of S.checks.values()) for (const c of vs) { if ((c.t ?? 0) <= t + eps) nc++; else break; }
+    for (const vs of S.checks.values()) for (const c of vs) { if ((c.t ?? 0) <= tt + eps) nc++; else break; }
     const key = W ? `${nc}|${upTo(W.liveHist)}|${upTo(W.actionsHist)}|${upTo(W.approxHist)}|${upTo(W.engineHist)}|${atEnd() ? 1 : 0}` : "";
     if (key !== S.shownKey) {
       S.shownKey = key; S.checksDirty = true; refreshLive();
@@ -877,7 +882,7 @@ function loop() {
 function currentT() { const f = S.frames[S.idx]; return f ? f.t : 0; }
 
 // The checks: one line per check — label, value with its reference under it, ✓ / ✗ in a fixed column — the note behind
-// «ⓘ» (and as the line's tooltip), groups with a summary that fold, the older groups folded away; what the owner opened
+// "ⓘ" (and as the line's tooltip), groups with a summary that fold, the older groups folded away; what the owner opened
 // stays open across the renders that new checks cause (review UX-ui U16, U17). A check that fails on purpose (a «what
 // if» preset, a preset outside its approximation) carries `expected`: drawn as an expected ✗ with the reason (P23).
 const CK = { open: new Set(), groups: new Map(), older: false };
@@ -898,7 +903,7 @@ function renderChecks() {
     if ((vs[0].t ?? 0) > tNow + eps) continue;
     while (lo < hi) { const mid = (lo + hi + 1) >> 1; if ((vs[mid].t ?? 0) <= tNow + eps) lo = mid; else hi = mid - 1; }
     const c = vs[lo];
-    const g = c.group || "Прочее";
+    const g = c.group ? t(c.group) : t("Other");  // a text: grouped by its rendering
     if (!groups.has(g)) groups.set(g, []);
     groups.get(g).push(c);
   }
@@ -908,68 +913,73 @@ function renderChecks() {
   const table = (entries, first) => el("table", {}, el("colgroup", {}, el("col", {}), el("col", { class: "c-val" }), el("col", { class: "c-st" })),
     entries.flatMap(([g, list], i) => checkRows(g, list, first && i === 0)));
   const recent = order.slice(0, RECENT), old = order.slice(RECENT);
-  const older = old.length ? el("details", { class: "older" }, el("summary", {}, `Прежние группы проверок: ${old.length}`), table(old, false)) : "";
+  const older = old.length ? el("details", { class: "older" }, el("summary", {}, t("Earlier groups of checks: {n:d}", { n: old.length })), table(old, false)) : "";
   if (older) { older.open = CK.older; older.addEventListener("toggle", () => { CK.older = older.open; }); }
   const sc = S.checksBox.scrollTop;
   S.checksBox.replaceChildren(
-    order.length ? table(recent, true) : el("div", { class: "muted" }, "Пока ничего не посчитано: запустите запись (⏺)."), older);
+    order.length ? table(recent, true) : el("div", { class: "muted" }, t("Nothing computed yet: start the recording (⏺).")), older);
   S.checksBox.scrollTop = sc;
 }
 
 function checkRows(g, list, newest) {
   const rows = [], st = list.slice(-40).map((c) => [c, checkState(c)]);
   const n = (k) => st.filter(([, x]) => x === k).length;
-  const sum = [n("ok") ? `${n("ok")} ✓` : "", n("bad") ? `${n("bad")} ✗` : "", n("exp") ? `${n("exp")} ✗ ожид.` : "",
+  const sum = [n("ok") ? `${n("ok")} ✓` : "", n("bad") ? `${n("bad")} ✗` : "", n("exp") ? `${n("exp")} ✗ ` + t("expected") : "",
     n("info") ? `${n("info")} ≈` : "", n("na") ? `${n("na")} —` : ""].filter(Boolean).join(" · ");
   // a group is open when the owner opened it, else when it is the newest or has a failure
   const open = CK.groups.has(g) ? CK.groups.get(g) : (newest || n("bad") > 0);
-  const head = el("tr", { class: "grp-row", title: open ? "Свернуть группу" : "Развернуть группу" },
+  const head = el("tr", { class: "grp-row", title: open ? t("Fold the group") : t("Unfold the group") },
     el("td", { class: "grp", colspan: 3 }, el("span", { class: "fold" }, open ? "▾ " : "▸ "), g,
       el("span", { class: "grp-sum" + (n("bad") ? " st-bad" : "") }, sum)));
   head.onclick = () => { CK.groups.set(g, !open); renderChecks(); };
   rows.push(head);
   if (!open) return rows;
   for (const [c, k] of st) {
-    const mark = { ok: ["st-ok", "✓", c.note || "совпадение в пределах численной точности"],
-      bad: ["st-bad", "✗", c.rel !== null && c.rel !== undefined ? `относительное отличие ${num(c.rel, 3)}, допуск ${num(c.tol || 1e-9, 2)}` : (c.note || "")],
-      exp: ["st-exp", "✗", "Ожидаемо: " + c.expected],
-      info: ["st-na", "≈", "Сравнение для сведения, не проверка"], na: ["st-na", "—", "Для этой величины нет замкнутого эталона"] }[k];
-    const key = (c.group || "") + "|" + c.id;
+    const note = t(c.note), expected = c.expected ? t("Expected: {why}", { why: c.expected }) : "";
+    const mark = { ok: ["st-ok", "✓", note || t("agreement within the numerical precision")],
+      bad: ["st-bad", "✗", c.rel !== null && c.rel !== undefined ? t("relative difference {rel:.3g}, tolerance {tol:.2g}", { rel: c.rel, tol: c.tol || 1e-9 }) : note],
+      exp: ["st-exp", "✗", expected],
+      info: ["st-na", "≈", t("A comparison for information, not a check")], na: ["st-na", "—", t("This quantity has no closed reference")] }[k];
+    const key = t(c.group) + "|" + c.id;
     const hasNote = !!(c.note || c.expected);
-    const info = hasNote ? el("button", { class: "ck-i", title: "Пояснение к проверке", onclick: (e) => {
+    const info = hasNote ? el("button", { class: "ck-i", title: t("About the check"), onclick: (e) => {
       e.stopPropagation(); if (CK.open.has(key)) CK.open.delete(key); else CK.open.add(key); renderChecks(); } }, "ⓘ") : null;
-    rows.push(el("tr", { title: [c.expected ? "Ожидаемо: " + c.expected : "", c.note || ""].filter(Boolean).join("\n") },
-      el("td", { class: "ck-label" }, c.label, info,
-        CK.open.has(key) ? el("div", { class: "muted ck-note" }, c.expected ? el("div", { class: "st-exp" }, "Ожидаемо: " + c.expected) : null, c.note || "") : null),
-      el("td", { class: "mono ck-val" }, fmtVal(c.value, c.unit), el("div", { class: "muted" }, c.ref === null || c.ref === undefined ? "" : "эталон " + fmtVal(c.ref, c.unit))),
+    rows.push(el("tr", { title: [expected, note].filter(Boolean).join("\n") },
+      el("td", { class: "ck-label" }, t(c.label), info,
+        CK.open.has(key) ? el("div", { class: "muted ck-note" }, c.expected ? el("div", { class: "st-exp" }, expected) : null, note) : null),
+      el("td", { class: "mono ck-val" }, fmtVal(c.value, c.unit), el("div", { class: "muted" }, c.ref === null || c.ref === undefined ? "" : t("reference {value}", { value: fmtVal(c.ref, c.unit) }))),
       el("td", { class: "ck-st" }, el("span", { class: mark[0], title: mark[2] }, mark[1]))));
   }
   return rows;
 }
 
+// a unit of seconds: a T "s", the plain "s", or "с" of the records before the i18n
+const SECONDS = new Set(["s", "\u0441"]);
 function fmtVal(v, unit) {
   if (v === null || v === undefined) return "—";
-  if (unit === "с") return time(v, 12);
-  return num(v, 12) + (unit ? " " + unit : "");
+  if (typeof v !== "number") return t(v);
+  if ((unit && unit.$t === "s" && !unit.a) || SECONDS.has(unit)) return time(v, 12);
+  return num(v, 12) + (unit ? " " + t(unit) : "");
 }
 
-// «События»: rebuilt only when its list changed, rows appended, the «future» marks toggled in place — a row stays under the
+// "Events": rebuilt only when its list changed, rows appended, the "future" marks toggled in place — a row stays under the
 // pointer between frames, so a click on it works while the world records (review UX-ui U14). Before any world it lists
-// why the run has none (P1). An error's detail (the exception's own text) is folded under «подробности» (P4).
+// why the run has none (P1). An error's detail (the exception's own text) is folded under "details" (P4).
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);  // a text shown on its own starts with a capital
 function eventRow(e) {
   const det = e.detail ? el("details", { class: "ev-detail", onclick: (x) => x.stopPropagation() },
-    el("summary", {}, "подробности"), el("div", { class: "mono" }, e.detail)) : null;
-  return el("div", { class: "ev" + (e.kind === "error" ? " err" : ""), title: "перейти к этому моменту",
-    onclick: () => jumpToTime(e.t) }, el("span", { class: "t mono" }, time(e.t, 7)), e.kind === "error" ? "⚠ " : "", e.text || e.kind, det);
+    el("summary", {}, t("details")), el("div", { class: "mono" }, e.detail)) : null;
+  return el("div", { class: "ev" + (e.kind === "error" ? " err" : ""), title: t("go to this moment"),
+    onclick: () => jumpToTime(e.t) }, el("span", { class: "t mono" }, time(e.t, 7)), e.kind === "error" ? "⚠ " : "", cap(t(e.text)) || e.kind, det);
 }
 function renderEvents() {
-  const t = currentT(), box = S.eventsBox;
+  const tt = currentT(), box = S.eventsBox;
   const list = S.worlds.length ? S.events : S.runNotes;
   const from = Math.max(0, list.length - 400);
   const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 30;
   const D = S.evDrawn;
   if (!D || D.list !== list || D.from !== from || D.n > list.length) {  // a new list (another world), or trimmed
-    if (!list.length) box.replaceChildren(el("div", { class: "muted" }, "Событий пока нет"));
+    if (!list.length) box.replaceChildren(el("div", { class: "muted" }, t("No events yet")));
     else box.replaceChildren(...list.slice(from).map(eventRow));
     S.evDrawn = { list, from, n: list.length, fut: -1 };
   } else if (D.n < list.length) {  // new events: appended
@@ -977,10 +987,10 @@ function renderEvents() {
     box.append(...list.slice(D.n).map(eventRow));
     D.n = list.length; D.fut = -1;
   }
-  // the first event after the cursor: rows from it on are marked «future» (toggled only where it changed)
-  const eps = 1e-15 * Math.abs(t);
+  // the first event after the cursor: rows from it on are marked "future" (toggled only where it changed)
+  const eps = 1e-15 * Math.abs(tt);
   let fut = list.length;
-  for (let i = from; i < list.length; i++) if (list[i].t > t + eps) { fut = i; break; }
+  for (let i = from; i < list.length; i++) if (list[i].t > tt + eps) { fut = i; break; }
   if (S.evDrawn.fut !== fut) {
     const rows = box.children;
     for (let i = 0; i < rows.length; i++) rows[i].classList.toggle("future", from + i >= fut);
@@ -989,10 +999,10 @@ function renderEvents() {
   if (atBottom && D && D.n !== undefined) box.scrollTop = box.scrollHeight;
 }
 
-function jumpToTime(t) {
+function jumpToTime(tt) {
   if (!S.frames.length) return;
   let lo = 0, hi = S.frames.length - 1;
-  while (lo < hi) { const mid = (lo + hi) >> 1; if (S.frames[mid].t < t) lo = mid + 1; else hi = mid; }
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (S.frames[mid].t < tt) lo = mid + 1; else hi = mid; }
   goTo(lo);
 }
 function goTo(i) {  // move the cursor (stops the history's playback); at the end it follows a recording
@@ -1026,9 +1036,9 @@ function advanceHistory() {
 // ⏺: compute further (recording); again: pause. With the cursor at the end, the recording is shown live; elsewhere
 // the cursor stays and the history grows behind it. A suspended run is resumed by the server (rebuilt by replay).
 function toggleRecord() {
-  if (S.startError && (!S.worlds.length || S.ended)) { toast(S.startError + "\nИзмените параметры в каталоге и запустите снова.", "error", 12000); return; }
-  if (S.ended) { toast("Это старая запись: продолжить её нельзя — начните новый мир (слева) или новый запуск", "notice", 5000); return; }
-  if (archived()) { toast("Это прежний мир из записи: записывать можно только текущий мир", "notice", 4000); return; }
+  if (S.startError && (!S.worlds.length || S.ended)) { toast(S.startError + "\n" + t("Change the parameters in the catalogue and start again."), "error", 12000); return; }
+  if (S.ended) { toast(t("This is an old record: it cannot go on — start a new world (on the left) or a new run"), "notice", 5000); return; }
+  if (archived()) { toast(t("This is an earlier world from the record: only the current world can be recorded"), "notice", 4000); return; }
   if (S.pending === "resume") return;  // the world is being rebuilt: the recording starts by itself
   if (S.playing) { send("pause"); return; }
   if (atEnd() || !S.frames.length) { S.live = true; S.hist = 0; }
@@ -1060,7 +1070,7 @@ function bindTransport() {
     send("step");
   };
   $("next").onclick = () => {  // the next recorded event; past the last one, compute up to the next event
-    const t = currentT(), ev = S.events.find((e) => e.t > t + 1e-12 * Math.abs(t));
+    const tt = currentT(), ev = S.events.find((e) => e.t > tt + 1e-12 * Math.abs(tt));
     if (ev && !atEnd()) { jumpToTime(ev.t); return; }
     if (S.ended || archived() || S.pending === "resume") return;
     goTo(S.frames.length - 1);
@@ -1079,24 +1089,25 @@ function bindTransport() {
     else if (e.key === "ArrowLeft") { e.preventDefault(); playHistory(-1); }
     else if (e.key === "Home") { e.preventDefault(); goTo(0); }
     else if (e.key === "End") { e.preventDefault(); goTo(S.frames.length - 1); }
-    else if (e.key === "n" || e.key === "N" || e.key === "т" || e.key === "Т") $("next").click();
-    else if (e.key === "t" || e.key === "T" || e.key === "е" || e.key === "Е") toggleTheme();
+    // by the key's place (e.code), so that the keys work in any keyboard layout (the Russian one too)
+    else if (e.code === "KeyN" || e.key === "n" || e.key === "N") $("next").click();
+    else if (e.code === "KeyT" || e.key === "t" || e.key === "T") toggleTheme();
     else if (e.key === "?") showHelp();
-    else if (e.key === "[" || e.key === "х" || e.key === "Х") S.fold("left", !$("app").classList.contains("fold-left"));
-    else if (e.key === "]" || e.key === "ъ" || e.key === "Ъ") S.fold("right", !$("app").classList.contains("fold-right"));
+    else if (e.code === "BracketLeft" || e.key === "[") S.fold("left", !$("app").classList.contains("fold-left"));
+    else if (e.code === "BracketRight" || e.key === "]") S.fold("right", !$("app").classList.contains("fold-right"));
   });
   window.addEventListener("themechange", () => { S.dirty = true; });
   window.addEventListener("resize", renderSpeedTicks);
 }
 
-function speedLabel(v) { return time(v, 3) + " / с"; }
+function speedLabel(v) { return time(v, 3) + " / " + t("s"); }
 
 // the slider's scale: round units of time inside the world's speed range, thinned to fit (review of the owner's
 // note 2026-10-28: «расширить ... обозначения с логарифмической шкалой ... от долей секунд до X лет»)
 const YEAR = 365.25 * 86400;
-const SPEED_TICKS = [[1e-15, "1 фс"], [1e-12, "1 пс"], [1e-9, "1 нс"], [1e-6, "1 мкс"], [1e-3, "1 мс"], [1, "1 с"],
-  [60, "1 мин"], [3600, "1 ч"], [86400, "1 сут"], [YEAR, "1 год"], [100 * YEAR, "100 лет"], [1e4 * YEAR, "10⁴ лет"],
-  [1e6 * YEAR, "10⁶ лет"], [1e9 * YEAR, "10⁹ лет"]];
+const SPEED_TICKS = [[1e-15, t("1 fs")], [1e-12, t("1 ps")], [1e-9, t("1 ns")], [1e-6, t("1 µs")], [1e-3, t("1 ms")], [1, t("1 s")],
+  [60, t("1 min")], [3600, t("1 h")], [86400, t("1 day")], [YEAR, t("1 yr")], [100 * YEAR, t("100 yr")], [1e4 * YEAR, t("10⁴ yr")],
+  [1e6 * YEAR, t("10⁶ yr")], [1e9 * YEAR, t("10⁹ yr")]];
 function supExp(n) { return String(n).replace(/-/g, "⁻").replace(/\d/g, (d) => "⁰¹²³⁴⁵⁶⁷⁸⁹"[d]); }
 function renderSpeedTicks() {
   const box = $("speedticks"), W = box.clientWidth;
@@ -1107,13 +1118,13 @@ function renderSpeedTicks() {
   // narrow range with fewer than three of them is marked by powers of ten of a second instead
   const prio = [1, 365.25 * 86400, 1e-3, 86400, 1e-6, 3600, 1e-9, 60, 100 * 365.25 * 86400, 1e-12, 1e4 * 365.25 * 86400,
                 1e6 * 365.25 * 86400, 1e-15, 1e9 * 365.25 * 86400];
-  let cand = prio.map((v) => SPEED_TICKS.find((t) => Math.abs(t[0] / v - 1) < 1e-9)).filter((t) => t && t[0] >= lo * 0.999 && t[0] <= hi * 1.001);
+  let cand = prio.map((v) => SPEED_TICKS.find((tt) => Math.abs(tt[0] / v - 1) < 1e-9)).filter((tt) => tt && tt[0] >= lo * 0.999 && tt[0] <= hi * 1.001);
   if (cand.length < 3) {
     cand = [];
-    for (let e = Math.ceil(l0 - 1e-9); e <= Math.floor(l1 + 1e-9); e++) cand.push([10 ** e, e === 0 ? "1 с" : `10${supExp(e)} с`]);
+    for (let e = Math.ceil(l0 - 1e-9); e <= Math.floor(l1 + 1e-9); e++) cand.push([10 ** e, e === 0 ? t("1 s") : `10${supExp(e)} ${t("s")}`]);
   }
   const kept = [];
-  for (const t of cand) { const x = at(t[0]); if (kept.every((k) => Math.abs(k.x - x) >= 34)) kept.push({ x, label: t[1] }); }
+  for (const tt of cand) { const x = at(tt[0]); if (kept.every((k) => Math.abs(k.x - x) >= 34)) kept.push({ x, label: tt[1] }); }
   kept.sort((a, b) => a.x - b.x);
   box.replaceChildren(...kept.map((k) => el("span", { style: { left: `${k.x}px` } }, k.label)));
 }
@@ -1123,19 +1134,18 @@ function updateRate(meta) {
   const box = $("speedfact");
   const r = meta && meta.speed_actual;
   if (!S.playing || r === null || r === undefined || r >= 0.97 * S.speed) { box.textContent = ""; box.title = ""; return; }
-  box.textContent = `факт: ${time(r, 2)} / с`;
-  box.title = `Счёт не успевает за выбранной скоростью: мир идёт в ${num(S.speed / Math.max(r, 1e-300), 2)} раза медленнее. ` +
-    "Время на часах и в событиях — всегда время мира; уменьшите скорость, чтобы она совпала с фактической.";
+  box.textContent = t("actual: {speed}", { speed: `${time(r, 2)} / ${t("s")}` });
+  box.title = t("The computation cannot keep up with the chosen speed: the world runs {k:.2g} times slower. The time on the clock and in the events is always the world's time; lower the speed to match the actual one.", { k: S.speed / Math.max(r, 1e-300) });
 }
 
 function updateTransport() {
   const noRec = S.ended || archived(), rebuild = S.pending === "resume";
   $("rec").disabled = noRec || rebuild;
   $("rec").classList.toggle("on", (S.playing || rebuild) && !noRec);
-  $("rec").textContent = (S.playing || rebuild) && !noRec ? "⏸ запись" : "⏺";
-  $("rec").title = rebuild ? "Мир восстанавливается; запись продолжится сама" : S.playing ? "Пауза записи (Пробел)" : S.suspended
-    ? "Продолжить: мир восстановится с сохранённого состояния и пойдёт дальше (Пробел)"
-    : "Запись: мир считается дальше, к истории добавляются кадры (Пробел)";
+  $("rec").textContent = (S.playing || rebuild) && !noRec ? t("⏸ recording") : "⏺";
+  $("rec").title = rebuild ? t("The world is being restored; the recording goes on by itself") : S.playing ? t("Pause the recording (Space)") : S.suspended
+    ? t("Go on: the world is restored from its saved state and goes further (Space)")
+    : t("Record: the world is computed further, frames are added to the history (Space)");
   $("fwd").textContent = S.hist > 0 ? "⏸" : "▶";
   $("back").textContent = S.hist < 0 ? "⏸" : "◀";
   $("fwd").classList.toggle("on", S.hist > 0);
@@ -1143,17 +1153,17 @@ function updateTransport() {
   for (const b of ["rt", "speed"]) $(b).disabled = false;
   $("speed").value = speedToSlider(S.speed);
   $("speedv").textContent = speedLabel(S.speed);
-  const where = !S.frames.length ? "" : atEnd() ? (S.playing && !archived() ? " · вживую" : " · конец записи") : " · история";
-  $("status").title = S.resumeError ? "Продолжение не удалось: " + S.resumeError : S.startError ? S.startError : "";
-  if (S.replaying) setStatus("", "загрузка записи…");  // the record's own states are not the run's
-  else if (archived()) setStatus("", "мир из записи" + where);
-  else if (S.startError && (!S.worlds.length || S.ended)) setStatus("dead", "мир не создан — причина в «Событиях»");  // P1, P3
-  else if (S.ended) setStatus("", "старая запись — продолжить нельзя" + where);
-  else if (rebuild) setStatus("paused", "мир восстанавливается — запись продолжится сама" + where);
-  else if (S.playing) setStatus("live", "запись идёт" + where);
-  else if (S.suspended && S.resumeError) setStatus("dead", "продолжение не удалось — ⏺ повторит" + where);
-  else if (S.suspended) setStatus("paused", "приостановлен — ⏺ продолжит" + where);
-  else setStatus("paused", "пауза" + where);
+  const where = !S.frames.length ? "" : " · " + (atEnd() ? (S.playing && !archived() ? t("live") : t("end of the record")) : t("history"));
+  $("status").title = S.resumeError ? t("Going on failed: {why}", { why: S.resumeError }) : S.startError ? S.startError : "";
+  if (S.replaying) setStatus("", t("loading the record…"));  // the record's own states are not the run's
+  else if (archived()) setStatus("", t("a world from the record") + where);
+  else if (S.startError && (!S.worlds.length || S.ended)) setStatus("dead", t("world not created — the reason is in “Events”"));  // P1, P3
+  else if (S.ended) setStatus("", t("an old record — it cannot go on") + where);
+  else if (rebuild) setStatus("paused", t("the world is being restored — the recording goes on by itself") + where);
+  else if (S.playing) setStatus("live", t("recording") + where);
+  else if (S.suspended && S.resumeError) setStatus("dead", t("going on failed — ⏺ tries again") + where);
+  else if (S.suspended) setStatus("paused", t("suspended — ⏺ goes on") + where);
+  else setStatus("paused", t("paused") + where);
   const ek = editBlock();  // the views' editable state (slice planes) follows the cursor and the run's state
   if (ek !== S.editKey) {
     S.editKey = ek;
@@ -1172,19 +1182,19 @@ function setStatus(cls, text) { $("status").replaceChildren(el("span", { class: 
 
 function showHelp() {
   modal(el("div", {},
-    el("h3", {}, S.viz ? S.viz.title : "Плеер"),
-    S.header && S.header.text ? el("p", {}, S.header.text) : null,
+    el("h3", {}, S.viz ? t(S.viz.title) : t("Player")),
+    S.header && S.header.text ? el("p", {}, t(S.header.text)) : null,
     S.view && S.view.help ? S.view.help() : null,
-    el("h4", {}, "Плеер"),
-    el("p", {}, "⏺ — запись: мир считается дальше и кадры добавляются к истории; ещё раз — пауза. ⏮ и ⏭ — в начало и в конец истории, ◀ и ▶ — проиграть историю назад и вперёд с выбранной скоростью (секунд мира за секунду; «1:1» — реальное время). Если бегунок в конце истории, запись показывается вживую; если в середине — история растёт дальше, а показывается выбранный момент. «|▶» — кадр вперёд (в конце — один шаг расчёта), «⏭ событие» — к следующему событию (за последним — посчитать до него)."),
-    el("p", {}, "Всё показанное — на момент бегунка: сцена, траектории, экран, проверки, установка и события. Менять установку и совершать действия можно только в конце истории."),
-    el("p", {}, "Остановки нет: если запуск никто не смотрит, он сам встаёт на паузу, а через полчаса освобождает вычислитель; ⏺ продолжит его с сохранённого состояния мира, как одну запись (без него — пересчитав мир по записи от начала). Назад по истории плеер идёт от ближайшего ключевого кадра, а не от начала записи. Запуски, к которым долго не обращались, удаляются (кроме отмеченных ★); срок задаётся в каталоге, по умолчанию 3 дня."),
-    el("p", {}, "«Установка — меняется сразу»: всё, что экспериментатор может поменять во время опыта (источник, щели, экран, наблюдатель…). Изменение применяется в момент, когда вы отпускаете ползунок, выбираете пункт списка или нажимаете Enter в поле числа. Если изменение невозможно, поле возвращается к прежнему значению и появляется сообщение."),
-    el("p", {}, "«Действия» — разовые события (вспышка, разгон, измерение). Их следствия распространяются от этого момента."),
-    el("p", {}, "«Новый мир» — другие законы или начальные условия. Он начинается в этом же запуске; прежние миры остаются в записи, их можно посмотреть переключателем «Мир» вверху."),
-    el("p", {}, "Шкала внизу — история текущего мира. Клик по событию в журнале переносит к его моменту."),
-    el("p", {}, "Если мир долго считает изменение (сцена, установка, новый мир), вверху видно, что именно и сколько секунд; «✕ отменить» вернёт мир в момент перед этим изменением. ⇤ и ⇥ вверху (клавиши [ и ]) прячут боковые колонки, чтобы картине было больше места."),
-    el("p", { class: "muted" }, "Клавиши: Пробел — запись/пауза, ← и → — проиграть историю назад/вперёд, Home и End — в начало и в конец, N — к событию, [ и ] — скрыть колонки, T — тема, ? — справка.")));
+    el("h4", {}, t("Player")),
+    el("p", {}, t("⏺ records: the world is computed further and its frames are added to the history; press again to pause. ⏮ and ⏭ go to the start and the end of the history, ◀ and ▶ play the history backwards and forwards at the chosen speed (world seconds per second; “1:1” is real time). With the slider at the end of the history the recording is shown live; in the middle the history grows on while the chosen moment is shown. “|▶” is a frame forward (at the end, one step of computation), “⏭ event” goes to the next event (past the last one, it computes up to it).")),
+    el("p", {}, t("Everything shown is as of the slider's moment: the scene, the trajectories, the screen, the checks, the set-up and the events. The set-up can be changed and actions done only at the end of the history.")),
+    el("p", {}, t("There is no stop: a run nobody watches pauses by itself and after half an hour frees its worker; ⏺ continues it from the world's saved state as one record (without one, by recomputing the world along the record from its start). Going back through the history, the player starts from the nearest key frame, not from the start of the record. Runs nobody has opened for a long time are removed (except those marked ★); the period is set in the catalogue, 3 days by default.")),
+    el("p", {}, t("“Set-up — changes at once”: everything an experimenter can change during the experiment (the source, the slits, the screen, the observer…). A change applies when you release the slider, choose an item of a list or press Enter in a number field. If a change is not possible, the field goes back to its previous value and a message appears.")),
+    el("p", {}, t("“Actions” are one-off events (a flash, an acceleration, a measurement). Their consequences spread from that moment.")),
+    el("p", {}, t("“New world” means other laws or initial conditions. It starts in this same run; the earlier worlds stay in the record and can be viewed with the world switch at the top.")),
+    el("p", {}, t("The scale at the bottom is the current world's history. A click on an event in the log takes you to its moment.")),
+    el("p", {}, t("If the world takes long to compute a change (the scene, the set-up, a new world), the top bar shows what it is and for how many seconds; “✕ cancel” takes the world back to the moment before that change. ⇤ and ⇥ at the top (keys [ and ]) hide the side columns to give the picture more room.")),
+    el("p", { class: "muted" }, t("Keys: Space — record/pause, ← and → — play the history backwards/forwards, Home and End — to the start and the end, N — to the next event, [ and ] — hide the columns, T — theme, ? — help."))));
 }
 
 main();

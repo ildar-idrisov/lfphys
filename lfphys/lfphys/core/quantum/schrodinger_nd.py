@@ -60,20 +60,24 @@ import numpy as np
 from scipy import special
 from scipy.sparse import linalg as sla
 
+from lfphys.i18n import T
+
 from .. import backend
 
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Уравнение Шрёдингера (и Паули) в 2-D и 3-D",
-    "statement": "Эволюция волновой функции на сетке методом расщепления оператора (спектрально точная кинетика; "
-                 "векторный потенциал — калибровочными фазами по осям; спин ½ — точной 2×2 экспонентой в каждой "
-                 "точке), поглощающие детекторы с учётом поглощённой вероятности; независимый эталон — разложение "
-                 "Чебышёва; стационарные состояния методом LOBPCG; ток вероятности и значения ψ в любых точках.",
-    "validity": "нерелятивистская частица (спин ½ по Паули); сетка мельче длины волны, окно шире волны или с "
-                "поглотителями на краях (контроль нормы, энергии и шага по времени в каждом запуске)",
+    "title": T("The Schrödinger (and Pauli) equation in 2-D and 3-D"),
+    "statement": T("Evolution of the wave function on a grid by the split-operator method (spectrally exact kinetic "
+                   "term; the vector potential as gauge phases along the axes; spin ½ as an exact 2×2 exponential at "
+                   "every point), absorbing detectors with the absorbed probability accounted for; an independent "
+                   "reference: the Chebyshev expansion; stationary states by LOBPCG; the probability current and the "
+                   "values of ψ at any points."),
+    "validity": T("a non-relativistic particle (spin ½ after Pauli); the grid finer than the wavelength, the window "
+                  "wider than the wave or with absorbers at its edges (the norm, the energy and the time step are "
+                  "checked in every run)"),
     "basis": ["Schrödinger 1926; Pauli 1927",
-              "Feit, Fleck, Steiger, J. Comput. Phys. 47, 412 (1982) — расщепление оператора",
-              "Tal-Ezer & Kosloff, J. Chem. Phys. 81, 3967 (1984) — разложение Чебышёва",
+              T("Feit, Fleck, Steiger, J. Comput. Phys. 47, 412 (1982) — split-operator method"),
+              T("Tal-Ezer & Kosloff, J. Chem. Phys. 81, 3967 (1984) — Chebyshev expansion"),
               "Knyazev, SIAM J. Sci. Comput. 23, 517 (2001) — LOBPCG",
               "Aharonov & Bohm, Phys. Rev. 115, 485 (1959)"],
     "conflicts": [],
@@ -98,17 +102,17 @@ def _bench(size: int, xp, cplx):
 
 
 backend.register(backend.KernelSpec(
-    KERNEL, "Уравнение Шрёдингера в 2-D/3-D (расщепление оператора)",
-    "шаг по времени волновой функции на сетке: БПФ, фазовые множители, поглощение (v11 и следующие квантовые миры)",
+    KERNEL, T("The Schrödinger equation in 2-D/3-D (split operator)"),
+    T("a time step of the wave function on a grid: FFT, phase factors, absorption (v11 and the later quantum worlds)"),
     gpu=True,
     precisions={"fp64": {"allowed": True},
                 "fp32": {"allowed": False,
-                         "why": "тысячи шагов: ошибка округления fp32 копится в норме и фазе (не проверено — не "
-                                "предлагается)"}},
+                         "why": T("thousands of steps: the fp32 round-off accumulates in the norm and the phase (not "
+                                  "verified, so not offered)")}},
     crossover=128 * 128,
-    crossover_note=("измерено 2026-10-28 на RTX 2080 Ti против CPU контейнера (6 ядер, OMP 2), fp64, четыре шага на "
-                    "устройстве и плотность обратно: GPU быстрее с 128×128 точек (×3), ×26–29 на 1024²–2048²; "
-                    "«Измерить заново» уточняет"),
+    crossover_note=T("measured 2026-10-28 on an RTX 2080 Ti against the container's CPU (6 cores, OMP 2), fp64, four "
+                     "steps on the device and the density back: the GPU is faster from 128×128 points (×3), ×26–29 at "
+                     "1024²–2048²; “Measure again” refines this"),
     bench=_bench, bench_sizes=(32 * 32, 64 * 64, 128 * 128, 256 * 256, 512 * 512, 1024 * 1024, 2048 * 2048)))
 
 
@@ -121,10 +125,10 @@ class Grid:
         self.shape = tuple(int(n) for n in shape)
         self.ndim = len(self.shape)
         if self.ndim < 1:
-            raise ValueError("сетка: хотя бы одна ось")
+            raise ValueError(T("grid: at least one axis"))
         self.d = np.broadcast_to(np.atleast_1d(np.asarray(spacing, float)), (self.ndim,)).copy()
         if np.any(self.d <= 0):
-            raise ValueError("шаг сетки должен быть положительным")
+            raise ValueError(T("the grid step must be positive"))
         self.center = np.zeros(self.ndim) if center is None else np.asarray(center, float).reshape(self.ndim)
         self.axes = [c + (np.arange(n) - n // 2) * di for c, n, di in zip(self.center, self.shape, self.d)]
         self.k = [2 * math.pi * np.fft.fftfreq(n, di) for n, di in zip(self.shape, self.d)]
@@ -222,7 +226,7 @@ class Grid:
                 j[i] -= H.q / self.m * Ai * rho
         if spin_term:
             if p.shape[0] != 2 or self.ndim != 3:
-                raise ValueError("спиновый член тока — для спинора в 3-D")
+                raise ValueError("the spin term of the current needs a spinor in 3-D")
             s = spin_density(p)
             for i in range(3):
                 a, b = (i + 1) % 3, (i + 2) % 3
@@ -255,7 +259,7 @@ def plane_values(grid: Grid, psi, axis: int, index: int, order: int = 8, xp=np):
     h = order // 2
     n = grid.shape[axis]
     if index - h < 0 or index + h >= n:
-        raise ValueError("плоскость потока слишком близко к краю сетки")
+        raise ValueError(T("the flux plane is too close to the edge of the grid"))
     c = fd_weights(order)
 
     def sl(i):
@@ -287,7 +291,7 @@ def fd_weights(order: int) -> np.ndarray:
     """Centred first-derivative weights on order + 1 equidistant nodes -order/2 .. order/2 (unit spacing, even
     order): the derivative of the Lagrange polynomial through them at the middle node."""
     if order % 2:
-        raise ValueError("порядок разностной производной — чётный")
+        raise ValueError("the order of the finite-difference derivative must be even")
     w = lagrange_weights(np.array([float(order // 2)]), order + 1, deriv=True)[1][0]
     w.setflags(write=False)
     return w
@@ -353,7 +357,8 @@ def sample(grid: Grid, psi, X, order: int = 8, xp=None, host_ok: bool = False, c
     k dx to that of the local spread (review B6-Q1). Returns (val (nc, N), grad (nc, ndim, N)); spinor components
     first; arrays of the module ``xp`` (NumPy or CuPy, as psi)."""
     if order % 2:
-        raise ValueError("степень интерполяции — чётная (шаблон из нечётного числа точек вокруг ближайшего узла)")
+        raise ValueError("the interpolation degree must be even (a stencil of an odd number of points about the nearest "
+                         "node)")
     xp = xp or np
     p = psi if psi.ndim == grid.ndim + 1 else psi[None]
     X = np.asarray(backend.to_numpy(X), float)
@@ -404,7 +409,7 @@ class VectorPotential:
     chi_i(r) = int_{x_i,0}^{x_i} A_i dx_i' along each axis from the first sample (8-point Gauss-Legendre in every cell,
     accumulated), which the split operator's gauge phases use."""
 
-    def __init__(self, fn: Callable, label: str = ""):
+    def __init__(self, fn: Callable, label=""):  # label: a translatable text (lfphys.i18n.T)
         self.fn = fn
         self.label = label
 
@@ -464,7 +469,7 @@ def uniform_field(B: float, center=(0.0, 0.0), axes=(0, 1)) -> VectorPotential:
         if i == b:
             return 0.5 * B * (X[a] - ca)
         return np.zeros_like(X[0])
-    return VectorPotential(fn, f"однородное поле B = {B:g}")
+    return VectorPotential(fn, T("uniform field B = {B}", B=float(B)))
 
 
 def flux_tube(flux: float, center=(0.0, 0.0), radius: float = 1.0, axes=(0, 1)) -> VectorPotential:
@@ -488,7 +493,7 @@ def flux_tube(flux: float, center=(0.0, 0.0), radius: float = 1.0, axes=(0, 1)) 
         if i == b:
             return flux / (2 * math.pi) * f_over_r2(X) * (X[a] - ca)
         return np.zeros(np.broadcast(*X).shape)
-    return VectorPotential(fn, f"трубка потока Φ = {flux:g}")
+    return VectorPotential(fn, T("flux tube Φ = {flux}", flux=float(flux)))
 
 
 def flux_tube_segment(grid: Grid, flux: float, shift, center=(0.0, 0.0), radius: float = 1.0,
@@ -547,7 +552,7 @@ class Hamiltonian:
         self.V = None if V is None else np.broadcast_to(np.asarray(V, float), grid.shape)
         self.W = None if W is None else np.broadcast_to(np.asarray(W, float), grid.shape)
         if self.W is not None and np.any(self.W < 0):
-            raise ValueError("поглощающий потенциал W должен быть неотрицательным")
+            raise ValueError(T("the absorbing potential W must be non-negative"))
         self.b = None if b is None else np.broadcast_to(np.asarray(b, float), (3,) + grid.shape)
         self._A = self._chi = None
 
@@ -693,7 +698,7 @@ class SplitOperator:
                           q=H.q if q is None else q,
                           b=b if b is not None else (H.b if "b" in keep else None))
         if new.spinor != H.spinor:
-            raise ValueError("нельзя на ходу превратить скалярную волну в спинор и обратно")
+            raise ValueError(T("a scalar wave cannot be turned into a spinor or back while running"))
         self.H = new
         self._build()
 
@@ -847,7 +852,7 @@ def absorbing_layer(grid: Grid, axis: int, side: str, width: float, W0: float, p
     elif side == "low":
         s = (x[0] + width) - x
     else:
-        raise ValueError("сторона поглотителя: 'low' или 'high'")
+        raise ValueError("absorber side: 'low' or 'high'")
     w1 = np.where(s > 0, W0 * np.clip(s / width, 0, 1) ** power, 0.0)
     shape = [1] * grid.ndim
     shape[axis] = -1
@@ -956,7 +961,7 @@ def resample(psi, old: Grid, new: Grid) -> np.ndarray:
     p = np.asarray(psi, complex)
     off = 1 if p.ndim == old.ndim + 1 else 0
     if new.ndim != old.ndim or not np.allclose(new.center, old.center, rtol=0, atol=1e-12 * float(max(old.d))):
-        raise ValueError("новая сетка: та же размерность и тот же центр окна")
+        raise ValueError(T("new grid: the same dimension and the same window centre"))
     for a in range(old.ndim):
         p = resample_axis(p, a + off, old.shape[a], float(old.d[a]), float(old.center[a]), new.shape[a],
                           float(new.d[a]))

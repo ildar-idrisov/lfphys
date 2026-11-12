@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
 from lfphys.core.constants import C  # noqa: E402
+from lfphys.i18n import render  # noqa: E402
 from lfviz import registry  # noqa: E402
 
 V = "v07_bell_test"
@@ -51,7 +52,7 @@ def test_every_preset_runs_and_no_check_fails(preset):
     for c in checks.values():  # the player's own verdict for checks without an explicit ok (info: no verdict)
         if "ok" not in c and not c.get("info") and c["ref"] is not None and c["rel"] is not None:
             assert abs(c["rel"]) <= max(c["tol"], 1e-12), c
-    assert h.of("header")[0]["title"].startswith("Тест Белла")
+    assert h.of("header")[0]["title"]["$t"] == "Bell test: {law}"
 
 
 # --- the laws -----------------------------------------------------------------------------------------------
@@ -62,7 +63,7 @@ def test_quantum_worlds_reach_tsirelson_and_violate_chsh_by_many_sigma(preset):
     assert abs(abs(s["S"]) - TSIRELSON) < 5 * s["se"]
     assert (abs(s["S"]) - 2) / s["se"] > 15
     assert h.checks()["bound"]["ok"] is True
-    assert any("Нарушение неравенства CHSH" in e["text"] for e in h.of("event"))
+    assert any(render(e["text"]).startswith("Violation of the CHSH inequality") for e in h.of("event"))
     assert h.of("header")[0]["modifications"] == []
 
 
@@ -132,14 +133,14 @@ def test_random_choice_is_space_like_and_a_slow_choice_is_not():
     h2 = run("photon_slow_choice", 5000)
     fl2 = details(h2)["fl"]
     assert np.all(fl2 & 3 == 0)
-    assert "ОТКРЫТА" in h2.checks()["st_loc"]["label"] and "закрыта" in h.checks()["st_loc"]["label"]
+    assert "OPEN" in render(h2.checks()["st_loc"]["label"]) and "closed" in render(h.checks()["st_loc"]["label"])
 
 
 def test_fixed_settings_become_time_like_as_they_age():
     h = Harness(V, "scan")
-    assert "пространственноподобны" in h.checks()["st_loc"]["label"]  # set at t = 0: the next pair is outside
+    assert "space-like" in render(h.checks()["st_loc"]["label"])  # set at t = 0: the next pair is outside
     h.run_to(5000 / h.params["rate"])
-    assert "ОТКРЫТА" in h.checks()["st_loc"]["label"]  # known long before: inside the light cone
+    assert "OPEN" in render(h.checks()["st_loc"]["label"])  # known long before: inside the light cone
     fl = details(h)["fl"]
     late = details(h)["t"] > 4 * h.params["L_m"] / C
     assert np.all(fl[late] & 3 == 0)
@@ -195,7 +196,8 @@ def test_moving_the_stations_loses_overtaken_pairs_and_delays_the_others():
     assert expect_lost > 0
     h.set(L_m=100.0)
     assert h.sim.counts["lost"] == expect_lost
-    assert any("потеряно" in n["text"] for n in h.of("notice"))
+    assert any(render(n["text"]).startswith(f"The stations were moved: pairs in flight lost: {expect_lost} ")
+               for n in h.of("notice"))
     h.run_to(t1 + 2e-6)
     d = details(h, since=t1)
     assert len(d["t"]) and np.allclose(d["t"] - d["te"], 100.0 / C, rtol=1e-9)
@@ -271,7 +273,7 @@ def test_coinciding_settings_get_the_right_error_of_S(a, a2, b, b2):
         s = h.sim._S(h.sim._cells())
         S.append(s["S"])
         se.append(s["se"])
-        assert "совпадают" in h.checks()["S"]["note"]  # flagged: S is not a CHSH test with these settings
+        assert "the settings coincide" in render(h.checks()["S"]["note"])  # flagged: S is not a CHSH test here
     S, se = np.array(S), np.array(se)
     if np.all(se == 0):  # S = 2 E(0, 0) = 2 exactly in every run: no spread, no error
         assert np.all(S == 2.0)

@@ -1,11 +1,11 @@
 <!doctype html>
 <!-- SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
      SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0 -->
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>lfphys · запуск</title>
+<title data-t>lfphys · run</title>
 <link rel="stylesheet" href="/static/assets/chrome.css">
 <style id="ux-framework">
 /* The player's frame after the UX reviews of 2026-11-04 (UX-ui U9, U14, U16, U20-U24; UX-params P1, P2, P4, P23). */
@@ -21,7 +21,7 @@
 .topbar { gap: 8px 10px; }
 .topbar .badge { white-space: nowrap; max-width: 26em; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: middle; }
 #scene { max-width: 28em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-@media (max-width: 1500px) { #runid { display: none; } #scene { max-width: 12em; } .topbar .badge { max-width: 15em; } }  /* the run's id: in «О запуске» */
+@media (max-width: 1500px) { #runid { display: none; } #scene { max-width: 12em; } .topbar .badge { max-width: 15em; } }  /* the run's id: in "About the run" */
 /* one row at every width the player is used at (review LB1-p02-ux X8: the bar wrapped in p01, at 1280 px and after a
    second world added its selector, and the columns below jumped): the names, the badges and the world selector shrink
    with an ellipsis (their full text in the tooltip), the buttons never */
@@ -59,7 +59,7 @@
 .checks .ck-i { border: 0; background: none; padding: 0 3px; color: var(--muted); cursor: pointer; font-size: 11px; }
 .checks .ck-note { margin-top: 2px; font-size: 11px; }
 .st-exp { color: var(--warn); font-weight: 700; }
-/* «События»: a failure's own text folded (P4) */
+/* "Events": a failure's own text folded (P4) */
 .events .ev-detail { margin: 2px 0 0 0; color: var(--muted); }
 .events .ev-detail summary { cursor: pointer; font-size: 11px; }
 .events .ev-detail .mono { white-space: pre-wrap; font-size: 11px; }
@@ -83,29 +83,29 @@
 .pg-carry { display: flex; gap: 6px; align-items: center; margin: 4px 0; }
 body.picking .s3d-canvas, body.picking .sw-canvas { cursor: crosshair; outline: 2px dashed var(--accent); }
 /* a world without slice planes: no slice tools in the 3-D toolbar (U21) */
-.run.no-slices .s3d-tools button[title^="Двигать выбранный срез"], .run.no-slices .s3d-tools button[title^="Наклонять выбранный срез"] { display: none; }
-.run.no-field .s3d-tools select[title^="Шкала яркости"] { display: none; }
+.run.no-slices .s3d-tools button.s3d-move, .run.no-slices .s3d-tools button.s3d-tilt { display: none; }
+.run.no-field .s3d-tools select.s3d-scale { display: none; }
 </style>
 </head>
 <body>
 <div class="run" id="app">
   <div class="topbar">
-    <a href="/" title="К каталогу визуализаций и запусков">← Каталог</a>
-    <button id="fold-left" class="fold" title="Скрыть / показать левую колонку ([)">⇤</button>
+    <a href="/" data-t-title title="To the catalogue of visualizations and runs" data-t>← Catalogue</a>
+    <button id="fold-left" class="fold" data-t-title title="Hide / show the left column ([)">⇤</button>
     <span class="title" id="title">…</span>
     <span id="scene" class="muted"></span>
     <span id="physics"></span>
-    <select id="world" title="Миры этого запуска: текущий и прежние (из записи)" style="display:none"></select>
+    <select id="world" data-t-title title="The worlds of this run: the current one and the earlier ones (from the record)" style="display:none"></select>
     <span class="grow"></span>
     <span id="busy" class="busy" style="display:none"></span>
-    <span id="status"><span class="dot"></span>подключение…</span>
+    <span id="status"><span class="dot"></span><span data-t>connecting…</span></span>
     <span id="runid" class="muted mono"></span>
-    <button id="keep" title="Хранить запись всегда">☆</button>
-    <a href="/settings" target="_blank" title="Где считать (CPU / GPU) и с какой точностью — для новых запусков">⚙</a>
-    <a href="/legal" target="_blank" title="Лицензия, цитирование, сторонний код и отказ от гарантий">§</a>
-    <button id="theme" title="Тема (T)">◐</button>
-    <button id="help" title="Справка (?)">?</button>
-    <button id="fold-right" class="fold" title="Скрыть / показать правую колонку (])">⇥</button>
+    <button id="keep" data-t-title title="Keep the record for good">☆</button>
+    <a href="/settings" target="_blank" data-t-title title="Where to compute (CPU / GPU) and with what precision — for new runs">⚙</a>
+    <a href="/legal" target="_blank" data-t-title title="Licence, citation, third-party code and disclaimer">§</a>
+    <button id="theme" data-t-title title="Theme (T)">◐</button>
+    <button id="help" data-t-title title="Help (?)">?</button>
+    <button id="fold-right" class="fold" data-t-title title="Hide / show the right column (])">⇥</button>
   </div>
   <div class="main">
     <div class="side" id="left"></div>
@@ -113,25 +113,25 @@ body.picking .s3d-canvas, body.picking .sw-canvas { cursor: crosshair; outline: 
     <div class="side right" id="right"></div>
   </div>
   <div class="bottombar">
-    <button id="rec" class="rec" title="Запись: мир считается дальше, к записи добавляются кадры; ещё раз — пауза (Пробел)">⏺</button>
-    <button id="tostart" title="В начало записи (Home)">⏮</button>
-    <button id="back" title="Проиграть запись назад (←)">◀</button>
-    <button id="fwd" title="Проиграть запись вперёд (→)">▶</button>
-    <button id="toend" title="В конец записи (End): при записи — вживую">⏭</button>
-    <button id="step" title="На кадр вперёд; в конце записи — посчитать один шаг">|▶</button>
-    <button id="next" title="К следующему событию; в конце записи — посчитать до него (N)">⏭ событие</button>
-    <span class="muted">скорость</span>
-    <span class="speedbox"><input id="speed" type="range" min="0" max="1000" title="Секунд мира за секунду (логарифмическая шкала)"><span id="speedticks" class="ticks"></span></span>
+    <button id="rec" class="rec" data-t-title title="Record: the world is computed further, frames are added to the record; again — pause (Space)">⏺</button>
+    <button id="tostart" data-t-title title="To the start of the record (Home)">⏮</button>
+    <button id="back" data-t-title title="Play the record backwards (←)">◀</button>
+    <button id="fwd" data-t-title title="Play the record forwards (→)">▶</button>
+    <button id="toend" data-t-title title="To the end of the record (End): live while recording">⏭</button>
+    <button id="step" data-t-title title="A frame forward; at the end of the record, compute one step">|▶</button>
+    <button id="next" data-t-title title="To the next event; at the end of the record, compute up to it (N)" data-t>⏭ event</button>
+    <span class="muted" data-t>speed</span>
+    <span class="speedbox"><input id="speed" type="range" min="0" max="1000" data-t-title title="World seconds per second (logarithmic scale)"><span id="speedticks" class="ticks"></span></span>
     <span id="speedv" class="mono"></span>
     <span id="speedfact" class="mono warn"></span>
-    <button id="rt" title="Реальное время: 1 с мира за 1 с">1:1</button>
-    <input id="timeline" class="timeline" type="range" min="0" max="0" value="0" title="История опыта: всё показанное — на этот момент">
+    <button id="rt" data-t-title title="Real time: 1 s of the world per 1 s">1:1</button>
+    <input id="timeline" class="timeline" type="range" min="0" max="0" value="0" data-t-title title="The experiment's history: everything shown is as of this moment">
     <span id="time" class="time mono"></span>
   </div>
 </div>
 <!-- third-party modules served by this server (player/vendor/README.md): the 3-D environment's three.js -->
 <script type="importmap">{"imports": {"three": "/static/vendor/three-0.185.1/three.module.min.js"}}</script>
 <script type="module" src="/static/js/player.js"></script>
-<script type="module" src="/static/js/instruments.js"></script><!-- [LB1 P16.3 instruments] the «Приборы» panel -->
+<script type="module" src="/static/js/instruments.js"></script><!-- [LB1 P16.3 instruments] the "Instruments" panel -->
 </body>
 </html>

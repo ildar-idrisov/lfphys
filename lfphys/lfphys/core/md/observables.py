@@ -31,18 +31,21 @@ import math
 import numpy as np
 from scipy import special, stats
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "statistics",
-    "title": "Статистическая механика по прогону МД: g(r), диффузия, распределение Максвелла, оценки ошибок",
-    "statement": "Радиальная функция распределения, коэффициент диффузии по наклону среднего квадрата смещения "
-                 "(Эйнштейн), расстояние Колмогорова–Смирнова распределения скоростей от максвелловского с "
-                 "границей Дворецкого–Кифера–Вольфовица (константа Массара), блочные средние, гамма-распределение "
-                 "кинетической энергии в каноническом ансамбле, ориентационный порядок связей (ψ6 в 2-D, Q6 в 3-D), "
-                 "модель стоимости шага.",
-    "validity": "граница DKW — для независимых выборок (скорости одного снимка канонической системы независимы; "
-                "соседние по времени снимки — нет); блочные ошибки верны, когда блоки длиннее времени корреляции",
+    "title": T("Statistical mechanics from an MD run: g(r), diffusion, the Maxwell distribution, error estimates"),
+    "statement": T("The radial distribution function, the diffusion coefficient from the slope of the mean square "
+                   "displacement (Einstein), the Kolmogorov–Smirnov distance of the velocity distribution from the "
+                   "Maxwellian with the Dvoretzky–Kiefer–Wolfowitz bound (Massart's constant), block averages, the "
+                   "gamma distribution of the kinetic energy in the canonical ensemble, bond orientational order (ψ6 "
+                   "in 2-D, Q6 in 3-D), a cost model of a step."),
+    "validity": T("the DKW bound holds for independent samples (the velocities of one snapshot of a canonical system "
+                  "are independent; snapshots adjacent in time are not); block errors are right when the blocks are "
+                  "longer than the correlation time"),
     "basis": ["Dvoretzky, Kiefer & Wolfowitz, Ann. Math. Stat. 27, 642 (1956); Massart, Ann. Probab. 18, 1269 "
-              "(1990)", "Einstein (1905): ⟨Δr²⟩ = 2dDt", "Allen & Tildesley (2017): g(r), блочные средние",
+              "(1990)", "Einstein (1905): ⟨Δr²⟩ = 2dDt", T("Allen & Tildesley (2017): g(r), block averages"),
               "Nelson & Halperin, PRB 19, 2457 (1979): ψ6; Steinhardt, Nelson & Ronchetti, PRB 28, 784 (1983): Q6"],
     "conflicts": [],
 }

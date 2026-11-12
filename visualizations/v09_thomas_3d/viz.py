@@ -22,22 +22,23 @@ gyroscopes and the result are revealed as the run's time reaches them.
 from __future__ import annotations
 
 import math
-import re
 
 import numpy as np
 
 from lfphys.core import geometry as G
 from lfphys.core import lorentz as LZ
-from lfphys.core import spin_transport as T
+from lfphys.core import spin_transport as ST
 from lfphys.core.constants import YEAR_JULIAN as YEAR
+from lfphys.i18n import T
+from lfviz.errors import Refusal
 from lfviz.params import Param, Schema
 from lfviz.planes3d import SlicePlanes
 from lfviz.sim import Simulation as BaseSimulation
 
 from .engine import loops as LP
 
-FIELDS = [("theta", "поворот гироскопов θ после петли покой → u → w → покой"),
-          ("ratio", "θ на единицу «изопериметрической» границы плоских петель при том же топливе")]
+FIELDS = [("theta", T("rotation of the gyroscopes θ after the loop rest → u → w → rest")),
+          ("ratio", T("θ per unit of the «isoperimetric» bound of planar loops at the same fuel"))]
 NS = 160         # samples of a slice along each in-plane axis
 COARSE = 64      # rows of a moving (auto) slice
 TRIADS = 36      # gyroscope triads along the path
@@ -48,41 +49,51 @@ def _p(*a, **k):
     return Param(*a, **k)
 
 
+def _vec(v, digits=3):
+    """A vector of three numbers as a text: the separator follows the language (ru: decimal commas)."""
+    x, y, z = (float(c) for c in v)
+    if digits == 4:
+        return T("({x:.4f}, {y:.4f}, {z:.4f})", x=x, y=y, z=z)
+    return T("({x:.3f}, {y:.3f}, {z:.3f})", x=x, y=y, z=z)
+
+
+SCENE, MANOEUVRE, FIELD = T("Scene"), T("Manoeuvre"), T("Field")
 SCHEMA = Schema([
-    _p("space", "3D-сцена", "select", "velocity", group="Сцена",
-       options=[("velocity", "пространство скоростей (шар β = v/c; свет — его граница)"),
-                ("lab", "обычное пространство: траектория корабля, световые годы")]),
-    _p("loop", "Манёвр (петля в пространстве скоростей)", "select", "thomas", group="Манёвр", options=LP.LOOPS),
-    _p("rho", "Размер петли ρ (быстрота: радиус круга, сторона импульса)", "float", 0.8, group="Манёвр",
+    _p("space", T("3-D scene"), "select", "velocity", group=SCENE,
+       options=[("velocity", T("velocity space (the ball β = v/c; light is its boundary)")),
+                ("lab", T("ordinary space: the craft's trajectory, light-years"))]),
+    _p("loop", T("Manoeuvre (a loop in velocity space)"), "select", "thomas", group=MANOEUVRE, options=LP.LOOPS),
+    _p("rho", T("Loop size ρ (rapidity: the circle's radius, a burn's side)"), "float", 0.8, group=MANOEUVRE,
        min=0.05, max=3.0),
-    _p("turns", "Повторов петли", "int", 1, group="Манёвр", min=1, max=6),
-    _p("sides", "Вершин многоугольника", "int", 6, group="Манёвр", min=3, max=24,
+    _p("turns", T("Repetitions of the loop"), "int", 1, group=MANOEUVRE, min=1, max=6),
+    _p("sides", T("Vertices of the polygon"), "int", 6, group=MANOEUVRE, min=3, max=24,
        show_if={"loop": ["polygon", "crown"]}),
-    _p("alpha", "Поворот тяги между импульсами α, °", "float", 90.0, group="Манёвр", min=10.0, max=170.0,
+    _p("alpha", T("Turn of the thrust between burns α, °"), "float", 90.0, group=MANOEUVRE, min=10.0, max=170.0,
        show_if={"loop": ["triangle"]}),
-    _p("chi", "Неплоскость χ, °", "float", 30.0, group="Манёвр", min=0.0, max=80.0,
+    _p("chi", T("Non-planarity χ, °"), "float", 30.0, group=MANOEUVRE, min=0.0, max=80.0,
        show_if={"loop": ["crown", "helix", "seam"]}),
-    _p("nth", "Нормаль плоскости петли: наклон от оси z θ, °", "float", 90.0, group="Манёвр", min=0.0, max=180.0),
-    _p("nph", "Нормаль плоскости петли: азимут φ, °", "float", 90.0, group="Манёвр", min=0.0, max=360.0),
-    _p("accel_g", "Тяга (собственное ускорение), g", "float", 1.0, group="Манёвр", min=0.1, max=10.0),
-    _p("field", "Поле в шаре скоростей (объём и срезы)", "select", "theta", group="Поле",
+    _p("nth", T("Normal of the loop's plane: tilt from the z axis θ, °"), "float", 90.0, group=MANOEUVRE, min=0.0,
+       max=180.0),
+    _p("nph", T("Normal of the loop's plane: azimuth φ, °"), "float", 90.0, group=MANOEUVRE, min=0.0, max=360.0),
+    _p("accel_g", T("Thrust (proper acceleration), g"), "float", 1.0, group=MANOEUVRE, min=0.1, max=10.0),
+    _p("field", T("Field in the ball of velocities (volume and slices)"), "select", "theta", group=FIELD,
        options=FIELDS, show_if={"space": ["velocity"]}),
-    _p("eta_u", "Быстрота первого импульса u петель поля (вдоль оси e₁ петли)", "float", 1.0, group="Поле",
-       min=0.1, max=3.0, show_if={"space": ["velocity"]}),
-    _p("ngrid", "Сетка объёма, точек на ось", "select", 64, group="Поле",
+    _p("eta_u", T("Rapidity of the first burn u of the field's loops (along the loop's axis e₁)"), "float", 1.0,
+       group=FIELD, min=0.1, max=3.0, show_if={"space": ["velocity"]}),
+    _p("ngrid", T("Volume grid, points per axis"), "select", 64, group=FIELD,
        options=[(48, "48"), (64, "64"), (96, "96")], show_if={"space": ["velocity"]}),
 ], presets={
-    "thomas": {"label": "Прецессия Томаса: равномерное движение по окружности, γ = 1,34", "params": {}},
-    "circle": {"label": "Круг через покой: равенство в изопериметрической границе", "params": {"loop": "circle"}},
-    "spin_flip": {"label": "SU(2): гироскопы вернулись (поворот 2π), спинор сменил знак",
+    "thomas": {"label": T("Thomas precession: uniform circular motion, γ = {g}", g=1.34), "params": {}},
+    "circle": {"label": T("Circle through rest: equality in the isoperimetric bound"), "params": {"loop": "circle"}},
+    "spin_flip": {"label": T("SU(2): the gyroscopes are back (a turn by 2π), the spinor changed its sign"),
                   "params": {"loop": "circle", "rho": round(math.acosh(2.0), 10)}},
-    "triangle": {"label": "Три импульса: угол Вигнера = площадь треугольника скоростей",
+    "triangle": {"label": T("Three burns: the Wigner angle = the area of the triangle of velocities"),
                  "params": {"loop": "triangle", "rho": 1.2, "alpha": 120.0}},
-    "crown": {"label": "Неплоская корона из 6 импульсов", "params": {"loop": "crown", "sides": 6, "chi": 35.0}},
-    "helix": {"label": "Винт: тяга поворачивается вокруг наклонной оси", "params": {"loop": "helix", "chi": 30.0}},
-    "seam": {"label": "Шов мяча на сфере скоростей (неплоский, 96 импульсов)",
+    "crown": {"label": T("A non-planar crown of {n:d} burns", n=6), "params": {"loop": "crown", "sides": 6, "chi": 35.0}},
+    "helix": {"label": T("Helix: the thrust turns about a tilted axis"), "params": {"loop": "helix", "chi": 30.0}},
+    "seam": {"label": T("The seam of a ball on the sphere of velocities (non-planar, {n:d} burns)", n=96),
              "params": {"loop": "seam", "rho": 0.9, "chi": 30.0}},
-    "lab": {"label": "Обычное пространство: траектория и гироскопы при прецессии Томаса",
+    "lab": {"label": T("Ordinary space: the trajectory and the gyroscopes in Thomas precession"),
             "params": {"space": "lab", "rho": 1.0, "turns": 2}},
 })
 
@@ -95,11 +106,11 @@ class Simulation(SlicePlanes, BaseSimulation):
         self.space = p["space"]
         self.accel = float(p["accel_g"]) * LP.G_LY  # ly / yr^2 (c = 1 ly/yr)
         self.pieces, self.info = LP.build(p)
-        self.mv = T.Manoeuvre(self.pieces, c=1.0, accel=self.accel)
+        self.mv = ST.Manoeuvre(self.pieces, c=1.0, accel=self.accel)
         fuel = self.mv.fuel()
         self.track = self.mv.run(ds=max(fuel / MAX_SAMPLES, 0.002))
         self.end = self.mv.end()
-        self.hol = T.holonomy(self.end)
+        self.hol = ST.holonomy(self.end)
         tr = self.track
         self.tt = tr.x[:, 0] * YEAR             # lab time of every sample: the world clock, seconds
         self.T_end = float(self.tt[-1])
@@ -153,7 +164,7 @@ class Simulation(SlicePlanes, BaseSimulation):
             s_loc = tr.s[i] - starts[k]
             a = np.asarray(q.direction, float)
             a = a / np.linalg.norm(a)
-            if isinstance(q, T.Turn):
+            if isinstance(q, ST.Turn):
                 a = LZ.rot3(q.axis, q.curvature * s_loc) @ a
             v = tr.M[i] @ np.r_[0.0, a]
             out[i] = v[1:] / max(np.linalg.norm(v[1:]), 1e-300)
@@ -212,23 +223,31 @@ class Simulation(SlicePlanes, BaseSimulation):
 
     def _quantity(self):
         if self.params["field"] == "theta":
-            return {"label": "θ", "unit": "рад", "scale": math.pi}
-        return {"label": "θ / граница(L)", "unit": "", "scale": 1.0}
+            return {"label": "θ", "unit": T("rad"), "scale": math.pi}
+        return {"label": T("θ / bound(L)"), "unit": "", "scale": 1.0}
 
     # --- slice planes (lfviz.planes3d hooks) --------------------------------------------------------------------------
     def _plane_label(self, pl):
-        lab = G._label(pl)
-        return re.sub(r"^([xyz]) = ", lambda m: f"β{m.group(1)} = ", lab).replace("через ось z", "через ось βz")
+        """The engine's label of a plane (lfphys.core.geometry._label) in the coordinates of velocity space."""
+        n = np.asarray(pl.normal, float)
+        for i, a in enumerate("xyz"):  # a coordinate plane
+            if abs(abs(n[i]) - 1.0) < 1e-12:
+                return T("β{axis} = {c}", axis=a, c=float(pl.origin[i]))
+        if abs(n[2]) < 1e-12 and abs(n[0] * pl.origin[0] + n[1] * pl.origin[1]) < 1e-12:  # contains the z axis
+            u = np.asarray(pl.u, float) if abs(pl.u[2]) < 1e-12 else np.asarray(pl.v, float)
+            phi = round(math.degrees(math.atan2(u[1], u[0])) % 180.0, 2) % 180.0
+            return T("through the βz axis, φ = {phi}°", phi=phi)
+        return G._label(pl)  # a plane in general position
 
     def _plane_slice(self, pid, pl, s_rng, t_rng, coarse):
         if self.space != "velocity":
-            raise ValueError("в обычном пространстве срезов нет: поле считается в пространстве скоростей")
+            raise Refusal(T("there are no slices in ordinary space: the field is computed in velocity space"))
         n = COARSE if coarse else NS
         s, t = np.linspace(*s_rng, n), np.linspace(*t_rng, n)
         P = G.plane_points(pl, s, t)
         P = np.where(G.inside_box(P, self.box)[..., None], P, 2.0)  # outside the box: outside the ball, blank
         th, val = self._field_on(P)
-        ver = {"points": 0, "note": "автосмещение: грубый срез, без сверки"} if coarse else self._verify(P, th)
+        ver = {"points": 0, "note": T("auto-move: a coarse slice, not checked")} if coarse else self._verify(P, th)
         return {"s": s, "t": t, "th": th, "val": val, "verify": ver, "coarse": coarse}
 
     def _verify(self, P, th):
@@ -236,7 +255,7 @@ class Simulation(SlicePlanes, BaseSimulation):
         against Gauss-Bonnet from the sides (L'Huilier); tolerance: the matrix route's round-off bound there."""
         f = np.where(np.isfinite(th), th, -1.0)
         if f.max() <= 1e-9:
-            return {"points": 0, "note": "на плоскости нет поворота (u и w на одной прямой)"}
+            return {"points": 0, "note": T("no rotation on this plane (u and w on one line)")}
         i0 = np.unravel_index(np.argmax(f), f.shape)
         cand = np.argwhere(f >= 0.05 * f.max())
         pts = [i0] + [tuple(cand[j]) for j in self.rng.choice(len(cand), size=min(2, len(cand)), replace=False)]
@@ -258,21 +277,22 @@ class Simulation(SlicePlanes, BaseSimulation):
                 "tt": [float(sl["t"][0]), float(sl["t"][-1]), len(sl["t"])],
                 "origin": pd["origin"], "u": pd["u"], "v": pd["v"], "normal": pd["normal"], "label": pd["label"],
                 "peak": peak, "route": "plane", "units": "c", "depth": False, "coord_names": ["βx", "βy", "βz"],
-                "verify_title": "θ в точках плоскости против площади треугольника скоростей (Гаусс–Бонне)",
+                "verify_title": T("θ at points of the plane against the area of the triangle of velocities (Gauss–Bonnet)"),
                 "quantity": {**q, "peak": peak * q["scale"]},
-                "route_label": "точно для этой плоскости (матрицы Лоренца в каждой точке)", "exact": True,
+                "route_label": T("exact for this plane (Lorentz matrices at every point)"), "exact": True,
                 "approximation": False, "reason": "", "verify": sl["verify"]}
         self._msg(meta, {"I": (val / max(peak, 1e-300)).astype(np.float32)})
         ver = sl["verify"]
         if ver.get("points"):
-            self._check(f"plane_exact_{pid}", f"Срез {pid} ({pd['label']}): поворот θ в {ver['points']} точках против "
-                                              f"Гаусса–Бонне", ver["max_err"], 0.0, "рад", tol=ver["tol"], ok=ver["ok"],
-                        note="θ матрицами Лоренца против площади треугольника скоростей по его сторонам (Люилье); "
-                             "допуск — граница округления матриц в этой точке")
+            self._check(f"plane_exact_{pid}", T("Slice {pid} ({plane}): rotation θ at {n:d} points against Gauss–Bonnet",
+                                                pid=pid, plane=pd["label"], n=int(ver["points"])),
+                        ver["max_err"], 0.0, T("rad"), tol=ver["tol"], ok=ver["ok"],
+                        note=T("θ from Lorentz matrices against the area of the triangle of velocities from its sides "
+                               "(L'Huilier); tolerance: the round-off bound of the matrices at that point"))
 
     def _plane_preview(self, pid, pl, s_rng, t_rng):
         if self.space != "velocity":
-            raise ValueError("в обычном пространстве срезов нет")
+            raise Refusal(T("there are no slices in ordinary space"))
         s, t = np.linspace(*s_rng, 48), np.linspace(*t_rng, 48)
         P = G.plane_points(pl, s, t)
         P = np.where(G.inside_box(P, self.box)[..., None], P, 2.0)
@@ -288,16 +308,17 @@ class Simulation(SlicePlanes, BaseSimulation):
 
     def _plane_removed(self, pid, sl):
         if sl and sl["verify"].get("points"):
-            self._check(f"plane_exact_{pid}", f"Срез {pid}: убран", None, None, "", info=True,
-                        note="последняя сверка этого среза — в записи запуска")
+            self._check(f"plane_exact_{pid}", T("Slice {pid}: removed", pid=pid), None, None, "", info=True,
+                        note=T("the last comparison of this slice is in the run's record"))
 
     def view(self, args):
         if self.space != "velocity":
-            raise ValueError("в обычном пространстве срезов нет: поле считается в пространстве скоростей")
+            raise Refusal(T("there are no slices in ordinary space: the field is computed in velocity space"))
         return super().view(args)
 
     # --- checks ----------------------------------------------------------------------------------------------------
-    def _check(self, cid, label, value, ref, unit="", note="", tol=1e-9, ok=None, info=False, group="Гироскоп"):
+    def _check(self, cid, label, value, ref, unit="", note="", tol=1e-9, ok=None, info=False, group=None):
+        group = T("Gyroscope") if group is None else group
         rel = None
         if ref is not None and value is not None and ref != 0:
             rel = (value - ref) / abs(ref)
@@ -313,11 +334,11 @@ class Simulation(SlicePlanes, BaseSimulation):
         """Checks known at the start: the field of three-burn loops against Gauss-Bonnet."""
         if self.space == "velocity":
             n, worst, tol, ok = self.field_check
-            self._check("field_exact", f"Поле: поворот θ в {n} точках объёма против Гаусса–Бонне", worst, 0.0, "рад",
-                        tol=tol, ok=ok, group="Поле",
-                        note="θ из матриц Лоренца (буст u, затем буст v' = w, увиденная из u) против площади "
-                             "треугольника скоростей (покой, u, w) по его сторонам (Люилье); допуск — граница "
-                             "округления 64 ε γ_u² γ_w² в худшей точке")
+            self._check("field_exact", T("Field: rotation θ at {n:d} points of the volume against Gauss–Bonnet", n=int(n)),
+                        worst, 0.0, T("rad"), tol=tol, ok=ok, group=FIELD,
+                        note=T("θ from Lorentz matrices (the boost u, then the boost v′ = w as seen from u) against the "
+                               "area of the triangle of velocities (rest, u, w) from its sides (L'Huilier); tolerance: "
+                               "the round-off bound 64 ε γ_u² γ_w² at the worst point"))
 
     def _round_bound(self):
         """An alarm level for the round-off (empirical, not derived; review B2-6): 1e-11 cosh(eta_max)^2 (pieces + 1 +
@@ -338,16 +359,18 @@ class Simulation(SlicePlanes, BaseSimulation):
     def _closing_checks(self):
         h, e = self.hol, self.end
         est, bound = self._round_est(), self._round_bound()
-        self._check("roundoff", "Округление: расхождение двух представлений (Лоренц 4×4 и SL(2, C))", est, 0.0, "",
-                    tol=bound, ok=est <= bound,
-                    note=f"оценка ошибки этого запуска (и отклонение состояния от группы Лоренца); порог тревоги — "
-                         f"эмпирический: 1e-11·ch²(η_max)·(участки + 1 + Σ нормы показателей) = {bound:.1e}; допуски "
-                         f"сверок ниже — 8 × эта оценка (импульсы многоугольников строятся в расширенной точности, "
-                         f"их ошибка построения много меньше)")
+        self._check("roundoff", T("Round-off: the disagreement of two representations (Lorentz 4×4 and SL(2, C))"), est,
+                    0.0, "", tol=bound, ok=est <= bound,
+                    note=T("the error estimate of this run (and the state's distance from the Lorentz group); the "
+                           "alarm level is empirical: 1e-11·cosh²(η_max)·(pieces + 1 + Σ norms of the exponents) = "
+                           "{bound:.1e}; the tolerances of the comparisons below are 8 × this estimate (the burns of "
+                           "polygons are built in extended precision, their construction error is far smaller)",
+                           bound=float(bound)))
         tol = max(8 * est, 1e3 * np.finfo(float).eps)
-        self._check("closed", "Корабль вернулся к покою: |β| в конце", h["residual_beta"], 0.0, "", tol=tol,
-                    ok=h["residual_beta"] <= tol, note="последний импульс рассчитан так, чтобы вернуть к покою; "
-                                                       "допуск — 8 × оценка округления")
+        self._check("closed", T("The craft came back to rest: |β| at the end"), h["residual_beta"], 0.0, "", tol=tol,
+                    ok=h["residual_beta"] <= tol,
+                    note=T("the last burn is computed to bring the craft back to rest; tolerance: 8 × the round-off "
+                           "estimate"))
         ang = math.degrees(h["angle"])
         if self.info["planar"]:
             ref = float(self.info["reference"])
@@ -355,56 +378,63 @@ class Simulation(SlicePlanes, BaseSimulation):
             tol = max(8 * est, 1e3 * np.finfo(float).eps * (1.0 + abs(ref)))  # + the reference's own rounding
             dR = float(np.max(np.abs(h["R"] - LZ.rot3(n, -ref))))
             ref_fold = math.degrees(abs((ref + math.pi) % (2 * math.pi) - math.pi))
-            self._check("holonomy", "Поворот гироскопов (SO(3)), °: против замкнутой формулы", ang, ref_fold, "°",
-                        tol=tol, ok=dR <= tol,
-                        note=f"{self.info['ref_how']}; накопленный угол {ref:.10g} рад; гироскопы поворачиваются "
-                             f"против обхода петли; сравнение матриц: max|R − R(n, −A)| = {dR:.1e}")
+            self._check("holonomy", T("Rotation of the gyroscopes (SO(3)), °: against the closed formula"), ang, ref_fold,
+                        "°", tol=tol, ok=dR <= tol,
+                        note=T("{how}; accumulated angle {ref:.10g} rad; the gyroscopes turn against the direction "
+                               "the loop is run; comparison of the matrices: max|R − R(n, −A)| = {d:.1e}",
+                               how=self.info["ref_how"], ref=ref, d=dR))
             dA = float(np.max(np.abs(h["su2"] - LZ.sl2_rotation(n, -ref))))
             dacc = abs(self.accumulated - ref)
-            self._check("holonomy_accumulated", "Накопленный угол поворота (по ходу расчёта), рад: против площади",
-                        self.accumulated, ref, "рад", tol=tol / max(abs(ref), 1e-300), ok=dacc <= tol,
-                        note=f"угол системы гироскопов вокруг нормали петли, прослеженный по точкам манёвра без "
-                             f"скачков на 2π; эталон — {self.info['ref_how']}; разность {dacc:.1e}")
-            self._check("holonomy_su2", "Спинор (SU(2)): против exp(+iAσ·n/2) — знак после каждых 2π", dA, 0.0, "",
+            self._check("holonomy_accumulated", T("Accumulated angle of rotation (along the computation), rad: against "
+                                                  "the area"),
+                        self.accumulated, ref, T("rad"), tol=tol / max(abs(ref), 1e-300), ok=dacc <= tol,
+                        note=T("the angle of the gyroscopes' frame about the loop's normal, followed through the "
+                               "manoeuvre's points without jumps by 2π; reference: {how}; difference {d:.1e}",
+                               how=self.info["ref_how"], d=dacc))
+            self._check("holonomy_su2", T("Spinor (SU(2)): against exp(+iAσ·n/2), the sign after every 2π"), dA, 0.0, "",
                         tol=tol, ok=dA <= tol,
-                        note=f"угол SU(2) {math.degrees(h['su2_angle']):.6g}° (в [0, 360°]); знак спинора "
-                             f"{'−1' if h['spinor_sign'] < 0 else '+1'} относительно поворота SO(3) на ≤ 180°")
+                        note=T("SU(2) angle {a:.6g}° (in [0, 360°]); the spinor's sign {sign} relative to the SO(3) "
+                               "rotation by ≤ 180°", a=math.degrees(h["su2_angle"]),
+                               sign="−1" if h["spinor_sign"] < 0 else "+1"))
         else:
-            self._check("holonomy", "Поворот гироскопов (SO(3)), °", ang, None, "°", info=True,
-                        note=f"{self.info['ref_how']}; ось ({', '.join(f'{c:.4f}' for c in h['axis'])})")
+            self._check("holonomy", T("Rotation of the gyroscopes (SO(3)), °"), ang, None, "°", info=True,
+                        note=T("{how}; axis {axis}", how=self.info["ref_how"], axis=_vec(h["axis"], 4)))
             if self.info["kind"] == "seam":
                 self._check_seam()
         acc, L, how = self._per_fuel()
-        bound = float(T.isoperimetric_bound(L))
-        self._check("fuel_bound", "Поворот на единицу топлива против границы плоских петель", acc / bound, None, "",
-                    info=True,
-                    note=f"{how}; топливо L = {L:.6g} (сумма быстрот, ∫|a|dτ/c); граница плоских петель при этом L: "
-                         f"√(4π² + L²) − 2π = {bound:.6g} рад (Оссерман 1978, (4.23): равенство только для круга); "
-                         + ("для плоской петли граница — теорема" if self.info["planar"] else
-                            "граница доказана только для плоских петель, здесь это линия сравнения"))
+        bound = float(ST.isoperimetric_bound(L))
+        self._check("fuel_bound", T("Rotation per unit of fuel against the bound of planar loops"), acc / bound, None,
+                    "", info=True,
+                    note=T("{how}; fuel L = {L:.6g} (the sum of rapidities, ∫|a|dτ/c); the bound of planar loops at "
+                           "this L: √(4π² + L²) − 2π = {bound:.6g} rad (Osserman 1978, (4.23): equality only for the "
+                           "circle); {status}", how=how, L=L, bound=bound,
+                           status=T("for a planar loop the bound is a theorem") if self.info["planar"] else
+                           T("the bound is proven only for planar loops; here it is a line of comparison")))
 
     def _per_fuel(self):
         """(angle, fuel, what): a planar loop's accumulated angle (computed along the run) and the whole fuel; for a
         non-planar loop the SU(2) angle of ONE loop and that loop's fuel (review B2-3: the SU(2) angle of a loop flown
         m times is only known mod 4 pi)."""
         if self.info["planar"]:
-            return self.accumulated, self.mv.fuel(), "накопленный угол плоской петли (по ходу расчёта)"
+            return self.accumulated, self.mv.fuel(), T("the accumulated angle of a planar loop (along the computation)")
         k = int(self.info.get("loop_pieces", len(self.pieces)))
-        h1 = T.holonomy(self.track.ends[k - 1])
+        h1 = ST.holonomy(self.track.ends[k - 1])
         L1 = float(sum(q.rapidity for q in self.pieces[:k]))
-        return h1["su2_angle"], L1, "угол SU(2) одной петли (первого облёта) и её топливо"
+        return h1["su2_angle"], L1, T("the SU(2) angle of one loop (the first round) and its fuel")
 
     def _check_seam(self):
         p = dict(self.params)
         e1, e2, n = LP.base_frame(float(p["nth"]), float(p["nph"]))
         chi = math.radians(float(p["chi"]))
         rho, m = float(p["rho"]), int(p["turns"])
-        h2 = T.holonomy(T.Manoeuvre(T.polygon_burns(LP.repeated(LP.seam_vertices(rho, chi, e1, e2, n,
+        h2 = ST.holonomy(ST.Manoeuvre(ST.polygon_burns(LP.repeated(LP.seam_vertices(rho, chi, e1, e2, n,
                                                                                   2 * LP.SEAM_BURNS), m)),
                                     c=1.0, accel=self.accel).end())
         d = float(np.max(np.abs(h2["R"] - self.hol["R"])))
-        self._check("seam_convergence", f"Шов: {LP.SEAM_BURNS} импульсов против {2 * LP.SEAM_BURNS}", d, None, "",
-                    info=True, note="разница поворотов (матрицы); гладкий шов — предел; ошибка падает как 1/N²")
+        self._check("seam_convergence", T("Seam: {n:d} burns against {n2:d}", n=LP.SEAM_BURNS, n2=2 * LP.SEAM_BURNS), d,
+                    None, "", info=True,
+                    note=T("the difference of the rotations (matrices); the smooth seam is the limit; the error falls "
+                           "as 1/N²"))
 
     # --- messages -----------------------------------------------------------------------------------------------------
     def _msg(self, meta, blobs=None):
@@ -419,16 +449,16 @@ class Simulation(SlicePlanes, BaseSimulation):
             self._msg({"type": "volume", "t": self.t, "id": "field", "dims": list(self.vol.shape),
                        "box": [list(self.box[0]), list(self.box[1])], "peak": self.field_peak,
                        "quantity": {**self._quantity(), "peak": self.field_peak * self._quantity()["scale"]},
-                       "note": "поворот после петли покой → u → w → покой для каждого w; доля максимума"},
+                       "note": T("the rotation after the loop rest → u → w → rest for every w; a fraction of the maximum")},
                       {"data": self.vol})
             pos, vec = self.glyphs
             self._msg({"type": "vectors", "t": self.t, "id": "rotvec", "count": int(len(pos)),
-                       "note": "ось и угол поворота гироскопов (длина ~ √угла)"}, {"pos": pos, "vec": vec})
+                       "note": T("axis and angle of the gyroscopes' rotation (length ~ √angle)")}, {"pos": pos, "vec": vec})
         if "vertices" in self.info:
             V = np.asarray(self.info["vertices"], float)
             if self.space == "velocity":
                 self._msg({"type": "marks", "t": self.t, "id": "vertices", "count": int(len(V)),
-                           "label": "вершины петли (заданы)"}, {"pos": V.astype(np.float32)})
+                           "label": T("vertices of the loop (given)")}, {"pos": V.astype(np.float32)})
         buf, self._buf = buf + self._buf, None
         for meta, blobs in buf:
             self.emit(meta, blobs)
@@ -471,27 +501,29 @@ class Simulation(SlicePlanes, BaseSimulation):
 
     def _piece_text(self, k):
         q = self.pieces[k]
-        d = ", ".join(f"{c:.3f}" for c in np.asarray(q.direction, float) / np.linalg.norm(q.direction))
-        if isinstance(q, T.Turn):
-            return (f"участок {k + 1} из {len(self.pieces)}: тяга ({d}) в своей системе поворачивается со скоростью "
-                    f"{q.curvature:.4g} рад на единицу быстроты, топливо {q.rapidity:.4g}")
-        return f"участок {k + 1} из {len(self.pieces)}: импульс вдоль ({d}) своей системы, быстрота {q.rapidity:.4g}"
+        d = _vec(np.asarray(q.direction, float) / np.linalg.norm(q.direction))
+        if isinstance(q, ST.Turn):
+            return T("piece {k:d} of {n:d}: the thrust {d} turns in the craft's own frame at {c:.4g} rad per unit of "
+                     "rapidity, fuel {f:.4g}", k=k + 1, n=len(self.pieces), d=d, c=float(q.curvature),
+                     f=float(q.rapidity))
+        return T("piece {k:d} of {n:d}: a burn along {d} of the craft's own frame, rapidity {r:.4g}", k=k + 1,
+                 n=len(self.pieces), d=d, r=float(q.rapidity))
 
     def _closing(self):
         h = self.hol
         ang = math.degrees(h["angle"])
         ax = h["axis"]
-        sign = "сменил знак (−1)" if h["spinor_sign"] < 0 else "тот же (+1)"
+        sign = T("changed its sign (−1)") if h["spinor_sign"] < 0 else T("is the same (+1)")
         self.emit({"type": "event", "t": self.T_end, "kind": "closed",
-                   "text": f"петля замкнута: гироскопы повернулись на {ang:.4g}° вокруг оси "
-                           f"({ax[0]:.3f}, {ax[1]:.3f}, {ax[2]:.3f}); спинор {sign}; топливо {self.mv.fuel():.4g}"})
+                   "text": T("the loop is closed: the gyroscopes turned by {a:.4g}° about the axis {axis}; the spinor "
+                             "{sign}; fuel {f:.4g}", a=ang, axis=_vec(ax), sign=sign, f=float(self.mv.fuel()))})
         origin = self._pos(len(self.tt) - 1)
         size = 0.45 if self.space == "velocity" else 0.25 * (self.box[1][0] - self.box[0][0])
         self.emit({"type": "arrow", "t": self.T_end, "id": "holonomy", "from": [float(c) for c in origin],
-                   "vec": [float(c) * size for c in ax], "label": f"ось поворота, {ang:.3g}°", "color": "#ffd23f",
-                   "layer": "Ось поворота гироскопов (после петли)"})
+                   "vec": [float(c) * size for c in ax], "label": T("rotation axis, {a:.3g}°", a=ang),
+                   "color": "#ffd23f", "layer": T("Rotation axis of the gyroscopes (after the loop)")})
         acc, L, how = self._per_fuel()
-        bound = float(T.isoperimetric_bound(L))
+        bound = float(ST.isoperimetric_bound(L))
         self.emit({"type": "holonomy", "t": self.T_end, "angle": h["angle"], "axis": [float(c) for c in ax],
                    "su2_angle": h["su2_angle"], "spinor_sign": h["spinor_sign"], "fuel": self.mv.fuel(),
                    "planar": self.info["planar"], "accumulated": self.accumulated, "per_fuel_angle": acc,
@@ -520,7 +552,7 @@ class Simulation(SlicePlanes, BaseSimulation):
         return {}
 
     def set_live(self, values):
-        raise ValueError("у этого мира нет параметров, меняемых на ходу: манёвр — параметр мира")
+        raise Refusal(T("this world has no parameters to change on the fly: the manoeuvre is a world parameter"))
 
     def engine_modules(self):
         return ["core.lorentz", "core.spin_transport", "core.geometry"]
@@ -530,54 +562,56 @@ class Simulation(SlicePlanes, BaseSimulation):
         vel = self.space == "velocity"
         objects = []
         if vel:
-            objects += [{"id": "light", "label": "Свет: |β| = 1 (граница пространства скоростей)", "kind": "sphere",
+            objects += [{"id": "light", "label": T("Light: |β| = 1 (the boundary of velocity space)"), "kind": "sphere",
                          "center": [0.0, 0.0, 0.0], "radius": 1.0, "visible": True},
-                        {"id": "rest", "label": "Покой (начало и конец петли)", "kind": "point",
-                         "pos": [0.0, 0.0, 0.0], "text": "покой", "visible": True}]
+                        {"id": "rest", "label": T("Rest (the start and the end of the loop)"), "kind": "point",
+                         "pos": [0.0, 0.0, 0.0], "text": T("rest"), "visible": True}]
         else:
-            objects += [{"id": "start", "label": "Старт и финиш (покой)", "kind": "point", "pos": [0.0, 0.0, 0.0],
-                         "text": "старт", "visible": True}]
-        layers = [{"id": "field", "label": "Поле поворотов (объём)", "kind": "volume", "visible": True,
+            objects += [{"id": "start", "label": T("Start and finish (rest)"), "kind": "point", "pos": [0.0, 0.0, 0.0],
+                         "text": T("launch"), "visible": True}]
+        layers = [{"id": "field", "label": T("Field of rotations (volume)"), "kind": "volume", "visible": True,
                    "look": {"density": 0.35, "threshold": 0.05}},
-                  {"id": "rotvec", "label": "Оси поворота гироскопов (стрелки)", "kind": "vectors", "visible": False}] \
-            if vel else []
-        views = ([["iso", "Изо", "Изометрия (F)"], ["side", "вдоль x", "Взгляд вдоль оси βx"],
-                  ["top", "сверху", "Взгляд вдоль оси βy (сверху)"], ["beam", "вдоль z", "Взгляд вдоль оси βz"],
-                  ["back", "против z", "Взгляд против оси βz"]] if vel else
-                 [["iso", "Изо", "Изометрия (F)"], ["side", "вдоль x", "Взгляд вдоль оси x"],
-                  ["top", "сверху", "Взгляд вдоль оси y (сверху)"], ["beam", "вдоль z", "Взгляд вдоль оси z"],
-                  ["back", "против z", "Взгляд против оси z"]])
-        units = "c" if vel else "св. лет"
+                  {"id": "rotvec", "label": T("Rotation axes of the gyroscopes (arrows)"), "kind": "vectors",
+                   "visible": False}] if vel else []
+        views = ([["iso", T("Iso"), T("Isometric (F)")], ["side", T("along x"), T("View along the βx axis")],
+                  ["top", T("top"), T("View along the βy axis (from above)")],
+                  ["beam", T("along z"), T("View along the βz axis")],
+                  ["back", T("against z"), T("View against the βz axis")]] if vel else
+                 [["iso", T("Iso"), T("Isometric (F)")], ["side", T("along x"), T("View along the x axis")],
+                  ["top", T("top"), T("View along the y axis (from above)")],
+                  ["beam", T("along z"), T("View along the z axis")],
+                  ["back", T("against z"), T("View against the z axis")]])
+        units = "c" if vel else T("ly")
         return {
-            "title": "Прецессия Томаса–Вигнера в 3D: " + dict(LP.LOOPS)[p["loop"]],
-            "text": ("Корабль стартует из покоя и выполняет манёвр: импульсы и повороты тяги в своей системе. Его "
-                     "гироскопы переносятся без вращения (Ферми–Уокер); вернувшись к покою, они оказываются "
-                     "повёрнутыми — это голономия петли, которую скорость пробежала в пространстве скоростей. Поворот "
-                     "считается точно (SO(3) и спинор SU(2)), сверяется с площадью петли (Гаусс–Бонне) для плоских "
-                     "петель и сравнивается с изопериметрической границей при том же топливе."),
+            "title": T("Thomas–Wigner precession in 3-D: {loop}", loop=dict(LP.LOOPS)[p["loop"]]),
+            "text": T("A craft starts at rest and flies a manoeuvre: burns and turns of its thrust in its own frame. "
+                      "Its gyroscopes are carried without rotation (Fermi–Walker); back at rest, they turn out to be "
+                      "turned: this is the holonomy of the loop its velocity ran in velocity space. The rotation is "
+                      "computed exactly (SO(3) and the spinor in SU(2)), checked against the loop's area "
+                      "(Gauss–Bonnet) for planar loops and compared with the isoperimetric bound at the same fuel."),
             "actions": [],
             "scene3d": {"box": [list(self.box[0]), list(self.box[1])], "units": units, "objects": objects,
                         "layers": layers, "views": views, "coord_names": ["βx", "βy", "βz"] if vel else ["x", "y", "z"],
-                        "planes": {"max": 3 if vel else 0, "center": list(self.plane_center), "time_unit": "год",
+                        "planes": {"max": 3 if vel else 0, "center": list(self.plane_center), "time_unit": T("yr"),
                                    "defaults": {str(i): list(v) for i, v in self.default_normals.items()}}},
             "loop": {"kind": info["kind"], "planar": info["planar"], "normal": info["normal"], "e1": info["e1"],
                      "e2": info["e2"], "ref_how": info["ref_how"], "pieces": len(self.pieces), "fuel": self.mv.fuel(),
                      "accel": self.accel},
             "field": {"kind": p["field"], "u": self.u_field.tolist(), "quantity": self._quantity(),
                       "peak": getattr(self, "field_peak", None)} if vel else None,
-            "units": {"t": "с (мировые часы; манёвр — годы)", "x": units},
+            "units": {"t": T("s (the world clock; the manoeuvre lasts years)"), "x": units},
             "space": self.space,
         }, {}
 
 
 VIZ = {
     "id": "v09_thomas_3d",
-    "title": "Прецессия Томаса–Вигнера в 3D",
-    "summary": ("Манёвр корабля в 3D (импульсы и повороты тяги): гироскопы после возврата к покою повёрнуты — "
-                "голономия петли в пространстве скоростей, в SO(3) и SU(2); топливо и изопериметрическая граница; "
-                "поле поворотов в шаре скоростей со срезами."),
-    "purpose": ("Продолжение линии вращения Томаса–Вигнера в 3+1: неплоские манёвры, двойное накрытие (знак спинора), "
-                "поворот на единицу топлива против границы плоских петель."),
+    "title": T("Thomas–Wigner precession in 3-D"),
+    "summary": T("A craft's manoeuvre in 3-D (burns and turns of the thrust): back at rest, its gyroscopes are turned — "
+                 "the holonomy of the loop in velocity space, in SO(3) and SU(2); the fuel and the isoperimetric bound; "
+                 "the field of rotations in the ball of velocities with slices."),
+    "purpose": T("The Thomas–Wigner rotation continued in 3+1: non-planar manoeuvres, the double cover (the spinor's "
+                 "sign), the rotation per unit of fuel against the bound of planar loops."),
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,

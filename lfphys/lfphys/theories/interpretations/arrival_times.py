@@ -33,29 +33,32 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "theories", "kind": "interpretation",
-    "title": "Время прихода частицы к детектору: собственные правила",
-    "statement": "Правила для плотности времени прихода Π(t) к поверхности, не зависящие от устройства детектора: "
-                 "квантовый поток Π = j·n (Бом при отсутствии обратного тока); первое прибытие бомовских траекторий "
-                 "(в 1-D — по бегущему минимуму вероятности слева от L); Ааронов–Бом–Киёвский "
-                 "Π = (ħ/2πm)Σ_α|∫dk θ(αk)√|k| ψ̃ e^{ikL−iħk²t/2m}|² для свободной частицы; полуклассическое "
-                 "Π = (md/ħt²)|ψ̃(md/ħt)|².",
-    "validity": "нерелятивистская частица; АБК и полуклассическое — только свободное движение (АБК — по всей "
-                "оси времени, вес при t < 0 читается как вероятность «не обнаружена»); полуклассическое — когда "
-                "путь много больше размера пакета; для состояния, разделимого по направлению полёта и поперёк, "
-                "правила для плоскости сводятся к одномерным",
-    "basis": ["Das & Struyve, Phys. Rev. A 104, 042214 (2021), arXiv:2105.14744 — экспоненциальные правила и полуклассическое",
-              "Das & Nöth, Proc. R. Soc. A 477, 20210101 (2021), arXiv:2102.02661 — АБК, уравнение 5",
+    "title": T("The arrival time of a particle at a detector: intrinsic rules"),
+    "statement": T("Rules for the arrival-time density Π(t) at a surface that do not depend on how the detector is "
+                   "built: the quantum flux Π = j·n (Bohm, when there is no backflow); the first arrival of Bohmian "
+                   "trajectories (in 1-D, by the running minimum of the probability to the left of L); "
+                   "Aharonov–Bohm–Kijowski Π = (ħ/2πm)Σ_α|∫dk θ(αk)√|k| ψ̃ e^{ikL−iħk²t/2m}|² for a free particle; "
+                   "the semiclassical Π = (md/ħt²)|ψ̃(md/ħt)|²."),
+    "validity": T("a non-relativistic particle; ABK and the semiclassical rule only for free motion (ABK over the "
+                  "whole time axis, the weight at t < 0 read as the probability “not detected”); the semiclassical "
+                  "rule when the path is much longer than the packet; for a state separable along and across the "
+                  "flight direction the rules for a plane reduce to one-dimensional ones"),
+    "basis": [T("Das & Struyve, Phys. Rev. A 104, 042214 (2021), arXiv:2105.14744 — exponential rules and the "
+                "semiclassical one"),
+              T("Das & Nöth, Proc. R. Soc. A 477, 20210101 (2021), arXiv:2102.02661 — ABK, equation 5"),
               "Aharonov & Bohm, Phys. Rev. 122, 1649 (1961); Kijowski, Rep. Math. Phys. 6, 361 (1974)",
-              "Leavens, Phys. Lett. A 178, 27 (1993) — время прихода по Бому",
-              "Muga & Leavens, Phys. Rep. 338, 353 (2000) — обзор"],
-    "conflicts": ["стандартная квантовая механика (lfphys.core.quantum): оператора времени нет, правило Борна "
-                  "время прихода не определяет; правила между собой расходятся — при обратном токе поток "
-                  "отрицателен, у АБК есть «отрицательные времена», полуклассическое не различает пакеты с "
-                  "одним распределением импульса (цепочка пакетов: Das & Struyve 2021)",
-                  "модели детекторов (lfphys.theories.models.detection): дают другое распределение и долю "
-                  "необнаруженных частиц, зависящие от параметров детектора"],
+              T("Leavens, Phys. Lett. A 178, 27 (1993) — the Bohmian arrival time"),
+              T("Muga & Leavens, Phys. Rep. 338, 353 (2000) — a review")],
+    "conflicts": [T("standard quantum mechanics (lfphys.core.quantum): there is no time operator, the Born rule does "
+                    "not define an arrival time; the rules disagree with each other: with backflow the flux is "
+                    "negative, ABK has “negative times”, the semiclassical rule cannot tell apart packets with the "
+                    "same momentum distribution (a train of packets: Das & Struyve 2021)"),
+                  T("detector models (lfphys.theories.models.detection): they give another distribution and another "
+                    "fraction of undetected particles, both depending on the detector's parameters")],
 }
 
 

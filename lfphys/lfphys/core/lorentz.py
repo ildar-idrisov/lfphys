@@ -25,21 +25,24 @@ from __future__ import annotations
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Специальная теория относительности в 3+1",
-    "statement": "Группа Лоренца в 3+1: бусты и повороты, разложение преобразования на буст и поворот, сложение "
-                 "скоростей в любых направлениях, вращение Томаса–Вигнера как поворот SO(3) (ось и угол), спинорное "
-                 "представление SL(2, C), аберрация, эффект Доплера и прожекторный эффект в 3D, преобразование "
-                 "электромагнитного поля, видимое положение тела с учётом запаздывания света (поворот Террелла, "
-                 "контур сферы — окружность, Пенроуз).",
-    "validity": "плоское пространство-время; гравитация — в lfphys.core.gravity",
+    "title": T("Special relativity in 3+1"),
+    "statement": T("The Lorentz group in 3+1: boosts and rotations, the decomposition of a transformation into a "
+                   "boost and a rotation, velocity composition in any directions, the Thomas–Wigner rotation as an "
+                   "SO(3) rotation (axis and angle), the spinor representation SL(2, C), aberration, the Doppler and "
+                   "searchlight effects in 3D, the transformation of the electromagnetic field, the apparent "
+                   "position of a body with the light delay (the Terrell rotation, the outline of a sphere is a "
+                   "circle, Penrose)."),
+    "validity": T("flat spacetime; gravity is in lfphys.core.gravity"),
     "basis": ["Einstein, Ann. Phys. 17, 891 (1905)",
-              "Wigner, Ann. Math. 40, 149 (1939): представления группы Лоренца; вращение Вигнера",
+              T("Wigner, Ann. Math. 40, 149 (1939): representations of the Lorentz group; the Wigner rotation"),
               "Thomas, Nature 117, 514 (1926)",
               "Penrose, Proc. Camb. Phil. Soc. 55, 137 (1959); Terrell, Phys. Rev. 116, 1041 (1959)",
               "Jackson, Classical Electrodynamics, 3rd ed. (1999), §§ 11.3–11.5, 11.10",
-              "проверки изотропии c и замедления времени: нарушений не найдено"],
+              T("tests of the isotropy of c and of time dilation: no violation found")],
     "conflicts": [],
 }
 
@@ -51,7 +54,7 @@ SIGMA4 = np.concatenate([np.eye(2, dtype=complex)[None], SIGMA])  # sigma_0 = id
 def _vec(v):
     v = np.asarray(v, dtype=float)
     if v.shape[-1:] != (3,):
-        raise ValueError("ожидается трёхмерный вектор (последняя ось длины 3)")
+        raise ValueError(T("a three-dimensional vector is expected (last axis of length 3)"))
     return v
 
 
@@ -171,8 +174,8 @@ def add_velocities(u, v, c: float = 1.0):
     uv = np.einsum("...i,...i->...", u, v)[..., None]
     w = (u + v / gu + gu / (1.0 + gu) * uv * u / c**2) / (1.0 + uv / c**2)
     if np.any(np.einsum("...i,...i->...", w, w) >= c * c):  # review B2-8: round-off at the edge of the ball
-        raise ValueError("сложение скоростей у самого предела c: в float64 сумма округлилась до |w| ≥ c; "
-                         "задайте такие скорости быстротами")
+        raise ValueError(T("velocity composition at the very limit c: in float64 the sum rounded to |w| ≥ c; give "
+                           "such velocities as rapidities"))
     return w
 
 
@@ -346,7 +349,7 @@ def apparent(x0, v, t_obs=0.0, observer_v=(0.0, 0.0, 0.0), c: float = 1.0):
     xe = x0 + v * te[..., None]
     r = np.linalg.norm(xe, axis=-1, keepdims=True)
     if np.any(r == 0):  # review B2-8: a point at the observer has no direction
-        raise ValueError("точка находится у наблюдателя в момент наблюдения: направления на неё нет")
+        raise ValueError(T("the point is at the observer at the moment of observation: it has no direction"))
     khat = -xe / r  # the photon travels from x_e to the origin
     k = np.concatenate([np.ones(khat.shape[:-1] + (1,)), khat], axis=-1)
     uo = np.broadcast_to(np.asarray(observer_v, float), khat.shape)
@@ -370,12 +373,12 @@ def sphere_outline(center0, radius: float, v, t_obs: float = 0.0, c: float = 1.0
     bn = float(np.linalg.norm(b))
     g = float(gamma_of(b))
     nv = b / bn if bn > 0 else np.zeros(3)
-    T = np.eye(3) + (g - 1.0) * np.outer(nv, nv)
+    Tm = np.eye(3) + (g - 1.0) * np.outer(nv, nv)  # the stretch T of the docstring
     Ti = np.eye(3) + (1.0 / g - 1.0) * np.outer(nv, nv)
-    TP = T @ P
+    TP = Tm @ P
     dist = float(np.linalg.norm(TP))
     if dist <= radius:
-        raise ValueError("наблюдатель внутри тела")
+        raise ValueError(T("the observer is inside the body"))
     alpha = np.arcsin(radius / dist)
     ph = TP / dist
     e1 = np.cross(ph, [1.0, 0.0, 0.0] if abs(ph[0]) < 0.9 else [0.0, 1.0, 0.0])

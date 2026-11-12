@@ -57,23 +57,25 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 from .. import elliptic as EL
 from . import kerr
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Нулевые геодезические Керра: постоянная Картера, время Мино, критическая кривая",
-    "statement": "Лучи света у вращающейся чёрной дыры в координатах Бойера–Линдквиста с сохраняющимися E, L_z и "
-                 "постоянной Картера Q (λ, η): корни радиального и полярного потенциалов, r(τ) и θ(τ) в "
-                 "эллиптических функциях Якоби (время Мино, точки поворота — точно), φ и t — квадратурой вдоль "
-                 "луча; экран далёкого наблюдателя (α, β); пересечения экватора по порядкам n; сферические "
-                 "фотонные орбиты, критическая кривая Бардина (край тени), показатель Ляпунова колец.",
-    "validity": "вакуумное решение ОТО, 0 ≤ a < M; геометрическая оптика (длина волны ≪ M); внешняя область "
-                "r > r₊; наблюдатель на бесконечности (экран Бардина). Точность r_n (замерено против 40-значного "
-                "маршрута, ревью B5): n ≤ 3 — не хуже 3·10⁻¹² при относительном расстоянии до критической кривой "
-                "|d| ≥ 10⁻³ (θ_o от 10⁻⁴° до 90°); дальнее пересечение n = 0 луча у самой кривой — 7·10⁻¹² при "
-                "d = 10⁻⁶, 5·10⁻¹⁰ при 10⁻⁹, 3·10⁻⁸ при 10⁻¹²; высокие порядки — по обусловленности задачи "
-                "(n = 8: 2·10⁻⁴ при d = 10⁻¹²)",
+    "title": T("Kerr null geodesics: Carter constant, Mino time, critical curve"),
+    "statement": T("Light rays near a rotating black hole in Boyer–Lindquist coordinates with the conserved E, L_z "
+                   "and Carter constant Q (λ, η): the roots of the radial and polar potentials, r(τ) and θ(τ) in "
+                   "Jacobi elliptic functions (Mino time; turning points exact), φ and t by quadrature along the ray; "
+                   "the distant observer's screen (α, β); equator crossings by order n; spherical photon orbits, "
+                   "Bardeen's critical curve (the edge of the shadow), the Lyapunov exponent of the rings."),
+    "validity": T("vacuum solution of GR, 0 ≤ a < M; geometric optics (wavelength ≪ M); exterior r > r₊; observer at "
+                  "infinity (Bardeen's screen). Accuracy of r_n (measured against a 40-digit route, review B5): for n "
+                  "≤ 3 within 3·10⁻¹² at a relative distance to the critical curve |d| ≥ 10⁻³ (θ_o from 10⁻⁴° to "
+                  "90°); the far crossing n = 0 of a ray right at the curve: 7·10⁻¹² at d = 10⁻⁶, 5·10⁻¹⁰ at 10⁻⁹, "
+                  "3·10⁻⁸ at 10⁻¹²; higher orders as the conditioning of the problem allows (n = 8: 2·10⁻⁴ at d = "
+                  "10⁻¹²)"),
     "basis": ["Carter, Phys. Rev. 174, 1559 (1968)", "Bardeen, in Black Holes (Les Houches 1972), 1973",
               "Gralla & Lupsasca, Phys. Rev. D 101, 044032 (2020): null geodesics of the Kerr exterior",
               "Gralla & Lupsasca, Phys. Rev. D 101, 044031 (2020): lensing by Kerr black holes",

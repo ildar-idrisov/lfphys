@@ -18,20 +18,23 @@ from __future__ import annotations
 import math
 
 from lfphys.core.quantum import decoherence as dec
+from lfphys.i18n import T
 
 ABOUT = {
     "layer": "theories", "kind": "alternative",
-    "title": "GRW против декогеренции среды: сравнение скоростей",
-    "statement": "Член GRW λ[1 − e^{−d²/4r_C²}] имеет ту же форму, что поток гауссовых толчков от среды; функция "
-                 "compare даёт видность от GRW, от дефазировки и от зондов-регистраторов пути и их отношение.",
-    "validity": "модификация квантовой динамики (GRW) сравнивается с базой — декогеренцией по уравнению Линдблада; "
-                "параметры GRW ограничены опытами при подавленной декогеренции среды",
+    "title": T("GRW against environmental decoherence: a comparison of rates"),
+    "statement": T("The GRW term λ[1 − e^{−d²/4r_C²}] has the same form as a stream of Gaussian kicks from the "
+                   "environment; the function compare gives the visibility under GRW, under dephasing and under "
+                   "which-path recording probes, and their ratio."),
+    "validity": T("a modification of quantum dynamics (GRW) compared with the baseline, decoherence by the Lindblad "
+                  "equation; the GRW parameters are bounded by experiments in which environmental decoherence is "
+                  "suppressed"),
     "basis": ["Bassi et al., Rev. Mod. Phys. 85, 471 (2013), eqs. (19), (21), (22)",
               "Ghirardi, Rimini, Weber, Phys. Rev. D 34, 470 (1986)",
               "Hornberger, arXiv:quant-ph/0612118, eqs. (5.170)–(5.171)",
-              "lfphys/sources/verification_2026-10-29_p5.md — проверка цитат и выводов"],
-    "conflicts": ["lfphys.core.quantum: линейная квантовая механика без коллапса; та же потеря видности возникает "
-                  "от среды (core.quantum.decoherence)"],
+              T("lfphys/sources/verification_2026-10-29_p5.md — check of the quotations and derivations")],
+    "conflicts": [T("lfphys.core.quantum: linear quantum mechanics without collapse; the same loss of visibility "
+                    "arises from the environment (core.quantum.decoherence)")],
 }
 
 

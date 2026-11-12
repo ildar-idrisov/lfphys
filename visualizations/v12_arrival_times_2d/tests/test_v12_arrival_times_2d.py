@@ -16,6 +16,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
+from lfphys.i18n import english  # noqa: E402
 
 from lfphys.core import backend  # noqa: E402
 from v11_double_slit_2d.viz import COST_LIMIT  # noqa: E402
@@ -134,9 +135,9 @@ def test_through_the_slits_a_slit_closed_in_flight_acts_on_both_runs():
 
 
 def test_refusals():
-    with pytest.raises(ValueError, match="перекрываются"):
+    with pytest.raises(ValueError, match="packets of the train overlap"):  # str(): the English rendering
         Harness(V, "train", {**SMALL, "sep": 8.0})
-    with pytest.raises(ValueError, match="слишком близко"):
+    with pytest.raises(ValueError, match="too close"):
         Harness(V, "gauss", {**SMALL, "L": 6.0})
 
 
@@ -146,7 +147,7 @@ def test_gpu_equals_cpu():
     h = Harness(V, "gauss", SMALL)
     assert h.sim.prop.device == "gpu" and h.sim.det.device == "gpu"
     H = h.sim.det.H
-    cpu = S.SplitOperator(H, h.sim.dt, track_absorbed=True, force_cpu=True, why="тест")
+    cpu = S.SplitOperator(H, h.sim.dt, track_absorbed=True, force_cpu=True, why="test")
     a = h.sim.det.put(h.sim._packet(H, h.sim.g))
     b = cpu.put(h.sim._packet(H, h.sim.g))
     a = h.sim.det.step(a, 200)
@@ -163,7 +164,7 @@ def test_a_detector_strength_set_before_the_signal_is_the_world_built_with_it():
     with them (bit for bit after 60 pairs); the event says the detector had not been reached."""
     live = Harness(V, "gauss", SMALL)
     live.set(mu_w=3.0, mu_ms=0.5, W0=2.0)
-    assert not live.errors() and "ещё не дошла" in live.of("event")[-1]["text"]
+    assert not live.errors() and "has not reached the detector yet" in english(live.of("event")[-1]["text"])
     built = Harness(V, "gauss", {**SMALL, "mu_w": 3.0, "mu_ms": 0.5, "W0": 2.0})
     for h in (live, built):
         h.run_to(60 * h.sim.pair * h.sim.tunit)
@@ -184,7 +185,7 @@ def test_a_detector_strength_changed_while_the_signal_arrives_acts_from_that_mom
     for g in (ref, h):
         g.run_to(t_half)
     h.set(mu_w=4.0)
-    assert "до этого момента посчитано с прежним значением" in h.of("event")[-1]["text"]
+    assert "up to this moment computed with the old value" in english(h.of("event")[-1]["text"])
     tau_c = h.sim.tau
     for g in (ref, h):
         g.run_to(t_half + 0.6 * h.sim.t0 * h.sim.tunit)
@@ -212,7 +213,7 @@ def test_soft_detector_height_changed_at_the_detector_leaves_the_stationary_comp
     from v12_arrival_times_2d.engine import apparatus as AP12
     W_d = h.sim.W + AP12.soft_detector(h.sim.g, h.sim.zL, 3.0 * AP12.E0, h.sim.geo.edge)
     assert np.array_equal(np.asarray(h.sim.det.H.W), W_d)
-    assert "W₀ = 3 E₀" in h.checks()["soft_grid"]["note"]
+    assert "W₀ = 3 E₀" in english(h.checks()["soft_grid"]["note"])
     run_out(h)
     c = h.checks()
     assert c["arr_soft_reflection"]["info"] and c["arr_soft_reflection"]["value"] is None
@@ -226,9 +227,9 @@ def test_detector_and_plate_refusals_leave_the_world_unchanged():
     h = Harness(V, "gauss", {**SMALL, "soft": False})
     live = dict(h.sim.live)
     h.set(W0=2.0)
-    assert "мягкого детектора в этом мире нет" in h.errors()[-1]
+    assert "there is no soft detector in this world" in english(h.errors()[-1])
     h.set(a=3.0)
-    assert "пластины нет" in h.errors()[-1]
+    assert "there is no plate in free flight" in english(h.errors()[-1])
     assert h.sim.live == live and h.sim.det_hist["W0"] == [(0.0, 1.0, True)]
 
 
@@ -246,9 +247,10 @@ def test_through_the_slits_a_live_plate_acts_on_both_runs():
 
 
 def test_a_new_world_from_the_header_and_the_live_values_builds():
-    """The player's «Начать новый мир» without a scenario sends the header's parameters with the live values in force:
+    """The player's «Start a new world» without a scenario sends the header's parameters with the live values in force:
     they are this world's own (v11's fixed path mark and flux were among them, and every such new world was refused:
-    «нет параметра «mark»», found while processing review UX-ui U12); the negative control: with them it is refused."""
+    «there is no parameter “mark”», found while processing review UX-ui U12); the negative control: with them it is
+    refused."""
     h = Harness(V, "gauss", SMALL)
     hd = h.of("header")[-1]
     assert set(hd["params"]) == set(SCHEMA.by_id) and set(hd["live"]) == set(SCHEMA.live_ids())
@@ -263,8 +265,8 @@ def test_every_length_and_detector_parameter_carries_its_unit_in_the_label():
     """Review UX-ui U19: the player shows a parameter's label, not its unit field."""
     for p in SCHEMA.params:
         if p.unit:
-            assert p.unit in p.label, (p.id, p.label, p.unit)
+            assert english(p.unit) in english(p.label), (p.id, p.label, p.unit)
     for k in ("W0", "kappa", "V0"):
-        assert "в " + SCHEMA.by_id[k].unit in SCHEMA.by_id[k].label
+        assert "in " + english(SCHEMA.by_id[k].unit) in english(SCHEMA.by_id[k].label)
     for k in ("mu_w", "mu_ms"):
-        assert "безразмерная" in SCHEMA.by_id[k].label
+        assert "dimensionless" in english(SCHEMA.by_id[k].label)

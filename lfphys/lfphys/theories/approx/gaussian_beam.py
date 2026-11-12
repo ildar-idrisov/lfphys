@@ -15,15 +15,16 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "theories", "kind": "approximation",
-    "title": "Гауссов пучок (параксиальное приближение)",
-    "statement": "Решение параксиального волнового уравнения: ширина w(z), радиус фронта R(z), фаза Гюи, "
-                 "комплексный параметр q и его преобразование матрицами ABCD.",
-    "validity": "малая расходимость, w0 ≫ λ (поправки порядка (λ/w0)²)",
-    "basis": ["Kogelnik & Li, Appl. Opt. 5, 1550 (1966)", "Siegman, Lasers, гл. 17"],
-    "conflicts": ["lfphys.core.optics.angular_spectrum: точное распространение отличается при сильной фокусировке "
-                  "(w0 ~ λ)"],
+    "title": T("Gaussian beam (paraxial approximation)"),
+    "statement": T("A solution of the paraxial wave equation: the width w(z), the radius of the wavefront R(z), the "
+                   "Gouy phase, the complex parameter q and its transformation by ABCD matrices."),
+    "validity": T("small divergence, w0 ≫ λ (corrections of order (λ/w0)²)"),
+    "basis": ["Kogelnik & Li, Appl. Opt. 5, 1550 (1966)", T("Siegman, Lasers, ch. 17")],
+    "conflicts": [T("lfphys.core.optics.angular_spectrum: exact propagation differs under strong focusing (w0 ~ λ)")],
 }
 
 

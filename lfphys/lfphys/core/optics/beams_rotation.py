@@ -45,19 +45,21 @@ from typing import Callable
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "exact consequence",
-    "title": "Вращательный эффект Доплера",
-    "statement": "Поле с полным моментом m = l + σ в системе, вращающейся с Ω, имеет частоту ω − mΩ; пучок, повёрнутый "
-                 "с частотой Ω (призма Дове с Ω/2), — сдвиг m_вых·Ω; свет, рассеянный вращающейся поверхностью на "
-                 "ось, сдвинут на −lΩ, суперпозиция ±l даёт биения 2|l|Ω. Замкнутые формы и измерение по выборке "
-                 "поля во времени (спектр).",
-    "validity": "Ω ≪ ω (нерелятивистское вращение); идеальный поворот изображения; модель рассеивающей поверхности "
-                "(тонкий фазовый экран, скалярно) — в theories.approx.beams_thin_masks",
-    "basis": ["Courtial et al., Phys. Rev. Lett. 80, 3217 (1998) (аннотация; диссертация Куртиаля, 1999)",
-              "Courtial et al., Phys. Rev. Lett. 81, 4828 (1998) — сдвиг (l + σ)Ω (аннотация)",
-              "Lavery, Speirits, Barnett, Padgett, Science 341, 537 (2013), ур. 1, 3, 4",
-              "Garetz, J. Opt. Soc. Am. 71, 609 (1981) (текст не получен)"],
+    "title": T("Rotational Doppler effect"),
+    "statement": T("A field with total angular momentum m = l + σ in a frame rotating at Ω has the frequency ω − mΩ; "
+                   "a beam rotated at the rate Ω (a Dove prism at Ω/2) is shifted by m_out·Ω; light scattered onto the "
+                   "axis by a rotating surface is shifted by −lΩ, and a superposition of ±l gives beats at 2|l|Ω. "
+                   "Closed forms and a measurement from a time sample of the field (its spectrum)."),
+    "validity": T("Ω ≪ ω (non-relativistic rotation); an ideal rotation of the image; the model of the scattering "
+                  "surface (a thin phase screen, scalar) is in theories.approx.beams_thin_masks"),
+    "basis": [T("Courtial et al., Phys. Rev. Lett. 80, 3217 (1998) (abstract; Courtial's thesis, 1999)"),
+              T("Courtial et al., Phys. Rev. Lett. 81, 4828 (1998) — the (l + σ)Ω shift (abstract)"),
+              T("Lavery, Speirits, Barnett, Padgett, Science 341, 537 (2013), eqs. 1, 3, 4"),
+              T("Garetz, J. Opt. Soc. Am. 71, 609 (1981) (full text not obtained)")],
     "conflicts": [],
 }
 

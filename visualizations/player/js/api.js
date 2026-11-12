@@ -2,10 +2,20 @@
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
 // REST + WebSocket client of the lfphys visualization server, and the message decoder.
 // Message layout (server/lfviz/protocol.py): u32 json_len | json | pad to 8 | blobs (each 8-aligned).
+import { t } from "./i18n.js";
 
 const DT = { f8: Float64Array, f4: Float32Array, i4: Int32Array, u4: Uint32Array, i2: Int16Array,
              u2: Uint16Array, i1: Int8Array, u1: Uint8Array };
 const TD = new TextDecoder();
+
+// An error the server answered with ({error: T or text, text: English, ...}): its message in the viewer's language;
+// .body keeps the whole answer (fields, hints, estimates)
+export function apiError(j, fallback) {
+  const e = new Error(j && j.error !== undefined ? t(j.error) : fallback);
+  e.body = j || {};
+  e.t = j ? j.error : undefined;
+  return e;
+}
 
 export function decode(buf) {
   const dv = new DataView(buf);
@@ -24,7 +34,7 @@ export function decode(buf) {
 export async function getJSON(url) {
   const r = await fetch(url);
   const j = await r.json();
-  if (!r.ok) throw new Error(j.error || r.statusText);
+  if (!r.ok) throw apiError(j, r.statusText);
   return j;
 }
 
@@ -32,7 +42,7 @@ export async function postJSON(url, body, method = "POST") {
   const r = await fetch(url, { method, headers: { "Content-Type": "application/json" },
                                body: body === undefined ? undefined : JSON.stringify(body) });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error || r.statusText);
+  if (!r.ok) throw apiError(j, r.statusText);
   return j;
 }
 

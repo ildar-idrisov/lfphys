@@ -156,41 +156,45 @@ import time
 
 import numpy as np
 
+from lfphys.i18n import T, is_t
+
 from .. import backend
 
 ABOUT = {
     "layer": "core", "kind": "numerical solution",
-    "title": "Несжимаемая жидкость в 2-D: решёточный метод Больцмана (D2Q9)",
-    "statement": "Уравнения Навье–Стокса несжимаемой жидкости (с однородной объёмной силой) и перенос пассивной "
-                 "примеси решаются решёточным уравнением Больцмана D2Q9 (столкновения TRT с «магическим» параметром "
-                 "3/16 или BGK, сила по Гуо); стенки — отражение на полпути (подвижные — по Ладду), криволинейные "
-                 "препятствия — ступеньками или с интерполяцией Бузиди; вход со скоростью, выход с давлением "
-                 "(анти-отражение), периодические стороны; препятствия добавляются и убираются в любой момент с "
-                 "учётом массы; вязкость, плотность, оператор столкновений и краска меняются в текущий момент; сетка, область и шаг "
-                 "по времени тоже: популяции переносятся на новую сетку (неравновесная часть — с пересчётом по "
-                 "временам релаксации, как при измельчении сеток у Дюпюи и Шопара), новая часть области — в покое "
-                 "или с входящим потоком; силы на препятствия обменом импульса (сопротивление и подъёмная сила), баланс массы, "
-                 "импульса и краски с потоками через границы.",
-    "validity": "течение несжимаемой жидкости: ошибка сжимаемости O(Ma²) (Ma ≤ 0.3, проверяется; звуковые волны "
-                "схемы отражаются входом и выходом, амплитуда O(Ma²)), второй порядок по сетке в диффузионном "
-                "масштабе; ламинарные течения; пределы устойчивости по числу Рейнольдса ячейки u·dx/ν: ≤ 25, с входом "
-                "или выходом ≤ 10 (измерено; это не мера точности: каверна Re 1000 на 64² при 15,6 отличается от Ghia "
-                "на 0,017 скорости крышки); плотность покоя от давления выхода и силы — в пределах ±0,045; 2-D, однородная плотность, однородная объёмная сила; препятствия "
-                "неподвижны (их поверхность может двигаться); криволинейные стенки — ступеньками (1-й порядок по "
-                "геометрии) или с интерполяцией; примесь пассивна, её диффузия не меньше порога схемы, вдоль потока "
-                "добавлена численная диффузия −(τ−½)u²",
+    "title": T("Incompressible fluid in 2-D: the lattice Boltzmann method (D2Q9)"),
+    "statement": T("The Navier–Stokes equations of an incompressible fluid (with a uniform body force) and the transport "
+                   "of a passive scalar are solved by the D2Q9 lattice Boltzmann equation (TRT collisions with the "
+                   "“magic” parameter 3/16, or BGK; Guo's forcing); walls by half-way bounce-back (moving ones after "
+                   "Ladd), curved obstacles as staircases or with Bouzidi's interpolation; a velocity inlet, a pressure "
+                   "outlet (anti-bounce-back), periodic sides; obstacles are added and removed at any moment with the "
+                   "mass accounted for; the viscosity, the density, the collision operator and the dye change at the "
+                   "current moment; so do the grid, the domain and the time step: the populations are carried over "
+                   "to the new grid (the non-equilibrium part rescaled by the relaxation times, as in the grid "
+                   "refinement of Dupuis and Chopard), the new part of the domain starts at rest or with the inflow; "
+                   "forces on obstacles by momentum exchange (drag and lift), balances of mass, momentum and dye with "
+                   "the fluxes through the boundaries."),
+    "validity": T("incompressible flow: compressibility error O(Ma²) (Ma ≤ 0.3, checked; the scheme's sound waves "
+                  "are reflected by the inlet and the outlet, amplitude O(Ma²)), second order in the grid in the "
+                  "diffusive scaling; laminar flows; stability limits on the grid Reynolds number u·dx/ν: ≤ 25, with "
+                  "an inlet or an outlet ≤ 10 (measured; not a measure of accuracy: the cavity at Re 1000 on 64² at "
+                  "15.6 differs from Ghia by 0.017 of the lid speed); the rest density set by the outlet pressure and "
+                  "the force within ±0.045; 2-D, uniform density, uniform body force; obstacles do not move (their "
+                  "surface may); curved walls as staircases (first order in the geometry) or interpolated; the scalar "
+                  "is passive, its diffusivity not below the scheme's threshold, along the flow a numerical "
+                  "diffusion −(τ−½)u² is added"),
     "basis": ["Qian, d'Humières, Lallemand, Europhys. Lett. 17, 479 (1992) — D2Q9",
-              "Ginzburg, Verhaeghe, d'Humières, Commun. Comput. Phys. 3, 427 и 519 (2008) — TRT, магический "
-              "параметр, анти-отражение для давления",
-              "Guo, Zheng, Shi, Phys. Rev. E 65, 046308 (2002) — объёмная сила",
-              "Ladd, J. Fluid Mech. 271, 285 (1994) — подвижные стенки, обмен импульсом",
-              "Bouzidi, Firdaouss, Lallemand, Phys. Fluids 13, 3452 (2001) — интерполяция отражения",
+              T("Ginzburg, Verhaeghe, d'Humières, Commun. Comput. Phys. 3, 427 and 519 (2008) — TRT, the magic "
+                "parameter, anti-bounce-back for the pressure"),
+              T("Guo, Zheng, Shi, Phys. Rev. E 65, 046308 (2002) — body force"),
+              T("Ladd, J. Fluid Mech. 271, 285 (1994) — moving walls, momentum exchange"),
+              T("Bouzidi, Firdaouss, Lallemand, Phys. Fluids 13, 3452 (2001) — interpolated bounce-back"),
               "Krüger et al., The Lattice Boltzmann Method (Springer 2017)",
-              "Schäfer & Turek (1996), Ghia, Ghia & Shin (1982) — эталонные задачи (тесты)",
-              "Dupuis & Chopard, Phys. Rev. E 67, 066707 (2003); Filippova & Hänel, J. Comput. Phys. 147, 219 (1998); "
-              "Lagrava, диссертация, Женевский университет (2012), ур. (4.1), (4.10), (4.11), правая часть (4.13), "
-              "(4.14)–(4.15) (в (4.12) и в средней части (4.13) отношение перевёрнуто — опечатка) — перенос неравновесной "
-              "части между сетками (смена сетки, области и шага)"],
+              T("Schäfer & Turek (1996), Ghia, Ghia & Shin (1982) — benchmark problems (tests)"),
+              T("Dupuis & Chopard, Phys. Rev. E 67, 066707 (2003); Filippova & Hänel, J. Comput. Phys. 147, 219 "
+                "(1998); Lagrava, PhD thesis, University of Geneva (2012), Eqs. (4.1), (4.10), (4.11), the right-hand "
+                "side of (4.13), (4.14)–(4.15) (in (4.12) and in the middle part of (4.13) the ratio is inverted — a "
+                "typo) — transfer of the non-equilibrium part between grids (a change of grid, domain and step)")],
     "conflicts": [],
 }
 
@@ -302,8 +306,8 @@ WATER_1ATM = (
     (38, 992.9663, 0.0006780421),
     (39, 992.5951, 0.0006651895),
     (40, 992.2164, 0.0006527287))
-WATER_SOURCE = ("NIST Chemistry WebBook SRD 69 (изобара 0.101325 МПа, загружено 2026-11-04): IAPWS-95 (Wagner & Pruß 2002) "
-                "и вязкость IAPWS 2008 (Huber et al. 2009)")
+WATER_SOURCE = T("NIST Chemistry WebBook SRD 69 (isobar 0.101325 MPa, retrieved 2026-11-04): IAPWS-95 (Wagner & Pruß "
+                 "2002) and the IAPWS 2008 viscosity (Huber et al. 2009)")
 # Air: U.S. Standard Atmosphere 1976 (NOAA/NASA/USAF, NASA-TM-X-74335, NTRS 19770009539): ideal gas
 # rho = P M0 / (R* T) with M0 = 28.9644 kg/kmol (p. 9), R* = 8.31432e3 N m/(kmol K) (p. 3; table 2 on p. 2 prints the
 # exponent wrongly), P0 = 1.013250e5 Pa (table 2); dynamic viscosity eq. (51), p. 19: mu = beta T^(3/2) / (T + S),
@@ -311,8 +315,8 @@ WATER_SOURCE = ("NIST Chemistry WebBook SRD 69 (изобара 0.101325 МПа, 
 # experiment"; table 2 prints S = 110 K, the text 110.4 K). Checked against the standard's table I (p. 52): sea level
 # 288.150 K, 1.01325e3 mb, 1.2250 kg/m^3.
 AIR_M0, AIR_RSTAR, AIR_BETA, AIR_S, P_ATM = 28.9644, 8.31432e3, 1.458e-6, 110.4, 1.013250e5
-AIR_SOURCE = ("U.S. Standard Atmosphere 1976 (NASA-TM-X-74335): идеальный газ с M0 = 28.9644 кг/кмоль, R* = 8.31432·10³ "
-              "Дж/(кмоль·К) (с. 3, 9); вязкость по формуле (51) с β = 1.458·10⁻⁶, S = 110.4 К (с. 19)")
+AIR_SOURCE = T("U.S. Standard Atmosphere 1976 (NASA-TM-X-74335): ideal gas with M0 = 28.9644 kg/kmol, R* = "
+               "8.31432·10³ J/(kmol·K) (pp. 3, 9); viscosity by formula (51) with β = 1.458·10⁻⁶, S = 110.4 K (p. 19)")
 
 
 def fluid_properties(name: str, T_C: float = 20.0, p: float = P_ATM) -> dict:
@@ -323,10 +327,10 @@ def fluid_properties(name: str, T_C: float = 20.0, p: float = P_ATM) -> dict:
     the U.S. Standard Atmosphere 1976 formulas), with the source."""
     if name == "water":
         if p != P_ATM:
-            raise ValueError("вода: только при 1 атм (101325 Па)")
+            raise ValueError(T("water: only at 1 atm (101325 Pa)"))
         tab = np.array(WATER_1ATM)
         if not (tab[0, 0] <= T_C <= tab[-1, 0]):
-            raise ValueError(f"вода: таблица от {tab[0, 0]} до {tab[-1, 0]} °C")
+            raise ValueError(T("water: the table runs from {lo} to {hi} °C", lo=float(tab[0, 0]), hi=float(tab[-1, 0])))
         at = np.flatnonzero(tab[:, 0] == T_C)
         if len(at):  # a tabulated temperature: the value as printed
             rho, mu = float(tab[at[0], 1]), float(tab[at[0], 2])
@@ -336,13 +340,13 @@ def fluid_properties(name: str, T_C: float = 20.0, p: float = P_ATM) -> dict:
         src = WATER_SOURCE
     elif name == "air":
         if not (-50.0 <= T_C <= 100.0) or not p > 0:
-            raise ValueError("воздух: от −50 до 100 °C, давление > 0")
-        T = T_C + 273.15
-        rho = p * AIR_M0 / (AIR_RSTAR * T)
-        mu = AIR_BETA * T**1.5 / (T + AIR_S)
+            raise ValueError(T("air: from −50 to 100 °C, pressure > 0"))
+        TK = T_C + 273.15  # kelvin (not "T": that name is the translatable text, lfphys.i18n)
+        rho = p * AIR_M0 / (AIR_RSTAR * TK)
+        mu = AIR_BETA * TK**1.5 / (TK + AIR_S)
         src = AIR_SOURCE
     else:
-        raise ValueError(f"жидкость {name!r}: 'water' или 'air'")
+        raise ValueError(T("fluid {name}: 'water' or 'air'", name=repr(name)))
     return {"name": name, "T_C": float(T_C), "p": float(p), "rho": rho, "mu": mu, "nu": mu / rho, "source": src}
 
 
@@ -379,7 +383,7 @@ class Units:
 
     def __init__(self, dx: float, dt: float, rho: float = 1000.0):
         if not (dx > 0 and dt > 0 and rho > 0):
-            raise ValueError("единицы: dx, dt и плотность должны быть положительными")
+            raise ValueError(T("units: dx, dt and the density must be positive"))
         self.dx, self.dt, self.rho = float(dx), float(dt), float(rho)
 
     @classmethod
@@ -388,7 +392,7 @@ class Units:
         """dt from the Mach number of the largest expected velocity u_max: dt = Ma c_s dx / u_max; if that makes
         tau+ = 3 nu dt/dx^2 + 1/2 larger than ``tau_max``, dt is lowered to tau_max (Ma then smaller)."""
         if not (u_max > 0 and nu > 0 and mach > 0):
-            raise ValueError("единицы: нужны u_max > 0, ν > 0, Ma > 0")
+            raise ValueError(T("units: u_max > 0, ν > 0, Ma > 0 are needed"))
         dt = mach * CS * dx / u_max
         if tau_max is not None and 3 * nu * dt / dx**2 + 0.5 > tau_max:
             dt = (tau_max - 0.5) * dx**2 / (3 * nu)
@@ -473,7 +477,7 @@ class Disk(Shape):
         self.c = (float(center[0]), float(center[1]))
         self.r = float(radius)
         if not self.r > 0:
-            raise ValueError("диск: радиус должен быть положительным")
+            raise ValueError(T("disk: the radius must be positive"))
 
     def contains(self, X, Y):
         return (X - self.c[0]) ** 2 + (Y - self.c[1]) ** 2 <= self.r**2
@@ -510,7 +514,7 @@ class Rect(Shape):
         self.w, self.h = float(size[0]), float(size[1])
         self.a = float(angle)
         if not (self.w > 0 and self.h > 0):
-            raise ValueError("прямоугольник: размеры должны быть положительными")
+            raise ValueError(T("rectangle: the sizes must be positive"))
         self._cs, self._sn = math.cos(self.a), math.sin(self.a)
 
     def _local(self, X, Y):
@@ -565,7 +569,7 @@ class Polygon(Shape):
     def __init__(self, points):
         p = np.asarray(points, float)
         if p.ndim != 2 or p.shape[1] != 2 or p.shape[0] < 3 or not np.all(np.isfinite(p)):
-            raise ValueError("многоугольник: не меньше трёх конечных вершин (x, y)")
+            raise ValueError(T("polygon: at least three finite vertices (x, y)"))
         self.p = p
 
     def contains(self, X, Y):
@@ -630,12 +634,12 @@ class Mask(Shape):
             self.m = np.asarray(self.fn(X, Y), bool).reshape(X.shape).copy()
             self.fn = None
         if self.m.shape != X.shape:
-            raise ValueError(f"маска: форма {self.m.shape}, а сетка {X.shape}")
+            raise ValueError(T("mask: shape {shape}, but the grid is {grid}", shape=str(self.m.shape), grid=str(X.shape)))
         return self
 
     def contains(self, X, Y):
         if self.m is None or self.m.shape != np.shape(X):
-            raise ValueError("маска задаётся на узлах сетки")
+            raise ValueError(T("a mask is given on the grid nodes"))
         return self.m
 
     def center(self):
@@ -649,7 +653,7 @@ class Mask(Shape):
         return {"type": self.TYPE, "mask": None if self.m is None else self.m.copy()}
 
     def shifted(self, sx, sy):
-        raise ValueError("маска задана на узлах сетки: её нельзя перенести на другую сетку или сдвинуть")
+        raise ValueError(T("a mask is given on the grid nodes: it cannot be carried to another grid or shifted"))
 
 
 SHAPES = {"disk": lambda d: Disk(d["center"], d["radius"]),
@@ -660,7 +664,7 @@ SHAPES = {"disk": lambda d: Disk(d["center"], d["radius"]),
 
 def shape_from_params(d: dict) -> Shape:
     if d.get("type") not in SHAPES:
-        raise ValueError(f"неизвестная форма {d.get('type')!r}")
+        raise ValueError(T("unknown shape {type}", type=repr(d.get("type"))))
     return SHAPES[d["type"]](d)
 
 
@@ -697,9 +701,9 @@ class Inlet(Side):
         self.velocity, self.profile, self.tangential = float(velocity), profile, float(tangential)
         self.ramp, self.dye = float(ramp), dye
         if not (isinstance(profile, str) and profile in ("uniform", "parabolic") or callable(profile)):
-            raise ValueError("вход: профиль 'uniform', 'parabolic' или функция")
+            raise ValueError(T("inlet: the profile is 'uniform', 'parabolic' or a function"))
         if self.ramp < 0:
-            raise ValueError("вход: время разгона ≥ 0")
+            raise ValueError(T("inlet: ramp time ≥ 0"))
 
     def normal_velocity(self, s, length):
         s = np.asarray(s, float)
@@ -715,8 +719,8 @@ class Inlet(Side):
 
     def params(self):
         if callable(self.profile) or callable(self.dye):
-            raise ValueError("вход с профилем-функцией не сохраняется как данные: задайте 'uniform'/'parabolic' и "
-                             "число для краски")
+            raise ValueError(T("an inlet with a function profile is not saved as data: set 'uniform'/'parabolic' and a "
+                               "number for the dye"))
         return {"kind": self.KIND, "velocity": self.velocity, "profile": self.profile,
                 "tangential": self.tangential, "ramp": self.ramp, "dye": float(self.dye)}
 
@@ -750,7 +754,7 @@ def side_from_params(d: dict) -> Side:
         return Outlet(d.get("pressure", 0.0))
     if k == "periodic":
         return Periodic()
-    raise ValueError(f"неизвестная сторона {k!r}")
+    raise ValueError(T("unknown side {kind}", kind=repr(k)))
 
 
 def _as_side(s) -> Side:
@@ -760,7 +764,7 @@ def _as_side(s) -> Side:
         return side_from_params({"kind": s, "velocity": 0.0})
     if isinstance(s, dict):
         return side_from_params(s)
-    raise ValueError(f"сторона: {s!r}")
+    raise ValueError(T("side: {side}", side=repr(s)))
 
 
 # --- the CUDA kernel ----------------------------------------------------------------------------------------------------
@@ -1038,13 +1042,23 @@ def _blocks(nx: int, ny: int) -> list:
     return [(edges[q], edges[q + 1]) for q in range(k)]
 
 
+def _label(label):
+    """A label as given: a translatable text (``lfphys.i18n.T``, also as restored from a record) or a plain string."""
+    return label if is_t(label) else str(label)
+
+
+def _name(item):
+    """How a refusal names an obstacle or a dye source: its label in quotes, or its number."""
+    return T("“{label}”", label=item.label) if item.label else T("No. {id:d}", id=int(item.id))
+
+
 class _Obstacle:
     def __init__(self, oid, shape, velocity=(0.0, 0.0), omega=0.0, interpolated=False, label="", ref_length=None):
         self.id, self.shape = int(oid), shape
         self.velocity = (float(velocity[0]), float(velocity[1]))
-        self.omega, self.interpolated, self.label = float(omega), bool(interpolated), str(label)
+        self.omega, self.interpolated, self.label = float(omega), bool(interpolated), _label(label)
         if ref_length is not None and not float(ref_length) >= 0.0:
-            raise ValueError("длина для коэффициентов: ≥ 0 (0 — ширина тела поперёк потока)")
+            raise ValueError(T("length for the coefficients: ≥ 0 (0: the body's width across the flow)"))
         # 0 means the default (the width across the flow): review B7 L10, a length set back to 0 is cleared
         self.ref_length = None if ref_length is None or float(ref_length) == 0.0 else float(ref_length)
 
@@ -1062,7 +1076,7 @@ class _Obstacle:
 
 class _Source:
     def __init__(self, sid, shape, concentration, label=""):
-        self.id, self.shape, self.concentration, self.label = int(sid), shape, float(concentration), str(label)
+        self.id, self.shape, self.concentration, self.label = int(sid), shape, float(concentration), _label(label)
 
     def params(self):
         return {"id": self.id, "shape": self.shape.params(), "concentration": self.concentration,
@@ -1081,8 +1095,8 @@ RATES = {
     "gpu": [(32**2, 3.38e-5), (64**2, 3.47e-5), (128**2, 3.40e-5), (256**2, 1.08e-4), (512**2, 2.85e-4),
             (1024**2, 1.09e-3)],
 }
-RATES_NOTE = ("измерено 2026-11-04: CPU (NumPy, столкновения в 4 потоках) 6–14 млн узлов/с; GPU 0 (RTX 2080 Ti) до "
-              "965 млн узлов/с, быстрее CPU при любом размере от 32² (×8) до 1024² (×155)")
+RATES_NOTE = T("measured 2026-11-04: CPU (NumPy, collisions on 4 threads) 6–14 million nodes/s; GPU 0 (RTX 2080 Ti) "
+               "up to 965 million nodes/s, faster than the CPU at every size from 32² (×8) to 1024² (×155)")
 
 
 def _interp_rate(dev: str, nodes: int) -> float:
@@ -1129,17 +1143,17 @@ class Flow2D:
                  device: str = "auto", displaced: str = "remove", u_ref: float | None = None,
                  length_ref: float | None = None, t0: float = 0.0):
         if nu is None and mu is None:
-            raise ValueError("жидкость: задайте ν (м²/с) или μ (Па·с)")
+            raise ValueError(T("fluid: give ν (m²/s) or μ (Pa·s)"))
         nu = float(mu) / float(rho) if nu is None else float(nu)
         if not (nu > 0 and dx > 0):
-            raise ValueError("жидкость: ν > 0, dx > 0")
+            raise ValueError(T("fluid: ν > 0, dx > 0"))
         Lx, Ly = float(size[0]), float(size[1])
         self.nx, self.ny = int(round(Lx / dx)), int(round(Ly / dx))
         if self.nx < 2 or self.ny < 2:
-            raise ValueError("область: не меньше 2 × 2 узлов")
+            raise ValueError(T("domain: at least 2 × 2 nodes"))
         if dt is None:
             if u_max is None:
-                raise ValueError("шаг по времени: задайте dt или u_max (с числом Маха)")
+                raise ValueError(T("time step: give dt or u_max (with the Mach number)"))
             self.units = Units.from_flow(dx, nu, u_max, mach, rho, tau_max)
         else:
             self.units = Units(dx, dt, rho)
@@ -1147,9 +1161,9 @@ class Flow2D:
         self.mach_target = float(mach)
         self.tau_max = tau_max
         if collision not in ("trt", "bgk"):
-            raise ValueError("столкновения: 'trt' или 'bgk'")
+            raise ValueError(T("collisions: 'trt' or 'bgk'"))
         if displaced not in ("remove", "spread"):
-            raise ValueError("вытесненная жидкость: 'remove' или 'spread'")
+            raise ValueError(T("displaced fluid: 'remove' or 'spread'"))
         self.collision, self.magic, self.displaced = collision, float(magic), displaced
         self.nu = nu
         self.device_mode = device
@@ -1164,11 +1178,11 @@ class Flow2D:
         if sides:
             for k, v in sides.items():
                 if k not in SIDES:
-                    raise ValueError(f"сторона {k!r}: одна из {SIDES}")
+                    raise ValueError(T("side {side}: one of {sides}", side=repr(k), sides=str(SIDES)))
                 self._sides[k] = _as_side(v)
         self._check_sides(self._sides)
         if not math.isfinite(float(t0)):
-            raise ValueError("время начала: конечное число")
+            raise ValueError(T("start time: a finite number"))
         self._t0 = float(t0)  # the time of step 0: t = t0 + steps dt (a world started from a scene file at its time)
         # the ramps of the inlets, per side: {"s0": the step it starts at, "ramp": duration (s), "from": [(Inlet,
         # weight), ...] (the velocity the side had when the inlet's velocity was set: empty after a wall)}; counted in
@@ -1253,8 +1267,8 @@ class Flow2D:
         self._check_densities(sides, self.gravity if gravity is None else gravity)
         nu_l = u.viscosity(nu)
         if nu_l < TAU_MIN_EXCESS / 3:
-            raise ValueError(f"неустойчиво: τ = {3 * nu_l + 0.5:.5g} слишком близко к 1/2 (нужно τ − 1/2 ≥ "
-                             f"{TAU_MIN_EXCESS}); увеличьте вязкость или уменьшите dx, или увеличьте dt")
+            raise ValueError(T("unstable: τ = {tau:.5g} is too close to 1/2 (τ − 1/2 ≥ {min} is needed); raise the "
+                               "viscosity or lower dx, or raise dt", tau=3 * nu_l + 0.5, min=TAU_MIN_EXCESS))
         vmax = 0.0 if u_max is None else float(u_max)
         for s in (sides or self._sides).values():
             if isinstance(s, Wall):
@@ -1270,13 +1284,14 @@ class Flow2D:
             vmax = max(vmax, self._surface_speed_max(ob))
         ma = vmax / u.c / CS
         if ma > MACH_MAX:
-            raise ValueError(f"число Маха {ma:.3g} > {MACH_MAX}: ошибка сжимаемости O(Ma²) слишком велика (и схема "
-                             f"неустойчива); уменьшите dt (или скорость)")
+            raise ValueError(T("Mach number {ma:.3g} > {max}: the compressibility error O(Ma²) is too large (and the "
+                               "scheme unstable); lower dt (or the velocity)", ma=float(ma), max=MACH_MAX))
         rec = vmax * u.dx / nu if nu > 0 else math.inf
         lim = self.re_cell_limit(sides)
         if rec > lim:
-            raise ValueError(f"число Рейнольдса ячейки u·dx/ν = {rec:.3g} > {lim:g}: сетка не разрешает течение "
-                             f"(неустойчиво); уменьшите dx или скорость, или увеличьте вязкость")
+            raise ValueError(T("grid Reynolds number u·dx/ν = {rec:.3g} > {lim}: the grid does not resolve the flow "
+                               "(unstable); lower dx or the velocity, or raise the viscosity", rec=float(rec),
+                               lim=float(lim)))
         return ma, rec
 
     def _g_lattice(self, gravity=None, sides=None) -> tuple:
@@ -1327,16 +1342,19 @@ class Flow2D:
         name, p, X, Y = worst[1]
         what = []
         if name is not None and p != 0.0:
-            what.append(f"давление выхода ({name}) {p:g} Па")
+            what.append(T("outlet pressure ({side}) {p} Pa", side=name, p=float(p)))
         if g != (0.0, 0.0):
-            what.append(f"объёмная сила ({gravity[0]:g}, {gravity[1]:g}) м/с² (гидростатический перепад g·L/c_s² = "
-                        f"{self.hydrostatic_spread(gravity, sides):.3g})")
-        at = f"в точке ({X:g}, {Y:g}) м; " if g != (0.0, 0.0) else ""
-        raise ValueError(f"{' и '.join(what)}: плотность покоя схемы отклонилась бы от ρ0 на {dev:.3g} > "
-                         f"{RHO_DEV_MAX:g} ({at}масштаб давления схемы c_s²ρ(dx/dt)² = "
-                         f"{CS2 * u.rho * u.c**2:.4g} Па, её скорость звука c_s = {u.c * CS:.4g} м/с — свойство счёта, "
-                         f"не жидкости): ошибка сжимаемости слишком велика; уменьшите давление или силу, или увеличьте "
-                         f"«наибольшую ожидаемую скорость» (шаг по времени меньше, c_s больше)")
+            what.append(T("body force ({gx}, {gy}) m/s² (hydrostatic spread g·L/c_s² = {spread:.3g})",
+                          gx=float(gravity[0]), gy=float(gravity[1]),
+                          spread=float(self.hydrostatic_spread(gravity, sides))))
+        what = what[0] if len(what) == 1 else T("{a} and {b}", a=what[0], b=what[1])
+        at = T("at ({x}, {y}) m; ", x=float(X), y=float(Y)) if g != (0.0, 0.0) else ""
+        raise ValueError(T("{what}: the scheme's rest density would deviate from ρ0 by {dev:.3g} > {max} ({at}the "
+                           "scheme's pressure scale c_s²ρ(dx/dt)² = {scale:.4g} Pa, its speed of sound c_s = {cs:.4g} "
+                           "m/s — a property of the computation, not of the fluid): the compressibility error is too "
+                           "large; lower the pressure or the force, or raise the “largest expected velocity” (a "
+                           "smaller time step, a larger c_s)", what=what, dev=float(dev), max=RHO_DEV_MAX, at=at,
+                           scale=float(CS2 * u.rho * u.c**2), cs=float(u.c * CS)))
 
     def _hydrostatic_shift(self, g_old, g_new):
         """A body force changed now: add the change of its hydrostatic pressure at once (an incompressible fluid's
@@ -1413,7 +1431,7 @@ class Flow2D:
         for a, b in (("left", "right"), ("bottom", "top")):
             pa, pb = isinstance(sides[a], Periodic), isinstance(sides[b], Periodic)
             if pa != pb:
-                raise ValueError(f"периодичность: стороны {a} и {b} — обе периодические или ни одна")
+                raise ValueError(T("periodicity: the sides {a} and {b} are both periodic or neither", a=a, b=b))
 
     @property
     def periodic(self) -> tuple[bool, bool]:
@@ -1668,7 +1686,7 @@ class Flow2D:
             cross = backend.settings()["crossover"].get(KERNEL, backend.kernels()[KERNEL].crossover)
             size = max(self.N, cross or 0)
         ch = backend.choose(KERNEL, size, footprint=self._footprint(), force=force,
-                            why="выбрано для этого течения" if force else "")
+                            why=T("chosen for this flow") if force else "")
         self._reason = ch.reason
         if ch.device != self.device:
             self._move(ch.device, ch.xp)
@@ -1996,13 +2014,21 @@ class Flow2D:
                 at = self.t
                 self._restore(backup)
                 imposed = self._imposed_note()
-                raise Unstable(f"счёт неустойчив к t = {bad_t:.6g} с (популяции нечисловые или вне |f| < {F_GUARD}); "
-                               f"последнее здоровое состояние (t = {at:.6g} с): Ma_max = {nums['mach_max']:.3g}, τ+ = "
-                               f"{self.tau_p:.4g}, Re ячейки = {nums['re_cell']:.3g} (предел {self.re_cell_limit():g})"
-                               + (f"; заданы {imposed}" if imposed else "")
-                               + f"; состояние восстановлено на начало вызова (t = {self.t:.6g} с). Уменьшите скорость "
-                               f"или dx, увеличьте вязкость" + (", уменьшите заданное давление или силу" if imposed
-                                                                else ""))
+                kw = dict(bad_t=float(bad_t), guard=F_GUARD, at=float(at), ma=float(nums["mach_max"]),
+                          tau=float(self.tau_p), rec=float(nums["re_cell"]), lim=float(self.re_cell_limit()),
+                          t=float(self.t))
+                if imposed:
+                    raise Unstable(T("the computation became unstable by t = {bad_t:.6g} s (populations not numbers "
+                                     "or outside |f| < {guard}); the last healthy state (t = {at:.6g} s): Ma_max = "
+                                     "{ma:.3g}, τ+ = {tau:.4g}, grid Re = {rec:.3g} (limit {lim}); imposed: {imposed}; "
+                                     "the state was restored to the start of the call (t = {t:.6g} s). Lower the "
+                                     "velocity or dx, raise the viscosity, lower the imposed pressure or force",
+                                     imposed=imposed, **kw))
+                raise Unstable(T("the computation became unstable by t = {bad_t:.6g} s (populations not numbers or "
+                                 "outside |f| < {guard}); the last healthy state (t = {at:.6g} s): Ma_max = {ma:.3g}, "
+                                 "τ+ = {tau:.4g}, grid Re = {rec:.3g} (limit {lim}); the state was restored to the "
+                                 "start of the call (t = {t:.6g} s). Lower the velocity or dx, raise the viscosity",
+                                 **kw))
             if self._rec is not None and self.steps == self._rec["next"]:
                 self._rec_sample()
             if done < n:
@@ -2044,17 +2070,22 @@ class Flow2D:
         self.t, self.steps, self._body_imp = t, steps, list(imp)
         self._rec = _rec_copy(rec)
 
-    def _imposed_note(self) -> str:
-        """The imposed outlet pressures and body force, for the blow-up message (review B7 L7)."""
+    def _imposed_note(self):
+        """The imposed outlet pressures and body force, for the blow-up message (review B7 L7): a translatable text,
+        or "" when nothing is imposed."""
         out = []
         for name, s in self._sides.items():
             if isinstance(s, Outlet) and s.pressure != 0.0:
-                out.append(f"давление на выходе ({name}) {s.pressure:g} Па — плотность решётки "
-                           f"{float(self.units.density_of_pressure(s.pressure)):.4g}")
+                out.append(T("outlet pressure ({side}) {p} Pa — lattice density {rho:.4g}", side=name,
+                             p=float(s.pressure), rho=float(self.units.density_of_pressure(s.pressure))))
         if self.gravity != (0.0, 0.0):
-            out.append(f"объёмная сила ({self.gravity[0]:g}, {self.gravity[1]:g}) м/с² — гидростатический перепад "
-                       f"плотности {self.hydrostatic_spread():.3g}")
-        return "; ".join(out)
+            out.append(T("body force ({gx}, {gy}) m/s² — hydrostatic density spread {spread:.3g}",
+                         gx=float(self.gravity[0]), gy=float(self.gravity[1]),
+                         spread=float(self.hydrostatic_spread())))
+        note = ""
+        for x in out:
+            note = x if not note else T("{a}; {b}", a=note, b=x)
+        return note
 
     def advance_to(self, t: float):
         """Advance to the step nearest to time t (s)."""
@@ -2172,7 +2203,7 @@ class Flow2D:
         interpolated bounce-back on its links (analytic shapes, static surface only); ``ref_length``: the length of
         its drag and lift coefficients (default: its width across the flow)."""
         if not isinstance(shape, Shape):
-            raise ValueError("препятствие: форма Disk, Rect, Polygon или Mask")
+            raise ValueError(T("obstacle: the shape is Disk, Rect, Polygon or Mask"))
         oid = self._next_id
 
         def change():
@@ -2180,7 +2211,7 @@ class Flow2D:
                 shape.resolve(self._X, self._Y)
             ob = _Obstacle(oid, shape, velocity, omega, interpolated, label, ref_length)
             if ob.interpolated and ob.moving:
-                raise ValueError("интерполированные стенки — только у неподвижной поверхности (подвижная — по Ладду)")
+                raise ValueError(T("interpolated walls only for a surface at rest (a moving one follows Ladd)"))
             self._obstacles[oid] = ob
             self._next_id = oid + 1
         self._regeometry(change)
@@ -2188,7 +2219,7 @@ class Flow2D:
 
     def remove_obstacle(self, oid: int):
         if oid not in self._obstacles:
-            raise KeyError(f"нет препятствия {oid}")
+            raise KeyError(f"no obstacle {oid}")
         self._regeometry(lambda: self._obstacles.pop(oid))
 
     def update_obstacle(self, oid: int, shape: Shape | None = None, velocity=None, omega=None, interpolated=None,
@@ -2196,7 +2227,7 @@ class Flow2D:
         """Change an obstacle now (a new shape moves it: nodes it leaves become fluid, nodes it covers solid). None
         keeps a value; ``ref_length=0`` returns the coefficients' length to the default (the width across the flow)."""
         if oid not in self._obstacles:
-            raise KeyError(f"нет препятствия {oid}")
+            raise KeyError(f"no obstacle {oid}")
         old = self._obstacles[oid]
 
         def change():
@@ -2209,7 +2240,7 @@ class Flow2D:
                            old.label if label is None else label,
                            old.ref_length if ref_length is None else ref_length)
             if ob.interpolated and ob.moving:
-                raise ValueError("интерполированные стенки — только у неподвижной поверхности (подвижная — по Ладду)")
+                raise ValueError(T("interpolated walls only for a surface at rest (a moving one follows Ladd)"))
             self._obstacles[oid] = ob
         self._regeometry(change)
 
@@ -2226,7 +2257,7 @@ class Flow2D:
     def set_side(self, name: str, side):
         """Change a side now: Wall(velocity), Inlet(...), Outlet(pressure), Periodic() (with its opposite side)."""
         if name not in SIDES:
-            raise ValueError(f"сторона {name!r}: одна из {SIDES}")
+            raise ValueError(T("side {side}: one of {sides}", side=repr(name), sides=str(SIDES)))
         side = _as_side(side)
 
         def change():
@@ -2248,7 +2279,7 @@ class Flow2D:
         new = {k: _as_side(v) for k, v in sides.items()}
         for k in new:
             if k not in SIDES:
-                raise ValueError(f"сторона {k!r}: одна из {SIDES}")
+                raise ValueError(T("side {side}: one of {sides}", side=repr(k), sides=str(SIDES)))
 
         def change():
             for k, v in new.items():
@@ -2267,7 +2298,7 @@ class Flow2D:
         (``_outlet_density``)."""
         g = (float(gravity[0]), float(gravity[1]))
         if not all(math.isfinite(v) for v in g):
-            raise ValueError("объёмная сила: конечные числа")
+            raise ValueError(T("body force: finite numbers"))
 
         old = self.gravity
 
@@ -2293,7 +2324,7 @@ class Flow2D:
         balances' relative residuals do not change; the force record restarts (its blocks would mix the two scales)."""
         rho = float(rho)
         if not (rho > 0 and math.isfinite(rho)):
-            raise ValueError("плотность: конечное число > 0")
+            raise ValueError(T("density: a finite number > 0"))
         self.units = Units(self.units.dx, self.units.dt, rho)
         if self._rec is not None:
             self._rec_restart()
@@ -2304,7 +2335,7 @@ class Flow2D:
         Lambda; BGK: tau- = tau+); the populations are kept, the next step uses the new rates; the force record
         restarts."""
         if collision not in ("trt", "bgk"):
-            raise ValueError("столкновения: 'trt' или 'bgk'")
+            raise ValueError(T("collisions: 'trt' or 'bgk'"))
         self.collision = collision
         self._relax()
         if self._dev is not None:
@@ -2367,7 +2398,7 @@ class Flow2D:
         passes them; review LB1-physics P7). The transfer is checked against closed forms by the tests (Poiseuille
         exact across a refinement, a coarsening and a new time step, with negative controls; Taylor-Green at the
         scheme's accuracy; the dye's second moment) and, in a world, by a reference flow a wrong transfer breaks
-        (p04's «Эталоны»). The step: the remap advances the flow by one step of the present grid
+        (p04's references). The step: the remap advances the flow by one step of the present grid
         (t + dt); the time origin, the inlets' ramps (a ramp's start may be a fraction of a step) and the force record
         are re-based on the new time step. Returns what changed: the mass, momentum and dye before and after (physical),
         the booked transfer, the grids, the time steps, the relaxation times.
@@ -2378,37 +2409,39 @@ class Flow2D:
         u0 = self.units
         dx1 = u0.dx if dx is None else float(dx)
         if not (math.isfinite(dx1) and dx1 > 0):
-            raise ValueError("сетка: шаг dx — конечное число > 0")
+            raise ValueError(T("grid: the step dx is a finite number > 0"))
         L1 = self.size if size is None else (float(size[0]), float(size[1]))
         if not all(math.isfinite(v) and v > 0 for v in L1):
-            raise ValueError("область: длина и высота — конечные числа > 0")
+            raise ValueError(T("domain: the length and the height are finite numbers > 0"))
         nx1, ny1 = int(round(L1[0] / dx1)), int(round(L1[1] / dx1))
         if nx1 < 2 or ny1 < 2:
-            raise ValueError("область: не меньше 2 × 2 узлов")
+            raise ValueError(T("domain: at least 2 × 2 nodes"))
         sx, sy = float(shift[0]), float(shift[1])
         if not (math.isfinite(sx) and math.isfinite(sy)):
-            raise ValueError("сдвиг области: конечные числа")
+            raise ValueError(T("domain shift: finite numbers"))
         if fill not in ("rest", "inflow"):
-            raise ValueError("новая часть области: 'rest' или 'inflow'")
+            raise ValueError(T("new part of the domain: 'rest' or 'inflow'"))
         if u_max is not None and not (math.isfinite(float(u_max)) and float(u_max) > 0):
-            raise ValueError("наибольшая ожидаемая скорость: конечное число > 0")
+            raise ValueError(T("largest expected velocity: a finite number > 0"))
         um = self.u_max if u_max is None else float(u_max)
         if dt is not None:
             dt1 = float(dt)
             if not (math.isfinite(dt1) and dt1 > 0):
-                raise ValueError("шаг по времени: конечное число > 0")
+                raise ValueError(T("time step: a finite number > 0"))
         elif um is not None:
             dt1 = Units.from_flow(dx1, self.nu, um, self.mach_target, u0.rho, self.tau_max).dt
         else:
             dt1 = u0.dt * (dx1 / u0.dx) ** 2
         same = (nx1, ny1) == (self.nx, self.ny) and dx1 == u0.dx and sx == 0.0 and sy == 0.0
         if not same:
-            masks = [f"«{o.label}»" if o.label else f"№ {o.id}" for o in [*self._obstacles.values(),
-                                                                          *self._sources.values()]
+            masks = [_name(o) for o in [*self._obstacles.values(), *self._sources.values()]
                      if isinstance(o.shape, Mask)]
             if masks:
-                raise ValueError("тела или источники, заданные маской узлов, нельзя перенести на другую сетку или "
-                                 "сдвинуть: " + ", ".join(masks))
+                names = masks[0]
+                for m in masks[1:]:
+                    names = T("{a}; {b}", a=names, b=m)
+                raise ValueError(T("bodies or sources given as a mask of nodes cannot be carried to another grid or "
+                                   "shifted: {names}", names=names))
             self._check_cut(nx1 * dx1, ny1 * dx1, sx, sy)
         saved = copy.deepcopy(self.__getstate__())
         try:
@@ -2437,16 +2470,16 @@ class Flow2D:
         domain stays inside the new one."""
         h = 0.5 * self.units.dx
         tol = 1e-9 * max(Lx1, Ly1, *self.size)
-        for what, items in (("тело", self._obstacles.values()), ("источник красителя", self._sources.values())):
+        for what, items in ((T("body"), self._obstacles.values()), (T("dye source"), self._sources.values())):
             for it in items:
                 m = np.asarray(it.shape.contains(self._X, self._Y), bool)
                 if not m.any():
                     continue
                 X, Y = self._X[m] + sx, self._Y[m] + sy
                 if X.min() - h < -tol or X.max() + h > Lx1 + tol or Y.min() - h < -tol or Y.max() + h > Ly1 + tol:
-                    lab = f"«{it.label}»" if it.label else f"№ {it.id}"
-                    raise ValueError(f"{what} {lab} оказалось бы срезано краем новой области: уменьшать область можно "
-                                     f"только там, где нет тел и источников красителя")
+                    raise ValueError(T("{what} {name} would be cut by the edge of the new domain: the domain can be "
+                                       "made smaller only where there are no bodies and dye sources", what=what,
+                                       name=_name(it)))
 
     def _inlet_now(self, name: str, s, step: int):
         """The velocity (lattice units, the present ones) an inlet imposes at the points ``s`` (m) of its side at step
@@ -2724,7 +2757,7 @@ class Flow2D:
         if self._force_ref is not None:
             self.reset_force_mean()
         if not self._healthy():
-            raise Unstable("после перестройки сетки популяции вышли за пределы здоровых: перестройка отменена")
+            raise Unstable(T("after the grid was rebuilt the populations left the healthy range: the rebuild was undone"))
         self._choose()
         M1, P1x, P1y, D1 = self._totals()
         return {"before": before,
@@ -2797,8 +2830,8 @@ class Flow2D:
         if self._g is None:
             return
         if self._sources:
-            raise ValueError(f"краситель нельзя выключить, пока есть его источники ({len(self._sources)}): "
-                             f"сначала уберите их")
+            raise ValueError(T("the dye cannot be switched off while it has sources ({n:d}): remove them first",
+                               n=len(self._sources)))
         f, g = self._host_state()
         D = float(g.reshape(5, -1)[:, self._fluid_idx].sum())
         b = self._banked.setdefault("dye_off", [0.0, 0.0, 0.0, 0.0])
@@ -2830,7 +2863,7 @@ class Flow2D:
         """Put dye in a region now: ``mode`` "set" (the concentration becomes ``concentration``) or "add". The dye
         added is booked ("injected")."""
         if self._g is None:
-            raise ValueError("краска выключена: enable_dye(диффузия)")
+            raise ValueError(T("the dye is off: enable_dye(diffusivity)"))
         m = (self._shape_mask(shape) & ~self._solid).ravel()
         f, g = self._host_state()
         gf = g.reshape(5, -1)
@@ -2858,7 +2891,7 @@ class Flow2D:
     def add_dye_source(self, shape: Shape, concentration: float = 1.0, label: str = "") -> int:
         """A region where the dye is held at ``concentration`` (an ink pen); returns its id."""
         if self._g is None:
-            raise ValueError("краска выключена: enable_dye(диффузия)")
+            raise ValueError(T("the dye is off: enable_dye(diffusivity)"))
         sid = self._next_src
 
         def change():
@@ -2871,7 +2904,7 @@ class Flow2D:
 
     def remove_dye_source(self, sid: int):
         if sid not in self._sources:
-            raise KeyError(f"нет источника {sid}")
+            raise KeyError(f"no dye source {sid}")
         self._regeometry(lambda: self._sources.pop(sid))
 
     def dye_sources(self) -> list[dict]:
@@ -2922,9 +2955,11 @@ class Flow2D:
         "dropped", "ramps": [sides whose ramp was continued]}."""
         if (other.nx, other.ny) != (self.nx, self.ny) or other.units.dx != self.units.dx \
                 or not math.isclose(other.units.dt, self.units.dt, rel_tol=1e-12):
-            raise ValueError(f"перенять течение можно только на той же сетке и с тем же шагом по времени: "
-                             f"{other.nx} × {other.ny} (dx {other.units.dx:g} м, dt {other.units.dt:g} с) против "
-                             f"{self.nx} × {self.ny} (dx {self.units.dx:g} м, dt {self.units.dt:g} с) — сначала remap")
+            raise ValueError(T("a flow can be adopted only on the same grid with the same time step: {nx1:d} × "
+                               "{ny1:d} (dx {dx1} m, dt {dt1} s) against {nx:d} × {ny:d} (dx {dx} m, dt {dt} s) — "
+                               "remap first", nx1=int(other.nx), ny1=int(other.ny), dx1=float(other.units.dx),
+                               dt1=float(other.units.dt), nx=int(self.nx), ny=int(self.ny), dx=float(self.units.dx),
+                               dt=float(self.units.dt)))
         fo, go = other._host_state()
         both = ~self._solid & ~other.solid()
         fresh = ~self._solid & other.solid()
@@ -2966,7 +3001,7 @@ class Flow2D:
             self.reset_force_mean()
         self._baseline()
         if not self._healthy():
-            raise Unstable("перенятое течение вне здоровых популяций")
+            raise Unstable(T("the adopted flow is outside the healthy populations"))
         return {"copied": int(both.sum()), "rest": int(fresh.sum()), "dye": dye, "ramps": ramps}
 
     def _totals(self):
@@ -3126,7 +3161,7 @@ class Flow2D:
             return
         every, keep = int(every), int(keep)
         if every < 1 or keep < 1:
-            raise ValueError("запись сил: блок ≥ 1 шага, хранить ≥ 1 блока")
+            raise ValueError(T("force record: a block ≥ 1 step, keep ≥ 1 block"))
         self._rec = {"every": every, "keep": keep, "next": 0, "prev": {}, "since_step": 0, "t": [], "F": {}}
         self._rec_restart()
 
@@ -3329,8 +3364,8 @@ class Flow2D:
                                    "value": max(abs(n["density_range"][0] - 1), abs(n["density_range"][1] - 1)),
                                    "limit": MACH_MAX**2, "ok": max(abs(n["density_range"][0] - 1),
                                                                    abs(n["density_range"][1] - 1)) <= MACH_MAX**2,
-                                   "note": "относительное отклонение плотности ~ Ma² (и перепад давления): мера "
-                                           "ошибки сжимаемости; предел — Ma² при Ma = 0.3"}}
+                                   "note": T("relative density deviation ~ Ma² (and the pressure drop): a measure "
+                                             "of the compressibility error; the limit is Ma² at Ma = 0.3")}}
         if "dye" in b:
             out["dye"] = {"relative_residual": b["dye"]["relative_residual"], "limit": lim,
                           "ok": abs(b["dye"]["relative_residual"]) < lim}
@@ -3402,7 +3437,7 @@ class Flow2D:
     @classmethod
     def from_state_dict(cls, d: dict, device: str | None = None) -> "Flow2D":
         if d.get("format") not in (FORMAT, "lfphys.lbm2d/1"):
-            raise ValueError(f"не состояние {FORMAT}")
+            raise ValueError(T("not a state of {format}", format=FORMAT))
         o = cls(d["size"], d["dx"], nu=d["nu"], rho=d["rho"], u_max=d["u_max"], mach=d["mach"], dt=d["dt"],
                 tau_max=d["tau_max"], sides={k: side_from_params(v) for k, v in d["sides"].items()},
                 collision=d["collision"], magic=d["magic"], gravity=d["gravity"], dye=d["dye"],
@@ -3573,15 +3608,15 @@ def _bench(size: int, xp, cplx):
 
 
 backend.register(backend.KernelSpec(
-    KERNEL, "Жидкость в 2-D (решёточный метод Больцмана)",
-    "шаг течения D2Q9 с краской: перенос, граничные условия, столкновения (плейграунд «Жидкости»)",
+    KERNEL, T("Fluid in 2-D (lattice Boltzmann method)"),
+    T("a D2Q9 flow step with dye: streaming, boundary conditions, collisions (the “Fluids” playground)"),
     gpu=True,
     precisions={"fp64": {"allowed": True},
                 "fp32": {"allowed": False,
-                         "why": "отклонения популяций от равновесия ~Ma² ~ 1e-3: в fp32 от них остаётся ~4 знака "
-                                "(не проверено — не предлагается)"}},
+                         "why": T("the populations' deviations from equilibrium are ~Ma² ~ 1e-3: fp32 keeps ~4 "
+                                  "digits of them (not checked — not offered)")}},
     crossover=32 * 32,
-    crossover_note=("измерено 2026-11-04 на RTX 2080 Ti против CPU контейнера (NumPy, столкновения в 4 потоках), fp64, "
-                    "шаги на устройстве: GPU быстрее при любом размере от 32² (×8; ×47 на 128², ×155 на 1024²); "
-                    "«Измерить заново» уточняет"),
+    crossover_note=T("measured 2026-11-04 on an RTX 2080 Ti against the container's CPU (NumPy, collisions on 4 "
+                     "threads), fp64, steps on the device: the GPU is faster at every size from 32² (×8; ×47 at 128², "
+                     "×155 at 1024²); “Measure again” refines this"),
     bench=_bench, bench_sizes=(32 * 32, 64 * 64, 128 * 128, 256 * 256, 512 * 512, 1024 * 1024)))

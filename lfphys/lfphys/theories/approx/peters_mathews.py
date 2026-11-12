@@ -46,27 +46,31 @@ import math
 import numpy as np
 from scipy import integrate
 
+from lfphys.i18n import T
+
 from ...core.constants import C
 from ...core.gravity import pn_binary as _pn
 
 ABOUT = {
     "layer": "theories", "kind": "approximation",
-    "title": "Вековая эволюция двойной системы по излучению (Петерс–Мэтьюз) и постькеплеровы параметры",
-    "statement": "Усреднённые по орбите потери энергии и момента на квадрупольное излучение, da/dt, de/dt, "
-                 "производная периода Ṗb с множителем f(e), связь a(e), время до слияния (пошагово, с остановкой, "
-                 "где усреднение теряет смысл); периастр ω̇ (1PN) и массы пульсара и спутника по ω̇ и "
-                 "эйнштейновской задержке γ (γ — из ядра, lfphys.core.gravity.pn_binary).",
-    "validity": "ведущий порядок: относительные поправки O(GM/(c²a)) к потоку (у PSR B1913+16 ~10⁻⁵), "
-                "усреднение по орбите — пока орбита мало меняется за период (вдали от слияния); ω̇ и γ — "
-                "ведущий порядок (поправки 2PN к ω̇ ~ GM/(c²a(1−e²)))",
+    "title": T("Secular evolution of a binary by radiation (Peters–Mathews) and the post-Keplerian parameters"),
+    "statement": T("The orbit-averaged losses of energy and angular momentum to quadrupole radiation, da/dt, de/dt, "
+                   "the period derivative Ṗb with the factor f(e), the relation a(e), the time to merger (step by "
+                   "step, stopping where averaging loses its meaning); the periastron advance ω̇ (1PN) and the masses "
+                   "of the pulsar and its companion from ω̇ and the Einstein delay γ (γ from the core, "
+                   "lfphys.core.gravity.pn_binary)."),
+    "validity": T("leading order: relative corrections O(GM/(c²a)) to the flux (~10⁻⁵ for PSR B1913+16); averaging "
+                  "over the orbit holds while the orbit changes little within a period (far from merger); ω̇ and γ at "
+                  "leading order (the 2PN corrections to ω̇ ~ GM/(c²a(1−e²)))"),
     "basis": ["Peters & Mathews, Phys. Rev. 131, 435 (1963)", "Peters, Phys. Rev. 136, B1224 (1964)",
               "Blanchet, Living Rev. Relativ. 17, 2 (2014), Eqs. (4), (9)-(13)",
               "Weisberg & Huang, ApJ 829, 55 (2016), Eqs. (16), (17), (22), (23)"],
-    "conflicts": ["lfphys.core.gravity.pn_binary: полные уравнения движения с радиационным торможением 2.5PN+3.5PN "
-                  "дают и колебания элементов внутри орбиты, и поправку 1PN к потоку, которых здесь нет; вблизи "
-                  "слияния (орбита меняется за период) усреднение неприменимо",
-                  "lfphys.core.gravity.gw_quadrupole: мгновенный поток вдоль вычисленной траектории, здесь — "
-                  "его среднее по кеплеровскому эллипсу"],
+    "conflicts": [T("lfphys.core.gravity.pn_binary: the full equations of motion with the 2.5PN+3.5PN radiation "
+                    "reaction give both the oscillations of the elements within an orbit and the 1PN correction to "
+                    "the flux, which are absent here; near merger (the orbit changes within a period) averaging does "
+                    "not apply"),
+                  T("lfphys.core.gravity.gw_quadrupole: the instantaneous flux along the computed trajectory; here "
+                    "its average over the Kepler ellipse")],
 }
 
 TWO_PI = 2.0 * math.pi

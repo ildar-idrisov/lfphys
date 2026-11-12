@@ -16,17 +16,19 @@ from __future__ import annotations
 
 import math
 
+from lfphys.i18n import T
+
 from ...core.constants import C
 
 ABOUT = {
     "layer": "theories", "kind": "approximation",
-    "title": "Слабое поле: параметризованный постньютоновский формализм (PPN)",
-    "statement": "Эффекты первого порядка по GM/(c²r) через параметры γ и β: отклонение света, задержка Шапиро, "
-                 "смещение перицентра; ОТО: γ = β = 1.",
-    "validity": "слабое поле, GM/(c²r) ≪ 1 (Солнечная система, двойные пульсары в низшем порядке)",
+    "title": T("Weak field: the parametrised post-Newtonian formalism (PPN)"),
+    "statement": T("First-order effects in GM/(c²r) through the parameters γ and β: deflection of light, Shapiro "
+                   "delay, periapsis shift; GR: γ = β = 1."),
+    "validity": T("weak field, GM/(c²r) ≪ 1 (the Solar System, binary pulsars at lowest order)"),
     "basis": ["Will, Living Rev. Relativ. 17, 4 (2014)", "Bertotti, Iess, Tortora, Nature 425, 374 (2003)"],
-    "conflicts": ["lfphys.core.gravity.orbits, schwarzschild: точные значения ОТО отличаются в сильном поле "
-                  "(вблизи 6M разложение неприменимо)"],
+    "conflicts": [T("lfphys.core.gravity.orbits, schwarzschild: the exact GR values differ in a strong field (near "
+                    "6M the expansion does not apply)")],
 }
 
 

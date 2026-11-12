@@ -10,11 +10,14 @@ import math
 import numpy as np
 from scipy import optimize
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "numerics",
-    "title": "Численные инструменты",
-    "statement": "Поиск корня монотонной функции с удвоением скобки (brentq), составные квадратуры Гаусса–Лежандра.",
-    "validity": "математика; точность указана в каждой функции",
+    "title": T("Numerical tools"),
+    "statement": T("Root finding of a monotonic function with bracket doubling (brentq), composite Gauss–Legendre "
+                   "quadratures."),
+    "validity": T("mathematics; the accuracy is stated in each function"),
     "basis": [],
     "conflicts": [],
 }

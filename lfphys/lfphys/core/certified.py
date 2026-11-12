@@ -28,13 +28,16 @@ from __future__ import annotations
 
 import math
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "numerics",
-    "title": "Строгие оценки (шаровая арифметика Arb)",
-    "statement": "Гарантированные интервалы для величин ядра: смещение перицентра, отклонение света, условия ISCO "
-                 "Керра, функции Ханкеля, амплитуды Френеля, уровни Дирака, сечение Клейна–Нишины, прохождение "
-                 "барьера; независимыми путями (строгое интегрирование определений, эллиптические функции Arb).",
-    "validity": "входы — двоичные числа (переводятся точно); точность задаётся битами (по умолчанию 256)",
+    "title": T("Rigorous bounds (Arb ball arithmetic)"),
+    "statement": T("Guaranteed intervals for quantities of the core: the periapsis shift, light deflection, the "
+                   "Kerr ISCO conditions, Hankel functions, Fresnel amplitudes, Dirac levels, the Klein–Nishina "
+                   "cross-section, barrier transmission; by independent routes (rigorous integration of the "
+                   "definitions, Arb's elliptic functions)."),
+    "validity": T("the inputs are binary numbers (converted exactly); the precision is set in bits (256 by default)"),
     "basis": ["Johansson, IEEE Trans. Comput. 66, 1281 (2017) (Arb)", "python-flint 0.9.0"],
     "conflicts": [],
 }

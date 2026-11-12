@@ -13,7 +13,7 @@ from lfphys.theories.interpretations import bohm
 
 
 @pytest.mark.parametrize("a", [5e-6, 20e-6])
-def test_slit_starts_follow_the_born_density(a):
+def test_slit_starts_follow_the_born_density(a, ru):
     k = 2 * math.pi / 633e-9
     n = 400
     out = bohm.slit_trajectories(k, [0.0], a, math.inf, np.eye(1), [1.0], 1e-3, n=n, n_steps=4)
@@ -28,4 +28,5 @@ def test_slit_starts_follow_the_born_density(a):
     assert ks < 0.5 / n + 2e-3
     assert np.mean(np.abs(x0) > 0.48 * a) > 0.03  # part of |Psi|^2 lies outside the slit window, and starts go there
     # the relativity conflict is declared
-    assert any("относительн" in c for c in bohm.ABOUT["conflicts"])
+    assert any("relativity" in str(c) for c in bohm.ABOUT["conflicts"])
+    assert any("относительн" in ru(c) for c in bohm.ABOUT["conflicts"])

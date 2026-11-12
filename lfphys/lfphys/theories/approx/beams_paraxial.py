@@ -56,24 +56,26 @@ import math
 import numpy as np
 from scipy.special import eval_genlaguerre, eval_hermite, jv
 
+from lfphys.i18n import T
 from . import gaussian_beam as GB
 
 ABOUT = {
     "layer": "theories", "kind": "approximation",
-    "title": "Параксиальные пучки с орбитальным моментом: моды Лагерра–Гаусса и Эрмита–Гаусса",
-    "statement": "Решения параксиального волнового уравнения: моды LG_pl (фаза e^{ilφ}, фаза Гюи (2p+|l|+1)·arctan(z/z_R)) "
-                 "и HG_nm; разложение HG ↔ LG (астигматический преобразователь мод как коэффициенты); френелевское "
-                 "распространение вихревого пучка по его спектру порядка l; линии потока энергии и винтовые "
-                 "поверхности равной фазы в замкнутой форме.",
-    "validity": "параксиальность: малая расходимость, w0 ≫ λ; ошибка скалярного поля и поперечных компонент против "
-                "точного решения порядка (λ/w0)² (измерена в тестах); поляризация однородна, продольного поля нет — "
-                "у точного пучка оно первого порядка, λ/(πw0)",
+    "title": T("Paraxial beams with orbital angular momentum: Laguerre–Gauss and Hermite–Gauss modes"),
+    "statement": T("Solutions of the paraxial wave equation: the modes LG_pl (phase e^(ilφ), Gouy phase "
+                   "(2p+|l|+1)·arctan(z/z_R)) and HG_nm; the decomposition HG ↔ LG (the astigmatic mode converter as "
+                   "coefficients); Fresnel propagation of a vortex beam from its spectrum of order l; energy flow "
+                   "lines and helical surfaces of equal phase in closed form."),
+    "validity": T("paraxiality: small divergence, w0 ≫ λ; the error of the scalar field and of the transverse "
+                  "components against the exact solution is of order (λ/w0)² (measured in the tests); the polarisation "
+                  "is uniform and there is no longitudinal field: in the exact beam it is of first order, λ/(πw0)"),
     "basis": ["Allen, Beijersbergen, Spreeuw, Woerdman, Phys. Rev. A 45, 8185 (1992)",
-              "Beijersbergen, Allen, van der Veen, Woerdman, Opt. Commun. 96, 123 (1993) — коэффициенты b(n,m,k)",
-              "Siegman, Lasers (1986), гл. 16–17"],
-    "conflicts": ["lfphys.core.optics.beams: точный векторный пучок того же спектра отличается при сильной "
-                  "фокусировке (w0 ~ λ): продольное поле, спин-орбитальное расщепление L_z и S_z",
-                  "lfphys.core.optics.angular_spectrum: точное распространение отличается на O((λ/w0)²)"],
+              T("Beijersbergen, Allen, van der Veen, Woerdman, Opt. Commun. 96, 123 (1993) — the coefficients "
+                "b(n,m,k)"),
+              T("Siegman, Lasers (1986), ch. 16–17")],
+    "conflicts": [T("lfphys.core.optics.beams: the exact vector beam of the same spectrum differs under strong "
+                    "focusing (w0 ~ λ): the longitudinal field, the spin–orbit splitting of L_z and S_z"),
+                  T("lfphys.core.optics.angular_spectrum: exact propagation differs by O((λ/w0)²)")],
 }
 
 

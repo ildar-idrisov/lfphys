@@ -41,22 +41,25 @@ import math
 import numpy as np
 from scipy import special
 
+from lfphys.i18n import T
 from . import mie
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Рассеяние облаком шаров разных размеров (усреднение ряда Ми)",
-    "statement": "Средние по гамма-распределению размеров сечения рассеяния и ослабления и дифференциальное сечение "
-                 "⟨dσ/dΩ⟩(θ) неполяризованного света (и его поляризационная часть) для одной длины волны; "
-                 "однократное рассеяние разреженным облаком, интенсивности капель складываются.",
-    "validity": "однократное рассеяние (оптически тонкое облако), независимые капли; распределение обрезано на ±4σ "
-                "(отрезанная доля вероятности возвращается, её смещение ≲ 3 доли от максимума); интеграл по размерам — "
-                "сумма на узлах с шагом ≤ dx_max = 0,25 по x: рябь у радуг (период 1,2–1,3 по x) разрешена, у "
-                "антисолнечной точки (период ~0,27) — нет, сумма сходится за счёт гладкости распределения; узкие "
-                "резонансы — выборочно; ошибка — оценка по порядку величины (наибольшая по углам разность двух "
-                "чередующихся половинных сумм)",
-    "basis": ["Bohren & Huffman (1983), §4.4 и гл. 13 (распределения размеров)", "Hansen & Travis, Space Sci. Rev. "
-              "16, 527 (1974): средние по распределению размеров"],
+    "title": T("Scattering by a cloud of spheres of different sizes (the Mie series averaged)"),
+    "statement": T("The scattering and extinction cross-sections averaged over a gamma distribution of sizes and the "
+                   "differential cross-section ⟨dσ/dΩ⟩(θ) of unpolarised light (and its polarised part) at one "
+                   "wavelength; single scattering by a dilute cloud, the intensities of the drops add."),
+    "validity": T("single scattering (an optically thin cloud), independent drops; the distribution is cut at ±4σ "
+                  "(the probability cut off is returned; the bias of the cut ≲ 3 times that fraction of the peak); the "
+                  "integral over sizes is a sum over nodes with a step ≤ dx_max = 0.25 in x: the ripple of the "
+                  "rainbows (period 1.2–1.3 in x) is resolved, at the antisolar point (period ~0.27) it is not and the "
+                  "sum converges thanks to the smoothness of the distribution; narrow resonances are sampled; the "
+                  "error is an order-of-magnitude estimate (the largest difference over the angles between two "
+                  "alternating half sums)"),
+    "basis": [T("Bohren & Huffman (1983), §4.4 and ch. 13 (size distributions)"), T("Hansen & Travis, Space Sci. Rev. "
+                                                                                   "16, 527 (1974): averages over size "
+                                                                                   "distributions")],
     "conflicts": [],
 }
 

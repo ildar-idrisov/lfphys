@@ -15,6 +15,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
 from lfphys.core import backend  # noqa: E402
+from lfphys.core import geometry as G  # noqa: E402
+from lfphys.i18n import T, english  # noqa: E402
 from v08_wave_3d.engine import apparatus as A  # noqa: E402
 from v08_wave_3d.viz import SCHEMA, Simulation  # noqa: E402
 
@@ -76,17 +78,20 @@ def test_planes_of_any_orientation_up_to_three_each_checked_against_the_exact_fi
     h = Harness(V, "double", SMALL)
     s = plane(h, 2, origin=[0.3, -0.4, 4.0], normal=[0.4, 0.3, 0.86])
     assert s["id"] == 2 and s["exact"] and s["verify"]["points"] == 3 and s["verify"]["ok"]
-    assert s["label"] == "произвольная плоскость" and len(h.of("planes")[-1]["planes"]) == 2
+    # the engine's label of a plane in general position (lfphys.core.geometry), whatever its language
+    assert english(s["label"]) == english(G._label(G.Plane.horizontal((0.4, 0.3, 0.86), (0.0, 0.0, 0.0))))
+    assert len(h.of("planes")[-1]["planes"]) == 2
     s = plane(h, 3, normal=[0.0, 0.0, 1.0], origin=[0.0, 0.0, 6.0])
-    assert s["label"] == "z = 6" and s["verify"]["ok"]
+    assert english(s["label"]) == "z = 6" and s["verify"]["ok"]
     n_err = len(h.errors())
     h.cmd("view", op="plane", id=4, normal=[1, 0, 0])
-    assert len(h.errors()) == n_err + 1 and "трёх" in h.errors()[-1]
+    assert len(h.errors()) == n_err + 1 and len(h.of("planes")[-1]["planes"]) == 3  # a fourth plane is refused
     h.cmd("view", op="remove", id=2)
     assert [p["id"] for p in h.of("planes")[-1]["planes"]] == [1, 3]
     # a plane through the axis at azimuth 30 degrees: labelled and exact
     s = plane(h, 2, origin=[0.0, 0.0, 5.0], normal=[-math.sin(math.radians(30)), math.cos(math.radians(30)), 0.0])
-    assert s["label"] == "через ось z, φ = 30°"
+    n30 = (-math.sin(math.radians(30)), math.cos(math.radians(30)), 0.0)
+    assert english(s["label"]) == english(G._label(G.Plane.horizontal(n30, (0.0, 0.0, 5.0)))) and "30" in english(s["label"])
     # every grid point of the slice lies on its plane and inside the computed region (else NaN)
     sl = h.sim.slices[2]
     P = A.slice_points(sl["plane"], sl["s"], sl["t"])
@@ -115,9 +120,10 @@ def test_slices_mode_computes_only_the_planes_and_flags_the_approximate_one():
     h = Harness(V, "double_slices", SMALL)
     hdr = h.of("header")[0]
     assert not h.of("volume") and hdr["modelling"]["mode"] == "slices"
-    assert hdr["approximations"] and hdr["approximations"][0].startswith("срез y = 0:")
+    assert hdr["approximations"] and "y = 0" in english(hdr["approximations"][0])
+    assert "L = 8 µm is taken as infinite" in english(hdr["approximations"][0])
     s = h.of("slice")[-1]
-    assert s["approximation"] and s["route"] == "reduced" and "ПРИБЛИЖЕНИЕ" in s["route_label"]
+    assert s["approximation"] and s["route"] == "reduced" and "APPROXIMATION" in english(s["route_label"])
     assert h.checks()["reduced"].get("info")
     s = plane(h, 2, normal=[1.0, 0.0, 0.0])
     assert s["exact"] and not s["approximation"]
@@ -132,7 +138,7 @@ def test_reduced_model_error_is_measured_and_shrinks_with_the_slit_length():
     for L in (4.0, 12.0, 24.0):
         h = Harness(V, "double_slices", {"L": L, "a": 0.5, "zmax": 12.0, "n": 128})
         c = h.checks()["reduced"]
-        assert c.get("info") and "ПРИБЛИЖЕНИЕ" in c["label"]
+        assert c.get("info") and "APPROXIMATION" in english(c["label"])
         errs.append(c["value"])
     assert errs[0] > errs[1] > errs[2] > 0
 
@@ -184,7 +190,7 @@ def test_the_circle_preset_is_within_its_estimate_at_every_depth():
 
 def test_a_world_whose_window_is_not_enough_is_refused():
     p = SCHEMA.resolve(None, {"source": "double", "lam": 1.5, "a": 0.2, "zmax": 80.0, "n": 128})[0]
-    with pytest.raises(ValueError, match="окно расчёта мало"):
+    with pytest.raises(ValueError, match="window is too small"):
         Simulation(p, 1, lambda *a: None)
 
 
@@ -277,13 +283,13 @@ def test_each_plane_has_its_own_check_and_labels_follow_the_normal():
     """Reviews C8, C11."""
     h = Harness(V, "double", SMALL)
     plane(h, 2, normal=[0.0, 1.0, 0.0], origin=[0.0, 1.0, 5.0])
-    assert h.sim.planes[2]["label"] == "y = 1"  # the normal +y (not only -y) names the coordinate plane
+    assert english(h.sim.planes[2]["label"]) == "y = 1"  # the normal +y (not only -y) names the coordinate plane
     plane(h, 3, normal=[0.2, 0.1, 0.97], origin=[0.0, 0.0, 6.0])
     ids = set(h.checks())
     assert {"plane_exact_1", "plane_exact_2", "plane_exact_3"} <= ids
     h.cmd("view", op="remove", id=3)
     c = h.checks()["plane_exact_3"]
-    assert c.get("info") and "убран" in c["label"]
+    assert c.get("info") and c["label"]["$t"] == "Slice {pid}: removed"
 
 
 def test_the_current_is_checked_against_the_exact_current():
@@ -297,17 +303,18 @@ def test_the_current_is_checked_against_the_exact_current():
 
 
 def test_a_refused_window_says_what_to_change_with_a_working_example(monkeypatch):
-    """Review UX-params P26 (partly): «Круглое отверстие» with the other defaults is refused after the window search
+    """Review UX-params P26 (partly): «Circular aperture» with the other defaults is refused after the window search
     (11 s on GPU 0, 90 s on the CPU; response_checks_v-worlds/v08_gpu.out). The refusal now says what to change and
     names the scenario that works for that source; the search itself is unchanged (an early refusal by extrapolating
     the measured errors was tried and rejected: one doubling of the window cut the plain sum's error 10-fold at
     z_max = 80 µm, so no extrapolation is safe)."""
     def refuse(*a, **k):
-        raise ValueError("окно расчёта мало для глубины z_max = 30 мкм: …, а нужно ≤ 2e-03. Уменьшите z_max или "
-                         "возьмите источник шире (свет уходит под меньшими углами)")
+        raise A.WindowError(A.Window(4, False, 3e-2).describe(),
+                            T("reduce z_max or take a wider source (light then leaves at smaller angles)"))
     monkeypatch.setattr(A, "choose_window", refuse)
     p = SCHEMA.resolve(None, {"source": "circle"})[0]
     with pytest.raises(ValueError) as e:
         Simulation(p, 1, lambda *a: None)
-    text = str(e.value)
-    assert "Что изменить: уменьшите z_max" in text and "«Круглое отверстие» (a = 3 мкм, z_max = 40 мкм)" in text
+    text = str(e.value)  # the English rendering
+    assert "What to change: reduce z_max" in text
+    assert "the preset «Circular aperture: dips and peaks of intensity on the axis» (a = 3 µm, z_max = 40 µm)" in text

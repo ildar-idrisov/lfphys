@@ -15,6 +15,7 @@ import pytest
 
 from lfphys.core import backend as B
 from lfphys.core.optics import angular_spectrum as AS
+from lfphys.i18n import T
 
 K = 2 * math.pi
 
@@ -37,7 +38,7 @@ def _field(n=128, dx=1 / 6):
     return np.exp(-((X - 0.4) ** 2 + (Y + 0.3) ** 2) / 2.0) * np.exp(1j * (0.9 * X - 0.4 * Y)), dx
 
 
-def test_settings_are_validated_with_notes():
+def test_settings_are_validated_with_notes(ru):
     notes = B.configure({"kernels": {
         "optics.angular_spectrum": {"device": "gpu", "precision": "fp32"},
         "gravity.geodesics": {"device": "gpu", "precision": "fp32"},
@@ -45,8 +46,9 @@ def test_settings_are_validated_with_notes():
     s = B.settings()["kernels"]
     assert s["optics.angular_spectrum"] == {"device": "gpu", "precision": "fp32"}  # fp32 validated for it
     assert s["gravity.geodesics"] == {"device": "cpu", "precision": "fp64"}  # no GPU code, fp32 not validated
-    assert any("неизвестное ядро" in n for n in notes) and any("нет GPU-реализации" in n for n in notes)
-    assert any("не проверена" in n for n in notes)
+    assert any("unknown kernel" in str(n) for n in notes) and any("no GPU implementation" in str(n) for n in notes)
+    assert any("not validated" in str(n) for n in notes)
+    assert any("неизвестное ядро" in ru(n) for n in notes) and any("нет GPU-реализации" in ru(n) for n in notes)
 
 
 def test_auto_takes_the_cpu_for_small_problems_and_checks_are_fp64():
@@ -60,7 +62,7 @@ def test_auto_takes_the_cpu_for_small_problems_and_checks_are_fp64():
     assert u["check"]["precision"] == "fp64" and u["check"]["size"] == 10**6
 
 
-def test_malformed_settings_are_refused_and_unusable_gpu_is_noted():
+def test_malformed_settings_are_refused_and_unusable_gpu_is_noted(ru):
     for bad in ({"kernels": []}, {"kernels": {"optics.angular_spectrum": "gpu"}}, {"crossover": [1]},
                 {"kernels": {"optics.angular_spectrum": {"device": 1}}}):
         with pytest.raises(ValueError):
@@ -69,12 +71,15 @@ def test_malformed_settings_are_refused_and_unusable_gpu_is_noted():
     assert notes and B.settings()["crossover"] == {}  # a bool is not a size
     r = subprocess.run([sys.executable, "-m", "lfphys.core.backend", "--configure", "-"], input='{"kernels": []}',
                        capture_output=True, text=True)
-    assert r.returncode == 2 and "error" in json.loads(r.stdout)
+    err = json.loads(r.stdout)["error"]
+    assert r.returncode == 2 and str(T(err)) == "settings: 'kernels' must be a JSON object (kernel → value)"
+    assert ru(err) == "настройки: 'kernels' — объект JSON (ядро → значение)"  # a translatable text (lfphys.i18n)
     env = dict(os.environ, LFPHYS_NO_GPU="1")
     code = ("import json; from lfphys.core import backend as B; "
             "print(json.dumps(B.configure({'kernels': {'optics.angular_spectrum': {'device': 'gpu'}}})))")
     out = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True, check=True)
-    assert any("недоступен" in n for n in json.loads(out.stdout))  # review B1-17
+    notes = [T(n) for n in json.loads(out.stdout)]  # review B1-17
+    assert any("not available" in str(n) for n in notes) and any("недоступен" in ru(n) for n in notes)
 
 
 def test_kernel_catalogue_states_why_cpu_only_kernels_stay_on_the_cpu():
@@ -129,7 +134,7 @@ def test_angular_spectrum_fp32_within_its_bound(device):
         pytest.skip("no GPU given to this container")
     spec = B.kernels()["optics.angular_spectrum"].precisions["fp32"]
     bound = spec["bound"]
-    assert "2000" in spec["domain"]
+    assert "2000" in str(spec["domain"])
     U0, dx = _field(256)
     zs = [0.0, 2.0, 8.0, 100.0, 2000.0 / K]
     B.configure({"kernels": {"optics.angular_spectrum": {"device": device, "precision": "fp64"}}})
@@ -162,14 +167,14 @@ def test_gpu_out_of_memory_falls_back_to_the_cpu_and_the_pool_is_released():
     finally:
         pool.set_limit(size=0)
     u = B.used()["optics.angular_spectrum"]["drawn"]
-    assert u["device"] == "cpu" and "памяти" in u["reason"]
+    assert u["device"] == "cpu" and "memory" in str(T(u["reason"]))
     assert np.max(np.abs(out - ref)) < 1e-13 * np.max(np.abs(ref))
     AS.propagate_field(U0, dx, K, [1.0])
     assert B.used()["optics.angular_spectrum"]["drawn"]["device"] == "gpu" and pool.used_bytes() == 0
     assert pool.total_bytes() == 0
     B.configure(None)
     ch = B.choose("optics.angular_spectrum", 10**8, footprint=1 << 50)  # a petabyte: never on the GPU
-    assert ch.device == "cpu" and "свободно" in ch.reason
+    assert ch.device == "cpu" and "free" in str(ch.reason)
 
 
 @pytest.mark.skipif(not _gpu(), reason="no GPU given to this container")
@@ -225,7 +230,7 @@ def test_a_hot_gpu_sends_kernels_to_the_cpu_until_it_cools(monkeypatch):
 
 
 @pytest.mark.parametrize("unreadable", [lambda: None, lambda: 1 / 0])
-def test_a_sensor_that_fails_while_hot_keeps_the_kernels_on_the_cpu(monkeypatch, unreadable):
+def test_a_sensor_that_fails_while_hot_keeps_the_kernels_on_the_cpu(monkeypatch, unreadable, ru):
     """Review B6-F7: after a hot reading an unreadable sensor (None or an exception) keeps the GPU off with a reason
     that names the last valid temperature; choose() must not fail (it formatted None). The GPU is stubbed as
     available (no CuPy needed: the choice ends on the CPU)."""
@@ -237,7 +242,8 @@ def test_a_sensor_that_fails_while_hot_keeps_the_kernels_on_the_cpu(monkeypatch,
         assert B.choose("optics.angular_spectrum", 10 ** 6).device == "cpu"
         monkeypatch.setattr(B, "_TEMPERATURE", unreadable)  # the reader fails; the state stays hot
         ch = B.choose("optics.angular_spectrum", 10 ** 6)
-        assert ch.device == "cpu" and "не читается, последняя 90 °C" in ch.reason, ch.reason
+        assert ch.device == "cpu" and "cannot be read, last 90 °C" in str(ch.reason), ch.reason
+        assert "не читается, последняя 90 °C" in ru(ch.reason)
         assert B.thermal()["hot"] is True and B.thermal()["last_temp"] == 90.0
     finally:
         B.set_temperature_reader(None)
@@ -251,7 +257,7 @@ def test_a_hot_gpu_is_not_chosen(monkeypatch):
     try:
         B.set_temperature_reader(lambda: 90.0)
         ch = B.choose("optics.angular_spectrum", 10 ** 6)
-        assert ch.device == "cpu" and "остывает" in ch.reason
+        assert ch.device == "cpu" and "cooling down" in str(ch.reason)
         B.set_temperature_reader(lambda: 50.0)
         assert B.choose("optics.angular_spectrum", 10 ** 6).device == "gpu"
     finally:

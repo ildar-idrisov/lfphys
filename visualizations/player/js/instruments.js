@@ -21,15 +21,18 @@
 // same canvas) are updated in place.
 import { getJSON, postJSON } from "./api.js";
 import { nice } from "./canvas.js";
+import { lang, t } from "./i18n.js";
 import { css, el, fill, fresh2d, num, panel, time, toast } from "./ui.js";
 
 const runId = new URLSearchParams(location.search).get("id");
 const MAX_POINTS = 20000;
 const MAX_PLOTS = 6;
-const STAT_LABEL = { final: "значение в конце", mean_last: "среднее за последние …", max: "максимум", min: "минимум" };
-const STATE_RU = { starting: "запускается", running: "считается", done: "готово", cancelled: "отменён", failed: "не посчитан",
-  over_budget: "остановлен: дороже предела", interrupted: "прерван" };
-const T_PREFIX = [[1, "с"], [1e-3, "мс"], [1e-6, "мкс"], [1e-9, "нс"], [1e-12, "пс"], [1e-15, "фс"], [1e-18, "ас"]];
+const STAT_LABEL = { final: t("the value at the end"), mean_last: t("the mean over the last …"), max: t("the maximum"), min: t("the minimum") };
+const STATE_TEXT = { starting: t("starting"), running: t("running"), done: t("done"), cancelled: t("cancelled"), failed: t("not computed"),
+  over_budget: t("stopped: dearer than the budget"), interrupted: t("interrupted") };
+const T_PREFIX = [[1, t("s")], [1e-3, t("ms")], [1e-6, t("µs")], [1e-9, t("ns")], [1e-12, t("ps")], [1e-15, t("fs")], [1e-18, t("as")]];
+// a world time in seconds: the unit "s" (a text from the server, rendered here) or "с" of the records before the i18n
+const SECONDS = new Set(["s", "\u0441", t("s")]);
 
 const I = {
   ctx: null, worlds: [], replaying: true, histStride: 1, mounted: false,
@@ -47,11 +50,13 @@ function newWorld(meta) {
   return W;
 }
 function tUnitOf(h) {
-  const u = h && h.units, t = u && typeof u === "object" ? u.t : null;
-  return typeof t === "string" && t.trim() ? t.split(" (")[0].trim() : "с";
+  const u = h && h.units, tu = u && typeof u === "object" ? u.t : null;
+  if (tu && typeof tu === "object") return t(tu);  // a text (T)
+  return typeof tu === "string" && tu.trim() ? t(tu.split(" (")[0].trim()) : t("s");
 }
+// the declarations' texts are rendered once, in the page's language (a change of language reloads the page)
 function declare(W, list) {
-  for (const d of list) if (d && typeof d.id === "string") W.decl.set(d.id, { id: d.id, label: String(d.label || d.id), unit: String(d.unit || ""), of: d.of ?? null, group: String(d.group || "") });
+  for (const d of list) if (d && typeof d.id === "string") W.decl.set(d.id, { id: d.id, label: t(d.label || d.id), unit: t(d.unit), of: d.of ?? null, group: t(d.group) });
 }
 const val = (x) => (typeof x === "number" && Number.isFinite(x) ? x : NaN);
 function addFrame(W, meta) {
@@ -65,7 +70,7 @@ function addFrame(W, meta) {
   for (const id of Object.keys(meas)) {
     if (!W.v.has(id)) { const a = new Array(W.t.length - 1).fill(NaN); a.push(val(meas[id])); W.v.set(id, a); }
   }
-  if (meta.meas_note) Object.assign(W.notes, meta.meas_note);
+  if (meta.meas_note) for (const [k, v] of Object.entries(meta.meas_note)) W.notes[k] = t(v);
   if (W.t.length > MAX_POINTS) {  // every other point (by arrival number), the latest kept
     W.stride *= 2;
     const keep = W.arr.map((a, i) => a % W.stride === 0 || i === W.arr.length - 1);
@@ -83,30 +88,32 @@ function title(W, d) {
   }
   return d.label;
 }
-// «label, unit» unless the label names the unit already («Размер окна, нм», «Число щелей»: review LB1-p02-ux X9; the
-// server's lfviz.sweep.with_unit says the same)
+// "label, unit" unless the label names the unit already ("Window size, nm", "Number of slits": review LB1-p02-ux X9; the
+// server's lfviz.sweep.with_unit says the same); texts are rendered first
 export function hasUnit(label, unit) {
+  label = t(label); unit = t(unit);  // texts (T) compared as the viewer reads them
   if (label.includes(", " + unit) || label.includes("(" + unit)) return true;
   return label.split(/[^\p{L}\p{N}_/·²³⁻¹°%]+/u).includes(unit);
 }
-export function withUnit(label, unit) { return !unit || hasUnit(String(label), unit) ? String(label) : `${label}, ${unit}`; }
+export function withUnit(label, unit) { label = t(label); unit = t(unit); return !unit || hasUnit(label, unit) ? label : `${label}, ${unit}`; }
 const shown = (p, values) => !p.show_if || Object.entries(p.show_if).every(([k, allowed]) => allowed.includes(values[k]));
-function atT(W, t) {  // the last point at or before t
+function atT(W, tt) {  // the last point at or before tt
   const T = W.t;
-  if (!T.length || t < T[0]) return -1;
+  if (!T.length || tt < T[0]) return -1;
   let lo = 0, hi = T.length - 1;
-  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (T[mid] <= t + 1e-12 * Math.abs(t)) lo = mid; else hi = mid - 1; }
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (T[mid] <= tt + 1e-12 * Math.abs(tt)) lo = mid; else hi = mid - 1; }
   return lo;
 }
-const fmtT = (W, t) => (W.tUnit === "с" ? time(t, 5) : `${num(t, 5)} ${W.tUnit}`);
+const fmtT = (W, x) => (SECONDS.has(W.tUnit) ? time(x, 5) : `${num(x, 5)} ${W.tUnit}`);
 const fmtV = (x, unit) => (Number.isFinite(x) ? num(x, 6) + (unit ? " " + unit : "") : "—");
-// a world time in the unit of its scale: seconds with an SI prefix down to attoseconds («50 фс»), another unit as it is
+// a world time in the unit of its scale: seconds with an SI prefix down to attoseconds ("50 fs"), another unit as it is
 function tScale(unit, x) {
-  if (unit !== "с") return { k: 1, u: unit };
+  unit = t(unit);
+  if (!SECONDS.has(unit)) return { k: 1, u: unit };
   const a = Math.abs(x);
-  if (!(a > 0)) return { k: 1, u: "с" };
+  if (!(a > 0)) return { k: 1, u: t("s") };
   for (const [k, u] of T_PREFIX) if (a >= 0.99999 * k) return { k, u };
-  return { k: 1e-18, u: "ас" };
+  return { k: 1e-18, u: t("as") };
 }
 function fmtTime(x, unit) {
   if (typeof x !== "number" || !Number.isFinite(x)) return "—";
@@ -144,7 +151,7 @@ function message(meta, blobs, ctx) {
   if (meta.type === "state" && typeof meta.speed === "number") W.speed = meta.speed;
   if (meta.type === "live") W.live = { ...W.live, ...(meta.values || {}) };
   if (meta.type === "scene" && Array.isArray(meta.objects)) {
-    W.objects = new Map(meta.objects.map((o) => [o.id, { label: o.label, type: o.type, values: o.values || {} }]));
+    W.objects = new Map(meta.objects.map((o) => [o.id, { label: t(o.label), type: o.type, values: o.values || {} }]));
     // what a playground measures now (a quantity of a removed object is not offered to a sweep: review F12)
     W.current = new Set((Array.isArray(meta.measurables) ? meta.measurables : []).map((d) => d && d.id));
   }
@@ -164,20 +171,20 @@ function mount() {
   I.mounted = true;
   injectStyle();
   UI.list = el("div", { class: "in-list" });
-  UI.empty = el("div", { class: "muted", style: { display: "none" } }, "Этот мир не сообщает измеряемых величин.");
+  UI.empty = el("div", { class: "muted", style: { display: "none" } }, t("This world reports no measurable quantities."));
   UI.plots = el("div", { class: "in-plots" });
-  UI.upto = el("input", { type: "checkbox", title: "Только записанное до бегунка истории" });
-  UI.csv = el("a", { class: "in-csv", href: "#", download: "", title: "Значения выбранных величин из записи этого мира — все кадры, полная точность" }, "⤓ CSV");
-  UI.csv.addEventListener("click", (e) => { const h = csvHref(); if (!h) { e.preventDefault(); toast("Отметьте величины", "notice", 3000); } else UI.csv.href = h; });
+  UI.upto = el("input", { type: "checkbox", title: t("Only what was recorded up to the history's slider") });
+  UI.csv = el("a", { class: "in-csv", href: "#", download: "", title: t("The values of the chosen quantities from this world's record — every frame, full precision") }, "⤓ CSV");
+  UI.csv.addEventListener("click", (e) => { const h = csvHref(); if (!h) { e.preventDefault(); toast(t("Tick the quantities"), "notice", 3000); } else UI.csv.href = h; });
   UI.sweep = el("div", { class: "in-sweep" });
-  UI.sweepBox = el("details", { class: "in-sweep-box" }, el("summary", {}, "Свип параметра"), UI.sweep);
+  UI.sweepBox = el("details", { class: "in-sweep-box" }, el("summary", {}, t("Parameter sweep")), UI.sweep);
   UI.sweepBox.addEventListener("toggle", () => { if (UI.sweepBox.open) { ensureSweepForm(); loadSweeps(); } });
   UI.body = el("div", {},
-    el("div", { class: "help" }, "Величины, которые мир измеряет в каждом кадре. Отметьте величину — её график по записи этого мира; вертикальная линия — бегунок истории, после неё — будущее записи (бледно)."),
+    el("div", { class: "help" }, t("The quantities the world measures in every frame. Tick a quantity for its plot along this world's record; the vertical line is the history's slider, after it the future of the record (faint).")),
     UI.list, UI.empty, UI.plots,
-    el("div", { class: "in-row" }, UI.csv, el("label", { class: "muted" }, UI.upto, " только до бегунка")),
+    el("div", { class: "in-row" }, UI.csv, el("label", { class: "muted" }, UI.upto, " " + t("only up to the slider"))),
     UI.sweepBox);
-  UI.panel = panel("Приборы", UI.body);
+  UI.panel = panel(t("Instruments"), UI.body);
   UI.panel.classList.add("in-panel");
   UI.panel.style.display = "none";
   right.insertBefore(UI.panel, right.children[1] || null);
@@ -199,7 +206,7 @@ function groups(W, only = null) {
   const g = new Map();
   for (const d of W.decl.values()) {
     if (only && !only.has(d.id)) continue;
-    const key = d.group || (d.of !== null ? "Объекты" : "Мир");
+    const key = d.group || (d.of !== null ? t("Objects") : t("World"));
     if (!g.has(key)) g.set(key, []);
     g.get(key).push(d);
   }
@@ -230,7 +237,7 @@ function makeRow(d) {
   cb.addEventListener("change", () => {
     I.userSelected = true;
     if (cb.checked) {
-      if (I.selected.length >= MAX_PLOTS) { cb.checked = false; toast(`Не больше ${MAX_PLOTS} графиков сразу`, "notice", 3000); return; }
+      if (I.selected.length >= MAX_PLOTS) { cb.checked = false; toast(t("At most {n:d} plots at once", { n: MAX_PLOTS }), "notice", 3000); return; }
       if (!I.selected.includes(R.id)) I.selected.push(R.id);
     } else I.selected = I.selected.filter((x) => x !== R.id);
     saveSel(); syncPlots(shownW()); I.dirty = true;  // the list itself stays as it is (F8)
@@ -302,7 +309,7 @@ function csvHref() {
   if (!W) return "";
   const ids = I.selected.filter((id) => W.decl.has(id));
   if (!ids.length) return "";
-  const q = new URLSearchParams({ ids: ids.join(","), world: String(W.n), format: "csv" });
+  const q = new URLSearchParams({ ids: ids.join(","), world: String(W.n), format: "csv", lang: lang() });
   if (UI.upto.checked && I.ctx) q.set("to", String(I.ctx.t()));
   return `/api/runs/${encodeURIComponent(runId)}/series?${q}`;
 }
@@ -313,8 +320,8 @@ function loop() {
   if (I.replaying || !I.ctx || !UI.plotEls) return;
   const W = shownW();
   if (!W) return;
-  const t = I.ctx.t();
-  const key = `${I.ctx.w()}|${t}|${W.t.length}|${W.t[W.t.length - 1]}|${I.listRev}|${I.hover ? I.hover.id + I.hover.x : ""}`;
+  const tt = I.ctx.t();
+  const key = `${I.ctx.w()}|${tt}|${W.t.length}|${W.t[W.t.length - 1]}|${I.listRev}|${I.hover ? I.hover.id + I.hover.x : ""}`;
   if (!I.dirty && key === I.drawnKey) return;
   const now = performance.now();
   // the cursor or the world moved: at once; new points of a recording only: at most ~12 times a second
@@ -322,16 +329,16 @@ function loop() {
   if (!moved && now - I.lastDraw < 80) return;
   if (W !== I.lastWorld) { I.lastWorld = W; refreshLists(); }
   I.drawnKey = key; I.dirty = false; I.lastDraw = now;
-  const i = atT(W, t);
+  const i = atT(W, tt);
   for (const [id, R] of UI.rows) {
     const a = W.v.get(id), d = W.decl.get(id);
     const x = a && i >= 0 ? a[i] : NaN;
     const text = fmtV(x, d && d.unit);
     if (R.val.textContent !== text) R.val.textContent = text;
-    const tip = Number.isFinite(x) ? "" : (W.notes[id] || "нет значения на этот момент");
+    const tip = Number.isFinite(x) ? "" : (W.notes[id] || t("no value at this moment"));
     if (R.val.title !== tip) R.val.title = tip;
   }
-  for (const P of UI.plotEls) drawPlot(W, P, t, i);
+  for (const P of UI.plotEls) drawPlot(W, P, tt, i);
   const h = csvHref() || "#";
   if (UI.csv.getAttribute("href") !== h) UI.csv.setAttribute("href", h);
 }
@@ -381,14 +388,14 @@ function polyline(g, T, A, X, Y, from, to) {  // NaN breaks the line; dense stre
   g.stroke();
 }
 
-function drawPlot(W, P, t, iCur) {
+function drawPlot(W, P, tt, iCur) {
   const { w, h, dpr } = sizeCanvas(P.cv);
   const g = fresh2d(P.cv.getContext("2d"), dpr);
   g.fillStyle = css("--canvas"); g.fillRect(0, 0, P.cv.width / dpr, P.cv.height / dpr);
   const A = W.v.get(P.id) || [], T = W.t;
   const d = P.d;
   const cur = iCur >= 0 && A.length ? A[iCur] : NaN;
-  if (!T.length || !A.length) { if (P.val.textContent !== "—") P.val.textContent = "—"; g.fillStyle = css("--muted"); g.font = "11px system-ui"; g.fillText("нет записанных значений", 8, h / 2); return; }
+  if (!T.length || !A.length) { if (P.val.textContent !== "—") P.val.textContent = "—"; g.fillStyle = css("--muted"); g.font = "11px system-ui"; g.fillText(t("no recorded values"), 8, h / 2); return; }
   const yr = range(A);
   let [y0, y1] = yr || [0, 1];
   if (y1 - y0 <= 1e-12 * Math.max(Math.abs(y0), Math.abs(y1))) { const p = Math.max(Math.abs(y0) * 1e-3, 1e-12); y0 -= p; y1 += p; }
@@ -398,7 +405,7 @@ function drawPlot(W, P, t, iCur) {
   const L = 2, R = w - 4, TOP = 4, BOT = h - 14;
   const X = (x) => L + (x - x0) / (x1 - x0) * (R - L), Y = (y) => BOT - (y - y0) / (y1 - y0) * (BOT - TOP);
   axes(g, w, h, x0, x1, y0, y1, X, Y, (x) => fmtT(W, x), (y) => num(y, 4));
-  const xc = Math.max(L, Math.min(R, X(t)));
+  const xc = Math.max(L, Math.min(R, X(tt)));
   const accent = css("--accent");
   g.lineWidth = 2; g.lineJoin = "round"; g.strokeStyle = accent;
   g.save(); g.beginPath(); g.rect(0, 0, xc + 1, h); g.clip(); polyline(g, T, A, X, Y, 0, T.length); g.restore();
@@ -406,7 +413,7 @@ function drawPlot(W, P, t, iCur) {
   g.strokeStyle = css("--muted"); g.lineWidth = 1;
   g.beginPath(); g.moveTo(Math.round(xc) + 0.5, 0); g.lineTo(Math.round(xc) + 0.5, BOT); g.stroke();
   if (Number.isFinite(cur)) { g.fillStyle = accent; g.beginPath(); g.arc(X(T[iCur]), Y(cur), 3.5, 0, 2 * Math.PI); g.fill(); }
-  let text = `${fmtV(cur, d.unit)} · ${fmtT(W, t)}`;
+  let text = `${fmtV(cur, d.unit)} · ${fmtT(W, tt)}`;
   if (!Number.isFinite(cur) && W.notes[P.id]) text = `— (${W.notes[P.id]})`;
   if (I.hover && I.hover.id === P.id) {  // a crosshair and the value under the pointer
     const th = x0 + (I.hover.x - L) / (R - L) * (x1 - x0), k = atT(W, th);
@@ -414,7 +421,7 @@ function drawPlot(W, P, t, iCur) {
       g.setLineDash([3, 3]); g.strokeStyle = css("--muted");
       g.beginPath(); g.moveTo(Math.round(X(T[k])) + 0.5, 0); g.lineTo(Math.round(X(T[k])) + 0.5, BOT); g.stroke(); g.setLineDash([]);
       if (Number.isFinite(A[k])) { g.strokeStyle = accent; g.lineWidth = 2; g.beginPath(); g.arc(X(T[k]), Y(A[k]), 4, 0, 2 * Math.PI); g.stroke(); }
-      text = `под указателем: ${fmtV(A[k], d.unit)} · ${fmtT(W, T[k])}`;
+      text = t("under the pointer: {v} · {t}", { v: fmtV(A[k], d.unit), t: fmtT(W, T[k]) });
     }
   }
   if (P.val.textContent !== text) P.val.textContent = text;
@@ -445,31 +452,31 @@ function targets(W) {  // what a sweep can change: the live laws in force here, 
   const out = [];
   const lawValues = { ...W.params, ...W.live };
   for (const p of (I.viz ? I.viz.schema.params : []).filter((q) => q.live && !q.hidden && q.type !== "json" && shown(q, lawValues))) {
-    out.push({ key: "law:" + p.id, target: { kind: "law", id: p.id }, label: `Закон: ${withUnit(p.label, p.unit)}`, p, current: W.live[p.id] });
+    out.push({ key: "law:" + p.id, target: { kind: "law", id: p.id }, label: t("Law: {label}", { label: withUnit(p.label, p.unit) }), p, current: W.live[p.id] });
   }
   for (const [oid, o] of W.objects) {
     const ot = W.palette.find((x) => x.type === o.type);
     for (const p of (ot ? ot.params : []).filter((q) => q.type !== "json" && !q.hidden && shown(q, o.values))) {
-      out.push({ key: `obj:${oid}:${p.id}`, target: { kind: "object", obj: oid, param: p.id }, label: `«${o.label}»: ${withUnit(p.label, p.unit)}`,
+      out.push({ key: `obj:${oid}:${p.id}`, target: { kind: "object", obj: oid, param: p.id }, label: t("“{object}”: {label}", { object: o.label, label: withUnit(p.label, p.unit) }),
                  p, current: o.values[p.id], oid, handle: handleOf(ot, p.id) });
     }
   }
   return out;
 }
 
-// values typed by the owner: separated by «;», spaces or «, » (a comma between digits is a decimal comma)
+// values typed by the owner: separated by ";", spaces or ", " (a comma between digits is a decimal comma)
 export function parseValues(text, p) {
   const toks = String(text).split(/;|\s+|,(?!\d)/).map((s) => s.trim()).filter(Boolean);
   const out = [];
   for (const s of toks) {
     if (p.type === "float" || p.type === "int") {
       const x = Number(s.replace(",", ".").replace("−", "-"));
-      if (!Number.isFinite(x)) throw new Error(`«${s}» — не число`);
+      if (!Number.isFinite(x)) throw new Error(t("“{value}” is not a number", { value: s }));
       out.push(p.type === "int" ? Math.round(x) : x);
-    } else if (p.type === "bool") out.push(/^(1|true|да|вкл)$/i.test(s));
+    } else if (p.type === "bool") out.push(/^(1|true|yes|on)$/i.test(s) || s.toLowerCase() === t("yes").toLowerCase());
     else {
-      const o = (p.options || []).find((q) => String(q.value) === s || q.label === s);
-      if (!o) throw new Error(`«${s}» — нет такого варианта; можно: ${(p.options || []).map((q) => q.value).join(", ")}`);
+      const o = (p.options || []).find((q) => String(q.value) === s || t(q.label) === s);
+      if (!o) throw new Error(t("“{value}” — there is no such option; allowed: {options}", { value: s, options: (p.options || []).map((q) => q.value).join(", ") }));
       out.push(o.value);
     }
   }
@@ -478,9 +485,9 @@ export function parseValues(text, p) {
 
 function inp(attrs) { return el("input", { type: "text", ...attrs }); }
 const fmtIn = (x) => String(Number(x.toPrecision(6))).replace(".", ",");
-const numIn = (e, what) => { const v = Number(String(e.value).trim().replace(",", ".").replace("−", "-")); if (!Number.isFinite(v)) throw new Error(`${what}: нужно число`); return v; };
+const numIn = (e, what) => { const v = Number(String(e.value).trim().replace(",", ".").replace("−", "-")); if (!Number.isFinite(v)) throw new Error(t("{what}: a number is needed", { what })); return v; };
 
-// the world time a sweep computes by default (review F2, X7: «1» in the world's unit asked p03 for 1 s of molecular
+// the world time a sweep computes by default (review F2, X7: "1" in the world's unit asked p03 for 1 s of molecular
 // dynamics and p02 for 10¹³ of its spans): five wall seconds of the world at the speed chosen, else a tenth of what the
 // record covers, else one unit
 function defaultDuration(W) {
@@ -501,21 +508,21 @@ async function drawSweepForm() {
   const W = latestW();
   if (!W || !UI.sweep || I.formBuilding) return;
   I.formBuilding = true;
-  try { await vizSchema(); } catch (e) { I.formBuilding = false; fill(UI.sweep, el("div", { class: "muted" }, "Схема мира не загрузилась: " + e.message)); return; }
+  try { await vizSchema(); } catch (e) { I.formBuilding = false; fill(UI.sweep, el("div", { class: "muted" }, t("The world's schema did not load: {why}", { why: e.message }))); return; }
   I.formBuilding = false;
   if (UI.form && UI.form.W === W) { updateSweepForm(); return; }
   const F = UI.form = { W, tgKeys: "", msKeys: "" };
   F.none = el("div", { class: "muted" });
   F.target = el("select", {});
-  F.values = inp({ placeholder: "например: 1; 2; 4; 8", style: { width: "100%" } });
+  F.values = inp({ placeholder: t("for example: 1; 2; 4; 8"), style: { width: "100%" } });
   F.cur = el("div", { class: "help in-cur" });
-  F.rFrom = inp({ placeholder: "от", style: { width: "4.5em" } }); F.rTo = inp({ placeholder: "до", style: { width: "4.5em" } });
-  F.rN = inp({ value: "8", style: { width: "2.5em" }, title: "Сколько значений (2–50)" });
-  F.rLog = el("select", {}, el("option", { value: "lin" }, "равномерно"), el("option", { value: "log" }, "логарифмически"));
+  F.rFrom = inp({ placeholder: t("from"), style: { width: "4.5em" } }); F.rTo = inp({ placeholder: t("to"), style: { width: "4.5em" } });
+  F.rN = inp({ value: "8", style: { width: "2.5em" }, title: t("How many values (2–50)") });
+  F.rLog = el("select", {}, el("option", { value: "lin" }, t("evenly")), el("option", { value: "log" }, t("logarithmically")));
   const fillRange = () => {
     const a = Number(F.rFrom.value.replace(",", ".")), b = Number(F.rTo.value.replace(",", ".")), n = Math.round(Number(F.rN.value));
-    if (!Number.isFinite(a) || !Number.isFinite(b) || !(n >= 2 && n <= 50)) { toast("Ряд: «от» и «до» — числа, значений от 2 до 50", "notice", 4000); return; }
-    if (F.rLog.value === "log" && !(a > 0 && b > 0)) { toast("Логарифмический ряд — только для положительных чисел", "notice", 4000); return; }
+    if (!Number.isFinite(a) || !Number.isFinite(b) || !(n >= 2 && n <= 50)) { toast(t("A series: “from” and “to” are numbers, from 2 to 50 values"), "notice", 4000); return; }
+    if (F.rLog.value === "log" && !(a > 0 && b > 0)) { toast(t("A logarithmic series is only for positive numbers"), "notice", 4000); return; }
     const vals = [];
     for (let i = 0; i < n; i++) {
       const s = i / (n - 1);
@@ -530,17 +537,17 @@ async function drawSweepForm() {
   F.measure = el("select", {});
   F.stat = el("select", {}, Object.entries(STAT_LABEL).map(([k, v]) => el("option", { value: k }, v)));
   F.window = inp({ size: 6, value: fmtIn(dur / 2 / F.ts.k) });
-  F.winRow = el("div", { class: "ctl" }, el("label", {}, `окно, ${F.ts.u}`), F.window);
+  F.winRow = el("div", { class: "ctl" }, el("label", {}, t("window, {unit}", { unit: F.ts.u })), F.window);
   F.samples = inp({ size: 5, value: "200" });
   F.dt = el("span", { class: "muted in-dt" });
   F.est = el("div", { class: "help in-est" });
-  F.go = el("button", { class: "primary", disabled: true }, "▶ Запустить свип");
-  F.estBtn = el("button", {}, "Оценить");
-  const invalidate = F.invalidate = () => { F.go.disabled = true; I.est = null; F.est.classList.remove("in-bad"); F.est.textContent = "Сначала «Оценить»: цена счёта по времени шага этого мира."; showDt(); };
+  F.go = el("button", { class: "primary", disabled: true }, t("▶ Start the sweep"));
+  F.estBtn = el("button", {}, t("Estimate"));
+  const invalidate = F.invalidate = () => { F.go.disabled = true; I.est = null; F.est.classList.remove("in-bad"); F.est.textContent = t("First “Estimate”: the cost of computing from this world's step time."); showDt(); };
   const showDt = () => {  // the readings' spacing, next to their number (F7)
     try {
-      const n = Math.round(numIn(F.samples, "Замеров")), span = (F.stat.value === "mean_last" ? numIn(F.window, "Окно") : numIn(F.duration, "Сколько считать")) * F.ts.k;
-      F.dt.textContent = F.stat.value === "final" ? "один замер в конце" : n >= 1 ? `${n + 1} замеров через ${fmtTime(span / n, W.tUnit)}` : "";
+      const n = Math.round(numIn(F.samples, t("Readings"))), span = (F.stat.value === "mean_last" ? numIn(F.window, t("Window")) : numIn(F.duration, t("How long to compute"))) * F.ts.k;
+      F.dt.textContent = F.stat.value === "final" ? t("one reading at the end") : n >= 1 ? t("{n:d} readings {dt} apart", { n: n + 1, dt: fmtTime(span / n, W.tUnit) }) : "";
     } catch (e) { F.dt.textContent = ""; }
   };
   F.target.onchange = () => { showCur(); invalidate(); };
@@ -553,16 +560,16 @@ async function drawSweepForm() {
   UI.sweepRes = UI.sweepRes || el("div", { class: "in-sres" });
   UI.sweepList = UI.sweepList || el("div", { class: "in-slist" });
   F.body = el("div", {},
-    el("div", { class: "ctl" }, el("label", {}, "Что менять"), F.target), F.cur,
-    el("div", { class: "ctl" }, el("label", {}, "Значения"), F.values),
-    el("div", { class: "in-row" }, el("span", { class: "muted" }, "ряд:"), F.rFrom, F.rTo, F.rN, F.rLog, el("button", { onclick: fillRange, title: "Заполнить «Значения» этим рядом" }, "→")),
-    el("div", { class: "ctl" }, el("label", {}, `Сколько считать, ${F.ts.u}`), F.duration),
-    el("div", { class: "ctl" }, el("label", {}, "Что измерять"), F.measure),
-    el("div", { class: "ctl" }, el("label", {}, "Что взять"), F.stat), F.winRow,
-    el("div", { class: "ctl" }, el("label", { title: "Замеров за время счёта (для «в конце» — один)" }, "Замеров"), F.samples, F.dt),
+    el("div", { class: "ctl" }, el("label", {}, t("What to change")), F.target), F.cur,
+    el("div", { class: "ctl" }, el("label", {}, t("Values")), F.values),
+    el("div", { class: "in-row" }, el("span", { class: "muted" }, t("series:")), F.rFrom, F.rTo, F.rN, F.rLog, el("button", { onclick: fillRange, title: t("Fill “Values” with this series") }, "→")),
+    el("div", { class: "ctl" }, el("label", {}, t("How long to compute, {unit}", { unit: F.ts.u })), F.duration),
+    el("div", { class: "ctl" }, el("label", {}, t("What to measure")), F.measure),
+    el("div", { class: "ctl" }, el("label", {}, t("What to take")), F.stat), F.winRow,
+    el("div", { class: "ctl" }, el("label", { title: t("Readings over the computed time (one for “at the end”)") }, t("Readings")), F.samples, F.dt),
     el("div", { class: "in-row" }, F.estBtn, F.go), F.est);
   fill(UI.sweep,
-    el("div", { class: "help" }, "Тот же опыт от текущего момента последнего мира — для каждого значения параметра отдельно, в отдельном процессе; идущий мир не меняется. Измеряется выбранная величина."),
+    el("div", { class: "help" }, t("The same experiment from the current moment of the latest world — for each value of the parameter separately, in a separate process; the running world does not change. The chosen quantity is measured.")),
     F.none, F.body, UI.sweepRes, UI.sweepList);
   updateSweepForm();
   invalidate();
@@ -576,7 +583,7 @@ function updateSweepForm() {
   const tg = targets(W);
   const now = W.current || new Set(W.decl.keys());
   const empty = !tg.length || !now.size;
-  F.none.textContent = !now.size ? "Мир не сообщает измеряемых величин: измерять нечего." : !tg.length ? "В этом мире нечего перебирать: нет законов, меняемых на ходу, и объектов в сцене." : "";
+  F.none.textContent = !now.size ? t("The world reports no measurable quantities: there is nothing to measure.") : !tg.length ? t("There is nothing to go over in this world: no laws changed on the go and no objects in the scene.") : "";
   F.none.style.display = empty ? "" : "none";
   F.body.style.display = empty ? "none" : "";
   const tKeys = tg.map((x) => x.key + "=" + x.label).join("|");
@@ -604,31 +611,32 @@ function showCur() {
   if (!F) return;
   const x = targets(W).find((q) => q.key === F.target.value);
   if (!x) { F.cur.textContent = ""; return; }
-  const p = x.p, unit = p.unit && !hasUnit(p.label, p.unit) ? p.unit : "";
+  const p = x.p, unit = p.unit && !hasUnit(t(p.label), t(p.unit)) ? t(p.unit) : "";
   const v = (y) => (typeof y === "number" ? num(y, 6) + (unit ? " " + unit : "") : y === undefined ? "—" : String(y) + (unit ? " " + unit : ""));
-  const range = (p.min !== null && p.min !== undefined ? ` · не меньше ${num(p.min, 6)}` : "") + (p.max !== null && p.max !== undefined ? ` · не больше ${num(p.max, 6)}` : "");
+  const range = (p.min !== null && p.min !== undefined ? " · " + t("at least {lo:.6g}", { lo: p.min }) : "") + (p.max !== null && p.max !== undefined ? " · " + t("at most {hi:.6g}", { hi: p.max }) : "");
   let text;
-  if (x.target.kind === "law") text = `Сейчас: ${v(x.current)}`;
+  if (x.target.kind === "law") text = t("Now: {v}", { v: v(x.current) });
   else if (x.handle && x.handle.kind === "position") {
     const o = W.objects.get(x.oid), at = (W.at || {})[x.oid];
     const i = x.handle.index !== undefined ? x.handle.index : axisIndex(o && o.values[x.handle.axisParam]);
-    const where = Array.isArray(at) && i >= 0 && typeof at[i] === "number" ? `; объект сейчас в ${v(at[i])} (последний кадр)` : "";
-    text = `Задано: ${v(x.current)} — где объект поставили${where}. Каждое значение ставит его туда в момент свипа, равное заданному тоже`;
+    text = Array.isArray(at) && i >= 0 && typeof at[i] === "number"
+      ? t("Set: {v} — where the object was put; the object is now at {at} (the last frame). Each value puts it there at the moment of the sweep, one equal to the set value too", { v: v(x.current), at: v(at[i]) })
+      : t("Set: {v} — where the object was put. Each value puts it there at the moment of the sweep, one equal to the set value too", { v: v(x.current) });
   } else if (x.handle && x.handle.kind === "velocity") {
-    text = `Задано: ${v(x.current)} — скорость последнего броска; сейчас она может быть другой. Каждое значение — бросок с этой скоростью в момент свипа`;
-  } else text = `Задано: ${v(x.current)} — значение параметра объекта, не обязательно его состояние сейчас. Каждое значение применяется в момент свипа, равное заданному тоже`;
+    text = t("Set: {v} — the velocity of the last throw; it may be different now. Each value is a throw with this velocity at the moment of the sweep", { v: v(x.current) });
+  } else text = t("Set: {v} — the value of the object's parameter, not necessarily its state now. Each value is applied at the moment of the sweep, one equal to the set value too", { v: v(x.current) });
   F.cur.textContent = text + range;
 }
 
 function request(estimate) {
   const F = UI.form, W = latestW();
   const x = targets(W).find((q) => q.key === F.target.value);
-  if (!x) throw new Error("Выберите, что менять");
+  if (!x) throw new Error(t("Choose what to change"));
   const values = parseValues(F.values.value, x.p);
-  if (!values.length) throw new Error("Введите значения (через «;» или пробел)");
-  const body = { target: x.target, values, duration: numIn(F.duration, "Сколько считать") * F.ts.k, measure: F.measure.value, stat: F.stat.value };
-  if (F.stat.value === "mean_last") body.window = numIn(F.window, "Окно") * F.ts.k;
-  if (F.stat.value !== "final") body.n_samples = Math.round(numIn(F.samples, "Замеров"));
+  if (!values.length) throw new Error(t("Type the values (separated by “;” or a space)"));
+  const body = { target: x.target, values, duration: numIn(F.duration, t("How long to compute")) * F.ts.k, measure: F.measure.value, stat: F.stat.value };
+  if (F.stat.value === "mean_last") body.window = numIn(F.window, t("Window")) * F.ts.k;
+  if (F.stat.value !== "final") body.n_samples = Math.round(numIn(F.samples, t("Readings")));
   if (estimate) body.estimate = true;
   return body;
 }
@@ -644,22 +652,23 @@ async function submit(estimate) {
     const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) {
-      F.est.textContent = (j.error || r.statusText) + (j.hint ? `. Что изменить: ${j.hint}` : "") + (j.estimate ? ` (${j.estimate.text})` : "");
+      const text = j.error !== undefined ? (j.hint ? t("{text}. What to change: {hint}", { text: t(j.error), hint: t(j.hint) }) : t(j.error)) : r.statusText;
+      F.est.textContent = text + (j.estimate ? ` (${t(j.estimate.text)})` : "");
       F.est.classList.add("in-bad");
       return;
     }
     if (estimate) {
       I.est = JSON.stringify({ ...body, estimate: undefined });
-      F.est.textContent = j.estimate.text;
+      F.est.textContent = t(j.estimate.text);
       F.go.disabled = false;
       return;
     }
     F.invalidate();  // the estimate was this sweep's: the next one is estimated anew (X7)
-    toast(`Свип № ${j.n} запущен`, "notice", 3000);
+    toast(t("Sweep no. {n:d} started", { n: j.n }), "notice", 3000);
     I.sweepShown = j.n;
     pollSweep(j.n);
   } catch (e) {
-    F.est.textContent = "Сервер не ответил: " + e.message; F.est.classList.add("in-bad");
+    F.est.textContent = t("The server did not answer: {why}", { why: e.message }); F.est.classList.add("in-bad");
   } finally {
     F.estBtn.disabled = false;
     if (!estimate) F.go.disabled = true;
@@ -680,9 +689,9 @@ function drawSweepList() {
   if (key === listText) return;  // unchanged: nothing rebuilt
   listText = key;
   if (!I.sweeps.length) { fill(UI.sweepList); return; }
-  fill(UI.sweepList, el("div", { class: "muted" }, "Свипы этого запуска:"),
-    I.sweeps.slice().reverse().map((s) => el("div", { class: "in-si" + (s.n === I.sweepShown ? " on" : ""), onclick: () => showSweep(s.n), title: "Показать результаты" },
-      `№ ${s.n} · ${s.target_label || ""} · ${(s.request || {}).values ? s.request.values.length : 0} знач. → ${s.measure_label || ""} · ${STATE_RU[s.state] || s.state}`)));
+  fill(UI.sweepList, el("div", { class: "muted" }, t("Sweeps of this run:")),
+    I.sweeps.slice().reverse().map((s) => el("div", { class: "in-si" + (s.n === I.sweepShown ? " on" : ""), onclick: () => showSweep(s.n), title: t("Show the results") },
+      t("no. {n:d} · {target} · {k:d} values → {measure} · {state}", { n: s.n, target: t(s.target_label), k: (s.request || {}).values ? s.request.values.length : 0, measure: t(s.measure_label), state: STATE_TEXT[s.state] || s.state }))));
 }
 
 async function showSweep(n) {
@@ -698,7 +707,7 @@ function pollSweep(n) {
     try { s = await getJSON(`/api/runs/${encodeURIComponent(runId)}/sweeps/${n}`); } catch (e) { return; }
     if (I.sweepShown === n) renderSweep(s);
     if (s.active || s.state === "starting" || s.state === "running") I.poll = setTimeout(tick, 700);
-    else { loadSweeps(); if (s.state !== "done") toast(s.message || STATE_RU[s.state], "notice", 6000); }
+    else { loadSweeps(); if (s.state !== "done") toast(s.message ? t(s.message) : STATE_TEXT[s.state], "notice", 6000); }
   };
   tick();
 }
@@ -707,12 +716,12 @@ function pollSweep(n) {
 function buildRes(s) {
   const R = { n: s.n, rows: 0 };
   R.state = el("span", {});
-  R.cancel = el("button", { class: "cancel" }, "✕ отменить");
+  R.cancel = el("button", { class: "cancel" }, t("✕ cancel"));
   R.cancel.onclick = async () => {
-    R.cancel.disabled = true; R.cancel.textContent = "отменяется…";  // one click is enough (F10)
+    R.cancel.disabled = true; R.cancel.textContent = t("cancelling…");  // one click is enough (F10)
     try { await postJSON(`/api/runs/${encodeURIComponent(runId)}/sweeps/${R.n}/cancel`); } catch (e) { toast(e.message); }
   };
-  R.remove = el("button", { title: "Удалить этот свип и его результаты" }, "удалить");
+  R.remove = el("button", { title: t("Remove this sweep and its results") }, t("remove"));
   R.remove.onclick = async () => {
     R.remove.disabled = true;
     try { await postJSON(`/api/runs/${encodeURIComponent(runId)}/sweeps/${R.n}`, undefined, "DELETE"); I.sweepShown = null; fill(UI.sweepRes); UI.res = null; loadSweeps(); } catch (e) { toast(e.message); R.remove.disabled = false; }
@@ -727,13 +736,13 @@ function buildRes(s) {
   R.th1 = el("th", {}); R.th2 = el("th", {});
   R.tbody = el("tbody", {});
   R.table = el("table", { class: "in-tab" }, el("thead", {}, el("tr", {}, R.th1, R.th2)), R.tbody);
-  R.csv = el("a", { href: `/api/runs/${encodeURIComponent(runId)}/sweeps/${s.n}?format=csv`, class: "in-csv" }, "⤓ CSV таблицы");
-  R.el = el("div", {}, el("div", { class: "in-sh" }, el("b", {}, `Свип № ${s.n}: `), R.state, " ", R.cancel, R.remove),
+  R.csv = el("a", { href: `/api/runs/${encodeURIComponent(runId)}/sweeps/${s.n}?format=csv&lang=${lang()}`, class: "in-csv" }, t("⤓ CSV of the table"));
+  R.el = el("div", {}, el("div", { class: "in-sh" }, el("b", {}, t("Sweep no. {n:d}: ", { n: s.n })), R.state, " ", R.cancel, R.remove),
     R.what, R.base, R.progBox, R.msg, R.cv, R.table, R.csv);
   return R;
 }
 
-const setText = (e, t) => { if (e.textContent !== t) e.textContent = t; };
+const setText = (e, s) => { if (e.textContent !== s) e.textContent = s; };
 const show = (e, on) => { const d = on ? "" : "none"; if (e.style.display !== d) e.style.display = d; };
 
 function renderSweep(s) {
@@ -742,24 +751,24 @@ function renderSweep(s) {
   if (!R || R.n !== s.n || !R.el.isConnected) { R = UI.res = buildRes(s); fill(UI.sweepRes, R.el); }
   const res = s.results || [], req = s.request || {}, prog = s.progress || {};
   const running = s.active || s.state === "starting" || s.state === "running";
-  setText(R.state, STATE_RU[s.state] || s.state);
+  setText(R.state, STATE_TEXT[s.state] || s.state);
   show(R.cancel, running); show(R.remove, !running);
-  const tu = s.t_unit || "с";
-  setText(R.what, `${s.target_text || ""} → ${s.measure_label || ""}, ${s.stat_text || ""}; каждое значение — ${fmtTime(req.duration, tu)} мира от t = ${fmtTime((s.base || {}).t, tu)}`);
-  setText(R.base, (s.base || {}).note || ""); show(R.base, !!(s.base || {}).note);
+  const tu = s.t_unit || "s";
+  setText(R.what, t("{target} → {measure}, {stat}; each value — {duration} of the world from t = {t}", { target: t(s.target_text), measure: t(s.measure_label), stat: t(s.stat_text), duration: fmtTime(req.duration, tu), t: fmtTime((s.base || {}).t, tu) }));
+  setText(R.base, t((s.base || {}).note)); show(R.base, !!(s.base || {}).note);
   show(R.progBox, running);
   const w = `${Math.round(100 * (prog.frac || 0))}%`;
   if (R.bar.style.width !== w) R.bar.style.width = w;
-  setText(R.prog, `${prog.done || 0} из ${prog.total || 0} значений` + (prog.elapsed_s ? ` · ${Math.round(prog.elapsed_s)} с` : "") + (prog.eta_s ? ` · осталось ≈ ${Math.round(prog.eta_s)} с` : ""));
-  setText(R.msg, s.message || ""); show(R.msg, !!s.message);
+  setText(R.prog, t("{k:d} of {n:d} values", { k: prog.done || 0, n: prog.total || 0 }) + (prog.elapsed_s ? " · " + t("{t:d} s", { t: Math.round(prog.elapsed_s) }) : "") + (prog.eta_s ? " · " + t("≈ {t:d} s left", { t: Math.round(prog.eta_s) }) : ""));
+  setText(R.msg, t(s.message)); show(R.msg, !!s.message);
   R.msg.classList.toggle("in-warn", s.state !== "done");
-  setText(R.th1, withUnit(s.target_label || "значение", s.target_unit || ""));
-  setText(R.th2, withUnit(`${s.measure_label || ""} (${s.stat_text || ""})`, s.measure_unit || ""));
+  setText(R.th1, withUnit(s.target_label || t("value"), s.target_unit || ""));
+  setText(R.th2, withUnit(`${t(s.measure_label)} (${t(s.stat_text)})`, s.measure_unit || ""));
   const fmtX = (v) => (typeof v === "number" ? num(v, 6) : String(v));
   for (; R.rows < res.length; R.rows++) {  // the table grows by rows: what is there stays (F8)
     const r = res[R.rows];
-    R.tbody.append(el("tr", { title: r.error || r.note || "" }, el("td", { class: "mono" }, fmtX(r.value)),
-      el("td", { class: "mono" + (r.error ? " in-bad" : "") }, r.error ? "✗ " + r.error : (r.measured === null || r.measured === undefined ? "— " + (r.note || "") : num(r.measured, 8) + (r.note ? " ⚠" : "")))));
+    R.tbody.append(el("tr", { title: t(r.error || r.note) }, el("td", { class: "mono" }, fmtX(r.value)),
+      el("td", { class: "mono" + (r.error ? " in-bad" : "") }, r.error ? "✗ " + t(r.error) : (r.measured === null || r.measured === undefined ? "— " + t(r.note) : num(r.measured, 8) + (r.note ? " ⚠" : "")))));
   }
   show(R.cv, res.length > 0); show(R.table, res.length > 0); show(R.csv, res.length > 0);
   drawSweepPlot();
@@ -773,7 +782,7 @@ function drawSweepPlot() {
   g.fillStyle = css("--canvas"); g.fillRect(0, 0, cv.width / dpr, cv.height / dpr);
   const pts = (s.results || []).filter((r) => typeof r.value === "number");
   const ok = pts.filter((r) => typeof r.measured === "number" && Number.isFinite(r.measured)).sort((a, b) => a.value - b.value);
-  if (!pts.length) { g.fillStyle = css("--muted"); g.font = "11px system-ui"; g.fillText("значения не числовые: см. таблицу", 8, h / 2); return; }
+  if (!pts.length) { g.fillStyle = css("--muted"); g.font = "11px system-ui"; g.fillText(t("the values are not numbers: see the table"), 8, h / 2); return; }
   const xs = pts.map((r) => r.value);
   let x0 = Math.min(...xs), x1 = Math.max(...xs);
   const log = x0 > 0 && x1 / x0 >= 100;
@@ -798,7 +807,7 @@ function drawSweepPlot() {
     const px = X(fx(r.value)), py = BOT - 4;
     g.beginPath(); g.moveTo(px - 4, py - 4); g.lineTo(px + 4, py + 4); g.moveTo(px + 4, py - 4); g.lineTo(px - 4, py + 4); g.stroke();
   }
-  if (log) { g.fillStyle = css("--muted"); g.font = "10px system-ui"; g.fillText("шкала значений логарифмическая", R - 170, TOP + 10); }
+  if (log) { g.fillStyle = css("--muted"); g.font = "10px system-ui"; g.fillText(t("a logarithmic scale of the values"), R - 170, TOP + 10); }
 }
 
 function injectStyle() {

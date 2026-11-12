@@ -5,10 +5,11 @@
 // Right: the run's curves R(θ), T(θ) for s and p, R(λ), T(λ), and the photon counters against the run's expectation.
 // Everything drawn comes from the run: segments (curves, field, angles), clicks (detections with their times) and
 // frames (photons under way as the viewer may know them at that moment). The view computes no physics.
+import { fmt, t } from "/static/js/i18n.js";
 import { css, el, fresh2d, num, panel, time } from "/static/js/ui.js";
 
 const S_COL = "#f76707", P_COL = "#1c7ed6", A_COL = "#868e96";
-const OUT_RU = { R: "отражено", T: "прошло", A: "поглощено" };
+const outLabel = (k) => (k === "R" ? t("Reflected") : k === "T" ? t("Transmitted") : t("Absorbed"));
 
 // a perceptual colormap (magma-like), 256 entries
 const LUT = (() => {
@@ -39,6 +40,8 @@ function lamRGB(nm) {
 }
 const polCol = (p) => (p ? P_COL : S_COL);
 const fmtN = (n) => (n[1] ? `${num(n[0], 4)} + ${num(n[1], 4)}i` : num(n[0], 5));
+const sceneText = (su) => t("{label}; λ = {lam:.4g} nm, θ = {th:.4g}°, {pol}",
+  { label: su.label, lam: su.lam, th: su.theta, pol: su.pol === "unpol" ? "s+p" : su.pol });
 
 export function createView(ctx) {
   let H = null, segs = [], clk = null, flashes = [], lastT = null, lastFrame = null, inFlight = [0, 0];
@@ -46,20 +49,22 @@ export function createView(ctx) {
   // --- DOM --------------------------------------------------------------------------------------------
   const cvGeo = el("canvas"), cvCur = el("canvas");
 
-  const btnFly = el("button", { title: "Скорость, при которой виден полёт одного фотона (плечо ≈ 1,2 с)" }, "▷ полёт фотона");
-  const btnStat = el("button", { title: "Скорость набора статистики (≈ 2000 фотонов в секунду)" }, "▷▷ набор статистики");
-  const quick = el("div", { class: "toolbar quick", title: "Установка: меняется сразу (то же, что в панели слева)" },
-    el("span", { class: "muted" }, "Установка:"),
-    ctx.liveControl ? [ctx.liveControl("lam_nm", { label: "λ, нм" }), ctx.liveControl("theta_deg", { label: "θ, °" }),
-      ctx.liveControl("pol", { label: "поляризация" }), ctx.liveControl("structure", { label: "структура" })] : null,
+  const btnFly = el("button", { title: t("A speed at which the flight of one photon is seen (an arm in ≈ {s} s)", { s: 1.2 }) },
+    t("▷ photon flight"));
+  const btnStat = el("button", { title: t("A speed for collecting statistics (≈ {n:d} photons per second)", { n: 2000 }) },
+    t("▷▷ collect statistics"));
+  const quick = el("div", { class: "toolbar quick", title: t("Set-up: changes at once (the same as in the panel on the left)") },
+    el("span", { class: "muted" }, t("Set-up:")),
+    ctx.liveControl ? [ctx.liveControl("lam_nm", { label: t("λ, nm") }), ctx.liveControl("theta_deg", { label: "θ, °" }),
+      ctx.liveControl("pol", { label: t("polarisation") }), ctx.liveControl("structure", { label: t("structure") })] : null,
     btnFly, btnStat);
   const center = el("div", { style: { display: "flex", flexDirection: "column", flex: 1, minHeight: 0 } }, quick,
     el("div", { class: "split" },
       el("div", {}, el("div", { class: "canvas-wrap" }, cvGeo)),
       el("div", {}, el("div", { class: "canvas-wrap" }, cvCur))));
   const infoBox = el("div", {}), statBox = el("div", {}), approxBox = el("div", { class: "help" });
-  const rightPanels = [panel("Установка этого отрезка", infoBox), panel("Фотоны", statBox),
-    panel("Приближения", approxBox)];
+  const rightPanels = [panel(t("Set-up of this segment"), infoBox), panel(t("Photons"), statBox),
+    panel(t("Approximations"), approxBox)];
   btnFly.onclick = () => { const s = now(); if (s) ctx.send("speed", { value: s.t_in / 1.2 }); };
   btnStat.onclick = () => { const s = now(); if (s) ctx.send("speed", { value: 2000 / s.rate }); };
   for (const cv of [cvGeo, cvCur]) new ResizeObserver(() => ctx.requestRender()).observe(cv);
@@ -78,12 +83,12 @@ export function createView(ctx) {
     clk.t.set(b.t, clk.n); clk.det.set(b.det, clk.n); clk.pol.set(b.pol, clk.n);
     clk.n += m;
   }
-  function firstAfter(t) {  // index of the first click with time > t (clicks are in time order)
+  function firstAfter(tw) {  // index of the first click with time > t (clicks are in time order)
     let lo = 0, hi = clk.n;
-    while (lo < hi) { const m = (lo + hi) >> 1; if (clk.t[m] <= t) lo = m + 1; else hi = m; }
+    while (lo < hi) { const m = (lo + hi) >> 1; if (clk.t[m] <= tw) lo = m + 1; else hi = m; }
     return lo;
   }
-  function segAt(t) { let s = segs[0]; for (const g of segs) if (g.t <= t) s = g; return s; }
+  function segAt(tw) { let s = segs[0]; for (const g of segs) if (g.t <= tw) s = g; return s; }
   function now() { const s = segs[segs.length - 1]; return (s && s.setup) || H; }
 
   function setup(cv) {
@@ -115,11 +120,11 @@ export function createView(ctx) {
   }
 
   // --- the geometry and the field -------------------------------------------------------------------------
-  function drawGeometry(frame, t, blobs) {
+  function drawGeometry(frame, tw, blobs) {
     const cv = cvGeo, g = setup(cv);
     const W = cv.clientWidth, Hh = cv.clientHeight;
     g.fillStyle = css("--canvas"); g.fillRect(0, 0, W, Hh);
-    const seg = segAt(t);
+    const seg = segAt(tw);
     if (!seg) return;
     const su = seg.setup, ang = seg.angles, b = seg.b;
     const pw = Math.max(130, Math.min(230, W * 0.3)), W1 = W - pw;
@@ -142,19 +147,19 @@ export function createView(ctx) {
     for (const e of [0, ...su.layers.map((L) => (zc += L.d))]) { const y = yz(e); g.beginPath(); g.moveTo(0, y); g.lineTo(W1, y); g.stroke(); }
     // labels of the media and the layers
     const muted = css("--muted");
-    text(g, `среда падения n₀ = ${num(su.n_in, 5)}`, 8, yTop - 8, { color: muted });
-    text(g, `${su.out_name} n = ${num(su.n_out, 5)}`, 8, Math.min(Hh - 6, yBot + 16), { color: muted });
+    text(g, t("incidence medium n₀ = {n:.5g}", { n: su.n_in }), 8, yTop - 8, { color: muted });
+    text(g, t("{name} n = {n:.5g}", { name: su.out_name, n: su.n_out }), 8, Math.min(Hh - 6, yBot + 16), { color: muted });
     if (su.layers.length && !thin) {
       zc = 0;
       for (const L of su.layers) {
         const ya = yz(zc), yb = yz(zc + L.d); zc += L.d;
-        text(g, `${L.name}: n = ${fmtN(L.n)}, d = ${num(L.d, 4)} нм`, W1 - 24, (ya + yb) / 2 + 4, { align: "right" });
+        text(g, t("{name}: n = {n}, d = {d:.4g} nm", { name: L.name, n: fmtN(L.n), d: L.d }), W1 - 24, (ya + yb) / 2 + 4, { align: "right" });
       }
     } else if (su.layers.length) {
       const uniq = new Map();
-      for (const L of su.layers) uniq.set(L.name, L);
-      const parts = [...uniq.values()].map((L) => `${L.name}: n = ${fmtN(L.n)}, ${num(L.d, 4)} нм`);
-      const head = su.kind === "bragg" ? `(H L)×${su.layers.length / 2}` : su.label;
+      for (const L of su.layers) uniq.set(t(L.name), L);
+      const parts = [...uniq.values()].map((L) => t("{name}: n = {n}, {d:.4g} nm", { name: L.name, n: fmtN(L.n), d: L.d }));
+      const head = su.kind === "bragg" ? `(H L)×${su.layers.length / 2}` : t(su.label);
       text(g, `${head}; ${parts.join("; ")}`, W1 - 24, (yTop + yBot) / 2 + 4, { align: "right" });
     }
     // the scale: one wavelength in depth
@@ -162,7 +167,7 @@ export function createView(ctx) {
     g.strokeStyle = css("--ink"); g.lineWidth = 2;
     const xs = W1 - 12, ys = Math.max(4, Math.min(yz(zmin) + 4, Hh - lamPx - 4));
     g.beginPath(); g.moveTo(xs, ys); g.lineTo(xs, ys + lamPx); g.moveTo(xs - 4, ys); g.lineTo(xs + 4, ys); g.moveTo(xs - 4, ys + lamPx); g.lineTo(xs + 4, ys + lamPx); g.stroke();
-    text(g, `λ = ${num(su.lam, 4)} нм`, xs - 7, ys + 10, { align: "right" });
+    text(g, t("λ = {lam:.4g} nm", { lam: su.lam }), xs - 7, ys + 10, { align: "right" });
 
     // beams: directions from the run (Snell's law of the engine, approximate ray picture)
     const m = 16, xc = W1 * 0.44, th = ang.theta * Math.PI / 180;
@@ -209,7 +214,7 @@ export function createView(ctx) {
       const gr = g.createLinearGradient(0, yBot, 0, yBot + 26);
       gr.addColorStop(0, hexA("#ffa94d", 0.55)); gr.addColorStop(1, hexA("#ffa94d", 0));
       g.fillStyle = gr; g.fillRect(Q[0] - 10, yBot, Math.min(160, W1 - Q[0] - 4), 26);
-      text(g, "затухающая волна", Q[0] + 4, yBot + 40, { color: muted });
+      text(g, t("evanescent wave"), Q[0] + 4, yBot + 40, { color: muted });
     }
     // the normal
     g.save(); g.setLineDash([4, 4]); g.strokeStyle = hexA(css("--ink"), 0.35); g.lineWidth = 1;
@@ -217,13 +222,16 @@ export function createView(ctx) {
     // the source and the detectors
     g.fillStyle = beamC; g.beginPath(); g.arc(Sp[0], Sp[1], 7, 0, 2 * Math.PI); g.fill();
     g.strokeStyle = css("--ink"); g.lineWidth = 1; g.stroke();
-    const vis = lamRGB(su.lam) ? "" : su.lam < 380 ? " (УФ)" : " (ИК)";
-    const srcLab = `источник: λ = ${num(su.lam, 4)} нм${vis}, ${su.pol === "unpol" ? "s и p" : su.pol}`;
+    const pol = su.pol === "unpol" ? t("s and p") : su.pol;
+    const srcLab = lamRGB(su.lam) ? t("source: λ = {lam:.4g} nm, {pol}", { lam: su.lam, pol })
+      : su.lam < 380 ? t("source: λ = {lam:.4g} nm (UV), {pol}", { lam: su.lam, pol })
+        : t("source: λ = {lam:.4g} nm (IR), {pol}", { lam: su.lam, pol });
     if (normal) text(g, srcLab, Sp[0] - 12, Sp[1] + 4, { align: "right" });
     else text(g, srcLab, Math.min(Sp[0] + 10, W1 - 190), Sp[1] - 9);
     const c = frame.counts || {};
-    detector(g, DR, [dx, -dy], `детектор R: ${c.R ?? 0}`, !normal);
-    detector(g, DT, [Math.sin(tho), Math.cos(tho)], `детектор T: ${c.T ?? 0}` + (prop ? "" : " (сюда не идёт)"), true, !prop);
+    detector(g, DR, [dx, -dy], t("detector R: {k:d}", { k: c.R ?? 0 }), !normal);
+    detector(g, DT, [Math.sin(tho), Math.cos(tho)], prop ? t("detector T: {k:d}", { k: c.T ?? 0 })
+      : t("detector T: {k:d} (no light goes here)", { k: c.T ?? 0 }), true, !prop);
     // photons under way: on the way in a dot; after the structure the two packets with their weights
     const fl = (blobs && blobs.fl) || [];
     let nin = 0, nout = 0;
@@ -235,8 +243,8 @@ export function createView(ctx) {
       if (fl[i + 5] > 0 && prop) dot(g, lerp(Q, DT, clamp01(fl[i + 4])), col, fl[i + 5]);
     }
     // clicks since the previous frame flash at their detector (absorptions at the structure)
-    if (lastT !== null && t > lastT && clk.n) {  // one flash per detector (the newest click there)
-      const i0 = firstAfter(lastT), i1 = firstAfter(t);
+    if (lastT !== null && tw > lastT && clk.n) {  // one flash per detector (the newest click there)
+      const i0 = firstAfter(lastT), i1 = firstAfter(tw);
       const seen = new Set();
       for (let i = i1 - 1; i >= i0 && seen.size < 3; i--) {
         if (seen.has(clk.det[i])) continue;
@@ -245,7 +253,7 @@ export function createView(ctx) {
         flashes.push({ det: clk.det[i], pol: clk.pol[i], w: performance.now() });
       }
     }
-    lastT = t;
+    lastT = tw;
     const wall = performance.now();
     flashes = flashes.filter((f) => wall - f.w < 450);
     for (const f of flashes) {
@@ -268,10 +276,10 @@ export function createView(ctx) {
     g.strokeStyle = css("--accent"); g.lineWidth = 1.4; g.beginPath();
     for (let i = 0; i < nz; i++) { const X = xl(E2[i]), Y = yz(z[i]); if (i) g.lineTo(X, Y); else g.moveTo(X, Y); }
     g.stroke();
-    text(g, "|E|² (s), запуск", xS + 6, y0 - 20, { bg: false });
-    text(g, `0 … ${num(emax, 3)} от падающей`, xS + 6, y0 - 6, { color: muted, bg: false });
-    if (su.pol !== "s") text(g, "поле показано для s", xS + 6, y1 + 14, { color: muted, bg: false });
-    text(g, "структура — в масштабе, плечи 30 см — нет", 8, 15, { color: muted });
+    text(g, t("|E|² (s), the run"), xS + 6, y0 - 20, { bg: false });
+    text(g, t("0 … {e:.3g} of the incident", { e: emax }), xS + 6, y0 - 6, { color: muted, bg: false });
+    if (su.pol !== "s") text(g, t("the field shown is for s"), xS + 6, y1 + 14, { color: muted, bg: false });
+    text(g, t("the structure is to scale, the {arm:.3g} cm arms are not", { arm: (su.arm_m ?? 0.3) * 100 }), 8, 15, { color: muted });
     inFlight = [nin, nout];
   }
   function detector(g, pos, dir, label, show = true, dim = false) {
@@ -299,7 +307,7 @@ export function createView(ctx) {
     for (const v of [0, 0.25, 0.5, 0.75, 1]) { const y = bx.y + (1 - v) * bx.h; g.beginPath(); g.moveTo(bx.x, y); g.lineTo(bx.x + bx.w, y); g.stroke(); }
     g.strokeStyle = css("--line"); g.strokeRect(bx.x, bx.y, bx.w, bx.h);
     const muted = css("--muted");
-    for (const v of [0, 0.5, 1]) text(g, String(v).replace(".", ","), bx.x - 4, bx.y + (1 - v) * bx.h + 4, { align: "right", color: muted, bg: false });
+    for (const v of [0, 0.5, 1]) text(g, fmt(v), bx.x - 4, bx.y + (1 - v) * bx.h + 4, { align: "right", color: muted, bg: false });
     for (const v of xticks) {
       const X = bx.x + (v - xmin) / (xmax - xmin) * bx.w;
       g.fillStyle = muted; g.fillRect(X, bx.y + bx.h, 1, 4);
@@ -326,11 +334,11 @@ export function createView(ctx) {
     }
   }
 
-  function drawCurves(frame, t) {
+  function drawCurves(frame, tw) {
     const cv = cvCur, g = setup(cv);
     const W = cv.clientWidth, Hh = cv.clientHeight;
     g.fillStyle = css("--canvas"); g.fillRect(0, 0, W, Hh);
-    const seg = segAt(t);
+    const seg = segAt(tw);
     if (!seg) return;
     const su = seg.setup, b = seg.b, pm = su.pol;
     const ink = css("--ink"), muted = css("--muted"), accent = css("--accent");
@@ -340,7 +348,7 @@ export function createView(ctx) {
     const A2 = { x: 40, y: hA + 34, w: W - 52, h: hB - 58 };
     const A3 = { x: 10, y: hA + hB + 16, w: W - 20, h: Hh - hA - hB - 22 };
     // R(θ), T(θ)
-    axes(g, A1, 0, 90, [0, 15, 30, 45, 60, 75, 90], (v) => v + "°", `R(θ), T(θ) при λ = ${num(su.lam, 4)} нм`);
+    axes(g, A1, 0, 90, [0, 15, 30, 45, 60, 75, 90], (v) => v + "°", t("R(θ), T(θ) at λ = {lam:.4g} nm", { lam: su.lam }));
     if (seg.theta_c !== null && seg.theta_c !== undefined) {
       const X = A1.x + seg.theta_c / 90 * A1.w;
       g.fillStyle = hexA(css("--accent").startsWith("#") ? css("--accent") : "#1c6dd0", 0.07); g.fillRect(X, A1.y, A1.x + A1.w - X, A1.h);
@@ -355,21 +363,23 @@ export function createView(ctx) {
     }
     if (pm === "unpol") { curve(g, A1, b.th, b.Rc, 0, 90, ink, 2.2); curve(g, A1, b.th, b.Tc, 0, 90, ink, 2.2, [6, 4]); }
     if (seg.theta_c !== null && seg.theta_c !== undefined) {
-      const lab = su.kind === "tir" && su.layers.length ? "θ_c грани" : "θ_c";
-      vline(g, A1, A1.x + seg.theta_c / 90 * A1.w, accent, [3, 3], `${lab} = ${num(seg.theta_c, 5)}°`, 0.62);
+      const lab = su.kind === "tir" && su.layers.length ? t("θ_c of the face = {a:.5g}°", { a: seg.theta_c })
+        : `θ_c = ${fmt(seg.theta_c, ".5g")}°`;
+      vline(g, A1, A1.x + seg.theta_c / 90 * A1.w, accent, [3, 3], lab, 0.62);
     } else if (seg.theta_c_face !== null && seg.theta_c_face !== undefined) {
-      vline(g, A1, A1.x + seg.theta_c_face / 90 * A1.w, accent, [3, 3], `θ_c грани = ${num(seg.theta_c_face, 5)}°`, 0.62);
+      vline(g, A1, A1.x + seg.theta_c_face / 90 * A1.w, accent, [3, 3], t("θ_c of the face = {a:.5g}°", { a: seg.theta_c_face }), 0.62);
     }
-    if (seg.theta_B) vline(g, A1, A1.x + seg.theta_B.deg / 90 * A1.w, P_COL, [3, 3], `θ_B = ${num(seg.theta_B.deg, 5)}°`, 0.86);
-    else if (seg.min_rp) vline(g, A1, A1.x + seg.min_rp.deg / 90 * A1.w, P_COL, [2, 4], `мин. R_p = ${num(seg.min_rp.Rp, 3)} при ${num(seg.min_rp.deg, 4)}°`, 0.86);
+    if (seg.theta_B) vline(g, A1, A1.x + seg.theta_B.deg / 90 * A1.w, P_COL, [3, 3], `θ_B = ${fmt(seg.theta_B.deg, ".5g")}°`, 0.86);
+    else if (seg.min_rp) vline(g, A1, A1.x + seg.min_rp.deg / 90 * A1.w, P_COL, [2, 4], t("min. R_p = {r:.3g} at {a:.4g}°", { r: seg.min_rp.Rp, a: seg.min_rp.deg }), 0.86);
     const Xc = A1.x + su.theta / 90 * A1.w, cm = seg.cur.mix;
     vline(g, A1, Xc, curC, null, null);
     for (const v of [cm.R, cm.T]) { g.fillStyle = curC; g.beginPath(); g.arc(Xc, A1.y + (1 - v) * A1.h, 4, 0, 2 * Math.PI); g.fill(); }
-    text(g, `θ = ${num(su.theta, 5)}°: R = ${num(cm.R, 5)}, T = ${num(cm.T, 5)}` + (lossy ? `, A = ${num(cm.A, 4)}` : ""),
+    text(g, `θ = ${fmt(su.theta, ".5g")}°: R = ${fmt(cm.R, ".5g")}, T = ${fmt(cm.T, ".5g")}` + (lossy ? `, A = ${fmt(cm.A, ".4g")}` : ""),
       Math.min(Xc + 6, A1.x + A1.w - 230), A1.y + 26, { color: curC });
     legend(g, A1.x + A1.w, A1.y - 8, lossy, pm);
     // R(λ), T(λ)
-    axes(g, A2, 300, 1600, [300, 500, 700, 900, 1100, 1300, 1600], (v) => String(v), `R(λ), T(λ) при θ = ${num(su.theta, 5)}°, поляризация ${pm === "unpol" ? "s+p (смесь)" : pm}; λ, нм`);
+    axes(g, A2, 300, 1600, [300, 500, 700, 900, 1100, 1300, 1600], (v) => String(v),
+      t("R(λ), T(λ) at θ = {th:.5g}°, polarisation {pol}; λ, nm", { th: su.theta, pol: pm === "unpol" ? t("s+p (mixture)") : pm }));
     for (let L = 380; L < 780; L += 2) {
       const X = A2.x + (L - 300) / 1300 * A2.w; g.fillStyle = lamRGB(L); g.fillRect(X, A2.y + A2.h - 4, Math.ceil(A2.w * 2 / 1300) + 1, 4);
     }
@@ -377,7 +387,7 @@ export function createView(ctx) {
     curve(g, A2, b.lam, b.lRc, 300, 1600, curC, 2);
     curve(g, A2, b.lam, b.lTc, 300, 1600, curC, 2, [6, 4]);
     if (lossy) curve(g, A2, b.lam, b.lAc, 300, 1600, curC, 1.6, [1.5, 3]);
-    if (su.lam0) vline(g, A2, A2.x + (su.lam0 - 300) / 1300 * A2.w, muted, [3, 3], `λ₀ = ${num(su.lam0, 4)}`, 0.5);
+    if (su.lam0) vline(g, A2, A2.x + (su.lam0 - 300) / 1300 * A2.w, muted, [3, 3], `λ₀ = ${fmt(su.lam0, ".4g")}`, 0.5);
     const Xl = A2.x + (su.lam - 300) / 1300 * A2.w;
     vline(g, A2, Xl, curC, null, null);
     for (const v of [cm.R, cm.T]) { g.fillStyle = curC; g.beginPath(); g.arc(Xl, A2.y + (1 - v) * A2.h, 4, 0, 2 * Math.PI); g.fill(); }
@@ -386,7 +396,7 @@ export function createView(ctx) {
   }
   function legend(g, xr, y, lossy, pm) {
     const items = [["R_s", S_COL, null], ["T_s", S_COL, [6, 4]], ["R_p", P_COL, null], ["T_p", P_COL, [6, 4]]];
-    if (pm === "unpol") items.push(["R, T смеси", css("--ink"), null]);
+    if (pm === "unpol") items.push([t("R, T of the mixture"), css("--ink"), null]);
     if (lossy) items.push(["A", css("--muted"), [1.5, 3]]);
     g.font = "11px system-ui";
     let x = xr;
@@ -399,12 +409,13 @@ export function createView(ctx) {
   function drawCounters(g, bx, frame, seg) {
     const c = frame.counts || { n: 0, R: 0, T: 0, A: 0 }, e = frame.expected || seg.expected, sg = frame.sigma || {};
     const ink = css("--ink"), muted = css("--muted");
-    text(g, `Фотоны этого отрезка: n = ${c.n}` + (frame.z === null || frame.z === undefined ? "" : `; отражённые: z = ${frame.z >= 0 ? "+" : ""}${num(frame.z, 3)}σ`),
+    text(g, frame.z === null || frame.z === undefined ? t("Photons of this segment: n = {n:d}", { n: c.n })
+      : t("Photons of this segment: n = {n:d}; reflected: z = {z:+.3g}σ", { n: c.n, z: frame.z }),
       bx.x, bx.y + 6, { bg: false, font: "600 12px system-ui" });
     const rowH = Math.min(40, (bx.h - 26) / 3), labW = 76, barW = Math.max(80, bx.w * 0.42);
     ["R", "T", "A"].forEach((key, i) => {
       const y = bx.y + 16 + i * rowH, f = c.n ? c[key] / c.n : 0, p = e[key];
-      text(g, OUT_RU[key], bx.x, y + 13, { bg: false, color: muted });
+      text(g, outLabel(key), bx.x, y + 13, { bg: false, color: muted });
       const x0 = bx.x + labW;
       g.fillStyle = css("--chip"); g.fillRect(x0, y + 3, barW, 13);
       g.fillStyle = key === "R" ? "#ae3ec9" : key === "T" ? "#2b8a3e" : A_COL; g.fillRect(x0, y + 3, barW * f, 13);
@@ -414,80 +425,77 @@ export function createView(ctx) {
         g.beginPath(); g.moveTo(x0 + barW * a, y + 9.5); g.lineTo(x0 + barW * bb, y + 9.5); g.stroke();
       }
       g.fillStyle = ink; g.fillRect(x0 + barW * p - 1, y, 2.5, 19);
-      text(g, `${c[key]}` + (c.n ? ` (${num(f, 4)})` : ""), x0 + barW + 8, y + 13, { bg: false });
-      text(g, `ожидание ${num(p, 5)}` + (sg[key] ? `, σ = ${num(sg[key], 2)}` : ""), x0, y + 29,
+      text(g, `${c[key]}` + (c.n ? ` (${fmt(f, ".4g")})` : ""), x0 + barW + 8, y + 13, { bg: false });
+      text(g, sg[key] ? t("expected {p:.5g}, σ = {s:.2g}", { p, s: sg[key] }) : t("expected {p:.5g}", { p }), x0, y + 29,
         { bg: false, color: muted, font: "10.5px system-ui" });
     });
-    text(g, "полоса — доля среди зарегистрированных; черта — ожидание запуска; отрезок — ±2σ", bx.x, bx.y + 16 + 3 * rowH + 8, { bg: false, color: muted });
+    text(g, t("bar: the fraction among the detected; tick: the run's expectation; segment: ±2σ"), bx.x, bx.y + 16 + 3 * rowH + 8, { bg: false, color: muted });
   }
 
   // --- panels ---------------------------------------------------------------------------------------------
   function drawInfo() {
     const su = now();
     if (!su) return;
-    const rows = [["Структура", su.label], ["Среда падения n₀", num(su.n_in, 6)], [su.out_name[0].toUpperCase() + su.out_name.slice(1), num(su.n_out, 6)],
-      ["Длина волны λ", num(su.lam, 6) + " нм"], ["Угол падения θ", num(su.theta, 6) + "°"], ["Поляризация", su.pol_label],
-      ["Темп источника", num(su.rate, 4) + " фотон/с"], ["Полёт до структуры", time(su.t_in, 4)],
-      ["Слоёв", String(su.layers.length) + (su.layers.length ? `, общая толщина ${num(su.thickness, 5)} нм` : "")]];
-    if (su.lam0) rows.push(["Расчётная λ₀", num(su.lam0, 5) + " нм"]);
+    const rows = [[t("Structure"), t(su.label)], [t("Incidence medium n₀"), num(su.n_in, 6)], [t("{name:cap}", { name: su.out_name }), num(su.n_out, 6)],
+      [t("Wavelength λ"), t("{v:.6g} nm", { v: su.lam })], [t("Angle of incidence θ"), num(su.theta, 6) + "°"], [t("Polarisation"), t(su.pol_label)],
+      [t("Source rate"), t("{v:.4g} photons/s", { v: su.rate })], [t("Flight to the structure"), time(su.t_in, 4)],
+      [t("Layers"), su.layers.length ? t("{k:d}, total thickness {d:.5g} nm", { k: su.layers.length, d: su.thickness }) : "0"]];
+    if (su.lam0) rows.push([t("Design λ₀"), t("{v:.5g} nm", { v: su.lam0 })]);
     const items = [el("div", { class: "kv" }, rows.flatMap(([k, v]) => [el("span", {}, k), el("span", { class: "mono" }, v)]))];
     if (su.layers.length && su.layers.length <= 8) {
       items.push(el("table", { style: { fontSize: "12px", marginTop: "6px" } },
-        el("tr", {}, el("th", {}, "слой"), el("th", {}, "n"), el("th", {}, "d, нм")),
-        su.layers.map((L) => el("tr", {}, el("td", {}, L.name), el("td", { class: "mono" }, fmtN(L.n)), el("td", { class: "mono" }, num(L.d, 5))))));
+        el("tr", {}, el("th", {}, t("layer")), el("th", {}, "n"), el("th", {}, t("d, nm"))),
+        su.layers.map((L) => el("tr", {}, el("td", {}, t(L.name)), el("td", { class: "mono" }, fmtN(L.n)), el("td", { class: "mono" }, num(L.d, 5))))));
     }
     infoBox.replaceChildren(...items);
   }
   function drawStats(frame) {
     const tt = frame.totals || {}, c = frame.counts || {};
-    const rows = [["выпущено всего", tt.emitted], ["в полёте: к структуре / после неё", `${inFlight[0]} / ${inFlight[1]}`], ["отражено (всего)", tt.R], ["прошло (всего)", tt.T],
-      ["поглощено (всего)", tt.A], ["переходных (выпущены до изменения)", tt.transitional], ["потеряно при перестройке", tt.lost],
-      ["в счёте этого отрезка", c.n]];
+    const rows = [[t("emitted in all"), tt.emitted], [t("in flight: to the structure / after it"), `${inFlight[0]} / ${inFlight[1]}`],
+      [t("reflected (in all)"), tt.R], [t("transmitted (in all)"), tt.T], [t("absorbed (in all)"), tt.A],
+      [t("transitional (emitted before a change)"), tt.transitional], [t("lost at a rebuild"), tt.lost],
+      [t("counted in this segment"), c.n]];
     statBox.replaceChildren(el("div", { class: "kv" }, rows.flatMap(([k, v]) => [el("span", {}, k), el("span", { class: "mono" }, String(v ?? 0))])),
-      el("div", { class: "help" }, "Поглощение в опыте видно как «ни один детектор не щёлкнул»; здесь фотон исчезает в структуре в момент прихода к ней."),
-      frame.lag ? el("p", { class: "st-bad" }, "Вычисление не успевает за выбранной скоростью: мир идёт медленнее.") : "");
+      el("div", { class: "help" }, t("In an experiment absorption is seen as “no detector clicked”; here the photon vanishes in the structure at the moment it reaches it.")),
+      frame.lag ? el("p", { class: "st-bad" }, t("The computation cannot keep up with the chosen speed: the world runs slower.")) : "");
   }
 
   return {
     center, rightPanels,
     help: () => el("div", {},
-      el("h4", {}, "Что на экране"),
-      el("p", {}, "Слева — схема: источник, плоская структура (в масштабе по глубине: слои — цветные полосы, отрезок слева — одна длина волны), падающий, отражённый и прошедший пучки под углами, которые запуск посчитал по закону Снелла (внутри слоёв — приближённая лучевая картина), и два детектора. Яркость пучков — рассчитанные R и T. Справа от схемы — поле |E|² s-волны в структуре и около неё (функция движка field_profile): стоячая волна над структурой, затухание в металле и за гранью при полном отражении."),
-      el("p", {}, "Фотоны летят по одному (оранжевые — s, синие — p). Долетев до структуры, фотон получает судьбу по правилу Борна с вероятностями R, T, A этого запуска. Пока ни один детектор не щёлкнул, после структуры показаны два пакета (кольца) с яркостью по вероятностям; щелчок одного детектора (вспышка) — исход. Если время прихода к одному детектору прошло без щелчка, его пакет гаснет. Поглощённый фотон исчезает в структуре (красная вспышка)."),
-      el("p", {}, "Справа — кривые этого запуска: R(θ), T(θ) для s и p при текущей λ (θ_B — где r_p запуска обращается в ноль, θ_c — где пропускание запуска исчезает), спектр R(λ), T(λ) при текущем угле и счётчики фотонов с ожиданием и ±2σ."),
-      el("p", {}, "Любое изменение установки (λ, угол, поляризация, среды, структура) применяется сразу и начинает новый отрезок. Фотоны, выпущенные до изменения источника или структуры, долетают и считаются переходными; при смене угла или сред пути пучков перестраиваются — фотоны в полёте теряются (это считается).")),
+      el("h4", {}, t("What is on the screen")),
+      el("p", {}, t("On the left, the diagram: the source, the planar structure (to scale in depth: the layers are coloured bands, the bar on the left is one wavelength), the incident, reflected and transmitted beams at the angles the run computed by Snell's law (inside the layers, an approximate ray picture), and the two detectors. The brightness of the beams is the computed R and T. To the right of the diagram, the field |E|² of the s wave in and near the structure (the engine's function field_profile): a standing wave above the structure, the decay in a metal and beyond the face at total reflection.")),
+      el("p", {}, t("Photons fly one by one (orange: s, blue: p). On reaching the structure a photon gets its fate by the Born rule with this run's probabilities R, T, A. While no detector has clicked, two packets (rings) are shown after the structure, their brightness by the probabilities; the click of one detector (a flash) is the outcome. When the arrival time at one detector has passed without a click, its packet fades. An absorbed photon vanishes in the structure (a red flash).")),
+      el("p", {}, t("On the right, this run's curves: R(θ), T(θ) for s and p at the current λ (θ_B: where the run's r_p vanishes, θ_c: where the run's transmission vanishes), the spectrum R(λ), T(λ) at the current angle, and the photon counters with the expectation and ±2σ.")),
+      el("p", {}, t("Any change of the set-up (λ, angle, polarisation, media, structure) applies at once and starts a new segment. Photons emitted before a change of the source or the structure fly on and are counted as transitional; when the angle or the media change, the beam paths are rebuilt and the photons in flight are lost (this is counted)."))),
     reset() { H = null; segs = []; clk = newClicks(); flashes = []; lastT = null; lastFrame = null; },
     // key frames (player.js): segments and clicks only grow (lengths); the panels follow the last segment
     snapshot() { return { segs: segs.length, clk: clk.n }; },
     restore(k) {
       segs.length = k.segs; clk.n = k.clk; lastT = null; flashes = [];
       const last = segs[segs.length - 1];
-      approxBox.replaceChildren(...((last && last.approx) || []).map((a) => el("div", { style: { margin: "4px 0" } }, "• " + a)));
-      if (last) {
-        const su = last.setup;
-        ctx.setScene && ctx.setScene(`${su.label}; λ = ${num(su.lam, 4)} нм, θ = ${num(su.theta, 4)}°, ${su.pol === "unpol" ? "s+p" : su.pol}`);
-      }
+      approxBox.replaceChildren(...((last && last.approx) || []).map((a) => el("div", { style: { margin: "4px 0" } }, "• " + t(a))));
+      if (last) ctx.setScene && ctx.setScene(sceneText(last.setup));
       drawInfo();
     },
     onHeader(meta) { H = meta; },
     onMessage(meta, blobs) {
       if (meta.type === "segment") {
         segs.push({ ...meta, b: blobs });
-        approxBox.replaceChildren(...(meta.approx || []).map((a) => el("div", { style: { margin: "4px 0" } }, "• " + a)));
-        const su = meta.setup;
-        ctx.setScene && ctx.setScene(`${su.label}; λ = ${num(su.lam, 4)} нм, θ = ${num(su.theta, 4)}°, ${su.pol === "unpol" ? "s+p" : su.pol}`);
+        approxBox.replaceChildren(...(meta.approx || []).map((a) => el("div", { style: { margin: "4px 0" } }, "• " + t(a))));
+        ctx.setScene && ctx.setScene(sceneText(meta.setup));
         drawInfo();
         lastT = null;
       } else if (meta.type === "clicks") {
         pushClicks(blobs);
       }
     },
-    render(frame, t, blobs) {
+    render(frame, tw, blobs) {
       if (!H) return;
-      if (lastT !== null && t < lastT) { lastT = null; flashes = []; }
+      if (lastT !== null && tw < lastT) { lastT = null; flashes = []; }
       lastFrame = frame;
-      drawGeometry(frame, t, blobs);
-      drawCurves(frame, t);
+      drawGeometry(frame, tw, blobs);
+      drawCurves(frame, tw);
       drawStats(frame);
     },
   };

@@ -39,17 +39,20 @@ import math
 import numpy as np
 from scipy import integrate, special
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Бег константы сильного взаимодействия α_s (КХД, схема MS-bar)",
-    "statement": "Уравнение ренормгруппы с β-функцией до четырёх петель; пороги тяжёлых кварков; асимптотическая "
-                 "свобода (β₀ > 0 при n_f ≤ 16).",
-    "validity": "пертурбативная область μ ≳ 1.5 ГэВ; неопределённость — усечение ряда (сравнение порядков); "
-                "сшивка на порогах на одну петлю ниже бега (до трёх петель при беге в четыре)",
+    "title": T("Running of the strong coupling α_s (QCD, MS-bar scheme)"),
+    "statement": T("The renormalisation-group equation with the β function up to four loops; heavy-quark thresholds; "
+                   "asymptotic freedom (β₀ > 0 for n_f ≤ 16)."),
+    "validity": T("the perturbative region μ ≳ 1.5 GeV; the uncertainty is the truncation of the series (comparison "
+                  "of orders); matching at the thresholds one loop below the running (up to three loops when running "
+                  "at four)"),
     "basis": ["Gross & Wilczek, PRL 30, 1343 (1973); Politzer, PRL 30, 1346 (1973)",
               "van Ritbergen, Vermaseren, Larin, Phys. Lett. B 400, 379 (1997)",
               "Chetyrkin, Kniehl, Steinhauser, PRL 79, 2184 (1997); RunDec: Comput. Phys. Commun. 133, 43 (2000)",
-              "PDG, обзор «Quantum Chromodynamics» (α_s(M_Z) — в lfphys.core.data)"],
+              T("PDG, review “Quantum Chromodynamics” (α_s(M_Z) in lfphys.core.data)")],
     "conflicts": [],
 }
 
@@ -70,7 +73,8 @@ class LandauPole(ValueError):
 
     def __init__(self, mu):
         self.mu = mu
-        super().__init__(f"полюс Ландау: α_s расходится около μ ≈ {mu:.3g} ГэВ (теория возмущений неприменима)")
+        super().__init__(T("Landau pole: α_s diverges near μ ≈ {mu:.3g} GeV (perturbation theory does not apply)",
+                           mu=float(mu)))
 
 
 ALPHA_MAX = 3.0

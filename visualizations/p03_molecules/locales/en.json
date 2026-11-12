@@ -1,0 +1,22 @@
+{
+ "{n:d} atoms": {
+  "one": "{n:d} atom",
+  "other": "{n:d} atoms"
+ },
+ "{n:d} molecules": {
+  "one": "{n:d} molecule",
+  "other": "{n:d} molecules"
+ },
+ "{n:d} molecules crossed a face that became a wall: moved inside as a whole (by at most {d:.3g} nm)": {
+  "one": "{n:d} molecule crossed a face that became a wall: moved inside as a whole (by at most {d:.3g} nm)",
+  "other": "{n:d} molecules crossed a face that became a wall: moved inside as a whole (by at most {d:.3g} nm)"
+ },
+ "“{label}”: {n:d} atoms would come closer than σ to atoms of other objects (they would overlap)": {
+  "one": "“{label}”: {n:d} atom would come closer than σ to atoms of other objects (they would overlap)",
+  "other": "“{label}”: {n:d} atoms would come closer than σ to atoms of other objects (they would overlap)"
+ },
+ "“{label}”: {n:d} lattice sites are taken by atoms already there and were left empty": {
+  "one": "“{label}”: {n:d} lattice site is taken by atoms already there and was left empty",
+  "other": "“{label}”: {n:d} lattice sites are taken by atoms already there and were left empty"
+ }
+}

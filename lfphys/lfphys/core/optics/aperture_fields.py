@@ -34,14 +34,17 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Точные поля за отверстием (эталоны без БПФ)",
-    "statement": "Поле Рэлея–Зоммерфельда за отверстием в плоскости z = 0: круг на оси (замкнутая формула), "
-                 "объединение прямоугольников в любой точке (одномерный интеграл по углу), гауссово поле (интеграл "
-                 "Ганкеля) — с оценкой ошибки; независимые эталоны для расчёта угловым спектром.",
-    "validity": "скалярное поле, заданное на плоскости z = 0 (граничные значения Рэлея–Зоммерфельда), z > 0",
-    "basis": ["Goodman, Introduction to Fourier Optics, гл. 3", "Osterberg & Smith, JOSA 51, 1050 (1961)"],
+    "title": T("Exact fields behind an aperture (references without FFTs)"),
+    "statement": T("The Rayleigh–Sommerfeld field behind an aperture in the plane z = 0: a disc on the axis (closed "
+                   "form), a union of rectangles at any point (a one-dimensional integral over the angle), a Gaussian "
+                   "field (a Hankel integral), with an error estimate; independent references for the angular-spectrum "
+                   "computation."),
+    "validity": T("a scalar field given on the plane z = 0 (Rayleigh–Sommerfeld boundary values), z > 0"),
+    "basis": [T("Goodman, Introduction to Fourier Optics, ch. 3"), "Osterberg & Smith, JOSA 51, 1050 (1961)"],
     "conflicts": [],
 }
 

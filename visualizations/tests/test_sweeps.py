@@ -30,6 +30,7 @@ from aiohttp.test_utils import TestClient, TestServer
 from lfviz import checkpoint as CK
 from lfviz import protocol, registry, sweep
 from lfviz.app import MGR, create_app
+from lfviz.i18n import english as E
 
 HERE = Path(__file__).resolve().parent
 WORLDS = HERE / "instruments_worlds"
@@ -88,7 +89,7 @@ def test_run_value_matches_the_closed_form_and_is_deterministic():
     assert h.sim.k == 4.0 and h.sim.t == t0
     # a refusal of the world is the value's result
     r = sweep.run_value(data, req, 1000.0, CLOCK)
-    assert r["measured"] is None and "жёстче 100 Н/м" in r["error"] and r["error"].startswith("Изменение не применено")
+    assert r["measured"] is None and "stiffer than 100 N/m" in E(r["error"]) and E(r["error"]).startswith("Change not applied")
 
 
 def test_object_parameter_mean_and_max():
@@ -129,7 +130,7 @@ def test_stats_of_undefined_readings():
     assert sweep._stat(req, [0, 1, 2], [1.0, None, 1.0])[0] is None
     assert sweep._stat(req, [0, 1, 3], [1.0, 3.0, 3.0]) == ((2.0 + 6.0) / 3, "")
     m, note = sweep._stat({"stat": "max"}, [0, 1, 2], [1.0, None, 5.0])
-    assert m == 5.0 and "1 из 3" in note
+    assert m == 5.0 and "1 of 3" in E(note)
     assert sweep._stat({"stat": "final"}, [0, 1], [1.0, None])[0] is None
 
 
@@ -161,8 +162,8 @@ def test_the_process_holds_the_memory_budget_and_measures_through_measure(tmp_pa
     assert out["state"] == "done" and out["progress"]["done"] == 2 and out["sampler"] == "measure"
     ok, big = out["results"]
     assert abs(ok["measured"] - x_after(x0, v0, 4.0, 0.7)) < 1e-12
-    assert big["measured"] is None and "не хватает памяти" in big["error"] and "1 ГБ" in big["error"], big
-    assert out["measured_cost"]["sample_ms"] >= 0 and out["message"] == "Готово: измерено 1 из 2 значений"
+    assert big["measured"] is None and "out of memory" in E(big["error"]) and "1 GB" in E(big["error"]), big
+    assert out["measured_cost"]["sample_ms"] >= 0 and E(out["message"]) == "Done: 1 of 2 values measured"
 
 
 # --- through the server -----------------------------------------------------------------------------------------------
@@ -209,8 +210,8 @@ async def _server(tmp_path, monkeypatch):
         est = await r.json()
         assert r.status == 200, est
         e = est["estimate"]
-        assert e["known"] and 0 < e["total_s"] < e["budget_s"] == 600 and e["text"].startswith("≈") and e["n_readings"] == 1
-        assert est["target_label"] == "Жёсткость пружины" and est["measure_label"] == "Осциллятор 1: положение"
+        assert e["known"] and 0 < e["total_s"] < e["budget_s"] == 600 and E(e["text"]).startswith("≈") and e["n_readings"] == 1
+        assert E(est["target_label"]) == "Spring stiffness" and E(est["measure_label"]) == "Oscillator 1: position"
         assert not (run.dir / "sweeps").exists() or not list((run.dir / "sweeps").glob("*.json"))  # nothing started
         # the sweep
         r = await cl.post(url, json=body)
@@ -229,7 +230,7 @@ async def _server(tmp_path, monkeypatch):
             assert abs(r_["measured"] - x_after(x0, v0, r_["value"], 0.7)) < 1e-10, r_
             if r_["value"] != 4.0:
                 assert abs(r_["measured"] - x_after(x0, v0, 4.0, 0.7)) > 1e-3  # negative control
-        assert res[4]["measured"] is None and "жёстче 100 Н/м" in res[4]["error"]
+        assert res[4]["measured"] is None and "stiffer than 100 N/m" in E(res[4]["error"])
         assert not (run.dir / "sweeps" / "1.base.pkl").exists()  # the linked state goes with the sweep's end
         # determinism: the same sweep from the same (paused) world gives the same numbers
         js2 = await sweep_done(cl, rid, (await (await cl.post(url, json=body)).json())["n"])
@@ -238,16 +239,16 @@ async def _server(tmp_path, monkeypatch):
         r = await cl.get(f"/api/runs/{rid}/sweeps/{n1}", params={"format": "csv"})
         lines = (await r.text()).splitlines()
         meta, lines = [x for x in lines if x.startswith("#")], [x for x in lines if not x.startswith("#")]
-        assert lines[0] == "\"Жёсткость пружины, Н/м\",\"Осциллятор 1: положение (в конце (1 замер)), м\",примечание"
-        assert lines[1].split(",")[:2] == ["1.0", repr(res[0]["measured"])] and "жёстче" in lines[5]
+        assert lines[0] == "\"Spring stiffness, N/m\",\"Oscillator 1: position (at the end (1 reading)), m\",note"
+        assert lines[1].split(",")[:2] == ["1.0", repr(res[0]["measured"])] and "stiffer" in lines[5]
         assert f"base_t={t_base!r}" in meta[2] and "readings=1;" in meta[2] and "sampler=frame" in meta[2]
-        assert "от t = " in meta[1] and "мир в момент запуска свипа" in meta[1]
+        assert "from t = " in meta[1] and "the world at the moment the sweep started" in meta[1]
         # an object's parameter, the mean over a window
         js3 = await sweep_done(cl, rid, (await (await cl.post(url, json={
             "target": {"kind": "object", "obj": "o1", "param": "m"}, "values": [0.5, 2.0], "duration": 0.5,
             "measure": "o1.E", "stat": "mean_last", "window": 0.3, "n_samples": 30})).json())["n"])
-        assert js3["state"] == "done" and js3["target_label"] == "Осциллятор 1: масса"
-        assert js3["stat_text"] == "среднее за последние 300 мс (31 замер через 10 мс)"  # the sampling (F7)
+        assert js3["state"] == "done" and E(js3["target_label"]) == "Oscillator 1: mass"
+        assert E(js3["stat_text"]) == "the mean over the last 300 ms (31 readings 10 ms apart)"  # the sampling (F7)
         x0, v0 = xv_exact(js3["base"]["t"])
         for r_ in js3["results"]:
             assert abs(r_["measured"] - (0.5 * r_["value"] * v0 * v0 + 2.0 * x0 * x0)) < 1e-10
@@ -256,7 +257,7 @@ async def _server(tmp_path, monkeypatch):
             "target": {"kind": "law", "id": "alloc_mb"}, "values": [8, 3000], "duration": 0.2, "measure": "E",
             "stat": "final"})).json())["n"])
         assert js4["state"] == "done" and abs(js4["results"][0]["measured"] - 2.0) < 1e-12
-        assert "не хватает памяти" in js4["results"][1]["error"]
+        assert "out of memory" in E(js4["results"][1]["error"])
         assert run.running and run.meta["state"] == "running"
         # the live world was not touched: it goes on with k = 4 (its frames follow the exact motion)
         await cl.post(f"/api/runs/{rid}/command", json={"cmd": "play"})
@@ -267,22 +268,23 @@ async def _server(tmp_path, monkeypatch):
         assert ser["t"][-1] > t_base + 0.5
         assert max(abs(x - xv_exact(t)[0]) for t, x in zip(ser["t"], ser["values"]["o1.x"])) < 1e-10
         # refusals before anything starts
-        for b, word in (({**body, "target": {"kind": "law", "id": "nope"}}, "не закон"),
-                        ({**body, "target": {"kind": "object", "obj": "o9", "param": "m"}}, "нет объекта"),
-                        ({**body, "target": {"kind": "object", "obj": "o1", "param": "zz"}}, "нет параметра"),
-                        ({**body, "values": list(range(1, 52))}, "не больше 50"),
-                        ({**body, "values": [-1.0]}, "меньше наименьшего"),
-                        ({**body, "measure": "nope"}, "нет измеряемой величины"),
-                        ({**body, "stat": "mean_last", "window": 5.0}, "длиннее"),
-                        ({**body, "duration": 0}, "положительное"),
+        for b, word in (({**body, "target": {"kind": "law", "id": "nope"}}, "is not a law"),
+                        ({**body, "target": {"kind": "object", "obj": "o9", "param": "m"}}, "has no object"),
+                        ({**body, "target": {"kind": "object", "obj": "o1", "param": "zz"}}, "has no parameter"),
+                        ({**body, "values": list(range(1, 52))}, "at most 50"),
+                        ({**body, "values": [-1.0]}, "is below the minimum"),
+                        ({**body, "measure": "nope"}, "there is no measurable quantity"),
+                        ({**body, "stat": "mean_last", "window": 5.0}, "longer than the sweep"),
+                        ({**body, "duration": 0}, "positive"),
                         ({**body, "n_samples": 5000}, "n_samples")):
             r = await cl.post(url, json=b)
-            assert r.status == 400 and word in (await r.json())["error"], (b, await r.json())
+            j = await r.json()
+            assert r.status == 400 and word in j["text"] and "$t" in j["error"], (b, j)
         # above the budget: refused with the estimate
         monkeypatch.setenv("LFVIZ_SWEEP_BUDGET_S", "0.5")
         r = await cl.post(url, json={**body, "duration": 1e5})
         j = await r.json()
-        assert r.status == 400 and "больше предела" in j["error"] and j["estimate"]["total_s"] > 0.5 and j["hint"]
+        assert r.status == 400 and "more than the budget" in j["text"] and j["estimate"]["total_s"] > 0.5 and j["hint"]
         # cancel: a long sweep, a second one refused meanwhile, then cancelled; its computed values are kept
         monkeypatch.setenv("LFVIZ_SWEEP_BUDGET_S", "100000")
         st = await (await cl.post(url, json={**body, "values": [1.0, 2.0, 3.0], "duration": 1e6})).json()
@@ -290,17 +292,17 @@ async def _server(tmp_path, monkeypatch):
         await wait_for(lambda: json.loads((run.dir / "sweeps" / f"{n_long}.json").read_text())["state"] == "running",
                        timeout=60)
         r = await cl.post(url, json=body)
-        assert r.status == 409 and "уже идёт свип" in (await r.json())["error"]
+        assert r.status == 409 and "already has sweep no." in (await r.json())["text"]
         lst = await (await cl.get(f"/api/runs/{rid}/sweeps")).json()
         assert [s["n"] for s in lst] == list(range(1, n_long + 1)) and lst[-1]["active"]
         proc = app[sweep.SWEEPS].active[(rid, n_long)]["proc"]
         r = await cl.delete(f"/api/runs/{rid}/sweeps/{n_long}")  # removing a running sweep is refused (F10)
-        assert r.status == 409 and "сначала" in (await r.json())["error"] and proc.returncode is None
+        assert r.status == 409 and "first" in (await r.json())["text"] and proc.returncode is None
         r = await cl.post(f"/api/runs/{rid}/sweeps/{n_long}/cancel")
         assert r.status == 200 and (await r.json())["cancelled"] == n_long
         assert proc.returncode is not None  # the process is gone
         js5 = await (await cl.get(f"/api/runs/{rid}/sweeps/{n_long}")).json()
-        assert js5["state"] == "cancelled" and not js5["active"] and js5["message"].startswith("Отменено")
+        assert js5["state"] == "cancelled" and not js5["active"] and E(js5["message"]).startswith("Cancelled")
         assert not (run.dir / "sweeps" / f"{n_long}.base.pkl").exists()
         r = await cl.post(f"/api/runs/{rid}/sweeps/{n_long}/cancel")  # a second click: nothing lost (F10)
         assert r.status == 200 and (await r.json())["already"] and (await r.json())["state"] == "cancelled"
@@ -312,7 +314,7 @@ async def _server(tmp_path, monkeypatch):
         await cl.post(f"/api/runs/{rid}/stop")
         await wait_for(lambda: not run.running, timeout=60)
         js6 = await sweep_done(cl, rid, (await (await cl.post(url, json={**body, "values": [9.0]})).json())["n"])
-        assert js6["state"] == "done" and js6["base"]["source"] == "latest" and "приостановлен" in js6["base"]["note"]
+        assert js6["state"] == "done" and js6["base"]["source"] == "latest" and "suspended" in E(js6["base"]["note"])
         x0, v0 = xv_exact(js6["base"]["t"])
         assert abs(js6["results"][0]["measured"] - x_after(x0, v0, 9.0, 0.7)) < 1e-10
         assert not run.running  # the sweep did not resume the run
@@ -337,7 +339,7 @@ async def _two_at_a_time(tmp_path, monkeypatch):
             assert r.status == 200, await r.json()
             ns.append((await r.json())["n"])
         r = await cl.post(f"/api/runs/{runs[2][0]}/sweep", json=body)
-        assert r.status == 409 and "больше 2 сразу" in (await r.json())["error"]
+        assert r.status == 409 and "no more than 2 at once" in (await r.json())["text"]
         rid0, run0 = runs[0]
         await wait_for(lambda: json.loads((run0.dir / "sweeps" / f"{ns[0]}.json").read_text())["state"] == "running",
                        timeout=60)
@@ -345,7 +347,7 @@ async def _two_at_a_time(tmp_path, monkeypatch):
         a["proc"].kill()
         await asyncio.wait_for(asyncio.shield(a["task"]), 30)
         js = await (await cl.get(f"/api/runs/{rid0}/sweeps/{ns[0]}")).json()
-        assert js["state"] == "failed" and "сигнал 9" in js["message"] and not js["active"]
+        assert js["state"] == "failed" and "signal 9" in E(js["message"]) and not js["active"]
         r = await cl.post(f"/api/runs/{runs[2][0]}/sweep", json=body)  # a place is free again
         assert r.status == 200, await r.json()
         procs = [a["proc"] for a in app[sweep.SWEEPS].active.values()]
@@ -394,7 +396,7 @@ def test_an_object_parameter_equal_to_the_stored_one_is_applied_again():
                 assert abs(r["measured"] - unchanged) > 1e-3  # negative control: not the world as it was
     # the flag equal to its stored value cannot be applied again (bool): the row says so
     r = sweep.run_value(data, _req(target={"kind": "object", "obj": "o2", "param": "glow"}, measure="o2.x"), False, CLOCK)
-    assert r["how"] == "set_same" and "без изменения" in r["note"]
+    assert r["how"] == "set_same" and "the world unchanged" in E(r["note"])
     # negative control of the test itself: with the re-application disabled, the stored value's row is the old defect
     import unittest.mock as um
     with um.patch.object(sweep, "_again", lambda v: None):
@@ -430,7 +432,7 @@ def test_the_budget_holds_inside_one_advance(tmp_path):
     spec = json.loads((tmp_path / "1.json").read_text())
     assert p.returncode == 0, out.decode()[-2000:]
     assert spec["state"] == "over_budget" and spec["results"] == [], spec
-    assert wall < sweep.PROBE_S + 15 and "по замеренной цене счёта весь свип занял бы" in spec["message"], (wall, spec)
+    assert wall < sweep.PROBE_S + 15 and "by the measured cost of computing the whole sweep would take" in E(spec["message"]), (wall, spec)
     # negative control: a duration it can finish
     p = _process(_spec(tmp_path, data, _req(duration=50.0), [4.0, 9.0], budget=20.0))
     p.communicate(timeout=120)
@@ -452,8 +454,8 @@ def test_a_contract_breaking_measure_is_named(tmp_path):
             assert spec["state"] == "done" and spec["sampler"] == "measure", spec
         else:
             assert spec["state"] == "failed" and spec["results"] == [], spec
-            assert "нарушает договор приборов" in spec["message"] and "measure() вернул tuple" in spec["message"]
-            assert "AttributeError" not in spec["message"]
+            assert "breaks the instruments' contract" in E(spec["message"]) and "measure() returned tuple" in E(spec["message"])
+            assert "AttributeError" not in E(spec["message"])
 
 
 def test_nothing_measured_is_not_done(tmp_path):
@@ -463,8 +465,8 @@ def test_nothing_measured_is_not_done(tmp_path):
     subprocess.run([sys.executable, "-m", "lfviz.sweep", "--file", str(path)], env=_env(), cwd=str(registry.ROOT),
                    capture_output=True, timeout=120)
     spec = json.loads(path.read_text())
-    assert spec["state"] == "failed" and spec["message"].startswith("Не измерено ни одно из 2 значений: ")
-    assert "жёстче 100 Н/м" in spec["message"]
+    assert spec["state"] == "failed" and E(spec["message"]).startswith("None of the 2 values was measured: ")
+    assert "stiffer than 100 N/m" in E(spec["message"])
 
 
 def test_object_parameters_of_a_real_playground_are_validated_from_its_header():
@@ -479,19 +481,19 @@ def test_object_parameters_of_a_real_playground_are_validated_from_its_header():
     w = idx.worlds[1] = I.WorldInfo(1)
     for m in h.msgs_meta:
         idx._note(w, m)
-    oid = next(k for k, o in w.objects.items() if o["label"] == "Цилиндр")
+    oid = next(k for k, o in w.objects.items() if o["type"] == "disk")  # the cylinder
     mid = next(iter(w.current))
     body = {"target": {"kind": "object", "obj": oid, "param": "radius"}, "values": [0.04, 0.05], "duration": 0.01,
             "measure": mid, "stat": "final"}
     req, info = sweep.validate(viz, idx, body)
     assert req["target"] == {"kind": "object", "obj": oid, "param": "radius"} and req["values"] == [0.04, 0.05]
-    assert info["target_handle"] is False and info["target_label"] == "Цилиндр: Радиус, м"
+    assert info["target_handle"] is False and E(info["target_label"]).startswith(E(w.objects[oid]["label"]) + ": ")
     req, info = sweep.validate(viz, idx, {**body, "target": {"kind": "object", "obj": oid, "param": "x"}})
     assert info["target_handle"] is True  # the disk's position is a handle: a sweep moves it by «edit»
-    with pytest.raises(sweep.Refused, match="меньше наименьшего"):  # the parameter's own range
+    with pytest.raises(sweep.Refused, match="is below the minimum"):  # the parameter's own range
         sweep.validate(viz, idx, {**body, "values": [-1.0]})
     w.palette = {}
-    with pytest.raises(sweep.Refused, match="есть: нет"):
+    with pytest.raises(sweep.Refused, match="there are: none"):
         sweep.validate(viz, idx, body)
 
 
@@ -510,20 +512,20 @@ def test_malformed_requests_are_400_not_500():
     viz = registry.load("p97_osc")
     idx = I.Index()
     w = idx.worlds[1] = I.WorldInfo(1, palette={"osc": {"type": "osc", "params": [
-        {"id": "x", "label": "x", "type": "float", "default": 1.0, "unit": "м"}]}})
-    w.objects = {"o1": {"type": "osc", "label": "Осциллятор 1", "values": {"x": 1.0}}}
-    w.decl = {"o1.x": {"id": "o1.x", "label": "x", "unit": "м", "of": "o1"},
-              "o2.x": {"id": "o2.x", "label": "x", "unit": "м", "of": "o2"}}
+        {"id": "x", "label": "x", "type": "float", "default": 1.0, "unit": "m"}]}})
+    w.objects = {"o1": {"type": "osc", "label": "Oscillator 1", "values": {"x": 1.0}}}
+    w.decl = {"o1.x": {"id": "o1.x", "label": "x", "unit": "m", "of": "o1"},
+              "o2.x": {"id": "o2.x", "label": "x", "unit": "m", "of": "o2"}}
     w.current = {"o1.x"}
     good = {"target": {"kind": "object", "obj": "o1", "param": "x"}, "values": [1.0], "duration": 1.0,
             "measure": "o1.x"}
     sweep.validate(viz, idx, good)
-    for bad, word in (({**good, "target": {"kind": "law", "id": ["k"]}}, "идентификатор"),
-                      ({**good, "target": {"kind": "object", "obj": ["o1"], "param": "x"}}, "идентификатор"),
-                      ({**good, "target": {"kind": "object", "obj": "o1", "param": {"a": 1}}}, "идентификатор"),
-                      ({**good, "measure": ["o1.x"]}, "нет измеряемой величины"),
-                      ({**good, "stat": ["max"]}, "«stat»"),
-                      ({**good, "measure": "o2.x"}, "сейчас не измеряет")):
+    for bad, word in (({**good, "target": {"kind": "law", "id": ["k"]}}, "identifier"),
+                      ({**good, "target": {"kind": "object", "obj": ["o1"], "param": "x"}}, "identifier"),
+                      ({**good, "target": {"kind": "object", "obj": "o1", "param": {"a": 1}}}, "identifier"),
+                      ({**good, "measure": ["o1.x"]}, "there is no measurable quantity"),
+                      ({**good, "stat": ["max"]}, "“stat”"),
+                      ({**good, "measure": "o2.x"}, "does not measure")):
         with pytest.raises(sweep.Refused, match=word):
             sweep.validate(viz, idx, bad)
 
@@ -544,7 +546,7 @@ async def _server_lb1(tmp_path, monkeypatch):
         n_ck = sum(1 for e in run.entries if e.kind == "checkpoint")
         for c in ("checkpoint_now", "stop"):
             r = await cl.post(f"/api/runs/{rid}/command", json={"cmd": c, "args": {"tag": "x" * 1000}})
-            assert r.status == 403 and "только сам сервер" in (await r.json())["error"]
+            assert r.status == 403 and "only the server itself sends" in (await r.json())["text"]
         ws = await cl.ws_connect(f"/ws/runs/{rid}")
         await ws.send_str(json.dumps({"cmd": "checkpoint_now", "args": {"tag": "ws"}}))
         got = None
@@ -554,7 +556,7 @@ async def _server_lb1(tmp_path, monkeypatch):
                 got = json.loads(m.data)
                 break
         await ws.close()
-        assert got and "только сам сервер" in got["error"]
+        assert got and "only the server itself sends" in got["text"]
         await asyncio.sleep(0.5)
         assert sum(1 for e in run.entries if e.kind == "checkpoint") == n_ck and run.running
         assert (await cl.post(f"/api/runs/{rid}/command", json=["play"])).status == 400
@@ -593,14 +595,14 @@ async def _server_lb1(tmp_path, monkeypatch):
         assert "n" in st and st["estimate"]["known"] is False, st
         t0 = time.monotonic()
         js = await sweep_done(cl, rid3, st["n"], timeout=60)
-        assert js["state"] == "over_budget" and js["message"].startswith("Остановлено сервером"), js
+        assert js["state"] == "over_budget" and E(js["message"]).startswith("Stopped by the server"), js
         assert time.monotonic() - t0 < 1.5 * 2 + 2.0 + 5  # not the 20 s the step takes
         # F9: a sweep that would not fit its budget is refused before it starts
         monkeypatch.setenv("LFVIZ_SWEEP_BUDGET_S", "100000")
         monkeypatch.setenv("LFVIZ_SWEEP_MEM_GB", "0.1")
         r = await cl.post(f"/api/runs/{rid2}/sweep", json={**body, "duration": 0.1})
         j = await r.json()
-        assert r.status == 409 and "свипу отведено 102 МБ" in j["error"] and not SW.active, j
+        assert r.status == 409 and "while a sweep is given 102 MB" in j["text"] and not SW.active, j
         assert not list((run2.dir / "sweeps").glob("*.base.pkl"))
 
 
@@ -627,7 +629,7 @@ async def _estimate(tmp_path):
         body = {"target": {"kind": "law", "id": "k"}, "values": [4.0, 9.0], "duration": 20.0, "measure": "E",
                 "stat": "final"}
         e = (await (await cl.post(f"/api/runs/{rid}/sweep", json={**body, "estimate": True})).json())["estimate"]
-        assert e["known"] is False and "не измерила" in e["text"]
+        assert e["known"] is False and "has not measured" in E(e["text"])
         fr = [protocol.peek_meta(run._read(x, {})) for x in run.entries if x.is_frame]
         naive = sum(f["cpu_ms"] for f in fr[1:]) / (fr[-1]["t"] - fr[0]["t"])  # the old estimator's numbers
         # played: the estimate against the sweep's own measurement

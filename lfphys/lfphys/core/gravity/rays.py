@@ -27,15 +27,17 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from lfphys.i18n import T
+
 from .. import relativity
 
 ABOUT = {
     "layer": "core", "kind": "numerical solution",
-    "title": "Лучи света: плоское пространство и Шварцшильд",
-    "statement": "Пучки лучей для рисования: прямые в плоском пространстве (скорость — по кинематике мира), "
-                 "нулевые геодезические Шварцшильда (RK4 по аффинному параметру). Точные времена событий "
-                 "считаются отдельно (arrivals, schwarzschild) и сверяются.",
-    "validity": "точность рисования (угловой допуск ANGLE_TOL); точные события — в arrivals",
+    "title": T("Light rays: flat space-time and Schwarzschild"),
+    "statement": T("Bundles of rays for drawing: straight lines in flat space-time (speed by the world's kinematics), "
+                   "Schwarzschild null geodesics (RK4 in the affine parameter). The exact times of events are "
+                   "computed separately (arrivals, schwarzschild) and compared."),
+    "validity": T("drawing accuracy (angular tolerance ANGLE_TOL); exact events in arrivals"),
     "basis": ["lfphys.core.gravity.schwarzschild"],
     "conflicts": [],
 }

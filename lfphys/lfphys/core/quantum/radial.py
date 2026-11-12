@@ -23,12 +23,15 @@ import math
 import numpy as np
 from scipy import linalg
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Радиальное уравнение Шрёдингера (связанные состояния)",
-    "statement": "Уровни и радиальные функции для центрального потенциала в синус-базисе ящика; любой потенциал "
-                 "V(r), орбитальный момент l.",
-    "validity": "нерелятивистская частица; ящик много больше состояния, шаг много меньше масштаба потенциала",
+    "title": T("The radial Schrödinger equation (bound states)"),
+    "statement": T("Levels and radial functions of a central potential in the sine basis of a box; any potential "
+                   "V(r), orbital angular momentum l."),
+    "validity": T("a non-relativistic particle; the box much larger than the state, the step much smaller than the "
+                  "potential's scale"),
     "basis": ["Schrödinger 1926", "Colbert & Miller, J. Chem. Phys. 96, 1982 (1992)"],
     "conflicts": [],
 }

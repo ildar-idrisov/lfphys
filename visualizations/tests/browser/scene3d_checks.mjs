@@ -18,9 +18,10 @@
 //     -w /lf/visualizations -p 8508:8479 lfphys-viz python3 server/serve.py --host 0.0.0.0 --port 8479 --max-workers 2
 //   docker run --rm --init --shm-size=2g --network host -v <a scratch dir with node_modules/playwright@1.58.2>:/pw \
 //     -v <engine>/visualizations/tests/browser:/t:ro -w /pw mcr.microsoft.com/playwright:v1.58.2-jammy \
-//     sh -c "cp /t/scene3d_checks.mjs /pw/ && node /pw/scene3d_checks.mjs 8508 [case,...]"
+//     -e LFVIZ_LANG=en|ru sh -c "cp /t/*.mjs /pw/ && node /pw/scene3d_checks.mjs 8508 [case,...]"
 // Prints one JSON line per case and exits with code 1 when a check fails.
 import { chromium } from "playwright";
+import { inLang } from "./lfi18n.mjs";
 
 const port = process.argv[2] || "8508";
 const base = `http://127.0.0.1:${port}`;
@@ -33,7 +34,7 @@ const cmd = (id, c, args) => post(`/api/runs/${id}/command`, { cmd: c, args });
 
 async function start(viz, body = {}) {
   let r = null;
-  for (let k = 0; k < 60; k++) { r = await post("/api/runs", { viz, seed: 3, ...body }); if (r.id || !/вычислител/.test(r.error || "")) break; await sleep(3000); }
+  for (let k = 0; k < 60; k++) { r = await post("/api/runs", { viz, seed: 3, ...body }); if (r.id || !JSON.stringify(r.error || "").includes("workers are busy")) break; await sleep(3000); }
   if (!r.id) throw new Error("run not started: " + JSON.stringify(r).slice(0, 300));
   const t0 = Date.now();
   for (;;) {
@@ -52,9 +53,9 @@ async function open(br, id, errs, { playMs = 4000, width = 1600, height = 1000, 
   if (storage) await page.addInitScript((kv) => { for (const [k, v] of Object.entries(kv)) { try { localStorage.setItem(k, v); } catch (e) { /* storage off */ } } }, storage);
   page.on("pageerror", (e) => errs.push(`pageerror: ${e.message}`));
   page.on("console", (m) => { if (m.type() === "error") errs.push(`console: ${m.text()}`.slice(0, 300)); });
-  await page.goto(`${base}/run?id=${id}`);
+  await page.goto(inLang(`${base}/run?id=${id}`));
   await page.waitForFunction(() => window.__lfPlayer && window.__lfPlayer.frames() > 0 && document.querySelector(".s3d-view")?.__scene3d
-    && !/загрузка записи/.test((document.querySelector("#status") || {}).textContent || ""), null, { timeout: 180000 });
+    && !window.__lfPlayer.replaying(), null, { timeout: 180000 });
   await sleep(playMs); await settle(page);
   return page;
 }

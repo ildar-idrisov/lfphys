@@ -22,17 +22,19 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "kinematics",
-    "title": "Причинная структура пространства-времени: интервал и световой конус",
-    "statement": "Интервал s² = c²Δt² − |Δr|² инвариантен; события времениподобны (s² > 0), светоподобны (s² = 0) или "
-                 "пространственноподобны (s² < 0). Сигнал связывает только события внутри или на световом конусе; "
-                 "порядок во времени пространственноподобных событий зависит от системы отсчёта: он обращается в "
-                 "системах, летящих вдоль Δr быстрее v* = c²|Δt|/|Δr| < c.",
-    "validity": "плоское пространство-время (СТО); в гравитационном поле — локально",
+    "title": T("The causal structure of spacetime: the interval and the light cone"),
+    "statement": T("The interval s² = c²Δt² − |Δr|² is invariant; events are timelike (s² > 0), lightlike (s² = 0) "
+                   "or spacelike (s² < 0). A signal connects only events inside or on the light cone; the time order "
+                   "of spacelike events depends on the frame: it reverses in frames moving along Δr faster than v* = "
+                   "c²|Δt|/|Δr| < c."),
+    "validity": T("flat spacetime (SR); in a gravitational field, locally"),
     "basis": ["Einstein, Ann. Phys. 17, 891 (1905)", "Minkowski, Phys. Z. 10, 104 (1909)",
-              "условие локальности в опытах Белла: Bell 1964; Aspect, Dalibard, Roger, PRL 49, 1804 (1982); "
-              "Weihs et al., PRL 81, 5039 (1998)"],
+              T("the locality condition in Bell experiments: Bell 1964; Aspect, Dalibard, Roger, PRL 49, 1804 "
+                "(1982); Weihs et al., PRL 81, 5039 (1998)")],
     "conflicts": [],
 }
 

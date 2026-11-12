@@ -28,6 +28,8 @@ import numpy as np
 
 from lfphys.core import geometry as G
 
+from .i18n import T
+
 MAX_PLANES = 3
 AUTO_STEPS = 24      # an auto plane is recomputed when it moved 1/24 of its range (or a grid step) ...
 AUTO_INTERVAL = 0.5  # ... at most twice per world second
@@ -43,7 +45,7 @@ class SlicePlanes:
         return G._label(pl)
 
     def _plane_preview(self, pid, pl, s_rng, t_rng):
-        raise ValueError("предпросмотр среза в этом мире не нужен")
+        raise ValueError(T("this world needs no preview of a slice"))
 
     def _plane_removed(self, pid, sl):
         pass
@@ -68,13 +70,13 @@ class SlicePlanes:
 
     def _set_plane(self, pid, origin, normal, auto=False, speed=1.0, coarse=False):
         if pid not in range(1, MAX_PLANES + 1):
-            raise ValueError("плоскостей среза не больше трёх (номера 1–3)")
+            raise ValueError(T("there are at most three slice planes (numbers 1–3)"))
         nrm = np.asarray(normal, float)
         if nrm.shape != (3,) or not np.all(np.isfinite(nrm)) or np.linalg.norm(nrm) < 1e-12:
-            raise ValueError("нормаль плоскости не задана")
+            raise ValueError(T("the plane's normal is not given"))
         org = np.asarray(origin, float)
         if org.shape != (3,) or not np.all(np.isfinite(org)):
-            raise ValueError("центр плоскости не задан")
+            raise ValueError(T("the plane's centre is not given"))
         nrm = nrm / np.linalg.norm(nrm)
         pl, poly, s_rng, t_rng = G.plane_cut(self._canonical(org, nrm), nrm, self.box)
         sl = self._plane_slice(pid, pl, s_rng, t_rng, coarse)  # nothing changes if this refuses
@@ -111,25 +113,28 @@ class SlicePlanes:
         if op == "plane":
             pid = int(args.get("id", 0))
             if pid not in self.planes and len(self.planes) >= MAX_PLANES:
-                raise ValueError("плоскостей среза не больше трёх")
+                raise ValueError(T("there are at most three slice planes"))
             cur = self.planes.get(pid, {})
             origin = args.get("origin") or cur.get("origin") or list(self.plane_center)
             normal = args.get("normal") or cur.get("normal") or self.default_normals.get(pid, self.default_normals[1])
             self._set_plane(pid, origin, normal, auto=bool(args.get("auto", cur.get("auto", False))),
                             speed=float(args.get("speed", cur.get("speed", 1.0))))
-            note = ""
+            moved = False
             try:  # asked for beyond the region: said, not silently moved (review UX-params P22)
                 nn = np.asarray(normal, float) / np.linalg.norm(np.asarray(normal, float))
                 if abs(float(np.asarray(origin, float) @ nn) - float(np.asarray(self.planes[pid]["origin"]) @ nn)) > \
                         1e-9 * max(1.0, float(np.abs(np.asarray(self.box, float)).max())):
-                    note = " (дальше края области срез пуст — плоскость поставлена у края, внутри области)"
+                    moved = True
             except (TypeError, ValueError, ZeroDivisionError):
                 pass
-            return f"срез {pid}: {self.planes[pid]['label']}{note}"
+            if moved:
+                return T("slice {id:d}: {label} (beyond the region's edge the slice is empty — the plane is put at the "
+                         "edge, inside the region)", id=pid, label=self.planes[pid]["label"])
+            return T("slice {id:d}: {label}", id=pid, label=self.planes[pid]["label"])
         if op == "preview":  # while a plane is dragged: a coarse slice, not kept, not checked
             pid = int(args.get("id", 0))
             if pid not in self.planes:
-                raise ValueError(f"нет среза {pid}")
+                raise ValueError(T("there is no slice {id:d}", id=pid))
             nrm = np.asarray(args.get("normal") or self.planes[pid]["normal"], float)
             nrm = nrm / np.linalg.norm(nrm)
             o = self._canonical(args.get("origin") or self.planes[pid]["origin"], nrm)
@@ -139,11 +144,11 @@ class SlicePlanes:
         if op == "remove":
             pid = int(args.get("id", 0))
             self._remove_plane(pid)
-            return f"срез {pid} убран"
+            return T("slice {id:d} removed", id=pid)
         if op == "reset":
             self._reset_planes()
-            return "срезы по умолчанию"
-        raise ValueError(f"неизвестная команда просмотра {op!r}")
+            return T("default slices")
+        raise ValueError(T("unknown view command {op}", op=repr(op)))
 
     def view_state(self):
         """The planes the experimenter placed (pose, auto, speed), kept in a new world of this run."""

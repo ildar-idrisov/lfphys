@@ -6,19 +6,20 @@
 // arrivals, ABK, semiclassical, the absorbing boundary, Wlodarz, Marchewka-Schuss, the soft detector), the joint
 // distribution of place and time J(x, t) with the Bohm hits over it, and the totals. Drawing only: every curve and
 // number comes from the run; everything is shown up to the time shown (the player may be scrolled back).
-import { el, fill, fresh2d, num, panel } from "/static/js/ui.js";
+import { el, fill, fresh2d, panel } from "/static/js/ui.js";
 import { createView as createV11View } from "/viz/v11_double_slit_2d/view.js";
+import { t, fmt, lang } from "/static/js/i18n.js";
 
 const RULES = {
-  flux: { label: "квантовый поток J(t)", color: "#ffffff", dash: [], width: 1.6 },
-  bohm: { label: "частицы Бома: первые прибытия", color: "#4fd1c5", bars: true },
-  bohm_law: { label: "закон первого прихода Бома (из потока)", color: "#4fd1c5", dash: [4, 3] },
-  abk: { label: "Ааронов–Бом–Киёвский", color: "#ffd23f", dash: [] },
-  sc: { label: "полуклассическое", color: "#b48cff", dash: [6, 4] },
-  abr: { label: "поглощающая граница", color: "#7bd88f", dash: [] },
-  wlodarz: { label: "Влодаж", color: "#ff8a1f", dash: [] },
-  ms: { label: "Маркевка–Шусс", color: "#ff5c7a", dash: [2, 3] },
-  soft: { label: "мягкий детектор −iW₀", color: "#5ab0ff", dash: [] },
+  flux: { label: t("quantum flux J(t)"), color: "#ffffff", dash: [], width: 1.6 },
+  bohm: { label: t("Bohm particles: first arrivals"), color: "#4fd1c5", bars: true },
+  bohm_law: { label: t("Bohm's law of first arrival (from the flux)"), color: "#4fd1c5", dash: [4, 3] },
+  abk: { label: t("Aharonov–Bohm–Kijowski"), color: "#ffd23f", dash: [] },
+  sc: { label: t("semiclassical"), color: "#b48cff", dash: [6, 4] },
+  abr: { label: t("absorbing boundary"), color: "#7bd88f", dash: [] },
+  wlodarz: { label: t("Wlodarz"), color: "#ff8a1f", dash: [] },
+  ms: { label: t("Marchewka–Schuss"), color: "#ff5c7a", dash: [2, 3] },
+  soft: { label: t("soft detector −iW₀"), color: "#5ab0ff", dash: [] },
 };
 const SERIES = ["flux", "bohm_law", "wlodarz", "ms", "soft"];  // sampled at the run's steps
 // the curve's colour on a dark chip, as on the chart (white and yellow vanish on the light theme)
@@ -31,8 +32,8 @@ export function createView(ctx) {
   const chart = el("canvas", { style: { width: "100%", height: "240px", display: "block", background: "#0b0e14", borderRadius: "4px" } });
   const joint = el("canvas", { style: { width: "100%", height: "260px", display: "block", background: "#0b0e14", borderRadius: "4px" } });
   const legendBox = el("div", { class: "help" }), jointHelp = el("div", { class: "help" }), totalsBox = el("div", {}), infoBox = el("div", { class: "kv" });
-  const ownPanels = [panel("Опыт: время прихода", infoBox), panel("Распределение времени прихода", el("div", {}, chart, legendBox)),
-                     panel("Место и время прихода", el("div", {}, joint, jointHelp)), panel("Итоги по правилам", totalsBox)];
+  const ownPanels = [panel(t("Experiment: arrival time"), infoBox), panel(t("Distribution of the arrival time"), el("div", {}, chart, legendBox)),
+                     panel(t("Place and time of arrival"), el("div", {}, joint, jointHelp)), panel(t("Totals by rule"), totalsBox)];
   const rightPanels = [...ownPanels, ...base.rightPanels];
   const hidden = new Set();
   let H = null, A = null, tu = 1, nowT = Infinity, S = null, refs = null, rows = [], hits = { x: [], t: [] }, result = null, key = "";
@@ -98,7 +99,7 @@ export function createView(ctx) {
     const cut = ref > 0 && ymax > 4 * ref;
     if (cut) ymax = 4 * ref;
     ymax = ymax || 1; ymin = Math.min(ymin, 0);
-    const X = (t) => left + t / tmax * pw, Y = (v) => top + (ymax - v) / (ymax - ymin) * ph;
+    const X = (tq) => left + tq / tmax * pw, Y = (v) => top + (ymax - v) / (ymax - ymin) * ph;
     if (!hidden.has("bohm")) {
       g.fillStyle = RULES.bohm.color; g.globalAlpha = 0.35;
       for (let b = 0; b < nb; b++) { const h = cnt[b] / Ntot / bw; if (h) g.fillRect(X(b * bw), Y(h), Math.max(1, pw / nb - 0.5), Y(0) - Y(h)); }
@@ -111,22 +112,22 @@ export function createView(ctx) {
       if (pts.length < 2) continue;
       const R = RULES[k];
       g.strokeStyle = R.color; g.lineWidth = R.width || 1.2; g.setLineDash(R.dash || []);
-      g.beginPath(); pts.forEach(([t, v], i) => (i ? g.lineTo(X(t), Y(v)) : g.moveTo(X(t), Y(v)))); g.stroke();
+      g.beginPath(); pts.forEach(([tq, v], i) => (i ? g.lineTo(X(tq), Y(v)) : g.moveTo(X(tq), Y(v)))); g.stroke();
       if (cut) { let m = -1, vm = ymax; pts.forEach(([, v], i) => { if (v > vm) { vm = v; m = i; } }); if (m >= 0) { g.fillStyle = R.color; g.fillText("▲", X(pts[m][0]) - 4, top + 10); } }
     }
     g.restore(); g.setLineDash([]);
     if (!resultNow() && tauNow < tauEnd()) { g.strokeStyle = "rgba(255,255,255,0.25)"; g.beginPath(); g.moveTo(X(tauNow / t0), top); g.lineTo(X(tauNow / t0), top + ph); g.stroke(); }
     g.strokeStyle = "#3a4350"; g.strokeRect(left, top, pw, ph);
     g.fillStyle = "#9aa3ad"; g.font = "10px system-ui";
-    for (let q = 0; q <= 4; q++) { const t = tmax * q / 4; g.fillText(num(t, 3), X(t) - 8, top + ph + 12); }
+    for (let q = 0; q <= 4; q++) { const tq = tmax * q / 4; g.fillText(fmt(tq, ".3g"), X(tq) - 8, top + ph + 12); }
     g.fillText("t / t₀", left + pw - 30, top + ph + 21);
-    g.fillText(num(ymax, 2), 2, top + 8); g.fillText(num(ymin, 2), 2, top + ph);
+    g.fillText(fmt(ymax, ".2g"), 2, top + 8); g.fillText(fmt(ymin, ".2g"), 2, top + ph);
   }
   function drawLegend() {
     if (!A) { fill(legendBox); return; }
     const items = ["flux", "bohm", ...A.rules.filter((k) => k !== "flux" && k !== "bohm")];
     fill(legendBox,
-      el("div", {}, "Плотность Π(t)·t₀ против t/t₀, t₀ — время пролёта со средней скоростью. Щелчок по правилу скрывает его."),
+      el("div", {}, t("The density Π(t)·t₀ against t/t₀; t₀ is the flight time at the mean speed. A click on a rule hides it.")),
       ...items.map((k) => el("label", { style: { display: "inline-block", marginRight: "10px", cursor: "pointer", opacity: hidden.has(k) ? 0.45 : 1 } },
         el("input", { type: "checkbox", checked: !hidden.has(k), onchange: (e) => { if (e.target.checked) hidden.delete(k); else hidden.add(k); drawLegend(); later("chart", drawChart); } }),
         swatch(k), RULES[k].label)));
@@ -139,7 +140,7 @@ export function createView(ctx) {
     const { g, W, Hh } = c, R = A.rows, t0 = A.t0_units, tmax = tauEnd() / t0;
     const left = 36, right = 6, top = 8, bot = 22, pw = W - left - right, ph = Hh - top - bot;
     const x0 = R.x0 - 0.5 * R.dx, x1 = R.x0 + (R.n - 0.5) * R.dx;
-    const X = (x) => left + (x - x0) / (x1 - x0) * pw, Y = (t) => top + t / tmax * ph;
+    const X = (x) => left + (x - x0) / (x1 - x0) * pw, Y = (tq) => top + tq / tmax * ph;
     let nr = rows.length; while (nr > 0 && nr * R.tbin_units * tu > nowT * (1 + 1e-12)) nr -= 1;  // whole bins in the past (B4-8)
     let pk = 0; for (let i = 0; i < nr; i++) for (const v of rows[i]) pk = Math.max(pk, Math.abs(v));
     if (nr && pk > 0) {
@@ -159,41 +160,41 @@ export function createView(ctx) {
     for (let i = 0; i < N; i++) { const px = X(hits.x[i]), py = Y(hits.t[i] / tu / t0); if (px >= left && px <= left + pw) g.fillRect(px - 0.75, py - 0.75, 1.5, 1.5); }
     g.strokeStyle = "#3a4350"; g.strokeRect(left, top, pw, ph);
     g.fillStyle = "#9aa3ad"; g.font = "10px system-ui";
-    for (let q = 0; q <= 4; q++) { let x = x0 + (x1 - x0) * q / 4; if (Math.abs(x) < 1e-9 * (x1 - x0)) x = 0; g.fillText(num(x, 3), X(x) - 8, top + ph + 12); }
+    for (let q = 0; q <= 4; q++) { let x = x0 + (x1 - x0) * q / 4; if (Math.abs(x) < 1e-9 * (x1 - x0)) x = 0; g.fillText(fmt(x, ".3g"), X(x) - 8, top + ph + 12); }
     g.fillText("x, λ", left + pw - 22, top + ph + 21);
-    for (let q = 0; q <= 4; q++) { const t = tmax * q / 4; g.fillText(num(t, 3), 2, Y(t) + 4); }
-    fill(jointHelp, "Ток в плоскость детектора j_z(x, t) (посчитан: тёплые цвета — внутрь, синие — обратно; яркость — √|j|), сверху вниз — время t/t₀; точки — попадания частиц Бома (место и время первого прихода). Интеграл по x даёт кривую потока, по t — картину на экране.");
+    for (let q = 0; q <= 4; q++) { const tq = tmax * q / 4; g.fillText(fmt(tq, ".3g"), 2, Y(tq) + 4); }
+    fill(jointHelp, t("The current into the detecting plane j_z(x, t) (computed: warm colours inwards, blue back; brightness √|j|), time t/t₀ from top to bottom; the dots are the hits of the Bohm particles (the place and the time of the first arrival). The integral over x gives the flux curve, over t the pattern on the screen."));
   }
 
   // --- totals and the experiment -------------------------------------------------------------------------------------
   function drawInfo() {
     if (!H || !A) { fill(infoBox); return; }
-    const P = H.particle, sc = A.scene === "free", D = { ...A.params, ...(liveNow || {}) }, st = { gauss: "один пакет", train: `цепочка из ${A.params.n_train} пакетов через ${num(A.params.sep, 3)} λ`, backflow: "медленный (k₀/4, амплитуда 1,5) впереди и быстрый (k₀) позади; встречаются у плоскости" }[A.state];
+    const P = H.particle, sc = A.scene === "free", D = { ...A.params, ...(liveNow || {}) }, st = { gauss: t("one packet"), train: t("a train of {n:d} packets {sep:.3g} λ apart", { n: A.params.n_train, sep: A.params.sep }), backflow: t("a slow packet (k₀/4, amplitude {amp}) ahead and a fast one (k₀) behind; they meet at the plane", { amp: 1.5 }) }[A.state];
     fill(infoBox,
-      el("span", {}, "частица"), el("span", {}, `${P.label}, λ = ${num(P.lambda_m * 1e12, 4)} пм`),
-      el("span", {}, "полёт"), el("span", {}, sc ? `свободно, ${num(A.D, 4)} λ от первого пакета до плоскости` : `через две щели, ${num(A.D, 4)} λ от первого пакета до экрана`),
-      el("span", {}, "состояние"), el("span", {}, `${st}, σz = ${num(H.geometry.sigma_z, 3)} λ`),
-      el("span", {}, "t₀ (пролёт со средней скоростью)"), el("span", { class: "mono" }, `${num(A.t0_units, 4)} ед. = ${num(A.t0_units * P.time_unit_s, 3)} с`),
-      el("span", {}, "детекторы сейчас"), el("span", {}, [sc ? `κ = ${num(D.kappa, 3)} k₀` : null, `λ₀: Влодаж ${num(D.mu_w, 3)}, Маркевка–Шусс ${num(D.mu_ms, 3)}`,
-        A.rules.includes("soft") ? `W₀ = ${num(D.W0, 3)} E₀` : null].filter(Boolean).join("; ")));
+      el("span", {}, t("particle")), el("span", {}, t("{particle}, λ = {lam:.4g} pm", { particle: P.label, lam: P.lambda_m * 1e12 })),
+      el("span", {}, t("flight")), el("span", {}, sc ? t("free, {D:.4g} λ from the first packet to the plane", { D: A.D }) : t("through two slits, {D:.4g} λ from the first packet to the screen", { D: A.D })),
+      el("span", {}, t("state")), el("span", {}, t("{state}, σz = {s:.3g} λ", { state: st, s: H.geometry.sigma_z })),
+      el("span", {}, t("t₀ (flight at the mean speed)")), el("span", { class: "mono" }, t("{u:.4g} units = {s:.3g} s", { u: A.t0_units, s: A.t0_units * P.time_unit_s })),
+      el("span", {}, t("detectors now")), el("span", {}, [sc ? t("κ = {k:.3g} k₀", { k: D.kappa }) : null, t("λ₀: Wlodarz {w:.3g}, Marchewka–Schuss {m:.3g}", { w: D.mu_w, m: D.mu_ms }),
+        A.rules.includes("soft") ? t("W₀ = {W:.3g} E₀", { W: D.W0 }) : null].filter(Boolean).join("; ")));
   }
   function drawTotals() {
     const r = resultNow();
-    if (!r) { fill(totalsBox, el("div", { class: "muted" }, "Итоги появятся в конце окна наблюдения.")); return; }
+    if (!r) { fill(totalsBox, el("div", { class: "muted" }, t("The totals appear at the end of the observation window."))); return; }
     const t0 = r.t0_units, rows_ = [];
     const cell = (x, right) => el("td", { style: { padding: "1px 4px", textAlign: right ? "right" : "left" }, class: right ? "mono" : "" }, x);
-    rows_.push(el("tr", {}, cell(el("span", { class: "muted" }, "правило")), cell(el("span", { class: "muted" }, "P за окно")),
+    rows_.push(el("tr", {}, cell(el("span", { class: "muted" }, t("rule"))), cell(el("span", { class: "muted" }, t("P in the window"))),
       cell(el("span", { class: "muted" }, "⟨t⟩ / t₀")), cell(el("span", { class: "muted" }, "σ_t / t₀"))));
     for (const k of ["flux", "bohm", ...A.rules.filter((q) => q !== "flux" && q !== "bohm")]) {
       const s = r.rules[k]; if (!s) continue;
-      rows_.push(el("tr", {}, cell([swatch(k), RULES[k].label]), cell(num(s.total, 4), true), cell(s.mean === null ? "—" : num(s.mean / t0, 4), true),
-        cell(s.sd === null || s.sd === undefined ? "—" : num(s.sd / t0, 3), true)));
+      rows_.push(el("tr", {}, cell([swatch(k), RULES[k].label]), cell(fmt(s.total, ".4g"), true), cell(s.mean === null ? "—" : fmt(s.mean / t0, ".4g"), true),
+        cell(s.sd === null || s.sd === undefined ? "—" : fmt(s.sd / t0, ".3g"), true)));
     }
     const extra = [];
-    extra.push(el("div", { class: "help" }, `P — вероятность прихода за окно наблюдения (${num(r.tau_obs / t0, 4)} t₀), ⟨t⟩ и σ_t — среднее время и разброс. Обратный ток через плоскость: ${num(r.backflow, 3)} вероятности.`));
-    extra.push(el("div", { class: "help" }, `Не щёлкнули за окно: Влодаж ${num(r.none.wlodarz, 4)}, Маркевка–Шусс ${num(r.none.ms, 4)}.`));
-    if (r.soft) extra.push(el("div", { class: "help" }, `Мягкий детектор: поглотил ${num(r.soft.clicks, 5)}, отразил ${num(r.soft.reflected, 4)}.`));
-    if (r.abk_neg !== undefined) extra.push(el("div", { class: "help" }, `Ааронов–Бом–Киёвский: вес при t < 0 — ${num(r.abk_neg, 3)} (читается как «не обнаружена»); поглощающая граница поглощает всего ${num(r.abr_total, 5)}.`));
+    extra.push(el("div", { class: "help" }, t("P is the probability of arrival within the observation window ({w:.4g} t₀), ⟨t⟩ and σ_t the mean time and the spread. Backflow through the plane: {b:.3g} of the probability.", { w: r.tau_obs / t0, b: r.backflow })));
+    extra.push(el("div", { class: "help" }, t("No click within the window: Wlodarz {w:.4g}, Marchewka–Schuss {m:.4g}.", { w: r.none.wlodarz, m: r.none.ms })));
+    if (r.soft) extra.push(el("div", { class: "help" }, t("Soft detector: absorbed {a:.5g}, reflected {r:.4g}.", { a: r.soft.clicks, r: r.soft.reflected })));
+    if (r.abk_neg !== undefined) extra.push(el("div", { class: "help" }, t("Aharonov–Bohm–Kijowski: the weight at t < 0 is {w:.3g} (read as «not detected»); the absorbing boundary absorbs {a:.5g} in all.", { w: r.abk_neg, a: r.abr_total })));
     fill(totalsBox, el("table", { style: { borderCollapse: "collapse", width: "100%", fontSize: "12px" } }, rows_), extra);
   }
 
@@ -201,13 +202,13 @@ export function createView(ctx) {
 
   return {
     center: base.center, rightPanels,
-    help: () => el("div", {}, el("h4", {}, "Время прихода частицы"),
-      el("p", {}, "Пакет частицы летит к плоскости детектора — свободно или через две щели. Прогон решает уравнение Шрёдингера на плоскости (x, z) и в каждый момент записывает на плоскости детектора ток j_z, волну ψ и её производную ∂ψ/∂z."),
-      el("p", {}, "Квантовая механика не даёт одного правила для времени прихода (оператора времени нет). Мир считает несколько: квантовый поток; первые прибытия частиц Бома (их ансамбль идёт по траекториям той же волны); Ааронова–Бома–Киёвского и полуклассическое (из импульсов начального состояния, только свободный полёт); поглощающую границу ∂ψ/∂z = iκψ (Вернер, Тумулька); экспоненциальные правила Влодажа и Маркевки–Шусса, где частота щелчков пропорциональна |ψ|² или |∂ψ|² на плоскости; мягкий детектор — второй прогон того же опыта с поглощающим потенциалом −iW₀ за плоскостью (часть волны он отражает)."),
-      el("p", {}, "Вдали от источника правила почти совпадают. У источника (узкий пакет, малое L) они расходятся; на цепочке пакетов экспоненциальные правила гасят поздние пики, а полуклассическое даёт один пик; при обратном токе поток местами отрицателен, а первые прибытия Бома — нет."),
-      el("p", {}, "Через две щели прогон даёт совместное распределение места и времени прихода j_z(x, t) (Das, Deckert, Kellers, Krekels, Struyve, 2024). Щель можно закрыть на ходу, пока пакет в пути; пластину (a, d, w, V₀) — изменить."),
-      el("p", {}, "На ходу меняются и детекторы: сила λ₀ экспоненциальных правил и высота W₀ мягкого детектора. До изменения правило посчитано с прежним значением, после — с новым; если сигнал к тому моменту ещё не дошёл, опыт — как с новым значением с самого начала. Поглощающая граница κ — параметр мира: её правило считается из начального состояния для одной κ на весь опыт."),
-      el("p", {}, "Сверки (справа, «Проверки»): в свободном полёте — поток и волна на плоскости против точного решения, времена прихода частиц Бома против закона первого прихода, отражение мягкого детектора против стационарной теории, тождество поглощающей границы; плюс сверки v11 (норма, сетка и шаг, поток, эквивариантность, симметрия).")),
+    help: () => el("div", {}, el("h4", {}, t("Particle arrival time")),
+      el("p", {}, t("A particle's packet flies to a detecting plane, freely or through two slits. The run solves the Schrödinger equation on the plane (x, z) and records on the detecting plane, at every moment, the current j_z, the wave ψ and its derivative ∂ψ/∂z.")),
+      el("p", {}, t("Quantum mechanics gives no single rule for the arrival time (there is no time operator). The world computes several: the quantum flux; the first arrivals of the Bohm particles (their ensemble follows the trajectories of the same wave); Aharonov–Bohm–Kijowski and the semiclassical rule (from the momenta of the initial state, free flight only); the absorbing boundary ∂ψ/∂z = iκψ (Werner, Tumulka); the exponential rules of Wlodarz and of Marchewka–Schuss, where the rate of clicks is proportional to |ψ|² or |∂ψ|² on the plane; the soft detector, a second run of the same experiment with an absorbing potential −iW₀ behind the plane (it reflects a part of the wave).")),
+      el("p", {}, t("Far from the source the rules almost agree. Near the source (a narrow packet, a small L) they diverge; for a train of packets the exponential rules damp the later peaks while the semiclassical one gives a single peak; under backflow the flux is negative in places while Bohm's first arrivals are not.")),
+      el("p", {}, t("Through two slits the run gives the joint distribution of the place and the time of arrival j_z(x, t) (Das, Deckert, Kellers, Krekels, Struyve, 2024). A slit can be closed on the fly while the packet is on its way; the plate (a, d, w, V₀) can be changed.")),
+      el("p", {}, t("The detectors change on the fly too: the strength λ₀ of the exponential rules and the height W₀ of the soft detector. Before the change a rule is computed with the old value, after it with the new one; if the signal has not arrived by then, the experiment is as with the new value from the very start. The absorbing boundary κ is a world parameter: its rule is computed from the initial state for one κ for the whole experiment.")),
+      el("p", {}, t("Checks (on the right, «Checks»): in free flight, the flux and the wave on the plane against the exact solution, the arrival times of the Bohm particles against the law of first arrival, the soft detector's reflection against the stationary theory, the identity of the absorbing boundary; plus the checks of v11 (norm, grid and step, flux, equivariance, symmetry)."))),
     reset() { base.reset(); resetOwn(); drawInfo(); drawLegend(); redrawAll(); },
     // key frames (player.js): v11's part is its own key frame; the series, rows, references and hits only grow
     snapshot() {
@@ -255,10 +256,10 @@ export function createView(ctx) {
         default: break;
       }
     },
-    render(meta, t, blobs) {
-      base.render(meta, t, blobs);
+    render(meta, tShown, blobs) {
+      base.render(meta, tShown, blobs);
       if (!H || !meta) return;
-      nowT = t;
+      nowT = tShown;
       const k = `${shownN()}|${hitsN()}|${resultNow() ? 1 : 0}|${rows.length}`;
       if (k !== key) { key = k; redrawAll(); }
     },

@@ -22,10 +22,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
 from lfphys.core import backend  # noqa: E402
+from lfphys.i18n import english  # noqa: E402
 from p04_fluids.viz import SCHEMA, naca4, resample  # noqa: E402
 
 V = "p04_fluids"
 SMALL = {}  # the presets at their own grids (a coarser one is refused where it cannot resolve the flow)
+
+
+
+def en(x):
+    """The English rendering of a text (a T, a T as the player gets it, or a plain string)."""
+    return english(x) if isinstance(x, dict) else str(x)
 
 
 def run(h, seconds, n=10):
@@ -75,7 +82,7 @@ def test_reynolds_numbers_of_a_cylinder_and_of_a_lid():
     run(h, 0.002, 1)
     now = h.of("frame")[-1]["now"]
     cyl = [k for k, o in h.sim.objects.items() if o["type"] == "disk"][0]
-    assert now[cyl]["Re (по длине и скорости для коэффициентов)"] == pytest.approx(100.0, rel=1e-12)
+    assert now[cyl]["Re (by the length and the velocity for the coefficients)"] == pytest.approx(100.0, rel=1e-12)
     h = Harness(V, "cavity", SMALL)
     run(h, 0.05, 2)
     lid = [k for k, o in h.sim.objects.items() if o["type"] == "lid"][0]
@@ -91,10 +98,10 @@ def test_one_condition_per_side_and_a_removed_inlet_gives_the_wall_back():
     assert not h.errors(), h.errors()
     new = [o for o in h.sim.objects.values() if o["type"] == "outlet"][-1]
     assert new["values"]["side"] == "top" and h.sim.fl.sides()["top"]["kind"] == "outlet"
-    assert any("занята" in m.get("text", "") and m.get("notify") for m in h.of("event"))
+    assert any("is taken" in en(m.get("text", "")) and m.get("notify") for m in h.of("event"))
     before = [o["id"] for o in h.of("scene")[-1]["objects"]]
     h.cmd("scene", op="set", id=new["id"], values={"side": "left"})
-    assert any("уже занята" in e and "свободны" in e for e in h.errors()), h.errors()
+    assert any("is already taken" in en(e) and "free:" in en(e) for e in h.errors()), h.errors()
     assert [o["id"] for o in h.of("scene")[-1]["objects"]] == before and h.sim.fl.sides()["top"]["kind"] == "outlet"
     inlet = [k for k, o in h.sim.objects.items() if o["type"] == "inlet"][0]
     h.cmd("scene", op="remove", id=inlet)
@@ -107,7 +114,7 @@ def test_one_condition_per_side_and_a_removed_inlet_gives_the_wall_back():
 def test_dye_needs_a_world_with_dye_and_the_field_is_shown_on_request():
     h = Harness(V, "cavity", {"dye": "off", "scene": None})
     h.cmd("scene", op="add", type="dye_source", values={"x": 0.5, "y": 0.2})
-    assert any("краситель выключен" in e for e in h.errors())
+    assert any("the dye is off" in en(e) for e in h.errors())
     h = Harness(V, "cavity", SMALL)
     h.cmd("view", op="field", field="vorticity")
     assert h.of("field")[-1]["name"] == "vorticity"
@@ -162,7 +169,7 @@ def test_editing_an_inlet_keeps_the_inflow():
 
 
 def test_a_coefficient_length_set_back_to_zero_is_the_diameter_again():
-    """Review B7 L10: «0 — диаметр» after a custom length (before, 0.2 m stayed: C_x, C_y half their values)."""
+    """Review B7 L10: "0: the diameter" after a custom length (before, 0.2 m stayed: C_x, C_y half their values)."""
     h = Harness(V, "cylinder_re20", SMALL)
     cyl = [k for k, o in h.sim.objects.items() if o["type"] == "disk"][0]
     eid = h.sim.ref[cyl][1]
@@ -191,12 +198,12 @@ def test_the_forces_are_shown_averaged_over_the_sound_period_with_their_window()
     eid = sim.ref[cyl][1]
     now = h.of("frame")[-1]["now"][cyl]
     mean = fl.forces(u_ref=0.2)[eid]["mean"]
-    assert now["C_x, среднее за период звука"] == pytest.approx(mean["cd"], rel=1e-12)
-    assert now["C_y, среднее за период звука"] == pytest.approx(mean["cl"], rel=1e-10)
-    assert "4L/c_s" in now["окно среднего"] and "C_x за последний шаг (со звуком схемы)" in now
+    assert now["C_x, mean over the sound period"] == pytest.approx(mean["cd"], rel=1e-12)
+    assert now["C_y, mean over the sound period"] == pytest.approx(mean["cl"], rel=1e-10)
+    assert "4L/c_s" in en(now["averaging window"]) and "C_x over the last step (with the scheme's sound)" in now
     sim.checks()
     c = h.checks()[f"cd_{cyl}"]
-    assert "среднее за период звука" in c["label"] and c["value"] == pytest.approx(mean["cd"], rel=1e-12)
+    assert "mean over the sound period" in en(c["label"]) and c["value"] == pytest.approx(mean["cd"], rel=1e-12)
 
 
 def test_benchmark_comparisons_appear_for_their_set_ups_only():
@@ -208,8 +215,8 @@ def test_benchmark_comparisons_appear_for_their_set_ups_only():
     h.sim.checks()
     ch = h.checks()
     assert {"dfg_cD", "dfg_cL"} <= set(ch), sorted(ch)
-    assert "5.5700" in ch["dfg_cD"]["note"] and "D = 20 ячеек" in ch["dfg_cD"]["note"] and ch["dfg_cD"]["info"]
-    assert "интерполированная" in ch["dfg_cD"]["note"]
+    assert "5.5700" in en(ch["dfg_cD"]["note"]) and "D = 20 cells" in en(ch["dfg_cD"]["note"]) and ch["dfg_cD"]["info"]
+    assert "an interpolated wall" in en(ch["dfg_cD"]["note"])
     cyl = [k for k, o in h.sim.objects.items() if o["type"] == "disk"][0]
     h.cmd("scene", op="set", id=cyl, values={"x": 0.25})
     assert h.sim._dfg_case() is None
@@ -242,16 +249,16 @@ def test_the_surface_velocity_is_labelled_as_one_and_the_cascade_is_flagged():
     labelled a cascade, and so is any periodic world with a body."""
     h = Harness(V, "cylinder_re20", SMALL)
     disk = h.sim.PALETTE["disk"].schema.by_id
-    assert "поверхности" in disk["vx"].label and "НЕ перемещается" in disk["vx"].help
-    assert not any("поверхность" in a for a in h.sim._approx())
+    assert "Surface velocity" in en(disk["vx"].label) and "does NOT move" in en(disk["vx"].help)
+    assert not any("surface" in en(a) for a in h.sim._approx())
     cyl = [k for k, o in h.sim.objects.items() if o["type"] == "disk"][0]
     h.cmd("scene", op="set", id=cyl, values={"wall": "staircase", "vx": 0.05})
     assert not h.errors(), h.errors()
     approx = [m for m in h.of("approximations")][-1]["approximations"]
-    assert any("стоят на месте" in a for a in approx)
-    assert "решётка" in SCHEMA.presets["airfoil"]["label"]
+    assert any("stay in place" in en(a) for a in approx)
+    assert "cascade" in en(SCHEMA.presets["airfoil"]["label"])
     h = Harness(V, "airfoil", SMALL)
-    assert any("решётка тел" in a for a in h.sim._approx())
+    assert any("a lattice of bodies" in en(a) for a in h.sim._approx())
 
 
 def test_the_karman_preset_stays_within_its_cell_reynolds_limit():
@@ -299,4 +306,4 @@ def test_the_view_marks_the_picture_as_an_approximation():
     walls)."""
     js = (Path(__file__).resolve().parents[1] / "web" / "view.js").read_text()
     assert "approximation: true" in js and "approximation: false" not in js and "exact: false" in js
-    assert "слабосжимаемая" in js
+    assert "weakly compressible" in js

@@ -10,26 +10,32 @@ from __future__ import annotations
 import importlib
 import pkgutil
 
+from lfphys.i18n import T
+
+# the user-facing fields of ABOUT (title, statement, validity, conflicts and the descriptive basis entries) and the
+# texts below are translatable texts (lfphys.i18n.T; Russian in lfphys/locales/ru.json)
 LAYERS = {
-    "core": "Ядро: установленная и подтверждённая опытом физика и её точные следствия (с контролем численной ошибки).",
-    "theories": "Вне ядра: широко используемые теории, расходящиеся с ядром или друг с другом в какой-то области "
-                "(приближения, интерпретации, модели) и альтернативы для исследований «что если».",
-    "laws": "Наборы законов: какие модули ядра и какие теории использует мир.",
-    "tools": "Инструменты, не физика: статистика смоделированных данных.",
+    "core": T("Core: established physics confirmed by experiment and its exact consequences (with the numerical "
+              "error controlled)."),
+    "theories": T("Outside the core: widely used theories that disagree with the core or with each other somewhere "
+                  "(approximations, interpretations, models) and alternatives for “what if” studies."),
+    "laws": T("Law sets: which core modules and which theories a world uses."),
+    "tools": T("Tools, not physics: statistics of simulated data."),
 }
 THEORY_KINDS = {
-    "approximation": "приближение",
-    "interpretation": "интерпретация",
-    "model": "феноменологическая модель",
-    "alternative": "альтернатива (модификация законов)",
+    "approximation": T("approximation"),
+    "interpretation": T("interpretation"),
+    "model": T("phenomenological model"),
+    "alternative": T("alternative (modified laws)"),
 }
+NOT_MODULES = ("lfphys.registry", "lfphys.i18n")  # the catalogue itself and the text mechanism: no physics, no ABOUT
 REQUIRED = ("layer", "kind", "title", "statement", "validity", "basis", "conflicts")
 
 
 def module_names() -> list[str]:
     import lfphys
     return sorted(m.name for m in pkgutil.walk_packages(lfphys.__path__, "lfphys.")
-                  if not m.ispkg and m.name not in ("lfphys.registry",))
+                  if not m.ispkg and m.name not in NOT_MODULES)
 
 
 def about(name: str) -> dict:

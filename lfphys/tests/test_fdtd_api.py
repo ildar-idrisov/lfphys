@@ -78,11 +78,12 @@ def test_state_round_trip_is_bit_identical(pol, bloch):
     assert b.steps == a.steps and b.t == a.t
 
 
-def test_state_refuses_what_cannot_be_saved():
+def test_state_refuses_what_cannot_be_saved(ru):
     w = F.FDTD((1.0, 1.0), 0.05)
     w.add_source(F.CurrentSource("ez", lambda t: np.sin(t), position=(0.5, 0.5)))
-    with pytest.raises(ValueError, match="не сохраняется"):
+    with pytest.raises(ValueError, match="is not saved in the state") as e:
         w.state_dict()
+    assert "не сохраняется в состоянии" in ru(e.value.args[0])
 
 
 # --- edits ------------------------------------------------------------------------------------------------------------
@@ -227,7 +228,7 @@ def test_mask_body_is_a_staircase_of_its_samples():
     assert np.array_equal(a.material_map("eps"), b.material_map("eps"))
     c = F.FDTD.from_state_dict(a.state_dict())
     assert np.array_equal(c.material_map("eps"), a.material_map("eps"))
-    with pytest.raises(ValueError, match="не сохраняется"):
+    with pytest.raises(ValueError, match="is not saved in the state"):
         w = F.FDTD((1.0, 1.0), 0.05)
         w.add_body(F.Mask(inside=lambda x, y: x < 0.5, dims=2), F.Medium(eps=2.0))
         w.state_dict()
@@ -251,16 +252,19 @@ def test_snapshots_and_material_map():
     assert w3.material_map("eps").shape == (20, 16, 12)
 
 
-def test_refusals():
+def test_refusals(ru):
     w = F.FDTD((2.0, 2.0), 0.05, pml=10)
-    with pytest.raises(ValueError, match="поглощающем"):
+    with pytest.raises(ValueError, match="absorbing layer") as e:
         w.add_source(F.PlaneWave(F.GaussianPulse(0.3), ((-0.2, 0.5), (1.5, 1.5))))
-    with pytest.raises(ValueError, match="Блоха"):
+    assert "в поглощающем слое" in ru(e.value.args[0])
+    with pytest.raises(ValueError, match="Bloch phase") as e:
         w.add_source(F.CurrentSource("ez", F.GaussianPulse(0.3), position=(1, 1), amplitude=1j))
-    with pytest.raises(ValueError, match="компоненты"):
+    assert "фазой Блоха" in ru(e.value.args[0])
+    with pytest.raises(ValueError, match="no component hz") as e:
         w.add_source(F.CurrentSource("hz", F.GaussianPulse(0.3), position=(1, 1)))
+    assert ru(e.value.args[0]) == "компоненты hz нет в этом мире (поляризация tm)"
     wb = F.FDTD((2.0, 0.05), 0.05, boundary={"x": "pml", "y": "periodic"}, bloch=(0.0, 2 * math.pi * 0.8))
-    with pytest.raises(ValueError, match="энергии"):  # half the pulse lies below the Bloch wave's cut-off
+    with pytest.raises(ValueError, match="of its energy"):  # half the pulse lies below the Bloch wave's cut-off
         wb.add_source(F.PlaneWave(F.ModulatedGaussian(0.8, fwidth=0.2), ((0.5, -math.inf), (math.inf, math.inf))))
     with pytest.raises(ValueError):
         F.FDTD((1.0, 1.0), 0.05, boundary={"x": ("periodic", "pec")})
@@ -359,7 +363,7 @@ def test_plane_wave_added_during_the_run():
     assert np.allclose(_cylinder_with_late_wave(400, save_at=300) / q0, 1.0, rtol=1e-8, atol=0)
 
 
-def test_bodies_at_the_plane_wave_faces_and_misplaced_monitors():
+def test_bodies_at_the_plane_wave_faces_and_misplaced_monitors(ru):
     """F12: a body crossing a TF/SF face (also one added later) is flagged in ``checks()`` with the count of correction
     nodes not in the background; a cross-section box crossing the total-field box is refused, and so is a near-to-far
     box that is not wholly in the scattered-field region."""
@@ -370,7 +374,8 @@ def test_bodies_at_the_plane_wave_faces_and_misplaced_monitors():
     assert w.checks()["tfsf_1"]["ok"]
     w.update_body(bid, shape=F.Box((1.0, 2.2), (4.0, 2.8)))
     c = w.checks()["tfsf_1"]
-    assert not c["ok"] and c["foreign_nodes_at_faces"] > 0 and "грань" in c["note"]
+    assert not c["ok"] and c["foreign_nodes_at_faces"] > 0 and "faces" in str(c["note"])
+    assert f"не в фоновой среде: {c['foreign_nodes_at_faces']}" in ru(c["note"])
     w.remove_body(bid)
     assert w.checks()["tfsf_1"]["ok"]
     good = w.add_flux(((1.0, 1.0), (4.0, 4.0)), freqs=[1.0])
@@ -382,8 +387,10 @@ def test_bodies_at_the_plane_wave_faces_and_misplaced_monitors():
     assert ch[f"monitor_{good}"]["region"] == "sf" and ch[f"monitor_{inside}"]["region"] == "tf"
     assert not ch[f"monitor_{crossing}"]["ok"] and not ch[f"monitor_{n2f_bad}"]["ok"]
     w.cross_sections(good, inside)
-    with pytest.raises(ValueError, match="F12"):
+    with pytest.raises(ValueError, match="F12") as e:
         w.cross_sections(crossing)
+    assert "across the boundary of the total-field region" in str(e.value)
+    assert "а он лежит поперёк границы области полного поля" in ru(e.value.args[0])
     with pytest.raises(ValueError, match="F12"):
         w.cross_sections(good, crossing)
     with pytest.raises(ValueError, match="F12"):
@@ -393,10 +400,10 @@ def test_bodies_at_the_plane_wave_faces_and_misplaced_monitors():
 def test_3d_polarization_along_the_direction_is_refused():
     """F16: a 3-D plane wave polarized along its own direction gave a silent zero wave."""
     w = F.FDTD((1.0, 1.0, 1.0), 0.1, pml=6)
-    with pytest.raises(ValueError, match="поляризация"):
+    with pytest.raises(ValueError, match="polarization"):
         w.add_source(F.PlaneWave(F.ModulatedGaussian(0.8, fwidth=0.3), ((0.3,) * 3, (0.7,) * 3),
                                  direction=(0, 0, 1), polarization=(0, 0, 1)))
-    with pytest.raises(ValueError, match="поляризация"):
+    with pytest.raises(ValueError, match="polarization"):
         w.add_source(F.PlaneWave(F.ContinuousWave(0.8, ramp=2.0), ((0.3,) * 3, (0.7,) * 3),
                                  direction=(1, 1, 0), polarization=(2, 2, 0)))
     assert not w._sources
@@ -422,3 +429,19 @@ def test_cost_estimate_and_footprint():
     assert b2 - b1 >= 1.3 * 11 * 40 * 40 * 16 * len(w.comps)
     w.add_body(F.Box((1.0, 1.0), (2.0, 2.0)), F.Medium(poles=[F.Lorentz(1.0, 1.0, 0.1)]))
     assert w._footprint() > b2
+
+
+def test_labels_are_translatable_texts(ru):
+    """A medium's or a body's label may be a translatable text (``lfphys.i18n.T``, owner 2026-11-12: the interface in
+    English and Russian); it survives a state saved as JSON."""
+    import json
+
+    from lfphys.i18n import T
+    m = F.Medium(eps=2.0, label=T("vacuum"))
+    back = F.Medium.from_params(json.loads(json.dumps(m.params())))
+    assert isinstance(back.label, T) and str(back.label) == "vacuum" and ru(back.label) == "вакуум"
+    assert ru(F.VACUUM.label) == "вакуум" and F.Medium(label="glass").label == "glass"
+    w = F.FDTD((1.0, 1.0), 0.05)
+    w.add_body(F.Box((0.2, 0.2), (0.4, 0.4)), F.Medium(eps=2.0), label=T("vacuum"))
+    c = F.FDTD.from_state_dict(json.loads(json.dumps(w.state_dict(), default=lambda a: a.tolist())))
+    assert c.bodies()[0]["label"] == T("vacuum") and isinstance(c.bodies()[0]["label"], T)

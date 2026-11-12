@@ -48,27 +48,30 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
 from ...core.optics import angular_spectrum as AS
 from ...core.optics import beams as B
 
 ABOUT = {
     "layer": "theories", "kind": "approximation",
-    "title": "Тонкие маски для оптических вихрей: спиральная пластинка, голограмма-«вилка», вращающийся шероховатый экран",
-    "statement": "Маска — пропускание t(x, y) в плоскости z = 0 (граничное условие тонкого элемента, как у Кирхгофа): "
-                 "спиральная пластинка exp(ilφ) (или ступенчатая), голограмма-вилка с фазой lφ − Kx (амплитудная, "
-                 "бинарная — на сетке рядом Фурье до полосы сетки, блазированная); m-й порядок вилки несёт заряд m·l "
-                 "и уходит под углом sin θ_m = −mK/k; мощность порядков по угловому спектру; шероховатый диск — тонкий "
-                 "фазовый экран, свет, рассеянный на ось. Дальше поле распространяется точно (ядро).",
-    "validity": "структуры много больше длины волны: тонкий элемент без толщины, краёв и векторного отклика; "
-                "скалярно (поляризация не участвует)",
-    "basis": ["Karimi et al., Opt. Lett. 32, 3053 (2007) — пучок за спиральной пластинкой",
-              "Bazhenov, Vasnetsov, Soskin, JETP Lett. 52, 429 (1990); Heckenberg et al., Opt. Lett. 17, 221 (1992) "
-              "(тексты не получены)",
-              "Lavery, Speirits, Barnett, Padgett, Science 341, 537 (2013), ур. 3, 4"],
-    "conflicts": ["lfphys.core.em.fdtd: пластинка или голограмма конечной толщины с векторным откликом отличается от "
-                  "тонкой маски, когда структура порядка длины волны (ступень пластинки, период в несколько λ)",
-                  "lfphys.core.em.slit: векторное решение для щелей в проводящем экране расходится с граничными "
-                  "значениями тонкой маски у структур в несколько λ (как у theories.approx.kirchhoff)"],
+    "title": T("Thin masks for optical vortices: the spiral phase plate, the “fork” hologram, a rotating rough screen"),
+    "statement": T("A mask is a transmission t(x, y) in the plane z = 0 (the boundary condition of a thin element, as "
+                   "in Kirchhoff's theory): a spiral phase plate exp(ilφ) (or a stepped one), a fork hologram with the "
+                   "phase lφ − Kx (amplitude; binary, on the grid as a Fourier series up to the grid's band; blazed); "
+                   "the m-th order of the fork carries the charge m·l and leaves at the angle sin θ_m = −mK/k; the "
+                   "power of the orders from the angular spectrum; a rough disc is a thin phase screen, and light is "
+                   "scattered onto the axis. Beyond the mask the field propagates exactly (the core)."),
+    "validity": T("structures much larger than the wavelength: a thin element without thickness, edges or vector "
+                  "response; scalar (polarisation plays no part)"),
+    "basis": [T("Karimi et al., Opt. Lett. 32, 3053 (2007) — the beam behind a spiral phase plate"),
+              T("Bazhenov, Vasnetsov, Soskin, JETP Lett. 52, 429 (1990); Heckenberg et al., Opt. Lett. 17, 221 (1992) "
+                "(full texts not obtained)"),
+              T("Lavery, Speirits, Barnett, Padgett, Science 341, 537 (2013), eqs. 3, 4")],
+    "conflicts": [T("lfphys.core.em.fdtd: a plate or a hologram of finite thickness with a vector response differs "
+                    "from the thin mask when the structure is of the order of the wavelength (a step of the plate, a "
+                    "period of a few λ)"),
+                  T("lfphys.core.em.slit: the vector solution for slits in a conducting screen departs from the "
+                    "boundary values of the thin mask for structures of a few λ (as for theories.approx.kirchhoff)")],
 }
 
 

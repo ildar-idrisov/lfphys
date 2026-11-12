@@ -110,7 +110,7 @@ def test_charge_coupled_shapes_act_through_q():
     assert np.array_equal(s.potential(el), step - phi) and np.array_equal(s.potential(), step)
 
 
-def test_unresolvable_edges_are_refused_and_why():
+def test_unresolvable_edges_are_refused_and_why(ru):
     """An edge narrower than edge_min(d) = 3.03 d is refused with its reason. The reason: the band-limited interpolant
     of the sampled potential (the grid's own picture of it) misses the continuous one by the aliased tail of the edge's
     spectrum, at most E1(k_N^2 eps^2/4)/pi per unit step (|S^(k)| = exp(-k^2 eps^2/4)/|k|, tails beyond k_N = pi/d on
@@ -119,9 +119,10 @@ def test_unresolvable_edges_are_refused_and_why():
     sc_ = Q.Scene((64, 64), d, dt=0.01)
     wmin = Q.edge_min(d)
     assert abs(wmin / d - Q.EDGE_STEPS) < 1e-12 and 3.03 < Q.EDGE_STEPS < 3.04
-    with pytest.raises(ValueError, match="край"):
+    with pytest.raises(ValueError, match="box: the edge .* is narrower than a grid") as e:
         sc_.add(Q.Box([0, 0], [1, 1], 1.0, 0.99 * wmin))
-    with pytest.raises(ValueError, match="край"):
+    assert ru(e.value.args[0]).startswith("ящик: край ") and "сделайте край шире или сетку мельче" in ru(e.value.args[0])
+    with pytest.raises(ValueError, match="edge"):
         sc_.add(Q.SlitWall(0, 0.0, 0.5, 1.0, [[0, 1]], 0.5 * wmin))
     sc_.add(Q.Box([0, 0], [1, 1], 1.0, wmin))
 
@@ -167,15 +168,15 @@ def test_landau_gauge_of_a_confined_field():
     # charged particles are refused next to fields whose orbital coupling is not built
     sc_ = Q.Scene((64, 64), 0.25, dt=0.01, edges=Q.EdgeLayers(2.0, 3.0))
     sc_.add_particle(Q.Packet(Q.species("electron"), [0, 0], [1, 0], [1, 1]))
-    with pytest.raises(ValueError, match="заряженная"):
+    with pytest.raises(ValueError, match="charged particle"):
         sc_.add(Q.MagneticField([0.3, 0, 0]))
-    with pytest.raises(ValueError, match="градиент"):
+    with pytest.raises(ValueError, match="gradient"):
         sc_.add(Q.MagneticField([0, 0, 1.0], gradient=[[0, 0, 0], [0, 0, 1.0], [0, 1.0, 0]]))
-    with pytest.raises(ValueError, match="несимметричен"):
+    with pytest.raises(ValueError, match="not symmetric"):
         Q.Scene((16, 16), 0.25).add(Q.MagneticField([0, 0, 1.0], gradient=[[0, 0, 0], [0, 0, 1.0], [0, 0, 0]]))
     # 3-D: a field along x confined in x has div B != 0: refused for a charge; a prism (unbounded along x) is built,
     # A_z = B g(y) F(z)... here (a, b) = (1, 2): A_2 = B g(x_2) F(x_1), curl_x A = d_1 A_2 - d_2 A_1 = B f(x_1) g(x_2)
-    assert "div B" in Q.MagneticField([0.5, 0, 0], lo=[-1, -1, -1], hi=[1, 1, 1], edge=0.5).orbital_reason(3)
+    assert "div B" in str(Q.MagneticField([0.5, 0, 0], lo=[-1, -1, -1], hi=[1, 1, 1], edge=0.5).orbital_reason(3))
     A3 = Q.MagneticField([0.5, 0, 0], lo=[None, -1, -1], hi=[None, 1, 1], edge=0.5).vector_potential(3)
     for x0, y, z in ((0.3, 0.2, -0.4), (2.0, 1.1, 0.9)):
         a = [np.array(x0), np.array(y), np.array(z)]
@@ -216,19 +217,21 @@ def test_free_packet_spreads_as_the_closed_form(shape, spacing, center, k, sigma
     assert abs(sx - sigma[0] * math.sqrt(1 + (t / (2 * sigma[0] ** 2)) ** 2)) < 1e-10
 
 
-def test_packets_are_refused_when_the_grid_or_window_cannot_hold_them():
+def test_packets_are_refused_when_the_grid_or_window_cannot_hold_them(ru):
     sc_ = Q.Scene((64, 64), 0.2, dt=0.01)
     sp = Q.species("electron")
-    with pytest.raises(ValueError, match="сетка не передаёт"):
+    with pytest.raises(ValueError, match="the grid does not carry") as e:
         sc_.add_particle(Q.Packet(sp, [0, 0], [14.0, 0], [1.0, 1.0]))  # pi/d = 15.7 < 14 + 3
-    with pytest.raises(ValueError, match="не помещается"):
+    assert "сетка не передаёт волну" in ru(e.value.args[0])
+    with pytest.raises(ValueError, match="does not fit") as e:
         sc_.add_particle(Q.Packet(sp, [3.0, 0], [0, 0], [1.0, 1.0]))   # 3.4 from the edge < 7.4 sigma
+    assert ru(e.value.args[0]).startswith("пакет не помещается в окно по оси x")
 
 
 # --- absorbed probability ---------------------------------------------------------------------------------------------
 def _absorbing_scene():
     sc_ = Q.Scene((128, 112), 0.2, dt=0.01, edges=Q.EdgeLayers(3.0, 6.0))
-    d1 = sc_.add(Q.Detector([5.0, None], [None, None], 3.0, 0.8, name="экран"))
+    d1 = sc_.add(Q.Detector([5.0, None], [None, None], 3.0, 0.8, name="screen"))
     d2 = sc_.add(Q.Detector([-2.0, 2.0], [0.0, None], 2.0, 0.8))
     sp = Q.species("electron")
     p1 = sc_.add_particle(Q.Packet(sp, [-2.0, 0.0], [5.0, 1.5], [1.0, 1.0]))
@@ -942,7 +945,7 @@ def test_a_shapes_peak_and_the_balls_kink():
     assert abs(wall.peak(2) - float(wall.V(g).max())) < 1e-12
     sc_ = Q.Scene((64, 64), 0.25, dt=0.01)
     assert abs(Q.BALL_MIN - 1.450) < 1e-3
-    with pytest.raises(ValueError, match="излом"):
+    with pytest.raises(ValueError, match="kink"):
         sc_.add(Q.Ball([0.0, 0.0], 0.5, 1.0, 1.0))
     sc_.add(Q.Ball([0.0, 0.0], 1.46, 1.0, 1.0))
 
@@ -973,11 +976,11 @@ def test_a_closed_window_refuses_a_charged_particle_next_to_a_field():
     for edges in (None, Q.EdgeLayers(3.0, 4.0, axes=[1])):
         s = Q.Scene((240, 240), 0.25, dt=0.01, edges=edges)
         s.add(fld)
-        with pytest.raises(ValueError, match="замкнутые"):
+        with pytest.raises(ValueError, match="closed"):
             s.add_particle(Q.Packet(el, [12.0, 10.0], [2.0, 0.0], [1.5, 1.5]))
         s2 = Q.Scene((240, 240), 0.25, dt=0.01, edges=edges)
         s2.add_particle(Q.Packet(el, [12.0, 10.0], [2.0, 0.0], [1.5, 1.5]))
-        with pytest.raises(ValueError, match="замкнутые"):
+        with pytest.raises(ValueError, match="closed"):
             s2.add(Q.FluxTube([-10.0, 0.0], math.pi, 1.0))
         s2.add_particle(Q.Packet(Q.species("neutron"), [-12.0, -10.0], [1.0, 0.0], [1.5, 1.5]))
         s2.add(Q.HarmonicTrap([0, 0], [0.01, 0.01]))  # other objects stay allowed
@@ -1005,7 +1008,7 @@ def test_a_uniform_field_is_not_changed_under_a_charged_wave():
         oid = s.add(Q.MagneticField([0, 0, B], lo=lo, hi=hi, edge=None if region is None else 1.0))
         pid = s.add_particle(Q.Packet(el, [0.0, -10.0], [2 * math.pi / 4, 0.0], [3.0, 3.0]))
         s.advance(64)
-        with pytest.raises(ValueError, match="поле нельзя менять"):
+        with pytest.raises(ValueError, match="field cannot be changed"):
             s.update(oid, B=[0, 0, 0.5 * B])
         s._switch_reason = lambda *a, **k: None
         s.update(oid, B=[0, 0, 0.5 * B])
@@ -1052,7 +1055,7 @@ def test_the_grid_must_hold_a_wave_in_a_well():
         return float(np.sum((s.density(pid) + backend.to_numpy(s.particles[pid].acc))[x > 4.0])) * s.grid.dV
     s = Q.Scene((512, 2), (80 / 256, 1.0), dt=2.0**-9, edges=Q.EdgeLayers(10.0, 30.0, axes=[0]))
     s.add(Q.Box([0.0, 0.0], [a, None], V0, w))
-    with pytest.raises(ValueError, match="сетка не передаёт"):
+    with pytest.raises(ValueError, match="the grid does not carry"):
         s.add_particle(Q.Packet(M1, [-25.0, 0.0], [k0, 0.0], [sig, math.inf]))
     assert abs(past(80 / 256, bypass=True) - ref) > 0.05
     for d in (80 / 384, 80 / 512):
@@ -1064,7 +1067,7 @@ def test_the_grid_must_hold_a_wave_in_a_well():
     k_, sk = s.k_spread(pid)
     assert abs(k0 + 6 * math.sqrt(float(np.max(sk ** 2)) + 0.25 / sm ** 2) - math.pi / (80 / 256)) < 1e-9
     st = s.state_dict()
-    with pytest.raises(ValueError, match="слишком мало"):
+    with pytest.raises(ValueError, match="too small"):
         s.measure(pid, 0.99 * sm, np.random.default_rng(1))
     assert np.array_equal(s.wave(pid), Q.Scene.from_state_dict(st).wave(pid))  # refused: nothing changed
     s.measure(pid, sm, np.random.default_rng(1))
@@ -1190,7 +1193,7 @@ def test_oblique_incidence_on_the_edge_layers():
     assert ref > 1e-4 and abs(back - ref) < 0.02 * ref, (back, ref)
 
 
-def test_a_packet_centred_outside_the_window_is_refused():
+def test_a_packet_centred_outside_the_window_is_refused(ru):
     """Review UX-params P29: a centre beyond the window (x = 1e6 nm in an 80 nm window) passed the window test,
     because the test squared the distance to the edge, which is then negative; the packet's Gaussian underflowed to 0
     on the grid and the normalisation made the wave NaN (the playground then showed «норма + поглощённое» = NaN and
@@ -1204,12 +1207,13 @@ def test_a_packet_centred_outside_the_window_is_refused():
         gap = 16.0 - abs(x)
         if abs(x) > 20.0:  # negative control: the former test alone, gap^2 / (2 s^2) < ln(1/tail), let these through
             assert not gap * gap / (2 * s * s) < math.log(1 / Q.PACKET_TAIL)
-        with pytest.raises(ValueError, match="вне окна"):
+        with pytest.raises(ValueError, match="outside the window") as e:
             sc_.add_particle(Q.Packet(sp, [x, 0.0], [1.0, 0.0], [s, s]))
-    with pytest.raises(ValueError, match="не помещается"):
+        assert ru(e.value.args[0]).startswith("центр пакета вне окна по оси x")
+    with pytest.raises(ValueError, match="does not fit"):
         sc_.add_particle(Q.Packet(sp, [16.0 - 0.5 * need, 0.0], [1.0, 0.0], [s, s]))
     pid = sc_.add_particle(Q.Packet(sp, [0.0, 0.0], [1.0, 0.0], [s, s]))
     assert np.isfinite(sc_.norm(pid)) and sc_.norm(pid) == pytest.approx(1.0, abs=1e-12)
-    with pytest.raises(ValueError, match="вне окна"):  # the same for a new packet of an existing particle
+    with pytest.raises(ValueError, match="outside the window"):  # the same for a new packet of an existing particle
         sc_.replace_particle(pid, Q.Packet(sp, [1e6, 0.0], [1.0, 0.0], [s, s]))
     assert sc_.norm(pid) == pytest.approx(1.0, abs=1e-12)  # refused: the particle is as it was

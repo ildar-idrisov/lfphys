@@ -8,13 +8,16 @@ limit omega -> infinity. The Cassini time-delay measurement gamma - 1 = (2.1 +- 
 
 from __future__ import annotations
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "theories", "kind": "alternative",
-    "title": "Скалярно-тензорная гравитация Бранса–Дикке",
-    "statement": "Скалярное поле с параметром связи ω; в слабом поле γ = (1+ω)/(2+ω), β = 1; ОТО — предел ω → ∞.",
-    "validity": "ограничена опытом Cassini: ω > ~4·10⁴",
+    "title": T("Brans–Dicke scalar-tensor gravity"),
+    "statement": T("A scalar field with the coupling parameter ω; in the weak field γ = (1+ω)/(2+ω), β = 1; GR is the "
+                   "limit ω → ∞."),
+    "validity": T("bounded by the Cassini experiment: ω > ~4·10⁴"),
     "basis": ["Brans & Dicke, Phys. Rev. 124, 925 (1961)", "Bertotti, Iess, Tortora, Nature 425, 374 (2003)"],
-    "conflicts": ["lfphys.core.gravity: ОТО (γ = 1); при малых ω противоречит измерениям Cassini"],
+    "conflicts": [T("lfphys.core.gravity: GR (γ = 1); at small ω it contradicts the Cassini measurements")],
 }
 
 

@@ -77,30 +77,33 @@ import math
 import numpy as np
 from scipy import linalg
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Открытые квантовые системы: управляющее уравнение Линдблада",
-    "statement": "dρ/dt = −i[H, ρ] + Σ_k (L_k ρ L_k† − ½{L_k†L_k, ρ}) — общий марковский генератор (вполне "
-                 "положительный, сохраняющий след): супероператор Лиувилля, точное решение через экспоненту матрицы "
-                 "(или её спектральное разложение), стационарное состояние как ядро 𝓛, для H(t) — метод Радо IIA "
-                 "5-го порядка (жёстко устойчивый) или схемы Магнуса 4-го порядка с контролем ошибки, проверки "
-                 "следа, эрмитовости и положительности.",
-    "validity": "марковское приближение: слабая связь с резервуаром (борновское), время корреляции резервуара много "
-                "меньше времени релаксации системы, при выводе из микроскопической модели — секулярное приближение; "
-                "конечномерное пространство (матрица 𝓛 размера d²×d², практически d ≲ 30). Ошибка: точное решение — "
-                "только округление (обратная ошибка u‖𝓛t‖); для H(t) — 4-й порядок, суммарная ошибка в следовой норме "
-                "≤ заданного tol (оценка удвоением шага, сжимаемость CPTP-эволюции); число шагов задаётся изменением "
-                "H(t) и tol, а не жёсткостью диссипатора (метод radau5; метод magnus4 — не меньше ‖𝓛‖·T шагов)",
+    "title": T("Open quantum systems: the Lindblad master equation"),
+    "statement": T("dρ/dt = −i[H, ρ] + Σ_k (L_k ρ L_k† − ½{L_k†L_k, ρ}), the general Markovian generator (completely "
+                   "positive, trace-preserving): the Liouville superoperator, the exact solution by the matrix "
+                   "exponential (or its spectral decomposition), the steady state as the kernel of 𝓛; for H(t) the "
+                   "5th-order Radau IIA method (stiffly stable) or 4th-order Magnus schemes with error control; "
+                   "checks of the trace, hermiticity and positivity."),
+    "validity": T("the Markov approximation: weak coupling to the reservoir (Born), the reservoir's correlation time "
+                  "much shorter than the system's relaxation time, and, when derived from a microscopic model, the "
+                  "secular approximation; a finite-dimensional space (the matrix 𝓛 is d²×d², in practice d ≲ 30). "
+                  "Error: the exact solution has only round-off (backward error u‖𝓛t‖); for H(t) 4th order, the "
+                  "total error in the trace norm ≤ the given tol (estimated by step doubling, contractivity of CPTP "
+                  "evolution); the number of steps is set by the variation of H(t) and by tol, not by the stiffness "
+                  "of the dissipator (method radau5; method magnus4 needs at least ‖𝓛‖·T steps)"),
     "basis": ["Lindblad, Commun. Math. Phys. 48, 119 (1976); Gorini, Kossakowski, Sudarshan, J. Math. Phys. 17, 821 "
               "(1976)",
               "Castin, Dalibard, Mølmer, AIP Conf. Proc. 275, 143 (1993), arXiv:0805.4002 — eq. (2)",
-              "Manzano, AIP Advances 10, 025106 (2020), arXiv:1906.04478 — спектральное решение, теорема Эванса",
-              "Blanes, Casas, Oteo, Ros, Phys. Rep. 470, 151 (2009), eqs. (254), (293), (295) — методы Магнуса "
-              "4-го порядка",
-              "Hairer & Wanner, Solving ODEs II (1996), §IV.5 — Radau IIA (коэффициенты проверены условиями "
-              "коллокации)",
+              T("Manzano, AIP Advances 10, 025106 (2020), arXiv:1906.04478 — spectral solution, Evans' theorem"),
+              T("Blanes, Casas, Oteo, Ros, Phys. Rep. 470, 151 (2009), eqs. (254), (293), (295) — 4th-order Magnus "
+                "methods"),
+              T("Hairer & Wanner, Solving ODEs II (1996), §IV.5 — Radau IIA (coefficients checked against the "
+                "collocation conditions)"),
               "Al-Mohy & Higham, SIAM J. Matrix Anal. Appl. 31, 970 (2009) — expm",
-              "lfphys/sources/verification_2026-10-29_p5.md — проверка цитат и выводов"],
+              T("lfphys/sources/verification_2026-10-29_p5.md — check of the quotations and derivations")],
     "conflicts": [],
 }
 

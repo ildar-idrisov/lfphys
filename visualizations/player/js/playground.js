@@ -19,6 +19,7 @@
 // `velocity_max` and says so); Delete removes the selected object, Esc
 // cancels a drag. A refusal of the world is shown (the player's toast) and the ghost snaps back. A gesture that starts
 // on an object is never the camera's. Edits respect the read-only history and a busy world (ctx.readOnly, ctx.busy).
+import { t } from "./i18n.js";
 import { control, el, fill, num, panel, time, toast } from "./ui.js";
 import { armPick, isFixedWindow, picking, redrawWindows, setFrameOverlay, setWindowManipulator } from "./slices.js";
 
@@ -26,12 +27,12 @@ import { armPick, isFixedWindow, picking, redrawWindows, setFrameOverlay, setWin
 // limit: review B6-F20)
 async function sceneText(f) {
   const text = await f.text();
-  if (text.length > 900000) throw new Error(`файл сцены больше 900 000 символов (${text.length})`);
+  if (text.length > 900000) throw new Error(t("the scene file is longer than {max:d} characters ({n:d})", { max: 900000, n: text.length }));
   return text;
 }
 
-const KIND_LABEL = { body: "тела", particle: "частицы", light: "свет", field: "поля", potential: "потенциалы",
-                     detector: "детекторы", probe: "датчики", observer: "наблюдатели", source: "источники" };
+const KIND_LABEL = { body: t("Bodies"), particle: t("Particles"), light: t("Light"), field: t("Fields"), potential: t("Potentials"),
+                     detector: t("Detectors"), probe: t("Probes"), observer: t("Observers"), source: t("Sources") };
 
 // The point of the plane z = zc under a screen point (client px) of the 3-D view: the plane's image is a homography of
 // the plane, fixed by four of its points (scene3d's screenOf), inverted (review UX-ui U4: «a click in the scene to choose
@@ -98,8 +99,8 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
   const ro = () => (ctx.readOnly ? ctx.readOnly() : "");
   // while the world computes a change, the palette and the inspector wait (review UX-ui U9: repeated clicks queued)
   const busy = () => (ctx.busy ? ctx.busy() : null);
-  const why = () => ro() || (busy() ? "Мир считает предыдущее изменение — подождите (или отмените его вверху)." : "");
-  const byType = (t) => (P ? P.palette.find((x) => x.type === t) : null);
+  const why = () => ro() || (busy() ? t("The world is computing the previous change — wait (or cancel it at the top).") : "");
+  const byType = (tt) => (P ? P.palette.find((x) => x.type === tt) : null);
   const objById = (id) => (scene ? scene.objects.find((o) => o.id === id) : null);
 
   // the inspector's edits are sent even while the world computes (they apply in order, and the focus stays in the field
@@ -116,12 +117,12 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
   function typeWhy(ot) {
     const n = scene ? scene.objects.length : 0;
     const count = scene ? scene.objects.filter((o) => o.type === ot.type).length : 0;
-    if (n >= P.max_objects) return `в сцене уже ${P.max_objects} объектов — больше нельзя`;
-    if (ot.limit !== null && ot.limit !== undefined && count >= ot.limit) return `не больше ${ot.limit} в сцене`;
-    return ((scene && scene.palette_state) || {})[ot.type] || "";
+    if (n >= P.max_objects) return t("the scene already holds {n:d} objects — no more", { n: P.max_objects });
+    if (ot.limit !== null && ot.limit !== undefined && count >= ot.limit) return t("at most {n:d} in a scene", { n: ot.limit });
+    return t(((scene && scene.palette_state) || {})[ot.type]);
   }
   function drawPalette() {
-    if (!P) { fill(paletteBox, el("div", { class: "muted" }, "ждём мир…")); return; }
+    if (!P) { fill(paletteBox, el("div", { class: "muted" }, t("waiting for the world…"))); return; }
     const groups = new Map();
     for (const ot of P.palette) {
       if (!groups.has(ot.kind)) groups.set(ot.kind, []);
@@ -129,15 +130,15 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
     }
     const off = why();
     fill(paletteBox,
-      el("div", { class: "help" }, "Щелчок — задать параметры и место, затем «Поставить» (Shift+щелчок — сразу, с параметрами по умолчанию). Объект появляется в текущий момент мира; потом его можно менять в инспекторе."),
+      el("div", { class: "help" }, t("Click — set the parameters and the place, then “Place” (Shift+click — at once, with the default parameters). The object appears at the world's current moment; then it can be changed in the inspector.")),
       ...[...groups].map(([kind, list]) => el("div", { class: "pg-group" },
         el("div", { class: "muted" }, KIND_LABEL[kind] || kind),
         el("div", { class: "pg-buttons" }, list.map((ot) => {
           const w = typeWhy(ot);
-          const b = el("button", { title: w ? `Сейчас нельзя: ${w}` : (ot.help || ot.label), disabled: !!off || !!w,
+          const b = el("button", { title: w ? t("Not possible now: {why}", { why: w }) : t(ot.help || ot.label), disabled: !!off || !!w,
                                    class: placing && placing.ot.type === ot.type ? "on" : "",
                                    style: { borderLeft: `4px solid ${ot.color}` },
-                                   onclick: (e) => { if (e.shiftKey) send({ op: "add", type: ot.type, values: {} }); else openPlace(ot); } }, "＋ " + ot.label);
+                                   onclick: (e) => { if (e.shiftKey) send({ op: "add", type: ot.type, values: {} }); else openPlace(ot); } }, "＋ " + t(ot.label));
           return w ? el("span", { class: "pg-btn" }, b, el("span", { class: "pg-why" }, w)) : b;
         })))));
   }
@@ -167,18 +168,18 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
     });
     const hasXY = ot.params.some((p) => p.id === "x") && ot.params.some((p) => p.id === "y");
     const canClick = hasXY && (!!s3() || !!document.querySelector(".sw-canvas"));
-    const pickBtn = canClick ? el("button", { class: picking() ? "toggle on" : "", title: "Щёлкните точку в 3D-сцене (на плоскости z середины области) или в окне среза: x, y возьмутся оттуда",
-      onclick: () => armScenePick() }, picking() ? "⌖ щёлкните в сцене… (Esc — отмена)" : "⌖ Указать место в сцене") : null;
+    const pickBtn = canClick ? el("button", { class: picking() ? "toggle on" : "", title: t("Click a point in the 3-D scene (on the plane z at the middle of the region) or in a slice window: x, y are taken from there"),
+      onclick: () => armScenePick() }, picking() ? t("⌖ click in the scene… (Esc — cancel)") : t("⌖ Point at a place in the scene")) : null;
     const w = typeWhy(ot);
     fill(placeBox, el("div", { class: "pg-place" },
-      el("div", { class: "name" }, "＋ " + ot.label + ": перед тем как поставить"),
-      ot.help ? el("div", { class: "help" }, ot.help) : null,
-      pickBtn, placing.position ? el("div", { class: "muted" }, `точка из сцены: ${placing.position.map((x) => num(x, 4)).join(", ")}`) : null,
+      el("div", { class: "name" }, "＋ " + t("{type}: before placing it", { type: ot.label })),
+      ot.help ? el("div", { class: "help" }, t(ot.help)) : null,
+      pickBtn, placing.position ? el("div", { class: "muted" }, t("the point from the scene: {p}", { p: placing.position.map((x) => num(x, 4)).join(", ") })) : null,
       rows,
-      w ? el("div", { class: "warn" }, "Сейчас нельзя: " + w) : null,
+      w ? el("div", { class: "warn" }, t("Not possible now: {why}", { why: w })) : null,
       el("div", { class: "row" },
-        placing.go = el("button", { class: "primary", disabled: !!why() || !!w, onclick: () => place() }, "Поставить"),
-        el("button", { onclick: closePlace }, "Отмена"))));
+        placing.go = el("button", { class: "primary", disabled: !!why() || !!w, onclick: () => place() }, t("Place")),
+        el("button", { onclick: closePlace }, t("Cancel")))));
     if (typing && placing.ctls[typing[0]] && placing.ctls[typing[0]].input) {
       const inp = placing.ctls[typing[0]].input;
       if (inp.type === "number") inp.value = typing[1].input.value;  // what was typed and not yet committed
@@ -210,7 +211,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
         const pt = planePoint(sc, e.clientX, e.clientY, box);
         e.stopPropagation(); e.preventDefault();
         armPick(null); disarmScene();
-        if (pt) setPoint(pt); else toast("Плоскость видна с ребра: поверните сцену или задайте x, y числами", "notice");
+        if (pt) setPoint(pt); else toast(t("The plane is seen edge on: turn the scene or type x, y as numbers"), "notice");
       };
       sc.el.addEventListener("click", sceneClick, true);
     }
@@ -219,7 +220,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
   function disarmScene() { const sc = s3(); if (sceneClick && sc && sc.el) sc.el.removeEventListener("click", sceneClick, true); sceneClick = null; }
   window.addEventListener("keydown", (e) => { if (e.key === "Escape" && picking()) { armPick(null); disarmScene(); drawPlace(); } });
 
-  // --- the camera on an object (review UX-3d A6): «◎ Центрировать» puts the 3-D view's pivot on the object, «Следить»
+  // --- the camera on an object (review UX-3d A6): "◎ Centre" puts the 3-D view's pivot on the object, "Follow"
   // keeps it there while the object moves; following stops when the owner turns or pans the view by hand (a zoom keeps
   // it) or the object is gone. Where an object is: the frame's `at[id]` when the section sends it, else the frame's
   // `ids` with its array `pos` (one point per id, as p01's bodies), else the object's set x, y, z.
@@ -243,7 +244,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
   function camNow(sc) { const c = sc.cameraState(); const d = sub3(c.pos, c.target), r = len3(d) || 1; return { target: c.target, dir: d.map((x) => x / r), r }; }
   function centerOnObject(id, { quiet = false } = {}) {
     const sc = s3(), p = posOf(id);
-    if (!sc || !sc.centerOn || !p) { if (!quiet) toast("Центрировать можно в 3D-сцене на объекте с положением", "notice"); return false; }
+    if (!sc || !sc.centerOn || !p) { if (!quiet) toast(t("Centring works in the 3-D scene, on an object with a position"), "notice"); return false; }
     sc.centerOn(p);
     if (follow && follow.id === id) follow.cam = camNow(sc);
     return true;
@@ -263,7 +264,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
       const zoom = Math.abs(c.r - k.r) > 1e-6 * scale;
       const turned = len3(sub3(c.dir, k.dir)) > 1e-5;
       const panned = len3(sub3(c.target, k.target)) > 1e-6 * scale;
-      if (!zoom && (turned || panned)) { setFollow(null); toast("Слежение за объектом выключено: вид повернули или сдвинули вручную", "notice", 4000); return; }
+      if (!zoom && (turned || panned)) { setFollow(null); toast(t("Following the object is off: the view was turned or moved by hand"), "notice", 4000); return; }
     }
     centerOnObject(follow.id, { quiet: true });
   }
@@ -271,7 +272,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
     if (insp.follow) {
       const on = !!follow && follow.id === selected;
       insp.follow.classList.toggle("on", on);
-      insp.follow.title = on ? "Слежение включено: вид держит объект в центре; повернёте или сдвинете вид вручную — выключится" : "Держать центр вида на объекте, пока он движется";
+      insp.follow.title = on ? t("Following is on: the view keeps the object in the centre; turn or move the view by hand and it goes off") : t("Keep the view's centre on the object while it moves");
     }
     for (const [id, r] of rowEls) if (r.eye) r.eye.style.display = follow && follow.id === id ? "" : "none";
   }
@@ -305,11 +306,11 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
   // why the object cannot be dragged now ("" when it can)
   function dragWhy(o) {
     const w = ro(); if (w) return w;
-    if (busy()) return "Мир считает предыдущее изменение — подождите (или отмените его вверху).";
-    if (pend) return "Предыдущее перемещение ещё применяется — подождите.";
+    if (busy()) return t("The world is computing the previous change — wait (or cancel it at the top).");
+    if (pend) return t("The previous move is still being applied — wait.");
     const h = handlesOf(o);
-    if (!h || !h.position) return `«${o.label}» нельзя перетаскивать: у объекта этого типа нет положения, которое двигают рукой; меняйте его в инспекторе`;
-    if (!Array.isArray(h.position) && axisIdx(o.values[h.position.axis_param]) === null) return `«${o.label}»: ось не задана`;
+    if (!h || !h.position) return t("“{label}” cannot be dragged: an object of this type has no position moved by hand; change it in the inspector", { label: o.label });
+    if (!Array.isArray(h.position) && axisIdx(o.values[h.position.axis_param]) === null) return t("“{label}”: the axis is not set", { label: o.label });
     return "";
   }
   // the coordinates a 2-element position names: the plane of a 2-D world (its normal axis k), else x, y
@@ -330,8 +331,8 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
     if (G.kind === "plane") {
       const den = vdot(d, G.n);
       if (Math.abs(den) < 1e-4) return null;
-      const t = vdot(vsub(G.p0, ray.origin), G.n) / den;
-      return t > 0 ? vadd(ray.origin, vmul(d, t)) : null;
+      const tt = vdot(vsub(G.p0, ray.origin), G.n) / den;
+      return tt > 0 ? vadd(ray.origin, vmul(d, tt)) : null;
     }
     const w = vsub(G.p0, ray.origin), b = vdot(d, G.a), den = 1 - b * b;
     if (den < 1e-4) return null;
@@ -342,10 +343,10 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
     const h = handlesOf(o), n = unitv(hw.plane.normal), dn = vdot(vsub(p0, hw.plane.origin), n);
     if (!Array.isArray(h.position)) {
       const ax = axisIdx(o.values[h.position.axis_param]);
-      if (Math.abs(n[ax]) > 0.98) return { why: `ось ${AX[ax]} поперёк плоскости этого окна: тяните «${o.label}» в 3D-сцене или в другом окне` };
+      if (Math.abs(n[ax]) > 0.98) return { why: t("the axis {axis} crosses the plane of this window: drag “{label}” in the 3-D scene or in another window", { axis: AX[ax], label: o.label }) };
       return { kind: "axis", p0, a: e3(ax), ax, n, dn };
     }
-    if (h.position.length === 2 && Math.abs(n[2]) < 0.999) return { why: `«${o.label}» живёт в плоскости z = const: тяните его в окне этой плоскости или в 3D-сцене` };
+    if (h.position.length === 2 && Math.abs(n[2]) < 0.999) return { why: t("“{label}” lives in the plane z = const: drag it in the window of that plane or in the 3-D scene", { label: o.label }) };
     return { kind: "plane", p0, n, dn };
   }
   const onWin = (G, P) => {  // the window's point under the pointer, put back at the object's distance from the plane
@@ -452,11 +453,11 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
   const velShow = (o) => { const h = handlesOf(o), d = h && h.velocity_display; return d && d.factor > 0 ? d : null; };
   function velUnit(o) {
     const d = velShow(o);
-    if (d) return d.unit;
+    if (d) return t(d.unit);
     const h = handlesOf(o), ot = byType(o.type), p = ot && h && h.velocity ? ot.params.find((q) => q.id === h.velocity[0]) : null;
-    if (p && p.unit) return p.unit;
-    const m = p ? /,\s*([^,(]+?)\s*(\(|$)/.exec(p.label) : null;  // a unit the label carries: «Скорость vx, нм/с (…)»
-    return m ? m[1] : "ед. длины / ед. времени";
+    if (p && p.unit) return t(p.unit);
+    const m = p ? /,\s*([^,(]+?)\s*(\(|$)/.exec(t(p.label)) : null;  // a unit the label carries: "Velocity vx, nm/s (…)"
+    return m ? m[1] : t("length unit / time unit");
   }
   // a vector in the player's number format; a component below a millionth of the vector's length is the arithmetic's
   // round-off, shown as 0 (review LB1-p02-ux X6)
@@ -465,7 +466,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
   // the markers: the selected object (a ring and its name) and the ghost (3-D scene and windows)
   function selectionSpec() {
     const o = selected ? objById(selected) : null, p = o ? posOf(o.id) : null;
-    return o && p ? { pos: p, radius: sizeOf(o), color: "#ffe066", text: o.label } : null;
+    return o && p ? { pos: p, radius: sizeOf(o), color: "#ffe066", text: t(o.label) } : null;
   }
   let selKey = "", selWinKey = "";
   function drawSelection() {
@@ -553,7 +554,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
     if (!drag) return;
     if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 4) return;
     if (drag.why || !drag.G) {
-      if (!drag.warned) { drag.warned = true; toast(drag.why || "Это объект нельзя перетащить здесь", "notice", 5000); }
+      if (!drag.warned) { drag.warned = true; toast(drag.why || t("This object cannot be dragged here"), "notice", 5000); }
       return;
     }
     const q = drag.where === "3d" ? onRay(drag.G, s3().rayAt(e.clientX, e.clientY)) : onWin(drag.G, drag.where.point(e));
@@ -580,13 +581,13 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
       drag.vel = v; drag.velShown = vmul(v, 0.5 * rate());  // where it would be after 0,5 s of wall time
       const kd = velShow(o) ? velShow(o).factor : 1;
       const shown = (n === 2 ? v.filter((_, i) => planeAxes(s3() && s3().state ? s3().state.plane2d : null).includes(i)) : v).map((x) => x * kd);
-      drag.text = `бросок: v = ${fmtVec(shown, n)} ${velUnit(o)} (×${num(sc.k, 3)}${sc.auto ? ", авто" : ""})`
-        + (drag.asked !== null ? ` — ограничено до ${num(vm * kd, 3)} ${velUnit(o)}: уменьшите масштаб броска` : "");
+      drag.text = t("throw: v = {v} {unit} (×{k:.3g}{auto})", { v: fmtVec(shown, n), unit: velUnit(o), k: sc.k, auto: sc.auto ? ", " + t("auto") : "" })
+        + (drag.asked !== null ? " — " + t("clamped to {vmax:.3g} {unit}: reduce the throw scale", { vmax: vm * kd, unit: velUnit(o) }) : "");
     } else {
       drag.vel = null; drag.velShown = null;
-      drag.text = axisB ? `${AX[drag.G.ax]} = ${num(drag.ghost[drag.G.ax], 5)}` : (shift && !axisB ? "бросить нельзя: у объекта нет скорости · " : "") + fmtVec(drag.ghost, 3);
+      drag.text = axisB ? `${AX[drag.G.ax]} = ${num(drag.ghost[drag.G.ax], 5)}` : (shift && !axisB ? t("it cannot be thrown: the object has no velocity") + " · " : "") + fmtVec(drag.ghost, 3);
     }
-    if (shift && axisB) drag.text += " (бросок вдоль оси не делается)";
+    if (shift && axisB) drag.text += " " + t("(there is no throw along an axis)");
   }
   function finish(e) {
     if (!drag) return;
@@ -630,7 +631,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
     if (ok) drawGhost(); else startSnap({ o: d.o, ghost: d.ghost, start: d.start, G: d.G, axisLine: d.axisLine });
     // a throw the world refused: what the owner can do about it (review LB1-p02-ux X4)
     if (!ok && d.throwing) {
-      toast(`Бросок не принят. Бросьте медленнее или уменьшите масштаб броска (сейчас ×${num(d.scale.k, 3)}${d.scale.auto ? ", авто" : ""}) — поле «Бросок (Shift): масштаб ×» в панели «Объекты сцены»`, "notice", 12000);
+      toast(t("The throw was not accepted. Throw slower or reduce the throw scale (now ×{k:.3g}{auto}) — the field “Throw (Shift): scale ×” in the panel “Scene objects”", { k: d.scale.k, auto: d.scale.auto ? ", " + t("auto") : "" }), "notice", 12000);
     }
   }
   window.addEventListener("lferror", () => editAnswered(false));
@@ -695,19 +696,19 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
     if (e.key === "Delete" && selected && objById(selected) && !drag) {
       const sc = s3();
       // a slice plane selected after the object takes the key; the world's own window never does (review LB1-p02-ux
-      // X2: Delete in p02's plane window answered «Срез не построен»)
+      // X2: Delete in p02's plane window answered "Slice not built")
       if (sc && sc.state && sc.state.selected && !isFixedWindow(sc.state.selected)) return;
       e.preventDefault(); e.stopPropagation();
       const o = objById(selected);
-      if (send({ op: "remove", id: o.id })) toast(`Удаляется «${o.label}»…`, "notice", 2500);
+      if (send({ op: "remove", id: o.id })) toast(t("Removing “{label}”…", { label: o.label }), "notice", 2500);
     }
     if (e.key === "Shift" && drag && drag.moved) { describeDrag(true, performance.now()); drawGhost(); }
   }, true);
   window.addEventListener("keyup", (e) => { if (e.key === "Shift" && drag && drag.moved) { describeDrag(false, performance.now()); drawGhost(); } }, true);
 
-  // the throw's scale and the help on manipulation (panel «Объекты сцены»)
-  const throwInput = el("input", { type: "number", min: 0, step: "any", value: throwScale ?? "", placeholder: "авто", style: { width: "6em" },
-                                   title: "Скорость броска = смещение указателя в мире за последние 0,1 с ÷ (0,1 с × скорость воспроизведения) × масштаб. Пусто — авто: быстрый взмах (ширина вида за секунду) бросает объект через всю область мира за 2 с при текущей скорости воспроизведения, но не быстрее половины наибольшей скорости, которую мир объявил; бросок быстрее неё ограничивается" });
+  // the throw's scale and the help on manipulation (panel "Scene objects")
+  const throwInput = el("input", { type: "number", min: 0, step: "any", value: throwScale ?? "", placeholder: t("auto"), style: { width: "6em" },
+                                   title: t("Throw velocity = the pointer's displacement in the world over the last 0.1 s ÷ (0.1 s × the playback speed) × the scale. Empty — auto: a brisk flick (the view's width in a second) throws the object across the whole region of the world in 2 s at the current playback speed, but not faster than half the largest speed the world declared; a faster throw is clamped") });
   throwInput.onchange = () => {
     const raw = String(throwInput.value).trim(), v = Number(raw);
     if (raw === "") throwScale = null;
@@ -715,11 +716,11 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
     else { throwInput.value = throwScale ?? ""; return; }
     try { if (throwScale === null) localStorage.removeItem("lf.throwScale"); else localStorage.setItem("lf.throwScale", String(throwScale)); } catch (e) { /* storage off */ }
   };
-  const autoBtn = el("button", { title: "Масштаб броска — автоматически", onclick: () => { throwInput.value = ""; throwInput.onchange(); } }, "авто");
+  const autoBtn = el("button", { class: "pg-auto", title: t("The throw scale — automatic"), onclick: () => { throwInput.value = ""; throwInput.onchange(); } }, t("auto"));
   const manipBox = el("div", { class: "pg-manip" },
-    el("div", { class: "help" }, "В сцене и в окне среза: щелчок по объекту — выбрать; перетащить — переместить (в плоскости, перпендикулярной взгляду; в плоскости 2-D мира или окна; вдоль оси для объектов на оси); Shift + перетащить — бросить; Delete — удалить; Esc — отменить перетаскивание. Изменение применяется при отпускании, в текущий момент мира."),
-    el("div", { class: "row" }, el("span", { class: "muted" }, "Бросок (Shift): масштаб ×"), throwInput, autoBtn,
-      el("span", { class: "muted", title: "При масштабе 1 тело летит дальше с той скоростью, с какой его несла рука при текущей скорости воспроизведения" }, " ⓘ")));
+    el("div", { class: "help" }, t("In the scene and in a slice window: click an object — select it; drag — move it (in the plane perpendicular to the view; in the plane of a 2-D world or of the window; along the axis for objects on an axis); Shift + drag — throw; Delete — remove; Esc — cancel the drag. The change applies on release, at the world's current moment.")),
+    el("div", { class: "row" }, el("span", { class: "muted" }, t("Throw (Shift): scale ×")), throwInput, autoBtn,
+      el("span", { class: "muted", title: t("At scale 1 a body flies on with the speed the hand carried it at the current playback speed") }, " ⓘ")));
 
   // --- objects and the inspector -----------------------------------------------------------------------------
   // The list is kept and its rows updated in place: its scroll stays where the owner put it when the scene changes or
@@ -729,7 +730,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
   const rowEls = new Map();
   function drawObjects() {
     const objs = scene ? scene.objects : [];
-    if (!objs.length) { listEl = null; rowEls.clear(); fill(objectsBox, el("div", { class: "muted" }, "Сцена пуста: добавьте объекты из палитры.")); drawInspector(); return; }
+    if (!objs.length) { listEl = null; rowEls.clear(); fill(objectsBox, el("div", { class: "muted" }, t("The scene is empty: add objects from the palette."))); drawInspector(); return; }
     if (!listEl || listEl.parentNode !== objectsBox) { listEl = el("div", { class: "pg-list" }); fill(objectsBox, listEl); rowEls.clear(); }
     const off = !!why(), ids = new Set(objs.map((o) => o.id));
     for (const [id, r] of rowEls) if (!ids.has(id)) { r.row.remove(); rowEls.delete(id); }
@@ -739,16 +740,16 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
       if (!r) {
         const ot = byType(o.type);
         const name = el("span", { class: "grow" });
-        const dup = el("button", { title: "Копия (в текущий момент)", onclick: (e) => { e.stopPropagation(); send({ op: "duplicate", id: o.id }); } }, "⧉");
-        const del = el("button", { title: "Удалить из сцены (в текущий момент)", onclick: (e) => { e.stopPropagation(); send({ op: "remove", id: o.id }); } }, "✕");
-        const ctr = el("button", { title: "Центрировать вид на объекте (центр вращения — на нём)", onclick: (e) => { e.stopPropagation(); centerOnObject(o.id); } }, "◎");
-        const eye = el("span", { class: "pg-eye", title: "За этим объектом следит вид (выключить — «Следить» в инспекторе)", style: { display: "none" } }, "👁");
+        const dup = el("button", { title: t("A copy (at the current moment)"), onclick: (e) => { e.stopPropagation(); send({ op: "duplicate", id: o.id }); } }, "⧉");
+        const del = el("button", { title: t("Remove from the scene (at the current moment)"), onclick: (e) => { e.stopPropagation(); send({ op: "remove", id: o.id }); } }, "✕");
+        const ctr = el("button", { title: t("Centre the view on the object (the centre of rotation on it)"), onclick: (e) => { e.stopPropagation(); centerOnObject(o.id); } }, "◎");
+        const eye = el("span", { class: "pg-eye", title: t("The view follows this object (to switch off — “Follow” in the inspector)"), style: { display: "none" } }, "👁");
         const row = el("div", { class: "pg-obj", onclick: () => select(o.id, { fromList: true }) },
           el("span", { class: "pg-sw", style: { background: ot ? ot.color : "#888" } }), name, eye, ctr, dup, del);
         r = { row, name, dup, del, eye, ctr };
         rowEls.set(o.id, r);
       }
-      if (r.name.textContent !== o.label) r.name.textContent = o.label;
+      if (r.name.textContent !== t(o.label)) r.name.textContent = t(o.label);
       r.row.classList.toggle("sel", o.id === selected);
       r.dup.disabled = off; r.del.disabled = off;
       r.ctr.style.display = s3() ? "" : "none";
@@ -777,7 +778,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
   let insp = { key: null, ctls: {} };
   function drawInspector() {
     const o = selected ? objById(selected) : null;
-    if (!o) { insp = { key: null, ctls: {} }; fill(inspectorBox, el("div", { class: "muted" }, "Выберите объект в списке сцены.")); return; }
+    if (!o) { insp = { key: null, ctls: {} }; fill(inspectorBox, el("div", { class: "muted" }, t("Choose an object in the list of the scene."))); return; }
     if (insp.key === null) insp = { key: null, ctls: {} };
     const ot = byType(o.type);
     const w = ro();
@@ -785,11 +786,11 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
     const key = `${o.id}|${o.type}|${w ? 1 : 0}|${vis}`;
     if (key === insp.key) {
       for (const [pid, c] of Object.entries(insp.ctls)) c.set(o.values[pid]);
-      if (insp.name && document.activeElement !== insp.name) insp.name.value = o.label;
-      if (insp.added) insp.added.textContent = `добавлен при t = ${time(o.t_added, 6)}`;
+      if (insp.name && document.activeElement !== insp.name) insp.name.value = t(o.label);
+      if (insp.added) insp.added.textContent = t("added at t = {t}", { t: time(o.t_added, 6) });
       return;
     }
-    const name = el("input", { type: "text", value: o.label, disabled: !!w, title: "Имя объекта" });
+    const name = el("input", { type: "text", class: "pg-insp-name", value: t(o.label), disabled: !!w, title: t("The object's name") });
     name.onchange = () => send({ op: "label", id: o.id, label: name.value });
     const ctls = {};
     const rows = (ot ? ot.params : []).filter((p) => !p.hidden && shown(p, o.values)).map((p) => {
@@ -798,18 +799,18 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
       ctls[p.id] = c;
       return c.el;
     });
-    const added = el("div", { class: "muted" }, `добавлен при t = ${time(o.t_added, 6)}`);
+    const added = el("div", { class: "muted" }, t("added at t = {t}", { t: time(o.t_added, 6) }));
     const camRow = s3() ? el("div", { class: "row pg-cam" },
-      el("button", { title: "Центр вращения 3D-вида — на объект (направление взгляда то же)", onclick: () => centerOnObject(o.id) }, "◎ Центрировать"),
-      el("button", { class: "toggle", onclick: () => setFollow(follow && follow.id === o.id ? null : o.id) }, "👁 Следить")) : null;
+      el("button", { title: t("The 3-D view's centre of rotation on the object (the direction of view the same)"), onclick: () => centerOnObject(o.id) }, t("◎ Centre")),
+      el("button", { class: "toggle", onclick: () => setFollow(follow && follow.id === o.id ? null : o.id) }, t("👁 Follow"))) : null;
     // keep the field the owner was in: the same parameter's field of the new controls takes the focus back
     const focusPid = Object.entries(insp.ctls).find(([, c]) => c.input && document.activeElement === c.input);
     insp = { key, ctls, name, added, follow: camRow ? camRow.lastChild : null };
     fill(inspectorBox,
-      el("div", { class: "ctl" }, el("label", {}, (ot ? ot.label : o.type) + ":"), name), camRow,
-      w ? el("div", { class: "warn" }, w) : el("div", { class: "help" }, "Изменения применяются сразу, в текущий момент мира. Поля — заданные значения; «сейчас» — состояние объекта в этот момент мира."),
+      el("div", { class: "ctl" }, el("label", {}, (ot ? t(ot.label) : o.type) + ":"), name), camRow,
+      w ? el("div", { class: "warn" }, w) : el("div", { class: "help" }, t("Changes apply at once, at the world's current moment. The fields are the values set; “now” is the object's state at this moment of the world.")),
       ...rows,
-      el("div", { class: "muted", style: { marginTop: "6px" } }, "сейчас:"), nowBox,
+      el("div", { class: "muted", style: { marginTop: "6px" } }, t("now:")), nowBox,
       added);
     if (focusPid && ctls[focusPid[0]] && ctls[focusPid[0]].input && !ctls[focusPid[0]].input.disabled) ctls[focusPid[0]].input.focus();
     drawFollow();
@@ -819,7 +820,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
   // in its own box (the inputs above keep their focus)
   function drawNow(frame) {
     const r = selected && frame && frame.now ? frame.now[selected] : null;
-    fill(nowBox, r ? Object.entries(r).flatMap(([k, v]) => [el("span", {}, k), el("span", { class: "mono" }, typeof v === "number" ? num(v, 6) : String(v))])
+    fill(nowBox, r ? Object.entries(r).flatMap(([k, v]) => [el("span", {}, t(k)), el("span", { class: "mono" }, typeof v === "number" ? num(v, 6) : t(v))])
       : [el("span", { class: "muted" }, "—")]);
   }
 
@@ -831,46 +832,46 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
   // --- the scene's changes in time --------------------------------------------------------------------------
   function drawChanges(tNow) {
     const list = changes.filter((c) => c.t <= tNow + 1e-12 * Math.abs(tNow));
-    if (!list.length) { fill(changesBox, el("div", { class: "muted" }, "Сцену ещё не меняли.")); return; }
+    if (!list.length) { fill(changesBox, el("div", { class: "muted" }, t("The scene has not been changed yet."))); return; }
     fill(changesBox, list.slice(-200).reverse().map((c) => el("div", { class: "ev", style: { cursor: "pointer" },
-      title: "Перейти к этому моменту записи", onclick: () => ctx.jumpTo && ctx.jumpTo(c.t) },
-      el("span", { class: "mono" }, time(c.t, 6)), " — ", c.text)));
+      title: t("Go to this moment of the record"), onclick: () => ctx.jumpTo && ctx.jumpTo(c.t) },
+      el("span", { class: "mono" }, time(c.t, 6)), " — ", t(c.text))));
   }
 
   // --- probes ----------------------------------------------------------------------------------------------
   function drawProbes(frame) {
     const probes = (frame && frame.probes) || {};
     const ids = Object.keys(probes);
-    if (!ids.length) { fill(probesBox, el("div", { class: "muted" }, "Датчиков нет: добавьте их из палитры.")); return; }
+    if (!ids.length) { fill(probesBox, el("div", { class: "muted" }, t("No probes: add them from the palette."))); return; }
     fill(probesBox, ids.map((id) => {
       const o = objById(id), r = probes[id];
-      const rows = describeProbe ? describeProbe(o, r) : Object.entries(r).map(([k, v]) => [k, typeof v === "number" ? num(v, 6) : String(v)]);
-      return el("div", { class: "pg-probe" }, el("b", {}, o ? o.label : id),
-        el("div", { class: "kv" }, rows.flatMap(([k, v]) => [el("span", {}, k), el("span", { class: "mono" }, v)])));
+      const rows = describeProbe ? describeProbe(o, r) : Object.entries(r).map(([k, v]) => [k, typeof v === "number" ? num(v, 6) : v]);
+      return el("div", { class: "pg-probe" }, el("b", {}, o ? t(o.label) : id),
+        el("div", { class: "kv" }, rows.flatMap(([k, v]) => [el("span", {}, t(k)), el("span", { class: "mono" }, t(v))])));
     }));
   }
 
   // --- the scene as a file --------------------------------------------------------------------------------
   function drawFile() {
-    const save = el("button", { title: "Объекты сцены с параметрами и их текущим состоянием, законы мира и время — в файл", onclick: () => {
+    const save = el("button", { title: t("The scene's objects with their parameters and current state, the world's laws and the time — into a file"), onclick: () => {
       if (!ctx.atEnd || ctx.atEnd()) { exportAsked = true; ctx.send("scene", { op: "export" }); }
-      else toast("Сохраняется сцена текущего момента мира: перейдите в конец записи (⏭)", "notice");
-    } }, "💾 Сохранить сцену");
+      else toast(t("The scene of the world's current moment is saved: go to the end of the record (⏭)"), "notice");
+    } }, t("💾 Save the scene"));
     const input = el("input", { type: "file", accept: ".lfscene,.json,application/json", style: { display: "none" } });
     input.onchange = async () => {
       const f = input.files[0];
       input.value = "";
       if (!f) return;
       let sc;
-      try { sc = JSON.parse(await sceneText(f)); } catch (e) { toast("Файл сцены не прочитан: " + e.message); return; }
-      if (!sc || sc.format !== "lfscene") { toast("Это не файл сцены (lfscene)"); return; }
-      if (P && sc.viz && sc.viz !== P.viz) { toast(`Сцена другого раздела (${sc.viz}): откройте её из каталога`); return; }
-      if (!confirm("Начать в этом запуске новый мир из сцены файла? Текущий мир останется в записи.")) return;
+      try { sc = JSON.parse(await sceneText(f)); } catch (e) { toast(t("The scene file was not read: {why}", { why: e.message })); return; }
+      if (!sc || sc.format !== "lfscene") { toast(t("This is not a scene file (lfscene)")); return; }
+      if (P && sc.viz && sc.viz !== P.viz) { toast(t("A scene of another section ({other}): open it from the catalogue", { other: sc.viz })); return; }
+      if (!confirm(t("Start a new world in this run from the file's scene? The current world stays in the record."))) return;
       ctx.send("new_world", { params: { ...(sc.laws || {}), scene: sc }, seed: null });
     };
-    const load = el("button", { title: "Новый мир этого запуска из файла сцены (законы и объекты из файла)", onclick: () => input.click() }, "📂 Загрузить сцену…");
+    const load = el("button", { title: t("A new world of this run from a scene file (the laws and the objects from the file)"), onclick: () => input.click() }, t("📂 Load a scene…"));
     fill(fileBox, el("div", { class: "row" }, save, load, input),
-      el("div", { class: "help" }, "В файле — объекты, их параметры и текущее состояние (положения, скорости), законы мира и время. Волна квантового раздела сохраняется как пакеты, из которых она началась; продолжение самой волны — в записи запуска."));
+      el("div", { class: "help" }, t("The file holds the objects, their parameters and current state (positions, velocities), the world's laws and the time. The wave of the quantum section is saved as the packets it started from; the continuation of the wave itself is in the run's record.")));
   }
 
   function download(sc) {
@@ -885,37 +886,37 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
     if (!rec) { fill(recBox, el("div", { class: "muted" }, "…")); return; }
     const mins = Math.round((rec.window_s || 600) / 60);
     const win = el("input", { type: "number", min: 1, max: 1440, step: 1, value: mins, style: { width: "5em" },
-                              title: "Сколько последних минут держит окно записи" });
+                              title: t("How many last minutes the record's window holds") });
     win.onchange = () => postRec({ window_s: 60 * Number(win.value) });  // the window only (B6-F11, F12)
     const btn = el("button", { class: rec.recording ? "toggle on" : "", title: rec.recording
-      ? "Запись сохраняется целиком; нажмите, чтобы снова держать только окно (сохранённое останется)"
-      : "Сохранить то, что держит окно, и писать всё дальше (как видеорегистратор)",
-      onclick: () => postRec({ on: !rec.recording }) }, rec.recording ? "■ Сохраняется — только окно" : "● Сохранять запись");
+      ? t("The record is kept whole; press to hold only the window again (what was kept stays)")
+      : t("Keep what the window holds and record everything from now on (like a dashcam)"),
+      onclick: () => postRec({ on: !rec.recording }) }, rec.recording ? t("■ Being kept — window only") : t("● Keep the record"));
     fill(recBox,
       el("div", { class: "row" }, btn),
-      el("div", { class: "row" }, el("span", { class: "muted" }, "Окно: последние"), win, el("span", { class: "muted" }, "мин")),
+      el("div", { class: "row" }, el("span", { class: "muted" }, t("Window: the last")), win, el("span", { class: "muted" }, t("min"))),
       el("div", { class: "help" }, rec.recording
-        ? "Всё, что было в окне, и всё дальше хранится, пока не выключите."
-        : "Хранятся только последние минуты: старое удаляется. Заметили эффект — нажмите «● Сохранять запись»: окно с ним сохранится, и запись пойдёт целиком."),
-      el("div", { class: "muted" }, `запись с t = ${rec.kept_from_t === null || rec.kept_from_t === undefined ? "—" : time(rec.kept_from_t, 5)}; на диске ${num((rec.size || 0) / 1e6, 3)} МБ`));
+        ? t("Everything that was in the window, and everything after it, is kept until you switch it off.")
+        : t("Only the last minutes are kept: older ones are removed. Noticed an effect — press “● Keep the record”: the window with it is kept and the record goes on whole.")),
+      el("div", { class: "muted" }, t("the record from t = {t}; on the disk {mb:.3g} MB", { t: rec.kept_from_t === null || rec.kept_from_t === undefined ? "—" : time(rec.kept_from_t, 5), mb: (rec.size || 0) / 1e6 })));
   }
 
   async function postRec(body) {
     try {
       const r = await fetch(`/api/runs/${encodeURIComponent(runId)}/record`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const j = await r.json();
-      if (!r.ok) throw new Error(j.error || r.statusText);
+      if (!r.ok) throw new Error(j.error !== undefined ? t(j.error) : r.statusText);
       rec = j; drawRec();
-    } catch (e) { toast("Запись: " + e.message); }
+    } catch (e) { toast(t("Record: {why}", { why: e.message })); }
   }
 
   // redrawn only when what they show changed: an input being edited must keep its focus between frames
   let keyScene = "", keyChanges = "", keyRec = "", fileDrawn = false;
-  function drawAll(frame, t) {
+  function drawAll(frame, tt) {
     const ks = `${P ? P.viz : ""}|${scene ? scene.rev + ":" + scene.objects.length + ":" + JSON.stringify(scene.palette_state || {}) : ""}|${selected}|${ro()}`;
     if (ks !== keyScene) { keyScene = ks; drawPalette(); drawObjects(); if (placing) drawPlace(); }
-    const shownChanges = changes.filter((c) => c.t <= (t ?? Infinity) + 1e-12 * Math.abs(t ?? 0)).length;
-    if (`${shownChanges}|${changes.length}` !== keyChanges) { keyChanges = `${shownChanges}|${changes.length}`; drawChanges(t ?? Infinity); }
+    const shownChanges = changes.filter((c) => c.t <= (tt ?? Infinity) + 1e-12 * Math.abs(tt ?? 0)).length;
+    if (`${shownChanges}|${changes.length}` !== keyChanges) { keyChanges = `${shownChanges}|${changes.length}`; drawChanges(tt ?? Infinity); }
     const kr = JSON.stringify(rec);
     if (kr !== keyRec) { keyRec = kr; drawRec(); }
     if (!fileDrawn) { fileDrawn = true; drawFile(); }
@@ -934,10 +935,10 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
   });
 
   return {
-    leftPanels: [panel("Палитра: добавить в сцену", el("div", {}, paletteBox, placeBox)), panel("Объекты сцены", el("div", {}, manipBox, objectsBox)),
-                 panel("Инспектор", inspectorBox), panel("Сцена: файл", fileBox, { closed: true }),
-                 panel("Запись: окно", recBox, { closed: true })],
-    rightPanels: [panel("Датчики", probesBox), panel("Изменения сцены", changesBox, { closed: true })],
+    leftPanels: [panel(t("Palette: add to the scene"), el("div", {}, paletteBox, placeBox)), panel(t("Scene objects"), el("div", {}, manipBox, objectsBox)),
+                 panel(t("Inspector"), inspectorBox), panel(t("Scene: file"), fileBox, { closed: true }),
+                 panel(t("Record: window"), recBox, { closed: true })],
+    rightPanels: [panel(t("Probes"), probesBox), panel(t("Scene changes"), changesBox, { closed: true })],
     selected: () => selected,
     objects: () => (scene ? scene.objects : []),
     object: objById,
@@ -979,7 +980,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
         case "event":
           if (meta.kind === "scene") changes.push({ t: meta.t, text: meta.text, name: meta.name });
           if (meta.kind === "scene" && pend && meta.name === "edit" && (meta.args || {}).id === pend.id) editAnswered(true);
-          return false;  // the player keeps it in «События» too
+          return false;  // the player keeps it in "Events" too
         case "record_state":
           rec = meta; return true;
         case "scene_export":
@@ -992,8 +993,8 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
       }
     },
     setRecord(state) { rec = state; drawRec(); },
-    render(frame, t, blobs) {
-      lastFrame = frame || lastFrame; lastBlobs = blobs || null; drawAll(frame, t);
+    render(frame, tt, blobs) {
+      lastFrame = frame || lastFrame; lastBlobs = blobs || null; drawAll(frame, tt);
       ensureManip();
       if (selected || selWinKey) drawSelection();
     },

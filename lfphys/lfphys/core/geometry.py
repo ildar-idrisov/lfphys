@@ -24,15 +24,18 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from lfphys.i18n import T, join
+
 ABOUT = {
     "layer": "core", "kind": "numerics",
-    "title": "Геометрия расчётов: 2-D и 3-D, плоскости и срезы",
-    "statement": "Плоскость в пространстве (xy, xz, yz или любая нормаль) для двумерных моделей; срез трёхмерного поля "
-                 "по плоскости; режимы трёхмерного моделирования: весь объём или только заданные срезы (с пометкой, "
-                 "когда срез — приближение).",
-    "validity": "точная линейная алгебра; срез по координатной плоскости через узлы — точно, иначе трилинейная "
-                "интерполяция с ошибкой ≤ Σ h²·|∂²f|/8",
-    "basis": ["линейная алгебра; трилинейная интерполяция (оценка ошибки — остаточный член интерполяции Лагранжа)"],
+    "title": T("Geometry of computations: 2-D and 3-D, planes and slices"),
+    "statement": T("A plane in space (xy, xz, yz or any normal) for two-dimensional models; the slice of a "
+                   "three-dimensional field by a plane; the modes of three-dimensional modelling: the whole volume or "
+                   "only the given slices (flagged when a slice is an approximation)."),
+    "validity": T("exact linear algebra; a slice along a coordinate plane through the nodes is exact, otherwise "
+                  "trilinear interpolation with an error ≤ Σ h²·|∂²f|/8"),
+    "basis": [T("linear algebra; trilinear interpolation (the error bound: the remainder term of Lagrange "
+                "interpolation)")],
     "conflicts": [],
 }
 
@@ -236,7 +239,7 @@ class Slice:
     approximation (a reduced model), with the reason (review B1-12)."""
     plane: Plane
     exact: bool = True
-    reason: str = ""
+    reason: T | str = field(default="", compare=False)  # a translatable text (lfphys.i18n); not hashed
 
 
 @dataclass
@@ -248,7 +251,7 @@ class Modelling:
     mode: str = "full3d"
     planes: list = field(default_factory=list)
     exact: bool = True
-    reason: str = ""
+    reason: T | str = ""  # a translatable text (lfphys.i18n)
 
     def __post_init__(self):
         if self.mode not in ("full3d", "slices"):
@@ -273,40 +276,45 @@ class Modelling:
     def approximation(self) -> bool:
         return self.mode == "slices" and any(not s.exact for s in self.planes)
 
-    def approximations(self) -> list[str]:
+    def approximations(self) -> list[T]:
         """One line per approximate plane, for a run's header and passport."""
-        return [f"срез {_label(s.plane)}: {s.reason}" for s in self.planes if not s.exact]
+        return [T("slice {plane}: {reason}", plane=_label(s.plane), reason=s.reason)
+                for s in self.planes if not s.exact]
 
     def describe(self) -> dict:
         d = {"mode": self.mode, "approximation": self.approximation, "approximations": self.approximations(),
              "planes": [{**s.plane.as_dict(), "label": _label(s.plane), "exact": bool(s.exact), "reason": s.reason}
                         for s in self.planes]}
         if self.mode == "full3d":
-            d["note"] = "весь объём; исследовать можно любой срез"
+            d["note"] = T("the whole volume; any slice can be explored")
         elif self.approximation:
-            rest = " Остальные срезы точны." if any(s.exact for s in self.planes) else ""
-            d["note"] = ("только заданные срезы; ПРИБЛИЖЕНИЕ в срезах: " + "; ".join(self.approximations()) + "."
-                         + rest + " Исследовать можно только эти срезы.")
+            items = join(self.approximations(), "; ")
+            if any(s.exact for s in self.planes):
+                d["note"] = T("the given slices only; APPROXIMATION in the slices: {items}. The other slices are "
+                              "exact. Only these slices can be explored.", items=items)
+            else:
+                d["note"] = T("the given slices only; APPROXIMATION in the slices: {items}. Only these slices can be "
+                              "explored.", items=items)
         else:
-            d["note"] = "только заданные срезы, каждый точен; исследовать можно только их"
+            d["note"] = T("the given slices only, each exact; only they can be explored")
         return d
 
 
-def _label(p: Plane) -> str:
-    """"y = 1.5" for a coordinate plane, "через ось z, φ = 30°" for a plane containing the z axis, otherwise
-    "произвольная плоскость"."""
+def _label(p: Plane) -> T:
+    """A translatable label: "y = 1.5" for a coordinate plane, "through the z axis, φ = 30°" for a plane containing the
+    z axis, otherwise "an arbitrary plane"."""
     axis = {"xy": ("z", 2), "xz": ("y", 1), "yz": ("x", 0)}.get(p.name)
     if axis is not None:
-        return f"{axis[0]} = {p.origin[axis[1]]:g}"
+        return T("{axis} = {value}", axis=axis[0], value=float(p.origin[axis[1]]))
     n = p.normal
     for i, a in enumerate("xyz"):  # a coordinate plane with other in-plane axes (e.g. the normal +y instead of -y)
         if abs(abs(n[i]) - 1.0) < 1e-12:
-            return f"{a} = {p.origin[i]:g}"
+            return T("{axis} = {value}", axis=a, value=float(p.origin[i]))
     if abs(n[2]) < 1e-12 and abs(n[0] * p.origin[0] + n[1] * p.origin[1]) < 1e-12:  # contains the z axis
         u = np.asarray(p.u, float) if abs(p.u[2]) < 1e-12 else np.asarray(p.v, float)
         phi = round(math.degrees(math.atan2(u[1], u[0])) % 180.0, 2) % 180.0
-        return f"через ось z, φ = {phi:g}°"
-    return "произвольная плоскость"
+        return T("through the z axis, φ = {phi}°", phi=float(phi))
+    return T("an arbitrary plane")
 
 
 def plane_cut(origin, normal, box):
@@ -329,7 +337,7 @@ def plane_cut(origin, normal, box):
             if d[a] * d[b] < 0:  # a strict crossing inside the edge
                 pts.append(corners[a] + (corners[b] - corners[a]) * d[a] / (d[a] - d[b]))
     if len(pts) < 3:
-        raise ValueError("плоскость не пересекает область расчёта")
+        raise ValueError(T("the plane does not cross the computed region"))
     st = np.array([[(p - o) @ u, (p - o) @ v] for p in pts])
     c = st.mean(axis=0)
     st = st[np.argsort(np.arctan2(st[:, 1] - c[1], st[:, 0] - c[0]))]

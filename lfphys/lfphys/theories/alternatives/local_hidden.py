@@ -17,14 +17,16 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "theories", "kind": "alternative",
-    "title": "Локальные скрытые параметры",
-    "statement": "Исход каждой стороны задан её настройкой и общим скрытым параметром из источника; любая такая "
-                 "модель даёт |S| ≤ 2 (неравенство CHSH).",
-    "validity": "опровергнуты опытами Белла без лазеек (2015): нарушение CHSH",
+    "title": T("Local hidden variables"),
+    "statement": T("Each side's outcome is set by its setting and by a common hidden variable from the source; every "
+                   "such model gives |S| ≤ 2 (the CHSH inequality)."),
+    "validity": T("refuted by the loophole-free Bell experiments (2015): CHSH is violated"),
     "basis": ["Bell, Physics 1, 195 (1964)", "Hensen et al., Nature 526, 682 (2015)"],
-    "conflicts": ["lfphys.core.quantum.qubits: квантовые корреляции дают S до 2√2"],
+    "conflicts": [T("lfphys.core.quantum.qubits: quantum correlations give S up to 2√2")],
 }
 
 

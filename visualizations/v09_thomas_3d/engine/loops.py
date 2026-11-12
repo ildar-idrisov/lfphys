@@ -16,7 +16,9 @@ import math
 import numpy as np
 
 from lfphys.core import lorentz as LZ
-from lfphys.core import spin_transport as T
+from lfphys.core import spin_transport as ST
+from lfphys.i18n import T
+from lfviz.errors import Refusal
 
 # one g of thrust in light-years per year squared (c = 1 ly/yr): 9.80665 m/s^2 * (Julian year)^2 / light-year
 from lfphys.core.constants import LIGHT_YEAR, YEAR_JULIAN
@@ -24,13 +26,13 @@ from lfphys.core.constants import LIGHT_YEAR, YEAR_JULIAN
 G_LY = 9.80665 * YEAR_JULIAN**2 / LIGHT_YEAR
 
 LOOPS = [
-    ("thomas", "равномерное движение по окружности (прецессия Томаса)"),
-    ("circle", "круг через покой (лучшее для плоских петель)"),
-    ("triangle", "три импульса: треугольник"),
-    ("polygon", "правильный многоугольник через покой"),
-    ("crown", "корона: неплоский многоугольник (вершины выше и ниже)"),
-    ("helix", "винт: тяга поворачивается вокруг наклонной оси, потом возврат"),
-    ("seam", "шов мяча на сфере пространства скоростей (неплоский)"),
+    ("thomas", T("uniform circular motion (Thomas precession)")),
+    ("circle", T("a circle through rest (the best of planar loops)")),
+    ("triangle", T("three burns: a triangle")),
+    ("polygon", T("a regular polygon through rest")),
+    ("crown", T("a crown: a non-planar polygon (vertices above and below)")),
+    ("helix", T("a helix: the thrust turns about a tilted axis, then the way back")),
+    ("seam", T("the seam of a ball on a sphere of velocity space (non-planar)")),
 ]
 PLANAR = ("thomas", "circle", "triangle", "polygon")
 SEAM_BURNS = 96  # burns of the seam polygon (the smooth seam is its limit; the difference to 2x is measured)
@@ -51,12 +53,13 @@ def check_reach(pieces):
     """Refuse a manoeuvre that comes closer to light than float64 can follow (rapidity above ETA_LIMIT), looking at
     the exact states every 0.05 of fuel before anything else is computed from them."""
     gmax = 1.0
-    for _, q in T.Manoeuvre(pieces).states(ds=0.05):
+    for _, q in ST.Manoeuvre(pieces).states(ds=0.05):
         g = float(q.M[0, 0])
         gmax = max(gmax, g) if math.isfinite(g) else math.inf
         if gmax > math.cosh(ETA_LIMIT):
-            raise ValueError(f"манёвр подходит к скорости света ближе, чем позволяет точность расчёта (γ > "
-                             f"{math.cosh(ETA_LIMIT):.0f}): уменьшите ρ, χ или число повторов")
+            raise Refusal(T("the manoeuvre comes closer to the speed of light than the computation's accuracy allows "
+                            "(γ > {g:.0f})", g=math.cosh(ETA_LIMIT)),
+                          T("reduce ρ, χ or the number of repetitions"))
 
 
 def base_frame(nth_deg: float, nph_deg: float):
@@ -85,32 +88,36 @@ def build(p: dict):
     chi = math.radians(float(p["chi"]))
     info = {"kind": kind, "planar": kind in PLANAR, "normal": n.tolist(), "e1": e1.tolist(), "e2": e2.tolist()}
     if kind == "thomas":
-        pieces = [T.Burn(tuple(e1), rho),
-                  T.Turn(tuple(e2), tuple(n), 1.0 / math.tanh(rho), m * float(T.circle_length(rho)))]
-        pieces.append(T.return_burn(T.Manoeuvre(pieces).end()))
+        pieces = [ST.Burn(tuple(e1), rho),
+                  ST.Turn(tuple(e2), tuple(n), 1.0 / math.tanh(rho), m * float(ST.circle_length(rho)))]
+        pieces.append(ST.return_burn(ST.Manoeuvre(pieces).end()))
         g = math.cosh(rho)
         info.update(reference=m * 2 * math.pi * (g - 1),
-                    ref_how=f"Томас: 2π(γ − 1) за оборот, γ = {g:.6g}, оборотов {m} (= площадь круга скоростей)")
+                    ref_how=T("Thomas: 2π(γ − 1) per revolution, γ = {g:.6g}, revolutions: {m:d} (= the area of the "
+                              "circle of velocities)", g=g, m=m))
     elif kind == "circle":
-        pieces = [T.Turn(tuple(e1), tuple(n), 1.0 / math.tanh(rho), m * float(T.circle_length(rho)))]
-        info.update(reference=m * float(T.circle_area(rho)),
-                    ref_how=f"Гаусс–Бонне: площадь круга радиуса ρ = {rho:g}, 2π(ch ρ − 1), × {m}")
+        pieces = [ST.Turn(tuple(e1), tuple(n), 1.0 / math.tanh(rho), m * float(ST.circle_length(rho)))]
+        info.update(reference=m * float(ST.circle_area(rho)),
+                    ref_how=T("Gauss–Bonnet: the area of the circle of radius ρ = {rho}, 2π(cosh ρ − 1), × {m:d}",
+                              rho=rho, m=m))
     elif kind == "triangle":
         alpha = math.radians(float(p["alpha"]))
         u = math.tanh(rho) * e1
         w = LZ.add_velocities(u, math.tanh(rho) * (math.cos(alpha) * e1 + math.sin(alpha) * e2))
-        pieces = T.polygon_burns(repeated([u, w], m))
+        pieces = ST.polygon_burns(repeated([u, w], m))
         z = np.zeros(3)
-        A = float(T.triangle_area(T.distance(z, u), T.distance(u, w), T.distance(w, z)))
-        info.update(reference=m * A, ref_how=f"площадь треугольника по сторонам (формула Люилье), × {m}",
+        A = float(ST.triangle_area(ST.distance(z, u), ST.distance(u, w), ST.distance(w, z)))
+        info.update(reference=m * A, ref_how=T("the area of the triangle from its sides (L'Huilier's formula), × {m:d}",
+                                               m=m),
                     vertices=[u.tolist(), w.tolist()])
     elif kind == "polygon":
         k = int(p["sides"])
         verts = [_on_sphere(rho, e1, -math.cos(2 * math.pi * j / k) * e1 - math.sin(2 * math.pi * j / k) * e2, rho)
                  for j in range(1, k)]
-        pieces = T.polygon_burns(repeated(verts, m))
-        info.update(reference=m * T.regular_polygon_area(k, rho),
-                    ref_how=f"правильный {k}-угольник, радиус описанной окружности ρ = {rho:g}: (n − 2)π − n·α, × {m}",
+        pieces = ST.polygon_burns(repeated(verts, m))
+        info.update(reference=m * ST.regular_polygon_area(k, rho),
+                    ref_how=T("a regular {k:d}-gon, the radius of its circumscribed circle ρ = {rho}: (n − 2)π − n·α, "
+                              "× {m:d}", k=k, rho=rho, m=m),
                     vertices=[np.asarray(v).tolist() for v in verts])
     elif kind == "crown":
         k = int(p["sides"])
@@ -119,25 +126,26 @@ def build(p: dict):
             ph, lift = 2 * math.pi * j / k, chi * (-1) ** j
             d = math.cos(lift) * (-math.cos(ph) * e1 - math.sin(ph) * e2) + math.sin(lift) * n
             verts.append(_on_sphere(rho, e1, d, rho))
-        pieces = T.polygon_burns(repeated(verts, m))
+        pieces = ST.polygon_burns(repeated(verts, m))
         info.update(loop_pieces=len(verts) + 1)
-        info.update(reference=None, ref_how="неплоская петля: замкнутой формулы нет; проверка — два представления "
-                                            "(группа Лоренца и SL(2, C))", vertices=[v.tolist() for v in verts])
+        info.update(reference=None, ref_how=T("a non-planar loop: no closed formula; the check is two representations "
+                                              "(the Lorentz group and SL(2, C))"), vertices=[v.tolist() for v in verts])
     elif kind == "helix":
         w = math.cos(chi) * n + math.sin(chi) * e1
-        pieces = [T.Turn(tuple(e1), tuple(w), 1.0 / math.tanh(rho), m * float(T.circle_length(rho)))]
+        pieces = [ST.Turn(tuple(e1), tuple(w), 1.0 / math.tanh(rho), m * float(ST.circle_length(rho)))]
         check_reach(pieces)
-        pieces.append(T.return_burn(T.Manoeuvre(pieces).end()))
-        info.update(reference=None, ref_how="винт (ось поворота тяги наклонена на χ): замкнутой формулы нет; при χ = 0 "
-                                            "это круг через покой")
+        pieces.append(ST.return_burn(ST.Manoeuvre(pieces).end()))
+        info.update(reference=None, ref_how=T("a helix (the axis the thrust turns about is tilted by χ): no closed "
+                                              "formula; at χ = 0 it is the circle through rest"))
     elif kind == "seam":
         verts = seam_vertices(rho, chi, e1, e2, n, SEAM_BURNS)
-        pieces = T.polygon_burns(repeated(verts, m))
+        pieces = ST.polygon_burns(repeated(verts, m))
         info.update(loop_pieces=len(verts) + 1)
-        info.update(reference=None, ref_how=f"шов из {SEAM_BURNS} импульсов (гладкий шов — их предел; разница с "
-                                            f"{2 * SEAM_BURNS} — в проверке); замкнутой формулы нет")
+        info.update(reference=None, ref_how=T("a seam of {n:d} burns (the smooth seam is their limit; the difference "
+                                              "from {n2:d} is in the checks); no closed formula", n=SEAM_BURNS,
+                                              n2=2 * SEAM_BURNS))
     else:
-        raise ValueError(f"неизвестная петля {kind!r}")
+        raise ValueError(f"unknown loop {kind!r}")
     check_reach(pieces)
     return pieces, info
 
@@ -188,7 +196,7 @@ def triangle_field(u, W, chunk: int = 40000):
 def triangle_reference(u, w):
     """The same angle by Gauss-Bonnet: the area of the geodesic triangle (rest, u, w) from its sides (L'Huilier)."""
     z = np.zeros(3)
-    return float(T.triangle_area(T.distance(z, u), T.distance(u, w), T.distance(w, z)))
+    return float(ST.triangle_area(ST.distance(z, u), ST.distance(u, w), ST.distance(w, z)))
 
 
 def field_tolerance(u, w):
@@ -203,4 +211,4 @@ def field_values(kind: str, th, L):
     """The field drawn: 'theta' -> theta / pi; 'ratio' -> theta over the planar isoperimetric bound at the same fuel."""
     if kind == "theta":
         return th / math.pi
-    return th / T.isoperimetric_bound(L)
+    return th / ST.isoperimetric_bound(L)

@@ -22,6 +22,7 @@ from __future__ import annotations
 import math
 
 import numpy as np
+from lfviz.errors import Refusal
 from lfviz.params import Param, Schema
 from lfviz.sim import Simulation as BaseSimulation
 
@@ -29,6 +30,7 @@ from lfphys.core import causality as K
 from lfphys.core import relativity as R
 from lfphys.core.constants import C
 from lfphys.core.quantum import qubits as Q
+from lfphys.i18n import T, join
 from lfphys.tools import bell_stats as BS
 
 from .engine.experiment import (F_FREE_A, F_FREE_B, F_LOC_A, F_LOC_B, MODEL_LABEL, PAIR_LABEL, Experiment, Law,
@@ -44,50 +46,61 @@ def _p(*a, **k):
     return Param(*a, **k)
 
 
+G_WSRC, G_CHOICE = T("Source (world)"), T("Choice of the settings")
+G_A, G_B = T("Alice's settings (A)"), T("Bob's settings (B)")
+
 SCHEMA = Schema([
-    _p("pair", "Пары", "select", "photon", group="Источник (мир)",
-       options=[("photon", "фотоны: поляризация |Φ+⟩ = (|HH⟩ + |VV⟩)/√2, поляризаторы"),
-                ("spin", "спин ½: синглет (|↑↓⟩ − |↓↑⟩)/√2, магниты Штерна–Герлаха")],
-       help="Тип пары задаёт состояние, анализаторы и скорость частиц; меняется только новым миром."),
-    _p("spin_beta", "Скорость частиц спиновой пары, v/c", "float", 0.5, group="Источник (мир)", min=1e-4, max=0.999,
+    _p("pair", T("Pairs"), "select", "photon", group=G_WSRC,
+       options=[("photon", T("photons: polarisation |Φ+⟩ = (|HH⟩ + |VV⟩)/√2, polarisers")),
+                ("spin", T("spin ½: singlet (|↑↓⟩ − |↓↑⟩)/√2, Stern–Gerlach magnets"))],
+       help=T("The type of the pair sets the state, the analysers and the particles' speed; it changes only with a "
+              "new world.")),
+    _p("spin_beta", T("Speed of the spin pair's particles, v/c"), "float", 0.5, group=G_WSRC, min=1e-4, max=0.999,
        log=True, show_if={"pair": ["spin"]},
-       help="Иллюстративно: массивные частицы со спином ½ (например, протоны). Фотоны летят со скоростью c."),
-    _p("law", "Закон корреляций", "select", "quantum", group="Законы (модификации)", standard="quantum",
-       options=[("quantum", "квантовая механика: правило Борна для запутанного состояния"),
-                ("lhv", "локальные скрытые параметры (фотоны: поляризационная модель; спин: знаковая модель Белла)")],
-       help="Квантовая механика — общепринятая физика. Локальные скрытые параметры — модификация «что если»: исход "
-            "каждой стороны задан её настройкой и общим параметром из источника."),
-    _p("L_m", "Расстояние источник — станция L, м", "float", 500.0, group="Геометрия", min=0.01, max=1e5, log=True,
-       live=True, help="Станции Алисы (−L) и Боба (+L) на одной прямой с источником; расстояние между ними 2L."),
-    _p("rate", "Пар в секунду (время мира)", "float", 1e6, group="Источник", min=1e-3, max=1e9, log=True, live=True),
-    _p("switch", "Выбор настройки", "select", "random", group="Выбор настроек",
-       options=[("fixed", "фиксированный: Алиса a, Боб b"),
-                ("random", "случайный для каждой частицы (как в опытах без лазеек)")], live=True),
-    _p("tau_ns", "Выбор делается за τ до прихода частицы, нс", "float", 100.0, group="Выбор настроек", min=1e-3,
+       help=T("Illustrative: massive particles with spin ½ (protons, for example). Photons fly at the speed c.")),
+    _p("law", T("Law of the correlations"), "select", "quantum", group=T("Laws (modifications)"), standard="quantum",
+       options=[("quantum", T("quantum mechanics: the Born rule for the entangled state")),
+                ("lhv", T("local hidden variables (photons: a polarisation model; spin: Bell's sign model)"))],
+       help=T("Quantum mechanics is the accepted physics. Local hidden variables are a “what if” modification: the "
+              "outcome of each side is set by its setting and by a common parameter from the source.")),
+    _p("L_m", T("Distance from the source to a station L, m"), "float", 500.0, group=T("Geometry"), min=0.01, max=1e5,
+       log=True, live=True,
+       help=T("Alice's (−L) and Bob's (+L) stations stand on one line with the source; the distance between them is "
+              "2L.")),
+    _p("rate", T("Pairs per second (world time)"), "float", 1e6, group=T("Source"), min=1e-3, max=1e9, log=True,
+       live=True),
+    _p("switch", T("Choice of the setting"), "select", "random", group=G_CHOICE,
+       options=[("fixed", T("fixed: Alice a, Bob b")),
+                ("random", T("random for every particle (as in loophole-free experiments)"))], live=True),
+    _p("tau_ns", T("The choice is made τ before the particle arrives, ns"), "float", 100.0, group=G_CHOICE, min=1e-3,
        max=1e7, log=True, show_if={"switch": ["random"]}, live=True,
-       help="Генератор случайных чисел станции выдаёт бит за τ до прихода частицы (задержка генератора и "
-            "переключателя). Выбор вне светового конуса регистрации на другой стороне, если cτ < 2L."),
-    _p("a_deg", "Алиса: настройка a, °", "float", 0.0, group="Настройки Алисы (A)", min=-360, max=360, live=True),
-    _p("a2_deg", "Алиса: настройка a′, °", "float", 45.0, group="Настройки Алисы (A)", min=-360, max=360, live=True),
-    _p("b_deg", "Боб: настройка b, °", "float", 22.5, group="Настройки Боба (B)", min=-360, max=360, live=True),
-    _p("b2_deg", "Боб: настройка b′, °", "float", 67.5, group="Настройки Боба (B)", min=-360, max=360, live=True),
+       help=T("The station's random number generator gives its bit τ before the particle arrives (the delay of the "
+              "generator and the switch). The choice is outside the light cone of the detection on the other side if "
+              "cτ < 2L.")),
+    _p("a_deg", T("Alice: setting a, °"), "float", 0.0, group=G_A, min=-360, max=360, live=True),
+    _p("a2_deg", T("Alice: setting a′, °"), "float", 45.0, group=G_A, min=-360, max=360, live=True),
+    _p("b_deg", T("Bob: setting b, °"), "float", 22.5, group=G_B, min=-360, max=360, live=True),
+    _p("b2_deg", T("Bob: setting b′, °"), "float", 67.5, group=G_B, min=-360, max=360, live=True),
 ], presets={
-    "photon_chsh": {"label": "Фотоны |Φ+⟩, квантовая механика: оптимальные углы CHSH 0°, 45° / 22.5°, 67.5°, "
-                             "случайный выбор", "params": {}},
-    "spin_chsh": {"label": "Синглет спина ½, квантовая механика: оптимальные углы 0°, 90° / 45°, 135°, случайный выбор",
+    "photon_chsh": {"label": T("Photons |Φ+⟩, quantum mechanics: optimal CHSH angles {a}°, {a2}° / {b}°, {b2}°, random "
+                               "choice", a=0, a2=45, b=22.5, b2=67.5), "params": {}},
+    "spin_chsh": {"label": T("Spin-½ singlet, quantum mechanics: optimal angles {a}°, {a2}° / {b}°, {b2}°, random "
+                             "choice", a=0, a2=90, b=45, b2=135),
                   "params": {"pair": "spin", "a_deg": 0.0, "a2_deg": 90.0, "b_deg": 45.0, "b2_deg": 135.0}},
-    "photon_lhv": {"label": "Фотоны, локальные скрытые параметры: поляризационная модель (модификация)",
+    "photon_lhv": {"label": T("Photons, local hidden variables: a polarisation model (modification)"),
                    "params": {"law": "lhv"}},
-    "spin_lhv": {"label": "Синглет спина ½, локальные скрытые параметры: знаковая модель Белла (модификация)",
+    "spin_lhv": {"label": T("Spin-½ singlet, local hidden variables: Bell's sign model (modification)"),
                  "params": {"pair": "spin", "law": "lhv", "a_deg": 0.0, "a2_deg": 90.0, "b_deg": 45.0,
                             "b2_deg": 135.0}},
-    "scan": {"label": "Кривая E(Δ): фотоны, фиксированные настройки a = b = 0° — двигайте b",
+    "scan": {"label": T("The curve E(Δ): photons, fixed settings a = b = {a}°; move b", a=0),
              "params": {"switch": "fixed", "a_deg": 0.0, "b_deg": 0.0}},
-    "photon_slow_choice": {"label": "Фотоны: выбор за 5 мкс до прихода (cτ > 2L) — лазейка локальности открыта",
+    "photon_slow_choice": {"label": T("Photons: the choice made {tau} µs before arrival (cτ > 2L), the locality "
+                                      "loophole is open", tau=5),
                            "params": {"tau_ns": 5000.0}},
 })
 
 ANGLES = ("a_deg", "a2_deg", "b_deg", "b2_deg")
+G_ST = T("Spacetime: the choice of a setting and the detection")
 
 
 class Simulation(BaseSimulation):
@@ -165,75 +178,83 @@ class Simulation(BaseSimulation):
         self._msg(d)
 
     def _actions(self):
-        return [{"name": "clear", "label": "Сбросить статистику",
-                 "help": "Счёты совпадений начинаются заново; установка и пары в полёте те же.", "args": []}]
+        return [{"name": "clear", "label": T("Reset the statistics"),
+                 "help": T("The coincidence counts start anew; the set-up and the pairs in flight stay the same."),
+                 "args": []}]
 
     # --- checks: the law and the set-up ---------------------------------------------------------------------
     def _engine_checks(self):
         """Once per world: properties of the source state computed by the engine."""
-        g = "Источник: состояние пары"
+        g = T("Source: the state of the pair")
         if self.law.law == "quantum":
             rho = Q.dm(self.law.state)
-            self._check("conc", "Запутанность состояния: согласованность (concurrence) Вуттерса", Q.concurrence(rho),
-                        1.0, "", g, tol=1e-12, note="1 — максимально запутанное состояние (движок: lfphys.core.quantum.qubits)")
+            self._check("conc", T("Entanglement of the state: Wootters' concurrence"), Q.concurrence(rho), 1.0, "", g,
+                        tol=1e-12,
+                        note=T("1: a maximally entangled state (the engine: lfphys.core.quantum.qubits)"))
             ent = Q.entropy(Q.ptrace(rho, 0))
-            self._check("ent", "Энтропия одной частицы пары (бит)", ent, 1.0, "", g, tol=1e-12,
-                        note="частица порознь — полностью неполяризована: её маргиналы 1/2 при любой настройке")
+            self._check("ent", T("Entropy of one particle of the pair (bits)"), ent, 1.0, "", g, tol=1e-12,
+                        note=T("a particle on its own is completely unpolarised: its marginals are 1/2 at any setting"))
         else:
-            self._check("conc", "Источник по модели ЛСП: общий скрытый параметр λ, без квантового состояния", None,
-                        None, "", g, note=f"{MODEL_LABEL[self.law.model]}: исход стороны = функция её настройки и λ "
-                                           "(локальность по построению)")
+            self._check("conc", T("Source by the LHV model: a common hidden parameter λ, no quantum state"), None,
+                        None, "", g, note=T("{model}: the outcome of a side is a function of its setting and λ (local by "
+                                            "construction)", model=MODEL_LABEL[self.law.model]))
 
     def _setup_checks(self):
         """After every change of the settings: the exact expectation of the world's law."""
         law, P = self.law, self.params
         a, a2, b, b2 = (P[k] for k in ANGLES)
-        g = "Установка: ожидание закона мира (точно)"
+        g = T("Set-up: the expectation of the world's law (exact)")
         S_law = law.S(a, a2, b, b2)
         if law.law == "quantum":
             S_cf = sum(s * law.E_closed_form(x, y) for s, (_, _, x, y) in zip(BS.CHSH_SIGNS, self._cell_angles()))
-            self._check("S_law", "S при текущих настройках: след Tr(ρ A⊗B) движка", S_law, S_cf, "", g, tol=1e-12,
-                        note=("эталон — замкнутая форма E = cos 2(α_A − α_B) для |Φ+⟩" if law.pair == "photon"
-                              else "эталон — замкнутая форма E = −cos(θ_A − θ_B) для синглета")
-                        + "; S = E(a,b) − E(a,b′) + E(a′,b) + E(a′,b′)")
+            self._check("S_law", T("S at the current settings: the engine's trace Tr(ρ A⊗B)"), S_law, S_cf, "", g,
+                        tol=1e-12,
+                        note=T("reference: the closed form E = cos 2(α_A − α_B) for |Φ+⟩; S = E(a,b) − E(a,b′) + "
+                               "E(a′,b) + E(a′,b′)") if law.pair == "photon" else
+                        T("reference: the closed form E = −cos(θ_A − θ_B) for the singlet; S = E(a,b) − E(a,b′) + "
+                          "E(a′,b) + E(a′,b′)"))
             mA = [abs(law.marginal_A_quantum(x, b) - law.marginal_A_quantum(x, b2)) for x in (a, a2)]
             mB = [abs(law.marginal_B_quantum(a, y) - law.marginal_B_quantum(a2, y)) for y in (b, b2)]
             dmax = max(mA + mB)
-            self._check("nosig_law", "Без сигнала в законе (точно): маргинал одной стороны от настройки другой",
+            self._check("nosig_law", T("No signalling in the law (exact): the marginal of one side against the setting "
+                                       "of the other"),
                         dmax, 0.0, "", g, ok=dmax < 1e-14,
-                        note="max |P_A(+|x,b) − P_A(+|x,b′)|, |P_B(+|a,y) − P_B(+|a′,y)| из совместных вероятностей "
-                             "Борна Tr(ρ Π⊗Π)")
+                        note=T("max |P_A(+|x,b) − P_A(+|x,b′)|, |P_B(+|a,y) − P_B(+|a′,y)| from the joint Born "
+                               "probabilities Tr(ρ Π⊗Π)"))
         else:
-            self._check("S_law", "S при текущих настройках по модели ЛСП", S_law, None, "", g,
-                        note=f"{MODEL_LABEL[law.model]}: E — функция модели движка "
-                             + ("½cos 2(α_A − α_B)" if law.pair == "photon" else "−1 + 2θ/π"))
-            self._check("nosig_law", "Без сигнала в законе модели ЛСП: по построению (для сведения)", 0.5, None, "", g,
-                        info=True,
-                        note="исход каждой стороны — функция только её настройки и λ (локальность по построению), "
-                             "λ распределён изотропно: P(+) = 1/2 при любой настройке другой стороны. Это тождество "
-                             "модели, а не проверка; проверка по счётам запуска — в группе «Без сигнала»")
+            self._check("S_law", T("S at the current settings by the LHV model"), S_law, None, "", g,
+                        note=T("{model}: E is a function of the engine's model, {formula}", model=MODEL_LABEL[law.model],
+                               formula="½cos 2(α_A − α_B)" if law.pair == "photon" else "−1 + 2θ/π"))
+            self._check("nosig_law", T("No signalling in the law of the LHV model: by construction (for information)"),
+                        0.5, None, "", g, info=True,
+                        note=T("the outcome of each side is a function of its setting and λ only (local by "
+                               "construction), and λ is distributed isotropically: P(+) = 1/2 at any setting of the "
+                               "other side. This is an identity of the model, not a check; the check by the run's "
+                               "counts is in the group “No signalling”"))
         if law.law == "quantum":
-            self._check("tsir_law", "Ожидание закона: |S| ≤ 2√2 (граница Цирельсона)", abs(S_law), TSIRELSON, "", g,
-                        ok=abs(S_law) <= TSIRELSON + 1e-12, note="никакая квантовая теория не даёт больше")
+            self._check("tsir_law", T("Expectation of the law: |S| ≤ 2√2 (the Tsirelson bound)"), abs(S_law),
+                        TSIRELSON, "", g, ok=abs(S_law) <= TSIRELSON + 1e-12,
+                        note=T("no quantum theory gives more"))
         else:
-            self._check("tsir_law", "Ожидание модели ЛСП и граница Цирельсона 2√2 (для сведения)", abs(S_law),
-                        TSIRELSON, "", g, info=True,
-                        note="в мире ЛСП следует из проверки |S| ≤ 2 (строкой ниже): не отдельная проверка")
+            self._check("tsir_law", T("Expectation of the LHV model and the Tsirelson bound 2√2 (for information)"),
+                        abs(S_law), TSIRELSON, "", g, info=True,
+                        note=T("in an LHV world it follows from the check |S| ≤ 2 (the next line): not a separate "
+                               "check"))
         bound_ok = abs(S_law) <= 2.0 + 1e-12
         if law.law == "lhv":
-            self._check("chsh_law", "Ожидание модели ЛСП: |S| ≤ 2 (граница CHSH)", abs(S_law), 2.0, "", g,
-                        ok=bound_ok, note="любая локальная модель обязана соблюдать эту границу")
+            self._check("chsh_law", T("Expectation of the LHV model: |S| ≤ 2 (the CHSH bound)"), abs(S_law), 2.0, "",
+                        g, ok=bound_ok, note=T("every local model must keep this bound"))
         else:  # information, not a test: quantum mechanics may exceed 2
-            self._check("chsh_law", "Квантовое ожидание |S| и классическая граница 2", abs(S_law), None, "", g,
-                        note=("превышает 2: квантовая механика нарушает неравенство CHSH при этих настройках"
-                              if not bound_ok else "при этих настройках квантовое ожидание не превышает 2"))
+            self._check("chsh_law", T("Quantum expectation |S| and the classical bound 2"), abs(S_law), None, "", g,
+                        note=T("exceeds 2: quantum mechanics violates the CHSH inequality at these settings")
+                        if not bound_ok else T("at these settings the quantum expectation does not exceed 2"))
         self._S_law = S_law
 
     def _spacetime_checks(self):
         """The space-time relation of the setting choices for a pair emitted now (nominal geometry)."""
         P = self.params
         L, c, v = P["L_m"], C, self.v
-        g = "Пространство-время: выбор настройки и регистрация"
+        g = G_ST
         # events of a pair emitted now, counted from its emission (intervals are translation invariant; this avoids
         # the cancellation of large world times)
         te = 0.0
@@ -245,48 +266,57 @@ class Simulation(BaseSimulation):
             chA = (tarr - tau, -L)
             s2 = K.interval(chA, detB, c)
             rel = K.relation(chA, detB, c)
-            txt = {K.SPACELIKE: "пространственноподобны — лазейка локальности закрыта",
-                   K.TIMELIKE: "времениподобны — лазейка локальности ОТКРЫТА",
-                   K.LIGHTLIKE: "светоподобны (на границе конуса)"}[rel]
-            self._check("st_loc", "Выбор у A ↔ регистрация у B: " + txt, s2, (c * tau) ** 2 - (2 * L) ** 2, "м²", g,
-                        tol=1e-9, note=f"s² = c²τ² − (2L)², cτ = {c * tau:.4g} м, 2L = {2 * L:.4g} м: сигнал от выбора у A "
-                                       + ("не успевает" if rel == K.SPACELIKE else "успевает")
-                                       + " к регистрации у B (и симметрично от B к A); эталон — замкнутая форма")
+            txt = {K.SPACELIKE: T("space-like: the locality loophole is closed"),
+                   K.TIMELIKE: T("time-like: the locality loophole is OPEN"),
+                   K.LIGHTLIKE: T("light-like (on the boundary of the cone)")}[rel]
+            note = (T("s² = c²τ² − (2L)², cτ = {ct:.4g} m, 2L = {L2:.4g} m: a signal from the choice at A cannot reach "
+                      "the detection at B in time (nor one from B reach A); reference: the closed form",
+                      ct=c * tau, L2=2 * L) if rel == K.SPACELIKE else
+                    T("s² = c²τ² − (2L)², cτ = {ct:.4g} m, 2L = {L2:.4g} m: a signal from the choice at A can reach "
+                      "the detection at B in time (and one from B can reach A); reference: the closed form",
+                      ct=c * tau, L2=2 * L))
+            self._check("st_loc", T("Choice at A ↔ detection at B: {rel}", rel=txt), s2, (c * tau) ** 2 - (2 * L) ** 2,
+                        T("m²"), g, tol=1e-9, note=note)
             if rel == K.SPACELIKE:
                 beta = K.order_reversal_speed(chA, detB, c)
-                self._check("st_rev", "Порядок «выбор у A → регистрация у B» обращается в системе, летящей от A к B "
-                                      "быстрее v*; v*/c =", beta, _reversal_by_boosts(chA, detB), "", g, tol=1e-9,
-                            note="v* = c²τ/(2L) < c: время между событиями не абсолютно, причинной связи нет; эталон — "
-                                 "поиск нуля Δt′ по матрицам Лоренца (lfphys.core.relativity.boost_matrix)")
+                self._check("st_rev", T("The order “choice at A → detection at B” reverses in a frame moving from A to B "
+                                        "faster than v*; v*/c ="), beta, _reversal_by_boosts(chA, detB), "", g,
+                            tol=1e-9,
+                            note=T("v* = c²τ/(2L) < c: the time between the events is not absolute, there is no causal "
+                                   "link; reference: the zero of Δt′ found with the Lorentz matrices "
+                                   "(lfphys.core.relativity.boost_matrix)"))
             else:
-                self._check("st_rev", "Порядок «выбор у A → регистрация у B» абсолютен (времениподобные события)",
-                            None, None, "", g, note="ни в одной инерциальной системе он не обращается")
+                self._check("st_rev", T("The order “choice at A → detection at B” is absolute (time-like events)"),
+                            None, None, "", g, note=T("it reverses in no inertial frame"))
             s2e = K.interval(chA, em, c)
             rel_e = K.relation(chA, em, c)
             before = tarr - tau < te
-            txe = {K.SPACELIKE: "пространственноподобны — выбор и источник независимы",
-                   K.TIMELIKE: ("выбор в прошлом конусе вылета — сигнал от выбора успевает к источнику"
-                                if before else "выбор в будущем конусе вылета — лазейка свободы выбора открыта"),
-                   K.LIGHTLIKE: "светоподобны"}[rel_e]
-            self._check("st_free", "Выбор у A ↔ вылет пары: " + txe, s2e,
-                        (c * (tarr - tau - te)) ** 2 - L ** 2, "м²", g, tol=1e-9,
-                        note=f"s² = c²(L/v − τ)² − L²; время полёта L/v = {L / v:.4g} с, τ = {tau:.4g} с")
+            txe = {K.SPACELIKE: T("space-like: the choice and the source are independent"),
+                   K.TIMELIKE: (T("the choice is in the past cone of the emission: a signal from the choice reaches the "
+                                  "source in time")
+                                if before else T("the choice is in the future cone of the emission: the "
+                                                 "freedom-of-choice loophole is open")),
+                   K.LIGHTLIKE: T("light-like")}[rel_e]
+            self._check("st_free", T("Choice at A ↔ emission of the pair: {rel}", rel=txe), s2e,
+                        (c * (tarr - tau - te)) ** 2 - L ** 2, T("m²"), g, tol=1e-9,
+                        note=T("s² = c²(L/v − τ)² − L²; the flight time L/v = {tf:.4g} s, τ = {tau:.4g} s", tf=L / v,
+                               tau=tau))
         else:
             tA, xA = self.t_set["A"]
             tA -= self.t  # the same origin: the emission of a pair now
             chA = (tA, xA)
             s2 = K.interval(chA, detB, c)
             rel = K.relation(chA, detB, c)
-            txt = {K.SPACELIKE: "пространственноподобны (настройка задана только что)",
-                   K.TIMELIKE: "времениподобны — настройки известны заранее, лазейка локальности ОТКРЫТА",
-                   K.LIGHTLIKE: "светоподобны"}[rel]
-            self._check("st_loc", "Фиксированная настройка a ↔ регистрация у B ближайшей пары: " + txt, s2,
-                        (c * (tarr - tA)) ** 2 - (L - xA) ** 2, "м²", g, tol=1e-9,
-                        note=f"настройка a задана за {abs(tA):.6g} с до вылета пары, пара придёт через {tarr:.6g} с "
-                             "после вылета")
+            txt = {K.SPACELIKE: T("space-like (the setting was set just now)"),
+                   K.TIMELIKE: T("time-like: the settings are known in advance, the locality loophole is OPEN"),
+                   K.LIGHTLIKE: T("light-like")}[rel]
+            self._check("st_loc", T("Fixed setting a ↔ detection at B of the next pair: {rel}", rel=txt), s2,
+                        (c * (tarr - tA)) ** 2 - (L - xA) ** 2, T("m²"), g, tol=1e-9,
+                        note=T("the setting a was set {dt:.6g} s before the emission of the pair, the pair arrives "
+                               "{tf:.6g} s after the emission", dt=abs(tA), tf=tarr))
             for cid in ("st_rev", "st_free"):
-                self._check(cid, "Только для случайного выбора настроек", None, None, "", g,
-                            note="при фиксированных настройках выбор сделан при установке")
+                self._check(cid, T("Only for a random choice of the settings"), None, None, "", g,
+                            note=T("with fixed settings the choice was made at the set-up"))
 
     # --- checks: the statistics of the run's own pairs ------------------------------------------------------
     def _cells(self):
@@ -317,12 +347,13 @@ class Simulation(BaseSimulation):
                 "Nmin": min(c["N"] for c in cells), "same": same}
 
     @staticmethod
-    def _same_note(s):
+    def _with_same(note, s):
+        """``note`` with the warning about coinciding settings, when they coincide."""
         if not s["same"]:
-            return ""
-        return ("; настройки совпадают (a′ = a или b′ = b): ячейки " + ", ".join(s["same"]) + " — те же пары, что и "
-                "другая ячейка; S сводится к 2E одной пары углов, это не проверка CHSH; ошибка S считает каждую пару "
-                "углов один раз")
+            return note
+        return T("{note}; the settings coincide (a′ = a or b′ = b): the cells {cells} are the same pairs as another "
+                 "cell; S reduces to 2E of one pair of angles, this is not a CHSH test; the error of S counts each pair "
+                 "of angles once", note=note, cells=", ".join(s["same"]))
 
     def _points(self):
         """All measured angle pairs: delta, E, se, N, E of the law (for the E(delta) plot and the chi-square)."""
@@ -339,48 +370,59 @@ class Simulation(BaseSimulation):
         law = self.law
         cells = self._cells()
         fixed = self.params["switch"] == "fixed"
-        g = "Статистика пар: измерено ↔ закон мира"
-        ref_txt = "квантовое ожидание (движок)" if law.law == "quantum" else "ожидание модели ЛСП"
+        g = T("Statistics of the pairs: measured ↔ the world's law")
+        ref_txt = T("the quantum expectation (the engine)") if law.law == "quantum" else \
+            T("the expectation of the LHV model")
         for k, c in enumerate(cells):
-            lab = f"E({c['x']},{c['y']}) при α_A = {c['alA']:g}°, α_B = {c['alB']:g}°"
+            lab = T("E({x},{y}) at α_A = {a}°, α_B = {b}°", x=c["x"], y=c["y"], a=float(c["alA"]), b=float(c["alB"]))
             if c["N"] >= NMIN:
                 self._check(f"E{k}", lab, c["E"], c["Eref"], "", g, ok=abs(c["z"]) < ZTOL,
-                            note=f"N = {c['N']}, ± {c['se']:.3g}; z = {c['z']:+.2f} (допуск {ZTOL:g}σ); эталон — {ref_txt}")
+                            note=T("N = {N:d}, ± {se:.3g}; z = {z:+.2f} (tolerance {ztol}σ); reference: {ref}",
+                                   N=int(c["N"]), se=float(c["se"]), z=float(c["z"]), ztol=ZTOL, ref=ref_txt))
             else:
                 self._check(f"E{k}", lab, None, c["Eref"], "", g,
-                            note=f"набирается: N = {c['N']} < {NMIN}"
-                                 + ("; в режиме «фиксированный» набирается только пара (a, b)" if fixed and k else ""))
+                            note=T("accumulating: N = {N:d} < {nmin:d}; in the mode “fixed” only the pair (a, b) "
+                                   "accumulates", N=int(c["N"]), nmin=NMIN) if fixed and k else
+                            T("accumulating: N = {N:d} < {nmin:d}", N=int(c["N"]), nmin=NMIN))
         s = self._S(cells)
-        lab_S = "S = E(a,b) − E(a,b′) + E(a′,b) + E(a′,b′)"
+        lab_S = T("S = E(a,b) − E(a,b′) + E(a′,b) + E(a′,b′)")
+        lab_tsir = T("Tsirelson bound: |S| ≤ 2√2 (with a tolerance of {ztol}σ)", ztol=ZTOL)
+        lab_viol = T("Violation of the CHSH inequality: (|S| − 2)/σ")
         if s["S"] is not None and s["Nmin"] >= NMIN:
             self._check("S", lab_S, s["S"], s["Sref"], "", g, ok=abs(s["z"]) < ZTOL,
-                        note=f"± {s['se']:.3g}; z = {s['z']:+.2f} (допуск {ZTOL:g}σ); эталон — {ref_txt}"
-                             + self._same_note(s))
+                        note=self._with_same(T("± {se:.3g}; z = {z:+.2f} (tolerance {ztol}σ); reference: {ref}",
+                                               se=float(s["se"]), z=float(s["z"]), ztol=ZTOL, ref=ref_txt), s))
             aS = abs(s["S"])
-            self._check("tsir", "Граница Цирельсона: |S| ≤ 2√2 (с допуском 5σ)", aS, TSIRELSON, "", g,
-                        ok=aS - TSIRELSON < ZTOL * s["se"], note=f"|S| = {aS:.4f} ± {s['se']:.3g}")
+            self._check("tsir", lab_tsir, aS, TSIRELSON, "", g,
+                        ok=aS - TSIRELSON < ZTOL * s["se"], note=T("|S| = {S:.4f} ± {se:.3g}", S=float(aS),
+                                                                    se=float(s["se"])))
             if law.law == "lhv":
-                self._check("bound", "Граница CHSH для локальных моделей: |S| ≤ 2 (с допуском 5σ)", aS, 2.0, "", g,
-                            ok=aS - 2.0 < ZTOL * s["se"],
-                            note=f"(|S| − 2)/σ = {s['excess']:+.2f}" if s["excess"] is not None else "")
+                self._check("bound", T("CHSH bound for local models: |S| ≤ 2 (with a tolerance of {ztol}σ)", ztol=ZTOL),
+                            aS, 2.0, "", g, ok=aS - 2.0 < ZTOL * s["se"],
+                            note=T("(|S| − 2)/σ = {x:+.2f}", x=float(s["excess"])) if s["excess"] is not None else "")
             else:
                 exc = s["excess"]
                 if abs(s["Sref"]) > 2.0:
                     need = self._pairs_needed(cells)
-                    self._check("bound", "Нарушение неравенства CHSH: (|S| − 2)/σ", exc, None, "σ", g,
+                    self._check("bound", lab_viol, exc, None, "σ", g,
                                 ok=True if exc is not None and exc > ZTOL else None,
-                                note=(f"|S| = {aS:.4f} ± {s['se']:.3g} > 2 на {exc:.1f}σ" if exc is not None and exc > ZTOL
-                                      else f"набирается: ожидание |S| = {abs(s['Sref']):.4f}; для 5σ нужно около "
-                                           f"{need:.0f} пар при случайном выборе"))
+                                note=(T("|S| = {S:.4f} ± {se:.3g} > 2 by {x:.1f}σ", S=float(aS), se=float(s["se"]),
+                                        x=float(exc))
+                                      if exc is not None and exc > ZTOL else
+                                      T("accumulating: the expected |S| = {S:.4f}; {ztol}σ needs about {need:.0f} pairs "
+                                        "with a random choice", S=float(abs(s["Sref"])), ztol=ZTOL, need=float(need))))
                 else:
-                    self._check("bound", "Нарушение неравенства CHSH: (|S| − 2)/σ", exc, None, "σ", g,
-                                note=f"при этих настройках квантовое ожидание |S| = {abs(s['Sref']):.4f} ≤ 2")
+                    self._check("bound", lab_viol, exc, None, "σ", g,
+                                note=T("at these settings the quantum expectation |S| = {S:.4f} ≤ 2",
+                                       S=float(abs(s["Sref"]))))
         else:
-            why = (f"набирается: в ячейке не меньше {NMIN} пар нужно для каждой из четырёх пар настроек"
-                   + ("; в режиме «фиксированный» набирается только (a, b) — включите случайный выбор" if fixed else ""))
-            self._check("S", lab_S, None, s["Sref"], "", g, note=why + self._same_note(s))
-            self._check("tsir", "Граница Цирельсона: |S| ≤ 2√2 (с допуском 5σ)", None, TSIRELSON, "", g, note=why)
-            self._check("bound", "Граница CHSH |S| ≤ 2" if law.law == "lhv" else "Нарушение неравенства CHSH: (|S| − 2)/σ",
+            why = (T("accumulating: at least {nmin:d} pairs per cell are needed for each of the four pairs of settings; "
+                     "in the mode “fixed” only (a, b) accumulates: switch on the random choice", nmin=NMIN) if fixed else
+                   T("accumulating: at least {nmin:d} pairs per cell are needed for each of the four pairs of settings",
+                     nmin=NMIN))
+            self._check("S", lab_S, None, s["Sref"], "", g, note=self._with_same(why, s))
+            self._check("tsir", lab_tsir, None, TSIRELSON, "", g, note=why)
+            self._check("bound", T("CHSH bound |S| ≤ 2") if law.law == "lhv" else lab_viol,
                         None, 2.0 if law.law == "lhv" else None, "" if law.law == "lhv" else "σ", g, note=why)
         # E(delta): all measured angle pairs against the law
         pts = self._points()
@@ -388,29 +430,34 @@ class Simulation(BaseSimulation):
         if np.any(m):
             x2, dof, p = BS.chi2_points(pts[m, 1], pts[m, 4], np.sqrt(np.maximum(1 - pts[m, 4] ** 2, 0) / pts[m, 3]))
             if dof:
-                self._check("curve", "Кривая E(Δ): χ² измеренных точек против закона мира", x2, float(dof), "", g,
-                            ok=p > 1e-6, note=f"точек с N ≥ {NMIN}: {dof}; p = {p:.3g}; эталон χ² ≈ числу точек")
+                self._check("curve", T("The curve E(Δ): χ² of the measured points against the world's law"), x2,
+                            float(dof), "", g, ok=p > 1e-6,
+                            note=T("points with N ≥ {nmin:d}: {k:d}; p = {p:.3g}; reference: χ² ≈ the number of points",
+                                   nmin=NMIN, k=int(dof), p=float(p)))
         # no-signalling from the run's own counts
-        gn = "Без сигнала: маргинал одной стороны не зависит от настройки другой"
+        gn = T("No signalling: the marginal of one side does not depend on the setting of the other")
         for i, (x, c1, c2) in enumerate((("a", cells[0], cells[1]), ("a′", cells[2], cells[3]))):
-            self._nosig(f"nsA{i}", f"P_A(+ | {x}, b) − P_A(+ | {x}, b′)", c1, c2, "A", gn, fixed)
+            self._nosig(f"nsA{i}", T("P_A(+ | {x}, b) − P_A(+ | {x}, b′)", x=x), c1, c2, "A", gn, fixed)
         for i, (y, c1, c2) in enumerate((("b", cells[0], cells[2]), ("b′", cells[1], cells[3]))):
-            self._nosig(f"nsB{i}", f"P_B(+ | a, {y}) − P_B(+ | a′, {y})", c1, c2, "B", gn, fixed)
+            self._nosig(f"nsB{i}", T("P_B(+ | a, {y}) − P_B(+ | a′, {y})", y=y), c1, c2, "B", gn, fixed)
         # space-time relations of the pairs actually detected in this segment
-        gs = "Пространство-время: выбор настройки и регистрация"
+        gs = G_ST
         n = self.seg_counts["detected"]
         if n:
-            self._check("st_frac", "Доля пар: выбор настроек обеих сторон вне светового конуса регистрации на другой "
-                                   "стороне", self.seg_counts["loc"] / n, None, "", gs,
-                        note=f"{self.seg_counts['loc']} из {n} пар (по событиям каждой пары, lfphys.core.causality)")
-            self._check("st_frac_free", "Доля пар: выбор настроек обеих сторон пространственноподобен вылету пары",
-                        self.seg_counts["free"] / n, None, "", gs, note=f"{self.seg_counts['free']} из {n} пар")
+            self._check("st_frac", T("Fraction of pairs: the choice of the settings of both sides is outside the light "
+                                     "cone of the detection on the other side"), self.seg_counts["loc"] / n, None, "",
+                        gs, note=T("pairs: {k:d} of {m:d} (by the events of each pair, lfphys.core.causality)",
+                                   k=self.seg_counts["loc"], m=n))
+            self._check("st_frac_free", T("Fraction of pairs: the choice of the settings of both sides is space-like to "
+                                          "the emission of the pair"),
+                        self.seg_counts["free"] / n, None, "", gs,
+                        note=T("pairs: {k:d} of {m:d}", k=self.seg_counts["free"], m=n))
 
     def _nosig(self, cid, label, c1, c2, side, group, fixed):
         if Store.key(c1["alA"], c1["alB"]) == Store.key(c2["alA"], c2["alB"]):  # b' = b (or a' = a): one cell
             self._check(cid, label, 0.0 if c1["N"] else None, None, "", group, info=True,
-                        note="настройки другой стороны совпадают: обе ячейки — одни и те же пары, разность равна 0 "
-                             "тождественно (не проверка)")
+                        note=T("the settings of the other side coincide: both cells are the same pairs, the difference "
+                               "is 0 identically (not a check)"))
             return
         if c1["N"] >= NMIN and c2["N"] >= NMIN:
             k1 = c1["n"][0] + (c1["n"][1] if side == "A" else c1["n"][2])
@@ -418,11 +465,13 @@ class Simulation(BaseSimulation):
             d, se = BS.difference(k1, c1["N"], k2, c2["N"])
             z = BS.zscore(d, 0.0, se)
             self._check(cid, label, d, 0.0, "", group, ok=abs(z) < ZTOL,
-                        note=f"P = {k1 / c1['N']:.4f} (N = {c1['N']}) и {k2 / c2['N']:.4f} (N = {c2['N']}); "
-                             f"± {se:.3g}; z = {z:+.2f} (допуск {ZTOL:g}σ)")
+                        note=T("P = {p1:.4f} (N = {N1:d}) and {p2:.4f} (N = {N2:d}); ± {se:.3g}; z = {z:+.2f} "
+                               "(tolerance {ztol}σ)", p1=float(k1 / c1["N"]), N1=int(c1["N"]), p2=float(k2 / c2["N"]),
+                               N2=int(c2["N"]), se=float(se), z=float(z), ztol=ZTOL))
         else:
             self._check(cid, label, None, 0.0, "", group,
-                        note="набирается" + ("; при фиксированных настройках вторая настройка не используется" if fixed else ""))
+                        note=T("accumulating; with fixed settings the second setting is not used") if fixed else
+                        T("accumulating"))
 
     @staticmethod
     def _pairs_needed(cells):
@@ -439,17 +488,18 @@ class Simulation(BaseSimulation):
     def set_live(self, values):
         new, errors = SCHEMA.coerce_live(self.params, values)
         if errors:
-            raise ValueError("; ".join(errors))
+            raise Refusal(join(errors))
         changed = [k for k in SCHEMA.live_ids() if not _same(new[k], self.params[k])]
         if not changed:
-            return "без изменений"
+            return T("no changes")
         now = self.t
         old = self.params
         lost = self.exp.reschedule(now, old["L_m"], new["L_m"], new["tau_ns"] * 1e-9, new["switch"])
         if lost:
             self.counts["lost"] += lost
-            self._msg({"type": "notice", "t": now, "text": f"Станции передвинуты: пар в полёте потеряно {lost} "
-                                                          "(частица уже пролетела новое место станции)"})
+            self._msg({"type": "notice", "t": now,
+                       "text": T("The stations were moved: pairs in flight lost: {k:d} (the particle had already passed "
+                                 "the station's new place)", k=int(lost))})
         if "switch" in changed:
             self.t_set = {"A": (now, -new["L_m"]), "B": (now, new["L_m"])}
         if "a_deg" in changed:
@@ -458,12 +508,14 @@ class Simulation(BaseSimulation):
             self.t_set["B"] = (now, new["L_m"])
         if "rate" in changed:
             self.t_next = now + self.rng.exponential(1.0 / new["rate"])  # Poisson stream: memoryless
-        desc = "; ".join(f"{SCHEMA.by_id[k].label}: {_fmt(old[k])} → {_fmt(new[k])}" for k in changed)
+        desc = join([T("{label}: {old} → {new}", label=SCHEMA.by_id[k].label, old=_val(SCHEMA.by_id[k], old[k]),
+                        new=_val(SCHEMA.by_id[k], new[k])) for k in changed])
         self.params = new
         if new["switch"] == "random" and C * new["tau_ns"] * 1e-9 >= 2 * new["L_m"] and \
                 any(k in changed for k in ("tau_ns", "L_m", "switch")):
-            self._msg({"type": "notice", "t": now, "text": "cτ ≥ 2L: выбор настройки во времениподобной связи с "
-                                                          "регистрацией на другой стороне — лазейка локальности открыта"})
+            self._msg({"type": "notice", "t": now,
+                       "text": T("cτ ≥ 2L: the choice of a setting is time-like to the detection on the other side, the "
+                                 "locality loophole is open")})
         if any(k in changed for k in ANGLES):
             self._setup_checks()
         self._spacetime_checks()
@@ -478,8 +530,8 @@ class Simulation(BaseSimulation):
             self.seg_counts = dict(detected=0, loc=0, free=0)
             self.viol_said = False
             self._stat_checks()
-            return "статистика сброшена; установка и пары в полёте прежние"
-        raise ValueError(f"неизвестное действие {name!r}")
+            return T("the statistics reset; the set-up and the pairs in flight as they were")
+        raise ValueError(f"unknown action {name!r}")
 
     # --- time -----------------------------------------------------------------------------------------
     def max_step(self):
@@ -541,8 +593,9 @@ class Simulation(BaseSimulation):
             i = 0
             sg = lambda o: "+" if o > 0 else "−"  # noqa: E731
             self._msg({"type": "event", "kind": "detection", "t": float(d["tarr"][0]),
-                       "text": f"Первая пара зарегистрирована: A {sg(d['oA'][i])} при {d['alA'][i]:g}°, "
-                               f"B {sg(d['oB'][i])} при {d['alB'][i]:g}° (полёт {self._flight():.4g} с)"})
+                       "text": T("The first pair detected: A {oA} at {aA}°, B {oB} at {aB}° (flight {tf:.4g} s)",
+                                 oA=sg(d["oA"][i]), aA=float(d["alA"][i]), oB=sg(d["oB"][i]), aB=float(d["alB"][i]),
+                                 tf=float(self._flight()))})
 
     def _maybe_violation_event(self):
         if self.viol_said or self.law.law != "quantum":
@@ -551,8 +604,9 @@ class Simulation(BaseSimulation):
         if s["excess"] is not None and s["Nmin"] >= NMIN and s["excess"] > ZTOL:
             self.viol_said = True
             self._msg({"type": "event", "kind": "result", "t": self.t,
-                       "text": f"Нарушение неравенства CHSH на {s['excess']:.1f}σ: S = {s['S']:.4f} ± {s['se']:.3g} "
-                               f"после {self.seg_counts['detected']} пар"})
+                       "text": T("Violation of the CHSH inequality by {x:.1f}σ: S = {S:.4f} ± {se:.3g} (pairs counted: "
+                                 "{k:d})", x=float(s["excess"]), S=float(s["S"]), se=float(s["se"]),
+                                 k=int(self.seg_counts["detected"]))})
 
     def next_event_time(self):
         c = [self.t_next]
@@ -579,14 +633,15 @@ class Simulation(BaseSimulation):
         d, q, h = law.curves()
         P = self.params
         return {
-            "title": "Тест Белла: " + law.describe(),
-            "text": ("Источник в центре выпускает пары по одной (пуассоновский поток); частицы летят к станциям Алисы "
-                     "(−L) и Боба (+L). У каждой станции две настройки анализатора; в режиме случайного выбора бит "
-                     "генератора станции выбирает настройку за τ до прихода частицы. Исход (+ или −) каждой частицы "
-                     "вычисляется и показывается в момент её прихода: по правилу Борна для запутанного состояния или по "
-                     "модели локальных скрытых параметров. Статистика — счёты совпадений этого запуска; ожидания закона "
-                     "и границы 2 и 2√2 — в «Проверках». Кривая ЛСП на графике E(Δ) в квантовом мире — только для "
-                     "сравнения (lfphys.theories.alternatives.local_hidden)."),
+            "title": T("Bell test: {law}", law=law.describe()),
+            "text": T("The source in the middle emits pairs one at a time (a Poisson stream); the particles fly to the "
+                      "stations of Alice (−L) and Bob (+L). Each station has two settings of its analyser; in the mode of "
+                      "random choice, a bit of the station's generator chooses the setting τ before the particle "
+                      "arrives. The outcome (+ or −) of each particle is computed and shown at the moment it arrives: "
+                      "by the Born rule for the entangled state, or by a model of local hidden variables. The "
+                      "statistics are the coincidence counts of this run; the expectations of the law and the bounds 2 "
+                      "and 2√2 are in “Checks”. The LHV curve on the plot E(Δ) in a quantum world is for comparison "
+                      "only (lfphys.theories.alternatives.local_hidden)."),
             "pair": P["pair"], "pair_label": PAIR_LABEL[P["pair"]], "law": law.law, "model": law.model,
             "model_label": MODEL_LABEL.get(law.model), "v": self.v, "c": C, "period": law.period,
             "modifications": SCHEMA.modifications(P), "actions": self._actions(),
@@ -623,20 +678,22 @@ def _same(a, b):
     return a == b
 
 
-def _fmt(v):
-    if isinstance(v, float):
-        return f"{v:.6g}"
-    return str(v)
+def _val(p, v):
+    """A parameter's value for a text: an option's label (a T) or the number itself (formatted by the viewer)."""
+    if p.type == "select":
+        return dict(p.options).get(v, v)
+    return v
 
 
 VIZ = {
     "id": "v07_bell_test",
-    "title": "Тест Белла: запутанные пары",
-    "summary": ("Пары фотонов |Φ+⟩ или спинов ½ в синглете летят к двум станциям; у каждой — две настройки, выбор "
-                "фиксированный или случайный перед приходом частицы (вне светового конуса другой стороны). Счёты "
-                "совпадений, корреляции E, параметр CHSH S против границ 2 и 2√2, кривая E(Δ), отсутствие сигнала."),
-    "purpose": ("Исследование нелокальных корреляций и условий опыта без лазеек; закон можно намеренно заменить "
-                "локальными скрытыми параметрами и увидеть, что |S| не превышает 2."),
+    "title": T("The Bell test with entangled pairs"),
+    "summary": T("Pairs of photons |Φ+⟩ or of spins ½ in the singlet fly to two stations; each has two settings, "
+                 "chosen fixed or at random before the particle arrives (outside the other side's light cone). "
+                 "Coincidence counts, the correlations E, the CHSH parameter S against the bounds 2 and 2√2, the curve "
+                 "E(Δ), no signalling."),
+    "purpose": T("A study of nonlocal correlations and of the conditions of a loophole-free experiment; the law can be "
+                 "replaced on purpose by local hidden variables to see that |S| does not exceed 2."),
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,

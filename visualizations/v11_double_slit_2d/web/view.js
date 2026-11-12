@@ -6,12 +6,14 @@
 // phase, with the trajectories over it); on the right the state of the experiment and the screen: the computed
 // pattern, the Bohm hits by slit, and at the end the approximate theories for comparison. Drawing only: every number
 // comes from the run (the view decodes the run's images and draws its polylines).
-import { el, fill, fresh2d, num, panel } from "/static/js/ui.js";
+import { el, fill, fresh2d, panel } from "/static/js/ui.js";
 import { createEnv3D } from "/static/js/env3d.js";
+import { t, fmt, lang } from "/static/js/i18n.js";
 
 const COLORS = { 0: [0.78, 0.82, 0.86], 1: [0.31, 0.82, 0.77], 2: [1.0, 0.54, 0.12] };  // not yet through, A, B
 const CSS = { 0: "#c8d0da", 1: "#4fd1c5", 2: "#ff8a1f" };
-const FATE = { 1: "на экране", 2: "отражены пластиной", 3: "ушли вбок", 0: "в полёте" };
+// the fates of the Bohm particles (counts of particles; the screen's result names fractions of the probability)
+const FATE = { 1: t("on the screen"), 2: t("bounced back"), 3: t("sideways"), 0: t("in flight") };
 
 export function createView(ctx) {
   const env = createEnv3D(ctx, { scale: "sqrt", logFloor: () => 1e-6 });
@@ -20,10 +22,10 @@ export function createView(ctx) {
   const chart = el("canvas", { style: { width: "100%", height: "220px", display: "block", background: "#0b0e14", borderRadius: "4px" } });
   const chartHelp = el("div", { class: "help" });
   const legend = el("div", { class: "help" },
-    el("span", { style: { color: CSS[1] } }, "━"), " через щель A (x < 0)  ", el("span", { style: { color: CSS[2] } }, "━"), " через щель B  ",
-    el("span", { style: { color: CSS[0] } }, "━"), " ещё не прошли / отражены");
-  const rightPanels = [panel("Опыт", el("div", {}, stateBox, legend)), panel("Экран", el("div", {}, chart, chartHelp, resBox)),
-                       panel("Установка сейчас", setupBox), panel("Слои сцены", env.layersPanel)];
+    el("span", { style: { color: CSS[1] } }, "━"), " ", t("through slit A (x < 0)"), "  ", el("span", { style: { color: CSS[2] } }, "━"), " ", t("through slit B"), "  ",
+    el("span", { style: { color: CSS[0] } }, "━"), " ", t("not through yet / reflected"));
+  const rightPanels = [panel(t("Experiment"), el("div", {}, stateBox, legend)), panel(t("Screen"), el("div", {}, chart, chartHelp, resBox)),
+                       panel(t("Set-up now"), setupBox), panel(t("Scene layers"), env.layersPanel)];
   let H = null, G = null, screens = [], result = null, hits = { x: [], slit: [], t: [] }, tracks = [], slits = null, fates = null, live = null;
   let chartKey = "";
   let waves = [], shownWave = -1, trackT = [], nowT = Infinity, lastSlits = "", lastPanels = 0, panelMeta = null, panelTimer = 0;
@@ -47,10 +49,10 @@ export function createView(ctx) {
 
   // --- the window of the plane of the experiment (y = 0): |psi|^2 and phase from the run, trajectories over it -------
   function windowMeta(nx, nz, w) {
-    const note = w ? `пик |ψ|² — ${num(w.peak_rel, 3)} от начального, в окне ${num(w.norm, 4)} вероятности (каждый снимок — в долях своего пика)` : "";
+    const note = w ? t("the peak of |ψ|² is {p:.3g} of the initial one, the window holds {n:.4g} of the probability (each picture as a fraction of its own peak)", { p: w.peak_rel, n: w.norm }) : "";
     return { type: "slice", id: 1, s: [G.x[0], G.x[1], nx], tt: [G.z[0], G.z[1], nz], origin: [0, 0, 0], u: [1, 0, 0], v: [0, 0, 1],
-             normal: [0, 1, 0], units: "λ", coord_names: ["x", "y", "z"], depth: true, fixed: true, label: "плоскость опыта y = 0",
-             title: "Плоскость опыта (y = 0): волна |ψ|²", route_label: "уравнение Шрёдингера на всей плоскости, без приближений",
+             normal: [0, 1, 0], units: "λ", coord_names: ["x", "y", "z"], depth: true, fixed: true, label: t("the plane of the experiment y = 0"),
+             title: t("Plane of the experiment (y = 0): the wave |ψ|²"), route_label: t("the Schrödinger equation on the whole plane, without approximations"),
              exact: true, approximation: false, verify: { note } };
   }
   function overlay(g, map) {
@@ -123,9 +125,9 @@ export function createView(ctx) {
     }
     return { dims: [nz, nx, ny], data };
   }
-  function showWave(t) {
+  function showWave(tNow) {
     let lo = 0, hi = waves.length - 1, k = -1;
-    while (lo <= hi) { const m = (lo + hi) >> 1; if (waves[m].t <= t + 1e-30) { k = m; lo = m + 1; } else hi = m - 1; }
+    while (lo <= hi) { const m = (lo + hi) >> 1; if (waves[m].t <= tNow + 1e-30) { k = m; lo = m + 1; } else hi = m - 1; }
     if (k < 0 || k === shownWave) return;
     shownWave = k;
     const w = decodeWave(waves[k]);
@@ -140,13 +142,13 @@ export function createView(ctx) {
 
   // --- the screen: the computed pattern, the Bohm hits by slit, at the end the approximate theories --------------------
   // everything as of the time shown: the player may be scrolled back (review B3-10)
-  function screenAt(t) {
+  function screenAt(tNow) {
     let lo = 0, hi = screens.length - 1, k = -1;
-    while (lo <= hi) { const m = (lo + hi) >> 1; if (screens[m].t <= t + 1e-30) { k = m; lo = m + 1; } else hi = m - 1; }
+    while (lo <= hi) { const m = (lo + hi) >> 1; if (screens[m].t <= tNow + 1e-30) { k = m; lo = m + 1; } else hi = m - 1; }
     return k < 0 ? null : screens[k];
   }
   const resultNow = () => (result && result.t <= nowT + 1e-30 ? result : null);
-  function hitsUpTo(t) { let n = hits.t.length; while (n > 0 && hits.t[n - 1] > t + 1e-30) n -= 1; return n; }
+  function hitsUpTo(tNow) { let n = hits.t.length; while (n > 0 && hits.t[n - 1] > tNow + 1e-30) n -= 1; return n; }
   function drawChart() {
     const screen = screenAt(nowT), result = resultNow();
     const cv = chart, dpr = Math.min(window.devicePixelRatio || 1, 2), W = cv.clientWidth, Hh = cv.clientHeight;
@@ -195,13 +197,13 @@ export function createView(ctx) {
     }
     g.strokeStyle = "#3a4350"; g.strokeRect(left, top, pw, ph);
     g.fillStyle = "#9aa3ad"; g.font = "10px system-ui";
-    for (let q = 0; q <= 4; q++) { const x = -xh + 2 * xh * q / 4; g.fillText(num(x, 3), X(x) - 8, top + ph + 12); }
+    for (let q = 0; q <= 4; q++) { const x = -xh + 2 * xh * q / 4; g.fillText(fmt(x, ".3g"), X(x) - 8, top + ph + 12); }
     g.fillText("x, λ", left + pw - 22, top + ph + 21);
-    g.fillText(num(ymax, 2), 2, top + 8); g.fillText("0", 2, top + ph);
+    g.fillText(fmt(ymax, ".2g"), 2, top + 8); g.fillText("0", 2, top + ph);
     fill(chartHelp,
-      el("span", {}, el("b", {}, "━"), " поток в экран (посчитан, копится) · столбцы — попадания частиц Бома по щелям"),
-      result && (refs.paraxial || refs.kirchhoff) ? el("div", {}, el("span", { style: { color: "#ffd23f" } }, "╌"), " параксиальная теория (Френель, Кирхгоф) · ",
-        el("span", { style: { color: "#b48cff" } }, "┄"), " граничные значения Кирхгофа, точное распространение — для сравнения, не эталон") : null);
+      el("span", {}, el("b", {}, "━"), " ", t("the flux into the screen (computed, accumulating) · bars: hits of the Bohm particles by slit")),
+      result && (refs.paraxial || refs.kirchhoff) ? el("div", {}, el("span", { style: { color: "#ffd23f" } }, "╌"), " ", t("paraxial theory (Fresnel, Kirchhoff)"), " · ",
+        el("span", { style: { color: "#b48cff" } }, "┄"), " ", t("Kirchhoff's boundary values, exact propagation: for comparison, not a reference")) : null);
   }
 
   function drawState(f) {
@@ -209,23 +211,23 @@ export function createView(ctx) {
     const P = H.particle, Gm = G;
     const c = f ? f.counts : null;
     fill(stateBox,
-      el("span", {}, "частица"), el("span", {}, `${P.label}, λ = ${num(P.lambda_m * 1e12, 4)} пм, E = ${num(P.Ekin_eV, 4)} эВ`),
-      el("span", {}, "щели"), el("span", { class: "mono" }, `a = ${num(Gm.a, 3)} λ, d = ${num(Gm.d, 3)} λ, стенка ${num(Gm.w, 3)} λ × ${num(Gm.V0, 3)} E₀, экран z = ${num(Gm.L, 4)} λ`),
-      el("span", {}, "время волны"), el("span", { class: "mono" }, f ? `${num(f.tau, 4)} ед. (${num(f.tau * P.time_unit_s, 3)} с)` : "—"),
-      el("span", {}, "вероятность в окне"), el("span", { class: "mono" }, f ? num(f.norm, 4) : "—"),
-      el("span", {}, `частицы Бома (${H.n_bohm})`), el("span", { class: "mono" }, c ? Object.entries(FATE).map(([k, t]) => `${t}: ${c[{ 1: "screen", 2: "back", 3: "side", 0: "flight" }[k]]}`).join(" · ") : "—"),
-      el("span", {}, "считается на"), el("span", {}, `${H.device.wave === "gpu" ? "GPU 0" : "CPU"} (${H.device.reason})`));
+      el("span", {}, t("particle")), el("span", {}, t("{particle}, λ = {lam:.4g} pm, E = {E:.4g} eV", { particle: P.label, lam: P.lambda_m * 1e12, E: P.Ekin_eV })),
+      el("span", {}, t("the slits")), el("span", { class: "mono" }, t("a = {a:.3g} λ, d = {d:.3g} λ, wall {w:.3g} λ × {V0:.3g} E₀, screen z = {L:.4g} λ", { a: Gm.a, d: Gm.d, w: Gm.w, V0: Gm.V0, L: Gm.L })),
+      el("span", {}, t("time of the wave")), el("span", { class: "mono" }, f ? t("{tau:.4g} units ({s:.3g} s)", { tau: f.tau, s: f.tau * P.time_unit_s }) : "—"),
+      el("span", {}, t("probability in the window")), el("span", { class: "mono" }, f ? fmt(f.norm, ".4g") : "—"),
+      el("span", {}, t("Bohm particles ({n:d})", { n: H.n_bohm })), el("span", { class: "mono" }, c ? Object.entries(FATE).map(([k, lab]) => `${lab}: ${fmt(c[{ 1: "screen", 2: "back", 3: "side", 0: "flight" }[k]], "d")}`).join(" · ") : "—"),
+      el("span", {}, t("computed on")), el("span", {}, `${H.device.wave === "gpu" ? "GPU 0" : "CPU"} (${t(H.device.reason)})`));
   }
   function drawSetup(live) {
     if (!H || !live) return;
     fill(setupBox,
-      G && G.centers && G.centers.length ? el("span", {}, "пластина") : null,
-      G && G.centers && G.centers.length ? el("span", { class: "mono" }, `a = ${num(G.a, 4)} λ, d = ${num(G.d, 4)} λ, w = ${num(G.w, 4)} λ, V₀ = ${num(G.V0, 4)} E₀`) : null,
-      el("span", {}, "щель A"), el("span", {}, live.slit_a ? "открыта" : "закрыта"),
-      el("span", {}, "щель B"), el("span", {}, live.slit_b ? "открыта" : "закрыта"),
-      H.particle.spin ? el("span", {}, H.particle.mark === "detector" ? "наблюдатель у щели B" : "метка в щели B") : null,
-      H.particle.spin ? el("span", {}, live.mark_deg ? `${H.particle.mark === "detector" ? "состояние детектора" : "спин"} поворачивается на ${num(live.mark_deg, 4)}° (различимость путей sin²(θ/2) = ${num(Math.sin(live.mark_deg * Math.PI / 360) ** 2, 3)})` : "θ = 0: путь не помечен") : null,
-      H.particle.charge_e ? el("span", {}, "поток между щелями") : null, H.particle.charge_e ? el("span", {}, `${num(live.flux, 4)} Φ₀`) : null);
+      G && G.centers && G.centers.length ? el("span", {}, t("plate")) : null,
+      G && G.centers && G.centers.length ? el("span", { class: "mono" }, t("a = {a:.4g} λ, d = {d:.4g} λ, w = {w:.4g} λ, V₀ = {V0:.4g} E₀", { a: G.a, d: G.d, w: G.w, V0: G.V0 })) : null,
+      el("span", {}, t("slit A")), el("span", {}, live.slit_a ? t("open") : t("closed")),
+      el("span", {}, t("slit B")), el("span", {}, live.slit_b ? t("open") : t("closed")),
+      H.particle.spin ? el("span", {}, H.particle.mark === "detector" ? t("observer at slit B") : t("mark in slit B")) : null,
+      H.particle.spin ? el("span", {}, live.mark_deg ? t("{what} turns by {th:.4g}° (the distinguishability of the paths sin²(θ/2) = {dist:.3g})", { what: H.particle.mark === "detector" ? t("the detector's state") : t("the spin"), th: live.mark_deg, dist: Math.sin(live.mark_deg * Math.PI / 360) ** 2 }) : t("θ = 0: the path is not marked")) : null,
+      H.particle.charge_e ? el("span", {}, t("flux between the slits")) : null, H.particle.charge_e ? el("span", {}, t("{f:.4g} Φ₀", { f: live.flux })) : null);
   }
   function drawPanels() {
     clearTimeout(panelTimer); panelTimer = 0;
@@ -236,23 +238,23 @@ export function createView(ctx) {
   }
   function drawResult() {
     const result = resultNow();
-    if (!result) { fill(resBox, el("div", { class: "muted" }, "Итог появится, когда волна уйдёт из окна: вся вероятность будет поглощена экраном, краями или отражена.")); return; }
+    if (!result) { fill(resBox, el("div", { class: "muted" }, t("The result appears when the wave has left the window: all the probability absorbed by the screen or the edges, or reflected."))); return; }
     const F = result.fractions, B = result.bohm;
     fill(resBox, el("div", { class: "kv" },
-      el("span", {}, "на экран"), el("span", { class: "mono" }, num(F.screen, 5)),
-      el("span", {}, "отражено пластиной"), el("span", { class: "mono" }, num(F.back, 5)),
-      el("span", {}, "ушло вбок"), el("span", { class: "mono" }, num(F.side, 5)),
-      el("span", {}, "частиц Бома на экране"), el("span", { class: "mono" }, `${B.screen} из ${B.n}: через A ${B.A}, через B ${B.B}; пересекли ось ${B.crossed_axis}`)));
+      el("span", {}, t("to the screen")), el("span", { class: "mono" }, fmt(F.screen, ".5g")),
+      el("span", {}, t("reflected by the plate")), el("span", { class: "mono" }, fmt(F.back, ".5g")),
+      el("span", {}, t("went sideways")), el("span", { class: "mono" }, fmt(F.side, ".5g")),
+      el("span", {}, t("Bohm particles on the screen")), el("span", { class: "mono" }, t("{s:d} of {n:d}: through A {a:d}, through B {b:d}; crossed the axis {c:d}", { s: B.screen, n: B.n, a: B.A, b: B.B, c: B.crossed_axis }))));
   }
 
   return {
     center: env.center, rightPanels,
-    help: () => el("div", {}, el("h4", {}, "Двухщелевой опыт в 2D"),
-      el("p", {}, "Пакет частицы летит на пластину с двумя длинными щелями и дальше на экран. Прогон решает уравнение Шрёдингера на всей плоскости опыта (x, z) — без параксиального приближения и без граничных условий Кирхгофа: стенка — потенциальный барьер конечной высоты и толщины, волна сама отражается, проходит в щели и расходится на любые углы. Экран и края окна поглощают волну (детекторы)."),
-      el("p", {}, "Картина на экране — вероятность, втекающая в экран, копится по мере прихода волны. Частицы Бома стартуют из точек, распределённых по |ψ|², и идут по току вероятности той же волны; цвет траектории — щель, через которую частица прошла. При симметричной установке траектории не пересекают ось; с меткой пути пересекают."),
-      el("p", {}, "Установку можно менять на ходу (слева): закрыть щель, повернуть спин в щели B (метка пути: интерференция гаснет), включить поток Ааронова–Бома между щелями (полосы сдвигаются), изменить саму пластину — ширину щелей a, расстояние между ними d, толщину w и высоту стенки V₀ (в окне и с экраном этого мира). Изменение действует с этого момента: часть волны, уже прошедшая щели, его не чувствует; если волна была там, где стенка изменилась, событие называет, какая доля вероятности почувствовала изменение сразу."),
-      el("p", {}, "Окно справа от сцены — плоскость опыта: интенсивность, амплитуда, логарифм или фаза; траектории поверх. Внизу справа — экран: посчитанная картина, попадания частиц и в конце — приближённые теории для сравнения."),
-      el("p", {}, "Третье измерение. Вдоль щелей (ось y) установка не меняется, поэтому трёхмерная волна — точное произведение волны на плоскости (x, z), посчитанной прогоном, и свободного гауссова пакета η(y, t) ширины σy (он только расплывается). В 3D волна показана объёмом (слой «Волна |ψ|² в объёме»; плоскость y = 0 — отдельный слой), частицы Бома и их траектории — во всех трёх координатах (по y траектория растягивается вместе с η), экран — картиной P(x, y). Сверки: сумма P(x, y) по y равна картине P(x), попадания частиц по y — распределению потока по y.")),
+    help: () => el("div", {}, el("h4", {}, t("The double slit in 2-D")),
+      el("p", {}, t("A particle's packet flies at a plate with two long slits and on to a screen. The run solves the Schrödinger equation on the whole plane of the experiment (x, z), without the paraxial approximation and without Kirchhoff's boundary conditions: the wall is a potential barrier of finite height and thickness; the wave reflects by itself, passes into the slits and spreads to any angle. The screen and the window's edges absorb the wave (detectors).")),
+      el("p", {}, t("The pattern on the screen is the probability flowing into the screen, accumulated as the wave arrives. The Bohm particles start from points distributed by |ψ|² and follow the probability current of the same wave; a trajectory's colour is the slit the particle went through. In a symmetric set-up the trajectories do not cross the axis; with a path mark they do.")),
+      el("p", {}, t("The set-up can be changed on the fly (on the left): close a slit, turn the spin in slit B (a path mark: the interference fades), switch on the Aharonov–Bohm flux between the slits (the fringes move), change the plate itself — the slit width a, the distance between the slits d, the thickness w and the wall height V₀ (within this world's window and screen). A change acts from that moment on: the part of the wave that has already passed the slits does not feel it; if the wave was where the wall changed, the event says what share of the probability felt the change at once.")),
+      el("p", {}, t("The window to the right of the scene is the plane of the experiment: the intensity, the amplitude, its logarithm or the phase, with the trajectories over it. At the bottom right is the screen: the computed pattern, the particles' hits and, at the end, the approximate theories for comparison.")),
+      el("p", {}, t("The third dimension. Along the slits (the y axis) the set-up does not change, so the 3-D wave is the exact product of the wave on the plane (x, z) computed by the run and a free Gaussian packet η(y, t) of width σy (it only spreads). In 3-D the wave is shown as a volume (the layer «Wave |ψ|² in the volume»; the plane y = 0 is a separate layer), the Bohm particles and their trajectories in all three coordinates (in y a trajectory stretches together with η), the screen as the pattern P(x, y). Checks: the sum of P(x, y) over y equals the pattern P(x), the particles' hits in y follow the distribution of the flux in y."))),
     reset() { env.reset(); reset(); drawChart(); },
     // key frames (player.js): lists and track points only grow (lengths); the latest result, set-up, slits and live
     // values are references; the 3-D scene's part is the environment's own key frame
@@ -287,7 +289,7 @@ export function createView(ctx) {
           for (let k = 0; k < n; k++) { (tracks[k] || (tracks[k] = [])).push(xz[2 * k], xz[2 * k + 1]); }
           const xyz = new Float32Array(3 * n), col = new Float32Array(3 * n);
           for (let k = 0; k < n; k++) { xyz[3 * k] = xz[2 * k]; xyz[3 * k + 1] = ys ? ys[k] : 0.02; xyz[3 * k + 2] = xz[2 * k + 1]; col.set(COLORS[slits[k]] || COLORS[0], 3 * k); }
-          env.scene.appendTracks("bohm", xyz, col, { label: "Траектории Бома (по щелям), в 3D" });
+          env.scene.appendTracks("bohm", xyz, col, { label: t("Bohm trajectories (by slit), in 3-D") });
           const key = Array.prototype.join.call(slits, "");
           if (key !== lastSlits) { lastSlits = key; env.scene.setTrackColors("bohm", col); }  // a slit became known
           later("window", () => env.windows.redraw());
@@ -303,16 +305,16 @@ export function createView(ctx) {
         default: break;
       }
     },
-    render(meta, t, blobs) {
+    render(meta, tShown, blobs) {
       if (!H || !meta) return;
-      nowT = t;
-      showWave(t);
-      const sc = screenAt(t), key = `${sc ? sc.t : -1}|${hitsUpTo(t)}|${resultNow() ? 1 : 0}`;
+      nowT = tShown;
+      showWave(tShown);
+      const sc = screenAt(tShown), key = `${sc ? sc.t : -1}|${hitsUpTo(tShown)}|${resultNow() ? 1 : 0}`;
       if (key !== chartKey) { chartKey = key; later("chart", drawChart); drawResult(); }
       if (blobs && blobs.pos) {
         const n = blobs.pos.length / 2, xyz = new Float32Array(3 * n), col = new Float32Array(3 * n);
         for (let k = 0; k < n; k++) { xyz[3 * k] = blobs.pos[2 * k]; xyz[3 * k + 1] = blobs.y ? blobs.y[k] : 0.04; xyz[3 * k + 2] = blobs.pos[2 * k + 1]; col.set(COLORS[blobs.slit[k]] || COLORS[0], 3 * k); }
-        env.scene.setPoints("particles", xyz, col, { label: "Частицы Бома сейчас" });
+        env.scene.setPoints("particles", xyz, col, { label: t("Bohm particles now") });
       }
       // the panels' tables: a few times a second, and always ending on the frame shown (review C1-17)
       panelMeta = meta;

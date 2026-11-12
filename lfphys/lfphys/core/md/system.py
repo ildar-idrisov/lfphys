@@ -131,38 +131,41 @@ import time
 
 import numpy as np
 
+from lfphys.i18n import T
+
 from .. import backend
 from . import cells
 
 ABOUT = {
     "layer": "core", "kind": "numerical solution",
-    "title": "Молекулярная динамика: частицы и молекулы, стенки, поршень, термостаты",
-    "statement": "Классическая МД в 2-D и 3-D: сорта частиц (масса, заряд, σ, ε), молекулы со связями и углами, "
-                 "короткодействующий парный потенциал (из theories.models) по спискам Верле, кулоновское "
-                 "взаимодействие (прямая сумма в ящике со стенками), стенки (зеркальные, тепловые с диффузным "
-                 "переизлучением — тепловая баня, мягкие), подвижный поршень (масса, внешнее давление, работа), "
-                 "однородное поле; скоростной Верле (NVE), термостаты CSVR (Буччи–Донадио–Парринелло) и Ланжевен "
-                 "(BAOAB), в том числе в области пространства; изменения в текущий момент (транзакционно): в том "
-                 "числе модель пары, шаг по времени, ось периодическая или со стенками, много молекул за одну правку, размеры "
-                 "ящика (аффинная деформация скачком или за заданное время малыми шагами, работа над системой учтена "
-                 "точно, первый порядок — по аффинному напряжению; или сдвиг стенки); "
-                 "температура, давление по вириалу и по импульсу стенкам, энергии, импульс, g(r), MSD, "
-                 "распределение скоростей, счётчики теплоты и работы, ошибка шага по спутнику с dt/2; состояние — "
-                 "простые данные, продолжение бит в бит.",
-    "validity": "классическая механика (квантовые поправки при ħω ≳ kT, у лёгких атомов и низких T не учтены); "
-                "взаимодействия — модели (theories.models.interatomic), кроме кулоновского; ошибка шага O(dt²) "
-                "при непрерывных силах (Верле: энергия без дрейфа при малом dt; CSVR и BAOAB — стационарное "
-                "распределение с ошибкой O(dt²)); у жёстких стенок и поршня при взаимодействующих атомах ошибка "
-                "энергии первого порядка по dt (удар внутри шага); кулон только в ящике со стенками по всем осям (периодический — отказ, нет Эвальда); "
-                "поршень — плоская зеркальная грань только на стороне hi одной оси",
-    "basis": ["Swope, Andersen, Berens & Wilson, J. Chem. Phys. 76, 637 (1982): скоростной Верле",
+    "title": T("Molecular dynamics: particles and molecules, walls, piston, thermostats"),
+    "statement": T("Classical MD in 2-D and 3-D: particle species (mass, charge, σ, ε), molecules with bonds and "
+                   "angles, a short-range pair potential (from theories.models) by Verlet lists, the Coulomb "
+                   "interaction (a direct sum in a box with walls), walls (specular, thermal with diffuse re-emission "
+                   "— a heat bath, soft), a movable piston (mass, external pressure, work), a uniform field; velocity "
+                   "Verlet (NVE), the CSVR (Bussi–Donadio–Parrinello) and Langevin (BAOAB) thermostats, also in a "
+                   "region of space; changes at the current moment (transactional): among them the pair model, the "
+                   "time step, an axis periodic or with walls, many molecules in one edit, the box size (an affine "
+                   "deformation at once or over a given time in small steps, the work on the system accounted for "
+                   "exactly, to first order in the affine stress; or a wall shift); temperature, pressure from the "
+                   "virial and from the momentum given to the walls, energies, momentum, g(r), MSD, the velocity "
+                   "distribution, heat and work counters, the step error from a companion run with dt/2; the state "
+                   "is plain data, continued bit for bit."),
+    "validity": T("classical mechanics (quantum corrections at ħω ≳ kT, for light atoms and low T, are not "
+                  "included); the interactions are models (theories.models.interatomic), except the Coulomb one; "
+                  "step error O(dt²) for continuous forces (Verlet: energy without drift at small dt; CSVR and BAOAB: "
+                  "the stationary distribution with an error O(dt²)); with hard walls and the piston and interacting "
+                  "atoms the energy error is first order in dt (an impact inside a step); Coulomb only in a box with "
+                  "walls on every axis (periodic: refused, no Ewald sum); the piston is a flat specular face only on "
+                  "the hi side of one axis"),
+    "basis": [T("Swope, Andersen, Berens & Wilson, J. Chem. Phys. 76, 637 (1982): velocity Verlet"),
               "Bussi, Donadio & Parrinello, J. Chem. Phys. 126, 014101 (2007), arXiv:0803.4060, Eqs. (7), (A7)",
               "Leimkuhler & Matthews, Appl. Math. Res. Express 2013, 34, arXiv:1203.5428: BAOAB",
-              "Allen & Tildesley, Computer Simulation of Liquids (2nd ed., 2017): вириал, поправки хвоста, списки",
-              "Maxwell (1879): диффузная стенка; Tehver, Toigo, Koplik & Banavar, PRE 57, R17 (1998): тепловые стенки",
-              "проверки: NIST SRS (ЛД, 3σ + хвост; линейный сдвиг силы 2.5σ), замкнутые формы (идеальный газ, "
-              "частоты связи и угла по отображению Верле, теплообмен кнудсеновского газа), распределение Γ(N_f/2) "
-              "кинетической энергии"],
+              T("Allen & Tildesley, Computer Simulation of Liquids (2nd ed., 2017): virial, tail corrections, lists"),
+              T("Maxwell (1879): diffuse wall; Tehver, Toigo, Koplik & Banavar, PRE 57, R17 (1998): thermal walls"),
+              T("checks: NIST SRS (LJ, 3σ + tail; linear force shift 2.5σ), closed forms (ideal gas, bond and "
+                "angle frequencies by the Verlet map, heat exchange of a Knudsen gas), the Γ(N_f/2) distribution of "
+                "the kinetic energy")],
     "conflicts": [],
 }
 
@@ -230,21 +233,22 @@ def _bench(size, xp, cdtype=None):
 
 
 backend.register(backend.KernelSpec(
-    KERNEL, "Молекулярная динамика: парные силы",
-    "силы, энергия и вириал короткодействующего парного потенциала по списку Верле (core.md.system; плейграунд "
-    "частиц и молекул P15.4): поэлементно как на CPU, суммы по частицам в порядке numpy.bincount — силы бит в бит "
-    "равны CPU",
+    KERNEL, T("Molecular dynamics: pair forces"),
+    T("forces, energy and virial of a short-range pair potential by the Verlet list (core.md.system; the playground "
+      "of particles and molecules P15.4): element by element as on the CPU, sums over particles in the order of "
+      "numpy.bincount — the forces equal the CPU's bit for bit"),
     gpu=True,
     precisions={"fp64": {"allowed": True},
                 "fp32": {"allowed": False,
-                         "why": "траектории МД хаотичны: ошибка fp32 сил растёт экспоненциально и меняет "
-                                "траекторию за десятки шагов; энергия NVE дрейфует (не проверено — не предлагается)"}},
+                         "why": T("MD trajectories are chaotic: the fp32 error of the forces grows exponentially "
+                                  "and changes the trajectory within tens of steps; the NVE energy drifts (not "
+                                  "checked — not offered)")}},
     crossover=20000,
-    crossover_note=("пары в списке Верле; измерено 2026-11-04 на RTX 2080 Ti против CPU контейнера (i9-9900K): "
-                    "ядро сил быстрее на GPU с 2·10^4 пар (0.46 против 0.76 мс), ×12 при 10^5, ×28 при 3·10^5; "
-                    "шаг целиком (перестройка списка и остальное — на CPU): 3-D ×1.1 / 2.0 / 2.7 / 2.0 при "
-                    "N = 10^3 / 3·10^3 / 10^4 / 3·10^4, 2-D ×1.0 / 1.7 / 2.2 при N = 3·10^3 / 10^4 / 3·10^4; "
-                    "«Измерить заново» уточняет"),
+    crossover_note=T("pairs in the Verlet list; measured 2026-11-04 on an RTX 2080 Ti against the container's CPU "
+                     "(i9-9900K): the force kernel is faster on the GPU from 2·10^4 pairs (0.46 against 0.76 ms), ×12 "
+                     "at 10^5, ×28 at 3·10^5; the whole step (list rebuilds and the rest on the CPU): 3-D ×1.1 / 2.0 "
+                     "/ 2.7 / 2.0 at N = 10^3 / 3·10^3 / 10^4 / 3·10^4, 2-D ×1.0 / 1.7 / 2.2 at N = 3·10^3 / 10^4 / "
+                     "3·10^4; “Measure again” refines this"),
     bench=_bench, bench_sizes=(2000, 5000, 10000, 20000, 50000, 100000, 300000, 1000000)))
 _EXCLUDE = ("bonded", "molecule", "none")
 _WALL_KINDS = ("specular", "thermal", "soft")
@@ -596,7 +600,7 @@ class MD:
         if device not in ("auto", "cpu"):
             raise ValueError("device: 'auto' (the backend's choice for the pair forces) or 'cpu'")
         self.device_mode = device
-        self._force_cpu = "задано: CPU" if device == "cpu" else None
+        self._force_cpu = T("set: CPU") if device == "cpu" else None
         self._device = "cpu"
         self.L = L
         self.periodic = np.array([b == "periodic" for b in boundary])
@@ -1919,7 +1923,7 @@ class MD:
                     if not backend.is_out_of_memory(e):
                         raise
                     backend.release()
-                    backend.choose(KERNEL, len(self._nl["i"]), force="cpu", why="GPU: не хватило памяти → CPU")
+                    backend.choose(KERNEL, len(self._nl["i"]), force="cpu", why=T("GPU: out of memory → CPU"))
                     f[:] = 0.0
                     vir[:] = 0.0
                     self._device = "cpu"
@@ -2424,11 +2428,12 @@ class MD:
         nm = int(np.sum(self._mobile))
         nc = int(np.sum(self.momentum_conserved_axes())) if nm > 1 else 0
         if nc == self.dim:
-            return self.dim * nm - nc, "d·N − d: полный импульс сохраняется (все оси периодические)"
+            return self.dim * nm - nc, T("d·N − d: the total momentum is conserved (all axes periodic)")
         if nc:
             ax = ", ".join(_AX[a] for a in np.flatnonzero(self.momentum_conserved_axes()))
-            return self.dim * nm - nc, f"d·N − {nc}: сохраняется импульс вдоль {ax}"
-        return self.dim * nm, "d·N: импульс не сохраняется (стенки, поле, термостат Ланжевена или локальный)"
+            return self.dim * nm - nc, T("d·N − {nc:d}: the momentum along {axes} is conserved", nc=nc, axes=ax)
+        return self.dim * nm, T("d·N: the momentum is not conserved (walls, a field, a Langevin or a local "
+                                "thermostat)")
 
     def temperature(self, species=None, region=None) -> dict:
         """Kinetic temperature. Whole system: 2 K_int / N_f (K_int: in the centre-of-mass frame along the axes whose
@@ -2451,7 +2456,7 @@ class MD:
         r = np.flatnonzero(sel)
         K = self.kinetic_energy(r)
         nf = self.dim * len(r)
-        return {"T": 2.0 * K / nf if nf else float("nan"), "dof": nf, "K": K, "reason": "d·n частиц выборки"}
+        return {"T": 2.0 * K / nf if nf else float("nan"), "dof": nf, "K": K, "reason": T("d·n of the selected particles")}
 
     def kinetic_tensor(self) -> np.ndarray:
         """2 K_aa = sum m v_a^2 (centre-of-mass frame along the axes whose momentum is conserved)."""
@@ -2780,7 +2785,7 @@ class MD:
         model = md_step_model(self.n, self._stats["pairs"], self.dim)
         return {"per_step_s": model, "measured_per_step_s": meas, "n": self.n, "pairs": self._stats["pairs"],
                 "rebuilds": self._stats["rebuilds"], "device": self._device,
-                "note": "модель — CPU; на GPU 0 парные силы быстрее с ~2·10^4 пар (README)"}
+                "note": T("model: CPU; on GPU 0 the pair forces are faster from ~2·10^4 pairs (README)")}
 
     def diagnostics(self) -> dict:
         T = self.temperature()
@@ -2828,7 +2833,7 @@ class MD:
         o.periodic = np.array(d["periodic"], bool)
         o.pair = _term_from(d["pair"])
         o.device_mode = d.get("device_mode", "auto")
-        o._force_cpu = "задано: CPU" if o.device_mode == "cpu" else None
+        o._force_cpu = T("set: CPU") if o.device_mode == "cpu" else None
         o._device = "cpu"
         o.skin, o.exclude = float(d["skin"]), d["exclude"]
         o.max_insert_energy = float(d["max_insert_energy"])

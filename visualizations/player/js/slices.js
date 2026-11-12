@@ -5,11 +5,12 @@
 // the run computed on that plane (a wave: intensity, amplitude, log or phase; any other field, named by the slice's
 // `quantity`: linear or log), its axes in physical units (the slice's `units`), how it was computed and checked, the
 // values under the cursor, and can export its data (CSV). While a plane is dragged, a preview is shown, marked as such.
+import { t } from "./i18n.js";
 import { el, fill, num, fresh2d } from "./ui.js";
 import { LUT, PLANE_COLORS, transfer } from "./scene3d.js";
 
-const MODES = [["sqrt", "амплитуда"], ["lin", "интенсивность"], ["log", "логарифм"], ["phase", "фаза"]];
-const FIELD_MODES = [["lin", "линейно"], ["log", "логарифм"]];  // a field that is not a wave (meta.quantity)
+const MODES = [["sqrt", t("amplitude")], ["lin", t("intensity")], ["log", t("logarithm")], ["phase", t("phase")]];
+const FIELD_MODES = [["lin", t("linear")], ["log", t("logarithm")]];  // a field that is not a wave (meta.quantity)
 const COORDS = ["x", "y", "z"];
 
 function phaseColor(a) {  // cyclic: hue from the phase
@@ -19,15 +20,15 @@ function phaseColor(a) {  // cyclic: hue from the phase
 }
 
 // an in-plane direction as a physical axis: a coordinate when it runs along one (with its sign), else a direction
-function axisOf(d, o, units = "мкм", names = COORDS) {
+function axisOf(d, o, units = t("µm"), names = COORDS) {
   for (const [i, a] of [[0, names[0]], [1, names[1]], [2, names[2]]]) {
     if (Math.abs(Math.abs(d[i]) - 1) < 1e-9) return { name: `${a}, ${units}`, at: (p) => o[i] + p * d[i], sign: Math.sign(d[i]) };
   }
   const dir = `(${num(d[0], 2)}, ${num(d[1], 2)}, ${num(d[2], 2)})`;
-  return { name: `от центра плоскости вдоль ${dir}, ${units}`, at: (p) => p, sign: 1 };
+  return { name: t("from the plane's centre along {dir}, {unit}", { dir, unit: units }), at: (p) => p, sign: 1 };
 }
 
-// A one-shot pick (the playground's «⌖ указать место», review UX-ui U4): the next click in any slice window gives the
+// A one-shot pick (the playground's "⌖ point at a place", review UX-ui U4): the next click in any slice window gives the
 // physical point under the pointer to `cb(point, "window")` instead of selecting the window; `armPick(null)` disarms.
 let pickCb = null;
 export function armPick(cb) {
@@ -58,14 +59,14 @@ export function createSliceWindows({ onSelect, onHighlight, onRemove } = {}) {
 
   function make(id) {
     const color = PLANE_COLORS[id];
-    const mode = el("select", { title: "Что показывать" }, MODES.map(([v, t]) => el("option", { value: v }, t)));
+    const mode = el("select", { title: t("What to show") }, MODES.map(([v, s]) => el("option", { value: v }, s)));
     const title = el("span", { class: "sw-title" });
-    const csv = el("button", { title: "Скачать данные среза (CSV: s, t, x, y, z, I/Iпик, фаза)" }, "CSV");
-    const del = el("button", { title: "Убрать срез" }, "✕");
+    const csv = el("button", { title: t("Download the slice's data (CSV: s, t, x, y, z, I/Ipeak, phase)") }, "CSV");
+    const del = el("button", { title: t("Remove the slice") }, "✕");
     const head = el("div", { class: "sw-head" }, el("span", { class: "sw-chip", style: { background: color } }, String(id)), title, el("span", { class: "grow" }), mode, csv, del);
     const cv = el("canvas", { class: "sw-canvas" });
     const status = el("div", { class: "sw-status" });
-    const readout = el("div", { class: "sw-readout mono" }, "наведите на срез");
+    const readout = el("div", { class: "sw-readout mono" }, t("point at the slice"));
     const box = el("div", { class: "slicewin", style: { borderColor: color } }, head, cv, status, readout);
     const w = { id, box, cv, title, status, readout, mode, data: null, preview: null, geom: null, busy: "", del, overlay: null };
     // a click selects the window, unless it was a gesture on an object of the window (the manipulator took it: the
@@ -113,7 +114,7 @@ export function createSliceWindows({ onSelect, onHighlight, onRemove } = {}) {
       armPick(null);
       cb(P, "window");
     }, true);
-    cv.addEventListener("mouseleave", () => { w.readout.textContent = "наведите на срез"; });
+    cv.addEventListener("mouseleave", () => { w.readout.textContent = t("point at the slice"); });
     new ResizeObserver(() => draw(w)).observe(cv);
     W.set(id, w);
     return w;
@@ -125,7 +126,7 @@ export function createSliceWindows({ onSelect, onHighlight, onRemove } = {}) {
     for (const p of [...planes].sort((a, b) => a.id - b.id)) {
       const w = W.get(p.id) || make(p.id);
       w.plane = p;
-      w.title.textContent = `Срез ${p.id}: ${p.label}`;
+      w.title.textContent = t("Slice {id:d}: {label}", { id: p.id, label: t(p.label) });
       if (!w.box.parentNode || w.box.parentNode !== root) root.append(w.box);
     }
     [...root.children].sort((a, b) => a.dataset.id - b.dataset.id);
@@ -137,7 +138,7 @@ export function createSliceWindows({ onSelect, onHighlight, onRemove } = {}) {
     const want = meta.quantity ? FIELD_MODES : MODES;
     if (w.modes === want) return;
     w.modes = want;
-    fill(w.mode, want.map(([v, t]) => el("option", { value: v }, t)));
+    fill(w.mode, want.map(([v, s]) => el("option", { value: v }, s)));
   }
   function setSlice(id, meta, blobs) {
     const w = W.get(id) || make(id);
@@ -145,7 +146,7 @@ export function createSliceWindows({ onSelect, onHighlight, onRemove } = {}) {
     w.data = { meta, I: blobs.I, phase: blobs.phase };
     w.preview = null; w.busy = "";
     w.del.style.display = meta.fixed ? "none" : "";  // a world's own plane (e.g. a 2-D world's): not removable
-    if (meta.title) w.title.textContent = meta.title;
+    if (meta.title) w.title.textContent = t(meta.title);
     if (!w.box.parentNode) root.append(w.box);
     root.style.display = "";
     draw(w);
@@ -161,7 +162,7 @@ export function createSliceWindows({ onSelect, onHighlight, onRemove } = {}) {
   function geometry(d) {
     const m = d.meta, [ns, nt] = [m.s[2], m.tt[2]];
     const longi = m.depth !== false && Math.abs(m.v[2]) > 0.5;  // the depth (z) runs along t: draw it horizontally
-    return { m, ns, nt, longi, units: m.units || "мкм", names: m.coord_names || COORDS };
+    return { m, ns, nt, longi, units: m.units ? t(m.units) : t("µm"), names: (m.coord_names || COORDS).map((n) => t(n)) };
   }
 
   function draw(w) {
@@ -178,7 +179,7 @@ export function createSliceWindows({ onSelect, onHighlight, onRemove } = {}) {
     const mode = w.mode.value, floor = Math.max(1e-6, (3 * (m.window_est || 0)) ** 2);
     // axes in physical coordinates (review C2): horizontal = t (the depth) for longitudinal planes, else s
     const aS = axisOf(m.u, m.origin, units, names), aT = axisOf(m.v, m.origin, units, names);
-    const zOfT = (t) => m.origin[2] + t * m.v[2];
+    const zOfT = (tt) => m.origin[2] + tt * m.v[2];
     const H_ = longi ? { ax: { name: `${names[2]}, ${units}`, at: zOfT, sign: 1 }, p0: m.tt[0], p1: m.tt[1], n: nt } : { ax: aS, p0: m.s[0], p1: m.s[1], n: ns };
     const V_ = longi ? { ax: aS, p0: m.s[0], p1: m.s[1], n: ns } : { ax: aT, p0: m.tt[0], p1: m.tt[1], n: nt };
     const flipH = H_.ax.sign < 0, flipV = V_.ax.sign < 0;  // draw so that the coordinate grows to the right / upwards
@@ -248,16 +249,16 @@ export function createSliceWindows({ onSelect, onHighlight, onRemove } = {}) {
     const th = ticksOf(hv[0], hv[1], pw, 64), tv = ticksOf(vv[0], vv[1], ph, 36);
     let lastRight = 0;
     for (const v of th.values) {
-      const x = left + (v - hv[0]) / (hv[1] - hv[0]) * pw, t = lab(v, th.step), tw = g.measureText(t).width;
+      const x = left + (v - hv[0]) / (hv[1] - hv[0]) * pw, tt = lab(v, th.step), tw = g.measureText(tt).width;
       const x0 = Math.min(Math.max(x - tw / 2, 1), Wc - tw - 2);
       g.fillRect(x - 0.5, top + ph, 1, 3);
-      g.fillText(t, x0, top + ph + 13);
+      g.fillText(tt, x0, top + ph + 13);
       lastRight = Math.max(lastRight, x0 + tw);
     }
     for (const v of tv.values) {
-      const y = top + ph - (v - vv[0]) / (vv[1] - vv[0]) * ph, t = lab(v, tv.step), tw = g.measureText(t).width;
+      const y = top + ph - (v - vv[0]) / (vv[1] - vv[0]) * ph, tt = lab(v, tv.step), tw = g.measureText(tt).width;
       g.fillRect(left - 3, y - 0.5, 3, 1);
-      g.fillText(t, Math.max(1, left - 4 - tw), Math.min(Math.max(y + 3, top + 8), top + ph + 3));
+      g.fillText(tt, Math.max(1, left - 4 - tw), Math.min(Math.max(y + 3, top + 8), top + ph + 3));
     }
     w.ticks = { h: { ...th, lastRight }, v: tv, width: Wc };  // for automated tests of the page
     g.fillText(H_.ax.name, Math.max(left, left + pw - g.measureText(H_.ax.name).width), top + ph + 24);
@@ -266,8 +267,8 @@ export function createSliceWindows({ onSelect, onHighlight, onRemove } = {}) {
     // a world's overlay in the plane's coordinates (s along u, t along v), e.g. computed trajectories (v11)
     if (w.overlay && !w.preview) {
       const at = (p, a) => (p - a.p0) / (a.p1 - a.p0);
-      const map = (s, t) => {
-        let fh = at(longi ? t : s, H_), fv = at(longi ? s : t, V_);
+      const map = (s, tt) => {
+        let fh = at(longi ? tt : s, H_), fv = at(longi ? s : tt, V_);
         if (flipH) fh = 1 - fh;
         if (flipV) fv = 1 - fv;
         return [left + fh * pw, top + (1 - fv) * ph];
@@ -283,22 +284,22 @@ export function createSliceWindows({ onSelect, onHighlight, onRemove } = {}) {
     }
     w.axes = { h: [H_.ax.name, hv[0], hv[1]], v: [V_.ax.name, vv[0], vv[1]] };  // for automated tests of the page
     if (w.preview || (w.data && w.data.meta.coarse)) {
-      const txt = w.preview ? (w.preview.coarse ? "предпросмотр: грубый срез (48 строк), без сверки" : "предпросмотр по объёму (приближённо)")
-        : "автосмещение: грубый срез, без сверки";
+      const txt = w.preview ? (w.preview.coarse ? t("preview: a coarse slice (48 rows), not verified") : t("preview from the volume (approximate)"))
+        : t("auto-shift: a coarse slice, not verified");
       g.fillStyle = "rgba(0,0,0,0.6)"; g.fillRect(left, top, g.measureText(txt).width + 8, 16); g.fillStyle = "#ffd28a"; g.fillText(txt, left + 4, top + 11);
     }
   }
 
   function statusLine(w) {
     const d = w.data;
-    if (w.busy) { fill(w.status, el("span", { class: "warn" }, w.busy)); return; }
-    if (!d) { fill(w.status, el("span", { class: "muted" }, "ждём расчёт…")); return; }
+    if (w.busy) { fill(w.status, el("span", { class: "warn" }, t(w.busy))); return; }
+    if (!d) { fill(w.status, el("span", { class: "muted" }, t("waiting for the computation…"))); return; }
     const m = d.meta, v = m.verify || {};
     fill(w.status,
-      el("span", { class: m.approximation ? "st-bad" : "muted", title: m.reason || "" }, m.route_label),
-      v.points ? el("span", { class: v.ok ? "st-ok" : "st-bad", title: m.verify_title || "поле в точках плоскости против точного поля без БПФ" },
-        ` · сверено в ${v.points} точк.: ${num(v.max_err, 2)} ≤ ${num(v.tol, 2)} ${v.ok ? "✓" : "✗"}`)
-        : el("span", { class: "muted" }, v.note ? " · " + v.note : ""));
+      el("span", { class: m.approximation ? "st-bad" : "muted", title: t(m.reason) }, t(m.route_label)),
+      v.points ? el("span", { class: v.ok ? "st-ok" : "st-bad", title: m.verify_title ? t(m.verify_title) : t("the field at points of the plane against the exact field without the FFT") },
+        " · " + t("verified at {n:d} points: {err:.2g} ≤ {tol:.2g}", { n: v.points, err: v.max_err, tol: v.tol }) + ` ${v.ok ? "✓" : "✗"}`)
+        : el("span", { class: "muted" }, v.note ? " · " + t(v.note) : ""));
   }
 
   // a window as the manipulator sees it (setWindowManipulator)
@@ -329,8 +330,8 @@ export function createSliceWindows({ onSelect, onHighlight, onRemove } = {}) {
     if (G.flipH) fh = 1 - fh;
     if (G.flipV) fv = 1 - fv;
     const fs = G.longi ? fv : fh, ft = G.longi ? fh : fv;
-    const m = G.m, s = m.s[0] + (m.s[1] - m.s[0]) * fs, t = m.tt[0] + (m.tt[1] - m.tt[0]) * ft;
-    return [0, 1, 2].map((i) => m.origin[i] + s * m.u[i] + t * m.v[i]);
+    const m = G.m, s = m.s[0] + (m.s[1] - m.s[0]) * fs, tt = m.tt[0] + (m.tt[1] - m.tt[0]) * ft;
+    return [0, 1, 2].map((i) => m.origin[i] + s * m.u[i] + tt * m.v[i]);
   }
 
   function hover(w, e) {
@@ -338,29 +339,29 @@ export function createSliceWindows({ onSelect, onHighlight, onRemove } = {}) {
     if (!G || !d) return;
     const r = w.cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
     let fh = (px - G.left) / G.pw, fv = 1 - (py - G.top) / G.ph;
-    if (fh < 0 || fh > 1 || fv < 0 || fv > 1) { w.readout.textContent = "наведите на срез"; return; }
+    if (fh < 0 || fh > 1 || fv < 0 || fv > 1) { w.readout.textContent = t("point at the slice"); return; }
     if (G.flipH) fh = 1 - fh;
     if (G.flipV) fv = 1 - fv;
     const fs = G.longi ? fv : fh, ft = G.longi ? fh : fv;
     const is = Math.min(G.ns - 1, Math.round(fs * (G.ns - 1))), it = Math.min(G.nt - 1, Math.round(ft * (G.nt - 1)));
-    const m = G.m, s = m.s[0] + (m.s[1] - m.s[0]) * is / Math.max(1, G.ns - 1), t = m.tt[0] + (m.tt[1] - m.tt[0]) * it / Math.max(1, G.nt - 1);
-    const P = [0, 1, 2].map((i) => m.origin[i] + s * m.u[i] + t * m.v[i]);
+    const m = G.m, s = m.s[0] + (m.s[1] - m.s[0]) * is / Math.max(1, G.ns - 1), tq = m.tt[0] + (m.tt[1] - m.tt[0]) * it / Math.max(1, G.nt - 1);
+    const P = [0, 1, 2].map((i) => m.origin[i] + s * m.u[i] + tq * m.v[i]);
     const k = it * G.ns + is, v = d.I[k];
     const q = m.quantity, nm = G.names;
     w.readout.textContent = `${nm[0]} = ${num(P[0], 4)}, ${nm[1]} = ${num(P[1], 4)}, ${nm[2]} = ${num(P[2], 4)} ${G.units} · ` +
-      (!(v >= 0) ? "вне области расчёта"
-        : q ? `${q.label} = ${num(v * q.peak, 5)}${q.unit ? " " + q.unit : ""}`
-        : `I/Iпик = ${num(v, 4)}` + (d.phase && !w.preview ? ` · фаза ${num(d.phase[k], 3)} рад` : ""));
+      (!(v >= 0) ? t("outside the computed region")
+        : q ? `${t(q.label)} = ${num(v * q.peak, 5)}${q.unit ? " " + t(q.unit) : ""}`
+        : t("I/Ipeak = {v:.4g}", { v }) + (d.phase && !w.preview ? " · " + t("phase {p:.3g} rad", { p: d.phase[k] }) : ""));
   }
 
   function exportCsv(w) {
     const d = w.data; if (!d) return;
     const m = d.meta, [ns, nt] = [m.s[2], m.tt[2]], q = m.quantity;
-    const rows = [q ? `s,t,x,y,z,${q.label}${q.unit ? " (" + q.unit + ")" : ""}` : "s,t,x,y,z,I_over_peak,phase"];
+    const rows = [q ? `s,t,x,y,z,${t(q.label)}${q.unit ? " (" + t(q.unit) + ")" : ""}` : "s,t,x,y,z,I_over_peak,phase"];
     for (let it = 0; it < nt; it++) for (let is = 0; is < ns; is++) {
-      const s = m.s[0] + (m.s[1] - m.s[0]) * is / Math.max(1, ns - 1), t = m.tt[0] + (m.tt[1] - m.tt[0]) * it / Math.max(1, nt - 1);
-      const P = [0, 1, 2].map((i) => m.origin[i] + s * m.u[i] + t * m.v[i]), k = it * ns + is;
-      if (d.I[k] >= 0) rows.push((q ? [s, t, ...P, d.I[k] * q.peak] : [s, t, ...P, d.I[k], d.phase ? d.phase[k] : ""]).map((x) => typeof x === "number" ? x.toPrecision(8) : x).join(","));
+      const s = m.s[0] + (m.s[1] - m.s[0]) * is / Math.max(1, ns - 1), tt = m.tt[0] + (m.tt[1] - m.tt[0]) * it / Math.max(1, nt - 1);
+      const P = [0, 1, 2].map((i) => m.origin[i] + s * m.u[i] + tt * m.v[i]), k = it * ns + is;
+      if (d.I[k] >= 0) rows.push((q ? [s, tt, ...P, d.I[k] * q.peak] : [s, tt, ...P, d.I[k], d.phase ? d.phase[k] : ""]).map((x) => typeof x === "number" ? x.toPrecision(8) : x).join(","));
     }
     const a = el("a", { href: URL.createObjectURL(new Blob([rows.join("\n")], { type: "text/csv" })), download: `slice${w.id}.csv` });
     a.click();

@@ -33,20 +33,22 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 from ..constants import C, G
 
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Гравитационные волны по квадрупольной формуле: h₊, h× и поток энергии",
-    "statement": "Волны медленного источника по формуле Эйнштейна: поляризации h₊, h× для заданного направления "
-                 "наблюдения из вычисленной траектории (положение, скорость, ускорение, рывок), светимость и поток "
-                 "момента импульса; поток энергии, проинтегрированный по сфере из самих волн, равен квадрупольной "
-                 "светимости.",
-    "validity": "ведущий порядок по v/c: поправки к амплитуде — относительные O(v/c) для неравных масс (массовый "
-                "октуполь, токовый квадруполь) и O(v²/c²); волновая зона R ≫ λ; без хвостов и нелинейной памяти "
-                "(у кругового движения память даёт в h₊ постоянный сдвиг −(1/96) sin²i (17 + cos²i) в единицах "
-                "2Gμx/(c²R), Blanchet 2014, Eq. (322a)); полнее волновых форм в движке нет",
-    "basis": ["Einstein 1918; Landau & Lifshitz (квадрупольная формула)",
+    "title": T("Gravitational waves by the quadrupole formula: h₊, h× and the energy flux"),
+    "statement": T("Waves of a slow source by Einstein's formula: the polarisations h₊, h× for a given direction of "
+                   "observation from the computed trajectory (position, velocity, acceleration, jerk), the luminosity "
+                   "and the angular-momentum flux; the energy flux integrated over a sphere from the waves themselves "
+                   "equals the quadrupole luminosity."),
+    "validity": T("leading order in v/c: the corrections to the amplitude are of relative order O(v/c) for unequal "
+                  "masses (mass octupole, current quadrupole) and O(v²/c²); wave zone R ≫ λ; no tails and no "
+                  "nonlinear memory (for circular motion the memory gives h₊ a constant offset −(1/96) sin²i (17 + "
+                  "cos²i) in units of 2Gμx/(c²R), Blanchet 2014, Eq. (322a)); the engine has no fuller waveforms"),
+    "basis": [T("Einstein 1918; Landau & Lifshitz (the quadrupole formula)"),
               "Blanchet, Living Rev. Relativ. 17, 2 (2014), Eqs. (2)-(5), (69), (320), (322a), (323a)"],
     "conflicts": [],
 }

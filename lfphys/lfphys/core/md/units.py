@@ -25,13 +25,15 @@ import math
 
 from scipy import constants as sc
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "data",
-    "title": "Единицы молекулярной динамики: приведённые и физические",
-    "statement": "Приведённые единицы (σ0, ε0, m0, k_B = 1) и точные переводы в Å, пс, K, а.е.м., бар, элементарные "
-                 "заряды, кг/м³, м²/с через постоянные CODATA.",
-    "validity": "точно (в пределах значений CODATA); давление в 2-D — сила на единицу длины",
-    "basis": ["CODATA через scipy.constants"],
+    "title": T("Molecular dynamics units: reduced and physical"),
+    "statement": T("Reduced units (σ0, ε0, m0, k_B = 1) and exact conversions to Å, ps, K, u, bar, elementary "
+                   "charges, kg/m³, m²/s through the CODATA constants."),
+    "validity": T("exact (within the CODATA values); in 2-D the pressure is a force per unit length"),
+    "basis": [T("CODATA through scipy.constants")],
     "conflicts": [],
 }
 

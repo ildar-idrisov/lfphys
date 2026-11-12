@@ -15,6 +15,7 @@ from harness import Harness  # noqa: E402
 from lfphys.core.constants import AU, C, GM_SUN, R_SUN  # noqa: E402
 from lfphys.core.gravity import rays as light  # noqa: E402
 from lfphys.core.gravity import schwarzschild as S  # noqa: E402
+from lfphys.i18n import render  # noqa: E402
 from lfphys.laws.light import Laws  # noqa: E402
 from lfphys.theories.alternatives import newton_light  # noqa: E402
 from lfphys.theories.approx import newton as kepler  # noqa: E402
@@ -170,7 +171,7 @@ def test_presets_run_and_all_checks_agree(preset, horizon):
 def test_measured_speeds_sr_are_c_for_all_observers():
     h = Harness(V, "measure_c")
     h.run_to(0.04)
-    speeds = [c["value"] for c in h.checks().values() if "односторонняя" in c["label"]]
+    speeds = [c["value"] for c in h.checks().values() if "one-way speed" in render(c["label"])]
     assert len(speeds) == 3
     assert np.allclose(speeds, C, rtol=1e-12)
 
@@ -180,7 +181,7 @@ def test_round_trip_measurement_and_boost_resync():
     h.run_to(0.004)  # after synchronisation (2 L0 / c ~ 2 ms)
     h.action("measure", obj="obs2")
     h.run_to(0.008)  # lab round trip at 0.5 c: 2.31 ms
-    rt = [c for c in h.checks().values() if "туда-обратно" in c["label"]]
+    rt = [c for c in h.checks().values() if "round-trip speed" in render(c["label"])]
     assert rt and abs(rt[0]["value"] / C - 1) < 1e-12
     # boost: the apparatus is dismantled, rebuilt in the new rest frame and re-synchronised by light
     n_sync_before = len([e for e in h.of("event") if e["kind"] == "sync" and e.get("obj") == "obs2"])
@@ -191,7 +192,7 @@ def test_round_trip_measurement_and_boost_resync():
     assert len(syncs) > n_sync_before and syncs[-1]["t"] > t_boost
     h.action("measure", obj="obs2")
     h.run_to(0.03)
-    one_way = [c for c in h.checks().values() if "в одну сторону" in c["label"]]
+    one_way = [c for c in h.checks().values() if "one way" in render(c["label"])]
     assert one_way and all(abs(c["value"] / C - 1) < 1e-12 for c in one_way)
 
 
@@ -200,13 +201,13 @@ def test_michelson_ether_round_trips():
     h.run_to(0.004)
     h.action("measure", obj="obs2")  # longitudinal rod, v = 0.5 c
     h.run_to(0.01)
-    rt = [c for c in h.checks().values() if "туда-обратно" in c["label"]][0]
+    rt = [c for c in h.checks().values() if "round-trip speed" in render(c["label"])][0]
     assert rt["value"] == pytest.approx(C * (1 - 0.25), rel=1e-12)
     h2 = Harness(V, "michelson")
     h2.run_to(0.004)
     h2.action("measure", obj="obs2")  # transverse rod
     h2.run_to(0.01)
-    rt2 = [c for c in h2.checks().values() if "туда-обратно" in c["label"]][0]
+    rt2 = [c for c in h2.checks().values() if "round-trip speed" in render(c["label"])][0]
     assert rt2["value"] == pytest.approx(C * math.sqrt(1 - 0.25), rel=1e-12)
 
 
@@ -214,9 +215,9 @@ def test_doppler_train_sr():
     h = Harness(V, "measure_c")
     h.action("train", obj="src", period=1e-3, count=4)
     h.run_to(0.05)
-    dop = [c for c in h.checks().values() if c["group"] == "Доплер и красное смещение"]
+    dop = [c for c in h.checks().values() if render(c["group"]) == "Doppler effect and redshift"]
     assert dop and _all_ok(h) == []
-    by = {c["label"]: c["value"] for c in dop}
+    by = {render(c["label"]): c["value"] for c in dop}
     # observer 2 recedes at 0.5c: sqrt((1-b)/(1+b)) = 0.5774
     assert any(abs(v - math.sqrt(1 / 3)) < 1e-9 for v in by.values())
 
@@ -225,7 +226,7 @@ def test_gravitational_redshift_train():
     h = Harness(V, "lensing")
     h.action("train", obj="src", period=1e-3, count=3)
     h.run_to(0.2)
-    dop = [c for c in h.checks().values() if c["group"] == "Доплер и красное смещение"]
+    dop = [c for c in h.checks().values() if render(c["group"]) == "Doppler effect and redshift"]
     assert dop and _all_ok(h) == []
 
 
@@ -271,11 +272,11 @@ def test_one_law_changed_from_the_defaults_works_and_two_incompatible_are_refuse
         h = Harness(V, None, {"scenario": scn, "kinematics": k, "gravity": g})
         hp = h.of("header")[-1]["params"]
         assert (hp["kinematics"], hp["gravity"]) == (k2, g2) and not Laws(k2, g2).validate()
-        notes = [m["text"] for m in h.of("notice") if "зависимые параметры" in m["text"]]
+        notes = [m["text"] for m in h.of("notice") if "dependent parameters" in render(m["text"])]
         assert bool(notes) == ((k, g) != (k2, g2)), notes
         assert not h.errors()
     for scn in ("sun_earth", "lensing"):
-        with pytest.raises(ValueError, match="выберите «Кинематика» = баллистическая"):
+        with pytest.raises(ValueError, match="choose “Kinematics” = emission theory"):
             Harness(V, None, {"scenario": scn, "kinematics": "ether", "gravity": "newton"})
     # a lens of radius 0 is GR's black hole: without GR it is given the horizon's radius of its mass (stated)
     h = Harness(V, None, {"scenario": "lensing", "kinematics": "ether"})
@@ -286,10 +287,10 @@ def test_one_law_changed_from_the_defaults_works_and_two_incompatible_are_refuse
     assert _adjust_laws(p) == [] and p == h.of("header")[-1]["params"]
 
 
-def test_walkers_faster_than_this_worlds_light_are_refused_in_russian():
+def test_walkers_faster_than_this_worlds_light_are_refused_with_the_numbers():
     """Review UX-params P7: «worldline is not timelike» (English, from the core) for walkers faster than c x factor.
-    Now refused before the core, in Russian, with the numbers to change; a Galilean world (ether) takes them."""
-    with pytest.raises(ValueError, match="пешеходы не быстрее света этого мира") as e:
+    Now refused before the core, in the owner's terms, with the numbers to change; a Galilean world (ether) takes them."""
+    with pytest.raises(ValueError, match="pedestrians are not faster than the light of this world") as e:
         Harness(V, None, {"scenario": "andromeda", "c_factor": 0.5, "an_walk": 2e8})
     assert "0.6671" in str(e.value)  # the factor above which the same walkers are slower than light
     Harness(V, None, {"scenario": "andromeda", "c_factor": 0.6672, "an_walk": 2e8})
@@ -348,7 +349,7 @@ def test_R5_emission_result_not_before_B_reading_can_arrive():
     # a source on the far side moving towards the rods at 0.5c: the flash passes B before A
     from v01_light_travel.engine.world import Obj
     from lfphys.core.worldlines import Piecewise
-    w.add(Obj("far", "Дальний источник", "beacon", "#000",
+    w.add(Obj("far", "Far source", "beacon", "#000",
               Piecewise.start(w.laws, 0.0, 0.0, [3.0e6, 0.0], [-0.5 * C, 0.0]), receiver=False))
     h.run_to(0.004)
     h.action("flash", obj="far")
@@ -394,14 +395,14 @@ def test_R9_doppler_not_paired_across_a_boost():
     h.run_to(0.012)
     h.action("boost", obj="obs1", v=0.3, unit="c", angle=0.0)
     h.run_to(0.06)
-    dop = [c for c in h.of("check") if c["group"] == "Доплер и красное смещение" and c["ref"] is not None]
+    dop = [c for c in h.of("check") if render(c["group"]) == "Doppler effect and redshift" and c["ref"] is not None]
     assert dop and all(abs(c["rel"]) < 1e-9 for c in dop)
 
 
 def test_R10_boost_into_the_body_refused():
     h = Harness(V, "lensing")
     h.action("boost", obj="obs", v=0.5, unit="c", angle=180.0)
-    assert any("влетит в тело" in e or "быстрее света" in e for e in h.errors())
+    assert any("fly into the body" in render(e) or "faster than light" in render(e) for e in h.errors())
 
 
 def test_R13_measurement_under_way_survives_a_boost():
@@ -411,7 +412,7 @@ def test_R13_measurement_under_way_survives_a_boost():
     h.run_to(0.0045)
     h.action("boost", obj="obs1", v=0.5, unit="c", angle=0.0)
     h.run_to(0.02)
-    assert any("после смены скорости" in e["text"] for e in h.of("event") if e["kind"] == "measure")
+    assert any("after the change of speed" in render(e["text"]) or "after A changed its speed" in render(e["text"]) for e in h.of("event") if e["kind"] == "measure")
 
 
 def test_R21_next_event_at_current_instant():
@@ -462,8 +463,8 @@ def test_a_flash_between_the_ends_of_a_rod_is_not_a_speed(preset):
     h = _flash_session(preset, "obs1")
     assert _all_ok(h) == []
     w = h.sim.world
-    inside_ev = {(e["obj"], e["pulse"]) for e in h.of("event") if "между концами" in (e.get("text") or "")}
-    measured = {(e["obj"], e["pulse"]) for e in h.of("event") if "измерено c" in (e.get("text") or "")}
+    inside_ev = {(e["obj"], e["pulse"]) for e in h.of("event") if "between the ends" in render(e.get("text") or "")}
+    measured = {(e["obj"], e["pulse"]) for e in h.of("event") if "measured c" in render(e.get("text") or "")}
     assert inside_ev and not (inside_ev & measured)
     for pulse in w.pulses:
         if pulse["src"] != "obs1":

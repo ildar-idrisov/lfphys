@@ -51,20 +51,22 @@ import math
 import numpy as np
 from scipy import special
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Декогеренция путей: дефазировка и регистрация пути средой",
-    "statement": "Видность двух путей V = 2|ρ₁₂|/(ρ₁₁ + ρ₂₂): при дефазировке Линдблада V = V₀e^{−γ_φ t}; при "
-                 "зонде-регистраторе V = V₀|⟨χ₂|χ₁⟩|; при пуассоновском потоке зондов V = V₀exp(−Γt(1 − Re χ)), "
-                 "скорость локализации F(d) = Γ(1 − χ(d)), для гауссовых толчков χ = e^{−d²/4a²} — та же форма, что у "
-                 "члена GRW (база для сравнения со спонтанным коллапсом).",
-    "validity": "марковская среда (независимые столкновения, мгновенные по сравнению со временем пролёта); "
-                "зонд не меняет населённости путей; две точки в пространстве путей",
+    "title": T("Which-path decoherence: dephasing and path registration by the environment"),
+    "statement": T("The visibility of two paths V = 2|ρ₁₂|/(ρ₁₁ + ρ₂₂): under Lindblad dephasing V = V₀e^{−γ_φ t}; "
+                   "with a recording probe V = V₀|⟨χ₂|χ₁⟩|; with a Poisson stream of probes V = V₀exp(−Γt(1 − Re "
+                   "χ)), the localisation rate F(d) = Γ(1 − χ(d)); for Gaussian kicks χ = e^{−d²/4a²}, the same form "
+                   "as the GRW term (the baseline for comparison with spontaneous collapse)."),
+    "validity": T("a Markovian environment (independent collisions, instantaneous compared with the time of flight); "
+                  "the probe does not change the populations of the paths; two points in path space"),
     "basis": ["Wootters & Zurek, Phys. Rev. D 19, 473 (1979)", "Englert, PRL 77, 2154 (1996)",
               "Joos & Zeh, Z. Phys. B 59, 223 (1985)",
               "Hornberger, Introduction to decoherence theory, arXiv:quant-ph/0612118, eqs. (5.170)–(5.171)",
-              "Bassi et al., Rev. Mod. Phys. 85, 471 (2013), eqs. (19), (21), (22) — форма члена GRW",
-              "lfphys/sources/verification_2026-10-29_p5.md — проверка цитат и выводов"],
+              T("Bassi et al., Rev. Mod. Phys. 85, 471 (2013), eqs. (19), (21), (22) — the form of the GRW term"),
+              T("lfphys/sources/verification_2026-10-29_p5.md — check of the quotations and derivations")],
     "conflicts": [],
 }
 

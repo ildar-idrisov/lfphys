@@ -1,24 +1,31 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// Small DOM and formatting helpers shared by the catalogue, the player and the visualization views.
+// Small DOM and formatting helpers shared by the catalogue, the player and the visualization views. A text the server
+// sent (a T object {"$t", "a"}) given to el(), fill() or panel() as a child or an attribute is rendered by t() in the
+// viewer's language (i18n.js).
+import { fmt, isT, t } from "./i18n.js";
+
+export { fmt, t };
 
 export function el(tag, attrs = {}, ...children) {
   const e = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs || {})) {
     if (v === undefined || v === null || v === false) continue;
+    if (isT(v)) { e.setAttribute(k, t(v)); continue; }
     if (k === "class") e.className = v;
     else if (k === "style" && typeof v === "object") Object.assign(e.style, v);
     else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
     else if (k === "html") e.innerHTML = v;
     else e.setAttribute(k, v === true ? "" : v);
   }
-  for (const c of children.flat()) if (c !== null && c !== undefined && c !== false) e.append(c.nodeType ? c : String(c));
+  for (const c of children.flat()) if (c !== null && c !== undefined && c !== false) e.append(c.nodeType ? c : isT(c) ? t(c) : String(c));
   return e;
 }
 
 // replaceChildren that, like el(), flattens arrays and skips null / undefined / false (the native one would print them)
 export function fill(node, ...children) {
-  node.replaceChildren(...children.flat(Infinity).filter((c) => c !== null && c !== undefined && c !== false));
+  node.replaceChildren(...children.flat(Infinity).filter((c) => c !== null && c !== undefined && c !== false)
+    .map((c) => (isT(c) ? t(c) : c)));
   return node;
 }
 
@@ -31,54 +38,46 @@ export function panel(title, body, { closed = false } = {}) {
 const SUP = "⁰¹²³⁴⁵⁶⁷⁸⁹";
 function sup(n) { return String(n).replace("-", "⁻").replace(/\d/g, (d) => SUP[d]); }
 
-// number with significant digits, scientific notation with a superscript exponent when large/small; one Russian format
-// everywhere (review LB1-p02-ux X6): a decimal comma also in the mantissa, the minus sign −. The server's texts use the
-// same rule (lfviz.playground.fmt)
+// number with significant digits, scientific notation with a superscript exponent when large/small (m·10ⁿ), in the
+// viewer's language (i18n.js fmt: ru a decimal comma, en a point; the minus sign − in both)
 export function num(x, digits = 6) {
   if (x === null || x === undefined || Number.isNaN(x)) return "—";
-  if (!Number.isFinite(x)) return x > 0 ? "∞" : "−∞";
-  const a = Math.abs(x);
-  if (a !== 0 && (a >= 1e7 || a < 1e-4)) {
-    let e = Math.floor(Math.log10(a));
-    let m = Number((x / 10 ** e).toPrecision(Math.min(digits, 12)));
-    if (Math.abs(m) >= 10) { m /= 10; e += 1; }  // rounded up to 10
-    const ms = m.toPrecision(Math.min(digits, 12)).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
-    return `${ms.replace(".", ",").replace("-", "−")}·10${sup(e)}`;
-  }
-  return Number(x.toPrecision(digits)).toLocaleString("ru-RU", { maximumSignificantDigits: digits }).replace("-", "−");
+  return fmt(x, `.${digits}g`);
 }
 
-// time in a human scale: ps..s, minutes, hours, days, years
-export function time(t, digits = 6) {
-  if (t === null || t === undefined || Number.isNaN(t)) return "—";
-  const a = Math.abs(t), s = t < 0 ? "−" : "";
+// time in a human scale: ps..s, minutes, hours, days, years (the units in the viewer's language)
+export function time(t_, digits = 6) {
+  if (t_ === null || t_ === undefined || Number.isNaN(t_)) return "—";
+  const a = Math.abs(t_), s = t_ < 0 ? "−" : "";
   const Y = 365.25 * 86400;
-  if (a === 0) return "0 с";
-  if (a < 1e-9) return s + num(a * 1e12, digits) + " пс";
-  if (a < 1e-6) return s + num(a * 1e9, digits) + " нс";
-  if (a < 1e-3) return s + num(a * 1e6, digits) + " мкс";
-  if (a < 1) return s + num(a * 1e3, digits) + " мс";
-  if (a < 120) return s + num(a, digits) + " с";
-  if (a < 7200) { const m = Math.floor(a / 60); return `${s}${m} мин ${(a - 60 * m).toFixed(2)} с`; }
-  if (a < 2 * 86400) return s + num(a / 3600, digits) + " ч";
-  if (a < Y) return s + num(a / 86400, digits) + " сут";
-  if (a < 1e6 * Y) return s + num(a / Y, digits) + " лет";
-  if (a < 1e9 * Y) return s + num(a / Y / 1e6, digits) + " млн лет";
-  return s + num(a / Y / 1e9, digits) + " млрд лет";
+  const u = (x, unit) => `${s}${num(x, digits)} ${t(unit)}`;
+  if (a === 0) return `0 ${t("s")}`;
+  if (a < 1e-9) return u(a * 1e12, "ps");
+  if (a < 1e-6) return u(a * 1e9, "ns");
+  if (a < 1e-3) return u(a * 1e6, "µs");
+  if (a < 1) return u(a * 1e3, "ms");
+  if (a < 120) return u(a, "s");
+  if (a < 7200) { const m = Math.floor(a / 60); return `${s}${m} ${t("min")} ${fmt(a - 60 * m, ".2f")} ${t("s")}`; }
+  if (a < 2 * 86400) return u(a / 3600, "h");
+  if (a < Y) return u(a / 86400, "d");
+  if (a < 1e6 * Y) return s + t("{x} yr", { x: num(a / Y, digits), n: a / Y });  // n chooses the plural form
+  if (a < 1e9 * Y) return u(a / Y / 1e6, "Myr");
+  return u(a / Y / 1e9, "Gyr");
 }
 
 // SI length with optional preferred astronomical unit
 export function length(x, units = {}, digits = 6) {
   const a = Math.abs(x);
-  if (units.ly && a >= 0.01 * units.ly) return num(x / units.ly, digits) + " св. лет";
-  if (units.au && a >= 0.01 * units.au) return num(x / units.au, digits) + " а.е.";
-  if (a >= 1e3) return num(x / 1e3, digits) + " км";
-  if (a >= 1) return num(x, digits) + " м";
-  if (a >= 1e-3) return num(x * 1e3, digits) + " мм";
-  if (a >= 1e-6) return num(x * 1e6, digits) + " мкм";
-  if (a >= 1e-9) return num(x * 1e9, digits) + " нм";
-  if (a === 0) return "0 м";
-  return num(x * 1e12, digits) + " пм";
+  const u = (v, unit) => `${num(v, digits)} ${t(unit)}`;
+  if (units.ly && a >= 0.01 * units.ly) return u(x / units.ly, "ly");
+  if (units.au && a >= 0.01 * units.au) return u(x / units.au, "au");
+  if (a >= 1e3) return u(x / 1e3, "km");
+  if (a >= 1) return u(x, "m");
+  if (a >= 1e-3) return u(x * 1e3, "mm");
+  if (a >= 1e-6) return u(x * 1e6, "µm");
+  if (a >= 1e-9) return u(x * 1e9, "nm");
+  if (a === 0) return `0 ${t("m")}`;
+  return u(x * 1e12, "pm");
 }
 
 // A message in the corner (review LB1-p02-ux X8): one stack, the newest on top, at most TOAST_MAX; each stays at least
@@ -87,16 +86,18 @@ const TOAST_MAX = 6;
 let toastBox = null;
 export function toast(text, kind = "error", ms = 9000) {
   if (!toastBox || !toastBox.isConnected) { toastBox = el("div", { class: "toasts" }); document.body.append(toastBox); }
-  const t = el("div", { class: "toast" + (kind === "notice" ? " notice" : "") }, el("span", { class: "tx", title: "Закрыть" }, "✕"), text);
-  toastBox.append(t);
+  let s = t(text);  // a msgid or a T object from the server
+  s = s.charAt(0).toUpperCase() + s.slice(1);  // a refusal's text may start in lower case (it continues a head elsewhere)
+  const box = el("div", { class: "toast" + (kind === "notice" ? " notice" : "") }, el("span", { class: "tx", title: t("Close") }, "✕"), s);
+  toastBox.append(box);
   while (toastBox.children.length > TOAST_MAX) toastBox.firstChild.remove();
   let timer = null;
-  const arm = (d) => { clearTimeout(timer); timer = setTimeout(() => t.remove(), d); };
-  t.addEventListener("click", () => { clearTimeout(timer); t.remove(); });
-  t.addEventListener("mouseenter", () => clearTimeout(timer));
-  t.addEventListener("mouseleave", () => arm(4000));
-  arm(Math.max(ms, 70 * String(text).length));
-  return t;
+  const arm = (d) => { clearTimeout(timer); timer = setTimeout(() => box.remove(), d); };
+  box.addEventListener("click", () => { clearTimeout(timer); box.remove(); });
+  box.addEventListener("mouseenter", () => clearTimeout(timer));
+  box.addEventListener("mouseleave", () => arm(4000));
+  arm(Math.max(ms, 70 * s.length));
+  return box;
 }
 
 export function modal(content) {
@@ -145,22 +146,26 @@ export function fmtInput(v) {
 }
 
 // A parameter as the forms name it, its allowed range, and why a typed value is refused — in the owner's words, as the
-// server says it (lfviz.params; review UX-params P2: «lam_nm: 0.0 < min 300.0» for a field only cleared)
-function pName(p) { const lab = p.label || p.id; return `«${p.unit && !lab.includes(p.unit) ? lab + ", " + p.unit : lab}»`; }
-function fnum(x) { return num(x, 10); }
+// server says it (lfviz.params, the same msgids; review UX-params P2: «lam_nm: 0.0 < min 300.0» for a field only cleared)
+function pName(p) {
+  const lab = p.label || p.id, u = p.unit;
+  return u && !t(lab).includes(t(u)) ? t("“{label}, {unit}”", { label: lab, unit: u }) : t("“{label}”", { label: lab });
+}
 export function rangeText(p) {
   const lo = p.min, hi = p.max, has = (v) => v !== null && v !== undefined;
-  return has(lo) && has(hi) ? `от ${fnum(lo)} до ${fnum(hi)}` : has(lo) ? `не меньше ${fnum(lo)}` : has(hi) ? `не больше ${fnum(hi)}` : "любое конечное число";
+  return has(lo) && has(hi) ? t("from {lo:.10g} to {hi:.10g}", { lo, hi }) : has(lo) ? t("at least {lo:.10g}", { lo })
+    : has(hi) ? t("at most {hi:.10g}", { hi }) : t("any finite number");
 }
 // why the text typed in a number field is not a value of p (null: it is), and the value
 export function checkNumber(p, text) {
-  const t = String(text ?? "").trim().replace(",", ".");
-  if (t === "") return { err: `${pName(p)}: поле пустое — введите число ${rangeText(p)}` };
-  const v = Number(t);
-  if (!Number.isFinite(v)) return { err: `${pName(p)}: «${text}» — не число; нужно ${rangeText(p)}` };
+  const s = String(text ?? "").trim().replace(",", ".");
+  const name = pName(p), range = rangeText(p);
+  if (s === "") return { err: p.type === "int" ? t("{name}: the field is empty — enter a whole number {range}", { name, range }) : t("{name}: the field is empty — enter a number {range}", { name, range }) };
+  const v = Number(s);
+  if (!Number.isFinite(v)) return { err: t("{name}: “{value}” is not a number; allowed: {range}", { name, value: String(text), range }) };
   const x = p.type === "int" ? Math.round(v) : v;
-  if (p.min !== null && p.min !== undefined && x < p.min) return { err: `${pName(p)}: ${fnum(x)} — меньше наименьшего ${fnum(p.min)}; можно ${rangeText(p)}` };
-  if (p.max !== null && p.max !== undefined && x > p.max) return { err: `${pName(p)}: ${fnum(x)} — больше наибольшего ${fnum(p.max)}; можно ${rangeText(p)}` };
+  if (p.min !== null && p.min !== undefined && x < p.min) return { err: t("{name}: {x:.10g} is below the minimum {lo:.10g}; allowed: {range}", { name, x, lo: p.min, range }) };
+  if (p.max !== null && p.max !== undefined && x > p.max) return { err: t("{name}: {x:.10g} is above the maximum {hi:.10g}; allowed: {range}", { name, x, hi: p.max, range }) };
   return { value: x };
 }
 // options of a select shown for these values (an option may carry its own show_if: review UX-params P17)
@@ -181,15 +186,19 @@ function syncOptions(input, p, values, note, { select = true } = {}) {
   if (curShown || first === null) { if (note) note.textContent = ""; return null; }
   const was = [...input.options].find((op) => op.value === input.value);
   const cond = Object.keys(((p.options || []).find((x) => String(x.value) === input.value) || {}).show_if || {}).join(", ");
-  if (!select) { if (note) note.textContent = `«${was ? was.textContent : input.value}» здесь не действует${cond ? " (зависит от: " + cond + ")" : ""}`; return null; }
+  const option = was ? was.textContent : input.value;
+  if (!select) {
+    if (note) note.textContent = cond ? t("“{option}” does not apply here (depends on: {params})", { option, params: cond }) : t("“{option}” does not apply here", { option });
+    return null;
+  }
   input.value = first;
-  if (note) note.textContent = `«${was ? was.textContent : ""}» здесь не подходит — выбрано «${input.selectedOptions[0].textContent}»`;
+  if (note) note.textContent = t("“{option}” does not fit here — “{chosen}” is chosen", { option, chosen: input.selectedOptions[0].textContent });
   return first;
 }
 
 export function control(p, value, onCommit, { compact = false, label = null } = {}) {
-  const lab = label ?? p.label;
-  const title = p.help || "";
+  const lab = t(label ?? p.label);
+  const title = t(p.help);
   let input, slider = null, set;
   const num = p.type === "float" || p.type === "int";
   const lo = p.min, hi = p.max;
@@ -238,7 +247,7 @@ export function control(p, value, onCommit, { compact = false, label = null } = 
   const note = el("div", { class: "ctl-err" });
   let errTimer = null;
   function showErr(text) {
-    note.textContent = text || "";
+    note.textContent = t(text);
     clearTimeout(errTimer);
     if (text) errTimer = setTimeout(() => { note.textContent = ""; }, 8000);
   }
@@ -279,15 +288,16 @@ export function paramForm(schema, values, { onChange, readOnly = false, only = n
       }
       const std = row.querySelector(".std");
       if (std) std.textContent = p.standard !== null && p.standard !== undefined && !same(values[p.id], p.standard)
-        ? "≠ стандарт" : "";
+        ? t("≠ standard") : "";
     }
     for (const [g, box] of groups) box.style.display = [...box.querySelectorAll(".field")].some((r) => r.style.display !== "none") ? "" : "none";
   }
   const params = schema.params.filter((p) => !p.hidden && (!only || only(p)));
   for (const p of params) {
-    if (!groups.has(p.group)) {
-      const gb = el("div", {}, el("div", { class: "help", style: { fontWeight: 600, marginTop: "8px" } }, p.group));
-      groups.set(p.group, gb); box.append(gb);
+    const gk = t(p.group);  // a group is a text (a T object or a msgid): grouped by its rendering
+    if (!groups.has(gk)) {
+      const gb = el("div", {}, el("div", { class: "help", style: { fontWeight: 600, marginTop: "8px" } }, gk));
+      groups.set(gk, gb); box.append(gb);
     }
     let input;
     const v = values[p.id];
@@ -301,7 +311,7 @@ export function paramForm(schema, values, { onChange, readOnly = false, only = n
       if (p.min !== null) input.min = p.min;
       if (p.max !== null) input.max = p.max;
     }
-    input.title = p.help || "";
+    input.title = t(p.help);
     const note = el("div", { class: "field-err" });
     input.addEventListener("change", () => {
       let x = p.type === "bool" ? input.checked : p.type === "select" ? input.value : null;
@@ -320,7 +330,7 @@ export function paramForm(schema, values, { onChange, readOnly = false, only = n
     });
     const row = el("div", { class: "field", "data-pid": p.id }, el("label", { title: p.help || "" }, p.label, el("span", { class: "std" })), input, note);
     inputs[p.id] = { row, input, note, p };
-    groups.get(p.group).append(row);
+    groups.get(gk).append(row);
   }
   refresh();
   function setValues(v) {
@@ -345,9 +355,9 @@ export function paramForm(schema, values, { onChange, readOnly = false, only = n
   // refusals by parameter (the form's own, or the server's answer to a start: {pid: text}) shown at their fields
   function markErrors(fields) {
     for (const [id, { row, note }] of Object.entries(inputs)) {
-      const t = (fields || {})[id];
-      row.classList.toggle("bad", !!t);
-      if (t) { note.textContent = t; if (row.style.display === "none") row.style.display = ""; }
+      const msg = (fields || {})[id];
+      row.classList.toggle("bad", !!msg);
+      if (msg) { note.textContent = t(msg); if (row.style.display === "none") row.style.display = ""; }
       else if (row.classList.contains("bad")) note.textContent = "";
     }
   }

@@ -85,26 +85,27 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 from . import kerr_null
 
 ABOUT = {
     "layer": "core", "kind": "numerical solution",
-    "title": "Керр–Ньюмен: пробные тела, лучи света и часы у заряженной вращающейся чёрной дыры",
-    "statement": "Метрика Керра–Ньюмена (масса, спин a, заряд q) в координатах Бойера–Линдквиста: горизонты, "
-                 "эргоповерхность, круговые экваториальные орбиты (Ω, E, L, ход часов), фотонные орбиты и ISCO; "
-                 "тетрада наблюдателя с нулевым моментом (ZAMO) — начальные условия по скорости или направлению "
-                 "луча, измеренным им; гамильтоновы уравнения геодезических (разделённая форма Картера) для многих "
-                 "тел и фотонов сразу, шаг по времени далёкого наблюдателя t, собственное время каждого тела; "
-                 "сохраняющиеся E, L, постоянная Картера K и массовая оболочка; события — захват горизонтом "
-                 "(с собственным временем пересечения) и уход за заданный радиус; камера наблюдателя (ZAMO или "
-                 "движущегося): для каждого пикселя луч прослежен назад — тень или направление на небесной сфере, "
-                 "постоянные Бардина луча и смещение частоты.",
-    "validity": "вакуумное (электровакуумное) решение ОТО, a² + q² < M², внешняя область r > r₊; только "
-                "нейтральные пробные тела и фотоны (заряженные частицы, на которые действует поле дыры, не "
-                "моделируются); пробное приближение (масса тела ≪ M, без обратного влияния); геометрическая оптика "
-                "для света. Ошибка — локальный допуск rtol на шаг (DOP853), дрейф K и массовой оболочки "
-                "показывается; круговые фотонные орбиты и ISCO — численные корни (точные формулы только в "
-                "пределах Керра и Райсснера–Нордстрёма)",
+    "title": T("Kerr–Newman: test bodies, light rays and clocks near a charged rotating black hole"),
+    "statement": T("The Kerr–Newman metric (mass, spin a, charge q) in Boyer–Lindquist coordinates: horizons, "
+                   "ergosurface, circular equatorial orbits (Ω, E, L, clock rate), photon orbits and the ISCO; the "
+                   "tetrad of the zero-angular-momentum observer (ZAMO): initial conditions from the velocity or the "
+                   "ray direction it measures; Hamilton's geodesic equations (Carter's separated form) for many "
+                   "bodies and photons at once, stepped in the distant observer's time t, with the proper time of "
+                   "every body; conserved E, L, Carter constant K and the mass shell; events: capture by the horizon "
+                   "(with the proper time of the crossing) and escape beyond a given radius; the observer's camera (a "
+                   "ZAMO or a moving one): for every pixel the ray is traced back to the shadow or to a direction on "
+                   "the celestial sphere, with the ray's Bardeen constants and the frequency shift."),
+    "validity": T("vacuum (electrovacuum) solution of GR, a² + q² < M², exterior r > r₊; only neutral test bodies and "
+                  "photons (charged particles acted on by the hole's field are not modelled); test-body approximation "
+                  "(body mass ≪ M, no back-reaction); geometric optics for light. The error is the local tolerance "
+                  "rtol per step (DOP853); the drift of K and of the mass shell is shown; circular photon orbits and "
+                  "the ISCO are numerical roots (closed forms only in the Kerr and Reissner–Nordström limits)"),
     "basis": ["Newman et al., J. Math. Phys. 6, 918 (1965)",
               "Adamo & Newman, Scholarpedia 9, 31791 (2014), arXiv:1410.6626: Eqs. (2.19), (3.3), (3.18), (3.23)",
               "Carter, Phys. Rev. 174, 1559 (1968)",
@@ -113,8 +114,8 @@ ABOUT = {
               "Pugliese, Quevedo & Ruffini, Phys. Rev. D 83, 104052 (2011), Eq. (36)",
               "Morales-Herrera et al., Eur. Phys. J. C 84, 525 (2024), Eq. (20)",
               "Keeton & Petters, Phys. Rev. D 72, 104006 (2005), Eqs. (2), (53)",
-              "Gralla & Lupsasca, Phys. Rev. D 101, 044031 (2020), Eq. (55): экран далёкого наблюдателя (проверки)",
-              "Hairer, Nørsett & Wanner, Solving ODE I (DOP853; таблица SciPy)"],
+              T("Gralla & Lupsasca, Phys. Rev. D 101, 044031 (2020), Eq. (55): the distant observer's screen (checks)"),
+              T("Hairer, Nørsett & Wanner, Solving ODE I (DOP853; SciPy's table)")],
     "conflicts": [],
 }
 

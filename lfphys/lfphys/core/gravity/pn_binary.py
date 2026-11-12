@@ -61,30 +61,32 @@ import numpy as np
 from scipy import integrate as _si
 from scipy.optimize import brentq
 
+from lfphys.i18n import T
+
 from ..constants import C
 
 ABOUT = {
     "layer": "core", "kind": "numerical solution",
-    "title": "Задача двух тел в ОТО: постньютоновские уравнения движения с радиационным торможением",
-    "statement": "Относительное движение двух невращающихся компактных тел в системе центра масс (гармонические "
-                 "координаты): консервативные поправки 1PN и 2PN, радиационное торможение 2.5PN и 3.5PN; "
-                 "сохраняющиеся энергия и момент 1PN/2PN; начальные данные по инвариантам (точки поворота как "
-                 "корни эффективного потенциала, с отказом и причиной, если орбиты нет) и квазикруговые с "
-                 "собственной скоростью сближения; интегрирование в декартовых переменных или вариацией постоянных "
-                 "(оскулирующие элементы, для слабых возмущений); пошаговый API; эйнштейновская задержка γ "
-                 "двойного пульсара.",
-    "validity": "медленное движение и слабое поле, v²/c² ~ GM/(c²r) ≪ 1: отброшенный консервативный член 3PN "
-                "даёт относительную ошибку O((v/c)⁶), диссипативная часть точна до относительного 1PN (нет 4.5PN "
-                "и хвостового члена 4PN); точечные массы без спинов и приливов; реакция излучения (2,5ПН + 3,5ПН, "
-                "гармоническая калибровка) точна до относительного 1ПН; её остаток (−35,5 x² при малых x: нет "
-                "реакции 4,5ПН) сокращает её при r = 9,10–9,12 GM/c² при любом отношении масс — ближе орбита "
-                "набирает энергию; остаток равен поправке 1ПН при r = 10,6 (q = 1) … 13,0 (q = 0,05), "
-                "reaction_validity_radius (ревью B6-gravity G1) — это самая полная форма задачи двух тел в движке, "
-                "полного решения ОТО (численной относительности) в нём нет",
+    "title": T("The two-body problem in GR: post-Newtonian equations of motion with radiation reaction"),
+    "statement": T("The relative motion of two non-spinning compact bodies in the centre-of-mass frame (harmonic "
+                   "coordinates): conservative 1PN and 2PN corrections, 2.5PN and 3.5PN radiation reaction; the "
+                   "conserved 1PN/2PN energy and angular momentum; initial data from invariants (turning points as "
+                   "roots of the effective potential, refused with a reason when there is no orbit) and "
+                   "quasi-circular data with their own inspiral velocity; integration in Cartesian variables or by "
+                   "variation of constants (osculating elements, for weak perturbations); a step-by-step API; the "
+                   "Einstein delay γ of a binary pulsar."),
+    "validity": T("slow motion and weak field, v²/c² ~ GM/(c²r) ≪ 1: the dropped conservative 3PN term gives a "
+                  "relative error O((v/c)⁶), the dissipative part is exact to relative 1PN (no 4.5PN and no 4PN tail "
+                  "term); point masses without spins or tides; the radiation reaction (2.5PN + 3.5PN, harmonic gauge) "
+                  "is exact to relative 1PN; its remainder (−35.5 x² at small x: no 4.5PN reaction) cancels it at r = "
+                  "9.10–9.12 GM/c² for any mass ratio, and closer in the orbit gains energy; the remainder equals the "
+                  "1PN correction at r = 10.6 (q = 1) … 13.0 (q = 0.05), reaction_validity_radius (review B6-gravity "
+                  "G1); this is the most complete form of the two-body problem in the engine, which has no full GR "
+                  "solution (numerical relativity)"),
     "basis": ["Blanchet, Living Rev. Relativ. 17, 2 (2014), Eqs. (219)-(220), (226)-(232), (345)-(353)",
               "Blanchet, Living Rev. Relativ. 27, 4 (2024), Eqs. (357)-(359)",
               "Kidder, Phys. Rev. D 52, 821 (1995), Eqs. (2.2), (2.7), (2.9)",
-              "PSR B1913+16: Weisberg & Huang, ApJ 829, 55 (2016) (затухание орбиты, сдвиг периастра)"],
+              T("PSR B1913+16: Weisberg & Huang, ApJ 829, 55 (2016) (orbital decay, periastron advance)")],
     "conflicts": [],
 }
 

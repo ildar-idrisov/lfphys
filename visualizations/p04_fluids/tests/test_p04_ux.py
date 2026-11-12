@@ -19,12 +19,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
 from lfphys.core.fluids import lbm as L  # noqa: E402
+from lfphys.i18n import english, render, text_of  # noqa: E402
 from lfviz import registry  # noqa: E402
+from lfviz.i18n import catalogue  # noqa: E402
 from lfviz.sim import Runner  # noqa: E402
 from p04_fluids import viz as P4  # noqa: E402
 
 V = "p04_fluids"
-CYR = set("абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ")
+CYR = {chr(c) for c in range(0x0410, 0x0450)} | {"\u0401", "\u0451"}  # the Russian alphabet
 
 
 def run(h, seconds, n=5):
@@ -34,7 +36,31 @@ def run(h, seconds, n=5):
         h.runner._frame(0.0)
 
 
-def russian(text):
+def en(x):
+    """The English rendering of a text (a T, a T as the player gets it, or a plain string)."""
+    return english(x) if isinstance(x, dict) else str(x)
+
+
+def ru(x):
+    """The Russian rendering of a text from the merged catalogues (what the player shows in Russian)."""
+    return render(x, catalogue("ru"), "ru")
+
+
+def _arg(x, part, name):
+    """The argument ``name`` of the text inside ``x`` (at any depth) whose msgid contains ``part``."""
+    if isinstance(x, dict) and isinstance(x.get("$t"), str):
+        if part in x["$t"]:
+            return x["a"][name]
+        for v in (x.get("a") or {}).values():
+            r = _arg(v, part, name)
+            if r is not None:
+                return r
+    return None
+
+
+def russian(x):
+    """The text shown in Russian is Russian (translated in the catalogues), names no step dt and no traceback."""
+    text = ru(x)
     return any(c in CYR for c in text) and "dt" not in text.replace("dt/", "") and "Traceback" not in text
 
 
@@ -44,7 +70,7 @@ def objs(h, typ):
 
 @pytest.mark.parametrize("fluid", ["water", "air"])
 def test_water_and_air_from_the_defaults_give_a_working_world(fluid):
-    """P24: «Жидкость» = вода / воздух with the other defaults was refused (τ − ½ too small, the cell Reynolds number
+    """P24: "Fluid" = water / air with the other defaults was refused (τ − ½ too small, the cell Reynolds number
     149); now u_max is lowered to what the 5 mm grid resolves (u dx / ν = 9) with a notice saying so, the palette's
     inlet speed follows it, and a channel with an inlet, an outlet and a disk runs with every check passing. Control:
     the DFG fluid keeps u_max = 0.45 m/s."""
@@ -53,7 +79,7 @@ def test_water_and_air_from_the_defaults_give_a_working_world(fluid):
     u = h.sim.u_max
     assert u < 0.45 and u * 0.005 / nu <= 9.0 + 1e-9 and u * 0.005 / nu > 8.0
     assert h.of("header")[-1]["params"]["u_max"] == u
-    assert any("понижена" in m["text"] for m in h.of("notice"))
+    assert any("is lowered" in en(m["text"]) for m in h.of("notice"))
     for t in ("inlet", "outlet", "disk"):
         h.cmd("scene", op="add", type=t, values={})
     assert not h.errors(), h.errors()
@@ -66,13 +92,14 @@ def test_water_and_air_from_the_defaults_give_a_working_world(fluid):
 
 @pytest.mark.parametrize("params", [{"Lx": 1e-6}, {"Ly": 1e4}, {"Lx": 1e-6, "Ly": 1e4, "nx": "1024"}])
 def test_a_grid_beyond_the_budget_is_refused_before_it_is_built(params):
-    """P25: «Lx» = 10⁻⁶ м made 440 × 1.8·10⁸ nodes (591 GiB); now refused before any allocation, in Russian, with the
+    """P25: "Lx" = 10⁻⁶ m made 440 × 1.8·10⁸ nodes (591 GiB); now refused before any allocation, in Russian, with the
     nodes, the memory and what to change (nx, Lx); ``estimate_bytes`` gives the same estimate to the framework."""
     p, errors = SCHEMA_RESOLVE(params)
     with pytest.raises(ValueError) as e:
         P4.Simulation.check_params(p)
-    text = str(e.value)
-    assert russian(text) and "узлов" in text and ("ГБ" in text or "ТБ" in text) and "Длина области по x" in text
+    text = en(text_of(e.value))
+    assert russian(text_of(e.value)) and "nodes" in text and ("GB" in text or "TB" in text)
+    assert "Domain length along x" in text
     b = P4.Simulation.estimate_bytes(p)
     nx, ny, _ = P4._grid(p)
     assert b[0] == L.Flow2D.memory_estimate(nx, ny, True)
@@ -96,7 +123,7 @@ def test_a_large_grid_that_fits_keeps_frames_short():
 
 
 def test_the_body_force_is_placeable_in_every_world_and_an_explicit_large_one_is_refused():
-    """U7: «Объёмная сила» with its defaults (−9.81 m/s²) was refused in every world; now its default is what the scheme
+    """U7: "Body force" with its defaults (−9.81 m/s²) was refused in every world; now its default is what the scheme
     carries (here less than 9.81), it is placed (with a note when reduced), and an explicit −9.81 is refused in Russian
     with the u_max that would carry it — which, as a new world, does."""
     for preset in (None, "cylinder_re20", "cavity", "channel"):
@@ -111,8 +138,8 @@ def test_the_body_force_is_placeable_in_every_world_and_an_explicit_large_one_is
     gid = objs(h, "gravity")[0]["id"]
     h.cmd("scene", op="set", id=gid, values={"gy": -9.81})
     err = h.errors()[-1]
-    assert russian(err) and "Наибольшая ожидаемая скорость" in err
-    u_need = float(err.split("не меньше ")[-1].split()[0].replace(",", ".").replace("·10^", "e"))
+    assert russian(err) and "Largest expected velocity" in en(err)
+    u_need = float(f'{_arg(err, "Largest expected velocity” of at least", "u"):.2g}')  # the hint's number, as read
     h2 = Harness(V, None, {"u_max": u_need})
     h2.cmd("scene", op="add", type="gravity", values={"gy": -9.81})
     assert not h2.errors(), h2.errors()
@@ -131,7 +158,7 @@ def test_side_objects_take_a_free_side_and_none_is_left():
     st = h.sim.palette_state()
     assert "inlet" in st and "periodic" in st and russian(st["inlet"])
     h.cmd("scene", op="add", type="outlet", values={})
-    assert russian(h.errors()[-1]) and "заняты" in h.errors()[-1]
+    assert russian(h.errors()[-1]) and "are taken" in en(h.errors()[-1])
 
 
 def test_bodies_land_free_and_outside_is_refused():
@@ -147,16 +174,16 @@ def test_bodies_land_free_and_outside_is_refused():
     masks = [h.sim.fl.shape_mask(h.sim._shape(o)) for o in objs(h, "disk")]
     assert len(masks) == 3 and not (masks[0] & masks[1]).any() and not (masks[0] & masks[2]).any()
     h.cmd("scene", op="set", id=d[0]["id"], values={"x": 1e4})
-    assert "вне области" in h.errors()[-1] and russian(h.errors()[-1])
+    assert "outside the domain" in en(h.errors()[-1]) and russian(h.errors()[-1])
     h.cmd("scene", op="add", type="disk", values={"x": 1e4, "y": 1e4})
     far = objs(h, "disk")[-1]["values"]
     assert 0 <= far["x"] <= h.sim.size[0] and 0 <= far["y"] <= h.sim.size[1]
     h.cmd("scene", op="add", type="probe", values={})
     pid = objs(h, "probe")[0]["id"]
     h.cmd("scene", op="set", id=pid, values={"y": -5.0})
-    assert "вне области" in h.errors()[-1]
+    assert "outside the domain" in en(h.errors()[-1])
     h.cmd("scene", op="set", id=d[0]["id"], values={"radius": 50.0})
-    assert "закрыло бы" in h.errors()[-1]
+    assert "would cover" in en(h.errors()[-1])
 
 
 def test_a_probe_inside_a_body_says_so():
@@ -168,7 +195,7 @@ def test_a_probe_inside_a_body_says_so():
     h.cmd("scene", op="set", id=pid, values={"x": 0.2, "y": 0.2})     # the cylinder's centre
     run(h, 0.05, 1)
     r = h.of("frame")[-1]["probes"][pid]
-    assert "внутри тела" in r["где"] and "Цилиндр" in r["где"]
+    assert "inside the body" in en(r["where"]) and "Cylinder" in en(r["where"])
     h.cmd("scene", op="add", type="probe", values={"x": 0.2, "y": 0.2})
     p2 = objs(h, "probe")[-1]["values"]
     i, j = h.sim._at(p2["x"], p2["y"])
@@ -190,18 +217,18 @@ def test_live_viscosity_density_collision_and_dye():
     h.set(collision="bgk")
     assert h.sim.fl.collision == "bgk" and h.sim.fl.tau_m == h.sim.fl.tau_p
     h.set(dye="off")
-    assert russian(h.errors()[-1]) and "Краситель" in h.errors()[-1] and h.sim.fl.dye_D is not None
+    assert russian(h.errors()[-1]) and "dye" in en(h.errors()[-1]) and h.sim.fl.dye_D is not None
     dye = objs(h, "dye_source")[0]["id"]
     h.cmd("scene", op="remove", id=dye)
     h.set(dye="off")
     assert h.sim.fl.dye_D is None and h.sim.D is None and "dye_source" in h.sim.palette_state()
     run(h, 0.3)
     h.set(dye="on")
-    assert h.sim.fl.dye_D == pytest.approx(2e-3)       # «0 — как вязкость»: the viscosity in force
+    assert h.sim.fl.dye_D == pytest.approx(2e-3)       # "0: as the viscosity": the viscosity in force
     run(h, 0.3)
     n = len(h.errors())
     h.set(nu=1e-9)
-    assert len(h.errors()) == n + 1 and russian(h.errors()[-1]) and "ν не меньше" in h.errors()[-1]
+    assert len(h.errors()) == n + 1 and russian(h.errors()[-1]) and "ν at least" in en(h.errors()[-1])
     assert h.sim.fl.nu == 2e-3
     assert not [c for c in h.checks().values() if c.get("ok") is False], h.checks()
     assert h.of("live")[-1]["values"]["nu"] == 2e-3
@@ -242,10 +269,10 @@ def test_live_laws_and_placements_are_replayed_by_a_restore():
 
 
 def test_engine_refusals_speak_the_worlds_terms():
-    """U13 / P24: «… уменьшите dt (или скорость)» named a step the owner cannot set; now the speed limit of this world
-    and «Наибольшая ожидаемая скорость»."""
+    """U13 / P24: "… lower dt (or the velocity)" named a step the owner cannot set; now the speed limit of this world
+    and "Largest expected velocity"."""
     h = Harness(V, "cylinder_re20")
     inlet = objs(h, "inlet")[0]["id"]
     h.cmd("scene", op="set", id=inlet, values={"speed": 100.0})
     err = h.errors()[-1]
-    assert russian(err) and "м/с" in err and "dt" not in err
+    assert russian(err) and "m/s" in en(err) and "dt" not in en(err)

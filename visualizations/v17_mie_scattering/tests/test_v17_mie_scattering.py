@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
 from lfphys.core import data as D  # noqa: E402
+from lfphys.i18n import english, text_of  # noqa: E402
 from lfphys.core.optics import mie, mie_debye as DB, mie_poly as MP  # noqa: E402
 from v17_mie_scattering.engine import drops as DR  # noqa: E402
 from v17_mie_scattering.viz import DISP_DEG, MAX_NODES, N_QUAD, SCHEMA, SKY_TH, T_LAM  # noqa: E402
@@ -232,7 +233,7 @@ def test_energy_identity_beyond_the_quadrature(monkeypatch):
     h = Harness(V, "rainbow", p)
     assert h.sim.x > 2900 and len(h.sim.coef[0]) > N_QUAD
     c = h.checks()["energy"]
-    assert _ok(c) and "тождество" in c["note"].lower()
+    assert _ok(c) and "identity" in english(c["note"]).lower()
     orig = mie.log_derivative
     monkeypatch.setattr(mie, "log_derivative", lambda z, N: orig(z, N) * (1 + 1e-9j))
     assert not _ok(Harness(V, "rainbow", p).checks()["energy"])
@@ -259,7 +260,7 @@ def test_only_debye_and_wiscombe_catch_wrong_coefficients(monkeypatch, part):
         monkeypatch.setattr(mie, "chi", lambda xx, N: orig(xx, N) * (1 + 1e-3))
     ch = Harness(V, "near", p).checks()
     assert _ok(ch["theorem"]) and _ok(ch["energy"]) and _ok(ch["mueller"])  # blind: identities
-    assert "тождество" in ch["theorem"]["note"].lower() and "тождество" in ch["energy"]["note"].lower()
+    assert "identity" in english(ch["theorem"]["note"]).lower() and "identity" in english(ch["energy"]["note"]).lower()
     assert not _ok(ch["debye"]) and not _ok(ch["wiscombe"])
 
 
@@ -309,10 +310,10 @@ def test_a_diverging_debye_series_is_announced():
                              "n_lam": 8})
     m, _ = last(h, "mono")
     assert m["debye"]["diverging_orders"] > 0
-    assert any("расходится" in n.get("text", "") for n in h.of("notice"))
+    assert any("diverges" in english(n.get("text", "")) for n in h.of("notice"))
     assert _ok(h.checks()["debye"])
     h2 = Harness(V, "glory", FAST)
-    assert not any("Дебая" in n.get("text", "") for n in h2.of("notice"))
+    assert not any("Debye" in english(n.get("text", "")) for n in h2.of("notice"))
 
 
 def test_the_medium_cut_and_coarse_sampling_are_stated():
@@ -322,17 +323,17 @@ def test_the_medium_cut_and_coarse_sampling_are_stated():
     is not coarse at 380 nm with the 1600-node cap."""
     h = Harness(V, "rainbow", FAST)
     hdr = h.of("header")[-1]
-    ap = " ".join(hdr["approximations"])
-    assert "вакуум" in ap and "±4σ" in ap and "грубая" not in ap
+    ap = " ".join(english(a) for a in hdr["approximations"])
+    assert "vacuum" in ap and "±4σ" in ap and "coarse" not in ap
     assert MP.size_nodes(150.0, 0.02, 0.38, max_nodes=MAX_NODES)["coarse"] is False
     h.run_to(T_LAM + 1e-9)
     m, _ = last(h, "sky")
     assert 0 < m["tail"] < 1e-3 and not m["coarse"]
     hb = Harness(V, "big_drops", {"n_lam": 8})
-    assert any("грубая" in a for a in hb.of("header")[-1]["approximations"])
+    assert any("coarse" in english(a) for a in hb.of("header")[-1]["approximations"])
     ha = Harness(V, "rainbow", {"n_medium": 1.0003, "n_lam": 8})
-    ap2 = " ".join(ha.of("header")[-1]["approximations"])
-    assert "вакуум" not in ap2 and "1.0003" in ap2
+    ap2 = " ".join(english(a) for a in ha.of("header")[-1]["approximations"])
+    assert "vacuum" not in ap2 and "1.0003" in ap2
 
 
 def test_info_checks_carry_no_misleading_tolerance_and_rays_for_m_below_1():
@@ -344,7 +345,7 @@ def test_info_checks_carry_no_misleading_tolerance_and_rays_for_m_below_1():
     for cid in ("bow2", "bow3", "alexander", "sky_bow"):
         c = h.checks()[cid]
         assert c.get("info") and c.get("tol") is None, cid
-    assert "°" in h.checks()["bow2"]["note"]
+    assert "°" in english(h.checks()["bow2"]["note"])
     hb = Harness(V, "glory", {"index": "custom", "n_re": 1.0, "n_im": 0.0, "n_medium": 1.333, "radius_um": 3.0,
                               "width": 0.0, "n_lam": 8})
     m = hb.sim.m.real
@@ -352,7 +353,7 @@ def test_info_checks_carry_no_misleading_tolerance_and_rays_for_m_below_1():
     ok = np.isfinite(pts[:, 0])
     assert m < 1 and np.all(np.abs(pts[ok, 1]) == 0)
     lines = [ms for ms in hb.of("lines") if ms["id"] == "rays"][-1]
-    assert "1,333" not in lines["label"] and "b < m" in lines["label"]
+    assert "1.333" not in english(lines["label"]) and "b < m" in english(lines["label"])
 
 
 def test_the_polar_surface_uses_the_engine_intensity():
@@ -371,18 +372,21 @@ def test_index_matched_drop_is_refused_and_next_event_is_one_wavelength():
     was NaN and the Debye check failed (1163 against 0); up to |m - 1| = 1e-6 the Debye route still fails
     and the energy identity of large drops up to ~1e-4 (response_checks_v-worlds/v17_m1*.out). Now |m - 1| < 1e-3 is
     refused at the start (check_params too) and as a live change of the wavelength, saying what to change; m = 1.001
-    builds and passes (negative control, at 1.0015). «⏭ событие» computed every
+    builds and passes (negative control, at 1.0015). The button ⏭ (the next event) computed every
     wavelength of the sky at once (20-40 s, > 2 min for 1 mm drops): now one wavelength per press, and the size nodes
     of a wavelength are capped by a time budget (coarse, flagged)."""
     import time
     from v17_mie_scattering.viz import STEP_BUDGET_S, SKY_S_PER_UNIT, Simulation
     vals = {"index": "custom", "n_re": 1.0, "n_im": 0.0, "n_medium": 1.0}
-    with pytest.raises(ValueError, match="капля почти неотличима от среды"):
+    with pytest.raises(ValueError) as e:
         Simulation.check_params({**SCHEMA.defaults(), **vals})
-    with pytest.raises(ValueError, match=r"\|m − 1\| < 10⁻³"):
+    assert "almost indistinguishable from the medium" in english(text_of(e.value))
+    with pytest.raises(ValueError) as e:
         Simulation.check_params({**SCHEMA.defaults(), **vals, "n_re": 1.0001})
-    with pytest.raises(ValueError, match="Показатель среды вокруг"):
+    assert "|m − 1| < 0.001" in english(text_of(e.value))
+    with pytest.raises(ValueError) as e:
         Harness(V, None, {**vals, "n_lam": 8})
+    assert "Index of the medium around" in english(text_of(e.value))
     h = Harness(V, None, {**vals, "n_re": 1.0015, "n_lam": 8, "radius_um": 1.0})
     assert not [c["id"] for c in h.checks().values() if c.get("ok") is False]
     h = Harness(V, None, {"n_lam": 8})

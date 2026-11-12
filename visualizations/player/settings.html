@@ -1,34 +1,34 @@
 <!doctype html>
 <!-- SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
      SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0 -->
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>lfphys · устройства и точность</title>
+<title data-t>lfphys · devices and precision</title>
 <link rel="stylesheet" href="/static/assets/chrome.css">
 </head>
 <body>
 <div class="topbar">
-  <a href="/" title="К каталогу визуализаций и запусков">← Каталог</a>
-  <span class="title">Устройства и точность расчётов</span>
+  <a href="/" data-t-title title="To the catalogue of visualizations and runs" data-t>← Catalogue</a>
+  <span class="title" data-t>Devices and precision of the computations</span>
   <span class="grow"></span>
   <span id="saved" class="muted"></span>
-  <a href="/legal" title="Лицензия, цитирование, сторонний код и отказ от гарантий">Лицензия</a>
-  <button id="theme" title="Тема (T)">◐</button>
+  <a href="/legal" data-t-title title="Licence, citation, third-party code and disclaimer" data-t>Licence</a>
+  <button id="theme" data-t-title title="Theme (T)">◐</button>
 </div>
 <div class="page">
   <p class="muted" id="intro"></p>
-  <h2>Устройства</h2>
+  <h2 data-t>Devices</h2>
   <div id="devices" class="cards"></div>
-  <h2>Ядра движка</h2>
+  <h2 data-t>Engine kernels</h2>
   <div id="kernels"></div>
   <div class="row" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
-    <button id="calibrate" title="Заново измерить время на CPU и на GPU и найти, с какого размера GPU выигрывает">Измерить заново</button>
-    <button id="reset" title="Авто и fp64 для всех ядер; пороги — измеренные по умолчанию">Сбросить к рекомендуемым</button>
+    <button id="calibrate" data-t-title title="Measure again the time on the CPU and on the GPU and find from what size the GPU gains" data-t>Measure again</button>
+    <button id="reset" data-t-title title="Auto and fp64 for every kernel; the thresholds as measured by default" data-t>Reset to the recommended</button>
   </div>
   <div id="calib" style="margin-top:12px"></div>
-  <h2>Как это работает</h2>
+  <h2 data-t>How it works</h2>
   <div id="howto" class="muted"></div>
 </div>
 <script type="module" src="/static/js/settings.js"></script>

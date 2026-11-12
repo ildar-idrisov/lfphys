@@ -92,13 +92,17 @@ def test_energies_of_any_reduced_mass():
     assert H.reduced_mass(sc.m_e, math.inf) == sc.m_e
 
 
-def test_orbital_labels_and_refused_inputs():
+def test_orbital_labels_and_refused_inputs(ru):
     assert H.orbital(3, 2, 0, real=True).label == "3d_z²" and H.orbital(1, 0, 0).energy == -0.5
     assert H.orbital(2, 1, 0, Z=2.0).energy == -0.5
     for bad in ((0, 0, 0), (2, 2, 0), (2, -1, 0), (3, 1, 2)):
         with pytest.raises(ValueError):
             H.orbital(*bad)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"need \|m\| ≤ l \(m = 2, l = 1\)") as e:
+        H.orbital(3, 1, 2)
+    assert ru(e.value.args[0]) == "нужно |m| ≤ l (m = 2, l = 1)"
+    with pytest.raises(ValueError, match="closed forms exist only") as e:
         H.expectation(2, 1, 3)
+    assert "замкнутые формулы" in ru(e.value.args[0])
     with pytest.raises(ValueError):
         H.radial_series(1, 1, 1.0)

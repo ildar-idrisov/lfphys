@@ -19,6 +19,7 @@ from aiohttp.test_utils import TestClient, TestServer
 
 from lfviz import protocol
 from lfviz.app import MGR, create_app
+from lfviz.i18n import english as E
 
 HERE = Path(__file__).resolve().parent
 WORLDS = HERE / "instruments_worlds"
@@ -76,13 +77,13 @@ async def _series(tmp_path):
         r = await cl.get(f"/api/runs/{rid}/series", params={"ids": "o1.x,E"})
         js = await r.json()
         assert r.status == 200, js
-        assert js["world"] == 1 and js["worlds"] == [1] and js["t_unit"] == "с" and js["stride"] == 1
+        assert js["world"] == 1 and js["worlds"] == [1] and js["t_unit"] == {"$t": "s"} and js["stride"] == 1
         assert js["n"] == js["n_frames"] == len(fr)
         assert js["t"] == [f["t"] for f in fr]
         assert js["values"]["o1.x"] == [f["meas"]["o1.x"] for f in fr]
         assert max(abs(x - x_exact(t)) for t, x in zip(js["t"], js["values"]["o1.x"])) < 1e-12
         assert max(abs(e - 2.0) for e in js["values"]["E"]) < 1e-12
-        assert js["measurables"][0]["title"] == "Осциллятор 1: положение" and js["measurables"][0]["unit"] == "м"
+        assert E(js["measurables"][0]["title"]) == "Oscillator 1: position" and js["measurables"][0]["unit"] == {"$t": "m"}
         # negative control: another law's motion does not fit the record
         assert max(abs(x - x_exact(t, k=4.4)) for t, x in zip(js["t"], js["values"]["o1.x"])) > 1e-2
         # a time range
@@ -97,8 +98,12 @@ async def _series(tmp_path):
         r = await cl.get(f"/api/runs/{rid}/series", params={"ids": "o1.x,E,x_first", "format": "csv"})
         assert r.status == 200 and r.headers["Content-Type"].startswith("text/csv")
         rows = list(csv.reader(io.StringIO(await r.text())))
-        assert rows[0] == ["t, с", "Осциллятор 1: положение, м [o1.x]", "Полная энергия, Дж [E]",
-                           "Положение первого осциллятора, м [x_first]"]
+        assert rows[0] == ["t, s", "Oscillator 1: position, m [o1.x]", "Total energy, J [E]",
+                           "Position of the first oscillator, m [x_first]"]
+        # the file in the player's language (?lang=): the header's texts from the catalogue
+        r_ru = await cl.get(f"/api/runs/{rid}/series", params={"ids": "o1.x", "format": "csv", "lang": "ru"})
+        head_ru = next(csv.reader(io.StringIO(await r_ru.text())))
+        assert head_ru == ["t, с", "Осциллятор 1: положение, м [o1.x]"]  # i18n-ok: the Russian catalogue under test
         assert len(rows) - 1 == len(fr)
         assert [float(r_[0]) for r_ in rows[1:]] == js["t"]
         assert [float(r_[1]) for r_ in rows[1:]] == js["values"]["o1.x"]  # exact: repr round trip
@@ -107,15 +112,16 @@ async def _series(tmp_path):
         await cl.post(f"/api/runs/{rid}/command", json={"cmd": "step", "args": {"dt": 0.1}})
         await asyncio.sleep(1.0)
         js4 = await (await cl.get(f"/api/runs/{rid}/series", params={"ids": "x_first"})).json()
-        assert js4["values"]["x_first"][-1] is None and js4["notes"]["x_first"] == "в сцене нет осцилляторов"
+        assert js4["values"]["x_first"][-1] is None and js4["notes"]["x_first"] == {"$t": "there are no oscillators in the scene"}
         text = await (await cl.get(f"/api/runs/{rid}/series", params={"ids": "x_first,E", "format": "csv"})).text()
         assert text.rstrip().splitlines()[-1].split(",")[1] == "" and text.rstrip().splitlines()[-1].split(",")[2] == "0.0"
         # refusals in the owner's words
-        for q, word in (({"ids": ""}, "укажите величины"), ({"ids": "nope"}, "нет величин: nope"),
-                        ({"ids": "E", "world": "7"}, "нет мира 7"), ({"ids": "E", "from": "x"}, "«from» — число"),
-                        ({"ids": "E", "format": "xml"}, "json или csv"), ({"ids": "E", "max_points": "1"}, "max_points")):
+        for q, word in (({"ids": ""}, "name the quantities"), ({"ids": "nope"}, "has no quantities nope"),
+                        ({"ids": "E", "world": "7"}, "has no world 7"), ({"ids": "E", "from": "x"}, "“from” is a number"),
+                        ({"ids": "E", "format": "xml"}, "json or csv"), ({"ids": "E", "max_points": "1"}, "max_points")):
             r = await cl.get(f"/api/runs/{rid}/series", params=q)
-            assert r.status == 400 and word in (await r.json())["error"], (q, await r.json())
+            j = await r.json()
+            assert r.status == 400 and word in j["text"] and "$t" in j["error"], (q, j)
         assert (await cl.get("/api/runs/nope/series", params={"ids": "E"})).status == 404
         # a new world: the latest by default, the first on request
         await cl.post(f"/api/runs/{rid}/command", json={"cmd": "new_world", "args": {"preset": "one", "params": {"k": 9.0}}})
@@ -176,11 +182,11 @@ def test_index_spans_and_labels(tmp_path):
         def seg_path(self, k):
             return self.path
 
-    msgs = [{"type": "header", "world": 1, "t": 0.0, "units": {"t": "фс (время мира)"},
-             "measurables": [{"id": "a", "label": "А", "unit": "м"}]},
+    msgs = [{"type": "header", "world": 1, "t": 0.0, "units": {"t": "fs (world time)"},
+             "measurables": [{"id": "a", "label": "A", "unit": "m"}]},
             {"type": "frame", "t": 0.5, "meas": {"a": 1.0}},
-            {"type": "scene", "t": 0.5, "objects": [{"id": "o1", "type": "probe", "label": "Датчик 1"}],
-             "measurables": [{"id": "o1.d", "label": "расстояние", "unit": "м", "of": "o1"}]},
+            {"type": "scene", "t": 0.5, "objects": [{"id": "o1", "type": "probe", "label": "Probe 1"}],
+             "measurables": [{"id": "o1.d", "label": "distance", "unit": "m", "of": "o1"}]},
             {"type": "frame", "t": 1.0, "meas": {"a": 2.0, "o1.d": None}},
             {"type": "header", "world": 2, "t": 0.0},
             {"type": "frame", "t": 0.25, "meas": {}}]
@@ -199,8 +205,8 @@ def test_index_spans_and_labels(tmp_path):
     idx.scan(run, entries, len(entries))
     assert idx.spans == [[1, 0, 4], [2, 4, 6]]
     w1 = idx.worlds[1]
-    assert w1.t_unit == "фс" and set(w1.decl) == {"a", "o1.d"} and idx.worlds[2].t_unit == "с"
-    assert I.column_title(w1, w1.decl["o1.d"]) == "Датчик 1: расстояние, м [o1.d]"
+    assert w1.t_unit == "fs" and set(w1.decl) == {"a", "o1.d"} and idx.worlds[2].t_unit == {"$t": "s"}
+    assert E(I.column_title(w1, w1.decl["o1.d"])) == "Probe 1: distance, m [o1.d]"
     assert [e.t for e in idx.frames(entries, 1, 0.0, 0.9)] == [0.5] and len(idx.frames(entries, 2, -1, 9)) == 1
     ts, rows, _ = I.read_rows(run, idx.frames(entries, 1, -math.inf, math.inf), ["a", "o1.d"])
     assert ts == [0.5, 1.0] and rows == [[1.0, None], [2.0, None]]
@@ -229,14 +235,14 @@ async def _csv_off_the_loop(tmp_path, monkeypatch):
         n = len(frames_of(run))
         text = await (await cl.get(f"/api/runs/{rid}/series", params={"ids": "E,E,o1.x,E", "format": "csv"})).text()
         rows = list(csv.reader(io.StringIO(text)))
-        assert rows[0] == ["t, с", "Полная энергия, Дж [E]", "Осциллятор 1: положение, м [o1.x]"] and len(rows) - 1 == n
+        assert rows[0] == ["t, s", "Total energy, J [E]", "Oscillator 1: position, m [o1.x]"] and len(rows) - 1 == n
         assert where and not any(where)  # never in the event loop's thread
         js = await (await cl.get(f"/api/runs/{rid}/series", params={"ids": "E,E"})).json()
         assert js["ids"] == ["E"]
         monkeypatch.setattr(I, "CSV_MAX_CELLS", 3 * 10)  # 3 columns: at most 10 rows
         r = await cl.get(f"/api/runs/{rid}/series", params={"ids": "E,o1.x", "format": "csv"})
         rows = list(csv.reader(io.StringIO(await r.text())))
-        assert len(rows) - 1 <= 10 and "предел 10 строк" in rows[0][0] and int(r.headers["X-Lfviz-Stride"]) > 1
+        assert len(rows) - 1 <= 10 and "a limit of 10 rows" in rows[0][0] and int(r.headers["X-Lfviz-Stride"]) > 1
         await cl.post(f"/api/runs/{rid}/stop")
 
 

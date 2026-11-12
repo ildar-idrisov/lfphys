@@ -152,30 +152,33 @@ def test_the_norm_and_kinetic_energy_are_kept_to_round_off_by_refinement():
     assert S.regrid_losses(p2, g2, g)["spectrum"] < 1e-28
 
 
-def test_changes_that_drop_or_misplace_the_wave_are_refused_with_the_number():
+def test_changes_that_drop_or_misplace_the_wave_are_refused_with_the_number(ru):
     """Coarser than the wave's spectrum, smaller than where it is, larger while it crosses the periodic face: each is
     refused with the measured fraction (above the stated tolerance REGRID_TOL), and nothing changes."""
     s, pid = _free_scene()
     s.advance(int(round(T1 / DT)))
     w0, g0 = s.wave(pid), s.grid
-    for shape, spacing, what in (((48, 48), 2.0, "за полосой новой сетки"), ((40, 40), 0.5, "вне нового окна")):
+    for shape, spacing, what, what_ru in (((48, 48), 2.0, "beyond the band of the new grid", "за полосой новой сетки"),
+                                          ((40, 40), 0.5, "outside the new window", "вне нового окна")):
         with pytest.raises(ValueError, match=what) as e:
             s.regrid(shape, spacing)
+        assert what_ru in ru(e.value.args[0])
         assert e.value.pid == pid and e.value.value > Q.REGRID_TOL
         assert s.grid is g0 and np.array_equal(s.wave(pid), w0)
     # a packet across the periodic face: a larger window would cut it in two
     s2 = Q.Scene((64, 64), 0.5, dt=DT, device="cpu")
     p2 = s2.add_particle(Q.Packet(UNIT, [0.0, 0.0], [0.0, 0.0], [1.5, 1.5]))
     s2.set_wave(p2, np.roll(s2.wave(p2), 32, axis=0))
-    with pytest.raises(ValueError, match="у граней прежнего окна") as e:
+    with pytest.raises(ValueError, match="at the faces of the present window") as e:
         s2.regrid((96, 96), 0.5)
     assert e.value.what == "face" and e.value.value > 0.1
     # an object whose edge (a physical length) the coarser grid cannot resolve: refused, named by its id
     s3, p3 = _free_scene()
     oid = s3.add(Q.Box([20.0, 0.0], [2.0, None], 0.05, 1.6))
-    with pytest.raises(ValueError, match="край") as e:
+    with pytest.raises(ValueError, match="edge") as e:
         s3.regrid((96, 96), 1.0)
     assert e.value.oid == oid and s3.grid.shape == (192, 192)
+    assert ru(e.value.args[0]).startswith(f"объект #{oid} на новой сетке: ящик: край ")  # nested texts in Russian too
 
 
 def test_a_finer_or_coarser_grid_carries_a_wave_across_the_periodic_face():
@@ -257,7 +260,7 @@ def test_flux_planes_follow_the_grid_and_are_refused_outside_it():
     _, _, f0 = run(False)
     assert f["flux_integral"] == pytest.approx(f0["flux_integral"], rel=1e-12, abs=1e-15)
     assert f["mismatch"] == pytest.approx(f0["mismatch"], rel=1e-9, abs=1e-15)
-    with pytest.raises(ValueError, match="плоскость потока") as e:
+    with pytest.raises(ValueError, match="flux plane") as e:
         s.regrid((40, 40), 0.5, tol=1.0)
     assert e.value.plane == pl
 
@@ -279,7 +282,7 @@ def test_a_moved_packet_is_the_same_wave_in_the_new_place():
     assert _rel_err(s.wave(pid), ph * _ref(s.grid, T2, center=c1)) < 1e-12
     # too near a face: refused with the probability that would cross it, nothing changed
     w = s.wave(pid)
-    with pytest.raises(ValueError, match="через грань окна") as e:
+    with pytest.raises(ValueError, match="across a face of the window") as e:
         s.move_particle(pid, [40.0, 0.0])
     assert e.value.value > Q.REGRID_TOL and np.array_equal(s.wave(pid), w)
 
@@ -339,7 +342,7 @@ def test_a_boost_gives_the_packet_the_new_momentum():
     E = float(np.sum((np.array(K0) + dk) ** 2)) / 2 + sum(1 / (8 * x * x) for x in SIG)
     assert s.observables(pid)["E"] == pytest.approx(E, rel=1e-9)
     w = s.wave(pid)
-    with pytest.raises(ValueError, match="за полосу сетки") as e:
+    with pytest.raises(ValueError, match="would leave the grid's band") as e:
         s.boost_particle(pid, [7.0, 0.0])
     assert e.value.what == "alias" and np.array_equal(s.wave(pid), w)
 
@@ -373,7 +376,7 @@ def test_the_model_of_a_boosted_wave_is_its_spectrum():
     import dataclasses
     sh = copy.copy(t.particles[p])
     sh.packet = dataclasses.replace(sh.packet, k=list(-k))
-    assert "сетка не передаёт" in (t._resolution_reason(t._arr, [sh]) or "")
+    assert "the grid does not carry" in str(t._resolution_reason(t._arr, [sh]) or "")
     rep = t.boost_particle(p, -k)
     assert np.allclose(rep["k_after"], 0.0, atol=1e-9)
     # with the packet's own spread s0 (what a boost uses: review LB1-p02-ux Q5) the model's |mean| + 6 sigma_k is the

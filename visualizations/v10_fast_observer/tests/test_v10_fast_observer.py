@@ -17,6 +17,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
+from lfphys.i18n import english  # noqa: E402
 
 from lfphys.core import raytrace as RT  # noqa: E402
 from v10_fast_observer import viz as V10  # noqa: E402
@@ -150,7 +151,8 @@ def test_comparison_modes_are_labelled_and_snapshot_shows_contraction():
     h = run(Harness(V, "snapshot", {"res": "s"}), 0.0)
     run(h, h.sim.default_speed * 18)
     m, b = images(h)[-1]
-    assert m["mode"] == "snapshot" and "для сравнения" in m["mode_label"] and "так не видно" in m["mode_label"]
+    lab = english(m["mode_label"])
+    assert m["mode"] == "snapshot" and "for comparison" in lab and "not what is seen" in lab
     # the snapshot of the cube is narrower than what is seen of it (Lorentz contraction is never seen)
     body = field(m, b, "body")
     h.set(image="seen")
@@ -169,7 +171,8 @@ def test_the_observer_inside_a_body_gets_a_notice_not_an_error():
     for f in np.linspace(0.2, 1.3, 12):
         run(h, f * t_in)
     assert not h.errors()
-    assert any("наблюдатель внутри тела" in m["text"] for m in h.of("notice"))
+    # the engine's refusal with the body's name (a tower of the street), and the world's time
+    assert any("tower (" in english(m["text"]) and english(m["text"]).endswith(" ns)") for m in h.of("notice"))
 
 
 @pytest.mark.parametrize("params", [{"scene": "flyby", "beta": 0.99, "res": "l"},

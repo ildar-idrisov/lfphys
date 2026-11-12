@@ -121,7 +121,7 @@ def test_the_edges_of_the_schema(loop):
     except AssertionError:
         raise
     except Exception as e:  # a refused world
-        assert "скорости света" in str(e) and loop == "helix", e
+        assert "closer to the speed of light" in str(e) and loop == "helix", e  # str(): the English rendering
         return
     assert not h.errors() and not failed(h), (h.errors(), failed(h))
     assert h.sim._round_est() * 20 <= h.sim._round_bound()  # an alarm level, measured >= 46 below it

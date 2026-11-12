@@ -32,11 +32,15 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": 'core', "kind": 'law',
-    "title": 'Метки пути: внутренние состояния, элементы, детектор-кубит, правило Борна',
-    "statement": 'Состояние за щелью j — A_j(x)|m_j⟩; P(x, r) = Σ A_j A_l* G⁽ʳ⁾_jl, G — матрица Грама меток; матрицы Джонса и спина, детектор Энглерта, базис чтения, двойственность V² + D² ≤ 1.',
-    "validity": 'квантовая механика (правило Борна); поляризация — в параксиальном приближении одинаково для обеих компонент',
+    "title": T("Which-path marks: internal states, elements, a qubit detector, the Born rule"),
+    "statement": T("The state behind slit j is A_j(x)|m_j⟩; P(x, r) = Σ A_j A_l* G⁽ʳ⁾_jl, G the Gram matrix of the "
+                   "marks; Jones and spin matrices, Englert's detector, the readout basis, the duality V² + D² ≤ 1."),
+    "validity": T("quantum mechanics (the Born rule); polarization in the paraxial approximation, the same for both "
+                  "components"),
     "basis": ['Englert, PRL 77, 2154 (1996)', 'Scully, Englert, Walther, Nature 351, 111 (1991)'],
     "conflicts": [],
 }
@@ -51,12 +55,13 @@ POL_STATES = {"H": [1, 0], "V": [0, 1], "D": [1 / SQ2, 1 / SQ2], "A": [1 / SQ2, 
 SPIN_STATES = {"up_z": [1, 0], "down_z": [0, 1], "up_x": [1 / SQ2, 1 / SQ2], "down_x": [1 / SQ2, -1 / SQ2],
                "up_y": [1 / SQ2, 1j / SQ2], "down_y": [1 / SQ2, -1j / SQ2]}
 
-PHOTON_ELEMENTS = [("none", "нет"), ("polarizer", "поляризатор (угол оси)"), ("hwp", "полуволновая пластинка"),
-                   ("qwp", "четвертьволновая пластинка"), ("phase", "фазовая пластинка (фаза)"),
-                   ("block", "заслонка (щель закрыта)")]
-SPIN_ELEMENTS = [("none", "нет"), ("rot_y", "поворот спина вокруг y (угол)"), ("filter", "спиновый фильтр (направление)"),
-                 ("phase", "фазовый сдвиг (фаза)"), ("block", "заслонка (щель закрыта)")]
-SCALAR_ELEMENTS = [("none", "нет"), ("phase", "фазовый сдвиг (фаза)"), ("block", "заслонка (щель закрыта)")]
+PHOTON_ELEMENTS = [("none", T("no element")), ("polarizer", T("polarizer (axis angle)")),
+                   ("hwp", T("half-wave plate")), ("qwp", T("quarter-wave plate")),
+                   ("phase", T("phase plate (phase)")), ("block", T("shutter (slit closed)"))]
+SPIN_ELEMENTS = [("none", T("no element")), ("rot_y", T("spin rotation about y (angle)")),
+                 ("filter", T("spin filter (direction)")), ("phase", T("phase shift (phase)")),
+                 ("block", T("shutter (slit closed)"))]
+SCALAR_ELEMENTS = [("none", T("no element")), ("phase", T("phase shift (phase)")), ("block", T("shutter (slit closed)"))]
 
 
 def _rot(t):
@@ -86,7 +91,7 @@ def element_matrix(kind: str, angle_deg: float, internal: str | None) -> np.ndar
         if kind == "filter":
             n = (math.sin(a), 0.0, math.cos(a))
             return 0.5 * (np.eye(2) + n[0] * SX + n[1] * SY + n[2] * SZ)
-    raise ValueError(f"элемент {kind!r} не подходит для этой частицы")
+    raise ValueError(T("element {kind} does not suit this particle", kind=repr(kind)))
 
 
 def analyzer_matrix(kind: str, angle_deg: float, internal: str | None) -> np.ndarray:

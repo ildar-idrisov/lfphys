@@ -26,16 +26,18 @@ import numpy as np
 from scipy.interpolate import CubicSpline
 
 from ..core.optics import radiation
+from lfphys.i18n import T
 
 ABOUT = {
     "layer": "tools", "kind": "display",
-    "title": "Цвет спектра для экрана: CIE 1931 XYZ и sRGB",
-    "statement": "Функции сложения цветов CIE 1931 — аналитическая аппроксимация Уаймена–Слоуна–Ширли (2013); цвет "
-                 "чёрного тела по закону Планка; переход XYZ → sRGB (IEC 61966-2-1); тональное сжатие для экрана.",
-    "validity": "инструмент отображения, не физика: аппроксимация функций CIE с ошибкой до 0,022 (абсолютной); "
-                "яркость на экране сжата",
+    "title": T("The colour of a spectrum on screen: CIE 1931 XYZ and sRGB"),
+    "statement": T("The CIE 1931 colour-matching functions by the analytic approximation of Wyman–Sloan–Shirley "
+                   "(2013); the colour of a black body by Planck's law; the transform XYZ → sRGB (IEC 61966-2-1); "
+                   "tone mapping for the screen."),
+    "validity": T("a display tool, not physics: the CIE functions are approximated with an error up to 0.022 "
+                  "(absolute); the brightness on screen is compressed"),
     "basis": ["Wyman, Sloan, Shirley, JCGT 2(2), 1 (2013): Table 1, Listing 1",
-              "IEC 61966-2-1:1999 (sRGB): матрица XYZ → линейный sRGB и кривая переноса"],
+              T("IEC 61966-2-1:1999 (sRGB): the matrix XYZ → linear sRGB and the transfer curve")],
     "conflicts": [],
 }
 

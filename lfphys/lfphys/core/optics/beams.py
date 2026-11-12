@@ -89,30 +89,33 @@ from typing import Callable
 import numpy as np
 from scipy.special import eval_genlaguerre, ive, jv
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Точные пучки с орбитальным моментом: бесселевы, скалярные и векторные вихревые пучки",
-    "statement": "Бесселевы пучки — точные решения уравнения Гельмгольца; вихревой пучок порядка l по его спектру "
-                 "(преобразование Ганкеля): скалярный (Рэлей–Зоммерфельд) и векторный (плоские волны спиральности σ с "
-                 "множителем e^{i(l+σ)φ_k} — собственное состояние J_z, точное решение уравнений Максвелла, "
-                 "J_z = l + σ на фотон). Плотности энергии, вектор Пойнтинга, орбитальная и спиновая части (Берри), "
-                 "момент импульса на фотон на единицу длины (каноническое разделение Блиоха и др. 2010) и потоки через "
-                 "плоскость (разделение потока по Барнетту — в форме Монтейру и др. 2009); момент по Пойнтингу в "
-                 "замкнутой форме; топологический заряд по обходу фазы, линии потока энергии, поверхности равной фазы.",
-    "validity": "свободное пространство, монохроматическое поле; численная ошибка квадратур оценивается удвоением "
-                "(измерена в тестах); векторный пучок содержит только распространяющиеся волны (доля мощности "
-                "источника, которую он сохраняет, — propagating_fraction); разделение момента на спин и орбиту "
-                "зависит от определения, от определения не зависит только J_z = l + σ",
-    "basis": ["Durnin, J. Opt. Soc. Am. A 4, 651 (1987) — бесселевы пучки",
-              "Berry, J. Opt. A 11, 094001 (2009), ур. 3.5 — орбитальный и спиновый токи",
-              "Bliokh, Bekshaev, Nori, New J. Phys. 15, 033026 (2013), ур. 3.27, 3.42–3.45, 3.50",
-              "Bliokh, Alonso, Ostrovskaya, Aiello, Phys. Rev. A 82, 063825 (2010), ур. 22, 25–26, A7 — построение "
-              "собственного состояния J_z и каноническое разделение на единицу длины",
-              "Monteiro, Maia Neto, Nussenzveig, Phys. Rev. A 79, 033830 (2009), ур. 33 — разделение потока по "
-              "Барнетту для сфокусированного пучка",
-              "Barnett, J. Opt. B 4, S7 (2002) — поток момента (аннотация; текст не получен)",
-              "Barnett & Allen, Opt. Commun. 110, 670 (1994) — их непараксиальный пучок не собственное состояние "
-              "J_z (по Монтейру и др. 2009; текст не получен)"],
+    "title": T("Exact beams with orbital angular momentum: Bessel beams, scalar and vector vortex beams"),
+    "statement": T("Bessel beams are exact solutions of the Helmholtz equation; a vortex beam of order l from its "
+                   "spectrum (Hankel transform): scalar (Rayleigh–Sommerfeld) and vector (plane waves of helicity σ "
+                   "with the factor e^(i(l+σ)φ_k): an eigenstate of J_z, an exact solution of Maxwell's equations, J_z "
+                   "= l + σ per photon). Energy densities, the Poynting vector and its orbital and spin parts (Berry), "
+                   "the angular momentum per photon per unit length (the canonical separation of Bliokh et al. 2010) "
+                   "and the fluxes through a plane (Barnett's flux separation, in the form of Monteiro et al. 2009); "
+                   "the Poynting angular momentum in closed form; the topological charge from the winding of the "
+                   "phase, energy flow lines, surfaces of equal phase."),
+    "validity": T("free space, a monochromatic field; the numerical error of the quadratures is estimated by doubling "
+                  "(measured in the tests); the vector beam contains only propagating waves (the fraction of the "
+                  "source's power it keeps: propagating_fraction); the split of the angular momentum into spin and "
+                  "orbit depends on the definition, only J_z = l + σ does not"),
+    "basis": [T("Durnin, J. Opt. Soc. Am. A 4, 651 (1987) — Bessel beams"),
+              T("Berry, J. Opt. A 11, 094001 (2009), eq. 3.5 — orbital and spin currents"),
+              T("Bliokh, Bekshaev, Nori, New J. Phys. 15, 033026 (2013), eqs. 3.27, 3.42–3.45, 3.50"),
+              T("Bliokh, Alonso, Ostrovskaya, Aiello, Phys. Rev. A 82, 063825 (2010), eqs. 22, 25–26, A7 — the "
+                "construction of the J_z eigenstate and the canonical separation per unit length"),
+              T("Monteiro, Maia Neto, Nussenzveig, Phys. Rev. A 79, 033830 (2009), eq. 33 — Barnett's flux separation "
+                "for a focused beam"),
+              T("Barnett, J. Opt. B 4, S7 (2002) — the angular momentum flux (abstract; full text not obtained)"),
+              T("Barnett & Allen, Opt. Commun. 110, 670 (1994) — their non-paraxial beam is not an eigenstate of J_z "
+                "(according to Monteiro et al. 2009; full text not obtained)")],
     "conflicts": [],
 }
 

@@ -25,6 +25,7 @@ from harness import Harness  # noqa: E402
 
 from lfphys.core import constants as K  # noqa: E402
 from lfphys.core.gravity import kerr_newman as KN  # noqa: E402
+from lfphys.i18n import render as en  # noqa: E402
 from lfviz import registry  # noqa: E402
 from lfviz.sim import Runner  # noqa: E402
 from p01_gravity import viz as P1  # noqa: E402
@@ -58,7 +59,7 @@ def test_the_hole_is_an_object_of_its_world():
         assert first["values"]["mass"] == h.params["m_hole"] and first["values"]["spin"] == h.params["spin"]
         assert "kn_hole" in h.sim.palette_state()
         h.cmd("scene", op="remove", id=first["id"])
-        assert "удалить нельзя" in h.errors()[-1]
+        assert "computed around this hole" in en(h.errors()[-1])
         h.cmd("scene", op="clear")
         assert [o["type"] for o in h.sim.objects.values()] == ["kn_hole"] and h.sim.mode.geo.n == 0
 
@@ -78,7 +79,7 @@ def test_the_hole_mass_is_a_change_of_units():
     hole = objs(a, "kn_hole")[0]["id"]
     a.cmd("scene", op="set", id=hole, values={"mass": 20.0})
     assert not a.errors(), a.errors()
-    ev = [m for m in a.of("event") if "смена масштаба" in m.get("text", "")]
+    ev = [m for m in a.of("event") if "change of scale" in en(m.get("text", ""))]
     assert ev and ev[-1].get("notify")
     assert np.array_equal(ga.bl(), bl0) and np.array_equal(ga.momenta(), p0)
     assert np.allclose(ga.proper_time() * a.sim.mode.T, tau0, rtol=1e-14)
@@ -97,7 +98,7 @@ def test_the_hole_mass_is_a_change_of_units():
 
 def test_spin_and_charge_change_only_as_a_declared_what_if():
     """a 0.9 -> 0.5 and Q 0 -> 0.3 under moving bodies: each keeps its place, its proper time and its ZAMO-measured
-    velocity (to round-off), its E and L change; the world says «МОДЕЛЬ» in its approximations and in the event; the
+    velocity (to round-off), its E and L change; the world says “WHAT IF” MODEL in its approximations and in the event; the
     checks (K and the mass shell, recounted from the change) pass; a change that would put a body under the new horizon
     is refused and leaves everything as it was."""
     h = Harness(V, "kerr_orbits")
@@ -115,8 +116,8 @@ def test_spin_and_charge_change_only_as_a_declared_what_if():
     assert (m.a, m.q) == (0.5, 0.3) and np.array_equal(g2.bl()[r2], bl) and np.array_equal(g2.proper_time()[r2], tau)
     assert np.allclose(g2.zamo_velocity()[r2], vz, rtol=1e-12, atol=1e-14)
     assert not np.allclose(g2.constants()["E"][r2], E0)
-    assert any("МОДЕЛЬ" in a for a in h.of("approx")[-1]["approximations"])
-    assert any("МОДЕЛЬ «что если»" in e.get("text", "") for e in h.of("event"))
+    assert any("MODEL" in en(a) for a in h.of("approx")[-1]["approximations"])
+    assert any("“WHAT IF” MODEL" in en(e.get("text", "")) for e in h.of("event"))
     run(h, 1e-3)
     assert not failed(h), failed(h)
     # after a capture (found in the browser: a captured body re-placed 1e-9 off the new horizon broke the shell check by
@@ -136,7 +137,7 @@ def test_spin_and_charge_change_only_as_a_declared_what_if():
     assert not f.errors(), f.errors()
     s0 = f.sim.mode.geo.state_dict()
     f.cmd("scene", op="set", id=objs(f, "kn_hole")[0]["id"], values={"spin": 0.0})
-    assert "под новым горизонтом" in f.errors()[-1]
+    assert "under the new horizon" in en(f.errors()[-1])
     assert f.sim.mode.a == 0.99 and f.sim.mode.geo.state_dict() == s0 and objs(f, "kn_hole")[0]["values"]["spin"] == 0.99
 
 
@@ -166,9 +167,9 @@ def test_the_what_if_is_the_engines_rule_without_a_speed_limit():
     g1 = 1 / math.sqrt(1 - v1 @ v1)
     assert abs(np.linalg.norm(v1) - np.linalg.norm(v0)) <= 1e-12 and abs(g1 / g0 - 1) <= 1e-6 * g0 ** 2, (g0, g1)
     assert np.linalg.norm(v1) > 0.999 + 1e-4  # the former clamp would have left 0.999
-    ev = [e["text"] for e in h.of("event") if "МОДЕЛЬ «что если»" in e.get("text", "")][-1]
-    assert "kn_change_whatif" in ev and "длина окружности" in ev and "γ" in ev
-    assert any("kn_change_whatif" in a for a in h.of("approx")[-1]["approximations"])
+    ev = [en(e["text"]) for e in h.of("event") if "“WHAT IF” MODEL" in en(e.get("text", ""))][-1]
+    assert "kn_change_whatif" in ev and "circumference" in ev and "γ" in ev
+    assert any("kn_change_whatif" in en(a) for a in h.of("approx")[-1]["approximations"])
 
 
 def test_the_radial_period_restarts_when_the_hole_changes_and_the_throw_limit():
@@ -191,7 +192,7 @@ def test_the_radial_period_restarts_when_the_hole_changes_and_the_throw_limit():
     k.cmd("scene", op="set", id=objs(k, "kn_hole")[0]["id"], values={"mass": 20.0})
     assert not k.errors(), k.errors()
     meas, notes = m.measure_now()
-    assert math.isnan(meas[f"{body}.Tr"]) and "заново" in notes[f"{body}.Tr"]
+    assert math.isnan(meas[f"{body}.Tr"]) and "anew" in en(notes[f"{body}.Tr"])
     assert k.sim.objects[body]["values"]["tv_max"] == pytest.approx(0.5 / m.T, rel=1e-15)
     run(k, 2.3 * T_kep * 2, n=60)
     assert m.measure_now()[0][f"{body}.Tr"] == pytest.approx(2 * Tr, rel=1e-3)  # the same orbit in twice the seconds
@@ -218,21 +219,21 @@ def test_the_binary_mass_is_a_change_of_units():
     assert meas1[f"{binary}.f"] == pytest.approx(meas0[f"{binary}.f"] / 2, rel=1e-12)
     assert meas1[f"{det}.hp"] == pytest.approx(2 * meas0[f"{det}.hp"], rel=1e-12)
     assert meas1[f"{binary}.r"] == pytest.approx(2 * meas0[f"{binary}.r"], rel=1e-12)
-    assert any("смена масштаба" in e.get("text", "") for e in h.of("event"))
+    assert any("change of scale" in en(e.get("text", "")) for e in h.of("event"))
     run(h, 0.1)
     assert m.bin["phase"] > ph0 and not failed(h), failed(h)
 
 
 def test_newtonian_handles_drag_and_throw():
     """Every body and field probe is in the frame's ``at``; a drag (an edit of x, y, z alone) moves the body and keeps
-    its velocity; a throw (the scene's а.е./с) sets its velocity, written into the body's own km/s; a throw at 0.1 c
+    its velocity; a throw (the scene's au/s) sets its velocity, written into the body's own km/s; a throw at 0.1 c
     and more is refused."""
     h = Harness(V, "sun_earth")
     run(h, 1e5)
     fr = h.of("frame")[-1]
     for o in h.sim.objects.values():
         assert o["id"] in fr["at"] and len(fr["at"][o["id"]]) == 3
-    earth = [o for o in h.sim.objects.values() if o["label"] == "Земля"][0]
+    earth = [o for o in h.sim.objects.values() if en(o["label"]) == "Earth"][0]
     nb = h.sim.mode.nb
     v0 = nb.body(earth["id"])["v"].copy()
     h.cmd("scene", op="set", id=earth["id"], values={"x": 0.0, "y": 1.5, "z": 0.0})
@@ -245,7 +246,7 @@ def test_newtonian_handles_drag_and_throw():
     vals = h.sim.objects[earth["id"]]["values"]
     assert vals["vmode"] == "manual" and vals["vx"] == pytest.approx(-1e-7 * K.AU / 1e3)
     h.cmd("scene", op="set", id=earth["id"], values={"tvx": 0.0, "tvy": 2.1e-4})  # 3.1e4 km/s > 0.1 c
-    assert "0,1 скорости света" in h.errors()[-1]
+    assert "0.1 of the speed of light" in en(h.errors()[-1])
 
 
 def test_kerr_drag_and_throw():
@@ -268,7 +269,7 @@ def test_kerr_drag_and_throw():
     assert np.allclose(m._vel([row])[0] / m.T, w, rtol=1e-9)
     assert h.sim.objects[free["id"]]["values"]["vmode"] == "zamo"
     h.cmd("scene", op="set", id=free["id"], values={"x": 0.1, "y": 0.1, "z": 0.0})
-    assert "под горизонтом" in h.errors()[-1]
+    assert "under the horizon" in en(h.errors()[-1])
 
 
 def test_measurables_kepler_and_the_far_kerr_orbit():
@@ -281,7 +282,7 @@ def test_measurables_kepler_and_the_far_kerr_orbit():
     assert {"E", "dE", "L", "dL"} <= set(ms) and all(m["unit"] is not None for m in ms.values())
     run(h, 1e5, n=1)
     fr = h.of("frame")[-1]
-    earth = [o for o in h.sim.objects.values() if o["label"] == "Земля"][0]["id"]
+    earth = [o for o in h.sim.objects.values() if en(o["label"]) == "Earth"][0]["id"]
     mm = fr["meas"]
     assert mm[f"{earth}.a"] == pytest.approx(1.0, rel=1e-6) and mm[f"{earth}.e"] < 1e-6
     me = K.GM_EARTH / K.GM_SUN
@@ -335,8 +336,8 @@ def test_carry_over_across_the_laws():
     sim, msgs = _new_world_from(n, {"laws": "kerr", "spin": 0.7})
     holes = [o for o in sim.objects.values() if o["type"] == "kn_hole"]
     assert len(holes) == 1 and holes[0]["values"]["mass"] == 1000.0 and holes[0]["values"]["spin"] == 0.7
-    note = [m for m in msgs if m.get("type") == "notice" and "не перенесены" in m.get("text", "")]
-    assert note and "Звезда 1" in note[-1]["text"]
+    note = [m for m in msgs if m.get("type") == "notice" and "not carried" in en(m.get("text", ""))]
+    assert note and "Star 1" in en(note[-1]["text"])
     k = Harness(V, "kerr_orbits")
     sim, _ = _new_world_from(k, {"laws": "newton"})
     assert [o["type"] for o in sim.objects.values()] == ["hole"]
@@ -347,15 +348,15 @@ def test_carry_over_across_the_laws():
     nb = sim.mode.nb
     assert nb.n == 2 and nb.masses().sum() == pytest.approx(40.0)
     assert np.allclose((nb.masses()[:, None] * nb.velocities()).sum(0), 0.0, atol=1e-9 * float(np.abs(nb.velocities()).max()))
-    assert any("детектор" in m.get("text", "") for m in msgs if m.get("type") == "notice")
+    assert any("detector" in en(m.get("text", "")) for m in msgs if m.get("type") == "notice")
     s = Harness(V, "sun_earth")
     _, msgs = _new_world_from(s, {"laws": "pn"})
-    assert any("вне диапазона двойной" in m.get("text", "") for m in msgs if m.get("type") == "notice")
+    assert any("outside the range of a GR binary" in en(m.get("text", "")) for m in msgs if m.get("type") == "notice")
 
 
 def test_a_new_kerr_world_keeps_the_bodies_states():
     """Review LB1-framework F5 (p01): a new Kerr–Newman world of another hole (the dialog's mass, spin, charge) with
-    «перенести сцену». Another mass only: the bodies keep their state in units of M (a change of units), their proper
+    "carry the scene". Another mass only: the bodies keep their state in units of M (a change of units), their proper
     times and the observers' clocks in seconds. Another spin: each body starts where it was, with the momentum its local
     ZAMO measured (its ZAMO velocity the same to 1e-12; E, L new), said in the notice object by object; a body under
     the new, larger horizon starts anew from its parameters, said as restarted (before: every state from another metric
@@ -376,13 +377,13 @@ def test_a_new_kerr_world_keeps_the_bodies_states():
     assert np.array_equal(g.bl()[order], bl0)
     assert np.allclose(g.proper_time()[order] * sim.mode.T, tau_s, rtol=1e-14)
     n = [m for m in msgs if m.get("type") == "notice" and m.get("carry")][-1]
-    assert "собственное время в секундах сохранено" in n["text"], n["text"]
+    assert "proper time in seconds kept" in en(n["text"]), en(n["text"])
     sim, msgs = _new_world_from(k, {"laws": "kerr", "m_hole": 10.0, "spin": 0.5, "charge": 0.0})
     g = sim.mode.geo
     order = [g.keys.index(kk) for kk in keys]
     assert np.array_equal(g.bl()[order], bl0) and np.max(np.abs(g.zamo_velocity()[order] - vz0)) <= 1e-9
     n = [m for m in msgs if m.get("type") == "notice" and m.get("carry")][-1]
-    assert "с импульсом, который измерял местный наблюдатель" in n["text"], n["text"]
+    assert "with the momentum its local zero-angular-momentum observer" in en(n["text"]), en(n["text"])
     assert {r_["how"] for r_ in n["carry"]["objects"] if r_["id"] in keys} == {"state"}
     f = Harness(V, None, {"laws": "kerr", "spin": 0.99})
     f.cmd("scene", op="add", type="body", values={"r": 2.6, "theta": 90.0, "vmode": "zamo", "v_phi": 0.0, "v_r": -0.9})
@@ -395,11 +396,11 @@ def test_a_new_kerr_world_keeps_the_bodies_states():
     assert f.sim.mode.geo.bl()[0, 0] < 1.9 and f.sim.mode.geo.status()[0] == "active"
     sim, msgs = _new_world_from(f, {"laws": "kerr", "spin": 0.0})
     n = [m for m in msgs if m.get("type") == "notice" and m.get("carry")][-1]
-    hows = {r_["label"]: r_["how"] for r_ in n["carry"]["objects"]}
+    hows = {en(r_["label"]): r_["how"] for r_ in n["carry"]["objects"]}
     # the falling body's state lies under the new horizon r+ = 2: anew from its set-up (r = 2.6); the third body's set-up
     # (r = 1.6) is under it too: refused, named
-    assert hows["Пробное тело 1"] == "restarted" and hows["Пробное тело 2"] == "state", (hows, n["text"])
-    assert hows["Пробное тело 3"] == "refused" and "под горизонтом новой дыры" in n["text"]
+    assert hows["Test body 1"] == "restarted" and hows["Test body 2"] == "state", (hows, en(n["text"]))
+    assert hows["Test body 3"] == "refused" and "under the new hole's horizon" in en(n["text"])
 
 
 def _world(params):

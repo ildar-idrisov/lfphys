@@ -69,29 +69,31 @@ import numpy as np
 from scipy import constants as sc
 from scipy import special
 
+from ...i18n import T
 from ..optics.scalar import hankel1 as _hankel1_real
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Векторная дифракция на щелях в идеально проводящем экране",
-    "statement": "Плоская волна под любым углом на одну или несколько щелей в идеально проводящем экране конечной "
-                 "(или нулевой) толщины, обе поляризации (E вдоль щелей — TE/s, H вдоль щелей — TM/p): модовый метод "
-                 "(волноводные моды в щелях, сшитые с полями полупространств), для тонкого экрана — базис с "
-                 "краевыми условиями; поле в любой точке, угловой спектр, диаграмма в дальней зоне, пропускание на "
-                 "ширину щели, баланс мощности (оптическая теорема экрана), оценка ошибки усечения по числу мод. "
-                 "Точное решение Зоммерфельда для полуплоскости.",
-    "validity": "2-D (щели бесконечно длинные), идеальный проводник (без потерь и плазмонов реальных металлов), вакуум; "
-                "численная ошибка — от числа мод: базис с краевыми условиями (тонкий экран, k·w ≤ 140) сходится "
-                "экспоненциально; волноводные моды — алгебраически (углы экрана, порядок 1.2–1.4), по умолчанию T "
-                "занижено на 0.04–0.2 % при толщине > 0; у тонкого экрана при k·w > 140 — волноводные моды, "
-                "0.2–0.5 % (измерено при k·w = 40–130); ошибка оценивается (error_estimate) и измеряется "
-                "(convergence)",
+    "title": T("Vector diffraction by slits in a perfectly conducting screen"),
+    "statement": T("A plane wave at any angle on one or several slits in a perfectly conducting screen of finite (or "
+                   "zero) thickness, both polarizations (E along the slits: TE/s, H along the slits: TM/p): the mode "
+                   "method (waveguide modes in the slits matched to the fields of the half-spaces), for a thin screen "
+                   "a basis with the edge conditions; the field at any point, the angular spectrum, the far-field "
+                   "pattern, the transmission per slit width, the power balance (the screen's optical theorem), an "
+                   "estimate of the truncation error in the number of modes. Sommerfeld's exact solution for the "
+                   "half-plane."),
+    "validity": T("2-D (infinitely long slits), a perfect conductor (without the losses and plasmons of real metals), "
+                  "vacuum; the numerical error comes from the number of modes: the basis with the edge conditions "
+                  "(a thin screen, k·w ≤ 140) converges exponentially; waveguide modes converge algebraically (the "
+                  "screen's corners, order 1.2–1.4), by default T is 0.04–0.2 % low at a thickness > 0; for a thin "
+                  "screen at k·w > 140 waveguide modes, 0.2–0.5 % (measured at k·w = 40–130); the error is estimated "
+                  "(error_estimate) and measured (convergence)"),
     "basis": ["Harrington & Auckland, RADC-TR-79-257 (1979); IEEE TAP 28, 616 (1980)",
-              "Takakura, PRL 86, 5601 (2001) (по вторичным источникам)",
-              "Rayleigh, Phil. Mag. 43, 259 (1897) — пределы узкой щели",
-              "Sommerfeld, Math. Ann. 47, 317 (1896) — полуплоскость"],
-    "conflicts": ["lfphys.theories.approx.kirchhoff: скалярные граничные условия Кирхгофа; расходятся у щелей уже "
-                  "~10 λ и по поляризации"],
+              T("Takakura, PRL 86, 5601 (2001) (from secondary sources)"),
+              T("Rayleigh, Phil. Mag. 43, 259 (1897) — the limits of a narrow slit"),
+              T("Sommerfeld, Math. Ann. 47, 317 (1896) — the half-plane")],
+    "conflicts": [T("lfphys.theories.approx.kirchhoff: Kirchhoff's scalar boundary conditions; they disagree for slits "
+                    "narrower than ~10 λ and in the polarization")],
 }
 
 Z0 = sc.mu_0 * sc.c

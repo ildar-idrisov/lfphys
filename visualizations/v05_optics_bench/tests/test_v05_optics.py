@@ -16,6 +16,7 @@ from harness import Harness  # noqa: E402
 
 from lfphys.core.constants import C  # noqa: E402
 from lfphys.core.optics import interfaces, thin_films  # noqa: E402
+from lfphys.i18n import render  # noqa: E402
 from lfviz import registry  # noqa: E402
 from v05_optics_bench.engine.bench import rta  # noqa: E402
 
@@ -231,7 +232,8 @@ def test_path_change_loses_photons_in_flight_and_source_change_makes_them_transi
     assert inflight > 0
     h.set(theta_deg=40.0)
     assert h.sim.tot["lost"] == inflight and len(h.sim.flight) == 0
-    assert any("потеряно" in m["text"] for m in h.of("notice"))
+    assert any(render(m["text"]) == f"the beam paths were rebuilt (media or angle): photons in flight lost: {inflight}"
+               for m in h.of("notice"))
     h.run_to(h.sim.t + 30.0 / rate)
     assert len(h.sim.flight) > 0
     h.set(lam_nm=500.0)  # the source changes: photons under way fly on with their old wavelength
@@ -271,7 +273,8 @@ def test_photon_counts_agree_with_the_computed_probabilities(preset, params):
         assert abs(cnt[j] - n * p[k]) <= 5 * sig + 1e-9, (k, cnt[j], n * p[k], sig)
     st = h.checks()["stat0"]
     assert st["ok"] and st["value"] > 5.7e-7  # the p-value of the counts (R, T, A) against the Born probabilities
-    assert f"R: {cnt[0]}" in st["note"] and f"T: {cnt[1]}" in st["note"] and f"A: {cnt[2]}" in st["note"]
+    note = render(st["note"])
+    assert f"R: {cnt[0]}" in note and f"T: {cnt[1]}" in note and f"A: {cnt[2]}" in note
     # the counters of the frame are the accumulation of the recorded clicks
     meta, _ = h.sim.frame()
     assert meta["counts"]["n"] == n and meta["counts"]["R"] == cnt[0]
@@ -319,7 +322,7 @@ def test_frame_shows_both_packets_until_a_detector_decides():
 def test_engine_modules_and_header():
     h = Harness(V)
     head = h.of("header")[0]
-    assert head["title"].startswith("Оптический стол") and head["modifications"] == []
+    assert head["title"]["$t"] == "Optical bench: {structure}" and head["modifications"] == []
     assert {a["name"] for a in head["actions"]} == {"emit_one", "clear"}
     assert h.sim.engine_modules() == ["core.optics.interfaces", "core.optics.thin_films", "core.constants",
                                       "theories.approx.ray_optics"]
@@ -415,16 +418,17 @@ def test_a_change_that_fails_inside_leaves_the_world_as_it_was(monkeypatch):
     new = [(m, b) for m, b in h.msgs[before["nmsg"]:] if m["type"] != "command"]  # the record's log of the command
     assert [m["type"] for m, _ in new] == ["error", "live"], [m["type"] for m, _ in new]
     assert [m["type"] for m, _ in h.msgs[before["nmsg"]:]][0] == "command"  # logged with its time (a resume replays it)
-    assert "Изменение не применено" in new[0][0]["text"] and "ZeroDivisionError" in new[0][0]["text"]
+    assert "ZeroDivisionError" in render(new[0][0]["text"])  # the framework's prefix: lfviz.errors.CONTEXTS["set"]
     assert new[1][0]["values"]["theta_deg"] == 60.0 and new[1][0]["values"]["rate"] == before["params"]["rate"]
     assert h.sim.params == before["params"] and h.sim.seg == before["seg"] and h.sim.tot == before["tot"]
     assert h.sim.segc == before["segc"] and len(h.sim.flight) == before["nflight"]
     assert h.sim.rng.bit_generator.state == before["rng"]
     h.cmd("new_world", preset="ftir")  # a world that fails while being built is refused, not a crash
-    assert "Новый мир не создан" in h.errors()[-1] and len(h.of("header")) == 1 and h.sim.params == before["params"]
+    assert len(h.errors()) == 2 and len(h.of("header")) == 1 and h.sim.params == before["params"]
     monkeypatch.undo()
     h.set(theta_deg=70.0)  # the same change now goes through
     assert len(h.errors()) == 2 and h.sim.seg == before["seg"] + 1 and h.sim.params["theta_deg"] == 70.0
+    assert "ZeroDivisionError" in render(h.errors()[-1])  # the world that failed to be built: why, in its text
 
 
 def test_photon_statistics_check_covers_all_three_outcomes():

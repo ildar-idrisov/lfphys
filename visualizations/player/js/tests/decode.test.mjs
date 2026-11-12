@@ -12,7 +12,7 @@ test("decode a message written by the Python codec", () => {
   const buf = b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
   const { meta, blobs } = decode(buf);
   assert.equal(meta.type, "probe");
-  assert.equal(meta.text, "кириллица ✓");
+  assert.equal(meta.text, "кириллица ✓");  // UTF-8 across the two codecs, i18n-ok
   assert.equal(meta.v, null);  // non-finite floats become null
   assert.deepEqual(Array.from(blobs.f8), [1.5, -2.25, 1e300]);
   assert.deepEqual(Array.from(blobs.u1), [1, 2, 3]);

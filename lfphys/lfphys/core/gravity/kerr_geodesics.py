@@ -33,19 +33,21 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "numerical solution",
-    "title": "Геодезические Керра и Керра–Ньюмена: метрика, интегралы движения, гамильтоново интегрирование",
-    "statement": "Метрика Керра–Ньюмена (спин a, заряд дыры q; q = 0 — Керр) в координатах Бойера–Линдквиста, E, "
-                 "L_z и постоянная Картера Q по состоянию (x, p), гамильтоновы уравнения движения во времени Мино "
-                 "для любых геодезических нейтральных тел и света (светоподобных и времениподобных), интегрирование "
-                 "DOP853 — независимый второй путь для замкнутых решений.",
-    "validity": "вакуумное решение ОТО, |a| < M (с зарядом q дыры — решение Керра–Ньюмена, a² + q² < M², "
-                "нейтральные пробные тела и фотоны), внешняя область r > r₊; ошибка — допуск интегратора DOP853 "
-                "(контролируется сохранением H и Q)",
+    "title": T("Kerr and Kerr–Newman geodesics: metric, constants of motion, Hamiltonian integration"),
+    "statement": T("The Kerr–Newman metric (spin a, hole charge q; q = 0 is Kerr) in Boyer–Lindquist coordinates, E, "
+                   "L_z and the Carter constant Q from the state (x, p), Hamilton's equations of motion in Mino time "
+                   "for any geodesics of neutral bodies and of light (null and timelike), DOP853 integration: an "
+                   "independent second route for the closed-form solutions."),
+    "validity": T("vacuum solution of GR, |a| < M (with a hole charge q, the Kerr–Newman solution, a² + q² < M², "
+                  "neutral test bodies and photons), exterior r > r₊; the error is the tolerance of the DOP853 "
+                  "integrator (controlled by the conservation of H and Q)"),
     "basis": ["Kerr, PRL 11, 237 (1963)", "Carter, Phys. Rev. 174, 1559 (1968)",
               "Hairer, Nørsett, Wanner, Solving ODE I (DOP853)",
-              "Adamo & Newman, Scholarpedia 9, 31791 (2014), arXiv:1410.6626 (метрика Керра–Ньюмена)"],
+              T("Adamo & Newman, Scholarpedia 9, 31791 (2014), arXiv:1410.6626 (the Kerr–Newman metric)")],
     "conflicts": [],
 }
 

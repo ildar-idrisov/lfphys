@@ -43,13 +43,16 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from lfphys.i18n import T, text_of
+
 ABOUT = {
     "layer": "core", "kind": "numerics",
-    "title": "Устройства и точность вычислений (CPU / GPU)",
-    "statement": "Тяжёлые ядра движка считаются на CPU или на GPU 0: по умолчанию там, где это быстрее (измерено), "
-                 "или по выбору; точность fp64, fp32 — только где проверено и только для рисования; ссылки и проверки "
-                 "всегда в fp64.",
-    "validity": "GPU — через CuPy (CUDA 12); без GPU всё считается на CPU (NumPy) теми же формулами",
+    "title": T("Devices and precision of computation (CPU / GPU)"),
+    "statement": T("The engine's heavy kernels run on the CPU or on GPU 0: by default where it is faster (measured), "
+                   "or as chosen; precision fp64, fp32 only where validated and only for what is drawn; references and "
+                   "checks always in fp64."),
+    "validity": T("the GPU through CuPy (CUDA 12); without a GPU everything runs on the CPU (NumPy) by the same "
+                  "formulas"),
     "basis": ["CuPy (MIT)", "NVIDIA CUDA runtime, cuFFT"],
     "conflicts": [],
 }
@@ -62,13 +65,13 @@ _DTYPES = {"fp64": (np.float64, np.complex128), "fp32": (np.float32, np.complex6
 @dataclass
 class KernelSpec:
     name: str
-    title: str  # Russian, for the settings page
-    what: str  # Russian: what it computes, where it is used
+    title: T  # for the settings page (a translatable text, lfphys.i18n)
+    what: T  # what it computes, where it is used (a translatable text)
     gpu: bool  # has a GPU implementation
-    cpu_reason: str = ""  # why it stays on the CPU (when gpu is False)
+    cpu_reason: T | str = ""  # why it stays on the CPU (when gpu is False; a translatable text)
     precisions: dict = field(default_factory=lambda: {"fp64": {"allowed": True}})
     crossover: int | None = None  # problem size (points) from which "auto" takes the GPU; None: never
-    crossover_note: str = ""
+    crossover_note: T | str = ""  # how the crossover was measured (a translatable text)
     bench: object = None  # callable(size, xp, complex_dtype) -> None, runs the kernel once at that size
     bench_sizes: tuple = ()
 
@@ -86,15 +89,15 @@ _CP = None
 
 # kernels that stay on the CPU, listed so that the settings page can say why
 _CPU_ONLY = [
-    KernelSpec("certified.arb", "Строгие оценки (Arb)", "шаровая арифметика для эталонов и тестов", False,
-               "Arb (python-flint) существует только для CPU; это эталоны, а не массовый счёт"),
-    KernelSpec("gravity.geodesics", "Геодезические и орбиты", "интегрирование уравнений движения (v01, v04)", False,
-               "последовательное интегрирование одного ОДУ: на GPU нечему распараллеливаться"),
-    KernelSpec("quantum.transfer", "Матрицы переноса", "стационарное прохождение барьеров (v03, v05)", False,
-               "цикл по слоям из малых матриц 2×2: накладные расходы GPU больше выигрыша"),
-    KernelSpec("quantum.schrodinger1d", "Уравнение Шрёдингера в 1-D", "волновой пакет (v03)", False,
-               "сетка ≤ 32768 точек и учёт поглощения на каждом шаге: на GPU медленнее (2-D и 3-D — ядро "
-               "quantum.split_operator, с GPU)"),
+    KernelSpec("certified.arb", T("Rigorous bounds (Arb)"), T("ball arithmetic for references and tests"), False,
+               T("Arb (python-flint) exists only for the CPU; these are references, not bulk computation")),
+    KernelSpec("gravity.geodesics", T("Geodesics and orbits"), T("integration of the equations of motion (v01, v04)"),
+               False, T("sequential integration of one ODE: nothing to parallelise on a GPU")),
+    KernelSpec("quantum.transfer", T("Transfer matrices"), T("stationary transmission through barriers (v03, v05)"),
+               False, T("a loop over layers of small 2×2 matrices: the GPU overhead exceeds the gain")),
+    KernelSpec("quantum.schrodinger1d", T("Schrödinger equation in 1-D"), T("a wave packet (v03)"), False,
+               T("a grid of ≤ 32768 points and absorption applied at every step: slower on a GPU (2-D and 3-D: the "
+                 "quantum.split_operator kernel, with a GPU)")),
 ]
 
 
@@ -147,19 +150,19 @@ def _cupy():
     if "CUDA_VISIBLE_DEVICES" not in os.environ:
         os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # GPU 0 only (GPU 1 of this host is faulty)
     if os.environ.get("LFPHYS_NO_GPU"):
-        _GPU = {"available": False, "reason": "отключено переменной LFPHYS_NO_GPU"}
+        _GPU = {"available": False, "reason": T("disabled by the variable LFPHYS_NO_GPU")}
         return None, _GPU
     try:
         import cupy as cp
         n = cp.cuda.runtime.getDeviceCount()
         if n < 1:
-            raise RuntimeError("CUDA не видит ни одного устройства")
+            raise RuntimeError("CUDA sees no device")
         with cp.cuda.Device(0):
             props = cp.cuda.runtime.getDeviceProperties(0)
             pci = cp.cuda.Device(0).pci_bus_id
             want = os.environ.get("LFPHYS_GPU_PCI", "").strip()
             if want and pci_key(want) != pci_key(pci):
-                raise RuntimeError(f"устройство 0 на шине {pci}, а разрешено только {want} (LFPHYS_GPU_PCI)")
+                raise RuntimeError(f"device 0 is on bus {pci}, but only {want} is allowed (LFPHYS_GPU_PCI)")
             free, total = cp.cuda.runtime.memGetInfo()
             # a trivial kernel and an FFT: the runtime, NVRTC and cuFFT really work with this driver
             x = cp.arange(8, dtype=cp.complex128)
@@ -197,39 +200,44 @@ def configure(settings: dict | None) -> list[str]:
     clean = {"kernels": {}, "crossover": {}}
     settings = settings or {}
     if not isinstance(settings, dict):
-        raise ValueError("настройки: объект JSON")
+        raise ValueError(T("settings: a JSON object"))
     for key in ("kernels", "crossover"):
         if settings.get(key) is not None and not isinstance(settings[key], dict):
-            raise ValueError(f"настройки: {key!r} — объект JSON (ядро → значение)")
+            raise ValueError(T("settings: {key} must be a JSON object (kernel → value)", key=repr(key)))
     for name, s in (settings.get("kernels") or {}).items():
         if name not in ks:
-            notes.append(f"неизвестное ядро {name!r}: пропущено")
+            notes.append(T("unknown kernel {name}: skipped", name=repr(name)))
             continue
         if not isinstance(s, dict) or not all(isinstance(s.get(f, ""), str) for f in ("device", "precision")):
-            raise ValueError(f"настройки ядра {name!r}: объект {{\"device\": строка, \"precision\": строка}}")
+            raise ValueError(T('settings of kernel {name}: an object {"device": string, "precision": string}',
+                               name=repr(name)))
         spec = ks[name]
         dev = s.get("device", "auto")
         prec = s.get("precision", "fp64")
         if dev not in DEVICES:
-            notes.append(f"{name}: устройство {dev!r} неизвестно → auto")
+            notes.append(T("{name}: unknown device {dev} → auto", name=name, dev=repr(dev)))
             dev = "auto"
         if dev == "gpu" and not spec.gpu:
-            notes.append(f"{name}: у ядра нет GPU-реализации ({spec.cpu_reason}) → CPU")
+            notes.append(T("{name}: the kernel has no GPU implementation ({why}) → CPU", name=name,
+                           why=spec.cpu_reason))
             dev = "cpu"
         if prec not in PRECISIONS or not spec.precisions.get(prec, {}).get("allowed"):
             if prec != "fp64":
-                notes.append(f"{name}: точность {prec} для этого ядра не проверена → fp64")
+                notes.append(T("{name}: precision {prec} is not validated for this kernel → fp64", name=name,
+                               prec=str(prec)))
             prec = "fp64"
         if dev == "gpu":
             _, gpu = _cupy()
             if not gpu["available"]:
-                notes.append(f"{name}: GPU выбран, но недоступен ({gpu.get('reason', '')}) → считается на CPU")
+                notes.append(T("{name}: the GPU is chosen but not available ({why}) → runs on the CPU", name=name,
+                               why=gpu.get("reason", "")))
         clean["kernels"][name] = {"device": dev, "precision": prec}
     for name, size in (settings.get("crossover") or {}).items():
         if name in ks and (size is None or (isinstance(size, int) and not isinstance(size, bool) and size > 0)):
             clean["crossover"][name] = size
         else:
-            notes.append(f"порог {name!r} = {size!r} не принят (нужно целое > 0 или null)")
+            notes.append(T("threshold {name} = {size} not accepted (an integer > 0 or null is needed)",
+                           name=repr(name), size=repr(size)))
     _SETTINGS = clean
     return notes
 
@@ -333,7 +341,7 @@ def _gpu_hot() -> bool:
 
 
 def choose(name: str, size: int, check: bool = False, footprint: int | None = None, force: str | None = None,
-           why: str = "", aux: bool = False) -> Choice:
+           why: T | str = "", aux: bool = False) -> Choice:
     """The array module, device and dtypes for kernel ``name`` on a problem of ``size`` points. ``check=True``
     (references and checks) forces fp64. ``footprint``: the bytes the call needs on the device (compared with the free
     GPU memory before the GPU is taken). ``force="cpu"`` with ``why``: a fallback decided by the kernel. ``aux``: a small
@@ -350,29 +358,33 @@ def choose(name: str, size: int, check: bool = False, footprint: int | None = No
     elif spec.gpu and want in ("auto", "gpu"):
         cp, gpu = _cupy()
         if not gpu["available"]:
-            reason = "GPU недоступен: " + gpu.get("reason", "")
+            reason = T("GPU not available: {why}", why=gpu.get("reason", ""))
         elif want == "gpu" or (cross is not None and size >= cross):
             device = "gpu"
-            reason = "выбрано в настройках" if want == "gpu" else f"авто: задача {size} ≥ порога {cross}"
+            reason = (T("chosen in the settings") if want == "gpu"
+                      else T("auto: problem size {size:d} ≥ threshold {cross:d}", size=int(size), cross=int(cross)))
             if footprint:
                 free = int(cp.cuda.runtime.memGetInfo()[0]) + int(cp.get_default_memory_pool().free_bytes())
                 if footprint > 0.8 * free:
                     device = "cpu"
-                    reason = (f"GPU: нужно ~{footprint / 2**30:.2g} ГБ, свободно {free / 2**30:.2g} ГБ → CPU")
+                    reason = T("GPU: needs ~{need:.2g} GB, {free:.2g} GB free → CPU", need=footprint / 2**30,
+                               free=free / 2**30)
             if device == "gpu" and _gpu_hot():
                 device = "cpu"
                 t = _THERMAL["temp"]
-                seen = (f"{t:.0f} °C" if t is not None else
-                        f"температура не читается, последняя {_THERMAL['last_temp']:.0f} °C"
-                        if _THERMAL["last_temp"] is not None else "температура не читается")
-                reason = (f"GPU остывает: {seen} (порог {THERMAL['pause_c']:.0f} °C) — считается на CPU, пока не "
-                          f"остынет до {THERMAL['resume_c']:.0f} °C")
+                seen = (T("{t:.0f} °C", t=float(t)) if t is not None else
+                        T("the temperature cannot be read, last {t:.0f} °C", t=float(_THERMAL["last_temp"]))
+                        if _THERMAL["last_temp"] is not None else T("the temperature cannot be read"))
+                reason = T("GPU cooling down: {seen} (threshold {pause:.0f} °C): runs on the CPU until it has "
+                           "cooled to {resume:.0f} °C", seen=seen, pause=float(THERMAL["pause_c"]),
+                           resume=float(THERMAL["resume_c"]))
         else:
-            reason = f"авто: задача {size} меньше порога {cross}" if cross else "авто: GPU здесь не выигрывает"
+            reason = (T("auto: problem size {size:d} below threshold {cross:d}", size=int(size), cross=int(cross))
+                      if cross else T("auto: the GPU does not pay here"))
     elif not spec.gpu:
-        reason = spec.cpu_reason or "только CPU"
+        reason = spec.cpu_reason or T("CPU only")
     else:
-        reason = "выбрано в настройках"
+        reason = T("chosen in the settings")
     xp = _CP if device == "gpu" else np
     real, cplx = _DTYPES[prec]
     if device == "gpu":
@@ -476,7 +488,7 @@ def _main(argv=None):
         try:
             out["notes"] = configure(json.loads(sys.stdin.read() if a.configure == "-" else a.configure))
         except ValueError as e:  # malformed JSON or shape: a message, not a traceback (review B1-10)
-            print(json.dumps({"error": str(e)}, ensure_ascii=False))
+            print(json.dumps({"error": text_of(e)}, ensure_ascii=False))
             raise SystemExit(2)
         out["settings"] = settings()
     if a.devices:

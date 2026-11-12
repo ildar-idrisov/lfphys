@@ -31,18 +31,21 @@ import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.linalg import expm
 
+from lfphys.i18n import T
+
 from . import lorentz as LZ
 
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Перенос гироскопа и спина в СТО: прецессия Томаса, голономия, BMT",
-    "statement": "Перенос Ферми–Уокера системы гироскопов вдоль программы ускорения (точно, экспонентами генераторов "
-                 "группы Лоренца и, независимо, SL(2, C)); поворот гироскопов после замкнутого манёвра (голономия) в "
-                 "SO(3) и SU(2); геометрия пространства скоростей (гиперболического): расстояния, углы, площадь "
-                 "многоугольника по Гауссу–Бонне, изопериметрическое неравенство плоскости L² ≥ 4πA + A²; движение "
-                 "заряда в однородных полях и прецессия его спина (уравнение Баргмана–Мишеля–Телегди).",
-    "validity": "плоское пространство-время; программа ускорения задана в сопутствующей системе; поля однородны и "
-                "постоянны; спин — классический вектор (BMT: g постоянно, градиенты полей не учтены)",
+    "title": T("Transport of a gyroscope and a spin in SR: Thomas precession, holonomy, BMT"),
+    "statement": T("Fermi–Walker transport of a set of gyroscopes along an acceleration programme (exact, by "
+                   "exponentials of the generators of the Lorentz group and, independently, of SL(2, C)); the "
+                   "rotation of the gyroscopes after a closed manoeuvre (holonomy) in SO(3) and SU(2); the geometry "
+                   "of velocity space (hyperbolic): distances, angles, the area of a polygon by Gauss–Bonnet, the "
+                   "isoperimetric inequality of the plane L² ≥ 4πA + A²; the motion of a charge in uniform fields "
+                   "and the precession of its spin (the Bargmann–Michel–Telegdi equation)."),
+    "validity": T("flat spacetime; the acceleration programme is given in the comoving frame; the fields are "
+                  "uniform and constant; the spin is a classical vector (BMT: g constant, field gradients neglected)"),
     "basis": ["Thomas, Nature 117, 514 (1926); Phil. Mag. 3, 1 (1927)",
               "Fermi–Walker transport: Misner, Thorne, Wheeler, Gravitation (1973), § 6.5",
               "Bargmann, Michel, Telegdi, Phys. Rev. Lett. 2, 435 (1959)",
@@ -150,7 +153,7 @@ def _unit(v):
     v = np.asarray(v, dtype=float)
     n = float(np.linalg.norm(v))
     if n == 0.0 or not math.isfinite(n):
-        raise ValueError("направление не задано")
+        raise ValueError(T("no direction given"))
     return v / n
 
 
@@ -189,11 +192,11 @@ class Manoeuvre:
 
     def __init__(self, pieces, c: float = 1.0, accel: float = 1.0):
         if accel <= 0 or c <= 0:
-            raise ValueError("ускорение и c должны быть положительны")
+            raise ValueError(T("the acceleration and c must be positive"))
         self.pieces = list(pieces)
         for p in self.pieces:
             if not (p.rapidity >= 0 and math.isfinite(p.rapidity)):
-                raise ValueError("быстрота участка должна быть неотрицательной")
+                raise ValueError(T("the rapidity of a segment must be non-negative"))
         self.c, self.accel = float(c), float(accel)
 
     def start(self) -> State:

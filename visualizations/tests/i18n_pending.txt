@@ -1,0 +1,11 @@
+# Files whose code lines still hold Cyrillic outside comments and docstrings (RULES.md «Languages and i18n»; checked
+# by tests/test_i18n.py, listed by `python tests/i18n_tools.py --pending`). Each agent removes its files when they are
+# converted; the list must be empty at the end. Paths are relative to the repository.
+
+# the engine (lf-i18e-)
+
+
+
+# worlds v13–v17 and server/lfviz/orbitals3d.py (lf-i18d-)
+
+# playgrounds p01–p04 (lf-i18p-)

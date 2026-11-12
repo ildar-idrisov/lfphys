@@ -18,16 +18,18 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "theories", "kind": "alternative",
-    "title": "Эфир и баллистическая (ритцевская) кинематика света",
-    "statement": "Преобразования Галилея и абсолютное время; свет со скоростью c относительно эфира (эфир) или "
-                 "относительно источника (баллистика).",
-    "validity": "опровергнуты; только для исследования «что если»",
+    "title": T("The ether and the ballistic (Ritz) kinematics of light"),
+    "statement": T("Galilean transformations and absolute time; light with the speed c relative to the ether (ether) "
+                   "or relative to the source (ballistic)."),
+    "validity": T("refuted; only for “what if” studies"),
     "basis": ["Michelson & Morley, Am. J. Sci. 34, 333 (1887)", "Alväger et al., Phys. Lett. 12, 260 (1964)",
               "Brecher, Phys. Rev. Lett. 39, 1051 (1977)"],
-    "conflicts": ["lfphys.core.relativity: другая кинематика (нет замедления времени, скорость света зависит "
-                  "от системы отсчёта или источника)"],
+    "conflicts": [T("lfphys.core.relativity: a different kinematics (no time dilation; the speed of light depends on "
+                    "the frame of reference or on the source)")],
 }
 
 

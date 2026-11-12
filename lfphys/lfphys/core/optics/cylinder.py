@@ -30,16 +30,20 @@ import math
 import numpy as np
 from scipy import special as sp
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Рассеяние плоской волны на бесконечном круговом цилиндре (точный ряд)",
-    "statement": "Точное решение уравнений Максвелла для бесконечного кругового цилиндра (диэлектрик, поглощающий "
-                 "или идеальный проводник) при падении перпендикулярно оси: коэффициенты ряда, сечения рассеяния, "
-                 "экстинкции и поглощения на единицу длины, угловое распределение, поле вблизи цилиндра.",
-    "validity": "плоская волна перпендикулярно оси; однородный изотропный немагнитный цилиндр в однородной среде без "
-                "потерь; ряд обрезан при n > x + 4.05·x^(1/3) + 8",
-    "basis": ["выведено из граничных условий (непрерывность E_z и H_φ, H_z и E_φ; проверено в тестах); тот же "
-              "ряд — Bohren & Huffman (1983), гл. 8 (книга не получена)", "асимптотика H_n: DLMF 10.17.5"],
+    "title": T("Scattering of a plane wave by an infinite circular cylinder (exact series)"),
+    "statement": T("The exact solution of Maxwell's equations for an infinite circular cylinder (dielectric, "
+                   "absorbing or a perfect conductor) at incidence perpendicular to the axis: the series coefficients, "
+                   "the scattering, extinction and absorption cross-sections per unit length, the angular "
+                   "distribution, the field near the cylinder."),
+    "validity": T("a plane wave perpendicular to the axis; a homogeneous isotropic non-magnetic cylinder in a "
+                  "homogeneous lossless medium; the series is truncated at n > x + 4.05·x^(1/3) + 8"),
+    "basis": [T("derived from the boundary conditions (continuity of E_z and H_φ, H_z and E_φ; checked in the tests); "
+                "the same series: Bohren & Huffman (1983), ch. 8 (book not obtained)"),
+              T("asymptotics of H_n: DLMF 10.17.5")],
     "conflicts": [],
 }
 
@@ -51,14 +55,14 @@ def n_max(x: float) -> int:
 def coefficients(m, x: float, pol: str, nmax: int | None = None) -> np.ndarray:
     """c_n for n = 0..nmax (the scattered field's coefficients, c_{-n} = c_n)."""
     if pol not in ("tm", "te"):
-        raise ValueError("pol: tm (E вдоль оси) или te (H вдоль оси)")
+        raise ValueError(T("pol: tm (E along the axis) or te (H along the axis)"))
     N = n_max(x) if nmax is None else int(nmax)
     n = np.arange(N + 1)
     Jx, dJx = sp.jv(n, x), sp.jvp(n, x)
     Hx, dHx = sp.hankel1(n, x), sp.h1vp(n, x)
     if isinstance(m, str):
         if m != "pec":
-            raise ValueError("m: комплексный показатель или 'pec'")
+            raise ValueError(T("m: a complex refractive index or 'pec'"))
         return -Jx / Hx if pol == "tm" else -dJx / dHx
     m = complex(m)
     mx = m * x

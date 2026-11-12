@@ -23,6 +23,7 @@ from harness import Harness  # noqa: E402
 
 from lfphys.core import constants as K  # noqa: E402
 from lfphys.core.gravity import kerr_newman as KN, pn_binary as PN  # noqa: E402
+from lfphys.i18n import render as en  # noqa: E402
 from p01_gravity import viz as P01  # noqa: E402
 from p01_gravity.viz import G_AU, KMS, RS_AU, SCHEMA, YR  # noqa: E402
 
@@ -111,7 +112,7 @@ def test_a_body_on_a_circular_orbit_is_on_the_two_body_circle_for_any_mass():
     h.cmd("scene", op="add", type="planet", values={"x": 0.0, "y": 0.0, "z": 2.0})
     assert len(h.sim.objects) == 2 and not h.errors(), h.errors()
     b = h.sim.mode.nb.body("o2")
-    assert b["x"][0] > 0 and b["x"][2] == 2.0 and any("плоскость" in e["text"] for e in h.of("event")), h.of("event")
+    assert b["x"][0] > 0 and b["x"][2] == 2.0 and any("plane" in en(e["text"]) for e in h.of("event")), h.of("event")
 
 
 def test_a_change_applies_at_the_current_moment_and_a_collision_merges():
@@ -173,12 +174,12 @@ def test_clocks_near_the_hole_against_their_closed_forms():
     a = 0.9
     pr = h.of("frame")[-1]["probes"]
     # a static observer at r = 4 in the equator: dtau/dt = sqrt(1 - 2 r / Sigma), Sigma = r^2 (Q = 0)
-    assert pr["o6"]["ход dτ/dt"] == pytest.approx(math.sqrt(1 - 8 / 16), rel=1e-14)
+    assert pr["o6"]["clock rate dτ/dt"] == pytest.approx(math.sqrt(1 - 8 / 16), rel=1e-14)
     # a circular prograde orbit at r = 6: dtau/dt = sqrt(1 - 3/r + 2 a r^(-3/2)) / (1 + a r^(-3/2)) (Bardeen, Press &
     # Teukolsky 1972 Eq. 2.13: u^t = (r^(3/2) + a) / (r^(3/4) sqrt(r^(3/2) - 3 r^(1/2) + 2 a)))
     r = 6.0
     ut = (r ** 1.5 + a) / (r ** 0.75 * math.sqrt(r ** 1.5 - 3 * r ** 0.5 + 2 * a))
-    assert pr["o7"]["ход dτ/dt"] == pytest.approx(1 / ut, rel=1e-12)
+    assert pr["o7"]["clock rate dτ/dt"] == pytest.approx(1 / ut, rel=1e-12)
     # the falling body is captured; the circular one keeps its radius; Carter's constant and the shell hold
     assert any(e.get("kind") == "captured" for e in h.of("event"))
     i = h.sim.mode.geo.keys.index("o1")
@@ -209,7 +210,7 @@ def test_the_binary_runs_to_where_its_reaction_series_ends_and_stops_there(monke
     b = h.sim.mode.bin
     assert b["status"] == "stopped" and abs(np.linalg.norm(b["st"]["x"]) - r_rr) <= 1e-9 * r_rr
     ev = [e for e in h.of("event") if e.get("kind") == "merger"]
-    assert len(ev) == 1 and "упорядоченным рядом" in ev[0]["text"]
+    assert len(ev) == 1 and "ordered series" in en(ev[0]["text"])
     assert len([c for c in h.of("check") if c["id"] == "balance"]) > 10 and not failed(h), failed(h)
     # the criterion: at r_rr the remainder equals the 1PN correction (Brent to 1e-9 in r); the reaction still
     # dissipates there and has changed sign at r = 9
@@ -266,13 +267,13 @@ def test_a_copy_or_a_body_put_on_another_lands_next_to_it_and_says_so():
     assert not h.errors(), h.errors()
     c = nb.body("o4")
     assert c["v"] == e0["v"] and c["x"][1:] == e0["x"][1:] and c["x"][0] > e0["x"][0]
-    assert any(e.get("notify") and "копия" in e["text"] for e in h.of("event"))
+    assert any(e.get("notify") and "copy" in en(e["text"]) for e in h.of("event"))
     xs = nb.body("o1")["x"]
     h.cmd("scene", op="add", type="star", values={"mass": 1.0, "x": xs[0], "y": xs[1], "z": xs[2]})
     assert not h.errors() and len(nb.keys) == 4
     s5 = nb.body("o5")["x"]
     assert np.linalg.norm(np.subtract(s5, xs)) > P01.CLEAR * 2 * K.R_SUN / K.AU
-    assert any(e.get("notify") and "свободное место" in e["text"] for e in h.of("event"))
+    assert any(e.get("notify") and "free place" in en(e["text"]) for e in h.of("event"))
     before = json.dumps(nb.state_dict())
     with pytest.raises(ValueError, match="same point"):  # the guard behind it: refused, nothing changed
         nb.add(nb.body("o1")["x"], (0, 0, 0), 1.0, 0.0, key="extra")
@@ -283,8 +284,8 @@ def test_a_copy_or_a_body_put_on_another_lands_next_to_it_and_says_so():
 
 
 def test_palette_places_at_a_free_spot_and_merges_are_toasted():
-    """Review UX-ui U4: in the inner Solar System «＋ Звезда» and «＋ Чёрная дыра» at the default (0, 0, 0) landed in the
-    Sun (the star merged within a frame, the hole swallowed the Sun) with a line in «События» only. Through ``place``
+    """Review UX-ui U4: in the inner Solar System "＋ Star" and "＋ Black hole" at the default (0, 0, 0) landed in the
+    Sun (the star merged within a frame, the hole swallowed the Sun) with a line in "Events" only. Through ``place``
     (the framework calls it for every palette add) they go to free points and the Sun stays; a body pushed into the Sun
     by hand merges with a toast that names the time since it was added."""
     h = Harness(V, "inner")
@@ -308,7 +309,7 @@ def test_palette_places_at_a_free_spot_and_merges_are_toasted():
     h2.cmd("scene", op="add", type="star", values={})
     run(h2, h2.sim.t + 0.01 * YR, 4)
     merges = [e for e in h2.of("event") if e.get("kind") == "merge"]
-    assert merges and merges[0].get("notify") and "после добавления" in merges[0]["text"]
+    assert merges and merges[0].get("notify") and "was added" in en(merges[0]["text"])
 
 
 def test_the_energy_check_of_a_world_whose_energy_is_zero():
@@ -358,7 +359,7 @@ def test_a_newtonian_hole_keeps_its_schwarzschild_radius_after_swallowing_a_star
 
 
 def test_scene_files_after_a_capture_and_a_stop_and_the_observers_clocks():
-    """Review B6-G11, G7 (the preset kerr_orbits through the capture of "Падает"): every check message passes (each
+    """Review B6-G11, G7 (the preset kerr_orbits through the capture of "Falling in"): every check message passes (each
     body's drift budget grows as 1/Delta with the shell's terms near the horizon; the former tolerance failed there);
     its file loads - the captured body stays captured at its place with its proper time and drift accounting - and the
     observers' clocks read the same after the file as before; a binary stopped at its end loads stopped."""
@@ -379,7 +380,7 @@ def test_scene_files_after_a_capture_and_a_stop_and_the_observers_clocks():
     h2.runner._frame(0.0)
     pr2 = h2.of("frame")[-1]["probes"]
     for oid in ("o6", "o7"):
-        assert pr2[oid]["часы наблюдателя τ, с"] == pr[oid]["часы наблюдателя τ, с"]
+        assert pr2[oid]["observer's clock τ, s"] == pr[oid]["observer's clock τ, s"]
     hb = Harness(V, "pn_inspiral")
     hb.cmd("scene", op="set", id="o1", values={"r_stop": 19.5})
     run(hb, hb.sim.t + 3000 * hb.sim.mode.T, 60)
@@ -401,7 +402,7 @@ def test_kerr_observers_and_bodies_change_only_what_was_changed():
     m, b = [(m, b) for m, b in h.msgs if m.get("type") == "frame"][-1]
     oid = [o["id"] for o in h.sim.objects.values() if o["type"] == "observer"][0]  # the hole is an object too (LB1)
     pos = np.asarray(b["pos"]).reshape(-1, 3)[m["ids"].index(oid)]
-    assert abs(math.atan2(pos[1], pos[0])) <= 1e-6 and m["probes"][oid]["часы наблюдателя τ, с"] == 0.0
+    assert abs(math.atan2(pos[1], pos[0])) <= 1e-6 and m["probes"][oid]["observer's clock τ, s"] == 0.0
     h = Harness(V, "kerr_orbits")
     run(h, 50 * h.sim.mode.T, 20)
     before = json.dumps(h.sim.mode.geo.state_dict())
@@ -410,11 +411,11 @@ def test_kerr_observers_and_bodies_change_only_what_was_changed():
     # found while processing the review: a refused restart (here a start under the horizon) had already removed the
     # body from the engine, so it vanished while the scene kept it; now every body goes on exactly as it was
     h.cmd("scene", op="set", id="o2", values={"r": 1.0})
-    assert "горизонт" in h.errors()[-1] and json.dumps(h.sim.mode.geo.state_dict()) == before
+    assert "horizon" in en(h.errors()[-1]) and json.dumps(h.sim.mode.geo.state_dict()) == before
     r_isco = KN.isco(0.9, 0.0, True)
     n = len(h.sim.objects)
     h.cmd("scene", op="add", type="observer", values={"kind": "circular", "r": 0.98 * r_isco})
-    assert "ISCO" in h.errors()[-1] and len(h.sim.objects) == n
+    assert "ISCO" in en(h.errors()[-1]) and len(h.sim.objects) == n
     h.cmd("scene", op="add", type="observer", values={"kind": "circular", "r": 1.02 * r_isco})
     assert len(h.sim.objects) == n + 1
 
@@ -572,8 +573,8 @@ def test_trail_points_of_every_mode_are_within_the_turn_limit(preset):
 
 def test_collisions_change_at_the_current_moment_with_the_world_kept():
     """Review UX-ui U12: the collision law is live. Two stars of 20 R☉ on a circle 0.1 au apart overlap for ever with
-    «проходят»; switched to «сливаются», they merge at that moment (mass and momentum kept) and the scene file takes the
-    law in force. Negative control: a world kept on «проходят» keeps both."""
+    "pass through"; switched to "merge", they merge at that moment (mass and momentum kept) and the scene file takes the
+    law in force. Negative control: a world kept on "pass through" keeps both."""
     objs = ({"type": "star", "values": {"mass": 1.0, "radius": 20.0, "x": -0.05}},
             {"type": "star", "values": {"mass": 1.0, "radius": 20.0, "x": 0.05, "vmode": "circular"}})
     h = Harness(V, None, scene("newton", *objs, collisions="pass"))

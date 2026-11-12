@@ -652,7 +652,7 @@ def test_a_compact_body_keeps_its_radius_rule_and_absorbs_what_it_meets():
 def test_the_passport_names_the_fuller_forms():
     """Review B6-G14: the module is in the core as the most complete form of N-body gravity the engine has
     (LAYERS.md §1); its two-body and test-body cases name the engine's fuller forms."""
-    c = " ".join(NB.ABOUT["conflicts"])
+    c = " ".join(map(str, NB.ABOUT["conflicts"]))
     assert NB.ABOUT["layer"] == "core" and "pn_binary" in c and "kerr_newman" in c
 
 

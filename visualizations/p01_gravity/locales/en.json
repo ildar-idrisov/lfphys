@@ -1,0 +1,6 @@
+{
+ "{n:.3g} years": {
+  "one": "{n:.3g} year",
+  "other": "{n:.3g} years"
+ }
+}

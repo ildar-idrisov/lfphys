@@ -32,26 +32,29 @@ import numpy as np
 from scipy.integrate import cumulative_trapezoid
 
 from ..interpretations.arrival_times import _chunks
+from lfphys.i18n import T
 
 ABOUT = {
     "layer": "theories", "kind": "model",
-    "title": "Модели детектора времени прихода",
-    "statement": "Поглощающее граничное условие ∂ₙψ = iκψ с плотностью щелчков (ħκ/m)|ψ|² и отражением "
-                 "R = (k−κ)²/(k+κ)²; экспоненциальные правила Π = λ exp(−∫λ) с λ = λ₀|ψ(L,t)|² (Влодаж) или "
-                 "(λ₀′ħ/πm)|∂ψ̄(L,t)|² = (4λ₀′ħ/πm)|∂ψ(L,t)|² (Маркевка–Шусс; ψ̄ — решение со стенкой Дирихле в L); "
-                 "поглощающий потенциал −iW₀ за поверхностью с отражением "
-                 "|(k−q)/(k+q)|², q = √(k² + 2imW₀/ħ²).",
-    "validity": "нерелятивистская частица; параметр детектора (κ, λ₀, W₀) задаётся, а не выводится; формула "
-                "образа для поглощающей границы — свободное движение и пакет без составляющих с k ≤ 0",
-    "basis": ["Werner, Ann. Inst. H. Poincaré A 47, 429 (1987) (по ссылке Das & Struyve 2021)",
-              "Tumulka, Ann. Phys. 442, 168910 (2022), arXiv:1601.03715 — уравнения 3, 7, 12",
-              "Das & Struyve, Phys. Rev. A 104, 042214 (2021), arXiv:2105.14744 — уравнение 5, таблица I",
+    "title": T("Models of an arrival-time detector"),
+    "statement": T("The absorbing boundary condition ∂ₙψ = iκψ with the click density (ħκ/m)|ψ|² and the reflection "
+                   "R = (k−κ)²/(k+κ)²; exponential rules Π = λ exp(−∫λ) with λ = λ₀|ψ(L,t)|² (Włodarz) or "
+                   "(λ₀′ħ/πm)|∂ψ̄(L,t)|² = (4λ₀′ħ/πm)|∂ψ(L,t)|² (Marchewka–Schuss; ψ̄ is the solution with a "
+                   "Dirichlet wall at L); an absorbing potential −iW₀ behind the surface with the reflection "
+                   "|(k−q)/(k+q)|², q = √(k² + 2imW₀/ħ²)."),
+    "validity": T("a non-relativistic particle; the detector's parameter (κ, λ₀, W₀) is given, not derived; the "
+                  "image formula for the absorbing boundary holds for free motion and a packet without components "
+                  "with k ≤ 0"),
+    "basis": [T("Werner, Ann. Inst. H. Poincaré A 47, 429 (1987) (as cited by Das & Struyve 2021)"),
+              T("Tumulka, Ann. Phys. 442, 168910 (2022), arXiv:1601.03715 — equations 3, 7, 12"),
+              T("Das & Struyve, Phys. Rev. A 104, 042214 (2021), arXiv:2105.14744 — equation 5, table I"),
               "Włodarz, Phys. Rev. A 65, 044103 (2002)",
-              "Marchewka & Schuss, Phys. Lett. A 240, 177 (1998) (по ссылке Das & Struyve 2021)",
-              "Allcock, Ann. Phys. 53, 253 и 286 (1969)", "Muga, Palao & Leavens, Phys. Lett. A 253, 21 (1999)"],
-    "conflicts": ["собственные правила времени прихода (lfphys.theories.interpretations.arrival_times): модель "
-                  "даёт другое распределение, часть частиц отражается или не обнаруживается, и ответ зависит от "
-                  "параметра детектора; экспоненциальные правила гасят пики цепочки пакетов (Das & Struyve 2021)"],
+              T("Marchewka & Schuss, Phys. Lett. A 240, 177 (1998) (as cited by Das & Struyve 2021)"),
+              T("Allcock, Ann. Phys. 53, 253 and 286 (1969)"), "Muga, Palao & Leavens, Phys. Lett. A 253, 21 (1999)"],
+    "conflicts": [T("intrinsic arrival-time rules (lfphys.theories.interpretations.arrival_times): the model gives "
+                    "another distribution, some particles are reflected or not detected, and the answer depends on "
+                    "the detector's parameter; the exponential rules damp the peaks of a train of packets (Das & "
+                    "Struyve 2021)")],
 }
 
 

@@ -11,6 +11,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
+from lfphys.i18n import render  # noqa: E402
+from lfviz.errors import Refusal  # noqa: E402
 from v03_quantum_1d.viz import FS, SCHEMA  # noqa: E402
 
 V = "v03_quantum_1d"
@@ -58,7 +60,7 @@ def test_live_change_rebuilds_and_reading_change_does_not():
     assert not h.errors() and h.sim.n_grid == n_grid and h.of("segment")[-1]["interp"] == "everett"
     h.set(width=1.2)
     seg = h.of("segment")[-1]
-    assert "изменена установка" in seg["reason"] and h.checks()[f"T{seg['seg']}"]["ok"]
+    assert seg["reason"]["$t"] == "the set-up changed: {what}" and h.checks()[f"T{seg['seg']}"]["ok"]
 
 
 def test_oscillator_levels_and_period():
@@ -102,9 +104,9 @@ def test_unreachable_set_ups_are_refused_with_the_reason():
     h = Harness(V, "tunnel")
     n_seg = h.sim.seg
     h.set(energy=0.05, sigma=1.0)
-    assert "слишком широк по импульсу" in h.errors()[-1] and h.sim.seg == n_seg
+    assert "too wide in momentum" in render(h.errors()[-1]) and h.sim.seg == n_seg
     h.set(scenario="oscillator", hw=1.0, x0=60.0)
-    assert "сетка" in h.errors()[-1] and h.sim.params["scenario"] == "barrier"
+    assert "grid" in render(h.errors()[-1]) and h.sim.params["scenario"] == "barrier"
 
 
 def test_heavy_trap_is_refused_and_levels_come_from_a_window():
@@ -113,13 +115,13 @@ def test_heavy_trap_is_refused_and_levels_come_from_a_window():
     any trap come from a 256-point window around it."""
     h = Harness(V, "oscillator")
     h.set(x0=60.0)
-    assert "слишком дорог" in h.errors()[-1] and h.sim.params["x0"] == 15.0
+    assert "too costly" in render(h.errors()[-1]) and h.sim.params["x0"] == 15.0
     assert abs(h.checks()[f"lev{h.sim.seg}"]["rel"]) < 1e-9 and abs(h.checks()[f"lev3{h.sim.seg}"]["rel"]) < 1e-9
 
 
 # --- review UX-params P13, P19 ---------------------------------------------------------------------------------------
 def test_a_step_above_the_energy_runs_to_its_transmission():
-    """P13: «Ступенька» from the defaults (E = 0.8 eV below the step V0 = 1 eV): only the fast tail of the packet passes,
+    """P13: the step scenario from the defaults (E = 0.8 eV below the step V0 = 1 eV): only the fast tail of the packet passes,
     near the threshold and slowly. Before, the run waited for it until its budget (52-88 s) and ended with T 8 % low and
     the absorption check failed. Now the expected time includes the slowest part that carries 1e-3 of T (from the
     stationary reference's transmitted spectrum) and the right detector is chosen for that spectrum: it ends without
@@ -159,9 +161,10 @@ def test_sharp_edges_shorten_the_step_where_the_transmission_is_small():
     assert h.sim._dt_max() < h.sim._dt_phase()
     for width in (3.0, 10.0):
         p, _ = SCHEMA.resolve(None, {"width": width, "edge": 0.02})
-        with pytest.raises(ValueError, match="края барьера резкие") as e:
+        with pytest.raises(Refusal) as e:
             M.Simulation(p, 1, lambda *a, **k: None)
-        assert "увеличьте размытие краёв δ" in str(e.value) and "review" not in str(e.value)
+        assert "edges are sharp" in render(e.value.text) and "increase the edge smoothing δ" in render(e.value.hint)
+        assert "review" not in str(e.value)
     p, _ = SCHEMA.resolve(None, {"width": 3.0, "edge": 0.02})
     old = M.T_EDGE
     try:
@@ -175,13 +178,14 @@ def test_sharp_edges_shorten_the_step_where_the_transmission_is_small():
 
 
 def test_refusals_name_what_this_scenario_can_change():
-    """P19: the cost refusal advised «ширину пакета, энергию или высоту потенциала» also in the trap, where only ħω and x0
+    """P19: the cost refusal advised the packet width, the energy or the height of the potential also in the trap, where only ħω and x0
     are shown; the momentum refusal ended with «(review V3-3)»."""
     p, _ = SCHEMA.resolve(None, {"scenario": "oscillator", "hw": 1.0, "x0": 60.0})
     import v03_quantum_1d.viz as M
     with pytest.raises(ValueError) as e:
         M.Simulation(p, 1, lambda *a, **k: None)
-    assert ("ħω" in str(e.value) or "x₀" in str(e.value)) and "ширину пакета" not in str(e.value)
+    hint = render(e.value.hint)
+    assert ("ħω" in hint or "x₀" in hint) and "packet width" not in hint
     p, _ = SCHEMA.resolve(None, {"energy": 0.05, "sigma": 1.0})
     with pytest.raises(ValueError) as e:
         M.Simulation(p, 1, lambda *a, **k: None)

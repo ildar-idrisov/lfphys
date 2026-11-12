@@ -52,22 +52,25 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from lfphys.i18n import T
+
 from .. import backend
 from . import kerr, kerr_null as KN
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Тень чёрной дыры Керра, кольца фотонов и изображение диска",
-    "statement": "Для каждого пикселя экрана далёкого наблюдателя луч прослеживается назад во времени в замкнутом "
-                 "виде: захвачен ли он (тень) или пришёл с бесконечности; пересечения экватора по порядкам n = 0, "
-                 "1, 2 … (прямое изображение диска, кольцо линзирования, фотонное кольцо), радиус и красное "
-                 "смещение g излучателя в каждом пересечении (кеплеровский диск вне ISCO; внутри — свободное "
-                 "падение с постоянными ISCO по Каннингему). CPU или GPU.",
-    "validity": "вакуумное решение ОТО, 0 ≤ a < M; геометрическая оптика; экран на бесконечности; излучатель — "
-                "тонкий экваториальный диск (модель источника, а не закон); без поглощения и рассеяния; яркость "
-                "(disk_intensity) — выбор модели: Σ f_n g_n^p J(r_n), p = 4 — болометрическая (p = 3 — плоский "
-                "спектр), f_n = 1 — без поправки на толщину диска и длину пути луча в слое; n — номер пересечения "
-                "экватора (полупериоды по θ), а не число оборотов вокруг дыры",
+    "title": T("The shadow of a Kerr black hole, photon rings and the image of a disk"),
+    "statement": T("For every pixel of the distant observer's screen the ray is traced back in time in closed form: "
+                   "whether it is captured (the shadow) or came from infinity; the equator crossings by order n = 0, "
+                   "1, 2 … (the direct image of the disk, the lensing ring, the photon ring), the radius and redshift "
+                   "g of the emitter at each crossing (a Keplerian disk outside the ISCO; inside it, free fall with "
+                   "the ISCO constants after Cunningham). CPU or GPU."),
+    "validity": T("vacuum solution of GR, 0 ≤ a < M; geometric optics; screen at infinity; the emitter is a thin "
+                  "equatorial disk (a model of the source, not a law); no absorption or scattering; the brightness "
+                  "(disk_intensity) is a choice of model: Σ f_n g_n^p J(r_n), p = 4 bolometric (p = 3 a flat "
+                  "spectrum), f_n = 1 without a correction for the disk's thickness and the ray's path length in the "
+                  "layer; n is the number of the equator crossing (half-periods in θ), not the number of turns around "
+                  "the hole"),
     "basis": ["Bardeen, in Black Holes (Les Houches 1972), 1973", "Cunningham, ApJ 202, 788 (1975)",
               "Gralla & Lupsasca, Phys. Rev. D 101, 044031 and 044032 (2020)",
               "Johnson et al., Sci. Adv. 6, eaaz1310 (2020)", "Chael, Johnson & Lupsasca, ApJ 918, 6 (2021)",
@@ -210,8 +213,8 @@ def trace_screen(alpha, beta, theta_o, chi, n_max=2, emitter="cunningham", progr
         if not backend.is_out_of_memory(e):
             raise
         backend.release()
-        backend.choose(KERNEL, size, check=check, force="cpu", why="GPU: не хватило памяти, пересчитано на CPU",
-                       aux=aux)
+        backend.choose(KERNEL, size, check=check, force="cpu",
+                       why=T("GPU: not enough memory, recomputed on the CPU"), aux=aux)
         res = _trace(np, alpha, beta, theta_o, chi, n_max, emitter, prograde)
     finally:
         if ch.device == "gpu":
@@ -475,16 +478,16 @@ def _bench(size: int, xp, cplx):
 
 
 backend.register(backend.KernelSpec(
-    KERNEL, "Тень Керра: трассировка лучей экрана",
-    "для каждого пикселя — судьба луча (тень), пересечения экватора n = 0, 1, 2, радиус и красное смещение "
-    "излучателя (P14.3)",
+    KERNEL, T("Kerr shadow: ray tracing of the screen"),
+    T("for every pixel: the fate of the ray (shadow), the equator crossings n = 0, 1, 2, the radius and redshift of "
+      "the emitter (P14.3)"),
     gpu=True,
     precisions={"fp64": {"allowed": True},
-                "fp32": {"allowed": False, "why": "радиусы фотонного кольца теряют точность вблизи критической "
-                                                  "кривой (k → 1); не проверялось"}},
+                "fp32": {"allowed": False, "why": T("the photon-ring radii lose accuracy near the critical curve "
+                                                    "(k → 1); not tested")}},
     crossover=256 * 256,
-    crossover_note=("измерено 2026-10-29 на RTX 2080 Ti против одного потока CPU (NumPy), fp64, с пересылкой "
-                    "результатов, χ = 0,9, 60°, n = 0…2: 128×128 — CPU 36 мс, GPU 41 мс; 256×256 — 134 и 42 мс "
-                    "(×3,2); 512×512 — 623 и 48 мс (×13); время GPU почти постоянно (запуски ядер); «Измерить "
-                    "заново» уточняет"),
+    crossover_note=T("measured 2026-10-29 on an RTX 2080 Ti against one CPU thread (NumPy), fp64, with the results "
+                     "transferred, χ = 0.9, 60°, n = 0…2: 128×128: CPU 36 ms, GPU 41 ms; 256×256: 134 and 42 ms "
+                     "(×3.2); 512×512: 623 and 48 ms (×13); the GPU time is almost constant (kernel launches); "
+                     "“Measure again” refines this"),
     bench=_bench, bench_sizes=(32 * 32, 64 * 64, 128 * 128, 256 * 256, 512 * 512)))

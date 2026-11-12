@@ -172,36 +172,40 @@ import numpy as np
 from scipy import constants as sc
 from scipy import special
 
+from lfphys.i18n import T, text_of
+
 from .. import backend
 from . import particles as PT
 from . import schrodinger_nd as S
 
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Квантовая сцена: частицы-пакеты, потенциалы, поля, детекторы, измерения и декогеренция в 2-D/3-D",
-    "statement": "Каждая частица — свой волновой пакет по уравнению Шрёдингера или Паули (частицы не "
-                 "взаимодействуют); общий потенциал из фигур с гладкими краями (ширина края — физическая длина), "
-                 "магнитные поля (калибровка Ландау для однородного поля в области, трубка Ааронова–Бома, спин — "
-                 "через магнитный момент), поглощающие детекторы с учётом поглощённой вероятности (норма + "
-                 "поглощённое = 1), нерезкое измерение положения (гауссовы операторы Крауса), локализация средой "
-                 "(уравнение Линдблада) квантовыми скачками, метка пути; проверки: энергия замкнутой системы, поток "
-                 "через плоскость, ошибка шага по времени.",
-    "validity": "нерелятивистская частица (спин ½ по Паули), без взаимодействия частиц между собой; сетка мельче "
-                "длины волны и краёв фигур (края уже 3 шагов сетки отклоняются; рядом с потенциалом волновые числа "
-                "частицы — не дальше 2/3 полосы сетки), окно с поглотителями на краях (заряженная частица в поле — "
-                "только при открытых краях); "
-                "в 2-D поле меняется только в плоскости (изменение вне плоскости, требуемое уравнениями Максвелла, "
-                "не учитывается — точно для однородных полей); марковская среда; ошибка шага по времени — "
-                "второго порядка, оценивается в запуске",
+    "title": T("Quantum scene: particles as packets, potentials, fields, detectors, measurements and decoherence in "
+               "2-D/3-D"),
+    "statement": T("Every particle is its own wave packet under the Schrödinger or the Pauli equation (the particles do "
+                   "not interact); a common potential of shapes with smooth edges (the edge width is a physical "
+                   "length), magnetic fields (the Landau gauge for a uniform field in a region, an Aharonov–Bohm tube, "
+                   "spin through the magnetic moment), absorbing detectors with the absorbed probability accounted for "
+                   "(norm + absorbed = 1), unsharp position measurement (Gaussian Kraus operators), localization by an "
+                   "environment (the Lindblad equation) by quantum jumps, a which-path mark; checks: the energy of a "
+                   "closed system, the flux through a plane, the time-step error."),
+    "validity": T("a non-relativistic particle (spin ½ after Pauli), no interaction between the particles; the grid "
+                  "finer than the wavelength and the shapes' edges (edges narrower than 3 grid steps are refused; next "
+                  "to a potential the particle's wavenumbers stay within 2/3 of the grid's band), a window with "
+                  "absorbers at its edges (a charged particle in a field only with open edges); in 2-D the field "
+                  "varies only in the plane (the out-of-plane variation Maxwell's equations require is not included: "
+                  "exact for uniform fields); a Markovian environment; the time-step error is of second order, "
+                  "estimated in the run"),
     "basis": ["Schrödinger 1926; Pauli 1927",
-              "Feit, Fleck, Steiger, J. Comput. Phys. 47, 412 (1982) — расщепление оператора",
+              T("Feit, Fleck, Steiger, J. Comput. Phys. 47, 412 (1982) — split-operator method"),
               "Aharonov & Bohm, Phys. Rev. 115, 485 (1959)",
-              "Jacobs & Steck, Contemp. Phys. 47, 279 (2006), arXiv:quant-ph/0611067 — гауссово измерение положения",
-              "Dalibard, Castin, Mølmer, PRL 68, 580 (1992); Plenio & Knight, Rev. Mod. Phys. 70, 101 (1998) — "
-              "квантовые скачки",
-              "Bassi et al., Rev. Mod. Phys. 85, 471 (2013) — гауссовы операторы локализации",
-              "CODATA 2022 (scipy.constants) — массы и магнитные моменты",
-              "lfphys/sources/verification_2026-11-03_p15_3.md — проверка цитат и выводов"],
+              T("Jacobs & Steck, Contemp. Phys. 47, 279 (2006), arXiv:quant-ph/0611067 — Gaussian position "
+                "measurement"),
+              T("Dalibard, Castin, Mølmer, PRL 68, 580 (1992); Plenio & Knight, Rev. Mod. Phys. 70, 101 (1998) — "
+                "quantum jumps"),
+              T("Bassi et al., Rev. Mod. Phys. 85, 471 (2013) — Gaussian localization operators"),
+              T("CODATA 2022 (scipy.constants) — masses and magnetic moments"),
+              T("lfphys/sources/verification_2026-11-03_p15_3.md — a check of the quotations and derivations")],
     "conflicts": [],
 }
 
@@ -250,7 +254,7 @@ RATES = {
     ("gpu", 3, "scalar_A"): [(262144, 1.12e-3)],
     ("gpu", 3, "spinor_A"): [(262144, 2.61e-3)],
 }
-RATES_NOTE = "оценка по измеренным скоростям (см. RATES); точнее — измеренная скорость этого запуска"
+RATES_NOTE = T("an estimate from the measured rates (see RATES); the measured speed of this run is more accurate")
 
 
 # --- units and species ---------------------------------------------------------------------------------------------
@@ -320,10 +324,10 @@ def species(name: str, units: Units | None = None, mass_u: float | None = None, 
         return Species(name, PT.SPECIES[name][1] / u.mass, 0.0, 0.0, False)
     if name in ("atom", "custom"):
         if mass_u is None or mass_u <= 0:
-            raise ValueError("частица: укажите массу в а.е.м. (> 0)")
+            raise ValueError(T("particle: give the mass in u (> 0)"))
         mom = 0.0 if moment_muB is None else float(moment_muB) * sc.physical_constants["Bohr magneton"][0] / u.moment
         return Species(name, float(mass_u) * PT.U / u.mass, float(charge_e), mom, moment_muB is not None)
-    raise ValueError(f"неизвестная частица {name!r}: electron, neutron, he4, c60, atom, custom")
+    raise ValueError(T("unknown particle {name}: electron, neutron, he4, c60, atom, custom", name=repr(name)))
 
 
 # --- smooth profiles -------------------------------------------------------------------------------------------------
@@ -390,7 +394,7 @@ def _finite(v) -> bool:
     return v is not None and math.isfinite(float(v))
 
 
-def _vec(v, n: int, what: str) -> list:
+def _vec(v, n: int, what: T) -> list:
     """A vector of n entries (a scalar is broadcast); None entries kept (unbounded)."""
     if v is None:
         return [None] * n
@@ -398,18 +402,36 @@ def _vec(v, n: int, what: str) -> list:
         return [float(v)] * n
     v = list(v)
     if len(v) != n:
-        raise ValueError(f"{what}: нужно {n} компонент(ы), дано {len(v)}")
+        raise ValueError(T("{what}: {n} components needed, {m} given", what=what, n=int(n), m=len(v)))
     return [None if x is None else float(x) for x in v]
 
 
-def _check_edge(w, d, what: str):
+def _arg(v):
+    """A value as an argument of a text: a plain number as it is (the player formats it), anything else as a string."""
+    if isinstance(v, (bool, np.bool_)) or not isinstance(v, (int, float, np.integer, np.floating)):
+        return str(v)
+    return v.item() if isinstance(v, (np.integer, np.floating)) else v
+
+
+def _list_text(items):
+    """Texts joined by commas, as one translatable text."""
+    out = ""
+    for x in items:
+        out = x if out == "" else T("{a}, {b}", a=out, b=x)
+    return out
+
+
+def _check_edge(w, d, what: T):
     if w is None or not (float(w) > 0):
-        raise ValueError(f"{what}: ширина края (10–90 %) должна быть задана и > 0 — это физическая длина, не шаг сетки")
+        raise ValueError(T("{what}: the edge width (10–90 %) must be given and > 0 — it is a physical length, not the "
+                           "grid step", what=what))
     wmin = edge_min(d)
     if float(w) < wmin * (1 - 1e-12):
-        raise ValueError(f"{what}: край {float(w):.4g} уже, чем сетка с шагом {float(d):.4g} может передать (нужно ≥ "
-                         f"{wmin:.4g} = {EDGE_STEPS:.2f} шага: спектр края exp(−k²ε²/4) на k = π/d должен быть ≤ "
-                         f"{EDGE_TOL:g}); сделайте край шире или сетку мельче")
+        raise ValueError(T("{what}: the edge {w:.4g} is narrower than a grid of step {d:.4g} can carry (it needs ≥ "
+                           "{wmin:.4g} = {steps:.2f} steps: the edge's spectrum exp(−k²ε²/4) at k = π/d must be ≤ "
+                           "{tol}); make the edge wider or the grid finer",
+                           what=what, w=float(w), d=float(d), wmin=float(wmin), steps=float(EDGE_STEPS),
+                           tol=float(EDGE_TOL)))
 
 
 # --- objects -----------------------------------------------------------------------------------------------------------
@@ -448,7 +470,7 @@ class Shape(SceneObject):
 
     def _check_coupling(self):
         if getattr(self, "coupling", "energy") not in ("energy", "charge"):
-            raise ValueError("связь фигуры: 'energy' (для всех частиц) или 'charge' (через заряд q)")
+            raise ValueError(T("shape coupling: 'energy' (for every particle) or 'charge' (through the charge q)"))
 
     def peak(self, ndim: int):
         """The extremum of V in closed form (a shape narrower than its edges does not reach its nominal height:
@@ -469,7 +491,7 @@ class Box(Shape):
     TYPE = "box"
 
     def _lohi(self, n):
-        c, s = _vec(self.center, n, "центр"), _vec(self.size, n, "размер")
+        c, s = _vec(self.center, n, T("centre")), _vec(self.size, n, T("size"))
         lo = [None if (s[i] is None or not math.isfinite(s[i])) else c[i] - 0.5 * s[i] for i in range(n)]
         hi = [None if (s[i] is None or not math.isfinite(s[i])) else c[i] + 0.5 * s[i] for i in range(n)]
         return lo, hi
@@ -480,8 +502,8 @@ class Box(Shape):
         for i in range(scene.ndim):
             if lo[i] is not None:
                 if not hi[i] > lo[i]:
-                    raise ValueError("ящик: размер должен быть > 0")
-                _check_edge(self.edge, scene.grid.d[i], "ящик")
+                    raise ValueError(T("box: the size must be > 0"))
+                _check_edge(self.edge, scene.grid.d[i], T("box"))
 
     def V(self, grid):
         lo, hi = self._lohi(grid.ndim)
@@ -519,25 +541,27 @@ class Ball(Shape):
     def check(self, scene):
         self._check_coupling()
         if not float(self.radius) > 0:
-            raise ValueError("шар: радиус должен быть > 0")
+            raise ValueError(T("ball: the radius must be > 0"))
         ax = self._axes(scene.ndim)
-        _check_edge(self.edge, max(scene.grid.d[a] for a in ax), "шар")
-        _vec(self.center, scene.ndim, "центр")
+        _check_edge(self.edge, max(scene.grid.d[a] for a in ax), T("ball"))
+        _vec(self.center, scene.ndim, T("centre"))
         if float(self.radius) < BALL_MIN * float(self.edge) * (1 - 1e-12):
             # S(R - |r|) has a kink at r = 0 of slope exp(-R^2/eps^2) relative to the edge's steepest: a cone whose
             # spectrum the grid cannot hold (review B6-Q14); the edge rule's EDGE_TOL bounds it
-            raise ValueError(f"шар: радиус {float(self.radius):.4g} меньше {BALL_MIN:.2f} ширины края "
-                             f"{float(self.edge):.4g}: в центре у профиля излом (конус, наклон "
-                             f"{math.exp(-(float(self.radius) / edge_eps(self.edge)) ** 2):.2g} от наибольшего) и он не "
-                             f"достигает высоты (только {0.5 * math.erfc(-float(self.radius) / edge_eps(self.edge)):.3g} "
-                             f"её); сделайте шар больше или край уже (сетку мельче)")
+            raise ValueError(T("ball: the radius {r:.4g} is less than {k:.2f} edge widths {w:.4g}: the profile has a "
+                               "kink at the centre (a cone, slope {slope:.2g} of the steepest) and does not reach the "
+                               "height (only {frac:.3g} of it); make the ball larger or the edge narrower (the grid "
+                               "finer)",
+                               r=float(self.radius), k=float(BALL_MIN), w=float(self.edge),
+                               slope=math.exp(-(float(self.radius) / edge_eps(self.edge)) ** 2),
+                               frac=0.5 * math.erfc(-float(self.radius) / edge_eps(self.edge))))
 
     def peak(self, ndim):
         """height x S(R): the radial step at the centre."""
         return float(self.height) * 0.5 * math.erfc(-float(self.radius) / edge_eps(self.edge))
 
     def V(self, grid):
-        c = _vec(self.center, grid.ndim, "центр")
+        c = _vec(self.center, grid.ndim, T("centre"))
         X = grid.mesh()
         r2 = 0.0
         for a in self._axes(grid.ndim):
@@ -546,7 +570,7 @@ class Ball(Shape):
         return float(self.height) * smooth_step(float(self.radius) - r, self.edge)
 
     def bbox(self, ndim):
-        c = np.array(_vec(self.center, ndim, "центр"), float)
+        c = np.array(_vec(self.center, ndim, T("centre")), float)
         lo, hi = np.full(ndim, -np.inf), np.full(ndim, np.inf)
         for a in self._axes(ndim):
             lo[a], hi[a] = c[a] - self.radius, c[a] + self.radius
@@ -567,8 +591,8 @@ class Step(Shape):
     def check(self, scene):
         self._check_coupling()
         if not 0 <= int(self.axis) < scene.ndim:
-            raise ValueError("ступенька: нет такой оси")
-        _check_edge(self.edge, scene.grid.d[int(self.axis)], "ступенька")
+            raise ValueError(T("potential step: no such axis"))
+        _check_edge(self.edge, scene.grid.d[int(self.axis)], T("potential step"))
 
     def V(self, grid):
         X = grid.mesh()
@@ -615,27 +639,28 @@ class SlitWall(Shape):
         self._check_coupling()
         n = scene.ndim
         if n < 2:
-            raise ValueError("стенка со щелями: нужна сетка 2-D или 3-D")
+            raise ValueError(T("wall with slits: needs a 2-D or 3-D grid"))
         ax, al = int(self.axis), self._along(n)
         if not (0 <= ax < n and 0 <= al < n and ax != al):
-            raise ValueError("стенка со щелями: оси стенки и щелей должны быть разными осями сетки")
+            raise ValueError(T("wall with slits: the wall's axis and the slits' axis must be different grid axes"))
         if not float(self.thickness) > 0:
-            raise ValueError("стенка со щелями: толщина должна быть > 0")
-        _check_edge(self.edge, scene.grid.d[ax], "стенка (поперёк)")
-        _check_edge(self.edge, scene.grid.d[al], "щели (вдоль стенки)")
+            raise ValueError(T("wall with slits: the thickness must be > 0"))
+        _check_edge(self.edge, scene.grid.d[ax], T("wall (across)"))
+        _check_edge(self.edge, scene.grid.d[al], T("slits (along the wall)"))
         sl = sorted((float(c), float(w)) for c, w in self.slits)
         for c, w in sl:
             if not w > 0:
-                raise ValueError("щель: ширина должна быть > 0")
+                raise ValueError(T("slit: the width must be > 0"))
         for (c1, w1), (c2, w2) in zip(sl, sl[1:]):
             if c2 - 0.5 * w2 < c1 + 0.5 * w1:
-                raise ValueError("щели перекрываются: расстояние между центрами должно быть больше полусуммы ширин")
+                raise ValueError(T("the slits overlap: the distance between centres must exceed the half-sum of the "
+                                   "widths"))
         if self.length is not None:
             if n != 3:
-                raise ValueError("длина щелей задаётся только в 3-D")
-            _check_edge(self.edge, scene.grid.d[self._third(n)], "щели (по длине)")
+                raise ValueError(T("the slits' length is set only in 3-D"))
+            _check_edge(self.edge, scene.grid.d[self._third(n)], T("slits (along their length)"))
             if not float(self.length[1]) > 0:
-                raise ValueError("длина щели должна быть > 0")
+                raise ValueError(T("the slit length must be > 0"))
 
     def V(self, grid):
         n = grid.ndim
@@ -688,12 +713,12 @@ class HarmonicTrap(Shape):
     coupling = "energy"
 
     def check(self, scene):
-        om = _vec(self.omega, scene.ndim, "частота")
+        om = _vec(self.omega, scene.ndim, T("frequency"))
         if any(o is None or o < 0 for o in om) or not float(self.mass) > 0:
-            raise ValueError("ловушка: частоты ≥ 0 и масса > 0")
+            raise ValueError(T("trap: frequencies ≥ 0 and mass > 0"))
 
     def V(self, grid):
-        c, om = _vec(self.center, grid.ndim, "центр"), _vec(self.omega, grid.ndim, "частота")
+        c, om = _vec(self.center, grid.ndim, T("centre")), _vec(self.omega, grid.ndim, T("frequency"))
         X = grid.mesh()
         v = 0.0
         for i in range(grid.ndim):
@@ -701,7 +726,7 @@ class HarmonicTrap(Shape):
         return np.broadcast_to(v, grid.shape).copy()
 
     def bbox(self, ndim):
-        c, om = np.array(_vec(self.center, ndim, "центр")), _vec(self.omega, ndim, "частота")
+        c, om = np.array(_vec(self.center, ndim, T("centre"))), _vec(self.omega, ndim, T("frequency"))
         L = np.array([3.0 / math.sqrt(self.mass * o) if o and o > 0 else np.inf for o in om])
         return c - L, c + L
 
@@ -728,7 +753,7 @@ class MagneticField(SceneObject):
     TYPE = "magnetic_field"
 
     def _region(self, n):
-        return _vec(self.lo, n, "область поля"), _vec(self.hi, n, "область поля")
+        return _vec(self.lo, n, T("field region")), _vec(self.hi, n, T("field region"))
 
     def _G(self):
         return np.zeros((3, 3)) if self.gradient is None else np.asarray(self.gradient, float).reshape(3, 3)
@@ -736,21 +761,23 @@ class MagneticField(SceneObject):
     def check(self, scene):
         B0 = np.asarray(self.B, float)
         if B0.shape != (3,):
-            raise ValueError("поле: B = (Bx, By, Bz)")
+            raise ValueError(T("field: B = (Bx, By, Bz)"))
         G = self._G()
         scale = max(float(np.max(np.abs(G))), 1e-300)
         if np.max(np.abs(G - G.T)) > 1e-12 * scale:
-            raise ValueError("градиент поля несимметричен: в вакууме rot B = 0 требует ∂B_i/∂x_j = ∂B_j/∂x_i")
+            raise ValueError(T("the field gradient is not symmetric: in vacuum curl B = 0 requires ∂B_i/∂x_j = "
+                               "∂B_j/∂x_i"))
         if abs(np.trace(G)) > 1e-12 * scale:
-            raise ValueError("след градиента поля не ноль: div B = 0 (магнитных зарядов нет)")
+            raise ValueError(T("the trace of the field gradient is not zero: div B = 0 (there are no magnetic "
+                               "charges)"))
         lo, hi = self._region(scene.ndim)
         for i in range(scene.ndim):
             if lo[i] is not None and hi[i] is not None and not hi[i] > lo[i]:
-                raise ValueError("поле: область пуста")
+                raise ValueError(T("field: the region is empty"))
             if lo[i] is not None or hi[i] is not None:
-                _check_edge(self.edge, scene.grid.d[i], "край области поля")
+                _check_edge(self.edge, scene.grid.d[i], T("edge of the field region"))
         if int(self.string) not in (1, -1):
-            raise ValueError("поле: string = +1 или −1")
+            raise ValueError(T("field: string = +1 or −1"))
 
     def field(self, grid: S.Grid) -> np.ndarray:
         """B (3, *shape) on the grid (grid axes i < ndim are x, y, z; the others at the centre's coordinate)."""
@@ -766,26 +793,28 @@ class MagneticField(SceneObject):
             out[j] = np.broadcast_to((B0[j] + sum(G[j, i] * r[i] for i in range(3))) * f, grid.shape)
         return out
 
-    def orbital_reason(self, ndim: int) -> str | None:
+    def orbital_reason(self, ndim: int) -> T | None:
         """None when the orbital coupling (A) is built, else why it is not."""
         B0 = np.asarray(self.B, float)
         if np.any(self._G() != 0):
-            return "у поля с градиентом орбитальная связь заряда не строится (нужен векторный потенциал вне плоскости)"
+            return T("for a field with a gradient the orbital coupling of a charge is not built (it needs a vector "
+                     "potential out of the plane)")
         nz = np.flatnonzero(B0)
         if len(nz) == 0:
             return None
         if ndim == 1:
-            return "в 1-D орбитальной связи нет (движение поперёк поля не моделируется)"
+            return T("in 1-D there is no orbital coupling (motion across the field is not modelled)")
         if len(nz) > 1:
-            return "поле не вдоль одной оси сетки: для заряда строится только поле вдоль оси"
+            return T("the field is not along one grid axis: for a charge only a field along an axis is built")
         c = int(nz[0])
         if ndim == 2 and c != 2:
-            return "в 2-D заряд чувствует только поле, перпендикулярное плоскости (Bz): поле в плоскости уводит из неё"
+            return T("in 2-D a charge feels only the field perpendicular to the plane (Bz): a field in the plane "
+                     "would take it out of the plane")
         if ndim == 3:
             lo, hi = self._region(3)
             if lo[c] is not None or hi[c] is not None:
-                return ("поле, ограниченное вдоль своего направления, имеет div B ≠ 0: для заряда область поля должна "
-                        "быть неограниченной вдоль B (призма)")
+                return T("a field bounded along its own direction has div B ≠ 0: for a charge the field region must "
+                         "be unbounded along B (a prism)")
         return None
 
     def vector_potential(self, ndim: int) -> S.VectorPotential | None:
@@ -814,9 +843,10 @@ class MagneticField(SceneObject):
             elif lo[a] is None and hi[a] is None:
                 F = X[a] - cen[a]
             else:
-                raise ValueError("поле для заряда: область вдоль оси a ограничена с одной стороны — поток бесконечен")
+                raise ValueError(T("field for a charge: the region along axis a is bounded on one side only — the "
+                                   "flux is infinite"))
             return Bc * g * F
-        return S.VectorPotential(fn, f"однородное поле B = {Bc:g} в области (калибровка Ландау)")
+        return S.VectorPotential(fn, T("uniform field B = {B} in a region (Landau gauge)", B=Bc))
 
     def bbox(self, ndim):
         lo, hi = self._region(ndim)
@@ -837,14 +867,15 @@ class FluxTube(SceneObject):
 
     def check(self, scene):
         if scene.ndim < 2:
-            raise ValueError("трубка потока: нужна сетка 2-D или 3-D")
+            raise ValueError(T("flux tube: needs a 2-D or 3-D grid"))
         a, b = (int(v) for v in self.axes)
         if not (0 <= a < scene.ndim and 0 <= b < scene.ndim and a != b):
-            raise ValueError("трубка потока: две разные оси сетки")
+            raise ValueError(T("flux tube: two different grid axes"))
         if not float(self.radius) > 0:
-            raise ValueError("трубка потока: радиус > 0")
+            raise ValueError(T("flux tube: radius > 0"))
         if float(self.radius) < 1.5 * max(scene.grid.d[a], scene.grid.d[b]):
-            raise ValueError(f"трубка потока: радиус {self.radius:g} меньше 1,5 шага сетки — поле в трубке не разрешено")
+            raise ValueError(T("flux tube: the radius {r} is less than 1.5 grid steps — the field in the tube is not "
+                               "resolved", r=float(self.radius)))
 
     def vector_potential(self, ndim) -> S.VectorPotential:
         return S.flux_tube(float(self.flux), tuple(float(v) for v in self.center), float(self.radius),
@@ -879,13 +910,13 @@ class Detector(SceneObject):
 
     def check(self, scene):
         if not float(self.strength) > 0:
-            raise ValueError("детектор: сила поглощения W0 > 0")
-        lo, hi = _vec(self.lo, scene.ndim, "детектор"), _vec(self.hi, scene.ndim, "детектор")
+            raise ValueError(T("detector: absorption strength W0 > 0"))
+        lo, hi = _vec(self.lo, scene.ndim, T("detector")), _vec(self.hi, scene.ndim, T("detector"))
         for i in range(scene.ndim):
             if lo[i] is not None and hi[i] is not None and not hi[i] > lo[i]:
-                raise ValueError("детектор: область пуста")
+                raise ValueError(T("detector: the region is empty"))
             if lo[i] is not None or hi[i] is not None:
-                _check_edge(self.edge, scene.grid.d[i], "край детектора")
+                _check_edge(self.edge, scene.grid.d[i], T("detector edge"))
 
     def W(self, grid):
         return float(self.strength) * _box_profile(grid, _vec(self.lo, grid.ndim, ""), _vec(self.hi, grid.ndim, ""),
@@ -905,7 +936,7 @@ class Detector(SceneObject):
         E = k**2 / (2 * mass)
         e = edge_eps(self.edge)
         if a is None and b is None:
-            raise ValueError("детектор неограничен вдоль этой оси: грани нет")
+            raise ValueError(T("the detector is unbounded along this axis: it has no face"))
         if a is None:  # entered through hi from above: mirror
             a, b = -b, np.inf
         x0 = a - 6 * e
@@ -914,9 +945,9 @@ class Detector(SceneObject):
         xs = np.concatenate([[x0 - 1.0], 0.5 * (edges[1:] + edges[:-1]), [x1 + 1.0]])
         prof = smooth_interval(xs, a, b, self.edge)
         W0 = np.atleast_1d(np.asarray(float(self.strength) if strengths is None else strengths, float))
-        T, R = staircase_transmission(E[None, :], -1j * W0[:, None, None] * prof[None, None, :], (x1 - x0) / slices,
-                                      mass, 1.0)
-        return (R[0], T[0]) if strengths is None else (R, T)
+        Tr, R = staircase_transmission(E[None, :], -1j * W0[:, None, None] * prof[None, None, :], (x1 - x0) / slices,
+                                       mass, 1.0)
+        return (R[0], Tr[0]) if strengths is None else (R, Tr)
 
     def bbox(self, ndim):
         lo, hi = _vec(self.lo, ndim, ""), _vec(self.hi, ndim, "")
@@ -962,10 +993,10 @@ class EdgeLayers:
 
     def check(self, grid):
         if not (float(self.width) > 0 and float(self.strength) > 0):
-            raise ValueError("края окна: ширина и сила поглощения > 0")
+            raise ValueError(T("window edges: width and absorption strength > 0"))
         for ax in (range(grid.ndim) if self.axes is None else self.axes):
             if 2 * float(self.width) >= grid.shape[int(ax)] * grid.d[int(ax)]:
-                raise ValueError("края окна: поглощающие слои шире окна")
+                raise ValueError(T("window edges: the absorbing layers are wider than the window"))
 
 
 @dataclass
@@ -985,18 +1016,19 @@ class Localization(SceneObject):
 
     def check(self, scene):
         if not (float(self.rate) > 0 and float(self.length) > 0):
-            raise ValueError("среда: скорость λ > 0 и длина a > 0")
+            raise ValueError(T("environment: rate λ > 0 and length a > 0"))
         if float(self.length) < LOC_MIN_STEPS * float(max(scene.grid.d)):
-            raise ValueError(f"среда: длина локализации a = {self.length:g} меньше {LOC_MIN_STEPS} шага сетки — "
-                             f"гауссов скачок не разрешён")
+            raise ValueError(T("environment: the localization length a = {a} is less than {k} grid steps — the "
+                               "Gaussian jump is not resolved", a=float(self.length), k=float(LOC_MIN_STEPS)))
         if float(self.rate) * scene.dt > LOC_MAX_STEP:
-            raise ValueError(f"среда: λ·dt = {self.rate * scene.dt:.3g} > {LOC_MAX_STEP}: за шаг возможны два скачка — "
-                             f"уменьшите шаг по времени до {LOC_MAX_STEP / self.rate:.3g}")
+            raise ValueError(T("environment: λ·dt = {x:.3g} > {lim}: two jumps are possible within a step — reduce the "
+                               "time step to {dt:.3g}", x=float(self.rate * scene.dt), lim=float(LOC_MAX_STEP),
+                               dt=float(LOC_MAX_STEP / self.rate)))
         if not self.uniform():
-            lo, hi = _vec(self.lo, scene.ndim, "среда"), _vec(self.hi, scene.ndim, "среда")
+            lo, hi = _vec(self.lo, scene.ndim, T("environment")), _vec(self.hi, scene.ndim, T("environment"))
             for i in range(scene.ndim):
                 if lo[i] is not None or hi[i] is not None:
-                    _check_edge(self.edge, scene.grid.d[i], "край области среды")
+                    _check_edge(self.edge, scene.grid.d[i], T("edge of the environment's region"))
 
     def chi(self, X: np.ndarray) -> np.ndarray:
         """The region's profile chi(y) at points X (N, ndim)."""
@@ -1035,12 +1067,12 @@ class PathMarker(SceneObject):
     TYPE = "path_marker"
 
     def check(self, scene):
-        lo, hi = _vec(self.lo, scene.ndim, "метка"), _vec(self.hi, scene.ndim, "метка")
+        lo, hi = _vec(self.lo, scene.ndim, T("which-path mark")), _vec(self.hi, scene.ndim, T("which-path mark"))
         for i in range(scene.ndim):
             if lo[i] is not None and hi[i] is not None and not hi[i] > lo[i]:
-                raise ValueError("метка: область пуста")
+                raise ValueError(T("which-path mark: the region is empty"))
             if lo[i] is not None or hi[i] is not None:
-                _check_edge(self.edge, scene.grid.d[i], "край области метки")
+                _check_edge(self.edge, scene.grid.d[i], T("edge of the which-path mark's region"))
 
     def b(self, grid) -> np.ndarray:
         out = np.zeros((3,) + grid.shape)
@@ -1113,15 +1145,15 @@ class Scene:
         self.grid = S.Grid(shape, spacing, m=1.0, hbar=1.0, center=center)
         self.ndim = self.grid.ndim
         if self.ndim not in (1, 2, 3):
-            raise ValueError("сцена: сетка 1-D, 2-D или 3-D")
+            raise ValueError(T("scene: a 1-D, 2-D or 3-D grid"))
         if not float(dt) > 0:
-            raise ValueError("шаг по времени должен быть > 0")
+            raise ValueError(T("the time step must be > 0"))
         self.dt = float(dt)
         if edges is not None:
             edges.check(self.grid)
         self.edges = edges
         if device not in ("auto", "cpu"):
-            raise ValueError("устройство: 'auto' или 'cpu'")
+            raise ValueError("device: 'auto' or 'cpu'")
         self.device_mode = device
         self.device = None
         self.xp = np
@@ -1214,7 +1246,10 @@ class Scene:
                 A = A_list[0]
             else:
                 fns = [a.fn for a in A_list]
-                A = S.VectorPotential(lambda i, *X: sum(f(i, *X) for f in fns), " + ".join(a.label for a in A_list))
+                label = A_list[0].label
+                for vp in A_list[1:]:
+                    label = T("{a} + {b}", a=label, b=vp.label)
+                A = S.VectorPotential(lambda i, *X: sum(f(i, *X) for f in fns), label)
         axis = None
         if B is not None:
             mag = np.sqrt(np.sum(B * B, axis=0))
@@ -1238,8 +1273,9 @@ class Scene:
         marker = arr["bmark"] is not None or p.kind == "marker"
         if p.kind == "spin":
             if marker:
-                raise ValueError(f"частица {p.id}: её спин уже требует второй компоненты волны, а метка пути занимает ту "
-                                 f"же компоненту — спин и метку вместе использовать нельзя")
+                raise ValueError(T("particle {pid}: its spin already needs the wave's second component, and the "
+                                   "which-path mark takes the same component — spin and mark cannot be used together",
+                                   pid=int(p.id)))
             return "spin", 0
         s = 0
         if spin_coupled:
@@ -1253,9 +1289,10 @@ class Scene:
                     s = 1 if proj > 0 else -1
             if s == 0:
                 if marker:
-                    raise ValueError(f"частица {p.id}: спин ½ в этом поле требует спинора (поле не вдоль одного "
-                                     f"направления или спин не вдоль поля), а метка пути занимает ту же вторую "
-                                     f"компоненту волны — спин и метку вместе использовать нельзя")
+                    raise ValueError(T("particle {pid}: spin ½ in this field needs a spinor (the field is not along "
+                                       "one direction or the spin is not along the field), and the which-path mark takes "
+                                       "the same second component of the wave — spin and mark cannot be used together",
+                                       pid=int(p.id)))
                 return "spin", 0
         return ("marker" if marker else "scalar"), s
 
@@ -1272,7 +1309,7 @@ class Scene:
         elif p.kind == "scalar" and kind == "marker":
             p.psi = xp.stack([p.psi, xp.zeros_like(p.psi)])
         else:
-            raise ValueError("форма волны не меняется обратно (спинор остаётся спинором)")
+            raise ValueError(T("the wave's form does not change back (a spinor stays a spinor)"))
         p.kind, p.s = kind, s
 
     def _key(self, p: _Particle):
@@ -1308,11 +1345,12 @@ class Scene:
             H = self.hamiltonian(key)
             force = self.device_mode == "cpu" or self.device == "cpu"
             op = S.SplitOperator(H, self.dt / 2 if half else self.dt, track_absorbed=True, force_cpu=force,
-                                 why="сцена на CPU")
+                                 why=T("the scene is on the CPU"))
             if self.device is None:
                 self.device, self.xp = op.device, op.xp
             elif op.device != self.device:
-                raise RuntimeError(f"оператор сцены на {op.device}, а сцена на {self.device} (нехватка памяти GPU?)")
+                raise RuntimeError(f"a scene operator on {op.device} but the scene on {self.device} (GPU memory "
+                                   f"short?)")
             store[key] = op
         return store[key]
 
@@ -1409,7 +1447,7 @@ class Scene:
         g = self.grid
         hi = np.broadcast_to(V + bm, g.shape)
         lo = V - bm
-        c = [0.0 if v is None else v for v in _vec(p.packet.center, self.ndim, "центр")]
+        c = [0.0 if v is None else v for v in _vec(p.packet.center, self.ndim, T("centre"))]
         ic = tuple(int(np.clip(np.rint((c[a] - g.axes[a][0]) / g.d[a]), 0, g.shape[a] - 1)) for a in range(g.ndim))
         top = float(hi[ic])
         rho = backend.to_numpy(self._rho(p.psi)) if p.psi is not None else None
@@ -1440,7 +1478,7 @@ class Scene:
             worst = max(worst, (Kl / lim, Kl, lim, dV))
         return worst
 
-    def _resolution_reason(self, arr: dict, parts, extra2: float = 0.0) -> str | None:
+    def _resolution_reason(self, arr: dict, parts, extra2: float = 0.0) -> T | None:
         """None when the grid holds every wave in ``parts`` under the arrays ``arr``, else why not (review B6-Q4).
         Free motion is exact for a wave inside the band |k_i| <= pi/d_i (the packet rule). Along the axes where
         something acts on the particle (``_scatter_axes``) its momentum can turn into any of them and gain the potential
@@ -1463,13 +1501,21 @@ class Scene:
             if ratio > 1 + 1e-12:
                 conv = 2.0 * p.species.mass * dV > 1e-6 * K * K
                 inter = lim < min(math.pi / float(d) for d in self.grid.d) * (1 - 1e-12) or conv
-                text = (f"сетка не передаёт волну частицы {p.id}: её волновые числа доходят до {K:.4g} (|k| + 6σ_k"
-                        + (f" и энергия {dV:.4g}, которую потенциал может перевести в движение" if conv else "")
-                        + f"), а сетка " + ("рядом с тем, что действует на частицу, " if inter else "")
-                        + f"передаёт ≤ {lim:.4g}"
-                        + (" (2/3·π/d: дальше произведение V·ψ на сетке искажается наложением спектров)" if inter
-                           else " (π/d)")
-                        + "; сделайте сетку мельче, частицу медленнее или потенциал ниже")
+                if conv:
+                    text = T("the grid does not carry the wave of particle {pid}: its wavenumbers reach {K:.4g} (|k| + "
+                             "6σ_k and the energy {dV:.4g} that the potential can turn into motion), while next to what "
+                             "acts on the particle the grid carries ≤ {lim:.4g} (2/3·π/d: beyond it the product V·ψ on "
+                             "the grid is distorted by aliasing); make the grid finer, the particle slower or the "
+                             "potential lower", pid=int(p.id), K=float(K), dV=float(dV), lim=float(lim))
+                elif inter:
+                    text = T("the grid does not carry the wave of particle {pid}: its wavenumbers reach {K:.4g} (|k| + "
+                             "6σ_k), while next to what acts on the particle the grid carries ≤ {lim:.4g} (2/3·π/d: "
+                             "beyond it the product V·ψ on the grid is distorted by aliasing); make the grid finer, the "
+                             "particle slower or the potential lower", pid=int(p.id), K=float(K), lim=float(lim))
+                else:
+                    text = T("the grid does not carry the wave of particle {pid}: its wavenumbers reach {K:.4g} (|k| + "
+                             "6σ_k), while the grid carries ≤ {lim:.4g} (π/d); make the grid finer, the particle slower "
+                             "or the potential lower", pid=int(p.id), K=float(K), lim=float(lim))
                 return {"text": text, "pid": p.id, "K": K, "lim": lim, "dV": dV, "inter": bool(inter),
                         "conv": bool(conv)}
         return None
@@ -1480,7 +1526,7 @@ class Scene:
         cov = range(self.ndim) if edges.axes is None else [int(a) for a in edges.axes]
         return [a for a in range(self.ndim) if a not in cov]
 
-    def _gauge_reason(self, arr: dict, edges, charges) -> str | None:
+    def _gauge_reason(self, arr: dict, edges, charges) -> T | None:
         """None unless a charged particle meets a vector potential the closed (periodic) window cannot hold (review
         B6-Q2). The split operator's gauge phases wrap at the window's faces: where A is not periodic across a closed
         face the wrap is a sheet of field (flux -Phi) that is not on the scene, and a non-zero line integral of A_i
@@ -1510,16 +1556,19 @@ class Scene:
             hol = np.sum(hol, axis=i)
             twist = max(float(np.max(np.abs(np.remainder(q * hol + math.pi, 2 * math.pi) - math.pi))) for q in charges)
             if jump > 1e-9 * max(scale, 1e-300) or twist > 1e-9:
-                return (f"замкнутые (периодичные) края окна по оси {'xyz'[i]}: векторный потенциал на гранях окна "
-                        + ("не периодичен — на грани получился бы слой поля, которого нет на сцене (поток −Φ)"
-                           if jump > 1e-9 * max(scale, 1e-300) else
-                           f"даёт фазу q∮A = {twist:.3g} рад поперёк окна — волна, прошедшая грань, получила бы фазу "
-                           f"Ааронова–Бома потока, которого нет") +
-                        "; заряженная частица рядом с полем или трубкой потока допускается только при открытых "
-                        "(поглощающих) краях окна по всем осям")
+                if jump > 1e-9 * max(scale, 1e-300):
+                    return T("closed (periodic) window edges along {axis}: the vector potential is not periodic across "
+                             "the window's faces — the face would carry a sheet of field that is not in the scene (flux "
+                             "−Φ); a charged particle next to a field or a flux tube is allowed only with open "
+                             "(absorbing) window edges along every axis", axis="xyz"[i])
+                return T("closed (periodic) window edges along {axis}: the vector potential gives a phase q∮A = "
+                         "{twist:.3g} rad across the window — a wave crossing the face would acquire the Aharonov–Bohm "
+                         "phase of a flux that is not there; a charged particle next to a field or a flux tube is "
+                         "allowed only with open (absorbing) window edges along every axis",
+                         axis="xyz"[i], twist=float(twist))
         return None
 
-    def _switch_reason(self, old: dict, new: dict) -> str | None:
+    def _switch_reason(self, old: dict, new: dict) -> T | None:
         """None unless a uniform field's vector potential (Landau gauge, ``MagneticField``) changes where a charged
         particle's wave is (review B6-Q3). psi is kept at a change, so the kinetic momentum jumps by -q Delta A: that
         is the impulse of the induced field -dA/dt of the switch only in the gauge of the magnet that makes it (for a
@@ -1553,11 +1602,11 @@ class Scene:
         for p in charged:
             P = float(np.sum(backend.to_numpy(self._rho(p.psi))[mask])) * g.dV
             if P > tol:
-                return (f"поле нельзя менять, пока заряженная частица {p.id} в окне там, где меняется векторный "
-                        f"потенциал (вероятность {P:.3g}): импульс индукционного поля при переключении магнита (закон "
-                        f"Фарадея) зависит от того, как устроен магнит и где его ось, а калибровка Ландау сцены его не "
-                        f"передаёт; задайте поле до частицы или уберите частицу (трубку потока менять можно: её поле — "
-                        f"тонкий соленоид)")
+                return T("the field cannot be changed while the charged particle {pid} is in the window where the "
+                         "vector potential changes (probability {P:.3g}): the impulse of the induced field when the "
+                         "magnet is switched (Faraday's law) depends on how the magnet is built and where its axis is, "
+                         "and the scene's Landau gauge does not carry it; set the field before the particle or remove the "
+                         "particle (a flux tube may be changed: its field is a thin solenoid)", pid=int(p.id), P=P)
         return None
 
     # --- changes of the set-up ----------------------------------------------------------------------------------------
@@ -1571,13 +1620,14 @@ class Scene:
             edges.check(self.grid)
         n_loc = sum(isinstance(o, Localization) for o in objects.values())
         if n_loc > 1:
-            raise ValueError("одна среда (локализация) на сцену")
+            raise ValueError(T("one environment (localization) per scene"))
         arr = self._compute(objects, edges)
         charges = [p.species.charge for p in self.particles.values() if p.active and p.species.charge != 0]
         if charges:
             for ob in objects.values():
                 if isinstance(ob, MagneticField) and ob.orbital_reason(self.ndim) is not None:
-                    raise ValueError(f"на сцене заряженная частица: {ob.orbital_reason(self.ndim)}")
+                    raise ValueError(T("there is a charged particle in the scene: {reason}",
+                                       reason=ob.orbital_reason(self.ndim)))
         same = (objects == self.objects and (edges is self.edges or (edges is not None and self.edges is not None
                                                                      and edges.params() == self.edges.params())))
         if not same:  # a change of the time step alone changes neither the gauge nor what the grid must hold
@@ -1588,26 +1638,26 @@ class Scene:
         kinds = {p.id: self._kind_for(p, arr) for p in self.particles.values() if p.active}
         return arr, kinds
 
-    def _reason(self, objects: dict, edges) -> str | None:
+    def _reason(self, objects: dict, edges) -> T | None:
         try:
             self._validate(objects, edges)
         except ValueError as e:
-            return str(e)
+            return text_of(e)
         return None
 
-    def addition_reason(self, obj: SceneObject) -> str | None:
+    def addition_reason(self, obj: SceneObject) -> T | None:
         """Why ``add(obj)`` would be refused now, or None; changes nothing (a playground's palette: review UX-ui U7)."""
         return self._reason({**self.objects, self._next_obj: obj}, self.edges)
 
-    def removal_reason(self, oid: int) -> str | None:
+    def removal_reason(self, oid: int) -> T | None:
         """Why ``remove(oid)`` would be refused now, or None; changes nothing (review UX-params P28)."""
         return self._reason({k: v for k, v in self.objects.items() if k != oid}, self.edges)
 
-    def edges_reason(self, edges) -> str | None:
+    def edges_reason(self, edges) -> T | None:
         """Why ``set_edges(edges)`` would be refused now, or None; changes nothing."""
         return self._reason(dict(self.objects), edges)
 
-    def particle_reason(self, packet: Packet) -> str | None:
+    def particle_reason(self, packet: Packet) -> T | None:
         """Why ``add_particle(packet)`` would be refused now, or None; changes nothing (review UX-ui U4: a free spot
         for a new packet)."""
         p = _Particle(self._next_pid, packet)
@@ -1618,10 +1668,10 @@ class Scene:
                 return reason
             self._kind_for(p, self._arr)
         except ValueError as e:
-            return str(e)
+            return text_of(e)
         return None
 
-    def _commit(self, objects: dict, edges, what: str, dt: float | None = None):
+    def _commit(self, objects: dict, edges, what: T, dt: float | None = None):
         """Validate the new set-up, then bank, convert the waves and rebuild: the change acts from now on."""
         old_dt = self.dt
         if dt is not None:
@@ -1653,18 +1703,18 @@ class Scene:
         """Add an object now (with ``dt``: and change the time step in the same change, e.g. for an environment whose
         rate needs a shorter step); returns its id."""
         if not isinstance(obj, SceneObject):
-            raise TypeError("объект сцены")
+            raise TypeError("a scene object expected")
         oid = self._next_obj
         objs = dict(self.objects)
         objs[oid] = obj
-        self._commit(objs, self.edges, f"добавлен {obj.TYPE} #{oid}", dt=dt)
+        self._commit(objs, self.edges, T("added {type} #{oid}", type=obj.TYPE, oid=int(oid)), dt=dt)
         self._next_obj += 1
         return oid
 
     def remove(self, oid: int):
         objs = dict(self.objects)
         ob = objs.pop(oid)
-        self._commit(objs, self.edges, f"убран {ob.TYPE} #{oid}")
+        self._commit(objs, self.edges, T("removed {type} #{oid}", type=ob.TYPE, oid=int(oid)))
 
     def update(self, oid: int, dt: float | None = None, **changes):
         """Change parameters of object ``oid`` now (a new object of the same type with the changed parameters; with
@@ -1673,16 +1723,18 @@ class Scene:
         new = type(ob).from_params({**ob.params(), **changes})
         objs = dict(self.objects)
         objs[oid] = new
-        self._commit(objs, self.edges, f"изменён {ob.TYPE} #{oid}: " + ", ".join(f"{k} = {v}" for k, v in changes.items()),
+        what = _list_text([T("{k} = {v}", k=k, v=_arg(v)) for k, v in changes.items()])
+        self._commit(objs, self.edges, T("changed {type} #{oid}: {changes}", type=ob.TYPE, oid=int(oid), changes=what),
                      dt=dt)
 
     def set_edges(self, edges: EdgeLayers | None):
-        self._commit(dict(self.objects), edges, "края окна изменены")
+        self._commit(dict(self.objects), edges, T("window edges changed"))
 
     def set_dt(self, dt: float):
         if not float(dt) > 0:
-            raise ValueError("шаг по времени должен быть > 0")
-        self._commit(dict(self.objects), self.edges, f"шаг по времени {self.dt:g} → {float(dt):g}", dt=dt)
+            raise ValueError(T("the time step must be > 0"))
+        self._commit(dict(self.objects), self.edges, T("time step {old} → {new}", old=float(self.dt), new=float(dt)),
+                     dt=dt)
 
     # --- particles -----------------------------------------------------------------------------------------------------
     def _prepare(self, packet: Packet, p: _Particle) -> np.ndarray:
@@ -1690,40 +1742,44 @@ class Scene:
         g, n = self.grid, self.ndim
         sp = packet.species
         if not sp.mass > 0:
-            raise ValueError("масса частицы > 0")
-        c, k, s = (_vec(v, n, what) for v, what in ((packet.center, "центр"), (packet.k, "k"),
-                                                     (packet.sigma, "ширина")))
+            raise ValueError(T("particle mass > 0"))
+        c, k, s = (_vec(v, n, what) for v, what in ((packet.center, T("centre")), (packet.k, "k"),
+                                                     (packet.sigma, T("width"))))
         X = g.mesh()
         psi = 1.0
         for i in range(n):
             if s[i] is None or not s[i] > 0:
-                raise ValueError("пакет: ширина σ > 0 (inf — однороден вдоль оси)")
+                raise ValueError(T("packet: width σ > 0 (inf: uniform along the axis)"))
             half = 0.5 * g.shape[i] * g.d[i]
             if math.isinf(s[i]):
                 if k[i] != 0:
-                    raise ValueError("пакет, однородный вдоль оси, должен иметь k = 0 вдоль неё")
+                    raise ValueError(T("a packet uniform along an axis must have k = 0 along it"))
                 continue
             kn = math.pi / g.d[i]
             if abs(k[i]) + PACKET_NYQUIST / (2 * s[i]) > kn:
-                raise ValueError(f"пакет: |k| + 6σ_k = {abs(k[i]) + PACKET_NYQUIST / (2 * s[i]):.4g} по оси {i} больше "
-                                 f"π/d = {kn:.4g} — сетка не передаёт волну (мельче сетку или меньше импульс)")
+                raise ValueError(T("packet: |k| + 6σ_k = {K:.4g} along axis {i} exceeds π/d = {kn:.4g} — the grid does "
+                                   "not carry the wave (a finer grid or a smaller momentum)",
+                                   K=float(abs(k[i]) + PACKET_NYQUIST / (2 * s[i])), i=int(i), kn=float(kn)))
             gap = half - abs(c[i] - g.center[i])
             need = s[i] * math.sqrt(2 * math.log(1 / PACKET_TAIL))
             ax = "xyz"[i] if i < 3 else str(i)
             lo_w, hi_w = float(g.center[i]) - half, float(g.center[i]) + half
             if not gap > 0:  # review UX-params P29: a centre outside the window passed (gap^2 large) and psi was 0/0
-                raise ValueError(f"центр пакета вне окна по оси {ax}: {c[i]:.4g}, а окно от {lo_w:.4g} до {hi_w:.4g} "
-                                 f"— поставьте центр внутрь окна, не ближе {need:.3g} к его краю")
+                raise ValueError(T("the packet's centre is outside the window along {ax}: {c:.4g}, while the window runs "
+                                   "from {lo:.4g} to {hi:.4g} — put the centre inside the window, no closer than {need:.3g} "
+                                   "to its edge", ax=ax, c=float(c[i]), lo=lo_w, hi=hi_w, need=float(need)))
             if gap * gap / (2 * s[i] ** 2) < math.log(1 / PACKET_TAIL):
-                raise ValueError(f"пакет не помещается в окно по оси {ax}: от центра до края окна {gap:.4g}, а "
-                                 f"пакету шириной σ = {s[i]:.4g} нужно ≥ {need:.4g} (сетка периодична: хвост за краем "
-                                 f"вошёл бы с другой стороны) — сдвиньте центр к середине окна или уменьшите σ")
+                raise ValueError(T("the packet does not fit into the window along {ax}: from the centre to the window's "
+                                   "edge is {gap:.4g}, while a packet of width σ = {s:.4g} needs ≥ {need:.4g} (the grid is "
+                                   "periodic: the tail beyond the edge would come in from the other side) — move the "
+                                   "centre towards the middle of the window or reduce σ",
+                                   ax=ax, gap=float(gap), s=float(s[i]), need=float(need)))
             psi = psi * np.exp(-((X[i] - c[i]) ** 2) / (4 * s[i] ** 2) + 1j * k[i] * X[i])
         psi = np.broadcast_to(np.asarray(psi, complex), g.shape).copy()
         if sp.charge != 0:
             for ob in self.objects.values():
                 if isinstance(ob, MagneticField) and ob.orbital_reason(n) is not None:
-                    raise ValueError(f"заряженная частица в этом поле: {ob.orbital_reason(n)}")
+                    raise ValueError(T("a charged particle in this field: {reason}", reason=ob.orbital_reason(n)))
             reason = self._gauge_reason(self._arr, self.edges, [sp.charge])
             if reason:
                 raise ValueError(reason)
@@ -1736,7 +1792,7 @@ class Scene:
             chi = np.array([1.0, 0.0], complex) if packet.spin is None else np.asarray(packet.spin, complex)
             nr = float(np.linalg.norm(chi))
             if not nr > 0:
-                raise ValueError("спин: ненулевой вектор (c↑, c↓)")
+                raise ValueError(T("spin: a non-zero vector (c↑, c↓)"))
             p.chi = chi / nr
         return psi
 
@@ -1757,12 +1813,13 @@ class Scene:
         self.particles[pid] = p
         self._next_pid += 1
         self._reset_refs(p, continuity=True)
-        self.events.append({"t": self.t, "what": f"добавлена частица {pid} ({packet.species.name})"})
+        self.events.append({"t": self.t, "what": T("added particle {pid} ({species})", pid=int(pid),
+                                                   species=packet.species.name)})
         return pid
 
     def remove_particle(self, pid: int):
         self.particles.pop(pid)
-        self.events.append({"t": self.t, "what": f"убрана частица {pid}"})
+        self.events.append({"t": self.t, "what": T("removed particle {pid}", pid=int(pid))})
 
     def replace_particle(self, pid: int, packet: Packet):
         """A new packet for particle ``pid`` now (its records restart)."""
@@ -1781,7 +1838,7 @@ class Scene:
         self._new_clock(p)
         self.particles[pid] = p
         self._reset_refs(p, continuity=True)
-        self.events.append({"t": self.t, "what": f"частица {pid}: новый пакет"})
+        self.events.append({"t": self.t, "what": T("particle {pid}: a new packet", pid=int(pid))})
 
     def set_wave(self, pid: int, psi):
         """Replace particle ``pid``'s wave now by ``psi`` (host array of the wave's form: scalar (shape) or (2, shape));
@@ -1790,7 +1847,8 @@ class Scene:
         psi = np.asarray(psi, complex)
         want = self.grid.shape if p.kind == "scalar" else (2,) + self.grid.shape
         if psi.shape != want:
-            raise ValueError(f"волна частицы {pid}: форма {want}, дано {psi.shape}")
+            raise ValueError(T("the wave of particle {pid}: shape {want}, given {got}", pid=int(pid), want=str(want),
+                               got=str(psi.shape)))
         psi = psi / math.sqrt(self.grid.norm(psi))
         comps = psi if psi.ndim == self.ndim + 1 else psi[None]
         w = np.sum(np.abs(np.fft.fftn(comps, axes=tuple(range(1, self.ndim + 1)))) ** 2, axis=0)
@@ -1805,7 +1863,7 @@ class Scene:
         if p.acc is not None:
             p.acc = self.xp.zeros(self.grid.shape)
         self._reset_refs(p, continuity=True)
-        self.events.append({"t": self.t, "what": f"частица {pid}: волна задана"})
+        self.events.append({"t": self.t, "what": T("particle {pid}: wave set", pid=int(pid))})
 
     def adopt_wave(self, pid: int, psi, shape, spacing, banked: dict | None = None, kspec=None, sk_extra2: float = 0.0,
                    old_edges=None, active: bool = True, detected=None, tol: float = REGRID_TOL) -> dict:
@@ -1821,28 +1879,31 @@ class Scene:
         p = self.particles[pid]
         old = S.Grid(shape, spacing, m=1.0, hbar=1.0, center=np.array(self.grid.center))
         if old.ndim != self.ndim:
-            raise self._refusal("волна другой размерности", pid=pid, what="dim")
+            raise self._refusal(T("a wave of another dimension"), pid=pid, what="dim")
         if not active:
             p.psi, p.active, p.detected, p.acc, p.snaps = None, False, detected, None, None
             p.banked = dict(banked or {})
-            self.events.append({"t": self.t, "what": f"частица {pid}: перенесена зарегистрированной"})
+            self.events.append({"t": self.t, "what": T("particle {pid}: carried over as detected", pid=int(pid))})
             return {"norm_before": 0.0, "norm_after": 0.0, "dropped": 0.0}
         psi = np.asarray(psi, complex)
         spinor = psi.ndim == self.ndim + 1
         if spinor and p.kind == "scalar":
-            raise self._refusal("волна со спином или меткой, а здесь у частицы их нет", pid=pid, what="kind")
+            raise self._refusal(T("a wave with a spin or a mark, while the particle here has neither"), pid=pid,
+                                what="kind")
         loss = S.regrid_losses(psi, old, self.grid, FACE_CELLS)
         for what in ("spectrum", "outside", "face"):
             if loss[what] > tol:
-                raise self._refusal(f"частица {pid}: на этой сетке — {loss[what]:.3g} её нормы потеряно ({what}), "
-                                    f"больше допуска {tol:g}", pid=pid, what=what, value=loss[what])
+                raise self._refusal(T("particle {pid}: on this grid {share:.3g} of its norm is lost ({kind}), more than "
+                                      "the tolerance {tol}", pid=int(pid), share=float(loss[what]), kind=what,
+                                      tol=float(tol)), pid=pid, what=what, value=loss[what])
         n0 = float(np.sum(np.abs(psi) ** 2)) * float(np.prod(old.d))
         same = old.shape == self.grid.shape and np.allclose(old.d, self.grid.d, rtol=1e-14, atol=0.0)
         psi2 = psi.copy() if same else S.resample(psi, old, self.grid)
         exposed, _ = self._layer_shares(psi2, self.grid, self.edges, old, old_edges)
         if exposed > tol:
-            raise self._refusal(f"частица {pid}: в поглощающих слоях краёв этого окна — {exposed:.3g} её вероятности, "
-                                f"больше допуска {tol:g}", pid=pid, what="layers", value=exposed)
+            raise self._refusal(T("particle {pid}: {share:.3g} of its probability lies in the absorbing layers of this "
+                                  "window's edges, more than the tolerance {tol}", pid=int(pid), share=float(exposed),
+                                  tol=float(tol)), pid=pid, what="layers", value=exposed)
         if not spinor and p.kind == "spin":
             chi = np.asarray(p.packet.spin if p.packet.spin is not None else [1.0, 0.0], complex)
             chi = chi / np.linalg.norm(chi)
@@ -1866,7 +1927,8 @@ class Scene:
             p.acc = self.xp.zeros(self.grid.shape)
         self._reset_refs(p, continuity=True)
         n1 = self.norm(pid)
-        self.events.append({"t": self.t, "what": f"частица {pid}: волна перенесена из другой сцены"})
+        self.events.append({"t": self.t, "what": T("particle {pid}: wave carried over from another scene",
+                                                   pid=int(pid))})
         return {"norm_before": n0, "norm_after": n1, "dropped": n0 - n1, **loss}
 
     # --- live changes of the grid, the window and a wave's place (plan P16.1, P16.2) -------------------------------
@@ -1922,7 +1984,7 @@ class Scene:
         return {"norm": tot * g.dV, "r": r, "k": k, "E": E, "active": True}
 
     @staticmethod
-    def _refusal(text: str, **who) -> ValueError:
+    def _refusal(text: T, **who) -> ValueError:
         """A refused live change: the reason, and which particle (``pid``), object (``oid``) or plane (``plane``) it
         is about, as attributes (a wrapper names them in its own terms)."""
         e = ValueError(text)
@@ -1979,9 +2041,9 @@ class Scene:
         old = self.grid
         shape = tuple(int(n) for n in (np.atleast_1d(shape) if not np.isscalar(shape) else [shape] * self.ndim))
         if len(shape) != self.ndim:
-            raise ValueError(f"новая сетка: нужно {self.ndim} чисел точек")
+            raise ValueError(T("new grid: {n} point counts needed", n=int(self.ndim)))
         if min(shape) < 8:
-            raise ValueError("новая сетка: не меньше 8 точек по оси")
+            raise ValueError(T("new grid: at least 8 points per axis"))
         new = S.Grid(shape, spacing, m=1.0, hbar=1.0, center=np.array(old.center))
         new_edges = self.edges if edges is False else edges
         rep = {"changed": False, "old": {"shape": list(old.shape), "d": old.d.tolist()},
@@ -2000,19 +2062,22 @@ class Scene:
             loss = S.regrid_losses(psi, old, new, FACE_CELLS)
             if loss["spectrum"] > tol:
                 raise self._refusal(
-                    f"частица {pid}: за полосой новой сетки (|k| ≥ π/шаг = {math.pi / float(max(new.d)):.4g}) — "
-                    f"{loss['spectrum']:.3g} нормы её волны, больше допуска {tol:g}: огрубление сетки отбросило бы их",
+                    T("particle {pid}: beyond the band of the new grid (|k| ≥ π/step = {kn:.4g}) lies {share:.3g} of "
+                      "its wave's norm, more than the tolerance {tol}: coarsening the grid would discard it",
+                      pid=int(pid), kn=math.pi / float(max(new.d)), share=float(loss["spectrum"]), tol=float(tol)),
                     pid=pid, what="spectrum", value=loss["spectrum"])
             if loss["outside"] > tol:
                 raise self._refusal(
-                    f"частица {pid}: вне нового окна — {loss['outside']:.3g} её вероятности, больше допуска {tol:g}: "
-                    f"уменьшение окна отбросило бы её", pid=pid, what="outside", value=loss["outside"])
+                    T("particle {pid}: outside the new window lies {share:.3g} of its probability, more than the "
+                      "tolerance {tol}: shrinking the window would discard it", pid=int(pid),
+                      share=float(loss["outside"]), tol=float(tol)), pid=pid, what="outside", value=loss["outside"])
             if loss["face"] > tol:
                 raise self._refusal(
-                    f"частица {pid}: у граней прежнего окна ({FACE_CELLS} крайние ячейки) — {loss['face']:.3g} её "
-                    f"вероятности, больше допуска {tol:g}: сетка периодична, эта часть волны продолжается с другой "
-                    f"стороны окна, а в большем окне её продолжение оборвалось бы", pid=pid, what="face",
-                    value=loss["face"])
+                    T("particle {pid}: at the faces of the present window ({cells} outermost cells) lies {share:.3g} of "
+                      "its probability, more than the tolerance {tol}: the grid is periodic, this part of the wave "
+                      "continues from the other side of the window, and in a larger window its continuation would be "
+                      "cut off", pid=int(pid), cells=int(FACE_CELLS), share=float(loss["face"]), tol=float(tol)),
+                    pid=pid, what="face", value=loss["face"])
             rho = backend.to_numpy(self._rho(p.psi))
             loss["in_layers"] = (float(rho[layers > 0].sum() / rho.sum()) if layers is not None and rho.sum() > 0
                                  else 0.0)
@@ -2020,8 +2085,9 @@ class Scene:
             loss["exposed"], loss["in_new_layers"] = self._layer_shares(psi2, new, new_edges, old, self.edges)
             if loss["exposed"] > tol:
                 raise self._refusal(
-                    f"частица {pid}: в поглощающих слоях нового окна — {loss['exposed']:.3g} её вероятности, которая "
-                    f"сейчас вне слоёв, больше допуска {tol:g}: слои поглотили бы эту часть волны", pid=pid,
+                    T("particle {pid}: {share:.3g} of its probability, now outside the layers, would lie in the "
+                      "absorbing layers of the new window, more than the tolerance {tol}: the layers would absorb this "
+                      "part of the wave", pid=int(pid), share=float(loss["exposed"]), tol=float(tol)), pid=pid,
                     what="layers", value=loss["exposed"])
             waves[pid] = (psi2, loss, self.norm(pid), self._energy_of(p))
         saved = (self.grid, self._grids)
@@ -2031,7 +2097,8 @@ class Scene:
                 try:
                     ob.check(self)
                 except ValueError as e:
-                    raise self._refusal(f"объект #{oid} на новой сетке: {e}", oid=oid) from None
+                    raise self._refusal(T("object #{oid} on the new grid: {reason}", oid=int(oid), reason=text_of(e)),
+                                        oid=oid) from None
             if new_edges is not None:
                 new_edges.check(new)
             arr = self._compute(self.objects, new_edges)
@@ -2056,8 +2123,9 @@ class Scene:
                 idx = int(np.argmin(np.abs(new.axes[ax] - want)))
                 lo, hi = S.window(new, ax)
                 if not (lo <= want < hi) or idx - order // 2 < 0 or idx + order // 2 >= new.shape[ax]:
-                    raise self._refusal(f"плоскость потока #{plid} ({'xyz'[ax]} = {want:.4g}) вне нового окна или "
-                                        f"ближе {order // 2} шагов к его краю", plane=plid)
+                    raise self._refusal(T("flux plane #{plid} ({ax} = {pos:.4g}) is outside the new window or closer "
+                                          "than {n} steps to its edge", plid=int(plid), ax="xyz"[ax], pos=want,
+                                          n=int(order // 2)), plane=plid)
                 planes[plid] = {**pl, "index": idx, "position": float(new.axes[ax][idx]), "requested": want}
         finally:
             self.grid, self._grids = saved
@@ -2089,8 +2157,9 @@ class Scene:
                 if p.active and p.psi is not None:
                     p.acc = self.xp.zeros(new.shape)
         rep["changed"] = True
-        self.events.append({"t": self.t, "what": f"сетка {list(old.shape)} × {old.d.tolist()} → {list(new.shape)} × "
-                                                 f"{new.d.tolist()}"})
+        self.events.append({"t": self.t, "what": T("grid {old_n} × {old_d} → {new_n} × {new_d}", old_n=str(list(old.shape)),
+                                                   old_d=str(old.d.tolist()), new_n=str(list(new.shape)),
+                                                   new_d=str(new.d.tolist()))})
         return rep
 
     def _packet_s0(self, p: _Particle) -> np.ndarray:
@@ -2284,10 +2353,11 @@ class Scene:
         (``in_layers``), the kinetic misfit of the move (``gauge``) and what aliased."""
         p = self.particles[pid]
         if not p.active or p.psi is None:
-            raise self._refusal(f"частица {pid} зарегистрирована детектором: волны нет — переносить или разгонять "
-                                f"нечего", pid=pid, what="no_wave")
+            raise self._refusal(T("particle {pid} was registered by a detector: there is no wave — nothing to move or "
+                                  "accelerate", pid=int(pid)), pid=pid, what="no_wave")
         g = self.grid
-        s = None if shift is None else np.array([0.0 if v is None else float(v) for v in _vec(shift, self.ndim, "сдвиг")])
+        s = None if shift is None else np.array([0.0 if v is None else float(v)
+                                                 for v in _vec(shift, self.ndim, T("shift"))])
         dk = None if dk is None else np.array([0.0 if v is None else float(v) for v in _vec(dk, self.ndim, "Δk")])
         psi = backend.to_numpy(p.psi)
         before = self.observables(pid)
@@ -2301,32 +2371,35 @@ class Scene:
             margin = float(self.edges.width) if self.edges is not None else 0.0
             wrap = S.wrap_fraction(psi, g, s, margin)
             if wrap > tol:
-                raise self._refusal(f"частица {pid}: при сдвиге на {np.round(s, 4).tolist()} через грань окна перешло "
-                                    f"бы {wrap:.3g} её вероятности (сетка периодична) — больше допуска {tol:g}", pid=pid,
-                                    what="wrap", value=wrap)
+                raise self._refusal(T("particle {pid}: a shift by {shift} would carry {share:.3g} of its probability "
+                                      "across a face of the window (the grid is periodic) — more than the tolerance {tol}",
+                                      pid=int(pid), shift=str(np.round(s, 4).tolist()), share=float(wrap),
+                                      tol=float(tol)), pid=pid, what="wrap", value=wrap)
             far = S.wrap_fraction(psi, g, s) - wrap if margin > 0 else 0.0
             new, mv = self._moved(p, psi, s, np.array(before["r"]))
             eps, T0, T1 = mv["eps"], mv["T0"], mv["T1"]
             if eps > tol:
                 dT = (T1 - T0) / T0 if T0 else float("nan")
                 raise self._refusal(
-                    f"частица {pid}: перенос на {np.round(s, 4).tolist()} не сохраняет волну — {eps:.3g} её "
-                    f"кинетического поля (p − qA)ψ не переносится с ней (кинетическая энергия изменилась бы на "
-                    f"{100 * dT:+.3g} %), больше допуска {tol:g}: магнитное поле там, куда переносится волна, не то, что "
-                    f"там, где она была, или путь трубки потока относительно волны проходит через неё (поток, который "
-                    f"охватывают её части, изменился бы)", pid=pid, what="gauge", value=eps, dT=dT,
+                    T("particle {pid}: a move by {shift} does not keep the wave — {share:.3g} of its kinetic field "
+                      "(p − qA)ψ does not move with it (the kinetic energy would change by {pct:.3g} %), more than the "
+                      "tolerance {tol}: the magnetic field where the wave goes is not the one where it was, or the path "
+                      "of a flux tube relative to the wave passes through it (the flux its parts enclose would change)",
+                      pid=int(pid), shift=str(np.round(s, 4).tolist()), share=float(eps), pct=float(100 * dT),
+                      tol=float(tol)), pid=pid, what="gauge", value=eps, dT=dT,
                     tubes=mv["tubes"], fields=mv["fields"])
             packet = dataclasses.replace(packet, center=[(0.0 if v is None else float(v)) + float(d_) for v, d_ in
-                                                         zip(_vec(packet.center, self.ndim, "центр"), s)])
+                                                         zip(_vec(packet.center, self.ndim, T("centre")), s)])
         kspec, extra2 = p.kspec, p.sk_extra2
         if dk is not None and np.any(dk != 0):
             comps = new if new.ndim == self.ndim + 1 else new[None]
             F = np.fft.fftn(comps, axes=tuple(range(1, self.ndim + 1)))
             alias = self._alias(np.sum(F.real ** 2 + F.imag ** 2, axis=0), dk)
             if alias > tol:
-                raise self._refusal(f"частица {pid}: с импульсом ħΔk, Δk = {np.round(dk, 4).tolist()}, за полосу сетки "
-                                    f"(π/шаг = {math.pi / float(max(g.d)):.4g}) вышло бы {alias:.3g} спектра её волны — "
-                                    f"больше допуска {tol:g}", pid=pid, what="alias", value=alias)
+                raise self._refusal(T("particle {pid}: with the momentum ħΔk, Δk = {dk}, {share:.3g} of its wave's "
+                                      "spectrum would leave the grid's band (π/step = {kn:.4g}) — more than the tolerance "
+                                      "{tol}", pid=int(pid), dk=str(np.round(dk, 4).tolist()), share=float(alias),
+                                      kn=math.pi / float(max(g.d)), tol=float(tol)), pid=pid, what="alias", value=alias)
             X = g.mesh()
             new = new * np.exp(1j * sum(dk[a] * X[a] for a in range(self.ndim)))
             # the wave's model for the resolution rule (``k_spread``) from its boosted spectrum (``_spec_model``), and
@@ -2348,9 +2421,9 @@ class Scene:
         if dk is not None and np.any(dk != 0):
             T0 = T0 if T0 is not None else self.kinetic_energy(pid, psi)
             T1 = self.kinetic_energy(pid)
-        self.events.append({"t": self.t, "what": f"частица {pid}: волна приготовлена заново — сдвиг "
-                                                 f"{None if s is None else np.round(s, 6).tolist()}, Δk "
-                                                 f"{None if dk is None else np.round(dk, 6).tolist()}"})
+        self.events.append({"t": self.t, "what": T("particle {pid}: wave prepared anew — shift {shift}, Δk {dk}",
+                                                   pid=int(pid), shift=str(None if s is None else np.round(s, 6).tolist()),
+                                                   dk=str(None if dk is None else np.round(dk, 6).tolist()))})
         return {"norm_before": before["norm"], "norm_after": after["norm"], "E_before": E0, "E_after": after["E"],
                 "T_before": T0, "T_after": T1, "r_before": before["r"], "r_after": after["r"],
                 "k_before": before["k"], "k_after": after["k"], "wrap": wrap, "far_layer": far, "in_layers": in_layers,
@@ -2400,11 +2473,12 @@ class Scene:
         kin = np.array(before["k"], float)
         packet = p.packet
         new = psi
-        s = None if shift is None else np.array([0.0 if v is None else float(v) for v in _vec(shift, self.ndim, "сдвиг")])
+        s = None if shift is None else np.array([0.0 if v is None else float(v)
+                                                 for v in _vec(shift, self.ndim, T("shift"))])
         if s is not None and np.any(s != 0):
             new, _ = self._moved(p, psi, s, np.array(before["r"]))
             packet = dataclasses.replace(packet, center=[(0.0 if v is None else float(v)) + float(d_) for v, d_ in
-                                                         zip(_vec(packet.center, self.ndim, "центр"), s)])
+                                                         zip(_vec(packet.center, self.ndim, T("centre")), s)])
         comps = new if new.ndim == self.ndim + 1 else new[None]
         F = np.fft.fftn(comps, axes=tuple(range(1, self.ndim + 1)))
         w = np.sum(F.real ** 2 + F.imag ** 2, axis=0)
@@ -2599,7 +2673,7 @@ class Scene:
                 y = Y[int(np.argmax(acc))]
                 break
         else:
-            raise RuntimeError("скачок локализации: точка в области среды не найдена")
+            raise RuntimeError("localization jump: no point found in the environment's region")
         X = g.mesh()
         f = 1.0
         for i in range(g.ndim):
@@ -2721,15 +2795,15 @@ class Scene:
         p = self.particles[pid]
         g = self.grid
         if not p.active:
-            raise ValueError(f"частица {pid} уже зарегистрирована детектором")
+            raise ValueError(T("particle {pid} has already been registered by a detector", pid=int(pid)))
         if not float(sigma) >= float(max(g.d)) * (1 - 1e-12):
-            raise ValueError(f"разрешение измерения σ = {sigma:g} меньше шага сетки {max(g.d):g}: исход не передаётся "
-                             f"сеткой")
+            raise ValueError(T("the measurement resolution σ = {sigma} is less than the grid step {d}: the grid does "
+                               "not carry the outcome", sigma=float(sigma), d=float(max(g.d))))
         smin = self.measure_min_sigma(pid)
         if float(sigma) < smin * (1 - 1e-12):
-            raise ValueError(f"разрешение измерения σ = {sigma:g} слишком мало для этой сетки: волна после измерения "
-                             f"(её спектр шире на 1/(2σ)) не поместится в полосу сетки — нужно σ ≥ {smin:.4g} "
-                             f"(или сетка мельче)")
+            raise ValueError(T("the measurement resolution σ = {sigma} is too small for this grid: the wave after the "
+                               "measurement (its spectrum wider by 1/(2σ)) would not fit into the grid's band — it needs "
+                               "σ ≥ {smin:.4g} (or a finer grid)", sigma=float(sigma), smin=float(smin)))
         A = self.absorbed(pid)
         n = self.norm(pid)
         u = rng.random()
@@ -2739,7 +2813,8 @@ class Scene:
             if u < tot:
                 p.psi, p.active, p.detected = None, False, k
                 p.banked, p.acc = {k: 1.0}, None
-                self.events.append({"t": self.t, "what": f"измерение частицы {pid}: уже поглощена ({k})"})
+                self.events.append({"t": self.t, "what": T("measurement of particle {pid}: already absorbed ({where})",
+                                                           pid=int(pid), where=k)})
                 return {"outcome": "absorbed", "detector": k, "p": v}
         if at is None:
             rho = backend.to_numpy(self._rho(p.psi)).ravel()
@@ -2759,8 +2834,8 @@ class Scene:
         p.snap_ok, p.snaps = False, None  # review B6-Q12: the last interval's snapshots are stale
         p.sk_extra2 += 0.25 / float(sigma) ** 2  # K_x multiplies psi by exp(-|r - x|^2 / (4 s^2)): sigma_k^2 + 1/(4 s^2)
         self._reset_refs(p, continuity=True)
-        self.events.append({"t": self.t, "what": f"измерение положения частицы {pid}: x = {np.round(x, 4).tolist()}, "
-                                                 f"σ = {sigma:g}"})
+        self.events.append({"t": self.t, "what": T("position measurement of particle {pid}: x = {x}, σ = {sigma}",
+                                                   pid=int(pid), x=str(np.round(x, 4).tolist()), sigma=float(sigma))})
         return {"outcome": "position", "x": x, "p_flight": n}
 
     # --- readouts -------------------------------------------------------------------------------------------------------
@@ -2784,7 +2859,7 @@ class Scene:
         """<sigma> (x, y, z) of the particle's spin (normalized), or of its marker for a marker wave."""
         p = self.particles[pid]
         if p.psi is None and p.kind != "scalar":
-            raise ValueError(f"частица {pid} поглощена детектором: волны нет")
+            raise ValueError(T("particle {pid} was absorbed by a detector: there is no wave", pid=int(pid)))
         if p.kind == "spin" or p.kind == "marker":
             ps = backend.to_numpy(p.psi)
             a, b = ps[0], ps[1]
@@ -2793,7 +2868,7 @@ class Scene:
             return np.array([2 * ab.real, 2 * ab.imag, np.sum(np.abs(a) ** 2 - np.abs(b) ** 2)]) / n
         chi = p.chi
         if chi is None:
-            raise ValueError("у частицы нет спина")
+            raise ValueError(T("the particle has no spin"))
         ab = np.conj(chi[0]) * chi[1]
         return np.array([2 * ab.real, 2 * ab.imag, abs(chi[0]) ** 2 - abs(chi[1]) ** 2])
 
@@ -2801,7 +2876,7 @@ class Scene:
         """The marker's reduced density matrix (2 x 2, trace 1) of a marker wave."""
         p = self.particles[pid]
         if p.kind != "marker":
-            raise ValueError("у частицы нет метки пути")
+            raise ValueError(T("the particle has no which-path mark"))
         ps = backend.to_numpy(p.psi).reshape(2, -1)
         rho = ps @ ps.conj().T
         return rho / np.trace(rho).real
@@ -2828,7 +2903,7 @@ class Scene:
         """(R, T) of the window's edge layers for normal wavenumbers k (``schrodinger_nd.layer_reflection``)."""
         e = self.edges
         if e is None:
-            raise ValueError("края окна закрыты (периодичны)")
+            raise ValueError(T("the window's edges are closed (periodic)"))
         return S.layer_reflection(k, float(e.width), float(e.strength), mass, 1.0, int(e.power))
 
     # --- flux planes -----------------------------------------------------------------------------------------------
@@ -2838,7 +2913,7 @@ class Scene:
         g = self.grid
         idx = int(np.argmin(np.abs(g.axes[axis] - position)))
         if idx - order // 2 < 0 or idx + order // 2 >= g.shape[axis]:
-            raise ValueError("плоскость потока слишком близко к краю окна")
+            raise ValueError(T("the flux plane is too close to the window's edge"))
         plid = self._next_plane
         self._next_plane += 1
         self.planes[plid] = {"axis": int(axis), "index": idx, "position": float(g.axes[axis][idx]), "order": int(order),

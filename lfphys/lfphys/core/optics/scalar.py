@@ -17,13 +17,16 @@ import math
 import numpy as np
 from scipy import special
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Точное распространение скалярной волны (2-D)",
-    "statement": "Функция Грина (i/4)H₀⁽¹⁾(kr) и ядро Рэлея–Зоммерфельда первого рода: точное решение уравнения "
-                 "Гельмгольца при заданных значениях поля на прямой.",
-    "validity": "однородная среда, поле на прямой задано; асимптотика Ханкеля с относительной ошибкой < 1e-10 при kR > 1e4",
-    "basis": ["Born & Wolf, Principles of Optics, гл. 8.11", "Abramowitz & Stegun 9.2.5–9.2.10"],
+    "title": T("Exact propagation of a scalar wave (2-D)"),
+    "statement": T("The Green's function (i/4)H₀⁽¹⁾(kr) and the Rayleigh–Sommerfeld kernel of the first kind: an "
+                   "exact solution of the Helmholtz equation for given values of the field on a line."),
+    "validity": T("homogeneous medium, the field given on a line; Hankel asymptotics with a relative error < 1e-10 at "
+                  "kR > 1e4"),
+    "basis": [T("Born & Wolf, Principles of Optics, ch. 8.11"), "Abramowitz & Stegun 9.2.5–9.2.10"],
     "conflicts": [],
 }
 

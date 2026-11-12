@@ -28,17 +28,20 @@ import warnings
 import numpy as np
 from scipy import integrate, optimize
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Шварцшильд: нулевые геодезические",
-    "statement": "Свет вне сферически-симметричного тела в ОТО: орбиты с прицельным параметром b, отклонение, время "
-                 "прихода, соединение двух точек геодезическими (первичный и вторичный образ) — точные квадратуры.",
-    "validity": "вне тела (r > R), невращающееся тело; вращение — lfphys.core.gravity.kerr",
+    "title": T("Schwarzschild: null geodesics"),
+    "statement": T("Light outside a spherically symmetric body in GR: orbits with impact parameter b, deflection, "
+                   "arrival time, the connection of two points by geodesics (primary and secondary image): exact "
+                   "quadratures."),
+    "validity": T("outside the body (r > R), a non-rotating body; rotation: lfphys.core.gravity.kerr"),
     "basis": ["Schwarzschild 1916",
-              "отклонение радиоволн Солнцем (VLBI): γ − 1 = (−1.6 ± 1.5)·10⁻⁴ (Lambert & Le Poncin-Lafitte 2009, "
-              "по Will 2014)",
-              "Cassini (доплеровский сдвиг частоты, относят к задержке Шапиро): γ − 1 = (2.1 ± 2.3)·10⁻⁵ "
-              "(Bertotti, Iess, Tortora 2003)"],
+              T("deflection of radio waves by the Sun (VLBI): γ − 1 = (−1.6 ± 1.5)·10⁻⁴ (Lambert & Le Poncin-Lafitte "
+                "2009, after Will 2014)"),
+              T("Cassini (Doppler shift of the frequency, attributed to the Shapiro delay): γ − 1 = (2.1 ± 2.3)·10⁻⁵ "
+                "(Bertotti, Iess, Tortora 2003)")],
     "conflicts": [],
 }
 

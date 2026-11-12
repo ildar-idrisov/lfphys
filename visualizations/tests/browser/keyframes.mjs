@@ -15,10 +15,11 @@
 //     -w /lf/visualizations -p 8507:8479 lfphys-viz python3 server/serve.py --host 0.0.0.0 --port 8479 --max-workers 2
 //   docker run --rm --init --shm-size=2g --network host -v <a scratch dir with node_modules/playwright@1.58.2>:/pw \
 //     -v <engine>/visualizations/tests/browser:/t:ro -w /pw mcr.microsoft.com/playwright:v1.58.2-jammy \
-//     sh -c "cp /t/keyframes.mjs /pw/ && node /pw/keyframes.mjs 8507 [viz,...]"
+//     -e LFVIZ_LANG=en|ru sh -c "cp /t/*.mjs /pw/ && node /pw/keyframes.mjs 8507 [viz,...]"
 // (the script runs next to its node_modules: ES modules resolve packages from the script's folder)
 // Prints one JSON line per visualization and exits with code 1 when a comparison differs.
 import { chromium } from "playwright";
+import { inLang } from "./lfi18n.mjs";
 
 const port = process.argv[2] || "8507";
 const base = `http://127.0.0.1:${port}`;
@@ -160,8 +161,8 @@ for (const job of jobs) {
     const page = await br.newPage({ viewport: { width: 1600, height: 1000 } });
     page.on("pageerror", (e) => errs.push(`pageerror: ${e.message}`));
     page.on("console", (m) => { if (m.type() === "error" && !/key frame not restored/.test(m.text())) errs.push(`console: ${m.text()}`.slice(0, 300)); });
-    await page.goto(`${base}/run?id=${id}&key_every=3`);  // opened at the end of the record
-    await page.waitForFunction(() => window.__lfPlayer && window.__lfPlayer.frames() > 0 && !/загрузка записи/.test(document.querySelector("#status").textContent || ""), null, { timeout: 180000 });
+    await page.goto(inLang(`${base}/run?id=${id}&key_every=3`));  // opened at the end of the record
+    await page.waitForFunction(() => window.__lfPlayer && window.__lfPlayer.frames() > 0 && !window.__lfPlayer.replaying(), null, { timeout: 180000 });
     await settle(page);
     const nf = await page.evaluate(() => window.__lfPlayer.frames());
     const res = { run: job.name, frames: nf, keys: await page.evaluate(() => window.__lfPlayer.keys()), steps: [] };

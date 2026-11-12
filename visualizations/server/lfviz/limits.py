@@ -10,7 +10,7 @@ Two lines of defence, both in the framework:
   (``ENV``); the worker
   sets it as its own ``RLIMIT_DATA`` before it builds a world. ``RLIMIT_DATA`` counts the private writable memory (NumPy's
   arrays, Python's objects) and not the address space a GPU driver reserves, so CUDA keeps working. An allocation beyond
-  it fails inside the worker (``MemoryError``), which is reported in Russian (``errors.owner_text``) — the host and the
+  it fails inside the worker (``MemoryError``), which is reported in the owner's words (``errors.owner_text``) — the host and the
   other runs are never touched;
 * **estimates before allocating**: a world may say how much it will allocate — for its parameters before it is built
   (``Simulation.estimate_bytes(params) -> int``, a classmethod; the server asks it before it starts a run, the worker
@@ -23,22 +23,23 @@ from __future__ import annotations
 import os
 import sys
 
+from .i18n import T
+
 ENV = "LFVIZ_WORKER_MEM"  # bytes a worker may hold (set by the server for every worker; absent: no limit)
 GIB = 2 ** 30
 HEADROOM = 0.85  # an estimate is compared with this share of the budget: the interpreter, the libraries, the record
 
 
-def fmt_bytes(n: float | None) -> str:
-    """Bytes in the owner's units: «6,6 ГБ», «591 ГБ», «74 ТБ», «120 МБ» (binary units, as the limits)."""
+def fmt_bytes(n: float | None):
+    """Bytes in the owner's units, a text (``T``) with its number: "6.6 GB", "591 GB", "74 TB", "120 MB" (binary
+    units, as the limits); ``str()`` of it is English (the server's log)."""
     if n is None:
         return "—"
     n = float(n)
-    for unit, k in (("ТБ", 2 ** 40), ("ГБ", 2 ** 30), ("МБ", 2 ** 20), ("КБ", 2 ** 10)):
+    for unit, k in (("TB", 2 ** 40), ("GB", 2 ** 30), ("MB", 2 ** 20), ("KB", 2 ** 10)):
         if n >= k:
-            v = n / k
-            s = f"{v:.0f}" if v >= 100 else f"{v:.1f}" if v >= 10 else f"{v:.2f}"
-            return s.rstrip("0").rstrip(".").replace(".", ",") + " " + unit
-    return f"{n:.0f} Б"
+            return T("{n:.3g} " + unit, n=n / k)
+    return T("{n:.3g} B", n=n)
 
 
 def worker_budget() -> int | None:
@@ -97,16 +98,17 @@ def default_budget(max_workers: int) -> int:
     return int(min(8 * GIB, max(1 * GIB, 0.6 * total)))
 
 
-def require(nbytes: float, what: str, change: str = "", budget: int | None = None) -> None:
-    """Refuse (``errors.Refusal``) when ``nbytes`` — what the world is about to allocate for ``what`` (Russian, e.g.
-    «сетка 440 × 180 400 000 узлов») — exceeds the budget (this worker's, or ``budget``); nothing when no budget is set
-    or it fits."""
+def require(nbytes: float, what, change="", budget: int | None = None) -> None:
+    """Refuse (``errors.Refusal``) when ``nbytes`` — what the world is about to allocate for ``what`` (a text, e.g.
+    ``T("a grid of {nx} × {ny} nodes", ...)``) — exceeds the budget (this worker's, or ``budget``); nothing when no
+    budget is set or it fits."""
     budget = budget or worker_budget()
     if not budget or not (nbytes > HEADROOM * budget):
         return
     from .errors import Refusal  # noqa: PLC0415
-    raise Refusal(f"{what[:1].upper() + what[1:]} потребует около {fmt_bytes(nbytes)} памяти, а вычислителю отведено "
-                  f"{fmt_bytes(budget)}", change or "уменьшите размер задачи (сетку, область, число частиц)")
+    raise Refusal(T("{what:cap} would need about {need} of memory, while the worker is given {budget}", what=what,
+                    need=fmt_bytes(nbytes), budget=fmt_bytes(budget)),
+                  change or T("reduce the size of the task (the grid, the region, the number of particles)"))
 
 
 def check_estimate(sim_cls, params: dict, budget: int | None = None) -> None:
@@ -132,4 +134,4 @@ def check_estimate(sim_cls, params: dict, budget: int | None = None) -> None:
         nbytes, what, change = (list(r) + ["", ""])[:3]
     else:
         nbytes, what, change = r, "", ""
-    require(float(nbytes), what or "мир с этими параметрами", change, budget)
+    require(float(nbytes), what or T("a world with these parameters"), change, budget)

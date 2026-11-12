@@ -107,9 +107,10 @@ def test_magic_time_step_is_exact_in_1d():
     assert out[0.5] > 1e-3, out  # the negative control: below the magic step the pulse disperses
 
 
-def test_courant_limit_is_enforced():
-    with pytest.raises(F.Unstable, match="неустойчива"):
+def test_courant_limit_is_enforced(ru):
+    with pytest.raises(F.Unstable, match="the scheme is unstable in the medium background") as e:
         F.FDTD((1.0, 1.0), 0.05, courant=0.72)
+    assert "схема неустойчива в среде фон (вакуум)" in ru(e.value.args[0])
     F.FDTD((1.0, 1.0), 0.05, courant=0.707)
     with pytest.raises(F.Unstable):
         F.FDTD((1.0, 1.0, 1.0), 0.05, courant=0.58)
@@ -242,7 +243,7 @@ def test_axis_lengths_with_pec_and_pmc_walls(lo, hi, want):
     g = w.checks()["geometry"]
     assert g["ok"] == (want == 0.6) and w.describe()["size_requested"][1] == 0.6
     if want != 0.6:
-        assert "PEC" in g["note"]
+        assert "PEC" in str(g["note"])
         exact = F.FDTD((1.0, 0.625), 0.05, pol="tm", boundary={"x": "pec", "y": (lo, hi)})
         assert exact.interior[1] == pytest.approx(0.625, abs=1e-12) and exact.checks()["geometry"]["ok"]
 
@@ -296,7 +297,7 @@ def test_hard_h_is_the_dual_of_hard_e_2d():
     assert peak > 0.1 and diff < 1e-4, diff
 
 
-def test_mixed_nodes_are_checked_for_stability():
+def test_mixed_nodes_are_checked_for_stability(ru):
     """F11: E nodes of medium A (eps 0.25, mu 4) next to H nodes of medium B (eps 4, mu 0.25): each medium alone has
     n = 1, but the mixed nodes carry a wave at speed 4 (1-D limit S = 0.25). Before the review the world was accepted
     at S = 0.5 and its fields were NaN after 500 steps; now refused by the node maps' bound, and accepted at S = 0.24,
@@ -312,8 +313,9 @@ def test_mixed_nodes_are_checked_for_stability():
         w.add_body(F.Mask(array=arr, lo=(0.0, -1.0), hi=(L, 1.0)), F.Medium(eps=0.25, mu=4.0, label="A"))
         return w
 
-    with pytest.raises(F.Unstable, match="стыке сред"):
+    with pytest.raises(F.Unstable, match="at an interface of media") as e:
         world(0.5)
+    assert "на стыке сред" in ru(e.value.args[0])
     w = world(0.24)
     assert np.unique(w._mats["ez"][0]).tolist() == [0.25] and np.unique(w._mats["hy"][0]).tolist() == [0.25]
     rng = np.random.default_rng(0)
@@ -374,9 +376,10 @@ def test_field_energy_is_not_conserved_with_a_lossless_pole():
     assert np.min(vals[1]) < 0.5
 
 
-def test_fields_are_checked_at_the_end_of_every_advance():
+def test_fields_are_checked_at_the_end_of_every_advance(ru):
     """F20: health was checked only at multiples of 256 steps, so short calls could return NaN fields silently."""
     w = F.FDTD((1.0, 1.0), 0.05)
     w.set_field("ez", np.inf)
-    with np.errstate(invalid="ignore", over="ignore"), pytest.raises(F.Unstable, match="нечисловыми"):
+    with np.errstate(invalid="ignore", over="ignore"), pytest.raises(F.Unstable, match="non-numeric") as e:
         w.advance(10)
+    assert "поля стали нечисловыми" in ru(e.value.args[0])

@@ -26,6 +26,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from lfphys.i18n import T
+
 from ..core import relativity
 from ..core.constants import C
 from ..core.gravity import arrivals
@@ -33,20 +35,21 @@ from ..theories.alternatives import kinematics as alt
 
 ABOUT = {
     "layer": "laws", "kind": "law set",
-    "title": "Законы света и часов: кинематика × гравитация",
-    "statement": "Выбор кинематики (СТО / эфир / баллистика) и гравитации (ОТО / ньютоновы корпускулы / нет) для "
-                 "мира; общепринятое сочетание — СТО + ОТО.",
-    "validity": "сочетания проверяются (validate)",
+    "title": T("Laws of light and clocks: kinematics × gravity"),
+    "statement": T("The choice of kinematics (SR / ether / emission) and of gravity (GR / Newtonian corpuscles / none) "
+                   "for a world; the accepted combination is SR + GR."),
+    "validity": T("the combinations are checked (validate)"),
     "basis": [],
     "conflicts": [],
 }
 
-KINEMATICS = [("SR", "СТО (преобразования Лоренца)"),
-              ("ether", "Галилей + эфир (скорость c относительно эфира)"),
-              ("emission", "Баллистическая (Ритц: c относительно источника)")]
-GRAVITY = [("GR", "ОТО (Шварцшильд, нулевые геодезические)"),
-           ("newton", "Ньютон: свет как корпускулы (Зольднер)"),
-           ("none", "Без гравитации")]
+# option labels: translatable texts (lfphys.i18n)
+KINEMATICS = [("SR", T("SR (Lorentz transformations)")),
+              ("ether", T("Galileo + ether (speed c relative to the ether)")),
+              ("emission", T("Emission theory (Ritz: c relative to the source)"))]
+GRAVITY = [("GR", T("GR (Schwarzschild, null geodesics)")),
+           ("newton", T("Newton: light as corpuscles (Soldner)")),
+           ("none", T("No gravity"))]
 STANDARD = {"kinematics": "SR", "gravity": "GR", "c_factor": 1.0}
 
 
@@ -68,20 +71,20 @@ class Laws:
     def standard(self) -> bool:
         return (self.kinematics, self.gravity, self.c_factor) == ("SR", "GR", 1.0)
 
-    def validate(self) -> list[str]:
+    def validate(self) -> list[T]:
         err = []
         if self.kinematics not in dict(KINEMATICS):
-            err.append(f"неизвестная кинематика {self.kinematics}")
+            err.append(T("unknown kinematics {name}", name=str(self.kinematics)))
         if self.gravity not in dict(GRAVITY):
-            err.append(f"неизвестная гравитация {self.gravity}")
+            err.append(T("unknown gravity {name}", name=str(self.gravity)))
         if self.gravity == "GR" and self.kinematics != "SR":
-            err.append("ОТО требует СТО: метрика Шварцшильда локально лоренцева. "
-                       "Для эфира или баллистики выберите «Без гравитации» или «Ньютон» (только баллистика).")
+            err.append(T("GR requires SR: the Schwarzschild metric is locally Lorentzian. For the ether or emission "
+                         "theory choose “No gravity” or “Newton” (emission theory only)."))
         if self.gravity == "newton" and self.kinematics != "emission":
-            err.append("Ньютоново притяжение света имеет смысл только для корпускул, то есть для "
-                       "баллистической кинематики.")
+            err.append(T("Newtonian attraction of light makes sense only for corpuscles, that is, for emission "
+                         "kinematics."))
         if not (self.c_factor > 0):
-            err.append("скорость света должна быть положительной")
+            err.append(T("the speed of light must be positive"))
         return err
 
     def rs(self, gm: float) -> float:

@@ -3,6 +3,7 @@
 // v03 view: the wave of the current particle over the potential, the detectors, the outcome in the chosen reading
 // (Copenhagen collapse, Bohm trajectory, Everett branches), the space-time map of |psi|^2 with Bohm trajectories,
 // and the statistics of outcomes against the run's own probabilities. Everything comes from the run.
+import { t, fmt } from "/static/js/i18n.js";
 import { css, el, fresh2d, num, panel, time } from "/static/js/ui.js";
 
 const LUT = (() => {
@@ -18,11 +19,11 @@ const LUT = (() => {
 
 export function createView(ctx) {
   let H = null, segs = [], clicks = [];
-  const quick = el("div", { class: "toolbar quick", title: "Установка: меняется сразу (то же, что в панели слева)" },
-    el("span", { class: "muted" }, "Установка:"),
-    ctx.liveControl("scenario", { label: "потенциал" }), ctx.liveControl("V0", { label: "V₀, эВ" }),
-    ctx.liveControl("width", { label: "a, нм" }), ctx.liveControl("energy", { label: "E, эВ" }),
-    ctx.liveControl("interp", { label: "прочтение" }));
+  const quick = el("div", { class: "toolbar quick", title: t("Set-up: changes at once (the same as in the panel on the left)") },
+    el("span", { class: "muted" }, t("Set-up:")),
+    ctx.liveControl("scenario", { label: t("potential") }), ctx.liveControl("V0", { label: t("V₀, eV") }),
+    ctx.liveControl("width", { label: t("a, nm") }), ctx.liveControl("energy", { label: t("E, eV") }),
+    ctx.liveControl("interp", { label: t("reading") }));
   const cvWave = el("canvas"), cvMap = el("canvas"), cvStat = el("canvas");
   const ovWave = el("div", { class: "overlay" }), ovMap = el("div", { class: "overlay" }), ovStat = el("div", { class: "overlay" });
   const center = el("div", { style: { display: "flex", flexDirection: "column", flex: 1, minHeight: 0 } }, quick,
@@ -32,7 +33,7 @@ export function createView(ctx) {
       el("div", {}, el("div", { class: "canvas-wrap" }, cvMap, ovMap)),
       el("div", {}, el("div", { class: "canvas-wrap" }, cvStat, ovStat))));
   const outBox = el("div", {}), partBox = el("div", { class: "kv" }), clickBox = el("div", { class: "events" });
-  const rightPanels = [panel("Исходы", outBox), panel("Частица и волна", partBox), panel("Последние щелчки", clickBox, { closed: true })];
+  const rightPanels = [panel(t("Outcomes"), outBox), panel(t("Particle and wave"), partBox), panel(t("Latest clicks"), clickBox, { closed: true })];
   for (const cv of [cvWave, cvMap, cvStat]) new ResizeObserver(() => ctx.requestRender()).observe(cv);
   window.addEventListener("themechange", () => ctx.requestRender());
   let mapCache = null;
@@ -65,8 +66,8 @@ export function createView(ctx) {
     g.fillRect(X(-L), top, X(-L + s.det) - X(-L), bot - top);
     g.fillRect(X(L - s.det), top, X(L) - X(L - s.det), bot - top);
     g.fillStyle = css("--muted"); g.font = "11px system-ui";
-    g.fillText("детектор:", X(-L) + 4, top + 34); g.fillText("отражение", X(-L) + 4, top + 47);
-    g.fillText("детектор:", X(L - s.det) + 4, top + 34); g.fillText("прохождение", X(L - s.det) + 4, top + 47);
+    g.fillText(t("detector:"), X(-L) + 4, top + 34); g.fillText(t("reflection"), X(-L) + 4, top + 47);
+    g.fillText(t("detector:"), X(L - s.det) + 4, top + 34); g.fillText(t("transmission"), X(L - s.det) + 4, top + 47);
     // |psi|^2, scaled to the band above the energy line
     const rho = blobs.rho;
     if (rho) {
@@ -82,7 +83,7 @@ export function createView(ctx) {
       if (collapsed) {  // the state after the click: localised in the detector that clicked
         const xd = frame.clicked === "right" ? L - s.det / 2 : -L + s.det / 2;
         g.fillStyle = "#e8590c"; g.fillRect(X(xd) - 3, base - hgt, 6, hgt);
-        g.fillText("коллапс: частица в этом детекторе", Math.min(X(xd) - 100, W - 230), base - hgt - 6);
+        g.fillText(t("collapse: the particle is in this detector"), Math.min(X(xd) - 100, W - 230), base - hgt - 6);
       }
     }
     // potential
@@ -91,7 +92,7 @@ export function createView(ctx) {
     g.stroke();
     if (!s.osc) {
       g.setLineDash([5, 4]); g.strokeStyle = "#e8590c"; g.beginPath(); g.moveTo(X(-L), Y(s.energy)); g.lineTo(X(L), Y(s.energy)); g.stroke(); g.setLineDash([]);
-      g.fillStyle = "#e8590c"; g.fillText(`E = ${num(s.energy, 3)} эВ`, X(-L) + 4, Y(s.energy) - 4);
+      g.fillStyle = "#e8590c"; g.fillText(t("E = {e:.3g} eV", { e: s.energy }), X(-L) + 4, Y(s.energy) - 4);
     }
     // the Bohm particle
     if (frame.x_bohm !== undefined) {
@@ -105,17 +106,19 @@ export function createView(ctx) {
         const ours = frame.clicked === side;
         g.fillStyle = ours ? css("--ink") : css("--muted");
         const xx = side === "right" ? X(L - s.det) - 190 : X(-L + s.det) + 6;
-        g.fillText(`${ours ? "● наша ветвь" : "○ другая ветвь"}: ${side === "right" ? "прошла" : "отразилась"}, вес ${num(b[side], 3)}`, xx, top + 30);
+        const what = side === "right" ? t("the particle is transmitted") : t("the particle is reflected");
+        g.fillText(ours ? t("● our branch: {what}, weight {w:.3g}", { what, w: b[side] })
+          : t("○ the other branch: {what}, weight {w:.3g}", { what, w: b[side] }), xx, top + 30);
       }
     }
     // axis
     g.fillStyle = css("--muted"); g.font = "11px system-ui";
-    for (let xx = -Math.floor(L / 20) * 20; xx <= L; xx += 20) { g.fillRect(X(xx), bot, 1, 4); g.fillText(`${xx}`, X(xx) - 8, bot + 15); }
-    g.fillText("x, нм", W - 40, bot + 15);
-    for (const e of [e0, 0, vmax]) { g.fillText(`${num(e, 2)} эВ`, 2, Y(e) + 4); }
-    const interp = { copenhagen: "копенгагенское прочтение", bohm: "прочтение Бома", everett: "прочтение Эверетта" }[frame.interp] || "";
-    ovWave.textContent = `Волна частицы №${(frame.counts || {}).emitted || 0} (${interp}); t после вылета ${time(frame.t_local * 1e-15, 4)}; ` +
-      `поглощено: слева ${num(frame.PL_t, 3)}, справа ${num(frame.PR_t, 3)}; в окне ${num(frame.norm_t, 3)}`;
+    for (let xx = -Math.floor(L / 20) * 20; xx <= L; xx += 20) { g.fillRect(X(xx), bot, 1, 4); g.fillText(fmt(xx), X(xx) - 8, bot + 15); }
+    g.fillText(t("x, nm"), W - 40, bot + 15);
+    for (const e of [e0, 0, vmax]) { g.fillText(t("{e:.2g} eV", { e }), 2, Y(e) + 4); }
+    const interp = { copenhagen: t("the Copenhagen reading"), bohm: t("Bohm's reading"), everett: t("Everett's reading") }[frame.interp] || "";
+    ovWave.textContent = t("Wave of particle no. {n:d} ({interp}); t after emission {t}; absorbed: left {l:.3g}, right {r:.3g}; in the window {w:.3g}",
+      { n: (frame.counts || {}).emitted || 0, interp, t: time(frame.t_local * 1e-15, 4), l: frame.PL_t, r: frame.PR_t, w: frame.norm_t });
   }
 
   // --- space-time map with Bohm trajectories ----------------------------------------------------------------
@@ -138,7 +141,7 @@ export function createView(ctx) {
     }
     g.imageSmoothingEnabled = true; g.drawImage(mapCache.oc, left, top, mw, mh);
     const tmax = s.t_map[s.t_map.length - 1];
-    const X = (xx) => left + mw * (xx + s.L) / (2 * s.L), Y = (t) => bot - mh * t / tmax;
+    const X = (xx) => left + mw * (xx + s.L) / (2 * s.L), Y = (tw) => bot - mh * tw / tmax;
     if (s.has_bohm && s.traj) {
       const [mt, mb] = s.traj_shape;
       g.strokeStyle = "rgba(120,220,255,0.55)"; g.lineWidth = 0.8;
@@ -152,8 +155,9 @@ export function createView(ctx) {
     const tl = Math.min(frame.t_local, tmax);
     g.strokeStyle = "#fff"; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(left, Y(tl)); g.lineTo(left + mw, Y(tl)); g.stroke(); g.setLineDash([]);
     g.fillStyle = css("--muted"); g.font = "11px system-ui";
-    g.fillText("t", 4, top + 10); g.fillText(`${num(tmax, 3)} фс`, 2, top + 22); g.fillText("0", 20, bot);
-    ovMap.textContent = "|ψ(x, t)|² одной частицы (√ для контраста), время вверх" + (s.has_bohm ? "; голубые — траектории Бома ансамбля (старт по |ψ|²)" : "");
+    g.fillText("t", 4, top + 10); g.fillText(t("{v:.3g} fs", { v: tmax }), 2, top + 22); g.fillText("0", 20, bot);
+    ovMap.textContent = s.has_bohm ? t("|ψ(x, t)|² of one particle (√ for contrast), time upwards; light blue: the Bohm trajectories of the ensemble (started by |ψ|²)")
+      : t("|ψ(x, t)|² of one particle (√ for contrast), time upwards");
   }
 
   // --- statistics: outcomes and T(E) -----------------------------------------------------------------------
@@ -161,24 +165,24 @@ export function createView(ctx) {
     const g = setup(cvStat), W = cvStat.clientWidth, Hh = cvStat.clientHeight;
     g.fillStyle = css("--canvas"); g.fillRect(0, 0, W, Hh);
     const s = segNow(); if (!s) return;
-    if (s.osc) { ovStat.textContent = "Ловушка: детекторов нет; уровни и период — в «Проверках»."; return; }
+    if (s.osc) { ovStat.textContent = t("Trap: no detectors; the levels and the period are in “Checks”."); return; }
     const c = frame.counts || {}, n = (c.left || 0) + (c.right || 0);
     const PR = s.PR / (s.PL + s.PR);
     // bars
     const bx = 16, bw = 46, top = 24, bot = Hh * 0.55;
-    const bars = [["отражение", c.left || 0, 1 - PR, "#1c7ed6"], ["прохождение", c.right || 0, PR, "#e8590c"]];
+    const bars = [[t("reflection"), c.left || 0, 1 - PR, "#1c7ed6"], [t("transmission"), c.right || 0, PR, "#e8590c"]];
     bars.forEach(([lab, k, p, col], i) => {
       const xx = bx + i * (bw + 24), fr = n ? k / n : 0;
       g.fillStyle = col; g.globalAlpha = 0.6; g.fillRect(xx, bot - (bot - top) * fr, bw, (bot - top) * fr); g.globalAlpha = 1;
       g.strokeStyle = css("--ink"); g.setLineDash([4, 3]); g.beginPath(); g.moveTo(xx - 4, bot - (bot - top) * p); g.lineTo(xx + bw + 4, bot - (bot - top) * p); g.stroke(); g.setLineDash([]);
-      g.fillStyle = css("--muted"); g.font = "11px system-ui"; g.fillText(lab, xx - 2, bot + 13); g.fillText(`${k}`, xx + 2, bot - (bot - top) * fr - 4);
+      g.fillStyle = css("--muted"); g.font = "11px system-ui"; g.fillText(lab, xx - 2, bot + 13); g.fillText(fmt(k, "d"), xx + 2, bot - (bot - top) * fr - 4);
     });
     // T(E) and the packet's energy distribution
     if (s.T_k) {
       const x0 = bx + 2 * (bw + 24) + 20, x1 = W - 10, y0 = top, y1 = bot;
       const E = s.E_k, T = s.T_k, wk = s.w_k, m = E.length;
       const Emin = E[0], Emax = E[m - 1];
-      const XE = (e) => x0 + (x1 - x0) * (e - Emin) / (Emax - Emin), YT = (t) => y1 - (y1 - y0) * t;
+      const XE = (e) => x0 + (x1 - x0) * (e - Emin) / (Emax - Emin), YT = (tw) => y1 - (y1 - y0) * tw;
       let wmax = 0; for (const v of wk) wmax = Math.max(wmax, v);
       g.fillStyle = "rgba(134,142,150,0.25)"; g.beginPath(); g.moveTo(XE(E[0]), y1);
       for (let i = 0; i < m; i++) g.lineTo(XE(E[i]), y1 - (y1 - y0) * 0.9 * wk[i] / wmax);
@@ -187,10 +191,10 @@ export function createView(ctx) {
       for (let i = 0; i < m; i++) { if (i) g.lineTo(XE(E[i]), YT(T[i])); else g.moveTo(XE(E[i]), YT(T[i])); }
       g.stroke();
       g.strokeStyle = css("--line"); g.strokeRect(x0, y0, x1 - x0, y1 - y0);
-      g.fillStyle = css("--muted"); g.fillText(`${num(Emin, 3)} эВ`, x0, y1 + 13); g.fillText(`${num(Emax, 3)} эВ`, x1 - 50, y1 + 13);
+      g.fillStyle = css("--muted"); g.fillText(t("{e:.3g} eV", { e: Emin }), x0, y1 + 13); g.fillText(t("{e:.3g} eV", { e: Emax }), x1 - 50, y1 + 13);
       g.fillText("T(E)", x0 + 4, y0 + 12);
     }
-    ovStat.textContent = `Исходы ${n} частиц: столбики — доли, пунктир — вероятность из волны. Справа: точное T(E) (оранжевое) и распределение пакета по энергии, на единицу энергии (серое).`;
+    ovStat.textContent = t("Outcomes of particles: {n:d}; bars: the fractions, dashes: the probability from the wave. Right: the exact T(E) (orange) and the packet's distribution in energy, per unit energy (grey).", { n });
   }
 
   function drawPanels(frame) {
@@ -201,27 +205,27 @@ export function createView(ctx) {
       const fr = n ? (c.right || 0) / n : 0;
       const sd = n ? Math.sqrt(PR * (1 - PR) / n) : 0;
       outBox.replaceChildren(el("div", { class: "kv" },
-        el("span", {}, "частиц"), el("span", { class: "mono" }, String(c.emitted || 0)),
-        el("span", {}, "прошли / отразились"), el("span", { class: "mono" }, `${c.right || 0} / ${c.left || 0}`),
-        el("span", {}, "доля прошедших"), el("span", { class: "mono" }, n ? `${num(fr, 4)} ± ${num(sd, 2)}` : "—"),
-        el("span", {}, "вероятность из волны"), el("span", { class: "mono" }, num(PR, 6)),
-        el("span", {}, "точное T(E) по спектру"), el("span", { class: "mono" }, s.T_expected !== undefined ? num(s.T_expected, 6) : "—")),
-        el("div", { class: "help" }, "Интерпретация меняет только картину исхода (коллапс, траектория, ветвь); вероятности одни и те же."));
-    } else outBox.replaceChildren(el("div", { class: "help" }, "Ловушка без детекторов: пакет колеблется с периодом 2π/ω."));
+        el("span", {}, t("particles")), el("span", { class: "mono" }, fmt(c.emitted || 0, "d")),
+        el("span", {}, t("transmitted / reflected")), el("span", { class: "mono" }, `${fmt(c.right || 0, "d")} / ${fmt(c.left || 0, "d")}`),
+        el("span", {}, t("fraction transmitted")), el("span", { class: "mono" }, n ? `${num(fr, 4)} ± ${num(sd, 2)}` : "—"),
+        el("span", {}, t("probability from the wave")), el("span", { class: "mono" }, num(PR, 6)),
+        el("span", {}, t("exact T(E) over the spectrum")), el("span", { class: "mono" }, s.T_expected !== undefined ? num(s.T_expected, 6) : "—")),
+        el("div", { class: "help" }, t("The interpretation changes only the picture of the outcome (a collapse, a trajectory, a branch); the probabilities are the same.")));
+    } else outBox.replaceChildren(el("div", { class: "help" }, t("A trap without detectors: the packet oscillates with the period 2π/ω.")));
     const lam = 2 * Math.PI / Math.max(s.k0, 1e-12);
-    partBox.replaceChildren(...[["частица", "электрон"], ["энергия", s.osc ? "—" : `${num(s.energy, 4)} эВ`],
-      ["длина волны де Бройля", s.osc ? "—" : `${num(lam, 4)} нм`], ["ширина пакета σ", `${num(s.sigma, 4)} нм`],
-      ["окно", `±${num(s.L, 3)} нм`], ["точек сетки", String(s.n_grid || "")], ["цикл частицы", time(s.cycle * 1e-15, 4)]]
+    partBox.replaceChildren(...[[t("particle"), t("electron")], [t("energy"), s.osc ? "—" : t("{v:.4g} eV", { v: s.energy })],
+      [t("de Broglie wavelength"), s.osc ? "—" : t("{v:.4g} nm", { v: lam })], [t("packet width σ"), t("{v:.4g} nm", { v: s.sigma })],
+      [t("window"), t("±{v:.3g} nm", { v: s.L })], [t("grid points"), s.n_grid ? fmt(s.n_grid, "d") : ""], [t("particle cycle"), time(s.cycle * 1e-15, 4)]]
       .flatMap(([k, v]) => [el("span", {}, k), el("span", { class: "mono" }, v)]));
   }
 
   return {
     center, rightPanels,
     help: () => el("div", {},
-      el("h4", {}, "Что на экране"),
-      el("p", {}, "Сверху — волна текущей частицы |ψ(x)|² (синяя) над потенциалом (чёрная линия) и уровнем энергии (оранжевый пунктир). По краям — детекторы: они поглощают волну, и запуск считает, какую вероятность и когда поглотил каждый."),
-      el("p", {}, "Исход частицы показан в выбранном прочтении: копенгагенское — щелчок в случайный момент и коллапс волны в детектор; Бом — красная точка-частица, которая движется по току вероятности; Эверетт — после щелчка остаются обе ветви со своими весами. Статистика исходов во всех трёх одинакова — это проверяется."),
-      el("p", {}, "Слева внизу — карта |ψ(x, t)|² одной частицы (время вверх) с траекториями Бома; справа — доли исходов против вероятности из волны и точное прохождение T(E) по спектру пакета.")),
+      el("h4", {}, t("What is on the screen")),
+      el("p", {}, t("At the top: the wave of the current particle |ψ(x)|² (blue) over the potential (black line) and the energy level (orange dashes). At the edges: the detectors; they absorb the wave, and the run computes what probability each of them absorbed, and when.")),
+      el("p", {}, t("The particle's outcome is shown in the chosen reading: Copenhagen, a click at a random moment and the wave's collapse into the detector; Bohm, a red point particle moving with the probability current; Everett, after the click both branches remain with their weights. The statistics of the outcomes are the same in all three, and this is checked.")),
+      el("p", {}, t("Bottom left: the map |ψ(x, t)|² of one particle (time upwards) with Bohm trajectories; bottom right: the fractions of the outcomes against the probability from the wave, and the exact transmission T(E) over the packet's spectrum."))),
     reset() { H = null; segs = []; clicks = []; mapCache = null; },
     // key frames (player.js): segments only grow (a length); the clicks are capped, so they are copied
     snapshot() { return { segs: segs.length, clicks: clicks.slice() }; },
@@ -243,7 +247,7 @@ export function createView(ctx) {
         clickBox.replaceChildren(...clicks.slice(-30).reverse().map((c) => el("div", { class: "ev" }, el("span", { class: "t mono" }, time(c.t, 6)), c.text)));
       }
     },
-    render(frame, t, blobs) {
+    render(frame, tw, blobs) {
       if (!segNow()) return;
       drawWave(frame, blobs || {});
       drawMap(frame);

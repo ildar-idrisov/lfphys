@@ -24,17 +24,19 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 from ..numerics import moving_root
 from ..worldlines import sphere_meeting
 from . import schwarzschild
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Приход вспышки к мировой линии",
-    "statement": "Момент встречи фронта вспышки с приёмником: в плоском пространстве — квадратное уравнение на "
-                 "каждом инерциальном куске (СТО: фронт с центром в точке вспышки при любом движении источника); "
-                 "в ОТО — точное соединение геодезическими и поиск корня для движущегося приёмника.",
-    "validity": "плоское пространство или внешность Шварцшильда",
+    "title": T("Arrival of a flash at a worldline"),
+    "statement": T("The moment the front of a flash meets the receiver: in flat space-time, a quadratic equation on "
+                   "each inertial piece (SR: the front is centred on the point of the flash whatever the motion of "
+                   "the source); in GR, the exact connection by geodesics and a root search for a moving receiver."),
+    "validity": T("flat space-time or the exterior of Schwarzschild"),
     "basis": ["lfphys.core.gravity.schwarzschild"],
     "conflicts": [],
 }

@@ -10,6 +10,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
+from lfphys.i18n import render  # noqa: E402
 from v06_qcd.viz import SCHEMA  # noqa: E402
 
 V = "v06_qcd"
@@ -32,7 +33,7 @@ def test_strong_coupling_world_breaks_perturbation_theory():
     2 GeV no longer converges - the run reports it as a failed convergence check and a notice."""
     h = Harness(V, "strong")
     assert h.checks()["conv0"]["ok"] is False
-    assert any("полюс Ландау" in m["text"] for m in h.of("notice"))
+    assert any("Landau pole" in render(m["text"]) for m in h.of("notice"))
 
 
 def test_probe_sweeps_and_alpha_falls():
@@ -49,8 +50,8 @@ def test_modified_coupling_is_flagged_and_live_change_recomputes():
     h.set(system="bottom")
     seg = h.of("segment")[-1]
     assert seg["system"] == "bottom" and seg["mq"] == pytest.approx(5.18)
-    h.set(alpha_mz=0.11)
-    assert "нельзя менять на ходу" in h.errors()[-1]
+    h.set(alpha_mz=0.11)  # a world parameter: refused while the world runs, named by its label
+    assert h.errors() and "α_s(M_Z)" in render(h.errors()[-1]) and h.sim.params["alpha_mz"] == 0.15
 
 
 def failed(h):
@@ -64,7 +65,7 @@ def test_large_coupling_worlds_are_built(a_mz):
     h = Harness(V, "standard", {"alpha_mz": a_mz})
     assert not h.errors()
     one2 = h.checks()["one0_2"]
-    assert one2.get("info") and "полюс Ландау" in one2["note"]
+    assert one2.get("info") and "Landau pole" in render(one2["note"])
     assert h.checks()["one0_1000"]["rel"] is not None and abs(h.checks()["one0_1000"]["rel"]) < 1e-10
 
 
@@ -79,7 +80,7 @@ def test_threshold_jump_is_the_decoupling_relation(loops):
     assert set(ch) == {"c", "b", "t"}
     for q, c in ch.items():
         assert abs(c["rel"]) < c["tol"]
-    jump_c = float(ch["c"]["note"].rsplit(" ", 1)[1])
+    jump_c = ch["c"]["note"]["a"]["jump"]
     assert (jump_c > 1e-3) == (loops >= 3)
 
 
@@ -102,7 +103,7 @@ def test_light_quark_is_refused_and_the_box_grows():
     gets a box large enough (the levels used to be box levels)."""
     h = Harness(V, "standard")
     h.set(m_q=0.3)
-    assert h.errors() and "тяжёлые" in h.errors()[-1] and h.sim.params["m_q"] == 0.0
+    assert h.errors() and "heavy quarks" in render(h.errors()[-1]) and h.sim.params["m_q"] == 0.0
     n_seg, n_err = h.sim.seg, len(h.errors())
     h.set(m_q=1.0, kappa=0.0, a_conf=5.0)
     assert len(h.errors()) == n_err and h.sim.seg == n_seg + 1
@@ -134,8 +135,8 @@ def test_honest_failures_are_marked_expected():
     standard world's checks carry none (negative control)."""
     h = Harness(V, "strong")
     c = h.checks()["conv0"]
-    assert c["ok"] is False and "изменена" in c["expected"]
-    assert "сходится" in SCHEMA.presets["strong"]["note"]
+    assert c["ok"] is False and "is changed" in render(c["expected"])
+    assert "does not converge" in str(SCHEMA.presets["strong"]["note"])
     h = Harness(V, "standard")
     h.set(kappa=0.0)
     assert any(c.get("expected") for k, c in h.checks().items() if k.startswith("lev1_") and c.get("ok") is False)

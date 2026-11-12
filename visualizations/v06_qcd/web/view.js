@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
 // v06 view: the running coupling alpha_s(mu) computed by the run (1-4 loops, thresholds, the PDG band), the probe
 // sweeping the scales, and quarkonium in the Cornell model (levels against PDG, the potential and the radial waves).
+import { t, fmt } from "/static/js/i18n.js";
 import { css, el, fresh2d, num, panel } from "/static/js/ui.js";
 
 export function createView(ctx) {
   let seg = null;
-  const quick = el("div", { class: "toolbar quick", title: "Меняется сразу" }, el("span", { class: "muted" }, "Установка:"),
-    ctx.liveControl("mu", { label: "μ, ГэВ" }), ctx.liveControl("loops", { label: "петель" }),
-    ctx.liveControl("system", { label: "кварконий" }), ctx.liveControl("kappa", { label: "κ" }), ctx.liveControl("a_conf", { label: "a, ГэВ⁻¹" }));
+  const quick = el("div", { class: "toolbar quick", title: t("Changes apply at once") }, el("span", { class: "muted" }, t("Set-up:")),
+    ctx.liveControl("mu", { label: t("μ, GeV") }), ctx.liveControl("loops", { label: t("loops") }),
+    ctx.liveControl("system", { label: t("quarkonium") }), ctx.liveControl("kappa", { label: "κ" }), ctx.liveControl("a_conf", { label: t("a, GeV⁻¹") }));
   const cvRun = el("canvas"), cvSpec = el("canvas"), cvPot = el("canvas");
   const ovRun = el("div", { class: "overlay" }), ovSpec = el("div", { class: "overlay" }), ovPot = el("div", { class: "overlay" });
   const center = el("div", { style: { display: "flex", flexDirection: "column", flex: 1, minHeight: 0 } }, quick,
@@ -18,7 +19,7 @@ export function createView(ctx) {
         el("div", { class: "canvas-wrap", style: { flex: 1.1 } }, cvSpec, ovSpec),
         el("div", { class: "canvas-wrap", style: { flex: 1, borderTop: "1px solid var(--line)" } }, cvPot, ovPot))));
   const runBox = el("div", { class: "kv" }), specBox = el("div", {});
-  const rightPanels = [panel("Константа связи", runBox), panel("Кварконий: уровни", specBox)];
+  const rightPanels = [panel(t("Coupling constant"), runBox), panel(t("Quarkonium: levels"), specBox)];
   for (const cv of [cvRun, cvSpec, cvPot]) new ResizeObserver(() => ctx.requestRender()).observe(cv);
 
   function setup(cv) {
@@ -39,7 +40,7 @@ export function createView(ctx) {
     const Y = (a) => bot - (bot - top) * a / amax;  // not clamped: curves are clipped at the frame (review V6-6)
     // grid
     g.strokeStyle = css("--grid"); g.fillStyle = css("--muted"); g.font = "11px system-ui";
-    for (let e = 0; e <= 4; e++) { g.beginPath(); g.moveTo(X(10 ** e), top); g.lineTo(X(10 ** e), bot); g.stroke(); g.fillText(["1 ГэВ", "10", "100", "1 ТэВ", "10 ТэВ"][e], X(10 ** e) - 10, bot + 15); }
+    for (let e = 0; e <= 4; e++) { g.beginPath(); g.moveTo(X(10 ** e), top); g.lineTo(X(10 ** e), bot); g.stroke(); g.fillText([t("{x} GeV", { x: 1 }), fmt(10, "d"), fmt(100, "d"), t("{x} TeV", { x: 1 }), t("{x} TeV", { x: 10 })][e], X(10 ** e) - 10, bot + 15); }
     for (let a = 0; a <= amax + 1e-9; a += 0.1) { g.beginPath(); g.moveTo(left, Y(a)); g.lineTo(W - right, Y(a)); g.stroke(); g.fillText(num(a, 2), 8, Y(a) + 4); }
     // thresholds
     for (const [q, m] of Object.entries(seg.thresholds)) {
@@ -69,7 +70,7 @@ export function createView(ctx) {
     const off = (seg[`L${seg.loops}`] || []).some((v) => Number.isFinite(v) && v > amax);
     if (off) {  // inside the frame, right-aligned under the top edge: the legend line above the frame stays readable
       g.save(); g.fillStyle = "#e8590c"; g.textAlign = "right";
-      g.fillText(`↑ α_s > ${num(amax, 2)}: кривая уходит за шкалу (к полюсу Ландау)`, W - right - 6, top + 26);
+      g.fillText(t("↑ α_s > {a:.2g}: the curve leaves the scale (towards the Landau pole)", { a: amax }), W - right - 6, top + 26);
       g.restore();
     }
     // input point alpha_s(M_Z)
@@ -86,14 +87,16 @@ export function createView(ctx) {
       if (a > amax) { g.moveTo(X(mu), top - 2); g.lineTo(X(mu) - 6, top + 9); g.lineTo(X(mu) + 6, top + 9); g.closePath(); }
       else g.arc(X(mu), yp, 6, 0, 2 * Math.PI);
       g.fill();
-      g.fillText(`μ = ${num(mu, 3)} ГэВ: α_s = ${num(a, 4)}${a > amax ? " (за шкалой)" : ""}, n_f = ${frame.nf}`, Math.min(X(mu) + 8, W - 230), Math.max(yp - 10, top + 24));
+      const args = { mu, a, nf: frame.nf };
+      g.fillText(a > amax ? t("μ = {mu:.3g} GeV: α_s = {a:.4g} (off the scale), n_f = {nf:d}", args) : t("μ = {mu:.3g} GeV: α_s = {a:.4g}, n_f = {nf:d}", args),
+        Math.min(X(mu) + 8, W - 230), Math.max(yp - 10, top + 24));
     } else {
       g.fillStyle = "#c92a2a"; g.fillRect(X(mu) - 1, top, 2, bot - top);
-      g.fillText(`μ = ${num(mu, 3)} ГэВ: ниже полюса Ландау — α_s не определена`, Math.min(X(mu) + 8, W - 260), top + 24);
+      g.fillText(t("μ = {mu:.3g} GeV: below the Landau pole, α_s is undefined", { mu }), Math.min(X(mu) + 8, W - 260), top + 24);
     }
     // legend
     g.fillStyle = css("--muted");
-    g.fillText("петли: 1 (серая), 2–4 (синие); выбранная — оранжевая; полоса — α_s(M_Z) ± 0,0009", left, top - 8);
+    g.fillText(t("loops: 1 (grey), 2–4 (blue); the chosen one orange; the band: α_s(M_Z) ± {da}", { da: seg.alpha_mz_pdg[1] }), left, top - 8);
     ovRun.textContent = "";
   }
 
@@ -121,8 +124,9 @@ export function createView(ctx) {
       }
     }
     g.fillStyle = css("--muted");
-    for (const m of [lo, (lo + hi) / 2, hi]) g.fillText(`${Math.round(m)} МэВ`, 2, Y(m) + 4);
-    ovSpec.textContent = `${seg.system === "charm" ? "Чармоний" : "Боттомоний"}: синие — модель Корнелла (1S привязан к опыту, модель задаёт расщепления), оранжевые — PDG 2024 (спин-усреднённо)`;
+    for (const m of [lo, (lo + hi) / 2, hi]) g.fillText(t("{m:d} MeV", { m: Math.round(m) }), 2, Y(m) + 4);
+    ovSpec.textContent = t("{system}: blue, the Cornell model (1S anchored to experiment, the model gives the splittings); orange, PDG 2024 (spin-averaged)",
+      { system: seg.system === "charm" ? t("Charmonium") : t("Bottomonium") });
   }
 
   function drawPot() {
@@ -149,27 +153,27 @@ export function createView(ctx) {
     g.strokeStyle = "#e8590c"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(X(seg.r_mean), top); g.lineTo(X(seg.r_mean), bot); g.stroke(); g.setLineDash([]);
     g.fillStyle = css("--muted"); g.font = "11px system-ui";
     for (let x = 0; x <= rmax; x += 2) g.fillText(`${x}`, X(x) - 3, bot + 14);
-    g.fillText("r, ГэВ⁻¹ (1 ГэВ⁻¹ ≈ 0,197 фм)", W - 200, bot + 14);
-    ovPot.textContent = `V(r) = −κ/r + r/a² (κ = ${num(seg.kappa, 3)}, a = ${num(seg.a_conf, 3)} ГэВ⁻¹) и |u(r)|² уровней; пунктир — ⟨r⟩ 1S`;
+    g.fillText(t("r, GeV⁻¹ (1 GeV⁻¹ ≈ {fm} fm)", { fm: 0.197 }), W - 200, bot + 14);
+    ovPot.textContent = t("V(r) = −κ/r + r/a² (κ = {k:.3g}, a = {a:.3g} GeV⁻¹) and |u(r)|² of the levels; dashed: ⟨r⟩ of 1S", { k: seg.kappa, a: seg.a_conf });
   }
 
   function drawPanels(frame) {
     if (!seg) return;
-    runBox.replaceChildren(...[["μ зонда", `${num(frame.mu, 4)} ГэВ`], ["α_s(μ)", frame.alpha === null || frame.alpha === undefined ? "— (ниже полюса Ландау)" : num(frame.alpha, 5)], ["активных ароматов n_f", String(frame.nf)],
-      ["вход α_s(M_Z)", `${num(seg.alpha_mz, 4)} (PDG 2024: ${seg.alpha_mz_pdg[0]} ± ${seg.alpha_mz_pdg[1]})`], ["порядок β-функции", `${seg.loops} петли`],
-      ["⟨r⟩ состояния 1S", `${num(seg.r_mean, 3)} ГэВ⁻¹ = ${num(seg.r_mean * 0.1973, 3)} фм`],
-      ["4/3·α_s(1/⟨r⟩) против κ", seg.a_bs ? `${num(4 / 3 * seg.a_bs, 3)} против ${num(seg.kappa, 3)}` : "—"]]
+    runBox.replaceChildren(...[[t("probe μ"), t("{mu:.4g} GeV", { mu: frame.mu })], ["α_s(μ)", frame.alpha === null || frame.alpha === undefined ? t("— (below the Landau pole)") : num(frame.alpha, 5)], [t("active flavours n_f"), String(frame.nf)],
+      [t("input α_s(M_Z)"), t("{a:.4g} (PDG 2024: {p} ± {dp})", { a: seg.alpha_mz, p: seg.alpha_mz_pdg[0], dp: seg.alpha_mz_pdg[1] })], [t("order of the β function"), t("loops: {l:d}", { l: seg.loops })],
+      [t("⟨r⟩ of the 1S state"), t("{r:.3g} GeV⁻¹ = {fm:.3g} fm", { r: seg.r_mean, fm: seg.r_mean * 0.1973 })],
+      [t("4/3·α_s(1/⟨r⟩) against κ"), seg.a_bs ? t("{a:.3g} against {k:.3g}", { a: 4 / 3 * seg.a_bs, k: seg.kappa }) : "—"]]
       .flatMap(([k, v]) => [el("span", {}, k), el("span", { class: "mono" }, v)]));
-    specBox.replaceChildren(el("table", { class: "runs" }, el("tr", {}, ["уровень", "модель, МэВ", "PDG, МэВ", "состояния"].map((h) => el("th", {}, h))),
+    specBox.replaceChildren(el("table", { class: "runs" }, el("tr", {}, [t("level"), t("model, MeV"), t("PDG, MeV"), t("states")].map((h) => el("th", {}, h))),
       seg.levels.map((l) => el("tr", {}, el("td", {}, `${l.n}${"SPD"[l.L]}`), el("td", { class: "mono" }, num(l.model, 5)),
         el("td", { class: "mono" }, l.measured ? num(l.measured, 5) : "—"), el("td", { class: "muted" }, (l.states || []).join(", "))))));
   }
 
   return {
     center, rightPanels,
-    help: () => el("div", {}, el("h4", {}, "Что на экране"),
-      el("p", {}, "Слева — α_s(μ), посчитанная запуском из α_s(M_Z) (PDG 2024) решением уравнения ренормгруппы с β-функцией КХД в 1–4 петли; пунктир — пороги тяжёлых кварков (меняется число ароматов). Красная точка — зонд: «Пуск» проводит его по масштабам. Чем меньше расстояние (больше μ), тем слабее связь — асимптотическая свобода."),
-      el("p", {}, "Справа — кварконий в потенциале Корнелла (модель вне ядра КХД, параметры подогнаны): уровни из радиального уравнения Шрёдингера против измеренных; ниже — потенциал и радиальные волновые функции.")),
+    help: () => el("div", {}, el("h4", {}, t("What is on the screen")),
+      el("p", {}, t("On the left: α_s(μ) computed by the run from α_s(M_Z) (PDG 2024) by solving the renormalisation-group equation with the QCD β function at 1–4 loops; dashed: the heavy-quark thresholds (the number of flavours changes). The red dot is the probe: “Play” sweeps it over the scales. The shorter the distance (the larger μ), the weaker the coupling: asymptotic freedom.")),
+      el("p", {}, t("On the right: quarkonium in the Cornell potential (a model outside the core of QCD, fitted parameters): the levels from the radial Schrödinger equation against the measured ones; below, the potential and the radial wave functions."))),
     reset() { seg = null; },
     // key frames (player.js): the latest segment is the whole state (it is replaced, never changed)
     snapshot() { return { seg }; },

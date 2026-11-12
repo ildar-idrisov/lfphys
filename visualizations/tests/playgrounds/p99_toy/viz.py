@@ -25,8 +25,9 @@ import os
 import numpy as np
 
 from lfviz.errors import Refusal
+from lfviz.i18n import T
 from lfviz.params import Param, Schema
-from lfviz.playground import ObjectType, PlaygroundSimulation, axis_index, fmt, scene_param
+from lfviz.playground import ObjectType, PlaygroundSimulation, axis_index, scene_param
 
 HALF = 5.0  # the region: |x|, |y|, |z| <= HALF (m)
 
@@ -35,17 +36,18 @@ def _p(*a, **k):
     return Param(*a, **k)
 
 
-PARTICLE3 = Schema([_p("x", "x", "float", 0.0, unit="м"), _p("y", "y", "float", 0.0, unit="м"),
-                    _p("z", "z", "float", 0.0, unit="м"),
-                    _p("vx", "vx", "float", 1.0, unit="м/с"), _p("vy", "vy", "float", 0.0, unit="м/с"),
-                    _p("vz", "vz", "float", 0.0, unit="м/с"), _p("mass", "масса", "float", 1.0, min=1e-6),
-                    _p("kick", "толчок", "float", 0.0, min=0.0), _p("r", "радиус", "float", 0.3, min=1e-3, unit="м"),
-                    _p("vmax", "Наибольшая скорость броска", "float", 12.0, min=1e-3, unit="м/с")])
+M, MS = T("m"), T("m/s")
+PARTICLE3 = Schema([_p("x", "x", "float", 0.0, unit=M), _p("y", "y", "float", 0.0, unit=M),
+                    _p("z", "z", "float", 0.0, unit=M),
+                    _p("vx", "vx", "float", 1.0, unit=MS), _p("vy", "vy", "float", 0.0, unit=MS),
+                    _p("vz", "vz", "float", 0.0, unit=MS), _p("mass", T("mass"), "float", 1.0, min=1e-6),
+                    _p("kick", T("kick"), "float", 0.0, min=0.0), _p("r", T("radius"), "float", 0.3, min=1e-3, unit=M),
+                    _p("vmax", T("Largest throw speed"), "float", 12.0, min=1e-3, unit=MS)])
 PARTICLE2 = Schema([p for p in PARTICLE3.params if p.id not in ("z", "vz")])
-PROBE = Schema([_p("x", "x", "float", 0.0, unit="м"), _p("y", "y", "float", 0.0, unit="м")])
-CLOUD = Schema([_p("x", "x", "float", 0.0, unit="м"), _p("y", "y", "float", 0.0, unit="м"),
-                _p("vx", "vx", "float", 0.0, unit="м/с"), _p("vy", "vy", "float", 0.0, unit="м/с"),
-                _p("n", "Точек", "int", 12, min=2, max=200), _p("spread", "Разброс", "float", 0.5, min=1e-3, unit="м")])
+PROBE = Schema([_p("x", "x", "float", 0.0, unit=M), _p("y", "y", "float", 0.0, unit=M)])
+CLOUD = Schema([_p("x", "x", "float", 0.0, unit=M), _p("y", "y", "float", 0.0, unit=M),
+                _p("vx", "vx", "float", 0.0, unit=MS), _p("vy", "vy", "float", 0.0, unit=MS),
+                _p("n", T("Points"), "int", 12, min=2, max=200), _p("spread", T("Spread"), "float", 0.5, min=1e-3, unit=M)])
 NCELL = 8  # the world's own state: the time the particles spent in each cell of NCELL x NCELL over the region
 
 
@@ -55,42 +57,42 @@ def _wall(axes, form="letter"):
     (integrator, 2026-11-11)."""
     opts = [(i if form == "number" else str(i) if form == "text" else a, a) for i, a in enumerate(axes)]
     start = {"letter": 3.0, "number": -3.0, "text": 2.0}[form]
-    return Schema([_p("position", "Положение", "float", start, min=-HALF, max=HALF, unit="м"),
-                   _p("axis", "Ось", "select", opts[0][0], options=opts)])
+    return Schema([_p("position", T("Position"), "float", start, min=-HALF, max=HALF, unit=M),
+                   _p("axis", T("Axis"), "select", opts[0][0], options=opts)])
 
 
-SCHEMA = Schema([_p("drag", "Сопротивление (закон)", "float", 0.0, standard=0.0, min=0.0),
-                 _p("ndim", "Размерность", "select", 3, options=[(3, "3-D"), (2, "2-D: плоскость z = 0")]),
+SCHEMA = Schema([_p("drag", T("Drag (a law)"), "float", 0.0, standard=0.0, min=0.0),
+                 _p("ndim", T("Dimension"), "select", 3, options=[(3, "3-D"), (2, T("2-D: the plane z = 0"))]),
                  scene_param()], presets={
-    "two": {"label": "Две частицы и датчик", "params": {"scene": {"format": "lfscene", "version": 1, "objects": [
+    "two": {"label": T("Two particles and a probe"), "params": {"scene": {"format": "lfscene", "version": 1, "objects": [
         {"type": "particle", "values": {"x": -1.0, "vx": 1.0}},
         {"type": "particle", "values": {"x": 1.0, "vx": -0.5, "kick": 0.1}},
         {"type": "probe", "values": {"x": 0.0, "y": 0.5}}]}}},
-    "empty": {"label": "Пустая сцена", "params": {}},
+    "empty": {"label": T("An empty scene"), "params": {}},
 })
 
 
 def palette(ndim: int) -> dict:
     three = ndim == 3
-    return {"particle": ObjectType("particle", "Частица", "particle", PARTICLE3 if three else PARTICLE2,
+    return {"particle": ObjectType("particle", T("Particle"), "particle", PARTICLE3 if three else PARTICLE2,
                                    color="#1c7ed6",
                                    handles={"position": ["x", "y", "z"] if three else ["x", "y"],
                                             "velocity": ["vx", "vy", "vz"] if three else ["vx", "vy"], "size": "r",
                                             "velocity_max": "vmax"}),
-            "probe": ObjectType("probe", "Датчик", "probe", PROBE, limit=3, color="#e8590c",
+            "probe": ObjectType("probe", T("Probe"), "probe", PROBE, limit=3, color="#e8590c",
                                 handles={"position": ["x", "y"]}),
-            "wall": ObjectType("wall", "Стенка (отражает)", "body", _wall("xyz" if three else "xy"), limit=2,
+            "wall": ObjectType("wall", T("Wall (reflects)"), "body", _wall("xyz" if three else "xy"), limit=2,
                                color="#adb5bd", handles={"position": {"param": "position", "axis_param": "axis"}}),
-            "mirror": ObjectType("mirror", "Зеркало (отражает; ось — номер)", "body",
+            "mirror": ObjectType("mirror", T("Mirror (reflects; the axis is a number)"), "body",
                                  _wall("xyz" if three else "xy", "number"), limit=2, color="#868e96",
                                  handles={"position": {"param": "position", "axis_param": "axis"}}),
-            "screen": ObjectType("screen", "Экран (отражает; ось — номер текстом)", "body",
+            "screen": ObjectType("screen", T("Screen (reflects; the axis is a number as text)"), "body",
                                  _wall("xyz" if three else "xy", "text"), limit=2, color="#5c7cfa",
                                  handles={"position": {"param": "position", "axis_param": "axis"}}),
-            "cloud": ObjectType("cloud", "Облако точек", "particle", CLOUD, limit=3, color="#37b24d",
+            "cloud": ObjectType("cloud", T("Cloud of points"), "particle", CLOUD, limit=3, color="#37b24d",
                                 handles={"position": ["x", "y"], "velocity": ["vx", "vy"], "size": "spread",
                                          # shown in cm/s (the reference of a display unit; the edit stays in m/s)
-                                         "velocity_display": {"unit": "см/с", "factor": 100.0}})}
+                                         "velocity_display": {"unit": T("cm/s"), "factor": 100.0}})}
 
 
 class Simulation(PlaygroundSimulation):
@@ -116,14 +118,14 @@ class Simulation(PlaygroundSimulation):
         if self.ndim == 2 and kind == "particle":  # a particle carried from 3-D: only one on the plane z = 0
             z, vz = values.pop("z", 0.0), values.pop("vz", 0.0)
             if z or vz:
-                raise Refusal(f"частица вне плоскости z = 0 (z = {fmt(z)} м, vz = {fmt(vz)} м/с)",
-                              hint="перенесите её в 3-D мир или поставьте z = 0, vz = 0")
+                raise Refusal(T("the particle is off the plane z = 0 (z = {z:.4g} m, vz = {vz:.4g} m/s)", z=z, vz=vz),
+                              hint=T("carry it into a 3-D world or set z = 0, vz = 0"))
         if self.ndim == 2 and kind == "cloud" and float(values.get("spread", 0.5)) > 2.0:
             values["spread"] = 2.0  # the toy's plane takes clouds at most 2 m wide (a value a carry-over changes, said)
         if kind in ("wall", "mirror", "screen") and "axis" in values \
                 and values["axis"] not in [o[0] for o in self.PALETTE[kind].schema.by_id["axis"].options]:
-            raise Refusal(f"стенки поперёк оси {values.get('axis')} в этом мире нет: он плоский",
-                          hint="выберите ось x или y")
+            raise Refusal(T("there is no wall across the axis {axis} in this world: it is flat", axis=str(values.get("axis"))),
+                          hint=T("choose the axis x or y"))
         return values
 
     def _vec(self, v):
@@ -132,8 +134,9 @@ class Simulation(PlaygroundSimulation):
     def _inside(self, obj, v):
         out = [k for k in ("x", "y", "z") if k in v and abs(v[k]) > HALF]
         if out:
-            raise Refusal(f"«{obj['label']}»: точка вне области игрушки (|{', '.join(out)}| > {HALF:g} м)",
-                          hint="отпустите объект внутри области")
+            raise Refusal(T("“{label}”: the point is outside the toy's region (|{axes}| > {half:g} m)", label=obj["label"],
+                            axes=", ".join(out), half=HALF),
+                          hint=T("release the object inside the region"))
 
     def on_add(self, obj, state):
         v = obj["values"]
@@ -142,14 +145,15 @@ class Simulation(PlaygroundSimulation):
             if len(xv) == 4:  # a file of the earlier toy (x, y, vx, vy)
                 xv = np.concatenate([xv, [0.0, 0.0]])
             if self.ndim == 2 and (xv[4] or xv[5]):
-                raise Refusal(f"частица вне плоскости z = 0 (z = {fmt(xv[4])} м, vz = {fmt(xv[5])} м/с)",
-                              hint="перенесите её в 3-D мир")
+                raise Refusal(T("the particle is off the plane z = 0 (z = {z:.4g} m, vz = {vz:.4g} m/s)", z=float(xv[4]),
+                                vz=float(xv[5])), hint=T("carry it into a 3-D world"))
             self.state[obj["id"]] = xv
         elif obj["type"] == "cloud":
             if state and "pts" in state:  # carried (an array from carry_state)
                 pts = np.array(state["pts"], float).reshape(-1, 2)
                 if len(pts) != v["n"]:
-                    self.carry_note(f"число точек {len(pts)} → {v['n']}: облако разыграно заново", restarted=True)
+                    self.carry_note(T("the number of points {old:d} → {new:d}: the cloud is drawn anew", old=len(pts),
+                                      new=int(v["n"])), restarted=True)
                     pts = None
             else:
                 pts = None
@@ -174,7 +178,8 @@ class Simulation(PlaygroundSimulation):
                     s[i] = v[k]
         if obj["type"] == "cloud":
             if v["n"] != old.get("n"):
-                raise Refusal("число точек облака меняется только новым облаком", hint="удалите и добавьте облако")
+                raise Refusal(T("the number of a cloud's points changes only with a new cloud"),
+                              hint=T("remove the cloud and add it again"))
             c = self.clouds[obj["id"]]
             if any(v[k] != old.get(k) for k in ("x", "y")):  # moved: the points go with their centre
                 c[0] = c[0] + (np.array([v["x"], v["y"]]) - c[0].mean(axis=0))
@@ -192,14 +197,14 @@ class Simulation(PlaygroundSimulation):
 
     def carry_world(self, state, laws):
         if state is None:
-            self.carry_note("посещения ячеек начаты заново с нуля", restarted=True)
+            self.carry_note(T("the visits of the cells started afresh from zero"), restarted=True)
             return
         v = np.asarray(state["visits"], float)
         if v.shape != self.visits.shape:
-            raise Refusal(f"сетка посещений {v.shape} не та, что здесь {self.visits.shape}")
+            raise Refusal(T("the grid of visits {old} is not the one here {new}", old=str(v.shape), new=str(self.visits.shape)))
         self.visits = v.copy()
         if int(state.get("ndim", self.ndim)) != self.ndim:
-            self.carry_note("посещения перенесены в плоскость z = 0 (ячейки по x, y те же)")
+            self.carry_note(T("the visits were carried into the plane z = 0 (the cells along x, y are the same)"))
 
     # --- the solver ----------------------------------------------------------------------------------------------
     def advance(self, t_target):
@@ -260,14 +265,16 @@ class Simulation(PlaygroundSimulation):
         return p
 
     def measurables(self):
-        out = [{"id": "ke", "label": "Кинетическая энергия частиц", "unit": "Дж", "of": None},
-               {"id": "visits", "label": "Время частиц в области (сумма по ячейкам)", "unit": "с", "of": None}]
+        out = [{"id": "ke", "label": T("Kinetic energy of the particles"), "unit": T("J"), "of": None},
+               {"id": "visits", "label": T("Time of the particles in the region (sum over the cells)"), "unit": T("s"),
+                "of": None}]
         for o in self.objects.values():
             if o["type"] == "particle":
-                out.append({"id": f"speed.{o['id']}", "label": f"Скорость «{o['label']}»", "unit": "м/с", "of": o["id"]})
+                out.append({"id": f"speed.{o['id']}", "label": T("Speed of “{label}”", label=o["label"]), "unit": MS,
+                            "of": o["id"]})
             elif o["type"] == "probe":
-                out.append({"id": f"near.{o['id']}", "label": f"«{o['label']}»: до ближайшей частицы", "unit": "м",
-                            "of": o["id"], "group": "Датчики"})
+                out.append({"id": f"near.{o['id']}", "label": T("“{label}”: to the nearest particle", label=o["label"]),
+                            "unit": M, "of": o["id"], "group": T("Probes")})
         return out
 
     def frame(self):
@@ -293,21 +300,22 @@ class Simulation(PlaygroundSimulation):
                 probes[o["id"]] = {"nearest": float(d.min()) if d.size else None}
                 meas[f"near.{o['id']}"] = float(d.min()) if d.size else float("nan")
                 if not d.size:
-                    note[f"near.{o['id']}"] = "частиц нет"
+                    note[f"near.{o['id']}"] = T("no particles")
         if self.check_due():
-            self.running_check("energy", "Кинетическая энергия", ke, None, 0.0, info=True)
+            self.running_check("energy", T("Kinetic energy"), ke, None, 0.0, info=True)
         at = {o["id"]: self._at(o) for o in self.objects.values()}
-        now = {i: {"положение, м": ", ".join(f"{x:.4g}" for x in self.state[i][[0, 1, 4]]),
-                   "скорость, м/с": ", ".join(f"{x:.4g}" for x in self.state[i][[2, 3, 5]])} for i in ids}
+        xyz = "{a:.4g}, {b:.4g}, {c:.4g}"  # numbers of the viewer's language (a msgid without words)
+        now = {i: {"position, m": T(xyz, **dict(zip("abc", map(float, self.state[i][[0, 1, 4]])))),
+                   "velocity, m/s": T(xyz, **dict(zip("abc", map(float, self.state[i][[2, 3, 5]]))))} for i in ids}
         rad = np.array([self.objects[i]["values"]["r"] for i in ids], float)
         return ({"ids": ids, "probes": probes, "at": at, "meas": meas, "now": now, **({"meas_note": note} if note else {})},
                 {"pos": pos.astype(np.float32), "rad": rad.astype(np.float32)})
 
     def header(self):
-        return {"title": "Игрушка: свободные частицы", "actions": [], "playground": self.playground_header(),
+        return {"title": T("Toy: free particles"), "actions": [], "playground": self.playground_header(),
                 "toy": {"ndim": self.ndim, "half": HALF},
                 "scene3d": {"box": self._box(),
-                            "units": "м", "objects": [], "layers": [], "planes": {"max": 0}},
+                            "units": M, "objects": [], "layers": [], "planes": {"max": 0}},
                 "modifications": SCHEMA.modifications(self.params)}, {}
 
     def engine_modules(self):
@@ -318,5 +326,5 @@ class Simulation(PlaygroundSimulation):
         return [[-HALF, -HALF, -zh], [HALF, HALF, zh]]
 
 
-VIZ = {"id": "p99_toy", "title": "Игрушка (тесты)", "summary": "", "purpose": "", "version": "1.1", "schema": SCHEMA,
+VIZ = {"id": "p99_toy", "title": T("Toy (tests)"), "summary": "", "purpose": "", "version": "1.1", "schema": SCHEMA,
        "simulation": Simulation, "kind": "playground", "section": "toy"}

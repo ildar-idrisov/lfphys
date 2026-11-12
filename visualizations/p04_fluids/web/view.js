@@ -8,6 +8,7 @@
 // to choose the field.
 // Drawing only: every picture and number comes from the run.
 import { el, fill, num, panel } from "/static/js/ui.js";
+import { t, fmt, lang } from "/static/js/i18n.js";
 import { createEnv3D } from "/static/js/env3d.js";
 import { createPlayground } from "/static/js/playground.js";
 
@@ -21,12 +22,12 @@ export function createView(ctx) {
   // choice, kept in this browser)
   let show3d = false;
   try { show3d = localStorage.getItem("p04.show3d") === "1"; } catch (e) { /* storage off: the default layout */ }
-  const layoutBtn = el("button", { title: "Показать или скрыть 3D-вид рядом с плоскостью течения" });
+  const layoutBtn = el("button", { title: t("Show or hide the 3-D view next to the flow plane") });
   function applyLayout() {
     env.scene.el.style.display = show3d ? "" : "none";
     env.windows.el.style.flex = show3d ? "" : "1 1 100%";
     env.windows.el.style.maxWidth = "none";
-    layoutBtn.textContent = show3d ? "Скрыть 3D-вид (плоскость течения — во весь центр)" : "Показать 3D-вид рядом";
+    layoutBtn.textContent = show3d ? t("Hide the 3-D view (the flow plane across the whole centre)") : t("Show the 3-D view alongside");
     env.windows.redraw(); env.scene.requestRender();
   }
   layoutBtn.onclick = () => { show3d = !show3d; try { localStorage.setItem("p04.show3d", show3d ? "1" : "0"); } catch (e) { /* ignore */ } applyLayout(); };
@@ -36,13 +37,13 @@ export function createView(ctx) {
   let H = null, pics = [], shown = -1, shapes = null, shapesKey = "", size = [1, 1], panelSize = null;
   const pg = createPlayground(ctx, { onSelect: () => { env.windows.redraw(); env.scene.requestRender(); }, describeProbe });
   const fieldSel = el("select", {});
-  const fieldBox = el("div", {}, el("div", { class: "ctl" }, el("label", {}, "Картина"), fieldSel),
-    el("div", { class: "help" }, "Какое поле течения показывать (просьба к вычислителю: физика мира не меняется)."),
+  const fieldBox = el("div", {}, el("div", { class: "ctl" }, el("label", {}, t("Picture")), fieldSel),
+    el("div", { class: "help" }, t("Which field of the flow to show (a request to the computer: the physics of the world does not change).")),
     el("div", { class: "ctl" }, layoutBtn));
   fieldSel.onchange = () => { if (!(ctx.readOnly && ctx.readOnly())) ctx.send("view", { op: "field", field: fieldSel.value }); };
 
   function describeProbe(o, r) {
-    return Object.entries(r).map(([k, v]) => [k, typeof v === "number" ? num(v, 5) : String(v)]);
+    return Object.entries(r).map(([k, v]) => [t(k), typeof v === "number" ? num(v, 5) : t(v)]);
   }
 
   // --- obstacles as prisms (one mesh), the rest drawn in the window ------------------------------------------------
@@ -65,17 +66,17 @@ export function createView(ctx) {
         I.push(c0, b, a); I.push(c1, a + 1, b + 1); // the caps (a fan from the centre: star-shaped outlines)
       }
     }
-    if (P.length) env.scene.setMesh("bodies", new Float32Array(P), I, C, { label: "Препятствия" });  // solid bodies: opaque and lit (review UX-3d A5)
+    if (P.length) env.scene.setMesh("bodies", new Float32Array(P), I, C, { label: t("Obstacles") });  // solid bodies: opaque and lit (review UX-3d A5)
     else env.scene.removeLayer("bodies");
   }
 
-  function lastAt(list, t) {
+  function lastAt(list, tw) {
     let lo = 0, hi = list.length - 1, k = -1;
-    while (lo <= hi) { const m = (lo + hi) >> 1; if (list[m].t <= t + 1e-30) { k = m; lo = m + 1; } else hi = m - 1; }
+    while (lo <= hi) { const m = (lo + hi) >> 1; if (list[m].t <= tw + 1e-30) { k = m; lo = m + 1; } else hi = m - 1; }
     return k;
   }
-  function showPic(t) {
-    const k = lastAt(pics, t);
+  function showPic(tw) {
+    const k = lastAt(pics, tw);
     if (k < 0 || k === shown) return false;
     shown = k;
     const p = pics[k], [nx, ny] = p.shape, I = new Float32Array(nx * ny), Iw = new Float32Array(nx * ny);
@@ -92,12 +93,12 @@ export function createView(ctx) {
     env.scene.setPanelImage("field", nx, ny, I);
     const [lo, hi] = p.range;
     const meta = { type: "slice", id: 1, s: [0, sz[0], nx], tt: [0, sz[1], ny], origin: [0, 0, 0], u: [1, 0, 0], v: [0, 1, 0],
-                   normal: [0, 0, 1], units: "м", coord_names: ["x", "y", "z"], depth: false, fixed: true, label: "плоскость течения",
-                   title: `Течение: ${p.label} (${num(lo, 3)} … ${num(hi, 3)} ${p.unit})`,
+                   normal: [0, 0, 1], units: t("m"), coord_names: ["x", "y", "z"], depth: false, fixed: true, label: t("flow plane"),
+                   title: t("Flow: {field} ({lo:.3g} … {hi:.3g} {unit})", { field: p.label, lo, hi, unit: p.unit }),
                    // an approximation of the 3-D incompressible flow (review B7 L15): marked as such in the window
-                   route_label: "решёточный метод Больцмана D2Q9 (уравнения Навье–Стокса, ошибка ~ Ma²) — приближение", exact: false, approximation: true,
-                   reason: "2-D течение (на метр глубины) вместо 3-D; слабосжимаемая схема: ошибка сжимаемости ~ Ma² и её звуковые волны; кривые стенки ступеньками (1-й порядок) или с интерполяцией; картина — средние по жидкости в точках картины",
-                   verify: { note: `шкала от ${num(lo, 4)} до ${num(hi, 4)} ${p.unit}; серое — твёрдое тело` } };
+                   route_label: t("the lattice Boltzmann method D2Q9 (the Navier–Stokes equations, error ~ Ma²): an approximation"), exact: false, approximation: true,
+                   reason: t("a 2-D flow (per metre of depth) instead of 3-D; a weakly compressible scheme: the compressibility error ~ Ma² and its sound waves; curved walls as a staircase (first order) or interpolated; the picture shows means over the fluid at the picture's points"),
+                   verify: { note: t("scale from {lo:.4g} to {hi:.4g} {unit}; grey is a solid body", { lo, hi, unit: p.unit }) } };
     env.windows.setSlice(1, meta, { I: Iw, phase: null });
     env.windows.setOverlay(1, overlay);
     if (fieldSel.value !== p.name) fieldSel.value = p.name;
@@ -132,12 +133,12 @@ export function createView(ctx) {
   return {
     center: env.center,
     leftPanels: pg.leftPanels,
-    rightPanels: [panel("Картина течения", fieldBox), ...pg.rightPanels, panel("Слои сцены", env.layersPanel)],
+    rightPanels: [panel(t("Flow picture"), fieldBox), ...pg.rightPanels, panel(t("Scene layers"), env.layersPanel)],
     help: () => el("div", {},
-      el("h4", {}, "Плейграунд: жидкости"),
-      el("p", {}, "Добавляйте препятствия (цилиндры, прямоугольники, профили крыла), входы и выходы потока на сторонах области, подвижные стенки, периодичность, краситель и датчики скорости — в текущий момент. Течение считает решёточный метод Больцмана (несжимаемые уравнения Навье–Стокса в плоскости)."),
-      el("p", {}, "Картина — выбранное поле (модуль скорости, завихренность, давление, краситель); стрелки — скорость. Силы на телах (сопротивление и подъёмная сила, их коэффициенты) — в «сейчас» тела и в «Проверках»: за последний шаг (несут стоячую звуковую волну схемы) и средние за период звука области (окно указано); там же балансы массы, импульса и красителя и числа Маха и Рейнольдса ячейки (пределы устойчивости, не точности)."),
-      el("p", {}, "Если сцена — постановка опубликованного теста (канал DFG с цилиндром, каверна Ghia, канал Пуазейля с датчиком), в «Проверках» (группа «Эталоны») рядом с посчитанным числом — опубликованный диапазон и что нужно для совпадения (сетка, стенка, установившееся течение).")),
+      el("h4", {}, t("Playground: fluids")),
+      el("p", {}, t("Add obstacles (cylinders, rectangles, wing profiles), flow inlets and outlets on the sides of the domain, moving walls, periodicity, dye and velocity probes at the current moment. The flow is computed by the lattice Boltzmann method (the incompressible Navier–Stokes equations in a plane).")),
+      el("p", {}, t("The picture is the chosen field (speed, vorticity, pressure, dye); the arrows are the velocity. The forces on the bodies (drag and lift, their coefficients) are in the body's “now” and in “Checks”: over the last step (they carry the scheme's standing sound wave) and averaged over the domain's sound period (the window is given); there too are the balances of mass, momentum and dye and the Mach and cell Reynolds numbers (stability limits, not accuracy ones).")),
+      el("p", {}, t("If the scene is the set-up of a published test (the DFG channel with a cylinder, the Ghia cavity, a Poiseuille channel with a probe), “Checks” (the group “Benchmarks”) show the published range next to the computed number and what the agreement needs (the grid, the wall, a steady flow)."))),
     reset() { env.reset(); pg.reset(); H = null; pics = []; shown = -1; shapes = null; shapesKey = ""; size = [1, 1]; panelSize = null; },
     snapshot() { return { env: env.snapshot(), pg: pg.snapshot(), np: pics.length, shapes, size }; },
     restore(k) {
@@ -146,7 +147,7 @@ export function createView(ctx) {
     },
     onHeader(meta) {
       H = meta; size = meta.grid.size; panelSize = null;
-      fill(fieldSel, ...Object.entries(meta.fields).map(([v, lab]) => el("option", { value: v }, lab)));
+      fill(fieldSel, ...Object.entries(meta.fields).map(([v, lab]) => el("option", { value: v }, t(lab))));
       fieldSel.value = meta.shown;
       env.onHeader(meta); pg.onHeader(meta); ctx.setScene && ctx.setScene(meta.title);
     },
@@ -156,10 +157,10 @@ export function createView(ctx) {
       if (meta.type === "field") pics.push({ t: meta.t, name: meta.name, label: meta.label, unit: meta.unit, range: meta.range, shape: meta.shape, size: meta.size, img: blobs.img });
       else if (meta.type === "shapes") { shapes = meta.items; size = meta.size || size; drawShapes(); }
     },
-    render(frame, t) {
+    render(frame, tw) {
       if (!H || !frame) return;
-      if (!showPic(t)) env.windows.redraw();
-      pg.render(frame, t);
+      if (!showPic(tw)) env.windows.redraw();
+      pg.render(frame, tw);
       env.scene.requestRender();
     },
   };

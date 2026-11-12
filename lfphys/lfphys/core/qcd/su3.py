@@ -11,11 +11,14 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Цветовая алгебра SU(3)",
-    "statement": "Матрицы Гелл-Манна, структурные константы f_abc и d_abc, казимиры C_F = 4/3, C_A = 3, T_F = 1/2.",
-    "validity": "математика калибровочной группы КХД",
+    "title": T("The SU(3) colour algebra"),
+    "statement": T("Gell-Mann matrices, the structure constants f_abc and d_abc, the Casimirs C_F = 4/3, C_A = 3, "
+                   "T_F = 1/2."),
+    "validity": T("mathematics of the gauge group of QCD"),
     "basis": ["Gell-Mann, Phys. Rev. 125, 1067 (1962)", "Fritzsch, Gell-Mann, Leutwyler, Phys. Lett. B 47, 365 (1973)"],
     "conflicts": [],
 }

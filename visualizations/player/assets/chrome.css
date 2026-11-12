@@ -207,3 +207,7 @@ details.lgroup > summary { cursor: pointer; font-weight: 600; font-size: 12px; p
 .modes { display: flex; gap: 6px; margin: 4px 0 12px; }
 .modes button { font-size: 15px; padding: 6px 14px; }
 .card.planned { opacity: 0.55; }
+
+/* the interface's language switch EN | RU in every top bar (i18n.js): the language in force is plain bold text */
+.lang-switch { white-space: nowrap; font-size: 12px; }
+.lang-switch a.on { font-weight: 700; text-decoration: none; color: var(--ink); cursor: default; }

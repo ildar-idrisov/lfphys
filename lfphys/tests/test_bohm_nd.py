@@ -16,7 +16,7 @@ from lfphys.theories.interpretations import bohm
 
 def _follow(g, H, psi0, X0, dt, pairs, reverse_from=None):
     """Integrate trajectories with RK4 over h = 2 dt, the wave from the split operator (steps of dt)."""
-    pr = S.SplitOperator(H, dt, force_cpu=True, why="тест")
+    pr = S.SplitOperator(H, dt, force_cpu=True, why="test")
     a = pr.put(psi0)
     X = np.array(X0, float)
     for _ in range(pairs):

@@ -26,29 +26,32 @@ import time
 import numpy as np
 
 from lfviz.errors import Refusal
+from lfviz.i18n import T
 from lfviz.params import Param, Schema
 from lfviz.playground import ObjectType, PlaygroundSimulation, scene_param
 
-OSC = Schema([Param("x", "x", "float", 1.0, unit="м"), Param("v", "v", "float", 0.0, unit="м/с"),
-              Param("m", "масса", "float", 1.0, unit="кг", min=1e-6), Param("kick", "толчок", "float", 0.0, min=0.0)])
-BALL = Schema([Param("x", "x", "float", 1.0, unit="м"), Param("y", "y", "float", 0.0, unit="м"),
-               Param("vx", "vx", "float", 0.0, unit="м/с"), Param("vy", "vy", "float", 0.0, unit="м/с"),
-               Param("m", "масса", "float", 1.0, unit="кг", min=1e-6),
-               Param("glow", "подсветка", "bool", False)])
-SCHEMA = Schema([Param("k", "Жёсткость пружины", "float", 4.0, unit="Н/м", min=1e-6, max=1e4, live=True),
-                 Param("alloc_mb", "Занять память, МБ", "int", 0, unit="МБ", min=0, max=100000, live=True),
-                 Param("cost_ms", "Цена счёта", "float", 0.0, unit="мс за 1 с мира", min=0.0, max=1e6, live=True),
-                 Param("kmode", "Режим", "select", "plain", options=[("plain", "без затухания"), ("damped", "с затуханием")]),
-                 Param("damp", "Затухание", "float", 0.0, unit="1/с", min=0.0, live=True, show_if={"kmode": ["damped"]}),
+M, MS, KG = T("m"), T("m/s"), T("kg")
+OSC = Schema([Param("x", "x", "float", 1.0, unit=M), Param("v", "v", "float", 0.0, unit=MS),
+              Param("m", T("mass"), "float", 1.0, unit=KG, min=1e-6), Param("kick", T("kick"), "float", 0.0, min=0.0)])
+BALL = Schema([Param("x", "x", "float", 1.0, unit=M), Param("y", "y", "float", 0.0, unit=M),
+               Param("vx", "vx", "float", 0.0, unit=MS), Param("vy", "vy", "float", 0.0, unit=MS),
+               Param("m", T("mass"), "float", 1.0, unit=KG, min=1e-6),
+               Param("glow", T("glow"), "bool", False)])
+SCHEMA = Schema([Param("k", T("Spring stiffness"), "float", 4.0, unit=T("N/m"), min=1e-6, max=1e4, live=True),
+                 Param("alloc_mb", T("Hold memory, MB"), "int", 0, unit=T("MB"), min=0, max=100000, live=True),
+                 Param("cost_ms", T("Cost of computing"), "float", 0.0, unit=T("ms per 1 s of the world"), min=0.0, max=1e6,
+                       live=True),
+                 Param("kmode", T("Mode"), "select", "plain", options=[("plain", T("undamped")), ("damped", T("damped"))]),
+                 Param("damp", T("Damping"), "float", 0.0, unit=T("1/s"), min=0.0, live=True, show_if={"kmode": ["damped"]}),
                  scene_param()], presets={
-    "one": {"label": "Один осциллятор", "params": {"scene": {"format": "lfscene", "version": 1, "objects": [
+    "one": {"label": T("One oscillator"), "params": {"scene": {"format": "lfscene", "version": 1, "objects": [
         {"type": "osc", "values": {"x": 1.0, "v": 0.0, "m": 1.0}}]}}},
-    "two": {"label": "Два осциллятора, один с толчками", "params": {"scene": {"format": "lfscene", "version": 1,
+    "two": {"label": T("Two oscillators, one with kicks"), "params": {"scene": {"format": "lfscene", "version": 1,
                                                                                "objects": [
         {"type": "osc", "values": {"x": 1.0, "v": 0.5, "m": 2.0, "kick": 0.3}},
         {"type": "osc", "values": {"x": -0.5, "v": 0.0, "m": 1.0}}]}}},
-    "empty": {"label": "Пустая сцена", "params": {}},
-    "ball": {"label": "Осциллятор и шар на плоскости", "params": {"scene": {"format": "lfscene", "version": 1,
+    "empty": {"label": T("An empty scene"), "params": {}},
+    "ball": {"label": T("An oscillator and a ball on a plane"), "params": {"scene": {"format": "lfscene", "version": 1,
                                                                              "objects": [
         {"type": "osc", "values": {"x": 1.0, "v": 0.0, "m": 1.0}},
         {"type": "ball", "values": {"x": 1.0, "y": 0.5, "vx": 0.0, "vy": 0.3, "m": 1.0}}]}}},
@@ -57,8 +60,8 @@ SCHEMA = Schema([Param("k", "Жёсткость пружины", "float", 4.0, u
 
 class Simulation(PlaygroundSimulation):
     VIZ_ID = "p97_osc"
-    PALETTE = {"osc": ObjectType("osc", "Осциллятор", "body", OSC, color="#1c7ed6"),
-               "ball": ObjectType("ball", "Шар", "body", BALL, color="#e8590c",
+    PALETTE = {"osc": ObjectType("osc", T("Oscillator"), "body", OSC, color="#1c7ed6"),
+               "ball": ObjectType("ball", T("Ball"), "body", BALL, color="#e8590c",
                                   handles={"position": ["x", "y"], "velocity": ["vx", "vy"]})}
     default_speed = 1.0
     speed_range = (0.01, 100.0)
@@ -116,14 +119,15 @@ class Simulation(PlaygroundSimulation):
     def set_live(self, values):
         k = float(values.get("k", self.k))
         if k > 100.0:
-            raise Refusal(f"пружина жёстче 100 Н/м ({k:g} Н/м) в этом мире не считается", "возьмите k не больше 100 Н/м")
+            raise Refusal(T("a spring stiffer than 100 N/m ({k:g} N/m) is not computed in this world", k=k),
+                          T("take k at most 100 N/m"))
         mb = int(values.get("alloc_mb", self.alloc_mb))
         if mb != self.alloc_mb:
             self.held = np.ones(mb * 2 ** 17) if mb else None  # 8 bytes each: mb MB, held by the world
         self.k, self.alloc_mb = k, mb
         self.cost_ms = float(values.get("cost_ms", self.cost_ms))
         self.damp = float(values.get("damp", self.damp))
-        return f"k = {k:g} Н/м"
+        return T("k = {k:g} N/m", k=k)
 
     # --- physics ---
     def advance(self, t_target):
@@ -155,14 +159,15 @@ class Simulation(PlaygroundSimulation):
 
     # --- instruments ---
     def measurables(self):
-        out = [{"id": "E", "label": "Полная энергия", "unit": "Дж", "of": None, "group": "Мир"},
-               {"id": "x_first", "label": "Положение первого осциллятора", "unit": "м", "of": None, "group": "Мир"}]
+        J, world = T("J"), T("World")
+        out = [{"id": "E", "label": T("Total energy"), "unit": J, "of": None, "group": world},
+               {"id": "x_first", "label": T("Position of the first oscillator"), "unit": M, "of": None, "group": world}]
         for oid in self.xv:
-            out.append({"id": f"{oid}.x", "label": "положение", "unit": "м", "of": oid, "group": "Осцилляторы"})
-            out.append({"id": f"{oid}.E", "label": "энергия", "unit": "Дж", "of": oid, "group": "Осцилляторы"})
+            out.append({"id": f"{oid}.x", "label": T("position"), "unit": M, "of": oid, "group": T("Oscillators")})
+            out.append({"id": f"{oid}.E", "label": T("energy"), "unit": J, "of": oid, "group": T("Oscillators")})
         for oid in self.balls:
-            out.append({"id": f"{oid}.x", "label": "x", "unit": "м", "of": oid, "group": "Шары"})
-            out.append({"id": f"{oid}.y", "label": "y", "unit": "м", "of": oid, "group": "Шары"})
+            out.append({"id": f"{oid}.x", "label": "x", "unit": M, "of": oid, "group": T("Balls")})
+            out.append({"id": f"{oid}.y", "label": "y", "unit": M, "of": oid, "group": T("Balls")})
         return out
 
     def scene_meta(self):  # the framework sends measurables() in the scene message (API §2); kept here for older ones
@@ -187,7 +192,7 @@ class Simulation(PlaygroundSimulation):
             meas["x_first"] = float(next(iter(self.xv.values()))[0])
         else:
             meas["x_first"] = None
-            note["x_first"] = "в сцене нет осцилляторов"
+            note["x_first"] = T("there are no oscillators in the scene")
         return meas, note
 
     def frame(self):
@@ -199,8 +204,8 @@ class Simulation(PlaygroundSimulation):
             {"pos": pos.astype(np.float32)}
 
     def header(self):
-        return {"title": "Осцилляторы (тесты приборов)", "actions": [], "playground": self.playground_header(),
-                "modifications": SCHEMA.modifications(self.params), "units": {"t": "с"}}, {}
+        return {"title": T("Oscillators (tests of the instruments)"), "actions": [], "playground": self.playground_header(),
+                "modifications": SCHEMA.modifications(self.params), "units": {"t": T("s")}}, {}
 
 
 if os.environ.get("P97_MEASURE") == "1":
@@ -209,5 +214,5 @@ elif os.environ.get("P97_MEASURE") == "tuple":  # breaks the contract (a dict): 
     Simulation.measure = lambda self: self._meas()
 
 
-VIZ = {"id": "p97_osc", "title": "Осцилляторы (тесты приборов)", "summary": "", "purpose": "", "version": "1.0",
+VIZ = {"id": "p97_osc", "title": T("Oscillators (tests of the instruments)"), "summary": "", "purpose": "", "version": "1.0",
        "schema": SCHEMA, "simulation": Simulation, "kind": "playground", "section": "toy"}

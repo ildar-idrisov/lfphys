@@ -24,6 +24,7 @@ from aiohttp.test_utils import TestClient, TestServer
 
 from lfviz import checkpoint, protocol, registry
 from lfviz.app import MGR, create_app
+from lfviz.i18n import english as E
 from lfviz.params import Param, Schema
 from lfviz.playground import ObjectType, axis_index, check_handles
 from lfviz.sim import Runner
@@ -69,10 +70,10 @@ def _edit(run, oid, values):
 def test_handles_are_checked_against_the_type_and_sent_in_the_palette():
     sch = Schema([Param("x", "x", "float", 0.0), Param("y", "y", "float", 0.0), Param("z", "z", "float", 0.0),
                   Param("vx", "vx", "float", 0.0), Param("vy", "vy", "float", 0.0), Param("vz", "vz", "float", 0.0),
-                  Param("r", "r", "float", 1.0), Param("name", "имя", "select", "a", options=[("a", "a")]),
-                  Param("ax", "ось", "select", "x", options=[("x", "x"), ("y", "y"), ("z", "z")]),
-                  Param("axn", "ось", "select", 0, options=[(0, "x"), (1, "y"), (2, "z")]),
-                  Param("axs", "ось", "select", "0", options=[("0", "x"), ("1", "y"), ("2", "z")])])
+                  Param("r", "r", "float", 1.0), Param("name", "name", "select", "a", options=[("a", "a")]),
+                  Param("ax", "axis", "select", "x", options=[("x", "x"), ("y", "y"), ("z", "z")]),
+                  Param("axn", "axis", "select", 0, options=[(0, "x"), (1, "y"), (2, "z")]),
+                  Param("axs", "axis", "select", "0", options=[("0", "x"), ("1", "y"), ("2", "z")])])
     ok = check_handles({"position": ["x", "y", "z"], "velocity": ["vx", "vy", "vz"], "size": "r"}, sch)
     assert ok == {"position": ["x", "y", "z"], "velocity": ["vx", "vy", "vz"], "size": "r"}
     assert check_handles({"position": ["x", "y"]}, sch) == {"position": ["x", "y"]}
@@ -86,15 +87,15 @@ def test_handles_are_checked_against_the_type_and_sent_in_the_palette():
         with pytest.raises(ValueError):
             check_handles(bad, sch)
     # the unit a throw is shown in (integrator, 2026-11-12): {unit, factor > 0}, with a velocity
-    vd = {"position": ["x", "y"], "velocity": ["vx", "vy"], "velocity_display": {"unit": " м/с ", "factor": 1e-9}}
-    assert check_handles(vd, sch)["velocity_display"] == {"unit": "м/с", "factor": 1e-9}
-    for bad_vd in ({"unit": "м/с"}, {"unit": "", "factor": 1.0}, {"unit": "м/с", "factor": 0}, {"unit": "м/с", "factor": -2},
-                   {"unit": "м/с", "factor": float("nan")}, {"unit": "м/с", "factor": True}, {"unit": 5, "factor": 1.0},
-                   {"unit": "м/с", "factor": 1.0, "offset": 3}, "м/с", {"unit": "x" * 30, "factor": 1.0}):
+    vd = {"position": ["x", "y"], "velocity": ["vx", "vy"], "velocity_display": {"unit": " m/s ", "factor": 1e-9}}
+    assert check_handles(vd, sch)["velocity_display"] == {"unit": "m/s", "factor": 1e-9}
+    for bad_vd in ({"unit": "m/s"}, {"unit": "", "factor": 1.0}, {"unit": "m/s", "factor": 0}, {"unit": "m/s", "factor": -2},
+                   {"unit": "m/s", "factor": float("nan")}, {"unit": "m/s", "factor": True}, {"unit": 5, "factor": 1.0},
+                   {"unit": "m/s", "factor": 1.0, "offset": 3}, "m/s", {"unit": "x" * 30, "factor": 1.0}):
         with pytest.raises(ValueError):
             check_handles({**vd, "velocity_display": bad_vd}, sch)
     with pytest.raises(ValueError):  # without a velocity
-        check_handles({"position": ["x", "y"], "velocity_display": {"unit": "м/с", "factor": 1.0}}, sch)
+        check_handles({"position": ["x", "y"], "velocity_display": {"unit": "m/s", "factor": 1.0}}, sch)
     for axp in ("ax", "axn", "axs"):  # the three spellings of an axis (integrator, 2026-11-11)
         assert check_handles({"position": {"param": "x", "axis_param": axp}}, sch)["position"]["axis_param"] == axp
     assert [axis_index(v) for v in ("x", "y", "z", 0, 1, 2, "0", "1", "2")] == [0, 1, 2] * 3
@@ -121,7 +122,7 @@ def test_handles_are_checked_against_the_type_and_sent_in_the_palette():
                                           "velocity_max": "vmax"}
     assert pal["probe"]["handles"] == {"position": ["x", "y"]}
     assert pal["wall"]["handles"] == {"position": {"param": "position", "axis_param": "axis"}}
-    assert pal["cloud"]["handles"]["velocity_display"] == {"unit": "см/с", "factor": 100.0}
+    assert pal["cloud"]["handles"]["velocity_display"] == {"unit": {"$t": "cm/s"}, "factor": 100.0}
 
 
 def test_a_throw_is_logged_in_the_unit_the_type_shows():
@@ -134,9 +135,9 @@ def test_a_throw_is_logged_in_the_unit_the_type_shows():
     cid = _of(msgs, "scene")[-1]["objects"][-1]["id"]
     _edit(run, cid, {"x": 0.5, "y": 1.0, "vx": 0.25, "vy": -1.5})
     assert sim.objects[cid]["values"]["vx"] == 0.25 and list(sim.clouds[cid][1]) == [0.25, -1.5]  # world units (m/s)
-    assert _of(msgs, "event")[-1]["text"] == "«Облако точек 1»: перемещение в (0,5; 1) м; бросок: v = (25; −150) см/с"
+    assert E(_of(msgs, "event")[-1]["text"]) == "“Cloud of points 1”: move to (0.5; 1) m; throw: v = (25; -150) cm/s"
     _edit(run, "o1", {"x": 0.0, "y": 0.0, "z": 0.0, "vx": 0.25, "vy": 0.0, "vz": 0.0})
-    assert _of(msgs, "event")[-1]["text"].endswith("бросок: v = (0,25; 0; 0) м/с")
+    assert E(_of(msgs, "event")[-1]["text"]).endswith("throw: v = (0.25; 0; 0) m/s")
 
 
 # --- the edit -------------------------------------------------------------------------------------------------------
@@ -151,11 +152,11 @@ def test_a_drag_moves_and_a_throw_sets_the_velocity_at_the_current_moment():
     assert ev["kind"] == "scene" and ev["name"] == "edit" and ev["args"]["id"] == "o1"
     # the log line in the player's short form with the parameters' unit (review LB1-F13, LB1-p02-ux X12): a noun, no
     # labels inside the brackets, the Russian number format (decimal comma, the minus sign −)
-    assert ev["text"] == "«Частица 1»: перемещение в (2; −1,5; 0,75) м"
+    assert E(ev["text"]) == "“Particle 1”: move to (2; -1.5; 0.75) m"
     assert _of(msgs, "command")[-1]["args"]["op"] == "edit" and _of(msgs, "command")[-1]["t"] == pytest.approx(0.4)
     _edit(run, "o1", {"x": 1.0, "y": 1.0, "z": 0.0, "vx": -0.5, "vy": 2.0, "vz": 0.25})
     assert list(sim.state["o1"]) == [1.0, 1.0, -0.5, 2.0, 0.0, 0.25]
-    assert _of(msgs, "event")[-1]["text"] == "«Частица 1»: перемещение в (1; 1; 0) м; бросок: v = (−0,5; 2; 0,25) м/с"
+    assert E(_of(msgs, "event")[-1]["text"]) == "“Particle 1”: move to (1; 1; 0) m; throw: v = (-0.5; 2; 0.25) m/s"
     run._advance(0.6)
     run._frame(0.0)
     f = _of(msgs, "frame")[-1]
@@ -176,27 +177,27 @@ def test_a_throw_faster_than_the_world_carries_is_clamped():
     _edit(run, "o1", {"x": 0.0, "y": 0.0, "z": 0.0, "vx": 30.0, "vy": 40.0, "vz": 0.0})
     v = sim.state["o1"][[2, 3, 5]]
     assert v == pytest.approx([7.2, 9.6, 0.0]) and sim.objects["o1"]["values"]["vx"] == pytest.approx(7.2)
-    assert _of(msgs, "event")[-1]["text"].endswith("— ограничено наибольшей скоростью 12 м/с (рука дала 50; уменьшите "
-                                                   "масштаб броска)")
+    assert E(_of(msgs, "event")[-1]["text"]).endswith("— clamped to the largest speed 12 m/s (the hand gave 50; reduce "
+                                                      "the throw scale)")
     run.handle({"cmd": "scene", "args": {"op": "edit", "id": "o2", "values": {"x": 1.0, "y": 0.0, "z": 0.0, "vx": 12.0,
                                                                                 "vy": 0.0, "vz": 0.0}, "asked": 31.5}})
-    assert sim.state["o2"][2] == 12.0 and _of(msgs, "event")[-1]["text"].endswith(
-        "— ограничено наибольшей скоростью 12 м/с (рука дала 31,5; уменьшите масштаб броска)")
+    assert sim.state["o2"][2] == 12.0 and E(_of(msgs, "event")[-1]["text"]).endswith(
+        "— clamped to the largest speed 12 m/s (the hand gave 31.5; reduce the throw scale)")
     # the player's clamped speed rounded a hair above the largest one is clamped here again: the log names the hand's
     run.handle({"cmd": "scene", "args": {"op": "edit", "id": "o2", "values": {"x": 1.0, "y": 0.0, "z": 0.0, "vx": 12.0004,
                                                                                 "vy": 0.0, "vz": 0.0}, "asked": 50.0}})
-    assert sim.state["o2"][2] == 12.0 and "(рука дала 50;" in _of(msgs, "event")[-1]["text"]
+    assert sim.state["o2"][2] == 12.0 and "(the hand gave 50;" in E(_of(msgs, "event")[-1]["text"])
     # review LB1-F13: a clamp is said only when one happened. A throw below the largest speed with an ``asked`` above it
     # (nothing clamped), an infinite or a non-number ``asked``: applied as sent, no clamp in the log
-    for asked in (31.5, float("inf"), "много", -3.0):
+    for asked in (31.5, float("inf"), "lots", -3.0):
         run.handle({"cmd": "scene", "args": {"op": "edit", "id": "o2", "values": {"x": 1.0, "y": 0.0, "z": 0.0,
                                                                                     "vx": 6.0, "vy": 0.0, "vz": 0.0},
                                              "asked": asked}})
-        ev = _of(msgs, "event")[-1]["text"]
-        assert sim.state["o2"][2] == 6.0 and "ограничено" not in ev and ev.endswith("бросок: v = (6; 0; 0) м/с"), asked
+        ev = E(_of(msgs, "event")[-1]["text"])
+        assert sim.state["o2"][2] == 6.0 and "clamped" not in ev and ev.endswith("throw: v = (6; 0; 0) m/s"), asked
     run.handle({"cmd": "scene", "args": {"op": "set", "id": "o2", "values": {"vmax": 100.0}}})
     _edit(run, "o2", {"x": 1.0, "y": 0.0, "z": 0.0, "vx": 30.0, "vy": 40.0, "vz": 0.0})
-    assert list(sim.state["o2"][[2, 3, 5]]) == [30.0, 40.0, 0.0] and "ограничено" not in _of(msgs, "event")[-1]["text"]
+    assert list(sim.state["o2"][[2, 3, 5]]) == [30.0, 40.0, 0.0] and "clamped" not in E(_of(msgs, "event")[-1]["text"])
 
 
 def test_an_edit_applies_a_value_equal_to_the_stored_one():
@@ -231,7 +232,7 @@ def test_refused_edits_leave_the_scene_exactly_as_it_was():
     base = viz["simulation"]
 
     class WithFixed(base):
-        PALETTE = {**base.PALETTE, "post": ObjectType("post", "Столб", "body",
+        PALETTE = {**base.PALETTE, "post": ObjectType("post", "Post", "body",
                                                       Schema([Param("x", "x", "float", 0.0), Param("h", "h", "float", 1.0)]))}
     msgs = []
     sim, run = _world(msgs, cls=WithFixed)
@@ -241,22 +242,22 @@ def test_refused_edits_leave_the_scene_exactly_as_it_was():
     before = ({k: dict(o["values"]) for k, o in sim.objects.items()}, {k: v.copy() for k, v in sim.state.items()}, sim.rev)
     n_err = len(_of(msgs, "error"))
     cases = [
-        ("o1", {"mass": 5.0}, "только положение и скорость, а не «масса»"),          # not a handle
-        ("o1", {"x": 9.0, "y": 0.0, "z": 0.0}, "вне области игрушки"),              # the section refuses (Refusal)
-        ("o1", {"x": "abc"}, "не число"),                                           # the schema refuses
-        ("o3", {"x": 1.0, "vx": 2.0}, "а не «vx»"),                                 # a probe has no velocity
-        (post, {"x": 1.0}, "нельзя перетаскивать"),                                 # a type without handles
-        ("o1", {}, "без новых значений"),
-        ("o999", {"x": 1.0}, "нет объекта"),
+        ("o1", {"mass": 5.0}, "only the position and the velocity, not “mass”"),   # not a handle
+        ("o1", {"x": 9.0, "y": 0.0, "z": 0.0}, "outside the toy's region"),        # the section refuses (Refusal)
+        ("o1", {"x": "abc"}, "is not a number"),                                   # the schema refuses
+        ("o3", {"x": 1.0, "vx": 2.0}, "not “vx”"),                                 # a probe has no velocity
+        (post, {"x": 1.0}, "cannot be dragged"),                                   # a type without handles
+        ("o1", {}, "a drag without new values"),
+        ("o999", {"x": 1.0}, "has no object"),
     ]
     for oid, vals, why in cases:
         _edit(run, oid, vals)
-        assert why in _of(msgs, "error")[-1]["text"], (oid, vals, _of(msgs, "error")[-1]["text"])
+        assert why in E(_of(msgs, "error")[-1]["text"]), (oid, vals, E(_of(msgs, "error")[-1]["text"]))
     assert len(_of(msgs, "error")) == n_err + len(cases)
     after = ({k: dict(o["values"]) for k, o in sim.objects.items()}, {k: v.copy() for k, v in sim.state.items()}, sim.rev)
     assert after[0] == before[0] and after[2] == before[2] and all((after[1][k] == before[1][k]).all() for k in before[1])
-    assert _of(msgs, "error")[-6]["text"].startswith("Сцена не изменена: «Частица 1»: точка вне области игрушки")
-    assert "Что изменить: отпустите объект внутри области" in _of(msgs, "error")[-6]["text"]
+    assert E(_of(msgs, "error")[-6]["text"]).startswith("Scene not changed: “Particle 1”: the point is outside the toy's region")
+    assert "What to change: release the object inside the region" in E(_of(msgs, "error")[-6]["text"])
 
 
 def test_an_axis_bound_handle_moves_along_its_axis_in_all_three_spellings():
@@ -271,9 +272,9 @@ def test_an_axis_bound_handle_moves_along_its_axis_in_all_three_spellings():
     run._frame(0.0)
     at = _of(msgs, "frame")[-1]["at"]
     assert at[ids[0]] == [0.0, 1.25, 0.0] and at[ids[1]] == [0.0, 0.0, -2.5] and at[ids[2]] == [4.0, 0.0, 0.0]
-    assert _of(msgs, "event")[-1]["text"] == "«Экран (отражает; ось — номер текстом) 1»: перемещение: x = 4 м"
+    assert E(_of(msgs, "event")[-1]["text"]) == "“Screen (reflects; the axis is a number as text) 1”: move: x = 4 m"
     _edit(run, ids[0], {"axis": "x"})  # the axis is not a handle: refused
-    assert "а не «Ось»" in _of(msgs, "error")[-1]["text"] and sim.objects[ids[0]]["values"]["axis"] == "y"
+    assert "not “Axis”" in E(_of(msgs, "error")[-1]["text"]) and sim.objects[ids[0]]["values"]["axis"] == "y"
     # the wall reflects a particle crossing it (its physics follows the edit)
     run.handle({"cmd": "scene", "args": {"op": "add", "type": "particle", "values": {"y": 0.0, "vy": 1.0, "vx": 0.0}}})
     pid = _of(msgs, "scene")[-1]["objects"][-1]["id"]
@@ -332,8 +333,8 @@ def test_measurables_go_with_the_scene_and_their_values_with_the_frames():
     sc = _of(msgs, "scene")[-1]
     ids = [m["id"] for m in sc["measurables"]]
     assert ids == ["ke", "visits", "speed.o1", "speed.o2", "near.o3"]
-    assert sc["measurables"][0] == {"id": "ke", "label": "Кинетическая энергия частиц", "unit": "Дж", "of": None}
-    assert sc["measurables"][-1]["of"] == "o3" and sc["measurables"][-1]["group"] == "Датчики"
+    assert sc["measurables"][0] == {"id": "ke", "label": {"$t": "Kinetic energy of the particles"}, "unit": {"$t": "J"}, "of": None}
+    assert sc["measurables"][-1]["of"] == "o3" and sc["measurables"][-1]["group"] == {"$t": "Probes"}
     run.handle({"cmd": "scene", "args": {"op": "remove", "id": "o2"}})
     assert [m["id"] for m in _of(msgs, "scene")[-1]["measurables"]] == ["ke", "visits", "speed.o1", "near.o3"]
     run._frame(0.0)
@@ -341,22 +342,22 @@ def test_measurables_go_with_the_scene_and_their_values_with_the_frames():
     assert f["meas"]["ke"] == pytest.approx(0.5) and f["meas"]["speed.o1"] == pytest.approx(1.0) and "near.o3" in f["meas"]
     run.handle({"cmd": "scene", "args": {"op": "remove", "id": "o1"}})
     run._frame(0.0)
-    assert _of(msgs, "frame")[-1]["meas_note"] == {"near.o3": "частиц нет"}
+    assert _of(msgs, "frame")[-1]["meas_note"] == {"near.o3": {"$t": "no particles"}}
     # the framework keeps the scene whole: entries not in the API's form are dropped, a failure sends none
     base = registry.load("p99_toy")["simulation"]
 
     class Bad(base):
         def measurables(self):
-            return [{"id": "ok", "label": "Хорошая", "unit": "м", "of": None}, {"id": 5, "label": "x", "unit": ""},
+            return [{"id": "ok", "label": "Good", "unit": "m", "of": None}, {"id": 5, "label": "x", "unit": ""},
                     {"id": "noLabel", "unit": ""}, {"id": "o", "label": "y", "unit": "", "of": 3}, "text"]
 
     class Broken(base):
         def measurables(self):
-            raise RuntimeError("сломано")
+            raise RuntimeError("broken")
     m2 = []
     _, r2 = _world(m2, cls=Bad)
     r2._start_world()
-    assert _of(m2, "scene")[-1]["measurables"] == [{"id": "ok", "label": "Хорошая", "unit": "м", "of": None}]
+    assert _of(m2, "scene")[-1]["measurables"] == [{"id": "ok", "label": "Good", "unit": "m", "of": None}]
     m3 = []
     _, r3 = _world(m3, cls=Broken)
     r3._start_world()
@@ -466,11 +467,11 @@ def test_the_log_lines_and_numbers_are_in_the_players_form():
     sim, run = _world(msgs)
     run._start_world()
     run.handle({"cmd": "scene", "args": {"op": "set", "id": "o1", "values": {"kick": 0.25, "vmax": 20.0}}})
-    assert _of(msgs, "event")[-1]["text"] == "«Частица 1»: толчок = 0,25; Наибольшая скорость броска = 20 м/с"
+    assert E(_of(msgs, "event")[-1]["text"]) == "“Particle 1”: kick = 0.25; Largest throw speed = 20 m/s"
     run.handle({"cmd": "scene", "args": {"op": "add", "type": "wall", "values": {"axis": "x"}}})
     wid = _of(msgs, "scene")[-1]["objects"][-1]["id"]
     run.handle({"cmd": "scene", "args": {"op": "set", "id": wid, "values": {"axis": "y", "position": -1.5e-5}}})
-    assert _of(msgs, "event")[-1]["text"] == "«Стенка (отражает) 1»: Положение = −1,5·10⁻⁵ м; Ось: y"
+    assert E(_of(msgs, "event")[-1]["text"]) == "“Wall (reflects) 1”: Position = -1.5e-05 m; Axis: y"
     # a no-op set logs nothing (no empty line in «События»)
     n = len(_of(msgs, "event"))
     run.handle({"cmd": "scene", "args": {"op": "set", "id": wid, "values": {"axis": "y"}}})

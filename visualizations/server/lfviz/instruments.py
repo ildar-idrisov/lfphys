@@ -39,6 +39,8 @@ import math
 import struct
 from dataclasses import dataclass, field
 
+from .i18n import T, error_body, is_t, render_in
+
 CSV_MAX_ROWS = 2_000_000
 CSV_MAX_CELLS = 20_000_000  # rows × columns of one CSV (~0.4 GB): beyond, a stride (review LB1-framework F11)
 JSON_POINTS = 5000
@@ -57,19 +59,22 @@ def read_json(files: dict, run, e) -> dict:
     return json.loads(f.read(jlen))
 
 
-def t_unit_of(header: dict) -> str:
-    """The unit of a world's time from its header (``units.t``, its first words: «с», «фс», «M»), «с» by default."""
+def t_unit_of(header: dict):
+    """The unit of a world's time from its header (``units.t``: a text, or a plain string whose first words count:
+    "s", "fs", "M"), seconds by default."""
     u = header.get("units") if isinstance(header, dict) else None
     t = u.get("t") if isinstance(u, dict) else None
+    if is_t(t):
+        return T(t)
     if isinstance(t, str) and t.strip():
         return t.split(" (")[0].strip()[:40]
-    return "с"
+    return T("s")
 
 
 @dataclass
 class WorldInfo:
     n: int
-    t_unit: str = "с"
+    t_unit: object = "s"  # a text (T) or a plain string
     header: bool = False  # its header was seen
     decl: dict = field(default_factory=dict)  # id -> the latest declaration {id, label, unit, of, group}
     objects: dict = field(default_factory=dict)  # obj id -> {type, label, values} (the latest scene message)
@@ -116,9 +121,9 @@ class Index:
         if isinstance(meta.get("measurables"), list):
             for d in meta["measurables"]:
                 if isinstance(d, dict) and isinstance(d.get("id"), str):
-                    w.decl[d["id"]] = {"id": d["id"], "label": str(d.get("label") or d["id"]),
-                                       "unit": str(d.get("unit") or ""), "of": d.get("of"),
-                                       "group": str(d.get("group") or "")}
+                    w.decl[d["id"]] = {"id": d["id"], "label": _txt(d.get("label") or d["id"]),
+                                       "unit": _txt(d.get("unit") or ""), "of": d.get("of"),
+                                       "group": _txt(d.get("group") or "")}
         if typ == "scene" and isinstance(meta.get("objects"), list):
             w.objects = {o.get("id"): {"type": o.get("type"), "label": o.get("label"), "values": o.get("values") or {}}
                          for o in meta["objects"] if isinstance(o, dict)}
@@ -196,20 +201,29 @@ async def indexed(run) -> tuple[Index, list, int]:
         return idx, entries, n_end
 
 
-def display_label(w: WorldInfo, d: dict) -> str:
-    """A quantity's label for the owner: a probe's quantity names its object («Датчик 1: расстояние»)."""
+def _txt(x):
+    """A text of the record: a ``T`` (kept, the player renders it) or a plain string (bounded)."""
+    return T(x) if is_t(x) else str(x)[:300]
+
+
+def display_label(w: WorldInfo, d: dict):
+    """A quantity's label for the owner (a text): a probe's quantity names its object ("Probe 1: distance")."""
     lab = d.get("label") or d.get("id")
     of = d.get("of")
     if of is not None and of in w.objects:
-        ol = str(w.objects[of].get("label") or of)
-        if ol and ol not in lab:
-            return f"{ol}: {lab}"
+        ol = w.objects[of].get("label") or of
+        if not is_t(ol):
+            ol = str(ol)
+        if ol and not (isinstance(ol, str) and isinstance(lab, str) and ol in lab):
+            return T("{object}: {label}", object=ol, label=lab)
     return lab
 
 
-def column_title(w: WorldInfo, d: dict) -> str:
+def column_title(w: WorldInfo, d: dict):
     unit = d.get("unit") or ""
-    return f"{display_label(w, d)}{', ' + unit if unit else ''} [{d['id']}]"
+    if unit:
+        return T("{label}, {unit} [{id}]", label=display_label(w, d), unit=unit, id=d["id"])
+    return T("{label} [{id}]", label=display_label(w, d), id=d["id"])
 
 
 def _num(v):
@@ -247,7 +261,7 @@ def read_rows(run, frames: list, ids: list) -> tuple[list, list, dict]:
             if isinstance(mn, dict):
                 for k in ids:
                     if mn.get(k):
-                        notes[k] = str(mn[k])[:300]
+                        notes[k] = _txt(mn[k])
     finally:
         for f in files.values():
             f.close()
@@ -277,9 +291,9 @@ def _float_arg(q, name, default):
     try:
         x = float(s)
     except ValueError:
-        raise BadRequest(f"«{name}» — число (время мира)") from None
+        raise BadRequest(T("“{name}” is a number (the world's time)", name=name)) from None
     if math.isnan(x):
-        raise BadRequest(f"«{name}» — число (время мира)")
+        raise BadRequest(T("“{name}” is a number (the world's time)", name=name))
     return x
 
 
@@ -287,7 +301,7 @@ def parse_query(q, idx: Index) -> dict:
     """The request's arguments, checked against what the record holds (``BadRequest`` with the owner's text)."""
     worlds = sorted(idx.worlds)
     if not worlds:
-        raise BadRequest("в записи нет ни одного мира")
+        raise BadRequest(T("the record holds no world"))
     ws = q.get("world")
     if ws in (None, ""):
         world = worlds[-1]
@@ -295,26 +309,28 @@ def parse_query(q, idx: Index) -> dict:
         try:
             world = int(ws)
         except ValueError:
-            raise BadRequest("«world» — номер мира (целое число)") from None
+            raise BadRequest(T("“world” is a world's number (a whole number)")) from None
         if world not in idx.worlds:
-            raise BadRequest(f"в записи нет мира {world}; есть: " + ", ".join(map(str, worlds)))
+            raise BadRequest(T("the record has no world {n}; there are: {worlds}", n=world,
+                               worlds=", ".join(map(str, worlds))))
     w = idx.worlds[world]
     ids = list(dict.fromkeys(s.strip() for s in (q.get("ids") or "").split(",") if s.strip()))  # once each (F11)
-    have = ", ".join(sorted(w.decl)) or "никаких: мир не сообщает измеряемых величин"
+    have = ", ".join(sorted(w.decl)) or T("none: the world reports no measurable quantities")
     if not ids:
-        raise BadRequest(f"укажите величины: ids=a,b (в мире {world} есть: {have})")
+        raise BadRequest(T("name the quantities: ids=a,b (world {n:d} has: {have})", n=world, have=have))
     if len(ids) > MAX_IDS or any(len(k) > 200 for k in ids):
-        raise BadRequest(f"не больше {MAX_IDS} величин за раз")
+        raise BadRequest(T("at most {n:d} quantities at a time", n=MAX_IDS))
     unknown = [k for k in ids if k not in w.decl]
     if unknown:
-        raise BadRequest(f"в мире {world} нет величин: {', '.join(unknown)} (есть: {have})")
+        raise BadRequest(T("world {n:d} has no quantities {ids} (it has: {have})", n=world, ids=", ".join(unknown),
+                           have=have))
     t0 = _float_arg(q, "from", -math.inf)
     t1 = _float_arg(q, "to", math.inf)
     if t1 < t0:
-        raise BadRequest("«to» раньше «from»")
+        raise BadRequest(T("“to” is before “from”"))
     fmt = (q.get("format") or "json").lower()
     if fmt not in ("json", "csv"):
-        raise BadRequest("«format» — json или csv")
+        raise BadRequest(T("“format” is json or csv"))
     mp = q.get("max_points")
     if mp in (None, ""):
         cap = JSON_POINTS
@@ -322,9 +338,9 @@ def parse_query(q, idx: Index) -> dict:
         try:
             cap = int(mp)
         except ValueError:
-            raise BadRequest("«max_points» — целое число") from None
+            raise BadRequest(T("“max_points” is a whole number")) from None
         if not 2 <= cap <= JSON_POINTS_MAX:
-            raise BadRequest(f"«max_points» — от 2 до {JSON_POINTS_MAX}")
+            raise BadRequest(T("“max_points” is from 2 to {max:d}", max=JSON_POINTS_MAX))
     return {"world": world, "ids": ids, "t0": t0, "t1": t1, "format": fmt, "cap": cap}
 
 
@@ -342,7 +358,7 @@ async def series(request, mgr):
     from aiohttp import web  # noqa: PLC0415
 
     def err(text, status=400):
-        return web.json_response({"error": text}, status=status, dumps=lambda d: json.dumps(d, ensure_ascii=False))
+        return web.json_response(error_body(text), status=status, dumps=lambda d: json.dumps(d, ensure_ascii=False))
 
     for rid in [k for k in _INDEX if k not in mgr.runs]:  # deleted runs: their scans go
         _INDEX.pop(rid, None)
@@ -350,14 +366,14 @@ async def series(request, mgr):
     try:
         run = mgr.get(request.match_info["id"])
     except KeyError:
-        return err("нет такого запуска", 404)
+        return err(T("there is no such run"), 404)
     try:
         idx, entries, _ = await indexed(run)
         a = parse_query(request.query, idx)
     except BadRequest as e:
-        return err(str(e))
+        return err(e.args[0] if e.args else str(e))
     except OSError as e:  # a record file gone or unreadable
-        return err(f"запись не читается: {e}", 409)
+        return err(T("the record cannot be read: {error}", error=str(e)), 409)
     w = idx.worlds[a["world"]]
     ids = a["ids"]
     frames = idx.frames(entries, a["world"], a["t0"], a["t1"])
@@ -368,7 +384,7 @@ async def series(request, mgr):
         try:
             ts, rows, notes = await asyncio.to_thread(read_rows, run, chosen, ids)
         except OSError as e:
-            return err(f"запись не читается: {e}", 409)
+            return err(T("the record cannot be read: {error}", error=str(e)), 409)
         finally:
             run.readers -= 1
         out = {"run": run.id, "world": a["world"], "worlds": sorted(idx.worlds), "t_unit": w.t_unit, "ids": ids,
@@ -378,13 +394,16 @@ async def series(request, mgr):
         return web.json_response(out, dumps=lambda d: json.dumps(d, ensure_ascii=False))
     cap = min(CSV_MAX_ROWS, max(2, CSV_MAX_CELLS // (len(ids) + 1)))
     chosen, stride = thin(frames, cap)
-    t_head = f"t, {w.t_unit}" + (f" (каждый {stride}-й кадр записи: предел {cap} строк)" if stride > 1 else "")
+    # the CSV's header in the language asked for (?lang=, English by default): a file keeps no T objects
+    lang = request.query.get("lang") or "en"
+    t_head = render_in(T("t, {unit} (every {k:d}th frame of the record: a limit of {cap:d} rows)", unit=w.t_unit, k=stride,
+                         cap=cap) if stride > 1 else T("t, {unit}", unit=w.t_unit), lang)
     name = f"{run.id}-w{a['world']}-series.csv"
     resp = web.StreamResponse(headers={"Content-Type": "text/csv; charset=utf-8",
                                        "Content-Disposition": f'attachment; filename="{name}"',
                                        "X-Lfviz-Rows": str(len(chosen)), "X-Lfviz-Stride": str(stride)})
     await resp.prepare(request)
-    await resp.write(_csv_line([t_head] + [column_title(w, d) for d in decls]).encode("utf-8"))
+    await resp.write(_csv_line([t_head] + [render_in(column_title(w, d), lang) for d in decls]).encode("utf-8"))
     run.readers += 1
     try:
         for i in range(0, len(chosen), BATCH):

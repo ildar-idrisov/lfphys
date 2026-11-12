@@ -231,14 +231,15 @@ def test_lab_points_are_lorentz_contracted_along_the_velocity():
     assert np.allclose(x[2] - x[0], [0, 1, 0], atol=1e-15)
 
 
-def test_the_observer_inside_a_body_is_refused_with_a_reason():
+def test_the_observer_inside_a_body_is_refused_with_a_reason(ru):
     ob = RT.Observer(0.0, (0.0, 0.0, 0.0))
     cam = RT.Camera(8, 8)
     for body in (RT.Sphere((0.2, 0, 0), 1.0), RT.Box((0, 0.3, 0), (0.5, 0.5, 0.5))):
-        with pytest.raises(ValueError, match="наблюдатель внутри тела"):
+        with pytest.raises(ValueError, match="the observer is inside the body") as e:
             RT.render(RT.Scene([body]), ob, cam)
+        assert ru(e.value.args[0]).startswith("наблюдатель внутри тела «" + ru(body.name) + "»")
     # a moving box whose world tube contains the observation event (in the box's own frame)
-    with pytest.raises(ValueError, match="внутри"):
+    with pytest.raises(ValueError, match="inside"):
         RT.render(RT.Scene([RT.Box((-0.9 * 2.0, 0, 0), (0.5, 0.5, 0.5), (0.9, 0, 0))]), RT.Observer(2.0, (0, 0, 0)), cam)
 
 
@@ -310,5 +311,5 @@ def test_gpu_equals_cpu():
 
 def test_the_kernel_is_registered_with_a_measured_crossover():
     k = B.kernels()[RT.KERNEL]
-    assert k.gpu and k.crossover and "измерено" in k.crossover_note and k.bench is not None
+    assert k.gpu and k.crossover and "measured" in str(k.crossover_note) and k.bench is not None
     assert list(k.precisions) == ["fp64"]

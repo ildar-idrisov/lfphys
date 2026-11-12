@@ -12,14 +12,16 @@ from __future__ import annotations
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "theories", "kind": "alternative",
-    "title": "Изменённое правило Борна: P ∝ |ψ|^p",
-    "statement": "Вероятность регистрации пропорциональна |ψ|^p; при p ≠ 2 появляется интерференция третьего "
-                 "порядка (параметр Соркина ≠ 0) и сигнализация через чтение детектора пути.",
-    "validity": "только для исследования «что если»; трёхщелевые опыты ограничивают отклонение от p = 2",
+    "title": T("A modified Born rule: P ∝ |ψ|^p"),
+    "statement": T("The detection probability is proportional to |ψ|^p; for p ≠ 2 third-order interference appears "
+                   "(the Sorkin parameter ≠ 0) and signalling through reading the which-path detector."),
+    "validity": T("only for “what if” studies; three-slit experiments bound the deviation from p = 2"),
     "basis": ["Sorkin, Mod. Phys. Lett. A 9, 3119 (1994)", "Sinha et al., Science 329, 418 (2010)"],
-    "conflicts": ["lfphys.core.quantum.marks: правило Борна P ∝ |ψ|²"],
+    "conflicts": [T("lfphys.core.quantum.marks: the Born rule P ∝ |ψ|²")],
 }
 
 

@@ -20,6 +20,8 @@ from aiohttp.test_utils import TestClient, TestServer
 from lfviz import playground as PG
 from lfviz import protocol, registry
 from lfviz.app import MGR, create_app
+from lfviz.i18n import T
+from lfviz.i18n import english as E
 from lfviz.sim import Runner
 
 HERE = Path(__file__).resolve().parent
@@ -72,7 +74,7 @@ def test_the_scene_carries_over_to_a_new_world_with_other_laws():
     sim, run, _ = _world(msgs)
     run._start_world()
     _build(run)
-    old = {o["label"]: (dict(o["values"]), sim.object_state(o)) for o in sim.objects.values()}
+    old = {E(o["label"]): (dict(o["values"]), sim.object_state(o)) for o in sim.objects.values()}
     n0 = len(msgs)
     run.handle({"cmd": "new_world", "args": {"params": {"drag": 0.5, "ndim": 3}, "seed": 7, "carry": True}})
     new = run.sim
@@ -81,13 +83,14 @@ def test_the_scene_carries_over_to_a_new_world_with_other_laws():
     assert head["params"]["scene"]["carry"] is True and head["t"] == pytest.approx(0.6)  # the world's time goes on
     assert [o["type"] for o in head["params"]["scene"]["objects"]] == ["particle", "particle", "probe", "particle",
                                                                         "wall", "mirror"]
-    assert {o["label"]: (dict(o["values"]), new.object_state(o)) for o in new.objects.values()} == old
-    note = [m for m in _of(msgs[n0:], "notice") if "Сцена перенесена" in m["text"]][0]
+    assert {E(o["label"]): (dict(o["values"]), new.object_state(o)) for o in new.objects.values()} == old
+    note = [m for m in _of(msgs[n0:], "notice") if "The scene was carried" in E(m["text"])][0]
     # what went how (review LB1-F5): the particles with their state, the probe and the walls by their parameters (no
     # state of their own), the world's own state (the toy's visits) carried
-    assert note["text"] == ("Сцена перенесена в новый мир: все объекты (6). С состоянием — «Частица 1», «Частица 2», "
-                            "«Частица 3». По параметрам (своего состояния нет) — «Датчик 1», «Стенка (отражает) 1», "
-                            "«Зеркало (отражает; ось — номер) 1». Состояние мира перенесено") and note["not_carried"] == 0
+    assert E(note["text"]) == ("The scene was carried into the new world: all objects (6). With their state — "
+                               "“Particle 1”, “Particle 2”, “Particle 3”. By their parameters (no state of their own) — "
+                               "“Probe 1”, “Wall (reflects) 1”, “Mirror (reflects; the axis is a number) 1”. The world's "
+                               "state carried over") and note["not_carried"] == 0
     assert [(o["id"], o["was"], o["how"]) for o in note["carry"]["objects"]] == [
         ("o1", "o1", "state"), ("o2", "o2", "state"), ("o3", "o3", "params"), ("o4", "o4", "state"),
         ("o5", "o5", "params"), ("o6", "o6", "params")]
@@ -97,7 +100,7 @@ def test_the_scene_carries_over_to_a_new_world_with_other_laws():
     assert cmd["args"] == {"params": {"drag": 0.5, "ndim": 3}, "seed": 7, "carry": True}
     # the new world is computed by its laws from the carried state
     run._advance(1.0)
-    assert new.state["o1"][2] == pytest.approx(old["Частица 1"][1]["xv"][2] * __import__("math").exp(-0.5 * 0.4))
+    assert new.state["o1"][2] == pytest.approx(old["Particle 1"][1]["xv"][2] * __import__("math").exp(-0.5 * 0.4))
 
 
 def test_objects_the_new_world_refuses_are_named_and_the_rest_carried():
@@ -108,17 +111,18 @@ def test_objects_the_new_world_refuses_are_named_and_the_rest_carried():
     n0 = len(msgs)
     run.handle({"cmd": "new_world", "args": {"params": {"ndim": 2}, "carry": True}})
     assert run.world == 2 and run.sim.ndim == 2
-    kept = [o["label"] for o in run.sim.objects.values()]
-    assert kept == ["Частица 1", "Частица 2", "Датчик 1", "Стенка (отражает) 1"]
-    note = [m for m in _of(msgs[n0:], "notice") if "Сцена перенесена" in m["text"]][0]
-    assert note["text"].startswith("Сцена перенесена в новый мир: 4 из 6 объектов. С состоянием — «Частица 1», "
-                                   "«Частица 2». По параметрам (своего состояния нет) — «Датчик 1», «Стенка (отражает) 1"
-                                   "». Не перенесены: ")
-    assert note["text"].endswith("Состояние мира перенесено: посещения перенесены в плоскость z = 0 (ячейки по x, y те "
-                                 "же)")
-    assert "«Частица 3» — Частица вне плоскости z = 0 (z = 0,8 м, vz = 0,1 м/с). Что изменить: перенесите её в 3-D мир" \
-        in note["text"]
-    assert "«Зеркало (отражает; ось — номер) 1» — " in note["text"] and note["not_carried"] == 2
+    kept = [E(o["label"]) for o in run.sim.objects.values()]
+    assert kept == ["Particle 1", "Particle 2", "Probe 1", "Wall (reflects) 1"]
+    note = [m for m in _of(msgs[n0:], "notice") if "The scene was carried" in E(m["text"])][0]
+    text = E(note["text"])
+    assert text.startswith("The scene was carried into the new world: 4 of 6 objects. With their state — “Particle 1”, "
+                           "“Particle 2”. By their parameters (no state of their own) — “Probe 1”, “Wall (reflects) 1"
+                           "”. Not carried: ")
+    assert text.endswith("The world's state carried over: the visits were carried into the plane z = 0 (the cells along "
+                         "x, y are the same)")
+    assert ("“Particle 3” — The particle is off the plane z = 0 (z = 0.8 m, vz = 0.1 m/s). What to change: carry it "
+            "into a 3-D world") in text
+    assert "“Mirror (reflects; the axis is a number) 1” — " in text and note["not_carried"] == 2
     # a carried particle keeps its dynamic state; the planar world drags it in its plane
     assert list(run.sim.state["o1"]) == list(sim.state["o1"])
     # negative control: without «перенести сцену» the new world starts empty (as before P16.1)
@@ -127,7 +131,7 @@ def test_objects_the_new_world_refuses_are_named_and_the_rest_carried():
     r2._start_world()
     _build(r2)
     r2.handle({"cmd": "new_world", "args": {"params": {"ndim": 2}}})
-    assert r2.world == 2 and not r2.sim.objects and not [m for m in _of(m2, "notice") if "Сцена перенесена" in m["text"]]
+    assert r2.world == 2 and not r2.sim.objects and not [m for m in _of(m2, "notice") if "The scene was carried" in E(m["text"])]
 
 
 def test_a_carried_world_is_rebuilt_the_same_by_a_restore_and_a_refused_one_stays_refused():
@@ -143,7 +147,7 @@ def test_a_carried_world_is_rebuilt_the_same_by_a_restore_and_a_refused_one_stay
     run.handle({"cmd": "scene", "args": {"op": "edit", "id": "o2", "values": {"x": 1.0, "y": -1.0}}})
     # a world refused as a whole (a dimension the toy has not): the carried world goes on, and so does its restore
     run.handle({"cmd": "new_world", "args": {"params": {"ndim": 4}, "carry": True}})
-    assert run.world == 2 and "Новый мир не создан" in _of(msgs, "error")[-1]["text"]
+    assert run.world == 2 and "New world not created" in E(_of(msgs, "error")[-1]["text"])
     for dt in (0.13, 0.05):
         run._advance(run.sim.t + dt)
         run._frame(0.0)
@@ -237,7 +241,7 @@ def test_a_carried_world_is_resumed_the_same_through_the_server(tmp_path, monkey
                     break
                 await asyncio.sleep(0.05)
             assert run.meta["resumes"][-1]["from"] == "replay"
-            await cmd("scene", {"op": "label", "id": "o1", "label": "после продолжения"})
+            await cmd("scene", {"op": "label", "id": "o1", "label": "after the continuation"})
             await asyncio.sleep(1.0)
             after = await scene_now()
             assert [(o["type"], o["values"]) for o in after["objects"]] == [(o["type"], o["values"]) for o in before["objects"]]
@@ -296,13 +300,13 @@ def test_the_carried_state_is_said_object_by_object_and_the_ids_are_kept(tmp_pat
     data = (tmp_path / ref["file"]).read_bytes()
     assert PG.CARRY_NAME.match(ref["file"]) and hashlib.sha256(data).hexdigest() == ref["sha256"]
     assert "pts" not in str(head["params"]["scene"]["objects"])  # the heavy state is not in the header
-    note = [m for m in _of(msgs[n0:], "notice") if "Сцена перенесена" in m["text"]][0]
+    note = [m for m in _of(msgs[n0:], "notice") if "The scene was carried" in E(m["text"])][0]
     how = {o["id"]: o["how"] for o in note["carry"]["objects"]}
     assert how == {"o1": "state", "o3": "params", "o4": "state", "o5": "state"}
     # a value the new world changed is said (the toy's plane takes clouds at most 2 m wide)
     assert note["carry"]["objects"][2]["changed"] == {"spread": [3.0, 2.0]}
-    assert "Изменено при переносе — «Облако точек 1»: spread 3 → 2" in note["text"]
-    assert "Состояние мира перенесено: посещения перенесены в плоскость z = 0" in note["text"]
+    assert "Changed in the carry-over — “Cloud of points 1”: spread 3 → 2" in E(note["text"])
+    assert "The world's state carried over: the visits were carried into the plane z = 0" in E(note["text"])
     run.handle({"cmd": "scene", "args": {"op": "add", "type": "probe", "values": {}}})
     assert list(new.objects)[-1] == "o6"
     # a world refused as a whole leaves no carried file behind; the earlier world's file is gone once a later world
@@ -331,11 +335,11 @@ def test_a_section_that_gives_no_state_is_said_to_restart():
     new = run.sim
     assert "carry_file" not in _of(msgs[n0:], "header")[0]["params"]["scene"]
     assert not np.allclose(new.clouds["o4"][0], pts) and new.visits.sum() == 0
-    note = [m for m in _of(msgs[n0:], "notice") if "Сцена перенесена" in m["text"]][0]
+    note = [m for m in _of(msgs[n0:], "notice") if "The scene was carried" in E(m["text"])][0]
     assert {o["id"]: o["how"] for o in note["carry"]["objects"]}["o4"] == "restarted"
-    assert "Состояние не перенесено, начато заново из параметров — «Облако точек 1»" in note["text"]
-    assert note["carry"]["world"] == {"how": "restarted", "notes": ["посещения ячеек начаты заново с нуля"]}
-    assert note["text"].endswith("Состояние мира: посещения ячеек начаты заново с нуля")
+    assert "The state not carried, started afresh from the parameters — “Cloud of points 1”" in E(note["text"])
+    assert note["carry"]["world"] == {"how": "restarted", "notes": [{"$t": "the visits of the cells started afresh from zero"}]}
+    assert E(note["text"]).endswith("The world's state: the visits of the cells started afresh from zero")
     # a state the new world cannot take is said too (the toy refuses a cloud of another size: rebuilt, with why)
     m2 = []
     _, r2 = _world_cls(m2, registry.load("p99_toy")["simulation"])
@@ -343,20 +347,20 @@ def test_a_section_that_gives_no_state_is_said_to_restart():
     _cloudy(r2)
     r2.sim.clouds["o4"][0] = r2.sim.clouds["o4"][0][:5]
     r2.handle({"cmd": "new_world", "args": {"params": {"drag": 0.2}, "carry": True}})
-    note = [m for m, _ in m2 if m["type"] == "notice" and "Сцена перенесена" in m["text"]][-1]
-    assert "«Облако точек 1» (число точек 5 → 7: облако разыграно заново)" in note["text"]
+    note = [m for m, _ in m2 if m["type"] == "notice" and "The scene was carried" in E(m["text"])][-1]
+    assert "“Cloud of points 1” (the number of points 5 → 7: the cloud is drawn anew)" in E(note["text"])
     # a world state the new world refuses (raised in carry_world): started afresh, with the reason
     class Refuses(registry.load("p99_toy")["simulation"]):
         def carry_world(self, state, laws):
-            raise PG.Refusal("сетка посещений другая")
+            raise PG.Refusal(T("the grid of visits is another"))
     m3 = []
     _, r3 = _world_cls(m3, Refuses)
     r3._start_world()
     _cloudy(r3)
     r3.handle({"cmd": "new_world", "args": {"params": {"drag": 0.2}, "carry": True}})
-    note = [m for m, _ in m3 if m["type"] == "notice" and "Сцена перенесена" in m["text"]][-1]
+    note = [m for m, _ in m3 if m["type"] == "notice" and "The scene was carried" in E(m["text"])][-1]
     assert note["carry"]["world"]["how"] == "restarted" and r3.sim.visits.sum() == 0
-    assert note["text"].endswith("Состояние мира: начато заново — Сетка посещений другая")
+    assert E(note["text"]).endswith("The world's state: started afresh — The grid of visits is another")
 
 
 def test_a_carried_state_is_plain_data_and_a_scene_file_cannot_name_one(tmp_path):
@@ -369,10 +373,10 @@ def test_a_carried_state_is_plain_data_and_a_scene_file_cannot_name_one(tmp_path
         with pytest.raises(TypeError):
             PG.pack_state(bad)
     # a scene file (a REST start, a loaded file) may not name a carried state: only the runner's new world does
-    with pytest.raises(ValueError, match="перенесённое состояние"):
+    with pytest.raises(ValueError, match="carried state"):
         PG.check_scene({"objects": [], "carry_file": {"file": "carry-w2-1.npz", "sha256": "0"}}, "p99_toy")
     PG.check_scene({"objects": [], "carry_file": {"file": None, "sha256": "0"}}, "p99_toy", carried_ok=True)
-    # a reference to a state that is not there, or not the same, is refused in Russian (the world is not built)
+    # a reference to a state that is not there, or not the same, is refused in the owner's words (the world is not built)
     PG.set_carry_dir(tmp_path)
     try:
         ref = PG.store_carry({"world": {"a": np.zeros(3)}}, 2)
@@ -380,10 +384,10 @@ def test_a_carried_state_is_plain_data_and_a_scene_file_cannot_name_one(tmp_path
         assert (PG.load_carry(ref)["world"]["a"] == 0).all()
         PG._carry_cache.clear()
         (tmp_path / ref["file"]).write_bytes(PG.pack_state({"world": {"a": np.ones(3)}}))
-        with pytest.raises(ValueError, match="изменён"):
+        with pytest.raises(ValueError, match="was changed"):
             PG.load_carry(ref)
         (tmp_path / ref["file"]).unlink()
-        with pytest.raises(ValueError, match="не найден"):
+        with pytest.raises(ValueError, match="is not found"):
             PG.load_carry(ref)
     finally:
         PG.set_carry_dir(None)
@@ -457,7 +461,7 @@ def test_a_carried_state_is_resumed_the_same_by_replay_through_the_server(tmp_pa
                 await asyncio.sleep(0.05)
             await asyncio.sleep(0.5)
             # a failed resume is kept out of the record and said in the run's state (lfviz.runs: resume_error)
-            assert not run.running and "изменён" in (run.meta.get("resume_error") or ""), run.meta.get("resume_error")
+            assert not run.running and "was changed" in E(run.meta.get("resume_error") or ""), run.meta.get("resume_error")
     asyncio.run(go())
 
 

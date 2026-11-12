@@ -18,7 +18,7 @@ Inside it the
 experimenter places, at any moment, a gas or a crystal block of atoms, single atoms, molecules (bonded atoms with
 angles), walls (specular, soft, or thermal: a heat bath; on a periodic axis a wall makes the axis walled), a piston,
 thermostats (CSVR or Langevin, everywhere or in a region), a field and thermometers; a new object lands where it can
-exist (``place``: the nearest free spot, a crystal around the atoms already there) or is refused in Russian with what to
+exist (``place``: the nearest free spot, a crystal around the atoms already there) or is refused with what to
 change (reviews UX-ui U4–U8, U13; UX-params P31–P33); the engine computes the motion and measures
 the temperature, the pressure, the energy balance (heat and work), the velocity distribution against Maxwell–Boltzmann,
 the radial distribution function, the density along the field, the bond-orientational order and the mean-square
@@ -40,14 +40,12 @@ import numpy as np
 
 from lfphys.core.md import observables as OB
 from lfphys.core.md.system import MD, free_sites
+from lfphys.i18n import T, is_t, join, text_of
 from lfphys.theories.models import interatomic as IA
+from lfviz.errors import Refusal  # the framework's refusal (reviews UX-params P4, UX-ui U13): shown with what to change
 from lfviz.params import Param, Schema
 from lfviz.playground import ObjectType, PlaygroundSimulation, scene_param, scene_time
 
-try:  # the framework's refusal (reviews UX-params P4, UX-ui U13): shown as it is, in Russian, with what to change
-    from lfviz.errors import Refusal
-except ImportError:  # an older framework: a Russian ValueError is shown as it is
-    Refusal = ValueError
 try:
     from lfviz.limits import require as _require
 except ImportError:
@@ -55,13 +53,8 @@ except ImportError:
 
 
 def refusal(text, hint=None, detail=None):
-    """A refusal for the owner: what is wrong and what to change (Russian)."""
-    for kw in ({"hint": hint, "detail": detail}, {"change": hint, "detail": detail}):
-        try:
-            return Refusal(text, **kw)
-        except TypeError:
-            continue
-    return Refusal(text.rstrip(".") + (f": {hint}" if hint else ""))
+    """A refusal for the owner: what is wrong and what to change (texts: ``T``)."""
+    return Refusal(text, hint=hint, detail=detail)
 
 U = IA.argon_units()
 NM = U.to_angstrom(1.0) / 10.0          # nm per reduced length
@@ -100,29 +93,29 @@ def _p(*a, **k):
     return Param(*a, **k)
 
 
-BOX_HELP = ("Меняется в текущий момент (см. «Как менять размер ящика» и «Время изменения размера»). Аффинно: координаты "
-            "атомов вдоль оси умножаются на L′/L, их скорости относительно центра масс — на L/L′ (для движения "
-            "относительно центра масс — каноническое преобразование, шаг объёма баростата Андерсена). Работа над "
-            "системой — изменение энергии, учтена в первом начале. За заданное время (по шагу на каждом шаге счёта) "
-            "сжатие тем ближе к квазистатическому, чем медленнее: работа стремится к −∫P dV по адиабате, сжатие и "
-            "возврат почти не нагревают; скачком (время 0) — необратимо: вещество после скачка неравновесно и греется "
-            "(газ аргона, 300 атомов при 300 K, 12 → 11 → 12 нм: скачками ≈ 16 K, за 10 пс ≈ 0,7 K, за 50 пс ≈ 0,6 K, "
-            "за 200 пс — 0 ± 0,2 K; см. README). Отказ — с "
-            "причиной: атомы перекрылись бы (скачок), связь молекулы изменила бы длину больше чем на 10 % (скачок), "
-            "радиус обрезки больше половины ящика, ось поршня (двигайте поршень), удары не разрешает шаг по времени "
-            "(сжатие нагревает)")
-BOX_TIME_HELP = ("Время, за которое ящик доходит до нового размера (аффинно): размер меняется равномерно, на каждом шаге "
-                 "счёта — малым аффинным шагом, работа каждого шага учтена. Чем дольше (медленнее грани ящика по "
-                 "сравнению со скоростью звука, у газа аргона при 300 K ≈ 320 м/с), тем ближе к квазистатической "
-                 "адиабате: газ аргона (300 атомов, 300 K), сжатый 12 → 11 нм и возвращённый, нагревается скачками на "
-                 "≈ 16 K, за 10 пс на ≈ 0,7 K, за 50 пс на ≈ 0,6 K, за 200 пс — 0 ± 0,2 K (измерено, 4 запуска). 0 — "
-                 "скачком (необратимо). Пока размер меняется, текущий размер — в кадре; конец изменения — событием с "
-                 "работой")
+BOX_HELP = T("Changed at the current moment (see “How to change the box size” and “Time of the size change”). Affinely: the "
+           "atoms' coordinates along the axis are multiplied by L′/L, their velocities relative to the centre of mass by "
+           "L/L′ (for the motion relative to the centre of mass a canonical transformation, the volume step of "
+           "Andersen's barostat). The work done on the system is the change of its energy, counted in the first law. "
+           "Over a given time (a step at every computing step) the compression is the closer to quasi-static the slower "
+           "it is: the work tends to −∫P dV along the adiabat, compression and return hardly heat; at once (time 0) it is "
+           "irreversible: the matter is out of equilibrium after the jump and heats up (argon gas, 300 atoms at 300 K, "
+           "12 → 11 → 12 nm: at once ≈ 16 K, over 10 ps ≈ 0.7 K, over 50 ps ≈ 0.6 K, over 200 ps 0 ± 0.2 K; see the "
+           "README). Refused with the reason when atoms would overlap (a jump), a molecule's bond would change its "
+           "length by more than 10 % (a jump), the cutoff radius would exceed half the box, the axis is the piston's "
+           "(move the piston), or the time step does not resolve the collisions (compression heats)")
+BOX_TIME_HELP = T("The time in which the box reaches its new size (affinely): the size changes uniformly, by a small affine "
+                  "step at every computing step, the work of each step counted. The longer (the slower the box's faces "
+                  "compared with the speed of sound, ≈ 320 m/s in argon gas at 300 K), the closer to the quasi-static "
+                  "adiabat: argon gas (300 atoms, 300 K) compressed 12 → 11 nm and returned heats by ≈ 16 K at once, by "
+                  "≈ 0.7 K over 10 ps, by ≈ 0.6 K over 50 ps, by 0 ± 0.2 K over 200 ps (measured, 4 runs). 0: at once "
+                  "(irreversible). While the size changes, the current size is in the frame; the end of the change is an "
+                  "event with the work")
 
 
 class _Schema(Schema):
-    """p03's schema: laws written before the split of 2026-11-05 (review UX-ui U12) still resolve. Then «model» held
-    lj | wca | hard as one world parameter; now «dynamics» (forces | hard) is the world's and «model» (lj | wca) a live
+    """p03's schema: laws written before the split of 2026-11-05 (review UX-ui U12) still resolve. Then ``model`` held
+    lj | wca | hard as one world parameter; now ``dynamics`` (forces | hard) is the world's and ``model`` (lj | wca) a live
     law. An old ``"model": "hard"`` (from a scene file's laws or a stored run) becomes ``dynamics = hard``; old lj / wca
     are valid as they are (the default dynamics is the forces). The world says so in a notice (``legacy_note``)."""
 
@@ -131,80 +124,83 @@ class _Schema(Schema):
 
 
 def legacy_laws(values):
-    """The laws of the old combined «model» in the new split (a copy; other values untouched)."""
+    """The laws of the old combined ``model`` in the new split (a copy; other values untouched)."""
     if isinstance(values, dict) and values.get("model") == "hard":
         values = {**values, "dynamics": "hard", "model": "lj"}   # the live model is unused by hard spheres
     return values
 
 
 def legacy_note(scene):
-    """The notice for a scene file of the old format (its laws carry «model» and no «dynamics»), or None."""
+    """The notice for a scene file of the old format (its laws carry ``model`` and no ``dynamics``), or None."""
     laws = scene.get("laws") if isinstance(scene, dict) else None
     if not isinstance(laws, dict) or "dynamics" in laws or "model" not in laws:
         return None
     old = laws["model"]
     if old == "hard":
-        what = "«Взаимодействие» = твёрдые диски / шары стало «Динамика» = твёрдые диски / шары"
+        what = T("“Interaction” = hard disks / spheres became “Dynamics” = hard disks / spheres")
     else:
-        lab = {"lj": "Леннард-Джонс", "wca": "только отталкивание (WCA)"}.get(old, str(old))
-        what = (f"«Взаимодействие» = {lab} стало «Динамика» = непрерывные силы и «Взаимодействие» = {lab} — теперь "
-                f"закон, который меняется на ходу")
-    return f"файл старого формата (до 2026-11-05): {what}; сцена загружена с теми же законами"
+        lab = {"lj": T("Lennard-Jones"), "wca": T("repulsion only (WCA)")}.get(old, str(old))
+        what = T("“Interaction” = {model} became “Dynamics” = continuous forces and “Interaction” = {model}, now a law "
+                 "that changes while the world runs", model=lab)
+    return T("a file of the old format (before 2026-11-05): {what}; the scene was loaded with the same laws", what=what)
 
 
 SCHEMA = _Schema([
-    _p("dim", "Пространство", "select", "2d", group="Законы",
-       options=[("2d", "плоскость"), ("3d", "объём")],
-       help="Плоскость или объём — другой мир (новый мир); сцену можно перенести: объекты создаются заново по своим "
-            "параметрам, координата z отбрасывается или берётся по умолчанию; стенка и поршень поперёк z в плоскость не "
-            "переносятся"),
-    _p("dynamics", "Динамика", "select", "forces", group="Законы (на ходу)", live=True,
-       options=[("forces", "непрерывные силы (Леннард-Джонс или WCA)"),
-                ("hard", "твёрдые диски / шары (событийная динамика)")],
-       help="Переключается в текущий момент: те же атомы с теми же положениями и скоростями. К твёрдым шарам — только "
-            "если ни одна пара атомов не ближе σ и ни один атом не ближе σ/2 к стенке, а в сцене нет молекул, поршня, "
-            "термостатов, поля, мягких стенок и зарядов (у твёрдых шаров их нет). Обратно — всегда: появляется "
-            "потенциальная энергия пар (скачок энергии сказан в событии); шаг по времени должен разрешать удары"),
-    _p("model", "Взаимодействие", "select", "lj", group="Законы (на ходу)", live=True,
+    _p("dim", T("Space"), "select", "2d", group=T("Laws"),
+       options=[("2d", T("plane")), ("3d", T("volume"))],
+       help=T("A plane or a volume is another world (a new world); the scene can be carried over: the objects are made "
+              "anew from their parameters, the z coordinate is dropped or takes its default; a wall or a piston across "
+              "z is not carried into a plane")),
+    _p("dynamics", T("Dynamics"), "select", "forces", group=T("Laws (live)"), live=True,
+       options=[("forces", T("continuous forces (Lennard-Jones or WCA)")),
+                ("hard", T("hard disks / spheres (event-driven dynamics)"))],
+       help=T("Switched at the current moment: the same atoms with the same positions and velocities. To hard spheres "
+              "only if no pair of atoms is closer than σ and no atom closer than σ/2 to a wall, and the scene has no "
+              "molecules, piston, thermostats, field, soft walls or charges (hard spheres have none of them). Back "
+              "always: the pairs' potential energy appears (the jump of the energy is stated in the event); the time "
+              "step must resolve the collisions")),
+    _p("model", T("Interaction"), "select", "lj", group=T("Laws (live)"), live=True,
        show_if={"dynamics": ["forces"]},
-       options=[("lj", "Леннард-Джонс (притяжение и отталкивание; модель)"),
-                ("wca", "только отталкивание (WCA; модель)")],
-       help="Меняется в текущий момент: те же атомы с новым законом взаимодействия; энергия меняется на разность "
-            "потенциалов (учтено в балансе энергии), отсчёты проверок начинаются заново"),
-    _p("cutoff", "Радиус обрезки, σ", "float", 2.5, group="Законы (на ходу)", min=1.2, max=6.0, live=True,
+       options=[("lj", T("Lennard-Jones (attraction and repulsion; a model)")),
+                ("wca", T("repulsion only (WCA; a model)"))],
+       help=T("Changed at the current moment: the same atoms with a new law of interaction; the energy changes by the "
+              "difference of the potentials (counted in the energy balance), the checks start counting anew")),
+    _p("cutoff", T("Cutoff radius, σ"), "float", 2.5, group=T("Laws (live)"), min=1.2, max=6.0, live=True,
        show_if={"dynamics": ["forces"], "model": ["lj"]},
-       help="Потенциал Леннард-Джонса обрезан на этом расстоянии; сдвиг убирает скачок. Обрезка меняет вещество: "
-            "его критическая точка и тройная точка другие, чем у полного потенциала (см. приближения). Меняется на "
-            "ходу (не больше половины периодического ящика)"),
-    _p("shift", "Сдвиг на обрезке", "select", "force", group="Законы (на ходу)", live=True,
+       help=T("The Lennard-Jones potential is cut at this distance; the shift removes the jump. The cutoff changes the "
+              "substance: its critical point and triple point differ from those of the full potential (see the "
+              "approximations). Changed while the world runs (at most half the periodic box)")),
+    _p("shift", T("Shift at the cutoff"), "select", "force", group=T("Laws (live)"), live=True,
        show_if={"dynamics": ["forces"], "model": ["lj"]},
-       options=[("force", "сила и энергия непрерывны (чистая ошибка схемы O(dt²))"),
-                ("energy", "только энергия непрерывна (скачок силы: ошибка энергии O(dt))")]),
-    _p("dt_fs", "Шаг по времени, фс", "float", 10.0, group="Законы (на ходу)", min=0.1, max=50.0, live=True,
+       options=[("force", T("force and energy continuous (only the scheme's error O(dt²))")),
+                ("energy", T("energy continuous only (a jump of the force: an energy error O(dt))"))]),
+    _p("dt_fs", T("Time step, fs"), "float", 10.0, group=T("Laws (live)"), min=0.1, max=50.0, live=True,
        show_if={"dynamics": ["forces"]},
-       help="Схема Верле: ошибка энергии ~ dt² при непрерывных силах; для аргона 10 фс ≈ 0,005 τ. Меняется на ходу "
-            "(состояние то же, следующие шаги — с новым шагом); атом за шаг должен проходить не больше 0,1 σ"),
-    _p("Lx", "Размер ящика по x, нм", "float", 12.0, group="Ящик (на ходу)", min=0.5, max=1e3, log=True, live=True,
+       help=T("Verlet scheme: the energy error ~ dt² with continuous forces; for argon 10 fs ≈ 0.005 τ. Changed while "
+              "the world runs (the same state, the next steps with the new step); an atom must move at most 0.1 σ in a "
+              "step")),
+    _p("Lx", T("Box size along x, nm"), "float", 12.0, group=T("Box (live)"), min=0.5, max=1e3, log=True, live=True,
        help=BOX_HELP),
-    _p("Ly", "Размер ящика по y, нм", "float", 12.0, group="Ящик (на ходу)", min=0.5, max=1e3, log=True, live=True,
+    _p("Ly", T("Box size along y, nm"), "float", 12.0, group=T("Box (live)"), min=0.5, max=1e3, log=True, live=True,
        help=BOX_HELP),
-    _p("Lz", "Размер ящика по z, нм", "float", 6.0, group="Ящик (на ходу)", min=0.5, max=1e3, log=True, live=True,
+    _p("Lz", T("Box size along z, nm"), "float", 6.0, group=T("Box (live)"), min=0.5, max=1e3, log=True, live=True,
        show_if={"dim": ["3d"]}, help=BOX_HELP),
-    _p("box_mode", "Как менять размер ящика", "select", "affine", group="Ящик (на ходу)", live=True,
-       options=[("affine", "сжать или растянуть вместе с веществом (аффинно; работа над системой)"),
-                ("wall", "сдвинуть верхнюю стенку: добавить или убрать пустое место")],
-       help="«Аффинно»: всё вещество сжимается или растягивается вместе с ящиком (так делает баростат) за «Время "
-            "изменения размера»: медленное сжатие приближается к адиабатическому, скачок необратим; работа над "
-            "системой учтена в первом начале. «Стенка» (только ось со стенками; у оси поршня — его верхний упор): "
-            "стенка сдвигается по пустому месту сразу — расширение в пустоту (опыт Джоуля, необратимо), работы нет у "
-            "зеркальных и тепловых стенок, у мягкой стенки работа — изменение её энергии под атомами (сказано в "
-            "событии); убрать место можно только там, где нет атомов. У твёрдых шаров — только «стенка»"),
-    _p("box_time_ps", "Время изменения размера, пс (0 — скачком)", "float", 50.0, group="Ящик (на ходу)", min=0.0,
+    _p("box_mode", T("How to change the box size"), "select", "affine", group=T("Box (live)"), live=True,
+       options=[("affine", T("compress or stretch together with the matter (affinely; work on the system)")),
+                ("wall", T("move the upper wall: add or remove empty space"))],
+       help=T("“Affinely”: all the matter is compressed or stretched with the box (as a barostat does) over the “Time "
+              "of the size change”: a slow compression approaches the adiabatic one, a jump is irreversible; the work "
+              "on the system is counted in the first law. “Wall” (an axis with walls only; on the piston's axis its "
+              "upper stop): the wall moves over empty space at once, an expansion into vacuum (Joule's experiment, "
+              "irreversible), no work for specular and thermal walls, for a soft wall the work is the change of its "
+              "energy under the atoms (stated in the event); space can be removed only where there are no atoms. Hard "
+              "spheres: “wall” only")),
+    _p("box_time_ps", T("Time of the size change, ps (0: at once)"), "float", 50.0, group=T("Box (live)"), min=0.0,
        max=1e4, live=True, show_if={"box_mode": ["affine"]}, help=BOX_TIME_HELP),
-    _p("boundary", "Границы в начале", "select", "periodic", group="Ящик",
-       options=[("periodic", "периодические (бесконечное вещество)"), ("walls", "стенки со всех сторон"),
-                ("slab", "стенки снизу и сверху (по y), по бокам периодично")],
-       help="«Стенка» или «Поршень» из палитры на периодической оси делают её осью со стенками (на ходу)"),
+    _p("boundary", T("Boundaries at the start"), "select", "periodic", group=T("Box"),
+       options=[("periodic", T("periodic (infinite matter)")), ("walls", T("walls on all sides")),
+                ("slab", T("walls at the bottom and the top (along y), periodic at the sides"))],
+       help=T("A “Wall” or a “Piston” from the palette on a periodic axis makes it an axis with walls (live)")),
     scene_param(),
 ], presets={})
 
@@ -224,89 +220,93 @@ _A085 = math.sqrt(2.0 / (math.sqrt(3.0) * 0.85)) * NM
 _AFCC = (4.0 / 0.693) ** (1.0 / 3.0) * NM
 
 SCHEMA.presets.update({
-    "maxwell": {"label": "Газ аргона из одинаковых скоростей: распределение Максвелла устанавливается само",
+    "maxwell": {"label": T("Argon gas started with equal speeds: the Maxwell distribution sets in by itself"),
                 "params": {"dim": "2d", "model": "lj", "Lx": 12.0, "Ly": 12.0, "boundary": "periodic",
-                           "scene": _scene([{"type": "gas", "label": "Аргон", "values": {
+                           "scene": _scene([{"type": "gas", "label": T("Argon"), "values": {
                                "n": 300, "T": 300.0, "start": "same_speed"}}])}},
-    "melting": {"label": "Плоский кристалл (ρσ² = 0,85) нагревают термостатом до 120 K: порядок ψ6 исчезает, атомы "
-                         "начинают диффундировать — плавление",
+    "melting": {"label": T("A plane crystal (ρσ² = {rho}) is heated by a thermostat to {T} K: the order ψ6 vanishes, the "
+                           "atoms start to diffuse — melting", rho=0.85, T=120),
                 "params": {"dim": "2d", "model": "lj", "Lx": round(25 * _A085, 4),
                            "Ly": round(15 * math.sqrt(3.0) * _A085, 4), "boundary": "periodic",
                            "scene": _scene([
-                               {"type": "crystal", "label": "Кристалл", "values": {"density": 0.85, "T": 20.0}},
-                               {"type": "thermostat", "label": "Нагрев 120 K", "values": {"T": 120.0, "tau": 2.0}}])}},
-    "piston": {"label": "Газ под поршнем: сжатие поршнем и теплообмен со стенкой (первое начало)",
+                               {"type": "crystal", "label": T("Crystal"), "values": {"density": 0.85, "T": 20.0}},
+                               {"type": "thermostat", "label": T("Heating to {T} K", T=120),
+                                "values": {"T": 120.0, "tau": 2.0}}])}},
+    "piston": {"label": T("Gas under a piston: compression by the piston and heat exchange with a wall (the first law)"),
                "params": {"dim": "2d", "model": "lj", "Lx": 12.0, "Ly": 16.0, "boundary": "walls",
                           "scene": _scene([
-                              {"type": "gas", "label": "Аргон", "values": {"n": 200, "T": 300.0, "sy": 8.0,
-                                                                           "y": 4.5}},
-                              {"type": "piston", "label": "Поршень", "values": {"position": 10.0, "mass": 4000.0,
-                                                                               "p_ext": 50.0}},
-                              {"type": "wall", "label": "Тёплое дно", "values": {"axis": "y", "side": "lo",
-                                                                                 "kind": "thermal", "T": 300.0}}])}},
-    "liquid_vapour": {"label": "Жидкость и пар в объёме при 90 K в поле: жидкость (ρσ³ ≈ 0,69) внизу, над ней пар "
-                               "(≈ 0,03) — профиль плотности по высоте",
+                              {"type": "gas", "label": T("Argon"), "values": {"n": 200, "T": 300.0, "sy": 8.0,
+                                                                              "y": 4.5}},
+                              {"type": "piston", "label": T("Piston"), "values": {"position": 10.0, "mass": 4000.0,
+                                                                                 "p_ext": 50.0}},
+                              {"type": "wall", "label": T("Warm bottom"), "values": {"axis": "y", "side": "lo",
+                                                                                    "kind": "thermal", "T": 300.0}}])}},
+    "liquid_vapour": {"label": T("Liquid and vapour in a volume at {T} K in a field: the liquid (ρσ³ ≈ {rl}) below, the "
+                                 "vapour (≈ {rv}) above it — the density profile along the height", T=90, rl=0.69,
+                                 rv=0.03),
                       "params": {"dim": "3d", "model": "lj", "Lx": round(5 * _AFCC, 4), "Ly": 6.0,
                                  "Lz": round(5 * _AFCC, 4), "boundary": "slab",
                                  "scene": _scene([
-                                     {"type": "crystal", "label": "Жидкость (из решётки)",
+                                     {"type": "crystal", "label": T("Liquid (from a lattice)"),
                                       "values": {"density": 0.693, "T": 90.0, "y": 1.3, "sy": 2.6}},
-                                     {"type": "thermostat", "label": "Термостат 90 K", "values": {"T": 90.0,
-                                                                                                  "tau": 5.0}},
-                                     {"type": "gravity", "label": "Поле", "values": {"g": 0.02}}])}},
-    "molecules": {"label": "Двухатомные молекулы стартуют только с поступательным движением: столкновения "
-                           "раздают энергию вращению и колебаниям (равнораспределение устанавливается)",
+                                     {"type": "thermostat", "label": T("Thermostat {T} K", T=90),
+                                      "values": {"T": 90.0, "tau": 5.0}},
+                                     {"type": "gravity", "label": T("Field"), "values": {"g": 0.02}}])}},
+    "molecules": {"label": T("Diatomic molecules start with translation only: collisions hand energy to rotation and "
+                             "vibration (equipartition sets in)"),
                   "params": {"dim": "3d", "model": "lj", "Lx": 5.0, "Ly": 5.0, "Lz": 5.0, "boundary": "periodic",
-                             "scene": _scene([{"type": "molecule", "label": "Молекулы X₂", "values": {
+                             "scene": _scene([{"type": "molecule", "label": T("Molecules X₂"), "values": {
                                  "shape": "dimer", "count": 150, "T": 400.0, "bond": 1.1, "k_bond": 50.0,
                                  "start": "translation"}}])}},
-    "hard_disks": {"label": "Твёрдые диски: давление против уравнения состояния (Колафа и Роттнер)",
+    "hard_disks": {"label": T("Hard disks: the pressure against the equation of state (Kolafa and Rottner)"),
                    "params": {"dim": "2d", "dynamics": "hard", "Lx": 12.0, "Ly": 12.0, "boundary": "periodic",
-                              "scene": _scene([{"type": "gas", "label": "Диски", "values": {
+                              "scene": _scene([{"type": "gas", "label": T("Disks"), "values": {
                                   "n": 400, "T": 300.0}}])}},
 })
 
 
-def _xyz(ndim, label="Центр", d=(6.0, 6.0, 3.0)):
-    return [_p(c, f"{label}: {c}, нм", "float", float(d[i]), min=-1e3, max=1e3) for i, c in enumerate("xyz"[:ndim])]
+def _xyz(ndim, d=(6.0, 6.0, 3.0)):
+    return [_p(c, T("Centre: {c}, nm", c=c), "float", float(d[i]), min=-1e3, max=1e3) for i, c in enumerate("xyz"[:ndim])]
 
 
 def _region(ndim):
-    return [*[_p(c, f"Центр области: {c}, нм (0 и размер 0 — весь ящик)", "float", 0.0, min=-1e3, max=1e3)
-              for c in "xyz"[:ndim]],
-            *[_p(f"s{c}", f"Размер области по {c}, нм (0 — весь ящик)", "float", 0.0, min=0.0, max=1e3)
+    return [*[_p(c, T("Centre of the region: {c}, nm (0 and size 0: the whole box)", c=c), "float", 0.0, min=-1e3,
+                 max=1e3) for c in "xyz"[:ndim]],
+            *[_p(f"s{c}", T("Size of the region along {c}, nm (0: the whole box)", c=c), "float", 0.0, min=0.0, max=1e3)
               for c in "xyz"[:ndim]]]
 
 
 def _subst(model):
-    out = [_p("substance", "Вещество", "select", "argon",
-              options=[("argon", "аргон (σ = 3,405 Å, ε/k = 119,8 K, m = 39,948 а.е.м.)"), ("custom", "своё")],
-              help="Смена вещества — те же атомы с новыми параметрами в текущий момент; температура сохраняется "
-                   "(скорости пересчитаны v·√(m/m′)); перекрытия при новом σ отклоняются"),
-           _p("sigma", "Размер σ, доля аргонового", "float", 1.0, min=0.3, max=3.0, show_if={"substance": ["custom"]}),
-           _p("mass", "Масса, а.е.м.", "float", 39.948, min=1.0, max=1e4, log=True,
+    out = [_p("substance", T("Substance"), "select", "argon",
+              options=[("argon", T("argon (σ = {s} Å, ε/k = {e} K, m = {m} u)", s=3.405, e=119.8, m=39.948)),
+                       ("custom", T("custom"))],
+              help=T("A change of the substance gives the same atoms new parameters at the current moment; the "
+                     "temperature is kept (the velocities rescaled by √(m/m′)); overlaps at the new σ are refused")),
+           _p("sigma", T("Size σ, fraction of argon's"), "float", 1.0, min=0.3, max=3.0, show_if={"substance": ["custom"]}),
+           _p("mass", T("Mass, u"), "float", 39.948, min=1.0, max=1e4, log=True,
               show_if={"substance": ["custom"]})]
     if model != "hard":
-        out[2:2] = [_p("epsilon", "Глубина ямы ε, доля аргоновой", "float", 1.0, min=0.0, max=20.0,
+        out[2:2] = [_p("epsilon", T("Well depth ε, fraction of argon's"), "float", 1.0, min=0.0, max=20.0,
                        show_if={"substance": ["custom"]})]
-        out.append(_p("charge", "Заряд, e (только в ящике со стенками)", "float", 0.0, min=-5.0, max=5.0,
+        out.append(_p("charge", T("Charge, e (only in a box with walls)"), "float", 0.0, min=-5.0, max=5.0,
                       show_if={"substance": ["custom"]}))
-    out.append(_p("color", "Цвет", "select", "0", options=[(str(i), c) for i, c in enumerate(
-        ["голубой", "оранжевый", "зелёный", "розовый", "жёлтый", "фиолетовый", "белый", "красный"])]))
+    out.append(_p("color", T("Colour"), "select", "0", options=[(str(i), c) for i, c in enumerate(
+        [T("light blue"), T("orange"), T("green"), T("pink"), T("yellow"), T("violet"), T("white"), T("red")])]))
     return out
 
 
 SP_KEYS = {"substance", "sigma", "epsilon", "mass", "charge", "color"}
 POS_KEYS = ("x", "y", "z")
-CARRIED = {"gas": "атомы газа", "crystal": "атомы кристалла", "atom": "атом", "molecule": "молекулы", "piston": "поршень"}
+CARRIED = {"gas": T("the gas's atoms"), "crystal": T("the crystal's atoms"), "atom": T("the atom"),
+           "molecule": T("the molecules"), "piston": T("the piston")}
 VEL_KEYS = ("vx", "vy", "vz")
 AXIS_KEYS = {"z", "sz", "vz", "throw_vz"}   # the keys of the axis a plane has not (a 3-D scene carried into a plane)
 
 
 def _vcom(ndim):
-    return [_p(f"v{c}", f"Скорость центра масс v{c}, м/с", "float", 0.0, min=-1e5, max=1e5,
-               help="Объект движется как целое с этой скоростью (бросок мышью задаёт её); тепловое движение атомов — "
-                    "по температуре") for c in "xyz"[:ndim]]
+    return [_p(f"v{c}", T("Centre-of-mass velocity v{c}, m/s", c=c), "float", 0.0, min=-1e5, max=1e5,
+               help=T("The object moves as a whole with this velocity (a throw with the mouse sets it); the atoms' "
+                      "thermal motion follows the temperature")) for c in "xyz"[:ndim]]
 
 
 # a throw (LB1, P16.2) comes in the world's units - nm per second of world time (the frames' ``at`` and ``t``); the
@@ -318,9 +318,10 @@ THROW_MAX_M_S = 500.0     # the largest throw (m/s): see palette()
 
 
 def _throw(ndim):
-    return [_p(f"throw_v{c}", f"Бросок: скорость центра масс v{c}, нм/с", "float", 0.0, min=-1e15, max=1e15,
-               hidden=True, help="задаётся броском мышью (в единицах мира: нм за секунду его времени); объект получает "
-                                 "эту скорость центра масс (в инспекторе — в м/с)") for c in "xyz"[:ndim]]
+    return [_p(f"throw_v{c}", T("Throw: centre-of-mass velocity v{c}, nm/s", c=c), "float", 0.0, min=-1e15, max=1e15,
+               hidden=True, help=T("set by a throw with the mouse (in the world's units: nm per second of its time); "
+                                   "the object gets this centre-of-mass velocity (shown in m/s in the inspector)"))
+            for c in "xyz"[:ndim]]
 
 
 def _ot(typ, label, kind, schema, handles=None, **kw):
@@ -342,63 +343,63 @@ def _ot(typ, label, kind, schema, handles=None, **kw):
 def palette(ndim: int, model: str = "lj") -> dict:
     """The palette: one for both dynamics (LB1: the dynamics is a live law; what the hard spheres have not is disabled
     by ``palette_state`` with the reason). ``model`` is kept for the callers of before."""
-    T = _p("T", "Температура, K", "float", 300.0, min=0.0, max=1e5)
+    Tp = _p("T", T("Temperature, K"), "float", 300.0, min=0.0, max=1e5)
     SUBST = _subst("lj")
-    gas = Schema([_p("n", "Число атомов", "int", 200, min=1, max=20000), T,
-                  _p("start", "Начальные скорости", "select", "maxwell",
-                     options=[("maxwell", "по Максвеллу при T"), ("same_speed", "все с одной скоростью (как при T)")]),
+    gas = Schema([_p("n", T("Number of atoms"), "int", 200, min=1, max=20000), Tp,
+                  _p("start", T("Initial velocities"), "select", "maxwell",
+                     options=[("maxwell", T("Maxwellian at T")), ("same_speed", T("all with one speed (as at T)"))]),
                   *_region(ndim), *_vcom(ndim), *_throw(ndim), *SUBST])
-    crystal = Schema([_p("density", "Плотность решётки ρσ^d", "float", 0.9, min=0.05, max=1.3,
-                         help="Решётка (2-D треугольная, 3-D ГЦК) с шагом этой плотности: целые ячейки в области; "
-                              "вдоль периодической оси, которую блок занимает целиком, ячейки подогнаны к ящику "
-                              "(фактическая плотность — в инспекторе). Плотная упаковка: ρσ² ≈ 0,9, ρσ³ ≈ 1,0"),
-                      T, *_region(ndim), *_vcom(ndim), *_throw(ndim), *SUBST])
-    atom = Schema([*_xyz(ndim), *[_p(f"v{c}", f"Скорость v{c}, м/с", "float", 0.0, min=-1e5, max=1e5)
+    crystal = Schema([_p("density", T("Lattice density ρσ^d"), "float", 0.9, min=0.05, max=1.3,
+                         help=T("A lattice (2-D triangular, 3-D fcc) of this density: whole cells in the region; along "
+                                "a periodic axis the block fills entirely the cells are fitted to the box (the actual "
+                                "density is in the inspector). Close packing: ρσ² ≈ {d2}, ρσ³ ≈ {d3}", d2=0.9, d3=1.0)),
+                      Tp, *_region(ndim), *_vcom(ndim), *_throw(ndim), *SUBST])
+    atom = Schema([*_xyz(ndim), *[_p(f"v{c}", T("Velocity v{c}, m/s", c=c), "float", 0.0, min=-1e5, max=1e5)
                                   for c in "xyz"[:ndim]], *_throw(ndim), *SUBST])
-    mol = Schema([_p("shape", "Молекула", "select", "dimer",
-                     options=[("dimer", "двухатомная"), ("bent", "трёхатомная угловая"), ("chain", "цепочка")]),
-                  _p("atoms", "Атомов в цепочке", "int", 6, min=3, max=50, show_if={"shape": ["chain"]}),
-                  _p("count", "Сколько молекул", "int", 20, min=1, max=2000), T,
-                  _p("start", "Начальное движение", "select", "maxwell",
-                     options=[("maxwell", "всё при T (поступательное, вращение, колебания)"),
-                              ("translation", "только поступательное при T (вращение и колебания холодные)")],
-                     help="«всё при T»: скорость каждого атома по Максвеллу при T, длины связей и углы — по "
-                          "Больцману около равновесных (каноническое начало); «только поступательное»: молекула "
-                          "движется как целое со скоростью при T своей массы, связи и углы равновесные"),
-                  _p("bond", "Длина связи, σ", "float", 1.0, min=0.5, max=2.0),
-                  _p("k_bond", "Жёсткость связи, ε/σ²", "float", 400.0, min=1.0, max=1e4, log=True),
-                  _p("angle", "Угол связей, °", "float", 105.0, min=30.0, max=180.0,
+    mol = Schema([_p("shape", T("Molecule"), "select", "dimer",
+                     options=[("dimer", T("diatomic")), ("bent", T("triatomic, bent")), ("chain", T("chain"))]),
+                  _p("atoms", T("Atoms in the chain"), "int", 6, min=3, max=50, show_if={"shape": ["chain"]}),
+                  _p("count", T("Number of molecules"), "int", 20, min=1, max=2000), Tp,
+                  _p("start", T("Initial motion"), "select", "maxwell",
+                     options=[("maxwell", T("everything at T (translation, rotation, vibration)")),
+                              ("translation", T("translation only at T (rotation and vibration cold)"))],
+                     help=T("“Everything at T”: each atom's velocity Maxwellian at T, bond lengths and angles "
+                            "Boltzmann-distributed around equilibrium (a canonical start); “translation only”: the "
+                            "molecule moves as a whole with a speed at T for its mass, bonds and angles at equilibrium")),
+                  _p("bond", T("Bond length, σ"), "float", 1.0, min=0.5, max=2.0),
+                  _p("k_bond", T("Bond stiffness, ε/σ²"), "float", 400.0, min=1.0, max=1e4, log=True),
+                  _p("angle", T("Bond angle, °"), "float", 105.0, min=30.0, max=180.0,
                      show_if={"shape": ["bent", "chain"]}),
-                  _p("k_angle", "Жёсткость угла, ε/рад²", "float", 50.0, min=0.0, max=1e4,
+                  _p("k_angle", T("Angle stiffness, ε/rad²"), "float", 50.0, min=0.0, max=1e4,
                      show_if={"shape": ["bent", "chain"]}),
                   *_region(ndim), *_vcom(ndim), *_throw(ndim), *SUBST])
     axes = [(c, c) for c in "xyz"[:ndim]]
-    wall_kinds = [("specular", "зеркальная (упругое отражение)"),
-                  ("thermal", "тепловая (возвращает атомы с температурой стенки: тепловая ванна)"),
-                  ("soft", "мягкая (потенциал стенки Леннард-Джонса; не у твёрдых шаров)")]
-    wall = Schema([_p("axis", "Стенка поперёк оси", "select", "y", options=axes),
-                   _p("side", "Сторона", "select", "lo", options=[("lo", "нижняя / левая"), ("hi", "верхняя / правая")]),
-                   _p("kind", "Стенка", "select", "thermal", options=wall_kinds),
-                   _p("T", "Температура стенки, K", "float", 300.0, min=0.0, max=1e5, show_if={"kind": ["thermal"]})])
-    piston = Schema([_p("axis", "Поршень поперёк оси", "select", "y", options=axes),
-                     _p("position", "Положение, нм", "float", 10.0, min=0.0, max=1e3,
-                        help="Задаётся при установке; правка других параметров поршень не двигает"),
-                     _p("mass", "Масса поршня, а.е.м. (0 — движется как задано)", "float", 4000.0, min=0.0,
+    wall_kinds = [("specular", T("specular (elastic reflection)")),
+                  ("thermal", T("thermal (returns atoms with the wall's temperature: a heat bath)")),
+                  ("soft", T("soft (a Lennard-Jones wall potential; not for hard spheres)"))]
+    wall = Schema([_p("axis", T("Wall across the axis"), "select", "y", options=axes),
+                   _p("side", T("Side of the box"), "select", "lo", options=[("lo", T("lower / left")), ("hi", T("upper / right"))]),
+                   _p("kind", T("Wall"), "select", "thermal", options=wall_kinds),
+                   _p("T", T("Wall temperature, K"), "float", 300.0, min=0.0, max=1e5, show_if={"kind": ["thermal"]})])
+    piston = Schema([_p("axis", T("Piston across the axis"), "select", "y", options=axes),
+                     _p("position", T("Position, nm"), "float", 10.0, min=0.0, max=1e3,
+                        help=T("Set when it is placed; changing other parameters does not move the piston")),
+                     _p("mass", T("Piston mass, u (0: moves as prescribed)"), "float", 4000.0, min=0.0,
                         max=1e9),
-                     _p("p_ext", "Внешнее давление, бар (в плоскости — мН/м)", "float", 50.0, min=0.0, max=1e6),
-                     _p("speed", "Скорость (если масса 0), м/с", "float", 0.0, min=-1e4, max=1e4)])
-    thermo = Schema([_p("kind", "Термостат", "select", "csvr",
-                        options=[("csvr", "CSVR (Буси–Донадио–Парринелло): канонический, мягкий"),
-                                 ("langevin", "Ланжевен (трение и шум)")]),
-                     _p("T", "Температура, K", "float", 300.0, min=0.0, max=1e5),
-                     _p("tau", "Время релаксации, пс", "float", 2.0, min=1e-3, max=1e6, show_if={"kind": ["csvr"]}),
-                     _p("gamma", "Трение γ, 1/пс", "float", 1.0, min=1e-6, max=1e4, show_if={"kind": ["langevin"]}),
+                     _p("p_ext", T("External pressure, bar (in a plane: mN/m)"), "float", 50.0, min=0.0, max=1e6),
+                     _p("speed", T("Speed (if the mass is 0), m/s"), "float", 0.0, min=-1e4, max=1e4)])
+    thermo = Schema([_p("kind", T("Thermostat"), "select", "csvr",
+                        options=[("csvr", T("CSVR (Bussi–Donadio–Parrinello): canonical, gentle")),
+                                 ("langevin", T("Langevin (friction and noise)"))]),
+                     _p("T", T("Temperature, K"), "float", 300.0, min=0.0, max=1e5),
+                     _p("tau", T("Relaxation time, ps"), "float", 2.0, min=1e-3, max=1e6, show_if={"kind": ["csvr"]}),
+                     _p("gamma", T("Friction γ, 1/ps"), "float", 1.0, min=1e-6, max=1e4, show_if={"kind": ["langevin"]}),
                      *_region(ndim)])
-    field = Schema([_p("g", "Поле g (вниз по y), ε/(mσ)", "float", 0.02, min=-10.0, max=10.0,
-                       help="Для аргона единица ε/(mσ) ≈ 7,3·10¹³ м/с² (земное g ≈ 1,3·10⁻¹³ в этих единицах): "
-                            "земное поле на масштабе атомов незаметно, здесь — модельное сильное поле, чтобы увидеть "
-                            "расслоение")])
-    probe = Schema([*_xyz(ndim, "Центр"), _p("r", "Радиус, нм", "float", 2.0, min=0.1, max=1e3)])
+    field = Schema([_p("g", T("Field g (down along y), ε/(mσ)"), "float", 0.02, min=-10.0, max=10.0,
+                       help=T("For argon the unit ε/(mσ) ≈ {u:.2g} m/s² (the Earth's g ≈ {g:.2g} in these units): the "
+                              "Earth's field is imperceptible on the scale of atoms; here a strong model field shows the "
+                              "stratification", u=7.3e13, g=1.3e-13))])
+    probe = Schema([*_xyz(ndim), _p("r", T("Radius, nm"), "float", 2.0, min=0.1, max=1e3)])
     pos = list(POS_KEYS[:ndim])
     # the throw: in the world's units (nm/s), at most THROW_MAX_M_S (review LB1-p02-ux X4): about the speed of sound of
     # argon gas at room temperature and above its thermal speed; the default step (10 fs) resolves the collisions of a
@@ -406,32 +407,35 @@ def palette(ndim: int, model: str = "lj") -> dict:
     # volume, the limit Q_MAX = 0.4; tests/test_p03_lab.py);
     # faster, or hotter, or lighter, is refused by the step with what to change
     group = {"position": pos, "velocity": list(THROW_KEYS[:ndim]), "velocity_max": THROW_MAX_M_S * NM_PER_S,
-             # the throw read and logged in m/s (the framework's velocity_display: shown = factor × world units)
-             "velocity_display": {"unit": "м/с", "factor": 1.0 / NM_PER_S}}
+             # the throw read and logged in m/s (the framework's velocity_display: shown = factor × world units); the
+             # unit is a plain msgid (check_handles takes a str), translated by the player
+             "velocity_display": {"unit": "m/s", "factor": 1.0 / NM_PER_S}}
     pal = {
-        "gas": _ot("gas", "Газ (атомы)", "particle", gas, handles=group, color=COLORS[0],
-                   help="Атомы в случайных местах (не ближе σ друг к другу и к уже имеющимся: случайная "
-                        "последовательная вставка), скорости при температуре T; общий импульс газа снят, затем "
-                        "добавлена скорость центра масс. Перетаскивание сдвигает все его атомы, бросок (Shift) задаёт "
-                        "скорость центра масс"),
-        "crystal": _ot("crystal", "Кристалл (решётка атомов)", "particle", crystal, handles=group, color=COLORS[2]),
-        "atom": _ot("atom", "Атом", "particle", atom, handles=group, color=COLORS[4]),
-        "wall": _ot("wall", "Стенка (тип)", "field", wall, limit=6, color="#adb5bd",
-                    help="Меняет одну из стенок ящика (у границ со стенками)"),
-        "probe": _ot("probe", "Термометр (область)", "probe", probe, handles={"position": pos, "size": "r"}, limit=6,
+        "gas": _ot("gas", T("Gas (atoms)"), "particle", gas, handles=group, color=COLORS[0],
+                   help=T("Atoms at random places (no closer than σ to each other and to those already there: random "
+                          "sequential insertion), velocities at the temperature T; the gas's total momentum removed, "
+                          "then the centre-of-mass velocity added. A drag moves all its atoms, a throw (Shift) sets the "
+                          "centre-of-mass velocity")),
+        "crystal": _ot("crystal", T("Crystal (a lattice of atoms)"), "particle", crystal, handles=group, color=COLORS[2]),
+        "atom": _ot("atom", T("Atom"), "particle", atom, handles=group, color=COLORS[4]),
+        "wall": _ot("wall", T("Wall (kind)"), "field", wall, limit=6, color="#adb5bd",
+                    help=T("Changes one of the box's walls (at boundaries with walls)")),
+        "probe": _ot("probe", T("Thermometer (region)"), "probe", probe, handles={"position": pos, "size": "r"}, limit=6,
                      color="#ffd43b",
-                     help="Число атомов, их плотность и температура в шаре вокруг точки (периодические грани учтены)"),
-        "molecule": _ot("molecule", "Молекулы", "particle", mol, handles=group, color=COLORS[1],
-                        help="Атомы, связанные пружинами (и углами): модель молекулы; размещаются без перекрытий "
-                             "(энергия каждого атома при вставке не выше 2kT); не у твёрдых шаров"),
-        "piston": _ot("piston", "Поршень", "body", piston, handles={"position": {"param": "position", "axis_param": "axis"}},
+                     help=T("The number of atoms, their density and temperature in a sphere around a point (periodic "
+                            "faces taken into account)")),
+        "molecule": _ot("molecule", T("Molecules"), "particle", mol, handles=group, color=COLORS[1],
+                        help=T("Atoms bound by springs (and angles): a model of a molecule; placed without overlaps "
+                               "(each atom's energy at insertion at most 2kT); not for hard spheres")),
+        "piston": _ot("piston", T("Piston"), "body", piston, handles={"position": {"param": "position", "axis_param": "axis"}},
                       limit=1, color="#868e96", stateful=True,
-                      help="Верхняя стенка оси подвижна: масса и внешнее давление; работа считается; не у твёрдых "
-                           "шаров"),
-        "thermostat": _ot("thermostat", "Термостат", "field", thermo, limit=4, color="#ff6b6b",
-                          help="Держит температуру (вся область или её часть); теплота считается; не у твёрдых шаров"),
-        "gravity": _ot("gravity", "Поле (тяжесть)", "field", field, limit=1, color="#868e96",
-                       help="Однородное поле вниз по y; не у твёрдых шаров"),
+                      help=T("The upper wall of the axis is movable: a mass and an external pressure; the work is "
+                             "counted; not for hard spheres")),
+        "thermostat": _ot("thermostat", T("Thermostat"), "field", thermo, limit=4, color="#ff6b6b",
+                          help=T("Holds the temperature (the whole region or a part of it); the heat is counted; not "
+                                 "for hard spheres")),
+        "gravity": _ot("gravity", T("Field (gravity)"), "field", field, limit=1, color="#868e96",
+                       help=T("A uniform field down along y; not for hard spheres")),
     }
     return pal
 
@@ -459,89 +463,80 @@ def einstein_cv_fraction(T, theta):
     return float(x * x * math.exp(-x) / (-math.expm1(-x)) ** 2)
 
 
-_SUP = str.maketrans("-0123456789", "⁻⁰¹²³⁴⁵⁶⁷⁸⁹")
-
-
-def _num(v, d=3):
-    """A number for the owner: d significant digits, a decimal comma, powers of ten as ·10⁻⁶ outside 10⁻³…10⁵."""
-    v = float(v)
-    if v == 0 or not math.isfinite(v):
-        return "0" if v == 0 else str(v)
-    if 1e-3 <= abs(v) < 1e5:
-        s = f"{v:.{d}g}"
-        if "e" in s:
-            s = f"{v:.0f}"
-        return s.replace(".", ",")
-    e = math.floor(math.log10(abs(v)))
-    m = f"{v / 10 ** e:.{max(d - 1, 0)}f}".rstrip("0").rstrip(".")
-    return f"{m}·10{str(e).translate(_SUP)}".replace(".", ",")
+def _charged(s):
+    return s is not None and any(d.get("charge", 0.0) for d in s.md.species())
 
 
 _EN = [  # the engine's refusals (core.md, English) in the owner's terms (reviews UX-ui U13, UX-params P31)
     (r"random placement jammed: (\d+) of (\d+)", lambda m, s: (
-        f"без перекрытий удалось разместить только {m.group(1)} из {m.group(2)} атомов",
-        "меньше атомов или больше область; плотнее — «Кристалл»")),
+        T("only {k:d} of {n:d} atoms could be placed without overlaps", k=int(m.group(1)), n=int(m.group(2))),
+        T("fewer atoms or a larger region; denser: “Crystal”"))),
     (r"overlap: an inserted particle's potential energy ([-\d.e+]+)", lambda m, s: (
-        (f"энергия вставки нового атома {_num(float(m.group(1)), 3)} ε больше предела "
-         f"{_num(getattr(s.md, 'max_insert_energy', 50))} ε: с зарядами её задаёт и кулоновское отталкивание дальних атомов"
-         if any(d.get("charge", 0.0) for d in s.md.species()) else
-         f"новые атомы легли бы на уже имеющиеся (энергия вставки {_num(float(m.group(1)), 3)} ε при пределе "
-         f"{_num(getattr(s.md, 'max_insert_energy', 50))} ε)"),
-        ("меньше заряд или меньше атомов" if any(d.get("charge", 0.0) for d in s.md.species()) else
-         "сдвиньте объект в свободное место или уменьшите размер σ"))),
+        (T("the insertion energy of a new atom {e:.3g} ε exceeds the limit {lim:.3g} ε: with charges the Coulomb "
+           "repulsion of distant atoms sets it too", e=float(m.group(1)), lim=float(getattr(s.md, "max_insert_energy", 50)))
+         if _charged(s) else
+         T("the new atoms would lie on those already there (insertion energy {e:.3g} ε at the limit {lim:.3g} ε)",
+           e=float(m.group(1)), lim=float(getattr(s.md, "max_insert_energy", 50)))),
+        (T("a smaller charge or fewer atoms") if _charged(s) else
+         T("move the object to a free place or decrease the size σ")))),
     (r"two interacting particles at the same point|two bonded atoms at the same point", lambda m, s: (
-        "два атома оказались бы в одной точке", "сдвиньте объект")),
+        T("two atoms would be at the same point"), T("move the object"))),
     (r"overlapping hard particles", lambda m, s: (
-        "твёрдые диски (шары) перекрылись бы", "сдвиньте объект в свободное место или уменьшите σ")),
+        T("hard disks (spheres) would overlap"), T("move the object to a free place or decrease σ"))),
     (r"region: hi > lo", lambda m, s: (
-        "область объекта лежит вне ящика (внутри стенок её не остаётся)",
-        "центр и размеры области — внутри ящика (размер 0 — весь ящик)")),
+        T("the object's region lies outside the box (nothing of it is left inside the walls)"),
+        T("the region's centre and sizes inside the box (size 0: the whole box)"))),
     (r"a particle outside the walls on axis (\w)", lambda m, s: (
-        f"атом оказался бы за стенкой по оси {m.group(1)}", "координаты — внутри ящика (и ниже поршня)")),
+        T("an atom would be beyond the wall on the axis {a}", a=m.group(1)),
+        T("coordinates inside the box (and below the piston)"))),
     (r"the pair cutoff \+ skin ([\d.e+-]+) exceeds half a periodic box length ([\d.e+-]+)", lambda m, s: (
-        f"радиус обрезки с запасом ({_num(float(m.group(1)) * NM, 3)} нм) больше половины периодического ящика "
-        f"({_num(float(m.group(2)) * NM, 3)} нм)", "меньше «Радиус обрезки» или ящик больше (оба меняются на ходу)")),
+        T("the cutoff radius with its margin ({rc:.3g} nm) exceeds half the periodic box ({half:.3g} nm)",
+          rc=float(m.group(1)) * NM, half=float(m.group(2)) * NM),
+        T("a smaller “Cutoff radius” or a larger box (both change while the world runs)"))),
     (r"charges in a box with a periodic axis", lambda m, s: (
-        "заряды в ящике с периодической осью не поддерживаются (сумма Эвальда не реализована)",
-        "поставьте «Стенку» на каждую периодическую ось (ось станет со стенками) или начните новый мир с «Границы в "
-        "начале» = стенки")),
+        T("charges in a box with a periodic axis are not supported (the Ewald sum is not implemented)"),
+        T("put a “Wall” on every periodic axis (the axis gets walls) or start a new world with “Boundaries at the "
+          "start” = walls"))),
     (r"a periodic box length must be >= 4 times the largest diameter \(([\d.e+-]+)\)", lambda m, s: (
-        f"периодический ящик короче четырёх диаметров самого крупного атома ({_num(float(m.group(1)) * NM, 3)} нм)",
-        "меньше σ атомов или ящик больше (на ходу, при непрерывных силах)")),
+        T("the periodic box is shorter than four diameters of the largest atom ({d:.3g} nm)", d=float(m.group(1)) * NM),
+        T("a smaller σ of the atoms or a larger box (while the world runs, with continuous forces)"))),
     (r"the piston's axis (\w)", lambda m, s: (
-        f"по оси {m.group(1)} объём задаёт поршень: аффинно ящик вдоль неё не меняется",
-        "двигайте поршень (его «Положение»), или «Как менять размер ящика» = сдвинуть стенку: тогда меняется верхний "
-        "упор поршня")),
+        T("along the axis {a} the piston sets the volume: the box does not change affinely along it", a=m.group(1)),
+        T("move the piston (its “Position”), or “How to change the box size” = move the upper wall: then the piston's "
+          "upper stop changes"))),
     (r"the piston's face ([\d.e+-]+) lies beyond", lambda m, s: (
-        f"поршень стоит на {_num(float(m.group(1)) * NM, 4)} нм — выше новой верхней стенки",
-        f"размер по оси поршня не меньше {_num(float(m.group(1)) * NM, 4)} нм, или сначала опустите поршень")),
+        T("the piston stands at {x:.4g} nm, above the new upper wall", x=float(m.group(1)) * NM),
+        T("a size along the piston's axis of at least {x:.4g} nm, or lower the piston first", x=float(m.group(1)) * NM))),
     (r"axis ([xyz, ]+) is periodic: it has no wall", lambda m, s: (
-        f"ось {m.group(1)} периодическая: стенки, которую можно сдвинуть, нет",
-        "«Как менять размер ящика» = аффинно, или сначала поставьте «Стенку» на эту ось")),
+        T("the axis {a} is periodic: there is no wall to move", a=m.group(1)),
+        T("“How to change the box size” = affinely, or first put a “Wall” on this axis"))),
     (r"a bond would change its length by ([\d.e+-]+) \(limit ([\d.e+-]+)\)", lambda m, s: (
-        f"связи молекул растянулись или сжались бы на {_num(100 * float(m.group(1)), 3)} % (предел "
-        f"{_num(100 * float(m.group(2)))} % за одно изменение: атомы сдвигаются вместе с ящиком, связи — тоже)",
-        f"меняйте размер шагами не больше {_num(100 * float(m.group(2)))} %")),
+        T("the molecules' bonds would stretch or shrink by {p:.3g} % (the limit is {lim:.3g} % per change: the atoms move "
+          "with the box, and so do the bonds)", p=100 * float(m.group(1)), lim=100 * float(m.group(2))),
+        T("change the size in steps of at most {lim:.3g} %", lim=100 * float(m.group(2))))),
     (r"the hi side of this axis is the piston", lambda m, s: (
-        "верхняя сторона этой оси — поршень", "выберите нижнюю сторону или другую ось")),
+        T("the upper side of this axis is the piston"), T("choose the lower side or another axis"))),
     (r"no free lattice site", lambda m, s: (
-        "все узлы кристалла заняты уже имеющимися атомами", "задайте кристаллу свободную область (центр и размер)")),
+        T("all the crystal's sites are taken by atoms already there"),
+        T("give the crystal a free region (centre and size)"))),
     (r"the region is smaller than one lattice cell", lambda m, s: (
-        "область кристалла меньше одной ячейки решётки при этой плотности", "область больше или плотность выше")),
+        T("the crystal's region is smaller than one lattice cell at this density"),
+        T("a larger region or a higher density"))),
     (r"0 < x_min <= X <= L", lambda m, s: (
-        "положение поршня — вне ящика", "положение от нижней стенки до верхней грани ящика")),
+        T("the piston's position is outside the box"), T("a position from the lower wall to the box's upper face"))),
     (r"non-finite forces|non-finite", lambda m, s: (
-        "силы стали бесконечными (атомы слишком близко)", "сдвиньте объект или уменьшите температуру")),
+        T("the forces became infinite (atoms too close)"), T("move the object or lower the temperature"))),
     (r"a thermal wall needs", lambda m, s: (
-        "у тепловой стенки температура должна быть больше 0 K", "температура стенки > 0 K")),
+        T("a thermal wall needs a temperature above 0 K"), T("a wall temperature > 0 K"))),
 ]
 
 
-def _is_russian(e):
-    return any("А" <= ch <= "я" or ch in "Ёё" for ch in str(e))
+def _is_owner_text(e):
+    """An exception that already speaks to the owner: a Refusal, or an error raised with a translatable text."""
+    return isinstance(e, Refusal) or is_t(text_of(e))
 
 
-def _ru(e, sim=None):
+def _owner(e, sim=None):
     """An engine exception in the owner's terms (a Refusal with what to change), the engine's sentence as the detail."""
     import re
     s = str(e)
@@ -551,7 +546,7 @@ def _ru(e, sim=None):
             text, hint = fn(m, sim)
             return refusal(text, hint=hint, detail=s)
     if isinstance(e, ValueError):
-        return refusal("движок отказал в этом изменении", hint="другие значения объекта", detail=s)
+        return refusal(T("the engine refused this change"), hint=T("other values of the object"), detail=s)
     return e
 
 
@@ -690,10 +685,11 @@ class Simulation(PlaygroundSimulation):
         values = dict(values or {})
         if self.ndim == 2:
             if kind in ("wall", "piston") and values.get("axis") == "z":
-                what = "стенку" if kind == "wall" else "поршень"
-                raise refusal(f"в плоскости нет оси z: {what} поперёк z не перенести",
-                              hint=f"поставьте {'её' if kind == 'wall' else 'его'} поперёк x или y, или вернитесь к объёму "
-                                   f"(«Пространство»)")
+                if kind == "wall":
+                    raise refusal(T("a plane has no axis z: a wall across z cannot be carried over"),
+                                  hint=T("put it across x or y, or go back to the volume (“Space”)"))
+                raise refusal(T("a plane has no axis z: a piston across z cannot be carried over"),
+                              hint=T("put it across x or y, or go back to the volume (“Space”)"))
             for k in AXIS_KEYS:
                 values.pop(k, None)
         return values
@@ -710,11 +706,11 @@ class Simulation(PlaygroundSimulation):
         resolve). Deterministic: it reads the state, never changes it."""
         ot = self._type(kind)
         values = self._import_values(kind, values)
-        # a clicked point is a list; the piston's own «position» is a number
+        # a clicked point is a list; the piston's own "position" is a number
         pos = values.pop("position") if isinstance(values.get("position"), (list, tuple)) else None
         v, errors = ot.schema.resolve(None, values)
         if errors:
-            raise refusal("; ".join(errors))
+            raise refusal(join(errors))
         v = dict(v)
         nd = self.ndim
         if pos is not None:
@@ -748,7 +744,7 @@ class Simulation(PlaygroundSimulation):
                 v["r"] = min(float(v["r"]), round(0.5 * min(self.box[i] for i in per) * NM, 6))
         elif kind == "piston" and not carrying:
             v["position"] = self._piston_position(v)
-            # the framework takes a returned «position» for a clicked point and drops a number: kept here for on_add
+            # the framework takes a returned "position" for a clicked point and drops a number: kept here for on_add
             self._piston_pos = v["position"]
         elif kind in ("gas", "molecule") and not carrying:
             self._pack_check(kind, v)
@@ -797,8 +793,8 @@ class Simulation(PlaygroundSimulation):
         if np.any(hi < lo):
             if not refuse:
                 return None
-            raise refusal(f"атом диаметром {_num(sig * NM, 3)} нм не помещается между стенками ящика",
-                          hint="меньше размер σ атома, или больше ящик (на ходу)")
+            raise refusal(T("an atom of diameter {d:.3g} nm does not fit between the box's walls", d=sig * NM),
+                          hint=T("a smaller size σ of the atom, or a larger box (while the world runs)"))
         x0 = np.asarray(x0, float).copy()
         for a in range(self.ndim):
             x0[a] = x0[a] - L[a] * math.floor(x0[a] / L[a]) if per[a] else min(max(x0[a], lo[a]), hi[a])
@@ -832,8 +828,8 @@ class Simulation(PlaygroundSimulation):
             axes = [np.linspace(lo[a], hi[a], max(2, int(span[a] / step) + 1)) for a in range(self.ndim)]
             got = nearest(np.stack(np.meshgrid(*axes, indexing="ij"), -1).reshape(-1, self.ndim))
         if got is None and refuse:
-            raise refusal(f"в ящике нет свободного места для атома диаметром {_num(sig * NM, 3)} нм",
-                          hint="уберите часть атомов, уменьшите σ атома или сделайте ящик больше (на ходу)")
+            raise refusal(T("the box has no free place for an atom of diameter {d:.3g} nm", d=sig * NM),
+                          hint=T("remove some atoms, decrease the atom's σ or make the box larger (while the world runs)"))
         return got
 
     def _piston_position(self, v):
@@ -856,9 +852,9 @@ class Simulation(PlaygroundSimulation):
         hi = np.array(reg[1]) if reg else np.array([self._hi(a) for a in range(nd)])
         lo, hi = np.maximum(lo, 0.0), np.minimum(hi, [self._hi(a) for a in range(nd)])
         if np.any(hi <= lo):
-            raise refusal("область объекта лежит вне ящика",
-                          hint=f"центр и размеры области — внутри ящика {' × '.join(f'{_num(b * NM)}' for b in self.box)} нм "
-                               f"(размер 0 — весь ящик)")
+            raise refusal(T("the object's region lies outside the box"),
+                          hint=T("the region's centre and sizes inside the box {size} (size 0: the whole box)",
+                                 size=self._size([b * NM for b in self.box])))
         V = float(np.prod(hi - lo))
         sig = self._subst_values(v)[1]
         v1 = (math.pi / 4 * sig ** 2) if nd == 2 else (math.pi / 6 * sig ** 3)
@@ -867,17 +863,21 @@ class Simulation(PlaygroundSimulation):
         vs = (math.pi / 4 * S ** 2) if nd == 2 else (math.pi / 6 * S ** 3)
         have = float(np.sum(vs[inside])) if len(X) else 0.0
         if kind == "gas":
-            per, n, lim, what = 1, int(v["n"]), JAM[nd], "атомов"
+            per, n, lim = 1, int(v["n"]), JAM[nd]
         else:
             per = 2 if v["shape"] == "dimer" else 3 if v["shape"] == "bent" else int(v["atoms"])
-            n, lim, what = int(v["count"]), MOL_JAM[nd], "молекул"
+            n, lim = int(v["count"]), MOL_JAM[nd]
         eta = (have + n * per * v1) / V
         if eta > lim:
             n_max = max(0, int((lim * V - have) / (per * v1)))
-            area = " × ".join(_num((h - l) * NM, 3) for l, h in zip(lo, hi))
-            raise refusal(f"{n} {what} в области {area} нм заняли бы {eta:.0%} {'площади' if nd == 2 else 'объёма'}"
-                          f" (с уже имеющимися атомами) — случайно без перекрытий укладывается не больше ≈ {lim:.0%}",
-                          hint=f"не больше {n_max} {what}, или область больше; плотнее — «Кристалл»")
+            area = self._size([(h - l) * NM for l, h in zip(lo, hi)])
+            what = T("{n:d} atoms", n=n) if kind == "gas" else T("{n:d} molecules", n=n)
+            frac = (T("{p:.0f} % of the area", p=100 * eta) if nd == 2 else T("{p:.0f} % of the volume", p=100 * eta))
+            raise refusal(T("{what} in the region {area} would cover {frac} (with the atoms already there): random "
+                            "placement without overlaps fits at most ≈ {lim:.0f} %", what=what, area=area, frac=frac,
+                            lim=100 * lim),
+                          hint=(T("at most {n:d} atoms, or a larger region; denser: “Crystal”", n=n_max) if kind == "gas"
+                                else T("at most {n:d} molecules, or a larger region; denser: “Crystal”", n=n_max)))
         if _require is not None:
             n_all = len(X) + n * per
             rl = (float(self.live["cutoff"]) if self.live["model"] == "lj" else 1.13) * max(sig, float(S.max())
@@ -885,7 +885,8 @@ class Simulation(PlaygroundSimulation):
             vol = float(np.prod(self.box))
             ball = (math.pi * rl ** 2) if nd == 2 else (4.0 / 3.0 * math.pi * rl ** 3)
             pairs = 0.5 * n_all * min(n_all, n_all / vol * ball * max(1.0, eta / max(n_all * v1 / vol, 1e-9)))
-            _require(int(pairs * PAIR_BYTES), "список соседних пар атомов", "меньше атомов или меньше радиус обрезки")
+            _require(int(pairs * PAIR_BYTES), T("the list of neighbouring pairs of atoms"),
+                     T("fewer atoms or a smaller cutoff radius"))
 
     def _lightest(self):
         ms = [float(d["mass"]) for d in self.md.species() if math.isfinite(d["mass"])]
@@ -922,34 +923,37 @@ class Simulation(PlaygroundSimulation):
                 return
             # v^(7/6) (m/2)^(1/12) = Q_MAX sigma (4 eps)^(1/12) / (12 dt)
             v_ok = (Q_MAX * sig * (4.0 * eps) ** (1 / 12) / (12.0 * dt) / (0.5 * m) ** (1 / 12)) ** (6 / 7)
-            raise refusal(f"атом со скоростью {_num(vel * U.velocity_m_s, 3)} м/с: шаг {_num(dt_fs)} фс не разрешает его удары "
-                          f"(за шаг он проходит {_num(q, 2)} от толщины крутой части отталкивания, можно до {_num(Q_MAX)})",
-                          hint=f"скорость не больше {_num(v_ok * U.velocity_m_s, 3)} м/с, или «Шаг по времени» не больше "
-                               f"{_num(dt_fs * Q_MAX / q, 2)} фс (меняется на ходу, в «Установке»)")
-        T = float(v.get("T", 0.0)) / KELVIN
+            raise refusal(T("an atom with the speed {v:.3g} m/s: the step {dt:.3g} fs does not resolve its collisions (in "
+                            "a step it travels {q:.2g} of the thickness of the steep part of the repulsion, at most "
+                            "{qmax:.3g} is allowed)", v=vel * U.velocity_m_s, dt=dt_fs, q=q, qmax=Q_MAX),
+                          hint=T("a speed of at most {v:.3g} m/s, or a “Time step” of at most {dt:.2g} fs (changes while "
+                                 "the world runs, in the “Set-up”)", v=v_ok * U.velocity_m_s, dt=dt_fs * Q_MAX / q))
+        Tr = float(v.get("T", 0.0)) / KELVIN
         vc = math.sqrt(sum((float(v.get(f"v{c}", 0.0)) / U.velocity_m_s) ** 2 for c in "xyz"[:nd])) if own else 0.0
         if vc > 0:
             # a thrown group: its atoms meet the others at the thermal speed plus the centre's (LB1, P16.2)
-            vel = math.sqrt(nd * T / m) + vc
+            vel = math.sqrt(nd * Tr / m) + vc
             q = self._step_q(vel, 0.5 * m * vel * vel, sig, eps, dt)
             if q > Q_MAX:
-                v_ok = max(0.0, (Q_MAX / q) ** (6.0 / 7.0) * vel - math.sqrt(nd * T / m))
-                raise refusal(f"скорость центра масс {_num(vc * U.velocity_m_s, 3)} м/с при {_num(float(v.get('T', 0.0)), 4)} K: "
-                              f"шаг {_num(dt_fs)} фс не разрешает удары атомов (за шаг атом проходит {_num(q, 2)} от "
-                              f"толщины крутой части отталкивания, можно до {_num(Q_MAX)})",
-                              hint=f"скорость центра масс не больше ≈ {_num(v_ok * U.velocity_m_s, 2)} м/с, или «Шаг по "
-                                   f"времени» не больше {_num(dt_fs * Q_MAX / q, 2)} фс (на ходу)")
-        if T <= 0:
+                v_ok = max(0.0, (Q_MAX / q) ** (6.0 / 7.0) * vel - math.sqrt(nd * Tr / m))
+                raise refusal(T("a centre-of-mass speed of {v:.3g} m/s at {T:.4g} K: the step {dt:.3g} fs does not resolve "
+                                "the atoms' collisions (in a step an atom travels {q:.2g} of the thickness of the steep "
+                                "part of the repulsion, at most {qmax:.3g} is allowed)", v=vc * U.velocity_m_s,
+                                T=float(v.get("T", 0.0)), dt=dt_fs, q=q, qmax=Q_MAX),
+                              hint=T("a centre-of-mass speed of at most ≈ {v:.2g} m/s, or a “Time step” of at most "
+                                     "{dt:.2g} fs (while the world runs)", v=v_ok * U.velocity_m_s, dt=dt_fs * Q_MAX / q))
+        if Tr <= 0:
             return
-        q = self._step_q(math.sqrt(nd * T / m), T, sig, eps, dt)
+        q = self._step_q(math.sqrt(nd * Tr / m), Tr, sig, eps, dt)
         if q <= Q_MAX:
             return
         # q ∝ T^(1/2 + 1/12): the largest T at this step, and the step for this T (q ∝ dt)
-        T_ok = T * (Q_MAX / q) ** (12.0 / 7.0)
-        raise refusal(f"при {_num(float(v['T']), 4)} K шаг {_num(dt_fs)} фс не разрешает столкновения атомов (за шаг атом проходит "
-                      f"{_num(q, 2)} от толщины крутой части отталкивания, можно до {_num(Q_MAX)}): атомы проскочили бы друг в "
-                      f"друга", hint=f"температура не выше {_num(T_ok * KELVIN, 3)} K при этом шаге, или «Шаг по времени» не "
-                                     f"больше {_num(dt_fs * Q_MAX / q, 2)} фс (меняется на ходу, в «Установке»)")
+        T_ok = Tr * (Q_MAX / q) ** (12.0 / 7.0)
+        raise refusal(T("at {T:.4g} K the step {dt:.3g} fs does not resolve the atoms' collisions (in a step an atom travels "
+                        "{q:.2g} of the thickness of the steep part of the repulsion, at most {qmax:.3g} is allowed): the "
+                        "atoms would pass into each other", T=float(v["T"]), dt=dt_fs, q=q, qmax=Q_MAX),
+                      hint=T("a temperature of at most {T:.3g} K at this step, or a “Time step” of at most {dt:.2g} fs "
+                             "(changes while the world runs, in the “Set-up”)", T=T_ok * KELVIN, dt=dt_fs * Q_MAX / q))
 
     def palette_state(self):
         """The palette types the world cannot take now (review UX-ui U7, U22): what the hard spheres have not
@@ -958,11 +962,9 @@ class Simulation(PlaygroundSimulation):
         becomes walled)."""
         out = {}
         if self.hard:
-            why = ("у твёрдых {} нет {}: переключите «Динамика» = непрерывные силы (на ходу, в «Законах»)")
-            bodies = "дисков" if self.ndim == 2 else "шаров"
-            for k, what in (("molecule", "молекул (связей)"), ("piston", "поршня"), ("thermostat", "термостатов"),
-                            ("gravity", "поля")):
-                out[k] = why.format(bodies, what)
+            for k in ("molecule", "piston", "thermostat", "gravity"):
+                out[k] = T("{what}: switch “Dynamics” to continuous forces (while the world runs, in the “Laws”)",
+                           what=self._hard_lacks(k))
         X, S = self._xs()
         if not len(X):
             return out
@@ -970,10 +972,19 @@ class Simulation(PlaygroundSimulation):
         vs = (math.pi / 4 * S ** 2) if nd == 2 else (math.pi / 6 * S ** 3)
         eta = float(np.sum(vs)) / float(np.prod([self._hi(a) for a in range(nd)]))
         if eta > JAM[nd]:
-            out["gas"] = f"ящик уже заполнен на {eta:.0%}: случайно больше атомов не уложить — уберите часть атомов"
+            out["gas"] = T("the box is already {p:.0f} % full: random placement fits no more atoms; remove some atoms",
+                           p=100 * eta)
         if eta > MOL_JAM[nd] and "molecule" in self.PALETTE and "molecule" not in out:
-            out["molecule"] = f"ящик уже заполнен на {eta:.0%}: молекулы не уложить — уберите часть атомов"
+            out["molecule"] = T("the box is already {p:.0f} % full: molecules do not fit; remove some atoms", p=100 * eta)
         return out
+
+    def _hard_lacks(self, kind):
+        """What hard disks or spheres have not, for the palette's reason and a refusal."""
+        if self.ndim == 2:
+            return {"molecule": T("hard disks have no molecules (bonds)"), "piston": T("hard disks have no piston"),
+                    "thermostat": T("hard disks have no thermostats"), "gravity": T("hard disks have no field")}[kind]
+        return {"molecule": T("hard spheres have no molecules (bonds)"), "piston": T("hard spheres have no piston"),
+                "thermostat": T("hard spheres have no thermostats"), "gravity": T("hard spheres have no field")}[kind]
 
     # --- all-or-nothing changes (review B7-md M6) -----------------------------------------------------------------
     _MAPS = ("parts", "kind", "species", "info", "_zb", "conv", "live", "model", "box", "hard", "_ramp_seen", "_ramp_T0")
@@ -998,8 +1009,8 @@ class Simulation(PlaygroundSimulation):
             self._after_change()
         except BaseException as e:
             self._restore(snap)
-            if isinstance(e, Exception) and not _is_russian(e):
-                raise _ru(e, self) from e
+            if isinstance(e, Exception) and not _is_owner_text(e):
+                raise _owner(e, self) from e
             raise
 
     def _after_change(self):
@@ -1030,8 +1041,9 @@ class Simulation(PlaygroundSimulation):
                     self._atomic(self._add_carried, obj, state)
                     return
                 except Exception as e:  # noqa: BLE001 - started again from the parameters, said in the notice
-                    why = (getattr(e, "text", None) or str(e))[:300]
-            self._carry_note(f"{CARRIED[obj['type']]} начаты заново из параметров: {why}", obj, restarted=True)
+                    why = text_of(e)
+            self._carry_note(T("{what:cap} started anew from the parameters: {why}", what=CARRIED[obj["type"]], why=why),
+                             obj, restarted=True)
         self._atomic(self._add_obj, obj)
 
     def on_remove(self, obj):
@@ -1049,7 +1061,7 @@ class Simulation(PlaygroundSimulation):
         t, v, md = obj["type"], obj["values"], self.md
         oid = obj["id"]
         if self.hard and t in ("molecule", "piston", "thermostat", "gravity"):   # (a scene file or a carry-over)
-            raise refusal(self.palette_state()[t].split(":")[0], hint="«Динамика» = непрерывные силы (на ходу)")
+            raise refusal(self._hard_lacks(t), hint=T("“Dynamics” = continuous forces (while the world runs)"))
         if t in ("gas", "crystal", "atom", "molecule", "thermostat", "wall"):
             self._check_temperature(t, v)
         if t in ("gas", "crystal", "atom", "molecule"):
@@ -1065,8 +1077,8 @@ class Simulation(PlaygroundSimulation):
                                skip_occupied=True)
                 self.info[oid] = inf
                 if inf.get("skipped"):
-                    self._note(f"«{obj['label']}»: {inf['skipped']} узлов решётки заняты уже имеющимися атомами — "
-                               f"оставлены пустыми")
+                    self._note(T("“{label}”: {n:d} lattice sites are taken by atoms already there and were left empty",
+                                 label=obj["label"], n=int(inf["skipped"])))
             elif t == "atom":
                 keys = self._atom(obj, sp)
             else:
@@ -1107,8 +1119,9 @@ class Simulation(PlaygroundSimulation):
         """A probe's centre inside the box along its walled axes (review UX-ui U8: far outside it was accepted)."""
         for i, c in enumerate("xyz"[:self.ndim]):
             if not self.md.periodic[i] and not (0.0 <= float(v[c]) <= self.box[i] * NM):
-                raise refusal(f"центр термометра по оси {c} ({_num(float(v[c]), 4)} нм) — вне ящика",
-                              hint=f"{c} от 0 до {_num(self.box[i] * NM, 4)} нм")
+                raise refusal(T("the thermometer's centre along the axis {c} ({x:.4g} nm) is outside the box", c=c,
+                                x=float(v[c])),
+                              hint=T("{c} from 0 to {L:.4g} nm", c=c, L=self.box[i] * NM))
 
     def _region_inside(self, v):
         reg = self._region_of(v)
@@ -1116,8 +1129,8 @@ class Simulation(PlaygroundSimulation):
             return
         for i in range(self.ndim):
             if not self.md.periodic[i] and (reg[1][i] <= 0.0 or reg[0][i] >= self.box[i]):
-                raise refusal(f"область термостата по оси {'xyz'[i]} лежит вне ящика",
-                              hint="центр и размеры области — внутри ящика (размер 0 — весь ящик)")
+                raise refusal(T("the thermostat's region along the axis {c} lies outside the box", c="xyz"[i]),
+                              hint=T("the region's centre and sizes inside the box (size 0: the whole box)"))
 
     def _atom(self, obj, sp):
         """One atom: at its place when that is free; a copy (⧉) goes to the nearest free spot; an occupied or outside
@@ -1134,10 +1147,10 @@ class Simulation(PlaygroundSimulation):
             else:
                 lo, hi = self._allowed(sig)
                 out = [c for i, c in enumerate("xyz"[:self.ndim]) if not (lo[i] <= x[i] <= hi[i])]
-                where = (f"за стенкой ящика по оси {', '.join(out)}" if out
-                         else "ближе σ к другому атому (атомы перекрылись бы)")
-                raise refusal(f"атом в точке ({', '.join(f'{_num(q * NM, 4)}' for q in x)}) нм — {where}",
-                              hint="ближайшее свободное место — (" + ", ".join(f"{_num(q * NM, 4)}" for q in spot) + ") нм")
+                where = (T("beyond the box's wall along the axis {a}", a=", ".join(out)) if out
+                         else T("closer than σ to another atom (the atoms would overlap)"))
+                raise refusal(T("the atom at the point {at}: {where}", at=self._point([q * NM for q in x]), where=where),
+                              hint=T("the nearest free place is {at}", at=self._point([q * NM for q in spot])))
         vel = np.array([float(v[f"v{c}"]) / U.velocity_m_s for c in "xyz"[:self.ndim]])
         return self.md.add(sp, x, v=vel)
 
@@ -1147,12 +1160,13 @@ class Simulation(PlaygroundSimulation):
         x, sig = self._xs()
         need = float(np.max(x[:, a])) if len(x) else 0.0
         if X > self.box[a] * (1 + 1e-12) or X <= 0:
-            raise refusal(f"поршень на {_num(float(v['position']))} нм — вне ящика (по оси {v['axis']} он "
-                          f"{_num(self.box[a] * NM, 4)} нм)", hint=f"положение от {_num(need * NM, 4)} до {_num(self.box[a] * NM, 4)} нм")
+            raise refusal(T("the piston at {x:.3g} nm is outside the box (along the axis {a} it is {L:.4g} nm)",
+                            x=float(v["position"]), a=v["axis"], L=self.box[a] * NM),
+                          hint=T("a position from {lo:.4g} to {hi:.4g} nm", lo=need * NM, hi=self.box[a] * NM))
         if X < need:
-            raise refusal(f"под поршнем на {_num(float(v['position']))} нм не помещаются атомы: самый высокий по оси "
-                          f"{v['axis']} доходит до {_num(need * NM, 4)} нм",
-                          hint=f"положение поршня не ниже {_num(math.ceil(need * NM * 1e4) / 1e4)} нм")
+            raise refusal(T("the atoms do not fit under the piston at {x:.3g} nm: the highest along the axis {a} reaches "
+                            "{top:.4g} nm", x=float(v["position"]), a=v["axis"], top=need * NM),
+                          hint=T("a piston position of at least {x:.3g} nm", x=math.ceil(need * NM * 1e4) / 1e4))
 
     def _make_walled(self, a, oid):
         """A wall or the piston on a periodic axis makes it walled at the current moment (review UX-ui U7, UX-params
@@ -1161,12 +1175,13 @@ class Simulation(PlaygroundSimulation):
             try:
                 self.md.set_boundary(a, "walls")
             except ValueError as e:
-                raise refusal(f"ось {'xyz'[a]} периодическая, и у её граней есть атомы: стенку там не поставить, не "
-                              f"сдвинув их", hint="уберите атомы у граней или начните новый мир с «Границы в начале» "
-                                                  "= стенки", detail=str(e)) from e
+                raise refusal(T("the axis {a} is periodic and there are atoms at its faces: a wall cannot be put there "
+                                "without moving them", a="xyz"[a]),
+                              hint=T("remove the atoms at the faces or start a new world with “Boundaries at the start” "
+                                     "= walls"), detail=str(e)) from e
             self.conv[a] = set()
-            self._note(f"ось {'xyz'[a]} стала осью со стенками (зеркальные стенки на её гранях); когда последняя "
-                       f"стенка или поршень на ней уйдёт, она снова станет периодической")
+            self._note(T("the axis {a} now has walls (specular walls at its faces); when the last wall or piston on it "
+                         "goes, it becomes periodic again", a="xyz"[a]))
         if a in self.conv:
             self.conv[a].add(oid)
 
@@ -1180,10 +1195,10 @@ class Simulation(PlaygroundSimulation):
                 del self.conv[ax]
                 try:
                     self.md.set_boundary(ax, "periodic")
-                    self._note(f"ось {'xyz'[ax]} снова периодическая (её стенки убраны)")
+                    self._note(T("the axis {a} is periodic again (its walls removed)", a="xyz"[ax]))
                 except ValueError as e:
-                    self._note(f"ось {'xyz'[ax]} остаётся со стенками (зеркальными): атомы у противоположных граней "
-                               f"перекрылись бы при периодичности ({_ru(e, self)})")
+                    self._note(T("the axis {a} keeps its (specular) walls: atoms at the opposite faces would overlap "
+                                 "if it were periodic ({why})", a="xyz"[ax], why=text_of(_owner(e, self))))
 
     def _gas(self, sp, n, region, T, start):
         keys = self.md.fill(sp, n=n, region=region, T=T, arrangement="random")
@@ -1203,7 +1218,7 @@ class Simulation(PlaygroundSimulation):
             self.md.set(keys, v=vel)
         return keys
 
-    def _molecules(self, obj, sp, T):
+    def _molecules(self, obj, sp, Tr):
         """``count`` molecules at random places and orientations, each atom's potential energy at insertion below
         2kT (at least 0.1 ε); "maxwell": every atom's velocity Maxwellian at T and the bond lengths and angles drawn
         about their rest values with the Boltzmann spread √(kT/k) (harmonic terms: each starts with about kT/2), the
@@ -1224,27 +1239,27 @@ class Simulation(PlaygroundSimulation):
             md.set_angle_type(f"{oid}-a", IA.HarmonicAngle(ka, th0))
         bonds = [(i, i + 1, f"{oid}-b") for i in range(na - 1)]
         angles = [(i, i + 1, i + 2, f"{oid}-a") for i in range(na - 2)]
-        thermal = v.get("start", "maxwell") == "maxwell" and T > 0
+        thermal = v.get("start", "maxwell") == "maxwell" and Tr > 0
         m_atom = self._sp(sp)["mass"]
         reg = self._region_of(v) or ([0.0] * self.ndim, [self._hi(a) for a in range(self.ndim)])
         lo, hi = np.array(reg[0]), np.array(reg[1])
-        e_max = max(2.0 * T, 0.1)
+        e_max = max(2.0 * Tr, 0.1)
         count = int(v["count"])
         mks, tries = [], 0
         while len(mks) < count:
             need = count - len(mks)
             k = min(4 * need + 16, 4096, 200 * count - tries)
             if k <= 0:
-                raise refusal(f"не удалось разместить {count} молекул без перекрытий: размещено {len(mks)}",
-                              hint="меньше молекул или больше область")
+                raise refusal(T("{n:d} molecules could not be placed without overlaps: {k:d} placed", n=count, k=len(mks)),
+                              hint=T("fewer molecules or a larger region"))
             tries += k
-            X = self._mol_candidates(k, na, b0, kb, th0, ka, thermal, T, lo, hi)
+            X = self._mol_candidates(k, na, b0, kb, th0, ka, thermal, Tr, lo, hi)
             vel = None
             if not thermal:
-                vc = (self.rng.normal(size=(k, 1, self.ndim)) * math.sqrt(T / (na * m_atom)) if T > 0
+                vc = (self.rng.normal(size=(k, 1, self.ndim)) * math.sqrt(Tr / (na * m_atom)) if Tr > 0
                       else np.zeros((k, 1, self.ndim)))
                 vel = np.broadcast_to(vc, (k, na, self.ndim))
-            _, mk, _ = md.add_molecules(sp, X, bonds=bonds, angles=angles, v=vel, T=T if thermal else None,
+            _, mk, _ = md.add_molecules(sp, X, bonds=bonds, angles=angles, v=vel, T=Tr if thermal else None,
                                         max_energy=e_max, limit=need)
             mks.extend(int(q) for q in mk)
         keys = np.concatenate([md.molecules()[mk] for mk in mks])
@@ -1288,13 +1303,13 @@ class Simulation(PlaygroundSimulation):
         kind = "specular" if reset else v["kind"]
         args = {}
         if kind == "thermal":
-            T = float(v["T"]) / KELVIN
-            if not T > 0:
-                raise refusal("у тепловой стенки температура должна быть больше 0 K",
-                              hint="температура стенки > 0 K, или стенка зеркальная")
-            args["T"] = T
+            Tr = float(v["T"]) / KELVIN
+            if not Tr > 0:
+                raise refusal(T("a thermal wall needs a temperature above 0 K"),
+                              hint=T("a wall temperature > 0 K, or a specular wall"))
+            args["T"] = Tr
         if self.hard and kind == "soft":
-            raise refusal("у твёрдых шаров мягкой стенки нет", hint="зеркальная или тепловая стенка")
+            raise refusal(T("hard spheres have no soft wall"), hint=T("a specular or a thermal wall"))
         if kind == "soft":
             args["term"] = IA.LJWall(self.ndim)
         self.md.set_wall(v["axis"], v["side"], kind, **args)
@@ -1483,10 +1498,11 @@ class Simulation(PlaygroundSimulation):
                 new[:, a] -= self.box[a] * np.floor(new[:, a] / self.box[a])
             elif np.any(new[:, a] < lo[a]) or np.any(new[:, a] > hi[a]):
                 dmin, dmax = lo[a] - float(np.min(X[:, a])), hi[a] - float(np.max(X[:, a]))
-                who = "атом оказался бы" if len(keys) == 1 else "атомы оказались бы"
-                raise refusal(f"«{obj['label']}»: {who} за стенкой по оси {'xyz'[a]}",
-                              hint=f"центр по {'xyz'[a]} от {_num((c[a] + dmin) * NM, 4)} до "
-                                   f"{_num((c[a] + dmax) * NM, 4)} нм")
+                text = (T("“{label}”: the atom would be beyond the wall along the axis {a}", label=obj["label"],
+                          a="xyz"[a]) if len(keys) == 1 else
+                        T("“{label}”: atoms would be beyond the wall along the axis {a}", label=obj["label"], a="xyz"[a]))
+                raise refusal(text, hint=T("the centre along {a} from {lo:.4g} to {hi:.4g} nm", a="xyz"[a],
+                                           lo=(c[a] + dmin) * NM, hi=(c[a] + dmax) * NM))
         Xall, Sall = self._xs()
         allk = np.asarray(self.md.particles()["keys"])
         others = ~np.isin(allk, keys)
@@ -1494,13 +1510,13 @@ class Simulation(PlaygroundSimulation):
             free = free_sites(new, sig, Xall[others], Sall[others], np.array(self.box), self.md.periodic)
             bad = int(np.sum(~free))
             if bad:
-                hint = "сдвиньте в свободное место"
+                hint = T("move it to a free place")
                 if obj["type"] == "atom":
                     spot = self._free_spot(sig, new[0], refuse=False)
                     if spot is not None:
-                        hint = "ближайшее свободное место — (" + ", ".join(_num(z * NM, 4) for z in spot) + ") нм"
-                raise refusal(f"«{obj['label']}»: {bad} {'атом лёг' if bad == 1 else 'атомов легли'} бы ближе σ к атомам "
-                              f"других объектов (перекрылись бы)", hint=hint)
+                        hint = T("the nearest free place is {at}", at=self._point([z * NM for z in spot]))
+                raise refusal(T("“{label}”: {n:d} atoms would come closer than σ to atoms of other objects (they would "
+                                "overlap)", label=obj["label"], n=bad), hint=hint)
         self.md.set(keys, x=new)
 
     def _throw_group(self, obj, axes):
@@ -1565,7 +1581,7 @@ class Simulation(PlaygroundSimulation):
     def _carry_mismatch(self, st):
         """Why a carried state cannot go into this world as it is (None: it can)."""
         if int(st.get("dim", 0)) != self.ndim:
-            return "другая размерность (плоскость ↔ объём): положения атомов в ней не продолжить"
+            return T("another dimension (plane ↔ volume): the atoms' positions cannot be continued in it")
         return None
 
     def _add_carried(self, obj, st):
@@ -1582,12 +1598,12 @@ class Simulation(PlaygroundSimulation):
             p = md.piston()
             md.set_piston(p["axis"], X=float(st["X"]), V=float(st["V"]), mass=p["M"], p_ext=p["p_ext"],
                           x_min=p["x_min"])
-            self._carry_note("поршень перенесён на своё место со своей скоростью", obj)
+            self._carry_note(T("the piston carried to its place with its velocity"), obj)
             return
         sp = self._species(obj)
         if t == "molecule":
             if self.hard:
-                raise refusal("у твёрдых шаров нет молекул")
+                raise refusal(T("hard spheres have no molecules"))
             na = int(np.asarray(st["xm"]).shape[1])
             b0, kb = float(v["bond"]), float(v["k_bond"])
             md.set_bond_type(f"{oid}-b", IA.HarmonicBond(kb, b0))
@@ -1611,8 +1627,8 @@ class Simulation(PlaygroundSimulation):
             _, mks, _ = md.add_molecules(sp, X, bonds=bonds, angles=angles, v=np.asarray(st["vm"], float),
                                          keep_all=True)
             if moved:
-                self._carry_note(f"{moved} молекул пересекали грань, ставшую стенкой: сдвинуты внутрь целиком (не "
-                                 f"больше чем на {_num(most * NM, 3)} нм)", obj)
+                self._carry_note(T("{n:d} molecules crossed a face that became a wall: moved inside as a whole (by at most "
+                                   "{d:.3g} nm)", n=moved, d=most * NM), obj)
             self.parts[oid] = np.asarray(mks)
             self.kind[oid] = "molecules"
         else:
@@ -1623,8 +1639,8 @@ class Simulation(PlaygroundSimulation):
             self.info[oid] = dict(st["info"])
         self._kcache.pop(oid, None)
         if other_box:
-            self._carry_note(f"ящик другой ({self._size([q * NM for q in L_old])} → {self._size([q * NM for q in md.L])}): "
-                             f"атомы оставлены на своих местах", obj)
+            self._carry_note(T("another box ({old} → {new}): the atoms left at their places",
+                               old=self._size([q * NM for q in L_old]), new=self._size([q * NM for q in md.L])), obj)
 
     def carry_world(self, state, laws):
         """The world's own state from the previous world: its random generators (the thermostats', the thermal walls'
@@ -1632,17 +1648,17 @@ class Simulation(PlaygroundSimulation):
         the mean-square displacement count from the new world's start (a world with other laws has another energy
         function); a change of the box still running there is not continued (the new world's box is its target)."""
         if state is None:
-            raise refusal("прежний мир не передал своего состояния: случайная последовательность начата заново")
+            raise refusal(T("the previous world gave no state: the random sequence started anew"))
         for g, key in ((self.md.rng, "rng_md"), (self.rng, "rng")):
             d = state[key]
             g.bit_generator.state = {"bit_generator": "PCG64", "state": {"state": int(d["state"]), "inc": int(d["inc"])},
                                      "has_uint32": int(d["has_uint32"]), "uinteger": int(d["uinteger"])}
-        self._carry_note("случайная последовательность (термостаты, тепловые стенки, твёрдые шары) продолжена из "
-                         "прежнего мира; баланс первого начала, импульс и средний квадрат смещения отсчитываются с начала "
-                         "нового мира")
+        self._carry_note(T("the random sequence (thermostats, thermal walls, hard spheres) continues that of the previous "
+                           "world; the first law's balance, the momentum and the mean-square displacement count from the "
+                           "new world's start"))
         if state.get("ramp"):
-            self._carry_note(f"изменение ящика, шедшее в прежнем мире, не продолжено: ящик нового мира сразу "
-                             f"{self._size([q * NM for q in self.md.L])}")
+            self._carry_note(T("the change of the box under way in the previous world is not continued: the new world's "
+                               "box is {size} at once", size=self._size([q * NM for q in self.md.L])))
         self._after_change()
 
     # --- live laws (review UX-ui U12) ------------------------------------------------------------------------------
@@ -1664,12 +1680,13 @@ class Simulation(PlaygroundSimulation):
           wall moved over empty space (``box_mode``)."""
         new, errors = SCHEMA.coerce_live(self.live, values or {})
         if errors:
-            raise refusal("; ".join(errors))
+            raise refusal(join(errors))
         changed = {k: v for k, v in new.items() if self.live.get(k) != v}
         if not changed:
             return ""
         if self.ndim == 2 and "Lz" in changed:
-            raise refusal("в плоскости нет оси z: размер ящика по z здесь не действует", hint="меняйте Lx и Ly")
+            raise refusal(T("a plane has no axis z: the box size along z does not apply here"),
+                          hint=T("change Lx and Ly"))
         snap = self._snapshot()
         parts = []
         laws = {"model", "cutoff", "shift", "dt_fs"} & set(changed)
@@ -1679,9 +1696,8 @@ class Simulation(PlaygroundSimulation):
             if "dynamics" in changed:
                 parts.append(self._switch_to_hard() if new["dynamics"] == "hard" else self._switch_to_soft())
             elif laws and self.hard:
-                parts.append("законы сил запомнены: " + ", ".join(
-                    f"{SCHEMA.by_id[k].label} = {_val(k, changed[k])}" for k in sorted(laws))
-                    + " — действуют после перехода к непрерывным силам")
+                parts.append(T("the force laws are kept: {laws}; they act after the switch to continuous forces",
+                               laws=self._law_list(laws, changed)))
             elif laws:
                 E0 = self.md.energy()
                 self.model = self.live["model"]
@@ -1693,30 +1709,35 @@ class Simulation(PlaygroundSimulation):
                     self.md.set_dt(dt)
                 dE = self.md.energy() - E0
                 de = U.to_kJ_mol(dE / max(self.md.n, 1))
-                labels = ", ".join(f"{SCHEMA.by_id[k].label} = {_val(k, changed[k])}" for k in sorted(laws))
-                parts.append(f"законы на ходу: {labels}" + (
-                    f"; энергия изменилась на {'+' if de >= 0 else '−'}{_num(abs(de), 4)} кДж/моль на атом (разность "
-                    f"потенциалов; учтена в балансе)" if abs(dE) > 0 else ""))
+                labels = self._law_list(laws, changed)
+                parts.append(T("laws changed while the world runs: {laws}; the energy changed by {de:+.4g} kJ/mol per atom "
+                               "(the difference of the potentials; counted in the balance)", laws=labels, de=de)
+                             if abs(dE) > 0 else T("laws changed while the world runs: {laws}", laws=labels))
             self.model = "hard" if self.hard else self.live["model"]
             if "dynamics" in changed or (laws and not self.hard):
                 self._after_change()
             if box:
                 parts.append(self._set_box())
             elif "box_mode" in changed:
-                parts.append("размер ящика дальше меняется " + (
-                    "аффинно (вещество вместе с ящиком)" if new["box_mode"] == "affine"
-                    else "сдвигом верхней стенки по пустому месту"))
+                parts.append(T("from now on the box size changes affinely (the matter with the box)")
+                             if new["box_mode"] == "affine" else
+                             T("from now on the box size changes by moving the upper wall over empty space"))
             if "dynamics" in changed or laws:
-                parts.append("отсчёты проверок — с этого момента")
+                parts.append(T("the checks count from this moment"))
         except BaseException as e:
             self._restore(snap)
-            if isinstance(e, Exception) and not _is_russian(e):
-                raise _ru(e, self) from e
+            if isinstance(e, Exception) and not _is_owner_text(e):
+                raise _owner(e, self) from e
             raise
         self.emit({"type": "approximations", "t": self.t, "approximations": self._approx()})
         if "dynamics" in changed:
             self._stale_checks()
-        return "; ".join(q for q in parts if q)
+        return join(parts)
+
+    def _law_list(self, laws, changed):
+        """«label = value» of the changed laws, joined."""
+        return join([T("{label} = {value}", label=SCHEMA.by_id[k].label, value=_val(k, changed[k]))
+                     for k in sorted(laws)], ", ")
 
     def _sub_seed(self):
         """A seed for a solver built at the current moment (the switch of the dynamics), from the world's generator:
@@ -1725,46 +1746,53 @@ class Simulation(PlaygroundSimulation):
 
     def _switch_to_hard(self):
         from lfphys.core.md import hard as HD
-        bodies = "дисков" if self.ndim == 2 else "шаров"
         block = []
         for o in self.objects.values():
-            t, v, lab = o["type"], o["values"], f"«{o['label']}»"
-            what = {"molecule": "молекулы", "piston": "поршень", "thermostat": "термостат", "gravity": "поле"}.get(t)
+            t, v = o["type"], o["values"]
+            what = {"molecule": T("molecules “{label}”", label=o["label"]),
+                    "piston": T("the piston “{label}”", label=o["label"]),
+                    "thermostat": T("the thermostat “{label}”", label=o["label"]),
+                    "gravity": T("the field “{label}”", label=o["label"])}.get(t)
             if t == "wall" and v.get("kind") == "soft":
-                what = "мягкая стенка"
+                what = T("the soft wall “{label}”", label=o["label"])
             if t in ("gas", "crystal", "atom") and v.get("substance") == "custom" and float(v.get("charge", 0.0)):
-                what = "заряд"
+                what = T("the charge of “{label}”", label=o["label"])
             if what:
-                block.append(f"{what} {lab}")
+                block.append(what)
         if block:
-            raise refusal(f"у твёрдых {bodies} этого нет: {', '.join(block)}",
-                          hint="уберите их (мягкую стенку сделайте зеркальной или тепловой), затем переключите "
-                               "«Динамика»")
+            raise refusal(T("hard disks have none of this: {what}", what=join(block, ", ")) if self.ndim == 2 else
+                          T("hard spheres have none of this: {what}", what=join(block, ", ")),
+                          hint=T("remove them (make the soft wall specular or thermal), then switch “Dynamics”"))
         p = self.md.particles()
         sig = np.array([self._sigma_of(q) for q in p["species"]], float)
         cv = HD.contact_violations(p["x"], sig, self.md.L, self.md.periodic, walls_on="centre")
         if cv["pairs"] or cv["walls"]:
             what = []
             if cv["pairs"]:
-                what.append(f"{cv['pairs']} пар атомов ближе σ друг к другу (ближайшая — {_num(cv['closest'], 3)} σ)")
+                what.append(T("pairs of atoms closer than σ to each other: {n:d} (the closest at {d:.3g} σ)",
+                              n=int(cv["pairs"]), d=float(cv["closest"])))
             if cv["walls"]:
-                what.append(f"{cv['walls']} атомов за стенкой")
-            raise refusal(f"твёрдые {'диски' if self.ndim == 2 else 'шары'} перекрылись бы: {'; '.join(what)}",
-                          hint="уменьшите плотность (ящик больше — на ходу) или температуру (чем слабее удар, тем меньше "
-                               "атомы заходят друг в друга), либо попробуйте в другой момент: такие пары возникают и "
-                               "расходятся")
+                what.append(T("atoms beyond a wall: {n:d}", n=int(cv["walls"])))
+            raise refusal(T("hard disks would overlap: {what}", what=join(what)) if self.ndim == 2 else
+                          T("hard spheres would overlap: {what}", what=join(what)),
+                          hint=T("lower the density (a larger box, while the world runs) or the temperature (the weaker "
+                                 "the impact, the less the atoms enter each other), or try at another moment: such pairs "
+                                 "appear and part"))
         n = max(self.md.n, 1)
-        stopped = self._stop_ramp("другая динамика")
+        stopped = self._stop_ramp("other dynamics")
         Ep = self.md.energy() - self.md.kinetic_energy()
         self.md = HD.hard_from_md(self.md, seed=self._sub_seed(), walls_on="centre")
         self.hard = True
         self.model = "hard"
         de = U.to_kJ_mol(Ep / n)
-        walls = ("; стенки действуют на центры атомов, как и при непрерывных силах: область центров и плотность не "
-                 "изменились" if not all(self.md.periodic) else "")
-        return stopped + (f"динамика: твёрдые {bodies} (событийно) — те же атомы, положения и скорости; потенциальная "
-                          f"энергия ({'+' if de >= 0 else '−'}{_num(abs(de), 4)} кДж/моль на атом) исчезла: энергия "
-                          f"теперь только кинетическая{walls}")
+        txt = (T("dynamics: hard disks (event-driven), the same atoms, positions and velocities; the potential energy "
+                 "({de:+.4g} kJ/mol per atom) vanished: the energy is now only kinetic", de=de) if self.ndim == 2 else
+               T("dynamics: hard spheres (event-driven), the same atoms, positions and velocities; the potential energy "
+                 "({de:+.4g} kJ/mol per atom) vanished: the energy is now only kinetic", de=de))
+        if not all(self.md.periodic):
+            txt = join([txt, T("the walls act on the atoms' centres, as with continuous forces: the centres' region and "
+                               "the density did not change")])
+        return join([stopped, txt])
 
     def _switch_to_soft(self):
         from lfphys.core.md import hard as HD
@@ -1782,8 +1810,8 @@ class Simulation(PlaygroundSimulation):
         n = max(self.md.n, 1)
         de = U.to_kJ_mol((self.md.energy() - K) / n)
         lab = _val("model", self.live["model"])
-        return (f"динамика: непрерывные силы ({lab}) — те же атомы, положения и скорости; появилась потенциальная "
-                f"энергия пар: скачок энергии {'+' if de >= 0 else '−'}{_num(abs(de), 4)} кДж/моль на атом")
+        return T("dynamics: continuous forces ({model}), the same atoms, positions and velocities; the pairs' potential "
+                 "energy appeared: a jump of the energy of {de:+.4g} kJ/mol per atom", model=lab, de=de)
 
     def _box3d(self, L=None):
         b = [x * NM for x in (self.box if L is None else L)] + [0.0] * (3 - self.ndim)
@@ -1791,12 +1819,29 @@ class Simulation(PlaygroundSimulation):
             b[2] = 0.05 * max(b[:2])
         return [[0.0, 0.0, -b[2] if self.ndim == 2 else 0.0], b]
 
-    def _size(self, L_nm):
-        return " × ".join(_num(x, 4) for x in L_nm) + " нм"
+    @staticmethod
+    def _size(L_nm):
+        """A box's or a region's sizes, «a × b (× c) nm»."""
+        L = [float(x) for x in L_nm]
+        if len(L) == 2:
+            return T("{a:.4g} × {b:.4g} nm", a=L[0], b=L[1])
+        if len(L) == 3:
+            return T("{a:.4g} × {b:.4g} × {c:.4g} nm", a=L[0], b=L[1], c=L[2])
+        return T("{a:.4g} nm", a=L[0])
+
+    @staticmethod
+    def _point(x_nm):
+        """A point, «(x, y (, z)) nm»."""
+        x = [float(q) for q in x_nm]
+        if len(x) == 2:
+            return T("({x:.4g}, {y:.4g}) nm", x=x[0], y=x[1])
+        if len(x) == 3:
+            return T("({x:.4g}, {y:.4g}, {z:.4g}) nm", x=x[0], y=x[1], z=x[2])
+        return T("{x:.4g} nm", x=x[0])
 
     def _set_box(self):
         """The box to the live Lx, Ly (, Lz) at the current moment: ``MD.deform`` (a jump: affine, or a wall over empty
-        space) or ``MD.ramp_box`` (affine over «Время изменения размера»: a small affine step after every step of the
+        space) or ``MD.ramp_box`` (affine over “Time of the size change”: a small affine step after every step of the
         integrator, the work of each booked; review LB1-physics P3) with its work in the first law; the hard world
         only by a wall. A change still running is stopped where the box is (its work stays). The view gets the new box
         (a ``box`` message: for a ramp the region it spans, then the final box at its end); the mean-square
@@ -1807,16 +1852,17 @@ class Simulation(PlaygroundSimulation):
         L = np.array(L_nm) / NM
         mode = self.live["box_mode"]
         tau_ps = float(self.live.get("box_time_ps", 0.0) or 0.0)
-        bodies = "дисков" if nd == 2 else "шаров"
         if self.hard and mode == "affine":
-            raise refusal(f"у твёрдых {bodies} аффинное сжатие скачком не совершает работы давления столкновений: даже "
-                          f"медленное оно шло бы по адиабате идеального газа — это неверно",
-                          hint="«Как менять размер ящика» = сдвинуть стенку (ось со стенками; на периодическую ось "
-                               "сначала поставьте «Стенку»), или «Динамика» = непрерывные силы, ящик, и обратно")
-        before = self._stop_ramp("задан новый размер")
+            raise refusal(T("for hard disks an affine compression by a jump does no work of the collision pressure: even "
+                            "a slow one would follow the adiabat of an ideal gas, which is wrong") if nd == 2 else
+                          T("for hard spheres an affine compression by a jump does no work of the collision pressure: "
+                            "even a slow one would follow the adiabat of an ideal gas, which is wrong"),
+                          hint=T("“How to change the box size” = move the upper wall (an axis with walls; on a periodic "
+                                 "axis put a “Wall” first), or “Dynamics” = continuous forces, the box, and back"))
+        before = self._stop_ramp("new size")
         old_nm = [b * NM for b in self.box]
         if not self.hard and mode == "affine" and tau_ps > 0 and np.any(L != np.asarray(self.md.L)):
-            return before + self._start_ramp(L, L_nm, old_nm, tau_ps)
+            return join([before, self._start_ramp(L, L_nm, old_nm, tau_ps)])
         T0 = self._T_kelvin()
         try:
             o = self.md.deform(L, mode="wall") if self.hard else self.md.deform(
@@ -1831,35 +1877,35 @@ class Simulation(PlaygroundSimulation):
         self.md.msd_origin()
         self._zb = {"blocks": [], "prev": None, "t_change": float(self.md.t)}
         self.emit({"type": "box", "t": self.t, "box": self._box3d()})
-        size = self._size(old_nm) + " → " + self._size(L_nm)
+        size = T("{old} → {new}", old=self._size(old_nm), new=self._size(L_nm))
         if mode == "wall" or self.hard:
             W = float(o.get("dE", 0.0))
             if W != 0.0:      # a soft wall's energy under the atoms near it changed (review LB1-physics P8)
                 Wk = U.to_kJ_mol(W)
-                return before + (f"ящик {size}: сдвинута стенка (пустое место добавлено или убрано); мягкая стенка "
-                                 f"сдвинулась под атомами у неё — работа над системой W = {'+' if Wk >= 0 else '−'}"
-                                 f"{_num(abs(Wk), 4)} кДж/моль (изменение энергии стенки), учтена в первом начале")
-            return before + (f"ящик {size}: сдвинута стенка (пустое место добавлено или убрано), работы над системой "
-                             f"нет (зеркальные и тепловые стенки по пустому месту); расширение в пустоту необратимо")
+                return join([before, T("box {size}: a wall moved (empty space added or removed); the soft wall moved under "
+                                       "the atoms near it: the work on the system W = {W:+.4g} kJ/mol (the change of the "
+                                       "wall's energy), counted in the first law", size=size, W=Wk)])
+            return join([before, T("box {size}: a wall moved (empty space added or removed), no work on the system "
+                                   "(specular and thermal walls over empty space); an expansion into vacuum is "
+                                   "irreversible", size=size)])
         n = max(self.md.n, 1)
         W = U.to_kJ_mol(o["dE"])
         T1 = self._T_kelvin()
         lam = max(abs(x - 1.0) for x in o["lambda"])
-        txt = (f"ящик {size}, аффинно скачком (на {_num(100 * lam, 3)} %): работа над системой W = "
-               f"{'+' if W >= 0 else '−'}{_num(abs(W), 4)} кДж/моль")
+        txt = [T("box {size}, affinely by a jump (by {p:.3g} %): the work on the system W = {W:+.4g} kJ/mol", size=size,
+                 p=100 * lam, W=W)]
         if o.get("pdv") is not None:
             pdv = U.to_kJ_mol(o["pdv"])
-            how = ("−P·ΔV по вириалу до и после" if o.get("virial_is_affine") else
-                   "−∫S dV по аффинному напряжению до и после — с полем, мягкими стенками или замороженными атомами "
-                   "это не давление вириала")
-            txt += f" ({how}: {'+' if pdv >= 0 else '−'}{_num(abs(pdv), 4)})"
-        txt += (f"; координаты ×L′/L, скорости относительно центра масс ×L/L′: кинетическая энергия "
-                f"{'+' if o['dK'] >= 0 else '−'}{_num(abs(U.to_kJ_mol(o['dK'] / n)), 4)} кДж/моль на атом")
+            txt.append(T("−P·ΔV by the virial before and after: {pdv:+.4g}", pdv=pdv) if o.get("virial_is_affine") else
+                       T("−∫S dV by the affine stress before and after (with a field, soft walls or frozen atoms this is "
+                         "not the virial pressure): {pdv:+.4g}", pdv=pdv))
+        txt.append(T("coordinates ×L′/L, velocities relative to the centre of mass ×L/L′: the kinetic energy {dk:+.4g} "
+                     "kJ/mol per atom", dk=U.to_kJ_mol(o["dK"] / n)))
         if T0 is not None and T1 is not None:
-            txt += f", температура {_num(T0, 4)} → {_num(T1, 4)} K"
-        return before + txt + ("; работа учтена в первом начале. Скачок не квазистатичен: вещество после него "
-                               "неравновесно и, расслабляясь, необратимо греется (медленно — «Время изменения размера» "
-                               "больше 0)")
+            txt.append(T("temperature {T0:.4g} → {T1:.4g} K", T0=T0, T1=T1))
+        txt.append(T("the work is counted in the first law. A jump is not quasi-static: the matter is out of equilibrium "
+                     "after it and, relaxing, heats irreversibly (slowly: “Time of the size change” above 0)"))
+        return join([before, *txt])
 
     def _start_ramp(self, L, L_nm, old_nm, tau_ps):
         """An affine change of the box over tau_ps (``MD.ramp_box``): refused where the end would pack the atoms beyond
@@ -1873,10 +1919,12 @@ class Simulation(PlaygroundSimulation):
             eta_max = (math.pi / (2 * math.sqrt(3.0))) if nd == 2 else (math.pi / (3 * math.sqrt(2.0)))
             if eta > eta_max:
                 cap = (float(np.sum(vs)) / eta_max / float(np.prod(np.asarray(self.md.L)))) ** (1.0 / nd)
-                raise refusal(f"атомы заняли бы {eta:.0%} {'площади' if nd == 2 else 'объёма'} — плотнее плотной упаковки "
-                              f"шаров диаметром σ ({eta_max:.0%})",
-                              hint=f"размеры не меньше ≈ {_num(cap * 100, 3)} % нынешних (сейчас "
-                                   f"{self._size(old_nm)}), или уберите часть атомов")
+                raise refusal(T("the atoms would cover {frac}, denser than the close packing of spheres of diameter σ "
+                                "({lim:.0f} %)", lim=100 * eta_max,
+                                frac=(T("{p:.0f} % of the area", p=100 * eta) if nd == 2 else
+                                      T("{p:.0f} % of the volume", p=100 * eta))),
+                              hint=T("sizes of at least ≈ {p:.3g} % of the present ones (now {size}), or remove some "
+                                     "atoms", p=cap * 100, size=self._size(old_nm)))
         tau = tau_ps / PS
         try:
             r = self.md.ramp_box(L, tau)
@@ -1886,26 +1934,28 @@ class Simulation(PlaygroundSimulation):
             m = re.search(r"changes a length by ([\d.e+-]+) per step \(limit ([\d.e+-]+)\)", msg)
             if m:
                 need = tau_ps * float(m.group(1)) / float(m.group(2))
-                raise refusal(f"за {_num(tau_ps, 3)} пс ящик менялся бы слишком быстро: {_num(100 * float(m.group(1)), 2)} % "
-                              f"длины за шаг счёта (предел {_num(100 * float(m.group(2)), 2)} %)",
-                              hint=f"«Время изменения размера» не меньше {_num(math.ceil(need * 100) / 100, 3)} пс, "
-                                   f"или 0 — скачком", detail=msg) from e
+                raise refusal(T("in {tau:.3g} ps the box would change too fast: {p:.2g} % of a length per computing step "
+                                "(the limit is {lim:.2g} %)", tau=tau_ps, p=100 * float(m.group(1)),
+                                lim=100 * float(m.group(2))),
+                              hint=T("“Time of the size change” at least {tau:.3g} ps, or 0: by a jump",
+                                     tau=math.ceil(need * 100) / 100), detail=msg) from e
             raise self._box_refusal(e, L, "affine") from e
         self._ramp_T0 = self._T_kelvin()
         self.emit({"type": "box", "t": self.t, "box": self._box3d(np.maximum(np.asarray(self.md.L), L))})
         dL = max(abs(a - b) for a, b in zip(L_nm, old_nm))
         v_face = dL * 1e-9 / (tau_ps * 1e-12)                 # m/s
-        T = self._T_kelvin()
+        Tk = self._T_kelvin()
         ms = self._masses()
         m_mean = float(np.mean(ms[np.isfinite(ms)])) if len(ms) and np.any(np.isfinite(ms)) else 1.0
-        txt = (f"ящик {self._size(old_nm)} → {self._size(L_nm)} аффинно за {_num(tau_ps, 3)} пс (до t = "
-               f"{_num((self.t + tau_ps * 1e-12) * 1e12, 6)} пс): грани ящика движутся со скоростью до "
-               f"{_num(v_face, 3)} м/с")
-        if T is not None and T > 0:
-            u = math.sqrt(nd * (T / KELVIN) / m_mean) * U.velocity_m_s
-            txt += f" (тепловая скорость атомов ≈ {_num(u, 3)} м/с; квазистатически — когда грани много медленнее)"
-        return txt + ("; размер меняется на каждом шаге счёта, работа каждого шага учтена в первом начале; конец — "
-                      "событием с работой")
+        txt = [T("box {old} → {new} affinely in {tau:.3g} ps (until t = {t_end:.6g} ps): the box's faces move at up to "
+                 "{v:.3g} m/s", old=self._size(old_nm), new=self._size(L_nm), tau=tau_ps,
+                 t_end=(self.t + tau_ps * 1e-12) * 1e12, v=v_face)]
+        if Tk is not None and Tk > 0:
+            u = math.sqrt(nd * (Tk / KELVIN) / m_mean) * U.velocity_m_s
+            txt.append(T("the atoms' thermal speed ≈ {u:.3g} m/s; quasi-static when the faces are much slower", u=u))
+        txt.append(T("the size changes at every computing step, the work of each step counted in the first law; the end "
+                     "is an event with the work"))
+        return join(txt)
 
     def _stop_ramp(self, why):
         """Stop a change of the box still running (another box, the other dynamics): the text for the event."""
@@ -1913,7 +1963,7 @@ class Simulation(PlaygroundSimulation):
             return ""
         self.md.stop_box_ramp(why)
         self.box = [float(b) for b in self.md.L]
-        return self._ramp_text(self.md.box_ramp()) + "; "
+        return self._ramp_text(self.md.box_ramp())
 
     def _ramp_text(self, r):
         """What a change of the box over a time did (its end, or where it was stopped)."""
@@ -1923,21 +1973,25 @@ class Simulation(PlaygroundSimulation):
         W = U.to_kJ_mol(r["W"])
         pdv = U.to_kJ_mol(r["pdv"])
         dur = (r["t_end"] - r["t0"]) * PS
-        head = ("изменение ящика закончено" if r["done"] else "изменение ящика остановлено (" + {
-            "задан новый размер": "задан новый размер",
-            "другая динамика": "переход к твёрдым шарам",
-            "шаг": "сжатие нагрело вещество: шаг по времени не разрешал бы удары",
-            "cutoff": "радиус обрезки стал бы больше половины ящика",
-        }.get(r["stopped"], "сила стала бы бесконечной" if str(r["stopped"]).startswith("refused") else
-              str(r["stopped"])) + ")")
-        txt = (f"{head}: {self._size(L0)} → {self._size(L1)} за {_num(dur, 4)} пс, {r['steps']} шагов; работа над "
-               f"системой W = {'+' if W >= 0 else '−'}{_num(abs(W), 4)} кДж/моль (по шагам, точно; "
-               f"−∫{'P' if r.get('virial_is_affine') else 'S'} dV по шагам — {'+' if pdv >= 0 else '−'}"
-               f"{_num(abs(pdv), 4)}), учтена в первом начале")
+        if r["done"]:
+            head = T("the change of the box finished")
+        else:
+            why = {
+                "new size": T("a new size was set"),
+                "other dynamics": T("the switch to hard spheres"),
+                "step": T("the compression heated the matter: the time step would not resolve the collisions"),
+                "cutoff": T("the cutoff radius would exceed half the box"),
+            }.get(r["stopped"], T("a force would become infinite") if str(r["stopped"]).startswith("refused") else
+                  str(r["stopped"]))
+            head = T("the change of the box stopped ({why})", why=why)
+        txt = [T("{head}: {old} → {new} in {dur:.4g} ps, {n:d} steps; the work on the system W = {W:+.4g} kJ/mol (by "
+                 "steps, exact; −∫{P} dV by steps: {pdv:+.4g}), counted in the first law", head=head,
+                 old=self._size(L0), new=self._size(L1), dur=dur, n=int(r["steps"]), W=W,
+                 P="P" if r.get("virial_is_affine") else "S", pdv=pdv)]
         T0, T1 = getattr(self, "_ramp_T0", None), self._T_kelvin()
         if T0 is not None and T1 is not None:
-            txt += f"; температура {_num(T0, 4)} → {_num(T1, 4)} K"
-        return txt
+            txt.append(T("temperature {T0:.4g} → {T1:.4g} K", T0=T0, T1=T1))
+        return join(txt)
 
     def _follow_ramp(self):
         """After an advance: the box the engine's ramp has reached (frames, measurables), the time step against the
@@ -1950,7 +2004,7 @@ class Simulation(PlaygroundSimulation):
             try:
                 self._check_dt(self.md.dt)
             except Exception:  # noqa: BLE001 - the heating outran the step: stop here, said in the event
-                self.md.stop_box_ramp("шаг")
+                self.md.stop_box_ramp("step")
                 r = self.md.box_ramp()
         if not r["running"] and r["n"] != getattr(self, "_ramp_seen", 0):
             self.emit({"type": "event", "kind": "action", "name": "box", "t": self.t, "text": self._ramp_text(r),
@@ -1982,17 +2036,19 @@ class Simulation(PlaygroundSimulation):
                 except ValueError:
                     hi_t = mid
             ok = (L0 + lo_t * (L - L0)) * NM
-            fit = ", ".join(f"{k} ≈ {_num(ok[BOX_KEYS.index(k)], 4)} нм" for k in names)
-            return refusal("при таком сжатии атомы перекрылись бы (энергия атома выше предела "
-                           f"{_num(getattr(self.md, 'max_insert_energy', 50))} ε)",
-                           hint=f"сейчас можно до {fit}; дальше — шагами, давая веществу разойтись", detail=msg)
+            fit = join([T("{k} ≈ {L:.4g} nm", k=k, L=float(ok[BOX_KEYS.index(k)])) for k in names], ", ")
+            return refusal(T("at such a compression the atoms would overlap (an atom's energy above the limit {lim:.3g} "
+                             "ε)", lim=float(getattr(self.md, "max_insert_energy", 50))),
+                           hint=T("now it can go to {fit}; further in steps, letting the matter spread out", fit=fit),
+                           detail=msg)
         if "outside the walls" in msg or "particle outside" in msg:
             X = np.asarray(self.md.positions(), float)
-            need = ", ".join(f"{k} не меньше {_num(float(np.max(X[:, BOX_KEYS.index(k)])) * NM * 1.0001, 4)} нм"
-                             for k in names if len(X))
-            return refusal("за сдвинутой стенкой остались бы атомы: убрать можно только пустое место",
-                           hint=(need or "размер больше") + ", или «аффинно»", detail=msg)
-        return _ru(e, self)
+            need = join([T("{k} at least {L:.4g} nm", k=k, L=float(np.max(X[:, BOX_KEYS.index(k)])) * NM * 1.0001)
+                         for k in names if len(X)], ", ")
+            return refusal(T("atoms would be left behind the moved wall: only empty space can be removed"),
+                           hint=T("{need}, or “affinely”", need=need or T("a larger size")), detail=msg)
+        return _owner(e, self)
+
     def _check_dt(self, dt):
         """A new time step must resolve the hottest motion present: the kinetic temperature of each species and the
         temperatures the baths and thermal walls impose (``_check_temperature``)."""
@@ -2015,9 +2071,10 @@ class Simulation(PlaygroundSimulation):
             try:
                 self.md.advance(tr)
             except FloatingPointError as e:   # review UX-params P4: the owner's words, not the engine's
-                raise RuntimeError(f"шаг Верле не удался ({e}): атомы сблизились до одной точки или пролетели сквозь "
-                                   f"стенку — шаг по времени велик для этих скоростей; уменьшите «Шаг по времени» (на "
-                                   f"ходу) или температуру и удалите или измените последний объект") from e
+                raise RuntimeError(T("the Verlet step failed ({why}): atoms came together to one point or flew through a "
+                                     "wall; the time step is too large for these speeds; decrease the “Time step” "
+                                     "(while the world runs) or the temperature, and remove or change the last object",
+                                     why=str(e))) from e
         self.t = max(self.t, t_target)
         if not self.hard and getattr(self.md, "_ramp", None) is not None:
             self._follow_ramp()
@@ -2048,53 +2105,60 @@ class Simulation(PlaygroundSimulation):
         pressure, energy per atom, density, the first law's Q, W, E − E₀ and residual, the momentum, the order
         parameter, the mean-square displacement), of every thermometer (atoms, density, temperature in its ball), of
         the piston (position, the gas's mean force on it, speed), of every molecule object (its modes' temperatures)
-        and of every particle object (its temperature). Russian labels, display units."""
+        and of every particle object (its temperature). Translatable labels, display units."""
         nd = self.ndim
-        E, G1, G2 = "кДж/моль", "Вещество", "Первое начало (с последнего изменения сцены)"
-        sq = "²" if nd == 2 else "³"
-        out = [{"id": "T", "label": "Температура", "unit": "K", "of": None, "group": G1},
-               {"id": "p", "label": "Давление (вириал; у твёрдых шаров — по столкновениям с изменения)",
-                "unit": "бар" if nd == 3 else "мН/м", "of": None, "group": G1},
-               {"id": "e", "label": "Энергия на атом", "unit": E, "of": None, "group": G1},
-               {"id": "N", "label": "Число атомов", "unit": "шт.", "of": None, "group": G1},
-               {"id": "rho", "label": "Плотность числа атомов", "unit": f"нм⁻{sq}", "of": None, "group": G1},
-               {"id": "rho_red", "label": f"Плотность ρσ{sq} (σ аргона)", "unit": "безразм.", "of": None, "group": G1},
-               {"id": "V", "label": "Объём ящика" if nd == 3 else "Площадь ящика", "unit": f"нм{sq}", "of": None,
-                "group": G1},
-               {"id": "Q", "label": "Теплота Q от ванн и тепловых стенок", "unit": E, "of": None, "group": G2},
-               {"id": "W", "label": "Работа W над системой (поршень и изменения ящика)", "unit": E, "of": None,
+        E, G1, G2 = T("kJ/mol"), T("Substance"), T("First law (since the last change of the scene)")
+        K_, PCS, DL = T("K"), T("pcs"), T("dimensionless")
+        rho_u = T("nm⁻²") if nd == 2 else T("nm⁻³")
+        out = [{"id": "T", "label": T("Temperature"), "unit": K_, "of": None, "group": G1},
+               {"id": "p", "label": T("Pressure (virial; for hard spheres from the collisions since the change)"),
+                "unit": T("bar") if nd == 3 else T("mN/m"), "of": None, "group": G1},
+               {"id": "e", "label": T("Energy per atom"), "unit": E, "of": None, "group": G1},
+               {"id": "N", "label": T("Number of atoms"), "unit": PCS, "of": None, "group": G1},
+               {"id": "rho", "label": T("Number density of the atoms"), "unit": rho_u, "of": None, "group": G1},
+               {"id": "rho_red", "label": T("Density ρσ² (argon's σ)") if nd == 2 else T("Density ρσ³ (argon's σ)"),
+                "unit": DL, "of": None, "group": G1},
+               {"id": "V", "label": T("Box volume") if nd == 3 else T("Box area"),
+                "unit": T("nm²") if nd == 2 else T("nm³"), "of": None, "group": G1},
+               {"id": "Q", "label": T("Heat Q from the baths and the thermal walls"), "unit": E, "of": None, "group": G2},
+               {"id": "W", "label": T("Work W on the system (the piston and changes of the box)"), "unit": E, "of": None,
                 "group": G2},
-               {"id": "dE", "label": "Изменение энергии E − E₀", "unit": E, "of": None, "group": G2},
-               {"id": "resid", "label": "Остаток баланса E − E₀ − Q − W", "unit": E, "of": None, "group": G2},
-               *[{"id": f"P{c}", "label": f"Импульс системы P{c}", "unit": "а.е.м.·м/с", "of": None,
-                  "group": "Импульс"} for c in "xyz"[:nd]],
-               {"id": "order", "label": "Порядок |⟨ψ6⟩| (раз в 1 пс)" if nd == 2 else "Порядок Q6 (раз в 1 пс)",
-                "unit": "безразм.", "of": None, "group": "Строение"},
-               {"id": "msd", "label": "Средний квадрат смещения (с последнего изменения)", "unit": "нм²", "of": None,
-                "group": "Строение"}]
+               {"id": "dE", "label": T("Change of the energy E − E₀"), "unit": E, "of": None, "group": G2},
+               {"id": "resid", "label": T("Balance residual E − E₀ − Q − W"), "unit": E, "of": None, "group": G2},
+               *[{"id": f"P{c}", "label": T("System momentum P{c}", c=c), "unit": T("u·m/s"), "of": None,
+                  "group": T("Momentum")} for c in "xyz"[:nd]],
+               {"id": "order", "label": T("Order |⟨ψ6⟩| (once per {dt} ps)", dt=ORDER_EVERY_PS) if nd == 2 else
+                T("Order Q6 (once per {dt} ps)", dt=ORDER_EVERY_PS), "unit": DL, "of": None, "group": T("Structure")},
+               {"id": "msd", "label": T("Mean-square displacement (since the last change)"), "unit": T("nm²"),
+                "of": None, "group": T("Structure")}]
         for oid, o in self.objects.items():
             lab, t = o["label"], o["type"]
             if t == "probe":
-                out += [{"id": f"{oid}.N", "label": f"«{lab}»: атомов в шаре", "unit": "шт.", "of": oid,
-                         "group": "Термометры"},
-                        {"id": f"{oid}.rho", "label": f"«{lab}»: плотность", "unit": f"нм⁻{sq}", "of": oid,
-                         "group": "Термометры"},
-                        {"id": f"{oid}.T", "label": f"«{lab}»: температура", "unit": "K", "of": oid,
-                         "group": "Термометры"}]
+                g = T("Thermometers")
+                out += [{"id": f"{oid}.N", "label": T("“{label}”: atoms in the ball", label=lab), "unit": PCS,
+                         "of": oid, "group": g},
+                        {"id": f"{oid}.rho", "label": T("“{label}”: density", label=lab), "unit": rho_u, "of": oid,
+                         "group": g},
+                        {"id": f"{oid}.T", "label": T("“{label}”: temperature", label=lab), "unit": K_, "of": oid,
+                         "group": g}]
             elif t == "piston":
-                out += [{"id": f"{oid}.X", "label": f"«{lab}»: положение", "unit": "нм", "of": oid, "group": "Поршень"},
-                        {"id": f"{oid}.F", "label": f"«{lab}»: сила газа (средняя с последнего изменения)",
-                         "unit": "пН", "of": oid, "group": "Поршень"},
-                        {"id": f"{oid}.V", "label": f"«{lab}»: скорость", "unit": "м/с", "of": oid,
-                         "group": "Поршень"}]
+                g = T("Piston")
+                out += [{"id": f"{oid}.X", "label": T("“{label}”: position", label=lab), "unit": T("nm"), "of": oid,
+                         "group": g},
+                        {"id": f"{oid}.F", "label": T("“{label}”: the gas's force (mean since the last change)",
+                                                       label=lab), "unit": T("pN"), "of": oid, "group": g},
+                        {"id": f"{oid}.V", "label": T("“{label}”: speed", label=lab), "unit": T("m/s"), "of": oid,
+                         "group": g}]
             elif t == "molecule":
-                for part, nm in (("tr", "поступательная"), ("rot", "вращательная"), ("vib", "колебательная (кин.)"),
-                                 ("bond", "связей (пот.)"), ("ang", "углов (пот.)")):
-                    out.append({"id": f"{oid}.T_{part}", "label": f"«{lab}»: температура мод — {nm}", "unit": "K",
-                                "of": oid, "group": "Молекулы"})
+                for part, nm in (("tr", T("translational")), ("rot", T("rotational")),
+                                 ("vib", T("vibrational (kinetic)")), ("bond", T("of the bonds (potential)")),
+                                 ("ang", T("of the angles (potential)"))):
+                    out.append({"id": f"{oid}.T_{part}", "label": T("“{label}”: mode temperature, {mode}", label=lab,
+                                                                     mode=nm),
+                                "unit": K_, "of": oid, "group": T("Molecules")})
             if t in ("gas", "crystal", "atom", "molecule"):
-                out.append({"id": f"{oid}.Tobj", "label": f"«{lab}»: температура атомов", "unit": "K", "of": oid,
-                            "group": "Объекты"})
+                out.append({"id": f"{oid}.Tobj", "label": T("“{label}”: temperature of the atoms", label=lab),
+                            "unit": K_, "of": oid, "group": T("Objects")})
         return out
 
     def measure(self):
@@ -2124,14 +2188,15 @@ class Simulation(PlaygroundSimulation):
             return c + [0.0] * (3 - nd)
 
         Tsys = md.temperature().get("T") if n else None
-        put("T", Tsys * KELVIN if Tsys is not None else None, "нет атомов")
+        no_atoms = T("no atoms")
+        put("T", Tsys * KELVIN if Tsys is not None else None, no_atoms)
         P = md.pressure() if n else {}
         pv = P.get("virial") if not self.hard else P.get("pressure")
         put("p", (U.to_bar(pv) if nd == 3 else pv * U.pressure_Pa(2) * 1e3) if pv is not None else None,
-            "нет атомов" if not n else ("у твёрдых шаров — после первых столкновений с изменения" if self.hard
-                                        else "вириал не определён (замороженные атомы)"))
+            no_atoms if not n else (T("for hard spheres: after the first collisions since the change") if self.hard
+                                    else T("the virial is undefined (frozen atoms)")))
         Etot = md.energy() if not self.hard else md.kinetic_energy()
-        put("e", U.to_kJ_mol(Etot / n) if n else None, "нет атомов")
+        put("e", U.to_kJ_mol(Etot / n) if n else None, no_atoms)
         meas["N"] = float(n)
         V = float(md.volume())
         put("V", V * NM ** nd)
@@ -2147,9 +2212,9 @@ class Simulation(PlaygroundSimulation):
         try:
             put("msd", md.msd()["msd"] * NM * NM)
         except (RuntimeError, ValueError):
-            put("msd", None, "нет отсчёта")
+            put("msd", None, T("no reference"))
         if full:      # a sweep's reading: computed now, the frames' schedule untouched
-            put("order", self._order_value(), "нет атомов")
+            put("order", self._order_value(), no_atoms)
         else:
             # by world time, not by frame count (a frame drawn again at the same moment shows the same): computed when a
             # new ORDER_EVERY_PS of world time begins, shown in that frame only
@@ -2160,7 +2225,8 @@ class Simulation(PlaygroundSimulation):
             if getattr(self, "_order_t", None) == self.t and getattr(self, "_order", None) is not None:
                 put("order", self._order)
             else:
-                put("order", None, f"считается раз в {_num(ORDER_EVERY_PS)} пс времени мира (дорого: как 1–3 шага)")
+                put("order", None, T("computed once per {dt} ps of world time (costly: like 1–3 steps)",
+                                     dt=ORDER_EVERY_PS))
         names = np.asarray(p["species"], dtype=object)
         for oid, k in self.kind.items():
             o = self.objects.get(oid)
@@ -2169,29 +2235,32 @@ class Simulation(PlaygroundSimulation):
             if k in ("particles", "molecules"):
                 Tsp = md.temperature(species=self.species[oid])
                 Tk = float(Tsp["T"]) * KELVIN if Tsp.get("T") is not None and math.isfinite(Tsp["T"]) else None
-                d = {"атомов": int(np.count_nonzero(names == self.species[oid])), "температура, K": Tk}
-                put(f"{oid}.Tobj", Tk, "нет атомов")
+                # the inspector's rows: plain English msgids as keys (the player translates them), numbers or T values
+                d = {"atoms": int(np.count_nonzero(names == self.species[oid])), "temperature, K": Tk}
+                put(f"{oid}.Tobj", Tk, no_atoms)
                 inf = self.info.get(oid)
                 if inf:
-                    d[f"плотность решётки ρσ^{nd}"] = inf["density"]
-                    d["деформация ячейки"] = inf["strain"]
+                    d["lattice density ρσ²" if nd == 2 else "lattice density ρσ³"] = inf["density"]
+                    d["cell strain"] = inf["strain"]
                     if inf.get("skipped"):
-                        d["узлов оставлено пустыми (заняты)"] = inf["skipped"]
+                        d["sites left empty (taken)"] = inf["skipped"]
                 ak = self._atom_keys(oid)
                 if len(ak):
                     rows = np.searchsorted(keys_all, ak)
                     c = self._centre(X[rows])
                     at[oid] = nm3(c)
-                    d["центр, нм"] = ", ".join(_num(z, 4) for z in at[oid][:nd])
+                    d["centre"] = self._point(at[oid][:nd])
                 if k == "molecules":
                     mm = md.molecule_modes(self.parts[oid]) if not self.hard else None
-                    for part, key, lab in (("translation", "tr", "поступат."), ("rotation", "rot", "вращат."),
-                                           ("vibration", "vib", "колебат. (кин.)"), ("bonds", "bond", "связи (пот.)"),
-                                           ("angles", "ang", "углы (пот.)")):
+                    for part, key, row in (("translation", "tr", "T translational, K"),
+                                           ("rotation", "rot", "T rotational, K"),
+                                           ("vibration", "vib", "T vibrational (kin.), K"),
+                                           ("bonds", "bond", "T bonds (pot.), K"),
+                                           ("angles", "ang", "T angles (pot.), K")):
                         Tm = mm[part]["T"] * KELVIN if mm and mm[part]["T"] is not None else None
-                        put(f"{oid}.T_{key}", Tm, "нет таких мод")
+                        put(f"{oid}.T_{key}", Tm, T("no such modes"))
                         if Tm is not None:
-                            d[f"T {lab}, K"] = Tm
+                            d[row] = Tm
                 now[oid] = d
             elif k == "piston":
                 pist = md.piston()
@@ -2203,7 +2272,7 @@ class Simulation(PlaygroundSimulation):
                     put(f"{oid}.X", pist["X"] * NM)
                     dt = md.t - pist["t0"]
                     put(f"{oid}.F", pist["impulse"] / dt * U.force_N * 1e12 if dt > 0 else None,
-                        "измеряется со следующего шага")
+                        T("measured from the next step"))
                     put(f"{oid}.V", pist["V"] * U.velocity_m_s if math.isfinite(pist["V"]) else None)
             elif k == "thermostat":
                 reg = self._region_of(o["values"])
@@ -2218,14 +2287,14 @@ class Simulation(PlaygroundSimulation):
                     pr = md.probe(c, self._len(v["r"]))
                 except ValueError:
                     pr = {"n": None, "density": None, "T": None}
-                probes[oid] = {"температура, K": pr["T"] * KELVIN if pr["T"] is not None else None,
-                               "атомов": pr["n"], f"плотность ρσ^{nd}": pr["density"]}
+                probes[oid] = {"temperature, K": pr["T"] * KELVIN if pr["T"] is not None else None,
+                               "atoms": pr["n"], ("density ρσ²" if nd == 2 else "density ρσ³"): pr["density"]}
                 ids.append(oid)
-                why = "шар вне ящика или радиус больше половины периодического ящика"
+                why = T("the ball is outside the box or its radius exceeds half the periodic box")
                 put(f"{oid}.N", pr["n"], why)
                 put(f"{oid}.rho", pr["density"] / NM ** nd if pr["density"] is not None else None, why)
                 put(f"{oid}.T", pr["T"] * KELVIN if pr["T"] is not None else None,
-                    "в шаре нет атомов" if pr["n"] == 0 else why)
+                    T("no atoms in the ball") if pr["n"] == 0 else why)
         return {"meas": meas, "notes": notes, "at": at, "now": now, "probes": probes, "ids": ids, "p": p, "X": X}
 
     def _order_value(self):
@@ -2289,8 +2358,8 @@ class Simulation(PlaygroundSimulation):
         md = self.md
         if md.n == 0:
             return
-        T = md.temperature()
-        Tk = float(T["T"]) * KELVIN if T.get("T") is not None and math.isfinite(T["T"]) else None
+        Tm0 = md.temperature()
+        Tk = float(Tm0["T"]) * KELVIN if Tm0.get("T") is not None and math.isfinite(Tm0["T"]) else None
         P = md.pressure()
         # MD: the instantaneous virial pressure; hard spheres: the collision virial since the last change
         p_val = P.get("virial") if self.model != "hard" else P.get("pressure")
@@ -2326,8 +2395,10 @@ class Simulation(PlaygroundSimulation):
             if mm:
                 modes = {part: (mm[part]["T"] * KELVIN if mm[part]["T"] is not None else None)
                          for part in ("translation", "rotation", "vibration", "bonds", "angles")}
-        self.emit({"type": "stats", "t": self.t, "T_K": Tk, "p": p_phys, "p_unit": "бар" if self.ndim == 3 else "мН/м",
-                   "p_kind": "вириал (мгновенный)" if self.model != "hard" else "по столкновениям (с изменения)",
+        self.emit({"type": "stats", "t": self.t, "T_K": Tk, "p": p_phys,
+                   "p_unit": T("bar") if self.ndim == 3 else T("mN/m"),
+                   "p_kind": T("virial (instantaneous)") if self.model != "hard" else
+                   T("from the collisions (since the change)"),
                    "e_kJ_mol": U.to_kJ_mol(e), "ks": {k: ks.get(k) for k in ("D", "bound", "within", "n")},
                    "order": order, "order_kind": "|⟨ψ6⟩|" if self.ndim == 2 else "Q6", "msd_nm2": msd,
                    "modes": modes, "rho_y_nm": Ly * NM},
@@ -2344,78 +2415,84 @@ class Simulation(PlaygroundSimulation):
             b = md.energy_balance()
             stiff = any(o["type"] in ("piston",) or (o["type"] == "wall") for o in self.objects.values()) or \
                 not all(md.periodic)
-            note = (f"E − E₀ = Q + W + остаток с последнего изменения сцены: теплота от ванн и стенок Q = "
-                    f"{_num(U.to_kJ_mol(b['Q']), 4)}, работа W = {_num(U.to_kJ_mol(b['W']), 4)} кДж/моль (поршень "
-                    f"{_num(U.to_kJ_mol(b.get('W_piston', b['W'])), 4)}, изменения ящика "
-                    f"{_num(U.to_kJ_mol(b.get('W_box', 0.0)), 4)}; правки сцены сдвигают E₀ на изменённую ими энергию); "
-                    f"остаток — ошибка схемы Верле: O(dt²) при непрерывных силах")
+            kj = U.to_kJ_mol
+            note = [T("E − E₀ = Q + W + residual since the last change of the scene: the heat from the baths and walls Q = "
+                      "{Q:.4g}, the work W = {W:.4g} kJ/mol (the piston {Wp:.4g}, changes of the box {Wb:.4g}; edits of "
+                      "the scene shift E₀ by the energy they change); the residual is the error of the Verlet scheme: "
+                      "O(dt²) with continuous forces", Q=kj(b["Q"]), W=kj(b["W"]), Wp=kj(b.get("W_piston", b["W"])),
+                      Wb=kj(b.get("W_box", 0.0)))]
             if stiff:
-                note += ("; удары о жёсткие стенки и поршень внутри шага при взаимодействующих атомах дают ошибку "
-                         "порядка F·v·dt на удар, она копится с ударами — ошибка первого порядка по dt (пресет "
-                         "поршня: остаток 1–14 ε за первый ход при 2,5–10 фс, не больше ~1,5 % работы; у идеального "
-                         "газа баланс точен)")
+                note.append(T("impacts on rigid walls and the piston inside a step with interacting atoms give an error "
+                              "of the order of F·v·dt per impact, accumulating with the impacts: an error of the first "
+                              "order in dt (the piston preset: a residual of 1–14 ε over the first stroke at 2.5–10 fs, at "
+                              "most ~1.5 % of the work; for an ideal gas the balance is exact)"))
             if not self._baths():
                 try:
                     se = md.step_error(n_steps=10)
-                    note += f"; оценка компаньона (dt против dt/2) за 10 шагов: {_num(U.to_kJ_mol(se['dE_estimate']), 3)}"
+                    note.append(T("the companion's estimate (dt against dt/2) over 10 steps: {dE:.3g}",
+                                  dE=kj(se["dE_estimate"])))
                 except ValueError:
                     pass
-            self.running_check("energy", "Энергия: первое начало (остаток баланса), кДж/моль",
-                               U.to_kJ_mol(b["residual"]), 0.0, 0.0, info=True, group="Законы сохранения", note=note)
+            self.running_check("energy", T("Energy: the first law (balance residual), kJ/mol"),
+                               kj(b["residual"]), 0.0, 0.0, info=True, group=T("Conservation laws"), note=join(note))
             dr = md.momentum_drift()
             if dr["ratio"] is not None:
                 ax = ", ".join("xyz"[a] for a in range(self.ndim) if dr["axes"][a])
-                self.running_check("momentum", f"Импульс системы вдоль {ax}: сохраняется (силы попарны)",
-                                   dr["ratio"], 0.0, 1.0, group="Законы сохранения", ok=dr["ratio"] <= 1.0,
-                                   note=(f"|P − P₀| / граница округления за {dr['steps']} шагов (P₀ — импульс при "
-                                         f"последнем изменении сцены; граница — ε·шаги·(суммы |m v|, |F|): "
-                                         f"engine momentum_drift); сохраняется вдоль периодических осей без поля, "
-                                         f"тепловых стенок, ванн Ланжевена и местных ванн, замороженных атомов"))
+                self.running_check("momentum", T("System momentum along {ax}: conserved (pairwise forces)", ax=ax),
+                                   dr["ratio"], 0.0, 1.0, group=T("Conservation laws"), ok=dr["ratio"] <= 1.0,
+                                   note=T("|P − P₀| / the rounding bound over {n:d} steps (P₀ the momentum at the last "
+                                          "change of the scene; the bound ε·steps·(sums of |m v|, |F|): the engine's "
+                                          "momentum_drift); conserved along periodic axes without a field, thermal "
+                                          "walls, Langevin baths and local baths, frozen atoms", n=int(dr["steps"])))
         else:
             b = md.energy_balance()
-            self.running_check("energy", "Энергия: первое начало (остаток баланса), кДж/моль",
-                               U.to_kJ_mol(b["residual"]), 0.0, 0.0, info=True, group="Законы сохранения",
-                               note=f"твёрдые шары: энергия только кинетическая, удары упругие — E − E₀ = Q (теплота "
-                                    f"тепловых стенок {_num(U.to_kJ_mol(b['Q']), 4)} кДж/моль) с точностью до округления")
+            self.running_check("energy", T("Energy: the first law (balance residual), kJ/mol"),
+                               U.to_kJ_mol(b["residual"]), 0.0, 0.0, info=True, group=T("Conservation laws"),
+                               note=T("hard spheres: the energy is only kinetic, the impacts elastic: E − E₀ = Q (the heat "
+                                      "of the thermal walls {Q:.4g} kJ/mol) up to rounding", Q=U.to_kJ_mol(b["Q"])))
         ks = md.velocity_ks()
         if ks.get("D") is not None:
-            self.running_check("maxwell", "Скорости против распределения Максвелла (расстояние КС)", ks["D"], None,
-                               ks.get("bound") or 0.0, info=True, group="Статистика",
-                               note=f"{'в пределах' if ks.get('within') else 'вне'} границы ДКВ {_num(ks.get('bound'), 3)} "
-                                    f"при уровне 0,01 ({ks.get('n')} компонент скорости всех атомов, каждая делена "
-                                    f"на √(kT/m) своей массы): в равновесии — в пределах")
+            self.running_check("maxwell", T("Velocities against the Maxwell distribution (KS distance)"), ks["D"], None,
+                               ks.get("bound") or 0.0, info=True, group=T("Statistics"),
+                               note=(T("within the DKW bound {b:.3g} at the level {lvl} ({n:d} velocity components of all "
+                                       "atoms, each divided by √(kT/m) of its mass): in equilibrium, within",
+                                       b=ks.get("bound"), lvl=0.01, n=int(ks.get("n") or 0)) if ks.get("within") else
+                                     T("outside the DKW bound {b:.3g} at the level {lvl} ({n:d} velocity components of "
+                                       "all atoms, each divided by √(kT/m) of its mass): in equilibrium, within",
+                                       b=ks.get("bound"), lvl=0.01, n=int(ks.get("n") or 0))))
         P = md.pressure()
         if self.model != "hard" and P.get("walls"):
-            walls = ", ".join(f"{k}: {v:.4g}" for k, v in P["walls"].items() if v is not None)
-            self.running_check("pressure", "Давление: вириал против стенок (приведённые единицы)",
-                               P.get("virial"), None, 0.0, info=True, group="Статистика",
-                               note=f"давление на стенки — переданный им импульс за время: {walls}"
-                                    + ("; с замороженными атомами вириал определён только вдоль осей со стенками"
-                                       if P.get("virial") is None else ""))
+            walls = join([T("{k}: {v:.4g}", k=k, v=v) for k, v in P["walls"].items() if v is not None], ", ")
+            note = T("the pressure on the walls is the momentum given to them per time: {walls}", walls=walls)
+            if P.get("virial") is None:
+                note = join([note, T("with frozen atoms the virial is defined only along the axes with walls")])
+            self.running_check("pressure", T("Pressure: the virial against the walls (reduced units)"),
+                               P.get("virial"), None, 0.0, info=True, group=T("Statistics"), note=note)
         if self.model == "hard":
             self._z_check()
         c = md.cost_estimate()
         if self.model == "hard":
-            self.running_check("cost", "Счёт: секунд на событие (CPU, измерено)", c.get("s_per_event"), None, 0.0,
-                               info=True, group="Расчёт", unit="с",
-                               note=f"{c.get('n')} атомов, {c.get('events')} событий")
+            self.running_check("cost", T("Computation: seconds per event (CPU, measured)"), c.get("s_per_event"), None,
+                               0.0, info=True, group=T("Computation"), unit=T("s"),
+                               note=T("{n} atoms, {e} events", n=c.get("n"), e=c.get("events")))
         else:
-            self.running_check("cost", f"Счёт: секунд на шаг ({c.get('device', 'cpu').upper()}, оценка)",
-                               c.get("per_step_s"), None, 0.0, info=True, group="Расчёт", unit="с",
-                               note=f"{c.get('n')} атомов")
+            self.running_check("cost", T("Computation: seconds per step ({device}, estimate)",
+                                         device=str(c.get("device", "cpu")).upper()),
+                               c.get("per_step_s"), None, 0.0, info=True, group=T("Computation"), unit=T("s"),
+                               note=T("{n} atoms", n=c.get("n")))
 
     def _stale_checks(self):
         """After a switch of the dynamics: the checks the other solver computed and this one does not are marked so
         (the panel keeps every check's latest version)."""
         if self.hard:
-            gone = (("momentum", "Импульс системы: сохраняется (силы попарны)", "Законы сохранения"),
-                    ("pressure", "Давление: вириал против стенок (приведённые единицы)", "Статистика"))
+            gone = (("momentum", T("System momentum: conserved (pairwise forces)"), T("Conservation laws")),
+                    ("pressure", T("Pressure: the virial against the walls (reduced units)"), T("Statistics")))
+            note = T("not computed with the dynamics of hard spheres (switched while the world runs)")
         else:
-            gone = (("eos", "Фактор сжимаемости Z против уравнения состояния", "Статистика"),)
-        what = "твёрдых шаров" if self.hard else "непрерывных сил"
+            gone = (("eos", T("Compressibility factor Z against the equation of state"), T("Statistics")),)
+            note = T("not computed with the dynamics of continuous forces (switched while the world runs)")
         for cid, label, group in gone:
-            self.running_check(cid, label, None, None, 0.0, info=True, group=group,
-                               note=f"не считается при динамике {what} (переключена на ходу)")
+            self.running_check(cid, label, None, None, 0.0, info=True, group=group, note=note)
 
     def _z_check(self):
         """Hard disks / spheres in a periodic box, one species: the compressibility factor Z of the run (mean of blocks
@@ -2449,22 +2526,24 @@ class Simulation(PlaygroundSimulation):
             return
         ref = z_inf - HD.ensemble_correction(self.ndim, rho, md.n)
         bl = np.array(zb["blocks"])
-        src = "Колафа и Роттнер 2006 (диски)" if self.ndim == 2 else "Колафа, Лабик и Малиевски 2004 (шары)"
+        src = (T("Kolafa and Rottner 2006 (disks)") if self.ndim == 2 else
+               T("Kolafa, Labík and Malijevský 2004 (spheres)"))
+        label = T("Compressibility factor Z against the equation of state")
         if len(bl) < Z_MIN_BLOCKS:
-            self.running_check("eos", "Фактор сжимаемости Z против уравнения состояния", None, ref, 0.0, info=True,
-                               group="Статистика", note=f"набирается: {len(bl)} из {Z_MIN_BLOCKS} блоков по "
-                                                        f"{_num(Z_BLOCK * PS, 2)} пс после {_num(Z_EQUIL * PS, 2)} пс с "
-                                                        f"изменения сцены; эталон {ref:.5f} ({src})")
+            self.running_check("eos", label, None, ref, 0.0, info=True, group=T("Statistics"),
+                               note=T("accumulating: {k:d} of {n:d} blocks of {b:.2g} ps after {eq:.2g} ps since the "
+                                      "change of the scene; the reference {ref:.5f} ({src})", k=len(bl), n=Z_MIN_BLOCKS,
+                                      b=Z_BLOCK * PS, eq=Z_EQUIL * PS, ref=ref, src=src))
             return
         z = float(bl.mean())
         se = float(bl.std(ddof=1) / math.sqrt(len(bl)))
         tol = 5.0 * se + 1e-4
-        self.running_check("eos", "Фактор сжимаемости Z против уравнения состояния", z, ref, tol,
-                           group="Статистика", ok=abs(z - ref) <= tol,
-                           note=(f"Z = 1 + Σ r·Δp / (d N T Δt) по столкновениям, среднее {len(bl)} блоков ± {_num(se, 2)}; "
-                                 f"эталон: жидкость при ρσ^{self.ndim} = {rho:.4f} в пределе N → ∞ {z_inf:.5f} "
-                                 f"({src}) минус поправка ансамбля для N = {md.n}: {ref:.5f}; допуск 5 стандартных "
-                                 f"ошибок + 1e-4"))
+        self.running_check("eos", label, z, ref, tol, group=T("Statistics"), ok=abs(z - ref) <= tol,
+                           note=T("Z = 1 + Σ r·Δp / (d N T Δt) over the collisions, the mean of {k:d} blocks ± {se:.2g}; "
+                                  "the reference: the fluid at ρσ^{d} = {rho:.4f} in the limit N → ∞ {zinf:.5f} ({src}) "
+                                  "minus the ensemble correction for N = {N:d}: {ref:.5f}; the tolerance 5 standard errors "
+                                  "+ 1e-4", k=len(bl), se=se, d=self.ndim, rho=rho, zinf=z_inf, src=src, N=int(md.n),
+                                  ref=ref))
 
     def _baths(self):
         return any(k == "thermostat" for k in self.kind.values()) or any(
@@ -2475,13 +2554,14 @@ class Simulation(PlaygroundSimulation):
         box = self._box3d()
         b = box[1]
         return {
-            "title": "Плейграунд: частицы и молекулы",
-            "text": ("Атомы и молекулы движутся по законам Ньютона с модельным межатомным взаимодействием; "
-                     "температура, давление, теплота и работа, распределение скоростей и строение вещества "
-                     "измеряются по ходу счёта."),
+            "title": T("Playground: particles and molecules"),
+            "text": T("Atoms and molecules move by Newton's laws with a model interatomic interaction; the temperature, "
+                      "the pressure, heat and work, the velocity distribution and the structure of the matter are "
+                      "measured as the computation goes."),
             "actions": [],
             "approximations": self._approx(),
-            "scene3d": {"box": box, "units": "нм",
+            # the axis unit stays a plain msgid: the 3-D environment puts it into its own strings
+            "scene3d": {"box": box, "units": "nm",
                         "up": [0, 1, 0] if self.ndim == 2 else [0, 0, 1], "objects": [], "layers": [],
                         "coord_names": ["x", "y", "z"],
                         "planes": {"max": 0, "center": [0.5 * x for x in b], "defaults": {"1": [0, 0, 1]}}},
@@ -2494,42 +2574,49 @@ class Simulation(PlaygroundSimulation):
 
     def _approx(self):
         """The approximations of this world (review B7-md M16), with the numbers that set their limits."""
-        a = [f"классическая механика атомов: у твёрдого аргона квантовые эффекты существенны ниже температуры Дебая "
-             f"Θ_D = 85 K (теплоёмкость по Дебаю при 20 / 40 / 80 K — {debye_cv_fraction(20, 85):.2f} / "
-             f"{debye_cv_fraction(40, 85):.2f} / {debye_cv_fraction(80, 85):.2f} классической)"]
+        a = [T("classical mechanics of the atoms: in solid argon quantum effects matter below the Debye temperature "
+               "Θ_D = {th} K (the Debye heat capacity at 20 / 40 / 80 K is {c20:.2f} / {c40:.2f} / {c80:.2f} of the "
+               "classical one)", th=85, c20=debye_cv_fraction(20, 85), c40=debye_cv_fraction(40, 85),
+               c80=debye_cv_fraction(80, 85))]
         if self.model == "lj":
             rc, sh = float(self.live["cutoff"]), self.live["shift"]
-            a.append(f"межатомное взаимодействие — модель Леннард-Джонса (12-6) с параметрами аргона, обрезанная на "
-                     f"{_num(rc)} σ (сдвиг {'силы' if sh == 'force' else 'энергии'}): это другое вещество, чем аргон")
+            a.append(T("the interatomic interaction is the Lennard-Jones (12-6) model with argon's parameters, cut at "
+                       "{rc:.3g} σ (the force shifted): a substance other than argon", rc=rc) if sh == "force" else
+                     T("the interatomic interaction is the Lennard-Jones (12-6) model with argon's parameters, cut at "
+                       "{rc:.3g} σ (the energy shifted): a substance other than argon", rc=rc))
             tc = TC.get((self.ndim, rc, sh))
             full = TC[(self.ndim, "full")]
             if tc is not None:
-                a.append(f"критическая температура этой модели {_num(tc)} ε/k = {tc * KELVIN:.0f} K (у полного 12-6 — "
-                         f"{_num(full)} ε/k = {full * KELVIN:.0f} K, у аргона ≈ 150,7–150,9 K): выше неё жидкости и пара "
-                         f"по отдельности нет")
+                a.append(T("the critical temperature of this model is {tc:.3g} ε/k = {tcK:.0f} K (of the full 12-6 "
+                           "{full:.3g} ε/k = {fullK:.0f} K, of argon ≈ 150.7–150.9 K): above it there are no separate "
+                           "liquid and vapour", tc=tc, tcK=tc * KELVIN, full=full, fullK=full * KELVIN))
+            elif self.ndim == 3:
+                a.append(T("the critical temperature depends on the cutoff and the shift (of the full 12-6 in a volume "
+                           "{full:.3g} ε/k = {fullK:.0f} K; with the force shifted at 2.5σ, 0.937 ε/k = 112 K); no "
+                           "value is known for this cutoff", full=full, fullK=full * KELVIN))
             else:
-                a.append(f"критическая температура зависит от обрезки и сдвига (у полного 12-6 в "
-                         f"{'объёме' if self.ndim == 3 else 'плоскости'} — {_num(full)} ε/k = {full * KELVIN:.0f} K; "
-                         f"{'со сдвигом силы на 2,5σ — 0,937 ε/k = 112 K' if self.ndim == 3 else 'обрезанного на 2,5σ со сдвигом энергии — 0,459 ε/k = 55 K, тройная точка около 0,42 ε/k'}); "
-                         f"для этой обрезки значение не найдено")
+                a.append(T("the critical temperature depends on the cutoff and the shift (of the full 12-6 in a plane "
+                           "{full:.3g} ε/k = {fullK:.0f} K; cut at 2.5σ with the energy shifted, 0.459 ε/k = 55 K, the "
+                           "triple point near 0.42 ε/k); no value is known for this cutoff", full=full,
+                           fullK=full * KELVIN))
         elif self.model == "wca":
-            a.append("только отталкивание (WCA) — модель: без притяжения нет жидкости и пара")
+            a.append(T("repulsion only (WCA), a model: without attraction there are no liquid and vapour"))
         else:
-            a.append("твёрдые диски / шары — модель (бесконечно жёсткое отталкивание, без притяжения: нет жидкости и "
-                     "пара, только жидкость и кристалл)")
+            a.append(T("hard disks / spheres, a model (infinitely stiff repulsion, no attraction: no liquid and vapour, "
+                       "only fluid and crystal)"))
         if self.ndim == 2:
-            a.append("плоскость: двумерное вещество (его фазы и уравнение состояния — двумерные)")
+            a.append(T("a plane: two-dimensional matter (its phases and equation of state are two-dimensional)"))
         mols = [o for o in self.objects.values() if o["type"] == "molecule"]
         for o in mols:
             v = o["values"]
             m = self._subst_values(v)[0]
             w = math.sqrt(float(v["k_bond"]) / (0.5 * m))                 # homonuclear bond: mu = m/2
             hw = w * HBAR_OVER_K / (PS * 1e-12)                            # ħω/k in K (ω in 1/τ)
-            T = float(v["T"])
-            frac = einstein_cv_fraction(T, hw) if T > 0 else 0.0
-            a.append(f"«{o['label']}»: связи — гармонические пружины (не рвутся, без ангармонизма), ħω/k = {hw:.0f} K; "
-                     f"при kT ≲ ħω колебания квантовые (теплоёмкость колебания при {_num(T)} K — {frac:.2f} "
-                     f"классической), здесь — классические")
+            Tk = float(v["T"])
+            frac = einstein_cv_fraction(Tk, hw) if Tk > 0 else 0.0
+            a.append(T("“{label}”: the bonds are harmonic springs (they do not break, no anharmonicity), ħω/k = {hw:.0f} "
+                       "K; at kT ≲ ħω the vibrations are quantum (the vibration's heat capacity at {T:.3g} K is {frac:.2f} "
+                       "of the classical one), here they are classical", label=o["label"], hw=hw, T=Tk, frac=frac))
         return a
 
     def engine_modules(self):
@@ -2540,11 +2627,11 @@ class Simulation(PlaygroundSimulation):
 
 VIZ = {
     "id": "p03_molecules",
-    "title": "Частицы и молекулы",
-    "summary": ("Песочница молекулярной динамики: газ, кристалл, молекулы, стенки, поршень, термостаты; "
-                "температура, давление, теплота и работа, распределение Максвелла — по ходу счёта."),
-    "purpose": ("Собрать вещество из атомов и посмотреть, как из законов Ньютона возникают тепловые свойства: "
-                "распределение скоростей, давление, плавление, жидкость и пар, теплота и работа поршня."),
+    "title": T("Particles and molecules"),
+    "summary": T("A molecular-dynamics sandbox: gas, crystal, molecules, walls, a piston, thermostats; the temperature, "
+                 "the pressure, heat and work, the Maxwell distribution as the computation goes."),
+    "purpose": T("Build matter from atoms and see how thermal properties arise from Newton's laws: the velocity "
+                 "distribution, pressure, melting, liquid and vapour, the heat and the work of a piston."),
     "version": "0.2",
     "schema": SCHEMA,
     "simulation": Simulation,

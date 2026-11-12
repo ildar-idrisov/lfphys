@@ -46,28 +46,31 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 from ...core import data as D
 from ...core.gravity import kerr_null as KN
 
 ABOUT = {
     "layer": "theories", "kind": "alternative",
-    "title": "Что если дыра не керровская: тень метрики Йоханнсена против данных EHT",
-    "statement": "Параметризованное отклонение от Керра (метрика Йоханнсена 2013, «JP» в статьях EHT) с "
-                 "параметрами α₁₂, α₁₃, α₂₂: край тени из условий R = R′ = 0 (как у Бардина), размер (медианный "
-                 "диаметр, δ по определению EHT) и форма (смещение, разброс диаметров) как функции отклонения; "
-                 "допустимые области параметров по измерениям EHT для M87* и Sgr A*.",
-    "validity": "геометрическая оптика; только регулярные метрики: вне горизонта (r ≥ r₊) положительны множитель "
-                "детерминанта A₁(r²+a²) − a²A₂ sin²θ (Johannsen 2013a, ур. 72), условие отсутствия замкнутых "
-                "времениподобных кривых (ур. 76) и A₁, A₂ (ур. 77–78) — проверяется; одна полоса фотонных орбит; "
-                "размер тени — медианный диаметр относительно середины между крайними α (центр CHARM — второй "
-                "показатель); при α = 0 — Керр",
+    "title": T("What if the hole is not Kerr: the shadow of the Johannsen metric against the EHT data"),
+    "statement": T("A parametrised deviation from Kerr (the Johannsen metric of 2013, “JP” in the EHT papers) with "
+                   "the parameters α₁₂, α₁₃, α₂₂: the edge of the shadow from the conditions R = R′ = 0 (as for "
+                   "Bardeen), its size (the median diameter, δ as defined by the EHT) and shape (offset, spread of "
+                   "diameters) as functions of the deviation; the allowed regions of the parameters from the EHT "
+                   "measurements of M87* and Sgr A*."),
+    "validity": T("geometric optics; regular metrics only: outside the horizon (r ≥ r₊) the determinant factor "
+                  "A₁(r²+a²) − a²A₂ sin²θ (Johannsen 2013a, Eq. 72), the condition of no closed timelike curves (Eq. "
+                  "76) and A₁, A₂ (Eqs. 77–78) are positive, which is checked; one band of photon orbits; the size of "
+                  "the shadow is the median diameter about the midpoint between the extreme α (the CHARM centre is a "
+                  "second measure); at α = 0 it is Kerr"),
     "basis": ["Johannsen, Phys. Rev. D 88, 044002 (2013)", "Johannsen, ApJ 777, 170 (2013)",
               "Psaltis et al. (EHT), Phys. Rev. Lett. 125, 141104 (2020)",
               "EHT Collaboration, ApJL 930, L17 (2022): Sgr A* Paper VI",
-              "EHT Collaboration, ApJL 875, L1 и L6 (2019): M87* Papers I, VI"],
-    "conflicts": ["lfphys.core.gravity.kerr_null: метрика Керра (теорема об отсутствии волос); при α ≠ 0 тень "
-                  "другого размера и формы; ограничена EHT: M87* |δ| ≤ 0.17 (−3.6 < α₁₃ < 5.9 при a = 0, "
-                  "Psaltis et al. 2020), Sgr A* (Keck) −3.1 ≲ α₁₃ ≲ 1.5 (EHT 2022, табл. 3)"],
+              T("EHT Collaboration, ApJL 875, L1 and L6 (2019): M87* Papers I, VI")],
+    "conflicts": [T("lfphys.core.gravity.kerr_null: the Kerr metric (the no-hair theorem); at α ≠ 0 the shadow has "
+                    "another size and shape; bounded by the EHT: M87* |δ| ≤ 0.17 (−3.6 < α₁₃ < 5.9 at a = 0, Psaltis "
+                    "et al. 2020), Sgr A* (Keck) −3.1 ≲ α₁₃ ≲ 1.5 (EHT 2022, Table 3)")],
 }
 
 SCHWARZSCHILD_DIAMETER = 6.0 * math.sqrt(3.0)

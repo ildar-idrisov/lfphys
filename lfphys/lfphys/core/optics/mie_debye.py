@@ -57,19 +57,22 @@ from __future__ import annotations
 
 import numpy as np
 
+from lfphys.i18n import T
 from . import mie
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Ряд Дебая для шара: отражение, проход, внутренние отражения",
-    "statement": "Каждый парциальный коэффициент Ми разложен на волну, отражённую поверхностью шара (p = 0, вместе с "
-                 "дифракцией), прошедшую насквозь (p = 1) и прошедшую с p − 1 внутренними отражениями (p = 2 — "
-                 "первичная радуга, p = 3 — вторичная); сумма ряда (в замкнутом виде) равна коэффициентам Ми.",
-    "validity": "точное тождество для однородного шара; ряд по p сходится только при |R¹¹| < 1 — у слабо "
-                "поглощающих капель с m ≈ 1 на туннельных порядках |R¹¹| > 1 (ряд расходится, замкнутая сумма — его "
-                "продолжение, члены p — не пути света; помечаются); численно при x ≤ 2·10⁴ (проверено до "
-                "Im(m)·x = 10⁴); сумма ряда совпадает с рядом Ми в пределах u(1000N + 32x|daₙ/dx|) наибольшего "
-                "коэффициента: ~10⁻¹⁵ при x = 10, ~10⁻¹² при x = 1000, до 10⁻⁹ при x = 2·10⁴ (m = 0,75)",
+    "title": T("The Debye series for a sphere: reflection, transmission, internal reflections"),
+    "statement": T("Each partial Mie coefficient is split into the wave reflected by the sphere's surface (p = 0, "
+                   "together with diffraction), the wave transmitted straight through (p = 1) and those transmitted "
+                   "after p − 1 internal reflections (p = 2: the primary rainbow, p = 3: the secondary); the sum of "
+                   "the series (in closed form) equals the Mie coefficients."),
+    "validity": T("an exact identity for a homogeneous sphere; the series in p converges only for |R¹¹| < 1: for "
+                  "weakly absorbing drops with m ≈ 1, at tunnelling orders |R¹¹| > 1 (the series diverges, the closed "
+                  "sum is its continuation and the terms p are not paths of light; they are flagged); numerically for "
+                  "x ≤ 2·10⁴ (checked up to Im(m)·x = 10⁴); the sum of the series agrees with the Mie series within "
+                  "u(1000N + 32x|daₙ/dx|) of the largest coefficient: ~10⁻¹⁵ at x = 10, ~10⁻¹² at x = 1000, up to 10⁻⁹ "
+                  "at x = 2·10⁴ (m = 0.75)"),
     "basis": ["Debye, Phys. Z. 9, 775 (1908)", "van de Hulst, Light Scattering by Small Particles (1957), §12.35",
               "Hovenac & Lock, J. Opt. Soc. Am. A 9, 781 (1992)", "Nussenzveig, Diffraction Effects in Semiclassical "
               "Scattering (1992)"],

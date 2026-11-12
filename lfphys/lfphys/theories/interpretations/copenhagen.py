@@ -13,14 +13,16 @@ from __future__ import annotations
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "theories", "kind": "interpretation",
-    "title": "Копенгагенская интерпретация: исход и коллапс состояния",
-    "statement": "Измерение даёт один исход с вероятностью по правилу Борна; состояние заменяется спроецированным. "
-                 "Граница «прибор — система» не определена теорией.",
-    "validity": "те же предсказания, что у ядра, для всех исходов измерений",
+    "title": T("The Copenhagen interpretation: an outcome and the collapse of the state"),
+    "statement": T("A measurement gives one outcome with the probability of the Born rule; the state is replaced by "
+                   "the projected one. The boundary between apparatus and system is not defined by the theory."),
+    "validity": T("the same predictions as the core for all measurement outcomes"),
     "basis": ["Bohr, Nature 121, 580 (1928)", "von Neumann, Mathematische Grundlagen der Quantenmechanik (1932)"],
-    "conflicts": ["интерпретации Бома и Эверетта: нет коллапса; объективный коллапс (GRW) — другая динамика"],
+    "conflicts": [T("the Bohm and Everett interpretations: no collapse; objective collapse (GRW): different dynamics")],
 }
 
 

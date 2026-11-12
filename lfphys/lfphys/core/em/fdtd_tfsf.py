@@ -19,21 +19,23 @@ import math
 
 import numpy as np
 
+from ...i18n import T
 from .fdtd_sources import ContinuousWave, omega_tilde, yee_normal_wavenumber, yee_wavenumber
 
 ABOUT = {
     "layer": "core", "kind": "numerics",
-    "title": "FDTD: плоская волна полного/рассеянного поля (точная волна сетки)",
-    "statement": "Поправки на гранях области полного поля с падающей волной, которая точно удовлетворяет разностным "
-                 "уравнениям сетки Йи на каждой частоте (волновой вектор из дисперсионного соотношения сетки, "
-                 "амплитуды E и H из разностных уравнений); импульс — окно по времени через БПФ, непрерывная волна — "
-                 "точно на своей частоте.",
-    "validity": "однородный фон без потерь у граней (узлы с поправками не в фоне считаются в checks()); грани вне "
-                "поглощающих слоёв; утечка — округление плюс начало ряда: ~0.3–0.4 хвоста окна (2–3e-9 вдали от "
-                "отсечки; хвост больше 1e-6 — у отсечки волны Блоха или края полосы сетки — отвергается); в 3-D "
-                "поляризация вдоль направления отвергается",
-    "basis": ["Schneider, Understanding the FDTD Method (2010), §3.10, §8.5 (TF/SF), §7.4 (дисперсионное "
-              "соотношение)"],
+    "title": T("FDTD: a total-field/scattered-field plane wave (the grid's exact wave)"),
+    "statement": T("Corrections on the faces of the total-field region with an incident wave that satisfies the Yee "
+                   "grid's difference equations exactly at every frequency (the wave vector from the grid's dispersion "
+                   "relation, the amplitudes of E and H from the difference equations); a pulse through a time window "
+                   "by the FFT, a continuous wave exactly at its frequency."),
+    "validity": T("a homogeneous lossless background at the faces (correction nodes not in the background are counted "
+                  "in checks()); faces outside the absorbing layers; the leak is round-off plus the start of the "
+                  "series: ~0.3–0.4 of the window's tail (2–3e-9 away from a cut-off; a tail above 1e-6, at a Bloch "
+                  "wave's cut-off or the grid's band edge, is refused); in 3-D a polarization along the direction is "
+                  "refused"),
+    "basis": [T("Schneider, Understanding the FDTD Method (2010), §3.10, §8.5 (TF/SF), §7.4 (the dispersion "
+                "relation)")],
     "conflicts": [],
 }
 
@@ -53,10 +55,10 @@ def _direction(sim, pw):
         v = np.array(list(d) + [0.0] * (3 - len(d)), float)
     else:
         if np.ndim(d) == 0:
-            raise ValueError("в 3-D направление плоской волны — вектор (x, y, z)")
+            raise ValueError(T("in 3-D the plane wave's direction is a vector (x, y, z)"))
         v = np.array(d, float)
     if not np.linalg.norm(v) > 0:
-        raise ValueError("направление плоской волны ненулевое")
+        raise ValueError(T("the plane wave's direction must be nonzero"))
     v = v / np.linalg.norm(v)
     v[np.abs(v) < 1e-15] = 0.0
     return v
@@ -67,7 +69,7 @@ def build_tfsf(sim, pw) -> dict:
     lo = list(pw.box[0]) + [-math.inf] * (3 - len(pw.box[0]))
     hi = list(pw.box[1]) + [math.inf] * (3 - len(pw.box[1]))
     if len(pw.box[0]) != dim:
-        raise ValueError(f"область полного поля: {dim} координаты")
+        raise ValueError(T("total-field region: {n} coordinates", n=dim))
     tol = 1e-9 * sim.dx
     spanned = []
     for u in range(3):
@@ -79,21 +81,22 @@ def build_tfsf(sim, pw) -> dict:
         full = lo[u] <= x0 + tol and hi[u] >= x1 - tol
         spanned.append(full)
         if full and not sim.periodic[u]:
-            raise ValueError(f"область полного поля охватывает непериодическую ось {AXES[u]} целиком: волна вошла бы "
-                             f"в поглощающий слой (оставьте грань внутри или используйте ±inf только с одной стороны)")
+            raise ValueError(T("the total-field region spans the whole non-periodic axis {axis}: the wave would enter "
+                               "the absorbing layer (keep a face inside, or use ±inf on one side only)", axis=AXES[u]))
         if not full:
             for x in (lo[u], hi[u]):
                 if math.isfinite(x):
                     i = sim.index_of(x, u)
                     lo_p, hi_p = sim.npml[u]
                     if not (lo_p + 1 <= i <= sim.shape[u] - hi_p - 1) and not sim.periodic[u]:
-                        raise ValueError(f"грань области полного поля по оси {AXES[u]} (x = {x:g}) в поглощающем "
-                                         f"слое или у стенки: отодвиньте её внутрь")
+                        raise ValueError(T("the face of the total-field region along axis {axis} (x = {x}) lies in "
+                                           "the absorbing layer or at a wall: move it inwards", axis=AXES[u],
+                                           x=float(x)))
     bg = sim.background
     nb = math.sqrt(bg.eps * bg.mu)
     finite_axes = [u for u in range(dim) if not spanned[u]]
     if not finite_axes:
-        raise ValueError("у области полного поля нет ни одной грани")
+        raise ValueError(T("the total-field region has no face"))
     # family
     if len(finite_axes) == 1 and all(spanned[u] for u in range(3) if u != finite_axes[0]):
         family = "slab"
@@ -113,11 +116,12 @@ def build_tfsf(sim, pw) -> dict:
         khat = _direction(sim, pw)
         for u in range(3):
             if spanned[u] and u < dim and khat[u] != 0:
-                raise ValueError(f"плоская волна с составляющей вдоль оси {AXES[u]}, которую область полного поля "
-                                 f"охватывает целиком: нужна периодичность Блоха (тогда угол задаёт фаза Блоха)")
+                raise ValueError(T("a plane wave with a component along axis {axis}, which the total-field region "
+                                   "spans entirely: Bloch periodicity is needed (the Bloch phase then sets the angle)",
+                                   axis=AXES[u]))
         if sim.complex:
-            raise ValueError("наклонная плоская волна в мире с фазой Блоха: используйте слой (грань только по одной "
-                             "оси), волна возьмёт волновой вектор Блоха")
+            raise ValueError(T("an oblique plane wave in a world with a Bloch phase: use a slab (faces along one axis "
+                               "only), the wave will take the Bloch wave vector"))
     # polarization
     if dim == 2:
         if sim.pol == "both":
@@ -125,14 +129,15 @@ def build_tfsf(sim, pw) -> dict:
         else:
             pol2d = sim.pol
             if isinstance(pw.polarization, str) and pw.polarization != pol2d:
-                raise ValueError(f"поляризация волны {pw.polarization} не совпадает с миром ({pol2d})")
+                raise ValueError(T("the wave's polarization {pol} does not match the world's ({world})",
+                                   pol=str(pw.polarization), world=pol2d))
         if pol2d not in ("tm", "te"):
-            raise ValueError("поляризация 2-D волны: tm или te")
+            raise ValueError(T("polarization of a 2-D wave: tm or te"))
         pvec = None
     else:
         pol2d = None
         if pw.polarization is None or isinstance(pw.polarization, str):
-            raise ValueError("в 3-D поляризация плоской волны — вектор E")
+            raise ValueError(T("in 3-D the plane wave's polarization is a vector E"))
         pvec = np.array(pw.polarization, float)
         pvec = pvec / np.linalg.norm(pvec)
     # reference point
@@ -153,8 +158,8 @@ def build_tfsf(sim, pw) -> dict:
             else:
                 r0[u] = lo[u] if math.isfinite(lo[u]) else 0.0
             if not math.isfinite(r0[u]):
-                raise ValueError(f"волна входит в область полного поля из бесконечности по оси {AXES[u]}: задайте "
-                                 f"грань со стороны падения")
+                raise ValueError(T("the wave enters the total-field region from infinity along axis {axis}: give a "
+                                   "face on the side of incidence", axis=AXES[u]))
 
     # --- corrections: per (target component, curl term) -----------------------------------------------------------
     def inside(x, u):
@@ -219,7 +224,7 @@ def build_tfsf(sim, pw) -> dict:
                     lists.append({"target": c, "src": s, "kind": "e" if kind_e else "h", "v": v, "e_idx": e_idx,
                                   "coef": float(cf), "pos": pos})
     if not lists:
-        raise ValueError("на гранях области полного поля нет ни одного узла с поправкой (проверьте поляризацию и оси)")
+        raise ValueError(T("no correction node on the faces of the total-field region (check the polarization and the axes)"))
     # merge lists with the same (target, src, v): their node sets are disjoint (different faces)
     merged = {}
     for L in lists:
@@ -235,7 +240,7 @@ def build_tfsf(sim, pw) -> dict:
     for m in merged.values():
         e_idx = np.concatenate(m["e_idx"])
         if len(np.unique(e_idx)) != len(e_idx):
-            raise RuntimeError("TF/SF: повторные узлы в одном списке поправок")
+            raise RuntimeError("TF/SF: repeated nodes in one list of corrections")
         lists.append({"target": m["target"], "src": m["src"], "kind": m["kind"], "e_idx": e_idx,
                       "coef": np.concatenate(m["coef"]), "pos": np.concatenate(m["pos"], axis=1)})
 
@@ -332,8 +337,9 @@ def _check_polarization(sim, rec, omega):
         return
     _, _, _, ok, pol = _vectors(sim, rec, omega)
     if np.any(ok) and float(np.min(pol[ok])) < POL_MIN:
-        raise ValueError(f"поляризация плоской волны почти параллельна направлению её распространения (поперечная "
-                         f"доля {float(np.min(pol[ok])):.2g} < {POL_MIN:g}): задайте E поперёк направления")
+        raise ValueError(T("the plane wave's polarization is nearly parallel to its direction of propagation (the "
+                           "transverse share {share:.2g} < {lim}): give E across the direction",
+                           share=float(np.min(pol[ok])), lim=float(POL_MIN)))
 
 
 def _build_series(sim, rec):
@@ -349,7 +355,7 @@ def _build_series(sim, rec):
         for comp, xi in rows:
             A, k, ok = _amplitudes(sim, rec, np.array([w0, w0 + dw]), comp)
             if not ok[0]:
-                raise ValueError("частота непрерывной волны вне полосы сетки (нет распространяющейся волны)")
+                raise ValueError(T("the continuous wave's frequency is outside the grid's band (no propagating wave)"))
             if rec["family"] == "fixed":
                 ph = k[:, 0] @ (rec["khat"] * xi)
                 dphase = (k[:, 1] - k[:, 0]) @ (rec["khat"] * xi) / dw
@@ -363,11 +369,11 @@ def _build_series(sim, rec):
         rec["cw"] = {"w0": w0, "coef": np.array(coef) * a, "delay": np.array(delay), "ramp": prof.ramp}
         rec["table"] = None
         return
-    T = prof.end()
-    if not math.isfinite(T):
-        raise ValueError("профиль плоской волны без конца: для непрерывной волны используйте ContinuousWave, для "
-                         "своего профиля задайте end")
-    n_p = int(math.ceil(T / dt)) + 2
+    t_end = prof.end()
+    if not math.isfinite(t_end):
+        raise ValueError(T("the plane wave's profile has no end: for a continuous wave use ContinuousWave, for a "
+                           "profile of your own give end"))
+    n_p = int(math.ceil(t_end / dt)) + 2
     xis = np.array([xi for _, xi in rows])
     nb = rec["nb"]
     d = np.floor(xis * nb / dt).astype(np.int64) if rec["family"] == "fixed" else np.floor(xis * nb / dt).astype(
@@ -403,9 +409,9 @@ def _build_series(sim, rec):
         rec["omitted"] = 0.0
         tables = np.zeros((len(rows), M), complex if sim.complex else float)
         if tables.nbytes > MAX_TABLE_BYTES:
-            raise ValueError(f"ряды падающей волны заняли бы {tables.nbytes / 2**20:.0f} МБ (> "
-                             f"{MAX_TABLE_BYTES / 2**20:.0f}): уменьшите область полного поля, длительность импульса "
-                             f"или используйте нормальное падение")
+            raise ValueError(T("the incident wave's series would take {mb:.0f} MB (> {lim:.0f}): reduce the "
+                               "total-field region or the pulse's duration, or use normal incidence",
+                               mb=tables.nbytes / 2**20, lim=MAX_TABLE_BYTES / 2**20))
         t = np.arange(M) * dt
         X = np.fft.fft(pw.amplitude * prof(t))
         w = -2 * math.pi * np.fft.fftfreq(M, dt)
@@ -434,9 +440,10 @@ def _build_series(sim, rec):
         ok_any = next(iter(cache.values()))[2]
         omitted = float(np.sum(np.abs(X[~ok_any]) ** 2) / tot) if tot > 0 else 0.0
         if omitted > OMIT_MAX:
-            raise ValueError(f"у импульса {omitted:.2g} энергии на частотах без распространяющейся волны сетки (ниже "
-                             f"отсечки волны Блоха или выше края полосы сетки; допускается {OMIT_MAX:g}): сузьте "
-                             f"полосу импульса или сдвиньте его частоту")
+            raise ValueError(T("the pulse has {share:.2g} of its energy at frequencies without a propagating wave of "
+                               "the grid (below a Bloch wave's cut-off or above the grid's band edge; {lim} is "
+                               "allowed): narrow the pulse's band or shift its frequency", share=omitted,
+                               lim=float(OMIT_MAX)))
         # the window's tail: what the periodic FFT wraps from before t = 0 and after the window into the series. It
         # is the incident wave's value at the start of the run, where the injection begins abruptly; the leak through
         # the faces is ~0.3 x the tail (review B8-fdtd F7, measured). A window too short for the group delays makes
@@ -446,16 +453,18 @@ def _build_series(sim, rec):
         if tail <= TAIL_MAX:
             break
         if prev_tail is not None and tail > 0.5 * prev_tail:
-            raise ValueError(f"ряды падающей волны не равны нулю в начале счёта (хвост окна {tail:.2g} пика > "
-                             f"{TAIL_MAX:g}; от длины окна не зависит): у импульса есть спектр у края полосы "
-                             f"распространяющихся волн (отсечка волны Блоха или край полосы сетки), где спектр обрезан "
-                             f"резко, и волна сетки имеет предвестник до начала счёта; утечка через грани была бы "
-                             f"~{0.3 * tail:.1g}. Сузьте полосу импульса, сдвиньте его частоту от отсечки или "
-                             f"задержите его (t0)")
+            raise ValueError(T("the incident wave's series are not zero at the start of the run (the window's tail "
+                               "{tail:.2g} of the peak > {lim}; it does not depend on the window's length): the "
+                               "pulse has spectrum at the edge of the band of propagating waves (a Bloch wave's "
+                               "cut-off or the grid's band edge), where the spectrum is cut sharply, and the grid's "
+                               "wave has a precursor before the start of the run; the leak through the faces would be "
+                               "~{leak:.1g}. Narrow the pulse's band, shift its frequency away from the cut-off or "
+                               "delay it (t0)", tail=tail, lim=float(TAIL_MAX), leak=0.3 * tail))
         if 2 * tables.nbytes > MAX_TABLE_BYTES:
-            raise ValueError(f"хвост окна рядов падающей волны {tail:.2g} (> {TAIL_MAX:g}) при пределе памяти "
-                             f"{MAX_TABLE_BYTES / 2**20:.0f} МБ: групповые задержки не укладываются в окно; сузьте "
-                             f"полосу импульса или область полного поля")
+            raise ValueError(T("the window's tail of the incident wave's series is {tail:.2g} (> {lim}) at the memory "
+                               "limit of {mb:.0f} MB: the group delays do not fit into the window; narrow the "
+                               "pulse's band or the total-field region", tail=tail, lim=float(TAIL_MAX),
+                               mb=MAX_TABLE_BYTES / 2**20))
         prev_tail = tail
         M *= 2
     # the reference: unit E amplitude at r0 (the injected spectrum)

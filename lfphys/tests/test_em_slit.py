@@ -411,8 +411,10 @@ def test_comparison_with_kirchhoff_for_v02():
     assert tw["TE"][0] < 0.1 < tw["TM"][0] and abs(tw["TE"][2] - 1) < 0.05 and abs(tw["TM"][2] - 1) < 0.05
 
 
-def test_the_approximation_lives_outside_the_core():
+def test_the_approximation_lives_outside_the_core(ru):
     """Review B8 C10: the core module keeps the exact law only; the approximation names it as its conflict."""
     assert not [n for n in dir(S) if n.startswith("kirchhoff") or n in ("compare_kirchhoff", "transmission_vs_width")]
-    assert any("lfphys.core.em.slit" in c for c in KI.ABOUT["conflicts"])
-    assert "нужна векторная теория" not in KI.ABOUT["validity"] and "core.em.slit" in KI.ABOUT["validity"]
+    assert any("lfphys.core.em.slit" in str(c) for c in KI.ABOUT["conflicts"])
+    validity = ru(KI.ABOUT["validity"])
+    assert "нужна векторная теория" not in validity and "core.em.slit" in validity
+    assert "core.em.slit" in str(KI.ABOUT["validity"])

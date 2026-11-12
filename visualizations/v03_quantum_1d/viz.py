@@ -30,7 +30,9 @@ from scipy import constants as sc
 
 from lfphys.core.quantum import schrodinger1d as S1
 from lfphys.core.quantum import transfer
+from lfphys.i18n import T, join
 from lfphys.theories.interpretations import bohm
+from lfviz.errors import Refusal
 from lfviz.params import Param, Schema
 from lfviz.sim import Simulation as BaseSimulation
 
@@ -47,48 +49,50 @@ def _p(*a, **k):
     return Param(*a, **k)
 
 
-SCEN = [("barrier", "прямоугольный барьер"), ("double", "двойной барьер (резонансное туннелирование)"),
-        ("step", "ступенька потенциала"), ("well", "потенциальная яма"), ("oscillator", "гармоническая ловушка"),
-        ("free", "свободная частица")]
-INTERP = [("copenhagen", "копенгагенская: щелчок и коллапс"), ("bohm", "де Бройль–Бом: траектория"),
-          ("everett", "Эверетт: ветвление")]
+SCEN = [("barrier", T("rectangular barrier")), ("double", T("double barrier (resonant tunnelling)")),
+        ("step", T("a potential step")), ("well", T("potential well")), ("oscillator", T("harmonic trap")),
+        ("free", T("free particle"))]
+INTERP = [("copenhagen", T("Copenhagen: a click and a collapse")), ("bohm", T("de Broglie–Bohm: a trajectory")),
+          ("everett", T("Everett: branching"))]
+G_PART, G_POT, G_READ = T("Particle (electron)"), T("Potential"), T("Reading the outcome")
 PIECEWISE = ("barrier", "double", "step", "well", "free")
 
 SCHEMA = Schema([
-    _p("energy", "Энергия пакета, эВ", "float", 0.8, group="Частица (электрон)", min=0.05, max=20.0, log=True,
+    _p("energy", T("Packet energy, eV"), "float", 0.8, group=G_PART, min=0.05, max=20.0, log=True,
        live=True,
-       help="энергия центральной компоненты пакета ħ²k₀²/2m (средняя кинетическая больше на ħ²/(8mσ²))"),
-    _p("sigma", "Ширина пакета σ, нм", "float", 4.0, group="Частица (электрон)", min=1.0, max=15.0, live=True,
-       help="разброс положения |ψ|²; разброс импульса ħ/(2σ)"),
-    _p("scenario", "Потенциал", "select", "barrier", group="Потенциал", options=SCEN, live=True),
-    _p("V0", "Высота V₀, эВ", "float", 1.0, group="Потенциал", min=-5.0, max=10.0, live=True,
-       show_if={"scenario": ["barrier", "double", "step", "well"]}, help="для ямы — глубина (отрицательная)"),
-    _p("width", "Ширина a, нм", "float", 0.6, group="Потенциал", min=0.05, max=10.0, live=True,
+       help=T("the energy of the packet's central component ħ²k₀²/2m (the mean kinetic energy is larger by "
+              "ħ²/(8mσ²))")),
+    _p("sigma", T("Packet width σ, nm"), "float", 4.0, group=G_PART, min=1.0, max=15.0, live=True,
+       help=T("the spread of the position |ψ|²; the spread of the momentum is ħ/(2σ)")),
+    _p("scenario", T("Potential"), "select", "barrier", group=G_POT, options=SCEN, live=True),
+    _p("V0", T("Height V₀, eV"), "float", 1.0, group=G_POT, min=-5.0, max=10.0, live=True,
+       show_if={"scenario": ["barrier", "double", "step", "well"]}, help=T("for a well: its depth (negative)")),
+    _p("width", T("Width a, nm"), "float", 0.6, group=G_POT, min=0.05, max=10.0, live=True,
        show_if={"scenario": ["barrier", "double", "well"]}),
-    _p("edge", "Размытие краёв δ, нм", "float", 0.1, group="Потенциал", min=0.02, max=2.0, log=True, live=True,
+    _p("edge", T("Edge smoothing δ, nm"), "float", 0.1, group=G_POT, min=0.02, max=2.0, log=True, live=True,
        show_if={"scenario": ["barrier", "double", "step", "well"]},
-       help="края — профиль (1 + tanh(x/δ))/2; прямоугольник — предел δ → 0 (δ ≪ длины волны)"),
-    _p("gap", "Промежуток между барьерами, нм", "float", 2.0, group="Потенциал", min=0.2, max=20.0, live=True,
+       help=T("the edges have the profile (1 + tanh(x/δ))/2; a rectangle is the limit δ → 0 (δ ≪ the wavelength)")),
+    _p("gap", T("Gap between the barriers, nm"), "float", 2.0, group=G_POT, min=0.2, max=20.0, live=True,
        show_if={"scenario": ["double"]}),
-    _p("hw", "Ловушка: ħω, эВ", "float", 0.05, group="Потенциал", min=0.001, max=1.0, log=True, live=True,
+    _p("hw", T("Trap: ħω, eV"), "float", 0.05, group=G_POT, min=0.001, max=1.0, log=True, live=True,
        show_if={"scenario": ["oscillator"]}),
-    _p("x0", "Смещение пакета в ловушке, нм", "float", 15.0, group="Потенциал", min=0.0, max=60.0, live=True,
+    _p("x0", T("Packet offset in the trap, nm"), "float", 15.0, group=G_POT, min=0.0, max=60.0, live=True,
        show_if={"scenario": ["oscillator"]}),
-    _p("interp", "Интерпретация (не меняет предсказаний)", "select", "copenhagen", group="Чтение исхода",
+    _p("interp", T("Interpretation (does not change the predictions)"), "select", "copenhagen", group=G_READ,
        options=INTERP, live=True),
-    _p("n_bohm", "Траекторий Бома в ансамбле", "int", 60, group="Чтение исхода", min=0, max=200, live=True),
+    _p("n_bohm", T("Bohm trajectories in the ensemble"), "int", 60, group=G_READ, min=0, max=200, live=True),
 ], presets={
-    "tunnel": {"label": "Туннелирование электрона через барьер 1 эВ × 0,6 нм", "params": {}},
-    "tunnel_bohm": {"label": "То же глазами Бома: траектории", "params": {"interp": "bohm"}},
-    "tunnel_everett": {"label": "То же по Эверетту: ветви", "params": {"interp": "everett"}},
-    "resonant": {"label": "Резонансное туннелирование: двойной барьер",
+    "tunnel": {"label": T("Electron tunnelling through a {v:g} eV × {a:g} nm barrier", v=1.0, a=0.6), "params": {}},
+    "tunnel_bohm": {"label": T("The same through Bohm's eyes: trajectories"), "params": {"interp": "bohm"}},
+    "tunnel_everett": {"label": T("The same by Everett: branches"), "params": {"interp": "everett"}},
+    "resonant": {"label": T("Resonant tunnelling: a double barrier"),
                  "params": {"scenario": "double", "V0": 1.0, "width": 0.4, "gap": 2.0, "energy": 0.33, "sigma": 8.0}},
-    "above": {"label": "Над барьером: отражение без препятствия", "params": {"energy": 1.3}},
-    "step": {"label": "Ступенька: отражение при E > V₀", "params": {"scenario": "step", "V0": 0.6, "energy": 0.8}},
-    "well": {"label": "Яма: рассеяние на притягивающем потенциале",
+    "above": {"label": T("Above the barrier: reflection with nothing in the way"), "params": {"energy": 1.3}},
+    "step": {"label": T("Step: reflection at E > V₀"), "params": {"scenario": "step", "V0": 0.6, "energy": 0.8}},
+    "well": {"label": T("Well: scattering by an attractive potential"),
              "params": {"scenario": "well", "V0": -2.0, "width": 1.0, "energy": 0.3, "sigma": 6.0}},
-    "thick": {"label": "Толстый барьер: прохождение экспоненциально мало", "params": {"width": 1.5}},
-    "oscillator": {"label": "Пакет в гармонической ловушке (когерентное состояние)",
+    "thick": {"label": T("A thick barrier: transmission is exponentially small"), "params": {"width": 1.5}},
+    "oscillator": {"label": T("A packet in a harmonic trap (coherent state)"),
                    "params": {"scenario": "oscillator", "hw": 0.05, "x0": 15.0}},
 })
 
@@ -118,6 +122,17 @@ E_DET_MIN = 0.01  # eV: the slowest electrons the detector ramps absorb within R
 N_KEEP = 300  # stored snapshots are thinned to between N_KEEP and 2 N_KEEP
 
 
+def _val(k, v):
+    """A parameter's value as the change log shows it: yes/no, a select by its option's label, a number as a number
+    (formatted in the viewer's language)."""
+    if isinstance(v, bool):
+        return T("yes") if v else T("no")
+    p = SCHEMA.by_id[k]
+    if p.type == "select":
+        return dict((o[0], o[1]) for o in p.options).get(v, v)
+    return v
+
+
 class Simulation(BaseSimulation):
     speed_range = (1e-18, 1e-6)
 
@@ -131,13 +146,13 @@ class Simulation(BaseSimulation):
         self._buf = []
         self._build()
         self.default_speed = self.cycle * FS / 6.0
-        self._new_segment("начало", rebuild=True)
+        self._new_segment(T("start"), rebuild=True)
 
     # --- the set-up -------------------------------------------------------------------------------------------
     def _build(self):
         p = self.params
         self.m = mass_ev(M_E)
-        self._exp, self.dt_edge, self.slow_note = None, math.inf, ""
+        self._exp, self.dt_edge, self.slow_note = None, math.inf, None
         sc_ = p["scenario"]
         osc = sc_ == "oscillator"
         delta = p["edge"]
@@ -179,10 +194,11 @@ class Simulation(BaseSimulation):
             k_min = math.sqrt(2 * self.m * E_DET_MIN) / HBAR
             if self.k0 - 3 * sk < k_min:  # the packet's slow edge would stand still, fly back or pass the detectors
                 need = 1.5 / (self.k0 - k_min) if self.k0 > k_min else math.inf
-                raise ValueError(f"пакет слишком широк по импульсу: при E = {p['energy']:g} эВ нужна σ ≥ "
-                                 f"{need:.3g} нм — медленный край пакета (k₀ − 3·ħ/(2σ)) должен иметь не меньше "
-                                 f"{E_DET_MIN:g} эВ: более медленные электроны края-детекторы не поглощают, а "
-                                 "отражают, и часть волны стоит на месте или летит назад; увеличьте σ или энергию")
+                raise Refusal(T("the packet is too wide in momentum: at E = {E:g} eV it needs σ ≥ {need:.3g} nm — "
+                                "the packet's slow edge (k₀ − 3·ħ/(2σ)) must have at least {Emin:g} eV: the edge "
+                                "detectors reflect slower electrons instead of absorbing them, and part of the wave "
+                                "stands still or flies back", E=p["energy"], need=need, Emin=E_DET_MIN),
+                              hint=T("increase σ or the energy"))
             self.x_start = self.extent[0] - 6 * self.sigma - 5.0
             v_right = float(self.Vf(np.array([1e6]))[0])
             self._exp = self._expected_T()
@@ -195,9 +211,9 @@ class Simulation(BaseSimulation):
             dx_max = min(math.pi / (6 * k_need), delta)  # 6 points per half-wave: converged (measured)
         n = int(2 ** math.ceil(math.log2(max(1024, 2 * self.L / dx_max))))
         if n > N_GRID_MAX:  # refuse rather than cap silently (aliasing; review V3-4)
-            raise ValueError(f"нужна сетка из {n} точек (больше {N_GRID_MAX}): "
-                             + ("уменьшите смещение x₀ или ħω ловушки" if osc else
-                                "уменьшите энергию или ширину пакета σ, или увеличьте размытие краёв δ"))
+            raise Refusal(T("the grid would need {n:d} points (more than {nmax:d})", n=n, nmax=N_GRID_MAX),
+                          hint=T("reduce the offset x₀ or the trap's ħω") if osc else
+                          T("reduce the energy or the packet width σ, or increase the edge smoothing δ"))
         self.n_grid = n
         if osc:
             self.det, self.W0, self.R_det, self.leak_det = 0.0, 0.0, 0.0, 0.0
@@ -215,7 +231,7 @@ class Simulation(BaseSimulation):
         self.dt_edge = self._dt_edge()
         cost = self.n_grid * self.t_end_est / self._dt_max()
         if cost > COST_MAX / 2:
-            raise ValueError(self._cost_reason(cost))
+            raise Refusal(*self._cost_reason(cost))
         self._evolve()
 
     def _dt_edge(self):
@@ -227,23 +243,25 @@ class Simulation(BaseSimulation):
         return PHI_EDGE * 2 * self.m * p["edge"] ** 2 / HBAR
 
     def _cost_reason(self, cost):
-        """Why the set-up is too costly, in the owner's terms: what makes it so and what to change for this scenario
+        """Why the set-up is too costly, in the owner's terms: (what makes it so, what to change for this scenario)
         (review UX-params P19: the advice named parameters the oscillator does not show)."""
         p = self.params
-        head = (f"этот опыт слишком дорог для живого мира: сетка {self.n_grid} точек × {cost / self.n_grid:.3g} шагов "
-                f"(≈ {cost * 4e-8:.0f} с счёта, предел ≈ {COST_MAX / 2 * 4e-8:.0f} с)")
+        head = T("this experiment is too costly for a live world: a grid of {n:d} points × {steps:.3g} steps "
+                 "(≈ {sec:.0f} s of computing, the limit is ≈ {lim:.0f} s)", n=self.n_grid,
+                 steps=cost / self.n_grid, sec=cost * 4e-8, lim=COST_MAX / 2 * 4e-8)
         if p["scenario"] == "oscillator":
-            return head + "; уменьшите ħω ловушки или смещение x₀"
+            return head, T("reduce the trap's ħω or the offset x₀")
         if self.dt_edge < self._dt_phase():
             k = self._dt_phase() / self.dt_edge
             d_need = p["edge"] * math.sqrt(min(k, 1e6))
-            return (head + f": края барьера резкие (δ = {p['edge']:g} нм), а прохождение мало (T ≈ "
-                    f"{self._exp[0]:.2g}): шаг по времени нужен в {k:.3g} раза меньше, иначе ошибка схемы на краях "
-                    f"больше самого прохождения; увеличьте размытие краёв δ (до ≈ {min(d_need, 2.0):.2g} нм) или "
-                    f"уменьшите ширину или высоту барьера")
+            return (T("{head}: the barrier's edges are sharp (δ = {d:g} nm) and the transmission is small "
+                      "(T ≈ {T:.2g}): the time step must be {k:.3g} times smaller, otherwise the scheme's error at the "
+                      "edges exceeds the transmission itself", head=head, d=p["edge"], T=self._exp[0], k=k),
+                    T("increase the edge smoothing δ (to ≈ {d:.2g} nm) or reduce the barrier's width or height",
+                      d=min(d_need, 2.0)))
         if self.slow_note:
-            return head + ": " + self.slow_note
-        return head + "; уменьшите ширину пакета σ, энергию или высоту потенциала"
+            return T("{head}: {why}", head=head, why=self.slow_note[0]), self.slow_note[1]
+        return head, T("reduce the packet width σ, the energy or the height of the potential")
 
     def _detector(self, k0, sk, v_right):
         """(D, W0, reflection, largest leak through the ramp) of the first detector ramp in DETECTORS within the limits:
@@ -302,7 +320,7 @@ class Simulation(BaseSimulation):
         just above the threshold and slowly; the run waited for it until its budget and missed 8 % of T). The run
         continues past it until the wave is absorbed (``_evolve``)."""
         p = self.params
-        self.slow_note = ""
+        self.slow_note = None
         if p["scenario"] == "oscillator":
             return 2 * 2 * math.pi * HBAR / p["hw"]
         v = HBAR * self.k0 / self.m
@@ -315,21 +333,25 @@ class Simulation(BaseSimulation):
         v_out = math.sqrt(2 * e_out / self.m) if e_out > 0 else v_in
         t = 1.3 * (self.L / v_in + self.L / max(min(v_in, v_out), 0.05 * v_in))
         if v_right > 0 and self._exp is not None:
-            ks, T, w = self._exp[1], self._exp[2], self._exp[3]
+            ks, Tk, w = self._exp[1], self._exp[2], self._exp[3]
             kv = math.sqrt(2 * self.m * v_right) / HBAR
-            on = (ks > kv) & (T > 0)
+            on = (ks > kv) & (Tk > 0)
             if on.any():
                 q = np.sqrt(np.maximum(ks[on] ** 2 - kv * kv, 0.0))
-                f = w[on] * T[on]
+                f = w[on] * Tk[on]
                 cum = np.cumsum(f[np.argsort(q)]) / f.sum()
                 q_min = float(np.sort(q)[min(int(np.searchsorted(cum, 1e-3)), len(q) - 1)])
                 v_min = HBAR * max(q_min, 1e-12) / self.m
                 t_slow = 1.3 * (abs(self.x_start) / v_in + (self.extent[1] + 3.0 + 2.0) / v_min)
                 if t_slow > t:
-                    self.slow_note = (f"энергия пакета {p['energy']:g} эВ {'ниже' if p['energy'] < v_right else 'близко к'}"
-                                      f" высоты ступеньки {v_right:g} эВ: проходит только часть спектра у порога, "
-                                      f"медленно (до {v_min * 1e3:.2g} нм/пс), и её надо дождаться; поднимите энергию "
-                                      f"выше ступеньки, опустите ступеньку или сузьте пакет по импульсу (больше σ)")
+                    why = (T("the packet energy {E:g} eV is below the step height {V:g} eV: only the part of the "
+                             "spectrum near the threshold passes, slowly (down to {v:.2g} nm/ps), and it has to be "
+                             "waited for", E=p["energy"], V=v_right, v=v_min * 1e3) if p["energy"] < v_right else
+                           T("the packet energy {E:g} eV is close to the step height {V:g} eV: only the part of the "
+                             "spectrum near the threshold passes, slowly (down to {v:.2g} nm/ps), and it has to be "
+                             "waited for", E=p["energy"], V=v_right, v=v_min * 1e3))
+                    self.slow_note = (why, T("raise the energy above the step, lower the step or narrow the packet "
+                                             "in momentum (a larger σ)"))
                     t = t_slow
         return t
 
@@ -468,15 +490,16 @@ class Simulation(BaseSimulation):
     def set_live(self, values):
         new, errors = SCHEMA.coerce_live(self.params, values)
         if errors:
-            raise ValueError("; ".join(errors))
+            raise Refusal(join(errors))
         changed = [k for k in values if new.get(k) != self.params.get(k)]
         if not changed:
-            return "без изменений"
-        desc = "; ".join(f"{SCHEMA.by_id[k].label}: {self.params[k]} → {new[k]}" for k in changed)
+            return T("no change")
+        desc = join([T("{label}: {old} → {new}", label=SCHEMA.by_id[k].label, old=_val(k, self.params[k]),
+                       new=_val(k, new[k])) for k in changed])
         bohm_needed = new["interp"] == "bohm" and not self.has_bohm
         if set(changed) <= {"interp", "n_bohm"} and not bohm_needed:
             self.params = new  # a reading, not physics: the wave and the statistics stay; outcomes are produced anew
-            self._new_segment("другая интерпретация: " + desc, rebuild=False)
+            self._new_segment(T("another interpretation: {what}", what=desc), rebuild=False)
             return desc
         old = self.params
         self.params = new
@@ -486,7 +509,7 @@ class Simulation(BaseSimulation):
             self.params = old
             self._build()
             raise
-        self._new_segment("изменена установка: " + desc, rebuild=True)
+        self._new_segment(T("the set-up changed: {what}", what=desc), rebuild=True)
         return desc
 
     # --- particles -----------------------------------------------------------------------------------------
@@ -576,15 +599,15 @@ class Simulation(BaseSimulation):
         n = int(math.ceil((x1 - x0) / h))
         t1 = transfer.transmission_profile(E, self.Vf, x0, x1, n, self.m, HBAR)
         t2 = transfer.transmission_profile(E, self.Vf, x0, x1, 2 * n, self.m, HBAR)
-        T = np.zeros_like(ks)
-        T[fwd] = (4 * t2 - t1) / 3
+        Tk = np.zeros_like(ks)
+        Tk[fwd] = (4 * t2 - t1) / 3
         w = np.exp(-((ks - self.k0) ** 2) / (2 * sk * sk))
-        return float(np.sum(T * w) / np.sum(w)), ks, T, w, float(np.max(np.abs(t2 - t1)))
+        return float(np.sum(Tk * w) / np.sum(w)), ks, Tk, w, float(np.max(np.abs(t2 - t1)))
 
     def _segment_msg(self, reason):
         g, p = self.grid, self.params
         osc = p["scenario"] == "oscillator"
-        grp = f"Отрезок {self.seg}"
+        grp = T("Segment {n:d}", n=self.seg)
         # space-time map of |psi|^2 (subsampled) and the Bohm ensemble for drawing
         step_t = max(1, len(self.t_snap) // 300)
         step_x = 4
@@ -613,36 +636,40 @@ class Simulation(BaseSimulation):
         # checks
         if not osc:
             tot = self.PL[-1] + self.PR[-1]
-            capped = " Счёт остановлен по бюджету раньше." if self.capped else ""
-            self._check(f"abs{self.seg}", "Волна поглощена детекторами (остаток не меняет результат)", tot, 1.0, "",
-                        grp, ok=self.leftover <= self.leftover_allowed, tol=self.leftover_allowed,
-                        note=f"неопределённый остаток {self.leftover:.1e}, допустимо {self.leftover_allowed:.1e} "
-                             f"(10⁻³·T + 10⁻⁹ и 10⁻³·R + 10⁻⁶); ещё {self.assigned:.1e} — за потенциалом и уходит от него (свободное "
-                             f"движение): отнесено к своему детектору в конце счёта; поглощающие края — модель "
-                             f"детектора.{capped}")
-            self._check(f"det{self.seg}", "Детекторы: отражение (среднее по спектру пакета) и утечка сквозь край",
+            note = T("undetermined remainder {u:.1e}, allowed {a:.1e} (10⁻³·T + 10⁻⁹ and 10⁻³·R + 10⁻⁶); another "
+                     "{s:.1e} is beyond the potential and moving away from it (free motion): assigned to its detector "
+                     "at the end of the computation; the absorbing edges are the detector model.",
+                     u=self.leftover, a=self.leftover_allowed, s=self.assigned)
+            if self.capped:
+                note = T("{a} {b}", a=note, b=T("The computation was stopped earlier by the budget."))
+            self._check(f"abs{self.seg}", T("The wave is absorbed by the detectors (the remainder does not change the "
+                                            "result)"), tot, 1.0, "",
+                        grp, ok=self.leftover <= self.leftover_allowed, tol=self.leftover_allowed, note=note)
+            step_up = p["scenario"] == "step" and p["V0"] > 0
+            self._check(f"det{self.seg}", T("Detectors: reflection (mean over the packet's spectrum) and leak through "
+                                            "the edge"),
                         self.R_det, 0.0, "", grp, ok=self.det_ok,
                         tol=R_DET_MAX,
-                        note=f"край W = {self.W0:g} эВ·(d/D)², D = {self.det:g} нм, выбран по спектру пакета; "
-                             f"отражение {self.R_det:.1e} (допуск {R_DET_MAX:.0e}"
-                             + (f"; за ступенькой — доля прошедшего, которую правый край возвращает, не больше "
-                                f"{R_REL_MAX:.0e}" if p["scenario"] == "step" and p["V0"] > 0 else "")
-                             + f"), утечка {self.leak_det:.1e} (допуск {LEAK_MAX:.0e}); стационарный расчёт матрицами "
-                               f"переноса")
+                        note=T("edge W = {W:g} eV·(d/D)², D = {D:g} nm, chosen for the packet's spectrum; reflection "
+                               "{R:.1e} (tolerance {Rmax:.0e}{extra}), leak {L:.1e} (tolerance {Lmax:.0e}); "
+                               "stationary calculation by transfer matrices", W=self.W0, D=self.det, R=self.R_det,
+                               Rmax=R_DET_MAX, L=self.leak_det, Lmax=LEAK_MAX,
+                               extra=T("; behind the step: the fraction of the transmitted wave the right edge sends "
+                                       "back, at most {r:.0e}", r=R_REL_MAX) if step_up else ""))
             if exp is not None:
                 Tp = self.PR[-1] / tot
                 tolT = 1e-7 + 1e-3 * exp[0] + self.leftover + self.R_det
-                self._check(f"T{self.seg}", "Прохождение волнового пакета (вычислено по времени)", Tp,
+                self._check(f"T{self.seg}", T("Transmission of the wave packet (computed in time)"), Tp,
                             exp[0], "", grp, ok=abs(Tp - exp[0]) <= tolT, tol=tolT / max(exp[0], 1e-300),
-                            note="эталон — другим методом: стационарное прохождение T(E) того же потенциала "
-                                 "(матрицы переноса по мелкой лестнице, экстраполяция Ричардсона) по всему "
-                                 "распределению импульсов пакета |φ(k)|² (k ≤ 0 — отражены); допуск 1e-7 + 1e-3·T + "
-                                 f"непоглощённый остаток + отражение детекторов = {tolT:.1e}; Ричардсон эталона "
-                                 f"±{exp[4]:.0e}")
+                            note=T("the reference by another method: the stationary transmission T(E) of the same "
+                                   "potential (transfer matrices over a fine staircase, Richardson extrapolation) over "
+                                   "the packet's whole momentum distribution |φ(k)|² (k ≤ 0: reflected); tolerance "
+                                   "1e-7 + 1e-3·T + the unabsorbed remainder + the detectors' reflection = {tol:.1e}; "
+                                   "Richardson error of the reference ±{r:.0e}", tol=tolT, r=exp[4]))
             E_mean = g.energy(self.psi0, self.V)
-            self._check(f"E{self.seg}", "Средняя энергия пакета", E_mean,
-                        p["energy"] + HBAR**2 / (8 * self.m * self.sigma**2), "эВ", grp, tol=1e-6,
-                        note="эталон: ħ²k₀²/2m + ħ²/(8mσ²) (гауссов пакет в свободной области)")
+            self._check(f"E{self.seg}", T("Mean energy of the packet"), E_mean,
+                        p["energy"] + HBAR**2 / (8 * self.m * self.sigma**2), T("eV"), grp, tol=1e-6,
+                        note=T("reference: ħ²k₀²/2m + ħ²/(8mσ²) (a Gaussian packet in a free region)"))
         else:
             w = p["hw"] / HBAR
             # the 4 lowest levels on a window around the trap (sinc DVR, 256 points; the whole grid as a dense matrix
@@ -651,18 +678,19 @@ class Simulation(BaseSimulation):
             xw = np.linspace(-Lw, Lw, 256, endpoint=False)
             gw = S1.Grid(xw, self.m, HBAR)
             E, _ = gw.eigenstates(self.Vf(xw), 4)
-            self._check(f"lev{self.seg}", "Нижний уровень ловушки (спектральный метод)", E[0], 0.5 * p["hw"], "эВ",
-                        grp, tol=1e-9, note="эталон ħω/2")
-            self._check(f"lev3{self.seg}", "Четвёртый уровень", E[3], 3.5 * p["hw"], "эВ", grp, tol=1e-9,
-                        note="эталон ħω(n + ½), n = 3")
+            self._check(f"lev{self.seg}", T("Lowest level of the trap (spectral method)"), E[0], 0.5 * p["hw"],
+                        T("eV"), grp, tol=1e-9, note=T("reference ħω/2"))
+            self._check(f"lev3{self.seg}", T("Fourth level"), E[3], 3.5 * p["hw"], T("eV"), grp, tol=1e-9,
+                        note=T("reference ħω(n + ½), n = {n:d}", n=3))
             xm = np.sum(self.snaps * g.x[None, :], axis=1) / np.sum(self.snaps, axis=1)
             T_osc = 2 * math.pi / w
             i_T = int(round(T_osc / self.dt_store))
             if i_T < len(xm):
-                self._check(f"per{self.seg}", "Пакет вернулся через период 2π/ω", float(xm[i_T]), float(xm[0]),
-                            "нм", grp, tol=1e-4, note="центр пакета ⟨x⟩ через T = 2π/ω (когерентное состояние)")
-            self._check(f"norm{self.seg}", "Норма волновой функции через два периода", float(self.norm[-1]), 1.0, "",
-                        grp, tol=1e-10, note="унитарная эволюция (метод расщепления оператора)")
+                self._check(f"per{self.seg}", T("The packet returned after the period 2π/ω"), float(xm[i_T]),
+                            float(xm[0]), T("nm"), grp, tol=1e-4,
+                            note=T("the packet's centre ⟨x⟩ after T = 2π/ω (a coherent state)"))
+            self._check(f"norm{self.seg}", T("Norm of the wave function after two periods"), float(self.norm[-1]),
+                        1.0, "", grp, tol=1e-10, note=T("unitary evolution (the split-operator method)"))
 
     # --- time ---------------------------------------------------------------------------------------------------
     def max_step(self):
@@ -682,11 +710,14 @@ class Simulation(BaseSimulation):
                 self.counts[side] += 1
                 self.history.append(side)
                 xd = (self.L - self.det / 2) * (1 if side == "right" else -1)
-                ev = {"type": "event", "kind": "click", "t": c, "side": side, "x": xd, "seg": self.seg,
-                      "text": f"щелчок детектора {'справа (прошла)' if side == 'right' else 'слева (отразилась)'}"}
+                text = (T("the right detector clicks (transmitted)") if side == "right" else
+                        T("the left detector clicks (reflected)"))
+                ev = {"type": "event", "kind": "click", "t": c, "side": side, "x": xd, "seg": self.seg}
                 if part.get("branches"):
                     ev["branches"] = part["branches"]
-                    ev["text"] += f"; ветви: слева {part['branches']['left']:.3f}, справа {part['branches']['right']:.3f}"
+                    text = T("{click}; branches: left {l:.3f}, right {r:.3f}", click=text,
+                             l=part["branches"]["left"], r=part["branches"]["right"])
+                ev["text"] = text
                 self._msg(ev)
                 self._statistics_check()
             t_next = part["t0"] + self.cycle * FS
@@ -705,8 +736,9 @@ class Simulation(BaseSimulation):
         k = sum(1 for s in self.history if s == "right")
         sd = math.sqrt(max(PR * (1 - PR), 1e-12) / n)
         z = (k / n - PR) / sd if sd > 0 else 0.0
-        self._check(f"stat{self.seg}", f"Доля прошедших среди {n} частиц", k / n, PR, "", f"Отрезок {self.seg}",
-                    ok=abs(z) < 5, note=f"отклонение {z:+.2f}σ от вероятности, посчитанной из волны")
+        self._check(f"stat{self.seg}", T("Fraction transmitted among particles: {n:d}", n=n), k / n, PR, "",
+                    T("Segment {n:d}", n=self.seg),
+                    ok=abs(z) < 5, note=T("deviation {z:+.2f}σ from the probability computed from the wave", z=z))
 
     def frame(self):
         part = self.particle
@@ -738,31 +770,32 @@ class Simulation(BaseSimulation):
 
     def action(self, name, args):
         if name == "clear":
-            self._new_segment("очистка счётчиков", rebuild=False)
-            return "счётчики очищены"
-        raise ValueError(f"неизвестное действие {name!r}")
+            self._new_segment(T("counters cleared"), rebuild=False)
+            return T("the counters are cleared")
+        raise Refusal(T("unknown action {name}", name=repr(name)))
 
     def header(self):
         p = self.params
         return {
-            "title": "Квантовая частица: " + dict(SCEN)[p["scenario"]],
-            "text": ("Частицы вылетают по одной. Волна каждой — численное решение уравнения Шрёдингера на сетке "
-                     "(сходимость проверяется эталоном); детекторы по краям поглощают волну (модель детектора), и "
-                     "запуск считает, какую вероятность и когда поглотил каждый. Исход "
-                     "частицы получается в выбранной интерпретации: щелчок и коллапс, траектория Бома или ветвление "
-                     "Эверетта. Статистика у всех трёх одна и та же — это проверяется."),
-            "actions": [{"name": "clear", "label": "Очистить счётчики", "args": []}],
-            "units": {"x": "нм", "t": "фс", "E": "эВ"},
+            "title": T("Quantum particle: {what}", what=dict(SCEN)[p["scenario"]]),
+            "text": T("Particles fly out one at a time. The wave of each is a numerical solution of the Schrödinger "
+                      "equation on a grid (its convergence is checked against a reference); detectors at the edges "
+                      "absorb the wave (the detector model), and the run computes what probability each of them "
+                      "absorbed, and when. The particle's outcome comes in the chosen interpretation: a click and a "
+                      "collapse, a Bohm trajectory or Everett's branching. The statistics are the same in all three, "
+                      "and this is checked."),
+            "actions": [{"name": "clear", "label": T("Clear the counters"), "args": []}],
+            "units": {"x": T("nm"), "t": T("fs"), "E": T("eV")},
         }, {}
 
 
 VIZ = {
     "id": "v03_quantum_1d",
-    "title": "Квантовая частица в одном измерении",
-    "summary": ("Электроны по одному у барьера, двойного барьера, ступеньки, ямы или в ловушке: точная волна, "
-                "туннелирование, детекторы; исход в копенгагенском, бомовском или эвереттовском прочтении."),
-    "purpose": ("Причины поведения частицы: что даёт расчёт волны, а что добавляет интерпретация (одинаковая "
-                "статистика, разная картина)."),
+    "title": T("A quantum particle in one dimension"),
+    "summary": T("Electrons one at a time at a barrier, a double barrier, a step, a well or in a trap: the exact "
+                 "wave, tunnelling, detectors; the outcome in the Copenhagen, Bohm or Everett reading."),
+    "purpose": T("The causes of the particle's behaviour: what the computation of the wave gives and what an "
+                 "interpretation adds (the same statistics, a different picture)."),
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,

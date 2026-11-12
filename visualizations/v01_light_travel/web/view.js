@@ -5,6 +5,7 @@
 // sends after every change of motion), events with their computed times, frame matrices of the laws.
 // The browser only interpolates along those polylines and applies the given matrices.
 import { Plane } from "/static/js/canvas.js";
+import { t, fmt } from "/static/js/i18n.js";
 import { css, el, length, num, panel, time } from "/static/js/ui.js";
 
 const C_SI = 299792458;
@@ -23,27 +24,27 @@ export function createView(ctx) {
   const opt = { frame: "lab", mode: "now", trails: true, labels: true, follow: "", cones: true, simul: true };
 
   // --- DOM ----------------------------------------------------------------------------------------
-  const selFrame = el("select", { title: "Чья система отсчёта: что считается «сейчас» и какие координаты" });
-  const selMode = el("select", { title: "«Сейчас» — срез одновременности; «видимое» — где были объекты, когда ушёл свет, который приходит к наблюдателю сейчас" },
-    el("option", { value: "now" }, "сейчас (одновременность)"), el("option", { value: "seen" }, "видимое (прошлый конус)"));
-  const selFollow = el("select", { title: "Держать объект в центре карты" }, el("option", { value: "" }, "камера свободна"));
+  const selFrame = el("select", { title: t("Whose frame of reference: what counts as “now”, and which coordinates") });
+  const selMode = el("select", { title: t("“Now”: the slice of simultaneity; “seen”: where the objects were when the light that reaches the observer now left them") },
+    el("option", { value: "now" }, t("now (simultaneity)")), el("option", { value: "seen" }, t("seen (past cone)")));
+  const selFollow = el("select", { title: t("Keep an object in the centre of the map") }, el("option", { value: "" }, t("free camera")));
   const cbTrails = el("input", { type: "checkbox", checked: true });
   const cbLabels = el("input", { type: "checkbox", checked: true });
   const cbCones = el("input", { type: "checkbox", checked: true });
   const cbSimul = el("input", { type: "checkbox", checked: true });
-  const btnFitSpace = el("button", { title: "Вписать сцену" }, "⌖ карта");
-  const btnFitDiag = el("button", { title: "Вписать диаграмму" }, "⌖ диаграмма");
-  const btn45 = el("button", { title: "Свет под 45° на диаграмме" }, "45°");
+  const btnFitSpace = el("button", { title: t("Fit the scene") }, "⌖ ", t("map"));
+  const btnFitDiag = el("button", { title: t("Fit the diagram") }, "⌖ ", t("diagram"));
+  const btn45 = el("button", { title: t("Light at 45° on the diagram") }, "45°");
   const zoomBox = el("span");
   const cvSpace = el("canvas");
   const cvDiag = el("canvas");
   const ovSpace = el("div", { class: "overlay" });
   const ovDiag = el("div", { class: "overlay" });
   const toolbar = el("div", { class: "toolbar" },
-    el("span", { class: "muted" }, "Система:"), selFrame, selMode, selFollow,
-    el("label", {}, cbTrails, " лучи"), el("label", {}, cbLabels, " подписи"),
-    el("label", { title: "Локальный световой конус наблюдателей на диаграмме" }, cbCones, " конусы"),
-    el("label", { title: "Линии одновременности наблюдателей на диаграмме" }, cbSimul, " одновременность"),
+    el("span", { class: "muted" }, t("Frame:")), selFrame, selMode, selFollow,
+    el("label", {}, cbTrails, " ", t("rays")), el("label", {}, cbLabels, " ", t("labels")),
+    el("label", { title: t("The observers' local light cones on the diagram") }, cbCones, " ", t("cones")),
+    el("label", { title: t("The observers' lines of simultaneity on the diagram") }, cbSimul, " ", t("simultaneity")),
     btnFitSpace, btnFitDiag, btn45, zoomBox);
   const center = el("div", { style: { display: "flex", flexDirection: "column", flex: 1, minHeight: 0 } },
     toolbar,
@@ -51,7 +52,7 @@ export function createView(ctx) {
       el("div", {}, el("div", { class: "canvas-wrap" }, cvSpace, ovSpace)),
       el("div", {}, el("div", { class: "canvas-wrap" }, cvDiag, ovDiag))));
   const objTable = el("div", { class: "checks" });
-  const rightPanels = [panel("Объекты и часы", objTable)];
+  const rightPanels = [panel(t("Objects and clocks"), objTable)];
 
   const space = new Plane(cvSpace, { onChange: () => ctx.requestRender() });
   const diag = new Plane(cvDiag, { onChange: () => ctx.requestRender(), lockAspect: false });
@@ -68,21 +69,21 @@ export function createView(ctx) {
   // --- helpers ------------------------------------------------------------------------------------
   const c = () => (H ? H.laws.c : C_SI);
 
-  function wlPos(wl, t) {
+  function wlPos(wl, tw) {
     if (!wl) return [NaN, NaN];
     if (wl.kind === "orbit") {
-      const a = wl.phase0 + wl.omega * t;
+      const a = wl.phase0 + wl.omega * tw;
       return [wl.radius * Math.cos(a), wl.radius * Math.sin(a)];
     }
     let s = wl.segments[0];
-    for (const g of wl.segments) { if (g.t0 <= t) s = g; else break; }
-    return [s.x0[0] + s.v[0] * (t - s.t0), s.x0[1] + s.v[1] * (t - s.t0)];
+    for (const g of wl.segments) { if (g.t0 <= tw) s = g; else break; }
+    return [s.x0[0] + s.v[0] * (tw - s.t0), s.x0[1] + s.v[1] * (tw - s.t0)];
   }
-  function bWl(owner, t) {  // apparatus end B worldline valid at lab time t
+  function bWl(owner, tw) {  // apparatus end B worldline valid at lab time t
     const list = apps.get(owner);
     if (!list) return null;
     let w = null;
-    for (const g of list) if (g.t <= t + 1e-15 * Math.abs(t)) w = g.wl;
+    for (const g of list) if (g.t <= tw + 1e-15 * Math.abs(tw)) w = g.wl;
     return w;
   }
 
@@ -91,7 +92,7 @@ export function createView(ctx) {
     if (opt.frame === "lab" || !frame || !frame.frames || !frame.frames[opt.frame]) return null;
     return frame.frames[opt.frame];
   }
-  const tr = (M, t, x, y) => M ? [ (M[3] * c() * t + M[4] * x + M[5] * y), (M[6] * c() * t + M[7] * x + M[8] * y), (M[0] * c() * t + M[1] * x + M[2] * y) / c() ] : [x, y, t];
+  const tr = (M, tw, x, y) => M ? [ (M[3] * c() * tw + M[4] * x + M[5] * y), (M[6] * c() * tw + M[7] * x + M[8] * y), (M[0] * c() * tw + M[1] * x + M[2] * y) / c() ] : [x, y, tw];
 
   // slice: events with c t' = K, i.e. g(t,x,y) = M0 c t + M1 x + M2 y - K = 0 (lab: t = t_now)
   function sliceK(frame, M) {
@@ -99,9 +100,9 @@ export function createView(ctx) {
     const o = frame.objects.find((q) => q.id === opt.frame);
     return M[0] * c() * frame.t + M[1] * o.x + M[2] * o.y;
   }
-  function onSliceRay(T, X, Y, a, b, M, K, t) {
+  function onSliceRay(T, X, Y, a, b, M, K, tw) {
     // vertices a..b-1 ordered in time; returns [x, y, t] at the slice or null
-    const g = M ? (i) => M[0] * c() * T[i] + M[1] * X[i] + M[2] * Y[i] - K : (i) => T[i] - t;
+    const g = M ? (i) => M[0] * c() * T[i] + M[1] * X[i] + M[2] * Y[i] - K : (i) => T[i] - tw;
     if (g(a) > 0) return null;
     if (g(b - 1) < 0) return { end: true, p: [X[b - 1], Y[b - 1], T[b - 1]] };
     let lo = a, hi = b - 1;
@@ -110,13 +111,13 @@ export function createView(ctx) {
     const w = g1 === g0 ? 0 : -g0 / (g1 - g0);
     return { end: false, p: [X[lo] + w * (X[hi] - X[lo]), Y[lo] + w * (Y[hi] - Y[lo]), T[lo] + w * (T[hi] - T[lo])], k: lo };
   }
-  function onSliceWl(wl, M, K, t) {
-    if (!M) { const p = wlPos(wl, t); return [p[0], p[1], t]; }
+  function onSliceWl(wl, M, K, tw) {
+    if (!M) { const p = wlPos(wl, tw); return [p[0], p[1], tw]; }
     if (wl.kind === "orbit") {  // bisection on the slice function (monotone along a timelike worldline)
       const g = (tt) => { const p = wlPos(wl, tt); return M[0] * c() * tt + M[1] * p[0] + M[2] * p[1] - K; };
-      let lo = t - 1, hi = t + 1, k = 0;
-      while (g(lo) > 0 && k++ < 200) lo = t - 2 * (t - lo);
-      k = 0; while (g(hi) < 0 && k++ < 200) hi = t + 2 * (hi - t);
+      let lo = tw - 1, hi = tw + 1, k = 0;
+      while (g(lo) > 0 && k++ < 200) lo = tw - 2 * (tw - lo);
+      k = 0; while (g(hi) < 0 && k++ < 200) hi = tw + 2 * (hi - tw);
       for (let i = 0; i < 100; i++) { const m = 0.5 * (lo + hi); if (g(m) <= 0) lo = m; else hi = m; }
       const p = wlPos(wl, lo); return [p[0], p[1], lo];
     }
@@ -157,13 +158,13 @@ export function createView(ctx) {
     space.clear();
     const M = frameM(frame);
     const K = sliceK(frame, M);
-    const t = frame.t;
+    const tw = frame.t;
     const flat = H.flat;
     if (opt.follow) {
       const wl = wls.get(opt.follow);
       if (wl) {
         let q;
-        if (M) { const ev = onSliceWl(wl, M, K, t); q = tr(M, ev[2], ev[0], ev[1]); } else q = wlPos(wl, t);
+        if (M) { const ev = onSliceWl(wl, M, K, tw); q = tr(M, ev[2], ev[0], ev[1]); } else q = wlPos(wl, tw);
         space.cx = q[0]; space.cy = q[1];
       }
     }
@@ -180,8 +181,8 @@ export function createView(ctx) {
     // light
     const showSeen = opt.mode === "seen" && M;
     if (!showSeen) for (const p of pulses) {  // "seen": only retarded positions, no fronts on another slice
-      if (p.t0 > t + 1e-15 * Math.abs(t)) continue;
-      drawPulse(g, p, M, K, t);
+      if (p.t0 > tw + 1e-15 * Math.abs(tw)) continue;
+      drawPulse(g, p, M, K, tw);
     }
     // objects
     for (const o of frame.objects) {
@@ -190,22 +191,24 @@ export function createView(ctx) {
       let pos;
       if (showSeen) {
         const s = frame.seen && frame.seen[opt.frame] && frame.seen[opt.frame][o.id];
-        if (o.id === opt.frame) pos = tr(M, t, o.x, o.y);
+        if (o.id === opt.frame) pos = tr(M, tw, o.x, o.y);
         else if (s) pos = tr(M, s[0], s[1], s[2]);
         else continue;
       } else if (M) {
-        const ev = onSliceWl(wls.get(o.id), M, K, t);
+        const ev = onSliceWl(wls.get(o.id), M, K, tw);
         pos = tr(M, ev[2], ev[0], ev[1]);
-        pos.future = ev[2] > t * (1 + 1e-15) + 1e-300;
+        pos.future = ev[2] > tw * (1 + 1e-15) + 1e-300;
       } else pos = [o.x, o.y];
-      drawObject(g, h, o, pos, M, K, t, frame);
+      drawObject(g, h, o, pos, M, K, tw, frame);
     }
-    ovSpace.textContent = (opt.frame === "lab" ? "Лабораторная система (покоится относительно " + (H.body ? H.body.name || "тела" : "сцены") + ")"
-      : `Система «${objs.get(opt.frame).name}»`) + " · " + (opt.mode === "seen" && M ? "видимое: где были объекты, когда ушёл приходящий сейчас свет"
-      : "срез «сейчас»") + (H.gr ? " · координаты Шварцшильда" : "");
+    const frameText = opt.frame !== "lab" ? t("Frame of “{name}”", { name: objs.get(opt.frame).name })
+      : H.body && H.body.name ? t("Laboratory frame (at rest relative to {body})", { body: H.body.name })
+      : H.body ? t("Laboratory frame (at rest relative to the body)") : t("Laboratory frame (at rest relative to the scene)");
+    const modeText = opt.mode === "seen" && M ? t("seen: where the objects were when the light arriving now left them") : t("the “now” slice");
+    ovSpace.textContent = frameText + " · " + modeText + (H.gr ? " · " + t("Schwarzschild coordinates") : "");
   }
 
-  function drawPulse(g, p, M, K, t) {
+  function drawPulse(g, p, M, K, tw) {
     const pts = new Array(p.n);
     const col = p.kind === "plane" ? "#1c7ed6" : p.kind === "train" ? "#ae3ec9" : "#f08c00";
     g.save();
@@ -214,7 +217,7 @@ export function createView(ctx) {
       g.strokeStyle = col; g.globalAlpha = p.kind === "plane" ? 0.35 : 0.18; g.lineWidth = 1;
       for (let i = 0; i < p.n; i++) {
         const a = p.off[i], b = p.off[i + 1];
-        const s = onSliceRay(p.T, p.X, p.Y, a, b, M, K, t);
+        const s = onSliceRay(p.T, p.X, p.Y, a, b, M, K, tw);
         if (!s) continue;
         g.beginPath();
         let q = tr(M, p.T[a], p.X[a], p.Y[a]); g.moveTo(space.X(q[0]), space.Y(q[1]));
@@ -226,7 +229,7 @@ export function createView(ctx) {
     }
     // front
     for (let i = 0; i < p.n; i++) {
-      const s = onSliceRay(p.T, p.X, p.Y, p.off[i], p.off[i + 1], M, K, t);
+      const s = onSliceRay(p.T, p.X, p.Y, p.off[i], p.off[i + 1], M, K, tw);
       if (!s) { pts[i] = null; continue; }
       if (s.end && p.st[i] !== 2) { pts[i] = null; continue; }  // left the scene or absorbed
       const q = tr(M, s.p[2], s.p[0], s.p[1]);
@@ -252,7 +255,7 @@ export function createView(ctx) {
     g.restore();
   }
 
-  function drawObject(g, h, o, pos, M, K, t, frame) {
+  function drawObject(g, h, o, pos, M, K, tw, frame) {
     const X = space.X(pos[0]), Y = space.Y(pos[1]);
     g.save();
     if (pos.future) g.globalAlpha = 0.35;  // on the observer's slice but in the lab future: extrapolated
@@ -262,7 +265,7 @@ export function createView(ctx) {
     // apparatus rod A-B
     if (o.bx !== undefined && opt.mode === "now") {
       let qb;
-      if (M) { const wb = bWl(o.id, t); const ev = wb ? onSliceWl(wb, M, K, t) : null; qb = ev ? tr(M, ev[2], ev[0], ev[1]) : null; }
+      if (M) { const wb = bWl(o.id, tw); const ev = wb ? onSliceWl(wb, M, K, tw) : null; qb = ev ? tr(M, ev[2], ev[0], ev[1]) : null; }
       else qb = [o.bx, o.by];
       if (qb) {
         g.strokeStyle = h.color; g.lineWidth = 3; g.globalAlpha = o.synced ? 1 : 0.4;
@@ -270,7 +273,7 @@ export function createView(ctx) {
         g.globalAlpha = 1; g.fillStyle = css("--canvas"); g.strokeStyle = h.color; g.lineWidth = 2;
         circle(g, space.X(qb[0]), space.Y(qb[1]), 4); g.fill(); g.stroke();
         if (opt.labels) { g.fillStyle = css("--muted"); g.font = "11px system-ui";
-          g.fillText("B " + (!o.synced || o.tau_b === null || o.tau_b === undefined ? "(часы ещё не синхронизированы)" : "τ=" + time(o.tau_b, 9)), space.X(qb[0]) + 6, space.Y(qb[1]) + 14); }
+          g.fillText("B " + (!o.synced || o.tau_b === null || o.tau_b === undefined ? t("(clock not synchronised yet)") : "τ=" + time(o.tau_b, 9)), space.X(qb[0]) + 6, space.Y(qb[1]) + 14); }
       }
     }
     g.fillStyle = h.color; g.strokeStyle = css("--ink"); g.lineWidth = 1;
@@ -283,7 +286,7 @@ export function createView(ctx) {
     }
     if (opt.labels) {
       g.fillStyle = css("--ink"); g.font = "12px system-ui";
-      g.fillText(h.name + (pos.future ? " (лаб. будущее: экстраполяция)" : ""), X + rpx + 4, Y - 4);
+      g.fillText(pos.future ? t("{name} (lab future: extrapolated)", { name: h.name }) : t(h.name), X + rpx + 4, Y - 4);
       g.fillStyle = css("--muted"); g.font = "11px system-ui";
       g.fillText("τ = " + time(o.tau, 9), X + rpx + 4, Y + 10);
     }
@@ -296,9 +299,9 @@ export function createView(ctx) {
     diag.clear();
     const M = frameM(frame);
     const K = sliceK(frame, M);
-    const t = frame.t;
+    const tw = frame.t;
     const P = (tt, x, y) => { const q = tr(M, tt, x, y); return [diag.X(q[0]), diag.Y(q[2])]; };
-    const past = (tt, x, y) => M ? M[0] * c() * tt + M[1] * x + M[2] * y <= K * (1 + 1e-15) : tt <= t;
+    const past = (tt, x, y) => M ? M[0] * c() * tt + M[1] * x + M[2] * y <= K * (1 + 1e-15) : tt <= tw;
     diag.grid({ labelX: lenLabel, labelY: (v) => time(v, 4) });
     g.save();
     // light: projection of every ray on (x, t), up to the current slice
@@ -309,7 +312,7 @@ export function createView(ctx) {
       const step = p.n > 180 ? Math.ceil(p.n / 180) : 1;
       for (let i = 0; i < p.n; i += step) {
         const a = p.off[i], b = p.off[i + 1];
-        const s = onSliceRay(p.T, p.X, p.Y, a, b, M, K, t);
+        const s = onSliceRay(p.T, p.X, p.Y, a, b, M, K, tw);
         if (!s) continue;
         g.beginPath();
         let q = P(p.T[a], p.X[a], p.Y[a]); g.moveTo(q[0], q[1]);
@@ -322,11 +325,11 @@ export function createView(ctx) {
     g.globalAlpha = 1;
     // worldlines up to their event on the current slice
     const b = diag.bounds();
-    const tLow = Math.min(b.y0, t) - Math.abs(b.y1 - b.y0);
+    const tLow = Math.min(b.y0, tw) - Math.abs(b.y1 - b.y0);
     for (const [id, h] of objs) {
       const wl = wls.get(id);
       if (!wl) continue;
-      const now = onSliceWl(wl, M, K, t);
+      const now = onSliceWl(wl, M, K, tw);
       if (!now) continue;
       const tEnd = now[2];
       g.strokeStyle = h.color; g.lineWidth = h.kind === "observer" ? 2.2 : 1.6;
@@ -341,20 +344,20 @@ export function createView(ctx) {
         pts.push(P(tEnd, now[0], now[1]));
       }
       g.beginPath(); pts.forEach((q, i) => i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1])); g.stroke();
-      if (M && tEnd > t) {  // the observer's slice reaches into the lab future: extrapolated, not computed yet
-        const pNow = wlPos(wl, t), A2 = P(t, pNow[0], pNow[1]), B2 = pts[pts.length - 1];
+      if (M && tEnd > tw) {  // the observer's slice reaches into the lab future: extrapolated, not computed yet
+        const pNow = wlPos(wl, tw), A2 = P(tw, pNow[0], pNow[1]), B2 = pts[pts.length - 1];
         g.save(); g.strokeStyle = css("--canvas"); g.lineWidth = 3; g.setLineDash([2, 4]); line(g, A2, B2); g.restore();
       }
       const last = pts[pts.length - 1];
       g.fillStyle = h.color; circle(g, last[0], last[1], 3.5); g.fill();
-      if (opt.labels) { g.font = "11px system-ui"; g.fillText(h.name, last[0] + 5, last[1] - 5); }
+      if (opt.labels) { g.font = "11px system-ui"; g.fillText(t(h.name), last[0] + 5, last[1] - 5); }
     }
     // apparatus end B (one dashed worldline per assembled apparatus)
     for (const [owner, list] of apps) {
       const h = objs.get(owner);
       for (let i = 0; i < list.length; i++) {
         const ta = list[i].t;
-        const nb = onSliceWl(list[i].wl, M, K, t);
+        const nb = onSliceWl(list[i].wl, M, K, tw);
         if (!nb) continue;
         let tEndGen = i + 1 < list.length ? list[i + 1].t : Infinity;
         for (const sg of signals) if (sg.owner === owner && sg.gen === list[i].gen) tEndGen = Math.max(tEndGen, sg.pts[sg.pts.length - 1][0]);
@@ -409,7 +412,7 @@ export function createView(ctx) {
       if (!past(pe.t, pe.x, pe.y)) continue;
       const q = P(pe.t, pe.x, pe.y);
       g.strokeStyle = "#c92a2a"; g.lineWidth = 1.5; g.strokeRect(q[0] - 4, q[1] - 4, 8, 8);
-      if (opt.labels) { g.fillStyle = "#c92a2a"; g.font = "11px system-ui"; g.fillText(pe.text, q[0] + 6, q[1] + 12); }
+      if (opt.labels) { g.fillStyle = "#c92a2a"; g.font = "11px system-ui"; g.fillText(t(pe.text), q[0] + 6, q[1] + 12); }
     }
     // simultaneity lines (flat runs: each observer's c t' = const) and local light cones
     for (const o of frame.objects) {
@@ -417,7 +420,7 @@ export function createView(ctx) {
       if (!h || (h.kind !== "observer" && h.kind !== "station")) continue;
       const Mo = frame.frames && frame.frames[o.id];
       if (opt.simul && Mo) {
-        const K0 = Mo[0] * c() * t + Mo[1] * o.x + Mo[2] * o.y;
+        const K0 = Mo[0] * c() * tw + Mo[1] * o.x + Mo[2] * o.y;
         const tAt = (x) => (K0 - Mo[1] * x - Mo[2] * o.y) / (Mo[0] * c());
         const w = b.x1 - b.x0, xs = [b.x0 - 3 * w, b.x1 + 3 * w];
         g.strokeStyle = h.color; g.globalAlpha = 0.65; g.setLineDash([8, 5]); g.lineWidth = 1.3;
@@ -428,32 +431,34 @@ export function createView(ctx) {
         const span = Math.abs(b.y1 - b.y0) * 0.25;
         g.strokeStyle = h.color; g.lineWidth = 1;
         g.globalAlpha = 0.9;
-        for (const u of cn.fut) line(g, P(t, o.x, o.y), P(t + span, o.x + u * span, o.y));
+        for (const u of cn.fut) line(g, P(tw, o.x, o.y), P(tw + span, o.x + u * span, o.y));
         g.globalAlpha = 0.5;
-        for (const u of cn.past) line(g, P(t, o.x, o.y), P(t - span, o.x - u * span, o.y));
+        for (const u of cn.past) line(g, P(tw, o.x, o.y), P(tw - span, o.x - u * span, o.y));
         g.globalAlpha = 1;
       }
     }
     // the current slice of the chosen frame: horizontal in its own coordinates
     g.strokeStyle = css("--ink"); g.globalAlpha = 0.5; g.lineWidth = 1;
-    const tNow = M ? K / c() : t;
+    const tNow = M ? K / c() : tw;
     line(g, [0, diag.Y(tNow)], [diag.w, diag.Y(tNow)]);
     g.restore();
-    ovDiag.textContent = "Пространство-время: x вправо, t вверх; " + (M ? `координаты «${objs.get(opt.frame).name}» (x′, t′); пунктир поверх линии — лабораторное будущее (ещё не вычислено: действия могут его изменить)` : "лабораторные координаты")
-      + (H.gr ? " (Шварцшильд)" : "") + " · колесо — масштаб, Shift — только t, Alt — только x";
+    ovDiag.textContent = t("Spacetime: x to the right, t up; {coords}", {
+      coords: M ? t("the coordinates of “{name}” (x′, t′); dashes over a line: the lab future (not computed yet: actions may change it)", { name: objs.get(opt.frame).name })
+        : t("laboratory coordinates") })
+      + (H.gr ? " " + t("(Schwarzschild)") : "") + " · " + t("wheel: zoom, Shift: t only, Alt: x only");
   }
 
   // --- readouts ---------------------------------------------------------------------------------------
   function drawTable(frame) {
     const rows = [];
-    const t = frame.t;
+    const tw = frame.t;
     for (const o of frame.objects) {
       const h = objs.get(o.id);
       if (!h || h.kind === "star") continue;
       const beta = Math.hypot(o.vx, o.vy) / c();
-      const cells = [el("td", {}, el("span", { style: { color: h.color } }, "● "), h.name),
-        el("td", { class: "mono" }, "τ " + time(o.tau, 10), el("div", { class: "muted" }, "t − τ = " + time(t - o.tau, 4))),
-        el("td", { class: "mono" }, beta ? num(beta, 4) + " c" : "покой")];
+      const cells = [el("td", {}, el("span", { style: { color: h.color } }, "● "), t(h.name)),
+        el("td", { class: "mono" }, "τ " + time(o.tau, 10), el("div", { class: "muted" }, "t − τ = " + time(tw - o.tau, 4))),
+        el("td", { class: "mono" }, beta ? num(beta, 4) + " c" : t("at rest"))];
       rows.push(el("tr", {}, cells));
       const na = frame.now_at && frame.now_at[o.id];
       if (na) {
@@ -461,8 +466,10 @@ export function createView(ctx) {
           const q = objs.get(qid);
           if (!q || q.kind !== "galaxy" || tq === null) continue;
           const evA = events.find((e) => e.kind === "emit" && e.obj === qid) || (H.planned || []).find((e) => e.obj === qid);
-          let txt = `«сейчас» на ${q.name}: t = ${time(tq, 6)}` + (tq > t ? " (лаб. будущее)" : "");
-          if (evA) txt += tq >= evA.t ? ` — событие уже произошло (${time(tq - evA.t, 4)} назад)` : ` — событие ещё впереди (через ${time(evA.t - tq, 4)})`;
+          let txt = tq > tw ? t("“now” on {name}: t = {at} (lab future)", { name: q.name, at: time(tq, 6) })
+            : t("“now” on {name}: t = {at}", { name: q.name, at: time(tq, 6) });
+          if (evA) txt += " — " + (tq >= evA.t ? t("the event has already happened ({dt} ago)", { dt: time(tq - evA.t, 4) })
+            : t("the event is still ahead (in {dt})", { dt: time(evA.t - tq, 4) }));
           rows.push(el("tr", {}, el("td", { colspan: 3, class: "muted" }, txt)));
         }
       }
@@ -474,9 +481,9 @@ export function createView(ctx) {
   return {
     center, rightPanels,
     help: () => el("div", {},
-      el("h4", {}, "Что на экране"),
-      el("p", {}, "Слева — пространство на срезе «сейчас» выбранной системы отсчёта (или то, что видит наблюдатель: где были объекты, когда ушёл приходящий к нему свет). Справа — диаграмма Минковского: мировые линии, лучи вспышек (проекция на ось x), события, линии одновременности и локальные конусы наблюдателей."),
-      el("p", {}, "Фронт вспышки — это положения посчитанных лучей в текущий момент; задержка у массы, тень и петли у фотонной сферы — результат интегрирования геодезических. Часы (τ) — собственное время по метрике законов запуска. Скорость света, частоты, одновременность — в «Проверках», рядом с эталоном.")),
+      el("h4", {}, t("What is on the screen")),
+      el("p", {}, t("On the left, space on the “now” slice of the chosen frame of reference (or what an observer sees: where the objects were when the light now reaching them left). On the right, the Minkowski diagram: worldlines, the rays of the flashes (projected on the x axis), events, the observers' lines of simultaneity and local cones.")),
+      el("p", {}, t("The front of a flash is the positions of the computed rays at the current moment; the delay near a mass, the shadow and the loops at the photon sphere come from integrating the geodesics. The clocks (τ) show proper time by the metric of the run's laws. The speed of light, the frequencies and the simultaneity are in “Checks”, next to their references."))),
     reset() { H = null; objs = new Map(); wls = new Map(); apps = new Map(); pulses = []; signals = []; events = []; },  // setUpFor stays
     // key frames (player.js): the accumulated lists only grow, so a key frame is their lengths and the latest worldlines
     snapshot() {
@@ -496,13 +503,13 @@ export function createView(ctx) {
       // zoom: only a new world sets them up again (found by the key frames' browser check, STATUS V32 f)
       if (setUpFor === meta) return;
       setUpFor = meta;
-      selFrame.replaceChildren(el("option", { value: "lab" }, "лабораторная"));
+      selFrame.replaceChildren(el("option", { value: "lab" }, t("laboratory")));
       if (meta.flat) for (const o of meta.objects) if (o.kind === "observer") selFrame.append(el("option", { value: o.id }, o.name));
       selFrame.value = "lab"; opt.frame = "lab";
       selMode.disabled = !meta.flat;
-      selFollow.replaceChildren(el("option", { value: "" }, "камера свободна"), ...meta.objects.map((o) => el("option", { value: o.id }, "следить: " + o.name)));
-      zoomBox.replaceChildren(...(meta.diagram.zooms || []).map((z) => el("button", { title: "Приблизить диаграмму",
-        onclick: () => { diag.fit(z.x0, z.x1, z.t0, z.t1, 0.04); } }, "⌖ " + z.label)));
+      selFollow.replaceChildren(el("option", { value: "" }, t("free camera")), ...meta.objects.map((o) => el("option", { value: o.id }, t("follow: {name}", { name: o.name }))));
+      zoomBox.replaceChildren(...(meta.diagram.zooms || []).map((z) => el("button", { title: t("Zoom the diagram"),
+        onclick: () => { diag.fit(z.x0, z.x1, z.t0, z.t1, 0.04); } }, "⌖ ", t(z.label))));
       fitSpace(); fitDiagram();
     },
     onMessage(meta, blobs) {
@@ -520,9 +527,9 @@ export function createView(ctx) {
         events.push(meta);
       }
     },
-    render(frame, t) {
+    render(frame, tw) {
       if (!H) return;
-      lastFrame = frame; lastT = t;
+      lastFrame = frame; lastT = tw;
       drawSpace(frame);
       drawDiagram(frame);
       drawTable(frame);

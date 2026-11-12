@@ -13,6 +13,7 @@
 // radius on the screen is under ~1200 px, at any speed of the world. The last piece runs from the trail's last point
 // to the body's position and velocity in the frame shown.
 import { el, num, panel } from "/static/js/ui.js";
+import { t } from "/static/js/i18n.js";
 import { createEnv3D } from "/static/js/env3d.js";
 import { createPlayground } from "/static/js/playground.js";
 
@@ -25,7 +26,7 @@ const GENS_KEPT = 12;
 function newTrail(rgb) {
   return { n: 0, p: new Float32Array(3 * 64), v: new Float32Array(3 * 64), t: new Float64Array(64), rgb };
 }
-function push(T, x, y, z, vx, vy, vz, t) {
+function push(T, x, y, z, vx, vy, vz, tw) {
   if (T.n === T.t.length) {
     const p = new Float32Array(2 * T.p.length), v = new Float32Array(2 * T.v.length), tt = new Float64Array(2 * T.t.length);
     p.set(T.p); v.set(T.v); tt.set(T.t); T.p = p; T.v = v; T.t = tt;
@@ -33,7 +34,7 @@ function push(T, x, y, z, vx, vy, vz, t) {
   const i = T.n++;
   T.p[3 * i] = x; T.p[3 * i + 1] = y; T.p[3 * i + 2] = z;
   T.v[3 * i] = vx; T.v[3 * i + 1] = vy; T.v[3 * i + 2] = vz;
-  T.t[i] = t;
+  T.t[i] = tw;
 }
 const turn = (a, b) => {
   const cx = a[1] * b[2] - a[2] * b[1], cy = a[2] * b[0] - a[0] * b[2], cz = a[0] * b[1] - a[1] * b[0];
@@ -66,7 +67,8 @@ export function createView(ctx) {
   const pg = createPlayground(ctx, { onSelect: () => ctx.requestRender(), describeProbe, env });
 
   function describeProbe(o, r) {
-    return Object.entries(r).map(([k, v]) => [k, typeof v === "number" ? num(v, 6) : Array.isArray(v) ? v.map((x) => num(x, 4)).join(", ") : String(v)]);
+    // keys are msgids (the playground renders them with t), values numbers, lists of numbers or texts (T)
+    return Object.entries(r).map(([k, v]) => [k, typeof v === "number" ? num(v, 6) : Array.isArray(v) ? v.map((x) => num(x, 4)).join("; ") : v]);
   }
 
   function onTrail(meta, b) {
@@ -115,7 +117,7 @@ export function createView(ctx) {
       if (P.length > q0) { P.push(NaN, NaN, NaN); F.push(0); }
       for (let k = q0 / 3; k < P.length / 3; k++) C.push(T.rgb[0] * F[k], T.rgb[1] * F[k], T.rgb[2] * F[k]);
     }
-    env.scene.setLines("trails", new Float32Array(P), new Float32Array(C), { label: "Следы тел (посчитаны)" });
+    env.scene.setLines("trails", new Float32Array(P), new Float32Array(C), { label: t("Trails of the bodies (computed)") });
   }
 
   // a Newtonian hole: a light marker of the scene's size with its name (review UX-ui U18: a dark sphere of the
@@ -126,10 +128,11 @@ export function createView(ctx) {
     for (const i of (frame && frame.holes) || []) {
       const id = frame.ids[i], at = [pos[3 * i], pos[3 * i + 1], pos[3 * i + 2]], lid = `hole_${id}`;
       seen.add(lid);
-      const lab = labels.get(id) || "Чёрная дыра", text = /дыр/i.test(lab) ? lab : `${lab} (чёрная дыра)`;
+      const name = t(labels.get(id) || "Black hole"), hole = t("black hole");
+      const text = name.toLowerCase().includes(hole.toLowerCase()) ? name : `${name} (${hole})`;
       const m = holeMarks.get(lid);
       if (!m || m.size !== size || m.text !== text || Math.hypot(at[0] - m.at[0], at[1] - m.at[1], at[2] - m.at[2]) > 0.004 * size) {
-        env.scene.setObject({ id: lid, kind: "point", pos: at, text, color: "#e5dbff", label: `Метка чёрной дыры: ${text}` });
+        env.scene.setObject({ id: lid, kind: "point", pos: at, text, color: "#e5dbff", label: t("Black hole marker: {text}", { text }) });
         holeMarks.set(lid, { at, size, text });
       }
     }
@@ -141,14 +144,14 @@ export function createView(ctx) {
   return {
     center: env.center,
     leftPanels: pg.leftPanels,
-    rightPanels: [...pg.rightPanels, panel("Слои сцены", env.layersPanel)],
+    rightPanels: [...pg.rightPanels, panel(t("Scene layers"), env.layersPanel)],
     help: () => el("div", {},
-      el("h4", {}, "Плейграунд: космос и гравитация"),
-      el("p", {}, "Добавляйте тела из палитры (звёзды, планеты, чёрные дыры, пробные тела, свет, наблюдателей с часами) и меняйте их параметры на ходу в инспекторе. Движение считается законами выбранного мира: ньютоновская гравитация N тел, постньютоновская двойная с излучением гравитационных волн или геодезические вокруг чёрной дыры Керра–Ньюмена."),
-      el("p", {}, "Тело из палитры ставится в заданную точку, а если она занята — в ближайшее свободное место по оси x (об этом сообщение). Столкновения тел (слияние или пролёт) меняются на ходу, в текущий момент."),
-      el("p", {}, "Следы — посчитанные орбиты: точки решения не дальше 20° поворота направления движения, между ними — кривая Эрмита по положениям и скоростям; на экране отклонение меньше 0,25 пикселя при любой скорости мира."),
-      el("p", {}, "Законы сохранения проверяются вживую («Проверки»): энергия, импульс, момент импульса (Ньютон), энергия, момент и постоянная Картера каждого тела (Керр–Ньюман), баланс энергии с излучённой волнами (двойная). Численная ошибка — по сравнению с расчётом того же интервала с вдвое меньшим параметром точности η (шаг в √2 раз короче, ошибка примерно в 4 раза меньше)."),
-      el("p", {}, "Запись держит окно последних минут; заметили эффект — «● Сохранять запись» в панели «Запись: окно». Сцену можно сохранить в файл и начать из него новый мир.")),
+      el("h4", {}, t("Playground: space and gravity")),
+      el("p", {}, t("Add bodies from the palette (stars, planets, black holes, test bodies, light, observers with clocks) and change their parameters on the fly in the inspector. The motion is computed by the laws of the chosen world: Newtonian gravity of N bodies, a post-Newtonian binary radiating gravitational waves, or geodesics around a Kerr–Newman black hole.")),
+      el("p", {}, t("A body from the palette is placed at the given point, or, if it is taken, at the nearest free place along the x axis (a message says so). Collisions of bodies (merging or passing through) are changed on the fly, at the current moment.")),
+      el("p", {}, t("Trails are the computed orbits: solution points at most {deg}° of turn of the direction of motion apart, joined by Hermite curves through the positions and velocities; on the screen the deviation is below {px} pixel at any speed of the world.", { deg: 20, px: 0.25 })),
+      el("p", {}, t("The conservation laws are checked live (“Checks”): energy, momentum and angular momentum (Newton); the energy, angular momentum and Carter's constant of every body (Kerr–Newman); the energy balance with what the waves radiate (the binary). The numerical error is estimated against a run of the same interval with half the accuracy parameter η (a step √2 times shorter, an error about 4 times smaller).")),
+      el("p", {}, t("The record keeps a window of the last minutes; when you notice an effect, press “● Keep the record” in the panel “Record: window”. The scene can be saved to a file and a new world started from it."))),
     reset() { env.reset(); pg.reset(); H = null; gens = new Map([[0, new Map()]]); gen = 0; trails = gens.get(0); holeMarks = new Map(); labels = new Map(); },
     snapshot() {
       return { env: env.snapshot(), pg: pg.snapshot(), gen, lens: new Map([...trails].map(([id, T]) => [id, T.n])), labels: new Map(labels) };
@@ -168,15 +171,15 @@ export function createView(ctx) {
       if (env.onMessage(meta, blobs)) return;
       if (meta.type === "trail") onTrail(meta, blobs);
     },
-    render(frame, t, blobs) {
+    render(frame, tNow, blobs) {
       if (!H || !frame) return;
       const pos = blobs.pos || new Float32Array(0), rad = blobs.rad || new Float32Array(0), rgb = blobs.rgb ? Float32Array.from(blobs.rgb) : new Float32Array(0);
       const ids = frame.ids || [], sel = pg.selected();
       for (let i = 0; i < ids.length; i++) if (ids[i] === sel) { rgb[3 * i] = Math.min(1, rgb[3 * i] + 0.4); rgb[3 * i + 1] = Math.min(1, rgb[3 * i + 1] + 0.4); }
-      env.scene.setSpheres("bodies", pos, rad, rgb, { label: "Тела сейчас" });
-      drawTrails(frame, blobs, t);
+      env.scene.setSpheres("bodies", pos, rad, rgb, { label: t("Bodies now") });
+      drawTrails(frame, blobs, tNow);
       drawHoles(frame, pos);
-      pg.render(frame, t);
+      pg.render(frame, tNow);
       env.scene.requestRender();
     },
   };

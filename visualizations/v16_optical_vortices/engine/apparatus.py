@@ -16,6 +16,8 @@ from lfphys.core.optics import beams as B
 from lfphys.core.optics import beams_rotation as ROT
 from lfphys.theories.approx import beams_paraxial as PX
 from lfphys.theories.approx import beams_thin_masks as TM
+from lfphys.i18n import T
+from lfviz.errors import Refusal
 
 POLS = {"+1": {1: 1.0}, "-1": {-1: 1.0}, "lin": {1: 1 / math.sqrt(2), -1: 1 / math.sqrt(2)}}
 NR, NZ = 320, 200          # the radial table
@@ -113,28 +115,32 @@ class Beam:
                 g0, gq = B.gaussian_vortex_spectrum(0, w0)
                 inc = 1.0 - B.VortexBeam(0, self.k, g0, gq).propagating_fraction()[0]
                 if inc > DROP_REFUSE:
-                    raise ValueError(
-                        f"падающий гауссов пучок с w0 = {w0:.3g} мкм при λ = {lam:.3g} мкм — не пучок: {100 * inc:.3g} % "
-                        f"его мощности на z = 0 приходится на затухающие волны (q > k; предел {100 * DROP_REFUSE:.3g} %): "
-                        f"увеличьте w0 или уменьшите λ")
+                    raise Refusal(
+                        T("the incident Gaussian beam with w0 = {w0:.3g} µm at λ = {lam:.3g} µm is not a beam: "
+                          "{p:.3g} % of its power at z = 0 is in evanescent waves (q > k; the limit is {lim:.3g} %)",
+                          w0=w0, lam=lam, p=100 * inc, lim=100 * DROP_REFUSE),
+                        hint=T("increase w0 or decrease λ"))
             if gen == "mode" and self.dropped > DROP_REFUSE:
-                raise ValueError(
-                    f"точная модель не может представить этот источник: {100 * self.dropped:.3g} % мощности перетяжки "
-                    f"LG (w0 = {w0:.3g} мкм при λ = {lam:.3g} мкм) приходится на q > k — это затухающие волны, их у "
-                    f"распространяющегося пучка нет (предел {100 * DROP_REFUSE:.3g} %): увеличьте w0 или уменьшите λ, "
-                    f"или выберите параксиальную модель (помечена как приближение)")
+                raise Refusal(
+                    T("the exact model cannot represent this source: {p:.3g} % of the power of the LG waist (w0 = "
+                      "{w0:.3g} µm at λ = {lam:.3g} µm) is at q > k; these are evanescent waves, which a propagating "
+                      "beam does not have (the limit is {lim:.3g} %)", p=100 * self.dropped, w0=w0, lam=lam,
+                      lim=100 * DROP_REFUSE),
+                    hint=T("increase w0 or decrease λ, or choose the paraxial model (marked as an approximation)"))
         self.cost = self._cost()
         if self.cost["bessel"] > BESSEL_BUDGET or self.cost["bytes"] > MATRIX_BUDGET:
-            raise ValueError(
-                f"мир слишком дорог: таблица поля {len(self.r)} радиусов × {self.cost['nq']} узлов квадратуры — "
-                f"~{self.cost['bessel'] / 1e6:.3g} млн вычислений функций Бесселя (~{self.cost['seconds']:.3g} с; предел "
-                f"~{BESSEL_BUDGET / BESSEL_RATE:.3g} с) и матрица ~{self.cost['bytes'] / 1e9:.2g} ГБ (предел "
-                f"{MATRIX_BUDGET / 1e9:.2g} ГБ): уменьшите длину области, w0 или |l|, или увеличьте λ")
+            raise Refusal(
+                T("the world is too expensive: a field table of {nr:d} radii × {nq:d} quadrature nodes, ~{nb:.3g} "
+                  "million evaluations of Bessel functions (~{sec:.3g} s; the limit ~{lim_s:.3g} s), and a matrix of "
+                  "~{gb:.2g} GB (the limit {lim_gb:.2g} GB)", nr=len(self.r), nq=int(self.cost["nq"]),
+                  nb=self.cost["bessel"] / 1e6, sec=self.cost["seconds"], lim_s=BESSEL_BUDGET / BESSEL_RATE,
+                  gb=self.cost["bytes"] / 1e9, lim_gb=MATRIX_BUDGET / 1e9),
+                hint=T("decrease the length of the region, w0 or |l|, or increase λ"))
         if model == "exact":
             tables, self.table_err = {}, 0.0
             for s in self.amp:
-                T, e = self.vb.table(self.r, self.z, s, estimate=True)
-                tables[s] = T
+                tab, e = self.vb.table(self.r, self.z, s, estimate=True)
+                tables[s] = tab
                 self.table_err = max(self.table_err, e)
         else:
             self.vb = None
@@ -472,7 +478,8 @@ class Fork:
         self.n = n
         self.dx = 2 * self.half / n
         if self.dx > lam / 2:
-            raise ValueError(f"сетка {n} точек на {2 * self.half:.3g} мкм грубее λ/2: уменьшите z или увеличьте период")
+            raise Refusal(T("a grid of {n:d} points over {w:.3g} µm is coarser than λ/2", n=n, w=2 * self.half),
+                          hint=T("decrease z or increase the period"))
         self.x = (np.arange(n) - n // 2) * self.dx
         X, Y = np.meshgrid(self.x, self.x, indexing="ij")
         self.m_band = TM.fork_band(self.dx, period)

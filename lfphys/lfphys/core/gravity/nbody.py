@@ -106,40 +106,44 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "numerical solution",
-    "title": "Задача N тел в ньютоновой гравитации: тесные сближения, слияния, приливы",
-    "statement": "Точечные массы и пробные частицы (m = 0) с устойчивыми ключами: добавление, удаление и изменение "
-                 "тел в текущий момент; симметричная по времени схема Эрмита 4-го порядка P(EC)^n с общим шагом "
-                 "по критерию Аарсета (симметризованным по концам шага) для тесных сближений и симплектическая "
-                 "схема Форест–Рут–Йошиды 4-го порядка с постоянным шагом для долгих спокойных систем; столкновения "
-                 "(момент касания поверхностей найден точно): слияние с сохранением массы и импульса или пролёт; "
-                 "энергия, импульс, момент импульса, центр масс; ускорение, потенциал и приливный тензор в любых "
-                 "точках; оценка локальной ошибки шага и спутник с более строгой точностью; состояние — простые "
-                 "данные, восстановление продолжает счёт бит в бит.",
-    "validity": "ньютоново тяготение: поправки ОТО порядка GM/(c²r) и v²/c² (для двух тел полнее — "
-                "core.gravity.pn_binary, для пробных тел у одной массы — геодезические core.gravity.kerr_newman: "
-                "см. conflicts; для N ≥ 3 это самая полная форма в движке: постньютоновской задачи N тел в нём нет — "
-                "поэтому модуль в ядре, LAYERS.md §1); точечные массы без приливной деформации и вращения тел; "
-                "слияние — абсолютно неупругое при касании (радиус слитого тела — по равной плотности или, у "
-                "компактного тела, пропорционален массе: выбор); схема Эрмита не симплектическая (при симметричных "
-                "шагах ошибка энергии на периодических орбитах колеблется; остаточный вековой дрейф задаётся "
-                "допуском симметризации dt_rtol, см. README), Йошида-4 — симплектическая, но с постоянным шагом. "
-                "Стоимость шага на CPU (NumPy): см. README",
-    "basis": ["Makino & Aarseth, PASJ 44, 141 (1992): схема Эрмита",
+    "title": T("The N-body problem in Newtonian gravity: close encounters, mergers, tides"),
+    "statement": T("Point masses and test particles (m = 0) with stable keys: bodies are added, removed and changed "
+                   "at the current moment; the time-symmetric fourth-order Hermite scheme P(EC)^n with a shared step "
+                   "by Aarseth's criterion (symmetrised over the ends of the step) for close encounters, and the "
+                   "fourth-order symplectic Forest–Ruth–Yoshida scheme with a constant step for long quiet systems; "
+                   "collisions (the moment the surfaces touch is found exactly): a merger conserving mass and "
+                   "momentum, or a pass-through; energy, momentum, angular momentum, centre of mass; acceleration, "
+                   "potential and tidal tensor at any points; an estimate of the local step error and a companion run "
+                   "of stricter accuracy; the state is plain data, and a restore continues the computation bit for "
+                   "bit."),
+    "validity": T("Newtonian gravity: GR corrections of order GM/(c²r) and v²/c² (for two bodies the fuller form is "
+                  "core.gravity.pn_binary, for test bodies about one mass the geodesics of core.gravity.kerr_newman: "
+                  "see conflicts; for N ≥ 3 this is the most complete form in the engine, which has no post-Newtonian "
+                  "N-body problem, hence the module is in the core, LAYERS.md §1); point masses without tidal "
+                  "deformation or spin of the bodies; a merger is perfectly inelastic on contact (the radius of the "
+                  "merged body by equal density or, for a compact body, proportional to the mass: a choice); the "
+                  "Hermite scheme is not symplectic (with symmetric steps the energy error oscillates on periodic "
+                  "orbits; the residual secular drift is set by the symmetrisation tolerance dt_rtol, see the "
+                  "README), Yoshida-4 is symplectic but has a constant step. Cost of a step on the CPU (NumPy): see "
+                  "the README"),
+    "basis": [T("Makino & Aarseth, PASJ 44, 141 (1992): the Hermite scheme"),
               "Kokubo, Yoshinaga & Makino, MNRAS 297, 1067 (1998), Eqs. (1)-(12)",
-              "Hut, Makino & McMillan, ApJ 443, L93 (1995), Eq. (4b): симметризация шага",
+              T("Hut, Makino & McMillan, ApJ 443, L93 (1995), Eq. (4b): symmetrisation of the step"),
               "Nitadori & Makino, New Astron. 13, 498 (2008), Eqs. (1), (2), (5), (15)",
               "Forest & Ruth, Physica D 43, 105 (1990); Yoshida, Phys. Lett. A 150, 262 (1990); "
               "Omelyan, Mryglod & Folk, Comput. Phys. Commun. 146, 188 (2002), Eq. (8)",
-              "проверки: Кеплер; восьмёрка Шансине–Монтгомери (2000, н.у. Симо); "
-              "пифагорова задача Бурау (Szebehely & Peters, AJ 72, 876 (1967))"],
+              T("checks: Kepler; the Chenciner–Montgomery figure-eight (2000, initial conditions by Simó); Burrau's "
+                "Pythagorean problem (Szebehely & Peters, AJ 72, 876 (1967))")],
     # the cases where the engine has the fuller form of the same law (review B6-G14): shown with the module
-    "conflicts": ["lfphys.core.gravity.pn_binary: двойная в ОТО — прецессия перицентра и сближение из-за излучения "
-                  "гравитационных волн, которых здесь нет",
-                  "lfphys.core.gravity.kerr_newman: пробное тело у одной массы движется по геодезической (прецессия "
-                  "перицентра — 43″ в столетие у Меркурия, неустойчивость внутри ISCO, захват горизонтом), а не по "
-                  "эллипсу Кеплера"],
+    "conflicts": [T("lfphys.core.gravity.pn_binary: a binary in GR has periapsis precession and an inspiral by the "
+                    "emission of gravitational waves, both absent here"),
+                  T("lfphys.core.gravity.kerr_newman: a test body about one mass moves on a geodesic (periapsis "
+                    "precession, 43″ per century for Mercury; instability inside the ISCO; capture by the horizon), "
+                    "not on a Kepler ellipse")],
 }
 
 THETA = 1.0 / (2.0 - 2.0 ** (1.0 / 3.0))

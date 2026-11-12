@@ -18,18 +18,19 @@ come out 2-10 % from the measured spin-averaged splittings (2S-1S: 591 vs 605 Me
 from __future__ import annotations
 
 from ...core.quantum import radial
+from lfphys.i18n import T
 
 ABOUT = {
     "layer": "theories", "kind": "model",
-    "title": "Кварконий в потенциале Корнелла",
-    "statement": "Пара тяжёлых кварков в потенциале V(r) = −κ/r + r/a² (обмен глюоном + струна конфайнмента); "
-                 "нерелятивистские спин-усреднённые уровни M = 2m_q + E(n, L).",
-    "validity": "подогнанные параметры (κ, a, m_q); предсказывает расщепления уровней (абсолютный масштаб не "
-                "задан); без спиновых сил, релятивистских поправок и связи с открытыми каналами; выше порога "
-                "D D̄ / B B̄ неприменима; расщепления совпадают с опытом на 2–10 %",
+    "title": T("Quarkonium in the Cornell potential"),
+    "statement": T("A pair of heavy quarks in the potential V(r) = −κ/r + r/a² (gluon exchange + the confining "
+                   "string); non-relativistic spin-averaged levels M = 2m_q + E(n, L)."),
+    "validity": T("fitted parameters (κ, a, m_q); predicts the level splittings (the absolute scale is not set); no "
+                  "spin forces, relativistic corrections or coupling to open channels; not applicable above the D D̄ "
+                  "/ B B̄ threshold; the splittings agree with experiment to 2–10 %"),
     "basis": ["Eichten et al., PRD 17, 3090 (1978); PRD 21, 203 (1980)", "Eichten & Quigg, PRD 52, 1726 (1995)"],
-    "conflicts": ["КХД (lfphys.core.qcd): потенциал не выводится из лагранжиана в этой форме; решёточная КХД даёт "
-                  "его лишь приближённо; константы κ, a, m_q — подгонка, а не параметры КХД"],
+    "conflicts": [T("QCD (lfphys.core.qcd): the potential is not derived from the Lagrangian in this form; lattice "
+                    "QCD gives it only approximately; the constants κ, a, m_q are a fit, not parameters of QCD")],
 }
 
 PARAMS = {"kappa": 0.52, "a": 2.34, "m_c": 1.84, "m_b": 5.18}

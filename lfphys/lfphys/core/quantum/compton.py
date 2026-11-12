@@ -17,12 +17,14 @@ from fractions import Fraction
 import numpy as np
 from scipy import constants as sc
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "law",
-    "title": "Комптоновское рассеяние (формула Клейна–Нишины)",
-    "statement": "Сдвиг длины волны λ' − λ = λ_C(1 − cos θ) и сечение Клейна–Нишины (низший порядок КЭД); "
-                 "томсоновский предел.",
-    "validity": "свободный покоящийся электрон, неполяризованные фотоны; поправки КЭД высших порядков ~α/π",
+    "title": T("Compton scattering (the Klein–Nishina formula)"),
+    "statement": T("The wavelength shift λ' − λ = λ_C(1 − cos θ) and the Klein–Nishina cross-section (lowest-order "
+                   "QED); the Thomson limit."),
+    "validity": T("a free electron at rest, unpolarised photons; higher-order QED corrections ~α/π"),
     "basis": ["Compton, Phys. Rev. 21, 483 (1923)", "Klein & Nishina, Z. Phys. 52, 853 (1929)"],
     "conflicts": [],
 }

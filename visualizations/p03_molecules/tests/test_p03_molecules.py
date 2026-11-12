@@ -23,6 +23,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
+from lfphys.i18n import english  # noqa: E402
 from p03_molecules import viz as P3  # noqa: E402
 from p03_molecules.viz import KELVIN, NM, PS, SCHEMA, U  # noqa: E402
 
@@ -164,12 +165,12 @@ def test_molecules_share_their_energy_among_the_modes():
     r = np.mean(rows, axis=0)
     assert np.all(np.abs(r / r.mean() - 1) < 0.15), r
     now = h.of("frame")[-1]["now"]["o1"]
-    assert "T вращат., K" in now and "T колебат. (кин.), K" in now
+    assert "T rotational, K" in now and "T vibrational (kin.), K" in now
     assert any(m.get("modes") for m in h.of("stats"))
 
 
 def test_molecules_start_at_their_temperature():
-    """Review B7-md M4: "всё при T" gives every atom a Maxwell velocity at T (translation included) and thermal bond
+    """Review B7-md M4: "everything at T" gives every atom a Maxwell velocity at T (translation included) and thermal bond
     lengths; the object's momentum is removed; atoms are placed without overlaps (each one's energy at its insertion
     below 2kT). At 200 K the kinetic temperature at t = 0 is within 15 % of 200 K (spread √(2/900) = 4.7 % for 300
     atoms; the reviewed start gave 84 K)."""
@@ -367,19 +368,19 @@ def test_texts_state_the_limits():
     """Review B7-md M16, M19, M20: the approximations name Θ_D = 85 K with the Debye heat capacity, the model's
     critical temperature and the bond's ħω/k; the field's unit is ε/(mσ) = 7.3·10¹³ m/s²; W is the piston's work."""
     h = Harness(V, "molecules")
-    ap = " ".join(h.of("header")[-1]["approximations"])
+    ap = " ".join(english(h.of("header")[-1]["approximations"]))
     assert "85 K" in ap and "0.47" in ap
     assert "112 K" in ap and "ħω/k = 35 K" in ap
     assert P3.debye_cv_fraction(20, 85) == pytest.approx(0.467, abs=0.002)
     assert P3.einstein_cv_fraction(1e6, 100) == pytest.approx(1.0, abs=1e-6)
     help_g = P3.palette(2, "lj")["gravity"].schema.params[0].help
-    assert "7,3·10¹³" in help_g
+    assert help_g.args["u"] == pytest.approx(7.3e13) and "7.3e+13 m/s²" in english(help_g)
     g = U.velocity_m_s / U.to_ps(1.0) / 1e-12
     assert g == pytest.approx(7.32e13, rel=2e-3)
     h2 = Harness(V, "piston")
     run(h2, 1.0, 20)
-    note = h2.checks()["energy"]["note"]
-    assert "работа W" in note and "поршень" in note and "изменения ящика" in note
+    note = english(h2.checks()["energy"]["note"])
+    assert "the work W" in note and "the piston" in note and "changes of the box" in note
 
 
 def test_the_scene_file_starts_the_same_set_up():

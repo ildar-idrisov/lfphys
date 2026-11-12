@@ -36,6 +36,8 @@ import time
 import types
 from pathlib import Path
 
+from .i18n import T
+
 VERSION = 1
 KEEP = 2       # checkpoint files kept per run (the newest), in case the last one was cut by a crash
 
@@ -69,7 +71,7 @@ def _cupy_array(a):
     from lfphys.core import backend
     gpu = backend.devices()["gpu"]
     if not gpu.get("available"):
-        raise RuntimeError(f"нет GPU, на котором шёл этот мир: {gpu.get('reason')}")
+        raise RuntimeError(T("there is no GPU this world ran on: {reason}", reason=gpu.get("reason")))
     import cupy
     return cupy.asarray(a)
 

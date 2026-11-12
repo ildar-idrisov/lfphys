@@ -14,14 +14,16 @@ import math
 
 import numpy as np
 
+from lfphys.i18n import T
+
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": "Туннелирование: точное рассеяние на ступенчатых потенциалах",
-    "statement": "Коэффициенты прохождения и отражения для кусочно-постоянного потенциала методом матриц "
-                 "переноса; T + R = 1; комплексные амплитуды t, r (с фазой) для плавных профилей; прямоугольный "
-                 "барьер и δ-барьер в замкнутой форме.",
-    "validity": "стационарное рассеяние, нерелятивистская частица",
-    "basis": ["Schrödinger 1926", "Gamow 1928 (туннелирование)", "Landau & Lifshitz, т. 3, §25"],
+    "title": T("Tunnelling: exact scattering by stepwise potentials"),
+    "statement": T("Transmission and reflection coefficients of a piecewise-constant potential by transfer matrices; "
+                   "T + R = 1; complex amplitudes t, r (with phase) for smooth profiles; the rectangular barrier and "
+                   "the δ barrier in closed form."),
+    "validity": T("stationary scattering, a non-relativistic particle"),
+    "basis": ["Schrödinger 1926", T("Gamow 1928 (tunnelling)"), T("Landau & Lifshitz, vol. 3, §25")],
     "conflicts": [],
 }
 

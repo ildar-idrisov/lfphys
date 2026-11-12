@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
 from lfphys.core import backend  # noqa: E402
+from lfphys.i18n import english, is_t  # noqa: E402
 from v11_double_slit_2d.engine import apparatus as AP  # noqa: E402
 from v11_double_slit_2d.viz import SCHEMA  # noqa: E402
 
@@ -199,11 +200,11 @@ def test_refusals_leave_the_world_unchanged():
     before = dict(h.sim.live)
     h.set(mark_deg=90.0)  # no spin in this world
     assert h.sim.live == before
-    assert any("метк" in e for e in h.errors()) or h.of("live")
+    assert any("path mark" in english(e) for e in h.errors()) or h.of("live")
     n = Harness(V, "narrow", {**SMALL, "particle": "neutron"})
     n.set(flux=0.5)  # a neutral particle
     assert n.sim.live["flux"] == 0.0
-    with pytest.raises(ValueError, match="заряженные"):
+    with pytest.raises(ValueError, match="charged particles"):
         Harness(V, "narrow", {**SMALL, "particle": "neutron", "flux": 0.5})
 
 
@@ -212,7 +213,7 @@ def test_gpu_equals_cpu():
     from lfphys.core.quantum import schrodinger_nd as S
     h = Harness(V, "narrow", SMALL)
     assert h.sim.prop.device == "gpu"
-    cpu = S.SplitOperator(h.sim.prop.H, h.sim.dt, track_absorbed=True, force_cpu=True, why="тест")
+    cpu = S.SplitOperator(h.sim.prop.H, h.sim.dt, track_absorbed=True, force_cpu=True, why="test")
     a = h.sim.prop.put(h.sim._packet(h.sim.prop.H, h.sim.g))
     b = cpu.put(h.sim._packet(h.sim.prop.H, h.sim.g))
     a = h.sim.prop.step(a, 200)
@@ -244,12 +245,12 @@ def test_a_quarter_flux_quantum_moves_the_run_and_the_curves_the_same_way():
 def test_no_spin_mark_for_particles_without_spin():
     """He-4 and C60 have no internal state in the engine: the spin mark is refused (review B3-7)."""
     for particle in ("he4", "c60"):
-        with pytest.raises(ValueError, match="нет спина"):
+        with pytest.raises(ValueError, match="has no spin"):
             Harness(V, "mark180", {**SMALL, "particle": particle})
 
 
 def test_edges_narrower_than_the_grid_are_refused():
-    with pytest.raises(ValueError, match="края стенки"):
+    with pytest.raises(ValueError, match="wall's edges"):
         Harness(V, "narrow", {**SMALL, "edge": 0.1})  # the coarse grid's step is 0.2 lambda
 
 
@@ -267,7 +268,7 @@ def test_the_screen_shows_nothing_before_the_wave_can_arrive():
 def test_the_corners_of_the_schema_are_refused_by_their_cost():
     """An experiment estimated to keep the device busy longer than its limit is refused with the estimate (review
     B3-6: ~29 min of GPU load at a corner, past the host's ~18 min hang)."""
-    with pytest.raises(ValueError, match="слишком тяж"):
+    with pytest.raises(ValueError, match="too heavy"):
         Harness(V, "narrow", {"a": 0.5, "d": 8.0, "L": 200.0, "sigma_x": 40.0, "sigma_z": 20.0, "grid": "fine"})
     h = Harness(V, "narrow", SMALL)
     assert 0 < h.sim.est_cost < 600
@@ -298,7 +299,7 @@ def test_the_wall_height_set_at_the_start_is_the_world_built_with_it():
     live = Harness(V, "narrow", SMALL)
     live.set(V0=6.0)
     assert live.sim.live["V0"] == 6.0 and not live.errors()
-    assert "ещё не считал" in live.of("event")[-1]["text"]
+    assert "has not computed yet" in english(live.of("event")[-1]["text"])
     built = Harness(V, "narrow", {**SMALL, "V0": 6.0})
     other = Harness(V, "narrow", SMALL)
     tu = live.sim.tunit
@@ -307,8 +308,8 @@ def test_the_wall_height_set_at_the_start_is_the_world_built_with_it():
     a, b, c = (h.sim.prop.get(h.sim.psi) for h in (live, built, other))
     assert np.array_equal(a, b)
     assert np.max(np.abs(a - c)) > 1e-6
-    assert live.checks()["grid_wall"]["note"].startswith("κ = √(2(V0 − E0)) = ") and "V0 = 6 E0" in \
-        live.checks()["grid_wall"]["note"]
+    note = english(live.checks()["grid_wall"]["note"])
+    assert note.startswith("κ = √(2(V0 − E0)) = ") and "V0 = 6 E0" in note
 
 
 def test_a_live_plate_is_the_apparatus_plate_in_the_same_window():
@@ -329,8 +330,8 @@ def test_a_live_plate_is_the_apparatus_plate_in_the_same_window():
     su = h.of("setup")[-1]
     assert su["geometry"] == {"a": 2.0, "d": 5.0, "w": 1.5, "V0": 4.0, "centers": [-2.5, 2.5]}
     assert [hole["rect"][:2] for hole in su["plate"]["holes"]] == [[-3.5, -1.5], [1.5, 3.5]]
-    ev = h.of("event")[-1]["text"]
-    assert "вероятности" in ev and "действует с этого момента" in ev
+    ev = english(h.of("event")[-1]["text"])
+    assert "of the probability" in ev and "acts from this moment on" in ev
 
 
 def test_a_plate_that_does_not_fit_the_window_is_refused_and_the_world_unchanged():
@@ -339,23 +340,27 @@ def test_a_plate_that_does_not_fit_the_window_is_refused_and_the_world_unchanged
     h = Harness(V, "narrow", {**SMALL, "L": 5.0})  # a short flight: the screen 5 λ behind the plate
     V0 = np.array(h.sim.prop.H.V)
     live, geo = dict(h.sim.live), h.sim.geo
-    for change, why in (({"d": 30.0}, "щель выходит за экран"), ({"w": 10.0}, "не помещается в окно"),
-                        ({"a": 4.5}, "щели сливаются")):
+    for change, why in (({"d": 30.0}, "a slit goes beyond the screen"), ({"w": 10.0}, "does not fit into the "
+                        "experiment's window"), ({"a": 4.5}, "the slits merge")):
         n = len(h.errors())
         h.set(**change)
-        assert len(h.errors()) == n + 1 and why in h.errors()[-1], (change, h.errors()[-1:])
-        assert "Что изменить" in h.errors()[-1]
+        assert len(h.errors()) == n + 1 and why in english(h.errors()[-1]), (change, h.errors()[-1:])
+        assert "What to change" in english(h.errors()[-1])
         assert h.sim.live == live and h.sim.geo is geo and np.array_equal(np.asarray(h.sim.prop.H.V), V0)
         assert h.of("live")[-1]["values"] == h.sim.live_values()
 
 
 def share_in(text):
-    """The probability an event names («было 0,0095 вероятности», «было 4,3·10⁻⁶ вероятности»)."""
-    import re
-    m = re.search(r"было ([0-9,]+)(?:·10([⁻⁰¹²³⁴⁵⁶⁷⁸⁹]+))? вероятности", text)
-    exp = m.group(2) or "⁰"
-    e = int(exp.translate(str.maketrans("⁻⁰¹²³⁴⁵⁶⁷⁸⁹", "-0123456789")))
-    return float(m.group(1).replace(",", ".")) * 10.0 ** e
+    """The probability an event names: the argument of its sentence «where the wall changed there was {p} of the
+    probability» (the text is language-neutral: the number is an argument, not a formatted string)."""
+    if is_t(text):
+        if text["$t"].startswith("where the wall changed there was"):
+            return text["a"]["p"]
+        for v in (text.get("a") or {}).values():
+            p = share_in(v)
+            if p is not None:
+                return p
+    return None
 
 
 def _plate_widened_at(tau):
@@ -386,7 +391,7 @@ def test_a_plate_changed_after_the_packet_passed_changes_almost_nothing():
     ids = set(late.checks())
     assert {"norm", "numerics", "flux_absorbed", "bohm_born"} <= ids
     assert not ({"symmetry", "no_crossing", "visibility", "ref_paraxial"} & ids)
-    assert [m for m in late.of("event") if "Ширина щели a, λ: 1,5 λ → 2,5 λ" in m["text"]]
+    assert [m for m in late.of("event") if "Slit width a, λ: 1.5 λ → 2.5 λ" in english(m["text"])]
 
 
 def test_a_wall_grown_under_the_wave_is_a_sudden_change_and_said():
@@ -396,7 +401,7 @@ def test_a_wall_grown_under_the_wave_is_a_sudden_change_and_said():
     geo = h.sim.geo
     h.run_to(abs(geo.z_src) / AP.V0_SPEED * h.sim.tunit)  # the packet's centre at the plate
     h.set(w=2.0)
-    ev = [m["text"] for m in h.of("event") if "Толщина пластины" in m["text"]][-1]
+    ev = [m["text"] for m in h.of("event") if "Plate thickness" in english(m["text"])][-1]
     assert share_in(ev) > 1e-3, ev
     run_out(h)
     assert h.checks()["norm"]["ok"]
@@ -459,8 +464,8 @@ def test_a_live_plate_is_continued_from_a_checkpoint_and_replayed_by_a_restore(t
 
 def test_every_length_and_the_wall_height_carry_their_unit_in_the_label():
     """Review UX-ui U19: the player shows a parameter's label, not its unit field: every parameter with a unit names it
-    in the label («Ширина щели a, λ», «Длина волны де Бройля λ, пм», «Высота стенки V₀, в E₀»)."""
+    in the label («Slit width a, λ», «de Broglie wavelength λ, pm», «Wall height V₀, in E₀»)."""
     for p in SCHEMA.params:
         if p.unit:
-            assert p.unit in p.label, (p.id, p.label, p.unit)
-    assert SCHEMA.by_id["lam_pm"].label.endswith(", пм") and SCHEMA.by_id["V0"].label.endswith("в E₀")
+            assert english(p.unit) in english(p.label), (p.id, p.label, p.unit)
+    assert english(SCHEMA.by_id["lam_pm"].label).endswith(", pm") and english(SCHEMA.by_id["V0"].label).endswith("in E₀")

@@ -79,6 +79,8 @@ import sys
 import time
 from pathlib import Path
 
+from .i18n import T, error_body, is_t, join, render_in, text_of
+
 MAX_VALUES = 50
 N_SAMPLES = 200
 N_SAMPLES_MAX = 2000
@@ -113,60 +115,59 @@ def sweep_mem(worker_mem: int) -> int:
     return int(min(worker_mem, max(512 * MIB, worker_mem // 2)))
 
 
-def fmt_wall(s: float | None) -> str:
-    """Seconds of computation in the owner's words: «0,4 с», «12 с», «2 мин 10 с», «1 ч 5 мин»."""
+def fmt_wall(s: float | None):
+    """Seconds of computation in the owner's words (a text): "0.4 s", "12 s", "2 min 10 s", "1 h 5 min"."""
     if s is None or not math.isfinite(s):
         return "—"
     if s < 10:
-        return f"{s:.1f} с".replace(".", ",")
+        return T("{s:.1f} s", s=s)
     if s < 60:
-        return f"{s:.0f} с"
+        return T("{s:.0f} s", s=s)
     if s < 3600:
         m, r = divmod(int(round(s)), 60)
-        return f"{m} мин" + (f" {r} с" if r else "")
+        return T("{m:d} min {s:d} s", m=m, s=r) if r else T("{m:d} min", m=m)
     h, r = divmod(int(round(s)), 3600)
-    return f"{h} ч" + (f" {r // 60} мин" if r // 60 else "")
+    return T("{h:d} h {m:d} min", h=h, m=r // 60) if r // 60 else T("{h:d} h", h=h)
 
 
 def fmt_num(x) -> str:
+    """A number for the logs (English)."""
     if isinstance(x, bool) or not isinstance(x, (int, float)):
         return str(x)
-    return f"{x:.6g}".replace(".", ",")
+    return f"{x:.6g}"
 
 
-def fmt3(x: float) -> str:
-    return f"{x:.3g}".replace(".", ",")
+#: seconds with the SI prefix of their scale (msgids "{x:.6g} ms", …)
+T_PREFIX = ((1.0, "s"), (1e-3, "ms"), (1e-6, "µs"), (1e-9, "ns"), (1e-12, "ps"), (1e-15, "fs"), (1e-18, "as"))
 
 
-T_PREFIX = ((1.0, "с"), (1e-3, "мс"), (1e-6, "мкс"), (1e-9, "нс"), (1e-12, "пс"), (1e-15, "фс"), (1e-18, "ас"))
+def _is_seconds(unit) -> bool:
+    return (is_t(unit) and unit.get("$t") == "s" and not unit.get("a")) or unit in ("s", "с")  # i18n-ok (old records)
 
 
-def fmt_t(x, unit: str = "с") -> str:
-    """A world time for the owner: seconds with the SI prefix of their scale («50 фс», «1,5 с»); another world unit
-    («M», «фс» of a world that counts in them) as it is."""
+def fmt_t(x, unit="s"):
+    """A world time for the owner (a text): seconds with the SI prefix of their scale ("50 fs", "1.5 s"); another
+    world unit ("M", or a world that counts in fs) as it is."""
     if not isinstance(x, (int, float)) or isinstance(x, bool) or not math.isfinite(x):
         return "—"
-    if unit != "с" or x == 0:
-        return f"{fmt_num(x)} {unit}"
+    if not _is_seconds(unit) or x == 0:
+        if _is_seconds(unit):
+            return T("{x:.6g} s", x=x)
+        return T("{x:.6g} {unit}", x=x, unit=unit)
     for k, u in T_PREFIX:
         if abs(x) >= 0.99999 * k:
-            return f"{fmt_num(x / k)} {u}"
-    return f"{fmt_num(x / 1e-18)} ас"
+            return T("{x:.6g} " + u, x=x / k)
+    return T("{x:.6g} as", x=x / 1e-18)
 
 
-def _plural(n: int, one: str, few: str, many: str) -> str:
-    n = abs(int(n))
-    if n % 10 == 1 and n % 100 != 11:
-        return one
-    return few if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14 else many
-
-
-def with_unit(label: str, unit: str) -> str:
-    """«label, unit» — unless the label already names the unit («Размер окна, нм», «Число щелей»; review LB1-p02-ux X9)."""
-    label, unit = str(label or ""), str(unit or "")
-    if not unit or has_unit(label, unit):
+def with_unit(label, unit):
+    """"label, unit" — unless the label already names the unit ("Window size, nm", "Number of slits"; review
+    LB1-p02-ux X9). Texts (``T``) are compared by their English rendering."""
+    if not unit:
+        return label or ""
+    if has_unit(str(label or ""), str(unit)):
         return label
-    return f"{label}, {unit}"
+    return T("{label}, {unit}", label=label or "", unit=unit)
 
 
 def has_unit(label: str, unit: str) -> bool:
@@ -179,7 +180,7 @@ def has_unit(label: str, unit: str) -> bool:
 class Refused(ValueError):
     """A sweep that is not started, with the owner's text and what to change."""
 
-    def __init__(self, text: str, hint: str = "", status: int = 400, **extra):
+    def __init__(self, text, hint="", status: int = 400, **extra):
         super().__init__(text)
         self.text, self.hint, self.status, self.extra = text, hint, status, extra
 
@@ -189,14 +190,14 @@ def _number(body, key, what, positive=True):
     v = body.get(key)
     if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(float(v)) \
             or (positive and not float(v) > 0):
-        raise Refused(f"«{what}» — положительное конечное число (время мира)")
+        raise Refused(T("“{what}” is a positive finite number (the world's time)", what=what))
     return float(v)
 
 
 def _ident(v, what: str) -> str:
     """An id from the request: a short string (a list or a number would break the lookups: review F12)."""
     if not isinstance(v, str) or not v or len(v) > 200:
-        raise Refused(f"«{what}» — идентификатор (строка)")
+        raise Refused(T("“{what}” is an identifier (a string)", what=what))
     return v
 
 
@@ -226,7 +227,7 @@ def object_param(viz: dict, w, obj: dict, pid: str):
     tj = (getattr(w, "palette", None) or {}).get(typ)
     if tj is not None:
         params = [d for d in (tj.get("params") or []) if isinstance(d, dict) and isinstance(d.get("id"), str)]
-        have = [f"«{d.get('label') or d['id']}» ({d['id']})" for d in params]
+        have = [T("“{label}” ({id})", label=d.get("label") or d["id"], id=d["id"]) for d in params]
         d = next((d for d in params if d["id"] == pid), None)
         try:
             p = _param_of(d) if d is not None else None
@@ -236,7 +237,8 @@ def object_param(viz: dict, w, obj: dict, pid: str):
     ot = (getattr(viz["simulation"], "PALETTE", None) or {}).get(typ)
     if ot is None:
         return None, False, []
-    return ot.schema.by_id.get(pid), pid in ot.handle_ids(), [f"«{q.label}» ({q.id})" for q in ot.schema.params]
+    return ot.schema.by_id.get(pid), pid in ot.handle_ids(), [T("“{label}” ({id})", label=q.label, id=q.id)
+                                                              for q in ot.schema.params]
 
 
 def sampling(req: dict) -> dict:
@@ -248,17 +250,18 @@ def sampling(req: dict) -> dict:
     return {"readings": n + 1, "dt": span / n}
 
 
-def stat_text(req: dict, t_unit: str) -> str:
-    """What the number is, with its sampling (review F7): «максимум по 201 замеру через 1,5 мс»."""
+def stat_text(req: dict, t_unit):
+    """What the number is, with its sampling (review F7): "the maximum over 201 readings 1.5 ms apart"."""
     s = sampling(req)
     if req["stat"] == "final":
-        return "в конце (1 замер)"
+        return T("at the end (1 reading)")
     k, dt = s["readings"], fmt_t(s["dt"], t_unit)
     if req["stat"] == "mean_last":
-        return (f"среднее за последние {fmt_t(req['window'], t_unit)} ({k} {_plural(k, 'замер', 'замера', 'замеров')} "
-                f"через {dt})")
-    what = "максимум" if req["stat"] == "max" else "минимум"
-    return f"{what} по {k} {_plural(k, 'замеру', 'замерам', 'замерам')} через {dt}"
+        return T("the mean over the last {window} ({n:d} readings {dt} apart)", window=fmt_t(req["window"], t_unit),
+                 n=k, dt=dt)
+    if req["stat"] == "max":
+        return T("the maximum over {n:d} readings {dt} apart", n=k, dt=dt)
+    return T("the minimum over {n:d} readings {dt} apart", n=k, dt=dt)
 
 
 def validate(viz: dict, idx, body) -> tuple[dict, dict]:
@@ -267,71 +270,79 @@ def validate(viz: dict, idx, body) -> tuple[dict, dict]:
     units). ``Refused`` otherwise."""
     from .params import _coerce  # noqa: PLC0415 - the parameters' own checks, as the forms use them
     if not isinstance(body, dict):
-        raise Refused("тело запроса — объект JSON")
+        raise Refused(T("the request body is a JSON object"))
     if not idx.worlds:
-        raise Refused("в записи нет ни одного мира")
+        raise Refused(T("the record holds no world"))
     world = max(idx.worlds)
     w = idx.worlds[world]
     tg = body.get("target")
     if not isinstance(tg, dict) or tg.get("kind") not in ("law", "object"):
-        raise Refused("«target» — {kind: law, id} или {kind: object, obj, param}")
+        raise Refused(T("“target” is {kind: law, id} or {kind: object, obj, param}"))
     if tg["kind"] == "law":
         lid = _ident(tg.get("id"), "target.id")
         p = viz["schema"].by_id.get(lid)
         if p is None or not p.live:
-            live = ", ".join(f"«{q.label}» ({q.id})" for q in viz["schema"].params if q.live) or "нет"
-            raise Refused(f"«{lid}» — не закон, меняемый на ходу; такие законы этого мира: {live}",
-                          "законы, меняемые только новым миром, свип не перебирает")
+            live = join([T("“{label}” ({id})", label=q.label, id=q.id) for q in viz["schema"].params if q.live],
+                        ", ") or T("none")
+            raise Refused(T("“{id}” is not a law that can be changed while the world runs; such laws of this world: "
+                            "{laws}", id=lid, laws=live),
+                          T("a sweep does not go over the laws that only a new world changes"))
         target = {"kind": "law", "id": p.id}
-        info = {"target_label": p.label, "target_unit": p.unit, "target_text": f"закон «{p.label}»",
+        info = {"target_label": p.label, "target_unit": p.unit, "target_text": T("the law “{label}”", label=p.label),
                 "target_handle": False}
     else:
         oid, pid = _ident(tg.get("obj"), "target.obj"), _ident(tg.get("param"), "target.param")
         obj = w.objects.get(oid)
         if obj is None:
-            raise Refused(f"в сцене нет объекта «{oid}»", "выберите объект из текущей сцены")
+            raise Refused(T("the scene has no object “{id}”", id=oid), T("choose an object of the current scene"))
         p, handle, have = object_param(viz, w, obj, pid)
         if p is None:
-            raise Refused(f"у «{obj.get('label')}» нет параметра «{pid}»; есть: {', '.join(have) or 'нет'}")
+            raise Refused(T("“{label}” has no parameter “{id}”; there are: {params}", label=obj.get("label") or oid,
+                            id=pid, params=join(have, ", ") or T("none")))
         target = {"kind": "object", "obj": oid, "param": p.id}
-        info = {"target_label": f"{obj.get('label')}: {p.label}", "target_unit": p.unit,
-                "target_text": f"«{p.label}» объекта «{obj.get('label')}»", "target_handle": handle}
+        info = {"target_label": T("{object}: {label}", object=obj.get("label") or oid, label=p.label),
+                "target_unit": p.unit,
+                "target_text": T("“{label}” of the object “{object}”", label=p.label, object=obj.get("label") or oid),
+                "target_handle": handle}
     if p.type == "json":
-        raise Refused(f"«{p.label}» — не число и не вариант: свип такие параметры не перебирает")
+        raise Refused(T("“{label}” is neither a number nor an option: a sweep does not go over such parameters",
+                        label=p.label))
     vals = body.get("values")
     if not isinstance(vals, list) or not vals:
-        raise Refused("«values» — список значений")
+        raise Refused(T("“values” is a list of values"))
     if len(vals) > MAX_VALUES:
-        raise Refused(f"значений {len(vals)} — не больше {MAX_VALUES}", "сократите список")
+        raise Refused(T("{n:d} values — at most {max:d}", n=len(vals), max=MAX_VALUES), T("shorten the list"))
     values, errs = [], []
     for v in vals:
         x, e = _coerce(p, v)
-        if e:
-            errs.append(str(e))
+        if e and e not in errs:
+            errs.append(e)
         values.append(x)
     if errs:
-        raise Refused("; ".join(dict.fromkeys(errs)))
-    duration = _number(body, "duration", "длительность")
+        raise Refused(join(errs, "; "))
+    duration = _number(body, "duration", T("duration"))
     mid = body.get("measure")
     now = w.current if w.current is not None else set(w.decl)
     if not isinstance(mid, str) or mid not in w.decl:
-        have = ", ".join(sorted(now)) or "никаких: мир не сообщает измеряемых величин"
-        raise Refused(f"нет измеряемой величины «{str(mid)[:200]}» (есть: {have})")
+        have = ", ".join(sorted(now)) or T("none: the world reports no measurable quantities")
+        raise Refused(T("there is no measurable quantity “{id}” (there are: {have})", id=str(mid)[:200], have=have))
     if mid not in now:  # declared once, its object removed since (review F12)
         from .instruments import display_label  # noqa: PLC0415
-        raise Refused(f"величину «{display_label(w, w.decl[mid])}» мир сейчас не измеряет: её объекта больше нет в "
-                      "сцене", "выберите величину из тех, что мир измеряет сейчас")
+        raise Refused(T("the world does not measure “{label}” now: its object is no longer in the scene",
+                        label=display_label(w, w.decl[mid])),
+                      T("choose a quantity among those the world measures now"))
     stat = body.get("stat", "final")
     if not isinstance(stat, str) or stat not in STATS:
-        raise Refused("«stat» — final, mean_last, max или min")
+        raise Refused(T("“stat” is final, mean_last, max or min"))
     window = None
     if stat == "mean_last":
-        window = _number(body, "window", "окно усреднения")
+        window = _number(body, "window", T("the averaging window"))
         if window > duration:
-            raise Refused("окно усреднения длиннее свипа", "окно — не больше длительности")
+            raise Refused(T("the averaging window is longer than the sweep"),
+                          T("make the window no longer than the duration"))
     ns = body.get("n_samples", N_SAMPLES)
     if isinstance(ns, bool) or not isinstance(ns, (int, float)) or int(ns) != ns or not 1 <= ns <= N_SAMPLES_MAX:
-        raise Refused(f"«n_samples» — целое от 1 до {N_SAMPLES_MAX}")
+        raise Refused(T("“n_samples” is a whole number from 1 to {max:d}", max=N_SAMPLES_MAX))
     d = w.decl[mid]
     from .instruments import display_label  # noqa: PLC0415
     req = {"target": target, "values": values, "duration": duration, "measure": mid, "stat": stat, "window": window,
@@ -421,23 +432,26 @@ def estimate(req: dict, info: dict, cost: dict, budget: float) -> dict:
            "restore_s": restore_s, "sample_ms": cost.get("sample_ms"), "ms_per_t": cost.get("ms_per_t"),
            "frames_measured": cost.get("frames_played", 0)}
     if cost.get("ms_per_t") is None:
-        out.update(known=False, total_s=None,
-                   text=f"{n} знач. × {nr} {_plural(nr, 'замер', 'замера', 'замеров')}: цену счёта этого мира запись "
-                        "не измерила (мир ещё не играл ⏺ — шаги и паузы её не показывают). Свип измерит её сам в "
-                        f"первые {fmt_wall(PROBE_S)} счёта и остановится, если весь он займёт больше "
-                        f"{fmt_wall(OVERRUN * budget)} (предел {fmt_wall(budget)} × {fmt_num(OVERRUN)})")
+        out.update(known=False, total_s=None, text=T(
+            "{values:d} values × {n:d} readings: the record has not measured the cost of computing this world (the "
+            "world has not played ⏺ yet — steps and pauses do not show it). The sweep measures it itself in the first "
+            "{probe} of computing and stops if the whole of it would take more than {limit} (the budget {budget} × "
+            "{k:g})", values=n, n=nr, probe=fmt_wall(PROBE_S), limit=fmt_wall(OVERRUN * budget),
+            budget=fmt_wall(budget), k=OVERRUN))
         return out
     adv_s = req["duration"] * cost["ms_per_t"] / 1e3
     smp_s = nr * (cost.get("sample_ms") or 0.0) / 1e3
     per = restore_s + adv_s + smp_s
     total = start_s + n * per
-    unit = info.get("t_unit", "с")
-    out.update(known=True, per_value_s=per, total_s=total, text=(
-        f"≈ {fmt_wall(total)} счёта: {n} знач. × (восстановление {fmt_wall(restore_s)} + {fmt_t(req['duration'], unit)} "
-        f"мира × {fmt3(cost['ms_per_t'])} мс за 1 {unit} + {nr} {_plural(nr, 'замер', 'замера', 'замеров')} × "
-        f"{fmt3(cost.get('sample_ms') or 0.0)} мс); предел {fmt_wall(budget)}. Оценка — по цене счёта этого мира, пока "
-        f"он играл ({cost.get('frames_played', 0)} кадров записи); свип проверит её сам и остановится, если выйдет "
-        f"дороже {fmt_wall(OVERRUN * budget)}"))
+    unit = info.get("t_unit") or "s"
+    out.update(known=True, per_value_s=per, total_s=total, text=T(
+        "≈ {total} of computing: {values:d} values × (restoring {restore} + {duration} of the world × {ms:.3g} ms per "
+        "1 {unit} + {n:d} readings × {sample:.3g} ms); the budget is {budget}. The estimate comes from the cost of "
+        "computing this world while it played ({frames:d} frames of the record); the sweep checks it itself and stops "
+        "if it comes out dearer than {limit}", total=fmt_wall(total), values=n, restore=fmt_wall(restore_s),
+        duration=fmt_t(req["duration"], unit), ms=cost["ms_per_t"], unit=unit, n=nr,
+        sample=cost.get("sample_ms") or 0.0, budget=fmt_wall(budget), frames=int(cost.get("frames_played", 0)),
+        limit=fmt_wall(OVERRUN * budget)))
     return out
 
 
@@ -532,17 +546,19 @@ class SweepManager:
         bud = budget_s()
         est = estimate(req, info, cost, bud)
         if est["known"] and est["total_s"] > bud:
-            raise Refused(f"Свип займёт около {fmt_wall(est['total_s'])} счёта — больше предела {fmt_wall(bud)}",
-                          "уменьшите число значений, длительность или число замеров", estimate=est)
+            raise Refused(T("The sweep would take about {total} of computing — more than the budget of {budget}",
+                            total=fmt_wall(est["total_s"]), budget=fmt_wall(bud)),
+                          T("reduce the number of values, the duration or the number of readings"), estimate=est)
         if body.get("estimate"):
             return {"estimate": est, **info}
         async with self.lock:
             mine = self._running_of(run)
             if mine:
-                raise Refused(f"у этого запуска уже идёт свип № {mine[0]}: дождитесь его или отмените", status=409)
+                raise Refused(T("this run already has sweep no. {n:d} running: wait for it or cancel it", n=mine[0]),
+                              status=409)
             if len(self.active) >= MAX_SWEEPS:
-                raise Refused(f"на сервере уже идут {len(self.active)} свипа (больше {MAX_SWEEPS} сразу нельзя): "
-                              "дождитесь одного из них", status=409)
+                raise Refused(T("{n:d} sweeps already run on the server (no more than {max:d} at once): wait for one of "
+                                "them", n=len(self.active), max=MAX_SWEEPS), status=409)
             folder = self.folder(run)
             folder.mkdir(parents=True, exist_ok=True)
             used = [int(m.group(1)) for p in folder.iterdir() if (m := SPEC.match(p.name))]
@@ -560,15 +576,16 @@ class SweepManager:
             need = memory_need(base.get("bytes") or dst.stat().st_size)
             mem = self.mem
             if need > mem:
-                raise Refused(f"свипу этого мира нужно около {fmt_bytes(need)} памяти (копия состояния мира и мир из "
-                              f"неё), а свипу отведено {fmt_bytes(mem)}",
-                              "уменьшите мир (сетку, число частиц) — или сервер с бо́льшим LFVIZ_SWEEP_MEM_GB",
-                              status=409)
+                raise Refused(T("a sweep of this world needs about {need} of memory (a copy of the world's state and "
+                                "a world made from it), while a sweep is given {mem}", need=fmt_bytes(need),
+                                mem=fmt_bytes(mem)),
+                              T("make the world smaller (the grid, the number of particles) — or use a server with a "
+                                "larger LFVIZ_SWEEP_MEM_GB"), status=409)
             free = container_free()
             if free is not None and need > free:
-                raise Refused(f"на сервере сейчас свободно {fmt_bytes(free)} памяти, а свипу нужно около "
-                              f"{fmt_bytes(need)}: идущие миры важнее", "повторите, когда другие запуски остановятся",
-                              status=409)
+                raise Refused(T("the server has {free} of memory free now, while the sweep needs about {need}: the "
+                                "running worlds come first", free=fmt_bytes(free), need=fmt_bytes(need)),
+                              T("repeat when other runs stop"), status=409)
             spec = {"n": n, "run": run.id, "viz": run.viz_id, "state": "starting", "created": _now_iso(),
                     "request": req, **info, "estimate": est, "budget_s": bud, "mem_bytes": mem,
                     "base": {**{k: v for k, v in base.items() if k != "path"}, "path": str(dst)},
@@ -587,32 +604,37 @@ class SweepManager:
         return {"n": n, "state": "starting", "estimate": est,
                 "base": {k: v for k, v in spec["base"].items() if k != "path"}, **info}
 
-    async def _base(self, run, world: int, t_unit: str = "с") -> dict:
+    async def _base(self, run, world: int, t_unit="s") -> dict:
         """The checkpoint the sweep starts from: a fresh one of the running world (``checkpoint_now``), else the
         latest usable one in the record (and the result says so)."""
         if run.running and run.rebuilding:
-            raise Refused("мир ещё восстанавливается по записи: свип — когда запись продолжится", status=409)
+            raise Refused(T("the world is still being restored along the record: sweep when the record goes on"),
+                          status=409)
         if run.running and checkpoint_now_supported():
             return await self._checkpoint_now(run, world)
         try:
             lw = run._latest_world()
         except RuntimeError as e:
-            raise Refused(str(e)) from None
+            raise Refused(text_of(e)) from None
         ck = lw["checkpoint"]
         if ck is None:
-            raise Refused("у мира нет пригодного сохранённого состояния (оно пишется при паузе и раз в 2 минуты счёта)",
-                          "нажмите ⏺, дайте миру посчитать несколько секунд и поставьте паузу — затем повторите свип")
+            raise Refused(T("the world has no usable saved state (it is written at a pause and every 2 minutes of "
+                            "computing)"),
+                          T("press ⏺, let the world compute for a few seconds and pause it — then repeat the sweep"))
         tail = ck.get("commands") or []
         n_fr = sum(1 for c in tail if "frame" in c)
         n_cmd = len(tail) - n_fr
         now_t = run.meta.get("sim_t")
         if run.running:
-            note = (f"Свип — от последнего сохранённого состояния мира, t = {fmt_t(ck['t'], t_unit)} (мир сейчас на "
-                    f"t = {fmt_t(now_t, t_unit)}): свежее состояние вычислитель этой версии сохранять не умеет")
+            note = T("The sweep starts from the world's latest saved state, t = {t} (the world is now at t = {now}): "
+                     "a worker of this version cannot save a fresh state", t=fmt_t(ck["t"], t_unit),
+                     now=fmt_t(now_t, t_unit))
         else:
-            note = f"Запуск приостановлен: свип — от его последнего сохранённого состояния, t = {fmt_t(ck['t'], t_unit)}"
+            note = T("The run is suspended: the sweep starts from its latest saved state, t = {t}",
+                     t=fmt_t(ck["t"], t_unit))
         if n_fr or n_cmd:
-            note += f"; после него в записи ещё {n_fr} кадр(ов) и {n_cmd} изменени(й) — в свип они не вошли"
+            note = T("{note}; after it the record holds {frames:d} more frames and {changes:d} changes — they are not "
+                     "in the sweep", note=note, frames=n_fr, changes=n_cmd)
         return {"path": ck["file"], "t": ck["t"], "world": int(lw["header"].get("world", 1)), "source": "latest",
                 "file": Path(ck["file"]).name, "bytes": ck.get("bytes"), "note": note}
 
@@ -645,27 +667,29 @@ class SweepManager:
             if meta is not None:
                 break
             if not run.running:
-                raise Refused("вычислитель запуска завершился, не сохранив состояние мира: повторите свип", status=409)
+                raise Refused(T("the run's worker ended without saving the world's state: repeat the sweep"), status=409)
             if time.monotonic() > deadline:
                 busy = (run.busy or {}).get("what")
-                raise Refused("мир не сохранил своё состояние за 2 мин" + (f" (он занят: {busy})" if busy else ""),
-                              "повторите свип, когда мир освободится", status=409)
+                raise Refused(T("the world did not save its state within 2 min (it is busy: {busy})", busy=busy) if busy
+                              else T("the world did not save its state within 2 min"),
+                              T("repeat the sweep when the world is free"), status=409)
             await asyncio.sleep(0.1)
         if meta.get("error"):
-            raise Refused(f"состояние мира не сохранилось: {meta['error']}", "свип этого мира невозможен", status=409)
+            raise Refused(T("the world's state was not saved: {error}", error=meta["error"]),
+                          T("a sweep of this world is not possible"), status=409)
         name = str(meta.get("file") or "")
         root = registry.ROOT.parent
         if not CK.NAME.match(name) or int(meta.get("world", 0)) != int(world):
-            raise Refused("вычислитель ответил не тем состоянием мира: повторите свип", status=409)
+            raise Refused(T("the worker answered with another state of the world: repeat the sweep"), status=409)
         if meta.get("env") != CK.runtime_env() or not isinstance(meta.get("files"), list) \
                 or CK.files_hash(root, meta["files"]) != meta.get("code"):
-            raise Refused("код движка или библиотеки изменились после того, как этот мир был запущен: свип посчитал "
-                          "бы его другим кодом", "приостановите запуск и продолжите его (⏺) — или начните новый мир",
-                          status=409)
+            raise Refused(T("the engine's code or the libraries changed after this world was started: the sweep would "
+                            "compute it with other code"),
+                          T("suspend the run and continue it (⏺) — or start a new world"), status=409)
         path = run.ckpt_dir / name
         while not path.is_file():  # the worker writes it in the background (lfviz.checkpoint.Writer)
             if time.monotonic() > deadline + 60.0:
-                raise Refused("файл сохранённого состояния так и не появился: повторите свип", status=409)
+                raise Refused(T("the file of the saved state never appeared: repeat the sweep"), status=409)
             await asyncio.sleep(0.1)
         return {"path": str(path), "t": meta.get("t"), "world": int(meta.get("world", 1)), "source": "now",
                 "file": name, "bytes": meta.get("bytes"), "note": ""}
@@ -722,21 +746,22 @@ class SweepManager:
         if spec is not None and spec.get("state") in ("starting", "running"):
             k = len(spec.get("results") or [])
             if a.get("cancel"):
-                spec.update(state="cancelled", message=(
-                    f"Отменено: посчитано {k} из {len(spec['request']['values'])} значений; они сохранены"))
+                spec.update(state="cancelled", message=T(
+                    "Cancelled: {k:d} of {n:d} values computed; they are kept", k=k, n=len(spec["request"]["values"])))
             elif a.get("killed") == "over":
-                spec.update(state="over_budget", message=(
-                    f"Остановлено сервером: свип считался дольше {fmt_wall(limit)} (предел {fmt_wall(a.get('budget'))} "
-                    f"× {fmt_num(OVERRUN)} и {fmt_wall(WATCH_GRACE_S)} запаса) — один шаг мира оказался длиннее "
-                    f"предела. Посчитано {k} значений, они сохранены; уменьшите длительность или шаг мира"))
+                spec.update(state="over_budget", message=T(
+                    "Stopped by the server: the sweep computed longer than {limit} (the budget {budget} × {k:g} and "
+                    "{grace} of margin) — one step of the world was longer than the limit. {n:d} values computed, they "
+                    "are kept; reduce the duration or the world's step", limit=fmt_wall(limit),
+                    budget=fmt_wall(a.get("budget")), k=OVERRUN, grace=fmt_wall(WATCH_GRACE_S), n=k))
             elif rc and rc < 0:
-                spec.update(state="failed", message=(
-                    f"Процесс свипа остановлен системой (сигнал {-rc}): вероятно, не хватило памяти контейнера. "
-                    "Посчитанные значения сохранены"))
+                spec.update(state="failed", message=T(
+                    "The sweep's process was stopped by the system (signal {sig:d}): probably the container ran out of "
+                    "memory. The computed values are kept", sig=-rc))
             else:
-                spec.update(state="failed", message=(
-                    f"Процесс свипа завершился с кодом {rc} (подробности — в sweeps/{n}.log). "
-                    "Посчитанные значения сохранены"))
+                spec.update(state="failed", message=T(
+                    "The sweep's process exited with code {code} (details in sweeps/{n:d}.log). The computed values "
+                    "are kept", code=rc, n=n))
             spec["ended"] = _now_iso()
             try:
                 _write_json(path, spec)
@@ -753,8 +778,8 @@ class SweepManager:
         spec = json.loads(path.read_text())  # OSError / ValueError: the caller answers 404
         active = (run.id, n) in self.active
         if not active and spec.get("state") in ("starting", "running"):  # the server restarted under it
-            spec.update(state="interrupted", message="Свип прерван: сервер перезапускался. Посчитанные значения "
-                                                     "сохранены", ended=_now_iso())
+            spec.update(state="interrupted", message=T("The sweep was interrupted: the server restarted. The computed "
+                                                       "values are kept"), ended=_now_iso())
             _write_json(path, spec)
             (self.folder(run) / f"{n}.base.pkl").unlink(missing_ok=True)
         spec["active"] = active
@@ -787,13 +812,13 @@ class SweepManager:
         a = self.active.get((rid, n))
         if a is None:
             if run is None or not self.spec_path(run, n).is_file():
-                raise Refused("нет такого свипа", status=404)
+                raise Refused(T("there is no such sweep"), status=404)
             state = json.loads(self.spec_path(run, n).read_text()).get("state")
-            return {"ok": True, "already": True, "state": state, "text": "свип уже остановлен"}
+            return {"ok": True, "already": True, "state": state, "text": T("the sweep has stopped already")}
         a["cancel"] = True
         proc, task = a.get("proc"), a.get("task")
         if proc is None:
-            raise Refused("свип ещё запускается: повторите отмену через секунду", status=409)
+            raise Refused(T("the sweep is still starting: repeat the cancel in a second"), status=409)
         try:
             proc.kill()
         except ProcessLookupError:
@@ -803,13 +828,13 @@ class SweepManager:
         return {"ok": True, "cancelled": n}
 
     def remove(self, run, n: int) -> dict:
-        """Remove a finished sweep with its results; refused while it runs (review F10: a second «отменить» removed what
+        """Remove a finished sweep with its results; refused while it runs (review F10: a second "cancel" removed what
         the first one kept)."""
         if (run.id, n) in self.active:
-            raise Refused("свип ещё идёт: сначала «✕ отменить», потом удалить", status=409)
+            raise Refused(T("the sweep is still running: first “✕ cancel”, then remove"), status=409)
         path = self.spec_path(run, n)
         if not path.is_file():
-            raise Refused("нет такого свипа", status=404)
+            raise Refused(T("there is no such sweep"), status=404)
         for p in (path, self.folder(run) / f"{n}.log", self.folder(run) / f"{n}.base.pkl"):
             p.unlink(missing_ok=True)
         return {"ok": True, "removed": n}
@@ -827,35 +852,43 @@ class SweepManager:
             await asyncio.wait(tasks, timeout=10.0)
 
 
-def table_csv(spec: dict) -> str:
+def table_csv(spec: dict, lang: str = "en") -> str:
     """The table of a sweep: its set-up in «#» lines (the base moment, the duration, the sampling, how the measure was
-    read — review F7), then one header line and a row per value."""
+    read — review F7), then one header line and a row per value. Its texts in ``lang`` (the player's language; English
+    by default), the third «#» line in ``key=value`` form for programs."""
     import csv  # noqa: PLC0415
     import io  # noqa: PLC0415
+    R = lambda x: render_in(x, lang)  # noqa: E731
     buf = io.StringIO()
     w = csv.writer(buf, lineterminator="\r\n")
-    tu, mu, unit = spec.get("target_unit") or "", spec.get("measure_unit") or "", spec.get("t_unit") or "с"
+    tu, mu, unit = spec.get("target_unit") or "", spec.get("measure_unit") or "", spec.get("t_unit") or "s"
     req, base = spec.get("request") or {}, spec.get("base") or {}
     smp = spec.get("sampling") or (sampling(req) if req else {})
     sampler = spec.get("sampler")
-    src = {"now": "мир в момент запуска свипа", "latest": "последнее сохранённое состояние мира"}.get(base.get("source"),
-                                                                                                    "")
-    buf.write(f"# свип № {spec.get('n')} запуска {spec.get('run')}: {spec.get('target_text')} → "
-              f"{spec.get('measure_label')} ({spec.get('stat_text')})\r\n")
-    buf.write(f"# от t = {fmt_t(base.get('t'), unit)} ({src}, мир {base.get('world')}); каждое значение — "
-              f"{fmt_t(req.get('duration'), unit)} мира; замеров {smp.get('readings')}"
-              + (f" через {fmt_t(smp.get('dt'), unit)}" if smp.get("dt") else "")
-              + (f"; величина читалась через {sampler}()" if sampler else "") + "\r\n")
-    buf.write(f"# base_t={base.get('t')!r}; t_unit={unit}; duration={req.get('duration')!r}; "
+    src = {"now": T("the world at the moment the sweep started"),
+           "latest": T("the world's latest saved state")}.get(base.get("source"), "")
+    buf.write("# " + R(T("sweep no. {n} of run {run}: {target} → {measure} ({stat})", n=spec.get("n"), run=spec.get("run"),
+                         target=spec.get("target_text") or "", measure=spec.get("measure_label") or "",
+                         stat=spec.get("stat_text") or "")) + "\r\n")
+    line = T("from t = {t} ({source}, world {world}); each value — {duration} of the world; {n} readings", t=fmt_t(
+        base.get("t"), unit), source=src, world=base.get("world"), duration=fmt_t(req.get("duration"), unit),
+        n=smp.get("readings"))
+    if smp.get("dt"):
+        line = T("{text}, {dt} apart", text=line, dt=fmt_t(smp.get("dt"), unit))
+    if sampler:
+        line = T("{text}; the quantity was read through {sampler}()", text=line, sampler=sampler)
+    buf.write("# " + R(line) + "\r\n")
+    buf.write(f"# base_t={base.get('t')!r}; t_unit={render_in(unit, 'en')}; duration={req.get('duration')!r}; "
               f"window={req.get('window')!r}; stat={req.get('stat')}; n_samples={req.get('n_samples')}; "
               f"readings={smp.get('readings')}; dt_readings={smp.get('dt')!r}; sampler={sampler}; "
               f"source={base.get('source')}; state={spec.get('state')}\r\n")
-    w.writerow([with_unit(spec.get("target_label"), tu),
-                with_unit(f"{spec.get('measure_label')} ({spec.get('stat_text')})", mu), "примечание"])
+    w.writerow([R(with_unit(spec.get("target_label"), tu)),
+                R(with_unit(T("{label} ({stat})", label=spec.get("measure_label") or "", stat=spec.get("stat_text") or ""),
+                            mu)), R(T("note"))])
     for r in spec.get("results") or []:
         v, m = r.get("value"), r.get("measured")
         w.writerow([repr(v) if isinstance(v, float) else v, "" if m is None else repr(float(m)),
-                    r.get("error") or r.get("note") or ""])
+                    R(r.get("error") or r.get("note") or "")])
     return buf.getvalue()
 
 
@@ -875,7 +908,7 @@ def add_routes(app, mgr):
         return web.json_response(data, status=status, dumps=lambda d: json.dumps(d, ensure_ascii=False, default=str))
 
     def refused(e: Refused):
-        return js({"error": e.text, **({"hint": e.hint} if e.hint else {}), **e.extra}, e.status)
+        return js(error_body(e.text, **({"hint": e.hint} if e.hint else {}), **e.extra), e.status)
 
     def run_of(request):
         return mgr.get(request.match_info["id"])
@@ -883,18 +916,18 @@ def add_routes(app, mgr):
     def n_of(request) -> int:
         s = request.match_info["n"]
         if not (s.isascii() and s.isdigit()) or len(s) > 9:  # «²» is a digit to isdigit (review F12)
-            raise Refused("нет такого свипа", status=404)
+            raise Refused(T("there is no such sweep"), status=404)
         return int(s)
 
     async def post(request):
         try:
             run = run_of(request)
         except KeyError:
-            return js({"error": "нет такого запуска"}, 404)
+            return js(error_body(T("there is no such run")), 404)
         try:
             body = await request.json()
         except ValueError:  # not JSON, or not UTF-8
-            return js({"error": "тело запроса не JSON"}, 400)
+            return js(error_body(T("the request body is not JSON")), 400)
         try:
             return js(await SW.start(run, body))
         except Refused as e:
@@ -904,20 +937,21 @@ def add_routes(app, mgr):
         try:
             return js(SW.list(run_of(request)))
         except KeyError:
-            return js({"error": "нет такого запуска"}, 404)
+            return js(error_body(T("there is no such run")), 404)
 
     async def get_one(request):
         try:
             run = run_of(request)
             spec = SW.read(run, n_of(request))
         except KeyError:
-            return js({"error": "нет такого запуска"}, 404)
+            return js(error_body(T("there is no such run")), 404)
         except Refused as e:
             return refused(e)
         except (OSError, ValueError):
-            return js({"error": "нет такого свипа"}, 404)
+            return js(error_body(T("there is no such sweep")), 404)
         if (request.query.get("format") or "").lower() == "csv":
-            return web.Response(text=table_csv(spec), content_type="text/csv", charset="utf-8", headers={
+            return web.Response(text=table_csv(spec, request.query.get("lang") or "en"), content_type="text/csv",
+                                charset="utf-8", headers={
                 "Content-Disposition": f'attachment; filename="{run.id}-sweep{spec["n"]}.csv"'})
         return js(spec)
 
@@ -929,13 +963,13 @@ def add_routes(app, mgr):
         except Refused as e:
             return refused(e)
         except (OSError, ValueError):
-            return js({"error": "нет такого свипа"}, 404)
+            return js(error_body(T("there is no such sweep")), 404)
 
     async def remove(request):
         try:
             return js(SW.remove(run_of(request), n_of(request)))
         except KeyError:
-            return js({"error": "нет такого запуска"}, 404)
+            return js(error_body(T("there is no such run")), 404)
         except Refused as e:
             return refused(e)
 
@@ -960,7 +994,8 @@ class _Sink:
 
     def emit(self, meta, blobs=None):
         if isinstance(meta, dict) and meta.get("type") == "error":
-            self.errors.append(str(meta.get("text") or "")[:1000])
+            text = meta.get("text") or ""
+            self.errors.append(text if is_t(text) else str(text)[:1000])
 
 
 class _OverBudget(Exception):
@@ -1036,10 +1071,10 @@ def _stat(req: dict, ts: list, vs: list) -> tuple[float | None, str]:
     stat = req["stat"]
     bad = sum(1 for v in vs if v is None)
     if stat == "final":
-        return vs[-1], ("величина в конце не определена" if vs[-1] is None else "")
+        return vs[-1], (T("the quantity is undefined at the end") if vs[-1] is None else "")
     if stat == "mean_last":
         if bad:
-            return None, f"величина не определена в {bad} из {len(vs)} замеров окна"
+            return None, T("the quantity is undefined in {bad:d} of the window's {n:d} readings", bad=bad, n=len(vs))
         span = ts[-1] - ts[0]
         if not span > 0:
             return vs[-1], ""
@@ -1047,8 +1082,9 @@ def _stat(req: dict, ts: list, vs: list) -> tuple[float | None, str]:
         return acc / span, ""
     ok = [v for v in vs if v is not None]
     if not ok:
-        return None, "величина не определена ни в одном замере"
-    return (max(ok) if stat == "max" else min(ok)), (f"не определена в {bad} из {len(vs)} замеров" if bad else "")
+        return None, T("the quantity is undefined in every reading")
+    return (max(ok) if stat == "max" else min(ok)), (T("undefined in {bad:d} of {n:d} readings", bad=bad, n=len(vs))
+                                                      if bad else "")
 
 
 def _thin_trace(ts, vs, t0):
@@ -1130,7 +1166,7 @@ def apply_change(runner, sim, req: dict, value) -> dict:
     objs = getattr(sim, "objects", None)
     obj = objs.get(oid) if isinstance(objs, dict) else None
     if obj is None:
-        raise ValueError(f"в сохранённом состоянии мира нет объекта «{oid}»")
+        raise ValueError(T("the world's saved state has no object “{id}”", id=oid))
     ot = (getattr(sim, "PALETTE", None) or {}).get(obj.get("type"))
     handles = ot.handle_ids() if ot is not None else []
     if pid in handles:
@@ -1165,14 +1201,15 @@ def _read(sim, sampler: str, measure) -> tuple[dict, dict]:
     if sampler == "measure":
         m = measure()
         if not isinstance(m, dict):
-            raise _Contract(f"его measure() вернул {type(m).__name__}, а не словарь {{id величины: число}}")
+            raise _Contract(T("its measure() returned {type}, not a dict {quantity id: number}", type=type(m).__name__))
         return m, {}
     meta, _ = sim.frame()
     meas = meta.get("meas") if isinstance(meta, dict) else None
     if meas is None:
         meas = {}
     if not isinstance(meas, dict):
-        raise _Contract(f"его кадр несёт «meas» в виде {type(meas).__name__}, а не словаря {{id величины: число}}")
+        raise _Contract(T("its frame carries “meas” as {type}, not as a dict {quantity id: number}",
+                          type=type(meas).__name__))
     mn = meta.get("meas_note")
     return meas, (mn if isinstance(mn, dict) else {})
 
@@ -1197,15 +1234,15 @@ def run_value(data: bytes, req: dict, value, clock: Clock, later_t: float = 0.0)
     if sink.errors:  # the world refused the change: that is this value's result
         return {"value": value, "measured": None, "error": sink.errors[0], "t0": t0, "restore_s": restore_s,
                 "how": applied["how"], "wall_s": time.monotonic() - w0}
-    T, n = req["duration"], req["n_samples"]
-    t_end = t0 + T
+    dur, n = req["duration"], req["n_samples"]
+    t_end = t0 + dur
     if req["stat"] == "final":
         grid = [t_end]
     elif req["stat"] == "mean_last":
         w = req["window"]
         grid = [t_end - w + w * i / n for i in range(n)] + [t_end]
     else:
-        grid = [t0 + T * i / n for i in range(n)] + [t_end]
+        grid = [t0 + dur * i / n for i in range(n)] + [t_end]
     mid = req["measure"]
     measure = getattr(sim, "measure", None)
     sampler = "measure" if callable(measure) else "frame"
@@ -1221,7 +1258,7 @@ def run_value(data: bytes, req: dict, value, clock: Clock, later_t: float = 0.0)
                 adv_s += dw
                 clock.advanced(dw, float(sim.t) - tb)
                 if not float(sim.t) > tb:
-                    raise RuntimeError(f"мир не продвинулся во времени от t = {fmt_num(tb)}")
+                    raise RuntimeError(T("the world did not advance in time from t = {t:.6g}", t=tb))
                 clock.check(later_t + max(0.0, t_end - float(sim.t)))
             s0 = time.monotonic()
             meas, mn = _read(sim, sampler, measure)
@@ -1229,7 +1266,8 @@ def run_value(data: bytes, req: dict, value, clock: Clock, later_t: float = 0.0)
             ts.append(float(sim.t))
             vs.append(_value_of(meas.get(mid)))
             if vs[-1] is None:
-                notes.append(str(mn.get(mid) or ("величина не измерена в этом кадре" if mid not in meas else "")))
+                nt = mn.get(mid) or (T("the quantity is not measured in this frame") if mid not in meas else "")
+                notes.append(nt if is_t(nt) else str(nt))
             clock.check(later_t + max(0.0, t_end - float(sim.t)))
             clock.tick((j + 1) / len(grid))
     except (_OverBudget, _Gone, _Contract):
@@ -1238,18 +1276,23 @@ def run_value(data: bytes, req: dict, value, clock: Clock, later_t: float = 0.0)
         import traceback  # noqa: PLC0415
         traceback.print_exc()
         text, detail = owner_text(e)
-        return {"value": value, "measured": None, "error": f"Расчёт остановился на t = {fmt_num(sim.t)}: {text}",
+        return {"value": value, "measured": None,
+                "error": T("The computation stopped at t = {t:.6g}: {text}", t=float(sim.t), text=text),
                 "detail": detail, "t0": t0, "restore_s": restore_s, "how": applied["how"],
                 "wall_s": time.monotonic() - w0}
     measured, note = _stat(req, ts, vs)
     if notes and not note:
         note = notes[-1]
     elif notes and notes[-1]:
-        note += f" ({notes[-1]})"
+        note = T("{text} ({why})", text=note, why=notes[-1])
     if "applied" in applied:
-        note = (note + "; " if note else "") + f"мир применил {fmt_num(applied['applied'])} вместо {fmt_num(value)}"
+        ap = applied["applied"]
+        num = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool)  # noqa: E731
+        note = join([note, T("the world applied {got:.6g} instead of {asked:.6g}", got=ap, asked=value)
+                     if num(ap) and num(value) else T("the world applied {got} instead of {asked}", got=str(ap),
+                                                      asked=str(value))], "; ")
     if applied["how"] == "set_same":
-        note = (note + "; " if note else "") + "равно заданному значению флажка: мир без изменения"
+        note = join([note, T("equal to the flag's stored value: the world unchanged")], "; ")
     return {"value": value, "measured": measured, **({"note": note} if note else {}), "t0": t0, "t1": float(sim.t),
             "readings": len(vs), "sampler": sampler, "how": applied["how"],
             **({"applied": applied["applied"]} if "applied" in applied else {}),
@@ -1318,7 +1361,7 @@ def main(argv=None):
             if notes:
                 spec["backend_notes"] = list(notes)
         except Exception as e:  # noqa: BLE001
-            spec["backend_notes"] = [f"настройки устройств не применены: {e}"]
+            spec["backend_notes"] = [T("the device settings were not applied: {error}", error=text_of(e))]
         registry.load(spec["viz"])  # the world's modules (the checkpoint names them)
         base = Path(spec["base"]["path"])
         data = base.read_bytes()
@@ -1349,34 +1392,39 @@ def main(argv=None):
             write(force=True)
         ok = sum(1 for r in spec["results"] if r.get("measured") is not None)
         if ok:
-            spec.update(state="done", ended=_now_iso(), message=f"Готово: измерено {ok} из {len(values)} значений")
-        else:  # nothing measured is not «готово» (review LB1-p02-ux X7)
+            spec.update(state="done", ended=_now_iso(), message=T("Done: {k:d} of {n:d} values measured", k=ok,
+                                                                    n=len(values)))
+        else:  # nothing measured is not "done" (review LB1-p02-ux X7)
             first = next((r.get("error") or r.get("note") for r in spec["results"] if r.get("error") or r.get("note")),
                          "")
             spec.update(state="failed", ended=_now_iso(), message=(
-                f"Не измерено ни одно из {len(values)} значений" + (f": {first}" if first else "")
-                + " — причины по значениям в таблице"))
+                T("None of the {n:d} values was measured: {first} — the reasons per value are in the table",
+                  n=len(values), first=first) if first
+                else T("None of the {n:d} values was measured — the reasons per value are in the table",
+                       n=len(values))))
     except _Gone:
         return 0  # the run was deleted: its folder went with the sweep
     except _OverBudget as e:
         k = len(spec["results"])
         lim = OVERRUN * bud
-        how = (f"по замеренной цене счёта весь свип занял бы около {fmt_wall(e.projected)}" if e.projected is not None
-               else f"он считался уже {fmt_wall(e.elapsed)}")
-        spec.update(state="over_budget", ended=_now_iso(), message=(
-            f"Остановлено через {fmt_wall(e.elapsed)}: {how} — больше {fmt_wall(lim)} (предел {fmt_wall(bud)} × "
-            f"{fmt_num(OVERRUN)}). Посчитано значений: {k}, они сохранены; уменьшите число значений, длительность или "
-            "число замеров"))
+        how = (T("by the measured cost of computing the whole sweep would take about {t}", t=fmt_wall(e.projected))
+               if e.projected is not None else T("it has computed for {t} already", t=fmt_wall(e.elapsed)))
+        spec.update(state="over_budget", ended=_now_iso(), message=T(
+            "Stopped after {elapsed}: {how} — more than {limit} (the budget {budget} × {k:g}). Values computed: {n:d}, "
+            "they are kept; reduce the number of values, the duration or the number of readings",
+            elapsed=fmt_wall(e.elapsed), how=how, limit=fmt_wall(lim), budget=fmt_wall(bud), k=OVERRUN, n=k))
     except _Contract as e:
         traceback.print_exc()
-        spec.update(state="failed", ended=_now_iso(), message=(
-            f"Свип не посчитан: мир «{spec.get('viz')}» нарушает договор приборов (API P16.3 §2) — {e}. Это ошибка "
-            "мира, а не выбранных значений: свип в нём невозможен, пока её не исправят"))
+        spec.update(state="failed", ended=_now_iso(), message=T(
+            "The sweep was not computed: the world “{viz}” breaks the instruments' contract (API P16.3 §2) — {error}. "
+            "It is the world's error, not the chosen values': a sweep in it is not possible until it is fixed",
+            viz=spec.get("viz"), error=text_of(e)))
     except Exception as e:  # noqa: BLE001 - the sweep as a whole failed: why, for the owner
         traceback.print_exc()
         from .errors import owner_text  # noqa: PLC0415
         text, detail = owner_text(e, "restore")
-        spec.update(state="failed", ended=_now_iso(), message=f"Свип не посчитан: {text}", detail=detail)
+        spec.update(state="failed", ended=_now_iso(), message=T("The sweep was not computed: {why}", why=text),
+                    detail=detail)
     spec["progress"]["frac"] = 1.0
     try:
         write(force=True)
