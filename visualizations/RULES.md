@@ -32,12 +32,18 @@ visualizations/
   docker/                Dockerfile, docker-compose.yml, requirements.lock (pinned)
   server/                serve.py + package lfviz (protocol, params, runner, worker, run manager, HTTP/WS API; the
                          slice planes of 3-D worlds: lfviz/planes3d.py)
-  player/                the one player: catalogue (index.html), run page (run.html), shared JS/CSS, the 3-D
-                         environment (js/env3d.js over js/scene3d.js and js/slices.js; the camera window
+  player/                the one player: start page (index.html, js/start.js), runs page (runs.html), run page
+                         (run.html; also a saved recording, ?rec=), js/base.js (MODE, BASE, url, page: the same files
+                         on the server and on the public site, §9), shared JS/CSS, the 3-D environment (js/env3d.js over js/scene3d.js and js/slices.js; the camera window
                          js/imagewin.js); vendor/: third-party modules, unmodified (three.js r185.1, MIT;
                          vendor/README.md)
   tests/                 server/API tests and the test harness
   runs/                  run records (git-ignored; limits: keep days, quota; "keep" protects a record)
+  site/                  the public site's scripts (§9; site/README.md): record.py (the offline recorder), plan.py,
+                         build.py, check.py, readme.py (the root READMEs' catalogue), posters.mjs, sitelib.py;
+                         ci/pages.yml (the draft workflow, not active)
+  recordings/            the recordings of the demonstrations (git-ignored; made by site/record.py): <world>/index.json
+                         and <world>/<rec>.<hash8>.lfrec.gz; served at /recordings/ (LFVIZ_RECORDINGS overrides it)
   planned.json           the planned items of every audience (S01–S45, U01–U30, R01–R10, benches p05–p07): id,
                          audience, section, title (an English msgid), grades/curriculum, batch, state, related
   pNN_<slug>/            ONE FOLDER PER LABORATORY (playground section, plan P15; §6): the same files,
@@ -60,7 +66,7 @@ visualizations/
 
 A new visualization is a new `sNN_`/`uNN_`/`rNN_<slug>/` folder (a laboratory `pNN_<slug>/`), its number the plan's
 id of the item; the server and the player pick it up without changes (`registry.py` discovers folders and checks
-their `VIZ`, §8; the catalogue lists them, the run page loads `web/view.js`). When the item lands, its entry in
+their `VIZ`, §8; the start page lists them, the run page loads `web/view.js`). When the item lands, its entry in
 `planned.json` is left to the site's build, which drops a planned id that exists as a folder.
 
 **The physics engine.** Since 2026-10-23 the physics of all visualizations lives in one library, `../lfphys/`
@@ -180,8 +186,14 @@ REST (JSON):
 | method | path | meaning |
 |---|---|---|
 | GET | `/api/health` | version, visualizations, running workers |
-| GET | `/api/viz`, `/api/viz/{viz}` | catalogue: id, title, summary, purpose, version, kind, audience, section, ui, teaser, related, recordings, aliases, picture, the audience's anchors (curriculum / courses / question, prior_art, status), schema (params + presets) (§8); `{viz}` may be an old id (`registry.ALIASES`): the renamed world's entry |
+| GET | `/api/viz`, `/api/viz/{viz}` | catalogue: id, title, summary, purpose, version, `code_hash` (`registry.code_hash_cached`: this process's code hash of the world, computed once; §9), kind, audience, section, ui, teaser, related, recordings, aliases, picture, the audience's anchors (curriculum / courses / question, prior_art, status), schema (params + presets) (§8); `{viz}` may be an old id (`registry.ALIASES`): the renamed world's entry |
+| GET | `/api/audiences` | `{audiences: [{id, prefix, label, description, ui}], sections: [{id, label}]}` from `registry.AUDIENCES` and `registry.SECTIONS`, in their order (labels and descriptions are `T`); the start page's audiences and sections (§9) |
+| GET | `/api/planned` | the planned items of `planned.json` not yet built (an entry whose id names an existing folder, S02 ↔ `s02_*`, is dropped; §8) |
+| GET | `/api/recordings` | `{worlds: {<world>: <its index.json>}, site: <LFVIZ_SITE_URL or https://ildar-idrisov.github.io/lfphys/>}`: the local recordings (§9) |
 | GET | `/viz/{viz}/{path}` | a world's `web/` files (its view); an old id answers 301 to the new address |
+| GET | `/recordings/{world}/{file}` | a recording file or a world's `index.json` from `visualizations/recordings/` (`LFVIZ_RECORDINGS`); a `.gz` goes as `application/gzip` without a Content-Encoding (the player inflates it); `Access-Control-Allow-Origin: *`; an old id names the new folder |
+| GET | `/images/{file}` | the pictures of the cards and the README, `../docs/images/` (`.jpg`, `.jpeg`, `.png`, `.webp`) |
+| GET | `/`, `/runs`, `/run?id={run}`, `/run?rec={world}/{rec}`, `/settings` | the pages: the start page (§9), the runs and their removal period, the player on a run, the player on a saved recording (an old world id works), the devices (§5) |
 | GET | `/api/runs` | runs, newest first: state, sim time, size, keep, modifications, approximations, `devices_override` |
 | POST | `/api/runs` | `{viz, preset?, params?, seed?, label?, backend?}` → `{id}`: starts a run (its first world; `viz` may be an old id); `backend` = `{kernels: {name: {device, precision}}}` overrides the device settings for this run only (§5) |
 | GET | `/api/runs/{id}` | the run's passport: current params and seed, `worlds` (each: n, preset, seed, params, modifications), code hash, commands, errors |
@@ -272,8 +284,8 @@ is never suspended for room or idleness, and a world-changing command other than
 the run suspended with the reason (`resume_error`): its record is whole and ⏺ tries again. Records from before this
 version (no `restorable` flag) can be watched, not resumed. Runs whose last action (a viewer came or left, a command)
 is older than the removal period are removed unless marked "keep"; beyond the quota the oldest last action goes first;
-a run open in a tab is never removed. The period (whole days, 3 by default, `--keep-days`) is set on the catalogue page
-(owner, 2026-10-29) and kept in the runs folder (`runs/settings.json`, which wins over the option); it applies at once,
+a run open in a tab is never removed. The period (whole days, 3 by default, `--keep-days`) is set on the page "My runs"
+(`/runs`; owner, 2026-10-29) and kept in the runs folder (`runs/settings.json`, which wins over the option); it applies at once,
 and a period that would remove runs at once is refused with their list (409) until exactly those runs are confirmed.
 
 **The player shows the record at the cursor (owner, 2026-10-28).** ⏮ ◀ ▶ ⏭ and the timeline move along the history
@@ -328,7 +340,7 @@ UX-ui U13).**
   (cheap), asked by the server at the start and by the worker for a new world.
 - A first world that fails to show itself (its header, `after_header`, the t = 0 advance) is reported "World not
   created: …" and ends with `end {reason: "world not built"}`. Such a run is failed, never resumable. `history_end`
-  says why (`start_error`), and so do the run list (`error`) and the catalogue's card.
+  says why (`start_error`), and so do the run list (`error`) and the start page's card.
 - A new world that fails so is refused as a whole, and the previous world goes on.
 
 **Memory budget (review UX-params P8: one world took 31 GB of the shared host).**
@@ -430,6 +442,9 @@ read-only).
 6. A different agent reviews the physics into `../reviews/`; the review is processed (RESPONSE.md) before the
    visualization is reported as done.
 7. Open problems of a visualization go to `../STATUS.md`, section "V. Visualizations — open items" (one place).
+8. A demonstration declares its recordings (§8 `recordings`), records them (`site/record.py --world <id>`, §9), gets
+   its picture (`site/posters.mjs`) and its rows in the root READMEs (`site/readme.py`); `tests/test_site_registry.py`
+   fails until all of that is in place.
 
 ## 5. Devices and precision (plan P11, 2026-10-27)
 
@@ -457,8 +472,8 @@ the GPU below the temperature where this host once hung, whatever power limit is
 > параметры, смотреть за их изменением и взаимодействием, все должно быть не задано заранее, а просчитываться в
 > реалтайме
 
-Two modes in the catalogue: **Demonstrations** (the `sNN_`, `uNN_`, `rNN_` folders: prepared set-ups with their checks and story) and
-**Laboratories** (the `pNN_` folders, one per branch of physics). The interface calls a playground a *laboratory*
+The start page has the demonstrations by audience (the `sNN_`, `uNN_`, `rNN_` folders: prepared set-ups with their
+checks and story) and the **Laboratories** (the `pNN_` folders, one per branch of physics; `/#labs`; §9). The interface calls a playground a *laboratory*
 («лаборатория»; owner, 2026-11-13: «Лаборатория / Laboratory»); the code keeps the identifier `playground`
 (`kind: "playground"`, `lfviz.playground`, the ids `pNN`). Every rule of §2 holds in the playground: what is shown
 is computed by the run; accepted physics by default, a changed law is a named world parameter and is flagged; the
@@ -678,7 +693,9 @@ section is how the visualizations keep it.
   msgid of the code and every text a world sends is translated), a guard against Cyrillic in code lines (a line that
   needs it carries the marker `i18n-ok` in a comment; escapes are decoded), that no local is named `t` (JavaScript) or
   `T` (Python), that every placeholder format is one the player renders and a translation keeps it, that a run-time
-  msgid carries its marker, and that no server code `str()`s a text. `tests/i18n_pending.txt` lists files not yet
+  msgid carries its marker, and that no server code `str()`s a text. The static scan also takes the msgids of the data files
+  (`planned.json`: `title`, `text`) and those named in an `i18n-msgids:` marker list, so that the warning about the
+  catalogue entries no code uses lists none, or only the few it explains; an entry no longer used is removed. `tests/i18n_pending.txt` lists files not yet
   converted and must be empty at a commit. `tests/i18n_tools.py --lines FILE… | --pending | --shadow` shows what the
   guard refuses and where a local hides `t()`. In a browser, `tests/browser/i18n_checks.mjs` opens every page and
   every world in English and in Russian. The other browser scripts take the language from `-e LFVIZ_LANG=en|ru`; they
@@ -738,3 +755,102 @@ p05–p07): `id`, `audience`, `section`, `title` (an English msgid translated in
 and `curriculum`, `priority`, `rank` and `status`, `text`; `batch` and `state` (`next` for the batch in work,
 `planned` for the rest); `related`. The start page and the site show them as planned, never as startable; the site's
 build drops an entry whose id exists as a folder.
+
+## 9. The start page, the recordings and the public site (owner, 2026-11-12 and 2026-11-13; plan P17.1)
+
+The rules for the whole repository are `../AGENTS.md` §3 rules 14–16 (one audience per item; learning materials by
+audience; demonstrations on the public site from recordings), with the owner's words in `../AGENTS.md` §1; the plan is
+`../lfphys/PLAN.md` P17.1 and `../lfphys/sources/audiences_2026-11-12_plan.md`. This section is what the code keeps.
+
+**The start page** (`player/index.html`, `player/js/start.js`). One page with hash routes, the same files on the
+server and on the site:
+
+| route | shows |
+|---|---|
+| `#` | the four audiences (`/api/audiences`), each with its count and a picture of one of its worlds; on the server "Continue" (the last runs open or paused) |
+| `#school` | the school course by section or by grade; until AB1 the planned items (`/api/planned`), honestly, with the worlds of another level on the same topic |
+| `#university`, `#research` | the worlds by section in teaching order, section chips with counts, a search box; the planned items folded at the end of their section, or under "Planned in other sections"; a research card shows its question, "Status: hypothesis" and its prior art |
+| `#labs` | the laboratories: on the server today's cards ("▶ Begin", "Laws…", "📂 From a scene file…"); on the site greyed with "Works only with a running server"; the old `#playground` is redirected here |
+| `#<audience>/<id>` | the same page with that card in view |
+
+A card's buttons: "▶ Compute live" (server: `POST /api/runs`, then the player) and "▷ Recording m:ss" for a scenario
+that has a recording (local, or the public site's of the same world `version`); a scenario without one has the button
+disabled with "No recording for this scenario: compute it live". The lower the level, the simpler the card (rule 16):
+school cards have no parameters, seed or devices; university cards fold them under "More: parameters, seed, device,
+precision"; research cards show them open. The runs are not on the start page: `/runs` (`player/runs.html`,
+`js/runs.js`) has the list and the removal period. The audiences' and sections' labels come from the registry through
+`apiGet("audiences")`; nothing in the player repeats them.
+
+**Ids and aliases.** §8: the prefix is the audience, the number the plan's id; the old `vNN_` ids are aliases
+everywhere an id is taken (URLs, `/api/viz/<old>`, `?rec=<old>/<rec>`, run records). The site carries `aliases.json`
+(`registry.ALIASES`) for the player's `?rec=` with an old id.
+
+**Recordings.** A demonstration's `VIZ["recordings"]` (§8) lists what the site plays. `site/record.py` runs each spec
+headless (`lfviz.sim.Runner`) on a frame clock of its own: exactly `seconds × fps` frames, the script's commands at
+their frames, no wall-time budget (the same file on any CPU), `checkpoint`/`command`/`resumed`/`record_segment`
+dropped; over the target size the frames are thinned by a stride (the first, the last and the poster frame always
+kept, never under 2 frames per played second), over the hard limit the recording fails (`sitelib.BUDGET`: a file 3 MB
+target / 10 MB limit, a world 12 / 25 MB, gzip, decimal; the exceptions accepted over target with their reasons are
+`sitelib.ACCEPTED`). Output per world: `recordings/<world>/<rec>.<hash8>.lfrec.gz` and `index.json` (`{world, version,
+recorder, code_hash, made, recordings: [{id, preset, label, file, seconds, fps, frame_stride, frames, frames_recorded,
+bytes, bytes_gz, poster_t, poster_frame, worlds, sha256, key, …}]}`; `site/README.md`).
+
+* **The key** of a recording is `sha256(spec + RECORDER_VERSION + registry.code_hash(world))[:16]`; `plan.py` marks
+  each `present`, `stale` or `missing`. `code_hash` covers the world's folder (`*.py`, `*.js`, not its `tests/`),
+  `server/lfviz/` and the engine, except `registry.SERVER_ONLY` (`app.py`, `runs.py`: the server process's own modules,
+  which no worker imports), so an edit of an HTTP route or of the runs' bookkeeping re-records nothing; an edit of
+  `sim.py`, of the engine or of a world's file makes that world's (or every world's) recordings stale.
+* **Recording locally** (Docker, CPU, a memory cap; at most a few containers at once on a shared host):
+  `docker run --rm --memory=12g -e LFPHYS_NO_GPU=1 --user "$(id -u):$(id -g)" -v "$PWD:/lf" -w /lf/visualizations
+  lfphys-viz python3 site/record.py --stale` (or `--world <id>`, `--all`, `--rec <id>`, `--out DIR`). Then
+  `site/posters.mjs` remakes the pictures whose recording's key changed (`../docs/images/posters.json`), and
+  `site/readme.py` the READMEs' catalogue.
+* **On the server**, `/recordings/…` serves `visualizations/recordings/` (git-ignored; `LFVIZ_RECORDINGS` points
+  elsewhere) and `/api/recordings` lists it. Without a local recording of a world the player falls back to the public
+  site's (`LFVIZ_SITE_URL`; Pages sends `Access-Control-Allow-Origin: *`) only when that index's `version` equals the
+  local world's; otherwise it says "No recording for this version: record it locally or compute live".
+* **The player on a recording** (`/run?rec=<world>/<rec>`; `api.js openRecording`, the handler interface of
+  `connectRun`): the file's messages are wrapped in the player's own `history_start {frame_stride}` / `history_end`,
+  so it is an ended record. `S.recording` hides ⏺, "Keep" and "⚙"; `editBlock()` and the views' `ctx.readOnly()`
+  give the reason "a recording: this needs a live run" (the set-up, the actions, new worlds, adding slice planes); the
+  passport ("About the recording") is built from the index entry; the instruments' CSV is made in the browser from
+  the kept frames, and the sweeps are absent. The badge "RECORDING · date · code X" compares the index's `code_hash`
+  with this server's (`describe()["code_hash"]`, `registry.code_hash_cached`, computed once per process) and, when they
+  differ, its tooltip says "recorded with code X; this server runs Y" (design §4.6). On the server "▶ Compute this
+  scenario live" starts a run of the same scenario.
+
+**The same files on the server and on the site** (`player/js/base.js`, re-exported by `api.js`). Every player page
+carries `<meta name="lf-mode" content="server">`, `<meta name="lf-base" content="/">` and one import map (`three`,
+`/static/`, `/viz/`); stylesheets and entry scripts are relative (`static/assets/…`, `static/js/…`). `MODE`, `BASE`,
+`url(path)` and `page(name, query)` build every fetch, href and location: `page("run", {rec})` is `/run?rec=…` on the
+server and `<base>run.html?rec=…` on the site. `apiGet(name)` reads `/api/<name>` on the server and
+`<base>api/<name>.json` on the site for `viz`, `viz/<id>`, `audiences`, `planned`, `recordings` and `health`. A link
+in a page's HTML names its target by `data-page`; one marked `data-server-only` (the runs, the devices) is removed on
+the site. A view never writes an absolute path: it imports through the import map (`/static/js/…`) and links with
+`page()`; a server-only link (the views' "⚙ Devices") is shown only when `MODE === "server"`.
+
+**The site build** (`site/build.py --recordings DIR --out DIR --base /lfphys/`) writes `index.html`, `run.html`,
+`legal.html`, `404.html` (the metas set to `static` and the base, the import map's targets relative), `static/` (the
+player and `static/locales/<lang>.json`), `viz/<id>/` (each world's `web/`), `api/viz.json`, `api/viz/<id>.json` (also
+under each old id), `api/audiences.json`, `api/planned.json`, `api/recordings.json`, `api/health.json` (the citation),
+`aliases.json`, `recordings/`, `images/`, `legal/<name>` and `site-manifest.json` (every file's size and sha256; every
+world and recording with its key). `site/check.py SITE --base /lfphys/` fails on a world or recording missing or stale,
+a file that differs from the manifest, a page without its metas or import map or with an absolute `/static`, `/api` or
+`/viz` outside the map, a missing catalogue, audiences or i18n file, or a hard limit exceeded; over a target it warns
+(the accepted ones say so). `tests/browser/site_smoke.mjs` serves the built site with `python -m http.server` under
+`/lfphys/` and checks that no request leaves the sub-path or goes to `/api/`, that the start page and an audience page
+render in EN and RU, that a recording plays (the timeline moves, the checks appear, the canvas is drawn), that the
+laboratories are greyed with their note, the school banner is honest, and `legal.html` shows the texts.
+
+**CI and publication.** `site/ci/pages.yml` is a draft workflow (check → record per world, cached by the key → build,
+check, smoke test → deploy to GitHub Pages), every action pinned to a commit SHA with its tag in a comment, recording
+in CI on the CPU. It is **not** in `.github/workflows/`: copying it there, turning Pages on (source "GitHub Actions")
+and the first deployment are the owner's actions, on his go. Until then the README's links to the public site are
+dead and the player's fallback to it finds nothing.
+
+**Tests.** `tests/test_site_registry.py` (the registry's fields, aliases, recording specs within limits, related links,
+translations of every `T`, the READMEs' generated sections up to date, a picture per world; `registry.SERVER_ONLY`
+kept out of `code_hash`), `tests/test_recorder.py`, `tests/test_site_build.py`, `tests/test_aliases.py`; in a browser
+`tests/browser/start_page.mjs`, `record_mode.mjs` (against a private server with the local recordings) and
+`site_smoke.mjs` (on a built site); `node --test player/js/tests/*.test.mjs` (`record.test.mjs`: a gzip fixture
+decoded through `openRecording`).

@@ -13,7 +13,8 @@
 // script's folder), against a server with LFVIZ_RECORDINGS set (never the shared one on 8479):
 //   docker run --rm --init --shm-size=2g --network host --memory=4g -v <dir with node_modules/playwright@1.58.2>:/pw \
 //     -v <repo>/docs/images:/images -w /pw mcr.microsoft.com/playwright:v1.58.2-jammy \
-//     sh -c "cp <repo>/visualizations/site/posters.mjs /pw/ && node /pw/posters.mjs 8678 /images [--force] [--only a,b]"
+//     sh -c "cp <repo>/visualizations/site/posters.mjs /pw/ && node /pw/posters.mjs 8678 /images [--force] [--only a,b]
+//     [--run p04_fluids:<run id>]"
 // Prints one JSON line per world; exit code 1 when a poster could not be made or is over 400 kB.
 import { chromium } from "playwright";
 import fs from "node:fs";
@@ -25,11 +26,19 @@ const dir = args[1] || "/images";
 const force = args.includes("--force");
 const onlyArg = args.indexOf("--only");
 const only = onlyArg >= 0 ? new Set(args[onlyArg + 1].split(",")) : null;
+// --run <lab>:<run id>: a laboratory's poster from a run already computed on this server (one that reached LAB_T, e.g.
+// computed earlier or on the GPU); the run is left as it is
+const fromRun = Object.fromEntries(args.flatMap((a, i) => (a === "--run" ? [args[i + 1].split(":")] : [])));
 const base = `http://127.0.0.1:${port}`;
 const WIDTH = 1200, HEIGHT = 720, TARGET = 150_000, LIMIT = 400_000, LIVE_SECONDS = 8;
 // a laboratory's scenario for its poster (the ones its README pictures showed before 2026-11-13); else its first
 const LAB_PRESET = { p01_gravity: "inner", p02_quantum: "double_slit", p03_molecules: "maxwell", p04_fluids: "karman" };
-const LAB_SECONDS = { p02_quantum: 20, p03_molecules: 20, p04_fluids: 45 };  // wall seconds of computing on the CPU
+const LAB_SECONDS = { p02_quantum: 20, p03_molecules: 20 };  // wall seconds of computing on the CPU
+// or the world time to reach (seconds), when the phenomenon needs it: the Kármán street of p04 behind the cylinder
+// (Re = 100, D = 0.1 m, mean inflow 1 m/s) is shed from about t = 3 s and its dye fills the channel by t ≈ 6 s; the CPU
+// computes about 0.005 s of it per wall second (2026-11-13), so this takes about 20 minutes
+const LAB_T = { p04_fluids: 6.0 };
+const LAB_T_TIMEOUT = 45 * 60 * 1000;
 const presetIds = (v) => (v.schema.presets || []).map((p) => p.id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const get = async (u) => (await fetch(base + u)).json();
@@ -37,10 +46,10 @@ const post = async (u, b) => (await fetch(base + u, { method: "POST", headers: {
   body: JSON.stringify(b || {}) })).json();
 const settle = (page) => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 600)))));
 
-async function until(page, fn, ms, what) {
+async function until(page, fn, ms, what, arg) {
   const t0 = Date.now();
   while (Date.now() - t0 < ms) {
-    if (await page.evaluate(fn).catch(() => false)) return;
+    if (await page.evaluate(fn, arg).catch(() => false)) return;
     await sleep(250);
   }
   throw new Error(`timeout: ${what}`);
@@ -87,18 +96,27 @@ for (const v of catalogue) {
     if (v.kind === "playground") {
       const ids = presetIds(v);
       const preset = ids.includes(LAB_PRESET[v.id]) ? LAB_PRESET[v.id] : (ids[0] || null);
-      const key = `live:${v.version}:${preset || ""}`;
+      const key = `live:${v.version}:${preset || ""}` + (LAB_T[v.id] ? `:t${LAB_T[v.id]}` : "");
       if (!force && meta[v.id] && meta[v.id].key === key && fs.existsSync(file)) { out.skipped = "same key"; continue; }
-      const run = await post("/api/runs", { viz: v.id, preset, label: "poster" });
+      const given = fromRun[v.id];
+      const run = given ? { id: given } : await post("/api/runs", { viz: v.id, preset, label: "poster" });
       if (!run.id) throw new Error(`run not started: ${JSON.stringify(run)}`);
       await page.goto(`${base}/run?id=${run.id}&lang=en`);
-      await until(page, () => window.__lfPlayer && !window.__lfPlayer.replaying() && window.__lfPlayer.frames() > 0, 180000, "the world's first frame");
-      await page.click("#rec");  // compute a few seconds
-      await sleep((LAB_SECONDS[v.id] || LIVE_SECONDS) * 1000);
-      await page.click("#rec");
-      await sleep(800);
+      await until(page, () => window.__lfPlayer && !window.__lfPlayer.replaying() && window.__lfPlayer.frames() > 0, 600000, "the world's first frame");
+      if (given) {
+        const meta = await get(`/api/runs/${run.id}`);
+        if (meta.viz !== v.id || (meta.preset || null) !== preset) throw new Error(`run ${run.id} is not ${v.id}/${preset}`);
+        if (LAB_T[v.id] && !((await page.evaluate(() => window.__lfPlayer.t())) >= LAB_T[v.id])) throw new Error(`run ${run.id} has not reached ${LAB_T[v.id]} s`);
+        if (meta.playing) { await page.click("#rec"); await sleep(800); }  // paused where it is
+      } else {
+        await page.click("#rec");  // compute a few seconds, or until the world's time shows the phenomenon
+        if (LAB_T[v.id]) await until(page, (tt) => window.__lfPlayer.t() >= tt, LAB_T_TIMEOUT, `the world's time ${LAB_T[v.id]} s`, LAB_T[v.id]);
+        else await sleep((LAB_SECONDS[v.id] || LIVE_SECONDS) * 1000);
+        await page.click("#rec");
+        await sleep(800);
+      }
       Object.assign(out, await shoot(page, file), { key, from: `live run ${run.id}, preset ${preset}`, t: await page.evaluate(() => window.__lfPlayer.t()) });
-      await fetch(`${base}/api/runs/${run.id}`, { method: "DELETE" }).catch(() => {});
+      if (!given) await fetch(`${base}/api/runs/${run.id}`, { method: "DELETE" }).catch(() => {});
     } else {
       const idx = recs[v.id];
       const spec = (v.recordings || [])[0];

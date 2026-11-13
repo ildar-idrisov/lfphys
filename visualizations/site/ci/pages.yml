@@ -3,8 +3,10 @@
 #
 # DRAFT, not active: the GitHub Actions workflow of the public site (design of the start page §5.2). It runs only once it
 # is copied to .github/workflows/pages.yml, which is the owner's action, on his go, together with enabling Pages with
-# "GitHub Actions" as the source. Before that copy: pin every action to a commit SHA (the majors below were current on
-# 2026-11-13 and must be checked then), and make sure tests/browser/site_smoke.mjs exists (step I).
+# "GitHub Actions" as the source. Every action is pinned to a commit SHA, with its release tag in a comment (looked up on
+# 2026-11-13 with `git ls-remote https://github.com/<owner>/<action> refs/tags/<tag>`; all were lightweight tags, so
+# the SHA is the tagged commit). To update one, look the new tag up the same way and change the SHA and the comment
+# together. Checked with actionlint 1.7.7 (Docker image rhysd/actionlint:1.7.7).
 #
 # What it does:
 #   1. check:  builds the Docker image once (cached), runs the registry/README/picture completeness tests, the i18n
@@ -51,10 +53,10 @@ jobs:
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f  # v3.12.0
       - name: Build the image (cached)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8  # v6.19.2
         with:
           context: .
           file: visualizations/docker/Dockerfile
@@ -86,17 +88,17 @@ jobs:
       matrix: ${{ fromJSON(needs.check.outputs.matrix) }}   # {include: [{world, key, force}]}
     steps:
       - if: matrix.world != ''
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - id: cache
         if: matrix.world != '' && !matrix.force
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
         with:
           path: rec/${{ matrix.world }}
           key: rec-${{ matrix.world }}-${{ matrix.key }}
       - if: matrix.world != '' && steps.cache.outputs.cache-hit != 'true'
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f  # v3.12.0
       - if: matrix.world != '' && steps.cache.outputs.cache-hit != 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8  # v6.19.2
         with:
           context: .
           file: visualizations/docker/Dockerfile
@@ -111,7 +113,7 @@ jobs:
             -e PYTHONDONTWRITEBYTECODE=1 -v "$PWD:/lf:ro" -v "$PWD/rec:/rec" -w /lf/visualizations "$IMAGE" \
             python3 site/record.py --world "${{ matrix.world }}" --out /rec --worker-mem-gb 10
       - if: matrix.world != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: rec-${{ matrix.world }}
           path: rec            # rec/<world>/index.json and its files
@@ -123,14 +125,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
         with:
           pattern: rec-*
           path: rec
           merge-multiple: true   # rec/<world>/...
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f  # v3.12.0
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8  # v6.19.2
         with:
           context: .
           file: visualizations/docker/Dockerfile
@@ -147,15 +149,24 @@ jobs:
         run: |
           docker run --rm --memory=2g -e PYTHONDONTWRITEBYTECODE=1 -v "$PWD:/lf:ro" -v "$PWD/_site:/out:ro" \
             -w /lf/visualizations "$IMAGE" python3 site/check.py /out --base "$SITE_BASE"
-      - name: Smoke test in Chromium, served under the sub-path from a parent folder, EN and RU
+      - name: Serve the site under the sub-path from a parent folder (Python's http.server)
         run: |
-          docker run -d --name lf-site-srv --memory=1g -p 8662:8000 -v "$PWD/_site:/srv/lfphys:ro" -w /srv \
+          docker network create site-smoke
+          docker run -d --name lf-site-srv --network site-smoke --memory=512m -v "$PWD/_site:/srv/lfphys:ro" -w /srv \
             python:3.11-slim python3 -m http.server 8000
-          docker run --rm --init --network host --shm-size=2g --memory=4g \
+      - name: Smoke test in Chromium, EN and RU (tests/browser/site_smoke.mjs)
+        run: |
+          docker run --rm --init --network site-smoke --shm-size=2g --memory=4g \
             -v "$PWD/visualizations/tests/browser:/t:ro" -w /pw mcr.microsoft.com/playwright:v1.58.2-jammy \
-            sh -c "npm i --no-save playwright@1.58.2 >/dev/null && cp /t/*.mjs /pw/ && node /pw/site_smoke.mjs http://127.0.0.1:8662/lfphys/ en,ru"
-          docker stop lf-site-srv && docker rm lf-site-srv
-      - uses: actions/upload-pages-artifact@v3
+            sh -c "npm i --no-save --no-audit --no-fund playwright@1.58.2 >/dev/null && cp /t/*.mjs /pw/ \
+                   && node /pw/site_smoke.mjs http://lf-site-srv:8000${SITE_BASE} en,ru"
+      - name: Stop the site's server
+        if: always()
+        run: |
+          docker logs --tail 50 lf-site-srv || true
+          docker rm -f lf-site-srv || true
+          docker network rm site-smoke || true
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa  # v3.0.1
         with:
           path: _site
 
@@ -170,4 +181,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e  # v4.0.5

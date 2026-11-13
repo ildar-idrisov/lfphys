@@ -137,6 +137,7 @@ def _static_msgids():
             ids = tools.msgids_html(f)
         if ids:
             out[rel] = ids
+    out.update(tools.msgids_data())  # planned.json's titles: shown by the start page, the README and the site
     return out
 
 

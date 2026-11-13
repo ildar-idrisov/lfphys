@@ -52,6 +52,7 @@ export function time(t_, digits = 6) {
   const a = Math.abs(t_), s = t_ < 0 ? "−" : "";
   const Y = 365.25 * 86400;
   const u = (x, unit) => `${s}${num(x, digits)}\u00a0${t(unit)}`;  // a number and its unit on one line (F11)
+  // i18n-msgids: "ps" "ns" "µs" "ms" "s" "h" "d" "Myr" "Gyr"
   if (a === 0) return `0\u00a0${t("s")}`;
   if (a < 1e-9) return u(a * 1e12, "ps");
   if (a < 1e-6) return u(a * 1e9, "ns");
@@ -69,7 +70,7 @@ export function time(t_, digits = 6) {
 // SI length with optional preferred astronomical unit
 export function length(x, units = {}, digits = 6) {
   const a = Math.abs(x);
-  const u = (v, unit) => `${num(v, digits)}\u00a0${t(unit)}`;
+  const u = (v, unit) => `${num(v, digits)}\u00a0${t(unit)}`;  // i18n-msgids: "ly" "au" "km" "m" "mm" "µm" "nm" "pm"
   if (units.ly && a >= 0.01 * units.ly) return u(x / units.ly, "ly");
   if (units.au && a >= 0.01 * units.au) return u(x / units.au, "au");
   if (a >= 1e3) return u(x / 1e3, "km");

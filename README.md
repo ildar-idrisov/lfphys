@@ -15,7 +15,8 @@ of a spinning black hole, and 4 **laboratories**, where you build a scene by han
 
 > The player speaks English (the default) and Russian: the switch **EN | RU** in the top bar of every page changes the
 > language of the interface, its help, the preset names and every message of the run. Each visualization's README
-> (linked in the tables below) and the guide to the player exist in both languages.
+> (linked in the tables below) and the guide to the server and the player
+> ([`visualizations/README.md`](visualizations/README.md)) exist in both languages.
 
 <a href="docs/images/u42-m87.jpg"><img src="docs/images/u42-m87.jpg" width="49%" alt="u42: the shadow of a Kerr black hole computed ray by ray"></a>
 <a href="docs/images/u44-rainbow.jpg"><img src="docs/images/u44-rainbow.jpg" width="49%" alt="u44: the rainbow and Alexander's band from the exact Mie series"></a>
@@ -42,14 +43,16 @@ docker compose -f visualizations/docker/docker-compose.yml up -d --build viz
 docker compose -f visualizations/docker/docker-compose.yml --profile cpu up -d --build viz-cpu
 ```
 
-Open <http://localhost:8479>, choose a demonstration and its scenario, and press **▶ Start**. The player opens;
-**⏺** records (computes the world further), and the slider goes back through the history. The switch
-**Demonstrations | Laboratories** at the top of the catalogue opens the laboratories.
+Open <http://localhost:8479>. The start page offers four audiences: **School**, **University**, **Research** and
+**Laboratories**. Open one, choose a scenario on a demonstration's card and press **▶ Compute live**: the player opens
+and computes the world as you watch; **⏺** computes it further, and the slider goes back through the history. Where a
+scenario has a saved recording, **▷ Recording** plays it at once, with nothing computed. A laboratory starts with
+**▶ Begin**. Your runs are listed on the page **My runs** in the top bar.
 
 | requirement | |
 |---|---|
 | Docker | Docker Engine with the Compose plugin v2 (`docker compose`) |
-| disk | about 3.3 GB for the image; most of it is NVIDIA's CUDA libraries from PyPI, which only the GPU path uses. Run records go to `visualizations/runs/`, up to a quota of 5 GB; a run nobody opened for 3 days is removed unless marked ☆ (the period is set in the catalogue) |
+| disk | about 3.3 GB for the image; most of it is NVIDIA's CUDA libraries from PyPI, which only the GPU path uses. Run records go to `visualizations/runs/`, up to a quota of 5 GB; a run nobody opened for 3 days is removed unless marked ☆ (the period is set on the page **My runs**) |
 | memory | the server's container is limited to 6 GB; each running world gets at most 60 % of it. A machine with 8 GB of RAM or more is advisable |
 | CPU | each run computes in its own process with 2 threads; at most 3 runs compute at once |
 | GPU (optional) | an NVIDIA GPU with a driver for CUDA 12 (version 525 or newer) and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html); the server uses one GPU, device 0 |
@@ -108,16 +111,34 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD":/lf -e PYTHONPATH=/lf/lfphy
 A research project uses the engine as an external library: `import lfphys` with `lfphys/` of this repository on
 `PYTHONPATH`.
 
+**Recordings and the public site.** A recording is a run of a demonstration's scenario saved once, so that it plays
+back and forth without computing. To make them on your machine (on the CPU; most worlds take seconds to two minutes,
+the exact two-slit world r12 about 20 minutes):
+
+```bash
+docker run --rm --memory=12g -e LFPHYS_NO_GPU=1 --user "$(id -u):$(id -g)" -v "$PWD":/lf -w /lf/visualizations \
+    lfphys-viz python3 site/record.py --stale
+```
+
+The server serves `visualizations/recordings/` (not in git): a card then offers **▷ Recording**, and
+`http://localhost:8479/run?rec=<world>/<recording>` opens one directly. `--stale` records only what is missing or was
+made by other code. Without a local copy, the server plays the public site's recording, but only one made from the
+same version of the world. The public site (GitHub Pages, `https://ildar-idrisov.github.io/lfphys/`) is the same player with
+these recordings and nothing computed: it is built by `visualizations/site/build.py` and goes online only when the
+author publishes it. Until then the links "Watch on the site" in the catalogue below do not open. Details:
+[`visualizations/site/README.md`](visualizations/site/README.md).
+
 ## Demonstrations by audience
 
 Each world belongs to exactly one audience (`AGENTS.md` §3 rule 14). Each card gives a picture of a recorded run, the
 visualization's name (linked to its README with the model, the checks and the approximations), what you will see, its
 anchors (the university courses; for research, the question it studies, marked as a hypothesis until it is reproduced,
-and the prior art), links to watch its recordings on the public site, the number of its scenarios and the same topic
-at other levels. A local server computes every scenario live. A recording marked *(modified physics)* shows a world
-with a deliberately changed law; the player's top bar flags such a world with the badge **MODIFIED PHYSICS: …**. The
-section below is generated from the registry by `visualizations/site/readme.py`; edit the worlds' `VIZ`, not this
-text.
+and the prior art), links to watch its recordings on the public site, the number of its scenarios and the same topic at
+other levels. Each audience also lists what is planned for it: the school course by section, the university and research
+items folded under their worlds. A local server computes every scenario live. A recording marked *(modified physics)*
+shows a world with a deliberately changed law; the player's top bar flags such a world with the badge **MODIFIED
+PHYSICS: …**. The section below is generated from the registry by `visualizations/site/readme.py`; edit the worlds'
+`VIZ`, not this text.
 
 <!-- BEGIN generated: catalogue (visualizations/site/readme.py); do not edit -->
 
@@ -255,6 +276,80 @@ The experiments of the university courses, computed from the laws.
 |---|---|
 | <a href="docs/images/u42_kerr_shadow.jpg"><img src="docs/images/u42_kerr_shadow.jpg" width="300" alt="u42: The shadow of a Kerr black hole and its photon rings"></a> | **[u42 · The shadow of a Kerr black hole and its photon rings](visualizations/u42_kerr_shadow/README.md)**<br>A rotating black hole with a disc of gas: the shadow and photon rings, traced ray by ray, compared with EHT.<br>*Courses:* Hartle, Gravity: An Introduction to Einstein's General Relativity, ch. 15; Chandrasekhar, The Mathematical Theory of Black Holes; Event Horizon Telescope Collaboration, ApJ Letters 875 (2019)<br>▷ Watch on the site: [M87*: a = 0.9, inclination 163° (as EHT for a &gt; 0), Cunningham's disc: the shadow, the lensing ring, the photon ring](https://ildar-idrisov.github.io/lfphys/run.html?rec=u42_kerr_shadow/m87) · [The disc edge-on (θ = 90°), a = 0.99: the shadow is flattened, the rings are asymmetric](https://ildar-idrisov.github.io/lfphys/run.html?rec=u42_kerr_shadow/edge_on) · [What if: the Johannsen metric with α₁₃ = 3, a larger shadow, compared with EHT *(modified physics)*](https://ildar-idrisov.github.io/lfphys/run.html?rec=u42_kerr_shadow/whatif)<br>Scenarios in the player: 6<br>Same topic at other levels: R10 · Non-Kerr photon rings: a reproduction benchmark (Research, planned) |
 
+<details>
+<summary>30 planned</summary>
+
+**Mechanics** · 3
+
+* U01 · Lagrangian mechanics and chaos: the double pendulum, the phase portrait, Poincaré sections, the Lyapunov exponent
+* U02 · The rigid body: Euler's equations, the Dzhanibekov effect, precession and nutation of a gyroscope
+* U03 · Non-inertial frames: Foucault's pendulum, the Coriolis force
+
+**Liquids and gases** · 1
+
+* U30 · Flow regimes: Poiseuille, Bernoulli and Venturi, the Reynolds number from creeping flow to the Kármán street
+
+**Oscillations and waves** · 1
+
+* U04 · Coupled oscillators, normal modes, beats, the resonance curve and the quality factor
+
+**Heat and molecular physics** · 3
+
+* U05 · Kinetic theory from atoms: Maxwell–Boltzmann, the barometric formula, the mean free path, transport
+* U06 · Heat engines and entropy: the Carnot and Otto cycles from molecular dynamics, P–V and T–S diagrams, irreversibility
+* U08 · Black-body radiation: cavity modes, Rayleigh–Jeans versus Planck, Wien, Stefan–Boltzmann
+
+**Electricity and magnetism** · 6
+
+* U09 · Electrostatics: boundary-value problems, images, multipoles, capacitance, dielectrics
+* U10 · Magnetostatics and inductance: Biot–Savart, Helmholtz coils, Ampère's circuital law, mutual induction
+* U11 · Charged particles in fields: the cyclotron, the mass spectrometer, the E×B drift, the magnetic trap, the Hall effect
+* U12 · Circuits: RLC transients, phasor diagrams, resonance, filters, the transmission line
+* U13 · Radiation of charges: the field of an accelerated charge (the kink in the field lines), the dipole, Larmor's formula, synchrotron radiation
+* U14 · Waves in matter and in waveguides: waveguide modes, the resonator, the evanescent wave, the one-dimensional photonic crystal
+
+**Optics** · 3
+
+* U15 · Interferometers and coherence: Michelson, Mach–Zehnder, Fabry–Pérot, Fourier spectroscopy
+* U16 · Fourier optics: Fraunhofer diffraction as a Fourier transform, 4f filtering, the resolution of a grating, Abbe's theory
+* U17 · Polarisation and crystal optics: Jones and Mueller calculus, wave plates, birefringence
+
+**The theory of relativity** · 1
+
+* U27 · Minkowski diagrams and the twin paradox. Already there at another level: [r11 · Thomas–Wigner precession in 3-D](visualizations/r11_thomas_3d/README.md) (Research)
+
+**Quantum physics** · 2
+
+* U18 · The Stern–Gerlach experiment and spin: sequential devices, Larmor precession
+* U20 · Photons: the photoelectric effect (h/e after Millikan), the Compton effect
+
+**Atomic physics** · 3
+
+* U19 · The two-level atom: Rabi, Ramsey, the Bloch sphere, the optical Bloch equations, spontaneous emission, quantum jumps
+* U22 · The atom: the hydrogen series, fine structure, the Zeeman effect, selection rules
+* U24 · Rutherford scattering and the cross-section
+
+**Condensed matter** · 3
+
+* U07 · The Ising model and phase transitions
+* U21 · Electron diffraction by a crystal: Davisson–Germer, Debye–Scherrer rings, Bragg's law
+* U23 · Bands: Kronig–Penney, tight binding, Bloch oscillations
+
+**Nuclear physics** · 1
+
+* U25 · The nucleus: decay chains (Bateman), α decay as tunnelling (Gamow), the Weizsäcker formula
+
+**Particle physics** · 1
+
+* U26 · Relativistic kinematics: invariant mass, decays, reaction thresholds
+
+**Astrophysics and cosmology** · 2
+
+* U28 · Gravitational waves from a binary: the chirp, h₊ and h×, the Hulse–Taylor pulsar
+* U29 · Cosmology: the history of the expansion, the Hubble diagram, distances, age, horizons
+
+</details>
+
 ### Research
 
 Set-ups not computed before, to study the harder laws; every novelty is a hypothesis.
@@ -271,6 +366,30 @@ Set-ups not computed before, to study the harder laws; every novelty is a hypoth
 |---|---|
 | <a href="docs/images/r12_double_slit_2d.jpg"><img src="docs/images/r12_double_slit_2d.jpg" width="300" alt="r12: Double slit (long slits, 3-D): the exact Schrödinger equation and Bohm trajectories"></a> | **[r12 · Double slit (long slits, 3-D): the exact Schrödinger equation and Bohm trajectories](visualizations/r12_double_slit_2d/README.md)**<br>The exact wave passes two thick slits; Bohm trajectories coloured by their slit build the pattern.<br>*Question:* Where does the paraxial theory of the double slit fail for real slits of finite thickness, and how do a path mark and the Aharonov–Bohm flux change the pattern and the Bohm trajectories? · **Status: hypothesis**<br>*Prior art:* [Das, Deckert, Kellers, Krekels & Struyve, Ann. Phys. 479, 170054 (2025)](https://arxiv.org/abs/2211.13362); [Sanz & Borondo, Eur. Phys. J. D 44, 319 (2007)](https://arxiv.org/abs/quant-ph/0310096); [Xiao, Wiseman et al., Sci. Adv. 5, eaav9547 (2019)](https://arxiv.org/abs/1805.02059); Dürr, Nonn & Rempe, Phys. Rev. Lett. 81, 5705 (1998); [Macdougall, Singleton & Vagenas, Phys. Lett. A 379, 1689 (2015)](https://arxiv.org/abs/1505.01510)<br>▷ Watch on the site: [Narrow slits a = 2λ: diffraction to large angles, the paraxial theory fails](https://ildar-idrisov.github.io/lfphys/run.html?rec=r12_double_slit_2d/narrow) · [Path mark: the spin in slit B turned by 180°: the fringes almost fade, the trajectories cross the axis](https://ildar-idrisov.github.io/lfphys/run.html?rec=r12_double_slit_2d/mark180)<br>Scenarios in the player: 7<br>Same topic at other levels: [u32 · The double-slit experiment](visualizations/u32_double_slit/README.md) (University); S38 · Interference and diffraction of light; the diffraction grating; polarisation (School, planned) |
 | <a href="docs/images/r13_arrival_times_2d.jpg"><img src="docs/images/r13_arrival_times_2d.jpg" width="300" alt="r13: Particle arrival time: the rules in 2-D"></a> | **[r13 · Particle arrival time: the rules in 2-D](visualizations/r13_arrival_times_2d/README.md)**<br>Several rules of the arrival time on one run: they agree far from the source and diverge near it.<br>*Question:* When does a particle arrive at a detector? Where do the rules of the arrival time agree, and where do they diverge: near the source, for a train of packets, under backflow, behind two slits? · **Status: hypothesis**<br>*Prior art:* [Ayatollah Rafsanjani et al., Commun. Phys. 6, 195 (2023)](https://arxiv.org/abs/2301.02641); [Das & Struyve, Phys. Rev. A 104, 042214 (2021)](https://arxiv.org/abs/2105.14744); [Das, Deckert, Kellers, Krekels & Struyve, Ann. Phys. 479, 170054 (2025)](https://arxiv.org/abs/2211.13362); [Cavendish & Das, Phys. Rev. A 112, 062217 (2025)](https://journals.aps.org/pra/abstract/10.1103/332p-4nl1); [Jozani & Tumulka, Phys. Rev. Research 8, 033072 (2026)](https://arxiv.org/abs/2603.22044); [Paterek & Goussev, Phys. Rev. Lett. 136, 090202 (2026)](https://arxiv.org/abs/2511.10155)<br>▷ Watch on the site: [One packet: far from the source all the rules almost agree](https://ildar-idrisov.github.io/lfphys/run.html?rec=r13_arrival_times_2d/gauss) · [Close to the source (σz = 1λ, L = 5λ): the rules diverge](https://ildar-idrisov.github.io/lfphys/run.html?rec=r13_arrival_times_2d/near)<br>Scenarios in the player: 5 |
+
+<details>
+<summary>10 planned</summary>
+
+**The theory of relativity** · 1
+
+* R07 · The Thomas–Wigner rotation per rapidity budget · *hypothesis*
+
+**Quantum physics** · 8
+
+* R01 · Time-dependent Aharonov–Bohm flux in a real double slit · *hypothesis*. Already there at another level: [u32 · The double-slit experiment](visualizations/u32_double_slit/README.md) (University)
+* R02 · A delayed which-path mark and its erasure with massive particles in a spatial double slit · *hypothesis*. Already there at another level: [u32 · The double-slit experiment](visualizations/u32_double_slit/README.md) (University)
+* R03 · Higher-order interference in real slits: Sorkin's κ for matter waves with thick slits, and tunnelling through the wall as a third path · *hypothesis*
+* R04 · Telling the arrival-time rules apart behind a real plate · *hypothesis*
+* R05 · The pulsed scalar (electric) Aharonov–Bohm effect: numerics for an experiment's design · *hypothesis*. Already there at another level: [u32 · The double-slit experiment](visualizations/u32_double_slit/README.md) (University)
+* R06 · The recoiling slit (Einstein–Bohr) as an exact two-body problem · *hypothesis*
+* R08 · A graded which-path mark and the crossing of Bohm trajectories · *hypothesis*. Already there at another level: [u32 · The double-slit experiment](visualizations/u32_double_slit/README.md) (University)
+* R09 · A time-modulated slit · *hypothesis*. Already there at another level: [u32 · The double-slit experiment](visualizations/u32_double_slit/README.md) (University)
+
+**Astrophysics and cosmology** · 1
+
+* R10 · Non-Kerr photon rings: a reproduction benchmark · *hypothesis*. Already there at another level: [u42 · The shadow of a Kerr black hole and its photon rings](visualizations/u42_kerr_shadow/README.md) (University)
+
+</details>
 
 ### Laboratories
 
@@ -311,8 +430,9 @@ Free benches: build a scene, and the engine computes it live.
 <!-- END generated -->
 
 In a laboratory the scene is not prepared: you build it from a palette, change it at any moment, and the world computes
-what follows in real time. The catalogue's switch **Laboratories** opens them; each starts from a scenario or from a
-scene file saved earlier.
+what follows in real time. The start page's **Laboratories** opens them; each starts from a scenario (**▶ Begin**) or
+from a scene file saved earlier (**📂 From a scene file…**). The laboratories need a running server: the public site
+shows them greyed out.
 
 * **Palette and objects**: add bodies, packets, atoms, walls, obstacles, detectors and probes at the current moment;
   copy or delete them; the inspector changes an object's parameters live and shows its computed state.
@@ -376,10 +496,12 @@ the author's decision. Plans: [`lfphys/PLAN.md`](lfphys/PLAN.md); open items: [`
 
 * [`visualizations/README.md`](visualizations/README.md): the guide to the server and the player, every world and its
   controls.
-* Each world's README, with its model, checks, approximations and tests: u31–u44 and p01–p04, linked in the tables
-  above.
+* Each world's README, with its model, checks, approximations and tests: u31–u44, r11–r13 and p01–p04, linked in the
+  tables above.
 * [`visualizations/RULES.md`](visualizations/RULES.md): the rules every visualization follows (physics, causality,
-  modified laws, the 3-D environment, the laboratories, the interface's languages) and the server's API.
+  modified laws, the 3-D environment, the laboratories, the interface's languages, the audiences, the recordings and
+  the site) and the server's API; [`visualizations/site/README.md`](visualizations/site/README.md): the recorder and
+  the public site's build.
 * [`lfphys/README.md`](lfphys/README.md): the engine's catalogue of modules, CPU and GPU, certified references;
   [`lfphys/LAYERS.md`](lfphys/LAYERS.md): the layers; [`lfphys/PLAN.md`](lfphys/PLAN.md): the development plan.
 * [`STATUS.md`](STATUS.md): open problems and plans. [`reviews/`](reviews/README.md): the reviews and their

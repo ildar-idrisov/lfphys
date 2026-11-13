@@ -38,7 +38,8 @@ docker compose -f visualizations/docker/docker-compose.yml up -d viz    # start;
 The server gets only GPU 0 (the second card of the development machine computes wrongly); the heavy parts of the engine
 move to it where that is faster. Where and with what precision to compute is set on the page **⚙ Devices**
 (`/settings`): changes are saved at once and apply to new runs; a single run can be given its own device and precision
-right in the catalogue (the line "For this run:" on the visualization's card). In every run the panel "About the run"
+right on the start page (the line "For this run:" under "More: parameters, seed, device, precision" on the
+demonstration's card). In every run the panel "About the run"
 records what computed on what — separately for the drawing and for the checks (the checks are always fp64). If a world
 chose an approximation itself (for example, a slice of the slit by the reduced 2-D model), the run is marked
 "approximation" in the list and "APPROXIMATION: …" in the player's top bar. On a machine without an NVIDIA graphics
@@ -67,10 +68,25 @@ docker run --rm -v "$PWD":/lf:ro -w /lf/visualizations node:24 \
 
 ## How to use it
 
-**The catalogue** (`/`): the visualizations' cards. Choose a scenario (a preset) and press "▶ Start" — the server
-starts a new run and opens the player. "Parameters…" sets the world's laws and parameters by hand. Below is the list of
-runs: recording, paused, suspended; "☆" keeps a run for good, "✕" deletes it (a run not open in any tab; a running one
-is suspended first). There is no stop (2026-10-28): a run either records (computes further) or is paused. Without
+**The start page** (`/`): learning materials in physics by audience. Four tiles, each with its count: **School**,
+**University**, **Research** and **Laboratories**. A tile opens its page (`/#school`, `/#university`, `/#research`,
+`/#labs`; the old address `/#playground` leads to the laboratories): the demonstrations by section in teaching order,
+the section chips with their counts, and a search box ("Search…"); at school, "By:" section or grade. The school
+demonstrations are being built along the curriculum: until they land, the school page shows the planned ones as planned,
+with what is already there at university level on the same topic. The planned university and research items are listed
+folded, by section, under the worlds. Under the tiles, "Continue:" shows the last runs that are open or paused.
+
+On a demonstration's card: its picture, its title, what you will see, its courses (university) or its question, "Status:
+hypothesis" and the prior art (research); "Scenario:" (the presets); **"▶ Compute live"**: the server starts a new run
+and opens the player; **"▷ Recording m:ss"**: plays the scenario's saved recording at once, with nothing computed
+(greyed, with the tooltip "No recording for this scenario: compute it live", when there is none; see "Recordings and the
+public site" below). "More: parameters, seed, device, precision" (folded on a university card, open on a research card)
+holds "Parameters…" (the world's laws and parameters by hand), the seed and the line "For this run:" with the device and
+the precision. "Same topic:" links the same topic at other levels. If a world cannot be made with the chosen parameters,
+the card says why under its buttons.
+
+**My runs** (`/runs`, "My runs" in the top bar): the runs on this server: recording, paused, suspended; "☆" keeps a run
+for good, "✕" deletes it (a run not open in any tab; a running one is suspended first). There is no stop (2026-10-28): a run either records (computes further) or is paused. Without
 viewers it pauses after a minute and after half an hour frees its worker ("suspended"); open it and press ⏺ — the
 world goes on from its saved state (2026-10-29): the worker saves the world's whole state when the run is suspended,
 when it pauses and every two minutes of computation, and it goes on from the last save, as one record, without
@@ -86,9 +102,9 @@ passed the limit, r12 and r13 before their latest change of the set-up. If resum
 visualization's code has changed incompatibly since), the run stays suspended with the reason ("resuming failed — ⏺
 tries again"); the record is intact. Runs not touched for longer than the removal period (a view, a command) are
 removed, except those marked ★; beyond the quota those untouched longest go first; a run open in a tab is not removed.
-The removal period is the field above the list of runs in the catalogue ("Remove runs without actions after … days",
-3 by default); it is saved on the server (`runs/settings.json`) and applies at once: if the new period would remove
-some runs, the catalogue first shows their list and removes them only after confirmation.
+The removal period is the field above the list on the page "My runs" ("Remove runs without actions after … days", 3 by
+default); it is saved on the server (`runs/settings.json`) and applies at once: if the new period would remove some
+runs, the page first shows their list and removes them only after confirmation.
 
 **The player** (`/run?id=…`):
 
@@ -109,8 +125,8 @@ the event, T — the theme, ? — the help.
 
 If the world takes long to compute a change (the scene, the set-up, a new world), the top bar shows what exactly and for
 how many seconds; "✕ cancel" returns the world to the moment before that change. If a world cannot be made with the
-chosen parameters, the catalogue says why right under the button "▶ Start", and the field with the unsuitable value is
-highlighted. In a laboratory, a palette button opens the object's parameters; the place can be typed or clicked in the
+chosen parameters, the start page says why right under the card's button "▶ Compute live", and the field with the
+unsuitable value is highlighted. In a laboratory, a palette button opens the object's parameters; the place can be typed or clicked in the
 scene ("⌖ Point at a place in the scene"), then "Place". ⇤ and ⇥ at the top (keys [ and ]) hide the side columns. Each
 worker has its own memory (`--worker-mem-gb`, by default 60 % of the server's memory, at most 8 GB): a world that
 does not fit in it refuses with an explanation instead of taking the memory of the whole computer.
@@ -146,9 +162,63 @@ change the world's parameters (a new world in the same run). A world from the re
 only: its slices do not change; in the past of the experiment (the slider not at the end), neither: "＋ Slice" is
 inactive and the slice's panel says why.
 
-The records are kept in `visualizations/runs/` (the removal period after the last action is 3 days by default, set in
-the catalogue, or until the quota of 5 GB; "☆" protects a run).
+The records are kept in `visualizations/runs/` (the removal period after the last action is 3 days by default, set on
+the page "My runs", or until the quota of 5 GB; "☆" protects a run).
 At most three runs compute at once.
+
+---
+
+## Recordings and the public site
+
+**Watching a recording.** A recording is a run of one scenario made once by the recorder and saved: it plays at once,
+back and forth, with nothing computed. Open it with "▷ Recording m:ss" on a card, or by its address
+`/run?rec=<world>/<recording>` (an old id works too: `/run?rec=v02_double_slit/young`). The player on a recording has
+the badge "RECORDING · date · code …" in its top bar (its tooltip names the scenario; when the recording was made by
+other code than this server runs, it names both codes); "⏺", "☆" and "⚙ Devices" are absent. ▶ (or Space) plays the
+recording; the slider, ◀ ▶ and ⏮ ⏭ go through it as through a run's history. The set-up, the actions and the laws are
+shown "as recorded" and cannot be changed (the reason: "a recording: this needs a live run"); a 3-D world shows the
+slices that were recorded and adds none. The checks, the events, "Physics of this world" and the instruments' plots work
+as in a run; the instruments' CSV is made in the browser from the frames the recording kept (its time column says "from
+the recording: every frame" or "one frame in k of the run"); parameter sweeps need a live run. "About the recording"
+holds its passport (the code, the recorder, the date, the frames) and "Download the recording (.lfrec.gz)". On the
+server, "▶ Compute this scenario live" starts a run of the same scenario, which can then be changed.
+
+**Where the server finds recordings.** In `visualizations/recordings/` (not in git; the variable `LFVIZ_RECORDINGS`
+names another folder), one folder per world with its `index.json`. When a world has no local recording, the player plays
+the public site's one, but only if it was made from the same version of the world; otherwise it says "No recording for
+this version: record it locally or compute live".
+
+**Recording locally** (`site/record.py`, in Docker, on the CPU):
+
+```bash
+docker run --rm --memory=12g -e LFPHYS_NO_GPU=1 --user "$(id -u):$(id -g)" -v "$PWD":/lf -w /lf/visualizations \
+    lfphys-viz python3 site/record.py --stale            # or: --world u32_double_slit (repeatable), --all
+```
+
+`--stale` records the worlds whose recordings are missing or were made by other code: a recording's key covers its
+scenario, the recorder's version and the code a run executes (the world's folder, `server/lfviz/` without the server's
+own `app.py` and `runs.py`, and the engine). Most worlds take seconds to two minutes; the exact two-slit world r12 about
+20 minutes. Each file must stay within the site's budget (3 MB aimed at, 10 MB at most; a world 12 MB, at most 25 MB); a
+recording over the limit fails with the advice to shorten it in the world's `VIZ["recordings"]`. The pictures of the
+cards and of the README (`docs/images/<id>.jpg`) are taken from the recordings by `site/posters.mjs`.
+
+**Building the public site locally** (`site/build.py`, then `site/check.py`, which fails on anything missing, stale or
+over budget):
+
+```bash
+python3 site/build.py --recordings recordings --out /tmp/site --base /lfphys/
+python3 site/check.py /tmp/site --base /lfphys/
+cd /tmp && mkdir -p srv && ln -s /tmp/site srv/lfphys && cd srv && python3 -m http.server 8000   # http://127.0.0.1:8000/lfphys/
+```
+
+The site is the same player in its static mode: the start page and the recordings, with nothing computed; the
+laboratories are greyed with "Works only with a running server"; there is no "My runs" and no "⚙ Devices". Details:
+[`site/README.md`](site/README.md) (in English).
+
+**What needs the author's go.** Publishing the site on GitHub Pages (`https://ildar-idrisov.github.io/lfphys/`): turning
+Pages on with "GitHub Actions" as its source and copying the draft workflow `site/ci/pages.yml` to `.github/workflows/`;
+the workflow then records in CI, builds, checks and deploys. Until then the links "Watch on the site" in the root README
+and the player's fallback to the public site find nothing.
 
 ---
 
@@ -178,9 +248,10 @@ At most three runs compute at once.
 
 ## Laboratories (B6, 2026-11-03)
 
-The catalogue has two modes (the switch at the top of the catalogue): **"Demonstrations"** — the prepared experiments
-`sNN_`/`uNN_`/`rNN_*` above — and **"Laboratories"** — one laboratory per branch of physics `pNN_*`, where the scene is built by hand and
-everything is computed in real time (the owner's request of 2026-10-28). On a section's card: a scenario (a ready scene),
+The start page's tile **"Laboratories"** (`/#labs`) opens one laboratory per branch of physics, `pNN_*`, where the
+scene is built by hand and everything is computed in real time (the owner's request of 2026-10-28); the demonstrations
+`sNN_`/`uNN_`/`rNN_*` above are the prepared experiments. The laboratories need a running server: there is nothing to
+replay, so the public site shows them greyed, with "Works only with a running server". On a section's card: a scenario (a ready scene),
 "▶ Begin", "Laws…" (the world's laws: which solver, space, grid — changing them starts a new
 world) and "📂 From a scene file…".
 
@@ -254,7 +325,7 @@ suspended run, from its last saved state (said above the result).
 | [`p04_fluids/`](p04_fluids/README.md) | Fluids | flow in a plane (the lattice Boltzmann method): cylinders, rectangles, NACA wing profiles, inlets and outlets, moving walls, periodicity, dye, velocity probes; drag and lift, the balances of mass and momentum. On the go change the viscosity, the density, the collision operator and the dye; water and air — with the speeds the grid resolves, or in their own scenarios (millimetre and centimetre channels). Also on the go: the grid (nodes along x), the size of the domain (on the side chosen in "The domain grows or shrinks"; the new part at rest or with the incoming flow) and the largest expected speed (the time step): the flow is moved to the new grid, not started afresh (the event names the mass and the momentum before and after); bodies, dye and probes are dragged; instruments: C_x and C_y (per step and averaged over a sound period), forces, velocity and pressure at the probes, the flow rates through the sides, the balances' residuals, Re and Ma; on a change of the grid, the domain or the largest speed the event names the domain's new height (if the number of nodes along y became a different whole number) and splits the change of mass: the scheme's compressibility (the same pressure, a different sound speed of the scheme), the new part of the domain, the interpolation; the balances of a transfer close by construction, the accuracy of the transfer shows in the checks "Benchmarks" (a channel with a body force and periodic ends); a new world with "carry the scene over" continues the flow (on another grid by the engine's transfer), what was started afresh is said |
 
 The other sections (optics and waves, electricity and magnetism, relativity) are batch B9 of the plan
-(`../lfphys/PLAN.md`); the catalogue shows them as planned.
+(`../lfphys/PLAN.md`); the start page shows them as planned.
 
 If GPU 0 has warmed to 82 °C, new computations go to the CPU by themselves until it cools to 70 °C (the reason for the
 choice of device: "GPU cooling down: …"); in the quantum section the device shows in the check "Computation: seconds
@@ -269,7 +340,9 @@ Describe what you want to see and which hypothesis or effect is tested. The agen
 (what is missing is added to the engine); the visualization's `engine/` holds only the apparatus, the drawing is in
 `web/view.js`, then the checks and tests, a README with the model in every language of
 [`../LANGUAGES.md`](../LANGUAGES.md), the translations of its texts (`locales/`), and an independent review of the
-physics in `../reviews/`. The server and the player pick the folder up by themselves.
+physics in `../reviews/`; a demonstration also declares its recordings (`VIZ["recordings"]`), which are recorded with
+`site/record.py`, and gets its picture from `site/posters.mjs`. The server, the player, the start page and the catalogue
+of the root README (`site/readme.py`) pick the folder up by themselves.
 
 ---
 
@@ -283,7 +356,7 @@ physics in `../reviews/`. The server and the player pick the folder up by themse
 | a run is at once "failure" | the laws are incompatible (for example, GR with an ether) — the reason is in "Events" and in `runs/<id>/worker.log` |
 | "resuming failed — ⏺ tries again" | the world could not be recomputed along the record (the reason is in the status line's tooltip and in "Events"); the record is intact, ⏺ tries again once the cause is removed |
 | "the world is still being restored: the change was not accepted — …" | a change came while the world was being restored along the record (for example, from another tab); repeat it when the record resumes |
-| a run in the catalogue has no "✕" | it is open in a tab (👁 in the list): close it |
+| a run on the page "My runs" has no "✕" | it is open in a tab (👁 in the list): close it |
 | the world runs slower than the chosen speed | the computation cannot keep up: next to the speed, "actual: …" in orange (before 2026-10-28 the player did not show this, though this guide said otherwise); lower the speed or the source's rate |
 | a change to the server does not show (including an "ImportError" of a new visualization: the server holds the engine loaded at its start) | `docker compose -f visualizations/docker/docker-compose.yml restart viz` — no runs are lost: the running ones are suspended and go on with ⏺ |
 

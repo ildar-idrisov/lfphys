@@ -8,8 +8,8 @@
 * a page (``index.html``, ``run.html``, ``legal.html``) lacks ``lf-mode=static``, ``lf-base`` equal to the base, or the
   import map with ``"/static/"`` and ``"/viz/"`` mapped relative; ``404.html`` lacks its metas; a page has an absolute
   ``/static``, ``/api`` or ``/viz`` address outside the import map;
-* a catalogue file (``api/viz.json``, ``api/viz/<id>.json``, ``api/planned.json``, ``api/recordings.json``,
-  ``aliases.json``) or ``static/locales/<lang>.json`` of a language of ``LANGUAGES.md`` is missing;
+* a catalogue file (``api/viz.json``, ``api/viz/<id>.json``, ``api/planned.json``, ``api/audiences.json``,
+  ``api/recordings.json``, ``api/health.json``, ``aliases.json``) or ``static/locales/<lang>.json`` of a language of ``LANGUAGES.md`` is missing;
 * a budget's hard limit is exceeded (one recording 10 MB, one world 25 MB, one poster 400 kB, the site 900 MB); over a
   target (3 MB, 12 MB, 150 kB, 600 MB) it warns; the recordings accepted over their target (``sitelib.ACCEPTED``) are
   warned as "over target (accepted: <reason>)".
@@ -103,7 +103,8 @@ def check_files(site: Path, man: dict, rep: Report):
             rep.fail(f"{rel}: in the manifest, missing")
         elif f.stat().st_size != info.get("bytes") or L.sha256_file(f) != info.get("sha256"):
             rep.fail(f"{rel}: differs from the manifest (size or sha256)")
-    need = ["api/viz.json", "api/planned.json", "api/recordings.json", "aliases.json"]
+    need = ["api/viz.json", "api/planned.json", "api/audiences.json", "api/recordings.json", "api/health.json",
+            "aliases.json"]
     need += [f"api/viz/{vid}.json" for vid in registry.viz_ids()]
     need += [f"static/locales/{code}.json" for code in languages()]
     for rel in need:

@@ -103,6 +103,7 @@ def test_the_catalogue_files_are_what_the_server_returns(site, extra):
     assert _json(site, f"api/viz/{old}.json")["id"] == new
     assert _json(site, "aliases.json") == registry.ALIASES
     assert _json(site, "api/planned.json") == A.planned_list()
+    assert _json(site, "api/audiences.json") == json.loads(json.dumps(A.audiences_list(), ensure_ascii=False))
     recs = _json(site, "api/recordings.json")
     assert set(recs["worlds"]) == set(TEST_WORLDS) and recs["site"].startswith("https://")
     assert recs == json.loads(json.dumps(A.recordings_list(site["out"] / "recordings"), ensure_ascii=False))

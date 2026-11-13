@@ -14,8 +14,8 @@ What it writes into ``--out`` (served at ``--base``, e.g. https://ildar-idrisov.
   ``404.html``: a small page of its own (GitHub Pages serves it at any missing address, so its links carry the base);
 * ``static/``: ``player/`` without its tests and ``legacy/``, and ``static/locales/<lang>.json`` (``lfviz.i18n
   --export``); ``viz/<id>/``: each world's ``web/``;
-* ``api/viz.json``, ``api/viz/<id>.json`` (also under each old id), ``api/planned.json``, ``api/recordings.json``,
-  ``api/health.json`` (``{version, visualizations, cite}``): what the server's ``GET /api/…`` returns;
+* ``api/viz.json``, ``api/viz/<id>.json`` (also under each old id), ``api/planned.json``, ``api/audiences.json``,
+  ``api/recordings.json``, ``api/health.json`` (``{version, visualizations, cite}``): what the server's ``GET /api/…`` returns;
   ``aliases.json`` (``registry.ALIASES``);
 * ``recordings/<world>/``: each world's ``index.json`` and the files it names, from ``--recordings`` (``DIR/<world>/``
   or, as the CI's artifacts land, ``DIR/rec-<world>/``);
@@ -210,6 +210,7 @@ def build(recordings: Path | None, out: Path, base: str) -> dict:
             _dump(out / "api" / "viz" / f"{old}.json", d)
     _dump(out / "api" / "viz.json", catalogue)
     _dump(out / "api" / "planned.json", A.planned_list())
+    _dump(out / "api" / "audiences.json", A.audiences_list())
     _dump(out / "aliases.json", registry.ALIASES)
     _dump(out / "api" / "health.json", {"ok": True, "version": __version__, "visualizations": ids,
                                         "cite": registry.citation(), "static": True})

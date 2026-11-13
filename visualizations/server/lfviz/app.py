@@ -4,10 +4,12 @@
 
 REST (JSON):
     GET    /api/health                     server version, counts
-    GET    /api/viz                        catalogue: [{id, title, summary, purpose, version, schema}]
+    GET    /api/viz                        catalogue: [registry.describe: {id, title, …, code_hash, schema}]
     GET    /api/viz/{viz}                  one entry
     GET    /api/recordings                 [S] the local recordings of the public site: {worlds: {<world>: its index.json},
                                            site: the public site's address (LFVIZ_SITE_URL)}
+    GET    /api/audiences                  the audiences and the sections in their order: {audiences: [{id, prefix, label,
+                                           description, ui}], sections: [{id, label}]} (registry.AUDIENCES, SECTIONS)
     GET    /api/planned                    the planned items (``visualizations/planned.json``) not yet built: those whose
                                            id names an existing folder (S02 <-> s02_*) are dropped
     GET    /api/runs                       runs (live and recorded), newest first
@@ -103,6 +105,14 @@ def planned_list() -> list:
         return []
     built = {v.split("_", 1)[0].lower() for v in registry.viz_ids()}
     return [x for x in items if isinstance(x, dict) and str(x.get("id", "")).lower() not in built]
+
+
+def audiences_list() -> dict:
+    """The audiences and the sections of the catalogue, in their order (``GET /api/audiences``; the site's
+    ``api/audiences.json`` is the same): ``registry.AUDIENCES`` and ``registry.SECTIONS``, their labels as ``T``."""
+    return {"audiences": [{"id": a["id"], "prefix": a["prefix"], "label": a["label"], "description": a["text"],
+                           "ui": a["ui"]} for a in registry.AUDIENCES],
+            "sections": [{"id": s["id"], "label": s["label"]} for s in registry.SECTIONS]}
 
 
 RECORDINGS_DEFAULT = registry.ROOT / "recordings"  # [S] site/record.py writes here (git-ignored)
@@ -478,6 +488,9 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
     async def api_planned(request):
         return _json(planned_list())
 
+    async def api_audiences(request):
+        return _json(audiences_list())
+
     async def api_i18n(request):
         """The merged catalogue of a language (lfviz.i18n): {lang, messages}; cached until a catalogue file changes; an
         ETag (weak comparison), gzip when the client takes it (review i18n-code F9, F13). Also at
@@ -519,6 +532,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
     app.router.add_get("/api/viz", viz_list)
     app.router.add_get("/api/viz/{viz}", viz_one)
     app.router.add_get("/api/planned", api_planned)
+    app.router.add_get("/api/audiences", api_audiences)
     app.router.add_get("/api/runs", runs_list)
     app.router.add_post("/api/runs", runs_start)
     app.router.add_get("/api/runs/{id}", run_meta)

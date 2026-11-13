@@ -305,7 +305,7 @@ class Simulation(PlaygroundSimulation):
             self.running_check("energy", T("Kinetic energy"), ke, None, 0.0, info=True)
         at = {o["id"]: self._at(o) for o in self.objects.values()}
         xyz = "{a:.4g}, {b:.4g}, {c:.4g}"  # numbers of the viewer's language (a msgid without words)
-        now = {i: {"position, m": T(xyz, **dict(zip("abc", map(float, self.state[i][[0, 1, 4]])))),
+        now = {i: {"position, m": T(xyz, **dict(zip("abc", map(float, self.state[i][[0, 1, 4]])))),  # i18n-msgids: "position, m" "velocity, m/s" (the keys: labels)
                    "velocity, m/s": T(xyz, **dict(zip("abc", map(float, self.state[i][[2, 3, 5]]))))} for i in ids}
         rad = np.array([self.objects[i]["values"]["r"] for i in ids], float)
         return ({"ids": ids, "probes": probes, "at": at, "meas": meas, "now": now, **({"meas_note": note} if note else {})},

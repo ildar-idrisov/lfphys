@@ -283,6 +283,7 @@ a.button.disabled { opacity: .45; cursor: default; }
 @media (max-width: 600px) { .st-search { margin-left: 0; width: 100%; } .st-head h1 { font-size: 17px; } .start .page { padding: 12px; } }
 /* the player on a saved recording (js/player.js, S.recording) */
 .badge.rec-badge { background: #b02a37; color: #fff; font-weight: 600; letter-spacing: .03em; }
+.badge.rec-badge.rec-other-code { outline: 2px dashed #f0ad4e; outline-offset: 1px; }  /* recorded by other code than the server's */
 .rec-note { margin: 8px 10px; padding: 7px 9px; border-left: 4px solid var(--accent); border-radius: 4px; font-size: 12px;
   background: color-mix(in srgb, var(--accent) 7%, var(--panel)); }
 .st-tile .pic { margin-bottom: 2px; }

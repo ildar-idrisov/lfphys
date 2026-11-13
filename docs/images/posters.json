@@ -21,126 +21,126 @@
   "quality": 85
  },
  "p04_fluids": {
-  "key": "live:0.2:karman",
-  "from": "live run 20261113-133034-p04-49d0, preset karman",
-  "bytes": 32586,
+  "key": "live:0.2:karman:t6",
+  "from": "live run 20261113-145522-p04-2f48, preset karman",
+  "bytes": 44929,
   "width": 1200,
   "quality": 85
  },
  "r11_thomas_3d": {
-  "key": "812360ef5db79308",
+  "key": "75b9cb4a9f355533",
   "from": "r11_thomas_3d/thomas",
   "bytes": 89745,
   "width": 1200,
   "quality": 85
  },
  "r12_double_slit_2d": {
-  "key": "2ab690cb310845d9",
+  "key": "4af44e8bb392cda9",
   "from": "r12_double_slit_2d/narrow",
   "bytes": 98763,
   "width": 1200,
   "quality": 85
  },
  "r13_arrival_times_2d": {
-  "key": "bf31291a9964c0db",
+  "key": "28aefe3000ec94d9",
   "from": "r13_arrival_times_2d/gauss",
   "bytes": 67251,
   "width": 1200,
   "quality": 85
  },
  "u31_light_travel": {
-  "key": "37351776acf8893d",
+  "key": "071c54245d21f6d7",
   "from": "u31_light_travel/sun_earth",
   "bytes": 126224,
   "width": 1200,
   "quality": 85
  },
  "u32_double_slit": {
-  "key": "f9fb36fda62fd96c",
+  "key": "d12308edd29079d1",
   "from": "u32_double_slit/young",
   "bytes": 129750,
   "width": 1200,
   "quality": 85
  },
  "u33_quantum_1d": {
-  "key": "83ff3bb4f2f2b710",
+  "key": "07c805d7fe7503ba",
   "from": "u33_quantum_1d/tunnel",
   "bytes": 63780,
   "width": 1200,
   "quality": 85
  },
  "u34_orbits": {
-  "key": "acac97279b316cde",
+  "key": "934aec93b5d5e005",
   "from": "u34_orbits/rosette",
-  "bytes": 72445,
+  "bytes": 100575,
   "width": 1200,
   "quality": 85
  },
  "u35_optics_bench": {
-  "key": "6880336c6fefb147",
+  "key": "77a6d1e01e1427cc",
   "from": "u35_optics_bench/tir",
   "bytes": 74574,
   "width": 1200,
   "quality": 85
  },
  "u36_qcd": {
-  "key": "9cd7de88fef9b53c",
+  "key": "6c3f6fbbb73d9e77",
   "from": "u36_qcd/charmonium",
   "bytes": 67562,
   "width": 1200,
   "quality": 85
  },
  "u37_bell_test": {
-  "key": "83bac89794fb766f",
+  "key": "db58c5d6431759d0",
   "from": "u37_bell_test/chsh",
   "bytes": 104670,
   "width": 1200,
   "quality": 85
  },
  "u38_wave_3d": {
-  "key": "1164689a325ae2ba",
+  "key": "361839dfa705d05b",
   "from": "u38_wave_3d/double",
   "bytes": 74388,
   "width": 1200,
   "quality": 85
  },
  "u39_fast_observer": {
-  "key": "2afbb438a9e62b03",
+  "key": "d762c2a70a470139",
   "from": "u39_fast_observer/terrell",
   "bytes": 108815,
   "width": 1200,
   "quality": 85
  },
  "u40_hydrogen_3d": {
-  "key": "1d4d78f3acd16f9e",
+  "key": "f60f5f814c941d39",
   "from": "u40_hydrogen_3d/3dz2",
   "bytes": 60680,
   "width": 1200,
   "quality": 85
  },
  "u41_quarkonium_3d": {
-  "key": "320023e7cb073226",
+  "key": "3dc7439433359424",
   "from": "u41_quarkonium_3d/cc_2s",
   "bytes": 58288,
   "width": 1200,
   "quality": 85
  },
  "u42_kerr_shadow": {
-  "key": "f7605c457223afbd",
+  "key": "d929bbe7b61aae69",
   "from": "u42_kerr_shadow/m87",
   "bytes": 67406,
   "width": 1200,
   "quality": 85
  },
  "u43_optical_vortices": {
-  "key": "4fa23048c430a71b",
+  "key": "3fa342bcba960dfc",
   "from": "u43_optical_vortices/lg3",
   "bytes": 70831,
   "width": 1200,
   "quality": 85
  },
  "u44_mie_scattering": {
-  "key": "3ffd1727338123a9",
+  "key": "2eb37beca9dfdff6",
   "from": "u44_mie_scattering/rainbow",
   "bytes": 107016,
   "width": 1200,

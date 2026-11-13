@@ -25,26 +25,18 @@ const SERVER = MODE === "server";
 const quickStart = () => (lang() === "ru" ? `${GITHUB}/blob/main/README.ru.md#%D0%B1%D1%8B%D1%81%D1%82%D1%80%D1%8B%D0%B9-%D1%81%D1%82%D0%B0%D1%80%D1%82`
   : `${GITHUB}#quick-start`);
 
-// the audiences and the sections: their ids and texts as registry.AUDIENCES and registry.SECTIONS have them (the same
-// msgids; the API carries only the ids)
-const AUDS = () => [
-  { id: "school", hash: "school", label: t("School"), text: t("Grades 7–11: the ordinary lab experiment, computed and guided step by step") },
-  { id: "university", hash: "university", label: t("University"), text: t("The experiments of the university courses, computed from the laws") },
-  { id: "research", hash: "research", label: t("Research"), text: t("Set-ups not computed before, to study the harder laws; every novelty is a hypothesis") },
-  { id: "playground", hash: "labs", label: t("Laboratories"), text: t("Free benches: build a scene, and the engine computes it live") },
-];
-const SECTIONS = () => [["mechanics", t("Mechanics")], ["fluids", t("Liquids and gases")], ["waves", t("Oscillations and waves")],
-  ["heat", t("Heat and molecular physics")], ["electromagnetism", t("Electricity and magnetism")], ["optics", t("Optics")],
-  ["relativity", t("The theory of relativity")], ["quantum", t("Quantum physics")], ["atom", t("Atomic physics")],
-  ["condensed_matter", t("Condensed matter")], ["nucleus", t("Nuclear physics")], ["particles", t("Particle physics")],
-  ["astrophysics", t("Astrophysics and cosmology")]];
+// the audiences and the sections in their order, with their texts (T): registry.AUDIENCES and registry.SECTIONS, read
+// from apiGet("audiences") (the server's /api/audiences, the site's api/audiences.json); the laboratories' route is #labs
+const HASH = { playground: "labs" };
+const AUDS = () => D.audiences.map((a) => ({ id: a.id, hash: HASH[a.id] || a.id, label: t(a.label), text: t(a.description) }));
+const SECTIONS = () => D.sections.map((s) => [s.id, t(s.label)]);
 const audOf = (id) => AUDS().find((a) => a.id === id) || null;
 const audByHash = (h) => AUDS().find((a) => a.hash === h) || null;
 const secLabel = (id) => (SECTIONS().find((s) => s[0] === id) || [id, id])[1];
 const secOrder = (id) => { const i = SECTIONS().findIndex((s) => s[0] === id); return i < 0 ? 99 : i; };
 
 // what the page shows: the catalogue, the planned items, the recordings (local or the site's), the runs (server)
-const D = { viz: [], planned: [], rec: { worlds: {}, site: "" }, runs: null, health: null, loaded: false };
+const D = { viz: [], planned: [], audiences: [], sections: [], rec: { worlds: {}, site: "" }, runs: null, health: null, loaded: false };
 const R = { aud: null, focus: null, section: "all", q: "", by: "section" };  // the route and the filters
 let kernelInfo = null;  // the engine's kernels (from /api/devices), for a run's own choice of devices
 
@@ -65,9 +57,12 @@ if (!SERVER) {  // the site: what it is, and the source
 
 // --- the data -------------------------------------------------------------------------------------------------------
 async function load() {
-  const [viz, planned, rec] = await Promise.allSettled([apiGet("viz"), apiGet("planned"), apiGet("recordings")]);
+  const [viz, planned, rec, auds] = await Promise.allSettled([apiGet("viz"), apiGet("planned"), apiGet("recordings"), apiGet("audiences")]);
   if (viz.status !== "fulfilled") throw viz.reason;
+  if (auds.status !== "fulfilled") throw auds.reason;
   D.viz = viz.value;
+  D.audiences = auds.value.audiences || [];
+  D.sections = auds.value.sections || [];
   D.planned = planned.status === "fulfilled" && Array.isArray(planned.value) ? planned.value : [];
   D.rec = rec.status === "fulfilled" && rec.value ? { worlds: rec.value.worlds || {}, site: rec.value.site || "" } : { worlds: {}, site: "" };
   D.loaded = true;
@@ -588,8 +583,7 @@ function showHelp() {
 }
 
 // --- start ----------------------------------------------------------------------------------------------------------
-parseHash();
-load().then(render).catch((e) => {
+load().then(() => { parseHash(); render(); }).catch((e) => {  // the routes need the audiences (#labs and the others)
   fill(document.getElementById("start"), el("div", { class: "st-note warn" }, t("Catalogue: {why}", { why: e.message })));
 });
 if (SERVER) { poll(); setInterval(poll, 3000); }

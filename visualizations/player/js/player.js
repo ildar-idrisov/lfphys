@@ -138,6 +138,7 @@ async function loadRecording(spec) {
   world = S.viz.id;
   let all = null;
   try { all = await apiGet("recordings"); } catch (e) { all = null; }
+  try { S.audiences = (await apiGet("audiences")).audiences || []; } catch (e) { S.audiences = []; }  // the back link's label
   const site = (all && all.site) || SITE;
   let index = all && all.worlds ? all.worlds[world] : null;
   let entry = index ? (index.recordings || []).find((r) => r.id === recId) : null;
@@ -186,19 +187,24 @@ function recordingChrome() {
   const R = S.recording, ix = R.index || {};
   const date = String(ix.made || "").slice(0, 10);
   const code = String(ix.code_hash || "").slice(0, 8);
-  const badge = el("span", { class: "badge rec-badge", id: "recbadge",
+  // the code the recording was made with against the code this server runs (design §4.6): the same world version can
+  // still differ in its code (the engine, the framework, the world's files)
+  const here = MODE === "server" ? String(S.viz.code_hash || "") : "";
+  const other = !!(here && ix.code_hash && here !== String(ix.code_hash));
+  const badge = el("span", { class: "badge rec-badge" + (other ? " rec-other-code" : ""), id: "recbadge",
     title: [t("A recording of a real run, made by the recorder from the world's code: it plays without computing. Scenario: {label}", { label: t(R.entry.label) }),
+      other ? t("Recorded with code {rec}; this server runs {here}", { rec: String(ix.code_hash), here }) : "",
       R.fromSite ? t("Played from the public site: this server has no local copy (the same version of the world).") : ""].filter(Boolean).join("\n") },
-    t("RECORDING · {date} · code {code}", { date, code }));
+    t("RECORDING · {date} · code {code}", { date, code }), other ? " ≠" : "");
   $("status").before(badge);
   for (const id of ["rec", "keep"]) $(id).style.display = "none";
   const gear = document.querySelector('.topbar a[data-page="settings"]');
   if (gear) gear.remove();
   const back = document.querySelector('.topbar a[data-page=""]');
-  const aud = { school: "school", university: "university", research: "research", playground: "labs" }[S.viz.audience];
-  if (back && aud) {
-    back.setAttribute("href", page("") + `#${aud}/${S.viz.id}`);
-    back.textContent = "← " + ({ school: t("School"), university: t("University"), research: t("Research"), labs: t("Laboratories") }[aud]);
+  const a = (S.audiences || []).find((x) => x.id === S.viz.audience);  // registry.AUDIENCES (apiGet("audiences"))
+  if (back && a) {
+    back.setAttribute("href", page("") + `#${a.id === "playground" ? "labs" : a.id}/${S.viz.id}`);
+    back.textContent = "← " + t(a.label);
   }
   $("app").classList.add("recording");
 }
@@ -975,7 +981,9 @@ function renderInfo() {
 function renderRecInfo() {
   const R = S.recording, ix = R.index || {}, e = R.entry, h = S.header || {};
   const rows = [[t("Recording"), S.meta.id], [t("Visualization"), t("{id} (version {version})", { id: R.world, version: String(ix.version) })],
-    [t("Code"), ix.code_hash], [t("Recorded"), String(ix.made || "").replace("T", " ")], [t("Recorder"), ix.recorder],
+    [t("Code"), ix.code_hash],
+    ...(MODE === "server" && S.viz.code_hash && S.viz.code_hash !== ix.code_hash ? [[t("This server's code"), S.viz.code_hash]] : []),
+    [t("Recorded"), String(ix.made || "").replace("T", " ")], [t("Recorder"), ix.recorder],
     [t("Scenario"), t(e.label)], [t("Seed"), h.seed ?? S.meta.seed],
     [t("Played"), t("{s:g} s at {fps:g} frames per second", { s: e.seconds, fps: e.fps })],
     [t("Frames"), e.frame_stride > 1 ? t("{n:d} kept of {total:d} (one in {k:d})", { n: e.frames, total: e.frames_recorded ?? e.frames * e.frame_stride, k: e.frame_stride }) : String(e.frames)],

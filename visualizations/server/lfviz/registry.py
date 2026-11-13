@@ -283,6 +283,20 @@ def code_hash(viz_id: str) -> str:
     return h.hexdigest()[:12]
 
 
+_CODE_HASHES: dict[str, str] = {}
+
+
+def code_hash_cached(viz_id: str) -> str:
+    """``code_hash`` of a visualization, computed once per process (the catalogue's entries carry it, and it reads the
+    whole engine): what a recording's ``code_hash`` is compared with («recorded with code X; this server runs Y»,
+    design of the start page §4.6). A file edited while the process runs is not seen; ``code_hash`` itself always
+    reads the files."""
+    viz_id = resolve(viz_id)
+    if viz_id not in _CODE_HASHES:
+        _CODE_HASHES[viz_id] = code_hash(viz_id)
+    return _CODE_HASHES[viz_id]
+
+
 def citation() -> dict:
     """What a publication cites (lfphys Research Licence §5): the version in CITATION.cff and the code identifier of this
     copy (a hash of the server and the engine, as in ``code_hash``), for a copy that is not a release."""
@@ -335,6 +349,7 @@ def describe(viz: dict | str) -> dict:
         "summary": viz.get("summary", ""),
         "purpose": viz.get("purpose", ""),
         "version": viz.get("version", ""),
+        "code_hash": code_hash_cached(viz["id"]),
         "kind": viz.get("kind", "demo"),
         "audience": aud,
         "section": viz.get("section"),

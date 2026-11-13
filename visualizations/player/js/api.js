@@ -44,7 +44,7 @@ export async function getJSON(u) {
 }
 
 // The catalogue's data, from the server's API or from the site's static copy of it (the same JSON): the names "viz",
-// "viz/<id>", "planned", "recordings" and "health"
+// "viz/<id>", "planned", "audiences", "recordings" and "health"
 export function apiGet(name) {
   name = String(name).replace(/^\/+/, "");
   return getJSON(MODE === "static" ? url(`api/${name}.json`) : url(`api/${name}`));

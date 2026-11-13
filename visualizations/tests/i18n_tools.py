@@ -13,6 +13,10 @@
 * ``composed_py(path)``, ``composed_js(path)``: calls ``T(...)`` / ``t(...)`` whose msgid is built at run time
   (``"a" + b``, a template with ``${}``, ``.join``, a format): their msgids are invisible to the static test, so such a
   line names them in a comment ``i18n-msgids: "…" "…"`` (none: a text made elsewhere) — review i18n-code F6.
+* ``msgids_data()``: the msgids the code shows from data files rather than from literals: every file of ``DATA_MSGIDS``
+  with the keys whose values are English msgids (``planned.json``: ``title`` and ``text``, which the start page, the
+  README and the site render with ``t()`` / ``render_in``). A msgid passed through a variable in code (a unit, a label
+  used as a key) is named by a marker ``i18n-msgids:`` on its line instead.
 * ``shadowed_t(path)`` (JavaScript: a parameter, a local or a function named ``t`` in a module that imports the
   translator) and ``shadowed_T(path)`` (Python: a function that binds ``T`` locally in a module that imports it) —
   review i18n-code F8.
@@ -232,6 +236,22 @@ def read_pending() -> set[str]:
 
 
 # --- msgids ---------------------------------------------------------------------------------------------------------
+#: the data files whose values are msgids, by the keys that hold them (relative to the repository): the static scan
+#: counts them as used (test_i18n), so a catalogue entry for a planned item's title is not reported as unused
+DATA_MSGIDS = {"visualizations/planned.json": ("title", "text")}
+
+
+def msgids_data() -> dict[str, list[tuple[str, int]]]:
+    """{file: [(msgid, item number)]} of the data files of ``DATA_MSGIDS`` (a list of objects each)."""
+    import json
+    out = {}
+    for rel, keys in DATA_MSGIDS.items():
+        items = json.loads((REPO / rel).read_text(encoding="utf-8"))
+        out[rel] = [(x[k], n) for n, x in enumerate(items, 1) if isinstance(x, dict)
+                    for k in keys if isinstance(x.get(k), str) and x[k].strip()]
+    return out
+
+
 def _const_str(node):
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value

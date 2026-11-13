@@ -7,6 +7,7 @@
 import { el, fill, panel } from "/static/js/ui.js";
 import { createEnv3D } from "/static/js/env3d.js";
 import { t, fmt, lang } from "/static/js/i18n.js";
+import { MODE, page } from "/static/js/base.js";
 
 export function createView(ctx) {
   // the log scale starts at (3 x the window's error)^2 of the peak, in the windows and in the 3-D scene alike
@@ -34,7 +35,7 @@ export function createView(ctx) {
     fill(devBox, el("span", {}, t("angular spectrum")), el("span", { class: "mono" }, u ? `${u.device === "gpu" ? "GPU" : "CPU"}, ${u.precision}` : "—"),
       el("span", {}, t("why")), el("span", {}, u ? t(u.reason) : ""),
       el("span", {}, t("checks")), el("span", {}, t("always fp64")),
-      el("span", {}, t("settings")), el("a", { href: "/settings", target: "_blank" }, t("⚙ Devices")));
+      ...(MODE === "server" ? [el("span", {}, t("settings")), el("a", { href: page("settings"), target: "_blank" }, t("⚙ Devices"))] : []));  // the site has no settings
   }
 
   return {

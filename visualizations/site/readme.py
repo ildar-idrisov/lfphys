@@ -14,7 +14,8 @@ research audiences by section in teaching order with their counts, one row per w
 (``docs/images/<id>.jpg``, when there is one), its title linked to its README in the language, its teaser, its anchors
 (the courses; the research question with «Status: hypothesis» and the prior art), «Watch on the site» (one link per
 recording, ``<site>run.html?rec=<world>/<rec>``), the count of scenarios in the player and «Same topic at other levels»;
-the laboratories with «Runs only with a local server» and the planned benches. Every world is in exactly one audience.
+the planned university and research items folded after their worlds, by section; the laboratories with «Runs only
+with a local server» and the planned benches. Every world is in exactly one audience.
 Every text is the registry's ``T`` rendered in the language (``lfviz.i18n.render_in``): the interface's own words.
 """
 
@@ -54,6 +55,8 @@ QUICK_START = T("Quick start")
 BENCHES = T("Planned benches")
 PLANNED_AT = T("{audience}, planned")
 MODIFIED = T("modified physics")
+N_PLANNED = T("{n:d} planned")
+HYPOTHESIS_SHORT = T("hypothesis")
 
 
 def readme_files() -> dict[str, Path]:
@@ -179,11 +182,17 @@ class Gen:
         todo = [p for p in items if p["id"] in self.planned]
         if not todo:
             return out
+        out += [f"*{self.r(PLANNED_BY_SECTION)}:*", ""]
+        return out + self.planned_by_section(todo)
+
+    def planned_by_section(self, todo: list[dict]) -> list[str]:
+        """The planned items by section in teaching order: one line each with its grades (school), «hypothesis»
+        (research), «next in the plan», and the worlds of another level on the same topic."""
         back = {}  # planned id -> worlds of another level that name it
         for vid, v in self.viz.items():
             for x in v.get("related") or []:
                 back.setdefault(x, []).append(vid)
-        out += [f"*{self.r(PLANNED_BY_SECTION)}:*", ""]
+        out = []
         for sec in registry.SECTIONS:
             here = [p for p in todo if p["section"] == sec["id"]]
             if not here:
@@ -193,6 +202,8 @@ class Gen:
                 s = f"* {p['id']} · {_md(self.r(p['title']))}"
                 if p.get("grades"):
                     s += f" ({self.r(GRADES, grades=', '.join(str(g) for g in p['grades']))})"
+                if p.get("status") == "hypothesis":
+                    s += f" · *{self.r(HYPOTHESIS_SHORT)}*"
                 if p.get("state") == "next":
                     s += f" · *{self.r(NEXT)}*"
                 there = [x for x in dict.fromkeys(list(p.get("related") or []) + back.get(p["id"], []))
@@ -202,6 +213,14 @@ class Gen:
                 out.append(s)
             out.append("")
         return out
+
+    def planned_folded(self, aud: str) -> list[str]:
+        """University and research: their planned items after the worlds, folded (as the site folds them)."""
+        todo = [p for p in self.planned.values() if p["audience"] == aud]
+        if not todo:
+            return []
+        return (["<details>", f"<summary>{_md(self.r(N_PLANNED, n=len(todo)))}</summary>", ""]
+                + self.planned_by_section(todo) + ["</details>", ""])
 
     def labs(self) -> list[str]:
         anchor = _slug(self.r(QUICK_START))
@@ -227,7 +246,7 @@ class Gen:
             elif a["id"] == "playground":
                 out += self.labs()
             else:
-                out += self.sections(a["id"])
+                out += self.sections(a["id"]) + self.planned_folded(a["id"])
         while out and out[-1] == "":
             out.pop()
         return "\n".join(out + ["", END])

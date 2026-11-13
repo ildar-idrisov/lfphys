@@ -24,9 +24,13 @@ export class Plane {
     this.w = Math.max(1, r.width); this.h = Math.max(1, r.height);
     this.cv.width = Math.round(this.w * this.dpr); this.cv.height = Math.round(this.h * this.dpr);
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    // a fit asked for before the canvas had a size (a recording drawn at once, before the layout): made now
+    if (this._fitLater && this.w > 1 && this.h > 1) { const f = this._fitLater; this._fitLater = null; this.fit(...f); }
   }
 
   fit(x0, x1, y0, y1, margin = 0.06) {
+    // no size yet (not laid out, or hidden): the scale would be of a 1-px canvas, so the fit waits for resize()
+    this._fitLater = this.w > 1 && this.h > 1 ? null : [x0, x1, y0, y1, margin];
     const W = this.w * (1 - 2 * margin), H = this.h * (1 - 2 * margin);
     this.cx = 0.5 * (x0 + x1); this.cy = 0.5 * (y0 + y1);
     const sx = W / Math.max(x1 - x0, 1e-300), sy = H / Math.max(y1 - y0, 1e-300);
@@ -46,12 +50,14 @@ export class Plane {
     window.addEventListener("mouseup", () => { drag = null; });
     window.addEventListener("mousemove", (e) => {
       if (!drag) return;
+      this._fitLater = null;
       this.cx = drag.cx - (e.clientX - drag.x) / this.sx;
       this.cy = drag.cy + (e.clientY - drag.y) / this.sy;
       this.onChange();
     });
     this.cv.addEventListener("wheel", (e) => {
       e.preventDefault();
+      this._fitLater = null;
       const r = this.cv.getBoundingClientRect();
       const px = e.clientX - r.left, py = e.clientY - r.top;
       const wx = this.wx(px), wy = this.wy(py);

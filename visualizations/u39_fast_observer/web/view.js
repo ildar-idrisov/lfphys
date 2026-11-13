@@ -9,6 +9,7 @@ import { el, fill, panel } from "/static/js/ui.js";
 import { createEnv3D } from "/static/js/env3d.js";
 import { createImageWindow, inflate, unsubRows } from "/static/js/imagewin.js";
 import { t, fmt, lang } from "/static/js/i18n.js";
+import { MODE, page } from "/static/js/base.js";
 
 function describe(meta, f, i, j) {
   const [H, W] = meta.shape, k = j * W + i;
@@ -65,7 +66,8 @@ export function createView(ctx) {
     const u = (((H && H.backend) || {}).used || {})["relativity.raytrace"];
     const d = (img && img.device) || (u && u.drawn);
     fill(devBox, el("span", {}, t("ray tracing")), el("span", { class: "mono" }, d ? `${d.device === "gpu" ? "GPU" : "CPU"}, ${d.precision}` : "—"),
-      el("span", {}, t("why")), el("span", {}, d ? t(d.reason) : ""), el("span", {}, t("settings")), el("a", { href: "/settings", target: "_blank" }, t("⚙ Devices")));
+      el("span", {}, t("why")), el("span", {}, d ? t(d.reason) : ""),
+      ...(MODE === "server" ? [el("span", {}, t("settings")), el("a", { href: page("settings"), target: "_blank" }, t("⚙ Devices"))] : []));  // the site has no settings
   }
   function drawImgPanel(meta) {
     const legend = [];
