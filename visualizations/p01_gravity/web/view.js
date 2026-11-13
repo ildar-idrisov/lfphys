@@ -146,12 +146,12 @@ export function createView(ctx) {
     leftPanels: pg.leftPanels,
     rightPanels: [...pg.rightPanels, panel(t("Scene layers"), env.layersPanel)],
     help: () => el("div", {},
-      el("h4", {}, t("Playground: space and gravity")),
-      el("p", {}, t("Add bodies from the palette (stars, planets, black holes, test bodies, light, observers with clocks) and change their parameters on the fly in the inspector. The motion is computed by the laws of the chosen world: Newtonian gravity of N bodies, a post-Newtonian binary radiating gravitational waves, or geodesics around a Kerr–Newman black hole.")),
-      el("p", {}, t("A body from the palette is placed at the given point, or, if it is taken, at the nearest free place along the x axis (a message says so). Collisions of bodies (merging or passing through) are changed on the fly, at the current moment.")),
+      el("h4", {}, t("Laboratory: space and gravity")),
+      el("p", {}, t("Add bodies from the palette (stars, planets, black holes, test bodies, light, observers with clocks) and change their parameters on the fly in the inspector. The motion is computed according to the laws of the chosen world: Newtonian gravity of N bodies, a post-Newtonian binary radiating gravitational waves, or geodesics around a Kerr–Newman black hole.")),
+      el("p", {}, t("A body from the palette is placed at the given point, or, if it is occupied, at the nearest free place along the x axis (a message says so). The collision mode (merge or pass through) can be changed on the fly, at the current moment.")),
       el("p", {}, t("Trails are the computed orbits: solution points at most {deg}° of turn of the direction of motion apart, joined by Hermite curves through the positions and velocities; on the screen the deviation is below {px} pixel at any speed of the world.", { deg: 20, px: 0.25 })),
-      el("p", {}, t("The conservation laws are checked live (“Checks”): energy, momentum and angular momentum (Newton); the energy, angular momentum and Carter's constant of every body (Kerr–Newman); the energy balance with what the waves radiate (the binary). The numerical error is estimated against a run of the same interval with half the accuracy parameter η (a step √2 times shorter, an error about 4 times smaller).")),
-      el("p", {}, t("The record keeps a window of the last minutes; when you notice an effect, press “● Keep the record” in the panel “Record: window”. The scene can be saved to a file and a new world started from it."))),
+      el("p", {}, t("The conservation laws are checked live (“Checks”): energy, momentum and angular momentum (Newton); the energy, angular momentum and Carter's constant of every body (Kerr–Newman); the energy balance against the energy carried away by the waves (the binary). The numerical error is estimated against a run of the same interval with half the accuracy parameter η (a step √2 times shorter, an error about 4 times smaller).")),
+      el("p", {}, t("The record keeps a window of the last minutes; when you notice an effect, press “● Keep the record” in the “Record: window” panel. The scene can be saved to a file and a new world started from it."))),
     reset() { env.reset(); pg.reset(); H = null; gens = new Map([[0, new Map()]]); gen = 0; trails = gens.get(0); holeMarks = new Map(); labels = new Map(); },
     snapshot() {
       return { env: env.snapshot(), pg: pg.snapshot(), gen, lens: new Map([...trails].map(([id, T]) => [id, T.n])), labels: new Map(labels) };

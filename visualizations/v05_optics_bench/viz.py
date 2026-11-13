@@ -26,7 +26,8 @@ from lfviz.sim import Simulation as BaseSimulation
 
 from lfphys.core.constants import C
 from lfphys.core.optics import interfaces, thin_films
-from lfphys.i18n import T, join
+from lfphys.codes import code_of, data_of
+from lfphys.i18n import T, is_t, join
 
 from .engine.bench import (ARM_M, P_5SIGMA, POL_LABEL, STRUCT_LABEL, STRUCTS, TH_MAX, Stream, Structure,
                            born_probs, brewster_from_rp, build_structure, critical_from_T, curves, field, field_grid,
@@ -157,7 +158,7 @@ class Simulation(BaseSimulation):
             raise
         except Exception as e:  # reported as a refused world (the runner catches ValueError), never a crash
             err = f"{type(e).__name__}: {e}"
-            raise Refusal(T("internal error of the world: {err}", err=err), detail=err) from e
+            raise Refusal(T("internal error of the world: {err}", err=type(e).__name__), detail=err) from e
 
     def engine_modules(self):
         return ["core.optics.interfaces", "core.optics.thin_films", "core.constants", "theories.approx.ray_optics"]
@@ -210,7 +211,7 @@ class Simulation(BaseSimulation):
             if isinstance(e, ValueError):
                 raise
             err = f"{type(e).__name__}: {e}"
-            raise Refusal(T("internal error of the world: {err} (the world is left as it was)", err=err),
+            raise Refusal(T("internal error of the world: {err} (the world is left as it was)", err=type(e).__name__),
                           detail=err) from e
         buf, self._buf = self._buf, outer
         for meta, blobs in buf:
@@ -359,8 +360,8 @@ class Simulation(BaseSimulation):
             out.append(T("An unpolarised source is a 50/50 mixture of s and p photons: an isotropic planar structure "
                          "does not mix them, so this is the same as the density matrix ρ = I/2."))
         if m_spec >= 1600:
-            out.append(T("The stack's spectrum is very dense: {m:d} points may not resolve every band at short "
-                         "wavelengths.", m=1600))
+            out.append(T("The multilayer's spectrum is very dense: {n:d} points may not resolve every band at short "
+                         "wavelengths.", n=1600))
         out.extend(st.notes)
         return out
 
@@ -391,15 +392,22 @@ class Simulation(BaseSimulation):
             amin = min(float(np.min(cv[pre + "A" + q])) for pre in ("", "l") for q in ("s", "p"))
             self._check(f"passive{s}", T("Passive medium: the smallest A over every computed point"), amin, None, "",
                         G, ok=amin >= -1e-12, note=T("absorption cannot be negative (κ ≥ 0)"))
-            jl = thin_films.joule_absorption_s(st.ns, st.ds, lam, th)
-            AJ = jl["A"]
-            val = cur["s"]["R"] + cur["s"]["T"] + AJ
-            self._check(f"joule{s}", T("R + T + A = 1 for s, with A the Joule heat k₀ Im(n²)∫|E|²dz / (n₀ cos θ)"),
-                        val, 1.0, "", G, tol=JOULE_TOL, ok=abs(val - 1.0) <= JOULE_TOL,
-                        note=T("A from the run's field |E|² = {AJ:.10g}; 1 − R − T from r, t = {A:.10g} (Poynting's "
-                               "theorem: an independent route); Gauss–Legendre quadrature, nodes: {nodes}, the step "
-                               "set by the skin depth and the period of the standing wave",
-                               AJ=AJ, A=cur["s"]["A"], nodes=jl["nodes"]))
+            jlab = T("R + T + A = 1 for s, with A the Joule heat k₀ Im(n²)∫|E|²dz / (n₀ cos θ)")
+            try:
+                jl = thin_films.joule_absorption_s(st.ns, st.ds, lam, th)
+            except ValueError as e:
+                if code_of(e) != "film.too_many_nodes":
+                    raise
+                self._check(f"joule{s}", jlab, None, 1.0, "", G, info=True, note=_joule_skipped(e))
+                jl = None
+            if jl is not None:
+                AJ = jl["A"]
+                val = cur["s"]["R"] + cur["s"]["T"] + AJ
+                self._check(f"joule{s}", jlab, val, 1.0, "", G, tol=JOULE_TOL, ok=abs(val - 1.0) <= JOULE_TOL,
+                            note=T("A from the run's field |E|² = {AJ:.10g}; 1 − R − T from r, t = {A:.10g} "
+                                   "(Poynting's theorem: an independent route); Gauss–Legendre quadrature, nodes: "
+                                   "{nodes}, the step set by the skin depth and the period of the standing wave",
+                                   AJ=AJ, A=cur["s"]["A"], nodes=jl["nodes"]))
         # Brewster: a single boundary
         if th_B is not None:
             ref = interfaces.brewster(st.n_in, st.n_out)
@@ -423,8 +431,8 @@ class Simulation(BaseSimulation):
         if th_c is not None and st.lossless:
             beyond = list(np.linspace(math.degrees(th_c) + 1e-6, TH_MAX, 60))
             dev = max(abs(1.0 - rta(st, lam, math.radians(x), q)["R"]) for x in beyond for q in ("s", "p"))
-            self._check(f"tir{s}", T("Beyond the critical angle R = 1: max |1 − R| (s and p, {k:d} angles from θ_c to "
-                                     "{th}°)", k=60, th=TH_MAX), dev, 0.0,
+            self._check(f"tir{s}", T("Beyond the critical angle R = 1: max |1 − R| (s and p, {n:d} angles from θ_c "
+                                     "to {th}°)", n=60, th=TH_MAX), dev, 0.0,
                         "", G, ok=dev < 1e-12, note=T("lossless: whatever is not transmitted is reflected"))
             if th >= th_c:  # th_c is the first float angle at which the run's T = 0
                 self._check(f"tirnow{s}", T("R at the current angle (it is beyond the critical one)"), Rc, 1.0, "", G,
@@ -516,7 +524,7 @@ class Simulation(BaseSimulation):
                 if I0 > I2 > 0:
                     ln = math.log(I0 / I2)
                     L_run = 2 * z / ln
-        L_ref = thin_films.evanescent_length(n0, n2, lam, th) if q > 0 else None
+        L_ref = _evanescent_ref(n0, n2, lam, th) if q > 0 else None
         tol = (4.5 * K + 9 + 15 / (ln if ln else 1.0)) * U if math.isfinite(K) else math.inf
         cond = T("the condition number K = n₀² sin²θ / (n₀² sin²θ − n_s²) = {K:.3g}", K=K) if math.isfinite(K) else \
             T("n₀ sin θ = n_s within rounding")
@@ -525,7 +533,7 @@ class Simulation(BaseSimulation):
                         note=T("θ differs from the critical angle by about a rounding: {cond}; the angle sets the decay "
                                "length only to ~K·2⁻⁵³ (the first-order error estimate does not apply here); {tail}",
                                cond=cond,
-                               tail=T("the run's field does not decay beyond the face (the wave slides along the face)")
+                               tail=T("the run's field does not decay beyond the face (the wave grazes along the face)")
                                if L_run is None else T("the length from the run's field is shown for information")))
             return
         if L_run is None:
@@ -704,17 +712,17 @@ class Simulation(BaseSimulation):
         a = self.flight.a
         lam, pol = a["lam"][idx], a["pol"][idx]
         R = np.empty(len(idx))
-        T = np.empty(len(idx))
+        Tr = np.empty(len(idx))
         for lv in np.unique(lam):
             for pv in np.unique(pol):
                 m = (lam == lv) & (pol == pv)
                 if m.any():
-                    R[m], T[m], _ = self._probs(lv, pv)
+                    R[m], Tr[m], _ = self._probs(lv, pv)
         u = self.rng.random(len(idx))
-        out = np.where(u < R, 0, np.where(u < R + T, 1, 2)).astype(np.int8)
+        out = np.where(u < R, 0, np.where(u < R + Tr, 1, 2)).astype(np.int8)
         ts = a["ts"][idx]
         tR, tT = ts + self.times["t_R"], ts + self.times["t_T"]
-        den = R + T
+        den = R + Tr
         with np.errstate(invalid="ignore", divide="ignore"):
             wR = np.where(den > 0, R / np.where(den > 0, den, 1.0), 0.0)
         a["out"][idx] = out
@@ -825,13 +833,14 @@ class Simulation(BaseSimulation):
         return {
             "title": self._title(),
             "text": T("The source emits photons one by one (a Poisson stream) onto a planar structure: a boundary "
-                      "between two media, an anti-reflection layer, a Bragg mirror, a Fabry–Pérot film, a metal film or "
-                      "a prism's face (total internal reflection; with a gap, tunnelling). For every set-up the run "
-                      "computes, with the transfer matrices of the engine lfphys, the amplitudes r, t and the "
+                      "between two media, an anti-reflection layer, a Bragg mirror, a Fabry–Pérot film, a metal film "
+                      "or a prism's face (total internal reflection; with a gap, tunnelling). For every set-up the "
+                      "run computes, with the transfer matrices of the engine lfphys, the amplitudes r, t and the "
                       "probabilities R, T, A, the curves R(θ), T(θ), R(λ), T(λ) and the field |E|² inside the "
-                      "structure. Every photon that reaches the structure gets its fate by the Born rule with these "
-                      "probabilities; we learn it when the photon reaches a detector (an absorbed one vanishes in the "
-                      "structure). The counters are the accumulation of these events, next to the run's expectation."),
+                      "structure. For every photon that reaches the structure, its fate is drawn by the Born rule "
+                      "with these probabilities; we learn it when the photon reaches a detector (an absorbed one "
+                      "vanishes in the structure). The counters are the accumulation of these events, next to the "
+                      "run's expected values."),
             "modifications": SCHEMA.modifications(self.params),
             "actions": self._actions(),
             "arm_m": ARM_M, "t_in": self.times["t_in"], "rate": float(self.params["rate"]),
@@ -874,18 +883,39 @@ def _val(p, v):
 
 
 def _airy_reason(e):
-    """Why the Airy intensity formula does not apply, from the engine's ValueError (thin_films.airy)."""
-    a = e.args[0] if e.args else ""
-    if isinstance(a, dict) and "$t" in a:
-        return a
-    s = str(e)
-    if "total reflection" in s:
-        return T("total reflection at a boundary of the film (no propagating wave in it)")
-    if "grazes" in s:
-        return T("the wave grazes inside the film (the formula is 0/0)")
-    if "real positive" in s:
-        return T("the formula needs real positive indices (a lossless film)")
-    return T("the engine's reason: {err}", err=s)
+    """Why the Airy intensity formula does not apply, from the machine code of the engine's ValueError
+    (thin_films.airy / single_film; lfphys.codes, review 2026-11-12 i18n-code F5): never from its wording."""
+    reason = _AIRY_REASONS.get(code_of(e))
+    if reason is not None:
+        return reason
+    a = e.args[0] if e.args else None
+    return a if is_t(a) else T("the engine's reason: {err}", err=str(e))
+
+
+def _evanescent_ref(n0, n2, lam, th):
+    """The engine's decay length, or None where the engine says the angle is below the critical one (a rounding
+    neighbour of θ_c: film.below_critical)."""
+    try:
+        return thin_films.evanescent_length(n0, n2, lam, th)
+    except ValueError as e:
+        if code_of(e) == "film.below_critical":
+            return None
+        raise
+
+
+def _joule_skipped(e):
+    """The note of the Joule check when the engine refuses the quadrature (film.too_many_nodes)."""
+    d = data_of(e)
+    return T("not checked here: the Joule integral would need {n:d} quadrature nodes in one layer (the engine's limit "
+             "is {lim:d})", n=int(d.get("n", 0)), lim=int(d.get("lim", 0)))
+
+
+#: the world's own words for the engine's coded refusals of the Airy formula
+_AIRY_REASONS = {
+    "airy.total_reflection": T("total reflection at a boundary of the film (no propagating wave in it)"),
+    "airy.grazing": T("the wave grazes inside the film (the formula is 0/0)"),
+    "airy.lossy_index": T("the formula needs real positive indices (a lossless film)"),
+}
 
 
 VIZ = {

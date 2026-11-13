@@ -183,7 +183,7 @@ def test_bloch_slab_leak_near_the_cut_off(ru):
     0.4 x the tail (measured 3.4e-7)."""
     with pytest.raises(ValueError, match="at the start of the run") as e:
         _slab_leak(0.6, 0.15)
-    assert "не равны нулю в начале счёта" in ru(e.value.args[0])
+    assert "не равны нулю в начале расчёта" in ru(e.value.args[0])
     leak, tail = _slab_leak(0.6, 0.08)
     assert leak < 1e-8 and tail < 1e-7, (leak, tail)
     leak, tail = _slab_leak(0.3, 0.15)

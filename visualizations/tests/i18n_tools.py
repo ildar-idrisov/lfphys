@@ -8,7 +8,14 @@
 * ``msgids_py(path)``, ``msgids_js(path)``, ``msgids_html(path)``: the literal msgids a file uses — ``T("...")`` in
   Python (also ``T(...)`` with adjacent literals), ``t("...")`` in JavaScript (also ``t('...')`` and template literals
   without substitutions), ``data-t`` texts and ``data-t-title`` titles in HTML.
-* ``placeholders(text)``: the placeholder names of a msgid or a translation.
+* ``placeholders(text)``, ``placeholder_specs(text)``: the placeholder names (and formats) of a msgid or a translation;
+  ``bad_specs(text)``: the formats the player cannot render.
+* ``composed_py(path)``, ``composed_js(path)``: calls ``T(...)`` / ``t(...)`` whose msgid is built at run time
+  (``"a" + b``, a template with ``${}``, ``.join``, a format): their msgids are invisible to the static test, so such a
+  line names them in a comment ``i18n-msgids: "…" "…"`` (none: a text made elsewhere) — review i18n-code F6.
+* ``shadowed_t(path)`` (JavaScript: a parameter, a local or a function named ``t`` in a module that imports the
+  translator) and ``shadowed_T(path)`` (Python: a function that binds ``T`` locally in a module that imports it) —
+  review i18n-code F8.
 
     python tests/i18n_tools.py --pending     the files the guard refuses now (one per line, relative to the repository)
     python tests/i18n_tools.py --lines F...  the refused lines of the given files
@@ -56,23 +63,35 @@ def _docstring_lines(tree) -> set[int]:
     return lines
 
 
+def _py_value(tok: str) -> str:
+    """A string token's value (escapes decoded: "\\u0428", "\\N{CYRILLIC …}"); the token itself when it is not a
+    plain literal (an f-string's parts are read as written)."""
+    try:
+        v = ast.literal_eval(tok)
+        return v if isinstance(v, str) else tok
+    except (ValueError, SyntaxError):
+        return tok
+
+
 def _py_lines(text: str) -> list[int]:
     try:
         tree = ast.parse(text)
     except SyntaxError:
         return [i + 1 for i, line in enumerate(text.splitlines()) if CYR.search(line)]
     doc = _docstring_lines(tree)
-    src = text.splitlines()
+    toks = list(tokenize.generate_tokens(io.StringIO(text).readline))
+    marked = {tok.start[0] for tok in toks if tok.type == tokenize.COMMENT and OPT_OUT in tok.string}  # in a comment only
     bad = set()
-    for tok in tokenize.generate_tokens(io.StringIO(text).readline):
+    for tok in toks:
         if tok.type == tokenize.COMMENT:
             continue
         if tok.type == tokenize.STRING and tok.start[0] in doc:
             continue
-        if CYR.search(tok.string):
-            for ln in range(tok.start[0], tok.end[0] + 1):
-                if CYR.search(src[ln - 1]) and OPT_OUT not in src[ln - 1]:
-                    bad.add(ln)
+        s = _py_value(tok.string) if tok.type == tokenize.STRING else tok.string
+        if CYR.search(s) or CYR.search(tok.string):
+            lines = range(tok.start[0], tok.end[0] + 1)
+            if not any(ln in marked for ln in lines):
+                bad.add(tok.start[0])
     return sorted(bad)
 
 
@@ -161,10 +180,16 @@ def strip_js_comments(text: str) -> str:
     return "".join(out)
 
 
+_JS_ESC = re.compile(r"\\u(?:\{0*4[0-9a-fA-F]{2}\}|04[0-9a-fA-F]{2})")  # an escaped Cyrillic letter: \u0428, \u{428}
+
+
 def _js_lines(text: str) -> list[int]:
+    """Lines of code (comments out) with Cyrillic, also escaped; the marker counts in a comment only (not inside a
+    string of the line: review i18n-code F8)."""
     code = strip_js_comments(text).splitlines()
     src = text.splitlines()
-    return [i + 1 for i, line in enumerate(code) if CYR.search(line) and OPT_OUT not in src[i]]
+    return [i + 1 for i, line in enumerate(code)
+            if (CYR.search(line) or _JS_ESC.search(line)) and not (OPT_OUT in src[i] and OPT_OUT not in line)]
 
 
 def _html_lines(text: str) -> list[int]:
@@ -213,19 +238,129 @@ def _const_str(node):
     return None
 
 
-def msgids_py(path: Path) -> list[tuple[str, int]]:
-    """``T("...")`` (and ``ParamError(T(...))`` etc.): the first positional argument when it is a string literal."""
-    tree = ast.parse(Path(path).read_text(encoding="utf-8"))
-    out = []
+MARK = re.compile(r"i18n-msgids:(.*)$")
+_QUOTED = re.compile(r"""\"((?:[^\"\\]|\\.)*)\"""")
+
+
+def _marked_msgids(comment: str) -> list[str] | None:
+    """The msgids a marker ``i18n-msgids: "…" "…"`` in a comment names (an empty list: none; None: no marker)."""
+    m = MARK.search(comment or "")
+    return None if m is None else [_unescape_js(x) for x in _QUOTED.findall(m.group(1))]
+
+
+def _literals(node, consts: dict) -> list[str] | None:
+    """The msgids an argument can be: a literal, a module constant, or a choice between such (``a if c else b``,
+    ``c and "a" or "b"``); None when it is anything else."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return [node.value]
+    if isinstance(node, ast.Name) and node.id in consts:
+        return [consts[node.id]]
+    if isinstance(node, ast.IfExp):
+        a, b = _literals(node.body, consts), _literals(node.orelse, consts)
+        return a + b if a is not None and b is not None else None
+    if isinstance(node, ast.BoolOp):
+        parts = [_literals(v, consts) for v in node.values]
+        lits = [x for p in parts if p for x in p]
+        return lits or None
+    return None
+
+
+def _py_tree(path: Path):
+    text = Path(path).read_text(encoding="utf-8")
+    tree = ast.parse(text)
+    consts = {}
+    for node in tree.body:  # module constants: MSG = "…"
+        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name) \
+                and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+            consts[node.targets[0].id] = node.value.value
+    comments = {}
+    for tok in tokenize.generate_tokens(io.StringIO(text).readline):
+        if tok.type == tokenize.COMMENT:
+            comments[tok.start[0]] = tok.string
+    return tree, consts, comments
+
+
+def _t_calls(tree):
     for node in ast.walk(tree):
         if isinstance(node, ast.Call) and node.args:
             f = node.func
             name = f.id if isinstance(f, ast.Name) else f.attr if isinstance(f, ast.Attribute) else None
             if name == "T":
-                s = _const_str(node.args[0])
-                if s:
-                    out.append((s, node.lineno))
+                yield node
+
+
+def msgids_py(path: Path) -> list[tuple[str, int]]:
+    """``T("...")`` (and ``ParamError(T(...))`` etc.): the first positional argument when it is a string literal, a
+    module constant or a choice between such; and the msgids a marker ``i18n-msgids:`` on a call's lines names."""
+    tree, consts, comments = _py_tree(path)
+    out = []
+    for node in _t_calls(tree):
+        for s in _literals(node.args[0], consts) or []:
+            if s:
+                out.append((s, node.lineno))
+        for ln in range(node.lineno, (node.end_lineno or node.lineno) + 1):
+            for s in _marked_msgids(comments.get(ln, "")) or []:
+                out.append((s, ln))
     return out
+
+
+def composed_py(path: Path) -> list[int]:
+    """Lines of ``T(...)`` calls whose msgid is built at run time (a concatenation, an f-string, a call, a format)
+    without a marker ``i18n-msgids:`` in a comment on the call's lines. ``T(x)`` of a name or an attribute is a text
+    made elsewhere (rebuilt), not a msgid."""
+    tree, consts, comments = _py_tree(path)
+    bad = []
+    for node in _t_calls(tree):
+        a = node.args[0]
+        if _literals(a, consts) is not None or isinstance(a, (ast.Name, ast.Attribute, ast.Subscript)):
+            continue
+        if any(_marked_msgids(comments.get(ln, "")) is not None
+               for ln in range(node.lineno, (node.end_lineno or node.lineno) + 1)):
+            continue
+        bad.append(node.lineno)
+    return bad
+
+
+def _imports_T(tree) -> bool:
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and any((a.asname or a.name) == "T" for a in node.names):
+            return True
+    return False
+
+
+def shadowed_T(path: Path) -> list[int]:
+    """In a module that imports ``T``: the functions that bind ``T`` in their own scope — a parameter, an assignment, a
+    loop or ``with`` target, ``except … as T``, a nested ``def T`` / ``class T``, ``import … as T`` (a later
+    ``T("…")`` there would raise UnboundLocalError or call something else: review i18n-code F8)."""
+    tree = ast.parse(Path(path).read_text(encoding="utf-8"))
+    if not _imports_T(tree):
+        return []
+    out = []
+    for fn in ast.walk(tree):
+        if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+            continue
+        a = fn.args
+        local = any(x.arg == "T" for x in a.posonlyargs + a.args + a.kwonlyargs + [a.vararg, a.kwarg] if x)
+        body = fn.body if isinstance(fn.body, list) else [fn.body]
+        stack = list(body)
+        while stack and not local:  # this function's own scope
+            n = stack.pop()
+            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                local = n.name == "T"
+                continue
+            if isinstance(n, ast.Lambda):
+                continue
+            if isinstance(n, ast.Name) and n.id == "T" and isinstance(n.ctx, (ast.Store, ast.Del)):
+                local = True
+            elif isinstance(n, ast.ExceptHandler) and n.name == "T":
+                local = True
+            elif isinstance(n, (ast.Import, ast.ImportFrom)) and any((x.asname or x.name.split(".")[0]) == "T"
+                                                                       for x in n.names):
+                local = True
+            stack.extend(ast.iter_child_nodes(n))
+        if local:
+            out.append(fn.lineno)
+    return sorted(out)
 
 
 _JS_T = re.compile(r"""(?:(?<![\w$.])t\(\s*|\$t:\s*)(?:"((?:[^"\\\n]|\\.)*)"|'((?:[^'\\\n]|\\.)*)'|`((?:[^`\\$]|\\.|\$(?!\{))*)`)""")
@@ -244,15 +379,165 @@ def _unesc(m):
     return {"n": "\n", "t": "\t", "r": "\r", "0": "\0"}.get(e, e)
 
 
-def msgids_js(path: Path) -> list[tuple[str, int]]:
-    """``t("...")``, ``t('...')`` and ``t(`...`)`` (no substitutions), and inline texts ``{ $t: "..." }``, outside
-    comments."""
+def _blank_strings(code: str) -> str:
+    """Code (comments out) with the contents of strings and template literals blanked (their quotes kept), so that
+    brackets inside strings do not count; the ``${…}`` of a template stays code."""
+    out, i, n = [], 0, len(code)
+    stack = []  # template nesting: brace depth at each ${
+    mode = None
+    while i < n:
+        c = code[i]
+        if mode is None:
+            if c in "'\"`":
+                mode = c
+                out.append(c)
+            elif c == "}" and stack:
+                if stack[-1] == 0:
+                    stack.pop()
+                    mode = "`"
+                else:
+                    stack[-1] -= 1
+                out.append(c)
+            else:
+                if c == "{" and stack:
+                    stack[-1] += 1
+                out.append(c)
+            i += 1
+            continue
+        if c == "\\":
+            out.append("  " if code[i + 1:i + 2] != "\n" else " \n")
+            i += 2
+            continue
+        if mode == "`" and c == "$" and code[i + 1:i + 2] == "{":
+            stack.append(0)
+            mode = None
+            out.append("${")
+            i += 2
+            continue
+        if c == mode or (c == "\n" and mode in "'\""):
+            mode = None
+            out.append(c)
+        else:
+            out.append("\n" if c == "\n" else " ")
+        i += 1
+    return "".join(out)
+
+
+def _close(code: str, i: int) -> int:
+    """The index of the bracket closing the one at ``i`` (in blanked code)."""
+    depth = 0
+    for j in range(i, len(code)):
+        if code[j] in "([{":
+            depth += 1
+        elif code[j] in ")]}":
+            depth -= 1
+            if depth == 0:
+                return j
+    return len(code)
+
+
+def _split_top(s: str, sep: str = ",") -> list[tuple[int, str]]:
+    """``s`` split at top-level separators: (offset, part)."""
+    out, depth, start = [], 0, 0
+    for j, c in enumerate(s):
+        if c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth -= 1
+        elif c == sep and depth == 0:
+            out.append((start, s[start:j]))
+            start = j + 1
+    out.append((start, s[start:]))
+    return out
+
+
+_LIT = re.compile(r"""\s*(?:"((?:[^"\\\n]|\\.)*)"|'((?:[^'\\\n]|\\.)*)'|`((?:[^`\\$]|\\.|\$(?!\{))*)`)\s*$""")
+_CALL_T = re.compile(r"(?<![\w$.])t\(")
+
+
+def _js_calls(path: Path):
+    """(line, first argument as written, the same blanked) of every call ``t(…)``, outside comments."""
     code = strip_js_comments(Path(path).read_text(encoding="utf-8"))
+    blank = _blank_strings(code)
+    for m in _CALL_T.finditer(blank):
+        o = m.end() - 1
+        c = _close(blank, o)
+        parts = _split_top(blank[o + 1:c])
+        off, first_b = parts[0]
+        first = code[o + 1 + off:o + 1 + off + len(first_b)]
+        yield code.count("\n", 0, m.start()) + 1, first, first_b
+
+
+def _js_choice(first: str, first_b: str) -> list[str] | None:
+    """The msgids of ``cond ? "a" : "b"`` (also nested) when every branch is a literal; None otherwise."""
+    q = next((j for j, c in enumerate(first_b) if c == "?" and first_b[j + 1:j + 2] not in ".?"
+              and first_b[max(j - 1, 0)] != "?"), -1)
+    if q < 0:
+        return None
+    rest, rest_b = first[q + 1:], first_b[q + 1:]
+    depth, colon = 0, -1
+    for j, c in enumerate(rest_b):  # the ":" of this "?" (nested ternaries in the branches)
+        if c in "([{?":
+            depth += 1 if c != "?" else 0
+        if c in ")]}":
+            depth -= 1
+        if c == ":" and depth == 0:
+            colon = j
+            break
+    if colon < 0:
+        return None
+    out = []
+    for part, part_b in ((rest[:colon], rest_b[:colon]), (rest[colon + 1:], rest_b[colon + 1:])):
+        m = _LIT.match(part)
+        if m and not (m.group(3) is not None and "${" in m.group(3)):
+            out.append(_unescape_js(next(g for g in m.groups() if g is not None)))
+            continue
+        sub = _js_choice(part, part_b)
+        if sub is None:
+            return None
+        out += sub
+    return out
+
+
+def msgids_js(path: Path) -> list[tuple[str, int]]:
+    """``t("...")``, ``t('...')`` and ``t(`...`)`` (no substitutions), a choice between literals ``t(c ? "a" : "b")``,
+    inline texts ``{ $t: "..." }``, and the msgids a marker ``i18n-msgids:`` names, outside comments."""
+    text = Path(path).read_text(encoding="utf-8")
+    code = strip_js_comments(text)
     out = []
     for m in _JS_T.finditer(code):
         s = next(g for g in m.groups() if g is not None)
         out.append((_unescape_js(s), code.count("\n", 0, m.start()) + 1))
+    for line, first, first_b in _js_calls(path):
+        for s in _js_choice(first, first_b) or []:
+            out.append((s, line))
+    for i, ln in enumerate(text.splitlines()):
+        code_ln = code.splitlines()[i] if i < len(code.splitlines()) else ""
+        if "i18n-msgids:" in ln and "i18n-msgids:" not in code_ln:  # in a comment
+            out += [(s, i + 1) for s in _marked_msgids(ln[ln.index("i18n-msgids:"):]) or []]
     return out
+
+
+def composed_js(path: Path) -> list[int]:
+    """Lines of ``t(…)`` calls whose msgid is built at run time — a template with ``${…}``, a concatenation with a
+    literal — without a marker ``i18n-msgids:`` in a comment on the line. ``t(x)`` of a name, a member or a call is a
+    text the server sent (the dynamic test reads those)."""
+    text = Path(path).read_text(encoding="utf-8")
+    src = text.splitlines()
+    code = strip_js_comments(text).splitlines()
+    bad = []
+    for line, first, first_b in _js_calls(path):
+        f = first.strip()
+        composed = (f.startswith("`") and "${" in f) or (
+            any(c == "+" for c in first_b) and re.search(r"""["'`]""", first_b) is not None and _js_choice(first, first_b) is None)
+        if not composed:
+            continue
+        ln = src[line - 1] if line - 1 < len(src) else ""
+        cl = code[line - 1] if line - 1 < len(code) else ""
+        if "i18n-msgids:" in ln and "i18n-msgids:" not in cl:
+            continue
+        bad.append(line)
+    return bad
 
 
 class _HTMLMsgids(HTMLParser):
@@ -295,29 +580,108 @@ def msgids_html(path: Path) -> list[tuple[str, int]]:
 
 
 _IMPORTS_T = re.compile(r'import\s*\{[^}]*\bt\b[^}]*\}\s*from\s*["\'][^"\']*i18n\.js["\']')
-_PARAMS = re.compile(r"function\s*[\w$]*\s*\(([^()]*)\)|\(([^()]*)\)\s*=>|(?<![\w$.])([\w$]+)\s*=>"
-                     r"|(?:^|[\s,{;])(?!(?:if|for|while|switch|catch|function|return)\b)[\w$]+\s*\(([^()]*)\)\s*\{")  # a method
-_SHADOW = re.compile(r"(?:^|[\s,({\[])t\s*(?=[,)}\]=:]|$)")
-_DECL = re.compile(r"\b(?:const|let|var)\s+(?:t\b|[{\[][^=;]*?(?<![\w$.])t\s*[,}\]])|\bcatch\s*\(\s*t\s*\)"
-                   r"|\b(?:const|let|var)\s[^;\n]*?,\s*t\s*=(?!=)")  # also t later in a list of declarations
+_NOT_PARAMS = {"if", "for", "while", "switch", "catch", "with", "return", "typeof", "await", "new", "in", "of", "do"}
+
+
+def _names(pattern: str) -> list[str]:
+    """The names a parameter or a declarator binds: ``a = f(1)`` → a; ``...a`` → a; ``{ a, b: c, t }`` → a, c, t;
+    ``[a, , t]`` → a, t."""
+    p = pattern.strip()
+    # its default value or initialiser out (the first top-level "=" that is not "==", "=>")
+    depth = 0
+    for j, c in enumerate(p):
+        if c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth -= 1
+        elif c == "=" and depth == 0 and p[j + 1:j + 2] not in "=>" and p[j - 1:j] not in "=!<>":
+            p = p[:j].strip()
+            break
+    p = p.lstrip(".").strip()
+    if p[:1] in "{[":
+        inner = p[1:_close(p, 0)]
+        out = []
+        for _, part in _split_top(inner):
+            part = part.strip()
+            if not part:
+                continue
+            if p[0] == "{" and ":" in part.split("=")[0]:
+                part = part.split(":", 1)[1]
+            out += _names(part)
+        return out
+    m = re.match(r"([\w$]+)", p)
+    return [m.group(1)] if m else []
 
 
 def shadowed_t(path: Path) -> list[int]:
-    """The lines of a module that imports ``t`` from i18n.js where a parameter or a local is also named ``t`` (it
-    would hide the translator inside its scope: a call t("…") there calls a number or a string)."""
+    """The lines of a module that imports ``t`` from i18n.js where a parameter, a local, a catch variable or a function
+    is also named ``t`` (it would hide the translator inside its scope: a call t("…") there calls a number or a
+    string). Parameter lists and declarations are split at their top-level commas, so defaults with calls, later names
+    without "=", destructuring and methods are seen (review i18n-code F8)."""
     text = Path(path).read_text(encoding="utf-8")
-    if not _IMPORTS_T.search(text):
+    if not _IMPORTS_T.search(strip_js_comments(text)):  # an import in a comment (i18n.js's own usage note) is none
         return []
-    code = strip_js_comments(text)
-    code = re.sub(r'"(?:[^"\\\n]|\\.)*"|\'(?:[^\'\\\n]|\\.)*\'', '""', code)  # string contents out
+    code = _blank_strings(strip_js_comments(text))
+    line = lambda i: code.count("\n", 0, i) + 1  # noqa: E731
     bad = set()
-    for m in _PARAMS.finditer(code):
-        params = next((g for g in m.groups() if g is not None), None)
-        if params == "t" or (params is not None and _SHADOW.search(" " + params)):
-            bad.add(code.count("\n", 0, m.start()) + 1)
-    for m in _DECL.finditer(code):
-        bad.add(code.count("\n", 0, m.start()) + 1)
+    # parameter lists: "(…)" followed by "=>" or "{" (a function, a method), not after if/for/while/…; "x =>"
+    for m in re.finditer(r"\(", code):
+        o = m.start()
+        c = _close(code, o)
+        after = code[c + 1:c + 40].lstrip()
+        before = re.search(r"([\w$]+)\s*$", code[max(0, o - 40):o])
+        if not (after.startswith("=>") or after.startswith("{")):
+            continue
+        if before and before.group(1) in _NOT_PARAMS:
+            if before.group(1) == "catch" and "t" in _names(code[o + 1:c]):
+                bad.add(line(o))
+            continue
+        if any("t" in _names(part) for _, part in _split_top(code[o + 1:c])):
+            bad.add(line(o))
+    for m in re.finditer(r"(?<![\w$.])t\s*=>", code):
+        bad.add(line(m.start()))
+    for m in re.finditer(r"\bfunction\s*\*?\s*t\s*\(|\bclass\s+t\b", code):
+        bad.add(line(m.start()))
+    # declarations: let / const / var up to the end of the statement (";" or a line end at depth 0)
+    for m in re.finditer(r"(?<![\w$.])(?:let|const|var)\s", code):
+        j, depth = m.end(), 0
+        while j < len(code):
+            ch = code[j]
+            if ch in "([{":
+                depth += 1
+            elif ch in ")]}":
+                if depth == 0:
+                    break
+                depth -= 1
+            elif depth == 0 and (ch == ";" or (ch == "\n" and not code[m.end():j].rstrip().endswith((",", "=")))):
+                break
+            j += 1
+        decl = code[m.end():j]
+        decl = re.split(r"\s(?:of|in)\s", decl)[0]  # for (const t of …)
+        if any("t" in _names(part) for _, part in _split_top(decl)):
+            bad.add(line(m.start()))
     return sorted(bad)
+
+
+PH_SPEC = re.compile(r"\{(\w+)(?::([^{}]*))?\}")
+#: the formats the player renders (player/js/i18n.js fmt, lfphys.i18n): nothing, .Ng/.Nf/.Ne, d, each with "+"; cap, unit
+SPEC_OK = re.compile(r"^(\+?((\.\d+)?[gfe]|d)?|cap|unit)$")
+
+
+def placeholder_specs(text) -> set[tuple[str, str]]:
+    """(name, format) of every placeholder; plural forms: the union."""
+    if isinstance(text, dict):
+        out = set()
+        for v in text.values():
+            out |= placeholder_specs(v)
+        return out
+    return {(m.group(1), m.group(2) or "") for m in PH_SPEC.finditer(text or "")
+            if not (m.group(2) or "")[:1].isspace()}  # "{kind: law, id}": braces of the text, not a placeholder
+
+
+def bad_specs(text) -> list[str]:
+    """The placeholder formats of a text the player cannot render (a width, ",", "%", "x": review i18n-code F6, F10)."""
+    return sorted({f"{{{n}:{sp}}}" for n, sp in placeholder_specs(text) if not SPEC_OK.match(sp)})
 
 
 def placeholders(text) -> set[str]:

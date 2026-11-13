@@ -65,6 +65,8 @@ import time
 
 import numpy as np
 
+from lfphys import i18n
+from lfphys.codes import coded
 from lfphys.i18n import T
 
 from . import cells
@@ -161,7 +163,7 @@ class HardSpheres:
         self.dim = int(dim)
         L = np.asarray(box, float).reshape(-1)
         if L.shape != (self.dim,) or not np.all((L > 0) & np.isfinite(L)):
-            raise ValueError("box: dim positive finite lengths")
+            raise coded(ValueError(T("box: positive finite lengths along every axis")), "md.value")
         if isinstance(boundary, str):
             boundary = [boundary] * self.dim
         if len(boundary) != self.dim or any(b not in ("periodic", "walls") for b in boundary):
@@ -244,7 +246,8 @@ class HardSpheres:
         smax = max([s["sigma"] for s in self._species], default=1.0)
         nc = np.maximum(np.floor(self.L / smax).astype(np.int64), 1)
         if np.any(self.periodic & (nc < 4)):
-            raise ValueError(f"a periodic box length must be >= 4 times the largest diameter ({4 * smax:g})")
+            raise coded(ValueError(T("a periodic box length must be >= 4 times the largest diameter ({d})",
+                                     d=4 * float(smax))), "md.hard_box")
         self._nc = nc
         self._w = self.L / nc
         self._sp_sig = np.array([s["sigma"] for s in self._species])
@@ -273,7 +276,7 @@ class HardSpheres:
             raise KeyError(f"species {name!r} exists")
         mass, sigma = float(mass), float(sigma)
         if not (mass > 0 and math.isfinite(mass) and sigma > 0 and math.isfinite(sigma)):
-            raise ValueError("finite mass > 0 and sigma > 0")
+            raise coded(ValueError(T("finite mass > 0 and sigma > 0")), "md.value")
 
         def apply():
             self._species.append({"name": name, "mass": mass, "sigma": sigma})
@@ -288,7 +291,7 @@ class HardSpheres:
         if sigma is not None:
             sp["sigma"] = float(sigma)
         if not (sp["mass"] > 0 and math.isfinite(sp["mass"]) and sp["sigma"] > 0):
-            raise ValueError("finite mass > 0 and sigma > 0")
+            raise coded(ValueError(T("finite mass > 0 and sigma > 0")), "md.value")
 
         def apply():
             self._species[i] = sp
@@ -363,7 +366,7 @@ class HardSpheres:
             lo = np.maximum(np.asarray(region[0], float), wlo)
             hi = np.minimum(np.asarray(region[1], float), whi)
             if not np.all(hi > lo):
-                raise ValueError("region: hi > lo inside the walls")
+                raise coded(ValueError(i18n.T("region: hi > lo inside the walls")), "md.region")
         if n is None and density is None:
             raise ValueError("give n or density")
         if arrangement not in ("lattice", "random"):
@@ -378,7 +381,8 @@ class HardSpheres:
                 keep = free_sites(pw, s, self._wrap(self.positions())[0], self._sig(), self.L, self.periodic)
                 inf["skipped"] = int(np.sum(~keep))
                 if not keep.any():
-                    raise ValueError(f"no free lattice site: all {len(pos)} sites of the block are occupied")
+                    raise coded(ValueError(i18n.T("no free lattice site: all {n:d} sites of the block are occupied",
+                                                  n=len(pos))), "md.no_free_site")
                 pos = pos[keep]
             if info is not None:
                 info.update(inf)
@@ -445,11 +449,11 @@ class HardSpheres:
     def set_wall(self, axis, side, kind, T=None):
         a = _AX.index(axis) if isinstance(axis, str) else int(axis)
         if self.periodic[a]:
-            raise ValueError("a periodic axis has no walls")
+            raise coded(ValueError(i18n.T("a periodic axis has no walls")), "md.periodic_axis")
         if kind not in ("specular", "thermal") or side not in ("lo", "hi"):
             raise ValueError("kind 'specular' or 'thermal', side 'lo' or 'hi'")
         if kind == "thermal" and not (T is not None and T > 0):
-            raise ValueError("a thermal wall needs T > 0")
+            raise coded(ValueError(i18n.T("a thermal wall needs T > 0")), "md.thermal_wall")
 
         def apply():
             old = self._walls[f"{_AX[a]}-{side}"]
@@ -498,13 +502,15 @@ class HardSpheres:
         "lambda", "V0", "V1", "dE": 0}."""
         L_new = np.asarray(L, float).reshape(-1)
         if L_new.shape != (self.dim,) or not np.all((L_new > 0) & np.isfinite(L_new)):
-            raise ValueError("box: dim positive finite lengths")
+            raise coded(ValueError(T("box: positive finite lengths along every axis")), "md.value")
         if mode != "wall":
-            raise ValueError("hard spheres: an affine jump does no work of the collisional pressure (only 'wall')")
+            raise coded(ValueError(T("hard spheres: an affine jump does no work of the collisional pressure (only "
+                                     "'wall')")), "md.hard_affine")
         changed = np.flatnonzero(L_new != self.L)
         per = [_AX[a] for a in changed if self.periodic[a]]
         if per:
-            raise ValueError(f"axis {', '.join(per)} is periodic: it has no wall to move")
+            raise coded(ValueError(T("axis {axis} is periodic: it has no wall to move", axis=", ".join(per))),
+                        "md.periodic_axis")
         V0 = self.volume()
         lam = (L_new / self.L).tolist()
 
@@ -561,7 +567,8 @@ class HardSpheres:
         for a in range(self.dim):
             if not self.periodic[a]:
                 if np.any(self._x[:, a] < off * (1 - 1e-12)) or np.any(self._x[:, a] > self.L[a] - off * (1 - 1e-12)):
-                    raise ValueError(f"a particle outside the walls on axis {_AX[a]}")
+                    raise coded(ValueError(T("a particle outside the walls on axis {axis}", axis=_AX[a])),
+                                "md.outside_walls")
         smax = float(sig.max())
         i, j = cells.pair_list(self._x, self.L, self.periodic, smax)
         if len(i):
@@ -571,7 +578,7 @@ class HardSpheres:
             r2 = np.einsum("ij,ij->i", dx, dx)
             s = 0.5 * (sig[i] + sig[j])
             if np.any(r2 < (s * (1.0 - 1e-12)) ** 2):
-                raise ValueError("overlapping hard particles")
+                raise coded(ValueError(T("overlapping hard particles")), "md.hard_overlap")
 
     def _restart(self):
         """Cells, counters and the event calendar from the current state (all particles at the world time)."""
@@ -1065,7 +1072,7 @@ def hard_from_md(md, seed=0, walls_on="centre") -> "HardSpheres":
     (``contact_violations``)."""
     bl = hard_blockers(md)
     if bl:
-        raise ValueError("not in the hard-sphere solver: " + ", ".join(bl))
+        raise coded(ValueError(T("not in the hard-sphere solver: {what}", what=list(bl))), "md.hard_unsupported")
     p = md.particles()
     sp = md.species()
     names = [s["name"] for s in sp]
@@ -1073,8 +1080,9 @@ def hard_from_md(md, seed=0, walls_on="centre") -> "HardSpheres":
     typ = np.array([names.index(q) for q in p["species"]], np.int64)
     cv = contact_violations(p["x"], sig[typ] if len(typ) else np.zeros(0), md.L, md.periodic, walls_on=walls_on)
     if cv["pairs"] or cv["walls"]:
-        raise ValueError(f"overlapping hard particles: {cv['pairs']} pairs nearer than contact, {cv['walls']} centres "
-                         f"beyond a wall's contact plane")
+        raise coded(ValueError(T("overlapping hard particles: pairs nearer than contact: {pairs:d}; centres beyond a "
+                                 "wall's contact plane: {walls:d}", pairs=int(cv["pairs"]), walls=int(cv["walls"]))),
+                    "md.hard_overlap")
     hs = HardSpheres(md.dim, md.L.copy(), ["periodic" if q else "walls" for q in md.periodic], seed=seed, t=md.t,
                      walls_on=walls_on)
     for s in sp:

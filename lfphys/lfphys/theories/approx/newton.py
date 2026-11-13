@@ -25,6 +25,7 @@ import numpy as np
 from scipy import integrate
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 
 ABOUT = {
@@ -56,7 +57,7 @@ def crossings(r0, v0, mu, rT, r_abs):
     v0 = np.asarray(v0, float)
     r, h, E, evec, e = _elements(r0, v0, mu)
     if E <= 0:
-        raise ValueError("bound corpuscle orbit (E <= 0)")
+        raise coded(ValueError(T("the corpuscle's orbit is not bound (E ≥ 0)")), "newton.unbound")
     rdot = float(r0 @ v0) / r
     if abs(h) < 1e-14 * r * math.sqrt(float(v0 @ v0)):
         return _radial(r, rdot, E, mu, rT, r_abs, r0 / r)

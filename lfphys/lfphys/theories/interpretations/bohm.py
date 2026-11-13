@@ -36,9 +36,9 @@ ABOUT = {
               T("Philippidis, Dewdney, Hiley, Nuovo Cimento B 52, 15 (1979) — trajectories behind two slits")],
     "conflicts": [T("the Copenhagen interpretation: there are no trajectories; the many-worlds one: no trajectories, "
                     "there are branches"),
-                  T("relativity (lfphys.core.relativity, core.causality): for entangled particles the guidance law "
-                    "is non-local — the velocity of one particle depends on the instantaneous position of the other, "
-                    "a preferred foliation of space-time is needed; there are no Lorentz-invariant trajectories, "
+                  T("relativity (lfphys.core.relativity, core.causality): for entangled particles the guidance law is "
+                    "non-local — the velocity of one particle depends on the instantaneous position of the other, a "
+                    "preferred foliation of spacetime is needed; there are no Lorentz-invariant trajectories, "
                     "although the observable predictions agree with special relativity (Bell, Speakable and "
                     "Unspeakable in Quantum Mechanics, 1987; Dürr et al., Proc. R. Soc. A 470, 20130699 (2014))")],
 }

@@ -79,7 +79,7 @@ import sys
 import time
 from pathlib import Path
 
-from .i18n import T, error_body, is_t, join, render_in, text_of
+from .i18n import T, error_body, has_unit, is_t, join, json_hook, names_unit, render_in, text_of  # noqa: F401
 
 MAX_VALUES = 50
 N_SAMPLES = 200
@@ -156,25 +156,19 @@ def fmt_t(x, unit="s"):
         return T("{x:.6g} {unit}", x=x, unit=unit)
     for k, u in T_PREFIX:
         if abs(x) >= 0.99999 * k:
-            return T("{x:.6g} " + u, x=x / k)
+            return T("{x:.6g} " + u, x=x / k)  # i18n-msgids: "{x:.6g} s" "{x:.6g} ms" "{x:.6g} µs" "{x:.6g} ns" "{x:.6g} ps" "{x:.6g} fs" "{x:.6g} as"
     return T("{x:.6g} as", x=x / 1e-18)
 
 
 def with_unit(label, unit):
     """"label, unit" — unless the label already names the unit ("Window size, nm", "Number of slits"; review
-    LB1-p02-ux X9). Texts (``T``) are compared by their English rendering."""
+    LB1-p02-ux X9). Texts (``T``, live or read back from JSON) are compared by msgid and arguments (``names_unit``),
+    never by a rendering or a repr (review i18n-code F2)."""
     if not unit:
         return label or ""
-    if has_unit(str(label or ""), str(unit)):
+    if names_unit(label or "", unit):
         return label
     return T("{label}, {unit}", label=label or "", unit=unit)
-
-
-def has_unit(label: str, unit: str) -> bool:
-    """Whether the label names the unit already: after a comma, in brackets, or as a word of its own."""
-    if f", {unit}" in label or f"({unit}" in label:
-        return True
-    return unit in re.split(r"[^\w/·²³⁻¹°%]+", label)
 
 
 class Refused(ValueError):
@@ -286,7 +280,7 @@ def validate(viz: dict, idx, body) -> tuple[dict, dict]:
                         ", ") or T("none")
             raise Refused(T("“{id}” is not a law that can be changed while the world runs; such laws of this world: "
                             "{laws}", id=lid, laws=live),
-                          T("a sweep does not go over the laws that only a new world changes"))
+                          T("a sweep does not vary the laws that only a new world changes"))
         target = {"kind": "law", "id": p.id}
         info = {"target_label": p.label, "target_unit": p.unit, "target_text": T("the law “{label}”", label=p.label),
                 "target_handle": False}
@@ -305,7 +299,7 @@ def validate(viz: dict, idx, body) -> tuple[dict, dict]:
                 "target_text": T("“{label}” of the object “{object}”", label=p.label, object=obj.get("label") or oid),
                 "target_handle": handle}
     if p.type == "json":
-        raise Refused(T("“{label}” is neither a number nor an option: a sweep does not go over such parameters",
+        raise Refused(T("“{label}” is neither a number nor an option: a sweep does not vary such parameters",
                         label=p.label))
     vals = body.get("values")
     if not isinstance(vals, list) or not vals:
@@ -434,7 +428,7 @@ def estimate(req: dict, info: dict, cost: dict, budget: float) -> dict:
     if cost.get("ms_per_t") is None:
         out.update(known=False, total_s=None, text=T(
             "{values:d} values × {n:d} readings: the record has not measured the cost of computing this world (the "
-            "world has not played ⏺ yet — steps and pauses do not show it). The sweep measures it itself in the first "
+            "world has not yet been run with ⏺ — steps and pauses do not show it). The sweep measures it itself in the first "
             "{probe} of computing and stops if the whole of it would take more than {limit} (the budget {budget} × "
             "{k:g})", values=n, n=nr, probe=fmt_wall(PROBE_S), limit=fmt_wall(OVERRUN * budget),
             budget=fmt_wall(budget), k=OVERRUN))
@@ -447,8 +441,8 @@ def estimate(req: dict, info: dict, cost: dict, budget: float) -> dict:
     out.update(known=True, per_value_s=per, total_s=total, text=T(
         "≈ {total} of computing: {values:d} values × (restoring {restore} + {duration} of the world × {ms:.3g} ms per "
         "1 {unit} + {n:d} readings × {sample:.3g} ms); the budget is {budget}. The estimate comes from the cost of "
-        "computing this world while it played ({frames:d} frames of the record); the sweep checks it itself and stops "
-        "if it comes out dearer than {limit}", total=fmt_wall(total), values=n, restore=fmt_wall(restore_s),
+        "computing this world while it was running ({frames:d} frames of the record); the sweep checks it itself and stops "
+        "if it exceeds {limit}", total=fmt_wall(total), values=n, restore=fmt_wall(restore_s),
         duration=fmt_t(req["duration"], unit), ms=cost["ms_per_t"], unit=unit, n=nr,
         sample=cost.get("sample_ms") or 0.0, budget=fmt_wall(budget), frames=int(cost.get("frames_played", 0)),
         limit=fmt_wall(OVERRUN * budget)))
@@ -608,7 +602,7 @@ class SweepManager:
         """The checkpoint the sweep starts from: a fresh one of the running world (``checkpoint_now``), else the
         latest usable one in the record (and the result says so)."""
         if run.running and run.rebuilding:
-            raise Refused(T("the world is still being restored along the record: sweep when the record goes on"),
+            raise Refused(T("the world is still being restored along the record: start the sweep when the record resumes"),
                           status=409)
         if run.running and checkpoint_now_supported():
             return await self._checkpoint_now(run, world)
@@ -740,7 +734,7 @@ class SweepManager:
             return  # the run's folder went with it: nothing to write
         path = self.spec_path(run, n)
         try:
-            spec = json.loads(path.read_text())
+            spec = json.loads(path.read_text(), object_hook=json_hook)
         except (OSError, ValueError):
             spec = None
         if spec is not None and spec.get("state") in ("starting", "running"):
@@ -775,7 +769,7 @@ class SweepManager:
     # --- read, list, cancel, remove -----------------------------------------------------------------------------
     def read(self, run, n: int) -> dict:
         path = self.spec_path(run, n)
-        spec = json.loads(path.read_text())  # OSError / ValueError: the caller answers 404
+        spec = json.loads(path.read_text(), object_hook=json_hook)  # OSError / ValueError: the caller answers 404
         active = (run.id, n) in self.active
         if not active and spec.get("state") in ("starting", "running"):  # the server restarted under it
             spec.update(state="interrupted", message=T("The sweep was interrupted: the server restarted. The computed "
@@ -813,12 +807,12 @@ class SweepManager:
         if a is None:
             if run is None or not self.spec_path(run, n).is_file():
                 raise Refused(T("there is no such sweep"), status=404)
-            state = json.loads(self.spec_path(run, n).read_text()).get("state")
+            state = json.loads(self.spec_path(run, n).read_text(), object_hook=json_hook).get("state")
             return {"ok": True, "already": True, "state": state, "text": T("the sweep has stopped already")}
         a["cancel"] = True
         proc, task = a.get("proc"), a.get("task")
         if proc is None:
-            raise Refused(T("the sweep is still starting: repeat the cancel in a second"), status=409)
+            raise Refused(T("the sweep is still starting: try cancelling again in a second"), status=409)
         try:
             proc.kill()
         except ProcessLookupError:
@@ -870,7 +864,7 @@ def table_csv(spec: dict, lang: str = "en") -> str:
     buf.write("# " + R(T("sweep no. {n} of run {run}: {target} → {measure} ({stat})", n=spec.get("n"), run=spec.get("run"),
                          target=spec.get("target_text") or "", measure=spec.get("measure_label") or "",
                          stat=spec.get("stat_text") or "")) + "\r\n")
-    line = T("from t = {t} ({source}, world {world}); each value — {duration} of the world; {n} readings", t=fmt_t(
+    line = T("from t = {t} ({source}, world {world}); each value — {duration} of the world; {n:d} readings", t=fmt_t(
         base.get("t"), unit), source=src, world=base.get("world"), duration=fmt_t(req.get("duration"), unit),
         n=smp.get("readings"))
     if smp.get("dt"):
@@ -1328,7 +1322,7 @@ def main(argv=None):
     registry.ensure_path()
     sys.stdout = sys.stderr
     path = Path(a.file)
-    spec = json.loads(path.read_text())
+    spec = json.loads(path.read_text(), object_hook=json_hook)
     req = spec["request"]
     values = req["values"]
     bud = float(spec.get("budget_s") or budget_s())
@@ -1407,7 +1401,7 @@ def main(argv=None):
     except _OverBudget as e:
         k = len(spec["results"])
         lim = OVERRUN * bud
-        how = (T("by the measured cost of computing the whole sweep would take about {t}", t=fmt_wall(e.projected))
+        how = (T("at the measured cost of computing, the whole sweep would take about {t}", t=fmt_wall(e.projected))
                if e.projected is not None else T("it has computed for {t} already", t=fmt_wall(e.elapsed)))
         spec.update(state="over_budget", ended=_now_iso(), message=T(
             "Stopped after {elapsed}: {how} — more than {limit} (the budget {budget} × {k:g}). Values computed: {n:d}, "

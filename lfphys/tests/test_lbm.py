@@ -630,7 +630,7 @@ def test_the_outlet_pressure_is_checked_and_named_when_the_flow_fails(ru):
     for p in (10.0, 1.0):
         with pytest.raises(ValueError, match="outlet pressure") as e:
             fl.set_side("right", lbm.Outlet(p))
-        assert "давление выхода (right)" in ru(e.value.args[0])
+        assert "давление на выходе (right)" in ru(e.value.args[0]) and e.value.code == "lbm.rest_density"
     p_lim = lbm.RHO_DEV_MAX * lbm.CS2 * fl.units.rho * fl.units.c**2
     fl.set_side("right", lbm.Outlet(0.999 * p_lim))
     dev = 0.0
@@ -644,7 +644,7 @@ def test_the_outlet_pressure_is_checked_and_named_when_the_flow_fails(ru):
     bad.set_flow(velocity=(U[0], U[1]))
     with pytest.raises(lbm.Unstable, match=r"imposed: outlet pressure \(right\)") as e:
         bad.advance(3000)
-    assert "заданы давление на выходе (right)" in ru(e.value.args[0])
+    assert "заданы: давление на выходе (right)" in ru(e.value.args[0]) and e.value.code == "lbm.unstable"
 
 
 def test_a_coefficient_length_set_back_to_zero_is_the_default_again():

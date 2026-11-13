@@ -120,7 +120,7 @@ class Simulation(PlaygroundSimulation):
         k = float(values.get("k", self.k))
         if k > 100.0:
             raise Refusal(T("a spring stiffer than 100 N/m ({k:g} N/m) is not computed in this world", k=k),
-                          T("take k at most 100 N/m"))
+                          T("set k to at most 100 N/m"))
         mb = int(values.get("alloc_mb", self.alloc_mb))
         if mb != self.alloc_mb:
             self.held = np.ones(mb * 2 ** 17) if mb else None  # 8 bytes each: mb MB, held by the world

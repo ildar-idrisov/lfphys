@@ -195,8 +195,8 @@ def main(argv=None):
             emit({"type": "resumed", "t": runner.sim.t, "how": "checkpoint", "tail_frames": n_tail})
             emit({"type": "notice", "t": runner.sim.t, "text": (
                 T("The world continued from its saved state at t = {t0:.6g} s (then {n:d} frames of the record were "
-                  "repeated); the record goes on from t = {t1:.6g} s", t0=t_ck, n=n_tail, t1=runner.sim.t) if n_tail
-                else T("The world continued from its saved state at t = {t0:.6g} s; the record goes on from "
+                  "repeated); the record continues from t = {t1:.6g} s", t0=t_ck, n=n_tail, t1=runner.sim.t) if n_tail
+                else T("The world continued from its saved state at t = {t0:.6g} s; the record continues from "
                        "t = {t1:.6g} s", t0=t_ck, t1=runner.sim.t))})
             runner.run(start=False)
             return 0
@@ -225,7 +225,7 @@ def main(argv=None):
         emit({"type": "resumed", "t": runner.sim.t, "how": "replay"})
         emit({"type": "notice", "t": runner.sim.t,
               "text": T("World restored: recomputed from its start along the record ({n:d} changes of the set-up) "
-                        "and going on from t = {t:.6g} s", n=n_cmd, t=runner.sim.t)})
+                        "and continuing from t = {t:.6g} s", n=n_cmd, t=runner.sim.t)})
         runner.run(start=False)
     else:
         ok = runner.start()

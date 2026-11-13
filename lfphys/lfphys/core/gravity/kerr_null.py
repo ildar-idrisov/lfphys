@@ -58,6 +58,7 @@ import math
 import numpy as np
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 from .. import elliptic as EL
 from . import kerr
@@ -71,11 +72,11 @@ ABOUT = {
                    "the distant observer's screen (α, β); equator crossings by order n; spherical photon orbits, "
                    "Bardeen's critical curve (the edge of the shadow), the Lyapunov exponent of the rings."),
     "validity": T("vacuum solution of GR, 0 ≤ a < M; geometric optics (wavelength ≪ M); exterior r > r₊; observer at "
-                  "infinity (Bardeen's screen). Accuracy of r_n (measured against a 40-digit route, review B5): for n "
-                  "≤ 3 within 3·10⁻¹² at a relative distance to the critical curve |d| ≥ 10⁻³ (θ_o from 10⁻⁴° to "
-                  "90°); the far crossing n = 0 of a ray right at the curve: 7·10⁻¹² at d = 10⁻⁶, 5·10⁻¹⁰ at 10⁻⁹, "
-                  "3·10⁻⁸ at 10⁻¹²; higher orders as the conditioning of the problem allows (n = 8: 2·10⁻⁴ at d = "
-                  "10⁻¹²)"),
+                  "infinity (Bardeen's screen). Accuracy of r_n (measured against a 40-digit reference computation, "
+                  "review B5): for n ≤ 3 within 3·10⁻¹² at a relative distance to the critical curve |d| ≥ 10⁻³ (θ_o "
+                  "from 10⁻⁴° to 90°); the far crossing n = 0 of a ray right at the curve: 7·10⁻¹² at d = 10⁻⁶, "
+                  "5·10⁻¹⁰ at 10⁻⁹, 3·10⁻⁸ at 10⁻¹²; higher orders as the conditioning of the problem allows (n = 8: "
+                  "2·10⁻⁴ at d = 10⁻¹²)"),
     "basis": ["Carter, Phys. Rev. 174, 1559 (1968)", "Bardeen, in Black Holes (Les Houches 1972), 1973",
               "Gralla & Lupsasca, Phys. Rev. D 101, 044032 (2020): null geodesics of the Kerr exterior",
               "Gralla & Lupsasca, Phys. Rev. D 101, 044031 (2020): lensing by Kerr black holes",
@@ -88,7 +89,7 @@ CASE_I, CASE_II, CASE_III, CASE_IV = 1, 2, 3, 4
 
 def _chk(chi):
     if not 0.0 <= chi < 1.0:
-        raise ValueError("spin chi = a/M must be in [0, 1) (the extremal limit is excluded)")
+        raise coded(ValueError(T("the spin χ = a/M must be in [0, 1) (the extremal limit is excluded)")), "kerr.spin")
 
 
 def horizon(chi: float) -> float:
@@ -744,7 +745,7 @@ def critical_radius_at(chi: float, theta_o: float, angle: float, center=(0.0, 0.
     if th == 0.0:
         b, r0 = face_on_shadow_radius(chi)
         if math.hypot(*center) > 0.0:
-            raise ValueError("on the axis the shadow is centred on the origin")
+            raise coded(ValueError(T("on the axis the shadow is centred on the origin")), "kerr.axis_view")
         return b, r0
     s, c = math.sin(th), math.cos(th)
     a = chi
@@ -793,7 +794,7 @@ def critical_radii(chi: float, theta_o: float, angles, center=(0.0, 0.0)):
     if th == 0.0:
         b, r0 = face_on_shadow_radius(chi)
         if math.hypot(*center) > 0.0:
-            raise ValueError("on the axis the shadow is centred on the origin")
+            raise coded(ValueError(T("on the axis the shadow is centred on the origin")), "kerr.axis_view")
         return np.full(ang.shape, b), np.full(ang.shape, r0)
     s, c = math.sin(th), math.cos(th)
     a = chi

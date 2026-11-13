@@ -89,6 +89,7 @@ from typing import Callable
 import numpy as np
 from scipy.special import eval_genlaguerre, ive, jv
 
+from lfphys.codes import coded
 from lfphys.i18n import T
 
 ABOUT = {
@@ -298,9 +299,11 @@ class VortexBeam:
 
     def _guard(self, what: str, n_points: int, n_nodes: int):
         if float(n_points) * n_nodes > self.max_elements:
-            raise ValueError(f"VortexBeam.{what}: {n_points} points x {n_nodes} quadrature nodes = "
-                             f"{float(n_points) * n_nodes:.3g} elements (~{16e-9 * n_points * n_nodes:.3g} GB) > "
-                             f"max_elements = {self.max_elements:.3g}: fewer points, a smaller region or a larger budget")
+            raise coded(ValueError(T("vortex beam: {n:d} points × {nq:d} quadrature nodes = {el:.3g} elements "
+                                     "(~{gb:.3g} GB) > the budget of {lim:.3g} elements: fewer points, a smaller "
+                                     "region or a larger budget", n=int(n_points), nq=int(n_nodes),
+                                     el=float(n_points) * n_nodes, gb=16e-9 * n_points * n_nodes,
+                                     lim=float(self.max_elements))), "beams.memory")
 
     # the source's power and what the propagating beam keeps ------------------------------------------------------
     def spectrum_power(self, q_lo: float = 0.0, q_hi: float = math.inf, panels: int = 400, weight: Callable | None = None):
@@ -371,10 +374,10 @@ class VortexBeam:
         r, z = np.broadcast_arrays(np.atleast_1d(np.asarray(r, float)), np.atleast_1d(np.asarray(z, float)))
         ev = evanescent and self.q_max > self.k
         if ev and np.any(z < 0):
-            raise ValueError("VortexBeam.scalar: the evanescent part only for z >= 0")
+            raise coded(ValueError(T("vortex beam: the evanescent part only for z ≥ 0")), "beams.z")
         zmin = float(np.min(z)) if ev else 0.0
         if ev and not math.isfinite(self.q_max) and zmin <= 0:
-            raise ValueError("VortexBeam.scalar: a spectrum without cut-off needs z > 0")
+            raise coded(ValueError(T("vortex beam: a spectrum without a cut-off needs z > 0")), "beams.z")
         k = self.k
         rmax, zmax = float(np.max(r)), float(np.max(np.abs(z)))
         tmax = 0.0

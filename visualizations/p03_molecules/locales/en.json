@@ -1,15 +1,51 @@
 {
+ "accumulating: {k:d} of {n:d} blocks of {b:.2g} ps after {eq:.2g} ps since the change of the scene; the reference {ref:.5f} ({src})": {
+  "one": "accumulating: {k:d} of {n:d} block of {b:.2g} ps after {eq:.2g} ps since the change of the scene; the reference {ref:.5f} ({src})",
+  "other": "accumulating: {k:d} of {n:d} blocks of {b:.2g} ps after {eq:.2g} ps since the change of the scene; the reference {ref:.5f} ({src})"
+ },
+ "at most {n:d} atoms, or a larger region; denser: “Crystal”": {
+  "one": "at most {n:d} atom, or a larger region; denser: “Crystal”",
+  "other": "at most {n:d} atoms, or a larger region; denser: “Crystal”"
+ },
+ "at most {n:d} molecules, or a larger region; denser: “Crystal”": {
+  "one": "at most {n:d} molecule, or a larger region; denser: “Crystal”",
+  "other": "at most {n:d} molecules, or a larger region; denser: “Crystal”"
+ },
+ "only {k:d} of {n:d} atoms could be placed without overlaps": {
+  "one": "only {k:d} of {n:d} atom could be placed without overlaps",
+  "other": "only {k:d} of {n:d} atoms could be placed without overlaps"
+ },
+ "outside the DKW bound {b:.3g} at the level {lvl} ({n:d} velocity components of all atoms, each divided by √(kT/m) of its mass): in equilibrium it should be within the bound": {
+  "one": "outside the DKW bound {b:.3g} at the level {lvl} ({n:d} velocity component of all atoms, each divided by √(kT/m) of its mass): in equilibrium it should be within the bound",
+  "other": "outside the DKW bound {b:.3g} at the level {lvl} ({n:d} velocity components of all atoms, each divided by √(kT/m) of its mass): in equilibrium it should be within the bound"
+ },
+ "within the DKW bound {b:.3g} at the level {lvl} ({n:d} velocity components of all atoms, each divided by √(kT/m) of its mass): in equilibrium it should be within the bound": {
+  "one": "within the DKW bound {b:.3g} at the level {lvl} ({n:d} velocity component of all atoms, each divided by √(kT/m) of its mass): in equilibrium it should be within the bound",
+  "other": "within the DKW bound {b:.3g} at the level {lvl} ({n:d} velocity components of all atoms, each divided by √(kT/m) of its mass): in equilibrium it should be within the bound"
+ },
  "{n:d} atoms": {
   "one": "{n:d} atom",
   "other": "{n:d} atoms"
+ },
+ "{n:d} atoms, {e:d} events": {
+  "one": "{n:d} atom, {e:d} events",
+  "other": "{n:d} atoms, {e:d} events"
  },
  "{n:d} molecules": {
   "one": "{n:d} molecule",
   "other": "{n:d} molecules"
  },
+ "{n:d} molecules could not be placed without overlaps: {k:d} placed": {
+  "one": "{n:d} molecule could not be placed without overlaps: {k:d} placed",
+  "other": "{n:d} molecules could not be placed without overlaps: {k:d} placed"
+ },
  "{n:d} molecules crossed a face that became a wall: moved inside as a whole (by at most {d:.3g} nm)": {
   "one": "{n:d} molecule crossed a face that became a wall: moved inside as a whole (by at most {d:.3g} nm)",
   "other": "{n:d} molecules crossed a face that became a wall: moved inside as a whole (by at most {d:.3g} nm)"
+ },
+ "|P − P₀| / the rounding bound over {n:d} steps (P₀ the momentum at the last change of the scene; the bound ε·steps·(sums of |m v|, |F|): the engine's momentum_drift); conserved along periodic axes without a field, thermal walls, Langevin baths and local baths, frozen atoms": {
+  "one": "|P − P₀| / the rounding bound over {n:d} step (P₀ the momentum at the last change of the scene; the bound ε·steps·(sums of |m v|, |F|): the engine's momentum_drift); conserved along periodic axes without a field, thermal walls, Langevin baths and local baths, frozen atoms",
+  "other": "|P − P₀| / the rounding bound over {n:d} steps (P₀ the momentum at the last change of the scene; the bound ε·steps·(sums of |m v|, |F|): the engine's momentum_drift); conserved along periodic axes without a field, thermal walls, Langevin baths and local baths, frozen atoms"
  },
  "“{label}”: {n:d} atoms would come closer than σ to atoms of other objects (they would overlap)": {
   "one": "“{label}”: {n:d} atom would come closer than σ to atoms of other objects (they would overlap)",

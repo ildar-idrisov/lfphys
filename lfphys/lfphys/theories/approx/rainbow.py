@@ -37,6 +37,7 @@ import numpy as np
 from scipy import optimize, special
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 ABOUT = {
     "layer": "theories", "kind": "approximation",
@@ -81,10 +82,11 @@ def descartes(m: float, p: int) -> dict:
     h = d^2 theta / db^2 at b_R (signed: > 0 where theta has a minimum, the bright side at larger theta)."""
     m = float(m)
     if p < 2:
-        raise ValueError("a rainbow needs at least one internal reflection (p >= 2)")
+        raise coded(ValueError(T("a rainbow needs at least one internal reflection (p ≥ 2)")), "rainbow.order")
     c2 = (m * m - 1.0) / (p * p - 1.0)
     if not 0.0 < c2 < 1.0:
-        raise ValueError(f"no rainbow of order p = {p} for m = {m}: needs 1 < m < p")
+        raise coded(ValueError(T("no rainbow of order p = {p:d} for m = {m}: it needs 1 < m < p", p=int(p),
+                                 m=float(m))), "rainbow.order")
     ci = math.sqrt(c2)
     i = math.acos(ci)
     b = math.sin(i)
@@ -177,7 +179,7 @@ def ray_path(m: float, p: int, b: float, length: float = 3.0) -> np.ndarray:
     segment of the outgoing ray; for p = 0 the reflected ray from the entry point. For m < 1 a ray enters only if
     b < m (sin r = b/m); a larger b raises ValueError for p >= 1."""
     if not 0.0 <= b < 1.0:
-        raise ValueError("0 <= b < 1")
+        raise coded(ValueError(T("the impact parameter must satisfy 0 ≤ b < 1")), "rainbow.impact")
     i = math.asin(b)
     entry = np.array([b, -math.cos(i)])
     pts = [np.array([b, -length]), entry]
@@ -188,7 +190,7 @@ def ray_path(m: float, p: int, b: float, length: float = 3.0) -> np.ndarray:
         pts.append(entry + length * out)
         return np.array(pts)
     if b >= m:
-        raise ValueError("no refracted ray: b >= m (a sphere of m < 1 admits only b < m)")
+        raise coded(ValueError(T("no refracted ray: b ≥ m (a sphere with m < 1 admits only b < m)")), "rainbow.impact")
     r = math.asin(b / m)
     psi = i
     cur = entry

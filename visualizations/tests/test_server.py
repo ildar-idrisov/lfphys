@@ -538,8 +538,10 @@ def test_view_command_is_refused_by_worlds_without_views_and_never_changes_the_w
 async def _approximations_follow_the_world(tmp_path):
     app = create_app(tmp_path / "runs", max_workers=2, idle_pause=60, idle_suspend=3600)
     async with TestClient(TestServer(app)) as cl:
+        # a small grid (as test_i18n's SMALL): at its defaults v08 took over 120 s to its first slice on a loaded host,
+        # in this version and in the one before (2026-11-13), and the test checks the run list, not the field
         r = await cl.post("/api/runs", json={"viz": "v08_wave_3d", "preset": "double_slices", "seed": 1,
-                                             "params": None})
+                                             "params": {"n": 128, "zmax": 10.0}})
         rid = (await r.json())["id"]
         ws = await cl.ws_connect(f"/ws/runs/{rid}")
 
@@ -599,7 +601,7 @@ async def _resume_races_and_failures(tmp_path):
         run = mgr.get(rid)
         assert mgr.n_running() == 1 and run.meta["resumed"] == 1
         assert sum(1 for m in _messages(run.stream_path) if m["type"] == "notice"
-                   and english(m["text"]).startswith("Going on")) == 1
+                   and english(m["text"]).startswith("Resuming")) == 1
         run.rebuilding = True  # as while a long record is replayed
         r = await cl.post(f"/api/runs/{rid}/command", json={"cmd": "set", "args": {"values": {}}})
         assert r.status == 409 and "being restored" in (await r.json())["text"]
@@ -676,7 +678,7 @@ async def _resume_from_checkpoint(tmp_path, monkeypatch):
         assert (await cl.post(f"/api/runs/{rid}/command", json={"cmd": "play"})).status == 200
         await _wait_state(cl, rid, lambda m: m["state"] == "running" and m.get("sim_t", 0) > t_ck)
         texts = [english(m.get("text") or "") for m in _messages(run.stream_path)]
-        assert any("Going on from the world's saved state" in x for x in texts)
+        assert any("Resuming from the world's saved state" in x for x in texts)
         assert any("The world continued from its saved state" in x for x in texts)
         assert not any("World restored" in x for x in texts)
         assert run.meta["resumes"][-1]["from"] == "checkpoint"
@@ -931,7 +933,7 @@ def test_a_world_that_fails_to_show_itself_is_not_built(tmp_path, monkeypatch):
     new = _decoded(s2)[n0:]
     assert [m["type"] for m in new] == ["busy", "busy", "command", "error"], [m["type"] for m in new]
     assert english(new[-1]["text"]).startswith("New world not created: internal error of the world") and \
-        "The previous world goes on" in english(new[-1]["text"])
+        "The previous world continues" in english(new[-1]["text"])
     assert r2.sim is sim0 and r2.world == 1
     r2.handle({"cmd": "new_world", "args": {"params": {"drag": 0.25}}})
     assert r2.world == 2 and [m["type"] for m in _decoded(s2)].count("header") == 2

@@ -35,6 +35,7 @@ import math
 import numpy as np
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
@@ -54,7 +55,7 @@ _GL_X, _GL_W = np.polynomial.legendre.leggauss(16)
 def circle_on_axis(k: float, a: float, z: float) -> complex:
     """U(0, 0, z) behind a unit disc of radius a: e^{ikz} - (z/R) e^{ikR}, R = sqrt(z^2 + a^2)."""
     if z <= 0:
-        raise ValueError("circle_on_axis: z > 0")
+        raise coded(ValueError(T("the field of a circular aperture on the axis needs z > 0")), "optics.z")
     R = math.hypot(z, a)
     return cmath.exp(1j * k * z) - z / R * cmath.exp(1j * k * R)
 
@@ -90,7 +91,7 @@ def _rect_integrand(k, z, boxes, phi):
 def rectangles_field(k: float, rects, z: float, x0: float = 0.0, y0: float = 0.0, panels: int | None = None):
     """(U(x0, y0, z), error estimate) behind a union of disjoint unit rectangles (xa, xb, ya, yb) on z = 0."""
     if z <= 0:
-        raise ValueError("rectangles_field: z > 0")
+        raise coded(ValueError(T("the field of rectangular apertures needs z > 0")), "optics.z")
     boxes = [(xa - x0, xb - x0, ya - y0, yb - y0) for xa, xb, ya, yb in rects]
     cuts = {0.0, 2 * math.pi}
     for xa, xb, ya, yb in boxes:
@@ -128,7 +129,7 @@ def gaussian_field(k: float, w: float, z: float, r: float = 0.0, deriv: str | No
     same integral (the integrand times i k_z, or J0(q r) replaced by -q J1(q r))."""
     from scipy.special import j0, j1
     if z < 0:
-        raise ValueError("gaussian_field: z >= 0")
+        raise coded(ValueError(T("the field of a Gaussian aperture needs z ≥ 0")), "optics.z")
     if deriv not in (None, "z", "r"):
         raise ValueError("gaussian_field: deriv None, 'z' or 'r'")
     # evanescent part: exp(-s^2 w^2/4 - z s) below 1e-18 beyond s_max

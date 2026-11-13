@@ -17,6 +17,10 @@ The recording file starts with the 8-byte magic ``LFVREC1\\n``.
 
 Non-finite floats are not valid JSON for the browser; ``clean`` maps them to ``None``. Physics code must
 not rely on NaN surviving the trip.
+
+A translatable text (``lfviz.i18n.T``) is written as ``{"$t", "a"}`` and read back as a ``T`` (``decode``,
+``peek_meta``), so that the server's code that reads a record compares and renders texts, not dicts (review i18n-code
+F2).
 """
 
 from __future__ import annotations
@@ -27,6 +31,8 @@ import struct
 from typing import Any
 
 import numpy as np
+
+from .i18n import json_hook
 
 ALIGN = 8
 MAGIC = b"LFVREC1\n"
@@ -96,7 +102,7 @@ def encode(meta: dict, blobs: dict[str, np.ndarray] | None = None) -> bytes:
 def decode(buf: bytes) -> tuple[dict, dict[str, np.ndarray]]:
     """Decode one message (inverse of ``encode``)."""
     (jlen,) = struct.unpack_from("<I", buf, 0)
-    meta = json.loads(bytes(buf[4 : 4 + jlen]).decode("utf-8"))
+    meta = json.loads(bytes(buf[4 : 4 + jlen]).decode("utf-8"), object_hook=json_hook)
     base = 4 + jlen
     base += (-base) % ALIGN
     blobs = {}
@@ -111,7 +117,7 @@ def decode(buf: bytes) -> tuple[dict, dict[str, np.ndarray]]:
 def peek_meta(buf: bytes) -> dict:
     """Only the JSON part of a message (cheap: no array views)."""
     (jlen,) = struct.unpack_from("<I", buf, 0)
-    return json.loads(bytes(buf[4 : 4 + jlen]).decode("utf-8"))
+    return json.loads(bytes(buf[4 : 4 + jlen]).decode("utf-8"), object_hook=json_hook)
 
 
 def frame_stream_item(msg: bytes) -> bytes:

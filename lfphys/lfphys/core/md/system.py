@@ -131,7 +131,9 @@ import time
 
 import numpy as np
 
-from lfphys.i18n import T
+from lfphys import i18n
+from lfphys.codes import coded
+from lfphys.i18n import T, text_of
 
 from .. import backend
 from . import cells
@@ -151,13 +153,13 @@ ABOUT = {
                    "virial and from the momentum given to the walls, energies, momentum, g(r), MSD, the velocity "
                    "distribution, heat and work counters, the step error from a companion run with dt/2; the state "
                    "is plain data, continued bit for bit."),
-    "validity": T("classical mechanics (quantum corrections at ħω ≳ kT, for light atoms and low T, are not "
-                  "included); the interactions are models (theories.models.interatomic), except the Coulomb one; "
-                  "step error O(dt²) for continuous forces (Verlet: energy without drift at small dt; CSVR and BAOAB: "
-                  "the stationary distribution with an error O(dt²)); with hard walls and the piston and interacting "
-                  "atoms the energy error is first order in dt (an impact inside a step); Coulomb only in a box with "
-                  "walls on every axis (periodic: refused, no Ewald sum); the piston is a flat specular face only on "
-                  "the hi side of one axis"),
+    "validity": T("classical mechanics (quantum corrections at ħω ≳ kT, for light atoms and low T, are not included); "
+                  "the interactions are models (theories.models.interatomic), except the Coulomb one; step error "
+                  "O(dt²) for continuous forces (Verlet: energy without drift at small dt; CSVR and BAOAB: the "
+                  "stationary distribution with an error O(dt²)); with hard walls or the piston and interacting atoms "
+                  "the energy error is first order in dt (an impact inside a step); Coulomb only in a box with walls "
+                  "on every axis (periodic: refused, no Ewald sum); the piston is a flat specular face only on the hi "
+                  "side of one axis"),
     "basis": [T("Swope, Andersen, Berens & Wilson, J. Chem. Phys. 76, 637 (1982): velocity Verlet"),
               "Bussi, Donadio & Parrinello, J. Chem. Phys. 126, 014101 (2007), arXiv:0803.4060, Eqs. (7), (A7)",
               "Leimkuhler & Matthews, Appl. Math. Res. Express 2013, 34, arXiv:1203.5428: BAOAB",
@@ -234,7 +236,7 @@ def _bench(size, xp, cdtype=None):
 
 backend.register(backend.KernelSpec(
     KERNEL, T("Molecular dynamics: pair forces"),
-    T("forces, energy and virial of a short-range pair potential by the Verlet list (core.md.system; the playground "
+    T("forces, energy and virial of a short-range pair potential by the Verlet list (core.md.system; the laboratory "
       "of particles and molecules P15.4): element by element as on the CPU, sums over particles in the order of "
       "numpy.bincount — the forces equal the CPU's bit for bit"),
     gpu=True,
@@ -353,7 +355,7 @@ def crystal_sites(lo, hi, density, kind="auto", full=None):
     hi = np.asarray(hi, float)
     d = len(lo)
     if not (density > 0 and math.isfinite(density)):
-        raise ValueError("density > 0")
+        raise coded(ValueError(T("density > 0")), "md.value")
     kind, basis, shape = _basis(kind, d)
     nb = basis.shape[0]
     a = (nb / (density * float(np.prod(shape)))) ** (1.0 / d)
@@ -362,8 +364,8 @@ def crystal_sites(lo, hi, density, kind="auto", full=None):
     full = np.zeros(d, bool) if full is None else np.asarray(full, bool)
     ncell = np.where(full, np.maximum(np.round(ext / cell), 1), np.floor(ext / cell * (1 + 1e-12))).astype(int)
     if np.any(ncell < 1):
-        raise ValueError(f"the region is smaller than one lattice cell ({' x '.join(f'{c:.3g}' for c in cell)}) "
-                         f"at density {density:g}")
+        raise coded(ValueError(T("the region is smaller than one lattice cell ({cell}) at density {density}",
+                                 cell=[float(c) for c in cell], density=float(density))), "md.lattice_cell")
     used = np.where(full, ext / ncell, cell)
     offset = np.where(full, 0.0, 0.5 * (ext - ncell * cell))
     idx = np.stack(np.meshgrid(*[np.arange(c) for c in ncell], indexing="ij"), -1).reshape(-1, d)
@@ -510,8 +512,8 @@ def random_sites(n, lo, hi, dmin, rng, L, periodic, others=None, others_dmin=Non
         for c in range(k):
             tries += 1
             if tries > limit or fails > 20000:
-                raise ValueError(f"random placement jammed: {len(out)} of {n} placed without overlaps; fewer "
-                                 f"particles, a larger region or a lattice")
+                raise coded(ValueError(T("random placement jammed: {k:d} of {n:d} placed without overlaps; fewer "
+                                         "particles, a larger region or a lattice", k=len(out), n=int(n))), "md.jammed")
             ok = not bad[c] and not any(acc[e] for e in earlier.get(c, ()))
             if ok:
                 acc[c] = True
@@ -556,7 +558,8 @@ def _probe(x, v, m, L, periodic, center, radius, hi=None):
     periodic = np.asarray(periodic, bool)
     d = len(L)
     if c.shape != (d,) or not (r > 0) or np.any(periodic & (r > 0.5 * L)):
-        raise ValueError("a ball: a d-vector centre and 0 < radius <= L/2 on periodic axes")
+        raise coded(ValueError(T("a ball: a centre with one coordinate per axis and 0 < radius ≤ L/2 on periodic "
+                                 "axes")), "md.region")
     dx = np.asarray(x, float) - c
     for a in np.flatnonzero(periodic):
         dx[:, a] -= L[a] * np.rint(dx[:, a] / L[a])
@@ -588,7 +591,7 @@ class MD:
         self.dim = int(dim)
         L = np.asarray(box, float).reshape(-1)
         if L.shape != (self.dim,) or not np.all((L > 0) & np.isfinite(L)):
-            raise ValueError("box: dim positive finite lengths")
+            raise coded(ValueError(T("box: positive finite lengths along every axis")), "md.value")
         if isinstance(boundary, str):
             boundary = [boundary] * self.dim
         if len(boundary) != self.dim or any(b not in ("periodic", "walls") for b in boundary):
@@ -596,7 +599,7 @@ class MD:
         if exclude not in _EXCLUDE:
             raise ValueError(f"exclude must be one of {_EXCLUDE}")
         if not (dt > 0 and math.isfinite(dt) and skin >= 0 and max_insert_energy > 0):
-            raise ValueError("dt > 0, skin >= 0, max_insert_energy > 0")
+            raise coded(ValueError(T("dt > 0, skin ≥ 0, max_insert_energy > 0")), "md.value")
         if device not in ("auto", "cpu"):
             raise ValueError("device: 'auto' (the backend's choice for the pair forces) or 'cpu'")
         self.device_mode = device
@@ -663,7 +666,7 @@ class MD:
     def _vec(self, z):
         z = np.asarray(z, float).reshape(-1)
         if z.shape != (self.dim,) or not np.all(np.isfinite(z)):
-            raise ValueError(f"a {self.dim}-vector of finite numbers")
+            raise coded(ValueError(T("a vector of {n:d} finite numbers", n=int(self.dim))), "md.value")
         return z
 
     @staticmethod
@@ -726,7 +729,7 @@ class MD:
             sp[k] = float(sp[k])
         if not (sp["mass"] > 0 and sp["sigma"] > 0 and sp["epsilon"] >= 0 and math.isfinite(sp["sigma"])
                 and math.isfinite(sp["epsilon"]) and math.isfinite(sp["charge"])):
-            raise ValueError("mass > 0 (inf: frozen), sigma > 0, epsilon >= 0, finite charge")
+            raise coded(ValueError(T("mass > 0 (inf: frozen), sigma > 0, epsilon ≥ 0, a finite charge")), "md.value")
         return sp
 
     def set_species(self, name, max_energy=None, **changes):
@@ -758,13 +761,14 @@ class MD:
         ti = self._species_index(species)
         x = np.atleast_2d(np.asarray(x, float))
         if x.shape[1] != self.dim or not np.all(np.isfinite(x)):
-            raise ValueError(f"positions: (n, {self.dim}) finite")
+            raise coded(ValueError(i18n.T("positions: {n:d} finite coordinates per particle", n=int(self.dim))),
+                        "md.non_finite")
         n = x.shape[0]
         m = self._species[ti]["mass"]
         if v is not None:
             v = np.broadcast_to(np.asarray(v, float), (n, self.dim)).copy()
             if not np.all(np.isfinite(v)):
-                raise ValueError("non-finite velocities")
+                raise coded(ValueError(i18n.T("non-finite velocities")), "md.non_finite")
         if not math.isfinite(m):
             v = np.zeros((n, self.dim))
 
@@ -779,7 +783,7 @@ class MD:
 
     def _maxwell(self, n, m, T, zero_momentum):
         if not (T >= 0 and math.isfinite(T)):
-            raise ValueError("T must be finite and >= 0")
+            raise coded(ValueError(i18n.T("T must be finite and ≥ 0")), "md.value")
         if not math.isfinite(m):
             return np.zeros((n, self.dim))
         v = self.rng.standard_normal((n, self.dim)) * math.sqrt(T / m)
@@ -837,7 +841,8 @@ class MD:
                 keep = free_sites(pw, self._species[ti]["sigma"], self._x, sig[self._typ], self.L, self.periodic)
                 inf["skipped"] = int(np.sum(~keep))
                 if not keep.any():
-                    raise ValueError(f"no free lattice site: all {len(pos)} sites of the block are occupied")
+                    raise coded(ValueError(i18n.T("no free lattice site: all {n:d} sites of the block are occupied",
+                                                  n=len(pos))), "md.no_free_site")
                 pos = pos[keep]
             if info is not None:
                 info.update(inf)
@@ -867,7 +872,7 @@ class MD:
             return lo, hi
         lo, hi = self._vec(region[0]), self._vec(region[1])
         if not np.all(hi > lo):
-            raise ValueError("region: hi > lo on every axis")
+            raise coded(ValueError(T("region: hi > lo on every axis")), "md.region")
         return lo, hi
 
     def adopt(self, keys, species_index, x, v, next_key=None, max_energy=None):
@@ -934,7 +939,7 @@ class MD:
         ti = None if species is None else self._species_index(species)
         for z in (x, v):
             if z is not None and not np.all(np.isfinite(z)):
-                raise ValueError("non-finite values")
+                raise coded(ValueError(T("non-finite values")), "md.non_finite")
 
         def apply():
             if x is not None:
@@ -1097,7 +1102,7 @@ class MD:
         if v is not None:
             v = np.broadcast_to(np.asarray(v, float), (k, n, d)).copy()
             if not np.all(np.isfinite(v)):
-                raise ValueError("non-finite velocities")
+                raise coded(ValueError(i18n.T("non-finite velocities")), "md.non_finite")
         lim = self.max_insert_energy if max_energy is None else float(max_energy)
         m_at = np.array([self._species[t]["mass"] for t in typ])
         # outside the walls or the piston: left out before anything is built
@@ -1127,7 +1132,8 @@ class MD:
             first[c] = inside[c] and not any(first[e] for e in earlier.get(c, ()))
         if keep_all:
             if not np.all(inside):
-                raise ValueError(f"{int(np.sum(~inside))} molecules have an atom outside the walls or the piston")
+                raise coded(ValueError(i18n.T("molecules with an atom outside the walls or the piston: {n:d}",
+                                              n=int(np.sum(~inside)))), "md.outside_walls")
             first = np.ones(k, bool)
 
         def apply():
@@ -1136,7 +1142,7 @@ class MD:
                 vv_all = np.zeros((k, n, d))
                 fin = np.isfinite(m_at)
                 if not (T >= 0 and math.isfinite(T)):
-                    raise ValueError("T must be finite and >= 0")
+                    raise coded(ValueError(i18n.T("T must be finite and ≥ 0")), "md.value")
                 vv_all[:, fin] = self.rng.standard_normal((k, int(fin.sum()), d)) * np.sqrt(T / m_at[fin])[None, :, None]
             else:
                 vv_all = np.zeros((k, n, d)) if v is None else v
@@ -1178,8 +1184,9 @@ class MD:
                     bad = ~np.all(np.isfinite(e.reshape(kk, n)) & (e.reshape(kk, n) <= lim), axis=1)
                 if bad.any() and keep_all:
                     emax = float(np.max(e)) if "e" in locals() and np.all(np.isfinite(e)) else math.inf
-                    raise ValueError(f"overlap: an inserted particle's potential energy {emax:.4g} exceeds the bound "
-                                     f"{lim:g} ({int(bad.sum())} molecules)")
+                    raise coded(ValueError(i18n.T("overlap: an inserted particle's potential energy {e:.4g} exceeds the "
+                                             "bound {lim} (molecules: {n:d})", e=emax, lim=float(lim),
+                                             n=int(bad.sum()))), "md.overlap")
                 if not bad.any():
                     if limit is not None and len(cand) > int(limit):
                         cand = cand[:int(limit)]
@@ -1187,7 +1194,7 @@ class MD:
                     break
                 cand = cand[~bad]
             else:
-                raise ValueError("molecules: the insertion did not settle")
+                raise coded(ValueError(i18n.T("molecules: the insertion did not settle")), "md.insertion")
             self._next_mol = mol0 + len(cand)
             result["kept"] = cand
             result["keys"] = (np.arange(n0, self.n) if len(cand) else np.zeros(0, np.int64))
@@ -1221,17 +1228,17 @@ class MD:
         wall term with ``tables`` and ``evaluate(z, P)``, a specular backstop behind it). Its counters restart."""
         a = self._axis(axis)
         if self.periodic[a]:
-            raise ValueError(f"axis {_AX[a]} is periodic")
+            raise coded(ValueError(i18n.T("axis {axis} is periodic", axis=_AX[a])), "md.periodic_axis")
         if side not in ("lo", "hi"):
             raise ValueError("side: 'lo' or 'hi'")
         if kind not in _WALL_KINDS:
             raise ValueError(f"wall kind must be one of {_WALL_KINDS}")
         if kind == "thermal" and not (T is not None and T > 0 and math.isfinite(T)):
-            raise ValueError("a thermal wall needs a temperature T > 0")
+            raise coded(ValueError(i18n.T("a thermal wall needs a temperature T > 0")), "md.thermal_wall")
         if kind == "soft" and not callable(getattr(term, "evaluate", None)):
             raise ValueError("a soft wall needs a wall term")
         if self._piston is not None and self._piston["axis"] == a and side == "hi":
-            raise ValueError("the hi side of this axis is the piston")
+            raise coded(ValueError(i18n.T("the hi side of this axis is the piston")), "md.piston")
 
         def apply():
             old = self._walls.get(f"{_AX[a]}-{side}")
@@ -1259,7 +1266,8 @@ class MD:
         if (kind == "periodic") == bool(self.periodic[a]):
             return
         if kind == "periodic" and self._piston is not None and self._piston["axis"] == a:
-            raise ValueError("the piston's axis cannot be made periodic (remove the piston first)")
+            raise coded(ValueError(T("the piston's axis cannot be made periodic (remove the piston first)")),
+                        "md.piston")
         near = None
         if kind == "periodic" and self.n:
             reach = (float(np.max(self._tables["rc"])) if self._tables is not None else 0.0) + self.skin
@@ -1295,18 +1303,19 @@ class MD:
         velocity V the user sets), external pressure p_ext on its outer side, end stops x_min and L_a."""
         a = self._axis(axis)
         if self.periodic[a]:
-            raise ValueError("a piston needs a walled axis")
+            raise coded(ValueError(T("a piston needs a walled axis")), "md.piston")
         old = self._piston if (self._piston is not None and self._piston["axis"] == a) else None
         X = (old["X"] if old else self.L[a]) if X is None else float(X)
         V = (old["V"] if old else 0.0) if V is None else float(V)
         x_min = (old["x_min"] if old else 1e-3 * self.L[a]) if x_min is None else float(x_min)
         mass, p_ext = float(mass), float(p_ext)
         if not (0 < x_min <= X <= self.L[a] and mass > 0 and math.isfinite(p_ext) and math.isfinite(V)):
-            raise ValueError("0 < x_min <= X <= L, mass > 0, finite p_ext and V")
+            raise coded(ValueError(T("0 < x_min <= X <= L, mass > 0, finite p_ext and V")), "md.piston")
         if self._piston is not None and self._piston["axis"] != a:
-            raise ValueError("one piston per system (remove the other first)")
+            raise coded(ValueError(T("one piston per system (remove the other first)")), "md.piston")
         if self.ramp_running() and self._ramp["L1"][a] != self._ramp["L0"][a]:
-            raise ValueError(f"the box is being changed along axis {_AX[a]} (a ramp): stop it first")
+            raise coded(ValueError(T("the box is being changed along axis {axis} (a ramp): stop it first",
+                                     axis=_AX[a])), "md.ramp")
 
         def apply():
             p = old or {"axis": a, "work": 0.0, "impulse": 0.0, "hits": 0, "t0": self.t, "stops": 0}
@@ -1354,7 +1363,7 @@ class MD:
 
     def set_dt(self, dt):
         if not (dt > 0 and math.isfinite(dt)):
-            raise ValueError("dt > 0")
+            raise coded(ValueError(T("dt > 0")), "md.value")
         self._t_base = self.t
         self._n_since = 0
         self._dt = float(dt)
@@ -1402,23 +1411,26 @@ class MD:
         a bond's length)}."""
         L_new = np.asarray(L, float).reshape(-1)
         if L_new.shape != (self.dim,) or not np.all((L_new > 0) & np.isfinite(L_new)):
-            raise ValueError("box: dim positive finite lengths")
+            raise coded(ValueError(T("box: positive finite lengths along every axis")), "md.value")
         if mode not in ("affine", "wall"):
             raise ValueError("mode: 'affine' or 'wall'")
         if self.ramp_running():
-            raise ValueError("a box ramp is running: stop it first (stop_box_ramp)")
+            raise coded(ValueError(T("a box ramp is running: stop it first (stop_box_ramp)")), "md.ramp")
         lam = L_new / self.L
         changed = np.flatnonzero(L_new != self.L)
         p = self._piston
         if p is not None and p["axis"] in changed:
             if mode == "affine":
-                raise ValueError(f"the piston's axis {_AX[p['axis']]}: move the piston (or mode 'wall': its end stop)")
+                raise coded(ValueError(T("the piston's axis {axis}: move the piston (or mode 'wall': its end stop)",
+                                         axis=_AX[p["axis"]])), "md.piston")
             if L_new[p["axis"]] < p["X"]:
-                raise ValueError(f"the piston's face {p['X']:.6g} lies beyond the new length {L_new[p['axis']]:.6g}")
+                raise coded(ValueError(T("the piston's face {x:.6g} lies beyond the new length {L:.6g}",
+                                         x=float(p["X"]), L=float(L_new[p["axis"]]))), "md.piston")
         if mode == "wall":
             per = [_AX[a] for a in changed if self.periodic[a]]
             if per:
-                raise ValueError(f"axis {', '.join(per)} is periodic: it has no wall to move")
+                raise coded(ValueError(T("axis {axis} is periodic: it has no wall to move", axis=", ".join(per))),
+                            "md.periodic_axis")
         strain = 0.0
         if mode == "affine" and len(self._bonds) and len(changed):
             r = self._rows(self._bonds.reshape(-1)).reshape(-1, 2)
@@ -1427,7 +1439,8 @@ class MD:
             b1 = np.sqrt(np.einsum("ij,ij->i", dx * lam, dx * lam))
             strain = float(np.max(np.abs(b1 / np.where(b0 > 0, b0, 1.0) - 1.0)))
             if max_bond_strain is not None and strain > float(max_bond_strain):
-                raise ValueError(f"a bond would change its length by {strain:.4g} (limit {float(max_bond_strain):g})")
+                raise coded(ValueError(T("a bond would change its length by {strain:.4g} (limit {lim})",
+                                         strain=float(strain), lim=float(max_bond_strain))), "md.bond_strain")
         V0 = self.volume()
         P0 = self.pressure()["tensor"] if self.n else [0.0] * self.dim
         S0 = self.affine_stress() if self.n else [0.0] * self.dim
@@ -1527,26 +1540,29 @@ class MD:
         there (``box_ramp()["stopped"]``). Returns the ramp's record (``box_ramp``)."""
         L1 = np.asarray(L, float).reshape(-1)
         if L1.shape != (self.dim,) or not np.all((L1 > 0) & np.isfinite(L1)):
-            raise ValueError("box: dim positive finite lengths")
+            raise coded(ValueError(T("box: positive finite lengths along every axis")), "md.value")
         duration = float(duration)
         if not (duration > 0 and math.isfinite(duration)):
-            raise ValueError("a ramp needs a finite duration > 0 (a jump: deform)")
+            raise coded(ValueError(T("a ramp needs a finite duration > 0 (a jump: deform)")), "md.ramp")
         if self.ramp_running():
             self.stop_box_ramp("replaced")
         L0 = self.L.copy()
         changed = np.flatnonzero(L1 != L0)
         p = self._piston
         if p is not None and p["axis"] in changed:
-            raise ValueError(f"the piston's axis {_AX[p['axis']]}: move the piston (or mode 'wall': its end stop)")
+            raise coded(ValueError(T("the piston's axis {axis}: move the piston (or mode 'wall': its end stop)",
+                                     axis=_AX[p["axis"]])), "md.piston")
         per_step = float(np.max(np.abs(L1 - L0) / np.minimum(L0, L1))) * self._dt / duration if len(changed) else 0.0
         if per_step > self.RAMP_MAX_STRAIN:
-            raise ValueError(f"a ramp of {duration:.4g} changes a length by {per_step:.3g} per step (limit "
-                             f"{self.RAMP_MAX_STRAIN:g}): longer duration, or a jump (deform)")
+            raise coded(ValueError(T("a ramp of {d:.4g} changes a length by {per:.3g} per step (limit {lim}): longer "
+                                     "duration, or a jump (deform)", d=float(duration), per=float(per_step),
+                                     lim=float(self.RAMP_MAX_STRAIN))), "md.ramp")
         if self._tables is not None and np.any(self.periodic):
             rc = float(np.max(self._tables["rc"])) + self.skin
             low = float(np.min(np.minimum(L0, L1)[self.periodic]))
             if rc > 0.5 * low:
-                raise ValueError(f"the pair cutoff + skin {rc:.4g} exceeds half a periodic box length {0.5 * low:.4g}")
+                raise coded(ValueError(T("the pair cutoff + skin {rc:.4g} exceeds half a periodic box length "
+                                         "{half:.4g}", rc=float(rc), half=0.5 * float(low))), "md.cutoff")
         n_prev = self._ramp["n"] if self._ramp is not None else 0
         self._ramp = {"n": n_prev + 1, "L0": L0, "L1": L1.copy(), "t0": self.t, "t1": self.t + duration,
                       "W": 0.0, "pdv": 0.0, "steps": 0, "running": bool(len(changed)), "done": not len(changed),
@@ -1597,7 +1613,7 @@ class MD:
         try:
             self._compute_forces()
             if not np.all(np.isfinite(self._f)):
-                raise FloatingPointError("non-finite forces")
+                raise coded(FloatingPointError(T("non-finite forces")), "md.non_finite")
         except FloatingPointError as e:
             for k, v in keep.items():
                 setattr(self, k, v)
@@ -1642,20 +1658,20 @@ class MD:
             raise ValueError(f"thermostat kind must be one of {_BATHS}")
         T = float(b["T"])
         if not (T >= 0 and math.isfinite(T)):
-            raise ValueError("T must be finite and >= 0")
+            raise coded(ValueError(i18n.T("T must be finite and ≥ 0")), "md.thermostat")
         out = {"kind": b["kind"], "T": T, "tau": None, "gamma": None, "region": None, "species": None}
         if b["kind"] == "csvr":
             if not (b.get("tau") is not None and float(b["tau"]) > 0):
-                raise ValueError("a CSVR bath needs tau > 0")
+                raise coded(ValueError(i18n.T("a CSVR bath needs tau > 0")), "md.thermostat")
             out["tau"] = float(b["tau"])
         else:
             if not (b.get("gamma") is not None and float(b["gamma"]) > 0):
-                raise ValueError("a Langevin bath needs gamma > 0")
+                raise coded(ValueError(i18n.T("a Langevin bath needs gamma > 0")), "md.thermostat")
             out["gamma"] = float(b["gamma"])
         if b.get("region") is not None:
             lo, hi = self._vec(b["region"][0]), self._vec(b["region"][1])
             if not np.all(hi > lo):
-                raise ValueError("region: hi > lo")
+                raise coded(ValueError(i18n.T("region: hi > lo")), "md.region")
             out["region"] = [lo.tolist(), hi.tolist()]
         if b.get("species") is not None:
             sp = [b["species"]] if isinstance(b["species"], str) else list(b["species"])
@@ -1705,14 +1721,14 @@ class MD:
             self._check_inside()
             self._compute_forces()
             if not np.all(np.isfinite(self._f)):
-                raise FloatingPointError("non-finite forces")
+                raise coded(FloatingPointError(T("non-finite forces")), "md.non_finite")
             if new_keys is not None and len(new_keys):
                 rows = self._rows(new_keys)
                 e = self._insert_energy(rows)
                 lim = self.max_insert_energy if max_energy is None else float(max_energy)
                 if e > lim:
-                    raise ValueError(f"overlap: an inserted particle's potential energy {e:.4g} exceeds "
-                                     f"{'max_insert_energy' if max_energy is None else 'the limit'} = {lim:g}")
+                    raise coded(ValueError(T("overlap: an inserted particle's potential energy {e:.4g} exceeds the "
+                                             "limit {lim}", e=float(e), lim=float(lim))), "md.overlap")
             # an edit changes the Hamiltonian or the state: the first-law balance continues from here
             self._balance["E0"] += self.energy() - E_before
             self._p_ref = self.momentum()      # and the momentum's conservation is checked from here
@@ -1721,7 +1737,8 @@ class MD:
         except FloatingPointError as e:
             for k, val in snap.items():
                 setattr(self, k, val)
-            raise ValueError(f"refused: {e}") from e
+            raise coded(ValueError(T("refused: {reason}", reason=text_of(e))), "md.refused",
+                        cause=getattr(e, "code", None)) from e
         except BaseException:
             for k, val in snap.items():
                 setattr(self, k, val)
@@ -1740,8 +1757,9 @@ class MD:
             self._tables = self.pair.tables(sig, eps)
             rcmax = float(np.max(self._tables["rc"]))
             if np.any(self.periodic) and rcmax + self.skin > 0.5 * float(np.min(self.L[self.periodic])):
-                raise ValueError(f"the pair cutoff + skin {rcmax + self.skin:.4g} exceeds half a periodic box "
-                                 f"length {0.5 * float(np.min(self.L[self.periodic])):.4g}")
+                raise coded(ValueError(T("the pair cutoff + skin {rc:.4g} exceeds half a periodic box length "
+                                         "{half:.4g}", rc=float(rcmax + self.skin),
+                                         half=0.5 * float(np.min(self.L[self.periodic])))), "md.cutoff")
         else:
             self._tables = None
         self._wtables = {}
@@ -1753,8 +1771,8 @@ class MD:
                     self._wtables[k] = w["term"].tables(sig, eps)
         q = np.array([s["charge"] for s in self._species]) if ns else np.zeros(0)
         if self.n and np.any(q[self._typ] != 0.0) and np.any(self.periodic):
-            raise ValueError("charges in a box with a periodic axis: the Coulomb lattice sum (Ewald) is not "
-                             "implemented; use walls on every axis")
+            raise coded(ValueError(T("charges in a box with a periodic axis: the Coulomb lattice sum (Ewald) is not "
+                                     "implemented; use walls on every axis")), "md.ewald")
         self._excl = self._exclusions()
         self._nl = None
 
@@ -1764,7 +1782,8 @@ class MD:
                 continue
             hi = self._piston["X"] if (self._piston is not None and self._piston["axis"] == a) else self.L[a]
             if np.any(self._x[:, a] < 0.0) or np.any(self._x[:, a] > hi):
-                raise ValueError(f"a particle outside the walls on axis {_AX[a]}")
+                raise coded(ValueError(T("a particle outside the walls on axis {axis}", axis=_AX[a])),
+                            "md.outside_walls")
 
     def _exclusions(self):
         """Sorted int64 codes (min key << 32 | max key) of the excluded pairs (mode "bonded"), or None."""
@@ -1854,7 +1873,7 @@ class MD:
         for a in range(1, self.dim):
             r2 = r2 + dx[:, a] * dx[:, a]
         if bool(xp.any(r2 == 0.0)):
-            raise FloatingPointError("two interacting particles at the same point")
+            raise coded(FloatingPointError(T("two interacting particles at the same point")), "md.same_point")
         u, fr = self.pair.evaluate(r2, P)
         return i, j, fr, dx, u, r2
 
@@ -1991,7 +2010,7 @@ class MD:
         dx = x[j] - x[i]
         r2 = np.einsum("ij,ij->i", dx, dx)
         if np.any(r2 == 0.0):
-            raise FloatingPointError("two charges at the same point")
+            raise coded(FloatingPointError(T("two charges at the same point")), "md.same_point")
         r = np.sqrt(r2)
         qq = q[i] * q[j]
         u = qq / r
@@ -2015,7 +2034,7 @@ class MD:
                 dx = self._min_image(x[j] - x[i])
                 r = np.sqrt(np.einsum("ij,ij->i", dx, dx))
                 if np.any(r == 0.0):
-                    raise FloatingPointError("two bonded atoms at the same point")
+                    raise coded(FloatingPointError(T("two bonded atoms at the same point")), "md.same_point")
                 u, mdu = bt[t].evaluate(r)
                 u = np.broadcast_to(u, r.shape)
                 fr = mdu / r
@@ -2038,7 +2057,7 @@ class MD:
                 la = np.sqrt(np.einsum("ij,ij->i", a_, a_))
                 lb = np.sqrt(np.einsum("ij,ij->i", b_, b_))
                 if np.any(la == 0.0) or np.any(lb == 0.0):
-                    raise FloatingPointError("an angle with coincident atoms")
+                    raise coded(FloatingPointError(T("an angle with coincident atoms")), "md.same_point")
                 cos = np.clip(np.einsum("ij,ij->i", a_, b_) / (la * lb), -1.0, 1.0)
                 theta = np.arccos(cos)
                 u, dudc = at[t].evaluate(theta, cos)
@@ -2070,7 +2089,7 @@ class MD:
             zz = np.maximum(z, 1e-300)
             u, fz = w["term"].evaluate(zz, P)
             if not np.all(np.isfinite(fz)):
-                raise FloatingPointError("a particle on a soft wall's plane")
+                raise coded(FloatingPointError(i18n.T("a particle on a soft wall's plane")), "md.non_finite")
             sgn = 1.0 if key.endswith("lo") else -1.0
             f[:, a] += sgn * fz
             E["wall"] += float(np.sum(u))
@@ -2105,7 +2124,8 @@ class MD:
         self._drift(0.5 * h)
         self._compute_forces()
         if not np.all(np.isfinite(self._f)):
-            raise FloatingPointError("non-finite forces: the time step is too large or particles overlap")
+            raise coded(FloatingPointError(T("non-finite forces: the time step is too large or particles overlap")),
+                        "md.non_finite")
         self._kick(0.5 * h)
         self._o_csvr(0.5 * h)
         self._n_since += 1
@@ -2185,7 +2205,8 @@ class MD:
                 sel = np.flatnonzero((c_best == c) & np.isfinite(t_best))
                 if len(sel):
                     self._wall_event(key, rows[sel], t_best[sel])
-        raise FloatingPointError("a particle crossed the walls more than 64 times in one drift (dt too large)")
+        raise coded(FloatingPointError(T("a particle crossed the walls more than {n:d} times in one drift (dt too "
+                                         "large)", n=64)), "md.drift")
 
     def _wall_event(self, key, r, s):
         """Particles r crossed the wall ``key`` a time s ago (on their straight segment): reflect or re-emit."""

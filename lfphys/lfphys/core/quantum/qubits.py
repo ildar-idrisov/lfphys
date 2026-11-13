@@ -25,6 +25,7 @@ import numpy as np
 from scipy import linalg
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 ABOUT = {
     "layer": "core", "kind": "law",
@@ -80,7 +81,8 @@ def born_probabilities(p, dim: int = 4) -> np.ndarray:
     p = np.asarray(p, float)
     tol = 4 * dim * np.finfo(float).eps * max(1.0, float(np.sum(np.abs(p))))
     if p.size and float(p.min()) < -tol:
-        raise ValueError(f"born_probabilities: negative probability {float(p.min()):.3g} beyond round-off ({tol:.1e})")
+        raise coded(ValueError(T("Born probabilities: a negative probability {p:.3g} beyond round-off ({tol:.1e})",
+                                 p=float(p.min()), tol=float(tol))), "quantum.negative_probability")
     return np.where(p < 0.0, 0.0, p)
 
 

@@ -40,7 +40,13 @@ export function createView(ctx) {
     const Y = (a) => bot - (bot - top) * a / amax;  // not clamped: curves are clipped at the frame (review V6-6)
     // grid
     g.strokeStyle = css("--grid"); g.fillStyle = css("--muted"); g.font = "11px system-ui";
-    for (let e = 0; e <= 4; e++) { g.beginPath(); g.moveTo(X(10 ** e), top); g.lineTo(X(10 ** e), bot); g.stroke(); g.fillText([t("{x} GeV", { x: 1 }), fmt(10, "d"), fmt(100, "d"), t("{x} TeV", { x: 1 }), t("{x} TeV", { x: 10 })][e], X(10 ** e) - 10, bot + 15); }
+    const ticks = [t("{x} GeV", { x: 1 }), fmt(10, "d"), fmt(100, "d"), t("{x} TeV", { x: 1 }), t("{x} TeV", { x: 10 })];
+    for (let e = 0; e <= 4; e++) {
+      g.beginPath(); g.moveTo(X(10 ** e), top); g.lineTo(X(10 ** e), bot); g.stroke();
+      // centred on its tick, kept inside the canvas (the last one, "10 TeV", sits at the right edge: browser review F13)
+      const wl = g.measureText(ticks[e]).width;
+      g.fillText(ticks[e], Math.max(2, Math.min(X(10 ** e) - wl / 2, W - 2 - wl)), bot + 15);
+    }
     for (let a = 0; a <= amax + 1e-9; a += 0.1) { g.beginPath(); g.moveTo(left, Y(a)); g.lineTo(W - right, Y(a)); g.stroke(); g.fillText(num(a, 2), 8, Y(a) + 4); }
     // thresholds
     for (const [q, m] of Object.entries(seg.thresholds)) {

@@ -1,27 +1,87 @@
 {
- "Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)…": {
-  "one": "Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} change of the set-up)…",
-  "other": "Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)…"
+ "At most {n:d} plots at once": {
+  "one": "At most {n:d} plot at once",
+  "other": "At most {n:d} plots at once"
  },
- "Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)… The visualization's code changed since last time: the continuation is computed by the new version, the earlier part of the record by the old one": {
-  "one": "Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} change of the set-up)… The visualization's code changed since last time: the continuation is computed by the new version, the earlier part of the record by the old one",
-  "other": "Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)… The visualization's code changed since last time: the continuation is computed by the new version, the earlier part of the record by the old one"
+ "Cancelled: {k:d} of {n:d} values computed; they are kept": {
+  "one": "Cancelled: {k:d} of {n:d} value computed; it is kept",
+  "other": "Cancelled: {k:d} of {n:d} values computed; they are kept"
  },
- "The world continued from its saved state at t = {t0:.6g} s (then {n:d} frames of the record were repeated); the record goes on from t = {t1:.6g} s": {
-  "one": "The world continued from its saved state at t = {t0:.6g} s (then {n:d} frame of the record was repeated); the record goes on from t = {t1:.6g} s",
-  "other": "The world continued from its saved state at t = {t0:.6g} s (then {n:d} frames of the record were repeated); the record goes on from t = {t1:.6g} s"
+ "Done: {k:d} of {n:d} values measured": {
+  "one": "Done: {k:d} of {n:d} value measured",
+  "other": "Done: {k:d} of {n:d} values measured"
  },
- "World restored: recomputed from its start along the record ({n:d} changes of the set-up) and going on from t = {t:.6g} s": {
-  "one": "World restored: recomputed from its start along the record ({n:d} change of the set-up) and going on from t = {t:.6g} s",
-  "other": "World restored: recomputed from its start along the record ({n:d} changes of the set-up) and going on from t = {t:.6g} s"
+ "None of the {n:d} values was measured — the reasons per value are in the table": {
+  "one": "The value was not measured — the reason is in the table",
+  "other": "None of the {n:d} values was measured — the reasons per value are in the table"
  },
- "all {n:d} workers are busy with open runs: close the tab of one of them (it will be suspended and go on when you open it again)": {
-  "one": "the only worker is busy with an open run: close its tab (it will be suspended and go on when you open it again)",
-  "other": "all {n:d} workers are busy with open runs: close the tab of one of them (it will be suspended and go on when you open it again)"
+ "None of the {n:d} values was measured: {first} — the reasons per value are in the table": {
+  "one": "The value was not measured: {first}",
+  "other": "None of the {n:d} values was measured: {first} — the reasons per value are in the table"
+ },
+ "Resuming: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)…": {
+  "one": "Resuming: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} change of the set-up)…",
+  "other": "Resuming: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)…"
+ },
+ "Resuming: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)… The visualization's code changed since last time: the continuation is computed by the new version, the earlier part of the record by the old one": {
+  "one": "Resuming: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} change of the set-up)… The visualization's code changed since last time: the continuation is computed by the new version, the earlier part of the record by the old one",
+  "other": "Resuming: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)… The visualization's code changed since last time: the continuation is computed by the new version, the earlier part of the record by the old one"
+ },
+ "The world continued from its saved state at t = {t0:.6g} s (then {n:d} frames of the record were repeated); the record continues from t = {t1:.6g} s": {
+  "one": "The world continued from its saved state at t = {t0:.6g} s (then {n:d} frame of the record was repeated); the record continues from t = {t1:.6g} s",
+  "other": "The world continued from its saved state at t = {t0:.6g} s (then {n:d} frames of the record were repeated); the record continues from t = {t1:.6g} s"
+ },
+ "World restored: recomputed from its start along the record ({n:d} changes of the set-up) and continuing from t = {t:.6g} s": {
+  "one": "World restored: recomputed from its start along the record ({n:d} change of the set-up) and continuing from t = {t:.6g} s",
+  "other": "World restored: recomputed from its start along the record ({n:d} changes of the set-up) and continuing from t = {t:.6g} s"
+ },
+ "a period of {n} days would remove runs at once: confirm": {
+  "one": "a period of {n} day would remove runs at once: confirm",
+  "other": "a period of {n} days would remove runs at once: confirm"
+ },
+ "all {n:d} workers are busy with open runs: close the tab of one of them (it will be suspended and resume when you open it again)": {
+  "one": "the only worker is busy with an open run: close its tab (it will be suspended and resume when you open it again)",
+  "other": "all {n:d} workers are busy with open runs: close the tab of one of them (it will be suspended and resume when you open it again)"
+ },
+ "from t = {t} ({source}, world {world}); each value — {duration} of the world; {n:d} readings": {
+  "one": "from t = {t} ({source}, world {world}); each value — {duration} of the world; {n:d} reading",
+  "other": "from t = {t} ({source}, world {world}); each value — {duration} of the world; {n:d} readings"
+ },
+ "the maximum over {n:d} readings {dt} apart": {
+  "one": "the maximum over {n:d} reading",
+  "other": "the maximum over {n:d} readings {dt} apart"
  },
  "the mean over the last {window} ({n:d} readings {dt} apart)": {
   "one": "the mean over the last {window} ({n:d} reading)",
   "other": "the mean over the last {window} ({n:d} readings {dt} apart)"
+ },
+ "the minimum over {n:d} readings {dt} apart": {
+  "one": "the minimum over {n:d} reading",
+  "other": "the minimum over {n:d} readings {dt} apart"
+ },
+ "the quantity is undefined in {bad:d} of the window's {n:d} readings": {
+  "one": "the quantity is undefined in {bad:d} of the window's {n:d} reading",
+  "other": "the quantity is undefined in {bad:d} of the window's {n:d} readings"
+ },
+ "the scene already holds {n:d} objects — no more": {
+  "one": "the scene already holds {n:d} object — no more",
+  "other": "the scene already holds {n:d} objects — no more"
+ },
+ "the scene already holds {n:d} objects: no more can be added": {
+  "one": "the scene already holds {n:d} object: no more can be added",
+  "other": "the scene already holds {n:d} objects: no more can be added"
+ },
+ "undefined in {bad:d} of {n:d} readings": {
+  "one": "undefined in {bad:d} of {n:d} reading",
+  "other": "undefined in {bad:d} of {n:d} readings"
+ },
+ "verified at {n:d} points: {err:.2g} ≤ {tol:.2g}": {
+  "one": "verified at {n:d} point: {err:.2g} ≤ {tol:.2g}",
+  "other": "verified at {n:d} points: {err:.2g} ≤ {tol:.2g}"
+ },
+ "{k:d} of {n:d} values": {
+  "one": "{k:d} of {n:d} value",
+  "other": "{k:d} of {n:d} values"
  },
  "{n:d} days": {
   "one": "{n:d} day",
@@ -30,5 +90,17 @@
  "{n:d} readings {dt} apart": {
   "one": "{n:d} reading",
   "other": "{n:d} readings {dt} apart"
+ },
+ "{name}: {n:d} characters — more than the limit of {max:d}": {
+  "one": "{name}: {n:d} character — more than the limit of {max:d}",
+  "other": "{name}: {n:d} characters — more than the limit of {max:d}"
+ },
+ "{values:d} values × {n:d} readings: the record has not measured the cost of computing this world (the world has not yet been run with ⏺ — steps and pauses do not show it). The sweep measures it itself in the first {probe} of computing and stops if the whole of it would take more than {limit} (the budget {budget} × {k:g})": {
+  "one": "{values:d} values × {n:d} reading: the record has not measured the cost of computing this world (the world has not yet been run with ⏺ — steps and pauses do not show it). The sweep measures it itself in the first {probe} of computing and stops if the whole of it would take more than {limit} (the budget {budget} × {k:g})",
+  "other": "{values:d} values × {n:d} readings: the record has not measured the cost of computing this world (the world has not yet been run with ⏺ — steps and pauses do not show it). The sweep measures it itself in the first {probe} of computing and stops if the whole of it would take more than {limit} (the budget {budget} × {k:g})"
+ },
+ "≈ {total} of computing: {values:d} values × (restoring {restore} + {duration} of the world × {ms:.3g} ms per 1 {unit} + {n:d} readings × {sample:.3g} ms); the budget is {budget}. The estimate comes from the cost of computing this world while it was running ({frames:d} frames of the record); the sweep checks it itself and stops if it exceeds {limit}": {
+  "one": "≈ {total} of computing: {values:d} values × (restoring {restore} + {duration} of the world × {ms:.3g} ms per 1 {unit} + {n:d} reading × {sample:.3g} ms); the budget is {budget}. The estimate comes from the cost of computing this world while it was running ({frames:d} frames of the record); the sweep checks it itself and stops if it exceeds {limit}",
+  "other": "≈ {total} of computing: {values:d} values × (restoring {restore} + {duration} of the world × {ms:.3g} ms per 1 {unit} + {n:d} readings × {sample:.3g} ms); the budget is {budget}. The estimate comes from the cost of computing this world while it was running ({frames:d} frames of the record); the sweep checks it itself and stops if it exceeds {limit}"
  }
 }

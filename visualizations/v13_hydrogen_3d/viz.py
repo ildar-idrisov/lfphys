@@ -49,7 +49,7 @@ SCHEMA = Schema([
               "with the same state of the electron)")),
     _p("mode", T("State"), "select", "single", group=G_STATE, live=True, help=PREP,
        options=[("single", T("one stationary state")), ("super", T("a superposition of two states"))]),
-    _p("n", T("n (principal number)"), "int", 2, group=G_STATE, min=1, max=N_MAX, live=True, help=PREP),
+    _p("n", T("n (principal, n ≥ 1)"), "int", 2, group=G_STATE, min=1, max=N_MAX, live=True, help=PREP),
     _p("l", T("l (orbital, 0 ≤ l < n)"), "int", 1, group=G_STATE, min=0, max=N_MAX - 1, live=True, help=PREP),
     _p("m", T("m (magnetic, |m| ≤ l)"), "int", 0, group=G_STATE, min=-(N_MAX - 1), max=N_MAX - 1, live=True,
        help=PREP),
@@ -58,13 +58,13 @@ SCHEMA = Schema([
        help=T("Real orbitals are sums of m and −m: standing waves without a current. Complex ones have a definite m: "
               "the probability current flows in rings around the z axis. {prep}", prep=PREP)),
     _p("n2", T("Second state: n"), "int", 1, group=G_SUPER, min=1, max=N_MAX, show_if=SUPER, live=True,
-       help=T("1s by default: “Superposition” with the default first state (2p_z) gives a cloud that sways at the "
+       help=T("1s by default: “a superposition of two states” with the default first state (2p_z) gives a cloud that sways at the "
               "frequency of the 2p → 1s transition. {prep}", prep=PREP)),
     _p("l2", T("Second state: l"), "int", 0, group=G_SUPER, min=0, max=N_MAX - 1, show_if=SUPER, live=True,
        help=PREP),
     _p("m2", T("Second state: m"), "int", 0, group=G_SUPER, min=-(N_MAX - 1), max=N_MAX - 1,
        show_if=SUPER, live=True, help=PREP),
-    _p("real2", T("Second state real"), "bool", True, group=G_SUPER, show_if=SUPER, live=True,
+    _p("real2", T("Second state: real"), "bool", True, group=G_SUPER, show_if=SUPER, live=True,
        help=PREP),
     _p("w2", T("Weight of the second state |c₂|²"), "float", 0.5, group=G_SUPER, min=0.01, max=0.99,
        show_if=SUPER, live=True, help=PREP),
@@ -85,13 +85,13 @@ SCHEMA = Schema([
               "params": {"n": 3, "l": 2, "m": 2, "real": False}},
     "super_1s2p": {"label": T("1s + 2p_z: the cloud sways along z at the Bohr frequency (a superposition)"),
                    "params": {"mode": "super", "n": 1, "l": 0, "m": 0, "n2": 2, "l2": 1, "m2": 0, "ng": 64}},
-    "px_ipy": {"label": T("2p_x + i·2p_y: this is 2p with m = {m:+d} (a superposition of one energy, stationary)",
+    "px_ipy": {"label": T("2p_x + i·2p_y: this is 2p with m = {m:+d} (a superposition of states of equal energy: stationary)",
                           m=1),
                "params": {"mode": "super", "n": 2, "l": 1, "m": 1, "real": True, "n2": 2, "l2": 1, "m2": -1,
                           "real2": True, "phase2": 90.0, "ng": 64}},
     "n10": {"label": T("n = {n}, l = {l}, m = {m}: a large cloud, {k} radial nodes", n=10, l=3, m=1, k=6),
             "params": {"n": 10, "l": 3, "m": 1, "real": True}},
-    "he_3dxy": {"label": T("The ion He⁺, 3d_xy: the cloud is Z = {Z} times smaller", Z=2),
+    "he_3dxy": {"label": T("The ion He⁺, 3d_xy: the cloud is smaller by a factor Z = {Z}", Z=2),
                 "params": {"atom": "He+", "n": 3, "l": 2, "m": -2, "real": True}},
 })
 

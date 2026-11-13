@@ -119,6 +119,7 @@ import time
 
 import numpy as np
 
+from ...codes import coded
 from ...i18n import T
 from .. import backend
 from . import fdtd_geometry as geo
@@ -132,32 +133,32 @@ from .fdtd_sources import as_text
 ABOUT = {
     "layer": "core", "kind": "numerical solution",
     "title": T("Maxwell's equations in time: the FDTD method (Yee grid) in 2-D and 3-D"),
-    "statement": T("Maxwell's equations in linear isotropic media (dielectrics, magnetic materials, conductors, Drude, "
-                   "Lorentz and Debye dispersive media, the perfect electric conductor) are solved by Yee's scheme: 2-D "
-                   "(TM and TE) and 3-D; CPML absorbing layers, PEC and PMC walls, periodic sides with a Bloch phase; "
-                   "point and extended currents, a plane wave by the total-field/scattered-field method; spectra, "
-                   "Poynting fluxes, energy, absorption, scattering cross sections and the far field; edits of the scene "
-                   "during the run."),
+    "statement": T("Maxwell's equations in linear isotropic media (dielectrics, magnetic materials, conductors, "
+                   "Drude, Lorentz and Debye dispersive media, the perfect electric conductor) are solved by Yee's "
+                   "scheme: 2-D (TM and TE) and 3-D; CPML absorbing layers, PEC and PMC walls, periodic sides with a "
+                   "Bloch phase; point and extended currents, a plane wave by the total-field/scattered-field method; "
+                   "spectra, Poynting fluxes, energy, absorption, scattering cross-sections and the far field; edits "
+                   "of the scene during the run."),
     "validity": T("classical electrodynamics of linear isotropic media (no nonlinearity, anisotropy or moving media); "
                   "the scheme's error is the grid's numerical dispersion, second order (the grid's exact dispersion "
-                  "relation is checked to 6e-15); body surfaces: a staircase (1st order for curved ones; a PEC cylinder "
-                  "TM −1.6…−2.0 % at 40 cells per unit) or averaging over the cell, only the diagonal of Farjadpour's "
-                  "tensor (the scheme VP-EP in their classification): 2nd order for flat surfaces along the axes and for "
-                  "E along a cylinder's axis (TM), in general 1st order for E in the plane of a curved surface (a "
-                  "cylinder ε = 6, TE: 2.6 → 1.4 → 0.8 % at 40/80/160 cells); the flux monitor sees a plane wave weaker "
-                  "by a factor 1 − O((k dx)²) (cos(k dx/2) at normal incidence), so cross sections come in two "
-                  "normalisations: by the exact intensity and by the intensity the same monitor measures (as in Meep); "
-                  "a dielectric cylinder m = 1.5 at 40 cells: TM +0.03…+0.06 % / +0.10…+0.37 %, TE −0.12…+0.29 % / "
-                  "−0.07…+0.60 %; a sphere at 32 cells −0.01…+0.76 % / +0.16…+0.84 % of Mie (the scheme's error and the "
-                  "monitor's error on the scattered waves are of the same order and are not separated); reflection from "
-                  "a flat interface on a coarse grid up to ~11 % of R at 10 cells per wavelength in the medium (the "
-                  "scheme's own error, second order); CPML −88…−95 dB at 10 cells from normal incidence to ~70°, at "
-                  "grazing incidence (81–87°) only −75…−52 dB, which needs 16–20 cells; an axis length is the nearest "
-                  "one realisable on the grid (between PEC and PMC walls an odd number of half cells; checks() shows "
-                  "the deviation from the request); stability is checked before the run for every medium and over the "
-                  "node maps (a double root on the unit circle is not seen); dispersive media are the user's models "
-                  "(poles), the scheme's ε(ω) differs from the model by O(Δt²); energy() does not include the "
-                  "polarization energy"),
+                  "relation is checked to 6e-15); body surfaces: a staircase (1st order for curved ones; a PEC "
+                  "cylinder TM −1.6…−2.0 % at 40 cells per unit) or averaging over the cell, only the diagonal of the "
+                  "tensor of Farjadpour et al. (the scheme VP-EP in their classification): 2nd order for flat "
+                  "surfaces along the axes and for E along a cylinder's axis (TM), in general 1st order for E in the "
+                  "plane of a curved surface (a cylinder ε = 6, TE: 2.6 → 1.4 → 0.8 % at 40/80/160 cells); the flux "
+                  "monitor sees a plane wave weaker by a factor 1 − O((k dx)²) (cos(k dx/2) at normal incidence), so "
+                  "cross-sections come in two normalisations: by the exact intensity and by the intensity the same "
+                  "monitor measures (as in Meep); a dielectric cylinder m = 1.5 at 40 cells: TM +0.03…+0.06 % / "
+                  "+0.10…+0.37 %, TE −0.12…+0.29 % / −0.07…+0.60 %; a sphere at 32 cells −0.01…+0.76 % / +0.16…+0.84 "
+                  "% of Mie (the scheme's error and the monitor's error on the scattered waves are of the same order "
+                  "and are not separated); reflection from a flat interface on a coarse grid up to ~11 % of R at 10 "
+                  "cells per wavelength in the medium (the scheme's own error, second order); CPML −88…−95 dB at 10 "
+                  "cells from normal incidence to ~70°, at grazing incidence (81–87°) only −75…−52 dB, which needs "
+                  "16–20 cells; an axis length is the nearest one realisable on the grid (between PEC and PMC walls "
+                  "an odd number of half cells; checks() shows the deviation from the request); stability is checked "
+                  "before the run for every medium and over the node maps (a double root on the unit circle is not "
+                  "seen); dispersive media are the user's models (poles), the scheme's ε(ω) differs from the model by "
+                  "O(Δt²); energy() does not include the polarisation energy"),
     "basis": [T("Yee, IEEE Trans. Antennas Propag. 14, 302 (1966) — the scheme"),
               T("Schneider, Understanding the FDTD Method (2010) — the dispersion relation (7.34), the “magic” time "
                 "step (§7.4), reflection from an interface on the grid (7.72), (7.90), TF/SF (§3.10, §8.5)"),
@@ -637,7 +638,7 @@ class FDTD:
             raise ValueError("dx > 0")
         if self.dim == 2:
             if pol not in ("tm", "te", "both"):
-                raise ValueError(T("polarization in 2-D: tm, te or both"))
+                raise ValueError(T("polarisation in 2-D: tm, te or both"))
             self.pol = pol
             comps = {"tm": ("ez", "hx", "hy"), "te": ("ex", "ey", "hz"), "both": COMPS}[pol]
         else:
@@ -833,12 +834,12 @@ class FDTD:
                          "for 3-D), and for every Lorentz pole ω0·Δt ≤ 2/√(2εs/ε∞ − 1), εs = ε∞ + Δε (for a Drude "
                          "pole, the limit ω0 → 0 at Δε·ω0² = ωp², derived here: ωp·Δt ≤ √(2ε∞)); for a Debye pole "
                          "(the trapezoid of Joseph et al.) the vacuum condition", s=float(s_inf), d=int(d))
-            raise Unstable(T("the scheme is unstable in the medium {what} ({label}): the spectral radius of a step "
-                             "is {rho:.6g} > 1 at the Courant number S = cΔt/dx = {S} (vacuum limit {lim:.4g}, for "
-                             "ε∞μ = {n2:.4g}: {limn:.4g}{hint}). Reduce courant or dx",
-                             what=what, label=m.label or T("unnamed"), rho=float(rho), S=self.courant,
-                             lim=_num(self.courant_limit), n2=float(nmin ** 2), limn=_num(self.courant_limit * nmin),
-                             hint=hint))
+            raise coded(Unstable(T("the scheme is unstable in the medium {what} ({label}): the spectral radius of a "
+                                   "step is {rho:.6g} > 1 at the Courant number S = cΔt/dx = {S} (vacuum limit "
+                                   "{lim:.4g}, for ε∞μ = {n2:.4g}: {limn:.4g}{hint}). Reduce courant or dx", what=what,
+                                   label=m.label or T("unnamed"), rho=float(rho), S=self.courant,
+                                   lim=_num(self.courant_limit), n2=float(nmin ** 2),
+                                   limn=_num(self.courant_limit * nmin), hint=hint)), "fdtd.unstable_medium")
 
     def _node_courant_bounds(self, mats, coef):
         """Two sufficient Courant limits from the actual node maps (review B8-fdtd F11: E nodes of one medium next to H
@@ -989,7 +990,7 @@ class FDTD:
     def _apply_bodies(self, new: dict):
         """Rebuild the materials for a new body set, all or nothing."""
         for b in new.values():
-            self._check_medium(b["medium"], b["label"] or T("a body of shape {kind}", kind=b["shape"].kind))
+            self._check_medium(b["medium"], b["label"] or T("a body ({kind})", kind=b["shape"].NAME))
         old = self._bodies
         self._bodies = new
         try:
@@ -1172,12 +1173,13 @@ class FDTD:
         simple, gersh = self._node_courant_bounds(mats, coef)
         node_limit = max(simple, gersh or 0.0)
         if self.courant > node_limit * (1 + 1e-12):
-            raise Unstable(T("the scheme is unstable at an interface of media: E nodes of one medium next to H nodes "
-                             "of another give a speed higher than in either medium; the sufficient limit from the node "
-                             "maps is S ≤ {lim:.4g} (by min ε of the E nodes and min μ of the H nodes: {simple:.4g}; by "
-                             "Gershgorin: {gersh:.4g}), but S = {S}. Reduce courant or dx, or change the media (ε < 1 "
-                             "or μ < 1)", lim=_num(node_limit), simple=_num(simple),
-                             gersh=_num(gersh if gersh is not None else math.inf), S=self.courant))
+            raise coded(Unstable(T("the scheme is unstable at an interface of media: E nodes of one medium next to "
+                                   "H nodes of another give a speed higher than in either medium; the sufficient "
+                                   "limit from the node maps is S ≤ {lim:.4g} (by min ε of the E nodes and min μ of "
+                                   "the H nodes: {simple:.4g}; by Gershgorin: {gersh:.4g}), but S = {S}. Reduce "
+                                   "courant or dx, or change the media (ε < 1 or μ < 1)", lim=_num(node_limit),
+                                   simple=_num(simple), gersh=_num(gersh if gersh is not None else math.inf),
+                                   S=self.courant)), "fdtd.unstable_interface")
         self._node_limit = node_limit
         self._media = media
         self._media_index = media_index
@@ -1248,7 +1250,7 @@ class FDTD:
     def _build_current(self, s: CurrentSource) -> dict:
         c = s.component
         if c not in self.comps:
-            raise ValueError(T("this world has no component {comp} (polarization {pol})", comp=c, pol=self.pol))
+            raise ValueError(T("this world has no component {comp} (polarisation {pol})", comp=c, pol=self.pol))
         lo, hi = s.region
         if len(lo) != self.dim:
             raise ValueError(T("source: {n} coordinates", n=self.dim))
@@ -1268,7 +1270,8 @@ class FDTD:
                 ranges.append(np.arange(a, b + 1))
             r = ranges[-1]
             if len(r) == 0 or r.min() < 0 or r.max() >= self.shape[u]:
-                raise ValueError(T("the source is outside the grid along axis {axis}", axis=AXES[u]))
+                raise coded(ValueError(T("the source is outside the grid along axis {axis}", axis=AXES[u])),
+                            "fdtd.outside_grid")
         I = np.meshgrid(*ranges, indexing="ij")
         idx = np.ravel_multi_index([i.ravel() for i in I], self.shape)
         idx_u, first = np.unique(idx, return_index=True)
@@ -1324,7 +1327,7 @@ class FDTD:
                         ii = (a, b, cc)
                         for u in range(3):
                             if not (0 <= ii[u] < self.shape[u]):
-                                raise ValueError(T("the probe is outside the grid"))
+                                raise coded(ValueError(T("the probe is outside the grid")), "fdtd.outside_grid")
                         idx.append(np.ravel_multi_index(ii, self.shape))
                         w.append(wa * wb * wc)
             items.append((c, np.array(idx), np.array(w)))
@@ -1499,9 +1502,10 @@ class FDTD:
             raise ValueError(T("normalisation: exact or monitor"))
         rel = self._tf_relation(m["region"])
         if rel not in (None, "sf"):
-            raise ValueError(T("the far-field box {id} must lie with all its faces in the scattered-field region "
-                               "(with a cell's margin), but it lies {where}: the incident wave would enter the far "
-                               "field (review B8-fdtd F12)", id=int(mid), where=_REL[rel]))
+            raise coded(ValueError(T("the far-field box {id} must lie with all its faces in the scattered-field "
+                                     "region (with a cell's margin), but it lies {where}: the incident wave would "
+                                     "enter the far field (review B8-fdtd F12)", id=int(mid), where=_REL[rel])),
+                        "fdtd.monitor_region")
         fs = m["freqs"]
         bg = self.background
         eta = math.sqrt(bg.mu / bg.eps)
@@ -1638,12 +1642,13 @@ class FDTD:
             rel = self._tf_relation(m["region"])
             want = "sf" if key == "sca" else "tf"
             if rel != want:
-                raise ValueError(T("the flux box {id} must lie with all its faces outside the total-field region "
-                                   "(with a cell's margin), but it lies {where}: the cross section would be wrong "
-                                   "(review B8-fdtd F12)", id=int(mid), where=_REL[rel]) if key == "sca" else
-                                 T("the flux box {id} must lie with all its faces inside the total-field region "
-                                   "(with a cell's margin), but it lies {where}: the cross section would be wrong "
-                                   "(review B8-fdtd F12)", id=int(mid), where=_REL[rel]))
+                raise coded(ValueError(
+                    T("the flux box {id} must lie with all its faces outside the total-field region (with a cell's "
+                      "margin), but it lies {where}: the cross-section would be wrong (review B8-fdtd F12)",
+                      id=int(mid), where=_REL[rel]) if key == "sca" else
+                    T("the flux box {id} must lie with all its faces inside the total-field region (with a cell's "
+                      "margin), but it lies {where}: the cross-section would be wrong (review B8-fdtd F12)",
+                      id=int(mid), where=_REL[rel])), "fdtd.monitor_region")
             fs = m["freqs"]
             I = self.incident_intensity(fs, m["start"], normalisation)
             P = sum(f.flux_spectrum() for f in m["faces"])
@@ -1839,10 +1844,12 @@ class FDTD:
         for _ in range(n):
             self._step()
             if self.steps % 256 == 0 and not self._healthy():
-                raise Unstable(T("the fields became non-numeric by t = {t:.6g} (step {step})", t=float(self.t), step=int(self.steps)))
+                raise coded(Unstable(T("the fields became non-numeric by t = {t:.6g} (step {step})", t=float(self.t),
+                                       step=int(self.steps))), "fdtd.non_finite")
         # and at the end of every call (review B8-fdtd F20: short calls never reached a multiple of 256)
         if self.steps % 256 != 0 and not self._healthy():
-            raise Unstable(T("the fields became non-numeric by t = {t:.6g} (step {step})", t=float(self.t), step=int(self.steps)))
+            raise coded(Unstable(T("the fields became non-numeric by t = {t:.6g} (step {step})", t=float(self.t),
+                                   step=int(self.steps))), "fdtd.non_finite")
         if self.device == "gpu":
             self.xp.cuda.Device(0).synchronize()
         self._timing["steps"] += n
@@ -2507,7 +2514,7 @@ def _bench(size: int, xp, cplx):
 
 backend.register(backend.KernelSpec(
     KERNEL, T("Electromagnetic field (FDTD, Yee grid)"),
-    T("a step of Maxwell's equations: the E and H updates with CPML (the playground “Electricity and magnetism”, "
+    T("a step of Maxwell's equations: the E and H updates with CPML (the “Electricity and magnetism” laboratory, "
       "optics)"),
     gpu=True,
     precisions={"fp64": {"allowed": True},

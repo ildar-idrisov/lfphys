@@ -53,22 +53,23 @@ from dataclasses import dataclass
 import numpy as np
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 from .. import backend
 from . import kerr, kerr_null as KN
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": T("The shadow of a Kerr black hole, photon rings and the image of a disk"),
+    "title": T("The shadow of a Kerr black hole, photon rings and the image of a disc"),
     "statement": T("For every pixel of the distant observer's screen the ray is traced back in time in closed form: "
                    "whether it is captured (the shadow) or came from infinity; the equator crossings by order n = 0, "
-                   "1, 2 … (the direct image of the disk, the lensing ring, the photon ring), the radius and redshift "
-                   "g of the emitter at each crossing (a Keplerian disk outside the ISCO; inside it, free fall with "
+                   "1, 2 … (the direct image of the disc, the lensing ring, the photon ring), the radius and redshift "
+                   "g of the emitter at each crossing (a Keplerian disc outside the ISCO; inside it, free fall with "
                    "the ISCO constants after Cunningham). CPU or GPU."),
     "validity": T("vacuum solution of GR, 0 ≤ a < M; geometric optics; screen at infinity; the emitter is a thin "
-                  "equatorial disk (a model of the source, not a law); no absorption or scattering; the brightness "
+                  "equatorial disc (a model of the source, not a law); no absorption or scattering; the brightness "
                   "(disk_intensity) is a choice of model: Σ f_n g_n^p J(r_n), p = 4 bolometric (p = 3 a flat "
-                  "spectrum), f_n = 1 without a correction for the disk's thickness and the ray's path length in the "
+                  "spectrum), f_n = 1 without a correction for the disc's thickness and the ray's path length in the "
                   "layer; n is the number of the equator crossing (half-periods in θ), not the number of turns around "
                   "the hole"),
     "basis": ["Bardeen, in Black Holes (Les Houches 1972), 1973", "Cunningham, ApJ 202, 788 (1975)",
@@ -343,12 +344,12 @@ def ring_image(chi, theta_o, r_source, angle, n, center=(0.0, 0.0)):
 
     lo = rho_c * (1.0 + 1e-14)
     if rn(lo) >= r_source:
-        raise ValueError("source ring inside the bound orbit seen in this direction")
+        raise coded(ValueError(T("the source ring lies inside the bound orbit seen in this direction")), "kerr.image")
     hi = rho_c * 1.001
     while rn(hi) < r_source:
         hi = rho_c + 2.0 * (hi - rho_c)
         if hi > 100.0 * rho_c:
-            raise ValueError("no n-th image found")
+            raise coded(ValueError(T("no image of order {n:d} found", n=int(n))), "kerr.image")
     for _ in range(200):
         mid = 0.5 * (lo + hi)
         if mid <= lo or mid >= hi:
@@ -371,7 +372,7 @@ def capture_boundary(chi, theta_o, angle, center=(0.0, 0.0), rho_max=20.0):
 
     lo, hi = 0.0, rho_max
     if not captured(lo) or captured(hi):
-        raise ValueError("the center must be inside the shadow and rho_max outside")
+        raise coded(ValueError(T("the centre must be inside the shadow and ρ_max outside it")), "kerr.image")
     for _ in range(200):
         mid = 0.5 * (lo + hi)
         if mid <= lo or mid >= hi:
@@ -395,7 +396,7 @@ def capture_boundaries(chi, theta_o, angles, center=(0.0, 0.0), rho_max=20.0):
 
     lo, hi = np.zeros(ang.shape), np.full(ang.shape, float(rho_max))
     if not captured(lo).all() or captured(hi).any():
-        raise ValueError("the center must be inside the shadow and rho_max outside")
+        raise coded(ValueError(T("the centre must be inside the shadow and ρ_max outside it")), "kerr.image")
     for _ in range(200):
         mid = 0.5 * (lo + hi)
         live = (mid > lo) & (mid < hi)

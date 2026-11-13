@@ -75,13 +75,14 @@ SCHEMA = Schema([
     _p("state", T("Initial state along the flight"), "select", "gauss", group=V11.PACKET,
        options=[("gauss", T("one packet")), ("train", T("a train of packets (Das & Struyve 2021)")),
                 ("backflow", T("a slow and a fast packet meet at the plane: backflow"))]),
-    _p("sigma_z", T("Packet width along σz, λ"), "float", 5.0, unit=LAM, group=V11.PACKET, min=1.0, max=20.0,
+    _p("sigma_z", T("Packet width along z σz, λ"), "float", 5.0, unit=LAM, group=V11.PACKET, min=1.0, max=20.0,
        help=T("the momentum spread Δk/k = 1/(4π σz/λ): the narrower the packet, the more the rules diverge")),
-    _p("sigma_x", T("Packet width across σx, λ"), "float", 4.0, unit=LAM, group=V11.PACKET, min=1.0, max=40.0),
+    _p("sigma_x", T("Packet width along x σx, λ"), "float", 4.0, unit=LAM, group=V11.PACKET, min=1.0, max=40.0),
     _p("sigma_y", T("Packet width along y σy, λ"), "float", 3.0, unit=LAM, group=V11.PACKET, min=0.5, max=40.0,
        help=T("nothing depends on y, so the wave is the exact product ψ(x, z, t)·η(y, t): η is a free Gaussian packet, "
               "it only spreads; the arrival time does not depend on y")),
-    _p("n_train", T("Packets in the train"), "int", 4, group=V11.PACKET, min=2, max=8, show_if={"state": ["train"]}),
+    _p("n_train", T("Number of packets in the train"), "int", 4, group=V11.PACKET, min=2, max=8,
+       show_if={"state": ["train"]}),
     _p("sep", T("Distance between the packets, λ"), "float", 30.0, unit=LAM, group=V11.PACKET, min=6.0, max=120.0,
        show_if={"state": ["train"]}, help=T("at least 6σz: the packets do not overlap")),
     # the plate is live (review UX-ui U12; v11's rules: rebuilt at the current moment in the world's window)
@@ -120,8 +121,9 @@ SCHEMA = Schema([
               "energy E₀: higher absorbs faster but reflects more. Changes on the fly: the absorber of the second run "
               "is rebuilt at the current moment")),
     _p("grid", T("Grid"), "select", "normal", group=V11.COMPUTATION, options=V11.GRIDS),
-    _p("n_bohm", T("Bohm particles in the ensemble"), "int", 2000, group=V11.BOHM_TRAJECTORIES, min=100, max=8000),
-    _p("n_tracks", T("Trajectories of them to draw"), "int", 60, group=V11.BOHM_TRAJECTORIES, min=10, max=400),
+    _p("n_bohm", T("Number of Bohm particles in the ensemble"), "int", 2000, group=V11.BOHM_TRAJECTORIES,
+       min=100, max=8000),
+    _p("n_tracks", T("Trajectories to draw"), "int", 60, group=V11.BOHM_TRAJECTORIES, min=10, max=400),
     _p("slit_a", T("Slit A (x = −d/2) open"), "bool", True, group=V11.SETUP, live=True, show_if={"scene": ["slits"]}),
     _p("slit_b", T("Slit B (x = +d/2) open"), "bool", True, group=V11.SETUP, live=True, show_if={"scene": ["slits"]},
        help=T("close a slit while the packet is on its way: the experiment of Das, Deckert, Kellers, Krekels, Struyve "
@@ -291,7 +293,7 @@ class Simulation(V11.Simulation):
     def set_live(self, values):
         if self.det is None and "W0" in values and float(values["W0"]) != float(self.live["W0"]):
             raise Refusal(T("there is no soft detector in this world: there is no height W₀ to change"),
-                          T("switch on «Soft detector» in the form of a new world"))
+                          T("switch on “Soft detector” in the new-world form"))
         before = dict(self.live)
         signal = self._signal_so_far()
         out = super().set_live(values)

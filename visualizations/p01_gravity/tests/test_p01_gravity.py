@@ -252,6 +252,24 @@ def test_the_binary_runs_to_where_its_reaction_series_ends_and_stops_there(monke
     assert failed(h)
 
 
+def test_the_engines_coincidence_refusal_is_said_in_the_worlds_terms():
+    """Code review 2026-11-12 i18n-code F5: the world puts the engine's refusal of two point masses at one point into
+    its own words (``NewtonMode._engine_edit``: by the engine's code ``nbody.refused``, never by its wording). The
+    engine's code and the world's text are both asserted: a recoded engine refusal fails here."""
+    from lfphys.codes import code_of
+    from lfviz.errors import Refusal
+    h = Harness(V, "sun_earth")
+    mode = h.sim.mode
+    n = len(mode.nb.keys)
+    with pytest.raises(ValueError) as raw:
+        mode.nb.add(mode.nb.body("o1")["x"], (0, 0, 0), 1.0, 0.0, key="extra")
+    assert code_of(raw.value) == "nbody.refused", code_of(raw.value)
+    with pytest.raises(Refusal) as e:
+        mode._engine_edit(mode.nb.add, mode.nb.body("o1")["x"], (0, 0, 0), 1.0, 0.0, key="extra")
+    assert en(e.value.text).startswith("the body would be at exactly the same point as another"), en(e.value.text)
+    assert len(mode.nb.keys) == n
+
+
 def test_a_copy_or_a_body_put_on_another_lands_next_to_it_and_says_so():
     """Review UX-ui U4 (before it, B6-G2 refused both): a copy of a massive body "at the current moment" would lie on
     the original (two point masses at one point) and a star asked for exactly on the Sun would be inside it; both now

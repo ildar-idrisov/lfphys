@@ -317,4 +317,4 @@ def test_a_refused_window_says_what_to_change_with_a_working_example(monkeypatch
         Simulation(p, 1, lambda *a: None)
     text = str(e.value)  # the English rendering
     assert "What to change: reduce z_max" in text
-    assert "the preset «Circular aperture: dips and peaks of intensity on the axis» (a = 3 µm, z_max = 40 µm)" in text
+    assert "the “Circular aperture: dips and peaks of intensity on the axis” preset (a = 3 µm, z_max = 40 µm)" in text

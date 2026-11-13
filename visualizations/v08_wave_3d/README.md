@@ -107,7 +107,7 @@ normal with axis presets (as in scientific visualization tools), colour-coded sl
 | `window` | error of the drawn field on z_max from the window | 1.5·max\|U_p − U_2p\| | 2e-3 of the peak |
 | `exact_i_j` | the field (fp64, the drawn window and sum) at grid nodes of z_max | the exact field without FFTs | the window estimate × peak + the reference's own error + 1e-9 |
 | `plane_exact_N` | slice N (one row per plane; "Slice N: removed" when removed), at up to three of its points | the exact field without FFTs | the window estimate × peak |
-| `slice_route` | the plane y = 0 by `propagate_plane` against the transverse planes' rows, at z_max/2 and z_max | the engine's two routes, fp64 | 1e-12 of the peak |
+| `slice_route` | the plane y = 0 by `propagate_plane` against the transverse planes' rows, at z_max/2 and z_max | the engine's two methods, fp64 | 1e-12 of the peak |
 | `flux_exact` | (full 3-D) the energy current j = Im(U*∇U)/k at the reference points of z_max | Im(U*∇U)/k of the exact field: closed-form derivatives (the Gaussian, the circle on its axis) or five-point differences of the exact field (rectangles; step 1e-3 µm, error < 1e-8) | the window estimate × peak × (\|U\| + \|∇U\|/k) at the point |
 | `flux` | (full 3-D) the power through 10 planes z, Σ j_z dx dy over the whole window, against the spectrum's closed form | information: Parseval's identity of the discrete sum (a check of the code and its normalisation, not of the window or the physics; review C4); for the band-limited sum the power it removes at depth | — |
 | `fp32` | (fp32 drawing) the drawn data against the same computation in fp64 | fp64 | the kernel's declared bound (1e-5) |

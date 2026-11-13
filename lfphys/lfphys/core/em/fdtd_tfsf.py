@@ -19,6 +19,7 @@ import math
 
 import numpy as np
 
+from ...codes import coded
 from ...i18n import T
 from .fdtd_sources import ContinuousWave, omega_tilde, yee_normal_wavenumber, yee_wavenumber
 
@@ -32,7 +33,7 @@ ABOUT = {
     "validity": T("a homogeneous lossless background at the faces (correction nodes not in the background are counted "
                   "in checks()); faces outside the absorbing layers; the leak is round-off plus the start of the "
                   "series: ~0.3–0.4 of the window's tail (2–3e-9 away from a cut-off; a tail above 1e-6, at a Bloch "
-                  "wave's cut-off or the grid's band edge, is refused); in 3-D a polarization along the direction is "
+                  "wave's cut-off or the grid's band edge, is refused); in 3-D a polarisation along the direction is "
                   "refused"),
     "basis": [T("Schneider, Understanding the FDTD Method (2010), §3.10, §8.5 (TF/SF), §7.4 (the dispersion "
                 "relation)")],
@@ -129,15 +130,15 @@ def build_tfsf(sim, pw) -> dict:
         else:
             pol2d = sim.pol
             if isinstance(pw.polarization, str) and pw.polarization != pol2d:
-                raise ValueError(T("the wave's polarization {pol} does not match the world's ({world})",
+                raise ValueError(T("the wave's polarisation {pol} does not match the world's ({world})",
                                    pol=str(pw.polarization), world=pol2d))
         if pol2d not in ("tm", "te"):
-            raise ValueError(T("polarization of a 2-D wave: tm or te"))
+            raise ValueError(T("polarisation of a 2-D wave: tm or te"))
         pvec = None
     else:
         pol2d = None
         if pw.polarization is None or isinstance(pw.polarization, str):
-            raise ValueError(T("in 3-D the plane wave's polarization is a vector E"))
+            raise ValueError(T("in 3-D the plane wave's polarisation is a vector E"))
         pvec = np.array(pw.polarization, float)
         pvec = pvec / np.linalg.norm(pvec)
     # reference point
@@ -224,7 +225,8 @@ def build_tfsf(sim, pw) -> dict:
                     lists.append({"target": c, "src": s, "kind": "e" if kind_e else "h", "v": v, "e_idx": e_idx,
                                   "coef": float(cf), "pos": pos})
     if not lists:
-        raise ValueError(T("no correction node on the faces of the total-field region (check the polarization and the axes)"))
+        raise ValueError(T("no correction node on the faces of the total-field region (check the polarisation and the "
+                           "axes)"))
     # merge lists with the same (target, src, v): their node sets are disjoint (different faces)
     merged = {}
     for L in lists:
@@ -337,7 +339,7 @@ def _check_polarization(sim, rec, omega):
         return
     _, _, _, ok, pol = _vectors(sim, rec, omega)
     if np.any(ok) and float(np.min(pol[ok])) < POL_MIN:
-        raise ValueError(T("the plane wave's polarization is nearly parallel to its direction of propagation (the "
+        raise ValueError(T("the plane wave's polarisation is nearly parallel to its direction of propagation (the "
                            "transverse share {share:.2g} < {lim}): give E across the direction",
                            share=float(np.min(pol[ok])), lim=float(POL_MIN)))
 
@@ -409,9 +411,9 @@ def _build_series(sim, rec):
         rec["omitted"] = 0.0
         tables = np.zeros((len(rows), M), complex if sim.complex else float)
         if tables.nbytes > MAX_TABLE_BYTES:
-            raise ValueError(T("the incident wave's series would take {mb:.0f} MB (> {lim:.0f}): reduce the "
-                               "total-field region or the pulse's duration, or use normal incidence",
-                               mb=tables.nbytes / 2**20, lim=MAX_TABLE_BYTES / 2**20))
+            raise coded(ValueError(T("the incident wave's series would take {mb:.0f} MB (> {lim:.0f}): reduce the "
+                                     "total-field region or the pulse's duration, or use normal incidence",
+                                     mb=tables.nbytes / 2**20, lim=MAX_TABLE_BYTES / 2**20)), "fdtd.incident_memory")
         t = np.arange(M) * dt
         X = np.fft.fft(pw.amplitude * prof(t))
         w = -2 * math.pi * np.fft.fftfreq(M, dt)
@@ -454,8 +456,8 @@ def _build_series(sim, rec):
             break
         if prev_tail is not None and tail > 0.5 * prev_tail:
             raise ValueError(T("the incident wave's series are not zero at the start of the run (the window's tail "
-                               "{tail:.2g} of the peak > {lim}; it does not depend on the window's length): the "
-                               "pulse has spectrum at the edge of the band of propagating waves (a Bloch wave's "
+                               "{tail:.2g} of the peak > {lim}; it does not depend on the window's length): the pulse "
+                               "has spectral content at the edge of the band of propagating waves (a Bloch wave's "
                                "cut-off or the grid's band edge), where the spectrum is cut sharply, and the grid's "
                                "wave has a precursor before the start of the run; the leak through the faces would be "
                                "~{leak:.1g}. Narrow the pulse's band, shift its frequency away from the cut-off or "

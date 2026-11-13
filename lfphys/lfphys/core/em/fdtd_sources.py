@@ -65,8 +65,9 @@ ABOUT = {
                    "samples); current sources J and M at a point, on a line or plane and in a volume (soft and hard: "
                    "a hard E is set after the E update, a hard H after the H update); a plane wave by the "
                    "total-field/scattered-field method, built as an exact plane wave of the Yee grid (every frequency "
-                   "with the wave vector from the grid's dispersion relation), so that the leak through the boundary is "
-                   "the round-off level plus what the start of the run cuts off (the tail of the series' window)."),
+                   "with the wave vector from the grid's dispersion relation), so that the leak through the boundary "
+                   "is the round-off level plus what the start of the run cuts off (the tail of the source's time "
+                   "window)."),
     "validity": T("a plane wave in a homogeneous lossless background at the faces (bodies on the faces are flagged in "
                   "checks()); for a pulse the leak is ~0.3–0.4 of the window's tail: 2–3e-9 away from a cut-off, at a "
                   "Bloch wave's cut-off a precursor, a tail above 1e-6 is refused; a continuous wave is exact after "

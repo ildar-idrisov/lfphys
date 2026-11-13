@@ -255,3 +255,63 @@ def test_a_what_if_metric_with_a_band_without_circular_orbits_builds():
     co = JP.circular_orbits(0.0, JP.Deviation(-3.0, -1.399, 3.612))
     assert co["E_isco_pro"] == pytest.approx(float(e0), rel=1e-12) and co["L_isco_pro"] == 0.0
     assert "the edge of the region" in " ".join(english(m.get("label", "")) for m in h.of("lines"))
+
+
+# --- review i18n-code F5: the engine's coded refusals, each mapped to this world's own text by its code ---------------
+def _fake_circular(kind):
+    """A stand-in for JP._circular that makes the real JP.circular_orbits reach one of its three refusals: no circular
+    photon orbit (the norm never changes sign), no stable orbit at 200 M (dE/dr < 0 everywhere), no ISCO (dE/dr > 0
+    everywhere, so no edge of the stable region)."""
+    def fake(r, chi, dev, prograde):
+        if kind == "photon":
+            return 0.0, -1.0, 1.0, 0.0
+        return 0.0, r - 3.0, (-r if kind == "stable" else r), 0.0  # the norm crosses 0 at r = 3; E's slope -1 or +1
+    return fake
+
+
+ORBIT_REFUSALS = [("photon", "jp.no_photon_orbit", "there is no circular photon orbit between the horizon and {r} M"),
+                  ("stable", "jp.no_stable_orbit", "there are no stable circular orbits even at {r} M"),
+                  ("isco", "jp.no_isco", "the inner edge of the stable circular orbits (ISCO) is not found up to {r} M")]
+
+
+@pytest.mark.parametrize("kind,code,world", ORBIT_REFUSALS)
+def test_each_refusal_of_the_circular_orbits_gets_the_worlds_own_text(monkeypatch, kind, code, world):
+    """The engine's condition is reached in the real JP.circular_orbits (its _circular replaced); the refusal carries
+    the engine's machine code, and the world maps it to its own msgid by that code, not by the wording (the ISCO
+    refusal names "the photon orbit" too, and was once taken for the photon-orbit one). An uncoded failure is named by
+    the engine's own text (review i18n-code F5)."""
+    from lfphys.codes import code_of
+    from v15_kerr_shadow.viz import orbits_refusal
+    monkeypatch.setattr(JP, "_circular", _fake_circular(kind))
+    with pytest.raises(ValueError) as e:
+        JP.circular_orbits(0.5, JP.Deviation(alpha13=1.0))
+    assert code_of(e.value) == code
+    assert orbits_refusal(e.value).msgid == world
+    assert orbits_refusal(ValueError(text_of(e.value))) == text_of(e.value)  # no code: the engine's text, unmapped
+
+
+def test_a_refused_orbit_search_becomes_the_worlds_notice(monkeypatch):
+    """Through the world: a what-if world whose orbit search is refused still builds and says why in its own words."""
+    monkeypatch.setattr(JP, "_circular", _fake_circular("stable"))
+    h = Harness(V, "whatif", SMALL)
+    assert not h.errors(), h.errors()
+    from lfphys.i18n import T
+    notes = [T(m["text"]) for m in h.of("notice")]
+    assert any(n.msgid.startswith("The equatorial circular orbits of this metric are not drawn")
+               and T(n.args["why"]).msgid == "there are no stable circular orbits even at {r} M" for n in notes), notes
+
+
+def test_no_visible_bound_orbit_is_refused_in_the_worlds_words(monkeypatch):
+    """jp.no_bound_orbit: JP.shadow_curve finds no bound photon orbit visible at the inclination (here forced: the photon
+    shell narrowed to its inner equatorial edge, where η = 0 and β² = cos²θ (a² − λ²/sin²θ) < 0); the engine's code is
+    checked, and the world refuses with its own text and hint."""
+    from lfphys.codes import code_of
+    from lfviz.errors import Refusal
+    real = JP.photon_shell
+    monkeypatch.setattr(JP, "photon_shell", lambda chi, dev: (real(chi, dev)[0], real(chi, dev)[0] * (1 + 1e-9)))
+    with pytest.raises(ValueError) as e:
+        JP.shadow_curve(0.5, math.radians(60.0), JP.Deviation(alpha13=1.0), 33)
+    assert code_of(e.value) == "jp.no_bound_orbit"
+    with pytest.raises(Refusal) as r:
+        Harness(V, None, {"metric": "jp", "a13": 1.0, "chi": 0.5, "incl": 60.0, **SMALL})
+    assert r.value.text.msgid.startswith("at the inclination θ = {i}° no spherical photon orbit")

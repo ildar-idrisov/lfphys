@@ -1,0 +1,6 @@
+{
+ "{n:d} particles of {N:d}; {law}; the critical value at {p} %: {c}/√n = {crit:.3g}": {
+  "one": "{n:d} particle of {N:d}; {law}; the critical value at {p} %: {c}/√n = {crit:.3g}",
+  "other": "{n:d} particles of {N:d}; {law}; the critical value at {p} %: {c}/√n = {crit:.3g}"
+ }
+}

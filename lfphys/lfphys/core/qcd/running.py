@@ -39,6 +39,7 @@ import math
 import numpy as np
 from scipy import integrate, special
 
+from lfphys.codes import coded
 from lfphys.i18n import T
 
 ABOUT = {
@@ -73,8 +74,12 @@ class LandauPole(ValueError):
 
     def __init__(self, mu):
         self.mu = mu
+        self.code, self.data = "qcd.landau_pole", {"mu": float(mu)}  # lfphys.codes
         super().__init__(T("Landau pole: α_s diverges near μ ≈ {mu:.3g} GeV (perturbation theory does not apply)",
                            mu=float(mu)))
+
+    def __reduce__(self):  # pickling rebuilds it from mu, with its attributes
+        return self.__class__, (self.mu,), self.__dict__
 
 
 ALPHA_MAX = 3.0
@@ -103,7 +108,8 @@ def _evolve(a0: float, L0: float, L1: float, nf: int, loops: int) -> float:
     if not sol.success:
         if sol.t.size and 4 * math.pi * float(sol.y[0, -1]) >= ALPHA_MAX:  # stopped past the bound: the same pole
             raise LandauPole(math.exp(0.5 * float(sol.t[-1])))
-        raise ValueError(f"RG integration failed at mu = {math.exp(0.5 * float(sol.t[-1])):.4g} GeV: {sol.message}")
+        raise coded(ValueError(T("the integration of the renormalisation-group equation failed at μ = {mu:.4g} GeV",
+                                 mu=math.exp(0.5 * float(sol.t[-1])))), "qcd.rg_failed", solver=str(sol.message))
     return float(sol.y[0, -1])
 
 

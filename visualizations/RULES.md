@@ -447,7 +447,9 @@ the GPU below the temperature where this host once hung, whatever power limit is
 > реалтайме
 
 Two modes in the catalogue: **Demonstrations** (the `vNN_` folders: prepared set-ups with their checks and story) and
-**Playground** (the `pNN_` folders, one per section of physics). Every rule of §2 holds in the playground: what is shown
+**Laboratories** (the `pNN_` folders, one per branch of physics). The interface calls a playground a *laboratory*
+(«лаборатория»; owner, 2026-11-13: «Лаборатория / Laboratory»); the code keeps the identifier `playground`
+(`kind: "playground"`, `lfviz.playground`, the ids `pNN`). Every rule of §2 holds in the playground: what is shown
 is computed by the run; accepted physics by default, a changed law is a named world parameter and is flagged; the
 consequences of a change start at the moment it is made.
 
@@ -618,7 +620,9 @@ section is how the visualizations keep it.
 
 * **Languages.** English is the source language and the default; Russian is the second. Every page (catalogue, run,
   settings, licence) has the switch EN | RU in its top bar (`player/js/i18n.js`, added to the first `.topbar`); the
-  choice is stored in `localStorage` under `lfviz.lang`, and `?lang=xx` in the address overrides it.
+  choice is stored in `localStorage` under `lfviz.lang`, and `?lang=xx` in the address overrides it for that tab: the
+  pages reached by its links keep the link's language (`sessionStorage`; a link opened in a new tab carries `?lang=`)
+  without changing the stored choice, and the switch ends it (review i18n-code F7).
 * **Texts on the server (Python).** A user-facing text is never a ready string in one language: it is
   `T("English msgid {arg}", arg=value)` from `lfviz.i18n` (the engine's `lfphys.i18n`, re-exported). Numbers are
   always arguments, never formatted into the msgid. The formats are `{x}`, `{x:.3g}`, `{x:.2f}`, `{x:.2e}`, `{x:d}`
@@ -627,32 +631,56 @@ section is how the visualizations keep it.
   hold plural forms `{one, few, many, other}`, chosen by the argument `n`. A `T` may contain other `T`s. It serialises
   to JSON as `{"$t": msgid, "a": {...}}` and survives `dataclasses.asdict`, `copy`, pickling and a JSON round trip, so
   a run's record is language-neutral and is read in any language later; records made before 2026-11-12 keep their
-  Russian strings and are shown as they are. `str(T(...))` is the English rendering (logs, tests).
+  Russian strings: in another language their labels are shown by a reverse lookup of the Russian catalogue (a string
+  that is exactly a translation shows its msgid's text), their sentences with numbers as recorded, with a note
+  (`i18n.js` `legacy`). `str(T(...))` is the English rendering (logs, tests). The server compares texts by msgid and
+  arguments (`same_text`, `mentions`, `names_unit`), never by `str()` or a rendering, and reads records and sweep
+  specs back with their texts as `T` (`json_hook`); a file for the owner (a CSV's header) is rendered by `render_in`
+  in the language asked, with its number format.
 * **Errors.** A refusal is `ValueError(T(...))` or `Refusal(T, hint=T)`, which the player shows as
   `T("{text}. What to change: {hint}")` (§3 "Refusals and failures"). `owner_text(exc)` gives the owner's `T` and the
-  English one-line detail. HTTP errors are `{"error": <T>, "text": <English>}` (`error_body`). Sizes in bytes come from
+  English one-line detail; a plain (untranslated) English `ValueError` is shown as a translated head with the sentence
+  under "details". HTTP errors are `{"error": <T>, "text": <English>}` (`error_body`, with `en.json`'s plural forms). Sizes in bytes come from
   `lfviz.limits.fmt_bytes`, a `T`. `lfviz.playground.fmt` is deprecated (§6 "Numbers in the owner's texts").
 * **Catalogues.** `<lang>.json` maps msgid → translation. They are merged in this order: the engine's
   (`../lfphys/lfphys/locales/`), the framework's (`locales/`), then each world's (`<world>/locales/`, also the folders
   of `LFVIZ_EXTRA`). `en.json` holds only plural forms and overrides. One msgid never gets two translations:
   `tests/test_i18n.py` reports a conflict, and the fix is to reuse the framework's msgid with its translation or to
-  choose another msgid. `GET /api/i18n/<lang>` serves the merged catalogue (§3: ETag, 304, 404 for an unknown
-  language).
+  choose another msgid. `GET /api/i18n/<lang>` serves the merged catalogue (§3: ETag with the weak comparison, 304,
+  gzip, 404 for an unknown language; "ru-RU" is "ru"); the player loads it from `/static/locales/<lang>.json`, the same
+  body, relative to its modules, so that a static copy of the player (the public site) carries the files written by
+  `python -m lfviz.i18n --export <player copy>/locales` (run from `server/`). A catalogue that cannot be loaded leaves
+  the English texts and marks the switch (⚠).
 * **The player (JS).** `import { t, fmt, lang } from "/static/js/i18n.js";`. Every text from the server goes through
   `t()`; `el`, `fill`, `panel` and `toast` render a `T` themselves. A static text is a literal `t("…")`, so that the
   completeness test finds it. Numbers are formatted by `fmt(x, spec)` in the viewer's language (a decimal comma in
   Russian, the minus sign −, m·10ⁿ). In HTML, `data-t`, `data-t-title` and `data-t-placeholder` mark the texts to
-  translate. A local or a parameter is never named `t` (it would hide the translator). Number inputs are
-  `type=number` (a point); typed text fields accept both "," and ".". Toasts and event rows capitalise their first
-  letter. A CSV download takes `?lang=` for its column headers.
+  translate. A local or a parameter is never named `t` (it would hide the translator). A number field is
+  `numberInput()` of `ui.js`, never `type=number` (Chromium drops a typed decimal comma there: 650,5 became 6505,
+  review i18n-browser F1): a text field (`inputmode=decimal`) that shows the value in the viewer's format (`fmtField`)
+  and is read by `parseNum`, which takes "," and "." as the decimal separator, spaces and groups of three as thousands,
+  − and m·10ⁿ, and refuses an ambiguous text ("1,500" in English) with both readings. A whole number without a format
+  is shown exactly; a plural form follows the number as shown. Toasts and event rows capitalise their first letter. A
+  CSV download takes `?lang=` for its column headers. A msgid built at run time names its msgids in a comment
+  `i18n-msgids: "…" "…"` (none for one made of placeholders only).
 * **Tests.** `tests/test_i18n.py` checks the catalogues' format and conflicts, static and dynamic completeness (every
   msgid of the code and every text a world sends is translated), a guard against Cyrillic in code lines (a line that
-  needs it carries the marker `i18n-ok`), and that no local is named `t`. `tests/i18n_pending.txt` lists files not yet
+  needs it carries the marker `i18n-ok` in a comment; escapes are decoded), that no local is named `t` (JavaScript) or
+  `T` (Python), that every placeholder format is one the player renders and a translation keeps it, that a run-time
+  msgid carries its marker, and that no server code `str()`s a text. `tests/i18n_pending.txt` lists files not yet
   converted and must be empty at a commit. `tests/i18n_tools.py --lines FILE… | --pending | --shadow` shows what the
   guard refuses and where a local hides `t()`. In a browser, `tests/browser/i18n_checks.mjs` opens every page and
   every world in English and in Russian. The other browser scripts take the language from `-e LFVIZ_LANG=en|ru`; they
   import `lfi18n.mjs`, so they are copied together (`cp /t/*.mjs /pw/`). The player's JS unit tests:
   `node --test player/js/tests/*.test.mjs` (from `visualizations/`, Node 22 or newer, e.g. the `node:24` image).
+* **Glossary (owner and integrator, 2026-11-13).** One word per concept in each language, in the interface and in the
+  user documents: the free labs are "laboratory" / «лаборатория» (never "playground", "sandbox", «плейграунд»,
+  «песочница» in a user text); "MODIFIED PHYSICS" / «МОДИФИЦИРОВАННАЯ ФИЗИКА» in full; a parameter sweep is «перебор
+  параметра»; a worker is «рабочий процесс»; a numerical error is «погрешность» (a fault stays «ошибка»); "closed form"
+  is «в замкнутом виде»; "against" is rendered by sense («в сравнении с», «в зависимости от», «↔»), not «против»;
+  «2D»/«3D» and the decimal comma in Russian; British spelling and "2-D"/"3-D" in English. Every count phrase has
+  plural forms (`{n:d}` and the catalogue's plural entry; English one/other in `en.json` where English needs it), and
+  no ordinal is built as "{k}th". A button is named by its label ("▶ Start a new world", not "New world").
 * **User documents.** A world's README and the owner guide exist as `README.md` (English) and `README.<lang>.md` for
   every other language, each linking the other at the top. A document names a part of the interface by its label in
   the document's language: the msgid in an English document, its translation from the catalogues in another.

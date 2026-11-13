@@ -400,10 +400,10 @@ def test_bodies_at_the_plane_wave_faces_and_misplaced_monitors(ru):
 def test_3d_polarization_along_the_direction_is_refused():
     """F16: a 3-D plane wave polarized along its own direction gave a silent zero wave."""
     w = F.FDTD((1.0, 1.0, 1.0), 0.1, pml=6)
-    with pytest.raises(ValueError, match="polarization"):
+    with pytest.raises(ValueError, match="polarisation"):
         w.add_source(F.PlaneWave(F.ModulatedGaussian(0.8, fwidth=0.3), ((0.3,) * 3, (0.7,) * 3),
                                  direction=(0, 0, 1), polarization=(0, 0, 1)))
-    with pytest.raises(ValueError, match="polarization"):
+    with pytest.raises(ValueError, match="polarisation"):
         w.add_source(F.PlaneWave(F.ContinuousWave(0.8, ramp=2.0), ((0.3,) * 3, (0.7,) * 3),
                                  direction=(1, 1, 0), polarization=(2, 2, 0)))
     assert not w._sources

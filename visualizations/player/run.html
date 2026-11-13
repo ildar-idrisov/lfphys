@@ -27,10 +27,13 @@
    with an ellipsis (their full text in the tooltip), the buttons never */
 .topbar { flex-wrap: nowrap; overflow: hidden; }
 .topbar > * { flex: none; }
-.topbar > #title { flex: 0 1 auto; min-width: 5em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.topbar > #scene { flex: 0 4 auto; min-width: 0; }
-.topbar > #physics { flex: 0 2 auto; min-width: 3em; display: flex; gap: 4px; overflow: hidden; }
-.topbar > #physics .badge { flex: 0 1 auto; min-width: 2.5em; }
+/* the physics badges keep their width (each is capped by its max-width above, its full text in the tooltip): «standard
+   physics» or «МОДИФИЦИРОВАННАЯ ФИЗИКА: …» is never cut to «станда…»; the scene and the title shrink first (review
+   i18n-browser F13) */
+.topbar > #title { flex: 0 2 auto; min-width: 5em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar > #scene { flex: 0 6 auto; min-width: 0; }
+.topbar > #physics { flex: none; display: flex; gap: 4px; }
+.topbar > #physics .badge { flex: none; }
 .topbar > #world { flex: 0 3 auto; min-width: 5.5em; max-width: 18em; text-overflow: ellipsis; }
 .topbar > #busy { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; }
 .topbar > #status { white-space: nowrap; }

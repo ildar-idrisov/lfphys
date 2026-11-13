@@ -23,7 +23,7 @@ function renderDevices() {
     el("div", { class: "kv" }, el("span", {}, t("processor")), el("span", { class: "mono" }, d.cpu.name || "—"),
       el("span", {}, t("threads")), el("span", { class: "mono" }, String(d.cpu.threads)),
       el("span", {}, "NumPy"), el("span", { class: "mono" }, d.cpu.numpy)),
-    el("div", { class: "muted", style: { marginTop: "6px" } }, t("Always there: it computes everything that does not gain on the GPU, and all the strict references.")));
+    el("div", { class: "muted", style: { marginTop: "6px" } }, t("Always present: it computes everything that is not faster on the GPU, and all the strict references.")));
   const g = d.gpu;
   const gpu = g.available
     ? el("div", { class: "card" }, el("h3", {}, "GPU 0 ", el("span", { class: "badge std" }, t("available"))),
@@ -72,7 +72,7 @@ function renderKernels() {
       el("td", {}, dev),
       el("td", {}, prec, p32 && p32.allowed ? el("div", { class: "muted" }, t("fp32: error ≤ {bound:.2g}, {use}", { bound: p32.bound, use: p32.use })) :
         el("div", { class: "muted" }, t("fp64 only"))),
-      el("td", {}, k.gpu ? (crossover == null ? t("the GPU does not gain") : t("GPU from {size} points", { size: side(crossover) })) : "—",
+      el("td", {}, k.gpu ? (crossover == null ? t("the GPU is not faster") : t("GPU from {size} points", { size: side(crossover) })) : "—",
         k.gpu ? el("div", { class: "muted" }, t(k.crossover_note)) : null));
   });
   fill($("kernels"), el("table", { class: "runs" },
@@ -136,9 +136,9 @@ $("reset").onclick = async () => {
 function renderHowto() {
   $("intro").textContent = t("Here you choose where the heavy parts of the engine compute: on the processor or on the graphics card, and with what precision. Changes are saved at once and hold for new runs; every run records what computed on what (the “About the run” panel).");
   fill($("howto"),
-    el("p", {}, t("“Auto” takes the GPU only where there is one, where the kernel has a GPU implementation and where the task is not smaller than the measured threshold; otherwise the CPU. Only the heavy part (FFTs, fields) goes to the GPU; the result comes back to the common memory.")),
-    el("p", {}, t("Precision: fp64 always. fp32 is offered only for kernels whose fp32 error against fp64 is verified by a test and small, and only for what is drawn: the references and checks of a run are always computed in fp64. fp16 is not offered: FFTs of complex fields in half precision lose about 10⁻³, which changes the result visibly.")),
-    el("p", {}, t("“CPU only” kernels do not gain from the GPU (sequential equations, small matrices) or exist only for the CPU (Arb's rigorous arithmetic).")));
+    el("p", {}, t("“Auto” takes the GPU only where there is one, where the kernel has a GPU implementation and where the task is not smaller than the measured threshold; otherwise the CPU. Only the heavy part (FFTs, fields) goes to the GPU; the result comes back to main memory.")),
+    el("p", {}, t("Precision: fp64 always. fp32 is offered only for kernels whose fp32 error relative to fp64 is verified by a test and small, and only for what is drawn: the references and checks of a run are always computed in fp64. fp16 is not offered: FFTs of complex fields in half precision have relative errors of about 10⁻³, which changes the result visibly.")),
+    el("p", {}, t("“CPU only” kernels are not faster on the GPU (sequential equations, small matrices) or exist only for the CPU (Arb's rigorous arithmetic).")));
 }
 
 async function load() {

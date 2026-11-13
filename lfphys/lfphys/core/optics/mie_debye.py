@@ -57,6 +57,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from lfphys.codes import coded
 from lfphys.i18n import T
 from . import mie
 
@@ -111,7 +112,8 @@ def interface_terms(m, x: float, n_max: int | None = None) -> dict:
     where psi(mx) underflowed: n >> |mx| for m < 1 at large x; there the p >= 1 waves are dropped)."""
     m = complex(m)
     if m.imag < 0:
-        raise ValueError("m = n + i kappa with kappa >= 0 (exp(-i omega t))")
+        raise coded(ValueError(T("the relative index is m = n + iκ with κ ≥ 0 (time dependence exp(−iωt))")),
+                    "mie.index")
     x = float(x)
     N = int(n_max) if n_max else mie.n_terms(x)
     lx, L1x = _xi1_logs(np.array([x + 0j]), N)

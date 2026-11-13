@@ -61,8 +61,8 @@ export function createImageWindow({ title = t("What the observer sees"), describ
       }
       g.fillText(t(cam.axis_label), left, top + ph + 24);
     } else if (cam.kind === "sky") {
-      for (let q = 0; q <= 4; q++) g.fillText(`${-180 + 90 * q}°`, left + pw * q / 4 - 8, top + ph + 12);
-      for (let q = 0; q <= 2; q++) g.fillText(`${90 - 90 * q}°`, 2, top + ph * q / 2 + 4);
+      for (let q = 0; q <= 4; q++) g.fillText(`${num(-180 + 90 * q)}°`, left + pw * q / 4 - 8, top + ph + 12);
+      for (let q = 0; q <= 2; q++) g.fillText(`${num(90 - 90 * q)}°`, 2, top + ph * q / 2 + 4);
       g.fillText(t("longitude from the direction of view (in the observer's frame)"), left, top + ph + 24);
     } else {
       const hf = (cam.fov || 90) / 2, th = Math.tan(hf * Math.PI / 180);

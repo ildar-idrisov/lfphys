@@ -166,10 +166,11 @@ async function toy([W, H]) {
 
   // 4. a throw with Shift: velocity = world displacement / (wall time × rate) × scale; shown while throwing
   await cmd(id, "speed", { value: 2.0 });
-  await page.fill(".pg-manip input[type=number]", "1.5");
-  await page.press(".pg-manip input[type=number]", "Enter");
+  await page.fill(".pg-manip input.num", "1.5");
+  await page.press(".pg-manip input.num", "Enter");
   await sleep(600);
-  const rate = await page.evaluate(() => Number(document.querySelector("#speedv")?.textContent?.replace(",", ".")) || null);
+  // the playback rate as the page shows it ("2 s / s", «2 с / с»): its leading number (for the report only)
+  const rate = await page.evaluate(() => parseFloat((document.querySelector("#speedv")?.textContent || "").replace(",", ".").replace(/[\s\u00a0\u202f]/g, "")) || null);
   const pa = await page.evaluate(() => window.__lfManip.at("o2"));
   const q2 = await scr3(page, "o2");
   const n2 = edits(await record(id), "o2").length;
@@ -204,8 +205,8 @@ async function toy([W, H]) {
     edits(await record(id), "o1").length === na + 1 && (da.mid || "").includes(", " + tr("auto") + ")") && ratioA > 0.6 && ratioA < 1.6 && !("asked" in (ea?.args || {})),
     { v: va, expected: expA, ratio: ratioA, text: da.mid });
   // 4c. a throw faster than the world carries is clamped to velocity_max and says so (readout and log)
-  await page.fill(".pg-manip input[type=number]", "200");
-  await page.press(".pg-manip input[type=number]", "Enter");
+  await page.fill(".pg-manip input.num", "200");
+  await page.press(".pg-manip input.num", "Enter");
   const qb = await scr3(page, "o2");
   await dragPath(page, qb, [qb[0] + 40, qb[1] - 20], { n: 8, dtMs: 16, shift: true });
   const db = { mid: await page.evaluate(() => window.__lfManip.released()) };  // the readout as it stood at the release
@@ -243,8 +244,8 @@ async function toy([W, H]) {
   //     cm/s (factor 100) while its parameters and the edit are in m/s — the readout at the release and the log in cm/s,
   //     the edit sent in m/s (readout = 100 × sent)
   {
-    await page.fill(".pg-manip input[type=number]", "1");
-    await page.press(".pg-manip input[type=number]", "Enter");
+    await page.fill(".pg-manip input.num", "1");
+    await page.press(".pg-manip input.num", "Enter");
     await cmd(id, "scene", { op: "add", type: "cloud", values: { x: -2, y: -2, n: 12, spread: 0.4 } });
     await sleep(1200);
     const cl = await page.evaluate(() => window.__lfManip.objects().filter((o) => o.type === "cloud").at(-1)?.id);

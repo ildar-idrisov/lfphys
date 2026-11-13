@@ -15,6 +15,7 @@ from scipy import constants as sc
 from scipy import special
 
 from lfphys.core.quantum import central3d as C, radial
+from lfphys.codes import coded
 from lfphys.i18n import T
 from lfphys.theories.models import cornell
 
@@ -47,7 +48,9 @@ def solve(system: str, L: int, n_states: int = 3, N: int = N_GRID):
                 a.flags.writeable = False
             return E, r, u, est, R
         R = 1.1 * need
-    raise ValueError(T("the states with L = {L} do not fit into the box of {R:.3g} GeV⁻¹", L=L, R=R))
+    # the same condition as the engine's Cornell spectrum, with the engine's code (lfphys.codes "cornell.box")
+    raise coded(ValueError(T("the states with L = {L} do not fit into the box of radius {R:.3g} GeV⁻¹", L=L, R=R)),
+                "cornell.box")
 
 
 def tables(system: str, specs, N: int = N_GRID):

@@ -61,6 +61,7 @@ import math
 
 import numpy as np
 
+from lfphys.codes import coded
 from lfphys.i18n import T
 
 ABOUT = {
@@ -92,6 +93,10 @@ ABOUT = {
 #: [error in earlier] a blanket 2e-11 of the largest coefficient was stated before review B8-mie (M1): it fails on
 #: resonance peaks (6.4e-3 at x ~ 1000.68, m = 1.333, n = 1056).
 ACCURACY = {"floor": 4.0, "conditioning": 8.0, "x_max": 2e4}
+#: the largest size parameter with a tested accuracy bound (``coefficient_bound``; code "mie.size_bound" above it)
+MAX_X = ACCURACY["x_max"]
+#: |m x| - n beyond which D_n cannot be started (``_D_start``; code "mie.mx_too_large")
+MX_START_MAX = 2e6
 U = 2.0 ** -53
 
 
@@ -101,7 +106,8 @@ def coefficient_bound(x: float, sensitivity=0.0):
     it is the floor, which holds only where the coefficient is well-conditioned (s of order N or less, i.e. away from
     resonances narrower than ~x/N in x); the caller supplies s from an exact reference (``ACCURACY``)."""
     if not x <= ACCURACY["x_max"]:
-        raise ValueError("no tested bound above x = 2e4")
+        raise coded(ValueError(T("no tested accuracy bound above the size parameter x = {xmax:.3g}", xmax=MAX_X)),
+                    "mie.size_bound")
     return U * (ACCURACY["floor"] * n_terms(x) + ACCURACY["conditioning"] * np.asarray(sensitivity, float))
 
 
@@ -161,7 +167,7 @@ def _cf_D(z, n: int, tol: float = 4e-16):
         active &= np.abs(delta - 1.0) > tol
         k += 1
         if k > kmax:
-            raise RuntimeError("continued fraction for D_n did not converge")
+            raise coded(RuntimeError(T("the continued fraction for D_n did not converge")), "mie.no_convergence")
     return -n / z + f
 
 
@@ -197,9 +203,10 @@ def _start_D(z, N: int):
         out[poly] = d if np.iscomplexobj(z) else d.real
     rest = ~poly
     if rest.any():
-        if float(np.max(np.abs(z[rest]))) - N > 2e6:
-            raise ValueError(f"|m x| = {float(np.max(np.abs(z[rest]))):.3g} too large for the start of D_n at "
-                             f"n = {N} (neither the continued fraction nor Hankel's sums are practical)")
+        if float(np.max(np.abs(z[rest]))) - N > MX_START_MAX:
+            raise coded(ValueError(T("|m x| = {mx:.3g} is too large for the start of D_n at n = {n:d} (neither the "
+                                     "continued fraction nor Hankel's sums are practical)",
+                                     mx=float(np.max(np.abs(z[rest]))), n=int(N))), "mie.mx_too_large")
         out[rest] = _cf_D(z[rest], N)
     return out
 
@@ -316,10 +323,11 @@ def chi(x, N: int):
 def _check_m(m):
     m = complex(m)
     if m.imag < 0:
-        raise ValueError("m = n + i kappa with kappa >= 0 (time dependence exp(-i omega t)); an absorbing sphere in the "
-                         "exp(+i omega t) convention (n - i kappa) is its complex conjugate")
+        raise coded(ValueError(T("the relative index is m = n + iκ with κ ≥ 0 (time dependence exp(−iωt)); an "
+                                 "absorbing sphere in the exp(+iωt) convention (n − iκ) is its complex conjugate")),
+                    "mie.index")
     if m == 0:
-        raise ValueError("m = 0")
+        raise coded(ValueError(T("the relative index m = 0")), "mie.index")
     return m
 
 
@@ -345,7 +353,7 @@ def coefficients(m, x: float, n_max: int | None = None, trim: bool = True):
     m = _check_m(m)
     x = float(x)
     if not x > 0:
-        raise ValueError("x must be positive")
+        raise coded(ValueError(T("the size parameter x must be positive")), "mie.size")
     N = int(n_max) if n_max else n_terms(x)
     P, Xi = _riccati_x(np.array([x]), N)
     P, Xi = P[:, 0], Xi[:, 0]

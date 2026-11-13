@@ -172,6 +172,7 @@ import numpy as np
 from scipy import constants as sc
 from scipy import special
 
+from lfphys.codes import coded
 from lfphys.i18n import T, text_of
 
 from .. import backend
@@ -182,13 +183,13 @@ ABOUT = {
     "layer": "core", "kind": "law",
     "title": T("Quantum scene: particles as packets, potentials, fields, detectors, measurements and decoherence in "
                "2-D/3-D"),
-    "statement": T("Every particle is its own wave packet under the Schrödinger or the Pauli equation (the particles do "
-                   "not interact); a common potential of shapes with smooth edges (the edge width is a physical "
-                   "length), magnetic fields (the Landau gauge for a uniform field in a region, an Aharonov–Bohm tube, "
-                   "spin through the magnetic moment), absorbing detectors with the absorbed probability accounted for "
-                   "(norm + absorbed = 1), unsharp position measurement (Gaussian Kraus operators), localization by an "
-                   "environment (the Lindblad equation) by quantum jumps, a which-path mark; checks: the energy of a "
-                   "closed system, the flux through a plane, the time-step error."),
+    "statement": T("Every particle is its own wave packet under the Schrödinger or the Pauli equation (the particles "
+                   "do not interact); a common potential of shapes with smooth edges (the edge width is a physical "
+                   "length), magnetic fields (the Landau gauge for a uniform field in a region, an Aharonov–Bohm "
+                   "tube, spin through the magnetic moment), absorbing detectors with the absorbed probability "
+                   "accounted for (norm + absorbed = 1), unsharp position measurement (Gaussian Kraus operators), "
+                   "localisation by an environment (the Lindblad equation) by quantum jumps, a which-path mark; "
+                   "checks: the energy of a closed system, the flux through a plane, the time-step error."),
     "validity": T("a non-relativistic particle (spin ½ after Pauli), no interaction between the particles; the grid "
                   "finer than the wavelength and the shapes' edges (edges narrower than 3 grid steps are refused; next "
                   "to a potential the particle's wavenumbers stay within 2/3 of the grid's band), a window with "
@@ -203,9 +204,9 @@ ABOUT = {
                 "measurement"),
               T("Dalibard, Castin, Mølmer, PRL 68, 580 (1992); Plenio & Knight, Rev. Mod. Phys. 70, 101 (1998) — "
                 "quantum jumps"),
-              T("Bassi et al., Rev. Mod. Phys. 85, 471 (2013) — Gaussian localization operators"),
+              T("Bassi et al., Rev. Mod. Phys. 85, 471 (2013) — Gaussian localisation operators"),
               T("CODATA 2022 (scipy.constants) — masses and magnetic moments"),
-              T("lfphys/sources/verification_2026-11-03_p15_3.md — a check of the quotations and derivations")],
+              T("lfphys/sources/verification_2026-11-03_p15_3.md — check of the quotations and derivations")],
     "conflicts": [],
 }
 
@@ -230,6 +231,13 @@ SPECTRUM_TAIL = 1e-3                # a boosted wave's model (``_spec_model``): 
 OBJ_CACHE_DOUBLES = 8               # the objects' arrays kept between changes (``Scene._on_grid``): at most this many
                                     # doubles per grid point; beyond, an object is evaluated at every change
 EPS = float(np.finfo(float).eps)
+#: where a carried-over wave loses its norm (``Scene.adopt_wave``), in words
+_LOSS = {"spectrum": T("beyond the grid's band"), "outside": T("outside the window"),
+         "face": T("at the window's faces")}
+#: the machine code (``lfphys.codes``) of a refused live change by its ``what`` (``Scene._refusal``)
+_WHAT_CODES = {"resolution": "qscene.resolution", "dim": "qscene.regrid_dimension", "kind": "qscene.regrid_kind",
+               "spectrum": "qscene.regrid_loss", "outside": "qscene.regrid_loss", "face": "qscene.regrid_loss",
+               "layers": "qscene.layers", "no_wave": "qscene.no_wave", "wrap": "qscene.wrap", "alias": "qscene.alias"}
 
 # Measured seconds per scene step of one particle (2026-11-03, image lfphys-viz, fp64, absorbing edges on, the
 # state kept on the device, timed over >= 0.6 s with a norm (a host sync) at the end): CPU of the container (numpy's
@@ -427,7 +435,7 @@ def _check_edge(w, d, what: T):
                            "grid step", what=what))
     wmin = edge_min(d)
     if float(w) < wmin * (1 - 1e-12):
-        raise ValueError(T("{what}: the edge {w:.4g} is narrower than a grid of step {d:.4g} can carry (it needs ≥ "
+        raise ValueError(T("{what}: the edge {w:.4g} is narrower than a grid of step {d:.4g} can resolve (it needs ≥ "
                            "{wmin:.4g} = {steps:.2f} steps: the edge's spectrum exp(−k²ε²/4) at k = π/d must be ≤ "
                            "{tol}); make the edge wider or the grid finer",
                            what=what, w=float(w), d=float(d), wmin=float(wmin), steps=float(EDGE_STEPS),
@@ -440,6 +448,7 @@ class SceneObject:
     with the reason when the object does not fit the scene, ``bbox(ndim)`` (lo, hi) for drawing."""
 
     TYPE = ""
+    NAME = None  # the object kind in words (a translatable text) for the scene's events
 
     def params(self) -> dict:
         def plain(v):
@@ -489,6 +498,7 @@ class Box(Shape):
     edge: float
     coupling: str = "energy"
     TYPE = "box"
+    NAME = T("a box")
 
     def _lohi(self, n):
         c, s = _vec(self.center, n, T("centre")), _vec(self.size, n, T("size"))
@@ -534,6 +544,7 @@ class Ball(Shape):
     axes: list | None = None
     coupling: str = "energy"
     TYPE = "ball"
+    NAME = T("a ball")
 
     def _axes(self, n):
         return list(range(n)) if self.axes is None else [int(a) for a in self.axes]
@@ -587,6 +598,7 @@ class Step(Shape):
     edge: float
     coupling: str = "energy"
     TYPE = "step"
+    NAME = T("a potential step")
 
     def check(self, scene):
         self._check_coupling()
@@ -625,6 +637,7 @@ class SlitWall(Shape):
     length: list | None = None
     coupling: str = "energy"
     TYPE = "slit_wall"
+    NAME = T("a wall with slits")
 
     def _along(self, n):
         if self.along is not None:
@@ -710,6 +723,7 @@ class HarmonicTrap(Shape):
     omega: list
     mass: float = 1.0
     TYPE = "harmonic_trap"
+    NAME = T("a harmonic trap")
     coupling = "energy"
 
     def check(self, scene):
@@ -751,6 +765,7 @@ class MagneticField(SceneObject):
     edge: float | None = None
     string: int = 1
     TYPE = "magnetic_field"
+    NAME = T("a magnetic field")
 
     def _region(self, n):
         return _vec(self.lo, n, T("field region")), _vec(self.hi, n, T("field region"))
@@ -864,6 +879,7 @@ class FluxTube(SceneObject):
     radius: float
     axes: list = field(default_factory=lambda: [0, 1])
     TYPE = "flux_tube"
+    NAME = T("a flux tube")
 
     def check(self, scene):
         if scene.ndim < 2:
@@ -907,6 +923,7 @@ class Detector(SceneObject):
     edge: float
     name: str = ""
     TYPE = "detector"
+    NAME = T("a detector")
 
     def check(self, scene):
         if not float(self.strength) > 0:
@@ -1010,6 +1027,7 @@ class Localization(SceneObject):
     hi: list | None = None
     edge: float | None = None
     TYPE = "localization"
+    NAME = T("a localisation environment")
 
     def uniform(self) -> bool:
         return self.lo is None and self.hi is None
@@ -1018,7 +1036,7 @@ class Localization(SceneObject):
         if not (float(self.rate) > 0 and float(self.length) > 0):
             raise ValueError(T("environment: rate λ > 0 and length a > 0"))
         if float(self.length) < LOC_MIN_STEPS * float(max(scene.grid.d)):
-            raise ValueError(T("environment: the localization length a = {a} is less than {k} grid steps — the "
+            raise ValueError(T("environment: the localisation length a = {a} is less than {k} grid steps — the "
                                "Gaussian jump is not resolved", a=float(self.length), k=float(LOC_MIN_STEPS)))
         if float(self.rate) * scene.dt > LOC_MAX_STEP:
             raise ValueError(T("environment: λ·dt = {x:.3g} > {lim}: two jumps are possible within a step — reduce the "
@@ -1065,6 +1083,7 @@ class PathMarker(SceneObject):
     coupling: float
     edge: float
     TYPE = "path_marker"
+    NAME = T("a which-path marker")
 
     def check(self, scene):
         lo, hi = _vec(self.lo, scene.ndim, T("which-path mark")), _vec(self.hi, scene.ndim, T("which-path mark"))
@@ -1349,8 +1368,8 @@ class Scene:
             if self.device is None:
                 self.device, self.xp = op.device, op.xp
             elif op.device != self.device:
-                raise RuntimeError(f"a scene operator on {op.device} but the scene on {self.device} (GPU memory "
-                                   f"short?)")
+                raise coded(RuntimeError(T("a scene operator on {op} but the scene on {scene} (GPU memory short?)",
+                                           op=str(op.device), scene=str(self.device))), "qscene.device_memory")
             store[key] = op
         return store[key]
 
@@ -1502,20 +1521,21 @@ class Scene:
                 conv = 2.0 * p.species.mass * dV > 1e-6 * K * K
                 inter = lim < min(math.pi / float(d) for d in self.grid.d) * (1 - 1e-12) or conv
                 if conv:
-                    text = T("the grid does not carry the wave of particle {pid}: its wavenumbers reach {K:.4g} (|k| + "
-                             "6σ_k and the energy {dV:.4g} that the potential can turn into motion), while next to what "
-                             "acts on the particle the grid carries ≤ {lim:.4g} (2/3·π/d: beyond it the product V·ψ on "
-                             "the grid is distorted by aliasing); make the grid finer, the particle slower or the "
-                             "potential lower", pid=int(p.id), K=float(K), dV=float(dV), lim=float(lim))
+                    text = T("the grid does not resolve the wave of particle {pid}: its wavenumbers reach {K:.4g} "
+                             "(|k| + 6σ_k and the energy {dV:.4g} that the potential can turn into motion), while "
+                             "next to what acts on the particle the grid resolves ≤ {lim:.4g} (2/3·π/d: beyond it the "
+                             "product V·ψ on the grid is distorted by aliasing); make the grid finer, the particle "
+                             "slower or the potential lower", pid=int(p.id), K=float(K), dV=float(dV), lim=float(lim))
                 elif inter:
-                    text = T("the grid does not carry the wave of particle {pid}: its wavenumbers reach {K:.4g} (|k| + "
-                             "6σ_k), while next to what acts on the particle the grid carries ≤ {lim:.4g} (2/3·π/d: "
-                             "beyond it the product V·ψ on the grid is distorted by aliasing); make the grid finer, the "
-                             "particle slower or the potential lower", pid=int(p.id), K=float(K), lim=float(lim))
+                    text = T("the grid does not resolve the wave of particle {pid}: its wavenumbers reach {K:.4g} "
+                             "(|k| + 6σ_k), while next to what acts on the particle the grid resolves ≤ {lim:.4g} "
+                             "(2/3·π/d: beyond it the product V·ψ on the grid is distorted by aliasing); make the "
+                             "grid finer, the particle slower or the potential lower", pid=int(p.id), K=float(K),
+                             lim=float(lim))
                 else:
-                    text = T("the grid does not carry the wave of particle {pid}: its wavenumbers reach {K:.4g} (|k| + "
-                             "6σ_k), while the grid carries ≤ {lim:.4g} (π/d); make the grid finer, the particle slower "
-                             "or the potential lower", pid=int(p.id), K=float(K), lim=float(lim))
+                    text = T("the grid does not resolve the wave of particle {pid}: its wavenumbers reach {K:.4g} "
+                             "(|k| + 6σ_k), while the grid resolves ≤ {lim:.4g} (π/d); make the grid finer, the "
+                             "particle slower or the potential lower", pid=int(p.id), K=float(K), lim=float(lim))
                 return {"text": text, "pid": p.id, "K": K, "lim": lim, "dV": dV, "inter": bool(inter),
                         "conv": bool(conv)}
         return None
@@ -1620,7 +1640,7 @@ class Scene:
             edges.check(self.grid)
         n_loc = sum(isinstance(o, Localization) for o in objects.values())
         if n_loc > 1:
-            raise ValueError(T("one environment (localization) per scene"))
+            raise ValueError(T("one environment (localisation) per scene"))
         arr = self._compute(objects, edges)
         charges = [p.species.charge for p in self.particles.values() if p.active and p.species.charge != 0]
         if charges:
@@ -1631,22 +1651,33 @@ class Scene:
         same = (objects == self.objects and (edges is self.edges or (edges is not None and self.edges is not None
                                                                      and edges.params() == self.edges.params())))
         if not same:  # a change of the time step alone changes neither the gauge nor what the grid must hold
-            for reason in (self._gauge_reason(arr, edges, charges), self._switch_reason(self.objects, objects),
-                           self._resolution_reason(arr, self.particles.values())):
+            for code, reason in (("qscene.gauge", self._gauge_reason(arr, edges, charges)),
+                                 ("qscene.field_with_charge", self._switch_reason(self.objects, objects)),
+                                 ("qscene.resolution", self._resolution_reason(arr, self.particles.values()))):
                 if reason:
-                    raise ValueError(reason)
+                    raise coded(ValueError(reason), code)
         kinds = {p.id: self._kind_for(p, arr) for p in self.particles.values() if p.active}
         return arr, kinds
 
-    def _reason(self, objects: dict, edges) -> T | None:
+    def _check(self, objects: dict, edges) -> ValueError | None:
         try:
             self._validate(objects, edges)
         except ValueError as e:
-            return text_of(e)
+            return e
         return None
 
+    def _reason(self, objects: dict, edges) -> T | None:
+        e = self._check(objects, edges)
+        return None if e is None else text_of(e)
+
+    def addition_check(self, obj: SceneObject) -> ValueError | None:
+        """The refusal ``add(obj)`` would raise now (with its machine code ``code``, ``lfphys.codes``), or None; changes
+        nothing."""
+        return self._check({**self.objects, self._next_obj: obj}, self.edges)
+
     def addition_reason(self, obj: SceneObject) -> T | None:
-        """Why ``add(obj)`` would be refused now, or None; changes nothing (a playground's palette: review UX-ui U7)."""
+        """Why ``add(obj)`` would be refused now, or None; changes nothing (a laboratory's palette: review UX-ui U7).
+        ``addition_check`` gives the refusal with its code."""
         return self._reason({**self.objects, self._next_obj: obj}, self.edges)
 
     def removal_reason(self, oid: int) -> T | None:
@@ -1657,19 +1688,25 @@ class Scene:
         """Why ``set_edges(edges)`` would be refused now, or None; changes nothing."""
         return self._reason(dict(self.objects), edges)
 
-    def particle_reason(self, packet: Packet) -> T | None:
-        """Why ``add_particle(packet)`` would be refused now, or None; changes nothing (review UX-ui U4: a free spot
-        for a new packet)."""
+    def particle_check(self, packet: Packet) -> ValueError | None:
+        """The refusal ``add_particle(packet)`` would raise now (with its machine code ``code``), or None; changes
+        nothing."""
         p = _Particle(self._next_pid, packet)
         try:
             p.psi = self._prepare(packet, p)
             reason = self._resolution_reason(self._arr, [p])
             if reason:
-                return reason
+                return coded(ValueError(reason), "qscene.resolution")
             self._kind_for(p, self._arr)
         except ValueError as e:
-            return text_of(e)
+            return e
         return None
+
+    def particle_reason(self, packet: Packet) -> T | None:
+        """Why ``add_particle(packet)`` would be refused now, or None; changes nothing (review UX-ui U4: a free spot
+        for a new packet). ``particle_check`` gives the refusal with its code."""
+        e = self.particle_check(packet)
+        return None if e is None else text_of(e)
 
     def _commit(self, objects: dict, edges, what: T, dt: float | None = None):
         """Validate the new set-up, then bank, convert the waves and rebuild: the change acts from now on."""
@@ -1707,14 +1744,14 @@ class Scene:
         oid = self._next_obj
         objs = dict(self.objects)
         objs[oid] = obj
-        self._commit(objs, self.edges, T("added {type} #{oid}", type=obj.TYPE, oid=int(oid)), dt=dt)
+        self._commit(objs, self.edges, T("added {type} #{oid}", type=obj.NAME or obj.TYPE, oid=int(oid)), dt=dt)
         self._next_obj += 1
         return oid
 
     def remove(self, oid: int):
         objs = dict(self.objects)
         ob = objs.pop(oid)
-        self._commit(objs, self.edges, T("removed {type} #{oid}", type=ob.TYPE, oid=int(oid)))
+        self._commit(objs, self.edges, T("removed {type} #{oid}", type=ob.NAME or ob.TYPE, oid=int(oid)))
 
     def update(self, oid: int, dt: float | None = None, **changes):
         """Change parameters of object ``oid`` now (a new object of the same type with the changed parameters; with
@@ -1724,8 +1761,8 @@ class Scene:
         objs = dict(self.objects)
         objs[oid] = new
         what = _list_text([T("{k} = {v}", k=k, v=_arg(v)) for k, v in changes.items()])
-        self._commit(objs, self.edges, T("changed {type} #{oid}: {changes}", type=ob.TYPE, oid=int(oid), changes=what),
-                     dt=dt)
+        self._commit(objs, self.edges, T("changed {type} #{oid}: {changes}", type=ob.NAME or ob.TYPE, oid=int(oid),
+                                         changes=what), dt=dt)
 
     def set_edges(self, edges: EdgeLayers | None):
         self._commit(dict(self.objects), edges, T("window edges changed"))
@@ -1757,9 +1794,10 @@ class Scene:
                 continue
             kn = math.pi / g.d[i]
             if abs(k[i]) + PACKET_NYQUIST / (2 * s[i]) > kn:
-                raise ValueError(T("packet: |k| + 6σ_k = {K:.4g} along axis {i} exceeds π/d = {kn:.4g} — the grid does "
-                                   "not carry the wave (a finer grid or a smaller momentum)",
-                                   K=float(abs(k[i]) + PACKET_NYQUIST / (2 * s[i])), i=int(i), kn=float(kn)))
+                raise coded(ValueError(T("packet: |k| + 6σ_k = {K:.4g} along axis {i} exceeds π/d = {kn:.4g} — the "
+                                         "grid does not resolve the wave (a finer grid or a smaller momentum)",
+                                         K=float(abs(k[i]) + PACKET_NYQUIST / (2 * s[i])), i=int(i), kn=float(kn))),
+                            "qscene.packet_band")
             gap = half - abs(c[i] - g.center[i])
             need = s[i] * math.sqrt(2 * math.log(1 / PACKET_TAIL))
             ax = "xyz"[i] if i < 3 else str(i)
@@ -1782,7 +1820,7 @@ class Scene:
                     raise ValueError(T("a charged particle in this field: {reason}", reason=ob.orbital_reason(n)))
             reason = self._gauge_reason(self._arr, self.edges, [sp.charge])
             if reason:
-                raise ValueError(reason)
+                raise coded(ValueError(reason), "qscene.gauge")
             A = self._arr["A"]
             if A is not None:
                 cen = [ci if ci is not None else 0.0 for ci in c]
@@ -1803,7 +1841,7 @@ class Scene:
         p.psi = self._prepare(packet, p)
         reason = self._resolution_reason(self._arr, [p])
         if reason:
-            raise ValueError(reason)
+            raise coded(ValueError(reason), "qscene.resolution")
         kind, s = self._kind_for(p, self._arr)
         self._convert(p, kind, s)
         p.psi = self._op(self._key(p)).put(p.psi)
@@ -1813,8 +1851,9 @@ class Scene:
         self.particles[pid] = p
         self._next_pid += 1
         self._reset_refs(p, continuity=True)
+        name = packet.species.name
         self.events.append({"t": self.t, "what": T("added particle {pid} ({species})", pid=int(pid),
-                                                   species=packet.species.name)})
+                                                   species=PT.SPECIES[name][0] if name in PT.SPECIES else name)})
         return pid
 
     def remove_particle(self, pid: int):
@@ -1828,7 +1867,7 @@ class Scene:
         p.psi = self._prepare(packet, p)
         reason = self._resolution_reason(self._arr, [p])
         if reason:
-            raise ValueError(reason)
+            raise coded(ValueError(reason), "qscene.resolution")
         kind, s = self._kind_for(p, self._arr)
         self._convert(p, kind, s)
         p.psi = self._op(self._key(p)).put(p.psi)
@@ -1894,7 +1933,7 @@ class Scene:
         for what in ("spectrum", "outside", "face"):
             if loss[what] > tol:
                 raise self._refusal(T("particle {pid}: on this grid {share:.3g} of its norm is lost ({kind}), more than "
-                                      "the tolerance {tol}", pid=int(pid), share=float(loss[what]), kind=what,
+                                      "the tolerance {tol}", pid=int(pid), share=float(loss[what]), kind=_LOSS[what],
                                       tol=float(tol)), pid=pid, what=what, value=loss[what])
         n0 = float(np.sum(np.abs(psi) ** 2)) * float(np.prod(old.d))
         same = old.shape == self.grid.shape and np.allclose(old.d, self.grid.d, rtol=1e-14, atol=0.0)
@@ -1986,8 +2025,9 @@ class Scene:
     @staticmethod
     def _refusal(text: T, **who) -> ValueError:
         """A refused live change: the reason, and which particle (``pid``), object (``oid``) or plane (``plane``) it
-        is about, as attributes (a wrapper names them in its own terms)."""
-        e = ValueError(text)
+        is about, as attributes (a wrapper names them in its own terms); its machine code (``lfphys.codes``) follows
+        ``what`` (``_WHAT_CODES``)."""
+        e = coded(ValueError(text), _WHAT_CODES.get(who.get("what"), "qscene.refused"))
         for k_, v in who.items():
             setattr(e, k_, v)
         return e
@@ -2105,7 +2145,7 @@ class Scene:
             charges = [p.species.charge for p in self.particles.values() if p.active and p.species.charge != 0]
             reason = self._gauge_reason(arr, new_edges, charges)
             if reason:
-                raise ValueError(reason)
+                raise coded(ValueError(reason), "qscene.gauge")
             shadows = []
             for pid, (psi2, *_rest) in waves.items():
                 sh = copy.copy(self.particles[pid])
@@ -2673,7 +2713,8 @@ class Scene:
                 y = Y[int(np.argmax(acc))]
                 break
         else:
-            raise RuntimeError("localization jump: no point found in the environment's region")
+            raise coded(RuntimeError(T("localisation jump: no point found in the environment's region")),
+                        "qscene.no_localisation_point")
         X = g.mesh()
         f = 1.0
         for i in range(g.ndim):
@@ -2798,7 +2839,7 @@ class Scene:
             raise ValueError(T("particle {pid} has already been registered by a detector", pid=int(pid)))
         if not float(sigma) >= float(max(g.d)) * (1 - 1e-12):
             raise ValueError(T("the measurement resolution σ = {sigma} is less than the grid step {d}: the grid does "
-                               "not carry the outcome", sigma=float(sigma), d=float(max(g.d))))
+                               "not resolve the outcome", sigma=float(sigma), d=float(max(g.d))))
         smin = self.measure_min_sigma(pid)
         if float(sigma) < smin * (1 - 1e-12):
             raise ValueError(T("the measurement resolution σ = {sigma} is too small for this grid: the wave after the "

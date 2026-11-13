@@ -49,7 +49,7 @@ ABOUT = {
                   "flight direction the rules for a plane reduce to one-dimensional ones"),
     "basis": [T("Das & Struyve, Phys. Rev. A 104, 042214 (2021), arXiv:2105.14744 — exponential rules and the "
                 "semiclassical one"),
-              T("Das & Nöth, Proc. R. Soc. A 477, 20210101 (2021), arXiv:2102.02661 — ABK, equation 5"),
+              T("Das & Nöth, Proc. R. Soc. A 477, 20210101 (2021), arXiv:2102.02661 — ABK, eq. 5"),
               "Aharonov & Bohm, Phys. Rev. 122, 1649 (1961); Kijowski, Rep. Math. Phys. 6, 361 (1974)",
               T("Leavens, Phys. Lett. A 178, 27 (1993) — the Bohmian arrival time"),
               T("Muga & Leavens, Phys. Rep. 338, 353 (2000) — a review")],

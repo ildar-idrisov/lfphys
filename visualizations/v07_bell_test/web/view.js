@@ -96,7 +96,7 @@ export function createView(ctx) {
 
   // which setting is in force at a station: the choice already made for the next particle, else the last one used
   function activeSetting(f, fl, tw, side) {
-    if (f.settings.switch === "fixed") return { s: 0, why: t("fixed") };
+    if (f.settings.switch === "fixed") return { s: 0, why: t("set by the mode “fixed”") };
     const k = fl.length / 6;
     let best = null;
     for (let q = 0; q < k; q++) {
@@ -273,8 +273,8 @@ export function createView(ctx) {
     g.fillStyle = muted;
     const ratio = (c * (thi - tl)) / (2 * Lr / 0.92) * (x1 - x0) / (y1 - y0);
     const win = Math.abs(ratio - 1) > 0.05
-      ? t("window in t: {dt}; the scales of x and ct differ: light lines are not at 45°", { dt: time(thi - tl, 3) })
-      : t("window in t: {dt}; the scales of x and ct are equal: light lines at 45°", { dt: time(thi - tl, 3) });
+      ? t("window in t: {dt}; the scales of x and ct differ: the world lines of light are not at 45°", { dt: time(thi - tl, 3) })
+      : t("window in t: {dt}; the scales of x and ct are equal: the world lines of light are at 45°", { dt: time(thi - tl, 3) });
     g.fillText(clipped ? t("{text}; the bottom of the window is cut", { text: win }) : win, 8, topH + 34);
     g.textAlign = "left";
   }
@@ -349,7 +349,7 @@ export function createView(ctx) {
     for (const e of [-1, -0.5, 0, 0.5, 1]) { g.fillText(fmt(e), px0 - 4, Ye(e) + 4); g.beginPath(); g.moveTo(px0, Ye(e)); g.lineTo(px1, Ye(e)); g.globalAlpha = e === 0 ? 0.9 : 0.35; g.stroke(); g.globalAlpha = 1; }
     g.textAlign = "center";
     const step = P === 180 ? 45 : 90;
-    for (let d = -P / 2; d <= P / 2 + 1e-9; d += step) { g.fillText(`${d}°`, Xd(d), py1 + 14); }
+    for (let d = -P / 2; d <= P / 2 + 1e-9; d += step) { g.fillText(`${fmt(d, "d")}°`, Xd(d), py1 + 14); }
     g.textAlign = "left";
     const quantumWorld = H.law === "quantum";
     const curve = (arr, col, dash, lw) => {
@@ -412,7 +412,7 @@ export function createView(ctx) {
     const pct = (k) => (n ? t("{p:.4g} %", { p: 100 * k / n }) : "—");
     const rows = [[t("pairs emitted"), c.emitted], [t("detected"), c.detected], [t("lost (stations moved)"), c.lost],
       [t("in flight"), c.in_flight], [t("in the statistics (after the reset)"), n],
-      [t("choice outside the other side's cone"), pct(c.loc)], [t("choice space-like to the emission"), pct(c.free)]];
+      [t("choice outside the other side's cone"), pct(c.loc)], [t("choice space-like separated from the emission"), pct(c.free)]];
     countBox.replaceChildren(el("div", { class: "kv" }, rows.flatMap(([k, v]) => [el("span", {}, k), el("span", { class: "mono" }, String(v ?? 0))])),
       el("div", { class: "help" }, t("The fractions come from the events of each pair: the choice of a setting, the emission, the detection (the interval s² = c²Δt² − Δx²).")));
   }

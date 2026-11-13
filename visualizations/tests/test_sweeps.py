@@ -432,7 +432,7 @@ def test_the_budget_holds_inside_one_advance(tmp_path):
     spec = json.loads((tmp_path / "1.json").read_text())
     assert p.returncode == 0, out.decode()[-2000:]
     assert spec["state"] == "over_budget" and spec["results"] == [], spec
-    assert wall < sweep.PROBE_S + 15 and "by the measured cost of computing the whole sweep would take" in E(spec["message"]), (wall, spec)
+    assert wall < sweep.PROBE_S + 15 and "at the measured cost of computing, the whole sweep would take" in E(spec["message"]), (wall, spec)
     # negative control: a duration it can finish
     p = _process(_spec(tmp_path, data, _req(duration=50.0), [4.0, 9.0], budget=20.0))
     p.communicate(timeout=120)

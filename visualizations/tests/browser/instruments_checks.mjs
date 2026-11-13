@@ -197,7 +197,7 @@ try {
   const cur = await page.textContent(".in-sweep .in-cur");
   const sx = await get(`/api/runs/${id}/series?ids=o2.x`);
   const xNow = sx.values["o2.x"].at(-1);
-  const F1 = "Set: {v} — where the object was put; the object is now at {at} (the last frame). Each value puts it there at the moment of the sweep, one equal to the set value too";
+  const F1 = "Set: {v} — where the object was put; the object is now at {at} (the last frame). Each value puts it there at the moment of the sweep, including one equal to the set value";
   const f1 = tr(F1, { v: `${fmt(1, ".6g")} ${tr("m")}`, at: "\u0002" });
   const m = new RegExp(esc(f1.split("\u0002")[0]) + `(\\S+) ${esc(tr("m"))}`).exec(cur);
   const shownNow = m ? Number(m[1].replace(",", ".").replace("−", "-")) : NaN;

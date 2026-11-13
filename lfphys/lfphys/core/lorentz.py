@@ -26,6 +26,7 @@ from __future__ import annotations
 import numpy as np
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 ABOUT = {
     "layer": "core", "kind": "law",
@@ -33,7 +34,7 @@ ABOUT = {
     "statement": T("The Lorentz group in 3+1: boosts and rotations, the decomposition of a transformation into a "
                    "boost and a rotation, velocity composition in any directions, the Thomas–Wigner rotation as an "
                    "SO(3) rotation (axis and angle), the spinor representation SL(2, C), aberration, the Doppler and "
-                   "searchlight effects in 3D, the transformation of the electromagnetic field, the apparent "
+                   "searchlight effects in 3-D, the transformation of the electromagnetic field, the apparent "
                    "position of a body with the light delay (the Terrell rotation, the outline of a sphere is a "
                    "circle, Penrose)."),
     "validity": T("flat spacetime; gravity is in lfphys.core.gravity"),
@@ -62,7 +63,8 @@ def _beta(v, c):
     b = _vec(v) / c
     b2 = np.einsum("...i,...i->...", b, b)
     if np.any(b2 >= 1.0):
-        raise ValueError("|v| >= c: no inertial frame moves at or faster than light (SR)")
+        raise coded(ValueError(T("|v| ≥ c: no inertial frame moves at or faster than light")),
+                    "kinematics.superluminal")
     return b, b2
 
 
@@ -331,7 +333,8 @@ def retarded_time(x0, v, t_obs, c: float = 1.0):
     x0, v = _vec(x0), _vec(v)
     a = c * c - np.einsum("...i,...i->...", v, v)
     if np.any(a <= 0):
-        raise ValueError("|v| >= c")
+        raise coded(ValueError(T("|v| ≥ c: no inertial frame moves at or faster than light")),
+                    "kinematics.superluminal")
     t_obs = np.asarray(t_obs, dtype=float)
     bp = np.einsum("...i,...i->...", x0, v) + c * c * t_obs
     cc = np.einsum("...i,...i->...", x0, x0) - c * c * t_obs * t_obs

@@ -380,7 +380,7 @@ def choose(name: str, size: int, check: bool = False, footprint: int | None = No
                            resume=float(THERMAL["resume_c"]))
         else:
             reason = (T("auto: problem size {size:d} below threshold {cross:d}", size=int(size), cross=int(cross))
-                      if cross else T("auto: the GPU does not pay here"))
+                      if cross else T("auto: the GPU does not pay off here"))
     elif not spec.gpu:
         reason = spec.cpu_reason or T("CPU only")
     else:

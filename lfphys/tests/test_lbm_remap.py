@@ -345,7 +345,8 @@ def test_a_domain_grown_and_cropped_keeps_the_flow_and_its_books(ru):
     with pytest.raises(ValueError, match="would be cut by the edge") as e:
         a.remap(size=(0.16, 0.12))
     assert str(e.value).startswith("body “disk” would be cut")
-    assert ru(e.value.args[0]).startswith("тело «disk»: его срезал бы край новой области")
+    assert ru(e.value.args[0]).startswith("тело «disk»: край новой области срезал бы")
+    assert e.value.code == "lbm.cut_by_edge"
     assert np.array_equal(a.populations(), f0) and (a.t, a.steps) == (t0, s0)
     assert a.balance()["lattice"]["books"] == books
     a.remap(size=(0.6, 0.12))
@@ -367,7 +368,7 @@ def test_refusals_leave_the_flow_as_it_was(ru):
     f0, t0, dt0 = a.populations(), a.t, a.units.dt
     with pytest.raises(ValueError, match="grid Reynolds number") as e:
         a.remap(dx=0.04)
-    assert "число Рейнольдса ячейки" in ru(e.value.args[0])
+    assert "сеточное число Рейнольдса" in ru(e.value.args[0]) and e.value.code == "lbm.cell_reynolds"
     assert np.array_equal(a.populations(), f0) and a.t == t0 and a.units.dt == dt0 and a.nx == 120
     m = lbm.Flow2D((0.1, 0.05), 0.005, nu=1e-3, rho=1.0, u_max=0.1, device="cpu")
     m.add_obstacle(lbm.Mask(lambda X, Y: (X - 0.05) ** 2 + (Y - 0.025) ** 2 < 0.01**2), label="mask")

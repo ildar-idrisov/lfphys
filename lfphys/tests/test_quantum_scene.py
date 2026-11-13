@@ -220,9 +220,9 @@ def test_free_packet_spreads_as_the_closed_form(shape, spacing, center, k, sigma
 def test_packets_are_refused_when_the_grid_or_window_cannot_hold_them(ru):
     sc_ = Q.Scene((64, 64), 0.2, dt=0.01)
     sp = Q.species("electron")
-    with pytest.raises(ValueError, match="the grid does not carry") as e:
+    with pytest.raises(ValueError, match="the grid does not resolve") as e:
         sc_.add_particle(Q.Packet(sp, [0, 0], [14.0, 0], [1.0, 1.0]))  # pi/d = 15.7 < 14 + 3
-    assert "сетка не передаёт волну" in ru(e.value.args[0])
+    assert "сетка не разрешает волну" in ru(e.value.args[0]) and e.value.code == "qscene.packet_band"
     with pytest.raises(ValueError, match="does not fit") as e:
         sc_.add_particle(Q.Packet(sp, [3.0, 0], [0, 0], [1.0, 1.0]))   # 3.4 from the edge < 7.4 sigma
     assert ru(e.value.args[0]).startswith("пакет не помещается в окно по оси x")
@@ -1055,7 +1055,7 @@ def test_the_grid_must_hold_a_wave_in_a_well():
         return float(np.sum((s.density(pid) + backend.to_numpy(s.particles[pid].acc))[x > 4.0])) * s.grid.dV
     s = Q.Scene((512, 2), (80 / 256, 1.0), dt=2.0**-9, edges=Q.EdgeLayers(10.0, 30.0, axes=[0]))
     s.add(Q.Box([0.0, 0.0], [a, None], V0, w))
-    with pytest.raises(ValueError, match="the grid does not carry"):
+    with pytest.raises(ValueError, match="the grid does not resolve"):
         s.add_particle(Q.Packet(M1, [-25.0, 0.0], [k0, 0.0], [sig, math.inf]))
     assert abs(past(80 / 256, bypass=True) - ref) > 0.05
     for d in (80 / 384, 80 / 512):

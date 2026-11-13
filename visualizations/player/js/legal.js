@@ -14,16 +14,16 @@ const html = (tag, text) => { const e = el(tag); e.innerHTML = text; return e; }
 
 document.getElementById("legal").append(
   el("h2", {}, t("A research tool — without warranty")),
-  el("p", {}, t("The lfphys engine and the visualizations are research tools. Their models, implementation, numerical methods and results may contain errors. The checks next to the results and the engine's tests confirm the stated cases within the stated bounds, not the correctness of any task. Before relying on a result, check the input, the model's applicability, the convergence and the result itself. The software is provided “as is”, without any warranty; support and fixes are not promised (section 8 of the licence).")),
+  el("p", {}, t("The lfphys engine and the visualizations are research tools. Their models, implementation, numerical methods and results may contain errors. The checks next to the results and the engine's tests confirm the stated cases within the stated bounds, not that any given problem is solved correctly. Before relying on a result, check the input, the model's applicability, the convergence and the result itself. The software is provided “as is”, without any warranty; support and fixes are not promised (section 8 of the licence).")),
   el("h2", {}, t("The terms in brief")),
   el("ul", {},
     html("li", t("<b>The code</b> (the engine, the server, the player, the visualizations) — lfphys Research Licence 1.0: noncommercial research, study and teaching only. The source code is open to read (source-available), but it is not open source.")),
     html("li", t("<b>Commercial use</b> by anyone — a company, a university or institute working for a company, a private person — only under a separate written agreement with the author (idrisov.sci@gmail.com).")),
-    html("li", t("<b>Your results</b> (the numbers, data, figures and snapshots of your runs) are yours. If the software computed, modelled, drew or checked something your publication reports, <b>citing it is required</b>: the author (Ildar Idrisov), the name (lfphys), the version and the code of this build — <span id=\"cite\" class=\"mono\">…</span>. Snapshots of your runs and short excerpts of the code may be published anywhere, also under CC BY, with the credit “Ildar Idrisov, lfphys &lt;version&gt;”. Results may not be presented as verified or endorsed by the author. Selling data sets made mainly of the software's results needs an agreement.")),
-    html("li", t("<b>The author's documentation and figures</b> — CC BY-NC-SA 4.0; figures and short quotations may be published in scholarly works, also by commercial publishers, with the author and the version credited.")),
+    html("li", t("<b>Your results</b> (the numbers, data, figures and snapshots of your runs) are yours. If the software computed, modelled, drew or checked something your publication reports, <b>citing it is required</b>: the author (Ildar Idrisov), the name (lfphys), the version and the code of this build — <span id=\"cite\" class=\"mono\">…</span>. Snapshots of your runs and short excerpts of the code may be published anywhere, including under CC BY, with the credit “Ildar Idrisov, lfphys &lt;version&gt;”. Results may not be presented as verified or endorsed by the author. Selling data sets made mainly of the software's results requires an agreement.")),
+    html("li", t("<b>The author's documentation and figures</b> — CC BY-NC-SA 4.0; figures and short quotations may be published in scholarly works, including those from commercial publishers, with the author and the version credited.")),
     html("li", t("<b>Access over a network</b>: whoever lets people use a copy of the software over a network must show them this page.")),
     html("li", t("<b>Third-party code</b>: three.js r185.1 (MIT licence) — the player's 3-D scene; the terms above do not apply to it."))),
-  el("p", { class: "muted" }, t("This is a summary; the full texts below (in English) are what holds.")),
+  el("p", { class: "muted" }, t("This is a summary; the full texts below (in English) are binding.")),
   el("h2", {}, t("Full texts")),
   el("div", { id: "texts" }));
 

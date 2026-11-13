@@ -2,7 +2,7 @@
 
 **English** | [Русский](README.ru.md)
 
-Pairs of polarization-entangled photons |Φ+⟩ = (|HH⟩ + |VV⟩)/√2 or spin-½ singlets (|↑↓⟩ − |↓↑⟩)/√2 fly from a
+Pairs of polarisation-entangled photons |Φ+⟩ = (|HH⟩ + |VV⟩)/√2 or spin-½ singlets (|↑↓⟩ − |↓↑⟩)/√2 fly from a
 source to two stations; each station measures its particle with one of two settings; the run counts coincidences
 and estimates the correlations E and the CHSH parameter S. Owner guide: `../README.md`; rules: `../RULES.md`.
 
@@ -12,7 +12,7 @@ and the drawing.
 
 | engine module | layer | used for |
 |---|---|---|
-| `core.quantum.qubits` | core | the states `PHI_PLUS`, `SINGLET`; polarizer projectors and Stern–Gerlach projectors; Born-rule sampling of a pair (`sample_pairs`); exact `correlation`, `joint_probabilities` (marginals), `chsh`, `concurrence`, `entropy` |
+| `core.quantum.qubits` | core | the states `PHI_PLUS`, `SINGLET`; polariser projectors and Stern–Gerlach projectors; Born-rule sampling of a pair (`sample_pairs`); exact `correlation`, `joint_probabilities` (marginals), `chsh`, `concurrence`, `entropy` |
 | `theories.alternatives.local_hidden` | theories (alternative) | LHV worlds: `polarization_model` (photons), `sign_model` (spin), with their exact `*_E`; in quantum worlds only the comparison curve on the E(Δ) plot (not listed among the world's modules) |
 | `core.causality` (new, 2026-10-23) | core | interval s², causal relation, order-reversal speed of each pair's events |
 | `core.relativity` | core | `boost_matrix`: an independent check of the order-reversal speed |
@@ -32,14 +32,14 @@ spin-½ particles at v = β c (world parameter, illustrative). Both particles of
    (or, when τ exceeds the flight time, when the pair is emitted: then t_c lies before the emission, as for a
    generator whose output is delayed by τ). Mode "fixed" ("fixed: Alice a, Bob b"): Alice uses a, Bob uses b; the
    "choice event" of a station is the moment its setting was last set.
-3. **Detection** at t_arr: the analyzer angle in force at that moment (a live change of an angle applies to every
+3. **Detection** at t_arr: the analyser angle in force at that moment (a live change of an angle applies to every
    particle that arrives after it), and the outcomes of both particles by the world's law:
    * quantum: `qubits.sample_pairs(state, Π(α_A), Π(α_B))` — the joint Born probabilities Tr(ρ Π_i ⊗ Π_j); index 0
-     (transmitted by the polarizer / spin up along the magnet's direction) is the outcome +1. At perfectly
+     (transmitted by the polariser / spin up along the magnet's direction) is the outcome +1. At perfectly
      (anti)correlated settings one of them is exactly 0, which the float trace gives as ±1e-17; the engine sets a
      negative value within the round-off of the trace (4·dim·eps) to 0 (`qubits.born_probabilities`, review
      2026-10-23 V7-1: before, about half of such settings, e.g. a = b = 30°, stopped the run);
-   * local hidden variables: `local_hidden.polarization_model(α_A, α_B)` (photons: a common polarization λ, Malus law
+   * local hidden variables: `local_hidden.polarization_model(α_A, α_B)` (photons: a common polarisation λ, Malus law
      independently on each side, E = ½ cos 2(α_A − α_B)) or `local_hidden.sign_model(θ_A, θ_B)` (spin: a common unit
      vector λ, A = sign(a·λ), B = −sign(b·λ), E = −1 + 2θ/π). The engine function draws λ and both outcomes in one
      call; its code computes A from (α_A, λ) only and B from (α_B, λ) only (locality by construction), and the run calls
@@ -48,16 +48,16 @@ spin-½ particles at v = β c (world parameter, illustrative). Both particles of
 
    The outcomes are revealed (message `pairs`, flash in the view) only at t_arr. The run computes nothing about a pair
    before its time except the emission bookkeeping. To keep the record small, a `pairs` message carries the per-pair
-   detail (times, settings, outcomes, choice events, space-time flags) of at most the newest 16 pairs of each step and
+   detail (times, settings, outcomes, choice events, spacetime flags) of at most the newest 16 pairs of each step and
    the number of pairs; every pair enters the counts, which the frames carry.
-4. **Space-time relations of the pair's events** (`core.causality.relation`, lab frame): Alice's choice
+4. **Spacetime relations of the pair's events** (`core.causality.relation`, lab frame): Alice's choice
    (t_cA, −L) against Bob's detection (t_arr, +L) and Bob's choice against Alice's detection (locality: space-like means
    no signal from the choice can reach the other detection); each choice against the emission (t_e, 0) (freedom of
    choice). For photons in the symmetric geometry both conditions are 0 < cτ < 2L. For particles slower than light the
    locality condition stays cτ < 2L but the freedom-of-choice condition becomes |L/v − τ| c < L; both can hold only if
    v > c/3 (computed per pair; shown as fractions).
 
-Coincidence counts are kept per pair of analyzer angles actually used (at most 200 pairs; the oldest unused one is
+Coincidence counts are kept per pair of analyser angles actually used (at most 200 pairs; the oldest unused one is
 dropped). The four CHSH cells are the current (a, b), (a, b′), (a′, b), (a′, b′); after an angle change the cells refer
 to the new angles, and the old angle pairs stay on the E(Δ) plot. The action "Reset the statistics" starts the counts
 anew.
@@ -100,13 +100,13 @@ anew.
   still needed while it does not); LHV worlds: |S| ≤ 2 + 5σ; |S| ≤ 2√2 + 5σ; χ² of all measured E(Δ) points against the
   law (p > 1e-6); no-signalling from the counts: P_A(+|x, b) − P_A(+|x, b′) and P_B(+|a, y) − P_B(+|a′, y) against 0
   with the pooled binomial error (5σ).
-* Space-time (re-emitted after changes of L, τ, mode): for a pair emitted now, s² of Alice's choice and Bob's detection
+* Spacetime (re-emitted after changes of L, τ, mode): for a pair emitted now, s² of Alice's choice and Bob's detection
   (engine) against the closed form c²τ² − (2L)²; its relation in the label; for space-like events the order-reversal
   speed v*/c = cτ/(2L) (engine) against a root search on the Lorentz matrices of `core.relativity`, applied to the
   events' separation (boosting the events apart cancelled terms ~L and lost ~εL/(cτ) of the root: 1.2·10⁻⁸ at
   τ = 1 ps, L = 10⁵ m, a failed check on a correct world — review UX-params P21); s² of the choice
-  and the emission against c²(L/v − τ)² − L². The fractions of detected pairs with both choices space-like to the other
-  detection and to the emission (no reference).
+  and the emission against c²(L/v − τ)² − L². The fractions of detected pairs with both choices space-like separated from the other
+  detection and from the emission (no reference).
 
 The 5σ tolerance makes a false failure of one check about 6·10⁻⁷ per evaluation; each check is re-evaluated as the
 counts grow, so over a long run a few dozen evaluations per check remain far from a false alarm.
@@ -121,8 +121,8 @@ counts grow, so over a long run a few dozen evaluations per check remain far fro
 * One line, a symmetric source in the middle, both particles at the same speed: the two detections of a pair are
   simultaneous in the lab frame.
 * The setting choice is a fair coin from the run's seeded generator (pseudo-random); the "freedom of choice" shown is
-  the space-time relation only.
-* The two LHV models are illustrative members of the class bounded by CHSH (|S| ≤ 2): the polarization model gives at
+  the spacetime relation only.
+* The two LHV models are illustrative members of the class bounded by CHSH (|S| ≤ 2): the polarisation model gives at
   most |S| = √2, the sign model reaches 2 at the spin-optimal angles. Any local model obeys |S| ≤ 2; the visualization
   does not search the class for the best one.
 * Statistical errors use the normal approximation (≥ 30 pairs per cell).
@@ -134,7 +134,7 @@ counts grow, so over a long run a few dozen evaluations per check remain far fro
 quantum worlds give |S| within 5σ of 2√2 and above 2 by > 15σ (40 000 pairs); LHV worlds never exceed 2 + 5σ (three
 seeds each) and reproduce their model's S; no-signalling from the counts; the wrapper's sampling against the textbook
 closed forms at random angles for all four law × pair combinations; outcomes revealed only at arrival (t_arr = t_e +
-L/c); random choice space-like, slow choice (cτ > 2L) time-like; the space-time checks against closed forms for four
+L/c); random choice space-like, slow choice (cτ > 2L) time-like; the spacetime checks against closed forms for four
 geometries; a live angle change applies to the next arrivals and keeps both angle pairs on the E(Δ) plot; a refused
 change leaves the world unchanged; moving the stations loses exactly the overtaken pairs; mode switches reschedule
 choices not before the switch; the clear action; a new world with another law in the same run; the frame and header

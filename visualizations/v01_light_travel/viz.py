@@ -58,15 +58,15 @@ SCHEMA = Schema([
        help=T("GR is the accepted theory (for the scenarios with a mass). “No gravity” in a scenario with a mass is a "
               "modification.")),
     _p("c_factor", T("Speed of light, × c"), "float", 1.0, group=G_LAWS, min=1e-3, max=1e3, log=True,
-       standard=1.0, help=T("A factor to c = {c:d} m/s; any value other than 1 is a modification.", c=299792458)),
+       standard=1.0, help=T("A multiplier on c = {c:d} m/s; any value other than 1 is a modification.", c=299792458)),
     _p("n_rays", T("Rays per flash"), "int", 360, group=G_LIGHT, min=36, max=1440,
        help=T("How many rays draw the front of one flash. It does not affect the accuracy of the events: they are "
-              "solved separately.")),
+              "computed separately.")),
     # sun-earth
     _p("se_mass", T("Mass of the Sun, M☉"), "float", 1.0, group=G_SE, min=1e-3, max=1e6, log=True, show_if=SE),
     _p("se_radius_km", T("Radius of the Sun, km"), "float", R_SUN / 1e3, group=G_SE, min=1.0, max=1e8, log=True,
        show_if=SE),
-    _p("se_distance_au", T("Distance to the Earth, AU"), "float", 1.0, group=G_SE, min=0.01, max=100, log=True,
+    _p("se_distance_au", T("Distance to the Earth, au"), "float", 1.0, group=G_SE, min=0.01, max=100, log=True,
        show_if=SE),
     _p("se_orbit", T("The Earth moves along its orbit"), "bool", True, group=G_SE, show_if=SE),
     # measure c
@@ -82,11 +82,11 @@ SCHEMA = Schema([
        help=T("Matters in the emission theory (light travels at c relative to its source); in SR it does not "
               "change c.")),
     _p("mc_sync", T("Synchronisation of clock B"), "select", "einstein", group=G_MC, show_if=MC,
-       options=[("einstein", T("Einstein's (an exchange of light)")),
+       options=[("einstein", T("Einstein's (light exchange)")),
                 ("lab", T("by laboratory simultaneity (not available to the observer)"))]),
     _p("mc_orient", T("Rod"), "select", "x", group=G_MC, show_if=MC,
        options=[("x", T("along the motion (x axis)")), ("y", T("across the motion (y axis)"))]),
-    _p("mc_t_flash_ms", T("Flash of the sources at the moment, ms"), "float", 3.0, group=G_MC, min=0.0, max=1e6,
+    _p("mc_t_flash_ms", T("Time of the flash of the sources, ms"), "float", 3.0, group=G_MC, min=0.0, max=1e6,
        show_if=MC),
     # lensing
     _p("ln_mass", T("Mass of the body, M☉"), "float", 10.0, group=G_LN, min=1e-3, max=1e10, log=True, show_if=LN),
@@ -103,7 +103,7 @@ SCHEMA = Schema([
     _p("an_dist_mly", T("Distance to Andromeda, million ly"), "float", 2.5, group=G_AN, min=1e-9, max=1e4,
        log=True, show_if=AN),
     _p("an_walk", T("Speed of the pedestrians, m/s"), "float", 1.4, group=G_AN, min=0.0, max=2.9e8, show_if=AN),
-    _p("an_event_days", T("Event on Andromeda at the moment (lab), days"), "float", 0.0, group=G_AN,
+    _p("an_event_days", T("Time of the event on Andromeda (lab), days"), "float", 0.0, group=G_AN,
        min=-1e12, max=1e12, show_if=AN),
 ], presets={
     "sun_earth": {"label": T("Sun → Earth (standard physics)"), "params": {"scenario": "sun_earth"}},
@@ -170,7 +170,7 @@ def _adjust_laws(p) -> list:
             k = "emission"
             out.append(T("The gravity “Newton: light as corpuscles” is defined for corpuscles flying at speed c "
                          "relative to the source, so the kinematics is the emission theory (Ritz), not SR: the speed "
-                         "of light depends on the speed of the source. To get SR back, choose the gravity GR or “No "
+                         "of light depends on the speed of the source. To get SR back, set the gravity to GR or “No "
                          "gravity”."))
         else:
             g = "none"
@@ -190,13 +190,13 @@ def _adjust_laws(p) -> list:
         r_max = SCHEMA.by_id["ln_radius_km"].max  # the header's parameters must stay inside the form's range
         p["ln_radius_km"] = min(rs_km, r_max)
         if rs_km > r_max:
-            out.append(T("A body of radius 0 (a black hole) makes sense only in GR; without it the body is given the "
-                         "horizon's radius of the same mass, 2GM/c² = {r:.4g} km (limited by the form's maximum "
-                         "{rmax:.4g} km): it absorbs the light that falls on it.", r=rs_km, rmax=r_max))
+            out.append(T("A body of radius 0 (a black hole) makes sense only in GR; without GR the body is given the "
+                         "horizon radius of a black hole of the same mass, 2GM/c² = {r:.4g} km (capped at the form's "
+                         "maximum {rmax:.4g} km): it absorbs the light that falls on it.", r=rs_km, rmax=r_max))
         else:
-            out.append(T("A body of radius 0 (a black hole) makes sense only in GR; without it the body is given the "
-                         "horizon's radius of the same mass, 2GM/c² = {r:.4g} km: it absorbs the light that falls on "
-                         "it.", r=rs_km))
+            out.append(T("A body of radius 0 (a black hole) makes sense only in GR; without GR the body is given the "
+                         "horizon radius of a black hole of the same mass, 2GM/c² = {r:.4g} km: it absorbs the light "
+                         "that falls on it.", r=rs_km))
     return out
 
 
@@ -269,7 +269,7 @@ class Simulation(BaseSimulation):
         rs = w.rs
         if R <= rs * 1.5:
             raise Refusal(T("the radius of the Sun is less than {k:.2g} rs", k=1.5),
-                          hint=T("take the scenario “Gravitational deflection of light (black hole / star)”"))
+                          hint=T("choose the scenario “Gravitational deflection of light (black hole / star)”"))
         # the central body's own clock is not used (its worldline is the centre r = 0)
         w.add(Obj("sun", T("Sun"), "star", COLORS["star"], Piecewise.start(self.laws, 0.0, 0.0, [0.0, 0.0], [0, 0]),
                   radius=R, receiver=False))
@@ -296,10 +296,10 @@ class Simulation(BaseSimulation):
         return {"speed": 20.0, "actions": actions,
                 "view": {"center": [0.5 * d, 0.0], "half": 0.62 * d, "unit": "au"},
                 "diagram": {"axis": "x", "x0": -0.05 * d, "x1": 1.05 * d, "t0": -20.0, "t1": 1.3 * d / self.laws.c},
-                "text": T("At moment 0 a flash goes off on the surface of the Sun. The front leaves the place of the "
+                "text": T("At t = 0 a flash goes off on the surface of the Sun. The front leaves the place of the "
                           "flash by the laws of this run ({laws}); when it reaches the rocket, the station and the "
                           "Earth, an event with the computed time of flight and the receiver's clock reading appears "
-                          "in the log. The station is at rest where the Earth was at the moment of the flash; the "
+                          "in the log. The station is at rest where the Earth was at the time of the flash; the "
                           "Earth moves along a prescribed circular orbit (Kepler's law for the mass of the Sun; with "
                           "gravity switched off this stays a prescribed motion). “1:1” is real time.",
                           laws=self._laws_text())}
@@ -347,14 +347,14 @@ class Simulation(BaseSimulation):
                                            self._act_train()],
                 "view": {"center": [-0.3 * D, 0.0], "half": 0.9 * D, "unit": "km"},
                 "diagram": {"axis": "x", "x0": -1.1 * D, "x1": 0.8 * D, "t0": -0.1 * D / c, "t1": 2.5 * D / c},
-                "text": T("Laws of the run: {laws}. Three observers meet at the origin at moment 0 with different "
-                          "speeds and carry rods of length L₀ (in their own rest frames) with clocks at the ends A and "
-                          "B (B is the far end). First each one synchronises clock B by an exchange of light (seen on "
-                          "the diagram), then at the moment {tf} the source flashes. The speed of light is computed "
-                          "from the clock readings at the events where the light passes the ends of the rod; the "
-                          "result reaches the observer when the signal with B's reading arrives at A. “Measure” is a "
-                          "round trip with one's own light. “Speed” accelerates an observer: the apparatus is "
-                          "dismantled, assembled again and synchronised again.", laws=self._laws_text(),
+                "text": T("Laws of the run: {laws}. Three observers meet at the origin at t = 0 with different "
+                          "speeds and carry rods of length L₀ (in their own rest frames) with clocks at the ends A "
+                          "and B (B is the far end). First each one synchronises clock B by an exchange of light "
+                          "(seen on the diagram), then at time {tf} the source flashes. The speed of light is "
+                          "computed from the clock readings at the events where the light passes the ends of the "
+                          "rod; the result reaches the observer when the signal with B's reading arrives at A. "
+                          "“Measure” is a round trip with one's own light. “Speed” accelerates an observer: the "
+                          "apparatus is dismantled, assembled again and synchronised again.", laws=self._laws_text(),
                           tf=fmt_s(tf))}
 
     def _scn_lensing(self, p):
@@ -393,11 +393,11 @@ class Simulation(BaseSimulation):
                 "view": {"center": [0.0, 0.0], "half": 0.45 * span, "unit": "rs", "rs": rs0},
                 "diagram": {"axis": "x", "x0": 1.25 * xs, "x1": 1.25 * xo, "t0": -0.05 * span / self.laws.c,
                             "t1": 3.0 * span / self.laws.c},
-                "text": T("On the left, a parallel beam; at the source, a flash. Every ray is computed by the laws of "
-                          "the run ({laws}). What the front does near the body (is delayed, bends round, is captured "
-                          "or goes straight) is seen from the computed rays; the observer receives as many images, "
-                          "at such moments, as the run found (events in the log). The checks appear when the rays "
-                          "have actually reached the horizon or left the scene.", laws=self._laws_text())}
+                "text": T("On the left, a parallel beam; at the source, a flash. Every ray is computed by the laws "
+                          "of the run ({laws}). What the front does near the body (is delayed, bends round, is "
+                          "captured or goes straight) is seen from the computed rays; the observer receives the "
+                          "images the run found, at the moments it found them (events in the log). The checks appear "
+                          "when the rays have actually reached the horizon or left the scene.", laws=self._laws_text())}
 
     def _deflection_checks(self, rays, ys):
         """Compare the RK fan with exact quadrature on the same finite path; the capture boundary vs b_c."""
@@ -447,25 +447,25 @@ class Simulation(BaseSimulation):
                 f"defl_{i}", T("Deflection of the same ray at infinity (quadrature, a reference computation)"),
                 S.deflection_from_quadrature(b, rs), checks.darwin_deflection(rtp, rs), T("rad"), group=T("GR"),
                 note=T("not an event of the run: the path from −∞ to +∞; reference: Darwin's formula (elliptic "
-                       "integrals); the weak field 2rs/b = {w:.6g}", w=2 * rs / b)))
+                       "integrals); weak-field limit 2rs/b = {w:.6g}", w=2 * rs / b)))
 
     def _scn_andromeda(self, p):
         c = self.laws.c
         D = p["an_dist_mly"] * 1e6 * LIGHT_YEAR
         v = p["an_walk"]
         if self.laws.relativistic and v >= c:  # P7: the walkers' worldlines would not be timelike in this world
-            raise Refusal(T("pedestrians are not faster than the light of this world: the pedestrians' speed {v:.4g} "
-                            "m/s ≥ c × {f} = {c:.4g} m/s (in SR a body does not catch up with light)", v=v,
+            raise Refusal(T("pedestrians cannot be faster than the light of this world: the pedestrians' speed "
+                            "{v:.4g} m/s ≥ c × {f} = {c:.4g} m/s (in SR a body cannot reach the speed of light)", v=v,
                             f=self.laws.c_factor, c=c),
-                          hint=T("make the pedestrians' speed less than {c:.4g} m/s or raise the factor “Speed of "
-                                 "light, × c” above {f:.4g}", c=c, f=v / C_SI))
+                          hint=T("make the pedestrians' speed less than {c:.4g} m/s or raise the multiplier “Speed "
+                                 "of light, × c” above {f:.4g}", c=c, f=v / C_SI))
         w = self._new_world(None, [0.5 * D, 0.0], 1.2 * D)
         w.add(Obj("earth", T("Earth"), "planet", COLORS["planet"], Piecewise.start(self.laws, 0.0, 0.0, [0, 0], [0, 0]),
                   radius=R_EARTH, receiver=True))
         w.add(Obj("andromeda", T("Andromeda"), "galaxy", COLORS["galaxy"],
                   Piecewise.start(self.laws, 0.0, 0.0, [D, 0.0], [0, 0]), radius=5e20, receiver=True))
         self._obs("walk_to", T("Walks towards Andromeda"), [0.0, 0.0], [v, 0.0], OBS_COLORS[0])
-        self._obs("stay", T("Stands"), [0.0, 0.0], [0.0, 0.0], OBS_COLORS[1])
+        self._obs("stay", T("At rest"), [0.0, 0.0], [0.0, 0.0], OBS_COLORS[1])
         self._obs("walk_from", T("Walks away from Andromeda"), [0.0, 0.0], [-v, 0.0], OBS_COLORS[2])
         tA = p["an_event_days"] * DAY
         w.schedule({"t": tA, "kind": "scripted", "silent": True, "deps": set(),
@@ -488,13 +488,13 @@ class Simulation(BaseSimulation):
                                        "t0": tA - 10 * DAY, "t1": tA + 10 * DAY},
                                       {"label": T("at the Earth ±{d:d} d", d=10), "x0": -c * 12 * DAY, "x1": c * 12 * DAY,
                                        "t0": -10 * DAY, "t1": 10 * DAY}]},
-                "text": T("Three observers pass each other on the Earth at moment 0 with different speeds. The "
-                          "diagram shows their lines of simultaneity (“now”) computed by the laws of the run "
-                          "({laws}); the buttons “at Andromeda ±{d:d} d” and “at the Earth ±{d:d} d” zoom the "
-                          "diagram. The table “Objects and clocks” shows which moment on Andromeda each observer "
-                          "calls “now” and whether the planned event has already happened there. The parts of the "
-                          "slice that lie in the lab future are not computed yet and are shown pale. The light from "
-                          "the event reaches the observers at the moments the run computes.", laws=self._laws_text(),
+                "text": T("Three observers pass each other on the Earth at t = 0 with different speeds. The diagram "
+                          "shows their lines of simultaneity (“now”) computed by the laws of the run ({laws}); the "
+                          "buttons “at Andromeda ±{d:d} d” and “at the Earth ±{d:d} d” zoom the diagram. The table "
+                          "“Objects and clocks” shows which moment on Andromeda each observer calls “now” and "
+                          "whether the planned event has already happened there. The parts of the slice that lie in "
+                          "the lab future are not computed yet and are shown pale. The light from the event reaches "
+                          "the observers at the moments the run computes.", laws=self._laws_text(),
                           d=10)}
 
     # --- actions --------------------------------------------------------------------------------------

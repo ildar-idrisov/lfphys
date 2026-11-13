@@ -72,11 +72,12 @@ SCHEMA = Schema([
               "changed instantly (that would not be a rigid motion)")),
     _p("sky_T", T("Temperature of the sky, K"), "float", 4000.0, group=SCENE, min=500.0, max=30000.0, log=True,
        show_if={"scene": ["sky"]}),
-    _p("stars", T("Stars"), "int", 300, group=SCENE, min=0, max=2000, show_if={"scene": ["sky", "city"]}),
+    _p("stars", T("Number of stars"), "int", 300, group=SCENE, min=0, max=2000, show_if={"scene": ["sky", "city"]}),
     _p("obs_beta", T("Speed of the observer β"), "float", 0.0, group=OBSERVER, min=0.0, max=0.99, live=True,
        help=T("A change is a boost of a point observer at the current moment: the same light, other directions and "
               "frequencies")),
-    _p("obs_theta", T("Direction of the observer's velocity: from the z axis θ, °"), "float", 0.0, group=OBSERVER,
+    _p("obs_theta", T("Direction of the observer's velocity: polar angle θ from the z axis, °"), "float", 0.0,
+       group=OBSERVER,
        min=0.0, max=180.0, live=True),
     _p("obs_phi", T("Direction of the observer's velocity: azimuth φ, °"), "float", 0.0, group=OBSERVER, min=0.0,
        max=360.0, live=True),
@@ -85,7 +86,7 @@ SCHEMA = Schema([
        show_if={"camera": ["pinhole"]}),
     _p("yaw", T("View: turn from the z axis towards the x axis, °"), "float", 0.0, group=CAMERA, min=-180.0, max=180.0,
        live=True),
-    _p("pitch", T("View: up, °"), "float", 0.0, group=CAMERA, min=-80.0, max=80.0, live=True),
+    _p("pitch", T("View: elevation, °"), "float", 0.0, group=CAMERA, min=-80.0, max=80.0, live=True),
     _p("res", T("Image size"), "select", "m", group=CAMERA, live=True,
        options=[("s", T("small size")), ("m", T("medium size")), ("l", T("large size"))]),
     _p("image", IMAGE, "select", "seen", group=IMAGE, live=True, options=IMAGES),
@@ -364,7 +365,7 @@ class Simulation(BaseSimulation):
         err = float(np.max(np.abs(r["s"][f] - s[f]) / s[f])) if f.any() else 0.0
         self._check("rest_equal", T("Scene at rest: the tracer against ordinary rays (distances, relative)"), err, 0.0,
                     "", tol=4 * EPS, ok=same and err <= 4 * EPS, group=T("Check of the tracer"),
-                    note=T("without velocities the Lorentz transformations are identities: the same bodies in {n:d} "
+                    note=T("at zero velocities the Lorentz transformations are the identity: the same bodies in {n:d} "
                            "pixels, the same distances; the bodies agree: {same}", n=int(f.sum()),
                            same=T("yes") if same else T("no")))
 

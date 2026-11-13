@@ -1,0 +1,34 @@
+{
+  "flux plane #{plid} ({ax} = {pos:.4g}) is outside the new window or closer than {n} steps to its edge": {
+    "one": "flux plane #{plid} ({ax} = {pos:.4g}) is outside the new window or closer than {n} step to its edge",
+    "other": "flux plane #{plid} ({ax} = {pos:.4g}) is outside the new window or closer than {n} steps to its edge"
+  },
+  "new grid: {n} point counts needed": {
+    "one": "new grid: {n} point count needed",
+    "other": "new grid: {n} point counts needed"
+  },
+  "probe point: {n} coordinates": {
+    "one": "probe point: {n} coordinate",
+    "other": "probe point: {n} coordinates"
+  },
+  "region: {n} coordinates": {
+    "one": "region: {n} coordinate",
+    "other": "region: {n} coordinates"
+  },
+  "source: {n} coordinates": {
+    "one": "source: {n} coordinate",
+    "other": "source: {n} coordinates"
+  },
+  "total-field region: {n} coordinates": {
+    "one": "total-field region: {n} coordinate",
+    "other": "total-field region: {n} coordinates"
+  },
+  "{n} coordinates needed, {m} given": {
+    "one": "{n} coordinate needed, {m} given",
+    "other": "{n} coordinates needed, {m} given"
+  },
+  "{what}: {n} components needed, {m} given": {
+    "one": "{what}: {n} component needed, {m} given",
+    "other": "{what}: {n} components needed, {m} given"
+  }
+}

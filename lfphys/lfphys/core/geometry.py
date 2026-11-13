@@ -25,6 +25,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from lfphys.i18n import T, join
+from lfphys.codes import coded
 
 ABOUT = {
     "layer": "core", "kind": "numerics",
@@ -80,7 +81,7 @@ class Plane:
         u = z x n normalised (x for a transverse plane), signs chosen so that v points to larger depth."""
         n = np.asarray(normal, float)
         if np.linalg.norm(n) == 0:
-            raise ValueError("Plane.horizontal: zero normal")
+            raise coded(ValueError(T("a plane needs a non-zero normal")), "geometry.zero_normal")
         n = n / np.linalg.norm(n)
         h = np.cross((0.0, 0.0, 1.0), n)
         if np.linalg.norm(h) < 1e-12:  # transverse plane: u = x, v = n x u (y for n = +z)
@@ -99,7 +100,7 @@ class Plane:
         (another axis if u_hint is along the normal), v = n x u."""
         n = np.asarray(normal, float)
         if np.linalg.norm(n) == 0:
-            raise ValueError("Plane.from_normal: zero normal")
+            raise coded(ValueError(T("a plane needs a non-zero normal")), "geometry.zero_normal")
         n = n / np.linalg.norm(n)
         h = np.asarray(u_hint, float)
         u = h - (h @ n) * n

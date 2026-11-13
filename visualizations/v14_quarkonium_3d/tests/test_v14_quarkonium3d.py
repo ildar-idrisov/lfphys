@@ -135,3 +135,29 @@ def test_a_state_set_live_is_prepared_in_the_same_world():
     assert h.checks()["split_0"]["info"] and h.sim.frame()[0]["t_prep"] == h.sim.t
     h.set(system="bottom")
     assert "Quark pair" in english(h.errors()[-1]) and h.sim.system == "charm"
+
+
+def test_a_box_too_small_for_the_states_is_refused_with_the_engines_code(monkeypatch):
+    """Review i18n-code F5: the world's radial solve enlarges its box like the engine's Cornell spectrum
+    (cornell._box_needed); when four enlargements do not hold the states (forced here: the needed box always grows),
+    the refusal carries the engine's code "cornell.box" and the world's own msgid. The engine's spectrum itself refuses
+    the same condition with the same code."""
+    from lfphys.codes import code_of
+    calls = []
+
+    def growing(kappa, a, mu, L, E):  # always twice the box asked last time
+        calls.append(1)
+        return 50.0 * 2.0 ** len(calls)
+    monkeypatch.setattr(cornell, "_box_needed", growing)
+    Q.solve.cache_clear()
+    try:
+        with pytest.raises(ValueError) as e:
+            Q.solve("charm", 1, 3, 200)
+        assert code_of(e.value) == "cornell.box"
+        assert text_of(e.value).msgid == "the states with L = {L} do not fit into the box of radius {R:.3g} GeV⁻¹"
+        calls.clear()
+        with pytest.raises(ValueError) as e2:
+            cornell.spectrum(Q.mass("charm"), L_max=0, n_max=1, N=200)
+        assert code_of(e2.value) == "cornell.box"
+    finally:
+        Q.solve.cache_clear()

@@ -1,0 +1,10 @@
+{
+ "against ⟨H⟩ at t = {t:.4g} s; the bound 2‖Hψ‖e + e²‖H‖ with the step error e estimated by a companion run (a step dt against two dt/2 every {n:d} steps): a bound at this estimate, not a strict one": {
+  "one": "against ⟨H⟩ at t = {t:.4g} s; the bound 2‖Hψ‖e + e²‖H‖ with the step error e estimated by a companion run (a step dt against two dt/2 every {n:d} step): a bound at this estimate, not a strict one",
+  "other": "against ⟨H⟩ at t = {t:.4g} s; the bound 2‖Hψ‖e + e²‖H‖ with the step error e estimated by a companion run (a step dt against two dt/2 every {n:d} steps): a bound at this estimate, not a strict one"
+ },
+ "local {loc:.3g} per step (a step dt against two dt/2, ×4/3, every {n:d} scene steps); the sum over the steps estimates the global error ‖ψ − ψ_exact‖ to leading order, not a bound (the double slit: an estimate of {e1:.2g} at a true {e2:.2g})": {
+  "one": "local {loc:.3g} per step (a step dt against two dt/2, ×4/3, every {n:d} scene step); the sum over the steps estimates the global error ‖ψ − ψ_exact‖ to leading order, not a bound (the double slit: an estimate of {e1:.2g} at a true {e2:.2g})",
+  "other": "local {loc:.3g} per step (a step dt against two dt/2, ×4/3, every {n:d} scene steps); the sum over the steps estimates the global error ‖ψ − ψ_exact‖ to leading order, not a bound (the double slit: an estimate of {e1:.2g} at a true {e2:.2g})"
+ }
+}

@@ -57,7 +57,7 @@ SCHEMA = Schema([
     _p("n2", T("Second state: n"), "int", 1, group=G_SUPER, min=1, max=3, show_if=SUPER, live=True, help=PREP),
     _p("l2", T("Second state: L"), "int", 1, group=G_SUPER, min=0, max=2, show_if=SUPER, live=True, help=PREP),
     _p("m2", T("Second state: m"), "int", 0, group=G_SUPER, min=-2, max=2, show_if=SUPER, live=True, help=PREP),
-    _p("real2", T("Second state real"), "bool", True, group=G_SUPER, show_if=SUPER, live=True,
+    _p("real2", T("Second state: real"), "bool", True, group=G_SUPER, show_if=SUPER, live=True,
        help=PREP),
     _p("w2", T("Weight of the second state |c₂|²"), "float", 0.5, group=G_SUPER, min=0.01, max=0.99, show_if=SUPER,
        live=True, help=PREP),
@@ -205,7 +205,7 @@ class Simulation(OrbitalWorld):
 
     # --- the independent route ------------------------------------------------------------------------------------------
     verify_note = T("reference: the radial function of a second solution on a finer grid, Y_lm by scipy; tolerance: "
-                    "3 × the difference of the two radial solutions (their accuracy is the check “Convergence”) and "
+                    "3 × the difference of the two radial solutions (their accuracy is the “Convergence” check) and "
                     "the round-off of the harmonics")
 
     def _reference(self, x, y, z, t):
@@ -245,7 +245,7 @@ class Simulation(OrbitalWorld):
             self._check(f"conv_{k}", T("Convergence{tag}: R(r) of the grid N = {n1:d} against N = {n2:d}", tag=tag,
                                        n1=Q.N_GRID, n2=Q.N_REF), conv, 0.0,
                         tol=DISPLAY_RESOLUTION, ok=conv <= DISPLAY_RESOLUTION,
-                        note=T("fraction of max|R|; tolerance: half a step of the 8-bit picture (the cloud and the "
+                        note=T("fraction of max|R|; tolerance: half a quantisation step of the 8-bit image (the cloud and the "
                                "slice windows): the difference of the solutions must not be visible"))
             Tk, Vk = C.energy_terms(o.R, o.R.derivative, l, V, self.r_max, self.mu)
             Tr, Vr = C.energy_terms(tr["R"], tr["R"].derivative, l, V, self.r_max, self.mu)
@@ -294,7 +294,7 @@ class Simulation(OrbitalWorld):
                            "w": float(abs(ck) ** 2), "phase_deg": math.degrees(float(np.angle(ck))),
                            "E": (tb["E"] - self.E1S) * 1e3, "r_mean": None,
                            "r_mean_quad": C.moment(o.R, 1, self.r_max) * self.Lu,
-                           "extra": [[T("energy in the potential E"), tb["E"] * 1e3, T("MeV")],
+                           "extra": [[T("energy E (in the potential)"), tb["E"] * 1e3, T("MeV")],
                                      ["√⟨r²⟩", rms, T("fm")]]})
         name = Q.SYSTEMS[self.system][0]
         what = " + ".join(s["label"] for s in states)
@@ -309,7 +309,7 @@ class Simulation(OrbitalWorld):
                       "numerical solution whose accuracy is measured; the arrows are the probability current; the "
                       "slices are planes at any angle with |ψ|² and the phase."),
             "actions": [],
-            "approximations": [T("the Cornell model (fitted κ, a, m_q): non-relativistic, without spin forces and "
+            "approximations": [T("the Cornell model (fitted κ, a, m_q): non-relativistic, without spin-dependent forces and "
                                  "without coupling to open channels; it predicts the splittings of the levels, not the "
                                  "absolute masses")],
             "scene3d": self.scene([{"id": "cm", "label": T("Centre of mass of the pair (the cloud is the separation "

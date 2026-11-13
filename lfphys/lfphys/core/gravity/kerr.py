@@ -24,6 +24,7 @@ from __future__ import annotations
 import math
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
@@ -40,7 +41,7 @@ ABOUT = {
 
 def _chk(chi):
     if not 0.0 <= chi <= 1.0:
-        raise ValueError("spin chi = a/M must be in [0, 1]")
+        raise coded(ValueError(T("the spin χ = a/M must be in [0, 1]")), "kerr.spin")
 
 
 def horizons(chi: float) -> tuple[float, float]:

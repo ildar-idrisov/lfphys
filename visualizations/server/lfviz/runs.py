@@ -55,7 +55,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import checkpoint as CK, limits, protocol, registry, devices
-from .i18n import T, is_t, join, text_of
+from .i18n import T, is_t, join, json_hook, text_of
 
 SETTINGS_NAME = "settings.json"  # the runs folder's own settings: the removal period chosen on the catalogue page
 KEEP_DAYS_MAX = 3650
@@ -419,7 +419,7 @@ class Run:
         name = cmd.get("cmd")
         if self.rebuilding and name in WORLD_COMMANDS and not first:
             raise RuntimeError(T("the world is still being restored: the change was not accepted — repeat it when "
-                                 "the record goes on"))
+                                 "the record resumes"))
         line = json.dumps({"cmd": name, "args": cmd.get("args") or {}}, ensure_ascii=False)
         self.proc.stdin.write(line.encode() + b"\n")
         if self.busy and name in WORLD_COMMANDS:
@@ -497,17 +497,17 @@ class Run:
         what = b.get("what") or self.CANCEL_TEXT.get(b.get("cmd"), b.get("cmd") or T("the computation"))
         if sent:
             text = T("Cancelled: {what}. The world is back at the moment before this command (it was not applied) "
-                     "and goes on from it, paused; the commands sent during the computation were not applied either: "
+                     "and continues from it, paused; the commands sent during the computation were not applied either: "
                      "{cmds}", what=what, cmds=", ".join(map(str, sent)))
         else:
             text = T("Cancelled: {what}. The world is back at the moment before this command (it was not applied) "
-                     "and goes on from it, paused", what=what)
+                     "and continues from it, paused", what=what)
         log = self.meta.setdefault("commands", [])
         log.append({"wall": _now_iso(), "from": source, "cmd": "cancel", "args": {"cancelled": b}})
         try:
             await self.mgr.resume(self)
         except (RuntimeError, OverflowError) as e:
-            text = T("{text}. It could not go on at once ({why}); ⏺ will try again", text=text, why=text_of(e))
+            text = T("{text}. It could not be resumed at once ({why}); ⏺ will try again", text=text, why=text_of(e))
         self._ingest(protocol.encode({"type": "notice", "t": self.meta.get("sim_t", 0.0), "text": text}))
         return {"ok": True, "cancelled": b}
 
@@ -519,7 +519,7 @@ class Run:
         stale (review C1-16)."""
         heads = [i for i, e in enumerate(self.entries) if e.kind == "header"]
         if not heads and not self.headers:
-            raise RuntimeError(T("the record holds no world: there is nothing to go on with"))
+            raise RuntimeError(T("the record holds no world: there is nothing to resume"))
         script = []
         ckpt, ckpt_at = None, 0  # the last usable checkpoint of this world and its place in the script
         env = CK.runtime_env()
@@ -676,7 +676,7 @@ class Run:
         good; off: the record goes on as a moving window again (what was kept stays). The window's length can be
         changed at the same time."""
         if not self.buffered:
-            raise RuntimeError(T("this run is recorded whole: only a playground has a record window"))
+            raise RuntimeError(T("this run is recorded whole: only a laboratory has a record window"))
         b = self.meta["buffer"]
         if window_s is not None:
             w = float(window_s)
@@ -799,7 +799,7 @@ class RunManager:
         if not (d.is_dir() and mp.is_file() and sp.is_file()):
             return None
         try:
-            meta = json.loads(mp.read_text())
+            meta = json.loads(mp.read_text(), object_hook=json_hook)  # texts back as T (review i18n-code F2)
         except (OSError, json.JSONDecodeError):
             return None
         if meta.get("state") in ("running", "starting"):
@@ -917,7 +917,7 @@ class RunManager:
         idle = [r for r in self.runs.values() if r.running and not r.viewers and not r.rebuilding]
         if not idle:
             raise OverflowError(T("all {n:d} workers are busy with open runs: close the tab of one of them (it will be "
-                                  "suspended and go on when you open it again)", n=self.max_workers))
+                                  "suspended and resume when you open it again)", n=self.max_workers))
         await min(idle, key=lambda r: r.last_viewer_time).suspend("room for another run")
 
     async def resume(self, run: Run, first: dict | None = None, source: str = "") -> bool:
@@ -929,11 +929,11 @@ class RunManager:
                 return False
             if not run.meta.get("restorable"):
                 raise RuntimeError(T("this record was made before the version that can continue runs: start a new run "
-                                     "with the same parameters (the “New world” button or the catalogue)"))
+                                     "with the same parameters (the “▶ Start a new world” button or the catalogue)"))
             w = run._latest_world()
             header, script, t_end, ckpt = w["header"], w["script"], w["t_end"], w["checkpoint"]
             if ckpt is None and not w["complete"]:
-                raise RuntimeError(T("it cannot go on: the saved state does not fit (the code or the libraries' versions "
+                raise RuntimeError(T("it cannot be resumed: the saved state does not fit (the code or the libraries' versions "
                                      "changed), and the world's start has already left the record's window — there "
                                      "is nothing to recompute it from. Start the world again from a scene file or a "
                                      "scenario"))
@@ -945,14 +945,14 @@ class RunManager:
                 prev = (run.meta.get("resumes") or [{}])[-1].get("code") or run.meta.get("code")
                 n_cmd = sum(1 for c in script if "cmd" in c)
                 if ckpt is not None:
-                    text = T("Going on from the world's saved state at t = {t:.6g} s…", t=ckpt["t"])
+                    text = T("Resuming from the world's saved state at t = {t:.6g} s…", t=ckpt["t"])
                 elif code != prev:
-                    text = T("Going on: the world is recomputed from its start along the record up to t = {t:.6g} s "
+                    text = T("Resuming: the world is recomputed from its start along the record up to t = {t:.6g} s "
                              "({n:d} changes of the set-up)… The visualization's code changed since last time: the "
                              "continuation is computed by the new version, the earlier part of the record by the old "
                              "one", t=t_end, n=n_cmd)
                 else:
-                    text = T("Going on: the world is recomputed from its start along the record up to t = {t:.6g} s "
+                    text = T("Resuming: the world is recomputed from its start along the record up to t = {t:.6g} s "
                              "({n:d} changes of the set-up)…", t=t_end, n=n_cmd)
                 run._ingest(protocol.encode({"type": "notice", "t": t_end, "text": text}))
                 init = {"params": header.get("params") or run.meta.get("params"), "seed": header.get("seed", 0),

@@ -106,7 +106,8 @@ import math
 
 import numpy as np
 
-from lfphys.i18n import T
+from lfphys.i18n import T, text_of
+from lfphys.codes import coded
 
 ABOUT = {
     "layer": "core", "kind": "numerical solution",
@@ -114,12 +115,12 @@ ABOUT = {
     "statement": T("Point masses and test particles (m = 0) with stable keys: bodies are added, removed and changed "
                    "at the current moment; the time-symmetric fourth-order Hermite scheme P(EC)^n with a shared step "
                    "by Aarseth's criterion (symmetrised over the ends of the step) for close encounters, and the "
-                   "fourth-order symplectic Forest–Ruth–Yoshida scheme with a constant step for long quiet systems; "
-                   "collisions (the moment the surfaces touch is found exactly): a merger conserving mass and "
-                   "momentum, or a pass-through; energy, momentum, angular momentum, centre of mass; acceleration, "
-                   "potential and tidal tensor at any points; an estimate of the local step error and a companion run "
-                   "of stricter accuracy; the state is plain data, and a restore continues the computation bit for "
-                   "bit."),
+                   "fourth-order symplectic Forest–Ruth–Yoshida scheme with a constant step for long runs of quiet "
+                   "systems; collisions (the moment the surfaces touch is found exactly): a merger conserving mass "
+                   "and momentum, or a pass-through; energy, momentum, angular momentum, centre of mass; "
+                   "acceleration, potential and tidal tensor at any points; an estimate of the local step error and a "
+                   "companion run of stricter accuracy; the state is plain data, and a restore continues the "
+                   "computation bit for bit."),
     "validity": T("Newtonian gravity: GR corrections of order GM/(c²r) and v²/c² (for two bodies the fuller form is "
                   "core.gravity.pn_binary, for test bodies about one mass the geodesics of core.gravity.kerr_newman: "
                   "see conflicts; for N ≥ 3 this is the most complete form in the engine, which has no post-Newtonian "
@@ -132,7 +133,7 @@ ABOUT = {
                   "the README"),
     "basis": [T("Makino & Aarseth, PASJ 44, 141 (1992): the Hermite scheme"),
               "Kokubo, Yoshinaga & Makino, MNRAS 297, 1067 (1998), Eqs. (1)-(12)",
-              T("Hut, Makino & McMillan, ApJ 443, L93 (1995), Eq. (4b): symmetrisation of the step"),
+              T("Hut, Makino & McMillan, ApJ 443, L93 (1995), eq. (4b): symmetrisation of the step"),
               "Nitadori & Makino, New Astron. 13, 498 (2008), Eqs. (1), (2), (5), (15)",
               "Forest & Ruth, Physica D 43, 105 (1990); Yoshida, Phys. Lett. A 150, 262 (1990); "
               "Omelyan, Mryglod & Folk, Comput. Phys. Commun. 146, 188 (2002), Eq. (8)",
@@ -170,7 +171,8 @@ def acc_jerk(x, v, m, G, src=None, jerk=True, notself=None):
     dx = x[src][None, :, :] - x[:, None, :]
     r2 = np.einsum("ijk,ijk->ij", dx, dx) + (1.0 - notself)
     if not np.all(r2 > 0.0):
-        raise FloatingPointError("two bodies at the same point (exact collision of point masses)")
+        raise coded(FloatingPointError(T("two bodies at the same point (an exact collision of point masses)")),
+                    "nbody.collision")
     inv_r2 = 1.0 / r2
     w = (G * np.asarray(m, float)[src]) * notself * inv_r2 * np.sqrt(inv_r2)
     a = np.einsum("ij,ijk->ik", w, dx)
@@ -199,7 +201,7 @@ def field_at(points, x, m, G, exclude=None):
     d = xs[None, :, :] - p[:, None, :]
     d2 = np.einsum("ijk,ijk->ij", d, d)
     if np.any(d2 == 0.0):
-        raise FloatingPointError("a field point coincides with a massive body")
+        raise coded(FloatingPointError(T("a field point coincides with a massive body")), "nbody.collision")
     inv = 1.0 / np.sqrt(d2)
     gm = G * ms[None, :]
     phi = -np.sum(gm * inv, axis=1)
@@ -398,10 +400,11 @@ class NBody:
         v = self._vec(v)
         m, radius, rpm = float(m), float(radius), float(radius_per_mass)
         if not all(z >= 0.0 and math.isfinite(z) for z in (m, radius, rpm)):
-            raise ValueError("mass, radius and radius_per_mass must be finite and >= 0")
+            raise coded(ValueError(T("mass, radius and radius per mass must be finite and ≥ 0")), "nbody.body")
         if rpm > 0.0:
             if radius != 0.0:
-                raise ValueError("a compact body's radius is radius_per_mass * m: give radius 0")
+                raise coded(ValueError(T("a compact body's radius is its radius per mass × m: give radius 0")),
+                            "nbody.body")
             radius = rpm * m
         if key is None:
             while self._next_key in self._keys:
@@ -454,10 +457,13 @@ class NBody:
                 if k in ch:
                     ch[k] = float(ch[k])
                     if not (ch[k] >= 0.0 and math.isfinite(ch[k])):
-                        raise ValueError(f"{k} must be finite and >= 0")
+                        name = {"m": T("the mass"), "radius": T("the radius"),
+                                "radius_per_mass": T("the radius per mass")}[k]
+                        raise coded(ValueError(T("{what:cap} must be finite and ≥ 0", what=name)), "nbody.body")
             rpm = ch.get("radius_per_mass", float(self._rpm[i]))
             if rpm > 0.0 and "radius" in ch:
-                raise ValueError("a compact body's radius is radius_per_mass * m: change m or radius_per_mass")
+                raise coded(ValueError(T("a compact body's radius is its radius per mass × m: change m or the "
+                                         "radius per mass")), "nbody.body")
             plan.append((i, ch))
 
         def apply():
@@ -490,7 +496,7 @@ class NBody:
         except FloatingPointError as e:
             for k, val in snap.items():
                 setattr(self, k, val)
-            raise ValueError(f"{e}: {what}") from e
+            raise coded(ValueError(T("{reason}: {what}", reason=text_of(e), what=what)), "nbody.refused") from e
         except BaseException:
             for k, val in snap.items():
                 setattr(self, k, val)
@@ -763,7 +769,7 @@ class NBody:
     def _vec(z):
         z = np.asarray(z, float).reshape(3)
         if not np.all(np.isfinite(z)):
-            raise ValueError("non-finite vector")
+            raise coded(ValueError(T("a vector with non-finite components")), "nbody.body")
         return z
 
     def _src(self):

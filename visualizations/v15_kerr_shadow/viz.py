@@ -31,6 +31,7 @@ import numpy as np
 from lfphys.core import backend as B
 from lfphys.core import data as D
 from lfphys.core.gravity import kerr, kerr_null as KN, kerr_shadow as KS
+from lfphys.codes import code_of
 from lfphys.i18n import T, english, join, text_of
 from lfphys.theories.alternatives import johannsen_metric as JP
 from lfviz.errors import Refusal
@@ -45,7 +46,7 @@ EPS = np.finfo(float).eps
 TARGETS = [("m87", "M87* (EHT 2019)"), ("sgra", "Sgr A* (EHT 2022)"), ("none", T("no comparison"))]
 PROFILES = [("r2", T("J ∝ r⁻² from the inner edge to {r} M", r=20)),
             ("ring", T("a narrow ring at r = {r} M (width {w} M)", r=6, w=0.3))]
-G_LAWS, G_HOLE, G_DISK, G_SCREEN = T("Laws"), T("Black hole"), T("Disk"), T("Screen")
+G_LAWS, G_HOLE, G_DISK, G_SCREEN = T("Laws"), T("Black hole"), T("Disc"), T("Screen")
 
 
 def _p(*a, **k):
@@ -57,11 +58,11 @@ SCHEMA = Schema([
        options=[("kerr", T("Kerr (GR)")), ("jp", T("Johannsen: a deviation from Kerr (what if)"))],
        help=T("Kerr is the rotating black hole of GR. “What if”: the Johannsen metric with the parameters α (α = 0 is "
               "Kerr); for it the engine computes the edge of the shadow and its size against EHT, but not an image of "
-              "the disk")),
+              "the disc")),
     _p("a13", T("α₁₃: deviation in A₁ = 1 + α₁₃/r³"), "float", 0.0, group=G_LAWS, standard=0.0, min=-10.0, max=10.0,
        show_if={"metric": ["jp"]},
-       help=T("The metric must be regular outside the horizon (Johannsen 2013a, Eqs. 72, 76–78), and its photon orbits "
-              "must form one band: otherwise the world is not built and names the values it takes. At a = {a} with "
+       help=T("The metric must be regular outside the horizon (Johannsen 2013a, eqs. 72, 76–78), and its photon orbits "
+              "must form one band: otherwise the world is not built and names the values it accepts. At a = {a} with "
               "the other α = 0: α₁₃ ≥ {lo} (at a = 0: α₁₃ > {lo0})", a=0.9, lo=-2.11, lo0=-8)),
     _p("a22", T("α₂₂: deviation in A₂ = 1 + α₂₂/r²"), "float", 0.0, group=G_LAWS, standard=0.0, min=-3.0, max=10.0,
        show_if={"metric": ["jp"]},
@@ -77,22 +78,22 @@ SCHEMA = Schema([
     _p("incl", T("Observer's inclination to the spin axis θ, °"), "float", D.EHT_M87_INCLINATION_DEG["a_positive"],
        group=T("Observer"), min=1.0, max=179.0, live=True,
        help=T("{i1}°: how EHT compared the images of M87* for a > 0 ({i2}° for a ≤ 0; EHT 2019 Paper V, Fig. 8): the "
-              "jet towards us at {i2}°, the hole's spin away from us; {i3}°: the disk edge-on", i1=163, i2=17, i3=90)),
-    _p("emitter", T("Gas of the disk"), "select", "cunningham", group=G_DISK, live=True,
+              "jet towards us at {i2}°, the hole's spin away from us; {i3}°: the disc edge-on", i1=163, i2=17, i3=90)),
+    _p("emitter", T("Gas of the disc"), "select", "cunningham", group=G_DISK, live=True,
        options=[("cunningham", T("Keplerian outside the ISCO, falling in down to the horizon (Cunningham)")),
                 ("keplerian", T("Keplerian outside the ISCO only (dark inside)"))]),
-    _p("retro", T("The disk rotates against the hole"), "bool", False, group=G_DISK, live=True),
-    _p("profile", T("Emission of the disk J(r) (a source model)"), "select", "r2", group=G_DISK, live=True,
+    _p("retro", T("The disc counter-rotates with respect to the hole"), "bool", False, group=G_DISK, live=True),
+    _p("profile", T("Emission of the disc J(r) (a source model)"), "select", "r2", group=G_DISK, live=True,
        options=PROFILES),
     _p("res", T("Screen resolution"), "select", "m", group=G_SCREEN, live=True,
        options=[("s", "128 × 128"), ("m", "192 × 192"), ("l", "256 × 256")]),
     _p("half", T("Half-width of the screen, M"), "float", 9.0, group=G_SCREEN, min=4.0, max=30.0, live=True),
-    _p("n_rays", T("Rays in 3-D"), "int", 14, group=G_SCREEN, min=0, max=40, live=True),
+    _p("n_rays", T("Number of rays in 3-D"), "int", 14, group=G_SCREEN, min=0, max=40, live=True),
 ], presets={
-    "m87": {"label": T("M87*: a = {a}, inclination {i}° (as EHT for a > 0), Cunningham's disk: the shadow, the lensing "
+    "m87": {"label": T("M87*: a = {a}, inclination {i}° (as EHT for a > 0), Cunningham's disc: the shadow, the lensing "
                        "ring, the photon ring", a=0.9, i=163),
             "params": {}},
-    "edge_on": {"label": T("The disk edge-on (θ = {i}°), a = {a}: the shadow is flattened, the rings are asymmetric",
+    "edge_on": {"label": T("The disc edge-on (θ = {i}°), a = {a}: the shadow is flattened, the rings are asymmetric",
                            i=90, a=0.99),
                 "params": {"chi": 0.99, "incl": 90.0}},
     "schwarzschild": {"label": T("No rotation (a = 0): the shadow is a circle of radius √27 M"),
@@ -104,6 +105,21 @@ SCHEMA = Schema([
     "whatif": {"label": T("What if: the Johannsen metric with α₁₃ = {v}, a larger shadow, compared with EHT", v=3),
                "params": {"metric": "jp", "a13": 3.0, "chi": 0.0, "incl": 17.0}},
 })
+
+# The refusals of JP.circular_orbits put into this world's words, by the engine's machine code (``lfphys.codes``; review
+# i18n-code F5): never by the wording, which may change. The radii are the engine's search limits (60 M, 200 M).
+_ORBIT_REFUSALS = {
+    "jp.no_photon_orbit": lambda: T("there is no circular photon orbit between the horizon and {r} M", r=60),
+    "jp.no_stable_orbit": lambda: T("there are no stable circular orbits even at {r} M", r=200),
+    "jp.no_isco": lambda: T("the inner edge of the stable circular orbits (ISCO) is not found up to {r} M", r=200),
+}
+
+
+def orbits_refusal(e):
+    """The world's text for a refusal of JP.circular_orbits, by its code; any other failure is named by the engine's
+    own text (the world still goes on without the rings)."""
+    text = _ORBIT_REFUSALS.get(code_of(e))
+    return text() if text else text_of(e)
 
 
 def _surface(r_of_theta, chi, nth=36, nph=48):
@@ -190,7 +206,9 @@ class Simulation(BaseSimulation):
             self.image = None
             try:
                 self.curve = JP.shadow_curve(self.chi, th, self.dev, 721)
-            except ValueError as e:  # P6: in the owner's terms
+            except ValueError as e:  # P6: in the owner's terms (by the engine's code, review i18n-code F5)
+                if code_of(e) != "jp.no_bound_orbit":
+                    raise
                 raise Refusal(T("at the inclination θ = {i}° no spherical photon orbit of this metric is visible: "
                                 "there is no edge of the shadow", i=float(self.live["incl"])),
                               hint=T("choose another inclination θ of the observer"),
@@ -270,7 +288,7 @@ class Simulation(BaseSimulation):
                 a_, b_ = i * len(ph) + j, i * len(ph) + (j + 1) % len(ph)
                 idx += [a_, a_ + len(ph), b_, b_, a_ + len(ph), b_ + len(ph)]
         self._msg({"type": "mesh", "t": self.t, "id": "disk", "count": int(len(pos)), "opacity": 0.55,
-                   "label": T("Disk: emission J(r) from {r0:.4g} to {r1} M (a source model)", r0=r_in, r1=R_OUT)},
+                   "label": T("Disc: emission J(r) from {r0:.4g} to {r1} M (a source model)", r0=r_in, r1=R_OUT)},
                   {"pos": pos, "idx": np.array(idx, np.uint32), "rgb": rgb})
 
     def _rays(self):
@@ -316,10 +334,7 @@ class Simulation(BaseSimulation):
         try:
             o = JP.circular_orbits(self.chi, self.dev)
         except ValueError as e:  # the shadow is still computable: the world goes on without the rings (P6)
-            s = english(text_of(e))
-            why = (T("there is no circular photon orbit between the horizon and {r} M", r=60) if "photon orbit" in s
-                   else T("there are no stable circular orbits even at {r} M", r=200) if "stable" in s else
-                   T("the inner edge of the stable circular orbits (ISCO) is not found up to {r} M", r=200))
+            why = orbits_refusal(e)
             self._msg({"type": "notice", "t": self.t, "text": T(
                 "The equatorial circular orbits of this metric are not drawn: {why}. The edge of the shadow and its "
                 "comparison with EHT are computed", why=why)})
@@ -340,7 +355,7 @@ class Simulation(BaseSimulation):
             ergo = T("Ergosphere (inside it nothing can stay at rest)")
         else:
             pos, idx = _surface(lambda th: JP.ergosurface(self.chi, self.dev, th), self.chi)
-            ergo = T("Ergosphere of this metric: g_tt = 0, Δ = a²A₂² sin²θ (Johannsen 2013a, Eq. 69)")
+            ergo = T("Ergosphere of this metric: g_tt = 0, Δ = a²A₂² sin²θ (Johannsen 2013a, eq. 69)")
         self._msg({"type": "mesh", "t": self.t, "id": "ergo", "count": int(len(pos)), "opacity": 0.18, "label": ergo},
                   {"pos": pos, "idx": idx, "rgb": np.tile(np.array([[120, 90, 200]], np.uint8), (len(pos), 1))})
         ph = np.linspace(0.0, 2.0 * math.pi, 181)
@@ -422,7 +437,7 @@ class Simulation(BaseSimulation):
             self._check("lyapunov", T("Photon ring: the demagnification of the images n = 2 → 3 against e^(−γ)"), ratio,
                         eg, tol=max(tl / eg, 1e-6), ok=abs(ratio - eg) <= tl,
                         note=T("images of a ring of gas r = {r:.3g} M in the direction α > 0: the distance to the curve "
-                               "decreases e^γ times per half-period in θ (Johnson et al. 2020), γ = {g:.6g} at the "
+                               "decreases by a factor e^γ per half-period in θ (Johnson et al. 2020), γ = {g:.6g} at the "
                                "orbit r = {rb:.6g} M; the ratio n = 1 → 2 = {q:.6g}; tolerance: 4 e^(−γ)·|the "
                                "deviation n = 1 → 2| (the corrections decrease as e^(−γ) with each order)",
                                r=r_src, g=-math.log(eg), rb=r_b, q=ratio1))
@@ -436,7 +451,7 @@ class Simulation(BaseSimulation):
         self._check("size", T("Size of the shadow δ from the tracer's edge against the closed form"), sz["delta"], ref,
                     tol=sz["delta_tol"] / abs(ref) if ref else sz["delta_tol"], ok=ok,
                     note=T("the median diameter over 128 directions from the midpoint between the extreme α (EHT 2022, "
-                           "Sgr A* Paper VI, Eq. 14: δ = d/(6√3 M) − 1): from the tracer's edge {d:.12g} M, from "
+                           "Sgr A* Paper VI, eq. 14: δ = d/(6√3 M) − 1): from the tracer's edge {d:.12g} M, from "
                            "Bardeen's curve {dc:.12g} M; tolerance {tol:.2g}: the derived tolerances of the edge",
                            d=sz["median_diameter"], dc=sz["median_diameter_closed"], tol=sz["delta_tol"]))
         self._eht_kerr(sz)
@@ -452,7 +467,7 @@ class Simulation(BaseSimulation):
         tgt = self.params["target"]
         d = sz["delta"]
         th_g = D.EHT_M87_THETA_G_UAS[0]
-        size_note = T("the size of this world's shadow by the definition of EHT 2022 (Sgr A* Paper VI, Eq. 14): "
+        size_note = T("the size of this world's shadow by the definition of EHT 2022 (Sgr A* Paper VI, eq. 14): "
                       "δ = {d:.6g}, the median diameter {dm:.6g} M from the edge the tracer found", d=d,
                       dm=sz["median_diameter"])
         if tgt == "m87":
@@ -460,8 +475,8 @@ class Simulation(BaseSimulation):
             self._check("eht", T("M87*: the deviation of the shadow's size from Kerr's (the same a and θ) against EHT "
                                  "2019 ±{s:.2f}", s=s),
                         0.0, 0.0, tol=s, ok=True, info=True, group=T("Comparison with EHT"),
-                        note=T("EHT 2019 (Paper VI, Sec. 9.5, Eq. 31) measured δ = θg(ring)/θg(mass from stars) − 1 = "
-                               "{d0} ± {s}, having calibrated the ring on Kerr models: every Kerr hole has δ = 0 there, "
+                        note=T("EHT 2019 (Paper VI, Sec. 9.5, eq. 31) measured δ = θg(ring)/θg(mass from stars) − 1 = "
+                               "{d0} ± {s}, having calibrated the ring with Kerr models: every Kerr hole has δ = 0 there, "
                                "and this world (Kerr) agrees with it; ±{s} as in Psaltis et al. 2020. {size}; the "
                                "angular diameter of the shadow at θg = {thg} µas is {ang:.4g} µas (the EHT ring "
                                "{ring} ± {ring_e} µas is a ring of emission, not the shadow)",
@@ -473,7 +488,7 @@ class Simulation(BaseSimulation):
             self._check("eht", T("Sgr A*: δ of this world against EHT 2022 (VLTI) {v:+.2f} +{up}/−{dn}", v=v, up=up,
                                  dn=dn), d, v,
                         tol=max(up, dn), ok=lo <= d <= hi, info=True, group=T("Comparison with EHT"),
-                        note=T("{size}; the 68 % interval [{lo:+.2f}, {hi:+.2f}] (EHT 2022 Paper VI, Eq. 13, VLTI)",
+                        note=T("{size}; the 68 % interval [{lo:+.2f}, {hi:+.2f}] (EHT 2022 Paper VI, eq. 13, VLTI)",
                                size=size_note, lo=lo, hi=hi))
 
     def _eht_whatif(self):
@@ -488,10 +503,10 @@ class Simulation(BaseSimulation):
             self._check("eht", T("M87*: the deviation of the shadow's size from Kerr's δ − δ_Kerr against EHT 2019 "
                                  "±{s:.2f}", s=s),
                         d_jp - d_k, 0.0, tol=s, ok=abs(d_jp - d_k) <= s, info=True, group=T("Comparison with EHT"),
-                        note=T("EHT 2019 (Paper VI, Eq. 31) measured θg from the ring calibrated on Kerr against θg "
+                        note=T("EHT 2019 (Paper VI, eq. 31) measured θg from the ring calibrated with Kerr models against θg "
                                "from the stars: the deviation of the size from Kerr's within ±{s} (Psaltis et al. "
                                "2020); δ of this metric {d:.6g}, of Kerr {dk:.6g} (the median diameter, EHT 2022 Paper "
-                               "VI, Eq. 14)", s=s, d=d_jp, dk=d_k))
+                               "VI, eq. 14)", s=s, d=d_jp, dk=d_k))
         elif tgt == "sgra":
             lo, hi = (v - 1.0 for v in D.EHT_SGRA_SHADOW_RADIUS_VLTI)
             v, up, dn = D.EHT_SGRA_DELTA_VLTI
@@ -499,8 +514,8 @@ class Simulation(BaseSimulation):
                                  dn=dn), d_jp, v,
                         tol=max(up, dn), ok=lo <= d_jp <= hi, info=True, group=T("Comparison with EHT"),
                         note=T("δ = d/(6√3 M) − 1, the median diameter of this metric's shadow edge; the 68 % interval "
-                               "[{lo:+.2f}, {hi:+.2f}] (EHT 2022 Paper VI, Eq. 13, VLTI)", lo=lo, hi=hi))
-        self._check("eht_kerr", T("The same hole by Kerr: δ"), d_k, None, info=True, group=T("Comparison with EHT"),
+                               "[{lo:+.2f}, {hi:+.2f}] (EHT 2022 Paper VI, eq. 13, VLTI)", lo=lo, hi=hi))
+        self._check("eht_kerr", T("The same hole in the Kerr metric: δ"), d_k, None, info=True, group=T("Comparison with EHT"),
                     note=T("the deviation of the metric changes δ by {dd:+.4g}", dd=d_jp - d_k))
 
     def _pixels_check(self):
@@ -615,7 +630,7 @@ class Simulation(BaseSimulation):
             self.live = old
             raise
         self._scan()
-        gas = {"cunningham": T("Cunningham's disk"), "keplerian": T("a Keplerian disk")}[merged["emitter"]]
+        gas = {"cunningham": T("Cunningham's disc"), "keplerian": T("a Keplerian disc")}[merged["emitter"]]
         if merged["retro"]:
             gas = T("{gas}, counter-rotating", gas=gas)
         return T("observer θ = {i:.4g}°; gas: {gas}; screen {n:d}², ±{h:.4g} M: a new image", i=float(merged["incl"]),
@@ -635,20 +650,20 @@ class Simulation(BaseSimulation):
         views = [["iso", T("Iso"), T("Isometric (F)"), [0.55, -0.7, 0.45]],
                  ["obs", T("Observer"), T("From the observer's direction: as on the screen, the spin axis up"),
                   {"along": "observer"}],
-                 ["side", T("Edge-on"), T("From the side: the disk edge-on, the spin axis up"), [0.0, -1.0, 0.0]],
-                 ["pole", T("From the pole"), T("From the spin axis (above): the disk face-on"), [0.0, 0.0, 1.0]]]
-        approximations = [T("the emitter is a thin equatorial disk with the emission J(r) (a source model, not a law)"),
+                 ["side", T("Edge-on"), T("From the side: the disc edge-on, the spin axis up"), [0.0, -1.0, 0.0]],
+                 ["pole", T("From the pole"), T("From the spin axis (above): the disc face-on"), [0.0, 0.0, 1.0]]]
+        approximations = [T("the emitter is a thin equatorial disc with the emission J(r) (a source model, not a law)"),
                           T("geometric optics, the screen at infinity, no absorption")]
         if modified:
             approximations.append(T("the Johannsen metric: the edge of the shadow is computed (the photon orbits), "
-                                    "the image of the disk is not"))
+                                    "the image of the disc is not"))
         return {
             "title": T("The shadow of a Kerr black hole: a = {a:.4g}", a=self.chi) if not modified else T(
                 "What if the hole is not Kerr: the shadow of the Johannsen metric, a = {a:.4g}", a=self.chi),
-            "text": T("Every pixel of a distant observer's screen is a photon traced back in closed form: captured by "
-                      "the hole (the shadow) or come from far away, and where it crossed the plane of the disk, the "
+            "text": T("Every pixel of a distant observer's screen is a photon traced back in closed form: either captured by "
+                      "the hole (the shadow) or arriving from far away, and where it crossed the plane of the disc, the "
                       "n-th crossing along the ray traced back: at a moderate inclination n = 0 is the direct image, "
-                      "n = 1 the lensing ring, n = 2 the photon ring; nearly edge-on the lower face of the disk is "
+                      "n = 1 the lensing ring, n = 2 the photon ring; nearly edge-on the lower face of the disc is "
                       "seen directly as n = 1. The brightness is the sum of g⁴J(r) over the crossings (a source "
                       "model). When the image is complete, the tracer's edge of the shadow is verified against "
                       "Bardeen's formula, the rings against their exponential demagnification, the size against EHT."),
@@ -681,8 +696,8 @@ def _margin(key, v):
     if key == "A2":
         return T("A₂ ≤ 0 (down to {v:.3g})", v=v)
     if key == "det_eq72":
-        return T("det g vanishes (Eq. 72)")
-    return T("closed timelike curves (Eq. 76)")
+        return T("det g vanishes (eq. 72)")
+    return T("closed timelike curves (eq. 76)")
 
 
 def _either(items):
@@ -707,7 +722,7 @@ def _jp_admissible(chi, p):
         m = JP.regularity_margins(chi, dev)
         bad = join([_margin(k, v) for k, v in m.items() if not v > 0.0], "; ")
         head = T("the Johannsen metric at a = {a} and {now} is not regular outside the horizon: {bad} (Johannsen 2013a, "
-                 "Eqs. 72, 76–78): no such metric exists as a black hole, and no shadow is built.", a=chi, now=now,
+                 "eqs. 72, 76–78): such a metric does not describe a black hole, and no shadow is built.", a=chi, now=now,
                  bad=bad)
     else:
         head = T("the photon orbits of the Johannsen metric at a = {a} and {now} do not form one band between the "
@@ -764,7 +779,7 @@ def _distance_to_curve(ax, bx, A, Bm):
 VIZ = {
     "id": "v15_kerr_shadow",
     "title": T("The shadow of a Kerr black hole and its photon rings"),
-    "summary": T("What a distant observer sees of a rotating black hole with a disk of gas: the shadow, the lensing "
+    "summary": T("What a distant observer sees of a rotating black hole with a disc of gas: the shadow, the lensing "
                  "ring and the photon ring, every pixel a ray traced back in closed form; the edge of the shadow "
                  "against Bardeen's formula, the rings' demagnification against the Lyapunov exponent, the size against "
                  "EHT; what if the metric is not Kerr."),

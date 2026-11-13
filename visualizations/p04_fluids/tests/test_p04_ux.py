@@ -276,3 +276,69 @@ def test_engine_refusals_speak_the_worlds_terms():
     h.cmd("scene", op="set", id=inlet, values={"speed": 100.0})
     err = h.errors()[-1]
     assert russian(err) and "m/s" in en(err) and "dt" not in en(err)
+
+
+def _msgids(x):
+    """Every msgid in a text (a T as the player gets it), at any depth."""
+    out = set()
+    if isinstance(x, dict) and isinstance(x.get("$t"), str):
+        out.add(x["$t"])
+        for v in (x.get("a") or {}).values():
+            out |= _msgids(v)
+    return out
+
+
+WORLD_TEXT = {  # the world's own text for each engine refusal it maps (review i18n-code F5)
+    "mach": "a velocity above what the weakly compressible scheme of this world can handle (Mach number {ma:.2g} > {max}: "
+            "up to {v:.2g} m/s)",
+    "tau": "the viscosity ν = {nu:.2g} m²/s is too small for this grid and time step (the scheme is unstable)",
+    "recell": "the grid does not resolve a flow this fast (cell Reynolds number {rec:.3g} > {lim})",
+    "density": "the outlet pressure or the body force is too large for the weakly compressible scheme of this world (its "
+               "density would deviate by more than 4.5 %)",
+    "interp": "the surface of a body with an interpolated wall cannot move",
+}
+
+
+CODE = {"mach": "lbm.mach", "tau": "lbm.tau", "recell": "lbm.cell_reynolds", "density": "lbm.rest_density",
+        "interp": "lbm.interp_moving"}
+
+
+@pytest.mark.parametrize("key", sorted(WORLD_TEXT))
+def test_each_engine_refusal_maps_to_the_worlds_text(key, monkeypatch):
+    """Review i18n-code F5: p04 recognises five engine refusals of the flow by the engine's machine code
+    (``lfphys.codes``) and takes their numbers from ``data_of``. Each is triggered here through the world: the engine's
+    exception carries the code, and the world's own msgid (with its numbers) comes out, in Russian, with the world as it
+    was."""
+    from lfphys.codes import code_of
+    seen = []
+    orig = P4._lbm_refusal
+    monkeypatch.setattr(P4, "_lbm_refusal", lambda e: (seen.append(code_of(e)), orig(e))[1])
+    h = Harness(V, "cylinder_re20")
+    nu0 = h.sim.live["nu"]
+    if key == "mach":
+        h.cmd("scene", op="set", id=objs(h, "inlet")[0]["id"], values={"speed": 100.0})
+    elif key == "tau":
+        h.set(nu=1e-9)
+    elif key == "recell":
+        h.set(nu=1e-4)
+    elif key == "density":
+        h.cmd("scene", op="set", id=objs(h, "outlet")[0]["id"], values={"pressure": 1e6})
+    else:
+        h.cmd("scene", op="set", id=objs(h, "disk")[0]["id"], values={"vx": 0.1})
+    assert seen and seen[-1] == CODE[key], seen
+    err = h.errors()[-1]
+    assert WORLD_TEXT[key] in _msgids(err), err
+    assert russian(err) and "nan" not in en(err), en(err)
+    assert h.sim.live["nu"] == nu0
+    if key == "mach":
+        assert _arg(err, "Mach number", "ma") == pytest.approx(100.0 / 3.0, rel=1e-6)
+    if key == "tau":     # the viscosity asked for, not the one in force
+        assert _arg(err, "is too small for this grid", "nu") == 1e-9
+    if key == "recell":
+        assert _arg(err, "cell Reynolds number", "rec") == pytest.approx(15.0)
+
+
+def test_every_lbm_code_mapping_has_a_test():
+    assert set(P4._LBM_CODES) == set(CODE.values()) and set(P4._LBM_CODES.values()) == set(WORLD_TEXT)
+    assert P4._lbm_refusal(ValueError("Mach number 0.5 > 0.3: the compressibility error O(Ma²) is too large")) == \
+        (None, {})   # English text alone is never matched

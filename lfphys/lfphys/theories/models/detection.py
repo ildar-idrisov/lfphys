@@ -46,8 +46,8 @@ ABOUT = {
                   "image formula for the absorbing boundary holds for free motion and a packet without components "
                   "with k ≤ 0"),
     "basis": [T("Werner, Ann. Inst. H. Poincaré A 47, 429 (1987) (as cited by Das & Struyve 2021)"),
-              T("Tumulka, Ann. Phys. 442, 168910 (2022), arXiv:1601.03715 — equations 3, 7, 12"),
-              T("Das & Struyve, Phys. Rev. A 104, 042214 (2021), arXiv:2105.14744 — equation 5, table I"),
+              T("Tumulka, Ann. Phys. 442, 168910 (2022), arXiv:1601.03715 — eqs. 3, 7, 12"),
+              T("Das & Struyve, Phys. Rev. A 104, 042214 (2021), arXiv:2105.14744 — eq. 5, table I"),
               "Włodarz, Phys. Rev. A 65, 044103 (2002)",
               T("Marchewka & Schuss, Phys. Lett. A 240, 177 (1998) (as cited by Das & Struyve 2021)"),
               T("Allcock, Ann. Phys. 53, 253 and 286 (1969)"), "Muga, Palao & Leavens, Phys. Lett. A 253, 21 (1999)"],

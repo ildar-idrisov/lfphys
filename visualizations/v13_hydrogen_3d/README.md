@@ -32,7 +32,7 @@ v14).
   superposition c₁ψ₁e^{−iE₁t/ħ} + c₂ψ₂e^{−iE₂t/ħ} of two orthogonal states (|c₂|² and the relative phase set at the
   preparation; t counted from it, section "Live and world parameters"); two states of the same (n, l) whose angular parts overlap are refused (one is a combination of the
   other). The form cannot bound l by n and m by l: the world takes the nearest allowed numbers (n first, then
-  0 ≤ l < n, then |m| ≤ l) and says so; the second state defaults to 1s, so "Superposition" alone is 2p_z + 1s, and a
+  0 ≤ l < n, then |m| ≤ l) and says so; the second state defaults to 1s, so "a superposition of two states" alone is 2p_z + 1s, and a
   default second state equal to the first is replaced (1s → 2p_z) with a notice; one chosen equal by hand is refused
   (review UX-params P10, 2026-11-05).
 * **The cloud.** |ψ|² on a cube that holds the sphere with 1 − 10⁻³ of the probability (the radius found by quadrature
@@ -126,7 +126,7 @@ one period and the frame at 3.5 T shows phase 12; real orbitals have no current,
 counter-clockwise about z; 2p_x + i·2p_y has the density of 2p, m = +1; the reduced mass and Z scale energies and
 sizes; the slice planes (any orientation, a fourth refused, removal, kept in a new world, coarse unchecked slices while
 moving, reset); a plane placed mid-period gets the phases reached and the rest later; l ≥ n and |m| > l are fitted
-and said, two equal states chosen by hand and two non-orthogonal states are refused with a reason; "Superposition" from
+and said, two equal states chosen by hand and two non-orthogonal states are refused with a reason; "a superposition of two states" from
 the defaults builds; 2p_z + 2s (j = 0, ∂ρ/∂t = 0 everywhere) passes the continuity check with a zero residual (it
 divided by a zero scale and killed the worker: UX-params P3); the largest states (n = 12, l = 11 and
 l = 0; a superposition of n = 12 and 11) build and pass. The live state (review UX-ui U12): 3d_z² set in a running

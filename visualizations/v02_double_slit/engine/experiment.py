@@ -505,7 +505,7 @@ def state_label(chi, internal):
         s1 = (abs(a) ** 2 - abs(b) ** 2) / s0
         s2 = 2 * (a * np.conj(b)).real / s0
         s3 = 2 * (a * np.conj(b)).imag / s0
-        return T("Stokes ({s1:+.2f}, {s2:+.2f}, {s3:+.2f})", s1=float(s1), s2=float(s2), s3=float(s3))
+        return T("Stokes parameters ({s1:+.2f}, {s2:+.2f}, {s3:+.2f})", s1=float(s1), s2=float(s2), s3=float(s3))
     s0 = abs(a) ** 2 + abs(b) ** 2
     sx = 2 * (np.conj(a) * b).real / s0
     sy = 2 * (np.conj(a) * b).imag / s0

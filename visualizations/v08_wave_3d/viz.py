@@ -43,7 +43,7 @@ NZ = 96  # z planes of the volume
 MAX_PLANES = 3  # the shared environment's limit (lfviz.planes3d)
 DEFAULT_NORMALS = {1: (0.0, -1.0, 0.0), 2: (1.0, 0.0, 0.0), 3: (0.0, 0.0, 1.0)}  # mutually perpendicular
 ROUTES = {"plane": T("exact for this plane (as the volume would give it on this grid)"),
-          "turned": T("exact for this plane; the source is turned, the window measured for the turned source"),
+          "turned": T("exact for this plane; the source is rotated, the window measured for the rotated source"),
           "reduced": T("APPROXIMATION: the reduced 2-D model (the slit taken as infinite)")}
 AUTO_NT = 64  # rows of a slice moved by "auto" (coarse, not checked; the full slice when the plane stops)
 
@@ -111,7 +111,7 @@ class Simulation(SlicePlanes, BaseSimulation):
         try:
             self.win = A.choose_window(self.src, self.dx, self.k, self.zmax)
         except A.WindowError as e:  # the world is refused: what to change, with a working example (review UX-params P26)
-            ex = [T("{hint}; a working example: the preset «{preset}» (a = {a} µm, z_max = {zmax} µm)", hint=e.hint,
+            ex = [T("{hint}; a working example: the “{preset}” preset (a = {a} µm, z_max = {zmax} µm)", hint=e.hint,
                     preset=v["label"], a=float(v["params"]["a"]), zmax=float(v["params"]["zmax"]))
                   for v in SCHEMA.presets.values() if v["params"].get("source") == p["source"]
                   and "a" in v["params"] and "zmax" in v["params"]]
@@ -152,7 +152,7 @@ class Simulation(SlicePlanes, BaseSimulation):
         if self.vol is not None:
             layers.append({"id": "light", "label": T("Light behind the aperture (volume, preview)"), "kind": "volume",
                            "visible": True})
-            layers.append({"id": "flux", "label": T("Energy current (direction and size)"), "kind": "vectors",
+            layers.append({"id": "flux", "label": T("Energy current (direction and magnitude)"), "kind": "vectors",
                            "visible": False})
         return {"box": [list(self.box[0]), list(self.box[1])], "units": T("µm"), "objects": objects, "layers": layers,
                 "planes": {"max": MAX_PLANES, "center": [0.0, 0.0, self.zmax / 2],
@@ -164,7 +164,7 @@ class Simulation(SlicePlanes, BaseSimulation):
             pv = A.preview_volume(self.vol, self.n)
             self._msg({"type": "volume", "t": self.t, "id": "light", "dims": list(pv.shape),
                        "box": [list(self.box[0]), list(self.box[1])],
-                       "note": T("intensity averaged 2×2 across (preview); the exact values are in the slices")},
+                       "note": T("intensity averaged over 2×2 cells (preview); the exact values are in the slices")},
                       {"data": pv})
             zf = np.linspace(max(2 * self.z_near, self.zmax / 12), self.zmax, 10)
             pos, vec, P, jlast = A.flux_glyphs(self.src, self.dx, self.k, zf, self.x, self.win)
@@ -192,8 +192,8 @@ class Simulation(SlicePlanes, BaseSimulation):
         if reduced:
             win, route = self.win, "reduced"
             s, t, U = A.reduced_slice(self.params, self.n, self.dx, self.k, pl, s_rng, t_rng, self.box, nt=nt)
-            reason = T("the slit of length L = {L} µm is taken as infinite (the reduced 2-D model); the size of the "
-                       "approximation is in the checks", L=float(self.params["L"]))
+            reason = T("the slit of length L = {L} µm is taken as infinite (the reduced 2-D model); the error of the "
+                       "approximation is given in the checks", L=float(self.params["L"]))
         else:
             key = round(math.degrees(math.atan2(pl.u[1], pl.u[0])) % 180.0, 2)
             if key not in self._turned:  # a plane that turns the source: its window measured once per azimuth
@@ -204,7 +204,7 @@ class Simulation(SlicePlanes, BaseSimulation):
             reason = ""
         tol = win.abs_err + 1e-9
         if reduced:
-            ver = {"points": 0, "note": T("an approximation: its size is in the check «APPROXIMATION»")}
+            ver = {"points": 0, "note": T("an approximation: its error is given in the “APPROXIMATION” check")}
         elif coarse:
             ver = {"points": 0, "note": T("auto-move: a coarse slice, not checked; the full one when auto-move is off")}
         else:
@@ -254,7 +254,7 @@ class Simulation(SlicePlanes, BaseSimulation):
                 "origin": pd["origin"], "u": pd["u"], "v": pd["v"], "normal": pd["normal"], "label": pd["label"],
                 "peak": peak, "route": sl["route"],
                 "route_label": ROUTES[sl["route"]] if sl["window"].est <= A.TOL else
-                T("{route}; the window for the turned source did not reach the tolerance ({est:.1e} > {tol:.0e})",
+                T("{route}; the window for the rotated source did not reach the tolerance ({est:.1e} > {tol:.0e})",
                   route=ROUTES[sl["route"]], est=float(sl["window"].est), tol=float(A.TOL)),
                 "exact": sl["exact"],
                 "approximation": not sl["exact"], "reason": sl["reason"], "verify": sl["verify"],
@@ -308,7 +308,7 @@ class Simulation(SlicePlanes, BaseSimulation):
         win, j0 = self.win, self.n // 2
         rows = join([T("×{pad:d} (band-limited): {d:.1e}", pad=int(pp), d=float(d)) if bl else
                      T("×{pad:d}: {d:.1e}", pad=int(pp), d=float(d)) for pp, bl, d in win.rows])
-        self._check("window", T("Computation window: periodic copies at the depth z_max"), win.est, None, "",
+        self._check("window", T("Computation window: periodic copies at depth z_max"), win.est, None, "",
                     tol=A.TOL, ok=win.est <= A.TOL,
                     note=T("{window}; a fraction of the peak amplitude, estimated as {k}·max|U(window) − U(window×2)|; "
                            "measured: {rows}", window=win.describe(), k=float(A.SAFETY), rows=rows))
@@ -318,7 +318,7 @@ class Simulation(SlicePlanes, BaseSimulation):
             U = complex(win.plane[i, j])
             tol = win.abs_err + rerr + 1e-9
             how = {"gauss": T("the Hankel integral (quadrature)"),
-                   "circle": T("the closed Rayleigh–Sommerfeld formula on the axis")}
+                   "circle": T("the closed-form Rayleigh–Sommerfeld solution on the axis")}
             self._check(f"exact_{i}_{j}", T("Field at the point x = {x:.3g}, y = {y:.3g}, z = z_max: the exact value",
                                             x=x0, y=y0),
                         abs(U), abs(ref), "", tol=tol / max(abs(ref), 1e-300), ok=abs(U - ref) <= tol,
@@ -333,9 +333,11 @@ class Simulation(SlicePlanes, BaseSimulation):
         s, U = AS.propagate_plane(self.src, self.dx, self.k, G.Plane.horizontal((0.0, -1.0, 0.0)),
                                   (float(self.x[0]), float(self.x[-1])), zc, check=True, **self.kw)
         diff = float(np.max(np.abs(U - rows_v)) / np.max(np.abs(rows_v)))
-        self._check("slice_route", T("The slice y = 0 by the plane route agrees with the slice of the transverse planes"),
+        self._check("slice_route", T("The slice y = 0 computed in its own plane agrees with the one cut from the "
+                                     "stack of transverse planes"),
                     diff, 0.0, "", tol=1e-12, ok=diff <= 1e-12,
-                    note=T("two routes of the engine in fp64 at z = z_max/2 and z_max (a fraction of the peak amplitude)"))
+                    note=T("the engine's two methods in fp64 at z = z_max/2 and z_max (a fraction of the peak "
+                           "amplitude)"))
         u = backend.used().get(AS.KERNEL, {}).get("drawn", {})
         exact = [sl for sl in self.slices.values() if sl["exact"]]  # the reduced model is computed in fp64
         if u.get("precision") == "fp32" and (self.vol is not None or exact):
@@ -346,15 +348,16 @@ class Simulation(SlicePlanes, BaseSimulation):
             else:
                 drawn, ref64 = self._fp64_pair(exact[0])
             err = float(np.nanmax(np.abs(drawn - ref64)) / np.nanmax(np.abs(ref64)))
-            self._check("fp32", T("The drawing in fp32 against the same computation in fp64"), err, 0.0, "", tol=bound,
+            self._check("fp32", T("The picture in fp32 compared with the same computation in fp64"), err, 0.0, "", tol=bound,
                         ok=err <= bound, note=T("the kernel's bound for fp32: {b:.0e} of the peak amplitude", b=float(bound)))
         self._check("near", T("Next to the aperture (z < {z:.2g} µm): the field band-limited by the grid", z=self.z_near),
                     self.z_near, None, T("µm"), info=True,
-                    note=T("components with |q| ≥ π/dx (evanescent) are left out: at the depth z_near they are below 1e-6 "
-                           "of their size at z = 0; closer to the aperture (hatched in the picture) the field ripples "
-                           "next to the edges (Gibbs): a property of the grid, not of the physics"))
+                    note=T("components with |q| ≥ π/dx (evanescent) are left out: at depth z_near they are below "
+                           "1e-6 of their amplitude at z = 0; closer to the aperture (hatched in the picture) the "
+                           "field oscillates next to the edges (the Gibbs phenomenon): a property of the grid, not "
+                           "of the physics"))
         if u:
-            self._check("device", T("The angular spectrum (the drawing) was computed on {device} ({precision})",
+            self._check("device", T("The angular spectrum (the picture) was computed on {device} ({precision})",
                                     device="GPU" if u["device"] == "gpu" else "CPU", precision=u["precision"]),
                         None, None, "", info=True,
                         note=T("{reason}; the checks are always in fp64", reason=u.get("reason", "")))
@@ -402,9 +405,9 @@ class Simulation(SlicePlanes, BaseSimulation):
                     info=True,
                     note=(T("the band limit removes the components at large angles with depth: a fraction of the power")
                           if self.win.band_limit else
-                          T("P(z) = Σ j_z dx dy over the whole window at {n:d} depths against the closed formula of the "
-                            "spectrum: Parseval's identity of the discrete sum; it confirms the code and the "
-                            "normalisation, not the window or the physics (those: the row above)", n=len(zf))))
+                          T("P(z) = Σ j_z dx dy over the whole window at {n:d} depths against the closed form from "
+                            "the spectrum: Parseval's identity of the discrete sum; it confirms the code and the "
+                            "normalisation, not the window or the physics (those are checked in the row above)", n=len(zf))))
 
     # --- messages -----------------------------------------------------------------------------------------------------
     def _msg(self, meta, blobs=None):

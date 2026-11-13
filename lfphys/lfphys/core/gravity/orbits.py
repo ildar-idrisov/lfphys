@@ -28,6 +28,7 @@ import numpy as np
 from scipy import integrate, special
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 from ..constants import C
 
@@ -57,10 +58,10 @@ def from_local_velocity(r_over_m: float, v_r: float, v_phi: float) -> tuple[floa
     l = gamma v_phi r."""
     v2 = v_r * v_r + v_phi * v_phi
     if v2 >= 1.0:
-        raise ValueError("local speed must be below c")
+        raise coded(ValueError(T("the local speed must be below c")), "orbit.superluminal")
     f = 1.0 - 2.0 / r_over_m
     if f <= 0:
-        raise ValueError("inside the horizon")
+        raise coded(ValueError(T("inside the horizon")), "gr.inside_horizon")
     g = 1.0 / math.sqrt(1.0 - v2)
     return g * math.sqrt(f), g * v_phi * r_over_m
 
@@ -69,7 +70,7 @@ def circular(r_over_m: float) -> tuple[float, float]:
     """(e, l/M) of the circular geodesic at r (r > 3M)."""
     r = r_over_m
     if r <= 3.0:
-        raise ValueError("no circular timelike orbit at r <= 3M")
+        raise coded(ValueError(T("no circular timelike orbit at r ≤ 3M")), "orbit.no_circular")
     return (r - 2.0) / math.sqrt(r * (r - 3.0)), r / math.sqrt(r - 3.0)
 
 
@@ -117,7 +118,7 @@ def periapsis_advance(e: float, l: float, em1: float | None = None) -> float:
     em1 = _em1(e, em1)
     u = turning_points(e, l, em1)
     if len(u) != 3 or not (u[0] > 0 and em1 < 0.0):
-        raise ValueError("not a bound orbit with two turning points")
+        raise coded(ValueError(T("not a bound orbit with two turning points")), "orbit.not_bound")
     return advance_from_turning(u[0], u[1])
 
 
@@ -127,7 +128,7 @@ def advance_from_turning(u_apo: float, u_peri: float) -> float:
     u1, u2 = u_apo, u_peri
     u3 = 0.5 - u1 - u2
     if not (0 < u1 <= u2 < u3):
-        raise ValueError("turning points do not bound a stable orbit")
+        raise coded(ValueError(T("the turning points do not bound a stable orbit")), "orbit.not_bound")
     m = (u2 - u1) / (u3 - u1)
     return 4.0 * special.ellipk(m) / math.sqrt(2.0 * (u3 - u1)) - 2.0 * math.pi
 
@@ -137,7 +138,7 @@ def elements(e: float, l: float, em1: float | None = None) -> dict:
     points (u_peri + u_apo = 2/p, epsilon = (u_peri - u_apo)/(u_peri + u_apo))."""
     u = turning_points(e, l, em1)
     if len(u) != 3:
-        raise ValueError("not a bound orbit with two turning points")
+        raise coded(ValueError(T("not a bound orbit with two turning points")), "orbit.not_bound")
     u1, u2 = u[0], u[1]
     return {"r_apo": 1.0 / u1, "r_peri": 1.0 / u2, "p": 2.0 / (u1 + u2), "ecc": (u2 - u1) / (u2 + u1)}
 
@@ -152,7 +153,7 @@ def radial_period(e: float, l: float, em1: float | None = None, n: int = 64) -> 
     evaluated by Gauss-Legendre with n nodes on each of 4 panels (no differential equation)."""
     u = turning_points(e, l, em1)
     if len(u) != 3 or not u[0] > 0:
-        raise ValueError("not a bound orbit with two turning points")
+        raise coded(ValueError(T("not a bound orbit with two turning points")), "orbit.not_bound")
     u1, u2 = u[0], u[1]
     u3 = 0.5 - u1 - u2
     x, w = np.polynomial.legendre.leggauss(n)

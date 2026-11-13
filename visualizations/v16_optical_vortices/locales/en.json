@@ -1,0 +1,22 @@
+{
+ "Slice {id} ({plane}): |E|² at {n} points against the direct calculation": {
+  "one": "Slice {id} ({plane}): |E|² at {n} point against the direct calculation",
+  "other": "Slice {id} ({plane}): |E|² at {n} points against the direct calculation"
+ },
+ "a grid of {n:d} points over {w:.3g} µm is coarser than λ/2": {
+  "one": "a grid of {n:d} point over {w:.3g} µm is coarser than λ/2",
+  "other": "a grid of {n:d} points over {w:.3g} µm is coarser than λ/2"
+ },
+ "detector signal, the last {n} samples ({ms:.4g} ms)": {
+  "one": "detector signal, the last sample ({ms:.4g} ms)",
+  "other": "detector signal, the last {n} samples ({ms:.4g} ms)"
+ },
+ "{what}; {n:d} samples over two turns, the peak of the spectrum; reference 2|l|·f (the modulation depth {d:.3g})": {
+  "one": "{what}; {n:d} sample over two turns, the peak of the spectrum; reference 2|l|·f (the modulation depth {d:.3g})",
+  "other": "{what}; {n:d} samples over two turns, the peak of the spectrum; reference 2|l|·f (the modulation depth {d:.3g})"
+ },
+ "{what}; {n:d} samples; reference: at l = 0 or f = 0 the frequency is not shifted": {
+  "one": "{what}; {n:d} sample; reference: at l = 0 or f = 0 the frequency is not shifted",
+  "other": "{what}; {n:d} samples; reference: at l = 0 or f = 0 the frequency is not shifted"
+ }
+}

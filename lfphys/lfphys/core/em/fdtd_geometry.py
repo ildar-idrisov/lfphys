@@ -49,7 +49,7 @@ from ...i18n import T
 ABOUT = {
     "layer": "core", "kind": "numerics",
     "title": T("FDTD: bodies and how a node of the Yee grid gets their material"),
-    "statement": T("Shapes (a sphere, a cylinder/disk, a box, a half-space, a polygon/prism, a mask) with a signed "
+    "statement": T("Shapes (a sphere, a cylinder/disc, a box, a half-space, a polygon/prism, a mask) with a signed "
                    "distance and a normal; a node gets its material by a staircase (by its own point) or by averaging "
                    "over the cell (the diagonal of the tensor of Farjadpour et al., the scheme VP-EP in their "
                    "classification, with the filling fraction from the tangent plane)."),
@@ -72,6 +72,7 @@ ABOUT = {
 class Shape:
     """A region of space. ``dims``: 2, 3 or None (both)."""
     kind = "shape"
+    NAME = T("a shape")  # in words, for the texts
     dims = None
     analytic = True  # has a signed distance (sub-pixel averaging possible)
 
@@ -106,6 +107,7 @@ def _as_vec(v, n=None):
 
 class Sphere(Shape):
     kind = "sphere"
+    NAME = T("a sphere")  # in words, for the texts
     dims = 3
 
     def __init__(self, center, radius: float):
@@ -131,6 +133,7 @@ class Cylinder(Shape):
     """A disk in 2-D (``center`` (x, y)); in 3-D a circular cylinder with its axis along ``axis`` through ``center``
     (x, y, z), of ``height`` (None: infinite) centred on the centre's coordinate along the axis."""
     kind = "cylinder"
+    NAME = T("a cylinder")  # in words, for the texts
 
     def __init__(self, center, radius: float, axis: str = "z", height: float | None = None):
         self.center, self.radius = _as_vec(center), float(radius)
@@ -146,7 +149,7 @@ class Cylinder(Shape):
             raise ValueError(T("cylinder height > 0 (or None: infinite)"))
         self.dims = len(self.center)
         if self.dims == 2 and (axis != "z" or self.height is not None):
-            raise ValueError(T("in 2-D a cylinder is a disk (axis z, no height)"))
+            raise ValueError(T("in 2-D a cylinder is a disc (axis z, no height)"))
 
     def sdf(self, P):
         if self.dims == 2:
@@ -197,6 +200,7 @@ class Cylinder(Shape):
 class Box(Shape):
     """Axis-aligned box between corners ``lo`` and ``hi`` (2 or 3 coordinates; +-inf allowed)."""
     kind = "box"
+    NAME = T("a rectangular box")  # in words, for the texts
 
     def __init__(self, lo, hi):
         self.lo, self.hi = _as_vec(lo), _as_vec(hi)
@@ -246,6 +250,7 @@ class Box(Shape):
 class HalfSpace(Shape):
     """{r : (r - point) . normal <= 0}: ``normal`` points out of the body."""
     kind = "halfspace"
+    NAME = T("a half-space")  # in words, for the texts
 
     def __init__(self, point, normal):
         self.point = _as_vec(point)
@@ -278,6 +283,7 @@ class HalfSpace(Shape):
 class Polygon(Shape):
     """A simple polygon (vertices (x, y) in order) in 2-D; in 3-D the prism between ``zmin`` and ``zmax``."""
     kind = "polygon"
+    NAME = T("a polygonal prism")  # in words, for the texts
 
     def __init__(self, points, zmin: float | None = None, zmax: float | None = None):
         p = np.array(points, float)
@@ -345,11 +351,12 @@ class Mask(Shape):
     """A region given by a function inside(x, y[, z]) -> bool array (staircase only), or by a boolean array sampled
     on a uniform grid (``array`` with its ``lo`` and ``hi`` corners: nearest sample)."""
     kind = "mask"
+    NAME = T("a mask")  # in words, for the texts
     analytic = False
 
     def __init__(self, inside=None, array=None, lo=None, hi=None, dims: int | None = None):
         if (inside is None) == (array is None):
-            raise ValueError(T("mask: a function inside or an array array, one of the two"))
+            raise ValueError(T("mask: a function `inside` or an array `array`, one of the two"))
         self.fn = inside
         self.array = None if array is None else np.asarray(array, bool)
         self.lo = None if lo is None else _as_vec(lo)

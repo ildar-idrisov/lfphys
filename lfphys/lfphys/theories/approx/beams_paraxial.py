@@ -57,6 +57,7 @@ import numpy as np
 from scipy.special import eval_genlaguerre, eval_hermite, jv
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 from . import gaussian_beam as GB
 
 ABOUT = {
@@ -105,7 +106,7 @@ def lg_norm(p: int, l: int) -> float:
 def lg(p: int, l: int, x, y, z, k: float, w0: float):
     """LG_{p,l}(x, y, z): the envelope u (multiply by exp(i k z) for the field); arrays broadcast."""
     if p < 0:
-        raise ValueError("lg: p >= 0")
+        raise coded(ValueError(T("LG mode: p ≥ 0")), "beams.mode_index")
     x, y, z = np.broadcast_arrays(np.asarray(x, float), np.asarray(y, float), np.asarray(z, float))
     w, invR, psi = params(z, k, w0)
     r2 = x * x + y * y
@@ -132,7 +133,7 @@ def hg_norm(n: int, m: int) -> float:
 def hg(n: int, m: int, x, y, z, k: float, w0: float):
     """HG_{n,m}(x, y, z): the envelope u; arrays broadcast."""
     if n < 0 or m < 0:
-        raise ValueError("hg: n, m >= 0")
+        raise coded(ValueError(T("HG mode: n, m ≥ 0")), "beams.mode_index")
     x, y, z = np.broadcast_arrays(np.asarray(x, float), np.asarray(y, float), np.asarray(z, float))
     w, invR, psi = params(z, k, w0)
     s = math.sqrt(2.0)
@@ -257,7 +258,8 @@ def helix_phi(p: int, l: int, r, z, k: float, w0: float, phase0: float = 0.0, om
     """Closed form of the equiphase surfaces arg[u exp(i (k z - omega t))] = phase0 of LG_{p,l} (l != 0): the
     azimuths phi_j(r, z), j = 0..|l|-1, in [0, 2 pi): array (|l|, *shape)."""
     if l == 0:
-        raise ValueError("helix_phi: l != 0 (for l = 0 the surfaces are not helicoids)")
+        raise coded(ValueError(T("helical surfaces need l ≠ 0 (for l = 0 the surfaces of constant phase are not "
+                                 "helicoids)")), "beams.mode_index")
     r, z = np.broadcast_arrays(np.asarray(r, float), np.asarray(z, float))
     w, invR, psi = params(z, k, w0)
     sign = np.where(eval_genlaguerre(p, abs(l), 2 * r * r / (w * w)) < 0, math.pi, 0.0)

@@ -113,8 +113,8 @@ SCHEMA = Schema([
        max=1.0, help=T("the wall's potential and the mark's field rise over this length (tanh); not less than the grid "
                        "step")),
     _p("L", T("Distance to the screen L, λ"), "float", 50.0, unit=LAM, group=SCREEN, min=5.0, max=200.0),
-    _p("sigma_x", T("Packet: width across σx, λ"), "float", 8.0, unit=LAM, group=PACKET, min=1.0, max=40.0),
-    _p("sigma_z", T("Packet: length along σz, λ"), "float", 5.0, unit=LAM, group=PACKET, min=2.0, max=20.0,
+    _p("sigma_x", T("Packet: width along x σx, λ"), "float", 8.0, unit=LAM, group=PACKET, min=1.0, max=40.0),
+    _p("sigma_z", T("Packet: length along z σz, λ"), "float", 5.0, unit=LAM, group=PACKET, min=2.0, max=20.0,
        help=T("the momentum spread Δk/k = 1/(4π σz/λ)")),
     _p("sigma_y", T("Packet: width along y σy, λ"), "float", 3.0, unit=LAM, group=PACKET, min=0.5, max=40.0,
        help=T("nothing changes along the slits, so the wave is the exact product ψ(x, z, t)·η(y, t): η is a free "
@@ -124,11 +124,12 @@ SCHEMA = Schema([
                 ("spin", T("the particle's spin: a field in slit B turns the spin ½ (electron, neutron)")),
                 ("detector", T("an observer: a path detector at slit B (two-level, Englert's model; any particle)"))],
        help=T("the wave gets a second component: the particle's spin or the detector's state; while the particle is "
-              "in slit B, it turns by the angle θ: the path is marked and the interference fades (in the two-path "
-              "model as |cos(θ/2)|)")),
+              "in slit B, this component turns by the angle θ: the path is marked and the interference fades (in "
+              "the two-path model as |cos(θ/2)|)")),
     _p("grid", T("Grid"), "select", "normal", group=COMPUTATION, options=GRIDS),
-    _p("n_bohm", T("Bohm particles in the ensemble"), "int", 2000, group=BOHM_TRAJECTORIES, min=100, max=8000),
-    _p("n_tracks", T("Trajectories of them to draw"), "int", 120, group=BOHM_TRAJECTORIES, min=10, max=400),
+    _p("n_bohm", T("Number of Bohm particles in the ensemble"), "int", 2000, group=BOHM_TRAJECTORIES, min=100,
+       max=8000),
+    _p("n_tracks", T("Trajectories to draw"), "int", 120, group=BOHM_TRAJECTORIES, min=10, max=400),
     _p("slit_a", T("Slit A (x = −d/2) open"), "bool", True, group=SETUP, live=True),
     _p("slit_b", T("Slit B (x = +d/2) open"), "bool", True, group=SETUP, live=True),
     _p("mark_deg", T("Mark in slit B: turn θ, °"), "float", 0.0, unit=DEG, group=SETUP, min=0.0, max=360.0,
@@ -177,7 +178,7 @@ class Simulation(BaseSimulation):
             raise Refusal(T("the Aharonov–Bohm flux acts only on charged particles (the electron)"))
         self.mark = p.get("mark", "none")
         if float(p["mark_deg"]) and self.mark == "none":
-            raise Refusal(T("the path mark is off"), T("choose the particle's spin or the detector in «Path mark in slit B»"))
+            raise Refusal(T("the path mark is off"), T("choose the particle's spin or the detector in “Path mark in slit B”"))
         if self.mark == "spin" and self.part.internal != "spin":
             raise Refusal(T("the particle «{particle}» has no spin ½ (the engine has no internal state for it): a path "
                             "mark by spin is not defined for it", particle=self.part.label),
@@ -395,7 +396,8 @@ class Simulation(BaseSimulation):
         if g0.n_slits == 2 and a >= d:  # the rule of the world's construction (apparatus.Geometry)
             raise Refusal(T("the slits merge: the slit width a = {a:.4g} λ is not smaller than the distance between "
                             "their centres d = {d:.4g} λ", a=a, d=d),
-                          T("take a smaller than {d:.4g} λ or d larger than {a:.4g} λ", a=a, d=d))
+                          T("make the slit width a smaller than {d:.4g} λ or the distance d larger than {a:.4g} λ",
+                            a=a, d=d))
         outer = (0.5 * d if g0.n_slits == 2 else 0.0) + 0.5 * a
         if outer + free > g0.screen_half:
             room = g0.screen_half - free
@@ -423,7 +425,7 @@ class Simulation(BaseSimulation):
             raise Refusal(T("the Aharonov–Bohm flux acts only on charged particles"))
         if float(new["mark_deg"]) and not self.spinor:
             raise Refusal(T("there is no path mark in this world"),
-                          T("choose the spin or the detector in «Path mark in slit B» (a new world)"))
+                          T("choose the spin or the detector in “Path mark in slit B” (a new world)"))
         changed = [k for k in values if new.get(k) != self.live.get(k)]
         if not changed:
             return NO_CHANGE
@@ -857,7 +859,7 @@ class Simulation(BaseSimulation):
                         note=T("{K:d} particles integrated again in the same wave, {tight:d} times more tightly; of the "
                                "{both:d} that hit in both cases, 95 % differ by at most {p95:.2g} λ, the largest by "
                                "{mx:.2g} λ{fringe}; the fate (screen, reflection, sideways) differs for {changed:d}; "
-                               "target: 95 % < {target} λ and at most 2 % of another fate (review B3-4)", K=K,
+                               "target: 95 % < {target} λ and at most 2 % with a different fate (review B3-4)", K=K,
                                tight=CONTROL_TIGHT, both=int(both.sum()), p95=p95, mx=mx, fringe=fringe,
                                changed=changed, target=BOHM_P95))
         p_scr = tot
@@ -935,8 +937,8 @@ class Simulation(BaseSimulation):
                     None, "", ok=D < crit, group=BOHM,
                     note=T("{n:d} hits; the reference is the distribution in y of the flux into the screen, "
                            "Σ_t J(x, t)|η(y, t)|²; the critical value at {p} %: {c}/√n = {crit:.3g}. It checks the starts "
-                           "by |η₀|²; the motion in y cannot be told this way (η spreads by {g:.3g} % during the "
-                           "flight): the check «Motion of the Bohm particles in y» does that", n=n, p=99.9, c=1.95,
+                           "by |η₀|²; the motion in y cannot be tested this way (η spreads by {g:.3g} % during the "
+                           "flight): the check “Motion of the Bohm particles in y” does that", n=n, p=99.9, c=1.95,
                            crit=crit, g=100 * grow))
 
     def _symmetric(self):
@@ -956,9 +958,9 @@ class Simulation(BaseSimulation):
             # at lambda/6 for a tube the wave cannot reach)
             self._check("symmetry_ab", T("Flux Φ₀/2 (half-integer): the pattern is symmetric, P(x) = P(−x)"), asym, 0.0,
                         "", tol=1e-4, ok=asym < 1e-4, group=COMPUTATION,
-                        note=T("the mirror x → −x reverses the flux, and the fluxes Φ and Φ − Φ₀ are physically the same "
-                               "(gauge): at a half-integer Φ/Φ₀ the pattern is symmetric; tolerance: the grid's error of "
-                               "the gauge identity"))
+                        note=T("the reflection x → −x reverses the flux, and the fluxes Φ and Φ − Φ₀ are physically "
+                               "the same (gauge): at a half-integer Φ/Φ₀ the pattern is symmetric; tolerance: the "
+                               "grid's error of the gauge identity"))
         if not self._symmetric():
             return
         self._check("symmetry", T("Symmetric set-up: the pattern is symmetric, P(x) = P(−x)"), asym, 0.0, "", tol=1e-8,
@@ -1001,7 +1003,8 @@ class Simulation(BaseSimulation):
                            "{down:.3f} (a pure rotation would give sin²(θ/2) = {pure:.3f}: the wave behind the slit is "
                            "turned unevenly)", th=th, down=mk["down_fraction"],
                            pure=math.sin(math.radians(th) / 2) ** 2) if mk else T("no mark"))
-            self._check("visibility", T("Fringe visibility near the axis against two paths |⟨m_B|m_A⟩|"), V, abs(coh),
+            self._check("visibility", T("Fringe visibility near the axis compared with the overlap of the path marks "
+                                        "|⟨m_B|m_A⟩|"), V, abs(coh),
                         "", info=True, group=COMPARISON,
                         note=T("the Fourier component of the pattern at the fringe frequency (period λL/d = {p:.3g} λ, a "
                                "Hann window of ±2 periods); {mark}; the envelope, the speed spread and the mix of "
@@ -1121,8 +1124,8 @@ class Simulation(BaseSimulation):
                             "exact for the given λ, the time has an error ~β²/2", b=part.v / 2.998e8))
         return {
             "title": TITLE,
-            "text": T("A particle's packet flies at a plate with two slits and on to a screen. The run solves the "
-                      "Schrödinger equation on the whole plane (x, z): reflection by the plate, the wave in the slits, "
+            "text": T("A particle's packet flies towards a plate with two slits and on to a screen. The run solves "
+                      "the Schrödinger equation on the whole plane (x, z): reflection by the plate, the wave in the slits, "
                       "diffraction to any angle; the screen and the edges absorb. The pattern on the screen is the "
                       "probability flowing into the screen, accumulated as the wave arrives. An ensemble of particles "
                       "follows the Bohm trajectories of the same wave; each is marked by the slit it went through. The "

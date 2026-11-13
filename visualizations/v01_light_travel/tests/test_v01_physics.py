@@ -290,7 +290,7 @@ def test_one_law_changed_from_the_defaults_works_and_two_incompatible_are_refuse
 def test_walkers_faster_than_this_worlds_light_are_refused_with_the_numbers():
     """Review UX-params P7: «worldline is not timelike» (English, from the core) for walkers faster than c x factor.
     Now refused before the core, in the owner's terms, with the numbers to change; a Galilean world (ether) takes them."""
-    with pytest.raises(ValueError, match="pedestrians are not faster than the light of this world") as e:
+    with pytest.raises(ValueError, match="pedestrians cannot be faster than the light of this world") as e:
         Harness(V, None, {"scenario": "andromeda", "c_factor": 0.5, "an_walk": 2e8})
     assert "0.6671" in str(e.value)  # the factor above which the same walkers are slower than light
     Harness(V, None, {"scenario": "andromeda", "c_factor": 0.6672, "an_walk": 2e8})
@@ -503,3 +503,38 @@ def test_flight_times_far_from_the_time_origin_keep_their_precision():
         t0 = next(p["t0"] for p in h.sim.world.pulses if p["id"] == e["pulse"])
         worst_old = max(worst_old, abs((e["t"] - t0) - c["ref"]) / c["ref"] / c["tol"])
     assert worst_old > 1.0  # the subtraction of absolute times would fail (3e-8 > 1e-9)
+
+
+# --- the engine's refusals matched by their machine codes (review 2026-11-12 i18n-code F5) ------------------------
+@pytest.mark.parametrize("code", ["gr.not_timelike", "kinematics.superluminal"])
+def test_superluminal_path_codes_become_the_worlds_refusal(code, monkeypatch):
+    """A boost whose path would outrun the local light: the engine's coded ValueError becomes the world's refusal in
+    the owner's terms, whatever the engine's wording."""
+    from lfphys.codes import coded
+    from lfphys.i18n import T
+    from lfviz.errors import Refusal
+    from v01_light_travel.engine import world as W
+
+    def refuse(*a, **k):
+        raise coded(ValueError(T("reworded by the engine")), code)
+
+    h = Harness(V, "lensing")
+    monkeypatch.setattr(W, "clock_rate", refuse)
+    with pytest.raises(Refusal) as e:
+        h.sim.world._validate_path(h.sim.world.objects["obs"], h.sim.t, np.array([0.1 * C, 0.0]))
+    assert e.value.text["$t"].startswith("at a constant coordinate speed “{obj}” would move faster than light")
+
+
+def test_other_clock_rate_codes_are_not_taken_for_superluminal(monkeypatch):
+    from lfphys.codes import code_of, coded
+    from lfphys.i18n import T
+    from v01_light_travel.engine import world as W
+
+    def refuse(*a, **k):
+        raise coded(ValueError(T("the clock is inside the horizon")), "gr.inside_horizon")
+
+    h = Harness(V, "lensing")
+    monkeypatch.setattr(W, "clock_rate", refuse)
+    with pytest.raises(ValueError) as e:
+        h.sim.world._validate_path(h.sim.world.objects["obs"], h.sim.t, np.array([0.1 * C, 0.0]))
+    assert code_of(e.value) == "gr.inside_horizon"

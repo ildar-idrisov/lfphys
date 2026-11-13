@@ -810,7 +810,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
       }
       const mk = (txt, px, pri, color) => { const s = labelSprite(txt, color, px); s.userData.pri = pri; g.add(s); S.frameLabels.push(s); updateLabelScale(s); return s; };
       const ticks = vals.map((v, i) => ({ v, s: mk(num(v, 3), 14, i === 0 || i === vals.length - 1 ? 1 : 2, "#8b96a3") }));
-      return { k, ticks, name: mk(`${t(names[k])}, ${t(units)}`, 16, 0, "#c8d0da") };
+      return { k, ticks, name: mk(t("{name}, {unit}", { name: t(names[k]), unit: t(units) }), 16, 0, "#c8d0da") };
     });
     S.frameLabels.sort((p, q) => p.userData.pri - q.userData.pri);
     S.frameBox = { lo: [...lo], hi: [...hi] };
@@ -851,6 +851,13 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
       };
       for (const tt of A.ticks) { const p = [...best.m]; p[k] = tt.v; tt.s.position.copy(P2T(p)); anchor(tt.s, 4); }
       const pm = [...best.m]; A.name.position.copy(P2T(pm)); anchor(A.name, A.ticks.length ? 22 : 6);
+      {  // the axis's name inside the view: a longer name (a unit in another language) is not cut by the canvas's edge
+        const Lb = A.name.userData.label, w = Lb.px * Lb.aspect, x = scr(pm)[0];  // (review i18n-browser F13)
+        let cx = A.name.center.x;
+        if (x - cx * w < 2) cx = Math.max(0, (x - 2) / w);
+        if (x + (1 - cx) * w > W - 2) cx = Math.min(1, 1 - (W - 2 - x) / w);
+        A.name.center.x = cx;
+      }
     }
   }
 

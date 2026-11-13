@@ -201,7 +201,7 @@ class Simulation(PlaygroundSimulation):
             return
         v = np.asarray(state["visits"], float)
         if v.shape != self.visits.shape:
-            raise Refusal(T("the grid of visits {old} is not the one here {new}", old=str(v.shape), new=str(self.visits.shape)))
+            raise Refusal(T("the visit grid {old} differs from this world's grid {new}", old=str(v.shape), new=str(self.visits.shape)))
         self.visits = v.copy()
         if int(state.get("ndim", self.ndim)) != self.ndim:
             self.carry_note(T("the visits were carried into the plane z = 0 (the cells along x, y are the same)"))

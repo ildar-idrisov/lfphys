@@ -32,17 +32,17 @@ export function createView(ctx) {
   // the layout: in a plane the wave's window fills the centre and the 3-D view is shown on request (review UX-ui U15)
   let show3d = false, plane = true;
   try { show3d = localStorage.getItem("p02.show3d") === "1"; } catch (e) { /* storage off: the default layout */ }
-  const layoutBtn = el("button", { title: t("Show or hide the 3D view next to the experiment's plane") });
+  const layoutBtn = el("button", { title: t("Show or hide the 3-D view next to the experiment's plane") });
   const viewBox = el("div", {});
   function applyLayout() {
     const side = plane && !show3d;  // the window alone, across the whole centre
     env.scene.el.style.display = side ? "none" : "";
     env.windows.el.style.flex = side ? "1 1 100%" : "";
     env.windows.el.style.maxWidth = side ? "none" : "";
-    layoutBtn.textContent = show3d ? t("Hide the 3D view (the experiment's plane across the whole centre)") : t("Show the 3D view alongside");
+    layoutBtn.textContent = show3d ? t("Hide the 3-D view (the experiment's plane across the whole centre)") : t("Show the 3-D view alongside");
     fill(viewBox, plane
-      ? [el("div", { class: "help" }, t("The wave lives in the (x, y) plane: its window is the main view. The 3D view shows the same plane as a plate in space with the scene's objects.")), el("div", { class: "ctl" }, layoutBtn)]
-      : el("div", { class: "help" }, t("A world in a volume: the main view is the 3D scene, beside it the slice z = 0.")));
+      ? [el("div", { class: "help" }, t("The wave lives in the (x, y) plane: its window is the main view. The 3-D view shows the same plane as a plate in space with the scene's objects.")), el("div", { class: "ctl" }, layoutBtn)]
+      : el("div", { class: "help" }, t("A world in a volume: the main view is the 3-D scene, beside it the slice z = 0.")));
     env.windows.redraw(); env.scene.requestRender();
   }
   layoutBtn.onclick = () => { show3d = !show3d; try { localStorage.setItem("p02.show3d", show3d ? "1" : "0"); } catch (e) { /* ignore */ } applyLayout(); };
@@ -201,11 +201,11 @@ export function createView(ctx) {
     leftPanels: pg.leftPanels,
     rightPanels: [panel(t("View"), viewBox), ...pg.rightPanels, panel(t("Scene layers"), env.layersPanel)],
     help: () => el("div", {},
-      el("h4", {}, t("Playground: quantum particles")),
-      el("p", {}, t("Add from the palette particles (wave packets of an electron, a neutron, atoms), barriers and wells, walls with slits, a trap, a magnetic field, an Aharonov–Bohm flux tube, detectors, a which-path marker, an environment, flux planes, and change them on the fly in the inspector. Every particle is its own wave by the Schrödinger equation (Pauli for spin); the particles do not interact.")),
+      el("h4", {}, t("Laboratory: quantum particles")),
+      el("p", {}, t("Add particles from the palette (wave packets of an electron, a neutron, atoms), barriers and wells, walls with slits, a trap, a magnetic field, an Aharonov–Bohm flux tube, detectors, a which-path marker, an environment, flux planes, and change them on the fly in the inspector. Each particle has its own wave function, evolved by the Schrödinger equation (the Pauli equation for spin); the particles do not interact.")),
       el("p", {}, t("The picture is |ψ|², the sum over the particles (each its own probability). The detectors absorb probability: how much each absorbed is in “Probes” and in the particle's “now”. “Measure the position” (an action) collapses the wave to the outcome by the Born rule; a cross marks the outcome.")),
       el("p", {}, t("Bohm particles (a particle's parameter) are an interpretation: points guided by the probability current; a point that enters a detector is registered by it and stopped (dim).")),
-      el("p", {}, t("Checks: norm + absorbed = 1, the energy of a closed system against the bound from the step error, the flux through the planes, the step error (a companion), the grid's quality, the reflection by the window's edges, the cost of a step."))),
+      el("p", {}, t("Checks: norm + absorbed = 1, the energy of a closed system against the bound from the step error, the flux through the planes, the step error (a companion run), the grid's quality, the reflection by the window's edges, the cost of a step."))),
     reset() { env.reset(); pg.reset(); H = null; G = null; gridRaw = null; gridKey = ""; volFresh = false; waves = []; vols = []; shownWave = -1; shownVol = -1; shapes = null; shapesKey = ""; marks = []; pts = null; },
     snapshot() { return { env: env.snapshot(), pg: pg.snapshot(), nw: waves.length, nv: vols.length, shapes, marks, grid: gridRaw }; },
     restore(k) {

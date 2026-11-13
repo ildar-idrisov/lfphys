@@ -47,6 +47,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 from . import backend
 from . import lorentz as LZ
@@ -160,7 +161,8 @@ class Camera:
         f = f / np.linalg.norm(f)
         r = np.cross(f, np.asarray(self.up, float))
         if np.linalg.norm(r) < 1e-12:
-            raise ValueError("the camera's up direction is parallel to its look direction")
+            raise coded(ValueError(T("the camera's up direction is parallel to its look direction")),
+                        "raytrace.camera_up")
         r = r / np.linalg.norm(r)
         return r, np.cross(r, f), f
 

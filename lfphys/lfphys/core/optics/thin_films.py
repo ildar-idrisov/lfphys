@@ -50,6 +50,8 @@ import mpmath
 import numpy as np
 
 from lfphys.core.optics import interfaces
+from lfphys import i18n
+from lfphys.codes import coded
 from lfphys.i18n import T
 
 U = 2.0 ** -53  # unit round-off of binary64
@@ -115,14 +117,15 @@ def single_film(n0, n1, n2, d: float, lam: float, theta0: float, pol: str) -> di
     n0, n1, n2 = complex(n0), complex(n1), complex(n2)
     c0, c1, c2 = interfaces._cosines([n0, n1, n2], theta0)
     if c1 == 0:
-        raise ValueError("single_film: the wave grazes inside the layer (cos theta1 = 0): the Airy sum is 0/0")
+        raise coded(ValueError(i18n.T("single_film: the wave grazes inside the layer (cos θ1 = 0): the Airy sum is "
+                                      "0/0")), "airy.grazing")
     r01, t01 = _rt(n0, c0, n1, c1, pol)
     r12, t12 = _rt(n1, c1, n2, c2, pol)
     beta = 2 * math.pi * n1 * c1 * d / lam
     e2 = cmath.exp(2j * beta)
     den = 1 + r01 * r12 * e2
     if den == 0:
-        raise ValueError("single_film: the Airy sum is 0/0 here (D = 0)")
+        raise coded(ValueError(i18n.T("single_film: the Airy sum is 0/0 here (D = 0)")), "airy.grazing")
     r = (r01 + r12 * e2) / den
     t = t01 * t12 * cmath.exp(1j * beta) / den
     R = abs(r) ** 2
@@ -191,12 +194,13 @@ def airy(n0: float, n1: float, n2: float, d: float, lam: float, theta0: float, p
     grazes (rho = 1 in float)."""
     for n in (n0, n1, n2):
         if isinstance(n, complex) or float(n) <= 0:
-            raise ValueError("airy: real positive indices only (a lossless film)")
+            raise coded(ValueError(i18n.T("airy: real positive indices only (a lossless film)")), "airy.lossy_index")
     ns = [complex(n0), complex(n1), complex(n2)]
     c0, c1, c2 = interfaces._cosines(ns, theta0)
     for c in (c1, c2):
         if c.imag != 0 or c.real <= 0:
-            raise ValueError("airy: total reflection at a film boundary (no propagating wave)")
+            raise coded(ValueError(i18n.T("airy: total reflection at a film boundary (no propagating wave)")),
+                        "airy.total_reflection")
     r01, t01 = _rt(ns[0], c0, ns[1], c1, pol)
     r12, t12 = _rt(ns[1], c1, ns[2], c2, pol)
     R10, R12 = abs(r01) ** 2, abs(r12) ** 2  # r10 = -r01
@@ -210,7 +214,8 @@ def airy(n0: float, n1: float, n2: float, d: float, lam: float, theta0: float, p
     s2 = math.sin(beta) ** 2 if m % 2 == 0 else math.cos(beta) ** 2
     den = a * a + 4 * rho * s2
     if a <= 0 or den <= 0:
-        raise ValueError("airy: the wave grazes inside the film (rho = 1 in float): the formula is 0/0")
+        raise coded(ValueError(i18n.T("airy: the wave grazes inside the film (ρ = 1 in floating point): the formula "
+                                      "is 0/0")), "airy.grazing")
     T = T01 * T12 / den
     d_rho = 5 * U * (abs(r01) + abs(r12)) + 2 * U * rho
     d_a = d_rho + U * a
@@ -283,7 +288,7 @@ def evanescent_length(n1: float, n2: float, lam: float, theta: float) -> float:
     with mpmath.workprec(160):
         q = (mpmath.mpf(float(n1)) * mpmath.sin(mpmath.mpf(float(theta)))) ** 2 - mpmath.mpf(float(n2)) ** 2
         if q <= 0:
-            raise ValueError("evanescent_length: angle below the critical one")
+            raise coded(ValueError(T("evanescent length: the angle is below the critical one")), "film.below_critical")
         return float(mpmath.mpf(float(lam)) / (2 * mpmath.pi * mpmath.sqrt(q)))
 
 
@@ -300,7 +305,8 @@ def _layer_nodes(a: float, b: float, rate: float, min_nodes: int = 0):
     L = b - a
     m = max(1, math.ceil(L * rate / GL_WIDTH), math.ceil(min_nodes / 16))
     if 16 * m > GL_MAX_NODES:
-        raise ValueError(f"joule_absorption_s: {16 * m} quadrature nodes needed in one layer (limit {GL_MAX_NODES})")
+        raise coded(ValueError(T("Joule absorption: {n:d} quadrature nodes needed in one layer (the limit is {lim:d})",
+                                 n=16 * m, lim=GL_MAX_NODES)), "film.too_many_nodes")
     edges = np.linspace(a, b, m + 1)
     h = 0.5 * np.diff(edges)
     mid = 0.5 * (edges[:-1] + edges[1:])

@@ -102,7 +102,7 @@ SCHEMA = Schema([
     "mercury": {"label": T("Mercury at the Sun (weak field, {adv}″ per century)", adv=43),
                 "params": {"gravity": "GR", "mass_msun": 1.0, "radius_km": R_SUN / 1e3, "r0": MERCURY_R0,
                            "speed": MERCURY_K, "angle": 0.0},
-                "note": T("a = {a:.8g} AU, e = {e:.8g} (NASA NSSDCA, J2000), the start at the perihelion; the GR "
+                "note": T("a = {a:.8g} au, e = {e:.8g} (NASA NSSDCA, J2000), the start at the perihelion; the GR "
                           "reference {adv}″ per century: Will 2014, Living Rev. Relativ. 17, 4, Eq. (65)",
                           a=MERCURY_A_AU, e=MERCURY_ECC, adv=MERCURY_GR_ARCSEC_PER_CENTURY)},
     "neutron_star": {"label": T("Neutron star: strong precession"),
@@ -415,7 +415,8 @@ class Simulation(BaseSimulation):
         return [
             {"name": "boost", "label": T("Push"), "button": T("push"),
              "help": T("An instantaneous change of the speed along the motion (in the frame of the static observer "
-                       "at this point): a fraction of the current speed, negative to brake. The body's clock goes on."),
+                       "at this point): a fraction of the current speed, negative to brake. The body's clock keeps "
+                       "running."),
              "args": [{"id": "dv", "label": T("Δv, fraction of the speed"), "type": "float", "default": 0.05,
                        "min": -1.0, "max": 1.0}]},
             {"name": "relaunch", "label": T("New launch of the body"),
@@ -573,7 +574,7 @@ class Simulation(BaseSimulation):
                 S["notes"].add("merc")
                 rp, ra = S["peri"][0]["r"], S["apo"][0]["r"]
                 self._check("merc_a", T("Semi-major axis (r_p + r_a)/2 from the orbit's events ↔ Mercury"),
-                            0.5 * (rp + ra) * self.M_m / AU, MERCURY_A_AU, T("AU"), tol=1e-6,
+                            0.5 * (rp + ra) * self.M_m / AU, MERCURY_A_AU, T("au"), tol=1e-6,
                             note=T("measured: the first periapsis and apoapsis of this run; reference: NASA NSSDCA "
                                    "Mercury Fact Sheet (J2000); the difference O(M/r) ~ 3·10⁻⁸ is GR's contribution "
                                    "to the initial data"))
@@ -648,8 +649,8 @@ class Simulation(BaseSimulation):
                 self._check("ppn", T("6πM/p (PPN, first order): here M/p = {mp:.3g}, outside its domain of validity",
                                      mp=mp),
                             info["adv_ppn"] / sc, None, unit,
-                            note=T("the measured advance is {ratio:.4g} times larger: the expansion in M/p does not "
-                                   "work in a strong field (the next-order correction ≈ {c2:.3g})", ratio=ratio, c2=c2))
+                            note=T("the measured advance is {n:.4g} times larger: the expansion in M/p does not work "
+                                   "in a strong field (the next-order correction ≈ {c2:.3g})", n=ratio, c2=c2))
             cent = mean * CENTURY_S / period / ARCSEC
             if mp > 0.02:
                 pass  # per century only means something in a weak field
@@ -706,10 +707,10 @@ class Simulation(BaseSimulation):
         tol = 1e-11 + 4.0 * 2.2e-16 * cond + 2.0 * sens * drift
         self._check("r_" + which, lab, e["r"], ref, "M", tol=tol,
                     note=T("reference: lfphys.core.gravity.orbits.elements from e² − 1 (without loss of precision), "
-                           "the cubic's roots to 30 digits; tolerance 10⁻¹¹ + 4ε·κ + 2·s·δ: κ = Σ|terms of "
-                           "f|/(|f′(u)|·u) = {cond:.3g} (the root's conditioning), δ = {drift:.2g} the measured drift "
-                           "of e² − 1 at this event (the row below), s = {sens:.3g} how much it moves the turning "
-                           "point", cond=cond, drift=drift, sens=sens))
+                           "the roots of the cubic to 30 significant digits; tolerance 10⁻¹¹ + 4ε·κ + 2·s·δ: κ = "
+                           "Σ|terms of f|/(|f′(u)|·u) = {cond:.3g} (the root's conditioning), δ = {drift:.2g} the "
+                           "measured drift of e² − 1 at this event (the row below), s = {sens:.3g} how much it moves "
+                           "the turning point", cond=cond, drift=drift, sens=sens))
         self._check("em1", T("e² − 1 from the body's state at the turning point ↔ the initial one (the integration "
                              "drift)"),
                     e["em1_state"], info["em1"], "", tol=1e-9,
@@ -773,9 +774,9 @@ class Simulation(BaseSimulation):
             if "left" not in self.S["notes"]:
                 self.S["notes"].add("left")
                 self._msg({"type": "notice", "t": self.t,
-                           "text": T("The body is leaving its circular orbit (r deviates by up to {dev:.2g} r₀, orbits "
-                                     "completed: {turns:d}; the spread of the turning points {s:.2g}): an instability, "
-                                     "the circle's checks stop here.", dev=self.S["maxdev"], turns=n, s=s)})
+                           "text": T("The body is leaving its circular orbit (r deviates by up to {dev:.2g} r₀, "
+                                     "orbits completed: {turns:d}; the spread of the turning points {s:.2g}): an "
+                                     "instability; the circular-orbit checks stop here.", dev=self.S["maxdev"], turns=n, s=s)})
             return
         dt = e["t"] * self.T_s - self.seg_t0
         dtau = (e["tau"] - self.seg_tau0) * self.T_s
@@ -788,8 +789,8 @@ class Simulation(BaseSimulation):
             tol = 1e-10 + 3.0 * s
             self._check("rate", T("dτ/dt on a circular orbit: Δτ/Δt on the orbit ↔ √(1 − 3M/r)"), dtau / dt,
                         self.info["rate_circ"], "", tol=tol,
-                        note=note_s(T("the body's proper time over the orbits observed ({turns:d}) to the coordinate "
-                                      "time; reference: the closed form", turns=n)))
+                        note=note_s(T("the ratio of the body's proper time to the coordinate time over the orbits "
+                                      "observed ({turns:d}); reference: the closed-form expression", turns=n)))
             self._check("period", T("Orbital period (t) ↔ 2π√(r³/GM) (exact for a circular geodesic)"), dt / n,
                         self.info["period_ref"], T("s"), tol=tol,
                         note=note_s(T("the time of one turn in φ, the mean")))
@@ -820,7 +821,7 @@ class Simulation(BaseSimulation):
         self._check("energy", T("Energy E = v²/2 − GM/r: the drift over the orbit"), d["E"], None, "", tol=tol_E,
                     ok=d["E"] <= tol_E,
                     note=T("relative to |E|, the maximum over all integration points; tolerance 10⁻⁹ of the largest "
-                           "term v²/2 + GM/r on the orbit ({ratio:.3g} times |E|)", ratio=d["scale"] / E0))
+                           "term v²/2 + GM/r on the orbit ({n:.3g} times |E|)", n=d["scale"] / E0))
         self._check("angmom", T("Angular momentum h = x·v_y − y·v_x: the drift over the orbit"), d["h"], None, "",
                     tol=1e-9, ok=d["h"] <= 1e-9, note=T("relative, the maximum; tolerance 10⁻⁹"))
 

@@ -1,8 +1,8 @@
-# p04 — the fluids playground
+# p04 — the fluids laboratory
 
 **English** | [Русский](README.ru.md)
 
-A playground section (plan P15.7; framework P15.0: `../RULES.md` §6), on the engine's lattice Boltzmann solver
+A laboratory section (plan P15.7; framework P15.0: `../RULES.md` §6), on the engine's lattice Boltzmann solver
 `lfphys.core.fluids.lbm` (P8, batch B7; the owner's subset of 2026-10-29: «молекулярную динамику, решёточный метод
 Больцмана и FLRW» — "molecular dynamics, the lattice Boltzmann method and FLRW"). The flow is built by hand —
 obstacles, inlets and outlets, moving walls, dye, probes — changed at any moment in the inspector, saved to a file and
@@ -120,7 +120,7 @@ The window of the plane is the main view (UX-ui U15: it was a side window next t
 field chosen across the whole centre; the 3-D scene beside it on request ("Show the 3-D view alongside"). The 3-D scene (z up): the field chosen ("Flow picture": speed, vorticity — signed, zero in the middle of the scale —,
 pressure, dye) as an image on the plane, the velocity arrows, the obstacles as prisms; the window of the plane with
 the obstacles' outlines, the sides' conditions (inlets green, outlets orange, moving walls violet, periodic dashed), the
-dye sources and the probes; the playground's panels. The picture averages the fluid only over each of its points, each
+dye sources and the probes; the laboratory's panels. The picture averages the fluid only over each of its points, each
 point covering an equal share of the domain (beyond 512 points per axis); the window marks it as an approximation. The
 field shown is a view request (`view` op `field`): it never changes the world's physics.
 

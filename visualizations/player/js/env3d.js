@@ -6,8 +6,8 @@
 // the keys, and the messages of the 3-D protocol (volume, vectors, target, planes, slice, path, triads, marks, arrow,
 // mesh).
 // A visualization adds its own panels, help and frame drawing; it never computes what a plane shows.
-import { t } from "./i18n.js";
-import { el, fill } from "./ui.js";
+import { parseNum, t } from "./i18n.js";
+import { el, fill, numberInput } from "./ui.js";
 import { PLANE_COLORS, SCALES, anglesOfNormal, createScene3D, normalFromAngles } from "./scene3d.js";
 import { createSliceWindows } from "./slices.js";
 
@@ -85,12 +85,14 @@ export function createEnv3D(ctx, { logFloor = () => 1e-6, scale = "sqrt", plane2
     const p = planes.find((q) => q.id === selected);
     if (!p) { fill(planeBoxEl, el("div", { class: "muted" }, planes.length ? t("Choose a slice: click its plane in 3-D or its window.") : t("No slices: “＋ Slice”."))); return; }
     const box = H.scene3d.box, a = anglesOfNormal(p.normal), units = t(H.scene3d.units);
-    const inp = (v, lo, hi, step) => el("input", { type: "number", value: (+v).toFixed(3), min: lo, max: hi, step, style: { width: "6.5em" } });
+    // number fields in the viewer's format, read with either decimal separator (review i18n-browser F1, F2)
+    const inp = (v, lo, hi, step) => numberInput(Number((+v).toFixed(3)), { style: { width: "6.5em" } }, { step, min: lo, max: hi });
+    const val = (x, was) => { const r = parseNum(x.value); return r.err ? was : r.value; };
     const xs = [0, 1, 2].map((i) => inp(p.origin[i], box[0][i], box[1][i], 0.01 * (box[1][i] - box[0][i])));
     const th = inp(a.theta, 0, 180, 1), ph = inp(a.phi, 0, 360, 1);
     const auto = el("input", { type: "checkbox" }); auto.checked = p.auto;
     const spd = inp(p.speed, -100, 100, 0.5);
-    const apply = () => sendPlane(p.id, { origin: xs.map((x) => +x.value), normal: normalFromAngles(+th.value, +ph.value), auto: auto.checked, speed: +spd.value });
+    const apply = () => sendPlane(p.id, { origin: xs.map((x, i) => val(x, p.origin[i])), normal: normalFromAngles(val(th, a.theta), val(ph, a.phi)), auto: auto.checked, speed: val(spd, p.speed) });
     for (const x of [...xs, th, ph, spd]) x.onchange = apply;
     auto.onchange = apply;
     const preset = (label, n, title) => el("button", { title, onclick: () => sendPlane(p.id, { normal: n }) }, label);

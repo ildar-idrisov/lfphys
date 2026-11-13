@@ -29,6 +29,7 @@ import numpy as np
 from scipy import integrate, optimize
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 ABOUT = {
     "layer": "core", "kind": "kinematics",
@@ -109,7 +110,7 @@ class Piecewise:
         """Change velocity at lab time t (t must not precede the last segment start)."""
         last = self.segments[-1]
         if t < last.t0:
-            raise ValueError("boost before the last change of motion")
+            raise coded(ValueError(T("a boost before the last change of motion")), "worldline.boost_order")
         x = self.pos(t)
         tau = self.tau(t)
         seg = Segment(float(t), x, np.asarray(v_new, float), tau)

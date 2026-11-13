@@ -443,7 +443,7 @@ export function createView(ctx) {
     line(g, [0, diag.Y(tNow)], [diag.w, diag.Y(tNow)]);
     g.restore();
     ovDiag.textContent = t("Spacetime: x to the right, t up; {coords}", {
-      coords: M ? t("the coordinates of “{name}” (x′, t′); dashes over a line: the lab future (not computed yet: actions may change it)", { name: objs.get(opt.frame).name })
+      coords: M ? t("the coordinates of “{name}” (x′, t′); dashed part of a line: the lab future (not computed yet: actions may change it)", { name: objs.get(opt.frame).name })
         : t("laboratory coordinates") })
       + (H.gr ? " " + t("(Schwarzschild)") : "") + " · " + t("wheel: zoom, Shift: t only, Alt: x only");
   }
@@ -482,7 +482,7 @@ export function createView(ctx) {
     center, rightPanels,
     help: () => el("div", {},
       el("h4", {}, t("What is on the screen")),
-      el("p", {}, t("On the left, space on the “now” slice of the chosen frame of reference (or what an observer sees: where the objects were when the light now reaching them left). On the right, the Minkowski diagram: worldlines, the rays of the flashes (projected on the x axis), events, the observers' lines of simultaneity and local cones.")),
+      el("p", {}, t("On the left, space on the “now” slice of the chosen frame of reference (or what an observer sees: where the objects were when the light now reaching the observer left them). On the right, the Minkowski diagram: worldlines, the rays of the flashes (projected onto the x axis), events, the observers' lines of simultaneity and local cones.")),
       el("p", {}, t("The front of a flash is the positions of the computed rays at the current moment; the delay near a mass, the shadow and the loops at the photon sphere come from integrating the geodesics. The clocks (τ) show proper time by the metric of the run's laws. The speed of light, the frequencies and the simultaneity are in “Checks”, next to their references."))),
     reset() { H = null; objs = new Map(); wls = new Map(); apps = new Map(); pulses = []; signals = []; events = []; },  // setUpFor stays
     // key frames (player.js): the accumulated lists only grow, so a key frame is their lengths and the latest worldlines

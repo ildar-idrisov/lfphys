@@ -17,9 +17,10 @@ wrapper over the engine; which of its modules the current world uses, the player
 world".
 
 The interface speaks English (the default) and Russian: the switch **EN | RU** in the top bar of every page changes
-the language at once and is remembered in this browser; `?lang=ru` or `?lang=en` in the address overrides it. Records
-are language-neutral: a run recorded in one language is read in the other (records made before the interface was
-translated, on 2026-11-12, show their texts in Russian, as they were recorded).
+the language at once and is remembered in this browser; `?lang=ru` or `?lang=en` in the address overrides it in that
+tab, also on the pages its links lead to. Records are language-neutral: a run recorded in one language is read in the
+other (records made before the interface was translated, on 2026-11-12, show their labels in the language chosen and
+their sentences with numbers as they were recorded, in Russian).
 
 ---
 
@@ -75,12 +76,12 @@ recomputing. If there is no save, or the code that this world loaded (the files 
 or the versions of Python and the libraries changed since, the world is recomputed along the record from its start
 (the same result frame for frame; the exception is the "ghost" of v04, `STATUS.md` V32); which way it went on, a
 message in the events says. While the world is being restored, the status line shows "the world is being restored —
-the recording goes on by itself"; the set-up cannot be changed meanwhile. Going back through the history, the player
+the recording resumes by itself"; the set-up cannot be changed meanwhile. Going back through the history, the player
 starts from the nearest key frame (as in a video: a snapshot of what has accumulated every 100 messages, at most 256
 per world — beyond that sparser, evenly over the whole record), not from the start of the record. From the start of the
 record it rebuilds the view where a key frame does not fit: v13 and v14 (the clouds), v07 after old detections have
-passed the limit, v11 and v12 before their latest change of the set-up. If going on failed (for example, the
-visualization's code has changed incompatibly since), the run stays suspended with the reason ("going on failed — ⏺
+passed the limit, v11 and v12 before their latest change of the set-up. If resuming failed (for example, the
+visualization's code has changed incompatibly since), the run stays suspended with the reason ("resuming failed — ⏺
 tries again"); the record is intact. Runs not touched for longer than the removal period (a view, a command) are
 removed, except those marked ★; beyond the quota those untouched longest go first; a run open in a tab is not removed.
 The removal period is the field above the list of runs in the catalogue ("Remove runs without actions after … days",
@@ -91,7 +92,7 @@ some runs, the catalogue first shows their list and removes them only after conf
 
 | where | what is there |
 |---|---|
-| top | the title, the scene, the badge **"standard physics"** or **"MODIFIED PHYSICS: …"**, the switch of worlds ("World 2 (current): …", if the run has several), the indicator "the set-up is being rebuilt…" (and "going on: the world is being restored…"), the state (recording / paused / suspended; live / history / end of the record), "☆", **EN \| RU**, the theme, the help |
+| top | the title, the scene, the badge **"standard physics"** or **"MODIFIED PHYSICS: …"**, the switch of worlds ("World 2 (current): …", if the run has several), the indicator "the set-up is being rebuilt…" (and "resuming: the world is being restored…"), the state (recording / paused / suspended; live / history / end of the record), "☆", **EN \| RU**, the theme, the help |
 | left | **Set-up — changes at once**: everything the experimenter may change during the experiment (source, particle, slits, screen, observer, elements). There is no "apply" button: a change takes effect as soon as you release the slider, choose an item of a list or press Enter in a number field. An impossible change is refused, and the field goes back to its former value. **Actions** — one-off events (a flash, a measurement) by a button; the observer's speed by a slider, also at once. **New world: …** — the laws and the initial conditions (they cannot change inside a running world): the new world starts in the same run, the earlier ones stay in the record |
 | centre | the visualization's scene; above it, quick elements of the set-up (in the double-slit experiment: the observer, the detector's coupling, the distance to the screen, the width and the period of the slits) — they change at once, as in the panel on the left |
 | right | **Checks: computed ↔ reference**: a quantity computed in this run next to the reference of accepted physics (✓/✗); the fresh groups on top, the earlier ones folded; the visualization's panels; **Events** (a click goes to that moment) |
@@ -107,7 +108,7 @@ the event, T — the theme, ? — the help.
 If the world takes long to compute a change (the scene, the set-up, a new world), the top bar shows what exactly and for
 how many seconds; "✕ cancel" returns the world to the moment before that change. If a world cannot be made with the
 chosen parameters, the catalogue says why right under the button "▶ Start", and the field with the unsuitable value is
-highlighted. In a playground, a palette button opens the object's parameters; the place can be typed or clicked in the
+highlighted. In a laboratory, a palette button opens the object's parameters; the place can be typed or clicked in the
 scene ("⌖ Point at a place in the scene"), then "Place". ⇤ and ⇥ at the top (keys [ and ]) hide the side columns. Each
 worker has its own memory (`--worker-mem-gb`, by default 60 % of the server's memory, at most 8 GB): a world that
 does not fit in it refuses with an explanation instead of taking the memory of the whole computer.
@@ -173,15 +174,15 @@ At most three runs compute at once.
 
 ---
 
-## The playground: research sandboxes (B6, 2026-11-03)
+## Laboratories (B6, 2026-11-03)
 
 The catalogue has two modes (the switch at the top of the catalogue): **"Demonstrations"** — the prepared experiments
-`vNN_*` above — and **"Playground"** — sandboxes by section of physics `pNN_*`, where the scene is built by hand and
+`vNN_*` above — and **"Laboratories"** — one laboratory per branch of physics `pNN_*`, where the scene is built by hand and
 everything is computed in real time (the owner's request of 2026-10-28). On a section's card: a scenario (a ready scene),
 "▶ Begin", "Laws…" (the world's laws: which solver, space, grid — changing them starts a new
 world) and "📂 From a scene file…".
 
-On the left of a playground's player:
+On the left of a laboratory's player:
 
 * **Palette: add to the scene** — add an object at the world's current moment: before it is placed, a form of its
   parameters opens, and the point can be given by a click in the scene; the world moves the object to a free spot or
@@ -236,8 +237,8 @@ computation it will take; the limit is 10 min), then "▶ Start the sweep"; afte
 again.
 
 A sweep computes in a separate process and does not change the running world: the sweep has its own, smaller share of
-memory, and if memory runs short the system stops the sweep first, not the world. A sweep stops by itself if it turns
-out dearer than the limit. "✕ cancel" stops it, what was computed stays; "remove" deletes a finished sweep with its
+memory, and if memory runs short the system stops the sweep first, not the world. A sweep stops by itself if it would
+exceed the limit. "✕ cancel" stops it, what was computed stays; "remove" deletes a finished sweep with its
 results. The result is a table, a plot and "⤓ CSV of the table" (the first lines of the CSV say from which moment, how
 many readings and how often); a world's refusal is in the table with its reason, and if not a single value was
 measured, the sweep is marked "not computed". The same sweep from the same state gives the same numbers; for a
@@ -278,8 +279,8 @@ physics in `../reviews/`. The server and the player pick the folder up by themse
 | "all 3 workers are busy with open runs: …" | three runs are open in a browser: close the tab of one (it will pause and free its worker; it goes on with ⏺). Runs without viewers free their workers by themselves |
 | "this record was made before the version that can continue runs: …" | the run was created before 2026-10-28: it can be watched but not continued — start a new world or a new run |
 | a run is at once "failure" | the laws are incompatible (for example, GR with an ether) — the reason is in "Events" and in `runs/<id>/worker.log` |
-| "going on failed — ⏺ tries again" | the world could not be recomputed along the record (the reason is in the status line's tooltip and in "Events"); the record is intact, ⏺ tries again once the cause is removed |
-| "the world is still being restored: the change was not accepted — …" | a change came while the world was being restored along the record (for example, from another tab); repeat it when the recording goes on |
+| "resuming failed — ⏺ tries again" | the world could not be recomputed along the record (the reason is in the status line's tooltip and in "Events"); the record is intact, ⏺ tries again once the cause is removed |
+| "the world is still being restored: the change was not accepted — …" | a change came while the world was being restored along the record (for example, from another tab); repeat it when the record resumes |
 | a run in the catalogue has no "✕" | it is open in a tab (👁 in the list): close it |
 | the world runs slower than the chosen speed | the computation cannot keep up: next to the speed, "actual: …" in orange (before 2026-10-28 the player did not show this, though this guide said otherwise); lower the speed or the source's rate |
 | a change to the server does not show (including an "ImportError" of a new visualization: the server holds the engine loaded at its start) | `docker compose -f visualizations/docker/docker-compose.yml restart viz` — no runs are lost: the running ones are suspended and go on with ⏺ |

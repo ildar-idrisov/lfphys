@@ -64,7 +64,7 @@ export function createView(ctx) {
   const pg = createPlayground(ctx, { onSelect: () => env.scene.requestRender(), describeProbe });
   const cv = () => el("canvas", { style: { width: "100%", height: "150px", display: "block", background: "#0b0e14", borderRadius: "4px" } });
   const cVel = cv(), cRdf = cv(), cRho = cv(), cT = cv(), cP = cv(), cE = cv(), cOrd = cv(), cMsd = cv(), cMode = cv();
-  const pLabel = el("div", { class: "help" }, t("Pressure")), ordLabel = el("div", { class: "help" }, t("Bond-orientational order"));
+  const pLabel = el("div", { class: "help" }, t("Pressure")), ordLabel = el("div", { class: "help" }, t("Bond-orientational order parameter"));
   const modeBox = el("div", {}, el("div", { class: "help" }, t("Mode temperatures of the molecules, K: translational (orange), rotational (green), vibrational kinetic (blue), potential of the bonds (pink), of the angles (yellow); equal at equipartition")), cMode);
   const statBox = el("div", { class: "kv" });
   const charts = el("div", {},
@@ -110,7 +110,7 @@ export function createView(ctx) {
     pLabel.textContent = t("Pressure: {kind}", { kind: s.p_kind ? t(s.p_kind) : t("virial") });
     chart(cP, [{ x: tt, y: ts.map((q) => q.p), color: "#b197fc" }], { xlabel: t("t, ps ({unit})", { unit: t(s.p_unit) }) });
     chart(cE, [{ x: tt, y: ts.map((q) => q.e), color: "#e9ecef" }], { xlabel: t("t, ps") });
-    ordLabel.textContent = t("Bond-orientational order {kind} (neighbours closer than {rc}σ): 1 (ψ6) or {q6} (Q6 of fcc) for a crystal, ~1/√N for a liquid or a gas", { kind: s.order_kind || "", rc: 1.5, q6: 0.575 });
+    ordLabel.textContent = t("Bond-orientational order parameter {kind} (neighbours closer than {rc}σ): 1 (ψ6) or {q6} (Q6 of fcc) for a crystal, ~1/√N for a liquid or a gas", { kind: s.order_kind || "", rc: 1.5, q6: 0.575 });
     chart(cOrd, [{ x: tt, y: ts.map((q) => (q.order === null || q.order === undefined) ? NaN : q.order), color: "#ffd43b" }], { xlabel: t("t, ps"), yr: [0, 1] });
     chart(cMsd, [{ x: tt, y: ts.map((q) => (q.msd === null || q.msd === undefined) ? NaN : q.msd), color: "#f783ac" }], { xlabel: t("t, ps (nm²)") });
     const md = ts.filter((q) => q.modes);
@@ -123,8 +123,8 @@ export function createView(ctx) {
       el("div", {}, el("span", {}, t("temperature")), el("b", {}, s.T_K === null ? "—" : t("{v:.4g} K", { v: s.T_K }))),
       el("div", {}, el("span", {}, t("pressure")), el("b", {}, s.p === null ? "—" : t("{v:.4g} {unit}", { v: s.p, unit: t(s.p_unit) }))),
       el("div", {}, el("span", {}, t("energy per atom")), el("b", {}, t("{v:.4g} kJ/mol", { v: s.e }))),
-      el("div", {}, el("span", {}, t("KS to Maxwell")), el("b", {}, s.ks && s.ks.D !== null && s.ks.D !== undefined ? t("{d:.3g} (bound {b:.3g})", { d: s.ks.D, b: s.ks.bound }) : "—")),
-      el("div", {}, el("span", {}, t("order {kind}", { kind: s.order_kind || "" })), el("b", {}, s.order === null || s.order === undefined ? "—" : fmt(s.order, ".3g"))),
+      el("div", {}, el("span", {}, t("KS distance to Maxwell")), el("b", {}, s.ks && s.ks.D !== null && s.ks.D !== undefined ? t("{d:.3g} (bound {b:.3g})", { d: s.ks.D, b: s.ks.bound }) : "—")),
+      el("div", {}, el("span", {}, t("order parameter {kind}", { kind: s.order_kind || "" })), el("b", {}, s.order === null || s.order === undefined ? "—" : fmt(s.order, ".3g"))),
       el("div", {}, el("span", {}, t("mean-square displacement")), el("b", {}, s.msd === null || s.msd === undefined ? "—" : t("{v:.3g} nm²", { v: s.msd }))));
   }
 
@@ -140,7 +140,7 @@ export function createView(ctx) {
     leftPanels: pg.leftPanels,
     rightPanels: [panel(t("Statistics"), charts), ...pg.rightPanels, panel(t("Scene layers"), env.layersPanel)],
     help: () => el("div", {},
-      el("h4", {}, t("Playground: particles and molecules")),
+      el("h4", {}, t("Laboratory: particles and molecules")),
       el("p", {}, t("Add a gas, a crystal, single atoms and molecules, change the walls (specular, soft, thermal: heat baths), put a piston, thermostats, a field and thermometers, all at the current moment. The atoms move by Newton's laws with a model interaction (Lennard-Jones, repulsion only, or hard spheres).")),
       el("p", {}, t("“Statistics”: the velocity distribution against the Maxwell distribution, the radial distribution function g(r), the density along the height, the temperature, the pressure and the energy over time, the orientational order (ψ6 / Q6) and the mean-square displacement (crystal or liquid), the molecules' mode temperatures. Checks: the energy balance (the first law: the baths' heat and the piston's work), the momentum (its change since the last edit against the rounding bound), the distance to the Maxwell distribution, for hard disks the compressibility factor against the equation of state."))),
     reset() { env.reset(); pg.reset(); H = null; stats = []; drawnStats = -1; shapesKey = ""; },

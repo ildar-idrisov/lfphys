@@ -20,7 +20,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
-from lfphys.i18n import english, is_t, msgids, text_of  # noqa: E402
+from lfphys.i18n import T as T_, english, is_t, msgids, text_of  # noqa: E402
 from lfviz import registry  # noqa: E402
 from lfviz.i18n import catalogue  # noqa: E402
 from lfviz.sim import Runner  # noqa: E402
@@ -343,3 +343,120 @@ def test_an_old_format_scene_file_still_loads(model):
     assert not h.errors(), h.errors()
     fresh = Harness(V, None, {**new["laws"], "scene": new})
     assert not any(en(m["text"]).startswith("a file of the old format") for m in fresh.of("notice"))
+
+
+
+def _lj(dim=2, box=(10.0, 10.0), boundary="walls"):
+    from lfphys.core.md.system import MD
+    from lfphys.theories.models import interatomic as IA
+    m = MD(dim=dim, box=box, boundary=boundary, pair=IA.LennardJones(2.5))
+    m.add_species("A")
+    return m
+
+
+def _hard(boundary="walls", sigma=1.0):
+    from lfphys.core.md.hard import HardSpheres
+    h = HardSpheres(2, (10.0, 10.0), boundary)
+    h.add_species("A", sigma=sigma)
+    return h
+
+
+def _piston(m):
+    m.fill("A", n=4, arrangement="random", region=((0.5, 0.5), (4.0, 4.0)))
+    m.set_piston(1, X=8.0, mass=10.0)
+    return m
+
+
+def _molecules_stretched():
+    h = Harness(V, "molecules")
+    md = h.sim.md
+    return lambda: md.deform(np.asarray(md.L) * np.array([1.2] + [1.0] * (md.dim - 1)), mode="affine",
+                             max_bond_strain=0.1)
+
+
+# code -> (a call that triggers it in the engine, the world's msgid). Review i18n-code F5: the world matches the
+# engine's machine code, never its wording; each mapping is triggered here.
+CODE_CASES = {
+    "md.jammed": (lambda: _lj().fill("A", n=1000, arrangement="random"),
+                  "only {k:d} of {n:d} atoms could be placed without overlaps"),
+    "md.overlap": (lambda: (lambda m: (m.add("A", [[5.0, 5.0]]), m.add("A", [[5.0, 5.05]])))(_lj()),
+                   "the new atoms would lie on those already there (insertion energy {e:.3g} ε at the limit {lim:.3g} ε)"),
+    "md.refused/md.same_point": (lambda: (lambda m: (m.add("A", [[5.0, 5.0]]), m.add("A", [[5.0, 5.0]])))(_lj()),
+                                 "two atoms would be at the same point"),
+    "md.hard_overlap": (lambda: _hard().add("A", [[5.0, 5.0], [5.2, 5.0]]), "hard disks (spheres) would overlap"),
+    "md.region": (lambda: _lj().fill("A", n=3, region=((5.0, 5.0), (4.0, 4.0)), arrangement="random"),
+                  "the object's region lies outside the box (nothing of it is left inside the walls)"),
+    "md.outside_walls": (lambda: (lambda m: (m.fill("A", n=20, arrangement="random", T=1.0),
+                                             m.deform((3.0, 10.0), mode="wall")))(_lj()),
+                         "an atom would be beyond the wall on the axis {a}"),
+    "md.cutoff": (lambda: (lambda m: (m.fill("A", n=4, arrangement="random"), m.deform((4.0, 10.0))))(
+                      _lj(boundary="periodic")),
+                  "the cutoff radius with its margin ({rc:.3g} nm) exceeds half the periodic box ({half:.3g} nm)"),
+    "md.ewald": (lambda: (lambda m: (m.add_species("Q", charge=1.0), m.fill("Q", n=2, arrangement="random")))(
+                     _lj(boundary="periodic")),
+                 "charges in a box with a periodic axis are not supported (the Ewald sum is not implemented)"),
+    "md.hard_box": (lambda: _hard("periodic", sigma=3.0).fill("A", n=1),
+                    "the periodic box is shorter than four diameters of the largest atom ({d:.3g} nm)"),
+    "md.piston/axis": (lambda: _piston(_lj()).deform((10.0, 9.0)),
+                       "along the axis {a} the piston sets the volume: the box does not change affinely along it"),
+    "md.piston/face": (lambda: _piston(_lj()).deform((10.0, 7.0), mode="wall"),
+                       "the piston stands at {x:.4g} nm, above the new upper wall"),
+    "md.piston/hi side": (lambda: _piston(_lj()).set_wall(1, "hi", "specular"),
+                          "the upper side of this axis is the piston"),
+    "md.piston/x_min": (lambda: _lj().set_piston(1, X=20.0, mass=10.0), "the piston's position is outside the box"),
+    "md.periodic_axis": (lambda: (lambda m: (m.fill("A", n=4, arrangement="random"),
+                                             m.deform((12.0, 10.0), mode="wall")))(_lj(boundary="periodic")),
+                         "the axis {a} is periodic: there is no wall to move"),
+    "md.bond_strain": (None, "the molecules' bonds would stretch or shrink by {p:.3g} % (the limit is {lim:.3g} % per "
+                             "change: the atoms move with the box, and so do the bonds)"),
+    "md.no_free_site": (lambda: (lambda m: (m.fill("A", density=0.5, region=((2, 2), (8, 8))),
+                                            m.fill("A", density=0.5, region=((2, 2), (8, 8)), skip_occupied=True)))(_lj()),
+                        "all the crystal's sites are taken by atoms already there"),
+    "md.lattice_cell": (lambda: _lj().fill("A", density=0.01, region=((4, 4), (5, 5))),
+                        "the crystal's region is smaller than one lattice cell at this density"),
+    "md.non_finite": (lambda: _lj().add("A", [[5.0, 5.0]], v=[[float("nan"), 0.0]]),
+                      "the forces became infinite (atoms too close)"),
+    "md.thermal_wall": (lambda: _lj().set_wall(1, "lo", "thermal", T=0.0), "a thermal wall needs a temperature above 0 K"),
+}
+
+
+@pytest.mark.parametrize("case", sorted(CODE_CASES))
+def test_each_engine_code_maps_to_the_worlds_text(case):
+    """Review i18n-code F5: p03 puts the engine's refusals (``core.md``) into its own terms by their machine code
+    (``lfphys.codes``), with the numbers from ``data_of``. Each mapping of ``_MD`` is triggered in the engine here: the
+    code (for a refused transactional edit, its cause) and the world's msgid with its numbers, translated."""
+    from lfphys.codes import code_of
+    from p03_molecules import viz as P3
+    code = case.split("/")[0] if not case.startswith("md.refused") else "md.refused"
+    trigger, msgid = CODE_CASES[case]
+    if trigger is None:
+        trigger = _molecules_stretched()
+    with pytest.raises(Exception) as info:
+        trigger()
+    e = info.value
+    assert code_of(e) == code, (code_of(e), str(e))
+    if code == "md.refused":
+        assert P3._cause(e) == "md.same_point"
+    r = text_of(P3._owner(e))
+    assert r["$t"] == "{text}. What to change: {hint}", r      # the world's text with its hint
+    t = r["a"]["text"]
+    assert t["$t"] == msgid, t
+    assert "{" not in english(t) and translated(t), english(t)
+    assert set(t.get("a") or {}) == {k for k in re.findall(r"\{(\w+)", msgid)}
+
+
+def test_every_md_mapping_has_a_test():
+    from p03_molecules import viz as P3
+    tested = {c.split("/")[0] for c in CODE_CASES} | {"md.same_point"}
+    assert set(P3._MD) <= tested, set(P3._MD) - tested
+
+
+def test_a_failed_verlet_step_names_the_reason_in_the_owners_words():
+    """Language review F11: the reason inside «the Verlet step failed ({why})» was the engine's English
+    («non-finite forces»); it is the world's own text for a mapped code, else the engine's translatable text."""
+    from lfphys.codes import coded
+    from p03_molecules import viz as P3
+    assert english(P3._why(coded(FloatingPointError(T_("non-finite forces")), "md.non_finite"))) \
+        == "the forces became infinite (atoms too close)"
+    assert english(P3._why(coded(FloatingPointError(T_("a FENE bond stretched to R0 (the bond broke)")),
+                                 "md.bond_broke"))) == "a FENE bond stretched to R0 (the bond broke)"

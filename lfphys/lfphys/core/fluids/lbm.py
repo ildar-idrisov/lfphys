@@ -156,6 +156,7 @@ import time
 
 import numpy as np
 
+from lfphys.codes import coded
 from lfphys.i18n import T, is_t
 
 from .. import backend
@@ -192,7 +193,7 @@ ABOUT = {
               "Krüger et al., The Lattice Boltzmann Method (Springer 2017)",
               T("Schäfer & Turek (1996), Ghia, Ghia & Shin (1982) — benchmark problems (tests)"),
               T("Dupuis & Chopard, Phys. Rev. E 67, 066707 (2003); Filippova & Hänel, J. Comput. Phys. 147, 219 "
-                "(1998); Lagrava, PhD thesis, University of Geneva (2012), Eqs. (4.1), (4.10), (4.11), the right-hand "
+                "(1998); Lagrava, PhD thesis, University of Geneva (2012), eqs. (4.1), (4.10), (4.11), the right-hand "
                 "side of (4.13), (4.14)–(4.15) (in (4.12) and in the middle part of (4.13) the ratio is inverted — a "
                 "typo) — transfer of the non-equilibrium part between grids (a change of grid, domain and step)")],
     "conflicts": [],
@@ -477,7 +478,7 @@ class Disk(Shape):
         self.c = (float(center[0]), float(center[1]))
         self.r = float(radius)
         if not self.r > 0:
-            raise ValueError(T("disk: the radius must be positive"))
+            raise ValueError(T("disc: the radius must be positive"))
 
     def contains(self, X, Y):
         return (X - self.c[0]) ** 2 + (Y - self.c[1]) ** 2 <= self.r**2
@@ -1267,8 +1268,9 @@ class Flow2D:
         self._check_densities(sides, self.gravity if gravity is None else gravity)
         nu_l = u.viscosity(nu)
         if nu_l < TAU_MIN_EXCESS / 3:
-            raise ValueError(T("unstable: τ = {tau:.5g} is too close to 1/2 (τ − 1/2 ≥ {min} is needed); raise the "
-                               "viscosity or lower dx, or raise dt", tau=3 * nu_l + 0.5, min=TAU_MIN_EXCESS))
+            raise coded(ValueError(T("unstable: τ = {tau:.5g} is too close to 1/2 (τ − 1/2 ≥ {min} is needed); raise "
+                                     "the viscosity or lower dx, or raise dt", tau=3 * nu_l + 0.5, min=TAU_MIN_EXCESS)),
+                        "lbm.tau")
         vmax = 0.0 if u_max is None else float(u_max)
         for s in (sides or self._sides).values():
             if isinstance(s, Wall):
@@ -1284,14 +1286,15 @@ class Flow2D:
             vmax = max(vmax, self._surface_speed_max(ob))
         ma = vmax / u.c / CS
         if ma > MACH_MAX:
-            raise ValueError(T("Mach number {ma:.3g} > {max}: the compressibility error O(Ma²) is too large (and the "
-                               "scheme unstable); lower dt (or the velocity)", ma=float(ma), max=MACH_MAX))
+            raise coded(ValueError(T("Mach number {ma:.3g} > {max}: the compressibility error O(Ma²) is too large "
+                                     "(and the scheme unstable); lower dt (or the velocity)", ma=float(ma),
+                                     max=MACH_MAX)), "lbm.mach")
         rec = vmax * u.dx / nu if nu > 0 else math.inf
         lim = self.re_cell_limit(sides)
         if rec > lim:
-            raise ValueError(T("grid Reynolds number u·dx/ν = {rec:.3g} > {lim}: the grid does not resolve the flow "
-                               "(unstable); lower dx or the velocity, or raise the viscosity", rec=float(rec),
-                               lim=float(lim)))
+            raise coded(ValueError(T("grid Reynolds number u·dx/ν = {rec:.3g} > {lim}: the grid does not resolve "
+                                     "the flow (unstable); lower dx or the velocity, or raise the viscosity",
+                                     rec=float(rec), lim=float(lim))), "lbm.cell_reynolds")
         return ma, rec
 
     def _g_lattice(self, gravity=None, sides=None) -> tuple:
@@ -1349,12 +1352,13 @@ class Flow2D:
                           spread=float(self.hydrostatic_spread(gravity, sides))))
         what = what[0] if len(what) == 1 else T("{a} and {b}", a=what[0], b=what[1])
         at = T("at ({x}, {y}) m; ", x=float(X), y=float(Y)) if g != (0.0, 0.0) else ""
-        raise ValueError(T("{what}: the scheme's rest density would deviate from ρ0 by {dev:.3g} > {max} ({at}the "
-                           "scheme's pressure scale c_s²ρ(dx/dt)² = {scale:.4g} Pa, its speed of sound c_s = {cs:.4g} "
-                           "m/s — a property of the computation, not of the fluid): the compressibility error is too "
-                           "large; lower the pressure or the force, or raise the “largest expected velocity” (a "
-                           "smaller time step, a larger c_s)", what=what, dev=float(dev), max=RHO_DEV_MAX, at=at,
-                           scale=float(CS2 * u.rho * u.c**2), cs=float(u.c * CS)))
+        raise coded(ValueError(T("{what}: the scheme's rest density would deviate from ρ0 by {dev:.3g} > {max} "
+                                 "({at}the scheme's pressure scale c_s²ρ(dx/dt)² = {scale:.4g} Pa, its speed of sound "
+                                 "c_s = {cs:.4g} m/s — a property of the computation, not of the fluid): the "
+                                 "compressibility error is too large; lower the pressure or the force, or raise the "
+                                 "“largest expected velocity” (a smaller time step, a larger c_s)", what=what,
+                                 dev=float(dev), max=RHO_DEV_MAX, at=at, scale=float(CS2 * u.rho * u.c**2),
+                                 cs=float(u.c * CS))), "lbm.rest_density")
 
     def _hydrostatic_shift(self, g_old, g_new):
         """A body force changed now: add the change of its hydrostatic pressure at once (an incompressible fluid's
@@ -2018,17 +2022,17 @@ class Flow2D:
                           tau=float(self.tau_p), rec=float(nums["re_cell"]), lim=float(self.re_cell_limit()),
                           t=float(self.t))
                 if imposed:
-                    raise Unstable(T("the computation became unstable by t = {bad_t:.6g} s (populations not numbers "
-                                     "or outside |f| < {guard}); the last healthy state (t = {at:.6g} s): Ma_max = "
-                                     "{ma:.3g}, τ+ = {tau:.4g}, grid Re = {rec:.3g} (limit {lim}); imposed: {imposed}; "
-                                     "the state was restored to the start of the call (t = {t:.6g} s). Lower the "
-                                     "velocity or dx, raise the viscosity, lower the imposed pressure or force",
-                                     imposed=imposed, **kw))
-                raise Unstable(T("the computation became unstable by t = {bad_t:.6g} s (populations not numbers or "
-                                 "outside |f| < {guard}); the last healthy state (t = {at:.6g} s): Ma_max = {ma:.3g}, "
-                                 "τ+ = {tau:.4g}, grid Re = {rec:.3g} (limit {lim}); the state was restored to the "
-                                 "start of the call (t = {t:.6g} s). Lower the velocity or dx, raise the viscosity",
-                                 **kw))
+                    raise coded(Unstable(T("the computation became unstable by t = {bad_t:.6g} s (populations not "
+                                           "numbers or outside |f| < {guard}); the last healthy state (t = {at:.6g} "
+                                           "s): Ma_max = {ma:.3g}, τ+ = {tau:.4g}, grid Re = {rec:.3g} (limit {lim}); "
+                                           "imposed: {imposed}; the state was restored to the start of the call (t = "
+                                           "{t:.6g} s). Lower the velocity or dx, raise the viscosity, lower the "
+                                           "imposed pressure or force", imposed=imposed, **kw)), "lbm.unstable")
+                raise coded(Unstable(T("the computation became unstable by t = {bad_t:.6g} s (populations not numbers "
+                                       "or outside |f| < {guard}); the last healthy state (t = {at:.6g} s): Ma_max = "
+                                       "{ma:.3g}, τ+ = {tau:.4g}, grid Re = {rec:.3g} (limit {lim}); the state was "
+                                       "restored to the start of the call (t = {t:.6g} s). Lower the velocity or dx, "
+                                       "raise the viscosity", **kw)), "lbm.unstable")
             if self._rec is not None and self.steps == self._rec["next"]:
                 self._rec_sample()
             if done < n:
@@ -2211,7 +2215,8 @@ class Flow2D:
                 shape.resolve(self._X, self._Y)
             ob = _Obstacle(oid, shape, velocity, omega, interpolated, label, ref_length)
             if ob.interpolated and ob.moving:
-                raise ValueError(T("interpolated walls only for a surface at rest (a moving one follows Ladd)"))
+                raise coded(ValueError(T("interpolated walls only for a surface at rest (a moving one follows Ladd)")),
+                            "lbm.interp_moving")
             self._obstacles[oid] = ob
             self._next_id = oid + 1
         self._regeometry(change)
@@ -2240,7 +2245,8 @@ class Flow2D:
                            old.label if label is None else label,
                            old.ref_length if ref_length is None else ref_length)
             if ob.interpolated and ob.moving:
-                raise ValueError(T("interpolated walls only for a surface at rest (a moving one follows Ladd)"))
+                raise coded(ValueError(T("interpolated walls only for a surface at rest (a moving one follows Ladd)")),
+                            "lbm.interp_moving")
             self._obstacles[oid] = ob
         self._regeometry(change)
 
@@ -2477,9 +2483,9 @@ class Flow2D:
                     continue
                 X, Y = self._X[m] + sx, self._Y[m] + sy
                 if X.min() - h < -tol or X.max() + h > Lx1 + tol or Y.min() - h < -tol or Y.max() + h > Ly1 + tol:
-                    raise ValueError(T("{what} {name} would be cut by the edge of the new domain: the domain can be "
-                                       "made smaller only where there are no bodies and dye sources", what=what,
-                                       name=_name(it)))
+                    raise coded(ValueError(T("{what} {name} would be cut by the edge of the new domain: the domain "
+                                             "can be made smaller only where there are no bodies and dye sources",
+                                             what=what, name=_name(it))), "lbm.cut_by_edge")
 
     def _inlet_now(self, name: str, s, step: int):
         """The velocity (lattice units, the present ones) an inlet imposes at the points ``s`` (m) of its side at step
@@ -2757,7 +2763,8 @@ class Flow2D:
         if self._force_ref is not None:
             self.reset_force_mean()
         if not self._healthy():
-            raise Unstable(T("after the grid was rebuilt the populations left the healthy range: the rebuild was undone"))
+            raise coded(Unstable(T("after the grid was rebuilt the populations left the admissible range: the rebuild "
+                                   "was undone")), "lbm.rebuild_unstable")
         self._choose()
         M1, P1x, P1y, D1 = self._totals()
         return {"before": before,
@@ -2830,8 +2837,8 @@ class Flow2D:
         if self._g is None:
             return
         if self._sources:
-            raise ValueError(T("the dye cannot be switched off while it has sources ({n:d}): remove them first",
-                               n=len(self._sources)))
+            raise coded(ValueError(T("the dye cannot be switched off while it has sources ({n:d}): remove them first",
+                                     n=len(self._sources))), "lbm.dye_has_sources")
         f, g = self._host_state()
         D = float(g.reshape(5, -1)[:, self._fluid_idx].sum())
         b = self._banked.setdefault("dye_off", [0.0, 0.0, 0.0, 0.0])
@@ -3001,7 +3008,7 @@ class Flow2D:
             self.reset_force_mean()
         self._baseline()
         if not self._healthy():
-            raise Unstable(T("the adopted flow is outside the healthy populations"))
+            raise coded(Unstable(T("the adopted flow is outside the healthy populations")), "lbm.adopt_unstable")
         return {"copied": int(both.sum()), "rest": int(fresh.sum()), "dye": dye, "ramps": ramps}
 
     def _totals(self):
@@ -3609,7 +3616,7 @@ def _bench(size: int, xp, cplx):
 
 backend.register(backend.KernelSpec(
     KERNEL, T("Fluid in 2-D (lattice Boltzmann method)"),
-    T("a D2Q9 flow step with dye: streaming, boundary conditions, collisions (the “Fluids” playground)"),
+    T("a D2Q9 flow step with dye: streaming, boundary conditions, collisions (the “Fluids” laboratory)"),
     gpu=True,
     precisions={"fp64": {"allowed": True},
                 "fp32": {"allowed": False,

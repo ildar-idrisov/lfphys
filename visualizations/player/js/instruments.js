@@ -21,18 +21,18 @@
 // same canvas) are updated in place.
 import { getJSON, postJSON } from "./api.js";
 import { nice } from "./canvas.js";
-import { lang, t } from "./i18n.js";
-import { css, el, fill, fresh2d, num, panel, time, toast } from "./ui.js";
+import { fmtField, lang, parseNum, t } from "./i18n.js";
+import { css, el, fill, fresh2d, labelHasUnit, num, panel, time, toast } from "./ui.js";
 
 const runId = new URLSearchParams(location.search).get("id");
 const MAX_POINTS = 20000;
 const MAX_PLOTS = 6;
 const STAT_LABEL = { final: t("the value at the end"), mean_last: t("the mean over the last …"), max: t("the maximum"), min: t("the minimum") };
 const STATE_TEXT = { starting: t("starting"), running: t("running"), done: t("done"), cancelled: t("cancelled"), failed: t("not computed"),
-  over_budget: t("stopped: dearer than the budget"), interrupted: t("interrupted") };
+  over_budget: t("stopped: over budget"), interrupted: t("interrupted") };
 const T_PREFIX = [[1, t("s")], [1e-3, t("ms")], [1e-6, t("µs")], [1e-9, t("ns")], [1e-12, t("ps")], [1e-15, t("fs")], [1e-18, t("as")]];
 // a world time in seconds: the unit "s" (a text from the server, rendered here) or "с" of the records before the i18n
-const SECONDS = new Set(["s", "\u0441", t("s")]);
+const SECONDS = new Set(["s", "\u0441", t("s")]);  // i18n-ok: «с» of the records made before the translation
 
 const I = {
   ctx: null, worlds: [], replaying: true, histStride: 1, mounted: false,
@@ -90,12 +90,8 @@ function title(W, d) {
 }
 // "label, unit" unless the label names the unit already ("Window size, nm", "Number of slits": review LB1-p02-ux X9; the
 // server's lfviz.sweep.with_unit says the same); texts are rendered first
-export function hasUnit(label, unit) {
-  label = t(label); unit = t(unit);  // texts (T) compared as the viewer reads them
-  if (label.includes(", " + unit) || label.includes("(" + unit)) return true;
-  return label.split(/[^\p{L}\p{N}_/·²³⁻¹°%]+/u).includes(unit);
-}
-export function withUnit(label, unit) { label = t(label); unit = t(unit); return !unit || hasUnit(label, unit) ? label : `${label}, ${unit}`; }
+export function hasUnit(label, unit) { return labelHasUnit(label, unit); }  // ui.js: by words, texts rendered first
+export function withUnit(label, unit) { label = t(label); unit = t(unit); return !unit || hasUnit(label, unit) ? label : t("{label}, {unit}", { label, unit }); }
 const shown = (p, values) => !p.show_if || Object.entries(p.show_if).every(([k, allowed]) => allowed.includes(values[k]));
 function atT(W, tt) {  // the last point at or before tt
   const T = W.t;
@@ -470,8 +466,9 @@ export function parseValues(text, p) {
   const out = [];
   for (const s of toks) {
     if (p.type === "float" || p.type === "int") {
-      const x = Number(s.replace(",", ".").replace("−", "-"));
-      if (!Number.isFinite(x)) throw new Error(t("“{value}” is not a number", { value: s }));
+      const r = parseNum(s), x = r.value;  // a decimal comma or point (review i18n-browser F1)
+      if (r.err === "ambiguous") throw new Error(t("in “{value}” the comma may separate thousands or decimals — type {a} or {b}", { value: s, a: r.a, b: r.b }));
+      if (r.err) throw new Error(t("“{value}” is not a number", { value: s }));
       out.push(p.type === "int" ? Math.round(x) : x);
     } else if (p.type === "bool") out.push(/^(1|true|yes|on)$/i.test(s) || s.toLowerCase() === t("yes").toLowerCase());
     else {
@@ -484,8 +481,11 @@ export function parseValues(text, p) {
 }
 
 function inp(attrs) { return el("input", { type: "text", ...attrs }); }
-const fmtIn = (x) => String(Number(x.toPrecision(6))).replace(".", ",");
-const numIn = (e, what) => { const v = Number(String(e.value).trim().replace(",", ".").replace("−", "-")); if (!Number.isFinite(v)) throw new Error(t("{what}: a number is needed", { what })); return v; };
+// a number in a field of the form, in the viewer's format without thousands separators (the values are separated by
+// spaces and ";"), and read back with either decimal separator (review i18n-browser F1, F2)
+const fmtIn = (x) => fmtField(Number(x.toPrecision(6))).replace(/[\s\u00a0\u202f]/g, "");
+const readIn = (s) => { const r = parseNum(s); return r.err ? NaN : r.value; };
+const numIn = (e, what) => { const v = readIn(e.value); if (!Number.isFinite(v)) throw new Error(t("{what}: a number is needed", { what })); return v; };
 
 // the world time a sweep computes by default (review F2, X7: "1" in the world's unit asked p03 for 1 s of molecular
 // dynamics and p02 for 10¹³ of its spans): five wall seconds of the world at the speed chosen, else a tenth of what the
@@ -520,7 +520,7 @@ async function drawSweepForm() {
   F.rN = inp({ value: "8", style: { width: "2.5em" }, title: t("How many values (2–50)") });
   F.rLog = el("select", {}, el("option", { value: "lin" }, t("evenly")), el("option", { value: "log" }, t("logarithmically")));
   const fillRange = () => {
-    const a = Number(F.rFrom.value.replace(",", ".")), b = Number(F.rTo.value.replace(",", ".")), n = Math.round(Number(F.rN.value));
+    const a = readIn(F.rFrom.value), b = readIn(F.rTo.value), n = Math.round(readIn(F.rN.value));
     if (!Number.isFinite(a) || !Number.isFinite(b) || !(n >= 2 && n <= 50)) { toast(t("A series: “from” and “to” are numbers, from 2 to 50 values"), "notice", 4000); return; }
     if (F.rLog.value === "log" && !(a > 0 && b > 0)) { toast(t("A logarithmic series is only for positive numbers"), "notice", 4000); return; }
     const vals = [];
@@ -583,7 +583,7 @@ function updateSweepForm() {
   const tg = targets(W);
   const now = W.current || new Set(W.decl.keys());
   const empty = !tg.length || !now.size;
-  F.none.textContent = !now.size ? t("The world reports no measurable quantities: there is nothing to measure.") : !tg.length ? t("There is nothing to go over in this world: no laws changed on the go and no objects in the scene.") : "";
+  F.none.textContent = !now.size ? t("The world reports no measurable quantities: there is nothing to measure.") : !tg.length ? t("There is nothing to sweep in this world: no laws that change on the go and no objects in the scene.") : "";
   F.none.style.display = empty ? "" : "none";
   F.body.style.display = empty ? "none" : "";
   const tKeys = tg.map((x) => x.key + "=" + x.label).join("|");
@@ -620,11 +620,11 @@ function showCur() {
     const o = W.objects.get(x.oid), at = (W.at || {})[x.oid];
     const i = x.handle.index !== undefined ? x.handle.index : axisIndex(o && o.values[x.handle.axisParam]);
     text = Array.isArray(at) && i >= 0 && typeof at[i] === "number"
-      ? t("Set: {v} — where the object was put; the object is now at {at} (the last frame). Each value puts it there at the moment of the sweep, one equal to the set value too", { v: v(x.current), at: v(at[i]) })
-      : t("Set: {v} — where the object was put. Each value puts it there at the moment of the sweep, one equal to the set value too", { v: v(x.current) });
+      ? t("Set: {v} — where the object was put; the object is now at {at} (the last frame). Each value puts it there at the moment of the sweep, including one equal to the set value", { v: v(x.current), at: v(at[i]) })
+      : t("Set: {v} — where the object was put. Each value puts it there at the moment of the sweep, including one equal to the set value", { v: v(x.current) });
   } else if (x.handle && x.handle.kind === "velocity") {
     text = t("Set: {v} — the velocity of the last throw; it may be different now. Each value is a throw with this velocity at the moment of the sweep", { v: v(x.current) });
-  } else text = t("Set: {v} — the value of the object's parameter, not necessarily its state now. Each value is applied at the moment of the sweep, one equal to the set value too", { v: v(x.current) });
+  } else text = t("Set: {v} — the value of the object's parameter, not necessarily its state now. Each value is applied at the moment of the sweep, including one equal to the set value", { v: v(x.current) });
   F.cur.textContent = text + range;
 }
 
@@ -763,7 +763,7 @@ function renderSweep(s) {
   setText(R.msg, t(s.message)); show(R.msg, !!s.message);
   R.msg.classList.toggle("in-warn", s.state !== "done");
   setText(R.th1, withUnit(s.target_label || t("value"), s.target_unit || ""));
-  setText(R.th2, withUnit(`${t(s.measure_label)} (${t(s.stat_text)})`, s.measure_unit || ""));
+  setText(R.th2, withUnit(t("{label} ({stat})", { label: s.measure_label, stat: s.stat_text }), s.measure_unit || ""));
   const fmtX = (v) => (typeof v === "number" ? num(v, 6) : String(v));
   for (; R.rows < res.length; R.rows++) {  // the table grows by rows: what is there stays (F8)
     const r = res[R.rows];

@@ -42,6 +42,7 @@ import numpy as np
 from scipy import integrate, optimize
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 from . import orbits
 
@@ -86,9 +87,9 @@ class OrbitStream:
     def __init__(self, r0: float, v_r: float, v_phi: float, *, phi0: float = 0.0, r_stop: float = 2.0,
                  r_far: float | None = None, rtol: float = 1e-12, n_turn: int = 240):
         if r0 <= 2.0:
-            raise ValueError("the start must be outside the horizon (r0 > 2M)")
+            raise coded(ValueError(T("the start must be outside the horizon (r0 > 2M)")), "orbit.horizon")
         if r_stop >= r0:
-            raise ValueError("the start must be above the surface of the body")
+            raise coded(ValueError(T("the start must be above the surface of the body")), "orbit.horizon")
         v = math.hypot(v_r, v_phi)
         if abs(v_r) <= SNAP * v:
             v_r = 0.0  # a start at a turning point: the rounding of a boosted circular state is not a radial speed
@@ -450,7 +451,7 @@ def proper_time_between(em1: float, l: float, r_a: float, r_b: float) -> float:
     tau = integral dr / sqrt(R(r)), with r = r_a + (r_b - r_a)(1 - cos theta)/2, which removes the inverse square
     root at a simple turning point (Gauss-Kronrod quadrature on two halves, relative 1e-11)."""
     if not r_a < r_b:
-        raise ValueError("r_a < r_b required")
+        raise coded(ValueError(T("r_a < r_b required")), "orbit.not_bound")
     h = 0.5 * (r_b - r_a)
 
     def g(th):
@@ -470,7 +471,7 @@ def plunge_proper_time(em1: float, l: float, r0: float, v_r: float, r_end: float
     first if the body starts outward (v_r > 0), then the fall."""
     if v_r > 0:
         if r_apo is None:
-            raise ValueError("an outward start without an apoapsis does not fall")
+            raise coded(ValueError(T("an outward start without an apoapsis does not fall")), "orbit.no_fall")
         return proper_time_between(em1, l, r0, r_apo) + proper_time_between(em1, l, r_end, r_apo)
     return proper_time_between(em1, l, r_end, r0)
 

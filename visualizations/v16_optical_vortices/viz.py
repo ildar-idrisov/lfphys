@@ -84,7 +84,7 @@ SCHEMA = Schema([
        show_if=ROTS, help=T("Changes on the fly: a new series of measurements starts at this moment.")),
     _p("t_show", T("Optical phase on the screen: the period, ms of the world's time"), "float", 400.0,
        group=T("Time"), min=40.0, max=4000.0,
-       help=T("Light at a frequency of ~{f} Hz is shown slowed: one optical period per this time of the world.",
+       help=T("Light at a frequency of ~{f} Hz is shown slowed down: one optical period takes this much world time.",
               f=1e15)),
 ], presets={
     "lg3": {"label": T("LG₀³, σ = +1: three helical fronts, the exact model, a rotating disc"), "params": {}},
@@ -459,14 +459,14 @@ class Simulation(SlicePlanes, BaseSimulation):
                                      "l + σ"), why]))
             flux_notes = {
                 "S_flux": T("another published definition: the spin flux σ/(2ω)∫|E_⊥|² dA (Monteiro et al. 2009, "
-                            "Eq. 33), measured as −∫Im(E_⊥*·H_⊥) dA/(2ω); reference σ⟨(1 + cos²θ)/2⟩/⟨cos θ⟩ (|spin| > "
+                            "eq. 33), measured as −∫Im(E_⊥*·H_⊥) dA/(2ω); reference σ⟨(1 + cos²θ)/2⟩/⟨cos θ⟩ (|spin| > "
                             "1, a shift from σ the other way than the canonical S_z's); only J_z = l + σ does not "
                             "depend on the definition"),
                 "L_flux": T("the angular momentum flux (the stress tensor) minus Barnett's spin flux, per photon "
                             "through the plane; reference l + σ − σ⟨(1 + cos²θ)/2⟩/⟨cos θ⟩")}
             for key, mkey, lab in (("S_flux", "flux_S", T("Spin from the flux through the plane per photon (Barnett's "
                                                           "split)")),
-                                   ("L_flux", "flux_L", T("Orbit from the flux through the plane per photon (Barnett's "
+                                   ("L_flux", "flux_L", T("Orbital part from the flux through the plane per photon (Barnett's "
                                                           "split)"))):
                 self._check(f"am_{key}", lab, m[mkey], ref[key], "ħ", tol=tol,
                             ok=None if wide else abs(m[mkey] - ref[key]) <= tol, info=wide, group=G_AM,
@@ -521,7 +521,7 @@ class Simulation(SlicePlanes, BaseSimulation):
                             d, None, "", info=True,
                             note=T("the largest difference of E_x, E_y, fraction of the peak; second order: it grows "
                                    "as (λ/w0)² = {v:.3g} (measured: ×4 at w0/2); the longitudinal field E_z, which the "
-                                   "mode does not have, is first order (λ/w0): the check “Longitudinal field”",
+                                   "mode does not have, is first order (λ/w0): the “Longitudinal field” check",
                                    v=(bm.lam / bm.w0) ** 2))
         else:
             psi = bm.psi(X, Y, Z)
@@ -712,7 +712,7 @@ class Simulation(SlicePlanes, BaseSimulation):
                 "peak": peak, "route": "plane",
                 "route_label": T("{route}; the phase is arg(ψ e^{−ikz}) (the envelope)", route=sl["route"]),
                 "exact": sl["exact"], "approximation": not sl["exact"],
-                "reason": "" if sl["exact"] else T("the paraxial beam model (the world is chosen so)"),
+                "reason": "" if sl["exact"] else T("the paraxial beam model (as chosen for this world)"),
                 "verify": sl["verify"], "verify_title": T("|E|² at points of the plane against the direct calculation"),
                 "z_near": 0.0, "window_est": 0.0}
         blobs = {"I": (I / max(peak, 1e-300)).astype(np.float32)}
@@ -815,7 +815,7 @@ class Simulation(SlicePlanes, BaseSimulation):
         s_ref = self._shift_ref()
         self._check("shift", (T("Frequency shift of the light on the axis (from the complex amplitude)")
                               if self.rot == "disc" else
-                              T("Frequency shift of the turned beam (from their overlap)")), s_meas, s_ref, T("Hz"),
+                              T("Frequency shift of the turned beam (from the overlap of the turned and the original beam)")), s_meas, s_ref, T("Hz"),
                     tol=1e-3 if s_ref else 1e-6 * max(self.f_rot, 1.0),
                     ok=(abs(s_meas) < 1e-6 * max(self.f_rot, 1.0)) if s_ref == 0 else None,
                     group=G_ROT,

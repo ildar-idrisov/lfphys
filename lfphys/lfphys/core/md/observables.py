@@ -31,6 +31,7 @@ import math
 import numpy as np
 from scipy import special, stats
 
+from lfphys.codes import coded
 from lfphys.i18n import T
 
 ABOUT = {
@@ -60,7 +61,7 @@ def rdf(x, L, periodic, r_max, nbins=100, sel_a=None, sel_b=None, volume=None):
     n = x.shape[0]
     d = x.shape[1]
     if np.any(periodic) and r_max > 0.5 * float(np.min(L[periodic])):
-        raise ValueError("r_max must not exceed half a periodic box length")
+        raise coded(ValueError(T("r_max must not exceed half a periodic box length")), "md.samples")
     a = np.ones(n, bool) if sel_a is None else np.asarray(sel_a, bool)
     b = np.ones(n, bool) if sel_b is None else np.asarray(sel_b, bool)
     from .cells import pair_list
@@ -142,7 +143,7 @@ def block_average(series, nblocks=10):
     y = np.asarray(series, float)
     m = len(y) // nblocks
     if m < 1:
-        raise ValueError("too few samples for the blocks")
+        raise coded(ValueError(T("too few samples for the blocks")), "md.samples")
     b = y[: m * nblocks].reshape(nblocks, m).mean(axis=1)
     return float(np.mean(y[: m * nblocks])), float(np.std(b, ddof=1) / math.sqrt(nblocks))
 

@@ -483,7 +483,7 @@ def test_plunge_and_r_stop_are_reported():
     st = P.periapsis_state(20.0, 0.9)  # r_p = 2: the PN equations break down
     with pytest.raises(RuntimeError, match="plunges"):
         P.integrate(st, 1e4, 0.25)
-    with pytest.raises(ValueError, match="not above r_stop"):
+    with pytest.raises(ValueError, match="not above the stopping radius"):
         P.integrate(st, 1e4, 0.25, r_stop=4.0)
     apo = P.state(0.0, [38.0, 0, 0], [0, math.sqrt(0.1 / 38.0), 0])
     out = P.integrate(apo, 1e4, 0.25, r_stop=4.0)

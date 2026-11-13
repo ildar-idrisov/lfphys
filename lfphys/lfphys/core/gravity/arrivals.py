@@ -33,10 +33,10 @@ from . import schwarzschild
 ABOUT = {
     "layer": "core", "kind": "exact solution",
     "title": T("Arrival of a flash at a worldline"),
-    "statement": T("The moment the front of a flash meets the receiver: in flat space-time, a quadratic equation on "
+    "statement": T("The moment the front of a flash meets the receiver: in flat spacetime, a quadratic equation on "
                    "each inertial piece (SR: the front is centred on the point of the flash whatever the motion of "
                    "the source); in GR, the exact connection by geodesics and a root search for a moving receiver."),
-    "validity": T("flat space-time or the exterior of Schwarzschild"),
+    "validity": T("flat spacetime or the Schwarzschild exterior"),
     "basis": ["lfphys.core.gravity.schwarzschild"],
     "conflicts": [],
 }

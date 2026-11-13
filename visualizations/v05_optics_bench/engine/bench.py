@@ -113,11 +113,11 @@ def born_probs(res: dict) -> tuple[float, float, float]:
     """Probabilities of the three fates of one photon from the computed R, T, A. A = 1 - R - T of a lossless structure
     is round-off (|A| ~ 1e-16): below ROUNDOFF it is set to 0 and R = 1 - T; the three always sum to one."""
     R = min(max(res["R"], 0.0), 1.0)
-    T = min(max(res["T"], 0.0), 1.0 - R)
-    A = 1.0 - R - T
+    Tr = min(max(res["T"], 0.0), 1.0 - R)
+    A = 1.0 - R - Tr
     if A < ROUNDOFF:
-        A, R = 0.0, 1.0 - T
-    return R, T, A
+        A, R = 0.0, 1.0 - Tr
+    return R, Tr, A
 
 
 P_5SIGMA = math.erfc(5.0 / math.sqrt(2.0))  # two-sided tail of 5 standard deviations: 5.73e-7

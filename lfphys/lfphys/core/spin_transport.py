@@ -32,6 +32,7 @@ from scipy.integrate import solve_ivp
 from scipy.linalg import expm
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 from . import lorentz as LZ
 
@@ -265,7 +266,8 @@ def polygon_burns(vertices, c: float = 1.0):
         b = np.asarray(w, dtype=LD)
         m = np.sqrt(b @ b)
         if m >= 1:
-            raise ValueError("|v| >= c")
+            raise coded(ValueError(T("|v| ≥ c: no inertial frame moves at or faster than light")),
+                        "kinematics.superluminal")
         g = LD(1) / np.sqrt((LD(1) - m) * (LD(1) + m))
         U = np.concatenate([[g], g * b])            # over c
         Uc = eta_m @ M.T @ eta_m @ U                # in the comoving frame (M^-1 = eta M^T eta)

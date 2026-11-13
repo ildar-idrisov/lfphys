@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from lfphys.codes import code_of
 from lfphys.core.gravity import arrivals, schwarzschild
 from lfphys.core.gravity import rays as light
 from lfphys.core.worldlines import Orbit, Piecewise, clock_rate
@@ -30,6 +31,9 @@ from lfviz.errors import Refusal
 
 from . import checks
 from .apparatus import Apparatus, fmt_s
+
+#: the engine's codes for a worldline that would outrun the local light (relativity.metric_clock_rate, clock_rate_flat)
+SUPERLUMINAL = ("gr.not_timelike", "kinematics.superluminal")
 
 
 @dataclass
@@ -265,9 +269,10 @@ class World:
                                T("Residual of the solution: time of flight to “{obj}” and |Δx|/c", obj=obj.name),
                                dt, d / laws.c, T("s"), group=T("Self-consistency"), tol=tol,
                                note=T("not an independent check: the residual of the equation the run solved; the "
-                                      "time of flight is solved from the flash event, while the receiver's position "
-                                      "is taken at the absolute arrival time — tolerance {tol0:.0e} plus "
-                                      "4ε(|v|·|t| + |x|)/(c·Δt) for the rounding of absolute times and coordinates",
+                                      "time of flight is solved for starting from the flash event, while the "
+                                      "receiver's position is taken at the absolute arrival time — tolerance "
+                                      "{tol0:.0e} plus 4ε(|v|·|t| + |x|)/(c·Δt) for the rounding of absolute times "
+                                      "and coordinates",
                                       tol0=1e-9)))
         ev = {"t": a["t"], "kind": "arrival", "obj": obj.id, "pulse": pulse["id"], "image": a["image"],
               "text": text, "targs": targs, "gr_clock": self.gr, "data": data, "checks": chks, "deps": {obj.id},
@@ -465,8 +470,9 @@ class World:
         chk = _check(f"loc_{obj.id}_{t:.17g}",
                      T("{obj}: locally measured speed of light (rod {ell:.3g} m, round trip)", obj=obj.name, ell=ell),
                      c_loc, ref, T("m/s"), group=T("GR"),
-                     note=T("reference: the radial time in closed form for this rod; as its length → 0 it → c "
-                            "(the difference now {d:.2e}); the coordinate radial speed here c·(1−rs/r) = {v:.9g} m/s",
+                     note=T("reference: the radial time in closed form for this rod; as its length → 0 the speed "
+                            "derived from it → c (the difference now {d:.2e}); the coordinate radial speed here "
+                            "c·(1−rs/r) = {v:.9g} m/s",
                             d=(ref - self.laws.c) / self.laws.c, v=coord))
         self.schedule({"t": t + i1 + i2, "kind": "measure", "obj": obj.id, "deps": {obj.id},
                        "text": T("{obj}: locally c = {c:.9g} m/s (coordinate {v:.9g})", obj=obj.name, c=c_loc,
@@ -580,7 +586,9 @@ class World:
                     continue
                 try:
                     clock_rate(self.laws, self.rs, p0 + v * s, v)
-                except ValueError:
+                except ValueError as e:  # by the engine's machine code (lfphys.codes; review i18n-code F5)
+                    if code_of(e) not in SUPERLUMINAL:
+                        raise
                     raise Refusal(T("at a constant coordinate speed “{obj}” would move faster than light for the "
                                     "local static observer in {dt}; in GR the “speed” is the coordinate one "
                                     "(Schwarzschild dx/dt)", obj=obj.name, dt=fmt_s(s)),

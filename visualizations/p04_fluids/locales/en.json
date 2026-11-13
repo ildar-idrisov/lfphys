@@ -1,0 +1,10 @@
+{
+ "St = f D / U ({n:d} periods of C_L)": {
+  "one": "St = f D / U ({n:d} period of C_L)",
+  "other": "St = f D / U ({n:d} periods of C_L)"
+ },
+ "{n:d} nodes where the previous world had a body start at rest": {
+  "one": "{n:d} node where the previous world had a body starts at rest",
+  "other": "{n:d} nodes where the previous world had a body start at rest"
+ }
+}

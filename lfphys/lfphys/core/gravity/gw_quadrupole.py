@@ -47,7 +47,7 @@ ABOUT = {
     "validity": T("leading order in v/c: the corrections to the amplitude are of relative order O(v/c) for unequal "
                   "masses (mass octupole, current quadrupole) and O(v²/c²); wave zone R ≫ λ; no tails and no "
                   "nonlinear memory (for circular motion the memory gives h₊ a constant offset −(1/96) sin²i (17 + "
-                  "cos²i) in units of 2Gμx/(c²R), Blanchet 2014, Eq. (322a)); the engine has no fuller waveforms"),
+                  "cos²i) in units of 2Gμx/(c²R), Blanchet 2014, eq. (322a)); the engine has no fuller waveforms"),
     "basis": [T("Einstein 1918; Landau & Lifshitz (the quadrupole formula)"),
               "Blanchet, Living Rev. Relativ. 17, 2 (2014), Eqs. (2)-(5), (69), (320), (322a), (323a)"],
     "conflicts": [],

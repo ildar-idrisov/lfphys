@@ -349,8 +349,9 @@ def test_switch_to_hard_refuses_overlaps_and_what_it_has_not():
     md.add("a", [[2.0, 2.0], [2.9, 2.0], [6.0, 6.0]])     # one pair at 0.9 sigma
     cv = HD.contact_violations(md.positions(), np.ones(3), md.L, md.periodic)
     assert cv["pairs"] == 1 and cv["closest"] == pytest.approx(0.9)
-    with pytest.raises(ValueError, match="1 pairs"):
+    with pytest.raises(ValueError, match="pairs nearer than contact: 1;") as e:
         HD.hard_from_md(md)
+    assert e.value.code == "md.hard_overlap" and e.value.data["pairs"] == 1
     md.remove(md.keys[1:2])
     assert HD.hard_from_md(md).n == 2
     md.set_gravity([0.0, -0.1])
@@ -364,7 +365,7 @@ def test_switch_to_hard_refuses_overlaps_and_what_it_has_not():
     # walls on the surfaces (the negative control) refuse it; on the centres, as MD's walls, it switches (review P4)
     assert HD.contact_violations(w.positions(), np.ones(2), w.L, w.periodic)["walls"] == 1
     assert HD.contact_violations(w.positions(), np.ones(2), w.L, w.periodic, walls_on="centre")["walls"] == 0
-    with pytest.raises(ValueError, match="1 centres"):
+    with pytest.raises(ValueError, match="centres beyond a wall's contact plane: 1"):
         HD.hard_from_md(w, walls_on="surface")
     hs = HD.hard_from_md(w)
     assert hs.walls_on == "centre" and np.array_equal(hs.positions(), w.positions())

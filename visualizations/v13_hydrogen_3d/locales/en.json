@@ -1,0 +1,10 @@
+{
+ "Slice {id} ({plane}): ψ at {n} points against an independent calculation": {
+  "one": "Slice {id} ({plane}): ψ at {n} point against an independent calculation",
+  "other": "Slice {id} ({plane}): ψ at {n} points against an independent calculation"
+ },
+ "Slice {id} ({plane}, phase {k} of {nb}): ψ at {n} points against an independent calculation": {
+  "one": "Slice {id} ({plane}, phase {k} of {nb}): ψ at {n} point against an independent calculation",
+  "other": "Slice {id} ({plane}, phase {k} of {nb}): ψ at {n} points against an independent calculation"
+ }
+}

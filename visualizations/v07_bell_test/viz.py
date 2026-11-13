@@ -409,8 +409,8 @@ class Simulation(BaseSimulation):
                                 note=(T("|S| = {S:.4f} ± {se:.3g} > 2 by {x:.1f}σ", S=float(aS), se=float(s["se"]),
                                         x=float(exc))
                                       if exc is not None and exc > ZTOL else
-                                      T("accumulating: the expected |S| = {S:.4f}; {ztol}σ needs about {need:.0f} pairs "
-                                        "with a random choice", S=float(abs(s["Sref"])), ztol=ZTOL, need=float(need))))
+                                      T("accumulating: the expected |S| = {S:.4f}; {ztol}σ needs about {n:d} pairs "
+                                        "with a random choice", S=float(abs(s["Sref"])), ztol=ZTOL, n=int(round(need)))))
                 else:
                     self._check("bound", lab_viol, exc, None, "σ", g,
                                 note=T("at these settings the quantum expectation |S| = {S:.4f} ≤ 2",
@@ -448,8 +448,8 @@ class Simulation(BaseSimulation):
                                      "cone of the detection on the other side"), self.seg_counts["loc"] / n, None, "",
                         gs, note=T("pairs: {k:d} of {m:d} (by the events of each pair, lfphys.core.causality)",
                                    k=self.seg_counts["loc"], m=n))
-            self._check("st_frac_free", T("Fraction of pairs: the choice of the settings of both sides is space-like to "
-                                          "the emission of the pair"),
+            self._check("st_frac_free", T("Fraction of pairs: the choice of the settings of both sides is space-like "
+                                          "separated from the emission of the pair"),
                         self.seg_counts["free"] / n, None, "", gs,
                         note=T("pairs: {k:d} of {m:d}", k=self.seg_counts["free"], m=n))
 
@@ -514,8 +514,8 @@ class Simulation(BaseSimulation):
         if new["switch"] == "random" and C * new["tau_ns"] * 1e-9 >= 2 * new["L_m"] and \
                 any(k in changed for k in ("tau_ns", "L_m", "switch")):
             self._msg({"type": "notice", "t": now,
-                       "text": T("cτ ≥ 2L: the choice of a setting is time-like to the detection on the other side, the "
-                                 "locality loophole is open")})
+                       "text": T("cτ ≥ 2L: the choice of a setting is time-like separated from the detection on the "
+                                 "other side; the locality loophole is open")})
         if any(k in changed for k in ANGLES):
             self._setup_checks()
         self._spacetime_checks()

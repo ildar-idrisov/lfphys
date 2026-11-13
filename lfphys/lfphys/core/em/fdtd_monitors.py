@@ -44,21 +44,22 @@ import math
 
 import numpy as np
 
+from ...codes import coded
 from ...i18n import T
 from .. import backend
 
 ABOUT = {
     "layer": "core", "kind": "numerics",
-    "title": T("FDTD: probes, spectra, fluxes, cross sections, the far field"),
+    "title": T("FDTD: probes, spectra, fluxes, cross-sections, the far field"),
     "statement": T("Fields at points; a running discrete Fourier transform on lines, planes and in volumes; the "
                    "Poynting flux through planes and closed boxes (in time and per frequency); scattering, absorption "
-                   "and extinction cross sections; the near-to-far-field transform (2-D and 3-D) through equivalent "
+                   "and extinction cross-sections; the near-to-far-field transform (2-D and 3-D) through equivalent "
                    "currents on a closed surface."),
     "validity": T("second order in the cell (the fields are brought to the face centres by averaging neighbouring Yee "
                   "nodes, so the monitor sees the grid's plane wave weaker by a factor 1 − O((k dx)²) that depends on "
-                  "the direction; at normal incidence cos(k dx/2)); cross sections with the exact or the “monitor” "
-                  "normalisation of the incident wave; the far field by the Green's function of a homogeneous lossless "
-                  "background"),
+                  "the direction; at normal incidence cos(k dx/2)); cross-sections with the exact or the “monitor” "
+                  "normalisation of the incident wave; the far field by the Green's function of a homogeneous "
+                  "lossless background"),
     "basis": [T("the equivalence theorem and the vector potentials in the far zone (derived; checked in the tests "
                 "against the exact series of the cylinder and of Mie)"),
               T("the asymptotics of the Hankel function, DLMF 10.17.5 (2-D)")],
@@ -81,7 +82,7 @@ class Gather:
             r = np.arange(a, b)
             if (r < 0).any() or (r >= n).any():
                 if not sim.periodic[u]:
-                    raise ValueError(T("the monitor's region extends beyond the grid"))
+                    raise coded(ValueError(T("the monitor's region extends beyond the grid")), "fdtd.outside_grid")
                 if ph is not None:
                     k = np.floor_divide(r, n)  # how many periods
                     f = np.exp(1j * sim.bloch[u] * sim.shape[u] * sim.dx * k)

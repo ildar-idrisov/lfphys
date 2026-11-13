@@ -32,6 +32,7 @@ from lfphys.core.gravity import gw_quadrupole as GW, kerr_newman as KN, nbody as
 from lfphys.i18n import T, is_t, join, text_of
 from lfphys.theories.alternatives import kn_change_whatif as WHATIF
 from lfviz.errors import Refusal
+from lfphys.codes import code_of
 from lfviz.params import Param, Schema
 from lfviz.playground import ObjectType, PlaygroundSimulation, scene_param
 
@@ -240,8 +241,8 @@ class Clock:
     that sets the units (the hole's, the binary's: plan P16.1) changes T at the current moment: the geometric time goes
     on from where it is (s0, g0), so nothing in the solver jumps; seconds before and after keep their meaning."""
 
-    def __init__(self, T: float):
-        self.T, self.s0, self.g0 = float(T), 0.0, 0.0
+    def __init__(self, unit_s: float):
+        self.T, self.s0, self.g0 = float(unit_s), 0.0, 0.0
 
     def geo(self, s: float) -> float:
         return self.g0 + (s - self.s0) / self.T
@@ -249,8 +250,8 @@ class Clock:
     def sec(self, g: float) -> float:
         return self.s0 + (g - self.g0) * self.T
 
-    def rescale(self, s_now: float, T: float):
-        self.g0, self.s0, self.T = self.geo(s_now), float(s_now), float(T)
+    def rescale(self, s_now: float, unit_s: float):
+        self.g0, self.s0, self.T = self.geo(s_now), float(s_now), float(unit_s)
 
     def state(self):
         return {"T": self.T, "s0": self.s0, "g0": self.g0}
@@ -263,15 +264,15 @@ SCHEMA = Schema([
        help=T("The laws the world is computed by; other laws make a new world")),
     _p("m_total", T("Total mass of a new binary, M☉"), "float", 20.0, group=T("Binary (GR)"), min=0.1, max=1e10,
        log=True, show_if={"laws": ["pn"]},
-       help=T("The mass of a binary added without its own mass; the mass is a property of the binary itself: it is "
+       help=T("Total mass given to a binary added without one; the mass is a property of the binary itself: it is "
               "changed in its inspector at the current moment (lengths in G m/c², time in G m/c³)")),
-    _p("m_hole", T("Black hole mass at the start, M☉"), "float", 10.0, group=T("Black hole"), min=0.1, max=1e10,
+    _p("m_hole", T("Initial black hole mass, M☉"), "float", 10.0, group=T("Black hole"), min=0.1, max=1e10,
        log=True, show_if={"laws": ["kerr"]},
        help=T("The hole is an object of the scene: its mass, spin and charge are changed in its inspector at the "
               "current moment (lengths in G M/c², time in G M/c³)")),
-    _p("spin", T("Spin a/M at the start"), "float", 0.9, group=T("Black hole"), min=0.0, max=0.998,
+    _p("spin", T("Initial spin a/M"), "float", 0.9, group=T("Black hole"), min=0.0, max=0.998,
        show_if={"laws": ["kerr"]}),
-    _p("charge", T("Charge Q/M at the start (geometric units)"), "float", 0.0, group=T("Black hole"), min=0.0,
+    _p("charge", T("Initial charge Q/M (geometric units)"), "float", 0.0, group=T("Black hole"), min=0.0,
        max=0.99, show_if={"laws": ["kerr"]}, help=T("a² + Q² < 1: otherwise there is no horizon")),
     _p("collisions", T("Collisions of bodies"), "select", "merge", group=T("Laws"), show_if={"laws": ["newton"]},
        live=True,
@@ -596,8 +597,8 @@ class Simulation(PlaygroundSimulation):
         self.mode.after_header()
         if getattr(self, "_carry_notes", None):
             self.emit({"type": "notice", "t": self.t, "text": T(
-                "Scene carried into a world of other laws: not carried — {list} (what makes sense was translated: see "
-                "the scene)", list=join(self._carry_notes))})
+                "Scene carried over to a world with different laws: not carried over — {list} (whatever made sense "
+                "was converted; see the scene)", list=join(self._carry_notes))})
 
     def engine_modules(self):
         return self.mode.engine_modules()
@@ -650,7 +651,7 @@ def _vel(default_mode="circular"):
 # velocity is shown in km/s (vmode "set", vx, vy, vz), set from the throw
 THROW = [_p(c, T("Throw: {c}, au/s", c=c[1:]), "float", 0.0, min=-1.0, max=1.0, hidden=True)
          for c in ("tvx", "tvy", "tvz")]
-REF = _p("ref", T("Distance in the instruments — to"), "select", "dominant", options=[
+REF = _p("ref", T("Instruments: distance to"), "select", "dominant", options=[
     ("dominant", T("the most massive other body")), ("com", T("the system's centre of mass")),
     ("origin", T("the origin"))],
     help=T("For the instruments (P16.3): the distance of this body to the chosen point; the orbital elements (a, e, "
@@ -718,7 +719,7 @@ class NewtonMode(Trails):
                                       "the new mass; by default on a circular orbit around the others' centre of "
                                       "mass")),
                 "test": _otype("test", T("Test body (massless)"), "particle", TEST, color="#e9ecef",
-                               handles=BODY_HANDLES, help=T("Feels gravity, does not attract itself")),
+                               handles=BODY_HANDLES, help=T("Feels gravity but does not itself attract")),
                 "field": _otype("field", T("Field and tide probe"), "probe", FIELD, limit=8, color="#f06595",
                                 handles={"position": ["x", "y", "z"]},
                                 help=T("The free-fall acceleration and the tidal stretching at a point"))}
@@ -794,7 +795,9 @@ class NewtonMode(Trails):
         try:
             return fn(*args, **kw)
         except ValueError as e:
-            if "same point" in str(e):
+            # code review 2026-11-12 i18n-code F5: matched by the engine's code (lfphys.codes), never by its wording;
+            # tested in test_p01_gravity.py (test_the_engines_coincidence_refusal_is_said_in_the_worlds_terms)
+            if code_of(e) in ("nbody.refused", "nbody.collision"):
                 raise Refusal(T("the body would be at exactly the same point as another: two point masses at one "
                                 "point (an infinite force) are not allowed (a copy of a massive body “at the current "
                                 "moment” lies on its original)"),
@@ -1176,8 +1179,8 @@ class NewtonMode(Trails):
                      "unit": T("au"), "of": oid, "group": orbits},
                     {"id": f"{oid}.e", "label": T("“{label}”: eccentricity", label=lab), "unit": "", "of": oid,
                      "group": orbits},
-                    {"id": f"{oid}.P", "label": T("“{label}”: period (two-body problem)", label=lab),
-                     "unit": T("years"), "of": oid, "group": orbits}]
+                    {"id": f"{oid}.P", "label": T("“{label}”: period (two-body problem), years", label=lab),
+                     "unit": "", "of": oid, "group": orbits}]
         return out
 
     def measure_now(self, probes=None):
@@ -1305,14 +1308,14 @@ class NewtonMode(Trails):
         S = self.ref["S"] or 1.0  # S = 0: E is exactly 0 and stays so; the change is shown absolute
         self.sim.running_check("energy", T("Energy of the system (conserved)"), (E - self.ref["E"]) / S, 0.0,
                                tol=tolE / S, ok=dE <= tolE or self.ref["err"] == 0.0,
-                               note=T("the change of the energy since the scene's last change relative to Σ½mv² + "
-                                      "Σ G mᵢmⱼ/rᵢⱼ (at that moment; the total energy may be zero); tolerance: three "
-                                      "times the energy error measured by the companion (the same interval with η/2: "
-                                      "its error is four times smaller, so the computation's error is at most 4/3 of "
-                                      "their difference; {every}){more}",
+                               note=T("the change of the energy since the scene's last change relative to Σ½mv² + Σ "
+                                      "G mᵢmⱼ/rᵢⱼ (at that moment; the total energy may be zero); tolerance: three "
+                                      "times the energy error measured by the companion run (the same interval with "
+                                      "η/2: its error is four times smaller, so the computation's error is at most "
+                                      "4/3 of their difference; {every}){more}",
                                       every=T("every interval") if every == 1 else T(
-                                          "every {k}th interval, scaled to all the intervals passed", k=every),
-                                      more=T(" (the companion has not run yet)") if self.ref["err"] == 0.0 else ""))
+                                          "one interval in {k}, scaled to all the intervals passed", k=every),
+                                      more=T(" (no companion run yet)") if self.ref["err"] == 0.0 else ""))
         dL = float(np.linalg.norm(L - self.ref["L"]))
         X, V, m = nb.positions(), nb.velocities(), nb.masses()
         Ls = float(np.sum(m * np.linalg.norm(np.cross(X, V), axis=1))) or 1.0  # sum |r x m v|: the system's total L may be 0
@@ -1323,7 +1326,7 @@ class NewtonMode(Trails):
                                       "to the order of the scheme, like the energy"))
 
     def header(self):
-        return {"title": T("Playground: Newtonian N bodies"),
+        return {"title": T("Laboratory: the Newtonian N-body problem"),
                 "approximations": [T("Newtonian gravity of point masses")],
                 "scene3d": {"box": self._box(), "units": T("au"), "objects": [], "layers": [],
                             "planes": {"max": 0, "center": [0, 0, 0], "defaults": {}}, "up": [0.0, 0.0, 1.0],
@@ -1345,8 +1348,8 @@ KBODY = Schema([_p("r", T("Distance r, G M/c²"), "float", 10.0, min=1.0, max=10
                 _p("theta", T("Polar angle θ, °"), "float", 90.0, min=1.0, max=179.0, help=T("90° is the equator")),
                 _p("phi", T("Azimuth φ, °"), "float", 0.0, min=0.0, max=360.0),
                 _p("vmode", T("Velocity"), "select", "circular", options=[
-                    ("circular", T("circular orbit in the equator (prograde)")),
-                    ("circular_retro", T("circular orbit in the equator (retrograde)")),
+                    ("circular", T("circular orbit in the equatorial plane (prograde)")),
+                    ("circular_retro", T("circular orbit in the equatorial plane (retrograde)")),
                     ("zamo", T("set the velocity measured by a zero-angular-momentum observer (ZAMO), in units of "
                                "c"))]),
                 _p("v_r", T("v_r / c (outwards)"), "float", 0.0, min=-0.99, max=0.99, show_if={"vmode": ["zamo"]}),
@@ -1389,7 +1392,7 @@ KLIGHT = Schema([_p("r", T("Distance r, G M/c²"), "float", 15.0, min=1.0, max=1
 KOBS = Schema([_p("kind", T("Observer"), "select", "static", options=[
                    ("static", T("static (held by an engine; only outside the ergosphere)")),
                    ("zamo", T("zero angular momentum (ZAMO: dragged by the rotation)")),
-                   ("circular", T("on a circular orbit in the equator (in free fall)"))]),
+                   ("circular", T("on a circular orbit in the equatorial plane (in free fall)"))]),
                _p("r", T("Distance r, G M/c²"), "float", 6.0, min=1.0, max=1000.0, log=True),
                _p("theta", T("Polar angle θ, °"), "float", 90.0, min=1.0, max=179.0),
                _p("phi", T("Azimuth φ, °"), "float", 45.0, min=0.0, max=360.0), *KXYZ])
@@ -1496,12 +1499,12 @@ class KerrMode(Trails):
                                key=obj["id"], tau=state.get("tau", 0.0), status=state.get("status", "active"),
                                K0=state.get("K0"), budget=state.get("budget", (0.0, 0.0)))
         elif r <= self.r_plus * (1.0 + 1e-6):
-            raise Refusal(T("r = {r} G M/c² is under the horizon (r₊ = {rp:.5g})", r=r, rp=self.r_plus),
+            raise Refusal(T("r = {r} G M/c² is inside the horizon (r₊ = {rp:.5g})", r=r, rp=self.r_plus),
                           hint=T("place it farther from the hole"))
         elif obj["type"] == "body":
             if v["vmode"] in ("circular", "circular_retro"):
                 if abs(v["theta"] - 90.0) > 1e-9:
-                    raise Refusal(T("a circular orbit lies only in the equator (θ = 90°)"),
+                    raise Refusal(T("a circular orbit lies only in the equatorial plane (θ = 90°)"),
                                   hint=T("set θ = 90° or another velocity"))
                 co = KN.circular_orbit(r, self.a, self.q, v["vmode"] == "circular")
                 if not np.isfinite(co["dtau_dt"]):
@@ -1543,8 +1546,8 @@ class KerrMode(Trails):
         r0, th = float(st["r"]), float(st["theta"])
         eps = self.geo.capture_eps
         if st.get("status", "active") == "active" and not r0 > self.r_plus + eps:
-            self.sim.carry_note(T("was at r = {r:.5g} G M/c², under the new hole's horizon (r₊ = {rp:.5g}): started "
-                                  "afresh from its parameters", r=r0, rp=self.r_plus), restarted=True)
+            self.sim.carry_note(T("was at r = {r:.5g} G M/c², inside the new hole's horizon (r₊ = {rp:.5g}): started "
+                                  "afresh with its parameters", r=r0, rp=self.r_plus), restarted=True)
             return None
         r1 = max(r0, self.r_plus + eps) if st.get("status") == "captured" else r0
         hat = KN.zamo_frame_momentum(r0, th, chi0, q0, np.asarray(st["p"], float))
@@ -1571,7 +1574,7 @@ class KerrMode(Trails):
         r, th, ph = (float(np.asarray(u)) for u in KN.from_cartesian(float(v["x"]), float(v["y"]), float(v["z"]),
                                                                        self.a))
         if not r > self.r_plus * (1.0 + 1e-6):
-            raise Refusal(T("“{label}”: the point {p} is under the horizon (r₊ = {rp:.4g})", label=obj["label"],
+            raise Refusal(T("“{label}”: the point {p} is inside the horizon (r₊ = {rp:.4g})", label=obj["label"],
                             p=_pt([v["x"], v["y"], v["z"]], T("G M/c²")), rp=self.r_plus),
                           hint=T("drag it farther from the hole"))
         th = 90.0 if v.get("vmode", v.get("kind")) in ("circular", "circular_retro") else min(max(math.degrees(th), 1.0), 179.0)
@@ -1612,7 +1615,7 @@ class KerrMode(Trails):
             return values
         r, th, ph = (float(np.asarray(u)) for u in KN.from_cartesian(*[float(c) for c in pos[:3]], self.a))
         if not r > self.r_plus * (1.0 + 1e-6):
-            raise Refusal(T("the point {p} is under the horizon (r₊ = {rp:.4g})", p=_pt(pos[:3], T("G M/c²")),
+            raise Refusal(T("the point {p} is inside the horizon (r₊ = {rp:.4g})", p=_pt(pos[:3], T("G M/c²")),
                             rp=self.r_plus), hint=T("click farther from the hole"))
         values.update(r=min(max(r, 1.0), 1000.0), theta=min(max(math.degrees(th), 1.0), 179.0),
                       phi=math.degrees(ph) % 360.0)
@@ -1730,15 +1733,15 @@ class KerrMode(Trails):
             nums = T("; the energy E changed most for “{label}”: {e0:.6g} → {e1:.6g}; the circumference through the "
                      "bodies at the same r, θ changed by up to {pct:.3g} %{gamma}", label=lab, e0=bmax["E"],
                      e1=bmax["E_new"], pct=100 * out["max_dvarpi"],
-                     gamma="" if gmax["photon"] else T("; the largest γ by the ZAMO, {g:.4g}, is kept (no speed "
-                                                       "limit)", g=gmax["gamma"]))
+                     gamma="" if gmax["photon"] else T("; the largest γ relative to the ZAMO, {g:.4g}, is kept (no "
+                                                       "speed limit)", g=gmax["gamma"]))
         return T("“WHAT IF” MODEL (lfphys.theories.alternatives.kn_change_whatif): spin {a0:.4g} → {a1:.4g}, charge "
-                 "{q0:.4g} → {q1:.4g} — a change of the metric under moving bodies has no established dynamics; every "
-                 "body kept its Boyer–Lindquist coordinates (r, θ, φ) — in another metric this is not the same physical "
-                 "place, the rule depends on the coordinates —, its proper time and the momentum measured by its local "
-                 "zero-angular-momentum observer (ZAMO; light: its direction and frequency); E, L and Carter's constant "
-                 "are recomputed in the new metric, their check starts anew{nums}; horizon r₊ = {rp:.5g} G M/c², ISCO "
-                 "{risco:.5g}", a0=a0, a1=a, q0=q0, q1=q, nums=nums, rp=r_plus, risco=self.r_isco)
+                 "{q0:.4g} → {q1:.4g} — a change of the metric under moving bodies has no established dynamics; "
+                 "every body kept its Boyer–Lindquist coordinates (r, θ, φ) (in another metric this is not the same "
+                 "physical place: the rule depends on the coordinates), its proper time and the momentum measured by "
+                 "its local zero-angular-momentum observer (ZAMO; light: its direction and frequency); E, L and "
+                 "Carter's constant are recomputed in the new metric, their check starts anew{nums}; horizon r₊ = "
+                 "{rp:.5g} G M/c², ISCO {risco:.5g}", a0=a0, a1=a, q0=q0, q1=q, nums=nums, rp=r_plus, risco=self.r_isco)
 
     def _rescale_mass(self, M):
         T0, T1 = self.T, M * K.GM_SUN / K.C ** 3
@@ -1813,14 +1816,14 @@ class KerrMode(Trails):
     def _observer_check(self, v):
         r, th = float(v["r"]), math.radians(v["theta"])
         if r <= self.r_plus * (1.0 + 1e-6):
-            raise Refusal(T("the observer is under the horizon"), hint=T("place it farther from the hole"))
+            raise Refusal(T("the observer is inside the horizon"), hint=T("place it farther from the hole"))
         if v["kind"] == "static" and not np.isfinite(KN.static_clock_rate(r, th, self.a, self.q)):
             raise Refusal(T("nothing can be static inside the ergosphere: everything is dragged by the hole's "
                             "rotation"), hint=T("place it farther from the hole or choose another observer"))
         if v["kind"] == "circular":
             if abs(v["theta"] - 90.0) > 1e-9:
-                raise Refusal(T("a circular orbit lies only in the equator (θ = 90°)"),
-                              hint=T("set θ = 90° or another observer"))
+                raise Refusal(T("a circular orbit lies only in the equatorial plane (θ = 90°)"),
+                              hint=T("set θ = 90° or choose another observer"))
             if r < self.r_isco:  # review B6-G19: not integrated, it would stay on an unstable orbit for ever
                 raise Refusal(T("inside the ISCO (r < {r:.5g} G M/c²) a circular orbit is unstable: a freely falling "
                                 "observer cannot stay on it (a test body can be launched there to watch it leave the "
@@ -2168,8 +2171,8 @@ class KerrMode(Trails):
     def header(self):
         a, q = self.a, self.q
         rp, rm = KN.horizons(a, q)
-        return {"title": T("Playground: bodies and light near a Kerr–Newman black hole (its mass, spin and charge are "
-                           "in the hole's inspector)"),
+        return {"title": T("Laboratory: bodies and light near a Kerr–Newman black hole (its mass, spin and charge "
+                           "are in the hole's inspector)"),
                 "approximations": self._approx(),
                 "hole": {"r_plus": rp, "r_minus": rm},
                 "scene3d": {"box": self._box(), "units": T("G M/c²"), "objects": [], "layers": [],
@@ -2183,9 +2186,9 @@ class KerrMode(Trails):
         """The hole: horizon, ergosurface, the equatorial photon orbits and the ISCO, from the metric."""
         a, q, sim = self.a, self.q, self.sim
         for mid, r_of, rgb, op, label in (
-                ("horizon", lambda T: np.full_like(T, self.r_plus), (12, 12, 16), 1.0,
+                ("horizon", lambda th: np.full_like(th, self.r_plus), (12, 12, 16), 1.0,
                  T("Horizon r₊ = {r:.6g} G M/c²", r=self.r_plus)),
-                ("ergo", lambda T: KN.ergosurface(T, a, q), (120, 90, 200), 0.18,
+                ("ergo", lambda th: KN.ergosurface(th, a, q), (120, 90, 200), 0.18,
                  T("Ergosphere (nothing can be at rest inside it)"))):
             X, Y, Z = KN.surface(r_of, a, 33, 64)
             pos = np.stack([X, Y, Z], -1).reshape(-1, 3).astype(np.float32)
@@ -2205,8 +2208,8 @@ class KerrMode(Trails):
             pts.append(np.stack([x, y, z], -1)); col.append(np.tile(c, (len(ph), 1)))
             pts.append(np.full((1, 3), np.nan)); col.append(np.zeros((1, 3)))
         sim.emit({"type": "lines", "t": sim.t, "id": "orbits",
-                  "label": T("Circular orbits in the equator: photon orbits (prograde and retrograde) and the ISCO "
-                             "(prograde)")},
+                  "label": T("Circular orbits in the equatorial plane: photon orbits (prograde and retrograde) and "
+                             "the ISCO (prograde)")},
                  {"pts": np.concatenate(pts).astype(np.float32).reshape(-1),
                   "rgb": np.concatenate(col).astype(np.float32).reshape(-1)})
 
@@ -2230,10 +2233,10 @@ BINARY = Schema([
         ("all", T("1PN + 2PN + radiation reaction {a}PN and {b}PN", a=2.5, b=3.5)),
         ("rr", T("Newton + radiation reaction {a}PN", a=2.5)),
         ("cons", T("1PN + 2PN without radiation (the energy is conserved)"))]),
-    _p("r_stop", T("Stop at the separation, G m/c²"), "float", 6.0, min=2.5, max=50.0,
-       help=T("Closer, the post-Newtonian approximation ends: it does not describe the merger. The full equations stop "
-              "not closer than the limit where their radiation reaction stops being an ordered series (≈ {r1}–{r2} "
-              "G m/c², computed when the binary starts)", r1=10.6, r2=13)),
+    _p("r_stop", T("Stop at separation, G m/c²"), "float", 6.0, min=2.5, max=50.0,
+       help=T("Closer in, the post-Newtonian approximation breaks down and does not describe the merger. The full "
+              "equations are stopped no closer than the limit where their radiation reaction stops being an ordered "
+              "series (≈ {r1}–{r2} G m/c², computed when the binary starts)", r1=10.6, r2=13)),
     _p("m_total", T("Total mass m, M☉"), "float", 20.0, min=0.1, max=1e10, log=True,
        help=T("Changes at the current moment as a change of scale (G = c = m = 1): the binary continues the same orbit "
               "in units of m, metres, seconds, the waves' frequency and their amplitude at the detector are recomputed; "
@@ -2280,8 +2283,8 @@ class PNMode(Trails):
                                             "the mass) starts the binary afresh from the current moment; the mass is a "
                                             "change of scale")),
                 "detector": ObjectType("detector", T("Wave detector"), "probe", DETECTOR, limit=4, color="#1c7ed6",
-                                       help=T("An observer at the distance R at the inclination ι: h₊, h× by the "
-                                              "quadrupole formula"))}
+                                       help=T("An observer at distance R and inclination ι: h₊, h× by the quadrupole "
+                                              "formula"))}
 
     def _start(self, obj, state=None):
         v = obj["values"]
@@ -2307,10 +2310,10 @@ class PNMode(Trails):
         r0 = float(np.linalg.norm(st["x"]))
         if not stopped and r0 <= r_eff:
             if r_rr > float(v["r_stop"]):
-                raise Refusal(T("the initial separation is not above {r:.4g} G m/c²: closer, the radiation reaction "
-                                "of the full equations ({a}PN + {b}PN) is no longer an ordered series, and at "
-                                "r ≈ {rs} it changes sign", r=r_rr, a=2.5, b=3.5, rs=9.1),
-                              hint=T("start farther or choose the orders “Newton + {a}PN”", a=2.5))
+                raise Refusal(T("the initial separation is not above {r:.4g} G m/c²: closer in, the radiation "
+                                "reaction of the full equations ({a}PN + {b}PN) is no longer an ordered series, and "
+                                "at r ≈ {rs} it changes sign", r=r_rr, a=2.5, b=3.5, rs=9.1),
+                              hint=T("start farther or choose the orders “Newton + radiation reaction {a}PN”", a=2.5))
             raise Refusal(T("the initial separation is not above “stop at” ({r} G m/c²)", r=v["r_stop"]),
                           hint=T("start farther or stop closer"))
         xx = (float(np.linalg.norm(np.cross(st["x"], st["v"]))) / (r0 * r0)) ** (2.0 / 3.0)
@@ -2324,8 +2327,9 @@ class PNMode(Trails):
         self.sim.emit({"type": "box", "t": self.sim.t, "box": self._box(r0)})
         if r_rr > float(v["r_stop"]):
             self.sim.emit({"type": "notice", "t": self.sim.t,
-                           "text": T("The full equations (ν = {nu:.4g}) will be stopped at r = {r:.4g} G m/c²: closer, "
-                                     "their radiation reaction is no longer an ordered series (see the README of p01)",
+                           "text": T("The full equations (ν = {nu:.4g}) will be stopped at r = {r:.4g} G m/c²: "
+                                     "closer in, their radiation reaction is no longer an ordered series (see the "
+                                     "README of p01)",
                                      nu=nu, r=r_rr)})
 
     @staticmethod
@@ -2428,14 +2432,14 @@ class PNMode(Trails):
             b["status"] = "stopped"
             self._trail_append(b["st"]["t"], b["st"]["x"], b["st"]["v"], force=True)  # the trails end where it stopped
             if b["r_rr"] > b["r_stop_set"]:
-                text = T("The binary has come to {r:.4g} G m/c²: closer, the radiation reaction of these equations "
-                         "({a}PN + {b}PN, harmonic gauge) stops being an ordered series — what it drops exceeds the "
-                         "1PN correction it carries, and at r ≈ {rs} it changes sign (the orbit would gain energy). "
-                         "The post-Newtonian equations do not describe the last orbits and the merger: the motion is "
-                         "stopped", r=b["r_stop"], a=2.5, b=3.5, rs=9.1)
+                text = T("The binary has reached a separation of {r:.4g} G m/c²: closer in, the radiation reaction "
+                         "of these equations ({a}PN + {b}PN, harmonic gauge) stops being an ordered series — what it "
+                         "drops exceeds the 1PN correction it carries, and at r ≈ {rs} it changes sign (the orbit "
+                         "would gain energy). The post-Newtonian equations do not describe the last orbits and the "
+                         "merger: the motion is stopped", r=b["r_stop"], a=2.5, b=3.5, rs=9.1)
             else:
-                text = T("The binary has come to {r:.4g} G m/c²: the post-Newtonian approximation ends here, it does "
-                         "not describe the merger: the motion is stopped", r=b["r_stop"])
+                text = T("The binary has reached a separation of {r:.4g} G m/c²: the post-Newtonian approximation "
+                         "breaks down here and does not describe the merger, so the motion is stopped", r=b["r_stop"])
             self.sim.emit({"type": "event", "kind": "merger", "t": self.clk.sec(b["st"]["t"]), "text": text,
                            "notify": True})
 
@@ -2616,7 +2620,7 @@ class PNMode(Trails):
         r0 = 20.0
         if self.bin is not None:
             r0 = float(np.linalg.norm(self.bin["st"]["x"]))
-        return {"title": T("Playground: a binary in GR (m = {m:.4g} M☉)", m=self.sim.params["m_total"]),
+        return {"title": T("Laboratory: a binary in GR (m = {m:.4g} M☉)", m=self.sim.params["m_total"]),
                 "approximations": [T("post-Newtonian equations of motion (1PN, 2PN; radiation reaction {a}PN, {b}PN), "
                                      "without spins and tides; waves by the leading-order quadrupole formula", a=2.5,
                                      b=3.5),
@@ -2640,11 +2644,11 @@ class PNMode(Trails):
 VIZ = {
     "id": "p01_gravity",
     "title": T("Space and gravity"),
-    "summary": T("A gravity sandbox: stars, planets, black holes, test bodies and light; Newtonian N bodies, a binary in "
-                 "GR radiating gravitational waves, geodesics near a Kerr–Newman black hole."),
-    "purpose": T("Build a system of bodies and watch it move: orbits, close encounters, captures, a binary's inspiral "
-                 "through the radiation of waves, the motion of light and clocks near a rotating black hole; the "
-                 "conservation laws checked live."),
+    "summary": T("A gravity laboratory: stars, planets, black holes, test bodies and light; the Newtonian N-body "
+                 "problem, a binary in GR radiating gravitational waves, geodesics near a Kerr–Newman black hole."),
+    "purpose": T("Build a system of bodies and watch it move: orbits, close encounters, captures, a binary's "
+                 "inspiral driven by gravitational-wave emission, the motion of light and clocks near a rotating "
+                 "black hole; the conservation laws checked live."),
     "version": "0.1",
     "schema": SCHEMA,
     "simulation": Simulation,

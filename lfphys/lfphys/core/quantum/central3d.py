@@ -37,7 +37,7 @@ from lfphys.i18n import T
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
-    "title": T("Central-field wave functions in 3D"),
+    "title": T("Central-field wave functions in 3-D"),
     "statement": T("ψ_nlm = R_nl(r)·Y_lm(θ, φ) from any radial function (a closed form or a table of the radial "
                    "solver with a spline); spherical harmonics by stable recurrences (complex and real orbitals), "
                    "superpositions with Bohr frequencies, the probability current, matrix elements, moments and the "

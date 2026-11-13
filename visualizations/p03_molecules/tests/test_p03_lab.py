@@ -118,7 +118,7 @@ def test_live_box_affine_books_its_work_and_shows_the_new_box():
     assert abs(b["residual"] - res0) < 1e-9
     ev = en(h.of("event")[-1]["text"])
     assert "the work on the system" in ev and "−P·ΔV" in ev and "temperature" in ev and translated(ev)
-    assert "by a jump" in ev and "not quasi-static" in ev
+    assert "instantaneously" in ev and "not quasi-static" in ev
     box = h.of("box")[-1]["box"]
     assert box[1][0] == pytest.approx(10.5) and box[1][1] == pytest.approx(12.0)
     assert h.of("live")[-1]["values"]["Lx"] == 10.5
@@ -597,7 +597,11 @@ def test_the_size_named_after_an_overlap_respects_the_bond_limit(monkeypatch):
     monkeypatch.setattr(MD, "deform", spy)
     L0 = np.array(h.sim.box)
     L = L0 * np.array([0.7, 1.0])
-    e = h.sim._box_refusal(ValueError("overlap: an inserted particle's potential energy 99 exceeds"), L, "affine")
+    from lfphys.codes import coded
+    from lfphys.i18n import T as T_
+    over = coded(ValueError(T_("overlap: an inserted particle's potential energy {e:.4g} exceeds the limit {lim}", e=99.0,
+                               lim=50.0)), "md.overlap")   # the engine's coded refusal (review i18n-code F5)
+    e = h.sim._box_refusal(over, L, "affine")
     import re
     fit = float(re.search(r"Lx ≈ ([\d.]+) nm", english(text_of(e))).group(1))
     assert len(seen) == 10 and all(q == pytest.approx(0.10) for q in seen), seen

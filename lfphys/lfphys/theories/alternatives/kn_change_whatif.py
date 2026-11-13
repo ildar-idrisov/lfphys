@@ -40,7 +40,7 @@ import math
 
 import numpy as np
 
-from lfphys.i18n import T
+from lfphys.i18n import T, is_t
 
 from ...core.gravity import kerr_newman as KN
 
@@ -60,7 +60,7 @@ ABOUT = {
                   "r the circumference √(A/Σ) sin θ, the proper distance to the horizon and the area of the sphere r "
                   "change); the rules “keep the circumference” or “keep E, L, K” are just as admissible and give "
                   "other worlds; test bodies, the hole is a background; captured bodies stay captured"),
-    "basis": [T("Bardeen, Press & Teukolsky, ApJ 178, 347 (1972): ZAMO (LNRF), Eqs. (3.9)–(3.10)"),
+    "basis": [T("Bardeen, Press & Teukolsky, ApJ 178, 347 (1972): ZAMO (LNRF), eqs. (3.9)–(3.10)"),
               T("Adamo & Newman, Scholarpedia 9, 31791 (2014), arXiv:1410.6626: the Kerr–Newman metric, horizons "
                 "(3.18)")],
     "conflicts": [T("lfphys.core.gravity.kerr_newman: the metric is stationary; in GR the hole's spin and charge "
@@ -75,11 +75,15 @@ ABOUT = {
 
 class Refused(ValueError):
     """A change the rule cannot make: ``key`` the body concerned (None for the hole); the text and ``hint`` (what to
-    change) are translatable texts (``lfphys.i18n.T``)."""
+    change) are translatable texts (``lfphys.i18n.T``); its machine code (``lfphys.codes``) is ``"kn_change.refused"``,
+    ``data`` the numbers of the text."""
+
+    code = "kn_change.refused"
 
     def __init__(self, text: T, key=None, hint: T | None = None):
         super().__init__(text)
         self.key, self.hint = key, hint
+        self.data = dict(text.get("a") or {}) if is_t(text) else {}
 
 
 def check_hole(chi: float, q: float):

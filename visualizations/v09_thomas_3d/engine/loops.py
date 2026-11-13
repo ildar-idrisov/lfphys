@@ -128,7 +128,7 @@ def build(p: dict):
             verts.append(_on_sphere(rho, e1, d, rho))
         pieces = ST.polygon_burns(repeated(verts, m))
         info.update(loop_pieces=len(verts) + 1)
-        info.update(reference=None, ref_how=T("a non-planar loop: no closed formula; the check is two representations "
+        info.update(reference=None, ref_how=T("a non-planar loop: no closed form; the check is two representations "
                                               "(the Lorentz group and SL(2, C))"), vertices=[v.tolist() for v in verts])
     elif kind == "helix":
         w = math.cos(chi) * n + math.sin(chi) * e1
@@ -136,13 +136,13 @@ def build(p: dict):
         check_reach(pieces)
         pieces.append(ST.return_burn(ST.Manoeuvre(pieces).end()))
         info.update(reference=None, ref_how=T("a helix (the axis the thrust turns about is tilted by χ): no closed "
-                                              "formula; at χ = 0 it is the circle through rest"))
+                                              "form; at χ = 0 it is the circle through rest"))
     elif kind == "seam":
         verts = seam_vertices(rho, chi, e1, e2, n, SEAM_BURNS)
         pieces = ST.polygon_burns(repeated(verts, m))
         info.update(loop_pieces=len(verts) + 1)
         info.update(reference=None, ref_how=T("a seam of {n:d} burns (the smooth seam is their limit; the difference "
-                                              "from {n2:d} is in the checks); no closed formula", n=SEAM_BURNS,
+                                              "from {n2:d} is in the checks); no closed form", n=SEAM_BURNS,
                                               n2=2 * SEAM_BURNS))
     else:
         raise ValueError(f"unknown loop {kind!r}")

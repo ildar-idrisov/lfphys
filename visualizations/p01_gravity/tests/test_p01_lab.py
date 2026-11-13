@@ -269,7 +269,7 @@ def test_kerr_drag_and_throw():
     assert np.allclose(m._vel([row])[0] / m.T, w, rtol=1e-9)
     assert h.sim.objects[free["id"]]["values"]["vmode"] == "zamo"
     h.cmd("scene", op="set", id=free["id"], values={"x": 0.1, "y": 0.1, "z": 0.0})
-    assert "under the horizon" in en(h.errors()[-1])
+    assert "inside the horizon" in en(h.errors()[-1])
 
 
 def test_measurables_kepler_and_the_far_kerr_orbit():
@@ -400,7 +400,7 @@ def test_a_new_kerr_world_keeps_the_bodies_states():
     # the falling body's state lies under the new horizon r+ = 2: anew from its set-up (r = 2.6); the third body's set-up
     # (r = 1.6) is under it too: refused, named
     assert hows["Test body 1"] == "restarted" and hows["Test body 2"] == "state", (hows, en(n["text"]))
-    assert hows["Test body 3"] == "refused" and "under the new hole's horizon" in en(n["text"])
+    assert hows["Test body 3"] == "refused" and "inside the new hole's horizon" in en(n["text"])
 
 
 def _world(params):

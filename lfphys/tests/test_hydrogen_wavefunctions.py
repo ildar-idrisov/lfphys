@@ -103,6 +103,6 @@ def test_orbital_labels_and_refused_inputs(ru):
     assert ru(e.value.args[0]) == "нужно |m| ≤ l (m = 2, l = 1)"
     with pytest.raises(ValueError, match="closed forms exist only") as e:
         H.expectation(2, 1, 3)
-    assert "замкнутые формулы" in ru(e.value.args[0])
+    assert "в замкнутом виде" in ru(e.value.args[0])
     with pytest.raises(ValueError):
         H.radial_series(1, 1, 1.0)

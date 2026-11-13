@@ -67,7 +67,7 @@ CUSTOM = {"index": ["custom"]}
 G_DROPS, G_LIGHT = T("Drops"), T("Light")
 SCHEMA = Schema([
     _p("radius_um", T("Drop radius ⟨r⟩, µm"), "float", 150.0, group=G_DROPS, min=0.05, max=1000.0, log=True,
-       help=T("Rain drops are {r1}–{r2} mm, fog drops {f1}–{f2} µm, cloud drops {c1}–{c2} µm. The near field is "
+       help=T("Raindrops are {r1}–{r2} mm, fog drops {f1}–{f2} µm, cloud drops {c1}–{c2} µm. The near field is "
               "computed for drops up to ~{rn} µm (x ≤ {xn} at every wavelength)", r1=0.1, r2=1, f1=5, f2=50, c1=2,
               c2=20, rn=2.7, xn=45)),
     _p("width", T("Spread of the sizes σ/⟨r⟩"), "float", 0.02, group=G_DROPS, min=0.0, max=0.3,
@@ -79,9 +79,9 @@ SCHEMA = Schema([
     _p("n_re", T("n, the real part of the index"), "float", 1.5, group=G_DROPS, min=0.2, max=10.0, show_if=CUSTOM),
     _p("n_im", T("κ, the imaginary part (absorption, ≥ 0)"), "float", 0.0, group=G_DROPS, min=0.0, max=10.0,
        show_if=CUSTOM),
-    _p("n_medium", T("Index of the medium around"), "float", 1.0, group=G_DROPS, min=1.0, max=1.6,
+    _p("n_medium", T("Refractive index of the surrounding medium"), "float", 1.0, group=G_DROPS, min=1.0, max=1.6,
        help=T("1 is vacuum; the drop's index is taken relative to the medium")),
-    _p("n_lam", T("Wavelengths of white light ({lo}–{hi} nm)", lo=380, hi=760), "select", 24, group=T("Computation"),
+    _p("n_lam", T("Number of wavelengths of white light ({lo}–{hi} nm)", lo=380, hi=760), "select", 24, group=T("Computation"),
        options=[(8, "8"), (16, "16"), (24, "24"), (32, "32")]),
     _p("light", T("Light"), "select", "white", group=G_LIGHT, live=True,
        options=[("white", T("sunlight (white): a black body at {T} K", T=5772)), ("mono", T("one wavelength"))]),
@@ -89,21 +89,21 @@ SCHEMA = Schema([
        help=T("For one drop (the phase function, the Debye series, the near field) and for the sky in the "
               "one-wavelength mode")),
 ], presets={
-    "rainbow": {"label": T("Rainbow: drops of {r} mm ± {w} % in sunlight: the primary and secondary bows, Alexander's "
+    "rainbow": {"label": T("Rainbow: drops of radius {r} mm ± {w} % in sunlight: the primary and secondary bows, Alexander's "
                            "band, the supernumerary bows", r=0.15, w=2), "params": {}},
-    "supernumerary": {"label": T("Supernumerary bows: equal drops of {r} mm ± {w} %", r=0.1, w=0.5),
+    "supernumerary": {"label": T("Supernumerary bows: nearly equal drops of radius {r} mm ± {w} %", r=0.1, w=0.5),
                       "params": {"radius_um": 100.0, "width": 0.005}},
-    "big_drops": {"label": T("Large drops of {r} mm ± {w} %: the supernumerary bows are washed out (a heavy "
+    "big_drops": {"label": T("Large drops of radius {r} mm ± {w} %: the supernumerary bows are washed out (a heavy "
                              "computation, ~a minute)", r=0.3, w=10),
                   "params": {"radius_um": 300.0, "width": 0.10, "n_lam": 16}},
-    "fogbow": {"label": T("Fogbow: drops of {r} µm ± {w} %, a wide white bow", r=15, w=15),
+    "fogbow": {"label": T("Fogbow: drops of radius {r} µm ± {w} %, a wide white bow", r=15, w=15),
                "params": {"radius_um": 15.0, "width": 0.15}},
-    "glory": {"label": T("Glory: cloud drops of {r} µm ± {w} %, coloured rings around the antisolar point", r=8, w=10),
+    "glory": {"label": T("Glory: cloud drops of radius {r} µm ± {w} %, coloured rings around the antisolar point", r=8, w=10),
               "params": {"radius_um": 8.0, "width": 0.10}},
-    "near": {"label": T("Near field: a drop of {r} µm in light of {lam} nm, the focus inside and behind the drop", r=1,
+    "near": {"label": T("Near field: a drop of radius {r} µm in light of {lam} nm, the focus inside and behind the drop", r=1,
                         lam=550),
              "params": {"radius_um": 1.0, "width": 0.0, "light": "mono", "n_lam": 8}},
-    "absorbing": {"label": T("An absorbing sphere of {r} µm, n = {n} + {k}i: the inner rays die out, no rainbow", r=2,
+    "absorbing": {"label": T("An absorbing sphere of radius {r} µm, n = {n} + {k}i: the inner rays die out, no rainbow", r=2,
                              n=1.6, k=0.05),
                   "params": {"radius_um": 2.0, "width": 0.05, "index": "custom", "n_re": 1.6, "n_im": 0.05}},
 })
@@ -150,9 +150,10 @@ class Simulation(SlicePlanes, BaseSimulation):
         self.live = {k: p[k] for k in SCHEMA.live_ids()}
         self.x_max = float(mie.size_parameter(self.r_um, DR.LAM_MIN * 1e-3, self.n_med))
         self.near = self.x_max <= X_NEAR
-        if float(mie.size_parameter(self.r_um * (1 + 3 * self.width), DR.LAM_MIN * 1e-3, self.n_med)) > 2e4:
+        # the engine's own bound (mie.MAX_X, code "mie.size_bound"), checked before any drop is computed
+        if float(mie.size_parameter(self.r_um * (1 + 3 * self.width), DR.LAM_MIN * 1e-3, self.n_med)) > mie.MAX_X:
             raise Refusal(T("the drops are too large: x > {xmax} at {lam} nm (the limit of the series' verified "
-                            "accuracy)", xmax=2e4, lam=380),
+                            "accuracy)", xmax=mie.MAX_X, lam=int(DR.LAM_MIN)),
                           hint=T("decrease the drop radius or the spread of the sizes"))
         self._ang = None   # the angular functions of the sky window (a cache, rebuilt after a checkpoint)
         self.seq = 0       # the set-up's number (a live change starts a new one)
@@ -271,14 +272,14 @@ class Simulation(SlicePlanes, BaseSimulation):
                    "r_um": self.r_um, "debye": {"diverging_orders": self.debye_div, "amplification": self.debye_amp}},
                   blobs)
         if self.debye_div or self.debye_amp > 10.0:
-            what = (T("the Debye series diverges at {n:d} orders (|R¹¹| > 1: this happens for a weakly absorbing drop "
+            what = (T("the Debye series diverges for {n:d} multipole orders (|R¹¹| > 1: this happens for a weakly absorbing drop "
                       "with m ≈ 1)", n=int(self.debye_div)) if self.debye_div else
                     T("the terms nearly cancel each other (this happens at m ≈ 1: diffraction against a passage with "
                       "almost no refraction)"))
             self._msg({"type": "notice", "t": self.t,
                        "text": T("The terms p = 0–3 of the Debye series of this drop are up to {amp:.2g} times larger "
                                  "than the full answer: {what}. The coloured curves are not paths of light but terms "
-                                 "that cancel; their sum in closed form is right (the check “Debye series”).",
+                                 "that cancel; their sum in closed form is right (the “Debye series” check).",
                                  amp=float(self.debye_amp), what=what)})
         # the polar surfaces (2-deg bin means of the fine grid)
         edges = np.concatenate([[-1e-9], 0.5 * (POLAR_DEG[1:] + POLAR_DEG[:-1]), [180.0 + 1e-9]])
@@ -571,7 +572,7 @@ class Simulation(SlicePlanes, BaseSimulation):
     def _sky_done(self):
         lams, _ = self._sky_lams()
         G_CLOUD = T("Cloud of drops")
-        head = T("the largest over the angles difference of two alternating half-sums over the sizes, as fractions of "
+        head = T("the largest difference, over the angles, of two alternating half-sums over the sizes, as fractions of "
                  "the maximum of ⟨dσ/dΩ⟩: an estimate of the largest error by its order of magnitude (on the presets the "
                  "true largest error is {lo}–{hi} of this estimate), not a bound and not the error at every angle; the "
                  "step in size does not resolve the series' narrow resonances", lo=0.1, hi=3)
@@ -591,7 +592,7 @@ class Simulation(SlicePlanes, BaseSimulation):
             k = int(np.argmax(np.where(lo, Y, -np.inf)))
             d550 = RB.descartes(float(DR.index(self.params, 550.0).real), 2)
             th_d = math.degrees(d550["theta"])
-            self._check("sky_bow", T("Sky: the brightest angle of the primary bow (white light) against Descartes at "
+            self._check("sky_bow", T("Sky: the brightest angle of the primary bow (white light) against Descartes' angle at "
                                      "{lam} nm", lam=550),
                         float(SKY_DEG[k]), th_d, "°", tol=None, info=True, group=G_CLOUD,
                         note=T("the brightness Y over {n:d} wavelengths, the size {r} µm ± {w} %: the maximum is "
@@ -702,7 +703,7 @@ class Simulation(SlicePlanes, BaseSimulation):
                                     n=self.n_med))
         if self.width > 0:
             approximations.append(T("the sizes have a gamma distribution cut at ±4σ (the fraction cut off is in the "
-                                    "check “Sky: the error estimate”)"))
+                                    "“Sky: the error estimate” check)"))
             nd = MP.size_nodes(self.r_um, self.width, DR.LAM_MIN * 1e-3, self.n_med, max_nodes=MAX_NODES)
             if nd["coarse"]:
                 approximations.append(T("a coarse sampling of the sizes: at short wavelengths the step in x is up to "

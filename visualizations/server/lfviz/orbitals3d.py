@@ -78,7 +78,7 @@ class OrbitalWorld(SlicePlanes, BaseSimulation):
         freqs = sp.frequencies()
         if len(freqs) > 1:
             raise Refusal(T("a superposition here holds at most two energy levels (one Bohr period)"),
-                          hint=T("choose two states of two energies at most"))
+                          hint=T("choose states with at most two distinct energies"))
         self.omega = freqs[0] if freqs else 0.0  # rad per computational time unit
         self.nb = NB if self.omega > 0 else 1
         self.period = 2 * math.pi / self.omega * self.tu if self.omega > 0 else math.inf  # seconds
@@ -391,7 +391,8 @@ class OrbitalWorld(SlicePlanes, BaseSimulation):
         self._check("continuity", label, res / scale, 0.0, tol=tol / scale, ok=res <= tol,
                     note=T("fraction of the scale {scale:.2e} (max|∂ρ/∂t| or max|j|/⟨r⟩); the derivatives are central "
                            "differences in t, x, y, z with steps h and 2h: the residual must be a truncation error "
-                           "(growing fourfold with the step); tolerance: |residual(2h) − residual(h)| + round-off",
+                           "(growing fourfold when the step is doubled); tolerance: |residual(2h) − residual(h)| + the "
+                           "round-off error",
                            scale=scale))
 
     def _dipole_ref(self):

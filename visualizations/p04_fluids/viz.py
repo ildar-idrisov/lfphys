@@ -30,8 +30,9 @@ import math
 
 import numpy as np
 
+from lfphys.codes import code_of, data_of
 from lfphys.core.fluids import lbm as L
-from lfphys.i18n import T, is_t, join, text_of
+from lfphys.i18n import T, join, text_of
 from lfviz.errors import Refusal
 from lfviz.params import Param, Schema
 from lfviz.playground import ObjectType, PlaygroundSimulation, scene_param, scene_time
@@ -119,7 +120,7 @@ SCHEMA = Schema([
        options=[("rest", T("fluid at rest (pressure from the nearest edge)")),
                 ("inflow", T("with the inflow (the velocity of the first inlet)"))]),
     _p("collision", T("Collision operator"), "select", "trt", group=T("Scheme (on the fly)"), live=True,
-       options=[("trt", T("TRT (walls independent of the viscosity)")), ("bgk", T("BGK (single-parameter)"))]),
+       options=[("trt", T("TRT (wall position independent of the viscosity)")), ("bgk", T("BGK (single-parameter)"))]),
     _p("dye", T("Dye"), "select", "on", group=T("Scheme (on the fly)"), live=True,
        options=[("on", T("on (a passive tracer)")), ("off", T("off"))],
        help=T("Switched on and off on the fly (off only when the scene has no dye sources)")),
@@ -181,8 +182,8 @@ SCHEMA.presets.update({
                     {"type": "probe", "label": T("Velocity on the axis"), "values": {"x": 0.1, "y": 0.02}}])}},
     # the DFG 2D-1 set-up made with real fluids at the scale where Re = 20 (review UX-params P24): the same numbers of
     # cells and the same Re, so the same flow in the units of D and U; water in a 22 mm channel, air in a 22 cm one
-    "water_cylinder": {"label": T("Water: flow past a cylinder of D = {d} mm in a {lx} × {ly} mm channel, Re = 20 (as the DFG "
-                                  "2D-1 test, at the scale where the grid resolves water)", d=1, lx=22, ly=4.1),
+    "water_cylinder": {"label": T("Water: flow past a cylinder of D = {d} mm in a {lx} × {ly} mm channel, Re = 20 "
+                                  "(as in the DFG 2D-1 test, at the scale where the grid resolves water)", d=1, lx=22, ly=4.1),
                        "params": {"fluid": "water", "Lx": 0.022, "Ly": 0.0041, "nx": 440, "u_max": 0.03,
                                   "scene": _scene([
                                       {"type": "inlet", "label": T("Inlet (parabola, {u} cm/s)", u=3),
@@ -193,8 +194,8 @@ SCHEMA.presets.update({
                                                                                      "wall": "interpolated"}},
                                       {"type": "dye_source", "label": T("Dye"),
                                        "values": {"x": 0.0008, "y": 0.002, "radius": 0.0001}}])}},
-    "air_cylinder": {"label": T("Air: flow past a cylinder of D = {d} cm in a {lx} × {ly} cm channel, Re = 20 (as the DFG 2D-1 "
-                                "test, at the scale where the grid resolves air)", d=1, lx=22, ly=4.1),
+    "air_cylinder": {"label": T("Air: flow past a cylinder of D = {d} cm in a {lx} × {ly} cm channel, Re = 20 (as in "
+                                "the DFG 2D-1 test, at the scale where the grid resolves air)", d=1, lx=22, ly=4.1),
                      "params": {"fluid": "air", "Lx": 0.22, "Ly": 0.041, "nx": 440, "u_max": 0.0455,
                                 "scene": _scene([
                                     {"type": "inlet", "label": T("Inlet (parabola, {u} cm/s)", u=4.55),
@@ -236,10 +237,10 @@ def _xy(label=None, x=0.1, y=0.1):
 
 # the engine imposes a surface velocity on a fixed shape (Ladd); the body itself does not move (review B7 L3)
 MOTION = [_p("vx", T("Surface velocity (the body stays in place): vx, m/s"), "float", 0.0, min=-1e4, max=1e4,
-             help=T("The body does NOT move: a surface velocity is set on its fixed shape (Ladd's condition). The part "
-                    "normal to the surface is a source in front and a sink behind (fluid passes through the wall; the "
-                    "mass balance accounts for it): this gives the instantaneous boundary condition of a moving body, "
-                    "not its flow. Moving bodies are not done yet (STATUS V41 o)")),
+             help=T("The body does NOT move: a surface velocity is set on its fixed shape (Ladd's condition). The "
+                    "part normal to the surface is a source in front and a sink behind (fluid passes through the "
+                    "wall; the mass balance accounts for it): this gives the instantaneous boundary condition of a "
+                    "moving body, not its flow. Moving bodies are not implemented yet (STATUS V41 o)")),
           _p("vy", T("Surface velocity (the body stays in place): vy, m/s"), "float", 0.0, min=-1e4, max=1e4),
           _p("omega", T("Surface rotation, rad/s"), "float", 0.0, min=-1e6, max=1e6,
              help=T("The surface turns about the centre, the shape stays in place (on a circle the velocity is tangent "
@@ -298,7 +299,7 @@ def palette(size=(2.2, 0.41), u_max=0.45, g=9.81) -> dict:
                              max=1e4),
                     _p("profile", T("Profile"), "select", "uniform",
                        options=[("uniform", T("uniform")), ("parabolic", T("parabola (as in a channel)"))]),
-                    _p("ramp", T("Smooth start-up within, s"), "float", 0.0, min=0.0, max=1e6,
+                    _p("ramp", T("Smooth start-up time, s"), "float", 0.0, min=0.0, max=1e6,
                        help=T("After a change of the velocity the inlet passes smoothly from the old velocity to the "
                               "new one within this time; a change of the dye alone does not restart the start-up")),
                     _p("dye", T("Dye in the incoming fluid (fraction)"), "float", 0.0, min=0.0, max=1.0)])
@@ -308,18 +309,19 @@ def palette(size=(2.2, 0.41), u_max=0.45, g=9.81) -> dict:
                                "hydrostatic part is added. The engine refuses when the scheme's density would deviate "
                                "by more than 0.045 (the scale is c_s²ρ, c_s the scheme's speed of sound)"))])
     lid = Schema([_p("side", T("Domain side"), "select", "top", options=SIDES),
-                  _p("speed", T("Wall velocity along itself, m/s"), "float", v0, min=-1e4, max=1e4,
+                  _p("speed", T("Tangential wall velocity, m/s"), "float", v0, min=-1e4, max=1e4,
                      help=T("At the bottom and the top: along +x; on the left and the right: along +y"))])
     periodic = Schema([_p("axis", T("Pair of sides"), "select", "x",
                           options=[("x", T("left–right (along x)")), ("y", T("bottom–top (along y)"))])])
     gravity = Schema([_p("gx", T("Acceleration: gx, m/s²"), "float", 0.0, min=-1e4, max=1e4),
                       _p("gy", T("Acceleration: gy, m/s²"), "float", -g, min=-1e4, max=1e4,
                          help=T("A uniform body force (Guo's scheme). In a fluid of constant density it changes only "
-                                "the pressure (hydrostatic, at once) while the walls and the outlets balance it; along "
-                                "a periodic axis it drives the flow like a pressure drop. The scheme carries its "
-                                "hydrostatic density spread g·L/c_s² (c_s is the scheme's speed of sound, not the "
-                                "fluid's): by default the largest force the scheme of this world carries (up to "
-                                "9.81 m/s²); for a larger one, a larger “largest expected velocity” (a new world)"))])
+                                "the pressure (hydrostatic, instantaneously) while the walls and the outlets balance "
+                                "it; along a periodic axis it drives the flow like a pressure drop. The scheme must "
+                                "withstand the hydrostatic density spread g·L/c_s² (c_s is the scheme's speed of "
+                                "sound, not the fluid's): by default the largest force the scheme of this world can "
+                                "handle (up to 9.81 m/s²); a larger one needs a larger “Largest expected velocity” "
+                                "(a new world)"))])
     dye = Schema([*_xy(x=_nice(0.1 * Lx, 3), y=cy), _p("radius", T("Spot radius, m"), "float", _nice(0.03 * m),
                                                      min=1e-9, max=1e4),
                   _p("concentration", T("Concentration (fraction)"), "float", 1.0, min=0.0, max=1.0),
@@ -400,25 +402,20 @@ def resample(a: np.ndarray, fluid: np.ndarray, m: int):
     return np.where(den > 0, num / np.where(den > 0, den, 1.0), 0.0), den / area
 
 
-# the engine's refusals of the flow, recognised by a fragment of their English text (the msgid, and its English
-# rendering), put in the world's terms: "dt" is not a parameter here (U13, P24); the numbers come from the text's args
-_LBM_REFUSALS = [
-    ("the compressibility error O(Ma²) is too large (and the scheme unstable)", "mach"),
-    ("is too close to 1/2", "tau"),
-    ("the grid does not resolve the flow", "recell"),
-    ("the scheme's rest density would deviate", "density"),
-    ("interpolated walls only for a surface at rest", "interp"),
-]
+# the engine's refusals of the flow put in the world's terms: "dt" is not a parameter here (U13, P24). Recognised by the
+# engine's machine code (``lfphys.codes``; review i18n-code F5), the numbers from ``data_of``; each mapping has a test
+# that triggers the engine's condition and checks the code and the world's msgid
+# (tests/test_p04_ux.py::test_each_engine_refusal_maps_to_the_worlds_text). The engine's instabilities (lbm.Unstable:
+# lbm.unstable, lbm.rebuild_unstable, lbm.adopt_unstable) are caught by their type and shown with the engine's own
+# text; lbm.cut_by_edge and lbm.dye_has_sources are checked by the world before the engine is asked
+_LBM_CODES = {"lbm.mach": "mach", "lbm.tau": "tau", "lbm.cell_reynolds": "recell", "lbm.rest_density": "density",
+              "lbm.interp_moving": "interp"}
 
 
 def _lbm_refusal(e):
-    """(key, the text's numeric args) of an engine refusal of the flow, or (None, {})."""
-    x = text_of(e)
-    s = x["$t"] if is_t(x) else str(x)
-    for frag, key in _LBM_REFUSALS:
-        if frag in s or frag in str(e):
-            return key, dict(x.get("a") or {}) if is_t(x) else {}
-    return None, {}
+    """(key, the numbers of the engine's refusal) of an engine refusal of the flow, or (None, {})."""
+    key = _LBM_CODES.get(code_of(e))
+    return (key, data_of(e)) if key is not None else (None, {})
 
 
 def _grid(params):
@@ -557,19 +554,19 @@ class Simulation(PlaygroundSimulation):
         """The u_max at which the scheme would carry |g| (the hydrostatic spread goes as 1/c_s² ∝ 1/u_max²)."""
         return self.u_max * math.sqrt(g / lim) * 1.02 if lim > 0 else math.inf
 
-    def _ru(self, e):
+    def _ru(self, e, nu=None):
         """An engine refusal of the flow put in this world's terms (what to change here: the speeds, ν, u_max, the
-        grid), its English sentence as the detail (review UX-ui U13, UX-params P24); anything else as it was."""
+        grid), its English sentence as the detail (review UX-ui U13, UX-params P24); anything else as it was. ``nu``:
+        the viscosity asked for (a refused live ν), else the one in force."""
         key, a = _lbm_refusal(e)
         if key is None:
             return e
         s = str(e)
-        nu, dx = self.live["nu"], self.fl.units.dx
+        nu, dx = (self.live["nu"] if nu is None else nu), self.fl.units.dx
         v = self._v_limit()
         if key == "mach":
-            return refusal(T("a velocity above what the weakly compressible scheme of this world carries (Mach number "
-                             "{ma:.2g} > {max}: up to {v:.2g} m/s)", ma=float(a.get("ma", float("nan"))),
-                             max=float(a.get("max", L.MACH_MAX)), v=v),
+            return refusal(T("a velocity above what the weakly compressible scheme of this world can handle (Mach "
+                             "number {ma:.2g} > {max}: up to {v:.2g} m/s)", ma=float(a["ma"]), max=float(a["max"]), v=v),
                            hint=T("velocities at most {v:.2g} m/s, or a larger “Largest expected velocity” (a new "
                                   "world)", v=v), detail=s)
         if key == "tau":
@@ -580,7 +577,7 @@ class Simulation(PlaygroundSimulation):
                                   "(a new world)", nu=nu_min * 1.01), detail=s)
         if key == "recell":
             return refusal(T("the grid does not resolve a flow this fast (cell Reynolds number {rec:.3g} > {lim})",
-                             rec=float(a.get("rec", float("nan"))), lim=float(a.get("lim", L.RE_CELL_MAX_OPEN))),
+                             rec=float(a["rec"]), lim=float(a["lim"])),
                            hint=T("velocities at most {v:.2g} m/s, or a larger ν (changed on the fly), or more nodes "
                                   "(a new world)", v=v), detail=s)
         if key == "density":
@@ -960,8 +957,8 @@ class Simulation(PlaygroundSimulation):
             gm = math.hypot(*g)
             lim = self.fl.gravity_limit(g) if gm > 0 else 0.0
             raise refusal(T("a body force of {g:.3g} m/s² is too large for the weakly compressible scheme of this "
-                            "world (the hydrostatic density spread would exceed 4.5 %): it carries up to {lim:.3g} "
-                            "m/s²", g=gm, lim=_nice(lim)),
+                            "world (the hydrostatic density spread would exceed 4.5 %): it can handle up to "
+                            "{lim:.3g} m/s²", g=gm, lim=_nice(lim)),
                           hint=T("|g| at most {lim:.3g} m/s², or a “Largest expected velocity” of at least {u:.2g} "
                                  "m/s (a new world)", lim=_nice(lim), u=self._u_for_g(gm, lim)),
                           detail=str(e)) from e
@@ -1061,7 +1058,7 @@ class Simulation(PlaygroundSimulation):
             try:
                 fl._check_numbers(float(new["nu"]), fl.u_max)
             except ValueError as e:
-                raise self._ru(e) from e
+                raise self._ru(e, nu=float(new["nu"])) from e
         D_new = (float(new["dye_D"]) or float(new["nu"])) if new["dye"] == "on" else None
         try:
             if "nu" in changed:
@@ -1112,7 +1109,7 @@ class Simulation(PlaygroundSimulation):
                         else T("the dye is on (zero so far)"))
         if regrid:
             what.append(regrid)
-        return T("laws on the fly: {labels}{what}; the window of the mean forces restarts", labels=labels,
+        return T("laws changed on the fly: {labels}{what}; the averaging window of the forces restarts", labels=labels,
                  what=T("; {list}", list=join(what, "; ")) if what else "")
 
     def _anchor_shift(self, anchor, grow, dx):
@@ -1366,7 +1363,8 @@ class Simulation(PlaygroundSimulation):
                               "lift, mean, N/m": float(w["force"][1]),
                               "averaging window": self._window_text(w)})
                 elif w:
-                    r["C_x, C_y means over the sound period"] = T("the window is filling: until t = {t:.4g} s",
+                    r["C_x, C_y means over the sound period"] = T("the averaging window is being filled until t = "
+                                                                  "{t:.4g} s",
                                                                    t=w["ready_at"])
                 r.update({"C_x over the last step (with the scheme's sound)": F["cd"],
                           "C_y over the last step (with the scheme's sound)": F["cl"],
@@ -1474,7 +1472,7 @@ class Simulation(PlaygroundSimulation):
                     m[f"{oid}.cd_mean"], m[f"{oid}.cl_mean"] = self._coeffs(F, w["force"])
                 else:
                     m[f"{oid}.cd_mean"] = m[f"{oid}.cl_mean"] = float("nan")
-                    why = (T("the window of the mean over the sound period is filling: until t = {t:.4g} s",
+                    why = (T("the averaging window over the sound period is being filled until t = {t:.4g} s",
                              t=w["ready_at"]) if w else T("the forces are not being recorded"))
                     notes[f"{oid}.cd_mean"] = notes[f"{oid}.cl_mean"] = why
             elif kind[0] == "probe":
@@ -1590,10 +1588,10 @@ class Simulation(PlaygroundSimulation):
                 self.running_check(f"cd_{oid}", T("“{label}”: C_x, mean over the sound period", label=lab), cx, None,
                                    0.0, info=True, group=T("Forces"),
                                    note=T("mean C_y = {cy:.4g}; window {window}; over the last step C_x = {cd:.4g}, "
-                                          "C_y = {cl:.4g} (they carry the scheme's sound wave); {basis}", cy=cy,
+                                          "C_y = {cl:.4g} (they contain the scheme's sound wave); {basis}", cy=cy,
                                           window=self._window_text(w), cd=F["cd"], cl=F["cl"], basis=basis))
             else:
-                ready = T("; the mean over the sound period is filling until t = {t:.4g} s", t=w["ready_at"]) if w \
+                ready = T("; the mean over the sound period is being accumulated until t = {t:.4g} s", t=w["ready_at"]) if w \
                     else ""
                 self.running_check(f"cd_{oid}", T("“{label}”: C_x over the last step (instantaneous, with the "
                                                   "scheme's sound)", label=lab),
@@ -1702,8 +1700,8 @@ class Simulation(PlaygroundSimulation):
                             "period ({n:d} blocks), St over the last sound periods ({m:d} blocks, from t = {t:.4g} s)",
                             ms=r["block"] * 1e3, n=n, m=m, t=t[0] - 0.5 * r["block"])
                     known = T("the engine's test (Ma 0.1, interpolated, 9–12 s): D = 20: St 0.2990, C_D max 3.330, "
-                              "C_L max 0.979; D = 40: St 0.3009, C_D max 3.248, C_L max 0.980 (C_L max and C_D max are "
-                              "outside the ranges, the cause is open: STATUS)")
+                              "C_L max 0.979; D = 40: St 0.3009, C_D max 3.248, C_L max 0.980 (C_L max and C_D max "
+                              "are outside the ranges, the cause is an open question: STATUS)")
                     vals = [("cDmax", T("C_D max over the last sound period"), float(cd[-n:].max())),
                             ("cLmax", T("C_L max over the last sound period"), float(cl[-n:].max()))]
                     if len(up) >= 3:
@@ -1883,7 +1881,7 @@ class Simulation(PlaygroundSimulation):
         fl = self.fl
         nb = fl.numbers()
         return {
-            "title": T("Playground: fluids"),
+            "title": T("Laboratory: fluids"),
             "text": T("The flow of an incompressible fluid in a plane: the lattice Boltzmann method solves the "
                       "Navier–Stokes equations. Add obstacles, inlets and outlets, moving walls, dye and probes at the "
                       "current moment; the forces on the bodies and the balances are computed live."),
@@ -1907,9 +1905,9 @@ class Simulation(PlaygroundSimulation):
     def _approx(self):
         out = [T("an incompressible fluid in a plane (2-D, per metre of depth): the lattice Boltzmann method D2Q9; "
                  "compressibility error ~ Ma² (lattice Mach number ≈ 0.1)"),
-               T("the scheme's sound waves (speed of sound c_s = u_max/0.1, a property of the computation): a standing "
-                 "wave O(Ma²) in the forces and the pressure, larger after abrupt changes; the means over the sound "
-                 "period do not carry it"),
+               T("the scheme's sound waves (speed of sound c_s = u_max/0.1, a property of the computation): a "
+                 "standing wave O(Ma²) in the forces and the pressure, larger after abrupt changes; the means over "
+                 "the sound period do not contain it"),
                T("walls: half-way bounce-back (curved walls as a staircase: first order in the shape) or with "
                  "Bouzidi's interpolation (for bodies with that choice)"),
                T("the dye is a passive tracer (it does not affect the flow); its diffusivity equals the viscosity "
@@ -1949,8 +1947,8 @@ class Simulation(PlaygroundSimulation):
 VIZ = {
     "id": "p04_fluids",
     "title": T("Fluids"),
-    "summary": T("A flow sandbox: obstacles, wings, inlets and outlets, moving walls, dye; an incompressible fluid by "
-                 "the lattice Boltzmann method."),
+    "summary": T("A flow laboratory: obstacles, wings, inlets and outlets, moving walls, dye; an incompressible "
+                 "fluid by the lattice Boltzmann method."),
     "purpose": T("Build a flow and see what comes of it: flow past bodies, separation, the Kármán street, the vortex in "
                  "a cavity, the lift of a wing, the mixing of dye; forces and balances live."),
     "version": "0.2",

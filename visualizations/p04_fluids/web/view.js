@@ -27,7 +27,7 @@ export function createView(ctx) {
     env.scene.el.style.display = show3d ? "" : "none";
     env.windows.el.style.flex = show3d ? "" : "1 1 100%";
     env.windows.el.style.maxWidth = "none";
-    layoutBtn.textContent = show3d ? t("Hide the 3-D view (the flow plane across the whole centre)") : t("Show the 3-D view alongside");
+    layoutBtn.textContent = show3d ? t("Hide the 3-D view (the flow plane fills the central pane)") : t("Show the 3-D view alongside");
     env.windows.redraw(); env.scene.requestRender();
   }
   layoutBtn.onclick = () => { show3d = !show3d; try { localStorage.setItem("p04.show3d", show3d ? "1" : "0"); } catch (e) { /* ignore */ } applyLayout(); };
@@ -135,9 +135,9 @@ export function createView(ctx) {
     leftPanels: pg.leftPanels,
     rightPanels: [panel(t("Flow picture"), fieldBox), ...pg.rightPanels, panel(t("Scene layers"), env.layersPanel)],
     help: () => el("div", {},
-      el("h4", {}, t("Playground: fluids")),
+      el("h4", {}, t("Laboratory: fluids")),
       el("p", {}, t("Add obstacles (cylinders, rectangles, wing profiles), flow inlets and outlets on the sides of the domain, moving walls, periodicity, dye and velocity probes at the current moment. The flow is computed by the lattice Boltzmann method (the incompressible Navier–Stokes equations in a plane).")),
-      el("p", {}, t("The picture is the chosen field (speed, vorticity, pressure, dye); the arrows are the velocity. The forces on the bodies (drag and lift, their coefficients) are in the body's “now” and in “Checks”: over the last step (they carry the scheme's standing sound wave) and averaged over the domain's sound period (the window is given); there too are the balances of mass, momentum and dye and the Mach and cell Reynolds numbers (stability limits, not accuracy ones).")),
+      el("p", {}, t("The picture is the chosen field (speed, vorticity, pressure, dye); the arrows are the velocity. The forces on the bodies (drag and lift, their coefficients) are in the body's “now” and in “Checks”: over the last step (they contain the scheme's standing sound wave) and averaged over the domain's sound period (the window is given); there too are the balances of mass, momentum and dye and the Mach and cell Reynolds numbers (stability limits, not accuracy ones).")),
       el("p", {}, t("If the scene is the set-up of a published test (the DFG channel with a cylinder, the Ghia cavity, a Poiseuille channel with a probe), “Checks” (the group “Benchmarks”) show the published range next to the computed number and what the agreement needs (the grid, the wall, a steady flow)."))),
     reset() { env.reset(); pg.reset(); H = null; pics = []; shown = -1; shapes = null; shapesKey = ""; size = [1, 1]; panelSize = null; },
     snapshot() { return { env: env.snapshot(), pg: pg.snapshot(), np: pics.length, shapes, size }; },

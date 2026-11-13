@@ -4,8 +4,8 @@
 // and the screen (individual detections and their histogram against the run's own expectation).
 // All data come from the run: detections are events with their computed positions and times, the map and the
 // curves are computed by the run for the current apparatus segment.
-import { t, fmt } from "/static/js/i18n.js";
-import { css, el, fresh2d, num, panel, time } from "/static/js/ui.js";
+import { t, fmt, parseNum } from "/static/js/i18n.js";
+import { css, el, fmtInput, fresh2d, num, numberInput, panel, time } from "/static/js/ui.js";
 
 const F_DARK = 1, F_R1 = 2, F_READ = 4, F_SCAT = 8, F_REC = 16, F_MIX = 32;
 // the elements at the slits by their short names (the same msgids as the run's own texts)
@@ -37,8 +37,10 @@ export function createView(ctx) {
     el("option", { value: "noscat" }, t("no scattered photon")),
     el("option", { value: "phase" }, t("scattered photon recorded: phase Δk·d in the window")),
     el("option", { value: "dark" }, t("dark counts only (known only in a simulation)")));
-  const inPhase = el("input", { type: "number", value: 0, step: 15, style: { width: "5em" }, title: t("centre of the phase window, °") });
-  const inPhaseW = el("input", { type: "number", value: 60, step: 15, style: { width: "5em" }, title: t("width of the window, °") });
+  // number fields that take a decimal comma (review i18n-browser F1): a text that is not a number is refused, and the
+  // field shows the value in use again
+  const inPhase = numberInput(0, { style: { width: "5em" }, title: t("centre of the phase window, °") }, { step: 15 });
+  const inPhaseW = numberInput(60, { style: { width: "5em" }, title: t("width of the window, °") }, { step: 15, min: 0 });
   const phaseBox = el("span", { style: { display: "none" } }, " φ₀ ", inPhase, "° ± ", inPhaseW, "°/2");
   const cbSeg = el("input", { type: "checkbox", checked: true });
   const cbCurves = el("input", { type: "checkbox", checked: true });
@@ -71,8 +73,13 @@ export function createView(ctx) {
     panel(t("Approximations of this segment"), approxBox), panel(t("Latest particles: the chain of causes"), storyBox)];
 
   selFilter.onchange = () => { opt.filter = selFilter.value; phaseBox.style.display = opt.filter === "phase" ? "" : "none"; full(); };
-  inPhase.onchange = () => { opt.phase0 = Number(inPhase.value); full(); };
-  inPhaseW.onchange = () => { opt.phaseW = Number(inPhaseW.value); full(); };
+  const readNum = (inp, key) => {
+    const r = parseNum(inp.value);
+    if (r.err) { inp.value = fmtInput(opt[key]); return; }
+    opt[key] = r.value; inp.value = fmtInput(r.value); full();
+  };
+  inPhase.onchange = () => readNum(inPhase, "phase0");
+  inPhaseW.onchange = () => readNum(inPhaseW, "phaseW");
   for (const [cb, k] of [[cbSeg, "segOnly"], [cbCurves, "curves"], [cbMap, "map"], [cbBohm, "bohm"], [cbLog, "log"]])
     cb.onchange = () => { opt[k] = cb.checked; full(); };
   btnFly.onclick = () => H && ctx.send("speed", { value: now().t_flight / 2 });
@@ -404,7 +411,7 @@ export function createView(ctx) {
       items.push(el("p", {}, t("Degree of coherence of the slits |γ₁₂|: from the histogram") + " ",
         el("b", { class: "mono" }, h.hist === null ? "—" : num(h.hist, 4)), h.err ? ` ± ${num(h.err, 2)}` : "",
         "; " + t("the run's expectation") + " ", el("b", { class: "mono" }, h.expected === null ? "—" : num(h.expected, 4)),
-        el("div", { class: "help" }, t("A fit of the histogram on the computed functions of the slits |A₁|², |A₂|², A₁A₂*: 1 is full interference, 0 none."))));
+        el("div", { class: "help" }, t("A fit of the histogram to the computed slit functions |A₁|², |A₂|², A₁A₂*: 1 is full interference, 0 none."))));
     }
     if (frame.chi2 && frame.chi2.x2 !== null) {
       const ch = frame.chi2;

@@ -3,29 +3,30 @@
 // Small DOM and formatting helpers shared by the catalogue, the player and the visualization views. A text the server
 // sent (a T object {"$t", "a"}) given to el(), fill() or panel() as a child or an attribute is rendered by t() in the
 // viewer's language (i18n.js).
-import { fmt, isT, t } from "./i18n.js";
+import { fmt, fmtField, isT, parseNum, relabel, t } from "./i18n.js";
 
-export { fmt, t };
+export { fmt, fmtField, parseNum, t };
 
 export function el(tag, attrs = {}, ...children) {
   const e = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs || {})) {
     if (v === undefined || v === null || v === false) continue;
     if (isT(v)) { e.setAttribute(k, t(v)); continue; }
+    if (k === "title" || k === "placeholder") { e.setAttribute(k, relabel(v)); continue; }  // an old record's label (F3)
     if (k === "class") e.className = v;
     else if (k === "style" && typeof v === "object") Object.assign(e.style, v);
     else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
     else if (k === "html") e.innerHTML = v;
     else e.setAttribute(k, v === true ? "" : v);
   }
-  for (const c of children.flat()) if (c !== null && c !== undefined && c !== false) e.append(c.nodeType ? c : isT(c) ? t(c) : String(c));
+  for (const c of children.flat()) if (c !== null && c !== undefined && c !== false) e.append(c.nodeType ? c : isT(c) ? t(c) : relabel(String(c)));
   return e;
 }
 
 // replaceChildren that, like el(), flattens arrays and skips null / undefined / false (the native one would print them)
 export function fill(node, ...children) {
   node.replaceChildren(...children.flat(Infinity).filter((c) => c !== null && c !== undefined && c !== false)
-    .map((c) => (isT(c) ? t(c) : c)));
+    .map((c) => (isT(c) ? t(c) : typeof c === "string" ? relabel(c) : c)));
   return node;
 }
 
@@ -50,14 +51,14 @@ export function time(t_, digits = 6) {
   if (t_ === null || t_ === undefined || Number.isNaN(t_)) return "—";
   const a = Math.abs(t_), s = t_ < 0 ? "−" : "";
   const Y = 365.25 * 86400;
-  const u = (x, unit) => `${s}${num(x, digits)} ${t(unit)}`;
-  if (a === 0) return `0 ${t("s")}`;
+  const u = (x, unit) => `${s}${num(x, digits)}\u00a0${t(unit)}`;  // a number and its unit on one line (F11)
+  if (a === 0) return `0\u00a0${t("s")}`;
   if (a < 1e-9) return u(a * 1e12, "ps");
   if (a < 1e-6) return u(a * 1e9, "ns");
   if (a < 1e-3) return u(a * 1e6, "µs");
   if (a < 1) return u(a * 1e3, "ms");
   if (a < 120) return u(a, "s");
-  if (a < 7200) { const m = Math.floor(a / 60); return `${s}${m} ${t("min")} ${fmt(a - 60 * m, ".2f")} ${t("s")}`; }
+  if (a < 7200) { const m = Math.floor(a / 60); return s + t("{m:d} min {sec:.2f} s", { m, sec: a - 60 * m }); }
   if (a < 2 * 86400) return u(a / 3600, "h");
   if (a < Y) return u(a / 86400, "d");
   if (a < 1e6 * Y) return s + t("{x} yr", { x: num(a / Y, digits), n: a / Y });  // n chooses the plural form
@@ -68,7 +69,7 @@ export function time(t_, digits = 6) {
 // SI length with optional preferred astronomical unit
 export function length(x, units = {}, digits = 6) {
   const a = Math.abs(x);
-  const u = (v, unit) => `${num(v, digits)} ${t(unit)}`;
+  const u = (v, unit) => `${num(v, digits)}\u00a0${t(unit)}`;
   if (units.ly && a >= 0.01 * units.ly) return u(x / units.ly, "ly");
   if (units.au && a >= 0.01 * units.au) return u(x / units.au, "au");
   if (a >= 1e3) return u(x / 1e3, "km");
@@ -76,7 +77,7 @@ export function length(x, units = {}, digits = 6) {
   if (a >= 1e-3) return u(x * 1e3, "mm");
   if (a >= 1e-6) return u(x * 1e6, "µm");
   if (a >= 1e-9) return u(x * 1e9, "nm");
-  if (a === 0) return `0 ${t("m")}`;
+  if (a === 0) return `0\u00a0${t("m")}`;
   return u(x * 1e12, "pm");
 }
 
@@ -140,16 +141,46 @@ export function fresh2d(g, dpr) {
 // One control for a parameter (schema Param or an action argument spec). It commits a value by itself, without an
 // "apply" button: a list or a checkbox on change, a number on Enter or when the field loses focus, a slider when it
 // is released (while dragging only the number follows). Returns {el, set(v), pending(on), disable(on)}.
-export function fmtInput(v) {
-  if (typeof v !== "number" || !Number.isFinite(v)) return String(v ?? "");
-  return String(Number(v.toPrecision(7)));
+export function fmtInput(v, int = false) { return fmtField(v, int); }  // a number in a field, the viewer's format
+
+// A number field (review i18n-browser F1, F2): a text field (inputmode "decimal": the number keyboard on a phone),
+// not type=number, which drops a decimal comma typed in a Russian interface (650,5 became 6505); the value is shown in
+// the viewer's format (fmtField) and read by parseNum, which takes both separators and refuses an ambiguous text.
+// opts.step: ArrowUp / ArrowDown change the value by it (within opts.min, opts.max) and commit it ("change").
+export function numberInput(value, attrs = {}, { int = false, step = null, min = null, max = null } = {}) {
+  const e = el("input", { type: "text", inputmode: "decimal", autocomplete: "off", spellcheck: "false", ...attrs,
+                          class: "num" + (attrs.class ? " " + attrs.class : "") });
+  e.value = fmtField(value, int);
+  if (step) {
+    e.addEventListener("keydown", (ev) => {
+      if (ev.key !== "ArrowUp" && ev.key !== "ArrowDown") return;
+      const r = parseNum(e.value);
+      if (r.err) return;
+      ev.preventDefault();
+      let v = Number((r.value + (ev.key === "ArrowUp" ? step : -step)).toPrecision(12));
+      if (min !== null && min !== undefined) v = Math.max(min, v);
+      if (max !== null && max !== undefined) v = Math.min(max, v);
+      e.value = fmtField(v, int);
+      e.dispatchEvent(new Event("change"));
+    });
+  }
+  return e;
+}
+
+// whether a label names its unit already: after a comma, in brackets, or as a word of its own — by words, so that a
+// one-letter unit ("s", "m", «с») is not found inside another word (review i18n-code F14); texts are rendered first
+export function labelHasUnit(label, unit) {
+  label = t(label); unit = t(unit);
+  if (!unit) return true;
+  if (label.includes(", " + unit) || label.includes("(" + unit)) return true;
+  return label.split(/[^\p{L}\p{N}_/·²³⁻¹°%]+/u).includes(unit);
 }
 
 // A parameter as the forms name it, its allowed range, and why a typed value is refused — in the owner's words, as the
 // server says it (lfviz.params, the same msgids; review UX-params P2: «lam_nm: 0.0 < min 300.0» for a field only cleared)
 function pName(p) {
   const lab = p.label || p.id, u = p.unit;
-  return u && !t(lab).includes(t(u)) ? t("“{label}, {unit}”", { label: lab, unit: u }) : t("“{label}”", { label: lab });
+  return u && !labelHasUnit(lab, u) ? t("“{label}, {unit}”", { label: lab, unit: u }) : t("“{label}”", { label: lab });
 }
 export function rangeText(p) {
   const lo = p.min, hi = p.max, has = (v) => v !== null && v !== undefined;
@@ -157,12 +188,14 @@ export function rangeText(p) {
     : has(hi) ? t("at most {hi:.10g}", { hi }) : t("any finite number");
 }
 // why the text typed in a number field is not a value of p (null: it is), and the value
+// (a number given as a number is taken as it is; a text by parseNum: a decimal comma or point, review i18n-browser F1)
 export function checkNumber(p, text) {
-  const s = String(text ?? "").trim().replace(",", ".");
   const name = pName(p), range = rangeText(p);
-  if (s === "") return { err: p.type === "int" ? t("{name}: the field is empty — enter a whole number {range}", { name, range }) : t("{name}: the field is empty — enter a number {range}", { name, range }) };
-  const v = Number(s);
-  if (!Number.isFinite(v)) return { err: t("{name}: “{value}” is not a number; allowed: {range}", { name, value: String(text), range }) };
+  const r = typeof text === "number" ? (Number.isFinite(text) ? { value: text } : { err: "nan" }) : parseNum(text);
+  if (r.err === "empty") return { err: p.type === "int" ? t("{name}: the field is empty — enter a whole number {range}", { name, range }) : t("{name}: the field is empty — enter a number {range}", { name, range }) };
+  if (r.err === "ambiguous") return { err: t("{name}: in “{value}” the comma may separate thousands or decimals — type {a} or {b}", { name, value: String(text).trim(), a: r.a, b: r.b }) };
+  if (r.err) return { err: t("{name}: “{value}” is not a number; allowed: {range}", { name, value: String(text), range }) };
+  const v = r.value;
   const x = p.type === "int" ? Math.round(v) : v;
   if (p.min !== null && p.min !== undefined && x < p.min) return { err: t("{name}: {x:.10g} is below the minimum {lo:.10g}; allowed: {range}", { name, x, lo: p.min, range }) };
   if (p.max !== null && p.max !== undefined && x > p.max) return { err: t("{name}: {x:.10g} is above the maximum {hi:.10g}; allowed: {range}", { name, x, hi: p.max, range }) };
@@ -222,14 +255,12 @@ export function control(p, value, onCommit, { compact = false, label = null } = 
     input.onchange = () => onCommit(input.checked);
     set = (v) => { input.checked = !!v; };
   } else {
-    input = el("input", { type: "number", step: "any", title, class: compact ? "compact" : "" });
-    input.value = fmtInput(value);
-    if (lo !== null && lo !== undefined) input.min = lo;
-    if (hi !== null && hi !== undefined) input.max = hi;
+    const isInt = p.type === "int";
+    input = numberInput(value, { title, class: compact ? "compact" : "" }, { int: isInt });
     input.onchange = () => {
       // refused here, in the owner's words, before anything is sent; the field goes back to the value in force (P2)
       const r = checkNumber(p, input.value);
-      if (r.err) { input.value = fmtInput(value); showErr(r.err); return; }
+      if (r.err) { input.value = fmtInput(value, isInt); showErr(r.err); return; }
       showErr("");
       onCommit(r.value);
     };
@@ -237,10 +268,10 @@ export function control(p, value, onCommit, { compact = false, label = null } = 
     if (canSlide) {
       slider = el("input", { type: "range", min: 0, max: 1000, step: 1, title: title || lab });
       slider.value = toPos(Math.min(Math.max(value, lo), hi));
-      slider.oninput = () => { input.value = fmtInput(fromPos(Number(slider.value))); };
+      slider.oninput = () => { input.value = fmtInput(fromPos(Number(slider.value)), isInt); };
       slider.onchange = () => onCommit(fromPos(Number(slider.value)));
     }
-    set = (v) => { value = v; if (document.activeElement !== input) input.value = fmtInput(v); if (slider) slider.value = toPos(Math.min(Math.max(v, lo), hi)); };
+    set = (v) => { value = v; if (document.activeElement !== input) input.value = fmtInput(v, isInt); if (slider) slider.value = toPos(Math.min(Math.max(v, lo), hi)); };
   }
   // the slider follows its number field: out of the tab order, so that Tab goes from field to field (review UX-ui U10)
   if (slider) slider.tabIndex = -1;
@@ -253,7 +284,7 @@ export function control(p, value, onCommit, { compact = false, label = null } = 
   }
   const box = compact
     ? el("label", { class: "qc", title }, el("span", { class: "muted" }, lab), slider, input, note)
-    : el("div", { class: "ctl" + (slider ? " slide" : "") }, el("label", { title }, lab), input, slider, note);
+    : el("div", { class: "ctl" + (slider ? " slide" : ""), "data-pid": p.id }, el("label", { title }, lab), input, slider, note);
   return {
     el: box,
     input,
@@ -307,9 +338,7 @@ export function paramForm(schema, values, { onChange, readOnly = false, only = n
       input = el("input", { type: "checkbox", disabled: readOnly });
       input.checked = !!v;
     } else {
-      input = el("input", { type: "number", step: "any", value: v, disabled: readOnly });
-      if (p.min !== null) input.min = p.min;
-      if (p.max !== null) input.max = p.max;
+      input = numberInput(v, { disabled: readOnly }, { int: p.type === "int" });
     }
     input.title = t(p.help);
     const note = el("div", { class: "field-err" });
@@ -318,7 +347,7 @@ export function paramForm(schema, values, { onChange, readOnly = false, only = n
       if (x === null) {  // a number: checked here, in the owner's words (review UX-params P2)
         const r = checkNumber(p, input.value);
         if (r.err && input.value.trim() === "") {  // emptied: the value before stays, the field says what to type
-          input.value = fmtInput(values[p.id]); note.textContent = r.err; row.classList.remove("bad"); return;
+          input.value = fmtInput(values[p.id], p.type === "int"); note.textContent = r.err; row.classList.remove("bad"); return;
         }
         note.textContent = r.err || "";
         row.classList.toggle("bad", !!r.err);
@@ -337,7 +366,7 @@ export function paramForm(schema, values, { onChange, readOnly = false, only = n
     Object.assign(values, v);
     for (const [id, { input }] of Object.entries(inputs)) {
       if (!(id in v)) continue;
-      if (input.type === "checkbox") input.checked = !!v[id]; else input.value = input.tagName === "SELECT" ? v[id] : fmtInput(v[id]);
+      if (input.type === "checkbox") input.checked = !!v[id]; else input.value = input.tagName === "SELECT" ? v[id] : fmtInput(v[id], inputs[id].p.type === "int");
       inputs[id].row.classList.remove("bad"); inputs[id].note.textContent = "";
     }
     refresh();

@@ -1,0 +1,6 @@
+{
+  "accumulating: the expected |S| = {S:.4f}; {ztol}σ needs about {n:d} pairs with a random choice": {
+    "one": "accumulating: the expected |S| = {S:.4f}; {ztol}σ needs about {n:d} pair with a random choice",
+    "other": "accumulating: the expected |S| = {S:.4f}; {ztol}σ needs about {n:d} pairs with a random choice"
+  }
+}

@@ -141,3 +141,39 @@ def test_honest_failures_are_marked_expected():
     h.set(kappa=0.0)
     assert any(c.get("expected") for k, c in h.checks().items() if k.startswith("lev1_") and c.get("ok") is False)
     assert not any(c.get("expected") for c in Harness(V, "standard").checks().values())
+
+
+# --- the engine's refusals matched by their machine codes (review 2026-11-12 i18n-code F5) ------------------------
+def test_landau_pole_code_gives_nan_in_the_world():
+    """qcd.landau_pole: alpha_s is NaN below the pole (the world's curve has a gap), never a refusal."""
+    import math
+
+    from lfphys.codes import code_of
+    from lfphys.core.qcd import running
+    from lfphys.core import data
+    from v06_qcd.viz import THRESH
+    h = Harness(V, "standard")
+    with pytest.raises(ValueError) as e:
+        running.alpha_s(1.0, 0.3, data.M_Z[0], THRESH, 1)
+    assert code_of(e.value) == "qcd.landau_pole"
+    assert math.isnan(h.sim._alpha(1.0, loops=1, a_mz=0.3))
+
+
+def test_rg_failure_code_becomes_the_worlds_refusal(monkeypatch):
+    """qcd.rg_failed: the world says what failed and what to change; the solver's own words go to the details."""
+    from lfphys.codes import coded
+    from lfphys.core.qcd import running
+    from lfphys.i18n import T
+    from lfviz.errors import Refusal
+
+    def fail(*a, **k):
+        raise coded(ValueError(T("reworded by the engine at μ = {mu:.4g} GeV", mu=3.0)), "qcd.rg_failed",
+                    solver="step size too small")
+
+    h = Harness(V, "standard")
+    monkeypatch.setattr(running, "alpha_s", fail)
+    with pytest.raises(Refusal) as e:
+        h.sim._alpha(3.0)
+    assert e.value.text["$t"].startswith("the renormalisation-group equation was not solved")
+    assert e.value.hint["$t"] == "take α_s(M_Z) closer to the world average {avg}"
+    assert "step size too small" in str(e.value.detail)

@@ -23,6 +23,7 @@ import math
 import numpy as np
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 ABOUT = {
     "layer": "core", "kind": "kinematics",
@@ -87,7 +88,8 @@ def time_difference_in_frame(e1, e2, v, c: float):
     if b2 is None:
         raise ValueError("one velocity vector per call")
     if b2 >= 1.0:
-        raise ValueError("|v| >= c: no inertial frame moves at or faster than light")
+        raise coded(ValueError(T("|v| ≥ c: no inertial frame moves at or faster than light")),
+                    "kinematics.superluminal")
     g = 1.0 / math.sqrt(1.0 - b2)
     out = g * (dt - (dr @ v) / c**2)
     return float(out) if np.ndim(out) == 0 else out

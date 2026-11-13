@@ -26,7 +26,7 @@ import math
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-from .i18n import T, is_t, join
+from .i18n import T, is_t, join, names_unit
 
 
 JSON_MAX = 900_000  # characters of a "json" parameter: below the player socket's 1 MiB message limit (app.py), so
@@ -191,7 +191,7 @@ def _name(p: Param):
     """The parameter as the form shows it: its label, with the unit when the label does not carry one."""
     lab = p.label or p.id
     unit = p.unit
-    if unit and str(unit) not in str(lab):  # compared in English: a T or a plain string on either side
+    if unit and not names_unit(lab, unit):  # by msgid and arguments (review i18n-code F2, F14)
         return T("“{label}, {unit}”", label=lab, unit=unit)
     return T("“{label}”", label=lab)
 

@@ -21,7 +21,7 @@ export function createView(ctx) {
     const h = H.toy.half;
     env.windows.setSlice(1, { type: "slice", id: 1, s: [-h, h, N], tt: [-h, h, N], origin: [0, 0, 0], u: [1, 0, 0], v: [0, 1, 0],
       normal: [0, 0, 1], units: "m", coord_names: ["x", "y", "z"], depth: false, fixed: true, label: t("the plane z = 0"),
-      title: t("The plane z = 0 (toy: no field is computed)"), route_label: t("only the objects' positions"), exact: true,
+      title: t("The plane z = 0 (toy model: no field is computed)"), route_label: t("only the objects' positions"), exact: true,
       quantity: { label: "—", unit: "", peak: 1 }, verify: { note: t("the marks are the objects' positions from the frame") } },
     { I: new Float32Array(N * N), phase: null });
     env.windows.setOverlay(1, overlay);

@@ -117,7 +117,7 @@ class Apparatus:
         res = flat_arrival(self.laws, t_emit, wl_s.pos(t_emit), wl_s.vel(t_emit), wl_d, t_emit)
         if res is None:
             raise Refusal(T("light does not catch up with the end of the rod"),
-                          hint=T("choose a slower observer or a faster light"))
+                          hint=T("choose a slower observer or faster light"))
         return res["t"]
 
     def round_trip(self, t: float) -> dict:

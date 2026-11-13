@@ -133,30 +133,40 @@ def test_render_through_the_catalogue(ru):
     assert str(relativity.ABOUT["title"]) == "Special relativity"
 
 
-def _shadowing(path: Path) -> list[str]:
-    """Functions that make ``T`` a local name (a parameter, an assignment, a loop variable) and also call ``T(...)``:
-    the call would then hit the local (UnboundLocalError or a call of an array)."""
-    out = []
-    tree = ast.parse(path.read_text(encoding="utf-8"))
-    for fn in ast.walk(tree):
-        if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+def _defines_T(fn) -> bool:
+    """A function that makes ``T`` a local name: a parameter, an assignment, a loop variable."""
+    a = fn.args
+    if any(x.arg == "T" for x in a.posonlyargs + a.args + a.kwonlyargs + [a.vararg, a.kwarg] if x):
+        return True
+    stack = list(fn.body if isinstance(fn.body, list) else [fn.body])
+    while stack:  # this function's own scope, not nested functions
+        n = stack.pop()
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)):
             continue
-        a = fn.args
-        local = any(x.arg == "T" for x in a.posonlyargs + a.args + a.kwonlyargs + [a.vararg, a.kwarg] if x)
-        calls = False
-        body = fn.body if isinstance(fn.body, list) else [fn.body]
-        stack = list(body)
-        while stack:  # this function's own scope, not nested functions
-            n = stack.pop()
-            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)):
-                continue
-            if isinstance(n, ast.Name) and n.id == "T" and isinstance(n.ctx, ast.Store):
-                local = True
-            if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id == "T":
-                calls = True
-            stack.extend(ast.iter_child_nodes(n))
-        if local and calls:
-            out.append(f"{path.relative_to(PKG)}:{fn.lineno}")
+        if isinstance(n, ast.Name) and n.id == "T" and isinstance(n.ctx, ast.Store):
+            return True
+        stack.extend(ast.iter_child_nodes(n))
+    return False
+
+
+def _shadowing(path: Path) -> list[str]:
+    """Calls ``T(...)`` where ``T`` is a local of the function or of an enclosing function (a closure, e.g. a
+    transaction's ``apply`` inside a method with a temperature ``T``): the call would hit the local (UnboundLocalError
+    or a call of a number)."""
+    out = []
+
+    def visit(node, shadowed):
+        for ch in ast.iter_child_nodes(node):
+            if isinstance(ch, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+                visit(ch, shadowed or _defines_T(ch))
+            elif isinstance(ch, ast.ClassDef):
+                visit(ch, False)
+            else:
+                if shadowed and isinstance(ch, ast.Call) and isinstance(ch.func, ast.Name) and ch.func.id == "T":
+                    out.append(f"{path.relative_to(PKG)}:{ch.lineno}")
+                visit(ch, shadowed)
+
+    visit(ast.parse(path.read_text(encoding="utf-8")), False)
     return out
 
 

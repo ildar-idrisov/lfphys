@@ -92,7 +92,7 @@ from pathlib import Path
 import numpy as np
 
 from .errors import Refusal, owner_text
-from .i18n import T, is_t, join
+from .i18n import T, is_t, join, names_unit
 from .params import Param, Schema
 from .sim import Simulation
 
@@ -423,7 +423,7 @@ def check_scene(scene, viz_id: str, carried_ok: bool = False) -> None:
         raise ValueError(T("a scene file cannot refer to the carried state of another world"))
     if scene.get("format", FORMAT) != FORMAT or not isinstance(scene.get("version", FORMAT_VERSION), int) \
             or int(scene.get("version", FORMAT_VERSION)) > FORMAT_VERSION:
-        raise ValueError(T("this is not a scene file of this playground (or it is of a newer version)"))
+        raise ValueError(T("this is not a scene file of this laboratory (or it is of a newer version)"))
     if scene.get("viz") not in (None, viz_id):
         raise ValueError(T("a scene of another section ({other}), and this is {this}", other=str(scene.get("viz")),
                            this=viz_id))
@@ -999,7 +999,8 @@ def _text(x) -> bool:
 
 def _nums(vals) -> T:
     """Numbers for the scene's log, each with 4 significant digits in the viewer's format: "a; b; c"."""
-    return T("; ".join("{v%d:.4g}" % i for i in range(len(vals))), **{f"v{i}": float(v) for i, v in enumerate(vals)})
+    return T("; ".join("{v%d:.4g}" % i for i in range(len(vals))),  # i18n-msgids: (placeholders only, no words)
+             **{f"v{i}": float(v) for i, v in enumerate(vals)})
 
 
 def _setting(p, pid: str, v):
@@ -1016,7 +1017,7 @@ def _setting(p, pid: str, v):
     if p.type == "bool":
         return T("{label}: yes", label=lab) if v else T("{label}: no", label=lab)
     if isinstance(v, (int, float)) and not isinstance(v, bool):
-        u = p.unit if p.unit and str(p.unit) not in str(lab) else ""  # compared in English (T or plain string)
+        u = p.unit if p.unit and not names_unit(lab, p.unit) else ""  # by msgid and arguments (review i18n-code F2)
         return T("{label} = {value:.4g} {unit}", label=lab, value=v, unit=_unit(u)) if u \
             else T("{label} = {value:.4g}", label=lab, value=v)
     return T("{label} = {value}", label=lab, value=v if is_t(v) else str(v))
@@ -1086,7 +1087,7 @@ def _sentences(head, parts):
     """A head and its parts as sentences: "Head. Part one. Part two" (each part starts with a capital)."""
     if not parts:
         return head
-    return T("{p0}" + "".join(". {p%d:cap}" % i for i in range(1, len(parts) + 1)),
+    return T("{p0}" + "".join(". {p%d:cap}" % i for i in range(1, len(parts) + 1)),  # i18n-msgids: (placeholders only)
              **{f"p{i}": x for i, x in enumerate([head, *parts])})
 
 

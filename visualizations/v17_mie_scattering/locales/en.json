@@ -1,0 +1,10 @@
+{
+ "Coloured: the terms p = 0–3 of the Debye series of the same drop. For this drop the series diverges for {n} multipole orders (|R¹¹| > 1) and the terms are up to {a:.2g} times larger than the full answer: these are not paths of light but cancelling terms; the white curve is their sum in closed form.": {
+  "one": "Coloured: the terms p = 0–3 of the Debye series of the same drop. For this drop the series diverges for {n} multipole order (|R¹¹| > 1) and the terms are up to {a:.2g} times larger than the full answer: these are not paths of light but cancelling terms; the white curve is their sum in closed form.",
+  "other": "Coloured: the terms p = 0–3 of the Debye series of the same drop. For this drop the series diverges for {n} multipole orders (|R¹¹| > 1) and the terms are up to {a:.2g} times larger than the full answer: these are not paths of light but cancelling terms; the white curve is their sum in closed form."
+ },
+ "the Debye series diverges for {n:d} multipole orders (|R¹¹| > 1: this happens for a weakly absorbing drop with m ≈ 1)": {
+  "one": "the Debye series diverges for {n:d} multipole order (|R¹¹| > 1: this happens for a weakly absorbing drop with m ≈ 1)",
+  "other": "the Debye series diverges for {n:d} multipole orders (|R¹¹| > 1: this happens for a weakly absorbing drop with m ≈ 1)"
+ }
+}

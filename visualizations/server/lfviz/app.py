@@ -161,7 +161,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
         try:
             seed = None if seed in (None, "") else int(seed)
             run = await mgr.start(vid, body.get("preset"), body.get("params"), seed,
-                                  label=str(body.get("label", ""))[:200], source=request.remote or "",
+                                  label=str(body.get("label", ""))[:200], source=request.remote or "",  # i18n-str-ok: typed by the owner
                                   backend=bset, backend_notes=bnotes)
         except OverflowError as e:
             return _err(text_of(e), 409)
@@ -417,16 +417,22 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
         return web.FileResponse(PLAYER / "index.html")
 
     async def api_i18n(request):
-        """The merged catalogue of a language (lfviz.i18n): {lang, messages}; cached until a catalogue file changes."""
-        code = request.match_info["lang"]
+        """The merged catalogue of a language (lfviz.i18n): {lang, messages}; cached until a catalogue file changes; an
+        ETag (weak comparison), gzip when the client takes it (review i18n-code F9, F13). Also at
+        /static/locales/<lang>.json, where a static copy of the player has the same file (lfviz.i18n.export)."""
+        code = i18n.normalise(request.match_info["lang"])
+        gz = "gzip" in request.headers.get("Accept-Encoding", "")
         try:
-            body, etag = i18n.payload(code)
+            body, etag = i18n.payload(code, gz=gz)
         except KeyError:
-            return _err(i18n.T("No interface language {lang}; there are: {langs}", lang=code,
+            return _err(i18n.T("No interface language {lang}; there are: {langs}", lang=request.match_info["lang"],
                                langs=", ".join(i18n.LANGS)), 404)
-        if request.headers.get("If-None-Match") == etag:
-            return web.Response(status=304, headers={"ETag": etag})
-        return web.Response(body=body, content_type="application/json", charset="utf-8", headers={"ETag": etag})
+        headers = {"ETag": etag, "Vary": "Accept-Encoding"}
+        if i18n.etag_matches(request.headers.get("If-None-Match"), etag):
+            return web.Response(status=304, headers=headers)
+        if gz:
+            headers["Content-Encoding"] = "gzip"
+        return web.Response(body=body, content_type="application/json", charset="utf-8", headers=headers)
 
     async def run_page(request):
         return web.FileResponse(PLAYER / "run.html")
@@ -442,6 +448,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
     app.router.add_post("/api/settings/calibrate", api_calibrate)
     app.router.add_get("/api/settings/runs", api_runs_settings_get)
     app.router.add_put("/api/settings/runs", api_runs_settings_put)
+    app.router.add_get("/static/locales/{lang}.json", api_i18n)  # before /static/: the merged catalogue
     app.router.add_static("/static/", PLAYER, show_index=False)
     app.router.add_get("/viz/{viz}/{path:.+}", viz_file)
     app.router.add_get("/api/health", health)

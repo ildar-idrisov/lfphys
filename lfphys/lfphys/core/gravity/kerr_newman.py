@@ -86,6 +86,8 @@ import math
 import numpy as np
 
 from lfphys.i18n import T
+from lfphys import i18n
+from lfphys.codes import coded
 
 from . import kerr_null
 
@@ -114,7 +116,7 @@ ABOUT = {
               "Pugliese, Quevedo & Ruffini, Phys. Rev. D 83, 104052 (2011), Eq. (36)",
               "Morales-Herrera et al., Eur. Phys. J. C 84, 525 (2024), Eq. (20)",
               "Keeton & Petters, Phys. Rev. D 72, 104006 (2005), Eqs. (2), (53)",
-              T("Gralla & Lupsasca, Phys. Rev. D 101, 044031 (2020), Eq. (55): the distant observer's screen (checks)"),
+              T("Gralla & Lupsasca, Phys. Rev. D 101, 044031 (2020), eq. (55): the distant observer's screen (checks)"),
               T("Hairer, Nørsett & Wanner, Solving ODE I (DOP853; SciPy's table)")],
     "conflicts": [],
 }
@@ -126,7 +128,8 @@ _FORMAT = "lfphys.kerr_newman.geodesics/1"
 
 def _chk(chi, q):
     if not (chi >= 0.0 and chi * chi + q * q < 1.0):
-        raise ValueError("need chi >= 0 and chi^2 + q^2 < 1 (a black hole, not the extremal limit)")
+        raise coded(ValueError(T("the hole needs a ≥ 0 and a² + Q² < 1 (a black hole, not the extremal limit)")),
+                    "kn.no_horizon")
 
 
 # --- geometry ------------------------------------------------------------------------------------------------------
@@ -200,7 +203,7 @@ def photon_orbit(chi: float, q: float = 0.0, prograde: bool = True) -> float:
     fs = np.array([f(x) for x in rs])
     k = np.flatnonzero((fs[:-1] <= 0.0) & (fs[1:] > 0.0))
     if len(k) == 0:
-        raise ValueError("no circular photon orbit found")
+        raise coded(ValueError(T("no circular photon orbit found")), "kn.no_photon_orbit")
     i = k[-1]
     return brentq(f, rs[i], rs[i + 1], xtol=1e-15, rtol=8.9e-16, maxiter=200)
 
@@ -225,7 +228,7 @@ def isco(chi: float, q: float = 0.0, prograde: bool = True) -> float:
     ok = np.isfinite(fs)
     k = np.flatnonzero(ok[:-1] & ok[1:] & (fs[:-1] > 0.0) & (fs[1:] <= 0.0))
     if len(k) == 0:
-        raise ValueError("no ISCO found")
+        raise coded(ValueError(T("no ISCO found")), "kn.no_isco")
     i = k[-1]
     return brentq(lambda x: float(_rpp(x, chi, q, prograde)), rs[i], rs[i + 1], xtol=1e-15, rtol=8.9e-16,
                   maxiter=200)
@@ -274,24 +277,25 @@ def momentum_from_zamo(r, theta, chi: float, q: float, v=None, n=None, nu: float
     (per unit rest mass), or of a photon of ZAMO direction n (normalized here) and local frequency nu."""
     _chk(chi, q)
     if math.sin(theta) < 1e-9:
-        raise ValueError("on the symmetry axis the Boyer-Lindquist frame is singular: place the body off the axis")
+        raise coded(ValueError(T("on the symmetry axis the Boyer–Lindquist frame is singular: place the body off "
+                                 "the axis")), "kn.on_axis")
     z = zamo(r, theta, chi, q)
     if z["Delta"] <= 0.0:
-        raise ValueError("inside the horizon")
+        raise coded(ValueError(T("inside the horizon")), "gr.inside_horizon")
     if (v is None) == (n is None):
         raise ValueError("give either v (a body) or n (a photon)")
     if v is not None:
         v = np.asarray(v, float).reshape(3)
         vv = float(v @ v)
         if not vv < 1.0:
-            raise ValueError("|v| must be < 1")
+            raise coded(ValueError(T("the local speed |v| must be below c")), "kn.superluminal")
         g = 1.0 / math.sqrt(1.0 - vv)
         pt_hat, sp = g, g * v
     else:
         n = np.asarray(n, float).reshape(3)
         nn = math.sqrt(float(n @ n))
         if nn == 0.0:
-            raise ValueError("zero direction")
+            raise coded(ValueError(T("a photon needs a non-zero direction")), "kn.zero_direction")
         pt_hat, sp = float(nu), float(nu) * n / nn
     sig, dl = float(z["Sigma"]), float(z["Delta"])
     L = float(z["varpi"]) * sp[2]
@@ -307,7 +311,7 @@ def zamo_frame_momentum(r, theta, chi: float, q: float, p) -> np.ndarray:
     of ``momentum_from_frame``; ``Geodesics.zamo_velocity`` is p^(i) / p^(t)."""
     _chk(chi, q)
     if not float(r) * float(r) - 2.0 * float(r) + chi * chi + q * q > 0.0:
-        raise ValueError("inside the horizon")
+        raise coded(ValueError(T("inside the horizon")), "gr.inside_horizon")
     z = zamo(r, theta, chi, q)
     p = np.asarray(p, float).reshape(4)
     E, L = -p[0], p[3]
@@ -323,9 +327,10 @@ def momentum_from_frame(r, theta, chi: float, q: float, p_hat) -> np.ndarray:
     directly: no 1 - v^2 to round near the horizon). The mass shell p^(t)^2 - |p^(i)|^2 is the caller's."""
     _chk(chi, q)
     if math.sin(theta) < 1e-9:
-        raise ValueError("on the symmetry axis the Boyer-Lindquist frame is singular: place the body off the axis")
+        raise coded(ValueError(T("on the symmetry axis the Boyer–Lindquist frame is singular: place the body off "
+                                 "the axis")), "kn.on_axis")
     if not float(r) * float(r) - 2.0 * float(r) + chi * chi + q * q > 0.0:
-        raise ValueError("inside the horizon")
+        raise coded(ValueError(T("inside the horizon")), "gr.inside_horizon")
     z = zamo(r, theta, chi, q)
     ph = np.asarray(p_hat, float).reshape(4)
     if not ph[0] > 0.0:
@@ -449,7 +454,7 @@ class Geodesics:
         if mu2 not in (0.0, 1.0):
             raise ValueError("mu2 must be 1 (timelike) or 0 (null)")
         if status == "active" and not r > self.r_plus + self.capture_eps:
-            raise ValueError("start outside the capture radius r_+ + capture_eps")
+            raise coded(ValueError(i18n.T("the start must lie outside the capture radius r₊ + ε")), "kn.inside_capture")
         if not r > self.r_plus:
             raise ValueError("a saved state outside the horizon r_+")
         if math.sin(theta) < 1e-9:
@@ -680,7 +685,8 @@ class Geodesics:
             h[rj] = hs[~acc] * np.minimum(fac[~acc], 1.0)
             if np.any(h[rj] < 1e-13 * (1.0 + np.abs(ti[rj]))):
                 k = self._keys[rows[rj[np.argmin(h[rj])]]]
-                raise RuntimeError(f"step size underflow for body {k!r}")
+                raise coded(RuntimeError(T("the integrator's step became too small for body {key}", key=str(k))),
+                            "kn.step_underflow")
             ai = idx[acc]
             if len(ai) == 0:
                 continue
@@ -865,7 +871,7 @@ def trace_sky(chi: float, q: float, r_o: float, theta_o: float, look, v_obs=None
     z = zamo(r_o, theta_o, chi, q)
     sig, dl = float(z["Sigma"]), float(z["Delta"])
     if dl <= 0.0 or math.sin(theta_o) < 1e-9:
-        raise ValueError("the observer must be outside the horizon and off the axis")
+        raise coded(ValueError(T("the observer must be outside the horizon and off the axis")), "kn.observer")
     L = float(z["varpi"]) * D * k_z[:, 2]
     E = float(z["alpha"]) * D + float(z["omega"]) * L
     pr = D * k_z[:, 0] * math.sqrt(sig / dl)

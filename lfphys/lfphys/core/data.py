@@ -11,6 +11,8 @@ Values are (value, uncertainty) in the units stated.
 from __future__ import annotations
 
 from lfphys.i18n import T
+from lfphys import i18n
+from lfphys.codes import coded
 
 ABOUT = {
     "layer": "core", "kind": "data",
@@ -220,7 +222,8 @@ def water_density_01mpa(T_K):
     import numpy as _np
     T = _np.asarray(T_K, float)
     if _np.any((T < 253.15) | (T > 383.15)):
-        raise ValueError("IAPWS SR6-08 density: 253.15 K <= T <= 383.15 K")
+        raise coded(ValueError(i18n.T("water density (IAPWS SR6-08): the temperature must be from 253.15 to 383.15 K")),
+                    "water.out_of_range")
     al = IAPWS08_TR / (IAPWS08_TA - T)
     be = IAPWS08_TR / (T - IAPWS08_TB)
     s = IAPWS08_V0_A[5] + sum(IAPWS08_V0_A[i] * al ** IAPWS08_V0_N[i] for i in range(6, 11)) \
@@ -234,7 +237,8 @@ def water_refractive_index(lam_um, T_K, rho):
     import numpy as _np
     lam, T, r = (_np.asarray(v, float) for v in (lam_um, T_K, rho))
     if _np.any((lam < 0.2) | (lam > 1.1)) or _np.any((T < 261.15) | (T > 773.15)) or _np.any((r < 0) | (r > 1060)):
-        raise ValueError("IAPWS R9-97: 0.2-1.1 um, -12 to 500 C, 0-1060 kg/m^3")
+        raise coded(ValueError(i18n.T("refractive index of water (IAPWS R9-97): 0.2–1.1 µm, −12 to 500 °C, 0–1060 "
+                                      "kg/m³")), "water.out_of_range")
     a = IAPWS97_RINDEX_A
     Tb, rb, lb2 = T / 273.15, r / 1000.0, (lam / 0.589) ** 2
     f = rb * (a[0] + a[1] * rb + a[2] * Tb + a[3] * lb2 * Tb + a[4] / lb2 + a[5] / (lb2 - IAPWS97_RINDEX_LAMBDA_UV ** 2)
@@ -250,7 +254,7 @@ def water_index(lam_nm, t_C: float = 20.0):
     metastable regions". [error in earlier] this docstring called 0-110 C "the stable range of both" (review B8-mie,
     M13)."""
     if not 0.0 <= float(t_C) <= 110.0:
-        raise ValueError("water at 0.1 MPa: 0 <= t <= 110 C")
+        raise coded(ValueError(i18n.T("water at 0.1 MPa: from 0 to 110 °C")), "water.out_of_range")
     T = float(t_C) + 273.15
     import numpy as _np
     return water_refractive_index(_np.asarray(lam_nm, float) * 1e-3, T, water_density_01mpa(T))

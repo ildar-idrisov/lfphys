@@ -23,7 +23,7 @@ export function createView(ctx) {
     el("span", { class: "muted" }, t("Set-up:")),
     ctx.liveControl("scenario", { label: t("potential") }), ctx.liveControl("V0", { label: t("V₀, eV") }),
     ctx.liveControl("width", { label: t("a, nm") }), ctx.liveControl("energy", { label: t("E, eV") }),
-    ctx.liveControl("interp", { label: t("reading") }));
+    ctx.liveControl("interp", { label: t("interpretation") }));
   const cvWave = el("canvas"), cvMap = el("canvas"), cvStat = el("canvas");
   const ovWave = el("div", { class: "overlay" }), ovMap = el("div", { class: "overlay" }), ovStat = el("div", { class: "overlay" });
   const center = el("div", { style: { display: "flex", flexDirection: "column", flex: 1, minHeight: 0 } }, quick,
@@ -116,7 +116,7 @@ export function createView(ctx) {
     for (let xx = -Math.floor(L / 20) * 20; xx <= L; xx += 20) { g.fillRect(X(xx), bot, 1, 4); g.fillText(fmt(xx), X(xx) - 8, bot + 15); }
     g.fillText(t("x, nm"), W - 40, bot + 15);
     for (const e of [e0, 0, vmax]) { g.fillText(t("{e:.2g} eV", { e }), 2, Y(e) + 4); }
-    const interp = { copenhagen: t("the Copenhagen reading"), bohm: t("Bohm's reading"), everett: t("Everett's reading") }[frame.interp] || "";
+    const interp = { copenhagen: t("the Copenhagen interpretation"), bohm: t("Bohm's interpretation"), everett: t("Everett's interpretation") }[frame.interp] || "";
     ovWave.textContent = t("Wave of particle no. {n:d} ({interp}); t after emission {t}; absorbed: left {l:.3g}, right {r:.3g}; in the window {w:.3g}",
       { n: (frame.counts || {}).emitted || 0, interp, t: time(frame.t_local * 1e-15, 4), l: frame.PL_t, r: frame.PR_t, w: frame.norm_t });
   }
@@ -156,7 +156,7 @@ export function createView(ctx) {
     g.strokeStyle = "#fff"; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(left, Y(tl)); g.lineTo(left + mw, Y(tl)); g.stroke(); g.setLineDash([]);
     g.fillStyle = css("--muted"); g.font = "11px system-ui";
     g.fillText("t", 4, top + 10); g.fillText(t("{v:.3g} fs", { v: tmax }), 2, top + 22); g.fillText("0", 20, bot);
-    ovMap.textContent = s.has_bohm ? t("|ψ(x, t)|² of one particle (√ for contrast), time upwards; light blue: the Bohm trajectories of the ensemble (started by |ψ|²)")
+    ovMap.textContent = s.has_bohm ? t("|ψ(x, t)|² of one particle (√ for contrast), time upwards; light blue: the Bohm trajectories of the ensemble (starting points distributed as |ψ|²)")
       : t("|ψ(x, t)|² of one particle (√ for contrast), time upwards");
   }
 
@@ -194,7 +194,7 @@ export function createView(ctx) {
       g.fillStyle = css("--muted"); g.fillText(t("{e:.3g} eV", { e: Emin }), x0, y1 + 13); g.fillText(t("{e:.3g} eV", { e: Emax }), x1 - 50, y1 + 13);
       g.fillText("T(E)", x0 + 4, y0 + 12);
     }
-    ovStat.textContent = t("Outcomes of particles: {n:d}; bars: the fractions, dashes: the probability from the wave. Right: the exact T(E) (orange) and the packet's distribution in energy, per unit energy (grey).", { n });
+    ovStat.textContent = t("Outcomes (particles: {n:d}); bars: fractions, dashes: probability from the wave. Right: the exact T(E) (orange) and the packet's distribution in energy, per unit energy (grey).", { n });
   }
 
   function drawPanels(frame) {
@@ -224,8 +224,8 @@ export function createView(ctx) {
     help: () => el("div", {},
       el("h4", {}, t("What is on the screen")),
       el("p", {}, t("At the top: the wave of the current particle |ψ(x)|² (blue) over the potential (black line) and the energy level (orange dashes). At the edges: the detectors; they absorb the wave, and the run computes what probability each of them absorbed, and when.")),
-      el("p", {}, t("The particle's outcome is shown in the chosen reading: Copenhagen, a click at a random moment and the wave's collapse into the detector; Bohm, a red point particle moving with the probability current; Everett, after the click both branches remain with their weights. The statistics of the outcomes are the same in all three, and this is checked.")),
-      el("p", {}, t("Bottom left: the map |ψ(x, t)|² of one particle (time upwards) with Bohm trajectories; bottom right: the fractions of the outcomes against the probability from the wave, and the exact transmission T(E) over the packet's spectrum."))),
+      el("p", {}, t("The particle's outcome is shown in the chosen interpretation: Copenhagen, a click at a random moment and the wave's collapse into the detector; Bohm, a red point particle moving with the probability current; Everett, after the click both branches remain with their weights. The statistics of the outcomes are the same in all three, and this is checked.")),
+      el("p", {}, t("Bottom left: the map |ψ(x, t)|² of one particle (time upwards) with Bohm trajectories; bottom right: the fractions of the outcomes compared with the probability from the wave, and the exact transmission coefficient T(E) over the packet's spectrum."))),
     reset() { H = null; segs = []; clicks = []; mapCache = null; },
     // key frames (player.js): segments only grow (a length); the clicks are capped, so they are copied
     snapshot() { return { segs: segs.length, clicks: clicks.slice() }; },

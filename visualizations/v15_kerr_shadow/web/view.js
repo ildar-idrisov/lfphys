@@ -10,10 +10,10 @@ import { t, fmt, lang } from "/static/js/i18n.js";
 import { createEnv3D } from "/static/js/env3d.js";
 import { createImageWindow } from "/static/js/imagewin.js";
 
-const MODES = [["seen", t("brightness: the sum of g⁴J over the crossings of the disk")],
+const MODES = [["seen", t("brightness: the sum of g⁴J over the crossings of the disc")],
                ["order", t("which crossing shines brightest: n = 0, 1, 2")],
                ["redshift", t("redshift g (false colours)")],
-               ["fate", t("the ray's fate: captured (the shadow) or come from far away")]];
+               ["fate", t("the ray's fate: captured (the shadow) or arrived from far away")]];
 const ORDER_RGB = [[255, 170, 60], [90, 200, 255], [255, 255, 255]];
 
 function describe(meta, f, i, j) {
@@ -29,11 +29,11 @@ function describe(meta, f, i, j) {
   for (let n = 0; n <= f.nmax; n++) {
     const q = n * W * f.ny + k, r = f.r[q], g = f.g[q], face = f.face ? f.face[q] : 0;
     if (!(r > 0)) continue;
-    if (r > f.r_out) parts.push(t("n = {n}: the plane of the disk at r = {r:.4g} M, beyond the edge of the disk ({e:.3g} M)", { n, r, e: f.r_out }));
-    else if (r < f.r_in) parts.push(t("n = {n}: the plane of the disk at r = {r:.4g} M, inside the edge of the disk ({e:.4g} M), no gas", { n, r, e: f.r_in }));
-    else if (face > 0) parts.push(t("n = {n}: the disk at r = {r:.4g} M, side +z, g = {g:.4g}", { n, r, g }));
-    else if (face < 0) parts.push(t("n = {n}: the disk at r = {r:.4g} M, side −z, g = {g:.4g}", { n, r, g }));
-    else parts.push(t("n = {n}: the disk at r = {r:.4g} M, g = {g:.4g}", { n, r, g }));
+    if (r > f.r_out) parts.push(t("n = {n}: the plane of the disc at r = {r:.4g} M, beyond the edge of the disc ({e:.3g} M)", { n, r, e: f.r_out }));
+    else if (r < f.r_in) parts.push(t("n = {n}: the plane of the disc at r = {r:.4g} M, inside the edge of the disc ({e:.4g} M), no gas", { n, r, e: f.r_in }));
+    else if (face > 0) parts.push(t("n = {n}: the disc at r = {r:.4g} M, side +z, g = {g:.4g}", { n, r, g }));
+    else if (face < 0) parts.push(t("n = {n}: the disc at r = {r:.4g} M, side −z, g = {g:.4g}", { n, r, g }));
+    else parts.push(t("n = {n}: the disc at r = {r:.4g} M, g = {g:.4g}", { n, r, g }));
   }
   return parts.join(" · ");
 }
@@ -157,11 +157,11 @@ export function createView(ctx) {
   }
   function drawImgPanel() {
     const notes = [];
-    if (H && H.metric.kind !== "kerr") notes.push(el("div", { class: "warn" }, t("In this metric the engine computes only the edge of the shadow (orange), from its photon orbits; the image of the disk is not computed. Dashed: the edge of the shadow of Kerr with the same spin.")));
-    notes.push(el("div", { class: "help" }, t("Every pixel is a photon traced back: in the shadow it fell into the hole; outside, where it crossed the plane of the disk, n is the number of the crossing along the ray traced back. At a moderate inclination n = 0 is the direct image of the disk, n = 1 the lensing ring, n = 2 the photon ring; nearly edge-on (θ ≳ {deg}°) the rays below the centre first cross the plane far beyond the edge of the disk, and the lower face of the disk is seen directly as n = 1. Dashed: Bardeen's critical curve (the edge of the shadow by the formula), where the rows are already computed. Point at the image to see the radius, the side of the disk and the redshift of every crossing.", { deg: 75 })));
-    notes.push(el("div", { class: "help" }, t("The brightness is a source model: a thin disk, each crossing gives g⁴J(r) (bolometric brightness), without a correction for the thickness of the disk and the ray's path length in it (Gralla, Lupsasca and Marrone 2020 use a factor {f} for n ≥ 1, Chael et al. 2021 g³ and 2/3); the scale is the {p}th percentile of the computed pixels.", { f: 1.5, p: 99.5 })));
+    if (H && H.metric.kind !== "kerr") notes.push(el("div", { class: "warn" }, t("In this metric the engine computes only the edge of the shadow (orange), from its photon orbits; the image of the disc is not computed. Dashed: the edge of the shadow of Kerr with the same spin.")));
+    notes.push(el("div", { class: "help" }, t("Every pixel is a photon traced back: in the shadow it fell into the hole; outside, where it crossed the plane of the disc, n is the number of the crossing along the ray traced back. At a moderate inclination n = 0 is the direct image of the disc, n = 1 the lensing ring, n = 2 the photon ring; nearly edge-on (θ ≳ {deg}°) the rays below the centre first cross the plane far beyond the edge of the disc, and the lower face of the disc is seen directly as n = 1. Dashed: Bardeen's critical curve (the edge of the shadow by the formula), where the rows are already computed. Point at the image to see the radius, the side of the disc and the redshift of every crossing.", { deg: 75 })));
+    notes.push(el("div", { class: "help" }, t("The brightness is a source model: a thin disc, each crossing gives g⁴J(r) (bolometric brightness), without a correction for the thickness of the disc and the ray's path length in it (Gralla, Lupsasca & Marrone 2020 use a factor {f} for n ≥ 1, Chael et al. 2021 g³ and 2/3); the scale is percentile {p} of the computed pixels.", { f: 1.5, p: 99.5 })));
     if (mode === "order") notes.push(el("div", { class: "help" }, t("Orange: the crossing n = 0, blue: n = 1, white: n = 2 (the brightest contribution in the pixel).")));
-    if (mode === "redshift") notes.push(el("div", { class: "help" }, t("g of the direct image: red, g = 1/2 (the gas recedes from the observer); blue, g = 2 (it approaches); g⁴ changes the brightness 256 times.")));
+    if (mode === "redshift") notes.push(el("div", { class: "help" }, t("g of the direct image: red, g = 1/2 (the gas recedes from the observer); blue, g = 2 (it approaches); g⁴ changes the brightness by a factor of 256.")));
     fill(imgBox, notes);
   }
 
@@ -169,9 +169,9 @@ export function createView(ctx) {
     center: env.center, rightPanels,
     help: () => el("div", {},
       el("h4", {}, t("The shadow of a Kerr black hole")),
-      el("p", {}, t("The observer is far away, at an angle θ to the spin axis. Every pixel of the observer's screen is a photon traced back in closed form (elliptic functions, Gralla & Lupsasca 2020): either it came out of the hole (this does not happen, so that direction is dark: the shadow), or it came from far away, crossing on its way the equator, where a thin disk of gas shines. The brightness of a pixel is the sum of g⁴J(r) over the crossings: g is the redshift of the gas (rotation and gravity), J(r) the emission of the disk (a source model).")),
-      el("p", {}, t("The shadow is bounded by the critical curve: the rays on it wind onto the spherical photon orbits. The images of the disk n = 1, 2, … (n is the number of the crossing of the disk's plane along the ray traced back, the half-periods of the motion in θ) approach it e^γ times closer with each order (γ is the orbit's Lyapunov exponent). When the image is complete, the run checks: the edge of the shadow by the tracer itself against Bardeen's formula; the captured pixels against the inside of the curve; the demagnification of the rings against e^(−γ); at a = 0, the radius √27 M; the size of the shadow δ from the tracer's edge against the formula and against EHT: for Sgr A* the size itself (EHT 2022), for M87* the deviation from Kerr's (EHT 2019 calibrated the ring on Kerr).")),
-      el("p", {}, t("A “what if” world: the Johannsen metric (α = 0 is Kerr). The engine computes the edge of its shadow from its photon orbits, its circular orbits and ergosphere, and δ against the EHT bounds; the image of the disk is not computed in it.")),
+      el("p", {}, t("The observer is far away, at an angle θ to the spin axis. Every pixel of the observer's screen is a photon traced back in closed form (elliptic functions, Gralla & Lupsasca 2020): either it came out of the hole (this does not happen, so that direction is dark: the shadow), or it came from far away, crossing on its way the equatorial plane, where a thin disc of gas shines. The brightness of a pixel is the sum of g⁴J(r) over the crossings: g is the redshift of the gas (rotation and gravity), J(r) the emission of the disc (a source model).")),
+      el("p", {}, t("The shadow is bounded by the critical curve: the rays on it wind onto the spherical photon orbits. The images of the disc n = 1, 2, … (n is the number of the crossing of the disc's plane along the ray traced back, the half-periods of the motion in θ) approach it by a factor e^γ with each order (γ is the orbit's Lyapunov exponent). When the image is complete, the run checks: the edge of the shadow by the tracer itself against Bardeen's formula; the captured pixels against the inside of the curve; the demagnification of the rings against e^(−γ); at a = 0, the radius √27 M; the size of the shadow δ from the tracer's edge against the formula and against EHT: for Sgr A* the size itself (EHT 2022), for M87* the deviation from Kerr's (EHT 2019 calibrated the ring with Kerr models).")),
+      el("p", {}, t("A “what if” world: the Johannsen metric (α = 0 is Kerr). The engine computes the edge of its shadow from its photon orbits, its circular orbits and ergosphere, and δ against the EHT bounds; the image of the disc is not computed in it.")),
       el("p", {}, t("The scene is stationary: the picture does not change in time; the screen's rows are computed as the world's time goes on, and a change of the set-up starts a new image."))),
     reset() { env.reset(); H = null; curve = null; img = null; images = new Map(); curves = []; drawnKey = ""; },
     // key frames (player.js): the environment's own; images by number (rows only grow; a key frame keeps how many

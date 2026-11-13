@@ -87,12 +87,12 @@ from ...i18n import T
 ABOUT = {
     "layer": "core", "kind": "exact solution",
     "title": T("Fields and radiation of moving point charges"),
-    "statement": T("The Liénard–Wiechert fields (the velocity and radiation parts) and potentials of a charge on a given "
-                   "worldline with the exact solution for the retarded time; the Larmor and Liénard power, the angular "
-                   "distribution (per unit of retarded and per unit of observed time); the field of a uniformly moving "
-                   "charge (Heaviside); synchrotron radiation: the critical frequency, F(x), G(x), the spectrum and the "
-                   "two polarizations, the angular and spectral distribution; the harmonics of cyclotron radiation "
-                   "(Schott)."),
+    "statement": T("The Liénard–Wiechert fields (the velocity and radiation parts) and potentials of a charge on a "
+                   "given worldline with the exact solution for the retarded time; the Larmor and Liénard power, the "
+                   "angular distribution (per unit of retarded and per unit of observed time); the field of a "
+                   "uniformly moving charge (Heaviside); synchrotron radiation: the critical frequency, F(x), G(x), "
+                   "the spectrum and the two polarisations, the angular and spectral distribution; the harmonics of "
+                   "cyclotron radiation (Schott)."),
     "validity": T("classical electrodynamics of a point charge in vacuum, a subluminal worldline; the radiation "
                   "reaction on the motion is not included (the worldline is given); the synchrotron spectrum through "
                   "F(x) is the ultrarelativistic limit (γ ≫ 1), Schott's harmonics are exact at any β < 1. Double "

@@ -47,6 +47,7 @@ import math
 import numpy as np
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 from ...core import data as D
 from ...core.gravity import kerr_null as KN
@@ -60,8 +61,8 @@ ABOUT = {
                    "diameters) as functions of the deviation; the allowed regions of the parameters from the EHT "
                    "measurements of M87* and Sgr A*."),
     "validity": T("geometric optics; regular metrics only: outside the horizon (r ≥ r₊) the determinant factor "
-                  "A₁(r²+a²) − a²A₂ sin²θ (Johannsen 2013a, Eq. 72), the condition of no closed timelike curves (Eq. "
-                  "76) and A₁, A₂ (Eqs. 77–78) are positive, which is checked; one band of photon orbits; the size of "
+                  "A₁(r²+a²) − a²A₂ sin²θ (Johannsen 2013a, eq. 72), the condition of no closed timelike curves (eq. "
+                  "76) and A₁, A₂ (eqs. 77–78) are positive, which is checked; one band of photon orbits; the size of "
                   "the shadow is the median diameter about the midpoint between the extreme α (the CHARM centre is a "
                   "second measure); at α = 0 it is Kerr"),
     "basis": ["Johannsen, Phys. Rev. D 88, 044002 (2013)", "Johannsen, ApJ 777, 170 (2013)",
@@ -126,8 +127,9 @@ def check_regular(chi, dev: Deviation):
     m = regularity_margins(chi, dev)
     bad = [k for k, v in m.items() if not v > 0.0]
     if bad:
-        raise ValueError("the metric is not regular outside the horizon (Johannsen 2013a Eqs. 72, 76-78): "
-                         + ", ".join(f"{k} reaches {m[k]:.3g}" for k in bad))
+        raise coded(ValueError(T("the metric is not regular outside the horizon (Johannsen 2013a, eqs. 72, 76–78): "
+                                 "{where}", where=[T("{k} reaches {v:.3g}", k=k, v=float(m[k])) for k in bad])),
+                    "jp.irregular")
 
 
 def radial_potential(r, lam, eta, chi, dev: Deviation):
@@ -163,7 +165,8 @@ def nonspinning_shadow(dev: Deviation):
     v = db(rs)
     idx = np.nonzero((v[:-1] < 0) & (v[1:] >= 0))[0]
     if idx.size != 1:
-        raise ValueError("not a single photon sphere outside the horizon for these parameters")
+        raise coded(ValueError(T("not a single photon sphere outside the horizon for these parameters")),
+                    "jp.photon_sphere")
     i = idx[0]
     r_ph = brentq(db, rs[i], rs[i + 1], xtol=1e-15, rtol=8.9e-16, maxiter=200)
     return float(r_ph * dev.A1(r_ph) / math.sqrt(1.0 - 2.0 / r_ph)), float(r_ph)
@@ -179,7 +182,8 @@ def photon_shell(chi, dev: Deviation):
     pos = eta > 0
     edges = np.nonzero(pos[:-1] != pos[1:])[0]
     if edges.size != 2 or not pos[edges[0] + 1]:
-        raise ValueError("the photon shell is not a single band between r+ and 12 M for these parameters")
+        raise coded(ValueError(T("the photon shell is not a single band between r+ and 12 M for these parameters")),
+                    "jp.photon_sphere")
 
     def f(r):
         return float(photon_orbit_constants(np.array(r), chi, dev)[1])
@@ -243,8 +247,8 @@ def circular_orbits(chi, dev: Deviation | None = None) -> dict:
     At a = 0 both senses coincide (the photon sphere of ``nonspinning_shadow``). The ISCO is the inner edge of the
     stable circular orbits connected to infinity: where dE/dr = 0 (``isco_kind_*`` = "stability"), or, where a
     deviation makes a band without circular geodesics (Omega^2 < 0, the effective gravity repulsive), that band's
-    outer edge (Omega^2 = 0, a static orbit; "existence"). Raises ValueError (English) when a photon orbit or the
-    ISCO is not found."""
+    outer edge (Omega^2 = 0, a static orbit; "existence"). Raises ValueError (a translatable text with a machine
+    code, ``lfphys.codes``) when a photon orbit or the ISCO is not found."""
     from scipy.optimize import brentq
     dev = dev or Deviation()
     check_regular(chi, dev)
@@ -257,7 +261,8 @@ def circular_orbits(chi, dev: Deviation | None = None) -> dict:
         vals = np.array([norm(r) for r in rs])
         pos = np.nonzero((vals[:-1] <= 0) & (vals[1:] > 0))[0]
         if pos.size == 0:
-            raise ValueError(f"no {name}grade circular photon orbit between r+ and 60 M")
+            raise coded(ValueError(T("no prograde circular photon orbit between r+ and 60 M") if pro else
+                                   T("no retrograde circular photon orbit between r+ and 60 M")), "jp.no_photon_orbit")
         i = pos[-1]
         r_ph = brentq(norm, rs[i], rs[i + 1], xtol=1e-15, rtol=8.9e-16, maxiter=200)
 
@@ -272,10 +277,12 @@ def circular_orbits(chi, dev: Deviation | None = None) -> dict:
         # deviations) or by existence (Omega^2 = 0 at the edge of a repulsive band: the orbit there is static)
         stable = np.isfinite(d) & (d >= 0)
         if not stable[-1]:
-            raise ValueError(f"no stable {name}grade circular orbit at 200 M")
+            raise coded(ValueError(T("no stable prograde circular orbit at 200 M") if pro else
+                                   T("no stable retrograde circular orbit at 200 M")), "jp.no_stable_orbit")
         bad = np.nonzero(~stable)[0]
         if bad.size == 0:
-            raise ValueError(f"no {name}grade ISCO between the photon orbit and 200 M")
+            raise coded(ValueError(T("no prograde ISCO between the photon orbit and 200 M") if pro else
+                                   T("no retrograde ISCO between the photon orbit and 200 M")), "jp.no_isco")
         j = int(bad[-1])
         if np.isfinite(d[j]):
             r_isco = brentq(dE, grid[j], grid[j + 1], xtol=1e-14 * grid[j + 1], rtol=8.9e-16, maxiter=200)
@@ -354,7 +361,7 @@ def shadow_curve(chi, theta_o, dev: Deviation | None = None, n=721):
     b2 = beta2(rr)
     pos = np.nonzero(b2 >= 0)[0]
     if pos.size == 0:
-        raise ValueError("no bound orbit is visible at this inclination")
+        raise coded(ValueError(T("no bound orbit is visible at this inclination")), "jp.no_bound_orbit")
     i0, i1 = pos[0], pos[-1]
     f = lambda r: float(beta2(r))  # noqa: E731
     lo = r_lo if i0 == 0 else brentq(f, rr[i0 - 1], rr[i0], xtol=1e-15, rtol=8.9e-16, maxiter=200)
@@ -514,7 +521,8 @@ def allowed_range(param: str, bounds: tuple, chi=0.0, theta_o=math.pi / 2, other
     lo_b, hi_b = bounds
     d0 = d(0.0)
     if not lo_b <= d0 <= hi_b:
-        raise ValueError(f"zero deviation (delta = {d0:.4f}) is already outside the bounds")
+        raise coded(ValueError(T("zero deviation (δ = {d:.4f}) is already outside the bounds", d=float(d0))),
+                    "jp.outside_bounds")
     out = {}
     for direction, key in ((-1.0, "low"), (1.0, "high")):
         step, v_prev, d_prev = 0.05, 0.0, d0

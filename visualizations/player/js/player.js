@@ -16,7 +16,7 @@
 // (syncView). With the cursor at the end, recording is shown live. There is no stop: a run idle without viewers is
 // suspended by the server and resumed (rebuilt from its record) when ⏺ is pressed again.
 import { connectRun, getJSON, postJSON } from "./api.js";
-import { lang, t } from "./i18n.js";
+import { lang, legacy, t } from "./i18n.js";
 import { control, el, fill, initTheme, modal, num, panel, paramForm, time, toast, toggleTheme } from "./ui.js";
 
 initTheme();
@@ -60,18 +60,22 @@ async function main() {
   try {
     S.meta = await getJSON(`/api/runs/${encodeURIComponent(runId)}`);
     S.viz = await getJSON(`/api/viz/${encodeURIComponent(S.meta.viz)}`);
+    // a record made before the translation (its texts are Russian strings): its labels in the language in force, and
+    // a note that its sentences with numbers stay as recorded (review i18n-browser F3)
+    S.legacy = await legacy(S.meta);
   } catch (e) { document.body.replaceChildren(el("div", { class: "page" }, t("Run not found: {why}", { why: e.message }))); return; }
   document.title = `${t(S.viz.title)} · ${runId}`;
-  $("title").textContent = t(S.viz.title);
+  $("title").textContent = $("title").title = t(S.viz.title);  // the full name in the tooltip when it is cut
   $("runid").textContent = runId;
   $("keep").textContent = S.meta.keep ? "★" : "☆";
+  if (S.legacy) toast(t("Recorded before the interface was translated (12 November 2026): its sentences with numbers are shown as they were recorded"), "notice", 12000);
   const mod = await import(`/viz/${S.meta.viz}/view.js`);
   const ctx = {
     action: (name, args) => sendAction(name, args),
     send: (cmd, args) => send(cmd, args),
     set: (values) => sendSet(values),
     liveControl: (id, opts) => boundControl(id, opts),
-    setScene: (text) => { $("scene").textContent = t(text); },
+    setScene: (text) => { $("scene").textContent = $("scene").title = t(text); },
     requestRender, time, num,
     jumpTo: (tt) => jumpToTime(tt),
     isArchived: () => archived(),  // a world from the record: views must not send view commands for it
@@ -108,7 +112,7 @@ function layout() {
   left.replaceChildren(S.banner);
   if (liveParams().length) {  // a playground's live laws too (integrator, 2026-11-05)
     left.append(panel(pg ? t("Laws of the world — change at once") : t("Set-up — changes at once"), el("div", {},
-      el("div", { class: "help" }, pg ? t("A change applies at once, at the world's current moment, to the scene already running; the other laws are in “New world”.")
+      el("div", { class: "help" }, pg ? t("A change applies at once, at the world's current moment, to the scene already running; the other laws change with “▶ Start a new world”.")
         : t("Any change applies at once, at the world's current moment, and starts a new stretch of the experiment. There is no “apply” button.")),
       S.liveBox)));
   }
@@ -126,7 +130,7 @@ function layout() {
   S.engineBox = el("div", { class: "engine" });
   S.enginePanel = panel(t("Physics of this world"), S.engineBox, { closed: true });
   right.replaceChildren(
-    panel(t("Checks: computed ↔ reference"), el("div", {}, el("div", { class: "help" }, t("On the left, the quantity computed in this run from its events; on the right, the closed formula of accepted physics (or of the declared modification). ✓ — agreement within the numerical precision.")), S.checksBox)),
+    panel(t("Checks: computed ↔ reference"), el("div", {}, el("div", { class: "help" }, t("On the left, the quantity computed in this run from its events; on the right, the closed-form expression of accepted physics (or of the declared modification). ✓ — agreement within the numerical precision.")), S.checksBox)),
     S.enginePanel,
     ...(S.view.rightPanels || []),
     panel(t("Events"), S.eventsBox),
@@ -246,7 +250,7 @@ let busyTimer = null, busyEls = null;
 function renderBusy() {
   const b = S.busy || S.sent, box = $("busy");
   const local = S.pending === "world" ? t("a new world is being created…") : S.pending === "set" ? t("the set-up is being rebuilt…")
-    : S.pending === "resume" ? t("going on: the world is being restored…") : "";
+    : S.pending === "resume" ? t("resuming: the world is being restored…") : "";
   const state = b ? "b:" + (b.cmd || "") : local ? "l:" + S.pending : "";
   if (state !== S.busyState) { S.busyState = state; window.dispatchEvent(new Event("busychange")); }  // views: only on a change
   if (!b && !local) { box.style.display = "none"; clearInterval(busyTimer); busyTimer = null; return; }
@@ -282,14 +286,14 @@ function editBlock() {
   if (archived()) return t("This is a world from the record: neither its slices nor its scene can be changed.");
   if (S.ended) return t("This is an old record: it cannot be changed.");
   if (!atEnd()) return t("You are looking at the experiment's past: slices and the scene are changed at the end of the record (⏭).");
-  if (S.pending === "resume") return t("The world is being restored: slices and the scene when the record goes on.");
+  if (S.pending === "resume") return t("The world is being restored: slices and the scene can be changed when the record resumes.");
   return "";
 }
 
 function sendSet(values, ctl) {
   if (S.ended || archived()) { toast(t("This is a record: it cannot be changed any more"), "notice", 3000); refreshLive(); return; }
   if (!atEnd()) { toast(t("You are looking at the experiment's past: the set-up can be changed at the end of the record (⏭)"), "notice", 4000); refreshLive(); return; }
-  if (S.pending === "resume") { toast(t("The world is being restored: the set-up can be changed when the record goes on"), "notice", 4000); refreshLive(); return; }
+  if (S.pending === "resume") { toast(t("The world is being restored: the set-up can be changed when the record resumes"), "notice", 4000); refreshLive(); return; }
   send("set", { values });
   if (ctl) ctl.pending(true);
   if (S.pending !== "resume") setPending("set");
@@ -298,7 +302,7 @@ function sendSet(values, ctl) {
 function sendAction(name, args) {
   if (S.ended || archived()) { toast(t("This is a record: actions are not available"), "notice", 3000); return; }
   if (!atEnd()) { toast(t("You are looking at the experiment's past: actions at the end of the record (⏭)"), "notice", 4000); return; }
-  if (S.pending === "resume") { toast(t("The world is being restored: actions when the record goes on"), "notice", 4000); return; }
+  if (S.pending === "resume") { toast(t("The world is being restored: actions are available when the record resumes"), "notice", 4000); return; }
   send("action", { name, args });
 }
 
@@ -351,7 +355,7 @@ function renderActions(actions) {
     if (a.args.length === 1 && a.args[0].type === "select" && a.args[0].options.length <= 8) {
       const arg = a.args[0];
       box.append(el("div", { class: "action" }, el("div", { class: "name" }, a.label), help,
-        el("div", { class: "btnrow" }, arg.options.map((o) => el("button", { disabled: off, title: `${t(a.label)}: ${t(o.label)}`,
+        el("div", { class: "btnrow" }, arg.options.map((o) => el("button", { disabled: off, title: t("{label}: {option}", { label: a.label, option: o.label }),
           onclick: () => sendAction(a.name, { [arg.id]: o.value }) }, o.label)))));
       continue;
     }
@@ -398,12 +402,12 @@ function renderWorldPanel() {
     const pr = S.viz.schema.presets.find((x) => x.id === preset);
     if (carryRow) { carry.disabled = !!preset; carryRow.classList.toggle("muted", !!preset); }
     note.textContent = preset
-      ? t("The new world starts from the scenario “{name}” with the laws of the form below.", { name: presetSel.selectedOptions[0].textContent })
+      ? t("The new world starts from the scenario “{name}” with the laws set in the form below.", { name: presetSel.selectedOptions[0].textContent })
         + (pr && pr.note ? " " + t(pr.note) : "")  // what the scenario shows, e.g. a check that fails on purpose (P23)
       : playground ? (carry.checked
-        ? t("The new world starts with the laws of the form below and with this world's scene at its current moment. The message after the carry-over says what went with its state, what started afresh from its parameters (where the section cannot carry the state), what was changed and what the new world refused.")
-        : t("The new world starts from an empty scene with the laws of the form below (the current scene can be saved in “Scene: file” and loaded)."))
-        : (liveParams().length ? t("The set-up (source, slits, observer…) goes into the new world as it is now; the laws and initial conditions of the form change.") : "");
+        ? t("The new world starts with the laws set in the form below and with this world's scene at its current moment. The message after the carry-over says what went with its state, what started afresh from its parameters (where the section cannot carry the state), what was changed and what the new world refused.")
+        : t("The new world starts from an empty scene with the laws set in the form below (the current scene can be saved in “Scene: file” and loaded)."))
+        : (liveParams().length ? t("The set-up (source, slits, observer…) goes into the new world as it is now; the laws and initial conditions set in the form change.") : "");
   };
   carry.onchange = showNote;
   presetSel.onchange = () => {
@@ -424,7 +428,7 @@ function renderWorldPanel() {
     if (playground && !preset && carry.checked) body.carry = true;
     const sd = seed.value.trim();
     if (sd) body.seed = Number(sd);
-    if (S.pending === "resume") { toast(t("The world is being restored: a new world when the record goes on"), "notice", 4000); return; }
+    if (S.pending === "resume") { toast(t("The world is being restored: a new world can be started when the record resumes"), "notice", 4000); return; }
     send("new_world", body);
     if (S.pending !== "resume") setPending("world");
   } }, t("▶ Start a new world"));
@@ -472,7 +476,7 @@ function showWorld(i) {
   S.idx = S.frames.length - 1; S.live = true; S.hist = 0;
   rebuildView(W, currentT());
   if (archived()) updateRate(null);  // the measured speed belongs to the live world (review B4-11)
-  $("scene").textContent = t(W.header.title);
+  $("scene").textContent = $("scene").title = t(W.header.title);
   renderAtCursor(W);
   renderLive();
   renderWorldPanel();
@@ -586,7 +590,7 @@ function renderWorldSelect() {
   const sel = $("world");
   sel.style.display = S.worlds.length > 1 ? "" : "none";
   sel.replaceChildren(...S.worlds.map((W, i) => el("option", { value: i },
-    t(i === latest() ? "World {n:d} (current): {title}" : "World {n:d}: {title}", { n: W.n, title: t(W.header.title).replace(/^[^:]*:\s*/, "") }))));
+    t(i === latest() ? "World {n:d} (current): {title}" : "World {n:d}: {title}", { n: W.n, title: t(W.header.short_title || W.header.title) }))));  // never cut a rendering (F14)
   sel.value = String(Math.max(0, S.w));
 }
 
@@ -794,11 +798,11 @@ function renderPhysics(mods, approx) {
   approx = (approx || []).map((a) => t(a));
   box.replaceChildren(...[mods.length
     ? el("span", { class: "badge mod", title: t("Modified physics:") + "\n" + mods.map((m) => t("{label}: {value} (accepted: {standard})", { label: t(m.label), value: val(m.value), standard: val(m.standard) })).join("\n") },
-        t("MODIFIED PHYSICS: ") + short(`${t(mods[0].label)} = ${val(mods[0].value)}`, 40) + (mods.length > 1 ? ` (+${mods.length - 1})` : ""))
+        t("MODIFIED PHYSICS:") + " " + short(`${t(mods[0].label)} = ${val(mods[0].value)}`, 40) + (mods.length > 1 ? ` (+${mods.length - 1})` : ""))
     : el("span", { class: "badge std", title: t("All laws are the accepted ones") }, t("standard physics")),
     // approximations the world itself flags (owner, 2026-10-24: «помечать там, где это приближение»)
     approx.length ? el("span", { class: "badge mod", title: approx.join("\n") },
-      t(" APPROXIMATION: ") + (approx[0].length > 48 ? approx[0].slice(0, 46) + "…" : approx[0]) + (approx.length > 1 ? ` (+${approx.length - 1})` : "")) : null]
+      t("APPROXIMATION:") + " " + (approx[0].length > 48 ? approx[0].slice(0, 46) + "…" : approx[0]) + (approx.length > 1 ? ` (+${approx.length - 1})` : "")) : null]
     .filter(Boolean));
 }
 
@@ -841,7 +845,7 @@ function renderInfo() {
   fill(S.infoBox,
     h.text ? el("p", {}, h.text) : null,
     el("div", { class: "kv" }, rows.flatMap(([k, v]) => [el("span", {}, k), el("span", { class: "mono" }, String(v ?? ""))])),
-    el("p", {}, el("a", { href: `/api/runs/${runId}/stream` }, t("Download the record (.lfrec)")), " · ", el("a", { href: `/api/runs/${runId}`, target: "_blank" }, t("the run's passport (JSON)"))));
+    el("p", {}, el("a", { href: `/api/runs/${runId}/stream` }, t("Download the record (.lfrec)")), " · ", el("a", { href: `/api/runs/${runId}`, target: "_blank" }, t("the run's metadata (JSON)"))));
 }
 
 // --- render loop ----------------------------------------------------------------------------------
@@ -928,7 +932,7 @@ function checkRows(g, list, newest) {
     n("info") ? `${n("info")} ≈` : "", n("na") ? `${n("na")} —` : ""].filter(Boolean).join(" · ");
   // a group is open when the owner opened it, else when it is the newest or has a failure
   const open = CK.groups.has(g) ? CK.groups.get(g) : (newest || n("bad") > 0);
-  const head = el("tr", { class: "grp-row", title: open ? t("Fold the group") : t("Unfold the group") },
+  const head = el("tr", { class: "grp-row", title: open ? t("Collapse the group") : t("Unfold the group") },
     el("td", { class: "grp", colspan: 3 }, el("span", { class: "fold" }, open ? "▾ " : "▸ "), g,
       el("span", { class: "grp-sum" + (n("bad") ? " st-bad" : "") }, sum)));
   head.onclick = () => { CK.groups.set(g, !open); renderChecks(); };
@@ -939,7 +943,7 @@ function checkRows(g, list, newest) {
     const mark = { ok: ["st-ok", "✓", note || t("agreement within the numerical precision")],
       bad: ["st-bad", "✗", c.rel !== null && c.rel !== undefined ? t("relative difference {rel:.3g}, tolerance {tol:.2g}", { rel: c.rel, tol: c.tol || 1e-9 }) : note],
       exp: ["st-exp", "✗", expected],
-      info: ["st-na", "≈", t("A comparison for information, not a check")], na: ["st-na", "—", t("This quantity has no closed reference")] }[k];
+      info: ["st-na", "≈", t("A comparison for information, not a check")], na: ["st-na", "—", t("This quantity has no closed-form reference")] }[k];
     const key = t(c.group) + "|" + c.id;
     const hasNote = !!(c.note || c.expected);
     const info = hasNote ? el("button", { class: "ck-i", title: t("About the check"), onclick: (e) => {
@@ -954,7 +958,7 @@ function checkRows(g, list, newest) {
 }
 
 // a unit of seconds: a T "s", the plain "s", or "с" of the records before the i18n
-const SECONDS = new Set(["s", "\u0441"]);
+const SECONDS = new Set(["s", "\u0441"]);  // i18n-ok: «с» of the records made before the translation
 function fmtVal(v, unit) {
   if (v === null || v === undefined) return "—";
   if (typeof v !== "number") return t(v);
@@ -1037,7 +1041,7 @@ function advanceHistory() {
 // the cursor stays and the history grows behind it. A suspended run is resumed by the server (rebuilt by replay).
 function toggleRecord() {
   if (S.startError && (!S.worlds.length || S.ended)) { toast(S.startError + "\n" + t("Change the parameters in the catalogue and start again."), "error", 12000); return; }
-  if (S.ended) { toast(t("This is an old record: it cannot go on — start a new world (on the left) or a new run"), "notice", 5000); return; }
+  if (S.ended) { toast(t("This is an old record: it cannot be resumed — start a new world (on the left) or a new run"), "notice", 5000); return; }
   if (archived()) { toast(t("This is an earlier world from the record: only the current world can be recorded"), "notice", 4000); return; }
   if (S.pending === "resume") return;  // the world is being rebuilt: the recording starts by itself
   if (S.playing) { send("pause"); return; }
@@ -1143,8 +1147,8 @@ function updateTransport() {
   $("rec").disabled = noRec || rebuild;
   $("rec").classList.toggle("on", (S.playing || rebuild) && !noRec);
   $("rec").textContent = (S.playing || rebuild) && !noRec ? t("⏸ recording") : "⏺";
-  $("rec").title = rebuild ? t("The world is being restored; the recording goes on by itself") : S.playing ? t("Pause the recording (Space)") : S.suspended
-    ? t("Go on: the world is restored from its saved state and goes further (Space)")
+  $("rec").title = rebuild ? t("The world is being restored; the recording resumes by itself") : S.playing ? t("Pause the recording (Space)") : S.suspended
+    ? t("Resume: the world is restored from its saved state and continues (Space)")
     : t("Record: the world is computed further, frames are added to the history (Space)");
   $("fwd").textContent = S.hist > 0 ? "⏸" : "▶";
   $("back").textContent = S.hist < 0 ? "⏸" : "◀";
@@ -1154,15 +1158,15 @@ function updateTransport() {
   $("speed").value = speedToSlider(S.speed);
   $("speedv").textContent = speedLabel(S.speed);
   const where = !S.frames.length ? "" : " · " + (atEnd() ? (S.playing && !archived() ? t("live") : t("end of the record")) : t("history"));
-  $("status").title = S.resumeError ? t("Going on failed: {why}", { why: S.resumeError }) : S.startError ? S.startError : "";
+  $("status").title = S.resumeError ? t("Resuming failed: {why}", { why: S.resumeError }) : S.startError ? S.startError : "";
   if (S.replaying) setStatus("", t("loading the record…"));  // the record's own states are not the run's
   else if (archived()) setStatus("", t("a world from the record") + where);
   else if (S.startError && (!S.worlds.length || S.ended)) setStatus("dead", t("world not created — the reason is in “Events”"));  // P1, P3
-  else if (S.ended) setStatus("", t("an old record — it cannot go on") + where);
-  else if (rebuild) setStatus("paused", t("the world is being restored — the recording goes on by itself") + where);
+  else if (S.ended) setStatus("", t("an old record — it cannot be resumed") + where);
+  else if (rebuild) setStatus("paused", t("the world is being restored — the recording resumes by itself") + where);
   else if (S.playing) setStatus("live", t("recording") + where);
-  else if (S.suspended && S.resumeError) setStatus("dead", t("going on failed — ⏺ tries again") + where);
-  else if (S.suspended) setStatus("paused", t("suspended — ⏺ goes on") + where);
+  else if (S.suspended && S.resumeError) setStatus("dead", t("resuming failed — ⏺ tries again") + where);
+  else if (S.suspended) setStatus("paused", t("suspended — ⏺ resumes") + where);
   else setStatus("paused", t("paused") + where);
   const ek = editBlock();  // the views' editable state (slice planes) follows the cursor and the run's state
   if (ek !== S.editKey) {
@@ -1191,7 +1195,7 @@ function showHelp() {
     el("p", {}, t("There is no stop: a run nobody watches pauses by itself and after half an hour frees its worker; ⏺ continues it from the world's saved state as one record (without one, by recomputing the world along the record from its start). Going back through the history, the player starts from the nearest key frame, not from the start of the record. Runs nobody has opened for a long time are removed (except those marked ★); the period is set in the catalogue, 3 days by default.")),
     el("p", {}, t("“Set-up — changes at once”: everything an experimenter can change during the experiment (the source, the slits, the screen, the observer…). A change applies when you release the slider, choose an item of a list or press Enter in a number field. If a change is not possible, the field goes back to its previous value and a message appears.")),
     el("p", {}, t("“Actions” are one-off events (a flash, an acceleration, a measurement). Their consequences spread from that moment.")),
-    el("p", {}, t("“New world” means other laws or initial conditions. It starts in this same run; the earlier worlds stay in the record and can be viewed with the world switch at the top.")),
+    el("p", {}, t("“▶ Start a new world” starts a world with other laws or initial conditions in this same run; the earlier worlds stay in the record and can be viewed with the world switch at the top.")),
     el("p", {}, t("The scale at the bottom is the current world's history. A click on an event in the log takes you to its moment.")),
     el("p", {}, t("If the world takes long to compute a change (the scene, the set-up, a new world), the top bar shows what it is and for how many seconds; “✕ cancel” takes the world back to the moment before that change. ⇤ and ⇥ at the top (keys [ and ]) hide the side columns to give the picture more room.")),
     el("p", { class: "muted" }, t("Keys: Space — record/pause, ← and → — play the history backwards/forwards, Home and End — to the start and the end, N — to the next event, [ and ] — hide the columns, T — theme, ? — help."))));

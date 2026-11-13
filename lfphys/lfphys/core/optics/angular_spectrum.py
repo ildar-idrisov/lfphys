@@ -46,6 +46,7 @@ from typing import Callable
 
 import numpy as np
 
+from lfphys.codes import coded
 from lfphys.i18n import T
 from .. import backend
 
@@ -170,8 +171,8 @@ def _run(U0, spacing, k, z, pad, check, band_limit, body):
     if U0.ndim not in (1, 2):
         raise ValueError("angular spectrum: U0 is 1-D (2-D problem) or 2-D (3-D problem)")
     if np.any(np.asarray(z, float) < 0):
-        raise ValueError("angular spectrum: z >= 0 (backward propagation would amplify the evanescent components; "
-                         "review B1-14)")
+        raise coded(ValueError(T("angular spectrum: z ≥ 0 (backward propagation would amplify the evanescent "
+                                 "components)")), "angular_spectrum.backward")
     m = _shape(U0, pad)
     size = int(np.prod(m))
     footprint = 7 * size * 16  # buffer, spectrum, k_z, band measure, phase, product, transform (complex128)
@@ -288,7 +289,8 @@ def propagate_plane(U0, spacing, k: float, plane, s_range, t, pad: int = 2, chec
         mx, my = m
         js = np.arange(int(math.ceil(s_lo / sp[0] - 1e-9)), int(math.floor(s_hi / sp[0] + 1e-9)) + 1)
         if not 0 < len(js) <= mx:
-            raise ValueError("propagate_plane: the plane's extent along u is empty or longer than the window")
+            raise coded(ValueError(T("the plane's extent along u is empty or longer than the window")),
+                        "angular_spectrum.plane_extent")
         qx = xp.asarray(ks[0])[:, None]
         qy = xp.asarray(ks[1])[None, :]
         C0 = A * xp.exp(1j * qx * ox)  # |.| = |A|

@@ -61,7 +61,8 @@ import numpy as np
 from scipy import integrate as _si
 from scipy.optimize import brentq
 
-from lfphys.i18n import T
+from lfphys.i18n import T, is_t
+from lfphys.codes import coded
 
 from ..constants import C
 
@@ -395,11 +396,17 @@ class NoOrbit(ValueError):
     "above_circular" (j above the circular value for this energy: no orbit), "plunge" (the bound region reaches the
     floor r_min: no periapsis, the orbit falls in), "pn_breakdown" (a turning point of E and J that the equations
     of motion do not have: their truncation is not small there), "no_circular" (no circular orbit at this radius or
-    energy), "unresolved" (a numerical check failed; the message says which)."""
+    energy), "unresolved" (a numerical check failed; the message says which). Its machine code (``lfphys.codes``)
+    is ``"pn." + reason``; ``data`` holds the numbers of a translatable message."""
 
-    def __init__(self, reason: str, message: str):
+    def __init__(self, reason: str, message):
         super().__init__(message)
         self.reason = reason
+        self.code = "pn." + reason
+        self.data = dict(message.get("a") or {}) if is_t(message) else {}
+
+    def __reduce__(self):  # pickling rebuilds it from (reason, message), with its attributes
+        return self.__class__, (self.reason, self.args[0]), self.__dict__
 
 
 def _jz(r, v, nu, order):
@@ -451,7 +458,8 @@ def turning_points(eps: float, j: float, nu: float, order: int = 2, r_min: float
     ``.partial`` with r_p = None), "invalid" or "unresolved" (G < 0 out to 4^6 times the Newtonian scale)."""
     from scipy import optimize
     if not (eps > 0.0 and j > 0.0 and math.isfinite(eps) and math.isfinite(j)):
-        raise NoOrbit("invalid", f"turning_points: need eps > 0 and j > 0 (bound orbits), got eps={eps}, j={j}")
+        raise NoOrbit("invalid", T("no bound orbit: ε > 0 and j > 0 are needed (ε = {eps}, j = {j})", eps=float(eps),
+                                   j=float(j)))
 
     def G(r):
         return float(turning_function(r, eps, j, nu, order)[0])
@@ -481,10 +489,10 @@ def turning_points(eps: float, j: float, nu: float, order: int = 2, r_min: float
         try:
             jc = j_circular(eps, nu, order)
         except NoOrbit as err:
-            raise NoOrbit("no_circular", f"no orbit with eps={eps:g}, j={j:g} (G = E_eff(r; J) + eps/2 > 0 "
-                          f"everywhere above r_min = {r_min:g}); {err}") from None
-        raise NoOrbit("above_circular", f"no orbit with eps={eps:g}, j={j:g}: j exceeds the circular value "
-                      f"j_circ(eps) = {jc:.10g} (G = E_eff(r; J) + eps/2 > 0 everywhere)")
+            raise NoOrbit("no_circular", T("no orbit with ε = {eps}, j = {j} above r_min = {r_min}", eps=float(eps),
+                                           j=float(j), r_min=float(r_min))) from None
+        raise NoOrbit("above_circular", T("no orbit with ε = {eps}, j = {j}: j exceeds the circular value "
+                                          "j_circ(ε) = {jc:.10g}", eps=float(eps), j=float(j), jc=float(jc)))
     k = int(neg[-1])
     r_a = optimize.brentq(G, rr[k], rr[k + 1], **kw)
     pos_in = np.nonzero(g[:k] > 0.0)[0]
@@ -495,8 +503,9 @@ def turning_points(eps: float, j: float, nu: float, order: int = 2, r_min: float
                                    options={"xatol": 1e-13 * rr[m]})
     r_c = float(res.x)
     if not pos_in.size:
-        err = NoOrbit("plunge", f"no bound orbit with eps={eps:g}, j={j:g} above r_min = {r_min:g}: the region allowed "
-                      f"by E and J reaches r_min (no periapsis; the orbit falls in from its apoapsis r_a = {r_a:.6g})")
+        err = NoOrbit("plunge", T("no bound orbit with ε = {eps}, j = {j} above r_min = {r_min}: the region allowed by "
+                                  "E and J reaches r_min (no periapsis; the orbit falls in from its apoapsis r_a = "
+                                  "{r_a:.6g})", eps=float(eps), j=float(j), r_min=float(r_min), r_a=float(r_a)))
         err.partial = {"r_p": None, "r_a": r_a, "r_c": r_c}
         raise err
     i = int(pos_in[-1])
@@ -541,9 +550,11 @@ def state_from_invariants(eps: float, j: float, nu: float, order: int = 2, t: fl
             raise NoOrbit("unresolved", f"state_from_invariants: the turning point r = {r:.10g} is not a {at} of the "
                           "conservative equations of motion within their truncation (a nearly circular orbit: use "
                           "circular_state)")
-        raise NoOrbit("pn_breakdown", f"no {at} with eps={eps:g}, j={j:g}: the turning point r = {r:.6g} of the "
-                      f"conserved E and J is not a {at} of the equations of motion (radial acceleration "
-                      f"{rdd:.3g}): their O(c^-6) truncation is not small there, the PN orbit is not defined")
+        raise NoOrbit("pn_breakdown", T("no turning point with ε = {eps}, j = {j}: the turning point r = {r:.6g} of "
+                                        "the conserved E and J is not one of the equations of motion (radial "
+                                        "acceleration {rdd:.3g}): their O(c⁻⁶) truncation is not small there, the "
+                                        "PN orbit is not defined", eps=float(eps), j=float(j), r=float(r),
+                                        rdd=float(rdd)))
     return st
 
 
@@ -555,7 +566,7 @@ def circular_speed(r: float, nu: float, orders=ORDERS) -> float:
     circular sequence ends at r ~ 2.6 for nu = 1/4)."""
     o = tuple(k for k in _orders(orders) if k in (1, 2))
     if not (r > 0.0 and math.isfinite(r)):
-        raise NoOrbit("no_circular", f"circular_speed: r must be positive, got {r}")
+        raise NoOrbit("no_circular", T("no circular orbit at r = {r}: r must be positive", r=float(r)))
     w1, w2 = 1.0 / r, 2.0 / r
     A0 = float(coefficients(r, 0.0, 0.0, nu, o)[0])
     Aa = float(coefficients(r, 0.0, w1, nu, o)[0])
@@ -565,8 +576,8 @@ def circular_speed(r: float, nu: float, orders=ORDERS) -> float:
     b, c = r - A1, 1.0 + A0  # A2 w^2 - b w + c = 0
     disc = b * b - 4.0 * A2 * c
     if not (b > 0.0 and c > 0.0 and disc >= 0.0):
-        raise NoOrbit("no_circular", f"circular_speed: no circular orbit at r = {r:g} for nu = {nu:g} under the "
-                      f"orders {o} (v^2 r = 1 + A has no positive root continuous with Newton's)")
+        raise NoOrbit("no_circular", T("no circular orbit at r = {r} for ν = {nu} under these PN orders", r=float(r),
+                                       nu=float(nu)))
     w = 2.0 * c / (b + math.sqrt(disc))
     return math.sqrt(w)
 
@@ -586,8 +597,9 @@ def j_circular(eps: float, nu: float, order: int = 2) -> float:
     from scipy import optimize
     pk = circular_binding_peak(nu, order)
     if not 0.0 < eps < pk["eps"]:
-        raise NoOrbit("no_circular", f"j_circular: the circular sequence has no orbit with eps = {eps:g} (its binding "
-                      f"peaks at eps = {pk['eps']:.6g}, r = {pk['r']:.6g})")
+        raise NoOrbit("no_circular", T("the circular sequence has no orbit with ε = {eps} (its binding peaks at "
+                                       "ε = {peak:.6g}, r = {r:.6g})", eps=float(eps), peak=float(pk["eps"]),
+                                       r=float(pk["r"])))
 
     def f(lr):
         return circular_invariants(math.exp(lr), nu, order)["eps"] / eps - 1.0
@@ -773,7 +785,8 @@ def _check_start(st, nu, orders, method, rtol, r_stop):
     x0, v0 = np.asarray(st["x"], float), np.asarray(st["v"], float)
     r0 = float(np.linalg.norm(x0))
     if r_stop is not None and not r0 > r_stop:
-        raise ValueError(f"pn_binary: the start r = {r0:.6g} is not above r_stop = {r_stop:.6g}")
+        raise coded(ValueError(T("the start r = {r0:.6g} is not above the stopping radius {r_stop:.6g}", r0=float(r0),
+                                 r_stop=float(r_stop))), "pn.start_below_stop")
     rr = tuple(k for k in orders if k in (2.5, 3.5))
     if method == "cartesian" and rr:
         # relative change of the orbit per period by the reaction, against what a Cartesian run resolves (review B5,
@@ -827,9 +840,9 @@ def _solve(st, dt, nu, orders, method, rtol, r_stop):
                         dense_output=True, events=events)
     if sol.status < 0:
         x_end, _ = xv(float(sol.t[-1]), sol.y[:, -1])
-        raise RuntimeError(f"pn_binary: the integration stopped at t = {float(sol.t[-1]):.6g}, "
-                           f"r = {float(np.linalg.norm(x_end)):.4g} G m/c^2 ({sol.message}): the orbit plunges and "
-                           "the PN equations break down; pass r_stop (e.g. 6) to end the run there")
+        raise coded(RuntimeError(T("the integration stopped at t = {t:.6g}, r = {r:.4g} G m/c²: the orbit plunges "
+                                   "and the PN equations break down; a stopping radius (e.g. 6) ends the run there",
+                                   t=float(sol.t[-1]), r=float(np.linalg.norm(x_end)))), "pn.plunge_integration")
     if sol.status == 1 and len(sol.t) >= 2:
         # stopped at r_stop: the event is located on the interpolant, less accurate than the steps; Newton steps on
         # the event time (dr/dt = x.v/r), each redoing the last step exactly, give the final state the integrator's
@@ -928,7 +941,7 @@ def averaged_dissipation(st: dict, nu: float, conservative=(1, 2), dissipative=(
 
     gi = gauge_invariants(x0, v0, nu, min(order, 2))
     if gi["eps"] <= 0.0:
-        raise ValueError("averaged_dissipation: unbound orbit")
+        raise coded(ValueError(T("orbit averages: the orbit is unbound")), "pn.unbound")
     # the search window from the PN radial period (Eq. (348a)), not the Newtonian one: PN orbits started from
     # Newtonian data can be much wider
     span = (0.0, 1.5 * 2.0 * math.pi / mean_motion(gi["eps"], max(gi["j"], 1e-3), nu))
@@ -940,13 +953,13 @@ def averaged_dissipation(st: dict, nu: float, conservative=(1, 2), dissipative=(
                        span, y0, **kw)
     t_first = [t for t in s1.t_events[0] if t > 0.0]
     if not t_first:
-        raise ValueError("averaged_dissipation: no periapsis within 1.5 radial periods")
+        raise coded(ValueError(T("orbit averages: no periapsis within 1.5 radial periods")), "pn.unbound")
     yp = s1.sol(t_first[0])
     yp[6:] = 0.0
     s2 = _si.solve_ivp(rhs, span, yp, **kw)
     t_next = [t for t in s2.t_events[0] if t > 1e-6 * span[1]]
     if not t_next:
-        raise ValueError("averaged_dissipation: no second periapsis")
+        raise coded(ValueError(T("orbit averages: no second periapsis")), "pn.unbound")
     Pr = float(t_next[0])
     yend = s2.sol(Pr)
     return {"dE": float(yend[6]) / Pr, "dJ": float(yend[7]) / Pr, "P_r": Pr, "Phi": float(yend[8])}

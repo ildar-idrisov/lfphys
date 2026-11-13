@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from ...core.quantum import radial
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 ABOUT = {
     "layer": "theories", "kind": "model",
@@ -74,8 +75,9 @@ def spectrum(m_q: float, kappa: float = PARAMS["kappa"], a: float = PARAMS["a"],
                 break
             R_L, N_L = 1.1 * need, min(1400, int(N * 1.1 * need / R))
         else:
-            raise ValueError(f"Cornell spectrum: the states need a box beyond {R_L:.3g} GeV^-1 "
-                             f"(m_q = {m_q:g}, kappa = {kappa:g}, a = {a:g})")
+            raise coded(ValueError(T("Cornell spectrum: the states need a box beyond {R:.3g} GeV⁻¹ (m_q = {m_q}, "
+                                     "κ = {kappa}, a = {a})", R=float(R_L), m_q=float(m_q), kappa=float(kappa),
+                                     a=float(a))), "cornell.box")
         for n in range(n_max):
             out[(n + 1, L)] = 2 * m_q + E[n]
         if info is not None:

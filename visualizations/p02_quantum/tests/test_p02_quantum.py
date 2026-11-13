@@ -553,7 +553,7 @@ def test_the_grid_and_the_window_change_live_in_the_same_world():
     assert not h.errors(), h.errors()
     assert len(h.of("header")) == 1 and h.sim.qs.grid.shape == (384, 384) and h.sim.d == pytest.approx(80 / 384)
     text = _ev(h)[-1]
-    assert "resampled exactly (by padding the spectrum with zeros)" in text and "(unchanged to round-off)" in text, text
+    assert "resampled exactly (by padding the spectrum with zeros)" in text and "(unchanged to within round-off)" in text, text
     from lfphys.core.quantum import schrodinger_nd as S
     old = S.Grid((256, 256), 80 / 256)
     assert np.max(np.abs(h.sim.qs.wave(1) - S.resample(w0, old, h.sim.qs.grid))) < 1e-14
@@ -1149,7 +1149,65 @@ def test_refusal_and_label_texts_say_which_rule():
     ms = {m["id"]: m["label"] for m in h.of("scene")[-1]["measurables"]}
     assert "a minus: added" in render(ms["regrid"])
     h.set(n2="384")
-    assert "(unchanged to round-off)" in _ev(h)[-1] and "((" not in _ev(h)[-1]
+    assert "(unchanged to within round-off)" in _ev(h)[-1] and "((" not in _ev(h)[-1]
     he = Harness(V, None, {"dim": "2d", "n2": "256", "size": 80.0, "edges": "open"})
     he.set(n2="384")
     assert "no waves in the window" in _ev(he)[-1] and "resampled" not in _ev(he)[-1]
+
+
+def test_engine_refusals_are_said_in_the_worlds_terms(monkeypatch):
+    """Code review 2026-11-12 i18n-code F5: every engine refusal the world puts in its own terms is matched by the
+    engine's machine code (``lfphys.codes``), not by its wording. Each place the world matches is triggered here, and
+    both the engine's code and the world's own text are asserted: ``_refusal`` (resolution, field under a charge),
+    ``_packet_refusal`` (resolution and the packet's band), ``palette_state``, ``can_remove`` and the window's edges."""
+    from lfphys.codes import code_of
+    seen = []
+
+    def spy(name):
+        orig = getattr(P.Simulation, name)
+
+        def f(self, obj, *a):
+            seen.append((name, code_of(a[-1])))
+            return orig(self, obj, *a)
+        monkeypatch.setattr(P.Simulation, name, f)
+    spy("_refusal")
+    spy("_packet_refusal")
+    # _refusal, qscene.resolution: a deep well next to a fast packet
+    h = Harness(V, None, _free_world(lam=1.2))
+    n = len(h.errors())
+    h.cmd("scene", op="add", type="box", values={"x": 10.0, "V": -30.0})
+    assert seen[-1] == ("_refusal", "qscene.resolution"), seen
+    assert len(h.errors()) == n + 1 and "the grid (step 0.312 nm) does not resolve the particle's wave: next to it" \
+        in errs(h)[-1], errs(h)[n:]
+    # palette_state, qscene.resolution (Scene.addition_check): a default trap next to the same packet
+    ot = h.sim.PALETTE["trap"]
+    obj = {"type": "trap", "values": ot.schema.resolve(None, h.sim.place("trap", {}))[0], "label": ot.label}
+    assert code_of(h.sim.qs.addition_check(h.sim._object(obj))) == "qscene.resolution"
+    ps = h.of("scene")[-1].get("palette_state") or {}
+    assert ps.get("trap") and render(ps["trap"]).startswith("with it the grid would not resolve the wave of a particle"), ps
+    # _packet_refusal, qscene.resolution: a packet inside the double slit's wall, said in the scene's terms
+    h2 = Harness(V, "double_slit")
+    with pytest.raises(ValueError) as e:
+        h2.sim._add("packet", {"x": 0.0, "y": 3.0})
+    assert seen[-1] == ("_packet_refusal", "qscene.resolution"), seen
+    assert "the packet's centre" in str(e.value) and "inside “Wall with two slits”" in str(e.value), str(e.value)
+    # _packet_refusal, qscene.packet_band: a packet faster than the grid holds anywhere
+    with pytest.raises(ValueError) as e:
+        h2.sim._add("packet", {"x": -10.0, "wavelength": 0.2})
+    assert seen[-1] == ("_packet_refusal", "qscene.packet_band"), seen
+    assert "the particle's wave is finer than the grid" in str(e.value), str(e.value)
+    # _refusal, qscene.field_with_charge: the cyclotron's field changed under its electron
+    h3 = Harness(V, "cyclotron")
+    run(h3, h3.sim.t + h3.sim.default_speed / 5, 3)
+    fid = next(k for k, o in h3.sim.objects.items() if o["type"] == "bfield")
+    h3.cmd("scene", op="set", id=fid, values={"Bz": 50.0})
+    assert seen[-1] == ("_refusal", "qscene.field_with_charge"), seen
+    assert "while a charged particle is in the window: the impulse of the induced field" in errs(h3)[-1], errs(h3)[-1]
+    # can_remove, qscene.field_with_charge: the same field removed
+    assert code_of(h3.sim._removal_check(h3.sim.ref[fid][1])) == "qscene.field_with_charge"
+    h3.cmd("scene", op="remove", id=fid)
+    assert "the field cannot be switched off" in errs(h3)[-1] and fid in h3.sim.objects, errs(h3)[-1]
+    # the edges, qscene.gauge: closing the window with the electron next to the field
+    assert code_of(h3.sim._edges_check(None)) == "qscene.gauge"
+    h3.set(edges="closed")
+    assert "a charged particle next to a field is allowed only with open edges" in errs(h3)[-1], errs(h3)[-1]

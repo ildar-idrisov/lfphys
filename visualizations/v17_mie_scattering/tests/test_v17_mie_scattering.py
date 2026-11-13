@@ -386,7 +386,7 @@ def test_index_matched_drop_is_refused_and_next_event_is_one_wavelength():
     assert "|m − 1| < 0.001" in english(text_of(e.value))
     with pytest.raises(ValueError) as e:
         Harness(V, None, {**vals, "n_lam": 8})
-    assert "Index of the medium around" in english(text_of(e.value))
+    assert "Refractive index of the surrounding medium" in english(text_of(e.value))
     h = Harness(V, None, {**vals, "n_re": 1.0015, "n_lam": 8, "radius_um": 1.0})
     assert not [c["id"] for c in h.checks().values() if c.get("ok") is False]
     h = Harness(V, None, {"n_lam": 8})
@@ -403,3 +403,21 @@ def test_index_matched_drop_is_refused_and_next_event_is_one_wavelength():
     big.cmd("next_event")
     assert big.sim.sky_k == 1 and time.monotonic() - t0 < 6 * STEP_BUDGET_S  # host-dependent; the old path > 120 s
     assert big.of("sky")[-1]["coarse"]
+
+
+def test_drops_beyond_the_engines_size_bound_are_refused_in_the_worlds_words():
+    """Review i18n-code F5: the world's refusal of too large drops is the engine's own bound, not a copy of it. Just
+    above mie.MAX_X the engine refuses with the code "mie.size_bound"; the world refuses the same drops before computing
+    them (the largest drop of the distribution, ⟨r⟩(1 + 3σ), at the shortest wavelength), with its own msgid and the
+    engine's number."""
+    from lfphys.codes import code_of
+    from lfviz.errors import Refusal
+    with pytest.raises(ValueError) as e:
+        mie.coefficient_bound(mie.MAX_X * (1 + 1e-9))
+    assert code_of(e.value) == "mie.size_bound"
+    r_max = mie.MAX_X * DR.LAM_MIN * 1e-3 / (2 * math.pi)  # µm: x = 2π r n_med / λ at the shortest wavelength, n = 1
+    w = (r_max / 1000.0 * 1.001 - 1.0) / 3.0  # the spread that puts the largest drop of ⟨r⟩ = 1 mm just above it
+    with pytest.raises(Refusal) as r:
+        Harness(V, "rainbow", {"radius_um": 1000.0, "width": w, "n_lam": 8})
+    assert r.value.text.msgid.startswith("the drops are too large: x > {xmax}")
+    assert r.value.text.args["xmax"] == mie.MAX_X

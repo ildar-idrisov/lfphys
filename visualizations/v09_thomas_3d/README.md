@@ -4,7 +4,7 @@
 
 A wrapper over the engine `lfphys` (plan item P14.1, on P9 and P10) and the second world of the player's 3-D
 environment (`../RULES.md` §2.10). A craft starts at rest and flies a manoeuvre; its gyroscopes are carried without
-rotation; when it is back at rest they are turned. The run computes by how much, in SO(3) and in SU(2), how much fuel
+rotation; when it is back at rest they are found to be rotated. The run computes by how much, in SO(3) and in SU(2), how much fuel
 it took, and compares both with closed forms and with the isoperimetric bound of the hyperbolic plane.
 
 ## What the run computes (engine modules)
@@ -28,7 +28,7 @@ references, the field of three-burn loops.
   boost generator of the proper acceleration in the craft's own frame. A burn is exp(η K·n); a turn (thrust direction
   a(s) = R(ω, κ s) a₀) is exp(s(K·a₀ + κ J·ω)) R(ω, −κ s) — exact (`spin_transport._advance`). The same pieces in
   SL(2, C) carry the spinor.
-* **Holonomy.** Back at rest the gyroscope axes are turned by R (Thomas precession). For a loop in one plane of
+* **Holonomy.** Back at rest the gyroscope axes are rotated by R (Thomas precession). For a loop in one plane of
   velocity space R is a rotation about that plane's normal by the enclosed area A, against the sense of the loop
   (Gauss–Bonnet; Aravind, Am. J. Phys. 65, 634 (1997)); uniform circular motion at γ gives 2π(γ − 1) per revolution
   (Thomas, 1927). SU(2) keeps the angle mod 4π: a loop of area 2π leaves the gyroscopes as they were and the spinor
@@ -93,7 +93,7 @@ The loop's plane is set by its normal (θ, φ); everything is checked in any ori
 
 ## Approximations and limits
 
-* Special relativity, flat space-time; the thrust is given in the craft's frame, of constant magnitude (it sets only
+* Special relativity, flat spacetime; the thrust is given in the craft's frame, of constant magnitude (it sets only
   the time and length scales); the craft is a point with ideal gyroscopes (no torque).
 * The burns of polygons (triangle, polygon, crown, seam) are built in extended precision (64-bit mantissa) and rounded
   to float64 as they are flown: built in float64, the next vertex seen from the comoving frame lost up to ε cosh²(η)

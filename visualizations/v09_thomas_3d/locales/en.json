@@ -1,0 +1,26 @@
+{
+  "A non-planar crown of {n:d} burns": {
+    "one": "A non-planar crown of {n:d} burn",
+    "other": "A non-planar crown of {n:d} burns"
+  },
+  "Field: rotation θ at {n:d} points of the volume against Gauss–Bonnet": {
+    "one": "Field: rotation θ at {n:d} point of the volume against Gauss–Bonnet",
+    "other": "Field: rotation θ at {n:d} points of the volume against Gauss–Bonnet"
+  },
+  "Seam: {n:d} burns against {n2:d}": {
+    "one": "Seam: {n:d} burn against {n2:d}",
+    "other": "Seam: {n:d} burns against {n2:d}"
+  },
+  "Slice {pid} ({plane}): rotation θ at {n:d} points against Gauss–Bonnet": {
+    "one": "Slice {pid} ({plane}): rotation θ at {n:d} point against Gauss–Bonnet",
+    "other": "Slice {pid} ({plane}): rotation θ at {n:d} points against Gauss–Bonnet"
+  },
+  "The seam of a ball on the sphere of velocities (non-planar, {n:d} burns)": {
+    "one": "The seam of a ball on the sphere of velocities (non-planar, {n:d} burn)",
+    "other": "The seam of a ball on the sphere of velocities (non-planar, {n:d} burns)"
+  },
+  "a seam of {n:d} burns (the smooth seam is their limit; the difference from {n2:d} is in the checks); no closed form": {
+    "one": "a seam of {n:d} burn (the smooth seam is their limit; the difference from {n2:d} is in the checks); no closed form",
+    "other": "a seam of {n:d} burns (the smooth seam is their limit; the difference from {n2:d} is in the checks); no closed form"
+  }
+}

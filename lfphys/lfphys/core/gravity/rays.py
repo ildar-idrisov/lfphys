@@ -33,8 +33,8 @@ from .. import relativity
 
 ABOUT = {
     "layer": "core", "kind": "numerical solution",
-    "title": T("Light rays: flat space-time and Schwarzschild"),
-    "statement": T("Bundles of rays for drawing: straight lines in flat space-time (speed by the world's kinematics), "
+    "title": T("Light rays: flat spacetime and Schwarzschild"),
+    "statement": T("Bundles of rays for drawing: straight lines in flat spacetime (speed by the world's kinematics), "
                    "Schwarzschild null geodesics (RK4 in the affine parameter). The exact times of events are "
                    "computed separately (arrivals, schwarzschild) and compared."),
     "validity": T("drawing accuracy (angular tolerance ANGLE_TOL); exact events in arrivals"),

@@ -39,7 +39,7 @@ ABOUT = {
     "title": T("Which-path marks: internal states, elements, a qubit detector, the Born rule"),
     "statement": T("The state behind slit j is A_j(x)|m_j⟩; P(x, r) = Σ A_j A_l* G⁽ʳ⁾_jl, G the Gram matrix of the "
                    "marks; Jones and spin matrices, Englert's detector, the readout basis, the duality V² + D² ≤ 1."),
-    "validity": T("quantum mechanics (the Born rule); polarization in the paraxial approximation, the same for both "
+    "validity": T("quantum mechanics (the Born rule); polarisation in the paraxial approximation, the same for both "
                   "components"),
     "basis": ['Englert, PRL 77, 2154 (1996)', 'Scully, Englert, Walther, Nature 351, 111 (1991)'],
     "conflicts": [],
@@ -55,7 +55,7 @@ POL_STATES = {"H": [1, 0], "V": [0, 1], "D": [1 / SQ2, 1 / SQ2], "A": [1 / SQ2, 
 SPIN_STATES = {"up_z": [1, 0], "down_z": [0, 1], "up_x": [1 / SQ2, 1 / SQ2], "down_x": [1 / SQ2, -1 / SQ2],
                "up_y": [1 / SQ2, 1j / SQ2], "down_y": [1 / SQ2, -1j / SQ2]}
 
-PHOTON_ELEMENTS = [("none", T("no element")), ("polarizer", T("polarizer (axis angle)")),
+PHOTON_ELEMENTS = [("none", T("no element")), ("polarizer", T("polariser (axis angle)")),
                    ("hwp", T("half-wave plate")), ("qwp", T("quarter-wave plate")),
                    ("phase", T("phase plate (phase)")), ("block", T("shutter (slit closed)"))]
 SPIN_ELEMENTS = [("none", T("no element")), ("rot_y", T("spin rotation about y (angle)")),

@@ -38,7 +38,7 @@ def fmt_bytes(n: float | None):
     n = float(n)
     for unit, k in (("TB", 2 ** 40), ("GB", 2 ** 30), ("MB", 2 ** 20), ("KB", 2 ** 10)):
         if n >= k:
-            return T("{n:.3g} " + unit, n=n / k)
+            return T("{n:.3g} " + unit, n=n / k)  # i18n-msgids: "{n:.3g} TB" "{n:.3g} GB" "{n:.3g} MB" "{n:.3g} KB"
     return T("{n:.3g} B", n=n)
 
 

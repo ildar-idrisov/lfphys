@@ -25,6 +25,7 @@ import math
 
 from scipy import constants as sc
 
+from lfphys.codes import coded
 from lfphys.i18n import T
 
 ABOUT = {
@@ -47,7 +48,7 @@ class Units:
 
     def __init__(self, sigma_m: float, epsilon_J: float, mass_kg: float):
         if not (sigma_m > 0 and epsilon_J > 0 and mass_kg > 0):
-            raise ValueError("sigma, epsilon and mass must be > 0")
+            raise coded(ValueError(T("sigma, epsilon and mass must be > 0")), "md.value")
         self.sigma_m = float(sigma_m)
         self.epsilon_J = float(epsilon_J)
         self.mass_kg = float(mass_kg)

@@ -69,6 +69,7 @@ import math
 
 import numpy as np
 
+from lfphys.codes import coded
 from lfphys.i18n import T
 
 ABOUT = {
@@ -82,9 +83,10 @@ ABOUT = {
                    "exact gradient of the energy."),
     "validity": T("fitted forms: the r^-12 repulsion is not derived (the true one is close to exponential), argon's "
                   "well is shallower and wider than 12-6, no three-body forces (Axilrod–Teller) and no quantum "
-                  "corrections (for light atoms and low T); bonds are harmonic (they do not break; FENE breaks the "
-                  "step), angles harmonic; a wall is a continuum of wall atoms. The argon parameters reproduce the "
-                  "second virial coefficient and the liquid's properties to within per cent"),
+                  "corrections (for light atoms and low T); bonds are harmonic (they do not break; a FENE bond "
+                  "stretched past its limit aborts the step), angles harmonic; a wall is a continuum of wall atoms. "
+                  "The argon parameters reproduce the second virial coefficient and the liquid's properties to within "
+                  "a few per cent"),
     "basis": ["Lennard-Jones, Proc. R. Soc. A 106, 463 (1924)",
               "Weeks, Chandler & Andersen, J. Chem. Phys. 54, 5237 (1971)",
               "Kremer & Grest, J. Chem. Phys. 92, 5057 (1990): FENE + WCA",
@@ -94,9 +96,9 @@ ABOUT = {
     "conflicts": [T("real argon: the Aziz potential (HFDID) and the Axilrod–Teller three-body correction give the "
                     "pressure and the critical point differently from 12-6 (the critical T of 12-6 is 1.312 ε/k, i.e. "
                     "157 K, against 150.7–150.9 K for argon by the NIST WebBook)"),
-                  T("a cut and shifted potential is another model than the full 12-6: the phase diagram depends on "
-                    "r_c (3-D: the critical T with the linear force shift at 2.5σ is 0.937, the triple point 0.560 — "
-                    "for the full one 1.312 and 0.687; 2-D: 0.515 for the full one, 0.459 for the one cut at 2.5σ "
+                  T("a cut and shifted potential is a different model from the full 12-6: the phase diagram depends "
+                    "on r_c (3-D: the critical T with the linear force shift at 2.5σ is 0.937, the triple point 0.560 "
+                    "— for the full one 1.312 and 0.687; 2-D: 0.515 for the full one, 0.459 for the one cut at 2.5σ "
                     "with an energy shift, the triple point about 0.42 — liquid and vapour coexist in the plane only "
                     "in a narrow interval)"),
                   T("a harmonic bond neither breaks nor is anharmonic (Morse, quantum vibrations at ħω > kT)")],
@@ -136,7 +138,7 @@ class LennardJones:
         if shift not in _SHIFTS:
             raise ValueError(f"shift must be one of {_SHIFTS}")
         if not (float(cutoff) > 0 and math.isfinite(float(cutoff))):
-            raise ValueError("cutoff must be finite and > 0")
+            raise coded(ValueError(T("the cutoff must be finite and > 0")), "md.potential")
         if mixing not in ("lorentz-berthelot", "geometric"):
             raise ValueError("mixing must be 'lorentz-berthelot' or 'geometric'")
         self.cutoff = float(cutoff)
@@ -146,7 +148,7 @@ class LennardJones:
         self.overrides = {(int(a), int(b)): (float(s), float(e)) for (a, b), (s, e) in (overrides or {}).items()}
         for (s, e) in self.overrides.values():
             if not (s > 0 and e >= 0):
-                raise ValueError("override sigma must be > 0 and epsilon >= 0")
+                raise coded(ValueError(T("an override needs sigma > 0 and epsilon ≥ 0")), "md.potential")
 
     def params(self) -> dict:
         return {"cutoff": self.cutoff, "shift": self.shift, "mixing": self.mixing,
@@ -237,7 +239,7 @@ class SoftRepulsion:
 
     def __init__(self, alpha=2.0, mixing="lorentz-berthelot", overrides=None):
         if not float(alpha) > 1.0:
-            raise ValueError("alpha must be > 1 (a continuous force)")
+            raise coded(ValueError(T("alpha must be > 1 (a continuous force)")), "md.potential")
         self.alpha = float(alpha)
         self.mixing = mixing
         self.overrides = {(int(a), int(b)): (float(s), float(e)) for (a, b), (s, e) in (overrides or {}).items()}
@@ -277,7 +279,7 @@ class HarmonicBond:
 
     def __init__(self, k, r0):
         if not (float(k) >= 0 and float(r0) >= 0):
-            raise ValueError("k and r0 must be >= 0")
+            raise coded(ValueError(T("k and r0 must be ≥ 0")), "md.potential")
         self.k, self.r0 = float(k), float(r0)
 
     def params(self):
@@ -303,7 +305,7 @@ class FENE:
 
     def __init__(self, k=30.0, R0=1.5):
         if not (float(k) > 0 and float(R0) > 0):
-            raise ValueError("k and R0 must be > 0")
+            raise coded(ValueError(T("k and R0 must be > 0")), "md.potential")
         self.k, self.R0 = float(k), float(R0)
 
     def params(self):
@@ -316,7 +318,7 @@ class FENE:
     def evaluate(self, r):
         x = (np.asarray(r, float) / self.R0) ** 2
         if np.any(x >= 1.0):
-            raise FloatingPointError("a FENE bond stretched to R0 (the bond broke)")
+            raise coded(FloatingPointError(T("a FENE bond stretched to R0 (the bond broke)")), "md.bond_broke")
         return -0.5 * self.k * self.R0 ** 2 * np.log1p(-x), -self.k * r / (1.0 - x)
 
 
@@ -327,7 +329,7 @@ class HarmonicAngle:
 
     def __init__(self, k, theta0):
         if not (float(k) >= 0 and 0.0 <= float(theta0) <= math.pi):
-            raise ValueError("k >= 0, 0 <= theta0 <= pi")
+            raise coded(ValueError(T("k ≥ 0, 0 ≤ θ0 ≤ π")), "md.potential")
         self.k, self.theta0 = float(k), float(theta0)
 
     def params(self):
@@ -363,7 +365,7 @@ class CosineAngle:
 
     def __init__(self, k, theta0):
         if not (float(k) >= 0 and 0.0 <= float(theta0) <= math.pi):
-            raise ValueError("k >= 0, 0 <= theta0 <= pi")
+            raise coded(ValueError(T("k ≥ 0, 0 ≤ θ0 ≤ π")), "md.potential")
         self.k, self.theta0 = float(k), float(theta0)
         self._c0 = math.cos(self.theta0)
 
@@ -392,7 +394,7 @@ class LJWall:
         if dim not in (2, 3):
             raise ValueError("dim must be 2 or 3")
         if not (float(epsilon) >= 0 and float(sigma) > 0):
-            raise ValueError("epsilon >= 0, sigma > 0")
+            raise coded(ValueError(T("epsilon ≥ 0, sigma > 0")), "md.potential")
         self.dim = int(dim)
         self.epsilon, self.sigma = float(epsilon), float(sigma)
         a, n, m = self._FORMS[self.dim]
@@ -402,7 +404,7 @@ class LJWall:
             self._zc = zmin
         else:
             if not float(cutoff) > 0:
-                raise ValueError("cutoff must be > 0 or 'min'")
+                raise coded(ValueError(T("the cutoff must be > 0 or 'min'")), "md.potential")
             self.cutoff = float(cutoff)
             self._zc = float(cutoff)
         self.mixing = bool(mixing)

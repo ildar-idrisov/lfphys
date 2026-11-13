@@ -2,7 +2,7 @@
 
 **English** | [Русский](README.ru.md)
 
-Particles one by one through N slits (photon with energy, frequency, polarization; electron, neutron, He-4 atom,
+Particles one by one through N slits (photon with energy, frequency, polarisation; electron, neutron, He-4 atom,
 C60, a custom particle), with or without an observer of the path. Owner guide: `../README.md`; rules: `../RULES.md`.
 
 ## The causal chain of one particle (all computed in the run)
@@ -18,9 +18,9 @@ C60, a custom particle), with or without an observer of the path. Owner guide: `
    plane), the Aharonov–Bohm phase qΦ/ħ = 2π(q/e)Φ/(h/e) sits between slits 1 and 2. Under the GRW modification the
    hits during the flight to the screen are drawn here: number Poisson(λ·(m/u)·L₂/v), each a kick q ~ N(0, 1/(2r_C²))
    at a uniform distance z′, which moves the screen pattern exactly like a slit-plane kick q(1 − z′/L₂).
-3. **Screen** (t_e + (L₁ + L₂)/v), with the apparatus present at THAT moment: the analyzer in front of the screen and
+3. **Screen** (t_e + (L₁ + L₂)/v), with the apparatus present at THAT moment: the analyser in front of the screen and
    the basis in which the detector is read. Born rule P(x, r) = Σ_jl A_j A_l* G⁽ʳ⁾_jl with the closed-form paraxial
-   amplitudes A_j of this particle (own k, source point, kick) and the Gram matrix of its marks; then the analyzer's
+   amplitudes A_j of this particle (own k, source point, kick) and the Gram matrix of its marks; then the analyser's
    absorption, missing the finite screen (Parseval: the total flux is λL₂aΣ‖m_j‖²), the position and the reading drawn
    jointly (exactly within each grid cell for the piecewise-linear density), detector efficiency; dark counts are a
    separate Poisson stream. A particle that passed the slits before an apparatus change and reached the screen after
@@ -32,15 +32,15 @@ G_jl, the overlap of what the particle carries away from them, or is washed out 
 ## Live set-up (owner, 2026-10-23)
 
 Everything an experimenter can change in a laboratory is a live parameter: the particle and its energy, the source
-(distance, width, rate, polarization or spin, spectrum), the slits (number, width, period), the screen (distance,
-size, pixel), the detector (efficiency, dark counts), the which-path observer, the elements and the analyzer. A
+(distance, width, rate, polarisation or spin, spectrum), the slits (number, width, period), the screen (distance,
+size, pixel), the detector (efficiency, dark counts), the which-path observer, the elements and the analyser. A
 change applies at once and starts a new segment:
 
 * particle or slits/screen changed: the beam path is rebuilt; particles in flight at that moment are lost (counted
   as `lost`), the grid, the exact reference fields and the set-up checks are recomputed;
 * source changed: particles already emitted fly on and are transitional (kept out of the new segment's histogram);
 * apparatus, detector or display changed: in-flight particles meet the apparatus present when they reach it;
-* parts of the apparatus the new particle cannot take (a polarizer for an electron, the microscope for a photon) are
+* parts of the apparatus the new particle cannot take (a polariser for an electron, the microscope for a photon) are
   removed, with a notice; an explicit impossible request is refused and nothing changes. The forms offer only the
   choices that act on the chosen particle (option-level `show_if`: polarisation elements for photons, spin elements
   for spin ½, "Set by" = "speed (massive)" for massive particles and "frequency (photon)" for photons, the microscope
@@ -69,7 +69,7 @@ construction gives:
 * the expected curves per detector reading and per class ("no scattered photon"), binned on the server as the
   histogram is, with the dark counts added;
 * the near-field map |Ψ(x, z)|² of the ensemble (with all decoherence), z from 2a to the screen, with the marks
-  *before* the analyzer (the analyzer stands right in front of the screen; in the eraser the map has no fringes and the
+  *before* the analyser (the analyser stands right in front of the screen; in the eraser the map has no fringes and the
   screen has them); the region next to the slits where the paraxial field differs from the exact Rayleigh–Sommerfeld
   solution by more than 1 % is found by bisection and hatched;
 * flow lines dx/dz = Im(Ψ†∂ₓΨ)/(k|Ψ|²): for a pure state without decoherence the de Broglie–Bohm trajectories (for
@@ -110,7 +110,7 @@ exponentially; otherwise the waveguide modes of the slits), separately for the t
 * **TE**: E along the slits (polarisation V); u = E_y, with u = 0 on the conductor;
 * **TM**: E across the slits (polarisation H); u = Z0 H_y, with ∂u/∂n = 0 on the conductor.
 
-The distance to the screen is counted from the exit face.
+The distance to the screen is measured from the exit face.
 
 **Hits.** A photon of the plane wave falls on the strip W = n·d (number of slits × period) and is transmitted with
 probability P_t/W, where P_t is the transmitted power per unit length in units of the incident flux. A transmitted
@@ -121,11 +121,11 @@ exceeds W (a capture cross-section wider than the period) is refused. For one sl
 period, which the scalar model does not use for one slit: a convention. The transmitted fraction and the count of
 reflected photons depend on it; the pattern on the screen does not (the run and the panel say so).
 
-**Where the hits stay scalar.** Which-path marks, elements at the slits, the analyzer and the modified laws (the
+**Where the hits stay scalar.** Which-path marks, elements at the slits, the analyser and the modified laws (the
 Born exponent, collapse) have no vector counterpart in the engine. With any of them the hits are drawn from the scalar
 model, and the run says so in the segment, its approximations and the panel "Model of the slit screen". The vector
 curve is then only a shape comparison: the flux of the vector solution for the same slits without the elements and the
-analyzer, scaled to the same total as the scalar expectation (their units differ: no detector efficiency, no
+analyser, scaled to the same total as the scalar expectation (their units differ: no detector efficiency, no
 elements' transmission). No difference strip is drawn then [error in earlier: before review B8 (C8) the vector curve
 was per particle on the open width n·a and the strip showed its difference from the scalar expectation, dominated by
 that normalisation, e.g. 0.96 of the curve for a zero-phase element]. Open item: `../../STATUS.md`, v02's vector mode.
@@ -225,7 +225,7 @@ the curve.
 
 ## Conventions
 
-Time dependence e^{i(kz−ωt)}; H = polarization along x (across the slits), V along y; R = (1, −i)/√2 is right-handed
+Time dependence e^{i(kz−ωt)}; H = polarisation along x (across the slits), V along y; R = (1, −i)/√2 is right-handed
 (S₃ = +1), L = (1, i)/√2; the custom state R(ψ)(cos χ, −i sin χ) has S₃ = sin 2χ; wave plates: the angle is the fast
 axis, symmetric retardance, no overall phase; spin rotation about y: exp(−iaσ_y/2); spin filter along
 n = (sin t, 0, cos t). Born-exponent modification: the position is drawn from |ψ|^p normalised on the finite screen,
@@ -243,7 +243,7 @@ the probability of reaching the screen uses |ψ|², Sorkin's parameter uses the 
   mode (above), which solves the conducting screen exactly. For wide multi-slit
   geometries the map column next to the slits does not resolve the individual slits (stated in the run).
 * 2-D geometry (slits infinitely long along y); the y position of a dot on the screen is only for display.
-* Polarization enters through the marks; in the paraxial regime both polarizations propagate identically.
+* Polarisation enters through the marks; in the paraxial regime both polarisations propagate identically.
 * GRW hits between the source and the slits are not modelled.
 * The microscope: one scattered photon in the slit plane, a dipole pattern (Thomson for charged, Rayleigh for
   polarisable particles; not available for photons and neutrons), the longitudinal recoil is neglected; recording "the
@@ -257,13 +257,13 @@ Open items: `../../STATUS.md`, "V. Visualizations — open items".
 
 `tests/test_v02_physics.py` (85 tests): kinematics (50 keV electron; slow neutron by E_k against 50-digit mpmath);
 Fresnel → Fraunhofer; Fresnel vs Rayleigh–Sommerfeld; the exact integral for a wide slit in the near field (incident
-wave inside the projection); the exact fields reused across segments; unaffordable columns reported as not verified; closed-form derivative; Parseval; polarizer marks and the
+wave inside the projection); the exact fields reused across segments; unaffordable columns reported as not verified; closed-form derivative; Parseval; polariser marks and the
 eraser; λ/2 plate; spin flip; Englert duality; readout completeness; dipole coherence vs closed forms; every preset
 runs and its checks agree; the Born-exponent modification is flagged, breaks Sorkin and is reported as signalling; a
 20 000-particle histogram agrees with the expectation; the eraser restores fringes in sorted subsets; absorption at
-the slits and at the analyzer; an analyzer inserted while particles fly acts on them; apparatus changes start
+the slits and at the analyser; an analyser inserted while particles fly acts on them; apparatus changes start
 segments; the exact ensemble against a direct Monte-Carlo with shifts; GRW coherence against the closed form; the
-coherence estimator is unbiased on multinomial samples and its shown error is calibrated at |γ| = 1; the map shows the decoherence; the map shows the wave before the analyzer (eraser); the Aharonov–Bohm phase for
+coherence estimator is unbiased on multinomial samples and its shown error is calibrated at |γ| = 1; the map shows the decoherence; the map shows the wave before the analyser (eraser); the Aharonov–Bohm phase for
 |q| ≠ e; dark counts in the expectation; probe rules; per-particle flight times; GRW on electrons; circular-state
 conventions.
 

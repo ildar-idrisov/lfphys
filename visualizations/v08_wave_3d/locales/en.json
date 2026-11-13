@@ -1,0 +1,10 @@
+{
+  "P(z) = Σ j_z dx dy over the whole window at {n:d} depths against the closed form from the spectrum: Parseval's identity of the discrete sum; it confirms the code and the normalisation, not the window or the physics (those are checked in the row above)": {
+    "one": "P(z) = Σ j_z dx dy over the whole window at {n:d} depth against the closed form from the spectrum: Parseval's identity of the discrete sum; it confirms the code and the normalisation, not the window or the physics (those are checked in the row above)",
+    "other": "P(z) = Σ j_z dx dy over the whole window at {n:d} depths against the closed form from the spectrum: Parseval's identity of the discrete sum; it confirms the code and the normalisation, not the window or the physics (those are checked in the row above)"
+  },
+  "Slice {pid} ({plane}): the field at {n:d} points against the exact one": {
+    "one": "Slice {pid} ({plane}): the field at {n:d} point against the exact one",
+    "other": "Slice {pid} ({plane}): the field at {n:d} points against the exact one"
+  }
+}

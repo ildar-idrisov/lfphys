@@ -200,8 +200,9 @@ def test_slices_for_odd_and_even_n_against_an_independent_reference(n, pad):
 
 
 def test_negative_distance_is_refused():
-    with pytest.raises(ValueError, match="z >= 0"):
+    with pytest.raises(ValueError, match="z ≥ 0") as e:
         AS.propagate_field(np.ones((8, 8)), 0.1, K, -0.5)
+    assert e.value.code == "angular_spectrum.backward"
 
 
 def test_propagation_is_a_group():

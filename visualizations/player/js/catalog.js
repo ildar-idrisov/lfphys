@@ -7,8 +7,8 @@
 // runs not touched for the removal period are removed unless kept (★); the period (3 days by default) is set above the
 // runs and kept on the server (owner, 2026-10-29).
 import { getJSON, postJSON } from "./api.js";
-import { t } from "./i18n.js";
-import { el, initTheme, modal, num, paramForm, time, toast, toggleTheme } from "./ui.js";
+import { fmtField, legacy, parseNum, t, withLang } from "./i18n.js";
+import { el, initTheme, modal, num, numberInput, paramForm, time, toast, toggleTheme } from "./ui.js";
 
 // a scene file is at most 900 000 characters (the server's limit for a JSON parameter, below the socket's message
 // limit: review B6-F20)
@@ -44,8 +44,9 @@ function days(n) { return t("{n:d} days", { n }); }
 // the removal period: changed here, saved on the server; a period that would remove runs at once lists them first
 async function loadRetention() {
   try { keepDays = (await getJSON("/api/settings/runs")).keep_days; } catch (e) { return; }
-  const inp = el("input", { type: "number", min: 1, max: 3650, step: 1, value: keepDays, style: "width:5em",
-                            title: t("After how many days without actions (a view, a command) a run is removed with its record") });
+  const inp = numberInput(keepDays, { style: "width:5em",
+                            title: t("After how many days without actions (a view, a command) a run is removed with its record") },
+                          { int: true, step: 1, min: 1, max: 3650 });
   const note = el("span", { class: "muted" });
   inp.onchange = () => saveRetention(inp, note);
   document.getElementById("retention").replaceChildren(
@@ -54,17 +55,20 @@ async function loadRetention() {
 }
 
 async function saveRetention(inp, note) {
-  const d = Number(inp.value);
+  const pr = parseNum(inp.value);  // a decimal comma or point (review i18n-browser F1)
+  const reset = () => { inp.value = fmtField(keepDays, true); };
+  if (pr.err || !(pr.value >= 1 && pr.value <= 3650)) { toast(t("The period is a whole number of days from {lo:d} to {hi:d}", { lo: 1, hi: 3650 })); reset(); return; }
+  const d = Math.round(pr.value);
   let r;
   try {
     r = await putRetention({ keep_days: d });
     if (r.would_remove) {
       if (!confirm(t("With a period of {days} these runs ({n:d}) are removed at once with their records:", { days: days(d), n: r.would_remove.length }) + "\n" +
-                   `${r.would_remove.join("\n")}\n\n` + t("Remove them and save the period?"))) { inp.value = keepDays; return; }
+                   `${r.would_remove.join("\n")}\n\n` + t("Remove them and save the period?"))) { reset(); return; }
       r = await putRetention({ keep_days: d, confirm: r.would_remove });
-      if (r.would_remove) { toast(t("While you confirmed, the list of runs to remove changed — repeat")); inp.value = keepDays; return; }
+      if (r.would_remove) { toast(t("While you confirmed, the list of runs to remove changed — repeat")); reset(); return; }
     }
-  } catch (e) { toast(t("Retention period: {why}", { why: e.message })); inp.value = keepDays; return; }
+  } catch (e) { toast(t("Retention period: {why}", { why: e.message })); reset(); return; }
   keepDays = r.keep_days;
   note.textContent = r.removed.length ? t("saved; runs removed: {n:d}", { n: r.removed.length }) : t("saved");
   setTimeout(() => { note.textContent = ""; }, 4000);
@@ -116,7 +120,7 @@ async function startRun(body, { btn, errBox, form }) {
       }
       if ((m.worlds || []).length) break;
     }
-    location.href = `/run?id=${encodeURIComponent(j.id)}`;
+    location.href = withLang(`/run?id=${encodeURIComponent(j.id)}`);  // a link's language goes along (F7)
   } catch (e) { errBox.append(el("div", {}, String(e.message || e))); btn.disabled = false; }
 }
 
@@ -137,10 +141,10 @@ function drawModes() {
   const set = (m) => { mode = m; try { localStorage.setItem("lfviz.mode", m); } catch (e) { /* ignore */ } drawModes(); drawCards(); };
   document.getElementById("modes").replaceChildren(
     el("button", { class: mode === "demo" ? "toggle on" : "", onclick: () => set("demo"), title: t("Prepared experiments: a set-up, checks, a history") }, t("Demonstrations")),
-    el("button", { class: mode === "playground" ? "toggle on" : "", onclick: () => set("playground"), title: t("A sandbox for research: you build the scene, everything is computed live") }, t("Playground")));
+    el("button", { class: mode === "playground" ? "toggle on" : "", onclick: () => set("playground"), title: t("A laboratory for research: you build the scene, everything is computed live") }, t("Laboratories")));
   document.getElementById("mode-help").textContent = mode === "demo"
     ? t("Prepared demonstrations: each has its own set-up, checks against accepted physics and the history of the experiment.")
-    : t("A sandbox by section of physics: add objects, change their parameters on the go and watch how they move and interact. Nothing is set in advance — everything is computed by the engine's laws in real time; the conservation laws are checked live.");
+    : t("A laboratory for each branch of physics: add objects, change their parameters on the go and watch how they move and interact. Nothing is set in advance — everything is computed by the engine's laws in real time; the conservation laws are checked live.");
 }
 
 async function loadViz() {
@@ -254,8 +258,16 @@ function stateCell(r) {
   const extra = r.error ? el("div", { class: "st-bad start-why", title: t(r.error) }, t(r.error))  // a refused start: why (P1)
     : r.busy ? el("div", { class: "muted", title: t("The world is computing a change; it can be cancelled in the player") }, "⟳ " + (r.busy.what ? t(r.busy.what) : t("computing")))
     : r.state === "running" && !r.viewers ? el("div", { class: "muted", title: t("Without viewers a run pauses after a minute and frees its worker after half an hour") }, t("no viewers"))
-    : r.resume_error ? el("div", { class: "st-bad", title: t(r.resume_error) }, t("going on failed — ⏺ tries again")) : null;
+    : r.resume_error ? el("div", { class: "st-bad", title: t(r.resume_error) }, t("resuming failed — ⏺ tries again")) : null;
   return el("td", {}, el("span", { class: "dot " + cls }), label, extra);
+}
+
+// a run's scenario by its name in the world's catalogue entry, not its id (review i18n-browser F12); an unknown id as
+// it is
+function presetLabel(r) {
+  const v = vizList.find((x) => x.id === r.viz);
+  const p = v && v.schema && (v.schema.presets || []).find((q) => q.id === r.preset);
+  return p ? t(p.label) : String(r.preset);
 }
 
 async function loadRuns() {
@@ -264,22 +276,23 @@ async function loadRuns() {
   const key = JSON.stringify(runs);
   if (key === lastRuns) return;  // re-rendering would recreate buttons under the cursor
   lastRuns = key;
+  await legacy(runs);  // runs recorded before the translation: their Russian titles in the language in force (F3)
   const box = document.getElementById("runs");
   if (!runs.length) { box.replaceChildren(el("div", { class: "muted" }, t("No runs yet: choose a visualization and press “▶ Start”."))); return; }
   const rows = runs.map((r) => el("tr", {},
     stateCell(r),
     el("td", {}, el("a", { href: `/run?id=${encodeURIComponent(r.id)}` }, t(r.title)),
-       r.kind === "playground" ? el("span", { class: "badge", title: t("Playground: the record holds a window of the last minutes until “● Keep the record” is on") }, " " + (r.recording ? t("playground · being kept") : t("playground"))) : null,
+       r.kind === "playground" ? el("span", { class: "badge", title: t("Laboratory: the record holds a window of the last minutes until “● Keep the record” is on") }, " " + (r.recording ? t("Laboratory · being kept") : t("Laboratory"))) : null,
        r.n_worlds > 1 ? el("span", { class: "badge", title: t("New worlds are created inside a run; the earlier ones stay in the record") }, " " + t("worlds: {n:d}", { n: r.n_worlds })) : null,
        r.scene ? el("div", {}, t(r.scene)) : null, el("div", { class: "muted mono" }, r.id),
        r.modifications && r.modifications.length ? el("span", { class: "badge mod", title: r.modifications.map((m) => t("{label}: {value} (standard: {standard})", { label: t(m.label), value: typeof m.value === "number" ? num(m.value) : t(m.value), standard: typeof m.standard === "number" ? num(m.standard) : t(m.standard) })).join("\n") }, t("modified physics")) : null,
        r.approximations && r.approximations.length ? el("span", { class: "badge mod", title: r.approximations.map((a) => t(a)).join("\n") }, t("approximation")) : null,
        r.devices_override ? el("span", { class: "badge", title: t("The devices and the precision were set for this run") }, t("own devices")) : null),
-    el("td", {}, r.preset || t("own parameters"), el("div", { class: "muted" }, t("seed {seed}", { seed: String(r.seed) }))),
-    el("td", { class: "mono" }, time(r.sim_t)),
+    el("td", {}, r.preset ? presetLabel(r) : t("own parameters"), el("div", { class: "muted" }, t("seed {seed}", { seed: String(r.seed) }))),
+    el("td", { class: "mono nw" }, time(r.sim_t)),
     el("td", {}, r.created ? r.created.replace("T", " ") : "",
        r.last_action ? el("div", { class: "muted", title: t("The last action: removed after {days} without actions unless ★", { days: days(keepDays) }) }, t("last: {when}", { when: r.last_action.replace("T", " ") })) : null),
-    el("td", { class: "mono" }, t("{n:.3g} MB", { n: r.size / 1e6 })),
+    el("td", { class: "mono nw" }, t("{n:.3g} MB", { n: r.size / 1e6 })),
     el("td", {}, r.viewers ? `${r.viewers} 👁` : ""),
     el("td", {},
       el("button", { title: r.keep ? t("Kept for good") : t("Keep for good (do not remove after {days} without actions or by the quota)", { days: days(keepDays) }), class: r.keep ? "toggle on" : "",
@@ -304,8 +317,8 @@ function showHelp() {
     el("h3", {}, t("How to use it")),
     el("p", {}, t("Each visualization is a folder of its own in visualizations/ of the lfphys repository. A run starts only with the “▶ Start” button: the server creates a worker process that computes this run's physics and writes everything it computed into a record on the server.")),
     el("p", {}, t("Everything you see in the player is the result of the current run's computation: rays, arrivals of light, clock readings, interference patterns. Nothing is drawn “because it is known”; next to the computed value the reference of accepted physics is shown (“Checks”).")),
-    el("p", {}, t("In the player the set-up (source, slits, screen, observer…) changes at once, on the go. The laws of physics and the initial conditions change only explicitly — with the “New world” button inside the same run; a world with changed laws is marked “modified physics”.")),
-    el("p", {}, t("There is no stop: a run without viewers pauses after a minute and frees its worker after half an hour (“suspended”); open it and press ⏺ — the world is restored from its saved state and the record goes on. Runs nobody has opened for {days} are removed (the period is set above the list of runs and kept on the server); ☆ keeps a record for good. A run open in no tab can be deleted (✕).", { days: days(keepDays) })),
+    el("p", {}, t("In the player the set-up (source, slits, screen, observer…) changes at once, on the go. The laws of physics and the initial conditions change only explicitly — with the “▶ Start a new world” button inside the same run; a world with changed laws is marked “modified physics”.")),
+    el("p", {}, t("There is no stop: a run without viewers pauses after a minute and frees its worker after half an hour (“suspended”); open it and press ⏺ — the world is restored from its saved state and the record continues. Runs nobody has opened for {days} are removed (the period is set above the list of runs and kept on the server); ☆ keeps a record for good. A run open in no tab can be deleted (✕).", { days: days(keepDays) })),
     el("p", { class: "muted" }, t("Keys: T — theme, ? — help."))));
 }
 

@@ -19,8 +19,8 @@
 // `velocity_max` and says so); Delete removes the selected object, Esc
 // cancels a drag. A refusal of the world is shown (the player's toast) and the ghost snaps back. A gesture that starts
 // on an object is never the camera's. Edits respect the read-only history and a busy world (ctx.readOnly, ctx.busy).
-import { t } from "./i18n.js";
-import { control, el, fill, num, panel, time, toast } from "./ui.js";
+import { fmtField, parseNum, t } from "./i18n.js";
+import { control, el, fill, num, numberInput, panel, time, toast } from "./ui.js";
 import { armPick, isFixedWindow, picking, redrawWindows, setFrameOverlay, setWindowManipulator } from "./slices.js";
 
 // a scene file is at most 900 000 characters (the server's limit for a JSON parameter, below the socket's message
@@ -182,7 +182,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
         el("button", { onclick: closePlace }, t("Cancel")))));
     if (typing && placing.ctls[typing[0]] && placing.ctls[typing[0]].input) {
       const inp = placing.ctls[typing[0]].input;
-      if (inp.type === "number") inp.value = typing[1].input.value;  // what was typed and not yet committed
+      if (inp.classList.contains("num")) inp.value = typing[1].input.value;  // what was typed and not yet committed
       inp.focus();
     }
   }
@@ -707,13 +707,14 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
   window.addEventListener("keyup", (e) => { if (e.key === "Shift" && drag && drag.moved) { describeDrag(false, performance.now()); drawGhost(); } }, true);
 
   // the throw's scale and the help on manipulation (panel "Scene objects")
-  const throwInput = el("input", { type: "number", min: 0, step: "any", value: throwScale ?? "", placeholder: t("auto"), style: { width: "6em" },
+  const throwInput = numberInput(throwScale ?? "", { placeholder: t("auto"), style: { width: "6em" },
                                    title: t("Throw velocity = the pointer's displacement in the world over the last 0.1 s ÷ (0.1 s × the playback speed) × the scale. Empty — auto: a brisk flick (the view's width in a second) throws the object across the whole region of the world in 2 s at the current playback speed, but not faster than half the largest speed the world declared; a faster throw is clamped") });
   throwInput.onchange = () => {
-    const raw = String(throwInput.value).trim(), v = Number(raw);
-    if (raw === "") throwScale = null;
+    const r = parseNum(throwInput.value), v = r.value;  // a decimal comma or point (review i18n-browser F1)
+    if (r.err === "empty") throwScale = null;
     else if (v > 0 && Number.isFinite(v)) throwScale = v;
-    else { throwInput.value = throwScale ?? ""; return; }
+    else { throwInput.value = throwScale === null ? "" : fmtField(throwScale); return; }
+    throwInput.value = throwScale === null ? "" : fmtField(throwScale);
     try { if (throwScale === null) localStorage.removeItem("lf.throwScale"); else localStorage.setItem("lf.throwScale", String(throwScale)); } catch (e) { /* storage off */ }
   };
   const autoBtn = el("button", { class: "pg-auto", title: t("The throw scale — automatic"), onclick: () => { throwInput.value = ""; throwInput.onchange(); } }, t("auto"));
@@ -801,7 +802,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
     });
     const added = el("div", { class: "muted" }, t("added at t = {t}", { t: time(o.t_added, 6) }));
     const camRow = s3() ? el("div", { class: "row pg-cam" },
-      el("button", { title: t("The 3-D view's centre of rotation on the object (the direction of view the same)"), onclick: () => centerOnObject(o.id) }, t("◎ Centre")),
+      el("button", { title: t("Move the 3-D view's centre of rotation to the object (the direction of view unchanged)"), onclick: () => centerOnObject(o.id) }, t("◎ Centre")),
       el("button", { class: "toggle", onclick: () => setFollow(follow && follow.id === o.id ? null : o.id) }, t("👁 Follow"))) : null;
     // keep the field the owner was in: the same parameter's field of the new controls takes the focus back
     const focusPid = Object.entries(insp.ctls).find(([, c]) => c.input && document.activeElement === c.input);
@@ -885,9 +886,13 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
   function drawRec() {
     if (!rec) { fill(recBox, el("div", { class: "muted" }, "…")); return; }
     const mins = Math.round((rec.window_s || 600) / 60);
-    const win = el("input", { type: "number", min: 1, max: 1440, step: 1, value: mins, style: { width: "5em" },
-                              title: t("How many last minutes the record's window holds") });
-    win.onchange = () => postRec({ window_s: 60 * Number(win.value) });  // the window only (B6-F11, F12)
+    const win = numberInput(mins, { style: { width: "5em" },
+                              title: t("How many last minutes the record's window holds") }, { int: true, step: 1, min: 1, max: 1440 });
+    win.onchange = () => {  // the window only (B6-F11, F12)
+      const r = parseNum(win.value);
+      if (r.err || !(r.value >= 1 && r.value <= 1440)) { win.value = fmtField(mins, true); toast(t("The window is from {lo:d} to {hi:d} minutes", { lo: 1, hi: 1440 }), "notice", 4000); return; }
+      postRec({ window_s: 60 * Math.round(r.value) });
+    };
     const btn = el("button", { class: rec.recording ? "toggle on" : "", title: rec.recording
       ? t("The record is kept whole; press to hold only the window again (what was kept stays)")
       : t("Keep what the window holds and record everything from now on (like a dashcam)"),
@@ -897,7 +902,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
       el("div", { class: "row" }, el("span", { class: "muted" }, t("Window: the last")), win, el("span", { class: "muted" }, t("min"))),
       el("div", { class: "help" }, rec.recording
         ? t("Everything that was in the window, and everything after it, is kept until you switch it off.")
-        : t("Only the last minutes are kept: older ones are removed. Noticed an effect — press “● Keep the record”: the window with it is kept and the record goes on whole.")),
+        : t("Only the last minutes are kept: older ones are removed. If you notice an effect, press “● Keep the record”: the window with it is kept, and from then on the record is kept in full.")),
       el("div", { class: "muted" }, t("the record from t = {t}; on the disk {mb:.3g} MB", { t: rec.kept_from_t === null || rec.kept_from_t === undefined ? "—" : time(rec.kept_from_t, 5), mb: (rec.size || 0) / 1e6 })));
   }
 

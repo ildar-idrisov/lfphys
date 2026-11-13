@@ -376,7 +376,7 @@ def test_the_model_of_a_boosted_wave_is_its_spectrum():
     import dataclasses
     sh = copy.copy(t.particles[p])
     sh.packet = dataclasses.replace(sh.packet, k=list(-k))
-    assert "the grid does not carry" in str(t._resolution_reason(t._arr, [sh]) or "")
+    assert "the grid does not resolve" in str(t._resolution_reason(t._arr, [sh]) or "")
     rep = t.boost_particle(p, -k)
     assert np.allclose(rep["k_after"], 0.0, atol=1e-9)
     # with the packet's own spread s0 (what a boost uses: review LB1-p02-ux Q5) the model's |mean| + 6 sigma_k is the

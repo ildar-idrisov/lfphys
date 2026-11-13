@@ -70,13 +70,14 @@ from scipy import constants as sc
 from scipy import special
 
 from ...i18n import T
+from lfphys.codes import coded
 from ..optics.scalar import hankel1 as _hankel1_real
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
     "title": T("Vector diffraction by slits in a perfectly conducting screen"),
     "statement": T("A plane wave at any angle on one or several slits in a perfectly conducting screen of finite (or "
-                   "zero) thickness, both polarizations (E along the slits: TE/s, H along the slits: TM/p): the mode "
+                   "zero) thickness, both polarisations (E along the slits: TE/s, H along the slits: TM/p): the mode "
                    "method (waveguide modes in the slits matched to the fields of the half-spaces), for a thin screen "
                    "a basis with the edge conditions; the field at any point, the angular spectrum, the far-field "
                    "pattern, the transmission per slit width, the power balance (the screen's optical theorem), an "
@@ -92,8 +93,8 @@ ABOUT = {
               T("Takakura, PRL 86, 5601 (2001) (from secondary sources)"),
               T("Rayleigh, Phil. Mag. 43, 259 (1897) — the limits of a narrow slit"),
               T("Sommerfeld, Math. Ann. 47, 317 (1896) — the half-plane")],
-    "conflicts": [T("lfphys.theories.approx.kirchhoff: Kirchhoff's scalar boundary conditions; they disagree for slits "
-                    "narrower than ~10 λ and in the polarization")],
+    "conflicts": [T("lfphys.theories.approx.kirchhoff: Kirchhoff's scalar boundary conditions; they disagree for "
+                    "slits narrower than ~10 λ and in the polarisation")],
 }
 
 Z0 = sc.mu_0 * sc.c
@@ -866,19 +867,19 @@ def solve(k: float, centers, widths, thickness: float = 0.0, pol: str = "TE", th
     centers = np.atleast_1d(np.asarray(centers, float))
     widths = np.broadcast_to(np.atleast_1d(np.asarray(widths, float)), centers.shape).copy()
     if np.any(widths <= 0):
-        raise ValueError("solve: slit widths > 0")
+        raise coded(ValueError(T("slits: the widths must be > 0")), "slit.geometry")
     order = np.argsort(centers)
     centers, widths = centers[order], widths[order]
     if np.any(centers[1:] - widths[1:] / 2 <= centers[:-1] + widths[:-1] / 2):
-        raise ValueError("solve: the slits overlap")
+        raise coded(ValueError(T("slits: the slits overlap")), "slit.overlap")
     if thickness < 0:
-        raise ValueError("solve: thickness >= 0")
+        raise coded(ValueError(T("slits: the thickness must be ≥ 0")), "slit.geometry")
     if not abs(theta) < 0.5 * math.pi:
-        raise ValueError("solve: |theta| < pi/2")
+        raise coded(ValueError(T("slits: the angle of incidence must satisfy |θ| < π/2")), "slit.geometry")
     if method == "auto":
         method = "edge" if thickness == 0 and k * float(np.max(widths)) <= EDGE_KW_MAX else "modal"
     if method == "edge" and thickness != 0:
-        raise ValueError("solve: the edge basis is for a zero-thickness screen")
+        raise coded(ValueError(T("slits: the edge basis is for a zero-thickness screen")), "slit.geometry")
     slits = [_Slit(float(c), float(w)) for c, w in zip(centers, widths)]
     if modes is None:
         modes = [_default_modes(k, s.w, method) for s in slits]

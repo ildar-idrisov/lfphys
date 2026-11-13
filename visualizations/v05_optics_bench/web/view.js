@@ -412,7 +412,11 @@ export function createView(ctx) {
     text(g, frame.z === null || frame.z === undefined ? t("Photons of this segment: n = {n:d}", { n: c.n })
       : t("Photons of this segment: n = {n:d}; reflected: z = {z:+.3g}σ", { n: c.n, z: frame.z }),
       bx.x, bx.y + 6, { bg: false, font: "600 12px system-ui" });
-    const rowH = Math.min(40, (bx.h - 26) / 3), labW = 76, barW = Math.max(80, bx.w * 0.42);
+    // the legend under the bars, wrapped to the box's width (the Russian line is longer than the canvas: browser review
+    // F10); the rows leave room for its extra lines
+    g.font = "11px system-ui";
+    const legendLines = wrapWords(g, t("bar: the fraction among the detected; tick: the run's expectation; whisker: ±2σ"), bx.w);
+    const rowH = Math.min(40, (bx.h - 26 - 13 * (legendLines.length - 1)) / 3), labW = 76, barW = Math.max(80, bx.w * 0.42);
     ["R", "T", "A"].forEach((key, i) => {
       const y = bx.y + 16 + i * rowH, f = c.n ? c[key] / c.n : 0, p = e[key];
       text(g, outLabel(key), bx.x, y + 13, { bg: false, color: muted });
@@ -425,11 +429,21 @@ export function createView(ctx) {
         g.beginPath(); g.moveTo(x0 + barW * a, y + 9.5); g.lineTo(x0 + barW * bb, y + 9.5); g.stroke();
       }
       g.fillStyle = ink; g.fillRect(x0 + barW * p - 1, y, 2.5, 19);
-      text(g, `${c[key]}` + (c.n ? ` (${fmt(f, ".4g")})` : ""), x0 + barW + 8, y + 13, { bg: false });
+      text(g, fmt(c[key], "d") + (c.n ? ` (${fmt(f, ".4g")})` : ""), x0 + barW + 8, y + 13, { bg: false });
       text(g, sg[key] ? t("expected {p:.5g}, σ = {s:.2g}", { p, s: sg[key] }) : t("expected {p:.5g}", { p }), x0, y + 29,
         { bg: false, color: muted, font: "10.5px system-ui" });
     });
-    text(g, t("bar: the fraction among the detected; tick: the run's expectation; segment: ±2σ"), bx.x, bx.y + 16 + 3 * rowH + 8, { bg: false, color: muted });
+    legendLines.forEach((line, i) => text(g, line, bx.x, bx.y + 16 + 3 * rowH + 8 + 13 * i, { bg: false, color: muted }));
+  }
+  function wrapWords(g, s, maxW) {  // greedy word wrap with the context's current font
+    const lines = [];
+    let cur = "";
+    for (const w of s.split(" ")) {
+      const next = cur ? cur + " " + w : w;
+      if (cur && g.measureText(next).width > maxW) { lines.push(cur); cur = w; } else cur = next;
+    }
+    if (cur) lines.push(cur);
+    return lines;
   }
 
   // --- panels ---------------------------------------------------------------------------------------------
@@ -465,8 +479,8 @@ export function createView(ctx) {
     help: () => el("div", {},
       el("h4", {}, t("What is on the screen")),
       el("p", {}, t("On the left, the diagram: the source, the planar structure (to scale in depth: the layers are coloured bands, the bar on the left is one wavelength), the incident, reflected and transmitted beams at the angles the run computed by Snell's law (inside the layers, an approximate ray picture), and the two detectors. The brightness of the beams is the computed R and T. To the right of the diagram, the field |E|² of the s wave in and near the structure (the engine's function field_profile): a standing wave above the structure, the decay in a metal and beyond the face at total reflection.")),
-      el("p", {}, t("Photons fly one by one (orange: s, blue: p). On reaching the structure a photon gets its fate by the Born rule with this run's probabilities R, T, A. While no detector has clicked, two packets (rings) are shown after the structure, their brightness by the probabilities; the click of one detector (a flash) is the outcome. When the arrival time at one detector has passed without a click, its packet fades. An absorbed photon vanishes in the structure (a red flash).")),
-      el("p", {}, t("On the right, this run's curves: R(θ), T(θ) for s and p at the current λ (θ_B: where the run's r_p vanishes, θ_c: where the run's transmission vanishes), the spectrum R(λ), T(λ) at the current angle, and the photon counters with the expectation and ±2σ.")),
+      el("p", {}, t("Photons fly one by one (orange: s, blue: p). When a photon reaches the structure, its fate is drawn by the Born rule with this run's probabilities R, T, A. While no detector has clicked, two packets (rings) are shown after the structure, their brightness by the probabilities; the click of one detector (a flash) is the outcome. When the arrival time at one detector has passed without a click, its packet fades. An absorbed photon vanishes in the structure (a red flash).")),
+      el("p", {}, t("On the right, this run's curves: R(θ), T(θ) for s and p at the current λ (θ_B: where the run's r_p vanishes, θ_c: where the run's transmission vanishes), the spectrum R(λ), T(λ) at the current angle, and the photon counters with the expected values and ±2σ.")),
       el("p", {}, t("Any change of the set-up (λ, angle, polarisation, media, structure) applies at once and starts a new segment. Photons emitted before a change of the source or the structure fly on and are counted as transitional; when the angle or the media change, the beam paths are rebuilt and the photons in flight are lost (this is counted)."))),
     reset() { H = null; segs = []; clk = newClicks(); flashes = []; lastT = null; lastFrame = null; },
     // key frames (player.js): segments and clicks only grow (lengths); the panels follow the last segment

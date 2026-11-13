@@ -1,8 +1,8 @@
-# p01 — the gravity playground (space and gravity)
+# p01 — the gravity laboratory (space and gravity)
 
 **English** | [Русский](README.ru.md)
 
-A playground section (plan P15.1; framework P15.0: `../RULES.md` §6). The owner's words (2026-10-28): «в плейграунде
+A laboratory section (plan P15.1; framework P15.0: `../RULES.md` §6). The owner's words (2026-10-28): «в плейграунде
 можно добавлять в мир разные объекты, менять параметры, смотреть за их изменением и взаимодействием, все должно быть не
 задано заранее, а просчитываться в реалтайме, чтобы можно было задать комбинацию и силумировать поведение например
 черной дыры или исследовать гравитацию» ("in the playground one can add different objects to the world, change
@@ -20,8 +20,8 @@ touching then merges at once (mass and momentum kept); the scene file takes the 
 **Masses as properties of the objects** (plan P16.1, batch LB1: the bench never restarts):
 
 * **The Kerr–Newman hole is an object of its world** ("Kerr–Newman black hole", the last object of the scene; a world
-  always has one, made from the world's parameters when the scene has none; it cannot be removed — clearing the scene (the
-  scene operation `clear`) keeps it — nor doubled). Its **mass** changed at the current moment is **a change of units**: the metric is G = c = M
+  always has one, made from the world's parameters when the scene has none; it cannot be removed (✕ and Delete are refused; the
+  API's scene command `clear` empties the scene but keeps the hole; the player has no clear-scene button) — nor doubled). Its **mass** changed at the current moment is **a change of units**: the metric is G = c = M
   = 1, so every body keeps its state in units of M (place, momentum, E, L, K) and the world's seconds per unit of M
   change from then on (``Clock``: the geometric time goes on from where it is); proper times (``Geodesics.
   rescale_proper_time``) and the observers' clocks are kept in seconds; lengths in metres scale with M (a body at r = 6 M
@@ -98,9 +98,9 @@ The binary sits at its centre of mass (no handle). Every frame carries `at[id]` 
 
 **Measurables** (`measurables()`, every frame's `meas`, `meas_note` for what is undefined, `measure()` for the sweeps):
 Newton — the system's energy (J) and angular momentum (kg·m²/s) and their drifts since the scene's last change; per
-body its distance to the chosen reference (its parameter "Distance in the instruments — to": the most massive other body, the
+body its distance to the chosen reference (its parameter "Instruments: distance to": the most massive other body, the
 centre of mass, the origin), its speed (km/s) and its osculating two-body elements about the most massive other body
-(a in au, e, the period in years; undefined when unbound); per probe g and the tidal stretch. Kerr–Newman — the largest
+(a in au, e, the period in years, named in the quantity's label; undefined when unbound); per probe g and the tidal stretch. Kerr–Newman — the largest
 drift of Carter's K and of the mass shell; per body r (G M/c² and km), its ZAMO-measured speed, E, L, the turning points'
 semi-axis (r_p + r_a)/2 and eccentricity (r_a − r_p)/(r_a + r_p) (the roots of the radial potential R(r) = P² − Δ(K + r²)
 around r), the radial period measured between two periapsis passages (p_r from − to +; the passages kept in world
@@ -116,7 +116,7 @@ per detector h₊ and h×.
 The 3-D scene (spin axis or orbital angular momentum up): the bodies as spheres (drawn at least 0.6 % of the scene so
 that a star much smaller than its orbit stays visible), their trails (sent as accumulating messages; a segment of the
 record starts with full trails), the hole's horizon, ergosurface and equatorial circular orbits; the panels of the
-playground (palette, objects, inspector with the selected object's state "now:", probes, the scene's changes, the
+laboratory (palette, objects, inspector with the selected object's state "now:", probes, the scene's changes, the
 file, the record's window). A Newtonian black hole is drawn light (its Schwarzschild radius is far below a pixel) with
 a marker and its name (review UX-ui U18: near-black on the dark scene, the hole the stars orbit could not be found).
 
@@ -178,7 +178,7 @@ added when that is under a year. The Newtonian world advances in chunks of 16 in
 ## Tests
 
 `tests/test_p01_lab.py` (LB1): the hole an object of every Kerr–Newman world (not removable, not doubled, kept by a
-clear); its mass as a change of units (state untouched, proper times and clocks continuous in seconds, the evolution
+`clear`); its mass as a change of units (state untouched, proper times and clocks continuous in seconds, the evolution
 after Δs that of the unchanged world after Δs/2); spin and charge as the flagged "what if" (place, proper time and ZAMO
 velocity kept to round-off, E and L recomputed, "“WHAT IF” MODEL" and the engine module in the approximations and the event, the
 checks passing, a body under the new horizon refused with the world as it was, a body near the horizon keeping γ, the

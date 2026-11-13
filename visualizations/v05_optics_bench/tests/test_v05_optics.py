@@ -473,3 +473,72 @@ def test_airy_checks_just_below_grazing_in_the_film(ns, d, lam, dth):
     assert not failed(h), failed(h)
     ch = h.checks()
     assert ch["airy0"]["ok"] is True and ch["airymax0"]["ok"] is True, (ch["airy0"], ch["airymax0"])
+
+
+# --- the engine's refusals matched by their machine codes (review 2026-11-12 i18n-code F5) ------------------------
+def _raised(f, *a):
+    with pytest.raises(ValueError) as e:
+        f(*a)
+    return e.value
+
+
+@pytest.mark.parametrize("code,call", [
+    ("airy.total_reflection", lambda: thin_films.airy(1.5, 1.0, 1.5, 200.0, 600.0, math.radians(60.0), "s")),
+    ("airy.lossy_index", lambda: thin_films.airy(1.0, 1.5 + 0.1j, 1.5, 200.0, 600.0, 0.3, "s")),
+    ("airy.grazing", None),
+])
+def test_airy_refusals_map_to_the_worlds_words_by_code(code, call):
+    """`_airy_reason` reads the engine's code, not its English: every Airy refusal gets the world's own sentence."""
+    from lfphys.codes import code_of, coded
+    from lfphys.i18n import T
+    from v05_optics_bench.viz import _AIRY_REASONS, _airy_reason
+    e = _raised(call) if call else coded(ValueError(T("airy: reworded by the engine")), code)
+    assert code_of(e) == code
+    assert _airy_reason(e) == _AIRY_REASONS[code] and _airy_reason(e)["$t"] != e.args[0]["$t"]
+
+
+def test_airy_grazing_is_coded_by_the_engine():
+    """The grazing case for real: n₀ sin θ equal to the film's index, cos θ₁ = 0 (single_film / airy)."""
+    from lfphys.codes import code_of
+    th = math.asin(1.2 / 1.5)
+    codes = set()
+    for f in (thin_films.airy, thin_films.single_film):
+        try:
+            f(1.5, 1.2, 1.0, 200.0, 600.0, th, "s")
+        except ValueError as e:
+            codes.add(code_of(e))
+    assert codes and codes <= {"airy.grazing", "airy.total_reflection"}
+
+
+def test_airy_reason_without_a_code_keeps_the_engines_text():
+    from lfphys.i18n import T
+    from v05_optics_bench.viz import _airy_reason
+    assert _airy_reason(ValueError(T("some new refusal"))) == T("some new refusal")
+    assert _airy_reason(ValueError("plain"))["$t"] == "the engine's reason: {err}"
+
+
+def test_film_below_critical_maps_to_no_reference():
+    from lfphys.codes import code_of
+    from v05_optics_bench.viz import _evanescent_ref
+    th = math.radians(20.0)  # below the critical angle of glass 1.5 -> air
+    assert code_of(_raised(thin_films.evanescent_length, 1.5, 1.0, 600.0, th)) == "film.below_critical"
+    assert _evanescent_ref(1.5, 1.0, 600.0, th) is None
+    assert _evanescent_ref(1.5, 1.0, 600.0, math.radians(60.0)) > 0
+
+
+def test_joule_quadrature_limit_maps_to_an_informational_check(monkeypatch):
+    """film.too_many_nodes: the Joule check becomes informational with the engine's numbers, never a crash."""
+    from lfphys.codes import coded
+    from lfphys.i18n import T
+    from v05_optics_bench import viz as VZ
+
+    def refuse(*a, **k):
+        raise coded(ValueError(T("Joule absorption: {n:d} quadrature nodes needed in one layer (the limit is {lim:d})",
+                                 n=99999, lim=4096)), "film.too_many_nodes")
+
+    monkeypatch.setattr(VZ.thin_films, "joule_absorption_s", refuse)
+    h = Harness("v05_optics_bench", "metal")
+    c = h.checks()["joule0"]
+    assert c.get("info") and c["note"]["$t"].startswith("not checked here: the Joule integral")
+    assert c["note"]["a"] == {"n": 99999, "lim": 4096}
+    assert not h.errors()

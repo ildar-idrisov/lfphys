@@ -1,8 +1,8 @@
-# p02 — the quantum playground (quantum particles)
+# p02 — the quantum laboratory (quantum particles)
 
 **English** | [Русский](README.ru.md)
 
-A playground section (plan P15.3; framework P15.0: `../RULES.md` §6). The owner's words (2026-10-28): «в плейграунде
+A laboratory section (plan P15.3; framework P15.0: `../RULES.md` §6). The owner's words (2026-10-28): «в плейграунде
 можно добавлять в мир разные объекты, менять параметры, смотреть за их изменением и взаимодействием, все должно быть не
 задано заранее, а просчитываться в реалтайме» ("in the playground one can add different objects to the world, change
 parameters, watch how they change and interact; nothing should be set in advance, everything computed in real
@@ -48,7 +48,7 @@ has grown near the band's edge is refused with the number (the 3-D preset after 
 of the norm beyond the coarser band). The
 objects keep their physical parameters: an edge set to 0 is the sharpest the grid resolves **when the object gets it**
 and keeps that width (the potential must not change with the numerics), so a grid too coarse for an object's edge, or
-a localization length under 1.5 steps, is refused naming the object; a flux plane keeps the position it was asked for
+a localisation length under 1.5 steps, is refused naming the object; a flux plane keeps the position it was asked for
 (the nearest sample) and is refused outside the window. After the change the open edges' layers are rebuilt for the
 new window (the probability inside the old layers goes on as it is), the absorbers' strengths and the time step are
 tuned again, Bohm points outside a smaller window are registered as dropped by it, the energy reference and the flux
@@ -91,7 +91,7 @@ wrong and what to change (the engine's sentence under "details").
 | flux tube | `FluxTube` (Aharonov–Bohm; its field also acts on spins) | centre, flux in h/e, radius |
 | detector | `Detector` (an absorbing region; the probability it takes is counted per particle) | region, strength (0: chosen for the particles' waves) , edge |
 | which-path marker | `PathMarker` (a two-level detector that turns while the particle is in its region) | region, turning rate in rad/fs |
-| environment | `Localization` (Lindblad localization by quantum jumps; GRW form when everywhere) | rate λ in 1/ps, length a, region |
+| environment | `Localization` (Lindblad localisation by quantum jumps; GRW form when everywhere) | rate λ in 1/ps, length a, region |
 | flux plane | `Scene.add_plane` (the probability flux through it, integrated in time) | axis, position |
 
 Actions: **"Prepare the packet anew"** — a fresh Gaussian packet from the particle's parameters at the current
@@ -258,16 +258,16 @@ cost per step on the device in use (CPU or GPU 0) and the real-time limit it giv
 ## What the player shows
 
 In a plane the wave's window is the main view, across the whole centre (review UX-ui U15, as p04); the 3-D scene is
-shown beside it on request ("Show the 3D view alongside", panel "View"); in space unchanged. The 3-D scene (z up): the objects (potentials orange / blue for wells, detectors and markers, fields, planes), the wave
+shown beside it on request ("Show the 3-D view alongside", the "View" panel); in space unchanged. The 3-D scene (z up): the objects (potentials orange / blue for wells, detectors and markers, fields, planes), the wave
 |ψ|² summed over the particles (each its own probability) — an image on the plane z = 0, or a volume in space — and the
 Bohm points (registered ones dimmer); the window of the plane z = 0 (|ψ|², amplitude, log, or the phase of a single
-particle) with the objects' outlines, the Bohm points and the measured positions (×); the playground's panels.
+particle) with the objects' outlines, the Bohm points and the measured positions (×); the laboratory's panels.
 
 ## Approximations and limits
 
 * Non-relativistic particles (Schrödinger; spin ½ by Pauli), **no interaction between particles** (each its own wave:
   distinguishable, no exchange); in a plane the fields vary only in it (exact for uniform fields); the environment is a
-  Markovian localization model, not a particular gas or radiation.
+  Markovian localisation model, not a particular gas or radiation.
 * A particle in a **scene file** is kept as its packet (parameters), not as its wave (a 2-D wave is megabytes): loaded,
   it starts again from its packet at the file's time. A duplicate is a new packet with the same parameters.
 * **The grid's resolution** (engine `_resolution_reason`, review B6-Q4): a packet needs |k| + 6σ_k ≤ π/d per axis;
@@ -277,8 +277,8 @@ particle) with the objects' outlines, the Bohm points and the measured positions
 * **A uniform field cannot be changed while a charged particle is in the window** where its vector potential changes
   (review B6-Q3): the impulse of the switch's induced field depends on how the magnet is built, which the scene's
   Landau gauge does not give (two set-ups identical in the window ended 29 nm apart). A flux tube can be changed (its
-  gauge is that of a thin solenoid). Place charged packets after the fields; clearing the scene (the scene operation `clear`) removes the
-  particles first.
+  gauge is that of a thin solenoid). Place charged packets after the fields; clearing the scene (the API's scene command `clear`; the player has no
+  clear-scene button, objects are removed one by one with ✕ or Delete) removes the particles first.
   A refused removal leaves the object as it was (review UX-params P28 [error in earlier]: the field had already lost
   its link to the engine and every later removal or clearing of the scene failed with "Scene: 'o1'").
   A packet needs 7.4 σ to the window's faces (the grid is periodic), so windows are large.

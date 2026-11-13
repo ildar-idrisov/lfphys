@@ -28,7 +28,8 @@ THEORY_KINDS = {
     "model": T("phenomenological model"),
     "alternative": T("alternative (modified laws)"),
 }
-NOT_MODULES = ("lfphys.registry", "lfphys.i18n")  # the catalogue itself and the text mechanism: no physics, no ABOUT
+NOT_MODULES = ("lfphys.registry", "lfphys.i18n", "lfphys.codes")  # the catalogue itself, the text mechanism and the
+#                                                                   refusal codes: no physics, no ABOUT
 REQUIRED = ("layer", "kind", "title", "statement", "validity", "basis", "conflicts")
 
 

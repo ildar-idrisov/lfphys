@@ -39,7 +39,7 @@ import math
 import struct
 from dataclasses import dataclass, field
 
-from .i18n import T, error_body, is_t, render_in
+from .i18n import T, error_body, is_t, json_hook, mentions, render_in
 
 CSV_MAX_ROWS = 2_000_000
 CSV_MAX_CELLS = 20_000_000  # rows × columns of one CSV (~0.4 GB): beyond, a stride (review LB1-framework F11)
@@ -56,7 +56,7 @@ def read_json(files: dict, run, e) -> dict:
         f = files[e.seg] = open(run.seg_path(e.seg), "rb")
     f.seek(e.offset)
     (jlen,) = struct.unpack("<I", f.read(4))
-    return json.loads(f.read(jlen))
+    return json.loads(f.read(jlen), object_hook=json_hook)  # texts back as T (review i18n-code F2)
 
 
 def t_unit_of(header: dict):
@@ -214,7 +214,9 @@ def display_label(w: WorldInfo, d: dict):
         ol = w.objects[of].get("label") or of
         if not is_t(ol):
             ol = str(ol)
-        if ol and not (isinstance(ol, str) and isinstance(lab, str) and ol in lab):
+        # the quantity names its object already: compared by msgid and arguments, never by a rendering or a repr
+        # (review i18n-code F1: "Probe 1: “Probe 1”: to the nearest particle")
+        if ol and not mentions(lab, ol):
             return T("{object}: {label}", object=ol, label=lab)
     return lab
 
@@ -396,7 +398,7 @@ async def series(request, mgr):
     chosen, stride = thin(frames, cap)
     # the CSV's header in the language asked for (?lang=, English by default): a file keeps no T objects
     lang = request.query.get("lang") or "en"
-    t_head = render_in(T("t, {unit} (every {k:d}th frame of the record: a limit of {cap:d} rows)", unit=w.t_unit, k=stride,
+    t_head = render_in(T("t, {unit} (one frame in {k:d} of the record: a limit of {cap:d} rows)", unit=w.t_unit, k=stride,
                          cap=cap) if stride > 1 else T("t, {unit}", unit=w.t_unit), lang)
     name = f"{run.id}-w{a['world']}-series.csv"
     resp = web.StreamResponse(headers={"Content-Type": "text/csv; charset=utf-8",

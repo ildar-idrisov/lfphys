@@ -38,6 +38,7 @@ from lfphys.i18n import T, is_t, join, text_of
 from lfphys.theories.interpretations import bohm
 from lfviz import limits
 from lfviz.errors import Refusal
+from lfphys.codes import code_of
 from lfviz.params import Param, Schema
 from lfviz import playground as PG
 from lfviz.playground import ObjectType, PlaygroundSimulation, scene_param, scene_time
@@ -138,7 +139,8 @@ SCHEMA.presets.update({
     # the tube inside the wall between the slits (3 nm thick: its field e^{-r^2/R^2} is e^{-9} at the wall's faces):
     # the screen's pattern is the ideal half-fringe shift 2 (S1 + S2) - P0 to 3.4e-4 of its peak (review B6-Q10: the
     # tube behind the wall, in the beams' overlap, left 5.6 %)
-    "aharonov_bohm": {"label": T("Aharonov–Bohm: a flux tube h/2e in the wall between the slits shifts the fringes by half"),
+    "aharonov_bohm": {"label": T("Aharonov–Bohm: a flux tube h/2e in the wall between the slits shifts the fringes "
+                                 "by half a period"),
                       "params": {"dim": "2d", "n2": "256", "size": 80.0, "edges": "open", "scene": _scene([
                           {"type": "slit_wall", "label": T("Wall with two slits"),
                            "values": {"position": 0.0, "thickness": 3.0, "V": 3.0, "n_slits": 2, "width": 2.0,
@@ -148,7 +150,7 @@ SCHEMA.presets.update({
                           {"type": "detector", "label": T("Screen"), "values": {"x": 30.0, "sx": 4.0, "sy": 0.0, "edge": 3.0}},
                           {"type": "packet", "label": T("Electron"),
                            "values": {"x": -20.0, "wavelength": 2.0, "sx": 2.5, "sy": 4.0}}])}},
-    "tunnel": {"label": T("Tunnelling: a packet against a thin barrier above its energy"),
+    "tunnel": {"label": T("Tunnelling: a packet hitting a thin barrier higher than its energy"),
                "params": {"dim": "2d", "n2": "256", "size": 80.0, "edges": "open", "scene": _scene([
                    {"type": "box", "label": T("Barrier"), "values": {"x": 0.0, "sx": 1.5, "sy": 0.0, "V": 0.5}},
                    {"type": "plane", "label": T("Flux behind the barrier"), "values": {"position": 6.0}},
@@ -222,10 +224,10 @@ def palette(ndim: int) -> dict:
         _p("species", T("Particle"), "select", "electron",
            options=[("electron", T("electron (charge −e, spin ½)")), ("neutron", T("neutron (spin ½)")),
                     ("he4", T("⁴He atom")), ("c60", T("fullerene C₆₀")), ("atom", T("atom of a given mass"))]),
-        _p("mass_u", T("Atom mass, u"), "float", 7.0, min=1e-3, max=1e6, log=True, show_if={"species": ["atom"]}),
+        _p("mass_u", T("Atomic mass, u"), "float", 7.0, min=1e-3, max=1e6, log=True, show_if={"species": ["atom"]}),
         *[_p(c, T("Centre at preparation: {c}, nm", c=c), "float", 0.0, min=-1e6, max=1e6,
-             help=T("Where the packet was prepared (a drag writes here the point the wave was moved to); then the wave "
-                    "moves by itself: where it is now, ⟨{c}⟩ in the inspector shows", c=c)) for c in "xyz"[:ndim]],
+             help=T("Where the packet was prepared (dragging records here the point the wave was moved to); after "
+                    "that the wave moves by itself, and ⟨{c}⟩ in the inspector shows where it is now", c=c)) for c in "xyz"[:ndim]],
         _p("wavelength", T("de Broglie wavelength, nm (0: at rest)"), "float", 2.0, min=0.0, max=1e6,
            help=T("Momentum ħk, k = 2π/λ; the grid must resolve the wave: |k| + 3/σ ≤ π/step. After a throw: 2π/|⟨k⟩| "
                   "of the mean wave vector of the whole wave (for a wave of several parts this is the wavelength of "
@@ -283,8 +285,8 @@ def palette(ndim: int) -> dict:
                      _p("grad", T("Gradient g, T/nm (Bx = Bx₀ − g·(x − x_c), By = By₀ + g·(y − y_c))"), "float", 0.0,
                         min=-1e4, max=1e4,
                         help=T("A non-uniform field with div B = 0 and curl B = 0 around the region's centre (x_c, "
-                               "y_c; for a field over the whole scene, around zero): it acts on the spin; on a charge "
-                               "only a uniform Bz")),
+                               "y_c; for a field over the whole scene, around the origin): it acts on the spin; on a "
+                               "charge only a uniform Bz")),
                      *region])
     flux = Schema([_p("x", T("Centre: {c}, nm", c="x"), "float", 0.0, min=-1e6, max=1e6),
                    _p("y", T("Centre: {c}, nm", c="y"), "float", 0.0, min=-1e6, max=1e6),
@@ -296,8 +298,8 @@ def palette(ndim: int) -> dict:
     marker = Schema([*_xyz(ndim), *_sizes(ndim, (3.0, 3.0, 0.0)),
                      _p("rate", T("Marker's turning rate, rad/fs"), "float", 1.0, min=-1e4, max=1e4,
                         help=T("While the particle is in the region, the marker turns |0⟩ → cos|0⟩ + sin|1⟩")), EDGE])
-    env = Schema([_p("rate", T("Localization rate λ, 1/ps"), "float", 10.0, min=1e-9, max=1e9),
-                  _p("length", T("Localization length a, nm"), "float", 2.0, min=1e-3, max=1e6), *region])
+    env = Schema([_p("rate", T("Localisation rate λ, 1/ps"), "float", 10.0, min=1e-9, max=1e9),
+                  _p("length", T("Localisation length a, nm"), "float", 2.0, min=1e-3, max=1e6), *region])
     plane = Schema([_p("axis", T("Plane across the axis"), "select", "0", options=axes),
                     _p("position", T("Position, nm"), "float", 10.0, min=-1e6, max=1e6)])
     for sch, own in ((packet, None), (box, None), (ball, None), (wall, None), (step, None), (trap, None), (bfield, None),
@@ -338,7 +340,7 @@ def palette(ndim: int) -> dict:
                              help=T("A two-level device (Englert): it turns while the particle is in the region"),
                              handles={**pos, "size": "sx"}),
         "env": ObjectType("env", T("Environment (decoherence)"), "field", env, limit=1, color=COLORS["env"],
-                          help=T("The environment localizes the particle by random jumps (the Lindblad equation, "
+                          help=T("The environment localises the particle by random jumps (the Lindblad equation, "
                                  "quantum jumps)"),
                           handles={**pos, "size": "sx"}),
         "plane": ObjectType("plane", T("Flux plane"), "probe", plane, limit=4, color=COLORS["plane"],
@@ -366,10 +368,38 @@ def _pt(c, digits=3):
 
 
 def _mid(x) -> str:
-    """The msgid of an engine's text (a T, or an exception raised with one), else its plain text: what the world matches
-    the engine's reasons by."""
+    """The msgid of an engine's text (a T, or an exception raised with one), else its plain text."""
     t = text_of(x)
     return t["$t"] if is_t(t) else str(t)
+
+
+# The engine's refusals this world puts in its own terms (code review 2026-11-12 i18n-code F5): matched by the engine's
+# machine code (``lfphys.codes``), never by its wording. ``tests/test_p02_quantum.py``
+# (``test_engine_refusals_are_said_in_the_worlds_terms``) triggers each one and asserts the code and the world's text.
+RESOLUTION = ("qscene.resolution",)                       # an object's potential: the grid would not resolve a wave
+PACKET_GRID = ("qscene.resolution", "qscene.packet_band")  # a packet the grid cannot hold
+FIELD_WITH_CHARGE = ("qscene.field_with_charge",)
+CLOSED_WITH_CHARGE = ("qscene.gauge",)
+
+
+def _is(e, which) -> bool:
+    """Whether the engine's refusal ``e`` (a coded exception, or None) has one of the codes ``which``."""
+    return e is not None and code_of(e) in which
+
+
+def _uncoded(why):
+    """A coded stand-in for a text the engine returns without its code (``Scene.removal_reason``, ``edges_reason``:
+    the engine has ``addition_check``/``particle_check`` but no ``removal_check``/``edges_check`` yet — an open point
+    for the engine). The only remaining match on engine wording in this world; removed once the engine has them."""
+    if not why:
+        return None
+    m = _mid(why)
+    e = ValueError(why)
+    if m.startswith("the field cannot be changed while the charged particle"):
+        e.code = "qscene.field_with_charge"
+    elif "a charged particle next to a field or a flux tube is" in m:
+        e.code = "qscene.gauge"
+    return e
 
 
 def _rgb(hexcol):
@@ -887,8 +917,8 @@ class Simulation(PlaygroundSimulation):
                 parts.append(T("{how}, λ = ∞ (was ⟨k⟩ = {k0} nm⁻¹)", how=how, k0=_pt(rep["k_before"])))
             if asked is not None:
                 va = float(np.linalg.norm(asked)) / mass / TU * 1e-12
-                parts[-1] = T("{text}; the throw was limited: {asked:.4g} km/s asked, the grid here and now does not "
-                              "resolve the wave faster than {vmax:.4g} km/s in this direction", text=parts[-1],
+                parts[-1] = T("{text}; the throw was limited: {asked:.4g} km/s requested, the grid here and now does "
+                              "not resolve the wave faster than {vmax:.4g} km/s in this direction", text=parts[-1],
                               asked=va, vmax=kk / mass / TU * 1e-12)
         if not parts:
             return
@@ -1005,12 +1035,12 @@ class Simulation(PlaygroundSimulation):
                          "{K:.3g} nm⁻¹ at π/step = {lim:.3g} nm⁻¹", label=lab, d=self.d, K=K, lim=lim)
             if kt is not None and not place:
                 vmax = a * float(np.linalg.norm(kt)) / mass / TU * 1e-12
-                text = T("{text}. The cause is the speed: in this direction no faster than {v:.4g} km/s now",
+                text = T("{text}. The reason is the speed: in this direction no faster than {v:.4g} km/s now",
                          text=text, v=vmax)
                 hint = T("throw slower (a smaller throw scale or a larger λ) or make the grid finer (“Grid points per "
                          "axis”, on the fly)")
             elif shift is not None:
-                text = T("{text}. The cause is the place: the wave cannot be moved there even at rest", text=text)
+                text = T("{text}. The reason is the location: the wave cannot be moved there even at rest", text=text)
                 hint = T("move it farther from the potential or make the grid finer (“Grid points per axis”, on the "
                          "fly)")
             else:
@@ -1037,17 +1067,28 @@ class Simulation(PlaygroundSimulation):
             self._op = None
 
     # --- placement, the palette, removals (review UX-ui U4, U7, U8, U13; UX-params P28) ----------------------------
+    def _removal_check(self, qid):
+        """The engine's coded refusal of removing object ``qid`` now, or None (``Scene.removal_check`` when the engine
+        has it; until then the text ``removal_reason`` gives, matched in ``_uncoded``)."""
+        f = getattr(self.qs, "removal_check", None)
+        return f(qid) if f is not None else _uncoded(self.qs.removal_reason(qid))
+
+    def _edges_check(self, edges):
+        """The engine's coded refusal of ``set_edges(edges)`` now, or None (as ``_removal_check``)."""
+        f = getattr(self.qs, "edges_check", None)
+        return f(edges) if f is not None else _uncoded(self.qs.edges_reason(edges))
+
     def can_remove(self, obj):
         """Why the object cannot be removed now (the engine's own test, nothing changed), or None. In "Clear scene"
         the particles go first, so a field can then go too."""
         ref = self.ref.get(obj["id"])
         if ref is None or ref[0] != "object" or self._clearing:
             return None
-        why = self.qs.removal_reason(ref[1])
-        if why and "charged particle" in _mid(why):
+        chk = self._removal_check(ref[1])
+        if _is(chk, FIELD_WITH_CHARGE):
             return T("while a charged particle is in the window, the field cannot be switched off (the impulse of the "
                      "induced field depends on how the magnet is built): remove the particle first")
-        return why
+        return text_of(chk) if chk is not None else None
 
     def _window(self):
         g = self.qs.grid
@@ -1082,14 +1123,14 @@ class Simulation(PlaygroundSimulation):
 
     def _refusal(self, obj, e):
         """The engine's refusal of an object in the owner's terms (review UX-ui U13)."""
-        text, mid = str(e), _mid(e)
-        if mid.startswith("the grid does not carry the wave"):
+        text = str(e)
+        if _is(e, RESOLUTION):
             return Refusal(T("with “{label}” the grid (step {d:.3g} nm) does not resolve the particle's wave: next to "
                              "it the wave's wavenumbers go beyond 2/3 of the grid's band", label=obj["label"], d=self.d),
                            detail=text,
                            hint=T("a lower potential or a slower particle (a larger λ); or a finer grid: “Grid points "
                                   "per axis” (changes on the fly)"))
-        if mid.startswith("the field cannot be changed while the charged particle"):
+        if _is(e, FIELD_WITH_CHARGE):
             return Refusal(T("the field cannot be changed while a charged particle is in the window: the impulse of "
                              "the induced field at the switch depends on how the magnet is built"), detail=text,
                            hint=T("set the field before the particle or remove the particle"))
@@ -1099,7 +1140,7 @@ class Simulation(PlaygroundSimulation):
         """A packet refused by the engine, said for this scene: where it sits and what is there (review UX-ui U13: a
         packet inside the double slit's wall was refused for a "well −3 eV" that was not in the scene)."""
         text = str(e)
-        if not _mid(e).startswith("the grid does not carry the wave"):
+        if not _is(e, PACKET_GRID):
             return e
         g = self.qs.grid
         sig = np.asarray(pk.sigma, float)
@@ -1268,7 +1309,7 @@ class Simulation(PlaygroundSimulation):
                 self._cnote(T("the tube runs along z"))
             elif kind == "trap":
                 self._cnote(T("in a volume it also holds along z (the motion in the x, y plane is the same: the trap "
-                              "separates by axes)"))
+                              "potential is separable in x, y, z)"))
             elif kind == "packet":
                 v.setdefault("sz", float(v.get("sy", 3.0)))
                 v.setdefault("phi", 0.0)
@@ -1316,7 +1357,7 @@ class Simulation(PlaygroundSimulation):
         super().after_header()
         if self._carry_notes:  # only with a framework that has no ``carry_note`` (its notice says it otherwise)
             self.emit({"type": "notice", "t": self.t,
-                       "text": T("Carried from a world of the other space with changes: {notes}",
+                       "text": T("Carried over, with changes, from a world with the other space: {notes}",
                                  notes=join(self._carry_notes, "; "))})
             self._carry_notes = []
 
@@ -1395,7 +1436,7 @@ class Simulation(PlaygroundSimulation):
                 self._emit_marks()
         elif state is not None:
             self._cnote(T("random outcomes (measurements, the environment's jumps, Bohm points): a new generator of "
-                          "this world: another dimension; the marked outcomes of measurements were not carried"),
+                          "this world: another dimension; the marked outcomes of measurements were not carried over"),
                         restarted=True)
         waves, self._carry_waves = self._carry_waves, {}
         for oid, st in waves.items():
@@ -1458,14 +1499,15 @@ class Simulation(PlaygroundSimulation):
                 try:
                     vals = self.place(typ, {})
                     obj = {"type": typ, "values": ot.schema.resolve(None, vals)[0], "label": ot.label}
-                    why = self.qs.addition_reason(self._object(obj))
+                    chk = self.qs.addition_check(self._object(obj))
+                    why = text_of(chk) if chk is not None else None
                 except ValueError as e:
-                    why = text_of(e)
+                    chk, why = None, text_of(e)
                 if why:
                     got[typ] = (T("with it the grid would not resolve the wave of a particle in the scene (its energy "
                                   "would grow): lower the particle's energy or make the object weaker after adding it; "
                                   "or a finer grid: “Grid points per axis” (on the fly)")
-                                if _mid(why).startswith("the grid does not carry the wave") else why)
+                                if _is(chk, RESOLUTION) else why)
             self._ps_key, self._ps = key, got
         out.update(self._ps)
         return out
@@ -1496,9 +1538,10 @@ class Simulation(PlaygroundSimulation):
             return T("no change")
         want = new["edges"] == "open"
         edges = QS.EdgeLayers(width=self.edge_w, strength=float(self._auto_W())) if want else None
-        why = self.qs.edges_reason(edges)
-        if why:
-            if "charged particle" in _mid(why):
+        chk = self._edges_check(edges)
+        if chk is not None:
+            why = text_of(chk)
+            if _is(chk, CLOSED_WITH_CHARGE):
                 raise Refusal(T("the window's edges were not changed: a charged particle next to a field is allowed "
                                 "only with open edges"), hint=T("remove the particle or the field"), detail=str(why))
             raise Refusal(T("the window's edges were not changed: {why}", why=why), detail=str(why))
@@ -1583,7 +1626,7 @@ class Simulation(PlaygroundSimulation):
                 continue
             dE = (r["E_after"] - r["E_before"]) * EV if r["E_before"] is not None and r["E_after"] is not None else None
             dn = r["norm_after"] - r["norm_before"]
-            drop = (T("unchanged to round-off") if abs(dn) <= 64 * np.finfo(float).eps else
+            drop = (T("unchanged to within round-off") if abs(dn) <= 64 * np.finfo(float).eps else
                     T("{p:.2g} dropped", p=-dn) if dn < 0 else T("larger by {p:.2g} from the new grid's quadrature", p=dn))
             part = T("“{label}”: probability in the window {p0:.7g} → {p1:.7g} ({drop}), energy ⟨H⟩ {e0:.6g} → "
                      "{e1:.6g} eV", label=self.objects[oid]["label"], p0=float(r["norm_before"]),
@@ -2157,7 +2200,7 @@ class Simulation(PlaygroundSimulation):
                         "group": T("World") if group is None else group})
         add("norm", T("Probability in the window (sum over the particles)"))
         add("absorbed", T("Absorbed by the detectors and the edges (sum over the particles)"))
-        add("regrid", T("Change of the norm by a change of the grid or the window: dropped (a minus: added by the new "
+        add("regrid", T("Change of the norm due to a grid or window change: dropped (a minus: added by the new "
                         "grid's quadrature; sum over the particles)"))
         parts = [(oid, qid) for oid, (k, qid) in self.ref.items() if k == "particle"]
         for oid, qid in parts:
@@ -2289,7 +2332,7 @@ class Simulation(PlaygroundSimulation):
         if key == "regrid":
             return T("a change of the grid or the window (dropped; a minus: added by the quadrature)")
         if key == "carried":
-            return T("in the previous world (before the scene was carried)")
+            return T("in the previous world (before the scene was carried over)")
         if key and key.startswith("detector "):
             q = int(key.split()[1])
             for oid, (kind, qid) in self.ref.items():
@@ -2350,15 +2393,16 @@ class Simulation(PlaygroundSimulation):
                 self.running_check(f"energy_{oid}", T("“{label}”: energy ⟨H⟩ (a closed system)", label=lab),
                                    e["E"] * EV, e["E_ref"] * EV, e["bound"] / max(abs(e["E_ref"]), 1e-300),
                                    unit=T("eV"), ok=abs(e["drift"]) <= e["bound"],
-                                   note=T("against ⟨H⟩ at t = {t:.4g} s; the bound 2‖Hψ‖e + e²‖H‖ with the step error e "
-                                          "estimated by a companion (a step dt against two dt/2 every {n:d} steps): a "
-                                          "bound at this estimate, not a strict one", t=e["since"] * TU,
+                                   note=T("against ⟨H⟩ at t = {t:.4g} s; the bound 2‖Hψ‖e + e²‖H‖ with the step "
+                                          "error e estimated by a companion run (a step dt against two dt/2 every "
+                                          "{n:d} steps): a bound at this estimate, not a strict one", t=e["since"] * TU,
                                           n=int(ERROR_EVERY)))
             else:
                 self.running_check(f"energy_{oid}", T("“{label}”: energy ⟨H⟩ (not conserved: absorption or an "
                                                       "environment)", label=lab),
                                    e["E"] * EV, None, 0.0, unit=T("eV"), info=True,
-                                   note=T("in an open system the particle's energy in the window changes lawfully"))
+                                   note=T("in an open system the particle's energy in the window changes, as it "
+                                          "should"))
             se = r["step_error"]
             self.running_check(f"steperr_{oid}", T("“{label}”: time-step error (accumulated estimate)", label=lab),
                                se["accumulated"], None, 0.0, info=True,
@@ -2463,11 +2507,11 @@ class Simulation(PlaygroundSimulation):
                                    None, tol, unit=T("nm"), group=T("Bohm"), ok=med <= tol and fate <= 1,
                                    note=T("{C:d} points of the ensemble integrated once more in the same wave: "
                                           "interpolation of order {order:d} instead of 8, the time step's tolerances "
-                                          "{tight:d} times tighter; the median deviation {med:.2g} nm against half the "
-                                          "grid step {tol:.3g} nm (what the grid knows |ψ|² on); the largest in the run "
-                                          "{dmax:.2g} nm (near the wave's nodes the trajectories are sensitive: single "
-                                          "ones diverge even without an error); a different absorber for {fate:d} "
-                                          "(1 allowed)", C=int(C), order=int(CONTROL_ORDER), tight=int(CONTROL_TIGHT),
+                                          "{tight:d} times tighter; the median deviation {med:.2g} nm against half "
+                                          "the grid step {tol:.3g} nm (the scale on which the grid knows |ψ|²); the "
+                                          "largest in the run {dmax:.2g} nm (near the wave's nodes the trajectories "
+                                          "are sensitive: single ones diverge even without an error); a different "
+                                          "absorber for {fate:d} (1 allowed)", C=int(C), order=int(CONTROL_ORDER), tight=int(CONTROL_TIGHT),
                                           med=med, tol=tol, dmax=float(B["dmax"]), fate=int(fate)))
             rows = self._bohm_expected(B, pid)
             if not rows:
@@ -2504,11 +2548,11 @@ class Simulation(PlaygroundSimulation):
         layers = ([{"id": "wave3d", "label": T("Wave |ψ|² in the volume (sum over the particles)"), "kind": "volume",
                     "visible": True, "look": {"density": 3.0, "threshold": 0.01}}] if self.ndim == 3 else [])
         return {
-            "title": T("Playground: quantum particles"),
-            "text": T("Wave packets of particles in a scene of potentials, fields and detectors. Every particle is its "
-                      "own wave by the Schrödinger equation (Pauli for spin); the particles do not interact. "
-                      "Everything is added and changed at the current moment; the detectors absorb probability, a "
-                      "position measurement is an action."),
+            "title": T("Laboratory: quantum particles"),
+            "text": T("Wave packets of particles in a scene of potentials, fields and detectors. Each particle has "
+                      "its own wave function, evolved by the Schrödinger equation (the Pauli equation for spin); the "
+                      "particles do not interact. Everything is added and changed at the current moment; the "
+                      "detectors absorb probability, a position measurement is an action."),
             "actions": self._actions(),
             "approximations": self._approx(),
             # the axes' unit: a plain msgid (a static field the 3-D environment puts into its axis labels)
@@ -2765,9 +2809,9 @@ class Simulation(PlaygroundSimulation):
 VIZ = {
     "id": "p02_quantum",
     "title": T("Quantum particles"),
-    "summary": T("A quantum mechanics sandbox: wave packets of electrons, neutrons and atoms in a scene of barriers, "
-                 "wells, walls with slits, traps, magnetic fields and flux tubes; detectors, a which-path marker, an "
-                 "environment, measurement."),
+    "summary": T("A quantum mechanics laboratory: wave packets of electrons, neutrons and atoms in a scene of "
+                 "barriers, wells, walls with slits, traps, magnetic fields and flux tubes; detectors, a which-path "
+                 "marker, an environment, measurement."),
     "purpose": T("Build an experiment and see how the wave behaves: tunnelling, interference and its loss under a "
                  "which-path marker or in an environment, the Aharonov–Bohm shift, spin precession, a cyclotron orbit, "
                  "a position measurement; the norm, the flux and the energy are checked live."),

@@ -54,7 +54,7 @@ SCEN = [("barrier", T("rectangular barrier")), ("double", T("double barrier (res
         ("free", T("free particle"))]
 INTERP = [("copenhagen", T("Copenhagen: a click and a collapse")), ("bohm", T("de Broglie–Bohm: a trajectory")),
           ("everett", T("Everett: branching"))]
-G_PART, G_POT, G_READ = T("Particle (electron)"), T("Potential"), T("Reading the outcome")
+G_PART, G_POT, G_READ = T("Particle (electron)"), T("Potential"), T("Interpretation of the outcome")
 PIECEWISE = ("barrier", "double", "step", "well", "free")
 
 SCHEMA = Schema([
@@ -87,7 +87,7 @@ SCHEMA = Schema([
     "tunnel_everett": {"label": T("The same by Everett: branches"), "params": {"interp": "everett"}},
     "resonant": {"label": T("Resonant tunnelling: a double barrier"),
                  "params": {"scenario": "double", "V0": 1.0, "width": 0.4, "gap": 2.0, "energy": 0.33, "sigma": 8.0}},
-    "above": {"label": T("Above the barrier: reflection with nothing in the way"), "params": {"energy": 1.3}},
+    "above": {"label": T("Over-barrier reflection (E > V₀)"), "params": {"energy": 1.3}},
     "step": {"label": T("Step: reflection at E > V₀"), "params": {"scenario": "step", "V0": 0.6, "energy": 0.8}},
     "well": {"label": T("Well: scattering by an attractive potential"),
              "params": {"scenario": "well", "V0": -2.0, "width": 1.0, "energy": 0.3, "sigma": 6.0}},
@@ -195,9 +195,9 @@ class Simulation(BaseSimulation):
             if self.k0 - 3 * sk < k_min:  # the packet's slow edge would stand still, fly back or pass the detectors
                 need = 1.5 / (self.k0 - k_min) if self.k0 > k_min else math.inf
                 raise Refusal(T("the packet is too wide in momentum: at E = {E:g} eV it needs σ ≥ {need:.3g} nm — "
-                                "the packet's slow edge (k₀ − 3·ħ/(2σ)) must have at least {Emin:g} eV: the edge "
-                                "detectors reflect slower electrons instead of absorbing them, and part of the wave "
-                                "stands still or flies back", E=p["energy"], need=need, Emin=E_DET_MIN),
+                                "the packet's slow edge (k₀ − 3/(2σ)) must have an energy of at least {Emin:g} eV: "
+                                "the edge detectors reflect slower electrons instead of absorbing them, and part of "
+                                "the wave stands still or flies back", E=p["energy"], need=need, Emin=E_DET_MIN),
                               hint=T("increase σ or the energy"))
             self.x_start = self.extent[0] - 6 * self.sigma - 5.0
             v_right = float(self.Vf(np.array([1e6]))[0])
@@ -254,9 +254,10 @@ class Simulation(BaseSimulation):
         if self.dt_edge < self._dt_phase():
             k = self._dt_phase() / self.dt_edge
             d_need = p["edge"] * math.sqrt(min(k, 1e6))
-            return (T("{head}: the barrier's edges are sharp (δ = {d:g} nm) and the transmission is small "
-                      "(T ≈ {T:.2g}): the time step must be {k:.3g} times smaller, otherwise the scheme's error at the "
-                      "edges exceeds the transmission itself", head=head, d=p["edge"], T=self._exp[0], k=k),
+            return (T("{head}: the barrier's edges are sharp (δ = {d:g} nm) and the transmission coefficient is "
+                      "small (T ≈ {T:.2g}): the time step must be {n:.3g} times smaller, otherwise the scheme's "
+                      "error at the edges exceeds the transmission coefficient itself", head=head, d=p["edge"],
+                      T=self._exp[0], n=k),
                     T("increase the edge smoothing δ (to ≈ {d:.2g} nm) or reduce the barrier's width or height",
                       d=min(d_need, 2.0)))
         if self.slow_note:
@@ -345,11 +346,11 @@ class Simulation(BaseSimulation):
                 t_slow = 1.3 * (abs(self.x_start) / v_in + (self.extent[1] + 3.0 + 2.0) / v_min)
                 if t_slow > t:
                     why = (T("the packet energy {E:g} eV is below the step height {V:g} eV: only the part of the "
-                             "spectrum near the threshold passes, slowly (down to {v:.2g} nm/ps), and it has to be "
-                             "waited for", E=p["energy"], V=v_right, v=v_min * 1e3) if p["energy"] < v_right else
+                             "spectrum near the threshold passes, slowly (down to {v:.2g} nm/ps), so the run has to "
+                             "wait for it", E=p["energy"], V=v_right, v=v_min * 1e3) if p["energy"] < v_right else
                            T("the packet energy {E:g} eV is close to the step height {V:g} eV: only the part of the "
-                             "spectrum near the threshold passes, slowly (down to {v:.2g} nm/ps), and it has to be "
-                             "waited for", E=p["energy"], V=v_right, v=v_min * 1e3))
+                             "spectrum near the threshold passes, slowly (down to {v:.2g} nm/ps), so the run has to "
+                             "wait for it", E=p["energy"], V=v_right, v=v_min * 1e3))
                     self.slow_note = (why, T("raise the energy above the step, lower the step or narrow the packet "
                                              "in momentum (a larger σ)"))
                     t = t_slow
@@ -641,7 +642,7 @@ class Simulation(BaseSimulation):
                      "at the end of the computation; the absorbing edges are the detector model.",
                      u=self.leftover, a=self.leftover_allowed, s=self.assigned)
             if self.capped:
-                note = T("{a} {b}", a=note, b=T("The computation was stopped earlier by the budget."))
+                note = T("{a} {b}", a=note, b=T("The computation was stopped early: the budget ran out."))
             self._check(f"abs{self.seg}", T("The wave is absorbed by the detectors (the remainder does not change the "
                                             "result)"), tot, 1.0, "",
                         grp, ok=self.leftover <= self.leftover_allowed, tol=self.leftover_allowed, note=note)
@@ -661,11 +662,11 @@ class Simulation(BaseSimulation):
                 tolT = 1e-7 + 1e-3 * exp[0] + self.leftover + self.R_det
                 self._check(f"T{self.seg}", T("Transmission of the wave packet (computed in time)"), Tp,
                             exp[0], "", grp, ok=abs(Tp - exp[0]) <= tolT, tol=tolT / max(exp[0], 1e-300),
-                            note=T("the reference by another method: the stationary transmission T(E) of the same "
-                                   "potential (transfer matrices over a fine staircase, Richardson extrapolation) over "
-                                   "the packet's whole momentum distribution |φ(k)|² (k ≤ 0: reflected); tolerance "
-                                   "1e-7 + 1e-3·T + the unabsorbed remainder + the detectors' reflection = {tol:.1e}; "
-                                   "Richardson error of the reference ±{r:.0e}", tol=tolT, r=exp[4]))
+                            note=T("the reference by another method: the stationary transmission coefficient T(E) of "
+                                   "the same potential (transfer matrices over a fine staircase, Richardson "
+                                   "extrapolation) over the packet's whole momentum distribution |φ(k)|² (k ≤ 0: "
+                                   "reflected); tolerance 1e-7 + 1e-3·T + the unabsorbed remainder + the detectors' "
+                                   "reflection = {tol:.1e}; Richardson error of the reference ±{r:.0e}", tol=tolT, r=exp[4]))
             E_mean = g.energy(self.psi0, self.V)
             self._check(f"E{self.seg}", T("Mean energy of the packet"), E_mean,
                         p["energy"] + HBAR**2 / (8 * self.m * self.sigma**2), T("eV"), grp, tol=1e-6,
@@ -736,7 +737,7 @@ class Simulation(BaseSimulation):
         k = sum(1 for s in self.history if s == "right")
         sd = math.sqrt(max(PR * (1 - PR), 1e-12) / n)
         z = (k / n - PR) / sd if sd > 0 else 0.0
-        self._check(f"stat{self.seg}", T("Fraction transmitted among particles: {n:d}", n=n), k / n, PR, "",
+        self._check(f"stat{self.seg}", T("Fraction transmitted (particles: {n:d})", n=n), k / n, PR, "",
                     T("Segment {n:d}", n=self.seg),
                     ok=abs(z) < 5, note=T("deviation {z:+.2f}σ from the probability computed from the wave", z=z))
 
@@ -793,7 +794,7 @@ VIZ = {
     "id": "v03_quantum_1d",
     "title": T("A quantum particle in one dimension"),
     "summary": T("Electrons one at a time at a barrier, a double barrier, a step, a well or in a trap: the exact "
-                 "wave, tunnelling, detectors; the outcome in the Copenhagen, Bohm or Everett reading."),
+                 "wave, tunnelling, detectors; the outcome in the Copenhagen, Bohm or Everett interpretation."),
     "purpose": T("The causes of the particle's behaviour: what the computation of the wave gives and what an "
                  "interpretation adds (the same statistics, a different picture)."),
     "version": "1.0",

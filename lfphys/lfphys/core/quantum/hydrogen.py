@@ -31,6 +31,7 @@ import numpy as np
 from scipy import constants as sc
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 ABOUT = {
     "layer": "core", "kind": "exact solution",
@@ -61,7 +62,8 @@ def dirac_level(n: int, j: float, Z: int = 1, M: float = sc.m_p) -> float:
     """Binding energy (J) of level (n, j) with the leading recoil correction for a nucleus of mass M (kg); M = math.inf
     gives the infinite-mass Dirac level. j = 1/2 ... n - 1/2."""
     if not (n >= 1 and 0.5 <= j <= n - 0.5 and (j - 0.5) == int(j - 0.5)):
-        raise ValueError(f"dirac_level: need n >= 1 and j in 1/2 ... n - 1/2 (got n = {n}, j = {j})")
+        raise coded(ValueError(T("no Dirac level with n = {n} and j = {j}: n ≥ 1 and j from 1/2 to n − 1/2 are "
+                                 "needed", n=n, j=j)), "hydrogen.level")
     za = Z * ALPHA
     delta = j + 0.5 - math.sqrt((j + 0.5) ** 2 - za * za)
     x = (za / (n - delta)) ** 2

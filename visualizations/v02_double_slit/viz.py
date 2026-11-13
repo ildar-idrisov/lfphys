@@ -578,7 +578,7 @@ class Simulation(BaseSimulation):
         frac = (SCREEN_BYTES_MAX / nbytes)
         hints = []
         if app.wp_mode == "microscope" and model.p > 0:
-            hints.append(T("take the probe photon's wavelength at least ~{lam:.3g} nm (the probe's recoil ∝ 1/λ)",
+            hints.append(T("set the probe photon's wavelength to at least ~{lam:.3g} nm (the probe's recoil ∝ 1/λ)",
                            lam=app.mic_lambda / frac * 1e9))
         if model.grw > 0:
             hints.append(T("weaken the GRW collapse (a smaller rate λ or a larger width r_C): GRW kicks shift the "
@@ -889,15 +889,17 @@ class Simulation(BaseSimulation):
             th = V["t"] * 1e6
             meth = (T("a basis with edge conditions, exponential convergence") if V["TE"]["method"] == "edge" else
                     T("waveguide modes in the slits, algebraic convergence"))
-            out.append(T("The screen is a perfect conductor {t:.4g} µm thick: the vector solution lfphys.core.em.slit "
-                         "({method}; the truncation error estimated in “Checks”) for both polarisations, E along the "
-                         "slits (TE, V) and E across them (TM, H); no losses and no plasmons of a real metal. The "
-                         "distance to the screen is counted from the exit face.", t=float(th), method=meth)
+            out.append(T("The screen is a perfect conductor {t:.4g} µm thick: the vector solution "
+                         "lfphys.core.em.slit ({method}; the truncation error estimated in “Checks”) for both "
+                         "polarisations, E along the slits (TE, V) and E across them (TM, H); no losses and no "
+                         "plasmons of a real metal. The distance to the screen is measured from the exit face.",
+                         t=float(th), method=meth)
                        if th != 0 else
-                       T("The screen is an infinitely thin perfect conductor: the vector solution lfphys.core.em.slit "
-                         "({method}; the truncation error estimated in “Checks”) for both polarisations, E along the "
-                         "slits (TE, V) and E across them (TM, H); no losses and no plasmons of a real metal. The "
-                         "distance to the screen is counted from the exit face.", method=meth))
+                       T("The screen is an infinitely thin perfect conductor: the vector solution "
+                         "lfphys.core.em.slit ({method}; the truncation error estimated in “Checks”) for both "
+                         "polarisations, E along the slits (TE, V) and E across them (TM, H); no losses and no "
+                         "plasmons of a real metal. The distance to the screen is measured from the exit face.",
+                         method=meth))
             if getattr(self, "_vec_hits", False):
                 out.append(T("Hits follow the energy flux of the vector solution through the screen's plane: a "
                              "photon of the source falls on a strip n·d = {w:.4g} µm wide and passes with the "
@@ -930,9 +932,9 @@ class Simulation(BaseSimulation):
                              "solution by > 1 %): hatched.", z=float(z_ok)))
         step0 = 2 * self._map_w0 / (self._map_nxi - 1)
         if step0 > 0.5 * g.a:
-            out.append(T("At the slits the map's cross-section does not resolve the single slits (step {st:.3g} m > "
-                         "a/2); the comparison with the exact solution there uses {n:d} points of the cross-section "
-                         "and is resolved no better.", st=float(step0), n=61))
+            out.append(T("At the slits the map's cross-section does not resolve the individual slits (grid step "
+                         "{st:.3g} m > a/2); the comparison with the exact solution there uses {n:d} points of the "
+                         "cross-section and is resolved no better.", st=float(step0), n=61))
         if g.a < 10 * pt.lam and V is None:
             out.append(T("A slit narrower than 10 wavelengths: Kirchhoff's boundary condition is inaccurate; for "
                          "photons there is the vector mode (“Model of the slit screen” → “perfect conductor”)."))
@@ -1093,7 +1095,7 @@ class Simulation(BaseSimulation):
                     note = T("van Cittert–Zernike reference |sinc(s·d/(λ L₁))|; a tolerance of {tol:g}: the shift of "
                              "the envelope by the source point", tol=tol_abs)
                 self._check(f"coh{s}", _COH_LABEL, gam_e, ref, "", group,
-                            note=note or T("fit of the computed pattern on the slits' basis (envelopes from the marks)"),
+                            note=note or T("fit of the computed pattern to the slit basis (envelopes from the marks)"),
                             ok=None if ref is None else abs(gam_e - ref) <= tol_abs)
         # Sorkin parameter (three slits; identity under the Born rule)
         if g.n == 3:
@@ -1184,7 +1186,7 @@ class Simulation(BaseSimulation):
         g11, g22 = float(self.Gavg[0, 0].real), float(self.Gavg[1, 1].real)
         hi = max(g11, g22)
         if not hi > 0:
-            return T("both slits are dark: nothing passes them")
+            return T("both slits are dark: nothing passes through them")
         if min(g11, g22) <= COH_DARK * hi:
             j = 1 if g11 < g22 else 2
             return T("slit {j:d} is dark (it passes {r:.1e} of the other's): there is nothing to interfere with, "
@@ -1366,7 +1368,7 @@ class Simulation(BaseSimulation):
 
 _ELEM_LABEL = ELEMENT_NAMES  # an element by its short name (refusals, notices, the segment's description)
 _RS_LABEL = T("Paraxial approximation on the screen: difference from the exact Rayleigh–Sommerfeld integral")
-_COH_LABEL = T("Degree of coherence of the slits |γ₁₂| of the run's expected pattern")
+_COH_LABEL = T("Degree of coherence of the slits |γ₁₂| in the run's expected pattern")
 
 
 def _who(pt):

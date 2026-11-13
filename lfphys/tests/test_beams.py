@@ -315,12 +315,13 @@ def test_cost_is_sized_before_the_matrices_are_built():
     assert cost["nq"] == len(th) and cost["elements"] == len(r) * len(th)
     beam.table(r, z, 1, estimate=True)  # within the budget
     small = B.VortexBeam(2, K, fn, qmax, {1: 1.0}, max_elements=cost["elements"] / 2)
-    with pytest.raises(ValueError, match="max_elements"):
+    with pytest.raises(ValueError, match="> the budget of") as e:
         small.table(r, z, 1, estimate=True)
+    assert e.value.code == "beams.memory" and e.value.data["lim"] == small.max_elements
     fs, qs = B.gaussian_vortex_spectrum(3, 2.0)
     spp = B.VortexBeam(3, K, fs, qs)
     spp.scalar(np.array([0.5, 1.0]), 0.5)  # fine at z = 0.5
-    with pytest.raises(ValueError, match="max_elements"):
+    with pytest.raises(ValueError, match="> the budget of"):
         spp.scalar(np.linspace(0.1, 10.0, 100), 1e-4)
 
 

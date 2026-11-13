@@ -14,6 +14,7 @@ import math
 import numpy as np
 
 from lfphys.i18n import T
+from lfphys.codes import coded
 
 ABOUT = {
     "layer": "core", "kind": "law",
@@ -34,7 +35,8 @@ def gamma(beta: float) -> float:
     1 - beta^2 loses up to 3e-10 relative near beta = 1 - 1e-8; review 2026-10-23, E14)."""
     b = abs(float(beta))
     if b >= 1.0:
-        raise ValueError("|v| >= c")
+        raise coded(ValueError(T("|v| ≥ c: no inertial frame moves at or faster than light")),
+                    "kinematics.superluminal")
     return 1.0 / math.sqrt((1.0 - b) * (1.0 + b))
 
 
@@ -45,7 +47,8 @@ def boost_matrix(v, c: float) -> np.ndarray:
     b = v / c
     b2 = float(b @ b)
     if b2 >= 1.0:
-        raise ValueError("|v| >= c: no inertial frame moves at or faster than light (SR)")
+        raise coded(ValueError(T("|v| ≥ c: no inertial frame moves at or faster than light")),
+                    "kinematics.superluminal")
     M = np.eye(3)
     g = 1.0 / np.sqrt(1.0 - b2)
     M[0, 0] = g
@@ -60,7 +63,8 @@ def clock_rate_flat(v, c: float) -> float:
     """dtau/dt of a clock moving with lab velocity v."""
     b2 = float(np.dot(v, v)) / c**2
     if b2 >= 1.0:
-        raise ValueError("|v| >= c")
+        raise coded(ValueError(T("|v| ≥ c: no inertial frame moves at or faster than light")),
+                    "kinematics.superluminal")
     return float(np.sqrt(1.0 - b2))
 
 
@@ -75,7 +79,7 @@ def metric_clock_rate(c: float, rs: float, pos, vel) -> float:
         r = float(np.hypot(*pos))
         f = 1.0 - rs / r
         if f <= 0:
-            raise ValueError("clock inside the horizon")
+            raise coded(ValueError(T("the clock is inside the horizon")), "gr.inside_horizon")
         rhat = pos / r
         vr = float(vel @ rhat)
         vt2 = float(vel @ vel) - vr * vr
@@ -83,7 +87,8 @@ def metric_clock_rate(c: float, rs: float, pos, vel) -> float:
     else:
         q = 1.0 - float(vel @ vel) / c2
     if q <= 0:
-        raise ValueError("worldline is not timelike (moves at or faster than local light)")
+        raise coded(ValueError(T("the worldline is not timelike (it moves at or faster than local light)")),
+                    "gr.not_timelike")
     return math.sqrt(q)
 
 

@@ -38,7 +38,7 @@ from lfviz.sim import Simulation as BaseSimulation
 from .engine import loops as LP
 
 FIELDS = [("theta", T("rotation of the gyroscopes θ after the loop rest → u → w → rest")),
-          ("ratio", T("θ per unit of the «isoperimetric» bound of planar loops at the same fuel"))]
+          ("ratio", T("θ per unit of the “isoperimetric” bound of planar loops at the same fuel"))]
 NS = 160         # samples of a slice along each in-plane axis
 COARSE = 64      # rows of a moving (auto) slice
 TRIADS = 36      # gyroscope triads along the path
@@ -63,7 +63,7 @@ SCHEMA = Schema([
        options=[("velocity", T("velocity space (the ball β = v/c; light is its boundary)")),
                 ("lab", T("ordinary space: the craft's trajectory, light-years"))]),
     _p("loop", T("Manoeuvre (a loop in velocity space)"), "select", "thomas", group=MANOEUVRE, options=LP.LOOPS),
-    _p("rho", T("Loop size ρ (rapidity: the circle's radius, a burn's side)"), "float", 0.8, group=MANOEUVRE,
+    _p("rho", T("Loop size ρ (rapidity: the circle's radius or the length of one burn)"), "float", 0.8, group=MANOEUVRE,
        min=0.05, max=3.0),
     _p("turns", T("Repetitions of the loop"), "int", 1, group=MANOEUVRE, min=1, max=6),
     _p("sides", T("Vertices of the polygon"), "int", 6, group=MANOEUVRE, min=3, max=24,
@@ -85,7 +85,7 @@ SCHEMA = Schema([
 ], presets={
     "thomas": {"label": T("Thomas precession: uniform circular motion, γ = {g}", g=1.34), "params": {}},
     "circle": {"label": T("Circle through rest: equality in the isoperimetric bound"), "params": {"loop": "circle"}},
-    "spin_flip": {"label": T("SU(2): the gyroscopes are back (a turn by 2π), the spinor changed its sign"),
+    "spin_flip": {"label": T("SU(2): the gyroscopes are back (a rotation by 2π), the spinor changed its sign"),
                   "params": {"loop": "circle", "rho": round(math.acosh(2.0), 10)}},
     "triangle": {"label": T("Three burns: the Wigner angle = the area of the triangle of velocities"),
                  "params": {"loop": "triangle", "rho": 1.2, "alpha": 120.0}},
@@ -359,7 +359,8 @@ class Simulation(SlicePlanes, BaseSimulation):
     def _closing_checks(self):
         h, e = self.hol, self.end
         est, bound = self._round_est(), self._round_bound()
-        self._check("roundoff", T("Round-off: the disagreement of two representations (Lorentz 4×4 and SL(2, C))"), est,
+        self._check("roundoff", T("Round-off error: the disagreement of two representations (Lorentz 4×4 matrices "
+                                  "and SL(2, C))"), est,
                     0.0, "", tol=bound, ok=est <= bound,
                     note=T("the error estimate of this run (and the state's distance from the Lorentz group); the "
                            "alarm level is empirical: 1e-11·cosh²(η_max)·(pieces + 1 + Σ norms of the exponents) = "
@@ -378,10 +379,11 @@ class Simulation(SlicePlanes, BaseSimulation):
             tol = max(8 * est, 1e3 * np.finfo(float).eps * (1.0 + abs(ref)))  # + the reference's own rounding
             dR = float(np.max(np.abs(h["R"] - LZ.rot3(n, -ref))))
             ref_fold = math.degrees(abs((ref + math.pi) % (2 * math.pi) - math.pi))
-            self._check("holonomy", T("Rotation of the gyroscopes (SO(3)), °: against the closed formula"), ang, ref_fold,
+            self._check("holonomy", T("Rotation of the gyroscopes (SO(3)), °: against the closed form"), ang, ref_fold,
                         "°", tol=tol, ok=dR <= tol,
-                        note=T("{how}; accumulated angle {ref:.10g} rad; the gyroscopes turn against the direction "
-                               "the loop is run; comparison of the matrices: max|R − R(n, −A)| = {d:.1e}",
+                        note=T("{how}; accumulated angle {ref:.10g} rad; the gyroscopes rotate opposite to the sense "
+                               "in which the loop is traversed; comparison of the matrices: max|R − R(n, −A)| = "
+                               "{d:.1e}",
                                how=self.info["ref_how"], ref=ref, d=dR))
             dA = float(np.max(np.abs(h["su2"] - LZ.sl2_rotation(n, -ref))))
             dacc = abs(self.accumulated - ref)
@@ -585,9 +587,9 @@ class Simulation(SlicePlanes, BaseSimulation):
         return {
             "title": T("Thomas–Wigner precession in 3-D: {loop}", loop=dict(LP.LOOPS)[p["loop"]]),
             "text": T("A craft starts at rest and flies a manoeuvre: burns and turns of its thrust in its own frame. "
-                      "Its gyroscopes are carried without rotation (Fermi–Walker); back at rest, they turn out to be "
-                      "turned: this is the holonomy of the loop its velocity ran in velocity space. The rotation is "
-                      "computed exactly (SO(3) and the spinor in SU(2)), checked against the loop's area "
+                      "Its gyroscopes are carried without rotation (Fermi–Walker); back at rest, they are found to "
+                      "be rotated: this is the holonomy of the loop its velocity traces in velocity space. The "
+                      "rotation is computed exactly (SO(3) and the spinor in SU(2)), checked against the loop's area "
                       "(Gauss–Bonnet) for planar loops and compared with the isoperimetric bound at the same fuel."),
             "actions": [],
             "scene3d": {"box": [list(self.box[0]), list(self.box[1])], "units": units, "objects": objects,

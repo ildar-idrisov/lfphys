@@ -18,6 +18,7 @@ import math
 
 import numpy as np
 
+from lfphys.codes import code_of, data_of
 from lfphys.core import data
 from lfphys.core.qcd import running, su3
 from lfphys.i18n import T
@@ -48,7 +49,7 @@ QUARKONIUM = T("Quarkonium (model)")
 
 
 SCHEMA = Schema([
-    _p("alpha_mz", T("α_s(M_Z), the coupling constant"), "float", data.ALPHA_S_MZ[0], group=LAWS, min=0.05, max=0.3,
+    _p("alpha_mz", T("Coupling constant α_s(M_Z)"), "float", data.ALPHA_S_MZ[0], group=LAWS, min=0.05, max=0.3,
        standard=data.ALPHA_S_MZ[0],
        help=T("PDG 2024 world average: {v} ± {dv}", v=data.ALPHA_S_MZ[0], dv=data.ALPHA_S_MZ[1])),
     _p("loops", T("Order of the β function (loops)"), "int", 4, group=RUNNING, min=1, max=4, live=True),
@@ -103,13 +104,14 @@ class Simulation(BaseSimulation):
         try:
             return running.alpha_s(mu, a_mz or self.params["alpha_mz"], data.M_Z[0], THRESH,
                                    loops or self.params["loops"])
-        except running.LandauPole:
-            return float("nan")
-        except ValueError as e:  # not a pole: the integrator itself failed (review UX-params P4/P5): said to the user
+        except ValueError as e:  # matched by the engine's machine code (lfphys.codes; review i18n-code F5)
+            if code_of(e) == "qcd.landau_pole":
+                return float("nan")
+            # qcd.rg_failed or another refusal: the integrator itself failed (review UX-params P4/P5): said to the user
             raise Refusal(T("the renormalisation-group equation was not solved at α_s(M_Z) = {a:.4g}, μ = {mu:.4g} GeV",
                             a=a_mz or self.params["alpha_mz"], mu=mu),
                           hint=T("take α_s(M_Z) closer to the world average {avg}", avg=data.ALPHA_S_MZ[0]),
-                          detail=str(e)) from e
+                          detail=data_of(e).get("solver") or str(e)) from e
 
     def _recompute(self, reason):
         p = self.params
@@ -173,11 +175,13 @@ class Simulation(BaseSimulation):
         for mu in (2.0, 1000.0):
             try:
                 val = running.alpha_s(mu, a0, mz, {"c": 0.1, "b": 0.2}, 1)
-            except running.LandauPole as e:  # a large alpha_s(M_Z): the pole lies above this scale (review V6-1)
+            except ValueError as e:  # a large alpha_s(M_Z): the pole lies above this scale (review V6-1)
+                if code_of(e) != "qcd.landau_pole":
+                    raise
                 self._check(f"one{self.seg}_{mu:g}", T("One loop, α_s({mu:.4g} GeV), n_f = 5 without thresholds", mu=mu),
                             None, None, "", g, info=True,
                             note=T("not computed: a Landau pole, α_s diverges near μ ≈ {mu:.3g} GeV (perturbation "
-                                   "theory does not apply)", mu=e.mu))
+                                   "theory does not apply)", mu=data_of(e)["mu"]))
                 continue
             self._check(f"one{self.seg}_{mu:g}", T("One loop, α_s({mu:.4g} GeV), n_f = 5 without thresholds", mu=mu),
                         val, running.one_loop(mu, a0, mz, 5), "",

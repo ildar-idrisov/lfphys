@@ -33,7 +33,7 @@ The server part and the view are shared with v13 (`../server/lfviz/orbitals3d.py
   forces, no relativistic corrections, no coupling to open-flavour channels: the states above the D D̄ / B B̄
   threshold (cc̄ 2P, 3S, 1D…) are the model's, not nature's.
 * **The radial functions** are numerical: the drawn ones from N = 800, the checks' from a second solve at N = 1200.
-  Their accuracy is a check of every world ("Convergence: R(r) of the grid N = 800 against N = 1200": the two differ by less than half a step of the 8-bit picture;
+  Their accuracy is a check of every world ("Convergence: R(r) of the grid N = 800 against N = 1200": the two differ by less than half a quantisation step of the 8-bit image;
   measured below). The cloud, the current, the time, the phases of a superposition and the slices are those of v13
   (see its README, section "The model").
 * **The cloud** is the distribution of r = r_q − r_q̄; each quark's own distribution about the centre of mass is the
@@ -55,7 +55,7 @@ the model); another pair is a new world in the same run. The title names the pai
 | id | what | reference | tolerance |
 |---|---|---|---|
 | `norm_k` | ∫\|ψ_k\|² dV of the spline | 1 | the solver's error estimate (grids N and 2N + 1) |
-| `conv_k` | max\|R_N − R_1200\| / max\|R\| | 0 | half a step of the 8-bit picture, 1/510 |
+| `conv_k` | max\|R_N − R_1200\| / max\|R\| | 0 | half a quantisation step of the 8-bit image, 1/510 |
 | `energy_k` | ⟨T⟩ + ⟨V⟩ of the drawn wave function (the spline's derivative) | the solver's (extrapolated) eigenvalue | 3 × (the change of both from N to N = 1200) |
 | `nodes_k` | sign changes of R(r) | n − 1 | exact |
 | `split_k` | the model's M(n, L) − M(1S) | PDG spin-averaged | information (a model against data) |

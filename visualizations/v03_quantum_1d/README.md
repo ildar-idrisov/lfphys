@@ -36,7 +36,7 @@ potential (rectangular barrier, double barrier, step, well) or released in a har
   (transfer matrices over a fine staircase, two resolutions and Richardson extrapolation), averaged over the
   packet's whole momentum distribution (components with k <= 0 count as reflected). The check's tolerance is
   1e-7 + 1e-3 T + the leftover + the detectors' reflection; the presets agree to ~1e-5.
-* The outcome of each particle in the reading chosen by the owner ("Interpretation (does not change the predictions)";
+* The outcome of each particle in the interpretation chosen by the owner ("Interpretation (does not change the predictions)";
   live; it does not change predictions): `theories.interpretations.copenhagen` (a click at a random moment drawn from
   the detector's absorption rate, then collapse), `theories.interpretations.bohm` (a trajectory from a
   |psi|^2-distributed start q, guided by j/|psi|^2; in one dimension trajectories do not cross, so outside the
@@ -69,15 +69,15 @@ probability (z-score); in the trap: levels hbar omega (n + 1/2) by the spectral 
   hbar^2/(8 m sigma^2) (checked). The grey curve in the panel "Outcomes" is the packet's distribution per unit energy.
 * The trap's levels come from a 256-point sinc DVR on a window around the trap (turning point of the 4th level plus
   8 ground-state widths).
-* A packet of a fixed shape is sent each cycle; outcomes differ by the random draw of the reading.
+* A packet of a fixed shape is sent each cycle; outcomes differ by the random draw of the interpretation.
 
 Open items: `../../STATUS.md`, section V.
 
 ## Tests
 
 `tests/test_v03_quantum.py`: every preset runs with all checks passing; the packet transmission equals the
-stationary reference to 1e-4; the three readings give the same statistics; clicks are revealed only when reached;
-a reading change keeps the wave, a set-up change rebuilds it; trap levels and period; a step above the packet's energy
+stationary reference to 1e-4; the three interpretations give the same statistics; clicks are revealed only when reached;
+an interpretation change keeps the wave, a set-up change rebuilds it; trap levels and period; a step above the packet's energy
 runs to its transmission without the budget, every check passing (P13); sharp edges shorten the step where T is small
 (a 3 nm barrier with δ = 0.05 nm within 1e-4 of the reference; δ = 0.02 nm refused at once with what to change;
 negative control: without it T is 8 times too large, P19); the refusals name what the scenario can change.
