@@ -215,7 +215,8 @@ details.lgroup > summary { cursor: pointer; font-weight: 600; font-size: 12px; p
 .lang-switch.failed a.on { color: var(--bad, #c0392b); }  /* the catalogue could not be loaded (F9) */
 
 /* the start page (js/start.js): learning materials by audience — the tiles, the sections, the cards (2026-11-13) */
-.start { --aud-school: #2b8a3e; --aud-university: #1c6dd0; --aud-research: #8e44ad; --aud-labs: #c25e00; }
+/* the light theme's audience colours reach 4.5:1 on the panel as 13 px text (review P17-start-page F8) */
+.start { --aud-school: #237a35; --aud-university: #1c6dd0; --aud-research: #8e44ad; --aud-labs: #a85100; }
 :root[data-theme="dark"] .start { --aud-school: #51cf66; --aud-university: #5aa2ff; --aud-research: #c792ea; --aud-labs: #ffa94d; }
 .aud-school { --aud: var(--aud-school); } .aud-university { --aud: var(--aud-university); }
 .aud-research { --aud: var(--aud-research); } .aud-labs { --aud: var(--aud-labs); }
@@ -230,12 +231,19 @@ details.lgroup > summary { cursor: pointer; font-weight: 600; font-size: 12px; p
 .st-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); gap: 14px; }
 .st-tile { display: flex; flex-direction: column; gap: 8px; color: var(--ink); text-decoration: none; background: var(--panel);
   border: 1px solid var(--line); border-top: 4px solid var(--aud); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); }
-.st-tile:hover, .st-tile:focus-visible { border-color: var(--aud); outline: none; }
+.st-tile:hover { border-color: var(--aud); }
+/* the keyboard's focus: a ring round the whole tile (review P17-start-page F7: only the side borders changed colour) */
+.st-tile:focus-visible { border-color: var(--aud); outline: 2px solid var(--aud); outline-offset: 2px; }
+button.chip:focus-visible, .st-cont:focus-visible, a.button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .st-tile .name { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--aud); }
 .st-tile .text { font-size: 14px; line-height: 1.45; flex: 1; }
 .st-tile .count { font-size: 13px; color: var(--muted); }
 .st-tile .open { color: var(--aud); font-weight: 600; }
-.st-tile.off, .card.off { filter: grayscale(1); opacity: .72; border-style: dashed; }
+/* greyed (the laboratories on the site): the pictures and the colour go grey, the text stays readable (review P17-start-page
+   F8: the whole tile at 72 % opacity gave 2.9:1) */
+.st-tile.off, .card.off { border-style: dashed; box-shadow: none; }
+.st-tile.off { --aud: var(--muted); }
+.st-tile.off .pic, .card.off .pic { filter: grayscale(1); opacity: .6; }
 .st-tile.off .warn, .card.off .warn { color: var(--ink); font-weight: 600; }
 img.pic { display: block; width: 100%; aspect-ratio: 2 / 1; object-fit: cover; border-radius: 6px; background: var(--chip); margin-bottom: 8px; }
 .st-continue { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 18px 0 0; }
@@ -279,7 +287,7 @@ button.chip.on { background: var(--accent); border-color: var(--accent); color: 
 a.button { display: inline-block; background: var(--chip); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; color: var(--ink); text-decoration: none; cursor: pointer; }
 a.button:hover { border-color: var(--accent); }
 a.button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-a.button.disabled { opacity: .45; cursor: default; }
+a.button.disabled { background: transparent; color: var(--muted); border-style: dashed; cursor: default; }  /* readable: 5:1 (F8) */
 @media (max-width: 600px) { .st-search { margin-left: 0; width: 100%; } .st-head h1 { font-size: 17px; } .start .page { padding: 12px; } }
 /* the player on a saved recording (js/player.js, S.recording) */
 .badge.rec-badge { background: #b02a37; color: #fff; font-weight: 600; letter-spacing: .03em; }
@@ -287,4 +295,5 @@ a.button.disabled { opacity: .45; cursor: default; }
 .rec-note { margin: 8px 10px; padding: 7px 9px; border-left: 4px solid var(--accent); border-radius: 4px; font-size: 12px;
   background: color-mix(in srgb, var(--accent) 7%, var(--panel)); }
 .st-tile .pic { margin-bottom: 2px; }
+div.pic { display: block; width: 100%; aspect-ratio: 2 / 1; border-radius: 6px; }  /* the placeholder keeps a picture's room (F10) */
 .st-tile .pic.ph { background: linear-gradient(135deg, color-mix(in srgb, var(--aud) 26%, var(--panel)), color-mix(in srgb, var(--aud) 6%, var(--panel))); }

@@ -18,7 +18,8 @@ What it writes into ``--out`` (served at ``--base``, e.g. https://ildar-idrisov.
   ``api/recordings.json``, ``api/health.json`` (``{version, visualizations, cite}``): what the server's ``GET /api/…`` returns;
   ``aliases.json`` (``registry.ALIASES``);
 * ``recordings/<world>/``: each world's ``index.json`` and the files it names, from ``--recordings`` (``DIR/<world>/``
-  or, as the CI's artifacts land, ``DIR/rec-<world>/``);
+  or, as the CI's artifacts land, ``DIR/rec-<world>/``), only the entries the registry asks for now (review F13);
+  ``api/recordings.json`` carries the public site's ``site`` and ``published`` (``site/site.json``);
 * ``images/<id>.jpg``: each world's poster from ``docs/images/`` (the cards' pictures); ``legal/<name>``: the full texts the licence page shows;
 * ``site-manifest.json``: every file with its size and sha256, every world and recording with its key and state
   (``present`` | ``stale`` | ``missing``), checked by ``site/check.py``.
@@ -168,8 +169,12 @@ def copy_recordings(src: Path | None, out: Path, worlds: list[str]) -> dict:
         if d is None:
             continue
         idx = json.loads((d / "index.json").read_text(encoding="utf-8"))
+        planned = {r["id"] for r in registry.recordings_of(registry.load(vid))}
         keep = []
         for e in idx.get("recordings") or []:
+            if e.get("id") not in planned:  # a recording the registry no longer asks for stays off the site (F13)
+                _warn(f"{vid}: {e.get('id')} is in its index but not asked for by the registry: left out")
+                continue
             f = d / str(e.get("file", ""))
             if not f.is_file():
                 _warn(f"{vid}: {e.get('file')} is named in its index but missing")

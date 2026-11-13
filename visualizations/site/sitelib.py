@@ -23,8 +23,10 @@ for _p in (str(HERE), str(VIZ / "server")):
 
 from lfviz import registry  # noqa: E402
 
-#: the recorder's version: part of every recording's key; raise it when the recorder writes something different
-RECORDER_VERSION = "1"
+#: the recorder's version: part of every recording's key; raise it when the recorder writes something different (2: the
+#: frames carry no ``cpu_ms``, the header's kernels are this recording's own; site review F1, F2). The recorder's code and
+#: the image's locked dependencies are in the key too (``recorder_hash``), so an edit there needs no raise to be seen.
+RECORDER_VERSION = "2"
 RECORDINGS = VIZ / "recordings"  # the local recordings (git-ignored; the server serves them at /recordings/)
 IMAGES = REPO / "docs" / "images"  # the README's and the cards' pictures (posters.mjs)
 
@@ -45,10 +47,12 @@ MIN_KEPT_FPS = 2.0
 #: large, so the frame stride cannot help; only ``seconds`` could, at the cost of what the recording shows.
 ACCEPTED = {
     ("u38_wave_3d", "double"): "one 6.3 MB float volume of the whole 3-D field, sent once at the start",
-    ("r12_double_slit_2d", "narrow"): "the wave field as 'wave' snapshots (~94 kB each, ~5 per world second, 101 in "
-                                      "20 s) that the record keeps so that scrolling back shows the wave of that moment",
-    ("r12_double_slit_2d", "mark180"): "the wave field as 'wave' snapshots (~94 kB each, ~5 per world second, 101 in "
-                                       "20 s) that the record keeps so that scrolling back shows the wave of that moment",
+    ("r12_double_slit_2d", "narrow"): "the wave field as 'wave' snapshots (~94 kB each, ~5 per played second, 101 "
+                                      "in 20 s) that the record keeps so that scrolling back shows the wave of that "
+                                      "moment",
+    ("r12_double_slit_2d", "mark180"): "the wave field as 'wave' snapshots (~94 kB each, ~5 per played second, 101 "
+                                       "in 20 s) that the record keeps so that scrolling back shows the wave of that "
+                                       "moment",
     ("r12_double_slit_2d", None): "its two recordings of the wave field (see each)",
 }
 
@@ -63,10 +67,33 @@ def spec_of(rec: dict) -> dict:
     return {k: rec.get(k) for k in ("id", "preset", "seconds", "fps", "speed", "seed", "poster", "script")}
 
 
-def spec_key(rec: dict, code_hash: str) -> str:
-    """The recording's key: sha256(spec + recorder version + the world's code hash), 16 hex digits."""
+#: the files besides the world's code that decide a recording's bytes (site review F3): the recorder (its frame clock,
+#: ``DROP``, ``STRIDES``, the packing) and the image's locked dependencies (numpy, scipy … decide the numbers)
+RECORDER_FILES = (HERE / "record.py", VIZ / "docker" / "requirements.lock", VIZ / "docker" / "Dockerfile")
+
+
+def recorder_hash(files=None) -> str:
+    """sha256 over the recorder's files (``RECORDER_FILES``) and the budgets that decide the thinning (``BUDGET``'s file
+    and world, ``MIN_KEPT_FPS``), 16 hex digits: part of every recording's key. A missing file counts as its name."""
+    h = hashlib.sha256()
+    for f in RECORDER_FILES if files is None else files:
+        f = Path(f)
+        h.update(f.name.encode() + b"\0")
+        try:
+            h.update(f.read_bytes())
+        except OSError:
+            h.update(b"<missing>")
+        h.update(b"\0")
+    h.update(json.dumps([BUDGET["file"], BUDGET["world"], MIN_KEPT_FPS]).encode())
+    return h.hexdigest()[:16]
+
+
+def spec_key(rec: dict, code_hash: str, recorder: str | None = None) -> str:
+    """The recording's key: sha256(spec + recorder version + the recorder's hash + the world's code hash), 16 hex
+    digits."""
     spec = json.dumps(spec_of(rec), sort_keys=True, ensure_ascii=False, separators=(",", ":"))
-    return hashlib.sha256(f"{spec}\n{RECORDER_VERSION}\n{code_hash}".encode()).hexdigest()[:16]
+    rh = recorder_hash() if recorder is None else recorder
+    return hashlib.sha256(f"{spec}\n{RECORDER_VERSION}\n{rh}\n{code_hash}".encode()).hexdigest()[:16]
 
 
 def world_key(keys: list[str]) -> str:
@@ -88,11 +115,12 @@ def planned_world(vid: str) -> dict:
     """What the registry asks of a world's recordings now: {world, version, code_hash, recordings: [spec + key]}."""
     viz = registry.load(vid)
     code = registry.code_hash(vid)
+    rh = recorder_hash()
     recs = []
     for r in registry.recordings_of(viz):
-        recs.append({**r, "key": spec_key(r, code)})
-    return {"world": vid, "version": viz.get("version", ""), "code_hash": code, "recordings": recs,
-            "key": world_key([r["key"] for r in recs])}
+        recs.append({**r, "key": spec_key(r, code, rh)})
+    return {"world": vid, "version": viz.get("version", ""), "code_hash": code, "recorder_hash": rh,
+            "recordings": recs, "key": world_key([r["key"] for r in recs])}
 
 
 def read_index(folder: Path, vid: str) -> dict | None:

@@ -11,6 +11,12 @@
 //    «▶ Compute live»;
 //  - a recording plays in run.html?rec=<world>/<rec>: the timeline moves and the world time grows, the badge is there,
 //    the checks appear, the canvas is not blank;
+//  - EVERY recording of api/recordings.json loads (review P17-site F5: a missing view, vendor or locale module shows up
+//    only when its world is played): the frames the player holds are the index's «frames», going to «poster_frame»
+//    shows «poster_t»; an old id (aliases.json) plays too; an unknown recording id says so with a link to the start
+//    page, not «No recording for this version» (integrator D4);
+//  - the server's addresses on the site (start-page F12): run.html?id=… and a bare run.html say «This site plays
+//    recordings; runs are computed by a local server», never a raw parse error or a server address «/run?id=…»;
 //  - the laboratories are greyed: the tile and the cards marked off, nothing to start, the note «Works only with a
 //    running server» with the way to the quick start;
 //  - the school banner is honest: «Ready: k of n» with k the school worlds of api/viz.json and n = k + the school items
@@ -29,6 +35,7 @@
 //     -v <repo>/visualizations/tests/browser:/t:ro -w /pw mcr.microsoft.com/playwright:v1.58.2-jammy \
 //     sh -c "cp /t/*.mjs /pw/ && node /pw/site_smoke.mjs http://127.0.0.1:8000/lfphys/ en,ru"
 // Prints one JSON line per check and "all passed" or the number failed (exit code 1). SHOTS=<dir> keeps screenshots.
+// ALL_RECS=0 plays only the one recording (a quick run); by default every recording is played in every language.
 import { chromium } from "playwright";
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -224,6 +231,67 @@ for (const lang of LANGS) {
       await language(page, REC);
       await shot(page, "record", false);
     }
+    await page.close();
+  }
+
+  // every recording: it loads, its frames are the index's, the poster frame is at poster_t (F5)
+  if (process.env.ALL_RECS !== "0") {
+    const all = Object.entries(recIndex).flatMap(([w, ix]) => (ix.recordings || []).map((r) => ({ w, r })));
+    const aliases = await getJSON("aliases.json").catch(() => ({}));
+    const oldId = Object.entries(aliases).find(([, nw]) => recIndex[nw]);
+    if (oldId) all.push({ w: oldId[0], r: { ...recIndex[oldId[1]].recordings[0], alias: true } });
+    let played = 0;
+    const badRecs = [];
+    for (const { w, r } of all) {
+      const page = await open(`run.html?rec=${w}/${r.id}`, { ms: 0 });
+      const out = { rec: `${w}/${r.id}` };
+      try {
+        await page.waitForFunction(() => window.__lfPlayer && !window.__lfPlayer.replaying() && window.__lfPlayer.frames() > 0, null, { timeout: 180000 });
+        out.frames = await page.evaluate(() => window.__lfPlayer.frames());
+        if (r.poster_frame !== undefined) {
+          await page.evaluate((i) => window.__lfPlayer.goTo(i), r.poster_frame);
+          await sleep(200);
+          out.t = await page.evaluate(() => window.__lfPlayer.t());
+        }
+        const okFrames = out.frames === r.frames;
+        const okPoster = r.poster_frame === undefined || Math.abs(out.t - r.poster_t) <= 1e-9 * Math.max(1, Math.abs(r.poster_t));
+        if (okFrames && okPoster) played++; else badRecs.push({ ...out, want: r.frames, poster_t: r.poster_t });
+      } catch (e) { badRecs.push({ ...out, error: e.message.split("\n")[0].slice(0, 160) }); }
+      await page.close();
+    }
+    check(`every recording plays with the index's frames and poster time (${all.length}, an old id among them)`,
+      badRecs.length === 0 && played === all.length && all.length > 0, { played, of: all.length, bad: badRecs.slice(0, 5) });
+  }
+
+  // an unknown recording id: said, with the way to the start page; not «No recording for this version» (D4)
+  if (REC) {
+    const w = REC.split("/")[0];
+    const page = await open(`run.html?rec=${w}/no_such_recording`, { ms: 0 });
+    let s = null;
+    for (let i = 0; i < 60; i++) {  // the player's page gives way to the refusal
+      s = await page.evaluate(() => ({ text: document.body.innerText, player: !!document.getElementById("timeline"),
+        start: [...document.querySelectorAll("a")].map((a) => a.getAttribute("href")) }));
+      if (!s.player) break;
+      await sleep(250);
+    }
+    const version = tr("No recording for this version: record it locally or compute live");
+    check("an unknown recording: «No such recording», with a link to the start page, not «for this version»",
+      !s.player && s.text.includes(tr("No such recording")) && !s.text.includes(version)
+        && s.start.some((h) => h === PREFIX || (h || "").startsWith(PREFIX + "?") || h === PREFIX + "index.html"),
+      { text: s.text.slice(0, 200), links: s.start.slice(0, 4) });
+    await page.close();
+  }
+
+  // the server's addresses on the site (start-page F12)
+  for (const q of ["run.html?id=20261111-170830-v04-2ca9", "run.html"]) {
+    const page = await open(q, { ms: 0 });
+    let text = "";
+    for (let i = 0; i < 40 && !text.trim(); i++) { await sleep(250); text = await page.evaluate(() => document.body.innerText); }
+    await sleep(300);
+    text = await page.evaluate(() => document.body.innerText);
+    const want = tr("This site plays recordings; runs are computed by a local server");
+    check(`${q}: «${want}», no raw error, no server address`, text.includes(want) && !/Unexpected token|is not valid JSON|\/run\?id=/.test(text),
+      { text: text.slice(0, 200) });
     await page.close();
   }
 

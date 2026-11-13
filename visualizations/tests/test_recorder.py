@@ -166,3 +166,87 @@ def test_the_plan_marks_missing_present_and_stale(rec, tmp_path):
     m = plan.matrix(worlds, "all", True)
     assert {"world": "u98_site_toy", "key": p["key"], "force": True} in m["include"]
     assert plan.matrix([], "stale", True) == {"include": [{"world": "", "key": "", "force": False}]}
+
+
+# --- review P17-site F1, F2, F4, F9; integrator D5, D6 --------------------------------------------------------------
+
+def _gz(rec, viz_id, rid):
+    return rec.pack(rec.record(viz_id, _spec(rid) if viz_id == "u98_site_toy" else
+                               registry.recordings_of(registry.load(viz_id))[0]), 1).gz
+
+
+def test_a_recording_is_byte_identical_alone_or_after_another_world(rec):
+    """D6: two recordings of the same spec by the same code are the same bytes, whatever the process recorded before
+    (F1: the header's kernels are this recording's own; F2: no CPU time in the frames)."""
+    from lfphys.core import backend as B
+    alone = _gz(rec, "u98_site_toy", "slow")
+    _gz(rec, "r98_site_probe", None)  # another world first
+    B._USED["fake.kernel"] = {"drawn": {"device": "cpu", "precision": "fp64", "reason": "a test", "size": 1}}
+    after = _gz(rec, "u98_site_toy", "slow")
+    assert after == alone
+    data = gzip.decompress(after)
+    metas = [protocol.decode(m)[0] for _o, m in protocol.iter_stream(data, len(protocol.MAGIC))]
+    header = next(m for m in metas if m["type"] == "header")
+    assert "fake.kernel" not in ((header.get("backend") or {}).get("used") or {})
+    frames = [m for m in metas if m["type"] == "frame"]
+    assert frames and not any(k in f for f in frames for k in rec.FRAME_TIMING)  # no wall clock, no CPU time
+
+
+def _with_checks(monkeypatch, checks_at):
+    """The toy world emits the given checks at its frames: {frame number: [check meta]}."""
+    sim = registry.load("u98_site_toy")["simulation"]
+    orig = sim.frame
+
+    def frame(self):  # counted per world: each recording builds its own
+        k = self.__dict__.setdefault("_test_k", 0)
+        for c in checks_at.get(k, []):
+            self.emit({"type": "check", "t": self.t, "label": "a check", "unit": "", "note": "", **c})
+        self._test_k = k + 1
+        return orig(self)
+
+    monkeypatch.setattr(sim, "frame", frame)
+
+
+def test_a_check_that_ends_failed_fails_the_recording(rec, monkeypatch, tmp_path):
+    """D5: a check whose last state is ✗ fails the recording (no file, a problem named); a ✗ on purpose (expected) or a
+    ✗ that a later version of the check turns into ✓ does not; the index counts the last states."""
+    _with_checks(monkeypatch, {3: [{"id": "c1", "value": 1.0, "ref": 2.0, "rel": -0.5, "tol": 1e-9}]})
+    with pytest.raises(rec.RecordingFailed, match="c1"):
+        rec.record("u98_site_toy", _spec("slow"))
+    index, problems = rec.record_world("u98_site_toy", tmp_path, only=["slow"])
+    assert any("check(s) end failed" in p and "u98_site_toy/slow" in p for p in problems)
+    assert not [e for e in index["recordings"] if e["id"] == "slow"]
+
+
+def test_a_check_failed_on_purpose_or_corrected_later_does_not_fail(rec, monkeypatch, tmp_path):
+    _with_checks(monkeypatch, {
+        2: [{"id": "c1", "value": 1.0, "ref": 2.0, "rel": -0.5, "tol": 1e-9}],
+        5: [{"id": "c1", "value": 2.0, "ref": 2.0, "rel": 0.0, "tol": 1e-9},
+            {"id": "c2", "ok": False, "expected": "a what-if world"},
+            {"id": "c3", "value": 1.0, "ref": None, "rel": None},
+            {"id": "c4", "value": 1.0, "info": True}]})
+    index, problems = rec.record_world("u98_site_toy", tmp_path, only=["slow"])
+    assert problems == []
+    e = next(e for e in index["recordings"] if e["id"] == "slow")
+    assert e["checks"] == {"ok": 1, "failed": 0, "expected": 1, "info": 1, "na": 1}
+
+
+def test_a_kept_old_entry_is_current_or_dropped(rec, tmp_path):
+    """F9: a recording not made now keeps its old entry only when its key is the current one, with its own date, code
+    and version; a stale one is dropped, so the index's code and date never name a file made by other code."""
+    rec.record_world("u98_site_toy", tmp_path)
+    folder = tmp_path / "u98_site_toy"
+    idx = json.loads((folder / "index.json").read_text(encoding="utf-8"))
+    fast = next(e for e in idx["recordings"] if e["id"] == "fast")
+    assert {"version", "code_hash", "made"} <= set(fast) and fast["code_hash"] == idx["code_hash"]
+    fast["made"] = "2000-01-01T00:00:00+00:00"
+    (folder / "index.json").write_text(json.dumps(idx), encoding="utf-8")
+    index, _ = rec.record_world("u98_site_toy", tmp_path, only=["slow"])
+    kept = next(e for e in index["recordings"] if e["id"] == "fast")
+    assert kept["made"] == "2000-01-01T00:00:00+00:00" and kept["key"] == fast["key"]
+    idx = json.loads((folder / "index.json").read_text(encoding="utf-8"))
+    next(e for e in idx["recordings"] if e["id"] == "fast")["key"] = "0" * 16  # made by other code
+    (folder / "index.json").write_text(json.dumps(idx), encoding="utf-8")
+    index, _ = rec.record_world("u98_site_toy", tmp_path, only=["slow"])
+    assert [e["id"] for e in index["recordings"]] == ["slow"]
+    assert sorted(p.name for p in folder.glob("*.lfrec.gz")) == [index["recordings"][0]["file"]]

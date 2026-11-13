@@ -62,14 +62,30 @@ ALIASES = {
 AUDIENCES = [
     {"id": "school", "prefix": "s", "label": T("School"), "ui": "school",
      "text": T("Grades 7–11: the ordinary lab experiment, computed and guided step by step")},
-    {"id": "university", "prefix": "u", "label": T("University"), "ui": "standard",
+    {"id": "university", "prefix": "u", "label": T("University"), "ui": "standard", "picture": "u32_double_slit",
      "text": T("The experiments of the university courses, computed from the laws")},
-    {"id": "research", "prefix": "r", "label": T("Research"), "ui": "full",
+    {"id": "research", "prefix": "r", "label": T("Research"), "ui": "full", "picture": "r12_double_slit_2d",
      "text": T("Set-ups not computed before, to study the harder laws; every novelty is a hypothesis")},
-    {"id": "playground", "prefix": "p", "label": T("Laboratories"), "ui": "full",
+    {"id": "playground", "prefix": "p", "label": T("Laboratories"), "ui": "full", "picture": "p04_fluids",
      "text": T("Free benches: build a scene, and the engine computes it live")},
 ]
 AUDIENCE = {a["id"]: a for a in AUDIENCES}
+# ``picture`` (optional): the world whose picture the start page's tile shows (review P17-start-page F10: the first world
+# with a picture gave a nearly blank tile); without one, or while that world has no picture, the first world that has one
+
+
+def check_audiences() -> list[str]:
+    """What is wrong with ``AUDIENCES`` (empty when nothing): a tile's ``picture`` names a world of that audience."""
+    out, ids = [], set(viz_ids())
+    for a in AUDIENCES:
+        w = a.get("picture")
+        if w is None:
+            continue
+        if w not in ids:
+            out.append(f"audience {a['id']}: picture {w!r} is no world")
+        elif not w.startswith(a["prefix"]):
+            out.append(f"audience {a['id']}: picture {w!r} is not a world of this audience (prefix {a['prefix']})")
+    return out
 
 #: the physics sections in teaching order (plan §5.1; curriculum research §2)
 SECTIONS = [

@@ -31,6 +31,10 @@ const $ = (id) => document.getElementById(id);
 const runId = new URLSearchParams(location.search).get("id");
 const recParam = new URLSearchParams(location.search).get("rec");  // a saved recording: "<world>/<rec>"
 const SITE = "https://ildar-idrisov.github.io/lfphys/";  // the public site, when the server does not say (GET /api/recordings)
+const GITHUB = "https://github.com/ildar-idrisov/lfphys";
+// the README's quick start in the viewer's language (how to run lfphys locally), as on the start page
+const quickStart = () => (lang() === "ru" ? `${GITHUB}/blob/main/README.ru.md#%D0%B1%D1%8B%D1%81%D1%82%D1%80%D1%8B%D0%B9-%D1%81%D1%82%D0%B0%D1%80%D1%82`
+  : `${GITHUB}#quick-start`);
 const MAX_FRAMES = 20000;  // beyond it the stride of the frames kept doubles: the history stays uniform at any length
 // a key frame of the view every KEY_EVERY messages fed in order (owner, 2026-10-29: «для воспроизведения назад давай
 // как в видео добавлять ключевые кадры»): going back restores the view from the nearest one before the cursor and
@@ -66,6 +70,8 @@ const archived = () => S.w !== latest();
 const liveParams = () => S.viz.schema.params.filter((p) => p.live);
 
 async function main() {
+  // the public site plays recordings only: a run's address (or none) says so, with the ways on (review P17-start-page F12)
+  if (MODE === "static" && !recParam) { siteHasNoRuns(); return; }
   if (!runId && !recParam) { document.body.replaceChildren(el("div", { class: "page" }, t("No run given: /run?id=…"))); return; }
   if (recParam) {
     try { await loadRecording(recParam); } catch (e) { recordingRefused(e); return; }
@@ -78,7 +84,9 @@ async function main() {
       S.legacy = await legacy(S.meta);
     } catch (e) { document.body.replaceChildren(el("div", { class: "page" }, t("Run not found: {why}", { why: e.message }))); return; }
   }
-  document.title = `${t(S.viz.title)} · ${S.recording ? t("recording") : runId}`;
+  // the tab says what this is: a saved recording, or a live run (its state while it computes: updateTransport); the two
+  // are never called by the same word (integrator D1; review P17-start-page F3)
+  document.title = S.recording ? t("{title} · recording", { title: t(S.viz.title) }) : `${t(S.viz.title)} · ${runId}`;
   $("title").textContent = $("title").title = t(S.viz.title);  // the full name in the tooltip when it is cut
   $("runid").textContent = S.recording ? S.meta.id : runId;
   $("keep").textContent = S.meta.keep ? "★" : "☆";
@@ -125,37 +133,63 @@ async function main() {
 
 // --- a saved recording ----------------------------------------------------------------------------------------------
 // The world (an old id resolves: the server's /api/viz/<old>, the site's aliases.json), its index (here; on a server with
-// no local copy, the public site's — only when it was recorded from the same version of the world), the entry, and the
-// passport made from it.
+// no local copy, the public site's — only when the site is published (site/site.json, GET /api/recordings "published")
+// and its recording was made from the same version of the world), the entry, and the passport made from it. A refusal
+// names its real cause (integrator D4; review P17-start-page F5): no such recording; none made yet; the public site not
+// reached; or the site's recording made by another version of the world.
+const refusal = (msg, kind) => Object.assign(new Error(msg), { kind });
 async function loadRecording(spec) {
   const [w0, recId] = String(spec).split("/");
-  if (!w0 || !recId) throw new Error(t("a recording is named <world>/<recording>"));
+  const noSuch = () => refusal(t("No such recording"), "missing");
+  if (!w0 || !recId) throw noSuch();
   let world = w0;
   if (MODE === "static") {
     try { world = (await getJSON(url("aliases.json")))[w0] || w0; } catch (e) { /* no alias table: the id as it is */ }
   }
-  S.viz = await apiGet(`viz/${encodeURIComponent(world)}`);
+  try { S.viz = await apiGet(`viz/${encodeURIComponent(world)}`); } catch (e) { throw noSuch(); }
   world = S.viz.id;
   let all = null;
   try { all = await apiGet("recordings"); } catch (e) { all = null; }
   try { S.audiences = (await apiGet("audiences")).audiences || []; } catch (e) { S.audiences = []; }  // the back link's label
   const site = (all && all.site) || SITE;
+  const spec0 = (S.viz.recordings || []).find((r) => r.id === recId) || null;
   let index = all && all.worlds ? all.worlds[world] : null;
   let entry = index ? (index.recordings || []).find((r) => r.id === recId) : null;
   let base = url(`recordings/${world}/`), fromSite = false;
-  if (!entry && MODE === "server") {  // the public site's recording, made by the same version of the world (§4.6)
-    let remote = null;
-    try { remote = await getJSON(`${site}recordings/${encodeURIComponent(world)}/index.json`); } catch (e) { remote = null; }
+  if (!entry) {
+    if (MODE === "static" || !spec0) throw noSuch();
+    if (!(all && all.published)) throw refusal(t("No recording yet: record it locally (site/record.py) or compute live"), "none");
+    let remote = null, reached = true;
+    try {
+      const r = await fetch(`${site}recordings/${encodeURIComponent(world)}/index.json`);
+      if (r.ok) remote = await r.json().catch(() => null);
+      else if (r.status !== 404) reached = false;
+    } catch (e) { reached = false; }
+    if (!reached) throw refusal(t("The public site could not be reached: record it locally (site/record.py) or compute live"), "unreachable");
     const e2 = remote ? (remote.recordings || []).find((r) => r.id === recId) : null;
-    if (e2 && String(remote.version) === String(S.viz.version)) { index = remote; entry = e2; base = `${site}recordings/${world}/`; fromSite = true; }
-    else if (e2) throw Object.assign(new Error(t("No recording for this version: record it locally or compute live")), { version: true });
+    if (!e2) throw refusal(t("No recording yet: record it locally (site/record.py) or compute live"), "none");
+    if (String(e2.version ?? remote.version) !== String(S.viz.version)) throw refusal(t("No recording for this version: record it locally or compute live"), "version");
+    index = remote; entry = e2; base = `${site}recordings/${world}/`; fromSite = true;
   }
-  if (!entry) throw Object.assign(new Error(t("No recording for this version: record it locally or compute live")), { missing: true });
-  const spec0 = (S.viz.recordings || []).find((r) => r.id === recId) || {};
   S.recording = { world, id: recId, index, entry, site, fromSite, src: base + entry.file };
-  // the run's passport, from the index entry (what «About the run» shows)
-  S.meta = { id: `${world}/${recId}`, viz: world, version: index.version, code: index.code_hash, created: index.made,
-             seed: entry.seed ?? spec0.seed ?? 1, preset: entry.preset, keep: false, python: "", recording: entry };
+  // the run's passport, from the index entry (what «About the run» shows); an entry carries its own version, code and
+  // date (review P17-site F9), an older index only its top level
+  const rx = recInfo();
+  S.meta = { id: `${world}/${recId}`, viz: world, version: rx.version, code: rx.code, created: rx.made,
+             seed: entry.seed ?? (spec0 || {}).seed ?? 1, preset: entry.preset, keep: false, python: "", recording: entry };
+}
+// the recording's version, code and date: the entry's own, else the index's
+function recInfo() {
+  const R = S.recording, ix = R.index || {}, e = R.entry || {};
+  return { version: e.version ?? ix.version, code: String(e.code_hash ?? ix.code_hash ?? ""), made: String(e.made ?? ix.made ?? "") };
+}
+
+// the public site and a run's address (or none): what the site does, and the ways on
+function siteHasNoRuns() {
+  document.body.replaceChildren(el("div", { class: "page" },
+    el("h2", {}, t("This site plays recordings; runs are computed by a local server")),
+    el("p", {}, el("a", { href: withLang(page("")) }, t("← Start page")), " · ",
+      el("a", { href: quickStart(), target: "_blank", rel: "noopener" }, t("How to run it →")))));
 }
 
 // the recording cannot be played: why, with the way to compute it live (server) and back to the start page
@@ -184,16 +218,16 @@ function computeLiveButton(viz, preset, seed) {
 
 // the top bar of a recording: its badge; no ⏺, no «Keep», no «⚙»; back to the card on its audience page
 function recordingChrome() {
-  const R = S.recording, ix = R.index || {};
-  const date = String(ix.made || "").slice(0, 10);
-  const code = String(ix.code_hash || "").slice(0, 8);
+  const R = S.recording, rx = recInfo();
+  const date = rx.made.slice(0, 10);
+  const code = rx.code.slice(0, 8);
   // the code the recording was made with against the code this server runs (design §4.6): the same world version can
   // still differ in its code (the engine, the framework, the world's files)
   const here = MODE === "server" ? String(S.viz.code_hash || "") : "";
-  const other = !!(here && ix.code_hash && here !== String(ix.code_hash));
+  const other = !!(here && rx.code && here !== rx.code);
   const badge = el("span", { class: "badge rec-badge" + (other ? " rec-other-code" : ""), id: "recbadge",
     title: [t("A recording of a real run, made by the recorder from the world's code: it plays without computing. Scenario: {label}", { label: t(R.entry.label) }),
-      other ? t("Recorded with code {rec}; this server runs {here}", { rec: String(ix.code_hash), here }) : "",
+      other ? t("Recorded with code {rec}; this server runs {here}", { rec: rx.code, here }) : "",
       R.fromSite ? t("Played from the public site: this server has no local copy (the same version of the world).") : ""].filter(Boolean).join("\n") },
     t("RECORDING · {date} · code {code}", { date, code }), other ? " ≠" : "");
   $("status").before(badge);
@@ -221,7 +255,10 @@ function layout() {
   if (S.recording) {  // what this is, and (server) the way to a live run of the same scenario
     left.append(el("div", { class: "rec-note" },
       el("div", {}, t("A recording: the set-up, the actions and the world's laws are shown as recorded and cannot be changed. Change them in a live run.")),
-      MODE === "server" ? el("div", { style: { marginTop: "6px" } }, computeLiveButton(S.viz.id, S.recording.entry.preset, S.meta.seed)) : null));
+      MODE === "server" ? el("div", { style: { marginTop: "6px" } }, computeLiveButton(S.viz.id, S.recording.entry.preset, S.meta.seed))
+        // the site: there is no live run here, so the way to one (review P17-start-page F11)
+        : el("div", { style: { marginTop: "6px" } }, t("Compute live or change the set-up: run lfphys locally"), " → ",
+          el("a", { href: quickStart(), target: "_blank", rel: "noopener" }, t("how")))));
   }
   if (liveParams().length) {  // a playground's live laws too (integrator, 2026-11-05)
     left.append(panel(S.recording ? (pg ? t("Laws of the world (as recorded)") : t("Set-up (as recorded)"))
@@ -349,6 +386,16 @@ function boundControl(id, { label = null } = {}) {
 // every command goes through here: one that computes or changes the world resumes a suspended run (the server rebuilds
 // its world from the record first)
 function send(cmd, args) {
+  // a recording computes nothing: a view's own speed buttons (u32 «▷▷ build-up», u35, u37) set the player's speed here,
+  // as the speed slider does; anything else says it needs a live run (review P17-start-page F2; STATUS V51 (f))
+  if (S.recording) {
+    const v = Number((args || {}).value);
+    if (cmd === "speed" && Number.isFinite(v) && v > 0) {
+      const [lo, hi] = S.speedRange;
+      S.speed = Math.min(hi, Math.max(lo, v)); S.histT = currentT(); updateTransport();
+    } else if (cmd !== "speed") toast(t("a recording: this needs a live run"), "notice", 3000);
+    return;
+  }
   if (S.suspended && RESUMING.includes(cmd) && S.pending !== "resume") setPending("resume");
   S.conn.send(cmd, args);
   if (cmd === "scene" && (args || {}).op !== "export") {  // shown at once; the worker's "busy" notice follows (U9)
@@ -979,11 +1026,11 @@ function renderInfo() {
 }
 // «About the recording»: its passport from the index entry
 function renderRecInfo() {
-  const R = S.recording, ix = R.index || {}, e = R.entry, h = S.header || {};
-  const rows = [[t("Recording"), S.meta.id], [t("Visualization"), t("{id} (version {version})", { id: R.world, version: String(ix.version) })],
-    [t("Code"), ix.code_hash],
-    ...(MODE === "server" && S.viz.code_hash && S.viz.code_hash !== ix.code_hash ? [[t("This server's code"), S.viz.code_hash]] : []),
-    [t("Recorded"), String(ix.made || "").replace("T", " ")], [t("Recorder"), ix.recorder],
+  const R = S.recording, ix = R.index || {}, e = R.entry, h = S.header || {}, rx = recInfo();
+  const rows = [[t("Recording"), S.meta.id], [t("Visualization"), t("{id} (version {version})", { id: R.world, version: String(rx.version) })],
+    [t("Code"), rx.code],
+    ...(MODE === "server" && S.viz.code_hash && rx.code && S.viz.code_hash !== rx.code ? [[t("This server's code"), S.viz.code_hash]] : []),
+    [t("Recorded"), rx.made.replace("T", " ")], [t("Recorder"), e.recorder ?? ix.recorder],
     [t("Scenario"), t(e.label)], [t("Seed"), h.seed ?? S.meta.seed],
     [t("Played"), t("{s:g} s at {fps:g} frames per second", { s: e.seconds, fps: e.fps })],
     [t("Frames"), e.frame_stride > 1 ? t("{n:d} kept of {total:d} (one in {k:d})", { n: e.frames, total: e.frames_recorded ?? e.frames * e.frame_stride, k: e.frame_stride }) : String(e.frames)],
@@ -1295,8 +1342,8 @@ function updateTransport() {
   const noRec = S.ended || archived(), rebuild = S.pending === "resume";
   $("rec").disabled = noRec || rebuild;
   $("rec").classList.toggle("on", (S.playing || rebuild) && !noRec);
-  $("rec").textContent = (S.playing || rebuild) && !noRec ? t("⏸ recording") : "⏺";
-  $("rec").title = rebuild ? t("The world is being restored; the recording resumes by itself") : S.playing ? t("Pause the recording (Space)") : S.suspended
+  $("rec").textContent = (S.playing || rebuild) && !noRec ? t("⏸ computing") : "⏺";
+  $("rec").title = rebuild ? t("The world is being restored; the recording resumes by itself") : S.playing ? t("Pause the computation (Space)") : S.suspended
     ? t("Resume: the world is restored from its saved state and continues (Space)")
     : t("Record: the world is computed further, frames are added to the history (Space)");
   $("fwd").textContent = S.hist > 0 ? "⏸" : "▶";
@@ -1314,10 +1361,14 @@ function updateTransport() {
   else if (S.startError && (!S.worlds.length || S.ended)) setStatus("dead", t("world not created — the reason is in “Events”"));  // P1, P3
   else if (S.ended) setStatus("", t("an old record — it cannot be resumed") + where);
   else if (rebuild) setStatus("paused", t("the world is being restored — the recording resumes by itself") + where);
-  else if (S.playing) setStatus("live", t("recording") + where);
+  else if (S.playing) setStatus("live", t("computing") + where);
   else if (S.suspended && S.resumeError) setStatus("dead", t("resuming failed — ⏺ tries again") + where);
   else if (S.suspended) setStatus("paused", t("suspended — ⏺ resumes") + where);
   else setStatus("paused", t("paused") + where);
+  if (S.viz && !S.recording) {  // the tab of a live run: «… · computing» while it computes (integrator D1)
+    const title = S.playing && !noRec ? t("{title} · computing", { title: t(S.viz.title) }) : `${t(S.viz.title)} · ${runId}`;
+    if (document.title !== title) document.title = title;
+  }
   const ek = editBlock();  // the views' editable state (slice planes) follows the cursor and the run's state
   if (ek !== S.editKey) {
     S.editKey = ek;
@@ -1335,20 +1386,34 @@ function updateTimeline() {
 function setStatus(cls, text) { $("status").replaceChildren(el("span", { class: "dot " + cls }), text); }
 
 function showHelp() {
-  modal(el("div", {},
+  const head = [
     el("h3", {}, S.viz ? t(S.viz.title) : t("Player")),
     S.header && S.header.text ? el("p", {}, t(S.header.text)) : null,
     S.view && S.view.help ? S.view.help() : null,
-    el("h4", {}, t("Player")),
-    el("p", {}, t("⏺ records: the world is computed further and its frames are added to the history; press again to pause. ⏮ and ⏭ go to the start and the end of the history, ◀ and ▶ play the history backwards and forwards at the chosen speed (world seconds per second; “1:1” is real time). With the slider at the end of the history the recording is shown live; in the middle the history grows on while the chosen moment is shown. “|▶” is a frame forward (at the end, one step of computation), “⏭ event” goes to the next event (past the last one, it computes up to it).")),
+    el("h4", {}, t("Player"))];
+  // a saved recording: what it is and what can be done with it, nothing of a live run's ⏺, set-up or worker (review
+  // P17-start-page F4)
+  if (S.recording) {
+    modal(el("div", {}, ...head,
+      el("p", {}, t("This is a recording: a real run of this world, made by the recorder from the world's code and saved to a file (the badge at the top gives its date and code). It plays in the browser without computing anything.")),
+      el("p", {}, t("▶ and ◀ play it forwards and backwards at the chosen speed (world seconds per second; “1:1” is real time), ⏮ and ⏭ go to its start and its end, “|▶” is a frame forward, “⏭ event” goes to the next event; the slider at the bottom is its timeline. A view's own speed buttons set the same speed.")),
+      el("p", {}, t("Everything shown is as of the slider's moment: the scene, the screen, the checks, the set-up and the events. The set-up, the actions and the world's laws are shown as recorded and cannot be changed; “About the recording” has its passport and the file.")),
+      MODE === "server"
+        ? el("p", {}, t("To change the set-up, compute the same scenario live: “▶ Compute this scenario live” on the left."))
+        : el("p", {}, t("Compute live or change the set-up: run lfphys locally"), " → ", el("a", { href: quickStart(), target: "_blank", rel: "noopener" }, t("how"))),
+      el("p", { class: "muted" }, t("Keys: Space — play/pause, ← and → — play backwards/forwards, Home and End — to the start and the end, N — to the next event, [ and ] — hide the columns, T — theme, ? — help."))));
+    return;
+  }
+  modal(el("div", {}, ...head,
+    el("p", {}, t("⏺ computes the world further and adds its frames to the run's record; press again to pause. ⏮ and ⏭ go to the start and the end of the record, ◀ and ▶ play it backwards and forwards at the chosen speed (world seconds per second; “1:1” is real time). With the slider at the end of the record the computation is shown live; in the middle the record grows on while the chosen moment is shown. “|▶” is a frame forward (at the end, one step of computation), “⏭ event” goes to the next event (past the last one, it computes up to it).")),
     el("p", {}, t("Everything shown is as of the slider's moment: the scene, the trajectories, the screen, the checks, the set-up and the events. The set-up can be changed and actions done only at the end of the history.")),
-    el("p", {}, t("There is no stop: a run nobody watches pauses by itself and after half an hour frees its worker; ⏺ continues it from the world's saved state as one record (without one, by recomputing the world along the record from its start). Going back through the history, the player starts from the nearest key frame, not from the start of the record. Runs nobody has opened for a long time are removed (except those marked ★); the period is set in the catalogue, 3 days by default.")),
+    el("p", {}, t("There is no stop: a run nobody watches pauses by itself and after half an hour frees its worker; ⏺ continues it from the world's saved state as one record (without one, by recomputing the world along the record from its start). Going back through the history, the player starts from the nearest key frame, not from the start of the record. Runs nobody has opened for a long time are removed (except those marked ★); the period is set on the “My runs” page, 3 days by default.")),
     el("p", {}, t("“Set-up — changes at once”: everything an experimenter can change during the experiment (the source, the slits, the screen, the observer…). A change applies when you release the slider, choose an item of a list or press Enter in a number field. If a change is not possible, the field goes back to its previous value and a message appears.")),
     el("p", {}, t("“Actions” are one-off events (a flash, an acceleration, a measurement). Their consequences spread from that moment.")),
     el("p", {}, t("“▶ Start a new world” starts a world with other laws or initial conditions in this same run; the earlier worlds stay in the record and can be viewed with the world switch at the top.")),
     el("p", {}, t("The scale at the bottom is the current world's history. A click on an event in the log takes you to its moment.")),
     el("p", {}, t("If the world takes long to compute a change (the scene, the set-up, a new world), the top bar shows what it is and for how many seconds; “✕ cancel” takes the world back to the moment before that change. ⇤ and ⇥ at the top (keys [ and ]) hide the side columns to give the picture more room.")),
-    el("p", { class: "muted" }, t("Keys: Space — record/pause, ← and → — play the history backwards/forwards, Home and End — to the start and the end, N — to the next event, [ and ] — hide the columns, T — theme, ? — help."))));
+    el("p", { class: "muted" }, t("Keys: Space — compute/pause, ← and → — play the record backwards/forwards, Home and End — to the start and the end, N — to the next event, [ and ] — hide the columns, T — theme, ? — help."))));
 }
 
 main();

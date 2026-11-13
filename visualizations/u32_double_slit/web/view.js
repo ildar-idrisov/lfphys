@@ -198,11 +198,14 @@ export function createView(ctx) {
         g.stroke();
       }
     }
-    // source side
-    g.fillStyle = css("--muted"); g.font = "11px system-ui";
-    g.fillText(geo.L1 ? t("source, L₁ = {L:.4g} m", { L: geo.L1 }) : t("plane wave"), 4, 12);
+    // source side: the source's dot and, under it along the left margin, its name (at the top-left it lay under the
+    // view's caption: integrator's D8 screenshots, 2026-11-13)
     g.fillStyle = "#f08c00";
     g.beginPath(); g.arc(10, top + mh / 2, 4, 0, 2 * Math.PI); g.fill();
+    g.save(); g.fillStyle = css("--muted"); g.font = "11px system-ui"; g.textAlign = "left";
+    g.translate(5, top + mh / 2 + 10); g.rotate(Math.PI / 2);
+    g.fillText(geo.L1 ? t("source, L₁ = {L:.4g} m", { L: geo.L1 }) : t("plane wave"), 0, 0, Math.max(20, mh / 2 - 14));
+    g.restore();
     // slit plate at z0 (scale w0)
     g.fillStyle = css("--ink");
     const xs = geo.slits, a = geo.a;

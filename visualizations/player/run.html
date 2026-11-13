@@ -90,6 +90,45 @@ body.picking .s3d-canvas, body.picking .sw-canvas { cursor: crosshair; outline: 
 /* a world without slice planes: no slice tools in the 3-D toolbar (U21) */
 .run.no-slices .s3d-tools button.s3d-move, .run.no-slices .s3d-tools button.s3d-tilt { display: none; }
 .run.no-field .s3d-tools select.s3d-scale { display: none; }
+/* a recording's badge keeps its width at every size: the title and the scene shrink first (review P17-start-page F11) */
+.topbar > .badge.rec-badge { flex: none; max-width: none; }
+/* narrow screens: a phone, a tablet upright (review P17-start-page F1; integrator D8: the public site's player must work at
+   390 px). One column that scrolls: the picture first with at least a screen's room (the views' canvases had zero height
+   when the three columns were stacked into one window-high grid), the side columns under it (⇤ and ⇥ still hide them), the
+   top bar wraps and keeps the RECORDING badge, the transport stays at the bottom of the screen; nothing wider than the
+   screen */
+@media (max-width: 1000px) {
+  html, body { height: auto; }
+  .run { height: auto; min-height: 100vh; grid-template-rows: auto auto auto; grid-template-columns: minmax(0, 1fr); }
+  .run > * { min-width: 0; }
+  .main { display: flex; flex-direction: column; min-width: 0; }
+  .main > * { min-width: 0; max-width: 100vw; }
+  #center { order: -1; min-height: max(calc(100vh - 170px), 440px); }
+  /* the picture first, a view's own control rows (set-up copies, display toggles) under it (integrator, D8 screenshots) */
+  #center > * > :not(:has(canvas)) { order: 1; }
+  .side, .side.right { max-height: none; overflow: visible; border: 0; border-top: 1px solid var(--line); }
+  #center .split { grid-template-columns: minmax(0, 1fr) !important; grid-auto-rows: minmax(260px, 1fr); flex: 1 0 auto; min-height: auto; }
+  #center .split > div { border-right: 0; border-bottom: 1px solid var(--line); }
+  #center .canvas-wrap { min-height: 220px; }
+  #center .s3d { flex-direction: column; flex: 1 0 auto; }
+  #center .s3d-view { flex: 1 0 auto; min-height: max(52vh, 300px); }
+  #center .s3d-windows, #center .s3d-windows.wide { flex: 0 0 auto; border-left: 0; border-top: 1px solid var(--line); overflow: visible; }
+  #center .toolbar, #center .qc { flex-wrap: wrap; max-width: 100%; }
+  #center select, .side select { max-width: 100%; }
+  .topbar { flex-wrap: wrap; overflow: visible; padding: 6px 8px; }
+  .topbar > #title { flex: 1 1 8em; }
+  .topbar > #scene { display: none; }
+  .topbar > #physics { flex-wrap: wrap; max-width: 100%; }
+  .topbar .badge, .topbar > .badge.rec-badge { max-width: 100%; }
+  .topbar > .grow { display: none; }
+  .topbar > #status { white-space: normal; }
+  .bottombar { position: sticky; bottom: 0; z-index: 20; flex-wrap: wrap; gap: 6px; }
+  .bottombar .timeline { order: 10; flex: 1 1 100%; min-width: 0; }
+  .bottombar .time { order: 11; max-width: none; }
+  .speedbox { width: auto; flex: 1 1 140px; min-width: 120px; }
+  .toast, .toasts { max-width: calc(100vw - 28px); }
+  .modal > div { max-width: calc(100vw - 16px); padding: 14px; }
+}
 </style>
 <!-- the module specifiers of the player and of every world's view, and the 3-D environment's three.js (player/vendor/README.md);
      the site build points them at its own copies -->

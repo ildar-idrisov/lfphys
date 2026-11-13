@@ -111,5 +111,53 @@ def test_the_audiences_api_is_the_registrys(tmp_path):
     assert [a["id"] for a in body["audiences"]] == [a["id"] for a in registry.AUDIENCES]
     assert [a["prefix"] for a in body["audiences"]] == ["s", "u", "r", "p"]
     assert all(a["label"]["$t"] and a["description"]["$t"] and a["ui"] for a in body["audiences"])
+    assert [a["picture"] for a in body["audiences"]] == [a.get("picture") for a in registry.AUDIENCES]  # start-page F10
     assert [s["id"] for s in body["sections"]] == [s["id"] for s in registry.SECTIONS]
     assert body["sections"][0]["label"] == {"$t": "Mechanics"}
+
+
+# --- the recorder's part of a recording's key (review P17-site F3) ---------------------------------------------------
+
+def _sitelib():
+    import importlib.util
+    import sys
+
+    if "lfsite_sitelib" in sys.modules:
+        return sys.modules["lfsite_sitelib"]
+    spec = importlib.util.spec_from_file_location("lfsite_sitelib", registry.ROOT / "site" / "sitelib.py")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_the_key_covers_the_recorder_its_budgets_and_the_images_dependencies(tmp_path, monkeypatch):
+    """A recording's key changes with the recorder's code, the image's locked dependencies and Dockerfile, and the
+    budgets that decide the thinning, not only with the world's code (F3): a change of any of them makes every
+    recording stale, so the CI cache never serves a recording made by another recorder or other libraries."""
+    L = _sitelib()
+    names = [f.name for f in L.RECORDER_FILES]
+    assert names == ["record.py", "requirements.lock", "Dockerfile"] and all(f.is_file() for f in L.RECORDER_FILES)
+    copies = []
+    for f in L.RECORDER_FILES:
+        c = tmp_path / f.name
+        c.write_bytes(f.read_bytes())
+        copies.append(c)
+    base = L.recorder_hash(copies)
+    assert base == L.recorder_hash()  # the same bytes: the same hash
+    spec = {"id": "a", "preset": "p", "seconds": 1, "fps": 10}
+    key = L.spec_key(spec, "code")
+    for c in copies:
+        old = c.read_bytes()
+        c.write_bytes(old + b"\n# an edit\n")
+        assert L.recorder_hash(copies) != base, c.name
+        c.write_bytes(old)
+    assert L.recorder_hash(copies) == base
+    monkeypatch.setitem(L.BUDGET, "file", (L.BUDGET["file"][0] + 1, L.BUDGET["file"][1]))
+    assert L.recorder_hash() != base and L.spec_key(spec, "code") != key
+    monkeypatch.undo()
+    monkeypatch.setattr(L, "MIN_KEPT_FPS", L.MIN_KEPT_FPS + 1)
+    assert L.spec_key(spec, "code") != key
+    monkeypatch.undo()
+    monkeypatch.setattr(L, "RECORDER_VERSION", "x")
+    assert L.spec_key(spec, "code") != key

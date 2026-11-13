@@ -104,8 +104,10 @@ def test_the_catalogue_files_are_what_the_server_returns(site, extra):
     assert _json(site, "aliases.json") == registry.ALIASES
     assert _json(site, "api/planned.json") == A.planned_list()
     assert _json(site, "api/audiences.json") == json.loads(json.dumps(A.audiences_list(), ensure_ascii=False))
+    assert all("picture" in a for a in _json(site, "api/audiences.json")["audiences"])  # start-page F10
     recs = _json(site, "api/recordings.json")
     assert set(recs["worlds"]) == set(TEST_WORLDS) and recs["site"].startswith("https://")
+    assert recs["published"] is A.site_setting()["published"]  # D3, D4: the player falls back to the site only then
     assert recs == json.loads(json.dumps(A.recordings_list(site["out"] / "recordings"), ensure_ascii=False))
     health = _json(site, "api/health.json")
     assert health["cite"]["code"] == registry.citation()["code"]
@@ -187,3 +189,98 @@ def test_readme_generation_is_idempotent_and_up_to_date(lang, monkeypatch):
         readme.apply("no markers here", g1)
     if lang != "en":
         assert not any(w in g1 for w in ("Watch on the site", "Same topic at other levels", "Planned benches"))
+
+
+# --- review P17-site F4, F5, F13; integrator D3, D4 ------------------------------------------------------------------
+
+def _copy(site, tmp_path):
+    copy = tmp_path / "site"
+    shutil.copytree(site["out"], copy)
+    return copy
+
+
+def _fails(check, copy):
+    return check.check(copy, BASE, allow_missing=True).fails
+
+
+def test_the_check_catches_a_missing_view_picture_or_absolute_address_in_a_script(site, extra, tmp_path):
+    """F5: the module graph of the site: every catalogue world's view module, every named picture, and no absolute
+    server address in a script (the import map serves /static/ and /viz/; nothing else is absolute on the site)."""
+    check = _site("check")
+    assert check.js_absolute('const a = "/api/runs"; b = `/run?id=${x}`; c = \'/recordings/x\';') == \
+        ["/api/", "/recordings/", "/run?"]
+    assert check.js_absolute('import { t } from "/static/js/i18n.js"; await import(`/viz/${id}/view.js`);') == []
+    assert check.js_absolute('// a comment: "/run?rec=…"\n/* "/api/x" */ const u = url("api/x");') == []
+    assert check.js_absolute('const s = "https://example.org/api/x";') == []
+    base = _fails(check, site["out"])
+    copy = _copy(site, tmp_path)
+    (copy / "viz" / "u98_site_toy" / "view.js").unlink()
+    assert any("viz/u98_site_toy/view.js is missing" in f for f in _fails(check, copy))
+    copy = _copy(site, tmp_path / "b")
+    js = copy / "static" / "js" / "start.js"
+    js.write_text(js.read_text(encoding="utf-8") + '\nconst bad = fetch("/api/runs");\n', encoding="utf-8")
+    assert any("static/js/start.js: absolute server addresses ['/api/']" in f for f in _fails(check, copy))
+    cat = [d for d in _json(site, "api/viz.json") if d.get("picture")]
+    if cat:  # a world with a picture: its file is required
+        copy = _copy(site, tmp_path / "c")
+        (copy / "images" / f"{cat[0]['id']}.jpg").unlink()
+        assert any(f"images/{cat[0]['id']}.jpg is missing" in f for f in _fails(check, copy))
+    assert not [f for f in base if "is missing (the world's view module)" in f or "absolute server" in f]
+
+
+def test_the_check_fails_a_recording_with_a_failed_check_and_warns_on_extras(site, extra, tmp_path):
+    """D5 (F4): an index entry that counts a check ending failed fails the site; F13: an entry or a file the registry
+    does not ask for is warned, and the build leaves such an entry out."""
+    check = _site("check")
+    copy = _copy(site, tmp_path)
+    f = copy / "recordings" / "u98_site_toy" / "index.json"
+    idx = json.loads(f.read_text(encoding="utf-8"))
+    assert all(e["checks"]["failed"] == 0 for e in idx["recordings"])
+    idx["recordings"][0]["checks"]["failed"] = 2
+    extra_e = {**idx["recordings"][1], "id": "gone", "file": "gone.00000000.lfrec.gz"}
+    (copy / "recordings" / "u98_site_toy" / extra_e["file"]).write_bytes(b"x")
+    (copy / "recordings" / "u98_site_toy" / "stray.lfrec.gz").write_bytes(b"x")
+    idx["recordings"].append(extra_e)
+    f.write_text(json.dumps(idx), encoding="utf-8")
+    rep = check.check(copy, BASE, allow_missing=True)
+    assert any("u98_site_toy/slow: 2 check(s) end failed" in x for x in rep.fails)
+    assert any("u98_site_toy/gone: in the site's index, not asked for" in w for w in rep.warns)
+    assert any("recordings/u98_site_toy/stray.lfrec.gz: a file its index does not name" in w for w in rep.warns)
+    # the build copies only what the registry asks for
+    recs = tmp_path / "recs"
+    shutil.copytree(site["recs"], recs)
+    ri = recs / "u98_site_toy" / "index.json"
+    idx = json.loads(ri.read_text(encoding="utf-8"))
+    idx["recordings"].append({**idx["recordings"][1], "id": "gone"})
+    ri.write_text(json.dumps(idx), encoding="utf-8")
+    out = tmp_path / "out"
+    _site("build").build(recs, out, BASE)
+    built = json.loads((out / "recordings" / "u98_site_toy" / "index.json").read_text(encoding="utf-8"))
+    assert [e["id"] for e in built["recordings"]] == ["slow", "fast"]
+
+
+def test_the_site_setting_reaches_the_player_and_the_check(site, extra, tmp_path, monkeypatch):
+    """D3, D4: site/site.json says where the public site is and whether it is published; /api/recordings and the site's
+    api/recordings.json carry both (LFVIZ_SITE_URL overrides the address on a server); the check fails when the built
+    file disagrees with the setting."""
+    setting = json.loads(A.SITE_JSON.read_text(encoding="utf-8"))
+    assert set(setting) == {"published", "url"} and isinstance(setting["published"], bool)
+    assert setting["url"] == "https://ildar-idrisov.github.io/lfphys/"
+    f = tmp_path / "site.json"
+    f.write_text(json.dumps({"published": True, "url": "https://example.org/x"}), encoding="utf-8")
+    monkeypatch.setattr(A, "SITE_JSON", f)
+    monkeypatch.delenv("LFVIZ_SITE_URL", raising=False)
+    assert A.site_setting() == {"published": True, "url": "https://example.org/x/"}
+    got = A.recordings_list(tmp_path / "none")
+    assert got == {"worlds": {}, "site": "https://example.org/x/", "published": True}
+    monkeypatch.setenv("LFVIZ_SITE_URL", "http://127.0.0.1:9/")
+    assert A.site_setting()["url"] == "http://127.0.0.1:9/" and A.site_setting(env=False)["url"] == "https://example.org/x/"
+    monkeypatch.delenv("LFVIZ_SITE_URL")
+    f.write_text("{not json", encoding="utf-8")  # an unreadable setting: not published
+    assert A.site_setting()["published"] is False
+    f.write_text(json.dumps({"published": True, "url": "https://example.org/x/"}), encoding="utf-8")
+    # the site was built with the repository's setting: now it differs
+    check = _site("check")
+    monkeypatch.setattr(check, "site_setting", A.site_setting)
+    if setting["published"] is not True:
+        assert any("api/recordings.json: published" in x for x in _fails(check, site["out"]))

@@ -28,7 +28,7 @@ const quickStart = () => (lang() === "ru" ? `${GITHUB}/blob/main/README.ru.md#%D
 // the audiences and the sections in their order, with their texts (T): registry.AUDIENCES and registry.SECTIONS, read
 // from apiGet("audiences") (the server's /api/audiences, the site's api/audiences.json); the laboratories' route is #labs
 const HASH = { playground: "labs" };
-const AUDS = () => D.audiences.map((a) => ({ id: a.id, hash: HASH[a.id] || a.id, label: t(a.label), text: t(a.description) }));
+const AUDS = () => D.audiences.map((a) => ({ id: a.id, hash: HASH[a.id] || a.id, label: t(a.label), text: t(a.description), picture: a.picture || null }));
 const SECTIONS = () => D.sections.map((s) => [s.id, t(s.label)]);
 const audOf = (id) => AUDS().find((a) => a.id === id) || null;
 const audByHash = (h) => AUDS().find((a) => a.hash === h) || null;
@@ -36,7 +36,7 @@ const secLabel = (id) => (SECTIONS().find((s) => s[0] === id) || [id, id])[1];
 const secOrder = (id) => { const i = SECTIONS().findIndex((s) => s[0] === id); return i < 0 ? 99 : i; };
 
 // what the page shows: the catalogue, the planned items, the recordings (local or the site's), the runs (server)
-const D = { viz: [], planned: [], audiences: [], sections: [], rec: { worlds: {}, site: "" }, runs: null, health: null, loaded: false };
+const D = { viz: [], planned: [], audiences: [], sections: [], rec: { worlds: {}, site: "", published: false }, siteRec: null, runs: null, health: null, loaded: false };
 const R = { aud: null, focus: null, section: "all", q: "", by: "section" };  // the route and the filters
 let kernelInfo = null;  // the engine's kernels (from /api/devices), for a run's own choice of devices
 
@@ -64,17 +64,28 @@ async function load() {
   D.audiences = auds.value.audiences || [];
   D.sections = auds.value.sections || [];
   D.planned = planned.status === "fulfilled" && Array.isArray(planned.value) ? planned.value : [];
-  D.rec = rec.status === "fulfilled" && rec.value ? { worlds: rec.value.worlds || {}, site: rec.value.site || "" } : { worlds: {}, site: "" };
+  D.rec = rec.status === "fulfilled" && rec.value ? { worlds: rec.value.worlds || {}, site: rec.value.site || "", published: rec.value.published === true }
+    : { worlds: {}, site: "", published: false };
+  // a server without a local recording of a world plays the public site's, only when the site is published and its
+  // recording was made from the same version of the world (integrator D4): its index is read once, here
+  if (SERVER && D.rec.published && D.rec.site) {
+    try { const r = await fetch(`${D.rec.site}api/recordings.json`); D.siteRec = r.ok ? await r.json() : null; } catch (e) { D.siteRec = null; }
+  }
   D.loaded = true;
 }
 const worlds = (aud) => D.viz.filter((v) => !v.error && v.audience === aud);
 const plannedOf = (aud) => D.planned.filter((p) => p.audience === aud);
-// a world's recordings: its specs (describe().recordings) with the index entry where one was recorded (here or on the
-// site); on the site only those recorded
+// a world's recordings: its specs (describe().recordings) with the index entry where one was recorded: here, or (server)
+// on the published site from the same version of the world (fromSite); on the site only those recorded
 function recsOf(v) {
   const idx = (D.rec.worlds || {})[v.id];
   const have = new Map(((idx && idx.recordings) || []).map((r) => [r.id, r]));
-  const out = (v.recordings || []).map((s) => ({ ...s, entry: have.get(s.id) || null }));
+  const sidx = SERVER && D.siteRec && D.siteRec.worlds ? D.siteRec.worlds[v.id] : null;
+  const remote = new Map(((sidx && sidx.recordings) || []).filter((r) => String(r.version ?? sidx.version) === String(v.version)).map((r) => [r.id, r]));
+  const out = (v.recordings || []).map((s) => {
+    const local = have.get(s.id) || null, site = local ? null : remote.get(s.id) || null;
+    return { ...s, entry: local || site, fromSite: !!site };
+  });
   return SERVER ? out : out.filter((r) => r.entry);
 }
 const mss = (s) => { s = Math.round(Number(s) || 0); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
@@ -82,7 +93,8 @@ const recHref = (v, r) => withLang(page("run", { rec: `${v.id}/${r.id}` }));
 
 // --- routes ---------------------------------------------------------------------------------------------------------
 function parseHash() {
-  let h = decodeURIComponent(location.hash.replace(/^#/, ""));
+  let h = location.hash.replace(/^#/, "");
+  try { h = decodeURIComponent(h); } catch (e) { /* a malformed escape (review P17-start-page F13): the hash as it is */ }
   if (h === "playground" || h.startsWith("playground/")) {  // the old name of the laboratories
     h = "labs" + h.slice("playground".length);
     history.replaceState(null, "", "#" + h);
@@ -128,7 +140,8 @@ function siteNote() {
 }
 function tile(a) {
   const W = worlds(a.id), P = plannedOf(a.id);
-  const pic = W.find((v) => v.picture);
+  // the audience's own picture (registry.AUDIENCES "picture"; review P17-start-page F10), else the first world with one
+  const pic = W.find((v) => v.id === a.picture && v.picture) || W.find((v) => v.picture);
   const nRec = W.reduce((n, v) => n + recsOf(v).filter((r) => r.entry).length, 0);
   const off = a.id === "playground" && !SERVER;
   let lines;
@@ -166,7 +179,8 @@ function header(a) {
 // the section chips with their counts, the search box; groups: [[key, label, items]]
 function filters(groups, extra) {
   const all = groups.reduce((n, g) => n + g[2].length, 0);
-  const chip = (key, label, n) => el("button", { class: "chip" + (R.section === key ? " on" : ""), onclick: () => { R.section = key; render(); } }, `${label} ${n}`);
+  const chip = (key, label, n) => el("button", { class: "chip" + (R.section === key ? " on" : ""), "aria-pressed": String(R.section === key),
+    onclick: () => { R.section = key; render(); } }, `${label} ${n}`);
   const search = el("input", { type: "search", class: "st-search", placeholder: t("Search…"), value: R.q, "aria-label": t("Search") });
   search.addEventListener("input", () => {
     R.q = search.value;
@@ -206,7 +220,7 @@ function audiencePage(aud) {
   const chipGroups = groups.map((g) => [g[0], g[1], school ? [...g[2], ...g[3]] : g[2]]);
   if (R.section !== "all" && !chipGroups.some((g) => g[0] === R.section && g[2].length)) R.section = "all";
   const byToggle = school ? el("span", { class: "st-by" }, t("By:"), " ",
-    ["section", "grade"].map((k) => el("button", { class: "chip" + (R.by === k ? " on" : ""), onclick: () => { R.by = k; R.section = "all"; render(); } },
+    ["section", "grade"].map((k) => el("button", { class: "chip" + (R.by === k ? " on" : ""), "aria-pressed": String(R.by === k), onclick: () => { R.by = k; R.section = "all"; render(); } },
       k === "section" ? t("section") : t("grade")))) : null;
   const out = [header(a)];
   if (school) out.push(schoolBanner(W, P));
@@ -266,7 +280,7 @@ function plannedBlock(aud, items, section) {
       const ids = new Set(D.planned.filter((p) => p.audience === "school" && p.section === section).map((p) => p.id));
       const there = D.viz.filter((v) => !v.error && (v.audience === "university" || v.audience === "research") && (v.related || []).some((r) => ids.has(r)));
       if (there.length) {
-        out.push(el("div", { class: "st-there" }, el("span", { class: "muted" }, t("Already there at university level:")), " ",
+        out.push(el("div", { class: "st-there" }, el("span", { class: "muted" }, t("Already there at another level:")), " ",
           there.flatMap((v, i) => [i ? " · " : "", el("a", { href: `#${audOf(v.audience).hash}/${v.id}` }, `${audOf(v.audience).label} · ${t(v.title)}`)])));
       }
     }
@@ -352,18 +366,20 @@ function vizCard(v) {
     const pre = presets.find((p) => p.id === (SERVER ? sel.value : (recOf() || {}).preset)) || {};
     pnote.textContent = t(pre.note);
     const r = recOf();
-    if (r) {
+    if (r && r.entry) {
       btnRec.classList.remove("disabled");
       btnRec.removeAttribute("aria-disabled");
       btnRec.href = recHref(v, r);
       btnRec.textContent = (SERVER ? t("▷ Recording {time}", { time: mss((r.entry || r).seconds) }) : t("▷ Watch the recording {time}", { time: mss((r.entry || r).seconds) }));
-      btnRec.title = r.entry ? t("Play the saved recording of this scenario: no computation") : t("Play the recording of this scenario from the public site (none was made on this server)");
+      btnRec.title = r.fromSite ? t("Play the recording of this scenario from the public site (none was made on this server)") : t("Play the saved recording of this scenario: no computation");
     } else {
       btnRec.classList.add("disabled");
       btnRec.setAttribute("aria-disabled", "true");
       btnRec.removeAttribute("href");
       btnRec.textContent = t("▷ Recording");
-      btnRec.title = t("No recording for this scenario: compute it live");
+      // a scenario with a recording spec that nobody has recorded here (every fresh clone) and the published site has
+      // not (integrator D4), or a scenario without one
+      btnRec.title = r ? t("No recording yet: record it locally (site/record.py) or compute live") : t("No recording for this scenario: compute it live");
     }
   };
   if (SERVER && recs.length && presets.some((p) => p.id === recs[0].preset)) sel.value = recs[0].preset;  // a recorded one first
@@ -567,7 +583,7 @@ function drawContinue() {
   fill(box, el("span", { class: "muted" }, t("Continue:")),
     list.map((r) => el("a", { class: "st-cont", href: withLang(page("run", { id: r.id })) },
       el("span", { class: "dot " + (r.playing ? "live" : "paused") }), t(r.title),
-      el("span", { class: "muted" }, " · " + (r.playing ? t("recording") : t("paused"))))),
+      el("span", { class: "muted" }, " · " + (r.playing ? t("computing") : t("paused"))))),
     el("a", { href: withLang(page("runs")) }, t("All my runs →")));
 }
 

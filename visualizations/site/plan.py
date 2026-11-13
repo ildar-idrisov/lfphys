@@ -7,7 +7,9 @@
     python3 site/plan.py --matrix [--rerecord stale|all] [--recordings DIR]
                                                        the CI matrix: {"include": [{world, key, force}]}
 
-A recording's key is ``sha256(spec + recorder version + registry.code_hash(world))`` (``sitelib.spec_key``); its state
+A recording's key is ``sha256(spec + recorder version + sitelib.recorder_hash() + registry.code_hash(world))``
+(``sitelib.spec_key``; the recorder's hash covers ``record.py``, the image's locked dependencies and Dockerfile, and the
+budgets that decide the thinning); its state
 against a recordings folder is ``present`` (the index holds it with this key and its file), ``stale`` (held with another
 key, or its file differs) or ``missing``. ``code_hash`` covers the world's folder, ``lfviz`` and the engine, so a change of
 the engine makes every recording stale (accepted for v1, design §5.1).

@@ -69,7 +69,8 @@ async function putRetention(body) {
 
 function stateCell(r) {
   const cls = r.state === "running" ? (r.playing ? "live" : "paused") : (r.state === "failed" || r.state === "interrupted") ? "dead" : "";
-  const label = { running: r.playing ? t("recording") : t("paused"), suspended: t("suspended"), finished: t("finished"),
+  // a live run computes ("computing"); "recording" is a saved file only (integrator D1)
+  const label = { running: r.playing ? t("computing") : t("paused"), suspended: t("suspended"), finished: t("finished"),
                   stopped: t("stopped"), failed: r.error ? t("world not created") : t("failure"), interrupted: t("cut off"), starting: t("starting") }[r.state] || r.state;
   const extra = r.error ? el("div", { class: "st-bad start-why", title: t(r.error) }, t(r.error))  // a refused start: why (P1)
     : r.busy ? el("div", { class: "muted", title: t("The world is computing a change; it can be cancelled in the player") }, "⟳ " + (r.busy.what ? t(r.busy.what) : t("computing")))
@@ -124,7 +125,7 @@ async function loadRuns() {
 async function loadHealth() {
   try {
     const h = await apiGet("health");
-    document.getElementById("health").textContent = t("{n:d} of {max:d} running · {runs:d} records in all", { n: h.running, max: h.max_workers, runs: h.runs });
+    document.getElementById("health").textContent = t("{n:d} of {max:d} running · records in all: {runs:d}", { n: h.running, max: h.max_workers, runs: h.runs });
   } catch (e) { document.getElementById("health").textContent = t("the server is not available"); }
 }
 

@@ -13,7 +13,9 @@ planned items by section (each with its grades and the worlds of another level o
 research audiences by section in teaching order with their counts, one row per world: its picture
 (``docs/images/<id>.jpg``, when there is one), its title linked to its README in the language, its teaser, its anchors
 (the courses; the research question with «Status: hypothesis» and the prior art), «Watch on the site» (one link per
-recording, ``<site>run.html?rec=<world>/<rec>``), the count of scenarios in the player and «Same topic at other levels»;
+recording, ``<site>run.html?rec=<world>/<rec>``, with ``&lang=<code>`` in a language other than the default: review F6;
+only while ``site/site.json`` says ``published``, else one line at the top says the site is being prepared and the
+recordings play locally, and a world lists its recordings' names without links: integrator D3), the count of scenarios in the player and «Same topic at other levels»;
 the planned university and research items folded after their worlds, by section; the laboratories with «Runs only
 with a local server» and the planned benches. Every world is in exactly one audience.
 Every text is the registry's ``T`` rendered in the language (``lfviz.i18n.render_in``): the interface's own words.
@@ -31,7 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import sitelib as L  # noqa: E402
 
 from lfviz import i18n, registry  # noqa: E402
-from lfviz.app import SITE_URL, planned_list  # noqa: E402
+from lfviz.app import planned_list, site_setting  # noqa: E402
 from lfviz.i18n import T, is_t  # noqa: E402
 
 BEGIN = "<!-- BEGIN generated: catalogue (visualizations/site/readme.py); do not edit -->"
@@ -48,6 +50,8 @@ QUESTION = T("Question")
 HYPOTHESIS = T("Status: hypothesis")
 PRIOR_ART = T("Prior art")
 WATCH = T("Watch on the site")
+RECORDINGS = T("Recordings")
+SITE_SOON = T("The public site with the recordings is being prepared; until then the recordings play on a local server")
 SAME_TOPIC = T("Same topic at other levels")
 SCENARIOS = T("Scenarios in the player: {n}")
 LOCAL_ONLY = T("Runs only with a local server")
@@ -81,6 +85,13 @@ class Gen:
         self.ids = registry.viz_ids()
         self.viz = {vid: registry.load(vid) for vid in self.ids}
         self.planned = {p["id"]: p for p in planned_list()}
+        self.site = site_setting(env=False)  # the committed setting, never the environment's (D3)
+
+    def site_link(self, vid: str, rec: str) -> str:
+        """A recording's address on the public site, in this README's language (F6: the player does not follow the
+        browser's language, so a link from a README in another language carries it)."""
+        q = f"rec={vid}/{rec}" + ("" if self.lang == i18n.DEFAULT else f"&lang={self.lang}")
+        return f"{self.site['url']}run.html?{q}"
 
     def r(self, text, **kw) -> str:
         """A text in the language (a ``T``, a plain English string of the registry, or a msgid with arguments)."""
@@ -146,14 +157,14 @@ class Gen:
             if refs:
                 lines.append(f"*{self.r(PRIOR_ART)}:* " + "; ".join(refs))
         recs = registry.recordings_of(v)
-        if recs:
+        if recs:  # published: links to the site; until then the recordings' names only (they play locally: D3)
             links = []
             for rec in recs:
                 label = _md(self.r(rec["label"]))
-                if self.modified(vid, rec["preset"]):
-                    label += f" *({self.r(MODIFIED)})*"
-                links.append(f"[{label}]({SITE_URL}run.html?rec={vid}/{rec['id']})")
-            lines.append(f"▷ {self.r(WATCH)}: " + " · ".join(links))
+                tag = f" *({self.r(MODIFIED)})*" if self.modified(vid, rec["preset"]) else ""
+                links.append(f"[{label}]({self.site_link(vid, rec['id'])}){tag}" if self.site["published"]
+                             else label + tag)
+            lines.append(f"▷ {self.r(WATCH if self.site['published'] else RECORDINGS)}: " + " · ".join(links))
         n = len(getattr(v["schema"], "presets", {}) or {})
         if n:
             lines.append(_md(self.r(SCENARIOS, n=n)))
@@ -239,6 +250,9 @@ class Gen:
 
     def block(self) -> str:
         out = [BEGIN, ""]
+        if not self.site["published"]:
+            anchor = _slug(self.r(QUICK_START))
+            out += [f"*{self.r(SITE_SOON)}* ([{self.r(QUICK_START)}](#{anchor})).", ""]
         for a in registry.AUDIENCES:
             out += [f"### {self.r(a['label'])}", "", self.r(a["text"]) + ".", ""]
             if a["id"] == "school":

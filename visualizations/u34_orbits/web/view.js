@@ -63,6 +63,15 @@ export function createView(ctx) {
   btnPlus.onclick = () => ctx.action("boost", { dv: 0.05 });
   btnMinus.onclick = () => ctx.action("boost", { dv: -0.05 });
   btnRelaunch.onclick = () => ctx.action("relaunch", {});
+  // the actions act at the end of a live run's record: on a recording, in the past or on an earlier world they are off,
+  // with the reason as their tooltip (start-page review F2, STATUS V51 (f); as the slice planes, ctx.readOnly())
+  const actBtns = [btnPlus, btnMinus, btnRelaunch].map((b) => [b, b.title]);
+  const syncActions = () => {
+    const why = ctx.readOnly ? ctx.readOnly() : "";
+    for (const [b, title] of actBtns) { b.disabled = !!why; b.title = why || title; }
+  };
+  window.addEventListener("editablechange", syncActions);
+  syncActions();
   btnFit.onclick = () => { const s = segAt(lastT); if (s) fitSeg(s); };
   btnCenter.onclick = () => { const R = Math.max(12, (H && H.body.R) ? 1.5 * H.body.R : 0); plane.fit(-R, R, -R, R); };
 

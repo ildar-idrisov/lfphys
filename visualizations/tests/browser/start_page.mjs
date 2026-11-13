@@ -5,12 +5,16 @@
 //  - the home: the four audiences (school, university, research, laboratories) with their counts; «My runs (n)» → /runs;
 //  - each audience page: its heading, the section chips with counts (a chip filters), the sections in teaching order, the
 //    search box (it narrows the cards);
-//  - university and research cards: the scenario, «▶ Compute live», «▷ Recording m:ss» (enabled where a recording
-//    exists, its link /run?rec=…), «Same topic» links labelled with the audience, «▸ More» (folded at university, open in
-//    research); research cards: the question, «Status: hypothesis», «Prior art: n references»;
-//  - «▶ Compute live» starts a run and opens it in the player;
+//  - the tiles: each audience's own picture (registry.AUDIENCES "picture"), the names at 4.5:1 or more, a visible focus
+//    ring for the keyboard (review P17-start-page F7, F8, F10); a malformed hash (/#%E0) still shows the page (F13);
+//  - university and research cards: the scenario, «▶ Compute live», «▷ Recording m:ss» (enabled only where a local
+//    recording exists, the site being unpublished: integrator D4; its link /run?rec=…; disabled with the reason
+//    otherwise), «Same topic» links labelled with the audience, «▸ More» (folded at university, open in research);
+//    research cards: the question, «Status: hypothesis», «Prior art: n references»; the section chips say aria-pressed;
+//  - «▶ Compute live» starts a run and opens it in the player; the home's «Continue» then names it as computing or
+//    paused, never as a recording (integrator D1); the run is left to suspend (there is no stop);
 //  - the school page before AB1: the honest banner «Ready: 0 of n», planned cards, nothing startable, «Already there at
-//    university level» links;
+//    another level» links;
 //  - the laboratories (server): «▶ Begin», «Laws…», «📂 From a scene file…» and the planned benches; the old #playground
 //    opens them;
 //  - /runs: the runs table and the retention setting;
@@ -22,6 +26,8 @@
 //   docker run --rm --init --shm-size=2g --network host --memory=4g -e LFVIZ_LANG=en -v <dir with node_modules/playwright>:/pw \
 //     -v <repo>/visualizations/tests/browser:/t:ro -w /pw mcr.microsoft.com/playwright:v1.58.2-jammy \
 //     sh -c "cp /t/*.mjs /pw/ && node /pw/start_page.mjs 8679"
+//  - NOREC_PORT=<port of a second private server with an empty LFVIZ_RECORDINGS and an unpublished site>: every
+//    «▷ Recording» there is disabled with «No recording yet…» (D4).
 // Prints one JSON line per check and "all passed" or the number failed (exit code 1).
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
@@ -36,10 +42,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let failed = 0;
 const check = (name, ok, info = {}) => { if (!ok) failed++; console.log(JSON.stringify({ check: `${LANG} ${name}`, ok: !!ok, ...info })); };
 const get = async (u) => (await fetch(base + u)).json();
-const post = async (u, b) => (await fetch(base + u, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b || {}) })).json();
 const { t: tr } = await loadI18n(base);
 
 const viz = (await get("/api/viz")).filter((v) => !v.error);
+const audiences = (await get("/api/audiences")).audiences || [];
 const planned = await get("/api/planned");
 const recs = (await get("/api/recordings")).worlds || {};
 const n = (aud) => viz.filter((v) => v.audience === aud).length;
@@ -74,6 +80,41 @@ const ctx = await br.newContext({ viewport: { width: 1280, height: 900 } });
   const my = await page.$eval("#myruns", (e) => ({ text: e.textContent, href: e.getAttribute("href") }));
   check("home: «My runs (n)» → /runs", my.text === tr("My runs ({n:d})", { n: runs.length }) && my.href === "/runs", my);
   language("home", await page.evaluate(() => document.body.innerText));
+  // each audience's own picture (F10), where the registry names one and that world has a picture
+  const pics = await page.$$eval(".st-tile", (a) => a.map((e) => ({ id: e.id, src: e.querySelector("img.pic")?.getAttribute("src") || "", ph: !!e.querySelector("div.pic.ph"), h: (e.querySelector(".pic") || {}).offsetHeight || 0 })));
+  for (const a of audiences.filter((x) => x.picture)) {
+    const tile = pics.find((x) => x.id === `tile-${a.id === "playground" ? "labs" : a.id}`);
+    const has = viz.some((v) => v.id === a.picture && v.picture);
+    if (has) check(`home: the ${a.id} tile shows ${a.picture}`, tile && tile.src.endsWith(`images/${a.picture}.jpg`), tile);
+  }
+  check("home: every tile has a picture's room (a placeholder too)", pics.every((x) => x.h > 40), { pics });
+  // the tiles' names readable (F8): 4.5:1 on the tile
+  const ratios = await page.evaluate(() => {
+    const rgb = (s) => (s.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+    const lum = (c) => { const v = c.map((x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+    return [...document.querySelectorAll(".st-tile")].map((t) => {
+      const a = lum(rgb(getComputedStyle(t.querySelector(".name")).color)), b = lum(rgb(getComputedStyle(t).backgroundColor));
+      return Math.round(100 * (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)) / 100;
+    });
+  });
+  check("home: the tiles' names at 4.5:1 or more", ratios.every((r) => r >= 4.5), { ratios });
+  // the keyboard: a visible ring round a focused tile (F7)
+  let ring = null;
+  for (let i = 0; i < 25 && !ring; i++) {
+    await page.keyboard.press("Tab");
+    ring = await page.evaluate(() => { const e = document.activeElement; if (!e || !e.classList.contains("st-tile")) return null;
+      const c = getComputedStyle(e); return { id: e.id, style: c.outlineStyle, width: c.outlineWidth }; });
+  }
+  check("home: a focused tile has a visible ring", ring && ring.style !== "none" && parseFloat(ring.width) >= 2, { ring });
+  await page.close();
+}
+// a malformed hash shows the page, not «Catalogue: URI malformed» (F13)
+{
+  const page = await ctx.newPage();
+  page.on("pageerror", (e) => errs.push(e.message.slice(0, 200)));
+  await page.goto(inLang(`${base}/`) + "#%E0");
+  const ok = await page.waitForSelector(".st-tiles", { timeout: 30000 }).then(() => true, () => false);
+  check("a malformed hash (#%E0) still shows the start page", ok);
   await page.close();
 }
 
@@ -90,6 +131,8 @@ for (const [hash, aud] of [["university", "university"], ["research", "research"
   check(`${hash}: the heading`, s.h1.toLowerCase().includes(tr({ university: "University", research: "Research", school: "School" }[aud]).toLowerCase()), { h1: s.h1 });
   check(`${hash}: the section chips with counts`, s.chips.length >= 2 && /\d+$/.test(s.chips[0]) && s.chips.slice(1).every((c) => /\d+$/.test(c)), { chips: s.chips });
   check(`${hash}: the sections`, s.secs.length >= 1, { secs: s.secs });
+  const pressed = await page.$$eval(".st-chips button, .st-by button", (a) => a.map((b) => b.getAttribute("aria-pressed")));
+  check(`${hash}: the chips say aria-pressed, one per group`, pressed.every((x) => x === "true" || x === "false") && pressed.filter((x) => x === "true").length === (aud === "school" ? 2 : 1), { pressed });
   language(hash, s.text);
   // a chip filters to its section
   const chip = await page.$$(".st-chips button");
@@ -114,13 +157,25 @@ for (const [hash, aud] of [["university", "university"], ["research", "research"
     const P = planned.filter((p) => p.audience === "school");
     check("school: the banner «Ready: k of n»", s.text.includes(tr("Ready: {k:d} of {n:d}.", { k: n("school"), n: n("school") + P.length })), { want: tr("Ready: {k:d} of {n:d}.", { k: n("school"), n: n("school") + P.length }) });
     check("school: planned cards, nothing startable", s.planned >= 1 && !(await page.$(".st-card button.primary")) && (n("school") > 0 || !(await page.$(".st-card"))), { planned: s.planned });
-    check("school: «Already there at university level» links", s.text.includes(tr("Already there at university level:")) && !!(await page.$(".st-there a[href^='#university/'], .st-there a[href^='#research/']")));
+    check("school: «Already there at another level» links", s.text.includes(tr("Already there at another level:")) && !!(await page.$(".st-there a[href^='#university/'], .st-there a[href^='#research/']")));
     check("school: no modified physics or options", !(await page.$(".st-moreopts")));
   } else {
     const live = await page.$$eval(".st-card button.primary", (a) => a.map((b) => b.textContent));
     check(`${hash}: «▶ Compute live» on every card`, live.length === s.cards && live.every((x) => x === tr("▶ Compute live")), { n: live.length, cards: s.cards });
     const rb = await page.$$eval(".st-card a.button", (a) => a.map((b) => ({ text: b.textContent, href: b.getAttribute("href"), off: b.classList.contains("disabled"), title: b.title })));
-    check(`${hash}: «▷ Recording» on the cards`, rb.length === s.cards && rb.every((b) => b.off ? b.title === tr("No recording for this scenario: compute it live") : /\/run\?rec=\w+(\/|%2F)\w+/.test(b.href)), { rb: rb.slice(0, 3) });
+    check(`${hash}: «▷ Recording» on the cards`, rb.length === s.cards && rb.every((b) => b.off ? [tr("No recording yet: record it locally (site/record.py) or compute live"), tr("No recording for this scenario: compute it live")].includes(b.title) : /\/run\?rec=\w+(\/|%2F)\w+/.test(b.href)), { rb: rb.slice(0, 3) });
+    // enabled only where this server has the recording (the test server's site is unpublished: D4)
+    const pub = (await get("/api/recordings")).published === true;
+    if (!pub) {
+      const wrong = [];
+      for (const v of viz.filter((x) => x.audience === aud)) {
+        const b = await page.$eval(`#card-${v.id} a.button`, (e) => ({ off: e.classList.contains("disabled"), href: e.getAttribute("href") || "" }));
+        const m = decodeURIComponent(b.href).match(/rec=[^/]+\/([^&]+)/);
+        const local = !!(recs[v.id] && m && (recs[v.id].recordings || []).some((r) => r.id === m[1]));
+        if (b.off ? false : !local) wrong.push(v.id);
+      }
+      check(`${hash}: «▷ Recording» enabled only for a local recording`, !wrong.length, { wrong });
+    }
     const local = viz.filter((v) => v.audience === aud && recs[v.id]);
     for (const v of local) {
       const b = await page.$eval(`#card-${v.id} a.button`, (e) => ({ text: e.textContent, href: e.getAttribute("href") }));
@@ -154,8 +209,13 @@ for (const [hash, aud] of [["university", "university"], ["research", "research"
   await Promise.all([page.waitForURL(/\/run\?id=/, { timeout: 60000 }), page.click("#card-u34_orbits button.primary")]);
   const id = new URL(page.url()).searchParams.get("id");
   check("«▶ Compute live» starts a run and opens it", !!id, { url: page.url() });
-  if (id) await post(`/api/runs/${id}/stop`);
-  await page.close();
+  // the home's «Continue» names the live run (watched in the other tab) by its state, never as a recording (D1)
+  const home = await open(ctx);
+  await sleep(3500);
+  const cont = await home.$$eval(".st-cont", (a) => a.map((e) => e.innerText));
+  check("home: «Continue» says computing or paused", cont.length >= 1 && cont.every((x) => x.includes(tr("computing")) || x.includes(tr("paused"))), { cont });
+  await home.close();
+  await page.close();  // the run is left to suspend by itself: there is no stop (owner, 2026-10-28)
 }
 
 // the laboratories, and the old #playground
@@ -196,6 +256,20 @@ for (const w of [1280, 390]) {
     await page.close();
   }
   await c2.close();
+}
+
+// a server with no local recordings, the site unpublished (every fresh clone): nothing to play, the reason said (D4)
+if (process.env.NOREC_PORT) {
+  const nb = `http://127.0.0.1:${process.env.NOREC_PORT}`;
+  const page = await ctx.newPage();
+  page.on("pageerror", (e) => errs.push(e.message.slice(0, 200)));
+  await page.goto(inLang(`${nb}/`) + "#university");
+  await page.waitForSelector(".st-head", { timeout: 60000 });
+  await sleep(500);
+  const rb = await page.$$eval(".st-card a.button", (a) => a.map((b) => ({ off: b.classList.contains("disabled"), title: b.title, href: b.getAttribute("href") })));
+  check("no local recordings: every «▷ Recording» disabled with «No recording yet…»", rb.length > 0 && rb.every((b) => b.off && !b.href
+    && [tr("No recording yet: record it locally (site/record.py) or compute live"), tr("No recording for this scenario: compute it live")].includes(b.title)), { rb: rb.slice(0, 3), n: rb.length });
+  await page.close();
 }
 
 check("no page errors", !errs.length, { errs });

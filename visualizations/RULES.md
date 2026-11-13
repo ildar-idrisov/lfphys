@@ -703,7 +703,10 @@ section is how the visualizations keep it.
   `node --test player/js/tests/*.test.mjs` (from `visualizations/`, Node 22 or newer, e.g. the `node:24` image).
 * **Glossary (owner and integrator, 2026-11-13).** One word per concept in each language, in the interface and in the
   user documents: the free labs are "laboratory" / «лаборатория» (never "playground", "sandbox", «плейграунд»,
-  «песочница» in a user text); "MODIFIED PHYSICS" / «МОДИФИЦИРОВАННАЯ ФИЗИКА» in full; a parameter sweep is «перебор
+  «песочница» in a user text); a saved file that plays without computing is a "recording" / «запись» (its tab «… ·
+  запись»); a live computation is a "run" / «запуск», its state while it computes "computing" / «идёт расчёт» (its tab
+  «… · идёт расчёт», the «Continue» strip and "My runs" say so), and what ⏺ adds to is the run's "record" / «запись
+  запуска» — never "recording" for a live run (integrator D1, 2026-11-13; review P17-start-page F3); "MODIFIED PHYSICS" / «МОДИФИЦИРОВАННАЯ ФИЗИКА» in full; a parameter sweep is «перебор
   параметра»; a worker is «рабочий процесс»; a numerical error is «погрешность» (a fault stays «ошибка»); "closed form"
   is «в замкнутом виде»; "against" is rendered by sense («в сравнении с», «в зависимости от», «↔»), not «против»;
   «2D»/«3D» and the decimal comma in Russian; British spelling and "2-D"/"3-D" in English. Every count phrase has
@@ -773,9 +776,11 @@ server and on the site:
 | `#labs` | the laboratories: on the server today's cards ("▶ Begin", "Laws…", "📂 From a scene file…"); on the site greyed with "Works only with a running server"; the old `#playground` is redirected here |
 | `#<audience>/<id>` | the same page with that card in view |
 
-A card's buttons: "▶ Compute live" (server: `POST /api/runs`, then the player) and "▷ Recording m:ss" for a scenario
-that has a recording (local, or the public site's of the same world `version`); a scenario without one has the button
-disabled with "No recording for this scenario: compute it live". The lower the level, the simpler the card (rule 16):
+A card's buttons: "▶ Compute live" (server: `POST /api/runs`, then the player) and "▷ Recording m:ss", enabled only
+for a local recording or, when `site/site.json` says `"published": true`, for the public site's recording of the same
+world `version` (`start.js` reads `<site>api/recordings.json` once); otherwise it is disabled with "No recording yet:
+record it locally (site/record.py) or compute live" (integrator D4). "No recording for this scenario: compute it live"
+is only for a preset with no recording spec. The lower the level, the simpler the card (rule 16):
 school cards have no parameters, seed or devices; university cards fold them under "More: parameters, seed, device,
 precision"; research cards show them open. The runs are not on the start page: `/runs` (`player/runs.html`,
 `js/runs.js`) has the list and the removal period. The audiences' and sections' labels come from the registry through
@@ -787,15 +792,25 @@ everywhere an id is taken (URLs, `/api/viz/<old>`, `?rec=<old>/<rec>`, run recor
 
 **Recordings.** A demonstration's `VIZ["recordings"]` (§8) lists what the site plays. `site/record.py` runs each spec
 headless (`lfviz.sim.Runner`) on a frame clock of its own: exactly `seconds × fps` frames, the script's commands at
-their frames, no wall-time budget (the same file on any CPU), `checkpoint`/`command`/`resumed`/`record_segment`
-dropped; over the target size the frames are thinned by a stride (the first, the last and the poster frame always
+their frames, no wall-time budget, `checkpoint`/`command`/`resumed`/`record_segment` dropped. **The same spec recorded
+by the same code gives the same bytes** (integrator D6; `tests/test_recorder.py`): the frames carry no `cpu_ms` and no
+`speed_actual` (the CPU time is the index entry's total `cpu_s`), and the header's kernels (`backend.used`) are reset
+for each recording. A seeded stochastic recording is one realisation: a live run with the same seed draws on its own
+frame clock and shows another realisation with the same statistics (review P17-site F11). **A recording fails** on an
+error of the world, an exception, or a check whose last state is ✗ (as the player draws it; a check marked
+`expected` is a ✗ on purpose and does not fail); its index entry counts the checks' last states (`checks`: ok, failed,
+expected, info, na) and `site/check.py` fails a site whose entry counts a failed one (integrator D5); over the target size the frames are thinned by a stride (the first, the last and the poster frame always
 kept, never under 2 frames per played second), over the hard limit the recording fails (`sitelib.BUDGET`: a file 3 MB
 target / 10 MB limit, a world 12 / 25 MB, gzip, decimal; the exceptions accepted over target with their reasons are
 `sitelib.ACCEPTED`). Output per world: `recordings/<world>/<rec>.<hash8>.lfrec.gz` and `index.json` (`{world, version,
-recorder, code_hash, made, recordings: [{id, preset, label, file, seconds, fps, frame_stride, frames, frames_recorded,
-bytes, bytes_gz, poster_t, poster_frame, worlds, sha256, key, …}]}`; `site/README.md`).
+recorder, recorder_hash, code_hash, made, recordings: [{id, preset, label, file, seconds, fps, frame_stride, frames,
+frames_recorded, bytes, bytes_gz, poster_t, poster_frame, worlds, checks, cpu_s, sha256, key, version, code_hash,
+made, …}]}`; `site/README.md`). Each entry carries its own `version`, `code_hash` and `made` (the player prefers them);
+a recording not made now keeps its old entry only when its key is still the current one (review F9).
 
-* **The key** of a recording is `sha256(spec + RECORDER_VERSION + registry.code_hash(world))[:16]`; `plan.py` marks
+* **The key** of a recording is `sha256(spec + RECORDER_VERSION + sitelib.recorder_hash() +
+  registry.code_hash(world))[:16]`; `recorder_hash` covers `site/record.py`, the image's
+  `docker/requirements.lock` and `Dockerfile`, and the budgets that decide the thinning (review F3); `plan.py` marks
   each `present`, `stale` or `missing`. `code_hash` covers the world's folder (`*.py`, `*.js`, not its `tests/`),
   `server/lfviz/` and the engine, except `registry.SERVER_ONLY` (`app.py`, `runs.py`: the server process's own modules,
   which no worker imports), so an edit of an HTTP route or of the runs' bookkeeping re-records nothing; an edit of
@@ -806,9 +821,13 @@ bytes, bytes_gz, poster_t, poster_frame, worlds, sha256, key, …}]}`; `site/REA
   `site/posters.mjs` remakes the pictures whose recording's key changed (`../docs/images/posters.json`), and
   `site/readme.py` the READMEs' catalogue.
 * **On the server**, `/recordings/…` serves `visualizations/recordings/` (git-ignored; `LFVIZ_RECORDINGS` points
-  elsewhere) and `/api/recordings` lists it. Without a local recording of a world the player falls back to the public
-  site's (`LFVIZ_SITE_URL`; Pages sends `Access-Control-Allow-Origin: *`) only when that index's `version` equals the
-  local world's; otherwise it says "No recording for this version: record it locally or compute live".
+  elsewhere) and `/api/recordings` lists it with the public site's address and whether it is published
+  (`{worlds, site, published}`; **`site/site.json`** `{"published": false, "url": …}`, committed; `LFVIZ_SITE_URL`
+  overrides the address). Without a local recording of a world the player falls back to the public site's (Pages sends
+  `Access-Control-Allow-Origin: *`) only when `published` is true and that index's `version` equals the local world's
+  (integrator D3, D4). The player's refusals: "No such recording" (an unknown world or recording; the only one on the
+  site), "No recording yet: …", "The public site could not be reached: …", and "No recording for this version: …"
+  only for a real version mismatch.
 * **The player on a recording** (`/run?rec=<world>/<rec>`; `api.js openRecording`, the handler interface of
   `connectRun`): the file's messages are wrapped in the player's own `history_start {frame_stride}` / `history_end`,
   so it is an ended record. `S.recording` hides ⏺, "Keep" and "⚙"; `editBlock()` and the views' `ctx.readOnly()`
@@ -816,8 +835,13 @@ bytes, bytes_gz, poster_t, poster_frame, worlds, sha256, key, …}]}`; `site/REA
   passport ("About the recording") is built from the index entry; the instruments' CSV is made in the browser from
   the kept frames, and the sweeps are absent. The badge "RECORDING · date · code X" compares the index's `code_hash`
   with this server's (`describe()["code_hash"]`, `registry.code_hash_cached`, computed once per process) and, when they
-  differ, its tooltip says "recorded with code X; this server runs Y" (design §4.6). On the server "▶ Compute this
-  scenario live" starts a run of the same scenario.
+  differ, its tooltip says "recorded with code X; this server runs Y" (design §4.6); the badge prefers the index
+  entry's own `code_hash` and `made`. A view's `ctx.send("speed")` sets the player's own speed; any other view command
+  gives the read-only toast. Below 1000 px the player is one scrolling column: the view first, the side columns under
+  it, a sticky transport, and a wrapping top bar that keeps the badge (integrator D8). The tab title is "{title} ·
+  recording" (D1). On the server "▶ Compute this scenario live" starts a run of the same scenario. In static mode,
+  `?id=…` or no query says "This site plays recordings; runs are computed by a local server", with the ways to the
+  start page and the quick start (start-page F12).
 
 **The same files on the server and on the site** (`player/js/base.js`, re-exported by `api.js`). Every player page
 carries `<meta name="lf-mode" content="server">`, `<meta name="lf-base" content="/">` and one import map (`three`,
@@ -842,11 +866,30 @@ a file that differs from the manifest, a page without its metas or import map or
 render in EN and RU, that a recording plays (the timeline moves, the checks appear, the canvas is drawn), that the
 laboratories are greyed with their note, the school banner is honest, and `legal.html` shows the texts.
 
+**What `site/check.py` also checks** (review F5, F13): every catalogue world's `viz/<id>/view.js` and every named
+picture's `images/<id>.jpg`; no absolute server address (`"/api…"`, `"/run…"`, `"/runs…"`, `"/settings…"`,
+`"/legal…"`, `"/recordings…"`, `"/images…"`, `"/ws…"`) in a string literal of `static/**/*.js` or `viz/**/*.js`;
+`api/recordings.json` agrees with `site/site.json`. It warns on an index entry or a file the registry does not ask
+for; `build.py` copies only the entries the registry asks for. `site_smoke.mjs` plays **every** recording (its frames
+are the index's, the poster frame shows `poster_t`), an old id, an unknown id (said, with a link to the start page),
+and `run.html?id=…` (the site says it plays recordings only).
+
+**The README's links to the site** (integrator D3, review F6, F7). While `site/site.json` says `"published": false`
+the generated catalogue names each world's recordings without links, and one line says, in the README's language,
+that the public site is being prepared and the recordings play on a local server. When the owner publishes the site
+he sets `"published": true` and runs `site/readme.py`: every recording is linked, `run.html?rec=<world>/<rec>`, with
+`&lang=<code>` in a README of a language other than the default (the player does not follow the browser's language;
+integrator D7). `tests/test_site_registry.py` checks both states and that the committed READMEs match the committed
+setting.
+
 **CI and publication.** `site/ci/pages.yml` is a draft workflow (check → record per world, cached by the key → build,
 check, smoke test → deploy to GitHub Pages), every action pinned to a commit SHA with its tag in a comment, recording
 in CI on the CPU. It is **not** in `.github/workflows/`: copying it there, turning Pages on (source "GitHub Actions")
-and the first deployment are the owner's actions, on his go. Until then the README's links to the public site are
-dead and the player's fallback to it finds nothing.
+and the first deployment are the owner's actions, on his go. Until then the site is unpublished (`site/site.json`)
+and the README carries no links to it. In the workflow (integrator D2, D5): `check`, `viz-tests` (the whole visualizations
+suite, in shards) and `engine-tests` (the engine's suite) run in parallel; `record` runs only after all three; a push to
+`main` checks, records and builds, and **the deploy job runs only when the workflow is started by hand
+(`workflow_dispatch`) with `deploy: true`**, the owner's go.
 
 **Tests.** `tests/test_site_registry.py` (the registry's fields, aliases, recording specs within limits, related links,
 translations of every `T`, the READMEs' generated sections up to date, a picture per world; `registry.SERVER_ONLY`

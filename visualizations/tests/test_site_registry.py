@@ -16,6 +16,10 @@ design of the start page §3, §5.4): the completeness check that fails. It need
 
 * the generated catalogue sections of the root READMEs (``README.md``, ``README.<code>.md`` of every language) carry
   their markers once and equal ``site/readme.py``'s output (step S);
+* the README's links to the public site follow ``site/site.json``: none while it is not published (one line says the
+  site is being prepared and the recordings play locally; the recordings are named), every recording linked once it
+  is, with ``&lang=<code>`` in a language other than the default (integrator D3; review P17-site F6, F7);
+* the audiences' tiles name worlds of their own audience (``registry.check_audiences``; start-page F10);
 * every world has its picture ``docs/images/<id>.jpg`` (``site/posters.mjs``): a JPEG 1200 px wide within the poster
   budget's hard limit, listed in ``docs/images/posters.json`` (step S).
 """
@@ -231,6 +235,50 @@ def test_the_readme_catalogue_is_the_registrys_in_every_language(lang):
     for vid in IDS:  # every world in exactly one audience
         n = len(re.findall(r"\*\*\[%s · " % re.escape(vid.split("_", 1)[0]), text))
         assert n == 1, (f.name, vid, n)
+
+
+@pytest.mark.parametrize("published", [False, True])
+@pytest.mark.parametrize("lang", i18n.LANGS)
+def test_the_readme_links_to_the_site_follow_its_setting(lang, published, monkeypatch):
+    """D3: until the owner publishes the site, the README has no link to it (a visitor would get a 404) and says, in
+    its language, that the site is being prepared and the recordings play locally; once ``published`` is true, every
+    recording of every world is linked, in the README's language (F6: the player does not follow the browser's)."""
+    monkeypatch.delenv("LFVIZ_EXTRA", raising=False)
+    readme = _site_module("readme")
+    url = "https://ildar-idrisov.github.io/lfphys/"
+    monkeypatch.setattr(readme, "site_setting", lambda env=True: {"published": published, "url": url})
+    g = readme.generate(lang)
+    links = re.findall(r"\]\((https://[^)\s]+run\.html\?[^)\s]+)\)", g)
+    soon = i18n.render_in(readme.SITE_SOON, lang)
+    n_recs = sum(len(registry.recordings_of(registry.load(vid))) for vid in IDS)
+    if not published:
+        assert links == [] and url not in g, links[:3]
+        assert g.count(soon) == 1
+        assert g.count(f"▷ {i18n.render_in(readme.RECORDINGS, lang)}:") == \
+            sum(1 for vid in IDS if registry.recordings_of(registry.load(vid)))
+        return
+    assert soon not in g and len(links) == n_recs
+    for vid in IDS:
+        for r in registry.recordings_of(registry.load(vid)):
+            want = f"{url}run.html?rec={vid}/{r['id']}" + ("" if lang == i18n.DEFAULT else f"&lang={lang}")
+            assert links.count(want) == 1, want
+    if lang == i18n.DEFAULT:
+        assert not any("lang=" in x for x in links)
+
+
+def test_the_committed_readme_matches_the_committed_site_setting():
+    """The READMEs in the repository are generated with ``site/site.json`` as committed (``readme.py --check``)."""
+    from lfviz.app import site_setting
+
+    readme = _site_module("readme")
+    text = readme.readme_files()[i18n.DEFAULT].read_text(encoding="utf-8")
+    has_links = "run.html?rec=" in text
+    assert has_links == site_setting(env=False)["published"], \
+        "the README's links to the site disagree with site/site.json: run python3 site/readme.py"
+
+
+def test_the_audiences_tiles_name_their_own_worlds():
+    assert registry.check_audiences() == []
 
 
 def _jpeg_size(data: bytes):

@@ -7,7 +7,8 @@ REST (JSON):
     GET    /api/viz                        catalogue: [registry.describe: {id, title, …, code_hash, schema}]
     GET    /api/viz/{viz}                  one entry
     GET    /api/recordings                 [S] the local recordings of the public site: {worlds: {<world>: its index.json},
-                                           site: the public site's address (LFVIZ_SITE_URL)}
+                                           site: the public site's address (site/site.json; LFVIZ_SITE_URL overrides),
+                                           published: whether that site is live (site/site.json)}
     GET    /api/audiences                  the audiences and the sections in their order: {audiences: [{id, prefix, label,
                                            description, ui}], sections: [{id, label}]} (registry.AUDIENCES, SECTIONS)
     GET    /api/planned                    the planned items (``visualizations/planned.json``) not yet built: those whose
@@ -109,15 +110,33 @@ def planned_list() -> list:
 
 def audiences_list() -> dict:
     """The audiences and the sections of the catalogue, in their order (``GET /api/audiences``; the site's
-    ``api/audiences.json`` is the same): ``registry.AUDIENCES`` and ``registry.SECTIONS``, their labels as ``T``."""
+    ``api/audiences.json`` is the same): ``registry.AUDIENCES`` and ``registry.SECTIONS``, their labels as ``T``; an audience's ``picture`` is the world
+    whose poster its tile shows (None: the start page picks one)."""
     return {"audiences": [{"id": a["id"], "prefix": a["prefix"], "label": a["label"], "description": a["text"],
-                           "ui": a["ui"]} for a in registry.AUDIENCES],
+                           "ui": a["ui"], "picture": a.get("picture")} for a in registry.AUDIENCES],
             "sections": [{"id": s["id"], "label": s["label"]} for s in registry.SECTIONS]}
 
 
 RECORDINGS_DEFAULT = registry.ROOT / "recordings"  # [S] site/record.py writes here (git-ignored)
 IMAGES = registry.ROOT.parent / "docs" / "images"  # [S] the pictures of the cards and the README (site/posters.mjs)
-SITE_URL = "https://ildar-idrisov.github.io/lfphys/"  # [S] the public site (CONTRACT S/P; LFVIZ_SITE_URL overrides it)
+SITE_JSON = registry.ROOT / "site" / "site.json"  # [S] {"published": bool, "url": …}: the public site (integrator D3)
+
+
+def site_setting(env: bool = True) -> dict:
+    """[S] The public site's setting (``site/site.json``, committed; the owner sets ``published`` on his go):
+    ``{"published": bool, "url": str}``; ``LFVIZ_SITE_URL`` overrides the address. Until ``published`` the READMEs
+    carry no links to the site and the player never falls back to it (integrator D3, D4). ``env=False``: the committed
+    address only (the READMEs)."""
+    try:
+        s = json.loads(SITE_JSON.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        log.warning("site setting %s not read: %s", SITE_JSON, e)
+        s = {}
+    url = (env and os.environ.get("LFVIZ_SITE_URL")) or str(s.get("url") or "https://ildar-idrisov.github.io/lfphys/")
+    return {"published": s.get("published") is True, "url": url if url.endswith("/") else url + "/"}
+
+
+SITE_URL = site_setting()["url"]  # [S] the public site (CONTRACT S/P)
 _REC_FILE = re.compile(r"^[A-Za-z0-9_.-]{1,120}$")
 
 
@@ -128,7 +147,8 @@ def recordings_dir() -> Path:
 
 def recordings_list(folder: Path | None = None) -> dict:
     """[S] ``GET /api/recordings`` (the site's ``api/recordings.json`` is the same for its own folder): the index of
-    every world that has one, and the public site's address."""
+    every world that has one, the public site's address and whether it is published (``site_setting``): the player
+    looks for a recording there only when ``published`` is true (integrator D4)."""
     folder = recordings_dir() if folder is None else Path(folder)
     worlds = {}
     if folder.is_dir():
@@ -140,7 +160,8 @@ def recordings_list(folder: Path | None = None) -> dict:
                 continue
             if isinstance(idx, dict) and idx.get("world") == f.parent.name:
                 worlds[f.parent.name] = idx
-    return {"worlds": worlds, "site": os.environ.get("LFVIZ_SITE_URL") or SITE_URL}
+    site = site_setting()
+    return {"worlds": worlds, "site": site["url"], "published": site["published"]}
 
 
 def _json(data, status=200):

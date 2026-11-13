@@ -10,9 +10,17 @@
   ``/static``, ``/api`` or ``/viz`` address outside the import map;
 * a catalogue file (``api/viz.json``, ``api/viz/<id>.json``, ``api/planned.json``, ``api/audiences.json``,
   ``api/recordings.json``, ``api/health.json``, ``aliases.json``) or ``static/locales/<lang>.json`` of a language of ``LANGUAGES.md`` is missing;
+* a catalogue world has no ``viz/<id>/view.js``, or its ``picture`` no ``images/<id>.jpg`` (site review F5);
+* a script of the site (``static/**/*.js``, ``viz/**/*.js``) has an absolute server address in a string literal
+  (``"/api…"``, ``"/run…"``, ``"/runs…"``, ``"/settings…"``, ``"/legal…"``, ``"/recordings…"``, ``"/images…"``,
+  ``"/ws…"``; ``/static/`` and ``/viz/`` go through the import map) outside a comment (F5);
+* a recording's index entry counts a check that ends failed (``checks.failed``; integrator D5);
+* ``api/recordings.json`` lacks ``published`` or ``site``, or they differ from ``site/site.json`` (integrator D3, D4);
 * a budget's hard limit is exceeded (one recording 10 MB, one world 25 MB, one poster 400 kB, the site 900 MB); over a
   target (3 MB, 12 MB, 150 kB, 600 MB) it warns; the recordings accepted over their target (``sitelib.ACCEPTED``) are
   warned as "over target (accepted: <reason>)".
+
+It warns on an index entry or a recording file the registry does not ask for (F13; ``build.py`` copies only the plan's).
 
     python3 site/check.py SITE [--base /lfphys/] [--allow-missing]
 
@@ -31,11 +39,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import sitelib as L  # noqa: E402
 
 from lfviz import registry  # noqa: E402
+from lfviz.app import site_setting  # noqa: E402
 
 PAGES = ("index.html", "run.html", "legal.html")
 IMPORTMAP = re.compile(r'<script\s+type="importmap"\s*>(.*?)</script>', re.S)
 #: an absolute address of the server's kind in a page: an attribute value or a string literal starting with it
 ABSOLUTE = re.compile(r"""(?:=|\(|\s)\s*["'`](/(?:static|api|viz)(?:/|["'`?]))""")
+#: an absolute server address in a script's string literal (the import map carries /static/ and /viz/ only)
+JS_ABSOLUTE = re.compile(r"""["'`](/(?:api|runs?|settings|legal|recordings|images|ws)(?:[/?#"'`$]|\$\{))""")
+JS_COMMENT = re.compile(r"/\*.*?\*/|(?:^|(?<=\s))//.*?$", re.S | re.M)
 
 
 def languages() -> list[str]:
@@ -48,6 +60,11 @@ def absolute_paths(html: str) -> list[str]:
     """The absolute ``/static``, ``/api``, ``/viz`` addresses of a page outside its import map."""
     body = IMPORTMAP.sub("", html)
     return sorted({m.group(1) for m in ABSOLUTE.finditer(body)})
+
+
+def js_absolute(text: str) -> list[str]:
+    """The absolute server addresses in a script's string literals, comments left out."""
+    return sorted({m.group(1).rstrip("\"'`$") for m in JS_ABSOLUTE.finditer(JS_COMMENT.sub("", text))})
 
 
 class Report:
@@ -110,6 +127,32 @@ def check_files(site: Path, man: dict, rep: Report):
     for rel in need:
         if not (site / rel).is_file():
             rep.fail(f"{rel} is missing")
+    try:  # every catalogue world's view module and picture (F5)
+        cat = json.loads((site / "api" / "viz.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        cat = []
+    for d in cat:
+        vid = d.get("id")
+        if not vid or d.get("error"):
+            continue
+        if not (site / "viz" / vid / "view.js").is_file():
+            rep.fail(f"viz/{vid}/view.js is missing (the world's view module)")
+        if d.get("picture") and not (site / "images" / f"{vid}.jpg").is_file():
+            rep.fail(f"images/{vid}.jpg is missing (api/viz.json names its picture)")
+    for folder in ("static", "viz"):  # the scripts: no absolute server address (F5)
+        for f in sorted((site / folder).rglob("*.js")) if (site / folder).is_dir() else []:
+            bad = js_absolute(f.read_text(encoding="utf-8", errors="replace"))
+            if bad:
+                rep.fail(f"{f.relative_to(site).as_posix()}: absolute server addresses {bad}")
+    try:  # the public site's setting as the player reads it (D3, D4)
+        recs = json.loads((site / "api" / "recordings.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        recs = None
+    if isinstance(recs, dict):
+        want = site_setting()
+        if recs.get("published") is not want["published"] or recs.get("site") != want["url"]:
+            rep.fail(f"api/recordings.json: published {recs.get('published')!r}, site {recs.get('site')!r}; "
+                     f"site/site.json gives {want['published']!r}, {want['url']!r}")
 
 
 def check_recordings(site: Path, man: dict, rep: Report, allow_missing: bool):
@@ -124,6 +167,14 @@ def check_recordings(site: Path, man: dict, rep: Report, allow_missing: bool):
             continue
         idx = L.read_index(site / "recordings", vid) or {}
         entries = {e.get("id"): e for e in idx.get("recordings") or []}
+        planned = {r["id"] for r in plan["recordings"]}
+        for rid in sorted(set(entries) - planned, key=str):  # F13
+            rep.warn(f"{vid}/{rid}: in the site's index, not asked for by the registry")
+        named = {str(e.get("file")) for e in entries.values()}
+        folder = site / "recordings" / vid
+        for f in sorted(folder.iterdir()) if folder.is_dir() else []:
+            if f.name != "index.json" and f.name not in named:
+                rep.warn(f"recordings/{vid}/{f.name}: a file its index does not name")
         total = 0
         for r in plan["recordings"]:
             m = (mw.get("recordings") or {}).get(r["id"])
@@ -140,6 +191,11 @@ def check_recordings(site: Path, man: dict, rep: Report, allow_missing: bool):
                 continue
             if L.sha256_file(f) != e.get("sha256") or f.stat().st_size != e.get("bytes_gz"):
                 rep.fail(f"{vid}/{r['id']}: {e.get('file')} differs from its index (sha256 or size)")
+            ck = e.get("checks")
+            if not isinstance(ck, dict):
+                say(f"{vid}/{r['id']}: its index entry has no count of checks (recorded before recorder 2)")
+            elif ck.get("failed"):
+                rep.fail(f"{vid}/{r['id']}: {ck['failed']} check(s) end failed")
             n = f.stat().st_size
             total += n
             if n > file_l:

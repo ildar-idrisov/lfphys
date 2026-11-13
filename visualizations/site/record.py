@@ -12,7 +12,13 @@ result does not depend on the speed of the CPU. The spec's ``script`` is applied
 the world is advanced to that frame's time, the command applied, then the frame drawn). The stream it writes is an
 ordinary ``LFVREC1`` record: the header and the world's messages as a worker emits them, ``state`` (start, then
 playing), the frames, ``end {reason: "recording"}``; the ``checkpoint``, ``command``, ``resumed`` and ``record_segment``
-messages are dropped (they serve the resumption of a live run only).
+messages are dropped (they serve the resumption of a live run only). The file is the same bytes for the same spec and
+code (integrator D6): the frames carry no ``cpu_ms`` and no ``speed_actual`` (the recorder's CPU time goes into the
+index as ``cpu_s``), and the header's kernels (``backend.used``) are this recording's own, not the process's so far.
+
+A recording fails on an error message or an exception of the world, and when a check of the world ends failed (its
+last state ✗, as the player draws it; a check marked ``expected`` is a ✗ on purpose and does not fail; integrator D5).
+The index entry counts the checks' last states (``checks``: ok, failed, expected, info, na).
 
 Budgets (``sitelib.BUDGET``): over the target (3 MB per file, 12 MB per world, gzip) the frames are thinned by a stride
 (every k-th frame kept, the first, the last and the poster frame always; every other message is kept); never below
@@ -50,6 +56,8 @@ from lfviz.sim import Runner  # noqa: E402
 
 #: messages that serve only the resumption of a live run (design §4.1), and what a worker never records
 DROP = {"checkpoint", "command", "resumed", "record_segment", "busy", "scene_export"}
+#: what the runner adds to a frame from the wall clock or the CPU: never in a recording (integrator D6)
+FRAME_TIMING = ("cpu_ms", "speed_actual")
 STRIDES = (1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 16, 20, 24, 30, 32, 40, 48, 60)
 
 
@@ -66,6 +74,26 @@ class Raw:
     worlds: int = 0
     poster_k: int = 0  # the poster's frame (0-based among all frames)
     seconds_cpu: float = 0.0
+    checks: dict = field(default_factory=dict)  # (world, check id) -> its last state (check_state)
+    flips: list = field(default_factory=list)  # (world, id, t) where a check was ✗ before its last state
+
+
+def check_state(c: dict) -> str:
+    """A check's state as the player draws it (``player.js checkState``): info, ok, failed, expected (a ✗ on purpose) or
+    na (no reference)."""
+    if c.get("info"):
+        return "info"
+    ok = None
+    if c.get("ok") is True or c.get("ok") is False:
+        ok = c["ok"]
+    elif c.get("ref") is not None and c.get("rel") is not None:
+        try:
+            ok = abs(float(c["rel"])) <= max(float(c.get("tol") or 1e-9), 1e-12)
+        except (TypeError, ValueError):
+            ok = None
+    if ok is None:
+        return "na"
+    return "ok" if ok else ("expected" if c.get("expected") else "failed")
 
 
 @dataclass
@@ -96,6 +124,8 @@ def record(viz_id: str, spec: dict) -> Raw:
         typ = meta.get("type")
         if typ in DROP:
             return
+        if typ == "frame":  # no wall-clock or CPU time in a recording (D6)
+            meta = {k: v for k, v in meta.items() if k not in FRAME_TIMING}
         data = protocol.encode(meta, blobs)
         if typ == "frame":
             raw.frames.append(len(raw.msgs))
@@ -103,11 +133,18 @@ def record(viz_id: str, spec: dict) -> Raw:
             raw.worlds += 1
         elif typ == "error":
             errors.append(meta.get("text"))
+        elif typ == "check" and meta.get("id") is not None:
+            key = (raw.worlds, str(meta["id"]))
+            if raw.checks.get(key) == "failed":
+                raw.flips.append((*key, meta.get("t")))
+            raw.checks[key] = check_state(meta)
         t = meta.get("t")
         raw.msgs.append((typ, float(t) if isinstance(t, (int, float)) else None, data))
 
-    try:  # the devices of the engine's kernels, as a worker configures them (LFPHYS_NO_GPU=1: the CPU)
+    try:  # the devices of the engine's kernels, as a worker configures them (LFPHYS_NO_GPU=1: the CPU); the kernels
+        # this process ran for an earlier recording are forgotten, so the header names this recording's own (review F1)
         from lfphys.core import backend as _backend
+        _backend.reset_used()
         notes = _backend.configure({})
     except Exception:  # noqa: BLE001 - the engine without the backend
         notes = []
@@ -143,12 +180,11 @@ def record(viz_id: str, spec: dict) -> Raw:
     last = time.monotonic()
     for k in range(n):
         try:
-            c0 = time.process_time()  # the frame's computing time (cpu_ms), as a worker measures it
             if k:
                 runner._advance(runner.sim.t + runner.speed / fps)
             for c in script.get(k, []):
                 runner.handle({"cmd": c["cmd"], "args": dict(c.get("args") or {})})
-            runner._frame((time.process_time() - c0) * 1e3)
+            runner._frame(0.0)  # emit() drops the runner's timing fields
         except Exception as e:  # noqa: BLE001 - the physics failed: no recording
             fail(f"frame {k} of {n}: {type(e).__name__}: {e}")
         if errors:
@@ -161,7 +197,21 @@ def record(viz_id: str, spec: dict) -> Raw:
         fail(f"{len(raw.frames)} frames instead of {n}")
     raw.poster_k = min(n - 1, max(0, int(round(float(spec.get("poster") or 0) * fps))))
     raw.seconds_cpu = time.process_time() - t0
+    bad = sorted(f"{cid} (world {w})" for (w, cid), st in raw.checks.items() if st == "failed")
+    if bad:
+        fail(f"{len(bad)} check(s) end failed: {', '.join(bad)}")
+    if raw.flips:
+        _log(f"  note: {viz_id}/{spec['id']}: a check was ✗ before its last state: "
+             f"{sorted({f'{cid} (world {w})' for w, cid, _t in raw.flips})}")
     return raw
+
+
+def check_counts(raw: Raw) -> dict:
+    """The checks' last states of a recording, counted (the index entry's ``checks``)."""
+    out = {"ok": 0, "failed": 0, "expected": 0, "info": 0, "na": 0}
+    for st in raw.checks.values():
+        out[st] = out.get(st, 0) + 1
+    return out
 
 
 def pack(raw: Raw, stride: int) -> Packed:
@@ -255,13 +305,18 @@ def record_world(viz_id: str, out: Path, only: list[str] | None = None) -> tuple
     folder = Path(out) / viz_id
     folder.mkdir(parents=True, exist_ok=True)
     old = L.read_index(out, viz_id) or {}
+    made = _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")
     entries = []
     for r in plan["recordings"]:
         p = packs.get(r["id"])
-        if p is None:  # not recorded now (failed or not asked): keep a present old entry
+        if p is None:  # not recorded now (failed or not asked): keep an old entry only when it is still current (its
+            # key is the one the registry gives now, so its code, version and spec are today's: review F9)
             prev = next((e for e in old.get("recordings") or [] if e.get("id") == r["id"]), None)
-            if prev and (folder / prev.get("file", "")).is_file():
-                entries.append(prev)
+            if prev and prev.get("key") == r["key"] and (folder / prev.get("file", "")).is_file():
+                entries.append({"version": plan["version"], "code_hash": plan["code_hash"],
+                                "made": old.get("made", ""), **prev})
+            elif prev:
+                _log(f"  {viz_id}/{r['id']}: its old recording is stale (key {prev.get('key')}, now {r['key']}): dropped")
             continue
         raw = raws[r["id"]]
         sha = hashlib.sha256(p.gz).hexdigest()
@@ -275,10 +330,11 @@ def record_world(viz_id: str, out: Path, only: list[str] | None = None) -> tuple
             "bytes": len(p.data), "bytes_gz": len(p.gz),
             "poster": r.get("poster", 0), "poster_t": frames_t[raw.poster_k], "poster_frame": p.poster_frame,
             "t_end": frames_t[-1], "worlds": raw.worlds, "script": r.get("script") or [],
-            "cpu_s": round(raw.seconds_cpu, 1), "sha256": sha, "key": r["key"]})
+            "checks": check_counts(raw), "cpu_s": round(raw.seconds_cpu, 1), "sha256": sha, "key": r["key"],
+            "version": plan["version"], "code_hash": plan["code_hash"], "made": made})
     index = {"world": viz_id, "version": viz.get("version", ""), "recorder": L.RECORDER_VERSION,
-             "code_hash": plan["code_hash"], "made": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
-             "recordings": entries}
+             "recorder_hash": plan["recorder_hash"], "code_hash": plan["code_hash"],
+             "made": max([e.get("made") or "" for e in entries] or [made]), "recordings": entries}
     keep = {e["file"] for e in entries}
     for f in folder.glob("*.lfrec.gz"):
         if f.name not in keep:

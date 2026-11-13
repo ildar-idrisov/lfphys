@@ -73,19 +73,21 @@ docker run --rm -v "$PWD":/lf:ro -w /lf/visualizations node:24 \
 `/#labs`; the old address `/#playground` leads to the laboratories): the demonstrations by section in teaching order,
 the section chips with their counts, and a search box ("Search…"); at school, "By:" section or grade. The school
 demonstrations are being built along the curriculum: until they land, the school page shows the planned ones as planned,
-with what is already there at university level on the same topic. The planned university and research items are listed
-folded, by section, under the worlds. Under the tiles, "Continue:" shows the last runs that are open or paused.
+with what is already there at another level on the same topic. The planned university and research items are listed
+folded, by section, under the worlds. Under the tiles, "Continue:" shows the last runs that are open or paused, each with its state ("computing" or "paused").
 
 On a demonstration's card: its picture, its title, what you will see, its courses (university) or its question, "Status:
 hypothesis" and the prior art (research); "Scenario:" (the presets); **"▶ Compute live"**: the server starts a new run
-and opens the player; **"▷ Recording m:ss"**: plays the scenario's saved recording at once, with nothing computed
-(greyed, with the tooltip "No recording for this scenario: compute it live", when there is none; see "Recordings and the
+and opens the player; **"▷ Recording m:ss"**: plays the scenario's saved recording at once, with nothing computed. It
+is enabled when this server has the recording, or when the public site is published and has it from the same version of
+the world; otherwise it is greyed, with the tooltip "No recording yet: record it locally (site/record.py) or compute live"
+(a scenario that has no recording at all: "No recording for this scenario: compute it live"; see "Recordings and the
 public site" below). "More: parameters, seed, device, precision" (folded on a university card, open on a research card)
 holds "Parameters…" (the world's laws and parameters by hand), the seed and the line "For this run:" with the device and
 the precision. "Same topic:" links the same topic at other levels. If a world cannot be made with the chosen parameters,
 the card says why under its buttons.
 
-**My runs** (`/runs`, "My runs" in the top bar): the runs on this server: recording, paused, suspended; "☆" keeps a run
+**My runs** (`/runs`, "My runs" in the top bar): the runs on this server: computing, paused, suspended; "☆" keeps a run
 for good, "✕" deletes it (a run not open in any tab; a running one is suspended first). There is no stop (2026-10-28): a run either records (computes further) or is paused. Without
 viewers it pauses after a minute and after half an hour frees its worker ("suspended"); open it and press ⏺ — the
 world goes on from its saved state (2026-10-29): the worker saves the world's whole state when the run is suspended,
@@ -110,18 +112,22 @@ runs, the page first shows their list and removes them only after confirmation.
 
 | where | what is there |
 |---|---|
-| top | the title, the scene, the badge **"standard physics"** or **"MODIFIED PHYSICS: …"**, the switch of worlds ("World 2 (current): …", if the run has several), the indicator "the set-up is being rebuilt…" (and "resuming: the world is being restored…"), the state (recording / paused / suspended; live / history / end of the record), "☆", **EN \| RU**, the theme, the help |
+| top | the title, the scene, the badge **"standard physics"** or **"MODIFIED PHYSICS: …"**, the switch of worlds ("World 2 (current): …", if the run has several), the indicator "the set-up is being rebuilt…" (and "resuming: the world is being restored…"), the state (computing / paused / suspended; live / history / end of the record), "☆", **EN \| RU**, the theme, the help |
 | left | **Set-up — changes at once**: everything the experimenter may change during the experiment (source, particle, slits, screen, observer, elements). There is no "apply" button: a change takes effect as soon as you release the slider, choose an item of a list or press Enter in a number field. An impossible change is refused, and the field goes back to its former value. **Actions** — one-off events (a flash, a measurement) by a button; the observer's speed by a slider, also at once. **New world: …** — the laws and the initial conditions (they cannot change inside a running world): the new world starts in the same run, the earlier ones stay in the record |
 | centre | the visualization's scene; above it, quick elements of the set-up (in the double-slit experiment: the observer, the detector's coupling, the distance to the screen, the width and the period of the slits) — they change at once, as in the panel on the left |
 | right | **Checks: computed ↔ reference**: a quantity computed in this run next to the reference of accepted physics (✓/✗); the fresh groups on top, the earlier ones folded; the visualization's panels; **Events** (a click goes to that moment) |
-| bottom | **⏺ record**: the world is computed further and frames are added to the history; again — pause. **⏮ / ⏭** — to the start / the end of the history, **◀ / ▶** — play the history backwards / forwards at the chosen speed. The slider at the end of the history shows the record live; in the middle, the history goes on growing while the chosen moment is shown. "\|▶" — a frame forward (at the end: a step of the computation), "⏭ event" — to the next event (past the last one: compute up to it). The speed is world seconds per wall second (for recording and for playback; the scale is logarithmic, labelled in time units — from fractions of a second to years, within the limits the world allows; if the computation cannot keep up, "actual: …" appears next to it in orange), "1:1" real time, the history scale of the current world |
+| bottom | **⏺ record**: the world is computed further and frames are added to the history; again — pause. **⏮ / ⏭** — to the start / the end of the history, **◀ / ▶** — play the history backwards / forwards at the chosen speed. The slider at the end of the history shows the record live; in the middle, the history goes on growing while the chosen moment is shown. "\|▶" — a frame forward (at the end: a step of the computation), "⏭ event" — to the next event (past the last one: compute up to it). The speed is world seconds per wall second (for computing and for playback; the scale is logarithmic, labelled in time units — from fractions of a second to years, within the limits the world allows; if the computation cannot keep up, "actual: …" appears next to it in orange), "1:1" real time, the history scale of the current world |
 
 Everything shown is as of the slider: the scene (trajectories, the screen, clouds), the slice windows, the checks, the
 set-up, the events; when you go back, the view is rebuilt from the record up to that moment. The set-up, actions and
 slices can be changed only at the end of the history.
 
-Keys: Space — record/pause, ← / → — play the history backwards/forwards, Home / End — to the start/to the end, N — to
+Keys: Space — compute/pause, ← / → — play the history backwards/forwards, Home / End — to the start/to the end, N — to
 the event, T — the theme, ? — the help.
+
+**Words.** A *recording* ("RECORDING", "▷ Recording") is a saved file that plays without computing. A *run* is a live
+computation on this server; while it computes, its state is "computing" (its tab says "… · computing"), and what ⏺ adds
+to is the run's *record*. The two are never called by the same word (`RULES.md` §7, glossary).
 
 If the world takes long to compute a change (the scene, the set-up, a new world), the top bar shows what exactly and for
 how many seconds; "✕ cancel" returns the world to the moment before that change. If a world cannot be made with the
@@ -180,13 +186,21 @@ shown "as recorded" and cannot be changed (the reason: "a recording: this needs 
 slices that were recorded and adds none. The checks, the events, "Physics of this world" and the instruments' plots work
 as in a run; the instruments' CSV is made in the browser from the frames the recording kept (its time column says "from
 the recording: every frame" or "one frame in k of the run"); parameter sweeps need a live run. "About the recording"
-holds its passport (the code, the recorder, the date, the frames) and "Download the recording (.lfrec.gz)". On the
-server, "▶ Compute this scenario live" starts a run of the same scenario, which can then be changed.
+holds its passport (the code, the recorder, the date, the frames) and "Download the recording (.lfrec.gz)". A view's
+own speed buttons (the double slit's "▷ flight" and "▷▷ build-up", the same in u35 and u37) set the player's speed; any
+other button that would change the world says "a recording: this needs a live run". The help (?) describes the
+recording, and the tab's title ends with "· recording". On the server, "▶ Compute this scenario live" starts a run of
+the same scenario, which can then be changed; on the public site the note on the left links to how to run lfphys
+locally. On a phone (a window narrower than 1000 px) the player is one column: the picture first, the set-up and the
+checks under it, the transport at the bottom of the screen. An address with an unknown world or recording says "No
+such recording", with a link to the start page.
 
 **Where the server finds recordings.** In `visualizations/recordings/` (not in git; the variable `LFVIZ_RECORDINGS`
 names another folder), one folder per world with its `index.json`. When a world has no local recording, the player plays
-the public site's one, but only if it was made from the same version of the world; otherwise it says "No recording for
-this version: record it locally or compute live".
+the public site's one, but only when the site is published (`site/site.json`) and its recording was made from the same
+version of the world. Otherwise it says why: "No recording yet: record it locally (site/record.py) or compute live" (the
+site is not published or has no such recording), "The public site could not be reached: …", or, for another version,
+"No recording for this version: record it locally or compute live".
 
 **Recording locally** (`site/record.py`, in Docker, on the CPU):
 

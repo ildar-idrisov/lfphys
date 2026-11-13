@@ -9,24 +9,36 @@
 # together. Checked with actionlint 1.7.7 (Docker image rhysd/actionlint:1.7.7).
 #
 # What it does:
-#   1. check:  builds the Docker image once (cached), runs the registry/README/picture completeness tests, the i18n
-#              tests and the site's own tests, and plans the matrix of worlds to record (site/plan.py);
-#   2. record: one job per world; restores rec-<world>-<key> from the Actions cache (key = the world's recording specs +
-#              the recorder's version + the world's code hash) and records only on a miss, on the CPU, in Docker with a
-#              memory cap (site/record.py); uploads the world's recordings as an artifact;
-#   3. build:  assembles the static site from the registry and the recordings (site/build.py), fails when anything is
-#              missing, stale or over budget (site/check.py), smoke-tests it in Chromium served under /lfphys/ by
-#              Python's http.server from a parent folder, EN and RU, and uploads the Pages artifact;
-#   4. deploy: publishes it to GitHub Pages.
+#   1. check:   builds the Docker image once (cached), runs the registry/README/picture completeness tests, the i18n
+#               tests and the site's own tests, and plans the matrix of worlds to record (site/plan.py);
+#      viz-tests, engine-tests (in parallel with check): the whole visualizations suite (in shards) and the engine's
+#               suite (integrator D5: nothing is recorded or published from code whose physics tests fail);
+#   2. record:  one job per world, after all three; restores rec-<world>-<key> from the Actions cache (key = the
+#               world's recording specs + the recorder's version and hash (record.py, the image's requirements.lock
+#               and Dockerfile, the budgets) + the world's code hash) and records only on a miss, on the CPU, in Docker
+#               with a memory cap (site/record.py; a recording fails when a check of the world ends failed); saves
+#               what it recorded under that key and uploads the world's recordings as an artifact;
+#   3. build:   assembles the static site from the registry and the recordings (site/build.py), fails when anything is
+#               missing, stale, failed or over budget (site/check.py), smoke-tests it in Chromium served under
+#               /lfphys/ by Python's http.server from a parent folder, EN and RU, playing every recording
+#               (tests/browser/site_smoke.mjs), and uploads the Pages artifact;
+#   4. deploy:  publishes it to GitHub Pages ONLY when started by hand (workflow_dispatch) with the input
+#               deploy: true, which is the owner's go (integrator D2, owner: «деплой по моему go»). A push to main
+#               checks, records and builds; it never deploys.
 # Nothing here pushes to the repository: the README pictures (site/posters.mjs) and the generated README sections
-# (site/readme.py) are made locally and committed by a person; the check job fails when they are out of date.
+# (site/readme.py) are made locally and committed by a person; the check job fails when they are out of date. When the
+# site is first published, the owner also sets "published": true in visualizations/site/site.json and runs
+# site/readme.py, which brings the README's links to the site back (integrator D3).
+# The container images are pinned by digest (python:3.11-slim, the Playwright image), as the actions are by SHA;
+# looked up on 2026-11-13 with `docker image inspect --format '{{.RepoDigests}}'` of the images pulled by tag.
 
 name: pages
 
 on:
   push:
     branches: [main]
-    paths: ["visualizations/**", "lfphys/**", "README*.md", "LANGUAGES.md", "docs/**", ".github/workflows/pages.yml"]
+    paths: ["visualizations/**", "lfphys/**", "README*.md", "LANGUAGES.md", "CITATION.cff", "docs/**",
+            ".github/workflows/pages.yml"]
   workflow_dispatch:
     inputs:
       rerecord:
@@ -34,6 +46,10 @@ on:
         default: stale
         type: choice
         options: [stale, all]
+      deploy:
+        description: "deploy to GitHub Pages after the build (the owner's go); off: check, record and build only"
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -45,6 +61,8 @@ concurrency:
 env:
   IMAGE: lfphys-viz:ci
   SITE_BASE: /lfphys/         # the project site's sub-path (https://ildar-idrisov.github.io/lfphys/)
+  PY_SLIM: python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8
+  PLAYWRIGHT: mcr.microsoft.com/playwright:v1.58.2-jammy@sha256:4698a73749c5848d3f5fcd42a2174d172fcad2b2283e087843b115424303a565
 
 jobs:
   check:
@@ -64,22 +82,74 @@ jobs:
           load: true
           cache-from: type=gha,scope=viz
           cache-to: type=gha,scope=viz,mode=max
-      - name: Registry, README, pictures, i18n and the site's tests (fail when anything is missing)
+      - name: Registry, README, pictures, i18n, the recording keys and the site's tests (fail when anything is missing)
         run: |
           docker run --rm --memory=6g -e LFPHYS_NO_GPU=1 -e PYTHONDONTWRITEBYTECODE=1 -v "$PWD:/lf:ro" \
             -w /lf/visualizations "$IMAGE" python3 -m pytest -q -p no:cacheprovider \
-            tests/test_site_registry.py tests/test_i18n.py tests/test_recorder.py tests/test_site_build.py
+            tests/test_site_registry.py tests/test_i18n.py tests/test_recorder.py tests/test_site_build.py \
+            tests/test_code_hash.py
       - name: Plan the recordings
         id: plan
+        env:
+          RERECORD: ${{ inputs.rerecord || 'stale' }}
         run: |
           docker run --rm --memory=4g -e LFPHYS_NO_GPU=1 -e PYTHONDONTWRITEBYTECODE=1 -v "$PWD:/lf:ro" \
             -w /lf/visualizations "$IMAGE" \
-            python3 site/plan.py --matrix --rerecord "${{ inputs.rerecord || 'stale' }}" > plan.json
+            python3 site/plan.py --matrix --rerecord "$RERECORD" > plan.json
           cat plan.json
           echo "matrix=$(cat plan.json)" >> "$GITHUB_OUTPUT"
 
+  viz-tests:   # the whole visualizations suite, in shards (integrator D5)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ["tests", "u3", "u4 r1 p0"]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f  # v3.12.0
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8  # v6.19.2
+        with:
+          context: .
+          file: visualizations/docker/Dockerfile
+          tags: ${{ env.IMAGE }}
+          load: true
+          cache-from: type=gha,scope=viz
+      - name: pytest (CPU, memory-capped)
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          cd visualizations
+          paths=()
+          for prefix in $SHARD; do
+            if [ "$prefix" = tests ]; then paths+=(tests); else for d in "$prefix"*/; do paths+=("$d"); done; fi
+          done
+          echo "shard: ${paths[*]}"
+          cd ..
+          docker run --rm --memory=8g -e LFPHYS_NO_GPU=1 -e PYTHONDONTWRITEBYTECODE=1 -v "$PWD:/lf:ro" \
+            -w /lf/visualizations "$IMAGE" python3 -m pytest -q -p no:cacheprovider --tb=short "${paths[@]}"
+
+  engine-tests:   # the engine's suite (integrator D5)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f  # v3.12.0
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8  # v6.19.2
+        with:
+          context: .
+          file: visualizations/docker/Dockerfile
+          tags: ${{ env.IMAGE }}
+          load: true
+          cache-from: type=gha,scope=viz
+      - name: pytest of lfphys (CPU, memory-capped)
+        run: |
+          docker run --rm --memory=8g -e LFPHYS_NO_GPU=1 -e PYTHONDONTWRITEBYTECODE=1 -v "$PWD:/lf:ro" \
+            -w /lf/lfphys "$IMAGE" python3 -m pytest -q -p no:cacheprovider --tb=short
+
   record:
-    needs: check
+    needs: [check, viz-tests, engine-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 300
     strategy:
@@ -91,7 +161,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - id: cache
         if: matrix.world != '' && !matrix.force
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
         with:
           path: rec/${{ matrix.world }}
           key: rec-${{ matrix.world }}-${{ matrix.key }}
@@ -106,12 +176,21 @@ jobs:
           load: true
           cache-from: type=gha,scope=viz
       - name: Record (CPU, memory-capped, the recorder's own frame clock)
+        id: record
         if: matrix.world != '' && steps.cache.outputs.cache-hit != 'true'
+        env:
+          WORLD: ${{ matrix.world }}
         run: |
           mkdir -p rec
-          docker run --rm --name "lf-rec-${{ matrix.world }}" --memory=12g -e LFPHYS_NO_GPU=1 \
+          docker run --rm --name "lf-rec-$WORLD" --memory=12g -e LFPHYS_NO_GPU=1 \
             -e PYTHONDONTWRITEBYTECODE=1 -v "$PWD:/lf:ro" -v "$PWD/rec:/rec" -w /lf/visualizations "$IMAGE" \
-            python3 site/record.py --world "${{ matrix.world }}" --out /rec --worker-mem-gb 10
+            python3 site/record.py --world "$WORLD" --out /rec --worker-mem-gb 10
+      - name: Keep the recordings under their key (also after a forced re-record)
+        if: matrix.world != '' && steps.record.outcome == 'success'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+        with:
+          path: rec/${{ matrix.world }}
+          key: rec-${{ matrix.world }}-${{ matrix.key }}
       - if: matrix.world != ''
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
@@ -121,9 +200,9 @@ jobs:
 
   build:
     needs: record
-    if: ${{ !cancelled() }}   # a failed recording still lets the check below say what is missing
+    if: ${{ !cancelled() && needs.record.result != 'skipped' }}   # a failed recording still lets the check say what is missing
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
@@ -145,7 +224,7 @@ jobs:
           docker run --rm --memory=6g -e LFPHYS_NO_GPU=1 -e PYTHONDONTWRITEBYTECODE=1 -v "$PWD:/lf:ro" \
             -v "$PWD/rec:/rec:ro" -v "$PWD/_site:/out" -w /lf/visualizations "$IMAGE" \
             python3 site/build.py --recordings /rec --out /out --base "$SITE_BASE"
-      - name: Completeness of the built site (fails when anything is missing, stale or over budget)
+      - name: Completeness of the built site (fails when anything is missing, stale, failed or over budget)
         run: |
           docker run --rm --memory=2g -e PYTHONDONTWRITEBYTECODE=1 -v "$PWD:/lf:ro" -v "$PWD/_site:/out:ro" \
             -w /lf/visualizations "$IMAGE" python3 site/check.py /out --base "$SITE_BASE"
@@ -153,11 +232,11 @@ jobs:
         run: |
           docker network create site-smoke
           docker run -d --name lf-site-srv --network site-smoke --memory=512m -v "$PWD/_site:/srv/lfphys:ro" -w /srv \
-            python:3.11-slim python3 -m http.server 8000
-      - name: Smoke test in Chromium, EN and RU (tests/browser/site_smoke.mjs)
+            "$PY_SLIM" python3 -m http.server 8000
+      - name: Smoke test in Chromium, EN and RU, every recording played (tests/browser/site_smoke.mjs)
         run: |
           docker run --rm --init --network site-smoke --shm-size=2g --memory=4g \
-            -v "$PWD/visualizations/tests/browser:/t:ro" -w /pw mcr.microsoft.com/playwright:v1.58.2-jammy \
+            -v "$PWD/visualizations/tests/browser:/t:ro" -w /pw "$PLAYWRIGHT" \
             sh -c "npm i --no-save --no-audit --no-fund playwright@1.58.2 >/dev/null && cp /t/*.mjs /pw/ \
                    && node /pw/site_smoke.mjs http://lf-site-srv:8000${SITE_BASE} en,ru"
       - name: Stop the site's server
@@ -170,9 +249,11 @@ jobs:
         with:
           path: _site
 
-  deploy:
+  deploy:   # only on the owner's go: started by hand with deploy: true (integrator D2)
     needs: build
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       pages: write
       id-token: write
