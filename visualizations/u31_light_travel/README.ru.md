@@ -1,4 +1,4 @@
-# v01 — Свет на больших расстояниях
+# u31 — Свет на больших расстояниях
 
 [English](README.md) | **Русский**
 
@@ -125,7 +125,7 @@
 
 ## Тесты
 
-`tests/test_v01_physics.py` (Docker: `docker compose -f visualizations/docker/docker-compose.yml run --rm viz-test`):
+`tests/test_u31_physics.py` (Docker: `docker compose -f visualizations/docker/docker-compose.yml run --rm viz-test`):
 матрицы Лоренца сохраняют метрику; свет с аберрацией сохраняет скорость c; отклонение по квадратуре = Дарвин
 (1e-10); слабое поле 2rs/b + 15π/16 (rs/b)²; время по радиусу; симметричная линза даёт два одновременных
 изображения; каждая вершина RK лежит на точной геодезической (время до 1e-9); захват ниже b_c; пересечение по

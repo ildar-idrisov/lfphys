@@ -1,10 +1,10 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v12: when does the particle arrive? Arrival times in 2-D by the rules in use (a wrapper over lfphys; plan P14.6, on
-P6 and v11).
+"""r13: when does the particle arrive? Arrival times in 2-D by the rules in use (a wrapper over lfphys; plan P14.6, on
+P6 and r12).
 
-A wave packet flies along z to a detecting plane, freely or through v11's double slit. The run solves the
-Schroedinger equation on the plane (x, z) (v11's machinery: split operator on GPU 0 where it pays, absorbing layers,
+A wave packet flies along z to a detecting plane, freely or through r12's double slit. The run solves the
+Schroedinger equation on the plane (x, z) (r12's machinery: split operator on GPU 0 where it pays, absorbing layers,
 the Bohm ensemble) and records at the plane, at every step, the current J(x, t), psi and d psi/dz. From them and
 from the initial state the run computes the arrival-time distribution by each rule
 (lfphys.theories.interpretations.arrival_times, lfphys.theories.models.detection):
@@ -24,7 +24,7 @@ for a while (quantum backflow: the flux is negative, Bohm's first arrivals are n
 
 Checks (free flight, against closed forms): the flux and psi on the plane against the exact free evolution; Bohm
 hit times against the first-arrival law (KS); the soft detector's reflection against stationary transfer matrices
-of its profile; the ABR identity; the initial state's momentum distribution; v11's checks (norm, time step, flux,
+of its profile; the ABR identity; the initial state's momentum distribution; r12's checks (norm, time step, flux,
 equivariance, symmetry).
 """
 
@@ -43,11 +43,11 @@ from lfphys.theories.interpretations import arrival_times as AT
 from lfphys.theories.models import detection as DET
 from lfviz.errors import Refusal
 from lfviz.params import Param, Schema
-from v11_double_slit_2d import viz as V11
+from r12_double_slit_2d import viz as V11
 
 from .engine import apparatus as AP
 
-V11_FIXED = {"mark": "none", "mark_deg": 0.0, "flux": 0.0}  # v11's parameters this world does not offer
+V11_FIXED = {"mark": "none", "mark_deg": 0.0, "flux": 0.0}  # r12's parameters this world does not offer
 CURVE_N = 1501        # samples of the curves computed from the initial state (ABK, semiclassical, ABR)
 K_N = 4001            # wave numbers for them
 ROWS_PER_T0 = 120     # time bins of the joint distribution J(x, t) per classical flight time t0 (a set-up scale)
@@ -69,7 +69,7 @@ SCHEMA = Schema([
        max=5000.0, log=True,
        help=T("sets the physical scale: every length of the experiment is in λ, every time in units of mλ²/ħ")),
     _p("scene", T("Flight"), "select", "free", group=T("Experiment"),
-       options=[("free", T("freely to the detecting plane")), ("slits", T("through two slits (as in v11)"))]),
+       options=[("free", T("freely to the detecting plane")), ("slits", T("through two slits (as in r12)"))]),
     _p("L", T("Distance to the detector L, λ"), "float", 30.0, unit=LAM, group=T("Experiment"), min=2.0, max=200.0,
        help=T("free flight: from the centre of the first packet to the plane; slits: from the plate to the screen")),
     _p("state", T("Initial state along the flight"), "select", "gauss", group=V11.PACKET,
@@ -85,7 +85,7 @@ SCHEMA = Schema([
        show_if={"state": ["train"]}),
     _p("sep", T("Distance between the packets, λ"), "float", 30.0, unit=LAM, group=V11.PACKET, min=6.0, max=120.0,
        show_if={"state": ["train"]}, help=T("at least 6σz: the packets do not overlap")),
-    # the plate is live (review UX-ui U12; v11's rules: rebuilt at the current moment in the world's window)
+    # the plate is live (review UX-ui U12; r12's rules: rebuilt at the current moment in the world's window)
     _p("a", T("Slit width a, λ"), "float", 2.0, unit=LAM, group=V11.PLATE, min=0.5, max=20.0,
        show_if={"scene": ["slits"]}, live=True, help=V11.LIVE_PLATE_HELP),
     _p("d", T("Distance between the slits d, λ"), "float", 8.0, unit=LAM, group=V11.PLATE, min=1.0, max=60.0,
@@ -147,14 +147,14 @@ TITLE = T("Particle arrival time: the rules in 2-D")
 
 class Simulation(V11.Simulation):
     SCHEMA = SCHEMA
-    FIXED_LIVE = {"mark_deg": 0.0, "flux": 0.0}  # v11's path mark and flux: not in this world
+    FIXED_LIVE = {"mark_deg": 0.0, "flux": 0.0}  # r12's path mark and flux: not in this world
 
     def __init__(self, params, seed, emit):
         p = {**V11_FIXED, **dict(params)}
         self.free = p["scene"] == "free"
         self.label_slits = not self.free
         self.BACK_LABEL = T("reflected by the plate") if not self.free else T("went back")
-        # the flight from the leading packet's centre to the plane (behind the plate: from v11's source point)
+        # the flight from the leading packet's centre to the plane (behind the plate: from r12's source point)
         D = float(p["L"]) if self.free else float(p["L"]) - AP.SlitGeometry(
             p["a"], p["d"], p["w"], p["L"], p["sigma_x"], p["sigma_z"], V11.H_OF[p["grid"]], edge=float(p["edge"])).z_src
         self.pk = AP.packets(p["state"], p["sigma_z"], p["n_train"], p["sep"], D)
@@ -169,7 +169,7 @@ class Simulation(V11.Simulation):
         # set before any signal reached the plane, so the rule saw that value alone
         self.det_hist = {k: [(0.0, float(p[k]), True)] for k in ("mu_w", "mu_ms", "W0")}
         super().__init__(p, seed, emit)
-        # the world's parameters are this world's own: v11's fixed path mark and flux are not among them (the header's
+        # the world's parameters are this world's own: r12's fixed path mark and flux are not among them (the header's
         # parameters seed the player's «new world» form; with them a new world without a scenario was refused, «there is
         # no parameter “mark”», found while processing review UX-ui U12)
         self.params = {k: v for k, v in self.params.items() if k in SCHEMA.by_id}
@@ -208,7 +208,7 @@ class Simulation(V11.Simulation):
         self._arrival_static_checks()
         self.curves = self._initial_state_rules() if self.free else None
 
-    # --- v11's hooks ---------------------------------------------------------------------------------------------------
+    # --- r12's hooks ---------------------------------------------------------------------------------------------------
     def _geometry(self, p):
         h = V11.H_OF[p["grid"]]
         layer = AP.screen_layer(*AP.k_range(self.pk, 3.0))
@@ -707,7 +707,7 @@ class Simulation(V11.Simulation):
 
 
 VIZ = {
-    "id": "v12_arrival_times_2d",
+    "id": "r13_arrival_times_2d",
     "title": TITLE,
     "summary": T("When does the particle arrive at the detector? A packet flies to a plane freely or through two slits; "
                  "the run solves the Schrödinger equation and, from the record on the plane and the initial state, "
@@ -720,4 +720,32 @@ VIZ = {
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "research",
+    "section": "quantum",
+    "ui": "full",
+    "teaser": T("Several rules of the arrival time on one run: they agree far from the source and diverge near it."),
+    "question": T("When does a particle arrive at a detector? Where do the rules of the arrival time agree, and "
+                  "where do they diverge: near the source, for a train of packets, under backflow, behind two "
+                  "slits?"),
+    # the prior art found in the checks of plan §3 (lfphys/sources/priorart_2026-11-12_*.md): two or three
+    # targeted searches per item, not a survey; every novelty a hypothesis (AGENTS.md rule 11)
+    "prior_art": [
+        {"ref": "Ayatollah Rafsanjani et al., Commun. Phys. 6, 195 (2023)", "url": "https://arxiv.org/abs/2301.02641"},
+        {"ref": "Das & Struyve, Phys. Rev. A 104, 042214 (2021)", "url": "https://arxiv.org/abs/2105.14744"},
+        {"ref": "Das, Deckert, Kellers, Krekels & Struyve, Ann. Phys. 479, 170054 (2025)",
+         "url": "https://arxiv.org/abs/2211.13362"},
+        {"ref": "Cavendish & Das, Phys. Rev. A 112, 062217 (2025)",
+         "url": "https://journals.aps.org/pra/abstract/10.1103/332p-4nl1"},
+        {"ref": "Jozani & Tumulka, Phys. Rev. Research 8, 033072 (2026)", "url": "https://arxiv.org/abs/2603.22044"},
+        {"ref": "Paterek & Goussev, Phys. Rev. Lett. 136, 090202 (2026)", "url": "https://arxiv.org/abs/2511.10155"},
+    ],
+    "status": "hypothesis",
+    "related": [],
+    # what the public site plays (DESIGN §4.1): ~8-9 kB of gzip per frame measured
+    "recordings": [
+        {"id": "gauss", "preset": "gauss", "seconds": 20, "fps": 10,
+         "speed": None, "seed": 1, "script": [], "poster": 18},
+        {"id": "near", "preset": "near", "seconds": 20, "fps": 10,
+         "speed": None, "seed": 1, "script": [], "poster": 18},
+    ],
 }

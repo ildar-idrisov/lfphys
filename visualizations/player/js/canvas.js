@@ -68,7 +68,7 @@ export class Plane {
   clear() {  // the start of a frame: the default drawing state too (ui.js fresh2d)
     const c = fresh2d(this.ctx, this.dpr);
     // the whole bitmap: w, h are fractional (the element's box), so filling w x h would leave the last pixel column and
-    // row blended with the previous frame (found by the key frames' browser check: v01)
+    // row blended with the previous frame (found by the key frames' browser check: u31)
     c.fillStyle = css("--canvas"); c.fillRect(0, 0, this.cv.width / this.dpr, this.cv.height / this.dpr);
   }
 

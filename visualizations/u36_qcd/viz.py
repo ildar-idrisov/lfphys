@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v06: quantum chromodynamics — asymptotic freedom and quarkonium (a wrapper over lfphys).
+"""u36: quantum chromodynamics — asymptotic freedom and quarkonium (a wrapper over lfphys).
 
 * The running coupling alpha_s(mu) (lfphys.core.qcd.running): the renormalisation-group equation with the MS-bar beta
   function to 1-4 loops, quark thresholds at the PDG masses, from the world average alpha_s(M_Z) (lfphys.core.data,
@@ -351,7 +351,7 @@ class Simulation(BaseSimulation):
 
 
 VIZ = {
-    "id": "v06_qcd",
+    "id": "u36_qcd",
     "title": T("QCD: asymptotic freedom and quarkonium"),
     "summary": T("The running α_s(μ) from {lo} GeV to {hi} TeV by the β function up to four loops (PDG 2024), the "
                  "colour Casimirs, the charmonium and bottomonium spectra in the Cornell model against the measured "
@@ -361,4 +361,20 @@ VIZ = {
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "university",
+    "section": "particles",
+    "ui": "standard",
+    "teaser": T("The strong coupling weakens at short distances; a quark model gives charmonium levels near the "
+                "measured ones."),
+    "courses": [
+        {"text": T("Griffiths, Introduction to Elementary Particles"), "chapters": ""},
+        {"text": T("Review of Particle Physics (Particle Data Group)"), "chapters": ""},
+    ],
+    "related": [],
+    "recordings": [
+        {"id": "charmonium", "preset": "standard", "seconds": 40, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 35},
+        {"id": "bottomonium", "preset": "bottom", "seconds": 30, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 25},
+    ],
 }

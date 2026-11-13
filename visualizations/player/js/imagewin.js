@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// A camera window of a 3-D world (plan P14.2; first used by v10): the image a run computed for an observer (RGB,
+// A camera window of a 3-D world (plan P14.2; first used by u39): the image a run computed for an observer (RGB,
 // deflate-compressed), what it shows (the image's mode; a mode that is not what is seen is marked), its time, the
 // values under the cursor from the run's per-pixel data (the world's describe(i, j) callback), the angles of the
 // camera on its axes, and a PNG export. Drawing only: every number comes from the run.
@@ -53,7 +53,7 @@ export function createImageWindow({ title = t("What the observer sees"), describ
     // the camera's angles on its axes (degrees from the direction of view, in the observer's frame)
     const cam = cur.meta.camera || {};
     g.fillStyle = "#9aa3ad"; g.font = "10px system-ui";
-    if (cam.kind === "screen") {  // a screen in the world's own units (v15: impact parameters alpha, beta in M)
+    if (cam.kind === "screen") {  // a screen in the world's own units (u42: impact parameters alpha, beta in M)
       const [a0, a1] = cam.alpha, [b0, b1] = cam.beta;
       for (const f of [0, 0.5, 1]) {
         g.fillText(num(a0 + f * (a1 - a0), 3), left + pw * f - 8, top + ph + 12);

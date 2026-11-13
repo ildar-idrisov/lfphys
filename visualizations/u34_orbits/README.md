@@ -1,4 +1,4 @@
-# v04 — Orbits and clocks: general relativity and Newton
+# u34 — Orbits and clocks: general relativity and Newton
 
 **English** | [Русский](README.ru.md)
 
@@ -153,11 +153,11 @@ Newton advance ≤ 10⁻¹¹ rad (also at −89.9° launch angles), period 2·10
 * `engine/body.py` — the tracks: chunking of the engine's integrators, the reveal in time, the Newtonian apsides
   and conservation measurements, states at a given time.
 * `web/view.js` — the drawing: orbit plane (pan, zoom), plots r(t) and 1 − dτ/dt, panels "Orbit" and "Clocks".
-* `tests/test_v04_orbits.py` — the run as a whole: all presets with all checks passing, measured advance vs exact,
+* `tests/test_u34_orbits.py` — the run as a whole: all presets with all checks passing, measured advance vs exact,
   Mercury 42.98″/century, causality (nothing revealed ahead of the world time), live change restarts the body and
   withdraws the old future, a refused change, a boost keeps the clock, the Newton world is flagged and its
   ellipse closed while the GR ghost precesses, ISCO, cycloid, circular dτ/dt, ghost toggle, impact, new worlds.
-* Engine: `lfphys/lfphys/core/gravity/orbit_stream.py` and `lfphys/tests/test_orbit_stream.py` (added for v04).
+* Engine: `lfphys/lfphys/core/gravity/orbit_stream.py` and `lfphys/tests/test_orbit_stream.py` (added for u34).
 
 ## 6. Sources
 

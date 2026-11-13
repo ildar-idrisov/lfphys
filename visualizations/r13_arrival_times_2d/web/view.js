@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v12 view: arrival times. v11's view draws the scene (the wave, the plate if any, the detecting plane, the Bohm
+// r13 view: arrival times. r12's view draws the scene (the wave, the plate if any, the detecting plane, the Bohm
 // trajectories, the window of the plane y = 0 and the pattern on the screen); next to it this view draws what the run
 // computed for the time of arrival: the density of each rule against time (the flux, the Bohm ensemble's first
 // arrivals, ABK, semiclassical, the absorbing boundary, Wlodarz, Marchewka-Schuss, the soft detector), the joint
 // distribution of place and time J(x, t) with the Bohm hits over it, and the totals. Drawing only: every curve and
 // number comes from the run; everything is shown up to the time shown (the player may be scrolled back).
 import { el, fill, fresh2d, panel } from "/static/js/ui.js";
-import { createView as createV11View } from "/viz/v11_double_slit_2d/view.js";
+import { createView as createV11View } from "/viz/r12_double_slit_2d/view.js";
 import { t, fmt, lang } from "/static/js/i18n.js";
 
 const RULES = {
@@ -208,9 +208,9 @@ export function createView(ctx) {
       el("p", {}, t("Far from the source the rules almost agree. Near the source (a narrow packet, a small L) they diverge; for a train of packets the exponential rules damp the later peaks while the semiclassical one gives a single peak; under backflow the flux is negative in places while Bohm's first arrivals are not.")),
       el("p", {}, t("Through two slits the run gives the joint distribution of the place and the time of arrival j_z(x, t) (Das, Deckert, Kellers, Krekels, Struyve, 2024). A slit can be closed on the fly while the packet is on its way; the plate (a, d, w, V₀) can be changed.")),
       el("p", {}, t("The detectors change on the fly too: the strength λ₀ of the exponential rules and the height W₀ of the soft detector. Before the change a rule is computed with the old value, after it with the new one; if the signal has not arrived by then, the experiment is as with the new value from the very start. The absorbing boundary κ is a world parameter: its rule is computed from the initial state for one κ for the whole experiment.")),
-      el("p", {}, t("Checks (on the right, “Checks”): in free flight, the flux and the wave on the plane against the exact solution, the arrival times of the Bohm particles against the law of first arrival, the soft detector's reflection against the stationary theory, the identity of the absorbing boundary; plus the checks of v11 (norm, grid and step, flux, equivariance, symmetry)."))),
+      el("p", {}, t("Checks (on the right, “Checks”): in free flight, the flux and the wave on the plane against the exact solution, the arrival times of the Bohm particles against the law of first arrival, the soft detector's reflection against the stationary theory, the identity of the absorbing boundary; plus the checks of r12 (norm, grid and step, flux, equivariance, symmetry)."))),
     reset() { base.reset(); resetOwn(); drawInfo(); drawLegend(); redrawAll(); },
-    // key frames (player.js): v11's part is its own key frame; the series, rows, references and hits only grow
+    // key frames (player.js): r12's part is its own key frame; the series, rows, references and hits only grow
     snapshot() {
       return { base: base.snapshot(), S: Object.fromEntries(Object.entries(S).map(([k, v]) => [k, v.length])),
                rows: rows.length, refs: refs ? refs.tau.length : -1, hits: hits.t.length, result };
@@ -227,7 +227,7 @@ export function createView(ctx) {
       base.onHeader(meta, blobs);
       resetOwn(); H = meta; A = meta.arrival; tu = meta.particle.time_unit_s;
       const free = A.scene === "free";
-      base.rightPanels[0].style.display = "none";            // v11's state of the experiment: replaced by this world's
+      base.rightPanels[0].style.display = "none";            // r12's state of the experiment: replaced by this world's
       base.rightPanels[2].style.display = free ? "none" : ""; // the slits' live set-up: only with the plate
       drawInfo(); drawLegend(); redrawAll();
     },

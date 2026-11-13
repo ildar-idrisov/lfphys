@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v09: Thomas-Wigner precession in 3-D. Every preset builds and passes its checks; the result is revealed only when
+"""r11: Thomas-Wigner precession in 3-D. Every preset builds and passes its checks; the result is revealed only when
 the run's time reaches the loop's closure; loops in a plane against their closed forms in any orientation (Thomas's
 2 pi (gamma - 1), the circle's area, the triangle's and the polygon's); the double cover (a turn by 2 pi: gyroscopes
 back, spinor sign -1); non-planar loops reduce to planar ones at chi = 0; the trajectory in ordinary space of uniform
@@ -19,10 +19,10 @@ from harness import Harness  # noqa: E402
 
 from lfphys.core import lorentz as LZ  # noqa: E402
 from lfphys.core import spin_transport as T  # noqa: E402
-from v09_thomas_3d.engine import loops as LP  # noqa: E402
-from v09_thomas_3d.viz import SCHEMA  # noqa: E402
+from r11_thomas_3d.engine import loops as LP  # noqa: E402
+from r11_thomas_3d.viz import SCHEMA  # noqa: E402
 
-V = "v09_thomas_3d"
+V = "r11_thomas_3d"
 SMALL = {"ngrid": 48}
 
 

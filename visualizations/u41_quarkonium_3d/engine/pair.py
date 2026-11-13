@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""The heavy quark-antiquark pair of v14 in the Cornell model (``lfphys.theories.models.cornell``: a fitted model): the
+"""The heavy quark-antiquark pair of u41 in the Cornell model (``lfphys.theories.models.cornell``: a fitted model): the
 radial solves per orbital momentum L with the box the highest state needs (as ``cornell.spectrum`` chooses it), their
 tabulated radial functions (``central3d.RadialTable``) and the independent route the slices are checked against (a
 second radial solve on a finer grid, scipy's spherical harmonics). Natural units: GeV, GeV^-1, hbar = c = 1."""

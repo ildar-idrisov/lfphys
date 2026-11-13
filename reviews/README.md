@@ -5,6 +5,8 @@ research tree as `engine/`. Their texts and scripts are kept exactly as written 
 quote local paths of that time (`/home/…/light-funnel/engine/…`, a scratch folder of the reviewing session) and the old
 image names `light-funnel-viz`, `light-funnel-ext`; today these are the repository root and `lfphys-viz`, `lfphys-ext`.
 
+**Note on the world ids (2026-11-13).** The visualization folders were renamed by audience and plan id (`v01_light_travel` → `u31_light_travel` … `v17_mie_scattering` → `u44_mie_scattering`; `v09_thomas_3d` → `r11_thomas_3d`, `v11_double_slit_2d` → `r12_double_slit_2d`, `v12_arrival_times_2d` → `r13_arrival_times_2d`). The archived reviews and this registry's rows for them keep the old ids as written; the mapping is the alias table `ALIASES` in `../visualizations/server/lfviz/registry.py` (and `lfphys/PLAN.md` P17).
+
 Independent reviews of `lfphys` and of the visualizations, with the responses. Rules for the whole of `engine/`: `../AGENTS.md`. Moved here from the owner's research project's reviews on 2026-10-24, when the engine was separated (`../AGENTS.md` §4). The reviewers' scripts mount `engine/` at `/lf` (paths `/lf/lfphys`, `/lf/visualizations`, `/lf/reviews/...` are unchanged by the move).
 
 ## Layout and lifecycle

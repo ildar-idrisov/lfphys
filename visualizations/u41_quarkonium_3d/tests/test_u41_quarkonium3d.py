@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v14: quarkonium in 3-D (the Cornell model, flagged as a model). Every preset builds and passes its checks; the
+"""u41: quarkonium in 3-D (the Cornell model, flagged as a model). Every preset builds and passes its checks; the
 world's levels are those of ``cornell.splittings``; the radial functions converge and their energies agree with the
 eigenvalues; the drawn cloud is |psi|^2 of the independent route (a finer radial solve, scipy's harmonics) to its 8-bit
 resolution; bottomonium is smaller than charmonium; the superposition oscillates at the model's transition frequency
@@ -19,10 +19,10 @@ from harness import Harness  # noqa: E402
 
 from lfphys.i18n import english, text_of  # noqa: E402
 from lfphys.theories.models import cornell  # noqa: E402
-from v14_quarkonium_3d.engine import pair as Q  # noqa: E402
-from v14_quarkonium_3d.viz import SCHEMA  # noqa: E402
+from u41_quarkonium_3d.engine import pair as Q  # noqa: E402
+from u41_quarkonium_3d.viz import SCHEMA  # noqa: E402
 
-V = "v14_quarkonium_3d"
+V = "u41_quarkonium_3d"
 
 
 def failed(h):

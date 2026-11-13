@@ -161,7 +161,7 @@ def write(folder: Path, name: str, data: bytes) -> Path:
 
 
 class Writer:
-    """Writes checkpoint files in a background thread (review CK-12: v08's 100 MB took 0.8 s in the frame loop): one
+    """Writes checkpoint files in a background thread (review CK-12: u38's 100 MB took 0.8 s in the frame loop): one
     write at a time; ``wait()`` before the worker ends; a failed write is reported once by ``take_failure()``, so the
     next trigger writes the state again (review CK-8)."""
 
@@ -195,7 +195,7 @@ class Writer:
 # --- what a checkpoint was made by (review CK-5): the code the world runs and the runtime ------------------------------
 def code_files(root: Path) -> list[str]:
     """The source files under ``root`` (engine/) of the modules loaded in this process, as paths relative to it: the
-    code the world actually runs (v12 runs v11's; an engine module the world does not import is not among them)."""
+    code the world actually runs (r13 runs r12's; an engine module the world does not import is not among them)."""
     import sys
     out = set()
     root = root.resolve()

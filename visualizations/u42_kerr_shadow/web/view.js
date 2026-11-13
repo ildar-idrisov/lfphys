@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v15 view: the shadow of a Kerr black hole and its photon rings. Next to the 3-D scene (the shared environment
+// u42 view: the shadow of a Kerr black hole and its photon rings. Next to the 3-D scene (the shared environment
 // /static/js/env3d.js: the horizon, the ergosphere, the disk, the equatorial photon orbits and the ISCO, the observer's
 // direction and sample light rays, all from the run) the screen window (/static/js/imagewin.js) shows the image the run
 // computed row by row: brightness, the order n of the disk images, the redshift or the fate of each pixel, with

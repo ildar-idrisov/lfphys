@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
 // Key frames of the player (owner, 2026-10-29), in a browser: for every visualization a run is recorded with changes in
-// the middle (live set-up, actions, slice planes added and removed; v09 also in ordinary space, where the scene's box
+// the middle (live set-up, actions, slice planes added and removed; r11 also in ordinary space, where the scene's box
 // grows), the page is opened at the end of the record, and at cursors going backwards the view brought back through a
 // key frame (key frames every 3 messages) is compared with the view rebuilt from the record at the same cursor: the 2-D
 // canvases' pixels (drawn in software, each view drawn once more before it is read), the 3-D scene's layers (geometry,
@@ -29,42 +29,42 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const settle = (page) => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 400)))));
 // the view drawn once more at the same cursor before it is compared: the browser's first drawing of a canvas just
 // resized (the cursor's set-up changes the toolbar, and so the canvas's size) may differ by a few levels in
-// antialiased pixels from any later drawing of the same commands (measured 2026-10-29: v06, v07)
+// antialiased pixels from any later drawing of the same commands (measured 2026-10-29: u36, u37)
 const steady = async (page) => { await settle(page); await page.evaluate(() => window.__lfPlayer.redraw()); await settle(page); };
 
 const SMALL = {
-  v08_wave_3d: { n: 128, zmax: 10.0 },
-  v09_thomas_3d: { ngrid: 48 },
-  v11_double_slit_2d: { a: 1.5, d: 4.0, w: 1.0, L: 12.0, sigma_x: 3.0, sigma_z: 2.0, grid: "coarse", n_bohm: 100, n_tracks: 10 },
-  v12_arrival_times_2d: { grid: "coarse", n_bohm: 100, n_tracks: 10, L: 12.0, sigma_z: 2.0, sigma_x: 2.0 },
-  v15_kerr_shadow: { res: "s" },
-  v17_mie_scattering: { radius_um: 1.0, width: 0.05, n_lam: 8 },
+  u38_wave_3d: { n: 128, zmax: 10.0 },
+  r11_thomas_3d: { ngrid: 48 },
+  r12_double_slit_2d: { a: 1.5, d: 4.0, w: 1.0, L: 12.0, sigma_x: 3.0, sigma_z: 2.0, grid: "coarse", n_bohm: 100, n_tracks: 10 },
+  r13_arrival_times_2d: { grid: "coarse", n_bohm: 100, n_tracks: 10, L: 12.0, sigma_z: 2.0, sigma_x: 2.0 },
+  u42_kerr_shadow: { res: "s" },
+  u44_mie_scattering: { radius_um: 1.0, width: 0.05, n_lam: 8 },
 };
 // what changes in the middle of the record: two commands (set values, an action, or a view request)
 const PLAN = {
-  v01_light_travel: [{ action: ["flash", { obj: "earth" }] }, { action: ["flash", { obj: "rocket" }] }],
-  v02_double_slit: [{ set: { lam_nm: 500.0 } }, { action: ["clear", {}] }],
-  v03_quantum_1d: [{ set: { energy: 1.2 } }, { action: ["clear", {}] }],
-  v04_orbits: [{ set: { ghost: true } }, { set: { ghost: false, time_units: "geo" } }],
-  v05_optics_bench: [{ set: { theta_deg: 30.0 } }, { set: { pol: "s" } }],
-  v06_qcd: [{ set: { mu: 100.0 } }, { set: { system: "bottom" } }],
-  v07_bell_test: [{ set: { switch: "fixed" } }, { set: { b_deg: 30.0 } }],
-  v08_wave_3d: [{ view: { op: "plane", id: 2, origin: [0, 0, 5], normal: [1, 0, 0] } }, { view: { op: "remove", id: 2 } }],
-  v09_thomas_3d: [{ view: { op: "plane", id: 2, origin: [0, 0, 0], normal: [1, 0, 0] } }, { view: { op: "remove", id: 2 } }],
-  v10_fast_observer: [{ set: { obs_beta: 0.5 } }, { set: { yaw: 30.0 } }],
-  v11_double_slit_2d: [{ set: { slit_b: false } }, { set: { slit_b: true } }],
-  v12_arrival_times_2d: [{ set: { slit_b: false } }, { set: { slit_a: false } }],
-  v13_hydrogen_3d: [{ view: { op: "plane", id: 2, origin: [0, 0, 0], normal: [1, 0, 0] } }, { view: { op: "remove", id: 2 } }],
-  v14_quarkonium_3d: [{ view: { op: "plane", id: 2, origin: [0, 0, 0], normal: [1, 0, 0] } }, { view: { op: "remove", id: 2 } }],
-  v15_kerr_shadow: [{ set: { incl: 60.0 } }, { set: { retro: true } }],
-  v16_optical_vortices: [{ set: { f_rot: 8.0 } }, { view: { op: "plane", id: 2, origin: [0, 0, 0], normal: [1, 0, 0] } }],
-  v17_mie_scattering: [{ view: { op: "plane", id: 2, origin: [0, 0, 0], normal: [1, 0, 0] } }, { set: { lam_nm: 480.0 } }],
+  u31_light_travel: [{ action: ["flash", { obj: "earth" }] }, { action: ["flash", { obj: "rocket" }] }],
+  u32_double_slit: [{ set: { lam_nm: 500.0 } }, { action: ["clear", {}] }],
+  u33_quantum_1d: [{ set: { energy: 1.2 } }, { action: ["clear", {}] }],
+  u34_orbits: [{ set: { ghost: true } }, { set: { ghost: false, time_units: "geo" } }],
+  u35_optics_bench: [{ set: { theta_deg: 30.0 } }, { set: { pol: "s" } }],
+  u36_qcd: [{ set: { mu: 100.0 } }, { set: { system: "bottom" } }],
+  u37_bell_test: [{ set: { switch: "fixed" } }, { set: { b_deg: 30.0 } }],
+  u38_wave_3d: [{ view: { op: "plane", id: 2, origin: [0, 0, 5], normal: [1, 0, 0] } }, { view: { op: "remove", id: 2 } }],
+  r11_thomas_3d: [{ view: { op: "plane", id: 2, origin: [0, 0, 0], normal: [1, 0, 0] } }, { view: { op: "remove", id: 2 } }],
+  u39_fast_observer: [{ set: { obs_beta: 0.5 } }, { set: { yaw: 30.0 } }],
+  r12_double_slit_2d: [{ set: { slit_b: false } }, { set: { slit_b: true } }],
+  r13_arrival_times_2d: [{ set: { slit_b: false } }, { set: { slit_a: false } }],
+  u40_hydrogen_3d: [{ view: { op: "plane", id: 2, origin: [0, 0, 0], normal: [1, 0, 0] } }, { view: { op: "remove", id: 2 } }],
+  u41_quarkonium_3d: [{ view: { op: "plane", id: 2, origin: [0, 0, 0], normal: [1, 0, 0] } }, { view: { op: "remove", id: 2 } }],
+  u42_kerr_shadow: [{ set: { incl: 60.0 } }, { set: { retro: true } }],
+  u43_optical_vortices: [{ set: { f_rot: 8.0 } }, { view: { op: "plane", id: 2, origin: [0, 0, 0], normal: [1, 0, 0] } }],
+  u44_mie_scattering: [{ view: { op: "plane", id: 2, origin: [0, 0, 0], normal: [1, 0, 0] } }, { set: { lam_nm: 480.0 } }],
 };
-// extra runs: v09 in ordinary space, where the box grows as the path is revealed (the craft's size: CK-1)
-const EXTRA = [// v02 with the conducting screen (B8): vector hits, the other model's curve, TE/TM and the difference strip
-               { name: "v02_vector", viz: "v02_double_slit", body: { preset: "vector_narrow" },
+// extra runs: r11 in ordinary space, where the box grows as the path is revealed (the craft's size: CK-1)
+const EXTRA = [// u32 with the conducting screen (B8): vector hits, the other model's curve, TE/TM and the difference strip
+               { name: "u32_vector", viz: "u32_double_slit", body: { preset: "vector_narrow" },
                  plan: [{ set: { pol_state: "H" } }, { action: ["clear", {}] }] },
-               { name: "v09_lab", viz: "v09_thomas_3d", body: { preset: "lab", params: { loop: "circle", rho: 2.0 } }, speed: 1e9,
+               { name: "r11_lab", viz: "r11_thomas_3d", body: { preset: "lab", params: { loop: "circle", rho: 2.0 } }, speed: 1e9,
                  plan: [{ view: { op: "plane", id: 2, origin: [0, 0, 0], normal: [1, 0, 0] } }, { view: { op: "remove", id: 2 } }] },
                // the playgrounds (B6): scene changes and an action in the middle of the record (their trails, waves, Bohm
                // points, shapes and measured positions are brought back by key frames)

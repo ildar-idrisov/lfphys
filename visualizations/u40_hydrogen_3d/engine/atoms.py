@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""The atoms of v13 (a nucleus of charge Z and mass M with an electron, or positronium) and their units, and the
+"""The atoms of u40 (a nucleus of charge Z and mass M with an electron, or positronium) and their units, and the
 independent route the slices are checked against: R_nl by the explicit power series of the Laguerre polynomial
 (``hydrogen.radial_series``, with its round-off bound) and Y_lm by scipy (``scipy.special.sph_harm_y``), instead of
 the world's log-scaled recurrence and the engine's own harmonics."""

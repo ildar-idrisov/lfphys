@@ -778,6 +778,7 @@ class RunManager:
 
     # --- visualizations -------------------------------------------------------------------------------
     def viz(self, viz_id: str) -> dict:
+        viz_id = registry.resolve(viz_id)  # an old id (registry.ALIASES) is the new one
         if viz_id not in self.viz_cache:
             self.viz_cache[viz_id] = registry.load(viz_id)
         return self.viz_cache[viz_id]
@@ -809,6 +810,12 @@ class RunManager:
         if meta.get("last_action") is None:  # a record from before the last action was kept: its record's time
             meta["last_action"] = sp.stat().st_mtime
             meta["last_action_iso"] = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(meta["last_action"]))
+        old_viz = meta.get("viz", "")
+        if registry.resolve(old_viz) != old_viz:  # a record made before the worlds were renamed (2026-11-13): the old id
+            # is an alias; the record opens, plays and resumes under the new one (by replay: its checkpoints name the
+            # old folder's files, so they are stale)
+            meta["viz"] = registry.resolve(old_viz)
+            meta.setdefault("viz_alias", old_viz)
         run = Run(self, d.name, meta.get("viz", ""), meta, d)
         for tmp in [*run.ckpt_dir.glob("w*-*.tmp"), *run.ckpt_dir.glob("carry-w*-*.npz.tmp")]:  # a write cut (CK-8)
             tmp.unlink(missing_ok=True)

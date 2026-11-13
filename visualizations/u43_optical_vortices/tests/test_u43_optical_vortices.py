@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v16: optical vortices. Every preset builds and passes its checks; the equiphase sheets of each phase of the slowed
+"""u43: optical vortices. Every preset builds and passes its checks; the equiphase sheets of each phase of the slowed
 optical period are revealed only as the world's time reaches it, and their vertices lie on the computed field's
 surface of that phase (checked against the engine's direct route, not against a formula); the detector's samples
 come as the time runs and their spectrum gives the beat 2|l| f, also after a live change of f; the spin-orbit split
@@ -22,9 +22,9 @@ from harness import Harness  # noqa: E402
 
 from lfphys.i18n import english, text_of  # noqa: E402
 
-from v16_optical_vortices.viz import NB, SCHEMA  # noqa: E402
+from u43_optical_vortices.viz import NB, SCHEMA  # noqa: E402
 
-V = "v16_optical_vortices"
+V = "u43_optical_vortices"
 
 
 def failed(h):
@@ -239,7 +239,7 @@ def test_cost_guard_refuses_with_an_estimate_before_building():
             Harness(V, "lg3", params)
         assert "too expensive" in english(text_of(e.value))
         assert time.time() - t0 < 5.0
-    from v16_optical_vortices.engine import apparatus as A
+    from u43_optical_vortices.engine import apparatus as A
     h = Harness(V, "lg3", {"rot": "none"})
     assert h.sim.beam.cost["bessel"] < 0.1 * A.BESSEL_BUDGET
 
@@ -260,7 +260,7 @@ def test_dove_prism_mesh_mirrors_across_the_rotators_line():
     """Review O13: the drawn prism's base face is normal to y, so the reflection off it maps y -> -y, the mirror of
     the engine's image rotator at angle 0 (the x axis)."""
     from lfphys.core.optics import beams_rotation as ROT
-    from v16_optical_vortices.engine import apparatus as A
+    from u43_optical_vortices.engine import apparatus as A
     L, hgt = 2.0, 1.0
     pos, _, _ = A.prism_mesh(L, hgt, 0.8 * hgt)
     base = pos[np.isclose(pos[:, 1], -hgt / 2)]
@@ -274,7 +274,7 @@ def test_table_reaches_every_point_the_consumers_sample():
     """Review O14: l = 6, p = 3 with a Dove prism (its square's corner was 19.29 um against a table ending at
     19.23 um): the table's radius covers the volume's and slices' corners, the angular-momentum plane, the disc's
     quadrature and the prism's square."""
-    from v16_optical_vortices.engine import apparatus as A
+    from u43_optical_vortices.engine import apparatus as A
     h = Harness(V, "lg3", {"l": 6, "p": 3, "rot": "dove"})
     bm = h.sim.beam
     r_end = float(bm.r[-1])

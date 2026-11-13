@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v09: Thomas-Wigner precession in 3-D (a wrapper over lfphys; plan P14.1, on the plan's P9 and P10).
+"""r11: Thomas-Wigner precession in 3-D (a wrapper over lfphys; plan P14.1, on the plan's P9 and P10).
 
 A craft starts at rest and flies a manoeuvre: burns and turns of its thrust given in its own frame. Its gyroscopes are
 carried without rotation (Fermi-Walker), and when the craft is back at rest they are turned: the holonomy of the loop
@@ -607,7 +607,7 @@ class Simulation(SlicePlanes, BaseSimulation):
 
 
 VIZ = {
-    "id": "v09_thomas_3d",
+    "id": "r11_thomas_3d",
     "title": T("Thomas–Wigner precession in 3-D"),
     "summary": T("A craft's manoeuvre in 3-D (burns and turns of the thrust): back at rest, its gyroscopes are turned — "
                  "the holonomy of the loop in velocity space, in SO(3) and SU(2); the fuel and the isoperimetric bound; "
@@ -617,4 +617,30 @@ VIZ = {
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "research",
+    "section": "relativity",
+    "ui": "full",
+    "teaser": T("A craft's manoeuvre in 3-D: back at rest, its gyroscopes are turned by the holonomy of the loop."),
+    "question": T("How does the turn of a craft's gyroscopes depend on the shape of its loop in velocity space, "
+                  "beyond planar manoeuvres and per unit of rapidity spent?"),
+    # the prior art found in the checks of plan §3 (lfphys/sources/priorart_2026-11-12_*.md): two or three
+    # targeted searches per item, not a survey; every novelty a hypothesis (AGENTS.md rule 11)
+    "prior_art": [
+        {"ref": "Aravind, Am. J. Phys. 65, 634 (1997)", "url": ""},
+        {"ref": "Rhodes & Semon, Am. J. Phys. 72, 943 (2004)", "url": "https://arxiv.org/abs/gr-qc/0501070"},
+        {"ref": "O'Donnell & Visser, Eur. J. Phys. 32, 1033 (2011)", "url": "https://arxiv.org/abs/1102.2001"},
+        {"ref": "Berry & Visser (2020)", "url": "https://arxiv.org/abs/2002.10659"},
+        {"ref": "Palge & Pfeifer, Phys. Rev. A 109, 032206 (2024)", "url": "https://arxiv.org/abs/2310.08121"},
+        {"ref": "Osserman, Bull. Amer. Math. Soc. 84, 1182 (1978)", "url": ""},
+    ],
+    "status": "hypothesis",
+    "related": ["U27"],
+    # what the public site plays (DESIGN §4.1): ~1.3 kB of gzip per frame measured
+    "recordings": [
+        {"id": "thomas", "preset": "thomas", "seconds": 30, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 25},
+        {"id": "seam", "preset": "seam", "seconds": 30, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 25},
+        {"id": "lab", "preset": "lab", "seconds": 30, "fps": 20, "speed": None, "seed": 1, "script": [], "poster": 25},
+    ],
 }

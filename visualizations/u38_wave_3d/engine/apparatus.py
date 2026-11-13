@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v08 apparatus: the source on z = 0 by its exact spectrum, the window chosen by measurement, the exact references
+"""u38 apparatus: the source on z = 0 by its exact spectrum, the window chosen by measurement, the exact references
 for the checks, the zone next to the aperture. No physics of its own: the spectra and the exact fields come from
 ``lfphys.core.optics.aperture_fields``, the propagation from ``lfphys.core.optics.angular_spectrum``.
 

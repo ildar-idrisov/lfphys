@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v10 view: what a fast observer sees. Next to the 3-D scene (the shared environment /static/js/env3d.js: the lab now
+// u39 view: what a fast observer sees. Next to the 3-D scene (the shared environment /static/js/env3d.js: the lab now
 // — bodies Lorentz-contracted at their lab-simultaneous places, the retarded shapes the light comes from, the observer
 // with its velocity and the lab directions its field of view takes the light from) the camera window
 // (/static/js/imagewin.js) shows the image the run computed by light-time ray tracing. Drawing only: images, retarded

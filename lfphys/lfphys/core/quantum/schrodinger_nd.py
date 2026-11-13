@@ -103,7 +103,7 @@ def _bench(size: int, xp, cplx):
 
 backend.register(backend.KernelSpec(
     KERNEL, T("The Schrödinger equation in 2-D/3-D (split operator)"),
-    T("a time step of the wave function on a grid: FFT, phase factors, absorption (v11 and the later quantum worlds)"),
+    T("a time step of the wave function on a grid: FFT, phase factors, absorption (r12 and the later quantum worlds)"),
     gpu=True,
     precisions={"fp64": {"allowed": True},
                 "fp32": {"allowed": False,

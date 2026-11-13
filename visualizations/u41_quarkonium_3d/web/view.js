@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v14 view: the wave functions of a heavy quark pair in the Cornell model (the shared wave-function view
+// u41 view: the wave functions of a heavy quark pair in the Cornell model (the shared wave-function view
 // /static/js/orbitview.js over the 3-D environment). Drawing only: every value comes from the run.
 import { el } from "/static/js/ui.js";
 import { t, fmt, lang } from "/static/js/i18n.js";
 import { createOrbitView } from "/static/js/orbitview.js";
-import { withPreparation } from "/viz/v13_hydrogen_3d/view.js";  // the state is live: prepared at the current moment
+import { withPreparation } from "/viz/u40_hydrogen_3d/view.js";  // the state is live: prepared at the current moment
 
 export function createView(ctx) {
   return withPreparation(createOrbitView(ctx, {

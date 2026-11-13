@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v04: orbits and clocks - a test body around a central mass in general relativity and in Newton's gravity.
+"""u34: orbits and clocks - a test body around a central mass in general relativity and in Newton's gravity.
 
 What the run computes (README.md of this folder has the model in full):
 * the body's orbit from its initial data: in GR the exact Schwarzschild geodesic (lfphys.core.gravity.orbit_stream:
@@ -884,7 +884,7 @@ class Simulation(BaseSimulation):
         note = T("the prediction is from the turning points at the start of the segment (lfphys.core.gravity.orbit_stream)")
         if unstable_circle or (kind == "plunge" and self.law == "GR" and self.special["photon"] < r0 < self.special["isco"]):
             note = T("{a}; r₀ = {r0:.4g}M < ISCO = {isco:.6g}M (lfphys.core.gravity.kerr.isco(0)): outside the ISCO the "
-                     "same perturbation gives a bound orbit (test v04)", a=note, r0=r0, isco=self.special["isco"])
+                     "same perturbation gives a bound orbit (test u34)", a=note, r0=r0, isco=self.special["isco"])
         self._check("outcome", T("Outcome of the orbit: predicted “{pred}”, observed “{seen}”", pred=pred,
                                  seen=END_TEXT.get(k, k)), None, None, "", ok=ok, note=note)
 
@@ -950,7 +950,7 @@ class Simulation(BaseSimulation):
 
 
 VIZ = {
-    "id": "v04_orbits",
+    "id": "u34_orbits",
     "title": T("Orbits and clocks: general relativity and Newton"),
     "summary": T("A body orbiting a star or a black hole: the periapsis precession (Mercury {adv}″ per century, a "
                  "neutron star, the ISCO), the fall through the horizon, the body's proper time against the time of a "
@@ -960,4 +960,22 @@ VIZ = {
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "university",
+    "section": "relativity",
+    "ui": "standard",
+    "teaser": T("An orbit near a black hole turns into a rosette, and the body's clock runs slower than a distant "
+                "one."),
+    "courses": [
+        {"text": T("Hartle, Gravity: An Introduction to Einstein's General Relativity"), "chapters": "9, 10"},
+        {"text": T("Taylor, Wheeler & Bertschinger, Exploring Black Holes"), "chapters": ""},
+    ],
+    "related": ["S11", "p01_gravity"],
+    "recordings": [
+        {"id": "rosette", "preset": "default", "seconds": 60, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 55},
+        {"id": "mercury", "preset": "mercury", "seconds": 40, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 35},
+        {"id": "plunge", "preset": "plunge", "seconds": 30, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 25},
+    ],
 }

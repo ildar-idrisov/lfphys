@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v06 view: the running coupling alpha_s(mu) computed by the run (1-4 loops, thresholds, the PDG band), the probe
+// u36 view: the running coupling alpha_s(mu) computed by the run (1-4 loops, thresholds, the PDG band), the probe
 // sweeping the scales, and quarkonium in the Cornell model (levels against PDG, the potential and the radial waves).
 import { t, fmt } from "/static/js/i18n.js";
 import { css, el, fresh2d, num, panel } from "/static/js/ui.js";

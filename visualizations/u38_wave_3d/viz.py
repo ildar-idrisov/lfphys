@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v08: a wave in 3-D — diffraction of monochromatic light by an aperture (a wrapper over lfphys; plan P10, P11;
+"""u38: a wave in 3-D — diffraction of monochromatic light by an aperture (a wrapper over lfphys; plan P10, P11;
 the 3-D environment: owner, 2026-10-27).
 
 The scalar field behind an aperture in the plane z = 0 (a Gaussian beam, a circle, a square, a slit or a double slit
@@ -465,7 +465,7 @@ class Simulation(SlicePlanes, BaseSimulation):
 
 
 VIZ = {
-    "id": "v08_wave_3d",
+    "id": "u38_wave_3d",
     "title": T("Wave in 3-D: diffraction by an aperture"),
     "summary": T("A 3-D scene: the screen with its aperture, the incident wave, the light behind the aperture, the "
                  "energy current and the target; slices are planes at any angle (up to three) with their own windows; "
@@ -475,4 +475,16 @@ VIZ = {
     "version": "2.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "university",
+    "section": "optics",
+    "ui": "standard",
+    "teaser": T("Light passes two slits of finite length: the 3-D field behind them, slices at any angle, the energy current."),
+    "courses": [
+        {"text": T("Halliday, Resnick & Walker, Fundamentals of Physics"), "chapters": "36"},
+        {"text": T("Hecht, Optics"), "chapters": "10"},
+    ],
+    "related": ["S38"],
+    "recordings": [
+        {"id": "double", "preset": "double", "seconds": 20, "fps": 10, "speed": None, "seed": 1, "script": [], "poster": 15},
+    ],
 }

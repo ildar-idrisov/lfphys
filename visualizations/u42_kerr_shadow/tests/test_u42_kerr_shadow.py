@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v15: the shadow of a Kerr black hole. Every preset builds and passes its checks; the image is revealed row by row
+"""u42: the shadow of a Kerr black hole. Every preset builds and passes its checks; the image is revealed row by row
 only as the world's time reaches the rows; the pixels sent are the engine's (captured pixels, the order n images, g^4
 J); a live change of the set-up starts a new image at once; a "what if" world computes the deviating metric's shadow
 edge and its size against EHT, and refuses a metric that is not regular outside the horizon."""
@@ -18,9 +18,9 @@ from harness import Harness  # noqa: E402
 from lfphys.core.gravity import kerr, kerr_null as KN, kerr_shadow as KS  # noqa: E402
 from lfphys.i18n import english, text_of  # noqa: E402
 from lfphys.theories.alternatives import johannsen_metric as JP  # noqa: E402
-from v15_kerr_shadow.viz import SCAN_M, SCHEMA  # noqa: E402
+from u42_kerr_shadow.viz import SCAN_M, SCHEMA  # noqa: E402
 
-V = "v15_kerr_shadow"
+V = "u42_kerr_shadow"
 SMALL = {"res": "s"}
 
 
@@ -281,7 +281,7 @@ def test_each_refusal_of_the_circular_orbits_gets_the_worlds_own_text(monkeypatc
     refusal names "the photon orbit" too, and was once taken for the photon-orbit one). An uncoded failure is named by
     the engine's own text (review i18n-code F5)."""
     from lfphys.codes import code_of
-    from v15_kerr_shadow.viz import orbits_refusal
+    from u42_kerr_shadow.viz import orbits_refusal
     monkeypatch.setattr(JP, "_circular", _fake_circular(kind))
     with pytest.raises(ValueError) as e:
         JP.circular_orbits(0.5, JP.Deviation(alpha13=1.0))

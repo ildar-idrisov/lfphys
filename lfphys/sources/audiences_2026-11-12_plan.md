@@ -13,6 +13,38 @@ item **P17** ("Audiences") of `lfphys/PLAN.md`.
   R07 in v09. Questions 5 (ranking), 6 (language of terms) and 8 (data sources) stay open and are settled at the
   batch discussions.
 
+**The owner's decisions (2026-11-13, on the start-page design):**
+- ids: the folder number is the plan id («Номер = id в плане»): today's university worlds take U31–U44 in §2.1 order,
+  the research worlds R11–R13; S01–S45, U01–U30 and R01–R10 keep their ids as folder numbers; the old `vNN` ids stay
+  valid as aliases (`visualizations/server/lfviz/registry.py` `ALIASES`);
+- the free labs are named «Лаборатория» / "Laboratory" in every user-facing text (internal `playground` and `pNN` stay);
+- the site's recordings are made in CI (GitHub Actions); the site is deployed only on the owner's go.
+
+The mapping of today's worlds (2026-11-13):
+
+| old id | new id | plan id | audience |
+|---|---|---|---|
+| `v01_light_travel` | `u31_light_travel` | U31 | University |
+| `v02_double_slit` | `u32_double_slit` | U32 | University |
+| `v03_quantum_1d` | `u33_quantum_1d` | U33 | University |
+| `v04_orbits` | `u34_orbits` | U34 | University |
+| `v05_optics_bench` | `u35_optics_bench` | U35 | University |
+| `v06_qcd` | `u36_qcd` | U36 | University |
+| `v07_bell_test` | `u37_bell_test` | U37 | University |
+| `v08_wave_3d` | `u38_wave_3d` | U38 | University |
+| `v10_fast_observer` | `u39_fast_observer` | U39 | University |
+| `v13_hydrogen_3d` | `u40_hydrogen_3d` | U40 | University |
+| `v14_quarkonium_3d` | `u41_quarkonium_3d` | U41 | University |
+| `v15_kerr_shadow` | `u42_kerr_shadow` | U42 | University |
+| `v16_optical_vortices` | `u43_optical_vortices` | U43 | University |
+| `v17_mie_scattering` | `u44_mie_scattering` | U44 | University |
+| `v09_thomas_3d` | `r11_thomas_3d` | R11 | Research |
+| `v11_double_slit_2d` | `r12_double_slit_2d` | R12 | Research |
+| `v12_arrival_times_2d` | `r13_arrival_times_2d` | R13 | Research |
+| `p01_gravity` … `p04_fluids` | unchanged | — | Laboratories |
+
+The rest of this plan is kept as written on 2026-11-12, with the old ids.
+
 How to approve: every item has an id (S01…, U01…, R01…, PL…, F…, M…, AB…). The owner can answer per id
 ("S03 да", "R05 нет", "AB2 после RB1").
 

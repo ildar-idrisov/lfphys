@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v03: a quantum particle in one dimension (a wrapper over lfphys).
+"""u33: a quantum particle in one dimension (a wrapper over lfphys).
 
 Electrons are sent one by one as wave packets at a potential (barrier, double barrier, step, well) or released in a
 harmonic trap. The wave of every particle is the numerical solution of the Schroedinger equation on a grid
@@ -791,7 +791,7 @@ class Simulation(BaseSimulation):
 
 
 VIZ = {
-    "id": "v03_quantum_1d",
+    "id": "u33_quantum_1d",
     "title": T("A quantum particle in one dimension"),
     "summary": T("Electrons one at a time at a barrier, a double barrier, a step, a well or in a trap: the exact "
                  "wave, tunnelling, detectors; the outcome in the Copenhagen, Bohm or Everett interpretation."),
@@ -800,4 +800,21 @@ VIZ = {
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "university",
+    "section": "quantum",
+    "ui": "standard",
+    "teaser": T("An electron's wave meets a barrier: part tunnels through, and single detections follow the computed "
+                "odds."),
+    "courses": [
+        {"text": T("Griffiths & Schroeter, Introduction to Quantum Mechanics"), "chapters": "2"},
+        {"text": T("Halliday, Resnick & Walker, Fundamentals of Physics"), "chapters": "39"},
+        {"text": T("Young & Freedman, University Physics"), "chapters": "40"},
+    ],
+    "related": [],
+    "recordings": [
+        {"id": "tunnel", "preset": "tunnel", "seconds": 30, "fps": 10,
+         "speed": None, "seed": 1, "script": [], "poster": 25},
+        {"id": "bohm", "preset": "tunnel_bohm", "seconds": 20, "fps": 10,
+         "speed": None, "seed": 1, "script": [], "poster": 15},
+    ],
 }

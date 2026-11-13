@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v11: the double slit in 2-D. Every preset builds; a small symmetric experiment runs to its end and passes its
+"""r12: the double slit in 2-D. Every preset builds; a small symmetric experiment runs to its end and passes its
 checks (norm, time step, flux into the screen against the absorbed probability, Bohm hits against the computed
 pattern, symmetry, no trajectory across the axis); nothing reaches the screen before the wave can; a slit closed after
 the packet has passed changes almost nothing, closed before it the pattern changes; the half flux quantum gives a
@@ -19,10 +19,10 @@ from harness import Harness  # noqa: E402
 
 from lfphys.core import backend  # noqa: E402
 from lfphys.i18n import english, is_t  # noqa: E402
-from v11_double_slit_2d.engine import apparatus as AP  # noqa: E402
-from v11_double_slit_2d.viz import SCHEMA  # noqa: E402
+from r12_double_slit_2d.engine import apparatus as AP  # noqa: E402
+from r12_double_slit_2d.viz import SCHEMA  # noqa: E402
 
-V = "v11_double_slit_2d"
+V = "r12_double_slit_2d"
 SMALL = {"a": 1.5, "d": 4.0, "w": 1.0, "L": 12.0, "sigma_x": 3.0, "sigma_z": 2.0, "grid": "coarse", "n_bohm": 300,
          "n_tracks": 20}
 

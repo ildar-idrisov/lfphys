@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// The view of the 3-D wave-function worlds (v13 hydrogen, v14 quarkonium; server: lfviz/orbitals3d.py), over the
+// The view of the 3-D wave-function worlds (u40 hydrogen, u41 quarkonium; server: lfviz/orbitals3d.py), over the
 // shared 3-D environment (env3d.js): the cloud |ψ|², the probability current, the slice planes, and the panels
 // "State", "Radial distribution" and "Energy levels". A superposition's cloud, current and slices come per
 // phase of its period (`bin`), revealed by the run as its time reaches them; a frame names the phase it shows, so

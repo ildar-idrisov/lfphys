@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""Server side of the 3-D wave-function worlds (plan P14.5: hydrogen, v13; P14.9: quarkonium, v14), shared by both:
+"""Server side of the 3-D wave-function worlds (plan P14.5: hydrogen, u40; P14.9: quarkonium, u41), shared by both:
 the probability cloud |psi|^2 of a stationary state R(r) Y_lm or of a superposition of two (``lfphys.core.quantum.
 central3d``), the probability current as glyphs, up to three slice planes (``lfviz.planes3d``) computed exactly for
 their plane and checked at points against the world's independent route, and the checks every such world shares.

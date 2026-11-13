@@ -251,7 +251,7 @@ void main() {
 // from iA to iB, `corner` (x: which end, y: which side) places the vertex; colours per segment end (PER_COLOR) or one
 // colour; optional dimming of the far half of a sphere's lines (SPHERE_DIM: the wire globe's front and back are told
 // apart). Written for this player from the usual screen-space construction. Not instanced: software GL draws thousands
-// of instances many times slower than the same quads as plain vertices (v15's rays: 50 ms against 1.6 ms).
+// of instances many times slower than the same quads as plain vertices (u42's rays: 50 ms against 1.6 ms).
 const WIDE_VERT = `
 uniform vec2 uRes; uniform float uWidth; uniform vec3 uColor; uniform vec4 uSphere;
 attribute vec3 iA; attribute vec3 iB; attribute vec3 corner;
@@ -977,7 +977,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     return g;
   }
 
-  // --- computed paths, gyroscope triads, marks, arrows, the moving body (e.g. v09) --------------------------------------
+  // --- computed paths, gyroscope triads, marks, arrows, the moving body (e.g. r11) --------------------------------------
   // a polyline revealed as the run's time reaches it: points [from, from + count) of path `id` (accumulative)
   function appendPath(id, from, pts, { label = t("Path (computed)"), color = 0x4fd1c5 } = {}) {
     let P = S.paths.get(id);
@@ -1081,7 +1081,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     requestRender();
   }
 
-  // --- meshes computed by the run (e.g. v10: bodies in the lab, their retarded shapes) ----------------------------------
+  // --- meshes computed by the run (e.g. u39: bodies in the lab, their retarded shapes) ----------------------------------
   // pos: count x 3 physics coordinates, idx: triangles (u4), rgb: count x 3 (u1). A mesh with base "rest" keeps its
   // vertices as given and is placed by an affine map x = A q + b (transformMesh); "lab" vertices are absolute. Lit with
   // a light from the viewer (its colour kept where it faces the viewer); a translucent mesh shows its nearest layer.
@@ -1161,7 +1161,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     requestRender();
   }
 
-  // a translucent box with its edges and a label: e.g. an observer, a which-path detector in a slit (v11). Physics
+  // a translucent box with its edges and a label: e.g. an observer, a which-path detector in a slit (r12). Physics
   // centre (x, y, z) and size (sx, sy, sz); three's axes are (z, y, -x)
   function boxObj(o) {
     const [sx, sy, sz] = o.size, c = P2T(o.center || [0, 0, 0]), color = new THREE.Color(o.color || "#ff8a1f");
@@ -1227,7 +1227,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     S.boxRadius = 0.5 * Math.hypot(...[0, 1, 2].map((i) => box[1][i] - box[0][i])) || 1;
   }
 
-  // a world whose region grows as its consequences are revealed (e.g. v09's trajectory) widens the box: the frame is
+  // a world whose region grows as its consequences are revealed (e.g. r11's trajectory) widens the box: the frame is
   // rebuilt; the camera follows only while the experimenter has not moved it, and an unchanged box changes nothing
   // (review UX-3d A7, UX-ui U1: the playground repeats its box at every record segment)
   function setBox(box) {
@@ -1255,7 +1255,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
 
   // --- the computed volume (ray marching) ----------------------------------------------------------------------------
   // data: Float32 values 0..1 of the peak (index iz·nx·ny + ix·ny + iy), or {amp8: true}: Uint8 amplitudes
-  // √(value)·255 (the clouds of v13/v14 as sent): then a new phase is painted through a 256-entry table (A17).
+  // √(value)·255 (the clouds of u40/u41 as sent): then a new phase is painted through a 256-entry table (A17).
   // The start look's optical depth τ (A10), fixed for the world at its first volume: `tau` (the caller's), else the
   // header's look.tau, else the header's look.density (the old density per length unit, 0.6 if none) times the
   // densest column of this first volume — the look the world was tuned to, now one τ for all its later volumes
@@ -1358,7 +1358,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     U.uCMax.value.set(Math.max(a.x, b.x), Math.max(a.y, b.y), Math.max(a.z, b.z));
     U.uDiag.value = U.uCMax.value.clone().min(U.uMax.value).distanceTo(U.uCMin.value.clone().max(U.uMin.value));
   }
-  // new values of the volume already shown, same dims (e.g. the phases of a superposition, v13/v14): the texture and
+  // new values of the volume already shown, same dims (e.g. the phases of a superposition, u40/u41): the texture and
   // the mesh are kept (setVolume builds new ones); false when there is no such volume
   function updateVolume(id, data, { amp8 = false } = {}) {
     if (!S.vol || !S.volTex || S.vol.data.length !== data.length || S.vol.amp8 !== amp8 || !S.layers.has(id)) return false;
@@ -1761,7 +1761,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
   }
 
   // --- camera views ----------------------------------------------------------------------------------------------------
-  // the scene's "up" (a physics vector; default y): a world may give another, e.g. v15 the spin axis z (review
+  // the scene's "up" (a physics vector; default y): a world may give another, e.g. u42 the spin axis z (review
   // B5-kerr-v15 K8); the orbit controls keep their up from the camera's, so their frame is set again
   function setUp(up) {
     S.up = up; S.axes = axesOfUp(up);
@@ -1840,7 +1840,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     requestRender();
   }
   // a view: a preset name, or a world's view [name, label, title, look] with look a physics direction from the scene's
-  // centre to the camera or {along: id}: from behind the arrow of that layer, looking along it (v15: the observer)
+  // centre to the camera or {along: id}: from behind the arrow of that layer, looking along it (u42: the observer)
   function viewDir(name) {
     const D = presetDirs();
     const def = (S.viewDefs || []).find((v) => v[0] === name), look = def && def[3];
@@ -1984,7 +1984,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
   buildTools();
   updateHint();
 
-  // --- a computed field on a rectangle of any orientation (e.g. v11: |psi|^2 in the plane of a 2-D world) -------------
+  // --- a computed field on a rectangle of any orientation (e.g. r12: |psi|^2 in the plane of a 2-D world) -------------
   // object {kind: "panel", origin (a corner), u, v (its edges, physics vectors), opacity?}; image nx along u, ny along
   // v, data index ix * ny + iy (as targets), values 0..1 drawn with the scene's scale; weak values fade out
   const vadd = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
@@ -2035,7 +2035,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     const obj = buildObject(o);
     if (obj) { const L = S.layers.get(o.id); addLayer(o.id, o.label, obj, L ? L.visible : o.visible !== false); }
   }
-  // many computed polylines at once (e.g. v11: Bohm trajectories), revealed as the run's time reaches them: point
+  // many computed polylines at once (e.g. r12: Bohm trajectories), revealed as the run's time reaches them: point
   // `from` of each of the n tracks (xyz: n x 3, NaN where a track has ended or not begun); colours per track
   // (n x 3, 0..1), which may change (setTrackColors) and recolour the whole track
   function appendTracks(id, xyz, colors, { label = t("Trajectories (computed)") } = {}) {
@@ -2086,7 +2086,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     }
     T.geo.attributes.color.needsUpdate = true; syncWide(T.line, 0); requestRender();
   }
-  // polylines replaced on every call (e.g. v15: sample light rays, p01: trails): pts n x 3 with NaN between the lines,
+  // polylines replaced on every call (e.g. u42: sample light rays, p01: trails): pts n x 3 with NaN between the lines,
   // colours per point (n x 3, 0..1, sRGB as named); the layer's object is kept and its buffers refilled (A17)
   function setLines(id, pts, rgb, { label = id, visible = true } = {}) {
     const n = pts.length / 3;
@@ -2121,7 +2121,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
     syncWide(lines, 0);
     requestRender();
   }
-  // a cloud of points replaced on every call (e.g. v11: the particles now), drawn as round shaded points; NaN positions
+  // a cloud of points replaced on every call (e.g. r12: the particles now), drawn as round shaded points; NaN positions
   // are left out
   function setPoints(id, xyz, colors, { label = t("Particles now"), size = 0.006 } = {}) {
     let L = S.layers.get(id);
@@ -2186,7 +2186,7 @@ export function createScene3D({ onPlaneEdit, onPlaneMoving, onSelect, readOnly =
   function snapshotAppends() {
     return {
       paths: new Map([...S.paths].map(([id, P]) => [id, P.n])),
-      // the drawn segments' colours too: a track is recoloured when what it shows becomes known (v11: its slit)
+      // the drawn segments' colours too: a track is recoloured when what it shows becomes known (r12: its slit)
       tracks: new Map([...S.tracks].map(([id, T]) => [id, { segs: T.segs, last: T.last.slice(), colors: T.colors.slice(),
                                                               col: T.col.slice(0, 6 * T.segs) }])),
       triads: new Map([...S.layers.values()].filter((L) => L.kind === "triads").map((L) => [L.id, L.obj.children.length])),

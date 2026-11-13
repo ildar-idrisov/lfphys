@@ -4,6 +4,7 @@
   "A quantum particle in one dimension": "Квантовая частица в одном измерении",
   "A thick barrier: transmission is exponentially small": "Толстый барьер: коэффициент прохождения экспоненциально мал",
   "A trap without detectors: the packet oscillates with the period 2π/ω.": "Ловушка без детекторов: пакет колеблется с периодом 2π/ω.",
+  "An electron's wave meets a barrier: part tunnels through, and single detections follow the computed odds.": "Волна электрона встречает барьер: часть проходит сквозь него, а отдельные срабатывания детекторов следуют рассчитанным вероятностям.",
   "At the top: the wave of the current particle |ψ(x)|² (blue) over the potential (black line) and the energy level (orange dashes). At the edges: the detectors; they absorb the wave, and the run computes what probability each of them absorbed, and when.": "Сверху — волна текущей частицы |ψ(x)|² (синяя) над потенциалом (чёрная линия) и уровнем энергии (оранжевый пунктир). По краям — детекторы: они поглощают волну, и запуск рассчитывает, какую вероятность и когда поглотил каждый.",
   "Bohm trajectories in the ensemble": "Число траекторий Бома в ансамбле",
   "Bohm's interpretation": "интерпретация Бома",

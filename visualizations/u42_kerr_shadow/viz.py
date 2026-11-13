@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v15: the shadow of a rotating black hole and its photon rings, and what if the hole is not Kerr (a wrapper over
+"""u42: the shadow of a rotating black hole and its photon rings, and what if the hole is not Kerr (a wrapper over
 lfphys; plan P14.3, on the plan's P7, P10, P11).
 
 The run computes what a distant observer sees of a Kerr black hole lit by a thin equatorial disk: every pixel of the
@@ -777,7 +777,7 @@ def _distance_to_curve(ax, bx, A, Bm):
 
 
 VIZ = {
-    "id": "v15_kerr_shadow",
+    "id": "u42_kerr_shadow",
     "title": T("The shadow of a Kerr black hole and its photon rings"),
     "summary": T("What a distant observer sees of a rotating black hole with a disc of gas: the shadow, the lensing "
                  "ring and the photon ring, every pixel a ray traced back in closed form; the edge of the shadow "
@@ -788,4 +788,19 @@ VIZ = {
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "university",
+    "section": "astrophysics",
+    "ui": "standard",
+    "teaser": T("A rotating black hole with a disc of gas: the shadow and photon rings, traced ray by ray, compared with EHT."),
+    "courses": [
+        {"text": T("Hartle, Gravity: An Introduction to Einstein's General Relativity"), "chapters": "15"},
+        {"text": T("Chandrasekhar, The Mathematical Theory of Black Holes"), "chapters": ""},
+        {"text": T("Event Horizon Telescope Collaboration, ApJ Letters 875 (2019)"), "chapters": ""},
+    ],
+    "related": ["R10"],
+    "recordings": [
+        {"id": "m87", "preset": "m87", "seconds": 20, "fps": 20, "speed": None, "seed": 1, "script": [], "poster": 10},
+        {"id": "edge_on", "preset": "edge_on", "seconds": 20, "fps": 20, "speed": None, "seed": 1, "script": [], "poster": 10},
+        {"id": "whatif", "preset": "whatif", "seconds": 20, "fps": 20, "speed": None, "seed": 1, "script": [], "poster": 10},
+    ],
 }

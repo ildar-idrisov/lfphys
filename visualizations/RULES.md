@@ -38,10 +38,18 @@ visualizations/
                          vendor/README.md)
   tests/                 server/API tests and the test harness
   runs/                  run records (git-ignored; limits: keep days, quota; "keep" protects a record)
-  pNN_<slug>/            ONE FOLDER PER PLAYGROUND SECTION (plan P15; §6): the same files, VIZ["kind"] = "playground"
-  vNN_<slug>/            ONE FOLDER PER VISUALIZATION, created on the owner's request
+  planned.json           the planned items of every audience (S01–S45, U01–U30, R01–R10, benches p05–p07): id,
+                         audience, section, title (an English msgid), grades/curriculum, batch, state, related
+  pNN_<slug>/            ONE FOLDER PER LABORATORY (playground section, plan P15; §6): the same files,
+                         VIZ["audience"] = "playground" (kind "playground")
+  sNN_ uNN_ rNN_<slug>/  ONE FOLDER PER VISUALIZATION, created on the owner's request; the prefix is the audience
+                         (school, university, research; AGENTS.md rule 14) and the number the item's id in the plan
+                         (lfphys/sources/audiences_2026-11-12_plan.md: u32_double_slit is U32). The old ids vNN_<slug>
+                         (before 2026-11-13) are aliases: registry.ALIASES
     __init__.py
-    viz.py               VIZ = {id, title, summary, purpose, version, schema, simulation}
+    viz.py               VIZ = {id, title, summary, purpose, version, schema, simulation, audience, section, ui,
+                         teaser, related, recordings; school: curriculum, guide; university: courses; research:
+                         question, prior_art, status} (§8)
     engine/              the apparatus logic over lfphys (Python), no drawing; physics itself lives in ../lfphys
     web/view.js          the drawing (ES module, createView(ctx)), no physics
     tests/               physics tests: every route against a closed form or a second method
@@ -50,8 +58,10 @@ visualizations/
     README.<lang>.md     the same in every other language of ../LANGUAGES.md (README.ru.md)
 ```
 
-A new visualization is a new `vNN_<slug>/` folder; the server and the player pick it up without changes
-(`registry.py` discovers folders, the catalogue lists them, the run page loads `web/view.js`).
+A new visualization is a new `sNN_`/`uNN_`/`rNN_<slug>/` folder (a laboratory `pNN_<slug>/`), its number the plan's
+id of the item; the server and the player pick it up without changes (`registry.py` discovers folders and checks
+their `VIZ`, §8; the catalogue lists them, the run page loads `web/view.js`). When the item lands, its entry in
+`planned.json` is left to the site's build, which drops a planned id that exists as a folder.
 
 **The physics engine.** Since 2026-10-23 the physics of all visualizations lives in one library, `../lfphys/`
 (owner: «выделяй в отдельную библиотеку движок для физики … а отдельная симуляции или визуализации должна быть
@@ -87,7 +97,7 @@ engine lacks is added to the engine, with its tests, not to the visualization.
      causally (they fly on, or are lost when the path they need is rebuilt, and this is counted). A refused change
      leaves the world as it was and the player rolls the control back. In a playground the laws the engine can
      change at the current moment are live parameters too (§6). A demonstration's state that an experimenter can prepare
-     (v13, v14: an ideal preparation at the current moment, the former state discarded) is live in the same way; a law
+     (u40, u41: an ideal preparation at the current moment, the former state discarded) is live in the same way; a law
      or a system that no operation changes (the atom, the quark pair) stays a world parameter.
    * Actions: one-off events done by an agent (boost an observer, emit a flash, start a measurement), applied at the
      current event. An action that sets a state continuously (the speed of an observer) is declared `mode: "live"`
@@ -103,7 +113,7 @@ engine lacks is added to the engine, with its tests, not to the visualization.
    and the top bar show it like a modification. Numerical errors (grid, window) are measured by the run and shown in
    its checks.
 7. **Tests before use.** Each route of the engine is tested against a closed form or an independent second method
-   (`vNN_*/tests/`), all tests pass in the Docker image before the visualization is reported, and a physics review
+   (`<id>/tests/`), all tests pass in the Docker image before the visualization is reported, and a physics review
    by a different agent is processed under `../reviews/README.md`.
 8. **Reproducible runs.** A run records its parameters, seed, code hash, every command with wall time, and every
    message it emitted (`runs/<id>/stream.lfrec`, `meta.json`). Randomness comes only from the run's seeded generator.
@@ -137,8 +147,8 @@ engine lacks is added to the engine, with its tests, not to the visualization.
     `server/lfviz/planes3d.py` (`SlicePlanes`: the planes, the view command, keeping them in a new world, "auto"),
     in the player `player/js/env3d.js` (the scene and the windows side by side, the panels "Scene layers" and "Slice:
     position and tilt", "＋ Slice", previews, the 3-D messages) and, for a world that computes what an observer sees,
-    the camera window `player/js/imagewin.js` (B3, v10). A world adds only its own objects, panels and checks.
-    A **2-D world** whose plane is the exact reduction of a 3-D set-up (B3: v11, slits long along y) uses the same
+    the camera window `player/js/imagewin.js` (B3, u39). A world adds only its own objects, panels and checks.
+    A **2-D world** whose plane is the exact reduction of a 3-D set-up (B3: r12, slits long along y) uses the same
     environment: the apparatus in 3-D, the computed field on its plane as a `panel` in the scene, the plane's own
     window (fixed: its plane is the world's, not the experimenter's, `planes.max = 0`), the computed paths in both.
     **The rendering contract of the 3-D view** (review UX-3d, 2026-11-04; `player/js/scene3d.js`):
@@ -170,9 +180,10 @@ REST (JSON):
 | method | path | meaning |
 |---|---|---|
 | GET | `/api/health` | version, visualizations, running workers |
-| GET | `/api/viz`, `/api/viz/{viz}` | catalogue: id, title, summary, purpose, version, schema (params + presets) |
+| GET | `/api/viz`, `/api/viz/{viz}` | catalogue: id, title, summary, purpose, version, kind, audience, section, ui, teaser, related, recordings, aliases, picture, the audience's anchors (curriculum / courses / question, prior_art, status), schema (params + presets) (§8); `{viz}` may be an old id (`registry.ALIASES`): the renamed world's entry |
+| GET | `/viz/{viz}/{path}` | a world's `web/` files (its view); an old id answers 301 to the new address |
 | GET | `/api/runs` | runs, newest first: state, sim time, size, keep, modifications, approximations, `devices_override` |
-| POST | `/api/runs` | `{viz, preset?, params?, seed?, label?, backend?}` → `{id}`: starts a run (its first world); `backend` = `{kernels: {name: {device, precision}}}` overrides the device settings for this run only (§5) |
+| POST | `/api/runs` | `{viz, preset?, params?, seed?, label?, backend?}` → `{id}`: starts a run (its first world; `viz` may be an old id); `backend` = `{kernels: {name: {device, precision}}}` overrides the device settings for this run only (§5) |
 | GET | `/api/runs/{id}` | the run's passport: current params and seed, `worlds` (each: n, preset, seed, params, modifications), code hash, commands, errors |
 | POST | `/api/runs/{id}/command` | `{cmd, args}` (same as over WebSocket); a suspended run is resumed first by a command that computes or changes the world (`play`, `step`, `next_event`, `set`, `action`, `view`, `scene`, `new_world`); the server's own worker commands (`checkpoint_now`, `stop`) are refused, 403, here and over the WebSocket (review LB1-framework F6); a body that is not `{cmd, args}` is 400 |
 | POST | `/api/runs/{id}/record` | a playground's record window (§6): `{on?: bool, window_s?: number, window_mb?: number}`; `on` absent leaves recording as it is; 400 for anything else; 409 for a demonstration |
@@ -228,7 +239,7 @@ world, pickled; GPU arrays as NumPy arrays put back on the GPU; the worker's out
 by name; closures by value) when the run is suspended (the server's `stop` carries `checkpoint: true`), when it pauses
 (at most once per 10 s) and every 2 min (`sim.CHECKPOINT_EVERY`) while it computes, each recorded by a `checkpoint`
 message (world, time, file; the code the world ran — the files under `engine/` of the modules loaded in the worker, so
-v12 includes v11, and their hash — and the runtime: Python version, bytecode magic number, NumPy, SciPy and CuPy
+r13 includes r12, and their hash — and the runtime: Python version, bytecode magic number, NumPy, SciPy and CuPy
 versions): its place in the record is the state's place. The state is pickled in the loop and written by a background
 thread (the next stop waits for it); a failed write is retried at the next occasion and its temporary file removed
 (and any left by a killed worker at the next start). The files are in `runs/<id>/checkpoints/` (the two newest kept;
@@ -239,7 +250,7 @@ crashed); the worker reports which way it went (`resumed {how: checkpoint | repl
 For every visualization the world continued from a checkpoint in a new process emits exactly what the original emits,
 byte for byte (`tests/test_checkpoint.py`: also a session with live changes, actions, slice planes, `step` and
 `next_event` before the checkpoint and a new world after it; on the CPU — review CK's `c01` ran it also with every
-kernel on GPU 0 for v08, v11 and v12). A world's state must not rely on two attributes viewing one buffer: pickling
+kernel on GPU 0 for u38, r12 and r13). A world's state must not rely on two attributes viewing one buffer: pickling
 separates them (the known ones, which nothing writes in place, are listed in that test). Without a usable checkpoint
 (a file the world loaded or the runtime changed since, or the checkpoint is missing or unreadable) a new worker builds
 the latest world from its parameters and seed and repeats, in the order of
@@ -273,21 +284,21 @@ brought back from its nearest **key frame** before the cursor (owner, 2026-10-29
 of its growing lists, references to the latest values, copies of small changing state) and, going back, calls
 `restore(snapshot)` on the view's present state and feeds only the messages after the key frame; at most 256 key
 frames per world: beyond, the step between them doubles and the key frames on the coarser grid are kept (uniform over
-the whole record at any length). A view without `snapshot`/`restore` (v13, v14: their clouds are decoded
-asynchronously), or a `restore` that cannot cut back (it throws: v07 once its cap dropped the oldest detections; v11 and
-v12 for a key frame from before their latest change of the set-up; the 3-D environment for a target set or a slice
+the whole record at any length). A view without `snapshot`/`restore` (u40, u41: their clouds are decoded
+asynchronously), or a `restore` that cannot cut back (it throws: u37 once its cap dropped the oldest detections; r12 and
+r13 for a key frame from before their latest change of the set-up; the 3-D environment for a target set or a slice
 computed after the key frame), is rebuilt from the record (`reset` → `onHeader` with the header as recorded → the
 messages up to the time). The 3-D environment's part (`env3d.snapshot`/`restore`): the latest message that set each
 object (re-applied in the record's order, the box first; the slices of the planes re-applied with them), and the
 lengths of the appending layers (paths, tracks with their segments' colours, triads), cut back by
 `scene3d.restoreAppends`. Tested in the browser for every visualization by `tests/browser/keyframes.mjs` (key frames
 every 3 messages; live changes, actions, slice planes added and removed in the middle of the record, the page opened at
-its end, v09 also in ordinary space where the box grows): the view brought back through a key frame equals the view
+its end, r11 also in ordinary space where the box grows): the view brought back through a key frame equals the view
 rebuilt from the record at the same cursor (the 2-D canvases' pixels, drawn in software and once more before they are
 read; the 3-D scene's layers, sphere radii, slice planes and their images, the scene's box; the panels' and overlays'
 texts). The scene keeps a copy of the header's scene description (`setBox`, `setObject` change it), so that a view
 rebuilt at an earlier time starts from the header as recorded; a view rebuilt for the same world keeps what the
-experimenter chose in it (v01: the frame, the camera, the zoom). Every
+experimenter chose in it (u31: the frame, the camera, the zoom). Every
 version of a check is kept and the latest one computed by the cursor's time is shown; events ahead, the set-up, the
 actions, the approximations and the engine modules in force are shown as of that time. A view must therefore be a
 function of the messages it has been fed (no state from messages it has not seen; a 2-D canvas starts every frame from
@@ -353,12 +364,12 @@ Message format (`server/lfviz/protocol.py`, `player/js/api.js`): `u32 json_len |
 
 Everything except `frame` is accumulative: never dropped, recorded, replayed to late viewers in order.
 
-### 3-D worlds (rule 2.10; `v08_wave_3d` and `v09_thomas_3d` are the reference implementations)
+### 3-D worlds (rule 2.10; `u38_wave_3d` and `r11_thomas_3d` are the reference implementations)
 
 The header carries `scene3d`: `box` [[xmin, ymin, zmin], [xmax, ymax, zmax]] (physics coordinates, z the depth),
 `units`, `coord_names` (optional, e.g. ["βx", "βy", "βz"]), `views` (optional camera buttons `[name, label, title]`,
 names iso / side / top / beam / back), `objects` (each `{id, label, kind, visible, ...}`: `plate` with `holes`
-(`rect` / `circle`), `disk`, `incident`, `target`, `sphere` (`center`, `radius`), `point` (`pos`, `text`), `panel` (B3, v11: a computed field on a rectangle of any orientation, `origin` (a corner), `u`, `v` (its edges), `opacity?`; its image is set by the world's view, `scene3d.setPanelImage`), `box` (B4, v11: a translucent box with edges, `center`, `size` [sx, sy, sz], `color?`, `opacity?`, `text?`, `text_size?` — e.g. the observer at slit B; a world replaces it with `scene3d.setObject`); the player
+(`rect` / `circle`), `disk`, `incident`, `target`, `sphere` (`center`, `radius`), `point` (`pos`, `text`), `panel` (B3, r12: a computed field on a rectangle of any orientation, `origin` (a corner), `u`, `v` (its edges), `opacity?`; its image is set by the world's view, `scene3d.setPanelImage`), `box` (B4, r12: a translucent box with edges, `center`, `size` [sx, sy, sz], `color?`, `opacity?`, `text?`, `text_size?` — e.g. the observer at slit B; a world replaces it with `scene3d.setObject`); the player
 draws them; `box` is the region at the start — never framed on consequences still to come), `layers` (computed fields: `{id, label, kind: "volume" | "vectors", visible, look?}`, `look` = the volume's starting `{tau?, threshold}`: τ the optical depth of the volume's densest line of sight along an axis
 of the region (the density slider); without `tau` the player keeps the world's former look, `density` (the old value per
 length unit, 0.6 when absent) times the densest column of the world's first volume), `planes` (`max` ≤ 3, 0 when the world has no field to slice; `center`;
@@ -377,19 +388,19 @@ is not the second). Messages:
 | `box` | `box`: a wider region for a world whose extent is revealed as its time runs (e.g. a trajectory); the frame is redrawn, the objects keep their coordinates; an equal box changes nothing; the camera is refitted only if the experimenter has not moved it |
 | `planes` | the planes in force: `{id, origin, normal, u, v, auto, speed, polygon (the cut by the box in (s, t)), label}` |
 | `slice` | `id`, the plane (`origin`, `u`, `v`, `normal`), `s` [s0, s1, ns], `tt` [t0, t1, nt], `route`, `route_label`, `exact`, `approximation`, `reason`, `verify` {points, max_err, tol, ok}, `verify_title?`, `z_near?`, `window_est?`, `units?` (default µm), `coord_names?`, `depth?` (false: no axis is the depth), `quantity?` (`{label, unit, peak}`: a field that is not a wave, value = I · peak); blobs `I` (float32 nt × ns, value / peak, NaN outside the region) and `phase` (waves) |
-| `mesh` | (B3, v10) a surface computed by the run: `id`, `label`, `count`, `opacity?`, `visible?`, `base` ("lab": absolute vertices; "rest": offsets placed by an affine map from the frames, `scene3d.transformMesh(id, A, b)`); blobs `pos` (float32 count × 3), `idx` (uint32 triangles), `rgb` (uint8 count × 3, sRGB); a world may replace a "lab" mesh's vertices and colours later (`scene3d.updateMesh`) |
-| `image` | (B3, v10; drawn by the shared camera window `player/js/imagewin.js`, not by env3d) what an observer sees: `seq`, `shape` [H, W], `camera` {kind, fov, forward}, `mode`, `mode_label` (a mode that is not what is seen is marked in the window), `codec: "deflate"` and `filter` (fields sent as row differences); blobs deflated: `rgb` (uint8 H × W × 3) and the world's per-pixel fields for the readout (v10: `D`, `delay`, `T`, `body`); frames name the image they show (`img_seq`) |
-| `wave` | (B3, v11) a 2-D world's wave on its plane: `shape` [nx, nz], `peak`, `ds` (grid steps per pixel), `tau`; blobs `amp` (uint16, √(\|ψ\|²/peak)·65535) and `phase` (uint8, (arg ψ + π)/2π·255); accumulative, so that the record keeps every image and a viewer who scrolls back sees the wave of that moment (frames are thinned); drawn on a `panel` object and in a slice window marked `fixed` (not removable; `meta.fixed`, `meta.title`) with the world's overlay (`slices.setOverlay(id, fn(ctx, map))`: computed polylines drawn in the plane's coordinates) |
-| `cloud` | (B4, v13/v14; server `lfviz/orbitals3d.py`, view `player/js/orbitview.js`) a probability cloud \|ψ\|² for the scene's volume: `id`, `bin`, `nb`, `t_bin`, `dims` [nz, nx, ny], `peak` (one scale for all phases: (Σ_k \|c_k\|\|ψ_k\|)² maximised over the grid, a bound of \|ψ(t)\|² at every t known without evolving; review B4-10), `enc: "sqrt-u8"`, `codec: "deflate"`; blob `data` (deflated uint8 √(\|ψ\|²/peak)·255, index as `volume`). A time-dependent cloud that repeats with a period T comes in `nb` phases, each revealed when the run's time reaches it; `vectors` and `slice` messages of such a world carry the same `bin` (and slices a `rev` per placement of their plane); frames name the phase they show (`bin`: the last one reached), so the record stops growing after one period and a viewer who scrolls back sees that moment's cloud. Shown with `scene3d.updateVolume(id, data)` (same dims: texture and mesh kept) |
-| `prepared` | (v13, v14) a state prepared at the current moment: `t_prep`, `keep_time`, `header` (the header's parts that describe the state: title, states, levels, period, nb, scene3d …); the view starts its state from the world's header with them; frames carry `t_prep`, the period's phases count from it |
+| `mesh` | (B3, u39) a surface computed by the run: `id`, `label`, `count`, `opacity?`, `visible?`, `base` ("lab": absolute vertices; "rest": offsets placed by an affine map from the frames, `scene3d.transformMesh(id, A, b)`); blobs `pos` (float32 count × 3), `idx` (uint32 triangles), `rgb` (uint8 count × 3, sRGB); a world may replace a "lab" mesh's vertices and colours later (`scene3d.updateMesh`) |
+| `image` | (B3, u39; drawn by the shared camera window `player/js/imagewin.js`, not by env3d) what an observer sees: `seq`, `shape` [H, W], `camera` {kind, fov, forward}, `mode`, `mode_label` (a mode that is not what is seen is marked in the window), `codec: "deflate"` and `filter` (fields sent as row differences); blobs deflated: `rgb` (uint8 H × W × 3) and the world's per-pixel fields for the readout (u39: `D`, `delay`, `T`, `body`); frames name the image they show (`img_seq`) |
+| `wave` | (B3, r12) a 2-D world's wave on its plane: `shape` [nx, nz], `peak`, `ds` (grid steps per pixel), `tau`; blobs `amp` (uint16, √(\|ψ\|²/peak)·65535) and `phase` (uint8, (arg ψ + π)/2π·255); accumulative, so that the record keeps every image and a viewer who scrolls back sees the wave of that moment (frames are thinned); drawn on a `panel` object and in a slice window marked `fixed` (not removable; `meta.fixed`, `meta.title`) with the world's overlay (`slices.setOverlay(id, fn(ctx, map))`: computed polylines drawn in the plane's coordinates) |
+| `cloud` | (B4, u40/u41; server `lfviz/orbitals3d.py`, view `player/js/orbitview.js`) a probability cloud \|ψ\|² for the scene's volume: `id`, `bin`, `nb`, `t_bin`, `dims` [nz, nx, ny], `peak` (one scale for all phases: (Σ_k \|c_k\|\|ψ_k\|)² maximised over the grid, a bound of \|ψ(t)\|² at every t known without evolving; review B4-10), `enc: "sqrt-u8"`, `codec: "deflate"`; blob `data` (deflated uint8 √(\|ψ\|²/peak)·255, index as `volume`). A time-dependent cloud that repeats with a period T comes in `nb` phases, each revealed when the run's time reaches it; `vectors` and `slice` messages of such a world carry the same `bin` (and slices a `rev` per placement of their plane); frames name the phase they show (`bin`: the last one reached), so the record stops growing after one period and a viewer who scrolls back sees that moment's cloud. Shown with `scene3d.updateVolume(id, data)` (same dims: texture and mesh kept) |
+| `prepared` | (u40, u41) a state prepared at the current moment: `t_prep`, `keep_time`, `header` (the header's parts that describe the state: title, states, levels, period, nb, scene3d …); the view starts its state from the world's header with them; frames carry `t_prep`, the period's phases count from it |
 
 Since B3 the scene also draws many computed polylines at once (`scene3d.appendTracks(id, xyz, colours)`, NaN where a
 track has ended; `setTrackColors` recolours whole tracks, e.g. when a Bohm particle's slit becomes known), a point
 cloud replaced on every frame (`setPoints`) and an object rebuilt after a live change of the apparatus (`setObject`,
-e.g. v11's plate when a slit is closed); v11's own messages (`tracks`, `hits`, `screen`, `result`, `setup`) feed them.
-A moving body (e.g. v09's craft: its position, gyroscope frame, spin, thrust) is drawn by the world's view from the
+e.g. r12's plate when a slit is closed); r12's own messages (`tracks`, `hits`, `screen`, `result`, `setup`) feed them.
+A moving body (e.g. r11's craft: its position, gyroscope frame, spin, thrust) is drawn by the world's view from the
 frames (`scene3d.setBody`); an observer (a marker, its velocity, the lab directions of its field of view) by
-`scene3d.setObserver` (v10). View commands: `view {op: "plane", id, origin?, normal?, auto?, speed?}` places or moves
+`scene3d.setObserver` (u39). View commands: `view {op: "plane", id, origin?, normal?, auto?, speed?}` places or moves
 plane `id` (1–3); `view {op: "remove", id}` removes it; `view {op: "reset"}` restores the default planes; `view {op:
 "preview", id, origin, normal}` (while a plane is dragged and no volume was computed) answers with a coarse `slice`
 marked `preview` that changes nothing (not kept, not checked). A plane's in-plane axes are the engine's
@@ -399,7 +410,7 @@ read-only).
 
 ## 4. How to add a visualization (checklist for agents)
 
-1. Create `vNN_<slug>/` with the files of §1. `viz.py`: a `Schema` of world parameters (laws marked `standard`),
+1. Create `<a>NN_<slug>/` (§1: the audience's prefix and the plan's id) with the files of §1 and the fields of §8. `viz.py`: a `Schema` of world parameters (laws marked `standard`),
    presets, and a `Simulation` subclass of `lfviz.sim.Simulation` implementing `header`, `advance`, `frame`,
    `action`, `next_event_time` (and `after_header` if it emits messages while constructing the world).
 2. Physics from the engine `../lfphys/` (add what is missing there, in the right layer, with tests); the
@@ -407,7 +418,7 @@ read-only).
    `web/view.js`. The view may interpolate along computed polylines and apply matrices the run sent; it computes no
    physics.
 3. Emit checks for every quantity that has a closed form; state approximations; flag modifications.
-4. Tests in `vNN_<slug>/tests/`; run all tests in Docker (`README.md`); look at the pages in a browser (headless
+4. Tests in `<id>/tests/`; run all tests in Docker (`README.md`); look at the pages in a browser (headless
    screenshots are fine). The browser regressions `tests/browser/keyframes.mjs` (key frames, §3),
    `tests/browser/scene3d_checks.mjs` (the 3-D view's rendering contract, §2 rule 10), `tests/browser/manipulation.mjs`
    (direct manipulation in the playgrounds, §6), `tests/browser/instruments_checks.mjs` (the panel "Instruments" and
@@ -446,7 +457,7 @@ the GPU below the temperature where this host once hung, whatever power limit is
 > параметры, смотреть за их изменением и взаимодействием, все должно быть не задано заранее, а просчитываться в
 > реалтайме
 
-Two modes in the catalogue: **Demonstrations** (the `vNN_` folders: prepared set-ups with their checks and story) and
+Two modes in the catalogue: **Demonstrations** (the `sNN_`, `uNN_`, `rNN_` folders: prepared set-ups with their checks and story) and
 **Laboratories** (the `pNN_` folders, one per branch of physics). The interface calls a playground a *laboratory*
 («лаборатория»; owner, 2026-11-13: «Лаборатория / Laboratory»); the code keeps the identifier `playground`
 (`kind: "playground"`, `lfviz.playground`, the ids `pNN`). Every rule of §2 holds in the playground: what is shown
@@ -687,3 +698,43 @@ section is how the visualizations keep it.
 * **Adding a language.** A row in `../LANGUAGES.md`; its code in `LANGS` of `lfviz/i18n.py` and of
   `player/js/i18n.js`; a `locales/<code>.json` next to every catalogue (`tests/test_i18n.py` lists what is missing);
   and `X.<code>.md` for every user document.
+
+## 8. Audiences, the registry's fields and the planned items (owner, 2026-11-12 and 2026-11-13)
+
+Four audiences, one per visualization (`../AGENTS.md` §3 rule 14): **school** (`sNN_`), **university** (`uNN_`),
+**research** (`rNN_`), **laboratories** (`pNN_`, internally `playground`). The number is the item's id in the plan
+(`../lfphys/sources/audiences_2026-11-12_plan.md`; owner, 2026-11-13: «Номер = id в плане»): today's university worlds
+are U31–U44, the research worlds R11–R13; S01–S45, U01–U30 and R01–R10 keep their plan ids when they land. The old
+ids (`v01_light_travel` … `v17_mie_scattering`) are aliases (`registry.ALIASES`): `registry.folder/load/describe`,
+`/viz/<old>/…` (301), `/api/viz/<old>`, `POST /api/runs {viz: <old>}` and the run records (`runs.py` maps
+`meta.json`'s `viz` at load and notes `viz_alias`; such a run resumes by replay, its checkpoints naming the old
+folder's files). The archived reviews keep the old ids as written.
+
+| old | new | old | new | old | new |
+|---|---|---|---|---|---|
+| v01_light_travel | u31_light_travel | v07_bell_test | u37_bell_test | v14_quarkonium_3d | u41_quarkonium_3d |
+| v02_double_slit | u32_double_slit | v08_wave_3d | u38_wave_3d | v15_kerr_shadow | u42_kerr_shadow |
+| v03_quantum_1d | u33_quantum_1d | v10_fast_observer | u39_fast_observer | v16_optical_vortices | u43_optical_vortices |
+| v04_orbits | u34_orbits | v13_hydrogen_3d | u40_hydrogen_3d | v17_mie_scattering | u44_mie_scattering |
+| v05_optics_bench | u35_optics_bench | v09_thomas_3d | r11_thomas_3d | v11_double_slit_2d | r12_double_slit_2d |
+| v06_qcd | u36_qcd | v12_arrival_times_2d | r13_arrival_times_2d | | |
+
+`VIZ` declares, besides §1, and `registry.load` checks (`registry.check`; `tests/test_site_registry.py`):
+
+| field | meaning |
+|---|---|
+| `audience` | `school` \| `university` \| `research` \| `playground`; it agrees with the prefix; `kind` follows from it |
+| `section` | one of `registry.SECTIONS` (the teaching order of the plan's §5.1: mechanics … astrophysics and cosmology) |
+| `ui` | `school` \| `standard` \| `full`, by default the audience's (`registry.AUDIENCES`); `school` for the school only |
+| `teaser` | a `T`: one line, what you will see |
+| `related` | the same topic at other levels: world ids or planned ids (`S38`, `U27`, `R10`, `p05`); mutual between them |
+| school | `curriculum` (an FRP anchor and an AP/IB/AQA anchor: `{system, grade \| unit \| topic \| section}`), `guide` (the guided steps, AB1); no law parameters (no modified physics) |
+| university | `courses`: `[{text: T(the book), chapters}]` |
+| research | `question` (a `T`), `prior_art` (`[{ref, url}]`), `status: "hypothesis"` until reproduced (`../AGENTS.md` rule 11) |
+| `recordings` | not for the laboratories, at least one: what the public site plays (`[{id, preset, seconds, fps, speed?, seed?, script?, poster?}]`; `registry.RECORDING_LIMITS`: 1–180 s, 1–30 fps, ≤ 3600 frames, script commands `set`, `action`, `view`, `new_world`); chosen so that each file stays within the site's budget (3 MB target, 10 MB limit; a world 12 MB, 25 MB limit) at the measured rates (`tests/test_site_registry.py` `RATE_KB`) |
+
+`planned.json` lists the items not built yet (school S01–S45, university U01–U30, research R01–R10, the benches
+p05–p07): `id`, `audience`, `section`, `title` (an English msgid translated in `locales/`), and per audience `grades`
+and `curriculum`, `priority`, `rank` and `status`, `text`; `batch` and `state` (`next` for the batch in work,
+`planned` for the rest); `related`. The start page and the site show them as planned, never as startable; the site's
+build drops an entry whose id exists as a folder.

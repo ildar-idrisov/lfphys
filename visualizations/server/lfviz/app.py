@@ -119,13 +119,16 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
         return _json(out)
 
     async def viz_one(request):
-        try:
-            return _json(registry.describe(mgr.viz(request.match_info["viz"])))
+        try:  # an old id (registry.ALIASES) gives the new entry
+            return _json(registry.describe(mgr.viz(registry.resolve(request.match_info["viz"]))))
         except KeyError:
             return _err(T("there is no such visualization"), 404)
 
     async def viz_file(request):
         vid = request.match_info["viz"]
+        if registry.resolve(vid) != vid:  # an old id: the file is at the new address (a view's module, its imports)
+            raise web.HTTPMovedPermanently(f"/viz/{registry.resolve(vid)}/{request.match_info['path']}"
+                                           + (f"?{request.query_string}" if request.query_string else ""))
         if vid not in registry.viz_ids():
             return _err(T("there is no such visualization"), 404)
         try:
@@ -147,7 +150,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
             return _err(T("the request body is not JSON"))
         if not isinstance(body, dict):
             return _err(T("the request body is a JSON object"))
-        vid = body.get("viz")
+        vid = registry.resolve(body.get("viz"))  # an old id (registry.ALIASES) starts the renamed world
         if vid not in registry.viz_ids():
             return _err(T("there is no such visualization"), 404)
         try:  # devices and precision for this run: the settings file, with the start form's overrides (plan P11)

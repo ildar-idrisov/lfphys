@@ -40,12 +40,12 @@ const check = (name, ok, info = {}) => { if (!ok) failed++; console.log(JSON.str
 
 // worlds heavy at their defaults: small geometries (as keyframes.mjs)
 const SMALL = {
-  v08_wave_3d: { n: 128, zmax: 10.0 },
-  v09_thomas_3d: { ngrid: 48 },
-  v11_double_slit_2d: { a: 1.5, d: 4.0, w: 1.0, L: 12.0, sigma_x: 3.0, sigma_z: 2.0, grid: "coarse", n_bohm: 100, n_tracks: 10 },
-  v12_arrival_times_2d: { grid: "coarse", n_bohm: 100, n_tracks: 10, L: 12.0, sigma_z: 2.0, sigma_x: 2.0 },
-  v15_kerr_shadow: { res: "s" },
-  v17_mie_scattering: { radius_um: 1.0, width: 0.05, n_lam: 8 },
+  u38_wave_3d: { n: 128, zmax: 10.0 },
+  r11_thomas_3d: { ngrid: 48 },
+  r12_double_slit_2d: { a: 1.5, d: 4.0, w: 1.0, L: 12.0, sigma_x: 3.0, sigma_z: 2.0, grid: "coarse", n_bohm: 100, n_tracks: 10 },
+  r13_arrival_times_2d: { grid: "coarse", n_bohm: 100, n_tracks: 10, L: 12.0, sigma_z: 2.0, sigma_x: 2.0 },
+  u42_kerr_shadow: { res: "s" },
+  u44_mie_scattering: { radius_um: 1.0, width: 0.05, n_lam: 8 },
 };
 const vizList = await get("/api/viz");
 const WORLDS = (process.argv[4] || vizList.map((v) => v.id).join(",")).split(",").filter(Boolean);
@@ -64,7 +64,7 @@ const readable = (page) => page.evaluate(() => {
 });
 // Latin words that are not English prose: symbols, units, proper names, code-ish tokens (review i18n-code, b01)
 const OK = new Set("Bohm Kerr Mie Newton Einstein Schwarzschild Lorentz Thomas Bell CHSH Young Planck Debye Airy Fresnel Brewster Fabry Perot Kretschmann Cornell PDG EHT GeV MeV keV TeV GPU CPU CSV JSON Lennard Jones Maxwell Boltzmann Reynolds Mach Kármán Gauss Bonnet Faraday Landau Rydberg Bohr Sgr M87 FLRW Hubble ΛCDM Coulomb Verlet Langevin Berendsen Andersen Nosé Hoover Poiseuille Couette Stokes Navier LBM BGK TRT MRT Ladd Zou PML FDTD TFSF Yee Courant Tsirelson GHZ Peters Mathews Johannsen Penrose Doppler Terrell Wigner Hamilton Heisenberg Schrödinger Dirac Pauli Feynman Kirchhoff Huygens Snell Rayleigh Lorenz Laguerre Hermite Bessel Hankel Legendre Runge Kutta Crank Nicolson Lindblad Born Copenhagen Everett EGKLY Upsilon chi_c0 psi eta_c PubMed arXiv NIST CODATA Sun Earth Moon Mercury Venus Mars Jupiter Saturn lfphys lfviz Shift Ctrl Delete Enter Space".split(" "));
-// words of English prose: lower-case Latin words of four letters or more, each once, outside identifiers (v01_light_travel,
+// words of English prose: lower-case Latin words of four letters or more, each once, outside identifiers (u31_light_travel,
 // lfphys.core.gravity.orbits) and outside names (capitalised: citations such as «Gralla, Lupsasca & Marrone»), and not a
 // mathematical function
 const MATH = new Set(["arctg", "arcsin", "arccos", "arctan", "sinc", "sech", "cosh", "sinh", "tanh", "erfc"]);
@@ -85,7 +85,7 @@ const newPage = async (ctx) => {
 // a number typed with a decimal comma into a live field is applied as that number, and the field shows it in the
 // language's format (review i18n-browser F1, F2: «650,5» became 6505 in a field of type=number)
 async function commaTyped(p, v, L) {
-  // the review's case (v02's wavelength, 650,5) when the field takes it; else a positive field whose value shows in full
+  // the review's case (u32's wavelength, 650,5) when the field takes it; else a positive field whose value shows in full
   const fl = v.schema.params.filter((q) => q.live && q.type === "float" && Number.isFinite(q.min) && Number.isFinite(q.max));
   let q = fl.find((x) => /lam/.test(x.id) && x.min <= 650.5 && x.max >= 650.5), whole = 650;
   if (!q) {
@@ -216,8 +216,8 @@ for (const L of LANGS) {
       const rr = await readable(p);
       judge(`run page ${viz}`, rr);
       if (L !== "en") check(`${L} run page ${viz}: the player's panels translated`, rr.text.toLowerCase().includes(tr(L, "Events").toLowerCase()) && rr.text.toLowerCase().includes(tr(L, "About the run").toLowerCase()), {});
-      if (viz === WORLDS[0] || viz === "v02_double_slit") await p.screenshot({ path: `${SHOTS}/run_${viz}_${L}.png`, timeout: 120000 });
-      if (viz === "v02_double_slit") await commaTyped(p, v, L);
+      if (viz === WORLDS[0] || viz === "u32_double_slit") await p.screenshot({ path: `${SHOTS}/run_${viz}_${L}.png`, timeout: 120000 });
+      if (viz === "u32_double_slit") await commaTyped(p, v, L);
     } catch (e) { check(`${L} run page ${viz}: opened`, false, { error: e.message }); }
     await p.close();
     await post(`/api/runs/${id}/stop`);

@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v11: the double slit in 2-D without the paraxial approximation (a wrapper over lfphys; plan P14.4, on P6 and P10).
+"""r12: the double slit in 2-D without the paraxial approximation (a wrapper over lfphys; plan P14.4, on P6 and P10).
 
 A wave packet of a massive particle runs at a plate with two slits (a wall of finite height and thickness, long along
 y: the 2-D model in the plane (x, z) is the exact reduction of that 3-D set-up) and on to a detecting screen. The run
@@ -66,7 +66,7 @@ Y_MOTION_TOL = 1e-6    # the hits' y against the guidance equation integrated in
 SCREEN_COLS = 128      # x columns of its 3-D picture (the pattern P(x) keeps the grid's resolution)
 FLUX_ORDER = 32        # the screen's current by a centred difference of this order: relative error (16!)^2/33! (k dz)^32,
                        # 3e-6 at the top of a packet's spectrum on the coarse grid (k dz = 1.4, lambda/5); order 16 lost
-                       # 1e-3 there (v12: the flux of a whole free packet came out 1e-4 too large), order 8 lost 2e-3 at
+                       # 1e-3 there (r13: the flux of a whole free packet came out 1e-4 too large), order 8 lost 2e-3 at
                        # lambda/6 (measured: the flux fell 0.16 % short)
 
 
@@ -81,8 +81,8 @@ LIVE_PLATE_HELP = T("Changes on the fly: the plate is rebuilt at the current mom
                     "and the screen.")
 # units (texts, so that a parameter's label and its unit are compared as texts by the forms)
 LAM, E0_UNIT, DEG, PM = T("λ"), T("E₀"), T("°"), T("pm")
-NO_CHANGE = T("no change")  # what set_live returns when nothing changed (v12 compares it)
-# the approximations of the header that v12's free flight replaces (compared by msgid)
+NO_CHANGE = T("no change")  # what set_live returns when nothing changed (r13 compares it)
+# the approximations of the header that r13's free flight replaces (compared by msgid)
 APPROX_SLITS = T("the slits are infinitely long along y: the Schrödinger equation is solved on the plane (x, z); the "
                  "3-D wave is the exact product ψ(x, z, t)·η(y, t) with a free Gaussian η (closed form)")
 APPROX_WALL = T("the wall is a potential barrier of finite height and thickness, with edges smoothed over a grid step")
@@ -163,10 +163,10 @@ TITLE = T("Double slit (long slits, 3-D): the exact Schrödinger equation and Bo
 
 
 class Simulation(BaseSimulation):
-    label_slits = True                 # Bohm particles are labelled by the slit they cross (v12's free flight: no plate)
+    label_slits = True                 # Bohm particles are labelled by the slit they cross (r13's free flight: no plate)
     BACK_LABEL = T("reflected by the plate")  # what is absorbed before the plate's middle plane
-    SCHEMA = SCHEMA                    # the world's schema: its live parameters are this world's (v12 has its own)
-    FIXED_LIVE: dict = {}              # live values of v11's set-up that a world built on it does not offer (v12)
+    SCHEMA = SCHEMA                    # the world's schema: its live parameters are this world's (r13 has its own)
+    FIXED_LIVE: dict = {}              # live values of r12's set-up that a world built on it does not offer (r13)
 
     def __init__(self, params, seed, emit):
         super().__init__(params, seed, emit)
@@ -269,7 +269,7 @@ class Simulation(BaseSimulation):
         self.events = []
         self._static_checks()
 
-    # --- hooks for worlds built on this one (v12) ---------------------------------------------------------------------
+    # --- hooks for worlds built on this one (r13) ---------------------------------------------------------------------
     def _geometry(self, p) -> AP.Geometry:
         return AP.Geometry(p["a"], p["d"], p["w"], p["L"], p["sigma_x"], p["sigma_z"], H_OF[p["grid"]],
                            edge=float(p["edge"]))
@@ -814,7 +814,7 @@ class Simulation(BaseSimulation):
         through = float(self.flux.sum())
         d = abs(through - scr)
         # the face's own cells lie half before, half beyond the face: what they hold is ambiguous (0 once the wave has
-        # gone; v12 stops while ~1e-4 is still near the face)
+        # gone; r13 stops while ~1e-4 is still near the face)
         face = float(rho[:, self.iL].sum())
         tol = self.R_layer * max(scr, 1e-12) + 3 * err_dt * scr + face + 1e-6
         self._check("flux_absorbed", T("Flux through the screen's face against the probability that went beyond it"),
@@ -1155,7 +1155,7 @@ class Simulation(BaseSimulation):
 
 
 VIZ = {
-    "id": "v11_double_slit_2d",
+    "id": "r12_double_slit_2d",
     "title": TITLE,
     "summary": T("A particle's packet passes two slits in a wall of finite thickness and reaches a screen; the wave is "
                  "computed on the whole plane without the paraxial approximation, the pattern accumulates as the wave "
@@ -1167,4 +1167,31 @@ VIZ = {
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "research",
+    "section": "quantum",
+    "ui": "full",
+    "teaser": T("The exact wave passes two thick slits; Bohm trajectories coloured by their slit build the "
+                "pattern."),
+    "question": T("Where does the paraxial theory of the double slit fail for real slits of finite thickness, and"
+                  " how do a path mark and the Aharonov–Bohm flux change the pattern and the Bohm trajectories?"),
+    # the prior art found in the checks of plan §3 (lfphys/sources/priorart_2026-11-12_*.md): two or three
+    # targeted searches per item, not a survey; every novelty a hypothesis (AGENTS.md rule 11)
+    "prior_art": [
+        {"ref": "Das, Deckert, Kellers, Krekels & Struyve, Ann. Phys. 479, 170054 (2025)",
+         "url": "https://arxiv.org/abs/2211.13362"},
+        {"ref": "Sanz & Borondo, Eur. Phys. J. D 44, 319 (2007)", "url": "https://arxiv.org/abs/quant-ph/0310096"},
+        {"ref": "Xiao, Wiseman et al., Sci. Adv. 5, eaav9547 (2019)", "url": "https://arxiv.org/abs/1805.02059"},
+        {"ref": "Dürr, Nonn & Rempe, Phys. Rev. Lett. 81, 5705 (1998)", "url": ""},
+        {"ref": "Macdougall, Singleton & Vagenas, Phys. Lett. A 379, 1689 (2015)",
+         "url": "https://arxiv.org/abs/1505.01510"},
+    ],
+    "status": "hypothesis",
+    "related": ["u32_double_slit", "S38"],
+    # what the public site plays (DESIGN §4.1): ~8-9 kB of gzip per frame measured
+    "recordings": [
+        {"id": "narrow", "preset": "narrow", "seconds": 20, "fps": 10,
+         "speed": None, "seed": 1, "script": [], "poster": 18},
+        {"id": "mark180", "preset": "mark180", "seconds": 20, "fps": 10,
+         "speed": None, "seed": 1, "script": [], "poster": 18},
+    ],
 }

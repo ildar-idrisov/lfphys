@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v13 view: the hydrogen atom's orbital cloud, current and slices (the shared wave-function view
+// u40 view: the hydrogen atom's orbital cloud, current and slices (the shared wave-function view
 // /static/js/orbitview.js over the 3-D environment). Drawing only: every value comes from the run.
 import { el, num } from "/static/js/ui.js";
 import { t, fmt, lang } from "/static/js/i18n.js";
@@ -10,7 +10,7 @@ import { createOrbitView } from "/static/js/orbitview.js";
 // `prepared` with the parts of the header that describe it (states, levels, period, the scene's box). The shared view
 // is started again from the world's header with those parts (its cloud, current and slices of the former state are
 // dropped; the messages that follow bring the new ones), and the phase of the period is counted from the preparation
-// (frames carry `t_prep`). Also used by v14.
+// (frames carry `t_prep`). Also used by u41.
 export function withPreparation(view) {
   let H0 = null;
   return {

@@ -1,0 +1,103 @@
+{
+ "id": "20261113-113234-v04-8069",
+ "viz": "v04_orbits",
+ "title": {
+  "$t": "Orbits and clocks: general relativity and Newton"
+ },
+ "version": "1.0",
+ "code": "1daba7e00e51",
+ "preset": "default",
+ "params": {
+  "gravity": "GR",
+  "mass_msun": 10.0,
+  "radius_km": 0.0,
+  "r0": 20.0,
+  "speed": 1.2,
+  "angle": 0.0,
+  "ghost": false,
+  "time_units": "si"
+ },
+ "seed": 1,
+ "label": "",
+ "created": "2026-11-13T11:32:34",
+ "state": "suspended",
+ "keep": false,
+ "modifications": [],
+ "started_from": "172.17.0.1",
+ "python": "3.11.17",
+ "backend_settings": {},
+ "backend_notes": [],
+ "restorable": true,
+ "last_action": 1794569558.5668166,
+ "last_action_iso": "2026-11-13T11:32:38",
+ "size": 68616,
+ "n_messages": 136,
+ "pid": 9,
+ "commands": [
+  {
+   "wall": "2026-11-13T11:32:34",
+   "from": "172.17.0.1",
+   "cmd": "play",
+   "args": {}
+  },
+  {
+   "wall": "2026-11-13T11:32:38",
+   "from": "server",
+   "cmd": "stop",
+   "args": {
+    "checkpoint": true
+   }
+  }
+ ],
+ "sim_t": 0.03844056647863612,
+ "approximations": [],
+ "scene": {
+  "$t": "Orbits and clocks: {law}, {m:.6g} M☉, {body}",
+  "a": {
+   "law": {
+    "$t": "GR"
+   },
+   "m": 10.0,
+   "body": {
+    "$t": "a black hole"
+   }
+  }
+ },
+ "worlds": [
+  {
+   "n": 1,
+   "wall": "2026-11-13T11:32:35",
+   "scene": {
+    "$t": "Orbits and clocks: {law}, {m:.6g} M☉, {body}",
+    "a": {
+     "law": {
+      "$t": "GR"
+     },
+     "m": 10.0,
+     "body": {
+      "$t": "a black hole"
+     }
+    }
+   },
+   "preset": "default",
+   "seed": 1,
+   "params": {
+    "gravity": "GR",
+    "mass_msun": 10.0,
+    "radius_km": 0.0,
+    "r0": 20.0,
+    "speed": 1.2,
+    "angle": 0.0,
+    "ghost": false,
+    "time_units": "si"
+   },
+   "modifications": [],
+   "approximations": []
+  }
+ ],
+ "playing": false,
+ "speed": 0.011620276913293521,
+ "stop_reason": "user",
+ "ended": "2026-11-13T11:32:38",
+ "returncode": 0
+}

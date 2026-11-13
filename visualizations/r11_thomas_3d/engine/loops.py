@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v09 apparatus over the engine lfphys (no physics of its own): the manoeuvres flown from rest (closed loops of
+"""r11 apparatus over the engine lfphys (no physics of its own): the manoeuvres flown from rest (closed loops of
 velocity space, planar and not), their references, and the field of three-burn loops that the volume and the slice
 planes show.
 

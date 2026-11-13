@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v01 physics: every engine route against an independent closed form or a second method."""
+"""u31 physics: every engine route against an independent closed form or a second method."""
 
 import math
 import sys
@@ -19,9 +19,9 @@ from lfphys.i18n import render  # noqa: E402
 from lfphys.laws.light import Laws  # noqa: E402
 from lfphys.theories.alternatives import newton_light  # noqa: E402
 from lfphys.theories.approx import newton as kepler  # noqa: E402
-from v01_light_travel.engine import checks  # noqa: E402
+from u31_light_travel.engine import checks  # noqa: E402
 
-V = "v01_light_travel"
+V = "u31_light_travel"
 
 
 # --- frames of the laws -------------------------------------------------------------------------------
@@ -263,7 +263,7 @@ def test_one_law_changed_from_the_defaults_works_and_two_incompatible_are_refuse
     the defaults: the world takes the other one as the nearest law that goes with it and says so (a notice, the
     scenario text, the header's parameters and modifications); two changed laws that do not go together are refused
     in Russian, saying what to change. The law set the world runs is always a valid one (Laws.validate)."""
-    from v01_light_travel.viz import _adjust_laws
+    from u31_light_travel.viz import _adjust_laws
     cases = {("sun_earth", "ether", "GR"): ("ether", "none"), ("sun_earth", "emission", "GR"): ("emission", "newton"),
              ("sun_earth", "SR", "newton"): ("emission", "newton"), ("lensing", "ether", "GR"): ("ether", "none"),
              ("measure_c", "SR", "newton"): ("SR", "none"), ("measure_c", "ether", "GR"): ("ether", "none"),
@@ -347,7 +347,7 @@ def test_R5_emission_result_not_before_B_reading_can_arrive():
                           "mc_v1": 0.0, "mc_v2": 0.0, "mc_v3": 0.0})
     w = h.sim.world
     # a source on the far side moving towards the rods at 0.5c: the flash passes B before A
-    from v01_light_travel.engine.world import Obj
+    from u31_light_travel.engine.world import Obj
     from lfphys.core.worldlines import Piecewise
     w.add(Obj("far", "Far source", "beacon", "#000",
               Piecewise.start(w.laws, 0.0, 0.0, [3.0e6, 0.0], [-0.5 * C, 0.0]), receiver=False))
@@ -513,7 +513,7 @@ def test_superluminal_path_codes_become_the_worlds_refusal(code, monkeypatch):
     from lfphys.codes import coded
     from lfphys.i18n import T
     from lfviz.errors import Refusal
-    from v01_light_travel.engine import world as W
+    from u31_light_travel.engine import world as W
 
     def refuse(*a, **k):
         raise coded(ValueError(T("reworded by the engine")), code)
@@ -528,7 +528,7 @@ def test_superluminal_path_codes_become_the_worlds_refusal(code, monkeypatch):
 def test_other_clock_rate_codes_are_not_taken_for_superluminal(monkeypatch):
     from lfphys.codes import code_of, coded
     from lfphys.i18n import T
-    from v01_light_travel.engine import world as W
+    from u31_light_travel.engine import world as W
 
     def refuse(*a, **k):
         raise coded(ValueError(T("the clock is inside the horizon")), "gr.inside_horizon")

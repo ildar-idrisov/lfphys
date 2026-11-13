@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v11 view: the 2-D double slit in the shared 3-D environment (/static/js/env3d.js). The scene: the plate with its two
+// r12 view: the 2-D double slit in the shared 3-D environment (/static/js/env3d.js). The scene: the plate with its two
 // long slits, the screen with the pattern accumulated so far, the wave |psi|^2 on the plane of the experiment (y = 0),
 // the Bohm trajectories and the particles now; next to it the window of that plane (|psi|^2, amplitude, log or
 // phase, with the trajectories over it); on the right the state of the experiment and the screen: the computed
@@ -56,7 +56,7 @@ export function createView(ctx) {
              exact: true, approximation: false, verify: { note } };
   }
   function overlay(g, map) {
-    // the plate (none in v12's free flight) and the screen's front
+    // the plate (none in r13's free flight) and the screen's front
     g.strokeStyle = "rgba(200,208,218,0.7)"; g.lineWidth = 1;
     if (G.w > 0) {
       const [xa, za] = map(G.x[0], -G.w / 2), [xb, zb] = map(G.x[1], G.w / 2);

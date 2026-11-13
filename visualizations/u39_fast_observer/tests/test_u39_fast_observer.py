@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v10: what a fast observer sees. Every preset builds, renders and passes its checks (the sky against
+"""u39: what a fast observer sees. Every preset builds, renders and passes its checks (the sky against
 T / (gamma (1 - beta cos theta')), stars against the aberration formula, emission times and Doppler factors against
 lorentz.retarded_time, Penrose's circle, the scene at rest against plain rays, the energy density of the sky); images
 use only light already emitted and the 3-D region grows only with present positions; a live boost changes the image
@@ -20,10 +20,10 @@ from harness import Harness  # noqa: E402
 from lfphys.i18n import english  # noqa: E402
 
 from lfphys.core import raytrace as RT  # noqa: E402
-from v10_fast_observer import viz as V10  # noqa: E402
-from v10_fast_observer.viz import SCHEMA  # noqa: E402
+from u39_fast_observer import viz as V10  # noqa: E402
+from u39_fast_observer.viz import SCHEMA  # noqa: E402
 
-V = "v10_fast_observer"
+V = "u39_fast_observer"
 C = V10.C
 
 

@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""The calibration of v08's window estimate (engine/apparatus.py, SAFETY), over depth (review C1): for worlds across
+"""The calibration of u38's window estimate (engine/apparatus.py, SAFETY), over depth (review C1): for worlds across
 the schema's range, both sums and pads 2-16, the true error of the field against the exact field (no FFTs) at points
 of the plane z_max and of the central planes y = 0, x = 0 at the measured depths, next to the estimate's difference
 max|U_p - U_2p| over the same planes, each against its own plane's peak. Prints a Markdown table (README, "Accuracy").
@@ -8,7 +8,7 @@ max|U_p - U_2p| over the same planes, each against its own plane's peak. Prints 
 Run in the image, from engine/ (GPU 0 makes it take a minute):
   docker run --rm --gpus '"device=0"' -v "$PWD":/lf -w /lf/visualizations \
     -e PYTHONPATH=/lf/lfphys:/lf/visualizations:/lf/visualizations/server lfphys-viz \
-    python3 v08_wave_3d/tests/window_estimate_table.py
+    python3 u38_wave_3d/tests/window_estimate_table.py
 """
 
 import argparse
@@ -52,7 +52,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--max-window", type=int, default=8192, help="largest padded window computed (points per axis)")
     a = ap.parse_args(argv)
-    from v08_wave_3d.engine import apparatus as A
+    from u38_wave_3d.engine import apparatus as A
     print("| world | sum | pad: true error / max|U_p − U_2p| over z_max and the central planes at depth | max ratio |")
     print("|---|---|---|---|")
     worst = 0.0

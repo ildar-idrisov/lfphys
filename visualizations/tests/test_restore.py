@@ -17,12 +17,12 @@ from lfviz import registry
 from lfviz.sim import Runner
 
 SMALL = {  # worlds that are heavy at their defaults: the geometries of their own tests
-    "v08_wave_3d": {"n": 128, "zmax": 10.0},
-    "v09_thomas_3d": {"ngrid": 48},
-    "v11_double_slit_2d": {"a": 1.5, "d": 4.0, "w": 1.0, "L": 12.0, "sigma_x": 3.0, "sigma_z": 2.0, "grid": "coarse",
+    "u38_wave_3d": {"n": 128, "zmax": 10.0},
+    "r11_thomas_3d": {"ngrid": 48},
+    "r12_double_slit_2d": {"a": 1.5, "d": 4.0, "w": 1.0, "L": 12.0, "sigma_x": 3.0, "sigma_z": 2.0, "grid": "coarse",
                            "n_bohm": 100, "n_tracks": 10},
-    "v12_arrival_times_2d": {"grid": "coarse", "n_bohm": 100, "n_tracks": 10, "L": 12.0, "sigma_z": 2.0, "sigma_x": 2.0},
-    "v17_mie_scattering": {"radius_um": 1.0, "width": 0.05, "n_lam": 8},
+    "r13_arrival_times_2d": {"grid": "coarse", "n_bohm": 100, "n_tracks": 10, "L": 12.0, "sigma_z": 2.0, "sigma_x": 2.0},
+    "u44_mie_scattering": {"radius_um": 1.0, "width": 0.05, "n_lam": 8},
     # playgrounds start empty: a scene with something in it (a preset's)
     "p01_gravity": dict(registry.load("p01_gravity")["schema"].presets["hole_stars"]["params"]),
     "p02_quantum": {**registry.load("p02_quantum")["schema"].presets["tunnel"]["params"], "n2": "192"},
@@ -97,8 +97,8 @@ def test_a_world_restored_by_replay_continues_as_the_original(viz_id):
 
 
 def test_restore_replays_live_changes_at_their_times():
-    """v11: slit B closed while the packet flies, then the world rebuilt: the same frames after the change."""
-    sim, run, frames, script = _world("v11_double_slit_2d")
+    """r12: slit B closed while the packet flies, then the world rebuilt: the same frames after the change."""
+    sim, run, frames, script = _world("r12_double_slit_2d")
     run._start_world()
     span = 3.0 * sim.default_speed
     run._advance(0.4 * span)
@@ -107,7 +107,7 @@ def test_restore_replays_live_changes_at_their_times():
     run._advance(span)
     run._frame(0.0)
     assert any(c.get("cmd") == "set" for c in script)
-    sim2, run2, frames2, _ = _world("v11_double_slit_2d")
+    sim2, run2, frames2, _ = _world("r12_double_slit_2d")
     run2.restore(1, list(script)[:-1], sim.t, lambda on: None)
     assert sim2.live["slit_b"] is False
     run2._frame(0.0)
@@ -118,7 +118,7 @@ def test_restore_replays_live_changes_at_their_times():
 def test_a_command_after_a_step_in_one_batch_is_replayed_at_its_time():
     """Review C1-4: a paused world handles a ``step`` and a queued ``set`` in one batch: the ``set`` is recorded at the
     time after the step with no frame between them; the restore advances to the command's recorded time first."""
-    sim, run, frames, script = _world("v11_double_slit_2d")
+    sim, run, frames, script = _world("r12_double_slit_2d")
     run._start_world()
     sp = sim.default_speed
     for t in (2 * sp, 4 * sp):
@@ -129,7 +129,7 @@ def test_a_command_after_a_step_in_one_batch_is_replayed_at_its_time():
     run._frame(0.0)
     t_end = sim.t
     assert [c for c in script if "cmd" in c][-1]["t"] == t_end
-    sim2, run2, frames2, _ = _world("v11_double_slit_2d")
+    sim2, run2, frames2, _ = _world("r12_double_slit_2d")
     run2.restore(1, list(script), t_end, lambda on: None)
     for k in (1, 2, 3):
         run._advance(t_end + k * sp)
@@ -143,8 +143,8 @@ def test_a_command_after_a_step_in_one_batch_is_replayed_at_its_time():
 def test_a_later_world_restored_keeps_the_planes_it_took_over():
     """Review C1-5: world 2 of a run took over the slice planes placed in world 1 (``adopt_view``); its header carries
     them and its restore takes them over again, so the rebuilt world 2 has the planes it had and goes on the same."""
-    viz = registry.load("v08_wave_3d")
-    params, _ = viz["schema"].resolve(None, SMALL["v08_wave_3d"])
+    viz = registry.load("u38_wave_3d")
+    params, _ = viz["schema"].resolve(None, SMALL["u38_wave_3d"])
     msgs = []
 
     def emit(meta, blobs=None):
@@ -162,7 +162,7 @@ def test_a_later_world_restored_keeps_the_planes_it_took_over():
     run.handle({"cmd": "view", "args": {"op": "plane", "id": 2, "origin": [0, 0, 5], "normal": [0.0, 1.0, 0.0]}})
     run._advance(2 * sp)
     run._frame(0.0)
-    run.handle({"cmd": "new_world", "args": {"params": dict(SMALL["v08_wave_3d"])}})
+    run.handle({"cmd": "new_world", "args": {"params": dict(SMALL["u38_wave_3d"])}})
     head = max(i for i, (m, _) in enumerate(msgs) if m.get("type") == "header")
     header = msgs[head][0]
     assert header["world"] == 2 and len(header["adopted_view"]) == 2

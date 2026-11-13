@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v07 view: the Bell test. Left: the set-up seen from the side (source, two stations with their analyzers at the
+// u37 view: the Bell test. Left: the set-up seen from the side (source, two stations with their analyzers at the
 // current angles, pairs in flight, flashes of the outcomes) and the space-time diagram of the last detected pair (its
 // emission, the setting choices with their future light cones, the detections). Right: coincidence counts, E with
 // errors, CHSH S against the bounds 2 and 2√2, and E(Δ) of the measured angle pairs against the laws' curves.

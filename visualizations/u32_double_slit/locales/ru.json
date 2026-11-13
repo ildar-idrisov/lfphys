@@ -99,6 +99,7 @@
   "Paraxial Fresnel optics with Kirchhoff boundary conditions (the field in a slit equals the incident one); compared with the exact Rayleigh–Sommerfeld integral in “Checks”.": "Параксиальная оптика Френеля с граничными условиями Кирхгофа (поле в щели равно падающему); сверка с точным интегралом Рэлея–Зоммерфельда — в «Проверках».",
   "Paraxial approximation on the screen: difference from the exact Rayleigh–Sommerfeld integral": "Параксиальное приближение на экране: отличие от точного интеграла Рэлея–Зоммерфельда",
   "Particle": "Частица",
+  "Particles land one by one; the fringes build up hit by hit and vanish under a which-path mark.": "Частицы попадают на экран по одной; полосы набираются попадание за попаданием и исчезают при метке пути.",
   "Particles one at a time through slits: a photon (energy, frequency, polarisation), an electron, a neutron, an atom, C60. A which-path observer (a qubit detector, photon scattering), marks by polarisation or spin, the quantum eraser, the Aharonov–Bohm effect, flow lines.": "Частицы по одной через щели: фотон (энергия, частота, поляризация), электрон, нейтрон, атом, C60. Наблюдатель пути (детектор-кубит, рассеяние фотона), метки поляризацией или спином, квантовый ластик, эффект Ааронова–Бома, линии тока.",
   "Particles per second (world time)": "Число частиц в секунду (время мира)",
   "Photons D: polarisers H and V on the slits, a which-path mark": "Фотоны D: поляризаторы H и V на щелях — метка пути",

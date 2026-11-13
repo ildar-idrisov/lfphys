@@ -1,4 +1,4 @@
-# v10 — What a fast observer really sees
+# u39 — What a fast observer really sees
 
 **English** | [Русский](README.ru.md)
 
@@ -111,7 +111,7 @@ live change and every 20th image). A check that fails is shown failed.
 
 ## Tests
 
-`tests/test_v10_fast_observer.py`: every preset builds, renders and passes its checks; images use only light already
+`tests/test_u39_fast_observer.py`: every preset builds, renders and passes its checks; images use only light already
 emitted (the delays are non-negative, the retarded shapes lie on the past light cone); the region grows only with
 present positions; a live boost changes the image at once on a continuous worldline (position and proper time); the
 comparison modes are labelled and the snapshot shows the contraction that what is seen does not; the observer inside a

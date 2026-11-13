@@ -1,4 +1,4 @@
-# v13 — the hydrogen atom in 3-D: orbital clouds, currents, superpositions
+# u40 — the hydrogen atom in 3-D: orbital clouds, currents, superpositions
 
 **English** | [Русский](README.ru.md)
 
@@ -20,7 +20,7 @@ at the Bohr frequency and is revealed phase by phase as the world's time runs.
 The apparatus (`engine/atoms.py`, no physics of its own): the atoms (Z, the nucleus's mass from CODATA through
 `scipy.constants`), their units, and the independent route of the checks. The shared server part of the 3-D
 wave-function worlds is `../server/lfviz/orbitals3d.py`, the shared view `../player/js/orbitview.js` (both also used by
-v14).
+u41).
 
 ## The model
 
@@ -119,7 +119,7 @@ Measured 2026-10-28 in the Docker image (CPU, OMP 2), every preset built by the 
 
 ## Tests
 
-`tests/test_v13_hydrogen3d.py`: every preset builds and passes its checks (a superposition run through one period);
+`tests/test_u40_hydrogen3d.py`: every preset builds and passes its checks (a superposition run through one period);
 the decoded cloud equals |ψ|² of the independent route at every node within half an 8-bit step; a superposition's
 phases are revealed only when the time reaches them, frames never show a later phase, the record does not grow after
 one period and the frame at 3.5 T shows phase 12; real orbitals have no current, the m = +1 state's rings turn

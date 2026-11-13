@@ -2652,6 +2652,10 @@ VIZ = {
     "version": "0.1",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "playground",
+    "ui": "full",
+    "teaser": T("Build a system of stars, planets and black holes and watch gravity move it."),
+    "related": ["u34_orbits", "S11"],
     "kind": "playground",
-    "section": "gravity",
+    "section": "astrophysics",
 }

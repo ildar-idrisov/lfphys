@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v13: the hydrogen atom in 3-D — orbital clouds (a wrapper over lfphys; plan P14.5).
+"""u40: the hydrogen atom in 3-D — orbital clouds (a wrapper over lfphys; plan P14.5).
 
 The exact bound states of a hydrogen-like atom (lfphys.core.quantum.hydrogen: R_nl by the log-scaled Laguerre
 recurrence; lfphys.core.quantum.central3d: Y_lm, real orbitals, superpositions, the probability current), with the
@@ -321,7 +321,7 @@ class Simulation(OrbitalWorld):
 
 
 VIZ = {
-    "id": "v13_hydrogen_3d",
+    "id": "u40_hydrogen_3d",
     "title": T("The hydrogen atom in 3-D: orbitals"),
     "summary": T("The exact wave functions of a hydrogen-like atom: the cloud |ψ|², the probability current, slices "
                  "at any angle with the phase; real and complex orbitals, superpositions oscillating at the Bohr "
@@ -332,4 +332,19 @@ VIZ = {
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "university",
+    "section": "atom",
+    "ui": "standard",
+    "teaser": T("The orbitals of hydrogen in 3-D: clouds, nodes, ring currents and a superposition swaying at the Bohr frequency."),
+    "courses": [
+        {"text": T("Griffiths & Schroeter, Introduction to Quantum Mechanics"), "chapters": "4"},
+        {"text": T("Young & Freedman, University Physics"), "chapters": "41"},
+        {"text": T("Sivukhin, General Course of Physics, vol. V: Atomic and Nuclear Physics"), "chapters": ""},
+    ],
+    "related": ["S42"],
+    "recordings": [
+        {"id": "3dz2", "preset": "3dz2", "seconds": 30, "fps": 20, "speed": None, "seed": 1, "script": [], "poster": 10},
+        {"id": "ring_current", "preset": "2p_m1", "seconds": 30, "fps": 20, "speed": None, "seed": 1, "script": [], "poster": 10},
+        {"id": "superposition", "preset": "super_1s2p", "seconds": 30, "fps": 20, "speed": None, "seed": 1, "script": [], "poster": 20},
+    ],
 }

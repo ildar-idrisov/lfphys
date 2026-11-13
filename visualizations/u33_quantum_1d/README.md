@@ -1,4 +1,4 @@
-# v03 — a quantum particle in one dimension
+# u33 — a quantum particle in one dimension
 
 **English** | [Русский](README.ru.md)
 
@@ -75,7 +75,7 @@ Open items: `../../STATUS.md`, section V.
 
 ## Tests
 
-`tests/test_v03_quantum.py`: every preset runs with all checks passing; the packet transmission equals the
+`tests/test_u33_quantum.py`: every preset runs with all checks passing; the packet transmission equals the
 stationary reference to 1e-4; the three interpretations give the same statistics; clicks are revealed only when reached;
 an interpretation change keeps the wave, a set-up change rebuilds it; trap levels and period; a step above the packet's energy
 runs to its transmission without the budget, every check passing (P13); sharp edges shorten the step where T is small

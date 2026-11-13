@@ -2487,7 +2487,7 @@ class Simulation(PlaygroundSimulation):
                            if rt else c["note"])
 
     def _bohm_checks(self):
-        """Bohm points measured in the run (review B6-Q1, as v11): the control's deviation and the registrations against
+        """Bohm points measured in the run (review B6-Q1, as r12): the control's deviation and the registrations against
         the absorbed probabilities."""
         from scipy import special, stats
         for oid, B in self.bohm.items():
@@ -2818,6 +2818,10 @@ VIZ = {
     "version": "0.1",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "playground",
+    "ui": "full",
+    "teaser": T("Build an experiment of wave packets, barriers, slits and fields and watch the wave."),
+    "related": [],
     "kind": "playground",
     "section": "quantum",
 }

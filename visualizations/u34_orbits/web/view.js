@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v04 view: the orbit plane (trail of the body, the other theory's ghost, apsides, the special radii of the
+// u34 view: the orbit plane (trail of the body, the other theory's ghost, apsides, the special radii of the
 // Schwarzschild geometry, the central body) and the plots r(t) and 1 − dτ/dt; panels "Orbit" and "Clocks".
 // Everything drawn is data of the run: trail samples and apsides are messages revealed when the world's time
 // reached them, the current state comes with each frame, the special radii come from the engine (header).

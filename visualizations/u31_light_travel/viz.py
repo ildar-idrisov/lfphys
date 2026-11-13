@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v01: light over large distances - finite speed, light cones, gravity, moving observers.
+"""u31: light over large distances - finite speed, light cones, gravity, moving observers.
 
 What the run computes (README.md of this folder has the model in full):
 * light from an emission event is traced under the run's laws (flat: Lorentz-aberrated straight rays; GR: null
@@ -632,7 +632,7 @@ class Simulation(BaseSimulation):
 
 
 VIZ = {
-    "id": "v01_light_travel",
+    "id": "u31_light_travel",
     "title": T("Light over large distances"),
     "summary": T("The finite speed of light from the Sun to the Earth, light cones, gravitational deflection, the "
                  "speed of light measured by moving observers, the relativity of simultaneity (the Andromeda "
@@ -642,4 +642,24 @@ VIZ = {
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "university",
+    "section": "relativity",
+    "ui": "standard",
+    "teaser": T("Light leaves the Sun and reaches the Earth about 8 minutes later; light cones, deflection, "
+                "simultaneity."),
+    "courses": [
+        {"text": T("Taylor & Wheeler, Spacetime Physics"), "chapters": ""},
+        {"text": T("Hartle, Gravity: An Introduction to Einstein's General Relativity"), "chapters": ""},
+        {"text": T("Halliday, Resnick & Walker, Fundamentals of Physics"), "chapters": "37"},
+        {"text": T("Sivukhin, General Course of Physics, vol. IV: Optics"), "chapters": "IX"},
+    ],
+    "related": ["S39"],
+    "recordings": [
+        {"id": "sun_earth", "preset": "sun_earth", "seconds": 40, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 35},
+        {"id": "measure_c", "preset": "measure_c", "seconds": 60, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 55},
+        {"id": "lensing", "preset": "lensing", "seconds": 40, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 35},
+    ],
 }

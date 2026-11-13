@@ -1,4 +1,4 @@
-# v14 — quarkonium in 3-D: wave functions of a heavy quark pair (Cornell model)
+# u41 — quarkonium in 3-D: wave functions of a heavy quark pair (Cornell model)
 
 **English** | [Русский](README.ru.md)
 
@@ -20,7 +20,7 @@ engine panel shows `theories.models.cornell` outside the core).
 | `core.geometry` | core | the slice planes |
 
 The apparatus (`engine/pair.py`): the solves per L with their box, the tables, the independent route of the checks.
-The server part and the view are shared with v13 (`../server/lfviz/orbitals3d.py`, `../player/js/orbitview.js`).
+The server part and the view are shared with u40 (`../server/lfviz/orbitals3d.py`, `../player/js/orbitview.js`).
 
 ## The model
 
@@ -34,14 +34,14 @@ The server part and the view are shared with v13 (`../server/lfviz/orbitals3d.py
   threshold (cc̄ 2P, 3S, 1D…) are the model's, not nature's.
 * **The radial functions** are numerical: the drawn ones from N = 800, the checks' from a second solve at N = 1200.
   Their accuracy is a check of every world ("Convergence: R(r) of the grid N = 800 against N = 1200": the two differ by less than half a quantisation step of the 8-bit image;
-  measured below). The cloud, the current, the time, the phases of a superposition and the slices are those of v13
+  measured below). The cloud, the current, the time, the phases of a superposition and the slices are those of u40
   (see its README, section "The model").
 * **The cloud** is the distribution of r = r_q − r_q̄; each quark's own distribution about the centre of mass is the
   same cloud halved in size.
 
 ## Live and world parameters (review UX-ui U12)
 
-As v13's (its README, section "Live and world parameters"): the state — single or superposition, n, L, m, the kind of the
+As u40's (its README, section "Live and world parameters"): the state — single or superposition, n, L, m, the kind of the
 angular part, the second state, |c₂|² and the phase of c₂ — is **live**: an ideal preparation of the new state at the
 current moment t_p (the former one discarded, no transition dynamics modelled), in the same world with its clock, record
 and slice planes; the box, cloud, current, slices and the state's checks (convergence, energy, nodes, the model's
@@ -60,7 +60,7 @@ the model); another pair is a new world in the same run. The title names the pai
 | `nodes_k` | sign changes of R(r) | n − 1 | exact |
 | `split_k` | the model's M(n, L) − M(1S) | PDG spin-averaged | information (a model against data) |
 | `slice_p` | ψ at points of plane p | the second solve × scipy's Y_lm | 3 × the largest difference of the two radial solves × \|Y\|, plus the harmonics' round-off: the radial part is bounded by construction, so this tests the angles, phases and plane geometry; the radial accuracy is `conv_k` |
-| `current`, `continuity`, `dipole`, `period`, `box` | as in v13 | | |
+| `current`, `continuity`, `dipole`, `period`, `box` | as in u40 | | |
 
 ## Measured
 
@@ -88,12 +88,12 @@ Build times: the first world of a process solves the radial equation for L = 0, 
 * A fitted, non-relativistic, spin-averaged model (above); κ and a are not parameters of QCD
   (`core.qcd` holds the running coupling).
 * Numerical radial functions (measured above); the cloud's 8-bit amplitude and the 10⁻³ outside the drawn sphere, as
-  in v13.
+  in u40.
 * Open items: `../../STATUS.md` (section V; V17 for the model's absolute scale).
 
 ## Tests
 
-`tests/test_v14_quarkonium3d.py`: every preset builds and passes its checks (the superposition through one period),
+`tests/test_u41_quarkonium3d.py`: every preset builds and passes its checks (the superposition through one period),
 is flagged as a model and shows the model–data splittings as information; the world's levels equal
 `cornell.splittings` within 0.05 MeV; the decoded cloud equals |ψ|² of the independent route within half an 8-bit
 step; bottomonium is smaller than charmonium and ⟨r⟩ grows 1S < 1P < 2S; the superposition's period is 2πħ/ΔE and it

@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v16 view: an optical vortex in the shared 3-D environment (/static/js/env3d.js): the helical surfaces of equal phase
+// u43 view: an optical vortex in the shared 3-D environment (/static/js/env3d.js): the helical surfaces of equal phase
 // (one mesh per phase of the slowed optical period, revealed by the run as its time reaches it; a frame names the phase
 // it shows), the intensity as a volume, the energy flow lines, the generator, the rotating element turned by the
 // matrix each frame carries, the detector; slice planes with intensity and phase. Panels: the beam, the angular

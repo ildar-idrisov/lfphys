@@ -1,4 +1,4 @@
-# v17 — light scattered by a drop: the rainbow, its supernumerary bows, Alexander's dark band and the glory
+# u44 — light scattered by a drop: the rainbow, its supernumerary bows, Alexander's dark band and the glory
 
 **English** | [Русский](README.ru.md)
 
@@ -142,7 +142,7 @@ Measured on the presets (CPU, 16 wavelengths, 2026-11-04, after review B8-mie):
 
 ## Tests
 
-`tests/test_v17_mie_scattering.py`: every preset builds and passes its checks (the heavy `big_drops` up to its first
+`tests/test_u44_mie_scattering.py`: every preset builds and passes its checks (the heavy `big_drops` up to its first
 wavelength); the sky is revealed one wavelength per 0.5 s of world time and the summary checks come at the end; the
 phase function, the polarisation and the Debye terms sent equal the engine's functions called directly; the binned
 phase function of a large drop lies within its bins' minimum and maximum and integrates to 4π within the forward

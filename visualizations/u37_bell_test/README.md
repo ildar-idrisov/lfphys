@@ -1,4 +1,4 @@
-# v07 — The Bell test with entangled pairs
+# u37 — The Bell test with entangled pairs
 
 **English** | [Русский](README.ru.md)
 
@@ -130,7 +130,7 @@ counts grow, so over a long run a few dozen evaluations per check remain far fro
 
 ## Tests
 
-`tests/test_v07_bell.py` (harness `../tests/harness.py`): every preset runs without errors and without a failed check;
+`tests/test_u37_bell.py` (harness `../tests/harness.py`): every preset runs without errors and without a failed check;
 quantum worlds give |S| within 5σ of 2√2 and above 2 by > 15σ (40 000 pairs); LHV worlds never exceed 2 + 5σ (three
 seeds each) and reproduce their model's S; no-signalling from the counts; the wrapper's sampling against the textbook
 closed forms at random angles for all four law × pair combinations; outcomes revealed only at arrival (t_arr = t_e +

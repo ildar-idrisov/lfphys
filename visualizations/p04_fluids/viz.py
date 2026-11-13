@@ -1954,6 +1954,10 @@ VIZ = {
     "version": "0.2",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "playground",
+    "ui": "full",
+    "teaser": T("Build a flow past bodies and wings and watch the vortices, the lift and the drag."),
+    "related": [],
     "kind": "playground",
     "section": "fluids",
 }

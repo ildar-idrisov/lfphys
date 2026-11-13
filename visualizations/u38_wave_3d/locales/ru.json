@@ -23,6 +23,7 @@
   "In the centre is the 3-D scene of this run: the screen with its aperture in the plane z = 0, the incident plane wave (given), the light behind the aperture (the computed volume; in the “whole volume” mode), the energy current (arrows; switched on in “Scene layers”) and the target at depth z_max with its computed intensity. Any part can be switched off in the “Scene layers” panel.": "В центре — 3D-сцена этого запуска: экран с отверстием в плоскости z = 0, падающая плоская волна (задана), свет за отверстием (рассчитанный объём; в режиме «весь объём»), поток энергии (стрелки; включается в «Слоях сцены») и мишень на глубине z_max с рассчитанной интенсивностью. Любую часть можно выключить в панели «Слои сцены».",
   "Incident plane wave (given)": "Падающая плоская волна (задана)",
   "Light behind the aperture (volume, preview)": "Свет за отверстием (объём, предпросмотр)",
+  "Light passes two slits of finite length: the 3-D field behind them, slices at any angle, the energy current.": "Свет проходит через две щели конечной длины: поле за ними в 3D, срезы под любым углом, поток энергии.",
   "Modelling": "Моделирование",
   "Next to the aperture (z < {z:.2g} µm): the field band-limited by the grid": "У отверстия (z < {z:.2g} мкм) — поле, ограниченное по спектру сеткой",
   "P(z) = Σ j_z dx dy over the whole window at {n:d} depths against the closed form from the spectrum: Parseval's identity of the discrete sum; it confirms the code and the normalisation, not the window or the physics (those are checked in the row above)": {

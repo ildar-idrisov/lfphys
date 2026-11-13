@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v03: the run's wave, its detectors and the three readings of the outcome."""
+"""u33: the run's wave, its detectors and the three readings of the outcome."""
 
 import sys
 from pathlib import Path
@@ -13,9 +13,9 @@ from harness import Harness  # noqa: E402
 
 from lfphys.i18n import render  # noqa: E402
 from lfviz.errors import Refusal  # noqa: E402
-from v03_quantum_1d.viz import FS, SCHEMA  # noqa: E402
+from u33_quantum_1d.viz import FS, SCHEMA  # noqa: E402
 
-V = "v03_quantum_1d"
+V = "u33_quantum_1d"
 
 
 @pytest.mark.parametrize("preset", list(SCHEMA.presets))
@@ -135,7 +135,7 @@ def test_a_step_above_the_energy_runs_to_its_transmission():
     c = h.checks()["T0"]
     assert abs(c["value"] - c["ref"]) <= 2e-3 * c["ref"]
     from lfphys.core.quantum import transfer
-    from v03_quantum_1d.viz import HBAR
+    from u33_quantum_1d.viz import HBAR
     s_ = h.sim
     ks, T, w = s_._exp[1], s_._exp[2], s_._exp[3]
     on = T > 0
@@ -154,7 +154,7 @@ def test_sharp_edges_shorten_the_step_where_the_transmission_is_small():
     0.02 nm the step needed costs too much for a live world and the world is refused at once with what to change (the
     10 nm barrier of the review alike). Negative control: without the edges' step (T_EDGE = 0) the 0.02 nm world runs
     at the old step and its T fails the check by far."""
-    import v03_quantum_1d.viz as M
+    import u33_quantum_1d.viz as M
     h = Harness(V, None, {"width": 3.0, "edge": 0.05})
     c = h.checks()["T0"]
     assert c["ok"] and abs(c["value"] - c["ref"]) <= 1e-4 * c["ref"], (c["value"], c["ref"])
@@ -181,7 +181,7 @@ def test_refusals_name_what_this_scenario_can_change():
     """P19: the cost refusal advised the packet width, the energy or the height of the potential also in the trap, where only ħω and x0
     are shown; the momentum refusal ended with «(review V3-3)»."""
     p, _ = SCHEMA.resolve(None, {"scenario": "oscillator", "hw": 1.0, "x0": 60.0})
-    import v03_quantum_1d.viz as M
+    import u33_quantum_1d.viz as M
     with pytest.raises(ValueError) as e:
         M.Simulation(p, 1, lambda *a, **k: None)
     hint = render(e.value.hint)

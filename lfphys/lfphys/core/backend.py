@@ -91,11 +91,11 @@ _CP = None
 _CPU_ONLY = [
     KernelSpec("certified.arb", T("Rigorous bounds (Arb)"), T("ball arithmetic for references and tests"), False,
                T("Arb (python-flint) exists only for the CPU; these are references, not bulk computation")),
-    KernelSpec("gravity.geodesics", T("Geodesics and orbits"), T("integration of the equations of motion (v01, v04)"),
+    KernelSpec("gravity.geodesics", T("Geodesics and orbits"), T("integration of the equations of motion (u31, u34)"),
                False, T("sequential integration of one ODE: nothing to parallelise on a GPU")),
-    KernelSpec("quantum.transfer", T("Transfer matrices"), T("stationary transmission through barriers (v03, v05)"),
+    KernelSpec("quantum.transfer", T("Transfer matrices"), T("stationary transmission through barriers (u33, u35)"),
                False, T("a loop over layers of small 2×2 matrices: the GPU overhead exceeds the gain")),
-    KernelSpec("quantum.schrodinger1d", T("Schrödinger equation in 1-D"), T("a wave packet (v03)"), False,
+    KernelSpec("quantum.schrodinger1d", T("Schrödinger equation in 1-D"), T("a wave packet (u33)"), False,
                T("a grid of ≤ 32768 points and absorption applied at every step: slower on a GPU (2-D and 3-D: the "
                  "quantum.split_operator kernel, with a GPU)")),
 ]

@@ -184,7 +184,7 @@ PLANCK2018_BESTFIT = {
 }
 
 # --- Water and the Sun (appended 2026-11-04 for plan items P1 and P14.8, Mie scattering by water drops; used by the
-# tests tests/test_mie_water.py and the visualization v17_mie_scattering). Verbatim quotes in
+# tests tests/test_mie_water.py and the visualization u44_mie_scattering). Verbatim quotes in
 # sources/verification_2026-11-04_p1_mie.md.
 # IAPWS R9-97 (Erlangen, September 1997), "Release on the Refractive Index of Ordinary Water Substance as a Function
 # of Wavelength, Temperature and Pressure", Eq. (1) with the coefficients of its Table 1:

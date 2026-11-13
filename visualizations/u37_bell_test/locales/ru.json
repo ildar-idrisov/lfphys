@@ -28,6 +28,7 @@
   "Counters": "Счётчики",
   "Distance from the source to a station L, m": "Расстояние от источника до станции L, м",
   "E({x},{y}) at α_A = {a}°, α_B = {b}°": "E({x},{y}) при α_A = {a}°, α_B = {b}°",
+  "Entangled pairs reach two distant stations; the CHSH parameter exceeds 2, the bound of any local theory.": "Запутанные пары приходят на две удалённые станции; параметр CHSH превышает 2 — предел любой локальной теории.",
   "Entanglement of the state: Wootters' concurrence": "Запутанность состояния: согласованность (concurrence) Вуттерса",
   "Entropy of one particle of the pair (bits)": "Энтропия одной частицы пары (бит)",
   "Expectation of the LHV model and the Tsirelson bound 2√2 (for information)": "Предсказание модели ЛСП и граница Цирельсона 2√2 (для сведения)",

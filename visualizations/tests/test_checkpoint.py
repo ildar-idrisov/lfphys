@@ -132,7 +132,7 @@ def test_a_checkpoint_followed_by_more_record_is_continued_by_repeating_only_the
     """The worker crashed after its periodic checkpoint: the record holds frames and a live change after it. The new
     worker loads the checkpoint, repeats only that tail (silently) and goes on as the original does."""
     msgs = []
-    sim, run = _world("v11_double_slit_2d", msgs)
+    sim, run = _world("r12_double_slit_2d", msgs)
     run._start_world()
     _play(run, _steps(sim, 0, 8))
     file = _checkpoint(run, tmp_path)
@@ -155,7 +155,7 @@ def test_a_checkpoint_followed_by_more_record_is_continued_by_repeating_only_the
 
 def test_a_world_without_changes_writes_no_new_checkpoint_and_files_are_kept_to_two(tmp_path):
     msgs = []
-    sim, run = _world("v01_light_travel", msgs)
+    sim, run = _world("u31_light_travel", msgs)
     run._start_world()
     run.ckpt_dir = tmp_path / "ck"
     for k in range(4):
@@ -177,9 +177,9 @@ def test_a_checkpoint_of_another_version_is_refused():
 
 def test_negative_control_a_state_without_its_random_generator_continues_differently(tmp_path):
     """The comparison above can fail: the same checkpoint with the world's random generator re-seeded (a state that
-    lost one piece) goes on differently (v02: the particles drawn after it)."""
+    lost one piece) goes on differently (u32: the particles drawn after it)."""
     msgs = []
-    sim, run = _world("v02_double_slit", msgs)
+    sim, run = _world("u32_double_slit", msgs)
     run._start_world()
     _play(run, _steps(sim, 0, 12))
     file = _checkpoint(run, tmp_path)
@@ -201,26 +201,26 @@ def test_negative_control_a_state_without_its_random_generator_continues_differe
 # removed after); then step and next_event, and a new world on each side of the checkpoint (its header carries its
 # number)
 PLAN = {
-    "v01_light_travel": (None, None, ("flash", {"obj": "earth"}), False),
-    # v02: the change after the checkpoint turns on the vector screen (a perfectly conducting screen, B8): the continued
-    # world computes it in the new process (a checkpoint of a vector world: v02's own tests)
-    "v02_double_slit": ({"lam_nm": 500.0}, {"screen_model": "pec", "screen_t_um": 0.2, "a_um": 1.0, "d_um": 5.0,
+    "u31_light_travel": (None, None, ("flash", {"obj": "earth"}), False),
+    # u32: the change after the checkpoint turns on the vector screen (a perfectly conducting screen, B8): the continued
+    # world computes it in the new process (a checkpoint of a vector world: u32's own tests)
+    "u32_double_slit": ({"lam_nm": 500.0}, {"screen_model": "pec", "screen_t_um": 0.2, "a_um": 1.0, "d_um": 5.0,
                                             "L2_m": 0.02}, ("clear", {}), False),
-    "v03_quantum_1d": ({"energy": 1.2}, {"sigma": 6.0}, ("clear", {}), False),
-    "v04_orbits": ({"speed": 1.0}, {"angle": 10.0}, ("boost", {"dv": 0.05}), False),
-    "v05_optics_bench": ({"theta_deg": 30.0}, {"pol": "s"}, ("emit_one", {}), False),
-    "v06_qcd": ({"mu": 100.0}, {"kappa": 0.4}, None, False),
-    "v07_bell_test": ({"b_deg": 30.0}, {"switch": "fixed"}, ("clear", {}), False),
-    "v08_wave_3d": (None, None, None, True),
-    "v09_thomas_3d": (None, None, None, True),
-    "v10_fast_observer": ({"obs_beta": 0.5}, {"yaw": 30.0}, None, False),
-    "v11_double_slit_2d": ({"slit_b": False}, {"mark_deg": 90.0}, None, False),
-    "v12_arrival_times_2d": ({"slit_b": False}, {"slit_a": False}, None, False),
-    "v13_hydrogen_3d": (None, None, None, True),
-    "v14_quarkonium_3d": (None, None, None, True),
-    "v15_kerr_shadow": ({"incl": 40.0}, {"retro": True}, None, False),
-    "v16_optical_vortices": ({"f_rot": 6.0}, {"f_rot": 3.0}, None, True),
-    "v17_mie_scattering": ({"lam_nm": 480.0}, {"light": "mono"}, None, True),
+    "u33_quantum_1d": ({"energy": 1.2}, {"sigma": 6.0}, ("clear", {}), False),
+    "u34_orbits": ({"speed": 1.0}, {"angle": 10.0}, ("boost", {"dv": 0.05}), False),
+    "u35_optics_bench": ({"theta_deg": 30.0}, {"pol": "s"}, ("emit_one", {}), False),
+    "u36_qcd": ({"mu": 100.0}, {"kappa": 0.4}, None, False),
+    "u37_bell_test": ({"b_deg": 30.0}, {"switch": "fixed"}, ("clear", {}), False),
+    "u38_wave_3d": (None, None, None, True),
+    "r11_thomas_3d": (None, None, None, True),
+    "u39_fast_observer": ({"obs_beta": 0.5}, {"yaw": 30.0}, None, False),
+    "r12_double_slit_2d": ({"slit_b": False}, {"mark_deg": 90.0}, None, False),
+    "r13_arrival_times_2d": ({"slit_b": False}, {"slit_a": False}, None, False),
+    "u40_hydrogen_3d": (None, None, None, True),
+    "u41_quarkonium_3d": (None, None, None, True),
+    "u42_kerr_shadow": ({"incl": 40.0}, {"retro": True}, None, False),
+    "u43_optical_vortices": ({"f_rot": 6.0}, {"f_rot": 3.0}, None, True),
+    "u44_mie_scattering": ({"lam_nm": 480.0}, {"light": "mono"}, None, True),
     "p01_gravity": (None, None, None, False),
     "p02_quantum": (None, None, ("measure", {"particle": "o3", "sigma": 2.5}), False),
     "p04_fluids": (None, None, None, False),
@@ -341,7 +341,7 @@ from lfviz import checkpoint
 from test_checkpoint import _play, _steps, _world, _checkpoint
 from pathlib import Path
 msgs = []
-sim, run = _world("v12_arrival_times_2d", msgs)
+sim, run = _world("r13_arrival_times_2d", msgs)
 run._start_world()
 _play(run, _steps(sim, 0, 3))
 _checkpoint(run, Path({tmp!r}))
@@ -351,7 +351,7 @@ print(json.dumps({{"files": ck["files"], "code": ck["code"], "env": ck["env"]}})
 
 
 def test_a_checkpoint_records_the_code_it_ran_and_its_runtime(tmp_path):
-    """Review CK-5: the files of the modules a world's worker runs (v12's include v11's; not an engine module it never
+    """Review CK-5: the files of the modules a world's worker runs (r13's include r12's; not an engine module it never
     imports, not the view's JS), their hash and the runtime; an edit of one of them changes the hash. Run in a fresh
     process, as a worker is."""
     r = subprocess.run([sys.executable, "-c", FILES_CHILD.format(paths=repr(list(sys.path)), tmp=str(tmp_path))],
@@ -359,7 +359,7 @@ def test_a_checkpoint_records_the_code_it_ran_and_its_runtime(tmp_path):
     assert r.returncode == 0, r.stderr[-4000:]
     ck = json.loads(r.stdout.strip().splitlines()[-1])
     files = ck["files"]
-    assert "visualizations/v11_double_slit_2d/viz.py" in files and "visualizations/server/lfviz/sim.py" in files
+    assert "visualizations/r12_double_slit_2d/viz.py" in files and "visualizations/server/lfviz/sim.py" in files
     assert not any(f.endswith(".js") for f in files) and "lfphys/lfphys/core/quantum/open_systems.py" not in files
     assert ck["env"] == checkpoint.runtime_env() and ck["env"]["magic"]
     root = Path(__file__).resolve().parents[2]
@@ -369,9 +369,9 @@ def test_a_checkpoint_records_the_code_it_ran_and_its_runtime(tmp_path):
         (copy / f).parent.mkdir(parents=True, exist_ok=True)
         (copy / f).write_bytes((root / f).read_bytes())
     assert checkpoint.files_hash(copy, files) == ck["code"]
-    (copy / "visualizations/v11_double_slit_2d/viz.py").write_text("# edited\\n")
+    (copy / "visualizations/r12_double_slit_2d/viz.py").write_text("# edited\\n")
     assert checkpoint.files_hash(copy, files) != ck["code"]
-    (copy / "visualizations/v11_double_slit_2d/viz.py").unlink()
+    (copy / "visualizations/r12_double_slit_2d/viz.py").unlink()
     assert checkpoint.files_hash(copy, files) is None
     with pytest.raises(ValueError):
         checkpoint.write(tmp_path, "../escape.pkl", b"x")
@@ -380,7 +380,7 @@ def test_a_checkpoint_records_the_code_it_ran_and_its_runtime(tmp_path):
 def test_shared_buffers_in_a_worlds_state_are_known():
     """Review CK-15: pickling makes two attributes that view one buffer two arrays. No world writes into such a pair in
     place today (the continuation tests above); this lists the pairs, so that a new one is looked at."""
-    known = {"v11_double_slit_2d", "v12_arrival_times_2d"}
+    known = {"r12_double_slit_2d", "r13_arrival_times_2d"}
     for viz_id in registry.viz_ids():
         sim, run = _world(viz_id, [])
         arrays = []

@@ -1,4 +1,4 @@
-# v05 — Optical bench: boundaries between media and coatings
+# u35 — Optical bench: boundaries between media and coatings
 
 **English** | [Русский](README.ru.md)
 
@@ -13,7 +13,7 @@ the engine; this folder holds orchestration (the set-up, the photon time line, t
 | engine module | layer | used for |
 |---|---|---|
 | `core.optics.interfaces` | core | `stack`: r, t, R, T, A of every structure (transfer matrices); `field_profile`: \|E\|² of s light; `brewster`, `critical`: closed-form references |
-| `core.optics.thin_films` | core | closed forms for the checks (added for v05, tested in `lfphys/tests/test_thin_films.py`) |
+| `core.optics.thin_films` | core | closed forms for the checks (added for u35, tested in `lfphys/tests/test_thin_films.py`) |
 | `core.constants` | core | the speed of light c (flight times) |
 | `theories.approx.ray_optics` | theories (approximation) | `snell`: ray directions for the drawing only |
 
@@ -180,7 +180,7 @@ interference, Airy formulae); Byrnes, arXiv:1603.02720 (transfer-matrix formulat
 
 ## Tests
 
-`tests/test_v05_optics.py` (Docker, see `../README.md`): every preset runs without errors and without a failed check;
+`tests/test_u35_optics.py` (Docker, see `../README.md`): every preset runs without errors and without a failed check;
 the exact critical angle and 60 angles a few ulp around it are accepted with no failed check (V5-1/V5-2); a change
 that fails inside (an injected exception after the new segment was built) leaves the world, the counters and the
 random generator exactly as they were and emits only the refusal and the live values in force (V5-1); the `evan`

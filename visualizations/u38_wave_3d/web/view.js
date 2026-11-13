@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v08 view: the 3-D scene of the run (the screen with its aperture, the incident wave, the light behind the screen,
+// u38 view: the 3-D scene of the run (the screen with its aperture, the incident wave, the light behind the screen,
 // the energy current, the target) and up to three slice planes with their windows (the shared 3-D environment:
 // /static/js/env3d.js). Every element can be switched off; planes are placed, moved and turned by hand (gizmo) or by
 // parameters; each slice is computed by the run for its plane (view command "plane").

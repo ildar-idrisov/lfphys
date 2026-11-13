@@ -24,7 +24,7 @@ Restoring a world (owner, 2026-10-28: a run can always be continued): every comm
 applied. A world is rebuilt from its parameters and seed by repeating, in the order of its record, every advance of
 the frame clock (each recorded frame's time) and every command (``Runner.restore``), with nothing emitted, and
 continues from the end of its record. Repeating the same advances makes the rebuilt world the same even where its
-random draws depend on how time was split into frames (the particle sources of v02, v05, v07); tested for every
+random draws depend on how time was split into frames (the particle sources of u32, u35, u37); tested for every
 visualization in ``tests/test_restore.py``.
 
 Continuing from the last state (owner, 2026-10-29): the runner writes checkpoints of its world's whole state
@@ -211,11 +211,11 @@ class Runner:
         if clash:  # review B4-1: a key of the runner silently overwrote a world's own field
             raise ValueError(T("the world's frame holds keys of the player {keys}: rename them in the world's frame()",
                                keys=str(sorted(clash))))
-        self.ckpt_dirty = True  # a world's frame() may change its state (v10 counts frames between its images)
+        self.ckpt_dirty = True  # a world's frame() may change its state (u39 counts frames between its images)
         meta["type"] = "frame"
         meta["t"] = self.sim.t
         meta["cpu_ms"] = round(cpu_ms, 2)
-        meta["speed_actual"] = self.rate()  # not "rate": worlds use that key (v04: the body's dτ/dt)
+        meta["speed_actual"] = self.rate()  # not "rate": worlds use that key (u34: the body's dτ/dt)
         # the computation could not keep up: the advance stopped short in this frame, or (a single step longer than a
         # frame) the measured speed is below the chosen one (review B4-11)
         meta["lag"] = bool(self.lag or (self.playing and meta["speed_actual"] is not None
@@ -322,7 +322,7 @@ class Runner:
             if te is None:
                 self.emit({"type": "notice", "t": self.sim.t, "text": T("No scheduled events ahead")})
             else:
-                if te <= self.sim.t:  # an event at the current instant (review v01 R21): reveal it in place
+                if te <= self.sim.t:  # an event at the current instant (review u31 R21): reveal it in place
                     self.sim.advance(self.sim.t)
                 else:
                     self._advance(te)
@@ -418,7 +418,7 @@ class Runner:
         """Show the first world (``_start_world``); when it fails the owner reads why ("World not created: …") and the
         worker ends with the reason "world not built": the server keeps such a run as failed, never resumable (review
         UX-params P3: the worker died and every ⏺ repeated the failure). Its messages are not held: a world that takes
-        long to show itself (v08's slices on the CPU) is drawn as it comes. False when it failed."""
+        long to show itself (u38's slices on the CPU) is drawn as it comes. False when it failed."""
         try:
             self._start_world()
         except Exception as e:  # noqa: BLE001 - reported to the owner, the worker ends

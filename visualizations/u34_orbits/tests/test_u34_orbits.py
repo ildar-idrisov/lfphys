@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v04 orbits: the run as a whole (all presets, checks, causality, live changes, actions, worlds)."""
+"""u34 orbits: the run as a whole (all presets, checks, causality, live changes, actions, worlds)."""
 
 import math
 import sys
@@ -13,9 +13,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
 from lfphys.i18n import render  # noqa: E402
-from v04_orbits.viz import MERCURY_GR_ARCSEC_PER_CENTURY, SCHEMA  # noqa: E402
+from u34_orbits.viz import MERCURY_GR_ARCSEC_PER_CENTURY, SCHEMA  # noqa: E402
 
-V = "v04_orbits"
+V = "u34_orbits"
 
 
 def _scale(h):

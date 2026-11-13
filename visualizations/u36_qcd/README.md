@@ -1,4 +1,4 @@
-# v06 — QCD: asymptotic freedom and quarkonium
+# u36 — QCD: asymptotic freedom and quarkonium
 
 **English** | [Русский](README.ru.md)
 
@@ -35,4 +35,4 @@ model with other parameters than the fit; P23), and the preset "What if α_s(M_Z
 Limits: perturbative running below ~1.5 GeV is not reliable (the curve starts at 1 GeV for orientation); no lattice
 QCD; quarkonium without spin-dependent forces, relativistic corrections or coupled channels.
 
-Tests: `tests/test_v06_qcd.py`.
+Tests: `tests/test_u36_qcd.py`.

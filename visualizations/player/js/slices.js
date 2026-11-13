@@ -264,7 +264,7 @@ export function createSliceWindows({ onSelect, onHighlight, onRemove } = {}) {
     g.fillText(H_.ax.name, Math.max(left, left + pw - g.measureText(H_.ax.name).width), top + ph + 24);
     g.fillText(V_.ax.name, left + 2, top + 10);
     w.geom = { left, top, pw, ph, longi, m, ns, nt, flipH, flipV, units, names };
-    // a world's overlay in the plane's coordinates (s along u, t along v), e.g. computed trajectories (v11)
+    // a world's overlay in the plane's coordinates (s along u, t along v), e.g. computed trajectories (r12)
     if (w.overlay && !w.preview) {
       const at = (p, a) => (p - a.p0) / (a.p1 - a.p0);
       const map = (s, tt) => {

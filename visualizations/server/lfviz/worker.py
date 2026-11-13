@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
 """The process that runs one simulation (spawned by the server, one per run).
 
-    python -m lfviz.worker --viz v01_light_travel
+    python -m lfviz.worker --viz u31_light_travel
 
 stdin : first line - JSON {"params": {...}, "seed": int, "preset": str|null[, "seed0": int, "checkpoints": {"dir":
         path, "code": hash}, "restore": {"world": n, "commands": [{frame: t} | {t, cmd, args}], "t_end": t,
@@ -92,7 +92,7 @@ class Output:
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Run one visualization simulation over stdin/stdout.")
-    ap.add_argument("--viz", required=True, help="visualization id, e.g. v01_light_travel")
+    ap.add_argument("--viz", required=True, help="visualization id, e.g. u31_light_travel")
     ap.add_argument("--fps", type=float, default=20.0, help="frames per second while playing")
     a = ap.parse_args(argv)
 

@@ -283,7 +283,7 @@ async def _buffer(tmp_path, monkeypatch):
             r = await cl.post("/api/runs", json={"viz": "p99_toy", "params": {"scene": bad}})
             assert r.status == 400, (bad, r.status)
         # a demonstration has no window
-        did = (await (await cl.post("/api/runs", json={"viz": "v01_light_travel", "preset": "measure_c"})).json())["id"]
+        did = (await (await cl.post("/api/runs", json={"viz": "u31_light_travel", "preset": "measure_c"})).json())["id"]
         assert (await cl.post(f"/api/runs/{did}/record", json={"on": True})).status == 409
         await cl.post(f"/api/runs/{did}/stop", json={})
         # the joined record for download: magic, the header, then the kept messages

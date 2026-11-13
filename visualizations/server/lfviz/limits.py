@@ -92,7 +92,7 @@ def default_budget(max_workers: int) -> int:
     """A worker's budget when the server is not told one: 60 % of the memory the server may use (its container's
     limit, else the host's), at least 1 GB and at most 8 GB. One runaway world then never takes the server's or the
     host's memory (the container's own limit stays the bound of all workers together); measured peaks of every world's
-    defaults and presets on the CPU are below 2 GB (v08: 1.7 GB). ``max_workers`` is kept for the signature: the share
+    defaults and presets on the CPU are below 2 GB (u38: 1.7 GB). ``max_workers`` is kept for the signature: the share
     does not shrink with it, so that one heavy world still fits when the others are light."""
     total = _cgroup_limit() or _mem_total() or 8 * GIB
     return int(min(8 * GIB, max(1 * GIB, 0.6 * total)))

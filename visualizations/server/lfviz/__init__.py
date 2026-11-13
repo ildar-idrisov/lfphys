@@ -8,7 +8,7 @@ Layout (see ../../RULES.md for the rules and the API):
 * ``params``    - parameter schema (world parameters vs live actions, standard-physics markers);
 * ``sim``       - base class of a simulation and the real-time runner (transport, frames);
 * ``worker``    - the process that runs one simulation and talks to the server over stdin/stdout;
-* ``registry``  - discovery of visualization folders ``visualizations/vNN_*``;
+* ``registry``  - discovery of visualization folders ``visualizations/{s,u,r,p}NN_*`` (their audiences; the old ``vNN_*`` ids are aliases);
 * ``runs``      - run manager: spawn, record, broadcast, limits;
 * ``app``       - HTTP + WebSocket API and static files.
 """

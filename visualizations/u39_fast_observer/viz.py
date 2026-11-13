@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v10: what a fast observer really sees (a wrapper over lfphys; plan P14.2, on the plan's P9, P10, P11).
+"""u39: what a fast observer really sees (a wrapper over lfphys; plan P14.2, on the plan's P9, P10, P11).
 
 A 3-D scene of self-luminous bodies (black bodies with patterns: a cube, spheres, a train, towers, a floor) and
 optionally a black-body sky and stars, seen by an observer who may move. The run computes the observer's image by
@@ -718,7 +718,7 @@ class Simulation(BaseSimulation):
 
 
 VIZ = {
-    "id": "v10_fast_observer",
+    "id": "u39_fast_observer",
     "title": T("What a fast observer sees"),
     "summary": T("The image of a 3-D scene for an observer or bodies at speeds close to c: ray tracing with the light's "
                  "travel time — aberration, the Terrell–Penrose rotation (the ball stays a circle), Doppler colours and "
@@ -728,4 +728,17 @@ VIZ = {
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "university",
+    "section": "relativity",
+    "ui": "standard",
+    "teaser": T("A ball flying past at 0.9 c still looks round: the cube turns, colours shift, the view crowds forward."),
+    "courses": [
+        {"text": T("Terrell (1959) and Penrose (1959): the invisibility of the Lorentz contraction"), "chapters": ""},
+        {"text": T("The Feynman Lectures on Physics, vol. I"), "chapters": "34"},
+    ],
+    "related": ["S39"],
+    "recordings": [
+        {"id": "terrell", "preset": "terrell", "seconds": 25, "fps": 10, "speed": None, "seed": 1, "script": [], "poster": 12},
+        {"id": "city", "preset": "city", "seconds": 25, "fps": 10, "speed": None, "seed": 1, "script": [], "poster": 15},
+    ],
 }

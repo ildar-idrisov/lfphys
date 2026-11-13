@@ -2,6 +2,7 @@
  "({x:.3f}, {y:.3f}, {z:.3f})": "({x:.3f}; {y:.3f}; {z:.3f})",
  "({x}, {y}, {z})": "({x}; {y}; {z})",
  "0 (at rest)": "0 (в покое)",
+ "A ball flying past at 0.9 c still looks round: the cube turns, colours shift, the view crowds forward.": "Шар, пролетающий со скоростью 0,9 c, по-прежнему выглядит круглым: куб поворачивается, цвета смещаются, картина сгущается вперёд.",
  "A change is a boost of a point observer at the current moment: the same light, other directions and frequencies": "Изменение — буст точечного наблюдателя в текущий момент: тот же свет, другие направления и частоты",
  "A cube and a ball fly past at β = {b}: Terrell rotation, the ball stays a circle": "Пролёт куба и шара при β = {b}: поворот Террелла, шар остаётся кругом",
  "A fast body does not look flattened: the ball stays a circle (Penrose), the cube looks turned — its rear face is seen (Terrell). Approaching, a body looks farther and bluer; receding, nearer and redder. A fast observer sees the world crowded forward, blue and bright ahead.": "Быстрое тело не выглядит сплюснутым: шар остаётся кругом (Пенроуз), куб выглядит повёрнутым — видна его задняя грань (Террелл). Приближаясь, тело выглядит дальше и синее, удаляясь — ближе и краснее. Быстрый наблюдатель видит мир стянутым вперёд, впереди — синим и ярким.",

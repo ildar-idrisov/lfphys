@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v08: the 3-D scene (owner, 2026-10-27), slice planes of any orientation placed by view commands (they stay where
+"""u38: the 3-D scene (owner, 2026-10-27), slice planes of any orientation placed by view commands (they stay where
 they are put; moving by themselves is an option), the modelling modes, the flagged approximation, the measured
 accuracy (the window and every slice against the exact field), the energy current, fp32 drawing, the devices."""
 
@@ -17,10 +17,10 @@ from harness import Harness  # noqa: E402
 from lfphys.core import backend  # noqa: E402
 from lfphys.core import geometry as G  # noqa: E402
 from lfphys.i18n import T, english  # noqa: E402
-from v08_wave_3d.engine import apparatus as A  # noqa: E402
-from v08_wave_3d.viz import SCHEMA, Simulation  # noqa: E402
+from u38_wave_3d.engine import apparatus as A  # noqa: E402
+from u38_wave_3d.viz import SCHEMA, Simulation  # noqa: E402
 
-V = "v08_wave_3d"
+V = "u38_wave_3d"
 SMALL = {"n": 128, "zmax": 10.0}  # a world that builds in seconds on one CPU thread
 
 

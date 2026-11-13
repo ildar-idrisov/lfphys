@@ -41,6 +41,7 @@
   "L_z (orbital)": "L_z (орбитальный)",
   "Length of the region, in z_R": "Длина области, в z_R",
   "Light at a frequency of ~{f} Hz is shown slowed down: one optical period takes this much world time.": "Свет с частотой ~{f} Гц показан замедленно: один оптический период длится столько времени мира.",
+  "Light with helical fronts: twisted energy flow, angular momentum per photon, and the beat from a rotating disc.": "Свет со спиральными фронтами: закрученный поток энергии, угловой момент на фотон и биения от вращающегося диска.",
   "Linear polarisation, l = 1: J_z = l on average, zero spin": "Линейная поляризация, l = 1: J_z = l в среднем, спин нулевой",
   "Lines of the orbital (canonical) current p_o": "Линии орбитального (канонического) тока p_o",
   "Longitudinal field max|E_z| / max|E| (the plane z_c)": "Продольное поле max|E_z| / max|E| (плоскость z_c)",

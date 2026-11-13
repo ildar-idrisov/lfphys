@@ -1,4 +1,4 @@
-# v09 — Thomas–Wigner precession in 3-D
+# r11 — Thomas–Wigner precession in 3-D
 
 **English** | [Русский](README.ru.md)
 
@@ -108,7 +108,7 @@ The loop's plane is set by its normal (θ, φ); everything is checked in any ori
 
 ## Tests
 
-`tests/test_v09_thomas3d.py`: every preset builds, closes and passes its checks; nothing about the result appears
+`tests/test_r11_thomas3d.py`: every preset builds, closes and passes its checks; nothing about the result appears
 before the closure and the path is revealed only up to the run's time; planar loops (Thomas's, the circle, the
 pentagon) in three orientations against their closed forms in SO(3) and SU(2); the edges of the schema (ρ = 3, six
 repetitions, 24 sides, χ = 80°) and the smallest (ρ = 0.05): refused with the reason or passing, the measured
@@ -122,6 +122,6 @@ Thomas loop in ordinary space is uniform circular motion (speed tanh ρ, radius 
 the field and three slices against Gauss–Bonnet, the ratio below 1; planes kept in a new world, auto-shifted slices coarse, none
 in ordinary space; frames carry an orthonormal gyroscope frame. The engine's own tests: `../../lfphys/tests/test_lorentz_3d.py`,
 `test_spin_transport.py`. The page: headless Chromium (WebGL by SwiftShader), presets thomas, crown, spin_flip, lab and
-v08's gauss after the shared environment was factored out (2026-10-27, no page errors).
+u38's gauss after the shared environment was factored out (2026-10-27, no page errors).
 
 Open items: `../../STATUS.md`.

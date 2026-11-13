@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v17's apparatus over lfphys: the drop's index at a wavelength, the wavelengths of sunlight and their weights, the
+"""u44's apparatus over lfphys: the drop's index at a wavelength, the wavelengths of sunlight and their weights, the
 colour of the accumulated spectra (lfphys.tools.colour, a display tool), the polar surface and the ray fans as drawable
 geometry. The physics (the Mie and Debye series, the size average, Planck's law, water's index) is the engine's."""
 

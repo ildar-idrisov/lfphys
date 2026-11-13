@@ -2692,6 +2692,10 @@ VIZ = {
     "version": "0.2",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "playground",
+    "ui": "full",
+    "teaser": T("Build matter from atoms and watch temperature, pressure and phases arise."),
+    "related": [],
     "kind": "playground",
-    "section": "molecules",
+    "section": "heat",
 }

@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v06: the running coupling and the quarkonium model, through the run."""
+"""u36: the running coupling and the quarkonium model, through the run."""
 
 import sys
 from pathlib import Path
@@ -11,9 +11,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from harness import Harness  # noqa: E402
 
 from lfphys.i18n import render  # noqa: E402
-from v06_qcd.viz import SCHEMA  # noqa: E402
+from u36_qcd.viz import SCHEMA  # noqa: E402
 
-V = "v06_qcd"
+V = "u36_qcd"
 
 
 @pytest.mark.parametrize("preset", [p for p in SCHEMA.presets if p != "strong"])
@@ -151,7 +151,7 @@ def test_landau_pole_code_gives_nan_in_the_world():
     from lfphys.codes import code_of
     from lfphys.core.qcd import running
     from lfphys.core import data
-    from v06_qcd.viz import THRESH
+    from u36_qcd.viz import THRESH
     h = Harness(V, "standard")
     with pytest.raises(ValueError) as e:
         running.alpha_s(1.0, 0.3, data.M_Z[0], THRESH, 1)

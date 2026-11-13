@@ -1,4 +1,4 @@
-# v08 — a wave in 3-D: diffraction by an aperture, in the 3-D environment
+# u38 — a wave in 3-D: diffraction by an aperture, in the 3-D environment
 
 **English** | [Русский](README.ru.md)
 
@@ -91,7 +91,7 @@ normal with axis presets (as in scientific visualization tools), colour-coded sl
   peak, the true error was at most 1.12 × the difference over twelve worlds of the schema's range (presets,
   z_max = 80 µm, a = 0.2 µm at λ = 0.3 µm, circles of a = 1–5 µm, squares, slits, Gaussians of waist λ), both sums,
   pads 2–16 (`tests/window_estimate_table.py`, 2026-10-27, GPU 0;
-  `tests/test_v08_wave3d.py::test_window_estimate_bounds_the_true_error`, `::test_the_circle_preset_is_within_its_estimate_at_every_depth`).
+  `tests/test_u38_wave3d.py::test_window_estimate_bounds_the_true_error`, `::test_the_circle_preset_is_within_its_estimate_at_every_depth`).
   Neither sum is better everywhere, hence both are measured. A plane whose horizontal axis is not along x or y turns
   the source (the copies' lattice turns with it): the window is measured again for the turned source in the same way,
   once per azimuth, and widened if needed; the window used is stated under the slice.
@@ -130,7 +130,7 @@ normal with axis presets (as in scientific visualization tools), colour-coded sl
 
 ## Tests
 
-`tests/test_v08_wave3d.py` (Docker; with `--gpus '"device=0"'` the GPU test runs too): every preset builds with all
+`tests/test_u38_wave3d.py` (Docker; with `--gpus '"device=0"'` the GPU test runs too): every preset builds with all
 checks passing, its scene and an exact reference; planes stay where they are put and move only with the auto-shift; a
 tilted plane moves uniformly with the auto-shift and a centre given outside the region keeps its plane; auto-moving slices are coarse
 and rate-limited, and the full slice returns; planes carry over to a new world and "default" restores the

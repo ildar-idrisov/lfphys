@@ -1,4 +1,4 @@
-# v11 — the double slit with long slits, in 3-D: the exact Schrödinger equation and Bohm trajectories
+# r12 — the double slit with long slits, in 3-D: the exact Schrödinger equation and Bohm trajectories
 
 **English** | [Русский](README.ru.md)
 
@@ -58,10 +58,10 @@ regions, the packet, the mark's coupling, the references.
   The screen's pattern is the probability that flows through its face, ∫ j_z(x, L) dt (the current by a 32nd-order
   centred difference: error (16!)²/33!·(k dz)³² ≤ 3·10⁻⁶ at the top of a packet's spectrum on the coarse grid λ/5);
   the layers' probability is accumulated point by point (norm + absorbed = 1 to round-off). The 4λ of free space
-  between the face and the layer (B4, found with v12): W'' of the layer jumps at its inner face, so the wave is only
+  between the face and the layer (B4, found with r13): W'' of the layer jumps at its inner face, so the wave is only
   C³ there, and a difference stencil centred on it errs by ~h⁴ — the flux of a free packet came out 1.2·10⁻⁴ too
   large at λ/5 when the layer began at the face; now the stencil (16 samples each side, 3.2λ at λ/5) lies in free
-  space and the flux agrees with the exact free evolution to 3·10⁻⁶ (v12, `arr_flux_exact`). Order 16 lost ~10⁻³ at
+  space and the flux agrees with the exact free evolution to 3·10⁻⁶ (r13, `arr_flux_exact`). Order 16 lost ~10⁻³ at
   the top of the spectrum on λ/5.
 * **The path mark and the observer.** The world parameter "Path mark in slit B" gives the wave a second component:
   * "the particle's spin" — the particle's own spin ½ (spin up along z). A coupling b·σ with b = b₀ e_y inside slit B's
@@ -69,7 +69,7 @@ regions, the packet, the mark's coupling, the references.
     or a neutron this is a magnetic field in the slit (b = −μB); particles without spin ½ in the engine (⁴He, C₆₀) are
     refused this mark (review B3-7);
   * "an observer: a path detector at slit B" (B4, the owner's request of 2026-10-28) — an external two-level which-path
-    detector at slit B (Englert's model, as v02's detector qubit): the second component is the detector's state, which
+    detector at slit B (Englert's model, as u32's detector qubit): the second component is the detector's state, which
     the same coupling turns by θ while the particle is in slit B. Any particle, also one without spin.
 
   θ itself is live ("Mark in slit B: turn θ, °"): 0 — the paths cannot be told apart, 180° — fully marked. Since B4
@@ -193,7 +193,7 @@ a = 2.5λ, 0.19 at 5λ, 0.078 at 10λ (at least first order in λ/a).
 * The wall is a smooth potential of finite height and thickness (a model of a material wall); the detectors are
   absorbing layers (their reflection and leak are checked).
 * The geometry is in wavelengths and must fit the grid: slits of 0.5–20 λ, screens up to 200 λ; real experiments with
-  slits of 10³–10⁵ λ are the paraxial regime of v02.
+  slits of 10³–10⁵ λ are the paraxial regime of u32.
 * The comparison with the approximate theories (`ref_*`) is information: they are approximations of this computation,
   not references for it.
 * Cost: the presets take 82–124 s on GPU 0 (4.8·10⁵ – 5.5·10⁵ grid points, ~2000 pairs of steps, the companion run,
@@ -206,7 +206,7 @@ a = 2.5λ, 0.19 at 5λ, 0.078 at 10λ (at least first order in λ/a).
 
 ## Tests
 
-`tests/test_v11_double_slit_2d.py` (a small geometry, so that the CPU runs them in a few minutes): every preset
+`tests/test_r12_double_slit_2d.py` (a small geometry, so that the CPU runs them in a few minutes): every preset
 builds and passes its static checks; the third dimension is the exact product (η's width and profile in closed form
 with every image, y in tracks, hits and frames, P(x, y) on the screen, the x, z starts unchanged by σy, `screen_y`,
 `bohm_y` and `bohm_y_motion` pass, and `bohm_y_motion` fails every wrong y-motion: none, twice the spreading, 0.1 %

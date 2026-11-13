@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v02: the double-slit experiment with single particles, which-path marks and observers.
+"""u32: the double-slit experiment with single particles, which-path marks and observers.
 
 What the run computes (README.md of this folder has the model in full):
 * the wave of every particle behind the slits (closed-form Fresnel solution, checked against the exact
@@ -1573,7 +1573,7 @@ def _rebin(x, P, edges):
 
 
 VIZ = {
-    "id": "v02_double_slit",
+    "id": "u32_double_slit",
     "title": T("The double-slit experiment"),
     "summary": T("Particles one at a time through slits: a photon (energy, frequency, polarisation), an electron, a "
                  "neutron, an atom, C60. A which-path observer (a qubit detector, photon scattering), marks by "
@@ -1584,4 +1584,23 @@ VIZ = {
     "version": "1.2",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "university",
+    "section": "quantum",
+    "ui": "standard",
+    "teaser": T("Particles land one by one; the fringes build up hit by hit and vanish under a which-path mark."),
+    "courses": [
+        {"text": T("The Feynman Lectures on Physics, vol. III"), "chapters": "1"},
+        {"text": T("Griffiths & Schroeter, Introduction to Quantum Mechanics"), "chapters": ""},
+        {"text": T("Halliday, Resnick & Walker, Fundamentals of Physics"), "chapters": "35, 38"},
+        {"text": T("Hecht, Optics"), "chapters": "9"},
+    ],
+    "related": ["S38", "r12_double_slit_2d", "R01", "R02", "R05", "R08", "R09"],
+    "recordings": [
+        {"id": "young", "preset": "photon_young", "seconds": 60, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 55},
+        {"id": "eraser", "preset": "photon_eraser", "seconds": 60, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 55},
+        {"id": "aharonov_bohm", "preset": "electron_ab", "seconds": 60, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 55},
+    ],
 }

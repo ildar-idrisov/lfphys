@@ -581,7 +581,7 @@ def _bench(size: int, xp, cplx):
 backend.register(backend.KernelSpec(
     KERNEL, T("Ray tracing with light travel time"),
     T("what a fast observer sees: the aberration of every pixel, the intersection of the past light ray with the "
-      "bodies' world tubes, the Doppler temperature (v10)"),
+      "bodies' world tubes, the Doppler temperature (u39)"),
     gpu=True,
     precisions={"fp64": {"allowed": True}},
     crossover=256 * 256 * 12,

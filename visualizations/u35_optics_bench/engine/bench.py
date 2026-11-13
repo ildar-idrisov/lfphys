@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v05 orchestration: the planar structure built from the set-up, the run's own curves and field (every number by
+"""u35 orchestration: the planar structure built from the set-up, the run's own curves and field (every number by
 the engine lfphys: transfer matrices, field profile, Snell's law for the drawing) and the single-photon stream
 (emission, the Born rule at the structure with the computed R, T, A, detection).
 

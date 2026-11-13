@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v17: light scattered by a sphere — the rainbow, its supernumerary bows, Alexander's dark band and the glory (a
+"""u44: light scattered by a sphere — the rainbow, its supernumerary bows, Alexander's dark band and the glory (a
 wrapper over lfphys; plan P14.8, on P1).
 
 One drop at one wavelength: the exact Mie series (lfphys.core.optics.mie) gives the phase function and the
@@ -307,7 +307,7 @@ class Simulation(SlicePlanes, BaseSimulation):
         route to the same coefficients) and `wiscombe` (the engine against published numbers, at fixed spheres);
         `theorem`, `energy` and `mueller` are identities of the series' structure, labelled as such: they test the
         angular functions, the quadrature and the arithmetic, and stay at round-off when D_n, psi_n or chi_n are
-        wrong (tests/test_v17_mie_scattering.py shows what each one catches)."""
+        wrong (tests/test_u44_mie_scattering.py shows what each one catches)."""
         x, m = self.x, self.m
         N = len(a)
         S1, S2 = mie.amplitudes(a, b, np.array([0.0]))
@@ -743,7 +743,7 @@ class Simulation(SlicePlanes, BaseSimulation):
 
 
 VIZ = {
-    "id": "v17_mie_scattering",
+    "id": "u44_mie_scattering",
     "title": T("Mie scattering by a drop: the rainbow and the glory"),
     "summary": T("The exact Mie series for a water drop: the phase function and the polarisation, the Debye series "
                  "(reflection, passage, internal reflections) against Descartes' rays and Airy's theory, the near "
@@ -755,4 +755,18 @@ VIZ = {
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "university",
+    "section": "optics",
+    "ui": "standard",
+    "teaser": T("Sunlight on water drops: the rainbow, its supernumerary bows and the glory from the exact Mie series."),
+    "courses": [
+        {"text": T("Bohren & Huffman, Absorption and Scattering of Light by Small Particles"), "chapters": ""},
+        {"text": T("Hecht, Optics"), "chapters": ""},
+    ],
+    "related": ["S37"],
+    "recordings": [
+        {"id": "rainbow", "preset": "rainbow", "seconds": 40, "fps": 10, "speed": None, "seed": 1, "script": [], "poster": 30},
+        {"id": "supernumerary", "preset": "supernumerary", "seconds": 40, "fps": 10, "speed": None, "seed": 1, "script": [], "poster": 30},
+        {"id": "glory", "preset": "glory", "seconds": 40, "fps": 10, "speed": None, "seed": 1, "script": [], "poster": 30},
+    ],
 }

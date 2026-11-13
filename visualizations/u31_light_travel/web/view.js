@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v01 view: the space map (lab "now", an observer's "now", or what an observer sees) and the spacetime diagram.
+// u31 view: the space map (lab "now", an observer's "now", or what an observer sees) and the spacetime diagram.
 // Everything drawn is data of the run: ray polylines traced by the server, worldlines (segments the server
 // sends after every change of motion), events with their computed times, frame matrices of the laws.
 // The browser only interpolates along those polylines and applies the given matrices.

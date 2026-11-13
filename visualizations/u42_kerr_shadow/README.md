@@ -1,4 +1,4 @@
-# v15 — the shadow of a Kerr black hole and its photon rings; what if the hole is not Kerr
+# u42 — the shadow of a Kerr black hole and its photon rings; what if the hole is not Kerr
 
 **English** | [Русский](README.ru.md)
 
@@ -85,7 +85,7 @@ its photon sphere at 3.3005 M and ISCO at 7.1646 M (Kerr: 3, 6).
 
 ## Tests
 
-`tests/test_v15_kerr_shadow.py`: every preset builds and passes its checks; the image is revealed only as the world's
+`tests/test_u42_kerr_shadow.py`: every preset builds and passes its checks; the image is revealed only as the world's
 time reaches its rows; the pixels sent equal the engine's tracer called directly; a live change starts a new image; the
 checks come when the image is complete and the size measured on the traced edge equals the engine's; the edge against
 Bardeen and √27 M, and a = 0.998 at 81° (which failed a fixed tolerance) within the derived bound; the pixels compared

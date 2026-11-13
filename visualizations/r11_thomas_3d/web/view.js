@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v09 view: the manoeuvre in the shared 3-D environment (/static/js/env3d.js). Velocity space (the ball of
+// r11 view: the manoeuvre in the shared 3-D environment (/static/js/env3d.js). Velocity space (the ball of
 // velocities, light at its boundary) or ordinary space; the path revealed as the run's time reaches it, the gyroscope
 // triads along it, the craft with its gyroscopes, spin and thrust, the rotation axis when the loop closes; in velocity
 // space the field of three-burn loops as a volume, its rotation axes as arrows, and up to three slice planes with

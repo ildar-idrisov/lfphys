@@ -80,7 +80,7 @@ async function cornersOnScreen(page) {
 
 const CASES = {
   async depth(br) {
-    const errs = [], id = await start("v13_hydrogen_3d", { preset: "2pz" }), page = await open(br, id, errs);
+    const errs = [], id = await start("u40_hydrogen_3d", { preset: "2pz" }), page = await open(br, id, errs);
     const g = await api(page, (a) => {
       a.view("iso"); for (const P of a.planes()) a.setPlaneVisible(P.id, false);
       const S = a.state, [nz, nx, ny] = S.vol.dims, d = S.vol.data, [lo, hi] = S.box; let best = -1, bi = 0;
@@ -103,7 +103,7 @@ const CASES = {
     return { ok, cloudBack, withFront, aloneFront, withBack, aloneBack, errs };
   },
   async planes(br) {
-    const errs = [], id = await start("v13_hydrogen_3d", { preset: "1s" }), page = await open(br, id, errs, { playMs: 2000 });
+    const errs = [], id = await start("u40_hydrogen_3d", { preset: "1s" }), page = await open(br, id, errs, { playMs: 2000 });
     await cmd(id, "view", { op: "plane", id: 2, origin: [0, 0, 0], normal: [1, 0, 0] });
     await page.waitForFunction(() => document.querySelector(".s3d-view").__scene3d.planes().length >= 2, null, { timeout: 60000 });
     await sleep(3000); await settle(page);
@@ -154,19 +154,19 @@ const CASES = {
       return out;
     });
     await page.close();
-    const id2 = await start("v08_wave_3d", { preset: "double", params: { n: 128, zmax: 10.0 } }), page2 = await open(br, id2, errs, { playMs: 3000 });
-    const v08 = await api(page2, (a) => {
+    const id2 = await start("u38_wave_3d", { preset: "double", params: { n: 128, zmax: 10.0 } }), page2 = await open(br, id2, errs, { playMs: 3000 });
+    const u38 = await api(page2, (a) => {
       a.view("top"); a.render();
       const [lo, hi] = a.state.box, m = [0, 0, (lo[2] + hi[2]) / 2], d = 0.1 * (hi[2] - lo[2]);
       const s0 = a.screenOf(m), sz = a.screenOf([0, 0, m[2] + d]), sx = a.screenOf([d, 0, m[2]]);
       return { zRight: sz[0] - s0[0] > 0.9 * Math.hypot(sz[0] - s0[0], sz[1] - s0[1]), xUp: s0[1] - sx[1] > 0.9 * Math.hypot(sx[0] - s0[0], sx[1] - s0[1]) };
     });
     await page2.close();
-    const ok = p04.opened && p04.top.xRight && p04.top.yUp && v08.zRight && v08.xUp;
-    return { ok, p04, v08, errs };
+    const ok = p04.opened && p04.top.xRight && p04.top.yUp && u38.zRight && u38.xUp;
+    return { ok, p04, u38, errs };
   },
   async fit(br) {
-    const errs = [], id = await start("v08_wave_3d", { preset: "double", params: { n: 128, zmax: 10.0 } });
+    const errs = [], id = await start("u38_wave_3d", { preset: "double", params: { n: 128, zmax: 10.0 } });
     const page = await open(br, id, errs, { playMs: 6000 });
     const opened = await cornersOnScreen(page);
     await page.setViewportSize({ width: 1280, height: 800 }); await sleep(800); await settle(page);
@@ -200,7 +200,7 @@ const CASES = {
     return { ok: res.userMoved && res.keptOnRepeatAndGrow && res.refitWhenNotMoved, ...res, errs };
   },
   async clip(br) {
-    const errs = [], id = await start("v08_wave_3d", { preset: "double", params: { n: 128, zmax: 10.0 } }), page = await open(br, id, errs);
+    const errs = [], id = await start("u38_wave_3d", { preset: "double", params: { n: 128, zmax: 10.0 } }), page = await open(br, id, errs);
     const r = await rect(page); await page.mouse.move(r.x + r.w / 2, r.y + r.h / 2);
     for (let i = 0; i < 60; i++) { await page.mouse.wheel(0, 100); await sleep(20); }
     await settle(page, 500);
@@ -210,7 +210,7 @@ const CASES = {
     return { ok: c.far >= c.dc + c.R && c.near <= Math.max(c.dc - c.R, 0) + 1e-9 + 0.01 * c.dc, ...c, errs };
   },
   async labels(br) {
-    const errs = [], id = await start("v13_hydrogen_3d", { preset: "1s" }), page = await open(br, id, errs, { playMs: 2000 });
+    const errs = [], id = await start("u40_hydrogen_3d", { preset: "1s" }), page = await open(br, id, errs, { playMs: 2000 });
     const res = await api(page, (a) => {
       a.render();
       const S = a.state, H = a.el.clientHeight, fov = 38 * Math.PI / 180;
@@ -266,7 +266,7 @@ const CASES = {
     return { ok: d <= 1.05 * t.r, atom: t.p, radius: t.r, target: c.target, distance: d, errs };
   },
   async quality(br) {
-    const errs = [], id = await start("v13_hydrogen_3d", { preset: "1s" }), page = await open(br, id, errs, { playMs: 2000 });
+    const errs = [], id = await start("u40_hydrogen_3d", { preset: "1s" }), page = await open(br, id, errs, { playMs: 2000 });
     const r = await rect(page), x0 = r.x + r.w / 2, y0 = r.y + r.h / 2;
     await page.mouse.move(x0, y0); await page.mouse.down();
     for (let i = 1; i <= 6; i++) { await page.mouse.move(x0 + 20 * i, y0); await sleep(60); }
@@ -291,7 +291,7 @@ const CASES = {
     return { ok: !res.error && res.childListMutations === 0 && !res.firstInputReplaced, ...res, errs };
   },
   async keys(br) {
-    const errs = [], id = await start("v13_hydrogen_3d", { preset: "1s" }), page = await open(br, id, errs, { playMs: 2000 });
+    const errs = [], id = await start("u40_hydrogen_3d", { preset: "1s" }), page = await open(br, id, errs, { playMs: 2000 });
     const pdb = await page.evaluate(() => { const c = document.querySelector(".s3d-view canvas"); const gl = c.getContext("webgl2"); return gl.getContextAttributes().preserveDrawingBuffer; });
     const n0 = await api(page, (a) => { a.select(1); return a.planes().length; });
     await page.locator("body").press("Backspace"); await sleep(2500); await settle(page);

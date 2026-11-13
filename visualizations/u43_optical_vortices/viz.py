@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v16: optical vortices — Laguerre-Gauss beams, orbital angular momentum and the rotational Doppler effect (a wrapper
+"""u43: optical vortices — Laguerre-Gauss beams, orbital angular momentum and the rotational Doppler effect (a wrapper
 over lfphys; plan P14.7).
 
 The beam of a world comes from the engine: a Laguerre-Gauss mode LG_pl with its waist at z = 0 or a Gaussian behind a
@@ -996,7 +996,7 @@ class Simulation(SlicePlanes, BaseSimulation):
 
 
 VIZ = {
-    "id": "v16_optical_vortices",
+    "id": "u43_optical_vortices",
     "title": T("Optical vortices: Laguerre–Gauss beams, orbital angular momentum, the rotational Doppler effect"),
     "summary": T("The helical fronts of a beam with the phase e^{ilφ}, the twisted energy flow, slices with the phase "
                  "on a colour wheel; the orbital and spin angular momentum per photon measured from the field (the "
@@ -1008,4 +1008,18 @@ VIZ = {
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "university",
+    "section": "optics",
+    "ui": "standard",
+    "teaser": T("Light with helical fronts: twisted energy flow, angular momentum per photon, and the beat from a rotating disc."),
+    "courses": [
+        {"text": T("Allen, Beijersbergen, Spreeuw & Woerdman, Phys. Rev. A 45, 8185 (1992)"), "chapters": ""},
+        {"text": T("Hecht, Optics"), "chapters": ""},
+    ],
+    "related": [],
+    "recordings": [
+        {"id": "lg3", "preset": "lg3", "seconds": 40, "fps": 10, "speed": None, "seed": 1, "script": [], "poster": 30},
+        {"id": "tight", "preset": "tight", "seconds": 40, "fps": 10, "speed": None, "seed": 1, "script": [], "poster": 30},
+        {"id": "dove", "preset": "dove", "seconds": 40, "fps": 10, "speed": None, "seed": 1, "script": [], "poster": 30},
+    ],
 }

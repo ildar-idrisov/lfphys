@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v07 Bell test: every preset, the statistics against the laws, no-signalling, causality, live changes."""
+"""u37 Bell test: every preset, the statistics against the laws, no-signalling, causality, live changes."""
 
 import math
 import sys
@@ -16,7 +16,7 @@ from lfphys.core.constants import C  # noqa: E402
 from lfphys.i18n import render  # noqa: E402
 from lfviz import registry  # noqa: E402
 
-V = "v07_bell_test"
+V = "u37_bell_test"
 PRESETS = list(registry.load(V)["schema"].presets)
 TSIRELSON = 2 * math.sqrt(2)
 
@@ -97,7 +97,7 @@ def test_no_signalling_from_the_run_counts():
 
 def test_sampled_correlations_match_the_closed_forms_at_many_angles():
     """The wrapper's outcome mapping (index 0 -> +1) and angle conventions against textbook closed forms."""
-    from v07_bell_test.engine.experiment import Law
+    from u37_bell_test.engine.experiment import Law
     rng = np.random.default_rng(5)
     forms = {("photon", "quantum"): lambda d: math.cos(2 * d), ("spin", "quantum"): lambda d: -math.cos(d),
              ("photon", "lhv"): lambda d: 0.5 * math.cos(2 * d),
@@ -303,8 +303,8 @@ def test_reversal_speed_reference_at_extreme_settings():
     import numpy as _np
     from lfphys.core import relativity as R
     from lfphys.core.constants import C
-    from v07_bell_test.viz import _reversal_by_boosts
-    h = Harness("v07_bell_test", None, {"switch": "random", "tau_ns": 0.001, "L_m": 1e5})
+    from u37_bell_test.viz import _reversal_by_boosts
+    h = Harness("u37_bell_test", None, {"switch": "random", "tau_ns": 0.001, "L_m": 1e5})
     c = h.checks()["st_rev"]
     assert c["ref"] is not None and abs(c["rel"]) <= 1e-9
 

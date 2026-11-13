@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v16 apparatus over the engine lfphys (orchestration and drawing data, no physics of its own): the beam of a world
+"""u43 apparatus over the engine lfphys (orchestration and drawing data, no physics of its own): the beam of a world
 as a radial table of the engine's exact vector beam or of the paraxial mode (``lfphys.core.optics.beams.RadialTable``),
 the grids the scene samples it on (volume, equiphase sheets, flow lines, slices), the masks of the generators, the
 rotating elements and the detector's samples. Units: micrometres; world time in seconds."""

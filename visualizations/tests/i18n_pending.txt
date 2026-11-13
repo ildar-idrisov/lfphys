@@ -6,6 +6,6 @@
 
 
 
-# worlds v13–v17 and server/lfviz/orbitals3d.py (lf-i18d-)
+# worlds u40–u44 and server/lfviz/orbitals3d.py (lf-i18d-)
 
 # playgrounds p01–p04 (lf-i18p-)

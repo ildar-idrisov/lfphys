@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v05: the optical bench - single photons at a boundary between media, at coatings and at a thin metal film.
+"""u35: the optical bench - single photons at a boundary between media, at coatings and at a thin metal film.
 
 What the run computes (README.md of this folder has the model in full), all with the engine lfphys:
 * the structure's amplitudes r, t and powers R, T, A = 1 - R - T by the transfer matrices
@@ -919,7 +919,7 @@ _AIRY_REASONS = {
 
 
 VIZ = {
-    "id": "v05_optics_bench",
+    "id": "u35_optics_bench",
     "title": T("Optical bench: boundaries and coatings"),
     "summary": T("Photons one by one at a boundary between two media, an anti-reflection layer, a Bragg mirror, a "
                  "Fabry–Pérot film, a metal film, a prism's face (total and frustrated total reflection). Brewster's "
@@ -929,4 +929,21 @@ VIZ = {
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "university",
+    "section": "optics",
+    "ui": "standard",
+    "teaser": T("Photons hit a boundary one by one and split in the fractions that Maxwell's equations give."),
+    "courses": [
+        {"text": T("Hecht, Optics"), "chapters": "4, 9"},
+        {"text": T("Sivukhin, General Course of Physics, vol. IV: Optics"), "chapters": "V"},
+    ],
+    "related": ["S35"],
+    "recordings": [
+        {"id": "tir", "preset": "tir", "seconds": 40, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 35},
+        {"id": "brewster", "preset": "brewster", "seconds": 40, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 35},
+        {"id": "spr", "preset": "spr", "seconds": 40, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 35},
+    ],
 }

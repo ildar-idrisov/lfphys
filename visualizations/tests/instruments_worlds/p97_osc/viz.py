@@ -215,4 +215,5 @@ elif os.environ.get("P97_MEASURE") == "tuple":  # breaks the contract (a dict): 
 
 
 VIZ = {"id": "p97_osc", "title": T("Oscillators (tests of the instruments)"), "summary": "", "purpose": "", "version": "1.0",
-       "schema": SCHEMA, "simulation": Simulation, "kind": "playground", "section": "toy"}
+       "schema": SCHEMA, "simulation": Simulation, "kind": "playground", "audience": "playground", "section": "mechanics",
+       "ui": "full", "teaser": T("Oscillators for the tests of the instruments."), "related": []}

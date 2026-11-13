@@ -56,7 +56,7 @@ docker run --rm --user "$(id -u):$(id -g)" -v <this repository>:/lf -w /lf/lfphy
 | `core.gravity.gw_quadrupole` | core | (P7, B5) gravitational waves by the quadrupole formula: h₊, h× toward any direction from the computed trajectory, luminosity and angular-momentum flux; the waves' flux over the sphere equals the luminosity |
 | `core.gravity.nbody` | core | (P15.1, B6) Newtonian N bodies for the playground: bodies with stable keys (point masses, test particles with m = 0), add / remove / change (one body or several in one edit) at the current time leaving the others bit for bit, all or nothing (a refused edit leaves the object bit for bit as it was); the time-symmetric fourth-order Hermite scheme P(EC)^n (Makino & Aarseth 1992, Kokubo et al. 1998) with one shared step from Aarseth's criterion, symmetrized over the step (Hut et al. 1995) to dt_rtol = 1e-4 (residual secular drift measured: −7·10⁻⁸ per orbit at e = 0.999, 29 times less than at 1e-3) — close encounters; the fourth-order symplectic Forest–Ruth–Yoshida composition with a fixed step — long quiet systems; continuous output (the result does not depend on how the caller slices time); collisions at the located contact: perfect merger (mass and momentum to one rounding, energy change reported; compact bodies with a radius proportional to their mass absorb what they meet and keep that rule) or pass-through; energy, momentum, angular momentum, centre of mass, potential, acceleration and tidal tensor at any points; per-step error indicators and companions (`clone(eta=…)`); plain-data state, bit-identical restore. Cost per step (CPU, NumPy, i9-9900K): Hermite 0.64 / 1.1 / 4.4 / 46 ms for N = 3 / 30 / 100 / 300 (dt_rtol 1e-4; 0.39 / 0.66 / 3.8 / 26 at 1e-3), Yoshida-4 0.1 / 0.2 / 0.8 / 5.6 / 100 ms; a GPU kernel would pay from N ~ 1000. Close approaches far below the system's size lose precision in Cartesian double (Pythagorean problem: floor ~1e-7 after the 4e-4 approach; STATUS); drawing samples of the continuous output (`Samples`: within a stated turn, independent of how time is sliced); the collision law changed at the current moment (`set_collisions`) |
 | `core.gravity.kerr_newman` | core | (P15.1, B6) neutral test bodies, light rays and clocks around a charged rotating black hole (Kerr–Newman, a² + q² < 1): horizons, ergosurface, equatorial circular orbits (Ω, E, L, dτ/dt), circular photon orbits and the ISCO (numerical roots; Kerr and Reissner–Nordström closed forms as checks), ZAMO lapse, frame dragging and tetrad (initial states from a ZAMO-measured velocity or a photon direction), drawing coordinates and surfaces; `Geodesics`: many bodies and photons advanced together in the distant observer's time t (separated Carter Hamiltonian, per-body adaptive DOP853 steps, vectorized), each body's proper time, E, L, Carter's K and the mass shell with their drift and each body's drift budget (summed over its steps; +12–14 % cost), events capture (with the proper time of the crossing) and escape, plain-data state, bit-identical restore, saved states with their status (captured, escaped) and drift accounting, companions (`clone(rtol=…)`); cost 0.6–0.9 ms per unit M of world time for 100–300 bodies; what an observer sees (`trace_sky`, `look_directions`): per pixel the ray traced back from a ZAMO or moving camera to capture (the shadow) or to its direction on the celestial sphere, with Bardeen's constants and ν∞/ν_obs (~0.4 ms per ray; checked against the exact sweep at r = 1e4, the RN shadow's closed form, Bardeen's curve); the ZAMO frame's momentum and back (`zamo_frame_momentum`, `momentum_from_frame`: γ and γv directly); `rescale_proper_time` (the proper times read in another unit of M; tested) |
-| `laws.light` | laws | law sets: kinematics × gravity, used by v01 |
+| `laws.light` | laws | law sets: kinematics × gravity, used by u31 |
 | `theories.approx.newton` | approx | Kepler orbits of slow bodies (exact conics, integrated bodies) |
 | `theories.alternatives.newton_light` | alternative | light as Newtonian corpuscles (Soldner): half the measured deflection |
 | `theories.approx.ppn` | approx | weak-field PPN expansion (γ, β) |
@@ -119,7 +119,7 @@ docker run --rm --user "$(id -u):$(id -g)" -v <this repository>:/lf -w /lf/lfphy
 | `theories.interpretations.arrival_times` | interpretation | (B4) when a particle reaches a surface — rules quantum mechanics does not fix: the quantum flux, Bohm's first arrival (in 1-D from the running minimum of P(x < L)), Aharonov–Bohm–Kijowski, semiclassical (also through its CDF in k, exact and alias-free: `Semiclassical`); tested against closed forms, trajectories integrated one by one through backflow, and Das & Struyve 2021 eq. 43 |
 | `theories.models.detection` | model | (B4) detector models of the arrival time: the absorbing boundary rule ∂ψ/∂n = iκψ (Werner, Tumulka; image solution, reflection (k − κ)²/(k + κ)²), the exponential rules of Włodarz and Marchewka–Schuss, the absorbing step −iW₀; the boundary rule tested against an independent Crank–Nicolson solution |
 | `theories.alternatives.collapse`, `born_rule`, `local_hidden` | alternative | GRW spontaneous collapse, P ∝ \|ψ\|^p, local hidden-variable models (\|S\| ≤ 2) |
-| `theories.alternatives.collapse_baseline` | alternative | (P5) GRW against the which-path decoherence of the environment: the same density-matrix form λ[1 − e^{−d²/4r_C²}]; `compare` gives the visibility factors of GRW, dephasing and probe streams and their ratio (for the v02 double slit) |
+| `theories.alternatives.collapse_baseline` | alternative | (P5) GRW against the which-path decoherence of the environment: the same density-matrix form λ[1 − e^{−d²/4r_C²}]; `compare` gives the visibility factors of GRW, dephasing and probe streams and their ratio (for the u32 double slit) |
 
 ### QCD
 
@@ -202,23 +202,23 @@ phase factor; it is fixed in `core.optics.scalar`.
 
 | visualization | engine modules |
 |---|---|
-| v01 light travel | relativity, worldlines, gravity (rays, arrivals, schwarzschild), laws.light, alternatives (kinematics, newton_light) |
-| v02 double slit | quantum (particles, marks, scattering), optics.scalar, approx (paraxial, kirchhoff — also the Kirchhoff curve of the vector mode, paraxial_ensemble), interpretations.bohm, alternatives (collapse, born_rule), tools.stats, em.slit (vector mode) |
-| v03 quantum 1-D | quantum.schrodinger1d, quantum.transfer, interpretations (Copenhagen, Bohm, Everett) |
-| v04 orbits | gravity (orbits, orbit_stream, kerr), approx (newton, ppn) |
-| v05 optics bench | optics.interfaces, optics.thin_films, approx.ray_optics |
-| v06 QCD | qcd.running, qcd.su3, quantum.radial, models.cornell, data |
-| v07 Bell test | quantum.qubits, causality, relativity, alternatives.local_hidden, tools.bell_stats |
-| v08 wave in 3-D | optics.angular_spectrum, optics.aperture_fields, geometry, backend |
-| v09 Thomas–Wigner precession in 3-D | lorentz, spin_transport, geometry |
-| v10 what a fast observer sees | raytrace, lorentz, optics.radiation, backend, tools.colour |
-| v11 double slit in 2-D | quantum.schrodinger_nd, quantum.particles, quantum.transfer, backend, interpretations.bohm, approx (paraxial, kirchhoff) |
-| v12 arrival times in 2-D | quantum.schrodinger_nd, quantum.schrodinger1d, quantum.transfer, quantum.particles, backend, interpretations (bohm, arrival_times), models.detection (behind slits also approx: paraxial, kirchhoff) |
-| v13 hydrogen atom in 3-D | quantum.hydrogen, quantum.central3d, geometry |
-| v14 quarkonium in 3-D | models.cornell, quantum.radial, quantum.central3d, data, geometry |
-| v15 Kerr shadow | gravity (kerr, kerr_null, kerr_shadow), alternatives.johannsen_metric, data, backend |
-| v16 optical vortices | optics.beams, optics.beams_rotation, optics.angular_spectrum (fork), geometry, approx.beams_paraxial, approx.beams_thin_masks |
-| v17 Mie scattering by a drop | optics.mie, mie_debye, mie_poly, optics.radiation, data, approx.rainbow, tools.colour, geometry |
+| u31 light travel | relativity, worldlines, gravity (rays, arrivals, schwarzschild), laws.light, alternatives (kinematics, newton_light) |
+| u32 double slit | quantum (particles, marks, scattering), optics.scalar, approx (paraxial, kirchhoff — also the Kirchhoff curve of the vector mode, paraxial_ensemble), interpretations.bohm, alternatives (collapse, born_rule), tools.stats, em.slit (vector mode) |
+| u33 quantum 1-D | quantum.schrodinger1d, quantum.transfer, interpretations (Copenhagen, Bohm, Everett) |
+| u34 orbits | gravity (orbits, orbit_stream, kerr), approx (newton, ppn) |
+| u35 optics bench | optics.interfaces, optics.thin_films, approx.ray_optics |
+| u36 QCD | qcd.running, qcd.su3, quantum.radial, models.cornell, data |
+| u37 Bell test | quantum.qubits, causality, relativity, alternatives.local_hidden, tools.bell_stats |
+| u38 wave in 3-D | optics.angular_spectrum, optics.aperture_fields, geometry, backend |
+| r11 Thomas–Wigner precession in 3-D | lorentz, spin_transport, geometry |
+| u39 what a fast observer sees | raytrace, lorentz, optics.radiation, backend, tools.colour |
+| r12 double slit in 2-D | quantum.schrodinger_nd, quantum.particles, quantum.transfer, backend, interpretations.bohm, approx (paraxial, kirchhoff) |
+| r13 arrival times in 2-D | quantum.schrodinger_nd, quantum.schrodinger1d, quantum.transfer, quantum.particles, backend, interpretations (bohm, arrival_times), models.detection (behind slits also approx: paraxial, kirchhoff) |
+| u40 hydrogen atom in 3-D | quantum.hydrogen, quantum.central3d, geometry |
+| u41 quarkonium in 3-D | models.cornell, quantum.radial, quantum.central3d, data, geometry |
+| u42 Kerr shadow | gravity (kerr, kerr_null, kerr_shadow), alternatives.johannsen_metric, data, backend |
+| u43 optical vortices | optics.beams, optics.beams_rotation, optics.angular_spectrum (fork), geometry, approx.beams_paraxial, approx.beams_thin_masks |
+| u44 Mie scattering by a drop | optics.mie, mie_debye, mie_poly, optics.radiation, data, approx.rainbow, tools.colour, geometry |
 | p01 gravity playground | gravity (nbody, pn_binary, gw_quadrupole, kerr_newman), constants |
 | p02 quantum playground | quantum.scene, quantum.schrodinger_nd, interpretations.bohm, backend |
 | p03 particles and molecules playground | md (system, hard, observables), models.interatomic |

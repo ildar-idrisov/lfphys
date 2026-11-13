@@ -1,4 +1,4 @@
-# v01 — Light over large distances
+# u31 — Light over large distances
 
 **English** | [Русский](README.ru.md)
 
@@ -115,7 +115,7 @@ Open items: `../../STATUS.md`, "V. Visualizations — open items".
 
 ## Tests
 
-`tests/test_v01_physics.py` (Docker: `docker compose -f visualizations/docker/docker-compose.yml run --rm viz-test`):
+`tests/test_u31_physics.py` (Docker: `docker compose -f visualizations/docker/docker-compose.yml run --rm viz-test`):
 Lorentz matrices preserve the metric; aberrated light keeps speed c; quadrature deflection = Darwin (1e-10); weak
 field 2rs/b + 15π/16 (rs/b)²; radial time; symmetric lens gives two simultaneous images; every RK vertex lies on the
 exact geodesic (time to 1e-9); capture below b_c; Kepler crossing = RK corpuscle; Newtonian half deflection; every

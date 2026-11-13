@@ -1,13 +1,13 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v12 apparatus: where the particle flies (freely to a detecting plane, or through v11's double slit), the initial
+"""r13 apparatus: where the particle flies (freely to a detecting plane, or through r12's double slit), the initial
 states along the flight (one packet, a train of packets, a two-speed superposition with backflow) and the soft
 detector's potential. No physics of its own: the wave is evolved by lfphys.core.quantum.schrodinger_nd, the
 closed-form free states come from lfphys.core.quantum.schrodinger1d.FreeGaussians.
 
-Units as in v11: lengths in de Broglie wavelengths lambda of the mean momentum hbar k0 (k0 = 2 pi), hbar = m = 1.
+Units as in r12: lengths in de Broglie wavelengths lambda of the mean momentum hbar k0 (k0 = 2 pi), hbar = m = 1.
 The flight runs along z; the initial state is separable, chi(x) phi(z - z_lead), with chi a Gaussian of width sigma_x
-and phi a superposition of Gaussians whose leading packet is centred at z_lead (0 in free flight, v11's source point
+and phi a superposition of Gaussians whose leading packet is centred at z_lead (0 in free flight, r12's source point
 before the plate).
 """
 
@@ -20,7 +20,7 @@ import numpy as np
 from lfphys.core.quantum.schrodinger1d import FreeGaussians
 from lfphys.i18n import T
 from lfviz.errors import Refusal
-from v11_double_slit_2d.engine import apparatus as AP11
+from r12_double_slit_2d.engine import apparatus as AP11
 
 K0, E0, V0_SPEED, ABS_W = AP11.K0, AP11.E0, AP11.V0_SPEED, AP11.ABS_W
 BACKFLOW_RATIO = 0.25  # the slow packet's wavenumber in units of k0 (the fast one is k0)
@@ -88,7 +88,7 @@ SCREEN_LAYERS = [(6.0, 2.0), (12.0, 1.0), (24.0, 0.5), (36.0, 0.5), (48.0, 0.25)
 
 def screen_layer(k_lo: float, k_hi: float, R_max: float = 1e-5, T_max: float = 1e-6):
     """The narrowest absorbing layer W (s/width)^2 of SCREEN_LAYERS that reflects less than R_max and leaks less than
-    T_max over the spectrum [k_lo, k_hi] (stationary transfer matrices, normal incidence): v11's layer (6 lambda,
+    T_max over the spectrum [k_lo, k_hi] (stationary transfer matrices, normal incidence): r12's layer (6 lambda,
     2 E0) is tuned for k ~ k0 and reflects 2.5 % at k0/4 (the slow packet of the backflow state)."""
     from lfphys.core.quantum import schrodinger_nd as S
     k = np.linspace(max(k_lo, 0.05 * K0), k_hi, 9)
@@ -125,7 +125,7 @@ class FreeGeometry(AP11.Geometry):
 
 
 class SlitGeometry(AP11.Geometry):
-    """v11's double slit, the window lengthened behind the source for a train of packets."""
+    """r12's double slit, the window lengthened behind the source for a train of packets."""
 
     def __init__(self, *args, back: float = 0.0, layer=(ABS_W, AP11.ABS_STRENGTH), **kw):
         super().__init__(*args, **kw)

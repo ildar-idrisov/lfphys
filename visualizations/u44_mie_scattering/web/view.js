@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v17 view: scattering of light by a drop. The 3-D scene (the shared environment /static/js/env3d.js): the drop, the
+// u44 view: scattering of light by a drop. The 3-D scene (the shared environment /static/js/env3d.js): the drop, the
 // incident light and its polarisation, the scattered light as polar surfaces (each incident polarisation and
 // unpolarised), the geometric rays of the orders p = 0..3, and for small drops the near field |E|^2 in the volume and
 // on slice planes. Next to it the sky around the antisolar point (/static/js/imagewin.js), painted from the colour

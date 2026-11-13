@@ -1,9 +1,9 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v12: arrival times. Every preset builds and passes its static checks; a small free packet runs to the end of its
+"""r13: arrival times. Every preset builds and passes its static checks; a small free packet runs to the end of its
 window and passes every check (the flux and psi on the plane against the exact free evolution, the Bohm hit times
 against the first-arrival law, the soft detector's reflection against stationary transfer matrices, the ABR
-identity, v11's checks); nothing arrives before the wave can; the backflow state's flux goes negative while Bohm's
+identity, r12's checks); nothing arrives before the wave can; the backflow state's flux goes negative while Bohm's
 first-arrival density does not; a train's exponential rule damps the later peaks; through the slits a slit closed in
 flight acts on both runs; refusals; GPU = CPU. The geometry of these tests is small."""
 
@@ -19,10 +19,10 @@ from harness import Harness  # noqa: E402
 from lfphys.i18n import english  # noqa: E402
 
 from lfphys.core import backend  # noqa: E402
-from v11_double_slit_2d.viz import COST_LIMIT  # noqa: E402
-from v12_arrival_times_2d.viz import SCHEMA  # noqa: E402
+from r12_double_slit_2d.viz import COST_LIMIT  # noqa: E402
+from r13_arrival_times_2d.viz import SCHEMA  # noqa: E402
 
-V = "v12_arrival_times_2d"
+V = "r13_arrival_times_2d"
 SMALL = {"grid": "coarse", "n_bohm": 300, "n_tracks": 20, "L": 12.0, "sigma_z": 2.0, "sigma_x": 2.0}
 
 
@@ -57,7 +57,7 @@ def test_small_free_packet_passes_every_check():
     ids = set(h.checks())
     assert {"norm", "numerics", "flux_absorbed", "bohm_born", "bohm_fraction", "symmetry", "arr_flux_exact",
             "arr_plane_psi", "arr_bohm_times", "arr_soft_reflection", "arr_abr_identity", "arr_det_norm",
-            "screen_y", "bohm_y", "bohm_y_motion"} <= ids  # the third dimension: the exact product with eta (v11)
+            "screen_y", "bohm_y", "bohm_y_motion"} <= ids  # the third dimension: the exact product with eta (r12)
     assert not failed(h), [(i, h.checks()[i]) for i in failed(h)]
     r = h.of("arrival_result")[-1]
     for k in ("flux", "bohm_law", "abk", "sc"):
@@ -210,7 +210,7 @@ def test_soft_detector_height_changed_at_the_detector_leaves_the_stationary_comp
     h.run_to(h.sim.t0 * h.sim.tunit)
     h.set(W0=3.0)
     assert not h.errors()
-    from v12_arrival_times_2d.engine import apparatus as AP12
+    from r13_arrival_times_2d.engine import apparatus as AP12
     W_d = h.sim.W + AP12.soft_detector(h.sim.g, h.sim.zL, 3.0 * AP12.E0, h.sim.geo.edge)
     assert np.array_equal(np.asarray(h.sim.det.H.W), W_d)
     assert "W₀ = 3 E₀" in english(h.checks()["soft_grid"]["note"])
@@ -248,7 +248,7 @@ def test_through_the_slits_a_live_plate_acts_on_both_runs():
 
 def test_a_new_world_from_the_header_and_the_live_values_builds():
     """The player's «Start a new world» without a scenario sends the header's parameters with the live values in force:
-    they are this world's own (v11's fixed path mark and flux were among them, and every such new world was refused:
+    they are this world's own (r12's fixed path mark and flux were among them, and every such new world was refused:
     «there is no parameter “mark”», found while processing review UX-ui U12); the negative control: with them it is
     refused."""
     h = Harness(V, "gauss", SMALL)

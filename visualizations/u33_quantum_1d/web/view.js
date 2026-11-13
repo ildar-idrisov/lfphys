@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v03 view: the wave of the current particle over the potential, the detectors, the outcome in the chosen reading
+// u33 view: the wave of the current particle over the potential, the detectors, the outcome in the chosen reading
 // (Copenhagen collapse, Bohm trajectory, Everett branches), the space-time map of |psi|^2 with Bohm trajectories,
 // and the statistics of outcomes against the run's own probabilities. Everything comes from the run.
 import { t, fmt } from "/static/js/i18n.js";

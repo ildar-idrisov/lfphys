@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v05 view: the optical bench. Left: the geometry (the structure to scale, the beams at the angles the run computed
+// u35 view: the optical bench. Left: the geometry (the structure to scale, the beams at the angles the run computed
 // by Snell's law, single photons under way, the two detectors) and the run's |E|² of s light through the structure.
 // Right: the run's curves R(θ), T(θ) for s and p, R(λ), T(λ), and the photon counters against the run's expectation.
 // Everything drawn comes from the run: segments (curves, field, angles), clicks (detections with their times) and

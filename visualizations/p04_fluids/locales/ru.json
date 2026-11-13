@@ -30,6 +30,7 @@
  "Body wall": "Стенка тела",
  "Bouzidi interpolation (more accurate; only for a surface at rest)": "интерполяция Бузиди (точнее; только у неподвижной поверхности)",
  "Build a flow and see what comes of it: flow past bodies, separation, the Kármán street, the vortex in a cavity, the lift of a wing, the mixing of dye; forces and balances live.": "Собрать течение и посмотреть, что из него выйдет: обтекание, отрыв, дорожка Кармана, вихрь в каверне, подъёмная сила крыла, перемешивание красителя; силы и балансы — вживую.",
+ "Build a flow past bodies and wings and watch the vortices, the lift and the drag.": "Соберите течение вокруг тел и крыльев и посмотрите на вихри, подъёмную силу и сопротивление.",
  "C_D max over the last sound period": "C_D max за последний период звука",
  "C_L max over the last sound period": "C_L max за последний период звука",
  "C_x over the last step (with the scheme's sound)": "C_x за последний шаг (с акустическими колебаниями схемы)",

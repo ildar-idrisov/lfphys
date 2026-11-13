@@ -327,4 +327,5 @@ class Simulation(PlaygroundSimulation):
 
 
 VIZ = {"id": "p99_toy", "title": T("Toy (tests)"), "summary": "", "purpose": "", "version": "1.1", "schema": SCHEMA,
-       "simulation": Simulation, "kind": "playground", "section": "toy"}
+       "simulation": Simulation, "kind": "playground", "audience": "playground", "section": "mechanics", "ui": "full",
+       "teaser": T("A toy laboratory for the tests."), "related": []}

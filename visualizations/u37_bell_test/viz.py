@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v07: the Bell test with entangled pairs, a wrapper over the physics engine lfphys.
+"""u37: the Bell test with entangled pairs, a wrapper over the physics engine lfphys.
 
 What the run computes (README.md of this folder has the model in full):
 * a Poisson stream of pairs from a source between two stations at distance L; each particle flies to its station
@@ -686,7 +686,7 @@ def _val(p, v):
 
 
 VIZ = {
-    "id": "v07_bell_test",
+    "id": "u37_bell_test",
     "title": T("The Bell test with entangled pairs"),
     "summary": T("Pairs of photons |Φ+⟩ or of spins ½ in the singlet fly to two stations; each has two settings, "
                  "chosen fixed or at random before the particle arrives (outside the other side's light cone). "
@@ -697,4 +697,22 @@ VIZ = {
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "university",
+    "section": "quantum",
+    "ui": "standard",
+    "teaser": T("Entangled pairs reach two distant stations; the CHSH parameter exceeds 2, the bound of any local theory."),
+    "courses": [
+        {"text": T("Sakurai & Napolitano, Modern Quantum Mechanics"), "chapters": "3"},
+        {"text": T("Griffiths & Schroeter, Introduction to Quantum Mechanics"), "chapters": "12"},
+        {"text": T("Bell, Speakable and Unspeakable in Quantum Mechanics"), "chapters": ""},
+    ],
+    "related": [],
+    "recordings": [
+        {"id": "chsh", "preset": "photon_chsh", "seconds": 60, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 55},
+        {"id": "local_model", "preset": "photon_lhv", "seconds": 60, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 55},
+        {"id": "scan", "preset": "scan", "seconds": 60, "fps": 20,
+         "speed": None, "seed": 1, "script": [], "poster": 55},
+    ],
 }

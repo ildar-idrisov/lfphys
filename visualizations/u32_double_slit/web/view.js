@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// v02 view: the apparatus seen from above (the computed wave behind the slits, particles in flight, flow lines)
+// u32 view: the apparatus seen from above (the computed wave behind the slits, particles in flight, flow lines)
 // and the screen (individual detections and their histogram against the run's own expectation).
 // All data come from the run: detections are events with their computed positions and times, the map and the
 // curves are computed by the run for the current apparatus segment.

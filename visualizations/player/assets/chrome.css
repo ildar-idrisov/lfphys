@@ -180,7 +180,7 @@ details.lgroup > summary { cursor: pointer; font-weight: 600; font-size: 12px; p
 .s3d-legend-ax { display: flex; justify-content: space-between; }
 .s3d-note { position: absolute; left: 50%; top: 46px; transform: translateX(-50%); padding: 3px 10px; background: rgba(28,109,208,.88); color: #fff; border-radius: 4px; font-size: 12px; pointer-events: none; white-space: nowrap; }
 .s3d-windows { flex: 0 0 min(40%, 420px); display: flex; flex-direction: column; gap: 6px; padding: 6px; overflow: auto; scrollbar-gutter: stable; background: var(--bg); border-left: 1px solid var(--line); }
-.s3d-windows.wide { flex-basis: min(50%, 640px); }  /* a world's own image window (v10 camera, v11 plane): wider, the 3-D scene keeps the rest */
+.s3d-windows.wide { flex-basis: min(50%, 640px); }  /* a world's own image window (u39 camera, r12 plane): wider, the 3-D scene keeps the rest */
 .slicewin { border: 2px solid var(--line); border-radius: 6px; background: var(--panel); display: flex; flex-direction: column; min-height: 220px; flex: 1 1 0; }
 .slicewin.sel { box-shadow: 0 0 0 2px var(--accent); }
 .sw-head { display: flex; align-items: center; gap: 4px; padding: 3px 6px; font-size: 12px; }

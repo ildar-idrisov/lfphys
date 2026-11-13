@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v05 optical bench: every preset runs and passes its checks; the closed-form checks (Brewster, total internal
+"""u35 optical bench: every preset runs and passes its checks; the closed-form checks (Brewster, total internal
 reflection, antireflection, Bragg, Airy, tunnelling, Joule heating) pass; live changes apply at once; single photons
 reproduce the computed R statistically; outcomes are revealed only on arrival."""
 
@@ -18,9 +18,9 @@ from lfphys.core.constants import C  # noqa: E402
 from lfphys.core.optics import interfaces, thin_films  # noqa: E402
 from lfphys.i18n import render  # noqa: E402
 from lfviz import registry  # noqa: E402
-from v05_optics_bench.engine.bench import rta  # noqa: E402
+from u35_optics_bench.engine.bench import rta  # noqa: E402
 
-V = "v05_optics_bench"
+V = "u35_optics_bench"
 PRESETS = list(registry.load(V)["schema"].presets)
 
 
@@ -402,7 +402,7 @@ def test_a_change_that_fails_inside_leaves_the_world_as_it_was(monkeypatch):
     the new parameters, structure and segment in place and escaped the runner (no rollback of the player's control).
     Now a live change is atomic: nothing of it is kept or emitted unless it succeeds as a whole, and any exception
     is reported as a refused change followed by the live values in force."""
-    import v05_optics_bench.viz as vz
+    import u35_optics_bench.viz as vz
     h = Harness(V, "tir")
     run_photons(h, 200)
     before = dict(params=dict(h.sim.params), seg=h.sim.seg, tot=dict(h.sim.tot), segc=dict(h.sim.segc),
@@ -491,7 +491,7 @@ def test_airy_refusals_map_to_the_worlds_words_by_code(code, call):
     """`_airy_reason` reads the engine's code, not its English: every Airy refusal gets the world's own sentence."""
     from lfphys.codes import code_of, coded
     from lfphys.i18n import T
-    from v05_optics_bench.viz import _AIRY_REASONS, _airy_reason
+    from u35_optics_bench.viz import _AIRY_REASONS, _airy_reason
     e = _raised(call) if call else coded(ValueError(T("airy: reworded by the engine")), code)
     assert code_of(e) == code
     assert _airy_reason(e) == _AIRY_REASONS[code] and _airy_reason(e)["$t"] != e.args[0]["$t"]
@@ -512,14 +512,14 @@ def test_airy_grazing_is_coded_by_the_engine():
 
 def test_airy_reason_without_a_code_keeps_the_engines_text():
     from lfphys.i18n import T
-    from v05_optics_bench.viz import _airy_reason
+    from u35_optics_bench.viz import _airy_reason
     assert _airy_reason(ValueError(T("some new refusal"))) == T("some new refusal")
     assert _airy_reason(ValueError("plain"))["$t"] == "the engine's reason: {err}"
 
 
 def test_film_below_critical_maps_to_no_reference():
     from lfphys.codes import code_of
-    from v05_optics_bench.viz import _evanescent_ref
+    from u35_optics_bench.viz import _evanescent_ref
     th = math.radians(20.0)  # below the critical angle of glass 1.5 -> air
     assert code_of(_raised(thin_films.evanescent_length, 1.5, 1.0, 600.0, th)) == "film.below_critical"
     assert _evanescent_ref(1.5, 1.0, 600.0, th) is None
@@ -530,14 +530,14 @@ def test_joule_quadrature_limit_maps_to_an_informational_check(monkeypatch):
     """film.too_many_nodes: the Joule check becomes informational with the engine's numbers, never a crash."""
     from lfphys.codes import coded
     from lfphys.i18n import T
-    from v05_optics_bench import viz as VZ
+    from u35_optics_bench import viz as VZ
 
     def refuse(*a, **k):
         raise coded(ValueError(T("Joule absorption: {n:d} quadrature nodes needed in one layer (the limit is {lim:d})",
                                  n=99999, lim=4096)), "film.too_many_nodes")
 
     monkeypatch.setattr(VZ.thin_films, "joule_absorption_s", refuse)
-    h = Harness("v05_optics_bench", "metal")
+    h = Harness("u35_optics_bench", "metal")
     c = h.checks()["joule0"]
     assert c.get("info") and c["note"]["$t"].startswith("not checked here: the Joule integral")
     assert c["note"]["a"] == {"n": 99999, "lim": 4096}

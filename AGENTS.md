@@ -112,14 +112,14 @@ lfphys Research Licence 1.0; the Licensor is the owner as an individual (residen
 | path | content |
 |---|---|
 | `lfphys/` | the physics engine (Python package `lfphys`): layers `LAYERS.md`, catalogue `README.md`, plan `PLAN.md`, sources `sources/`, tests `tests/` |
-| `visualizations/` | one server and one player in Docker (port 8479) and one folder `vNN_<slug>/` per visualization; rules and API `RULES.md`, owner guide `README.md` (English) and `README.ru.md` (Russian); the player's 3-D environment `player/js/scene3d.js`, `player/js/slices.js`; third-party code only in `player/vendor/` (three.js, MIT, unmodified) |
+| `visualizations/` | one server and one player in Docker (port 8479) and one folder per visualization, named by its audience and plan id: `sNN_<slug>/` (school), `uNN_<slug>/` (university), `rNN_<slug>/` (research), `pNN_<slug>/` (laboratories; old `vNN_` ids are aliases in `server/lfviz/registry.py`); the planned items `planned.json`; rules and API `RULES.md`, owner guide `README.md` (English) and `README.ru.md` (Russian); the player's 3-D environment `player/js/scene3d.js`, `player/js/slices.js`; third-party code only in `player/vendor/` (three.js, MIT, unmodified) |
 | `reviews/` | independent reviews of the engine and the visualizations, rules and registry `reviews/README.md` |
 | `STATUS.md` | the one place for open problems and plans of the engine and the visualizations |
 | `LICENSE.md`, `LICENSE-DOCS.txt`, `NOTICE`, `COMMERCIAL.md`, `CITATION.cff`, `CONTRIBUTING.md`, `CLA.md`, `PUBLICATIONS.md` | licence (code: the lfphys Research Licence 1.0, `LicenseRef-lfphys-Research-1.0` — noncommercial research only, citation required; documentation: CC BY-NC-SA 4.0 with additional permissions for scholarly publications; commercial use only by a separate written agreement), citation, contribution terms and the contributor agreement; copies in `lfphys/` and `visualizations/` |
 
 ## 3. Rules
 
-1. **Visualizations live in `visualizations/`.** A new visualization is a new subfolder `vNN_<slug>/` made on the
+1. **Visualizations live in `visualizations/`.** A new visualization is a new subfolder `sNN_`/`uNN_`/`rNN_`/`pNN_<slug>/` (its audience and plan id) made on the
    owner's request; the one server and the one player serve all of them through one API (`visualizations/RULES.md`).
    Runs start only from the owner's browser.
 2. **Computed, not drawn.** Every visible consequence is computed by the current run from its inputs. Closed forms of

@@ -35,6 +35,7 @@
  "Box size along z, nm": "Размер ящика по z, нм",
  "Box volume": "Объём ящика",
  "Build matter from atoms and see how thermal properties arise from Newton's laws: the velocity distribution, pressure, melting, liquid and vapour, the heat and the work of a piston.": "Собрать вещество из атомов и посмотреть, как из законов Ньютона возникают тепловые свойства: распределение скоростей, давление, плавление, жидкость и пар, теплота и работа поршня.",
+ "Build matter from atoms and watch temperature, pressure and phases arise.": "Соберите вещество из атомов и посмотрите, как возникают температура, давление и фазы.",
  "CSVR (Bussi–Donadio–Parrinello): canonical, gentle": "CSVR (Бусси–Донадио–Парринелло): канонический, мягкий",
  "Centre of the region: {c}, nm (0 and size 0: the whole box)": "Центр области: {c}, нм (0 и размер 0 — весь ящик)",
  "Centre-of-mass velocity v{c}, m/s": "Скорость центра масс v{c}, м/с",

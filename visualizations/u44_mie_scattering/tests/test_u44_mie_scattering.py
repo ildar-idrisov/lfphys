@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v17: scattering of light by drops. Every preset builds and passes its checks; what the run sends is the engine's
+"""u44: scattering of light by drops. Every preset builds and passes its checks; what the run sends is the engine's
 (the phase function and the Debye terms against lfphys.core.optics.mie and mie_debye called directly, the sky's
 spectra against mie_poly, the near field against mie.near_field); the sky is revealed one wavelength per T_LAM of world
 time; a live change of the light recomputes the drop and restarts the sky; the near-field slices are verified on the
@@ -21,10 +21,10 @@ from harness import Harness  # noqa: E402
 from lfphys.core import data as D  # noqa: E402
 from lfphys.i18n import english, text_of  # noqa: E402
 from lfphys.core.optics import mie, mie_debye as DB, mie_poly as MP  # noqa: E402
-from v17_mie_scattering.engine import drops as DR  # noqa: E402
-from v17_mie_scattering.viz import DISP_DEG, MAX_NODES, N_QUAD, SCHEMA, SKY_TH, T_LAM  # noqa: E402
+from u44_mie_scattering.engine import drops as DR  # noqa: E402
+from u44_mie_scattering.viz import DISP_DEG, MAX_NODES, N_QUAD, SCHEMA, SKY_TH, T_LAM  # noqa: E402
 
-V = "v17_mie_scattering"
+V = "u44_mie_scattering"
 FAST = {"n_lam": 8}
 
 
@@ -292,7 +292,7 @@ def test_the_identity_checks_catch_what_they_test(monkeypatch):
 
 def test_debye_check_of_an_air_bubble_at_large_x():
     """M4: m = 0.75 (n = 1 in a medium of 1.333, an air bubble in water) at x = 1.9e4 (380 nm, 860 um): the
-    Debye-route error 1.0e-9 exceeded v17's fixed 5e-10 on a correct engine; the derived per-order tolerance
+    Debye-route error 1.0e-9 exceeded u44's fixed 5e-10 on a correct engine; the derived per-order tolerance
     u (1000 N + 32 s) holds it (measured err/tol <= 0.46 over 281 cases)."""
     p = {"radius_um": 860.0, "width": 0.0, "index": "custom", "n_re": 1.0, "n_im": 0.0, "n_medium": 1.333,
          "light": "mono", "lam_nm": 380.0, "n_lam": 8}
@@ -376,7 +376,7 @@ def test_index_matched_drop_is_refused_and_next_event_is_one_wavelength():
     wavelength of the sky at once (20-40 s, > 2 min for 1 mm drops): now one wavelength per press, and the size nodes
     of a wavelength are capped by a time budget (coarse, flagged)."""
     import time
-    from v17_mie_scattering.viz import STEP_BUDGET_S, SKY_S_PER_UNIT, Simulation
+    from u44_mie_scattering.viz import STEP_BUDGET_S, SKY_S_PER_UNIT, Simulation
     vals = {"index": "custom", "n_re": 1.0, "n_im": 0.0, "n_medium": 1.0}
     with pytest.raises(ValueError) as e:
         Simulation.check_params({**SCHEMA.defaults(), **vals})

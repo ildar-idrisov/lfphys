@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v02 physics: wave kinematics, the diffraction engine, marks and the whole stream of particles."""
+"""u32 physics: wave kinematics, the diffraction engine, marks and the whole stream of particles."""
 
 import math
 import sys
@@ -18,7 +18,7 @@ from lfphys.i18n import render  # noqa: E402
 from lfphys.theories.approx import kirchhoff, paraxial  # noqa: E402
 from lfphys.tools import stats  # noqa: E402
 
-V = "v02_double_slit"
+V = "u32_double_slit"
 
 
 def _en(x):
@@ -80,7 +80,7 @@ def test_paraxial_matches_rayleigh_sommerfeld():
 def test_rs_exact_for_wide_slit_in_near_field():
     """Inside the geometric projection of a wide slit, close behind it (Fresnel number 1e5), the exact field is the
     incident wave up to small edge ripples. With the former cap of 2000 panels this needed 260 rad per 32-node panel
-    and the reference integral was wrong (response check to the v02 review)."""
+    and the reference integral was wrong (response check to the u32 review)."""
     lam, a, z = 5e-12, 1e-6, 2e-6
     k = 2 * math.pi / lam
     x = np.linspace(-0.4e-6, 0.4e-6, 9)
@@ -311,7 +311,7 @@ def test_R2_coherence_estimator_unbiased_on_samples():
 
 def test_coherence_error_is_calibrated_at_full_coherence():
     """|gamma| = 1 at N = 100: the Fisher error was 14x smaller than the real scatter (zero expected minima); the shown
-    error is the parametric bootstrap, within 30 % of the scatter (response to the v02 review)."""
+    error is the parametric bootstrap, within 30 % of the scatter (response to the u32 review)."""
     h = Harness(V, "photon_young")
     sim = h.sim
     P = sim.theory["curves"]["all"]
@@ -409,7 +409,7 @@ def test_R13_R15_reported():
 def test_map_shows_the_wave_before_the_analyzer():
     """Eraser: orthogonal polarizers at the slits, analyzer at 45 deg in front of the screen. Between the slits and the
     analyzer the marks are orthogonal, so the map has no fringes; the screen (after the analyzer) has full fringes
-    (found in the processing of the v02 review: the map used the marks after the analyzer)."""
+    (found in the processing of the u32 review: the map used the marks after the analyzer)."""
     h = Harness(V, "photon_eraser")
     sim = h.sim
     b = [b for m, b in h.msgs if m.get("type") == "segment"][0]
@@ -426,7 +426,7 @@ def test_map_shows_the_wave_before_the_analyzer():
 
 
 def test_R19_right_circular_has_s3_plus_one():
-    from v02_double_slit.engine.experiment import state_label
+    from u32_double_slit.engine.experiment import state_label
     lab = state_label(np.array(marks.POL_STATES["R"], complex), "pol")
     assert lab.msgid.startswith("Stokes") and lab.args["s3"] == pytest.approx(1.0) and _en(lab).endswith("+1.00)")
     chi = marks.sample_internal(np.random.default_rng(0), "pol", "custom", 1.0, (0.0, 45.0))
@@ -631,7 +631,7 @@ def test_vector_and_scalar_curves_approach_each_other_for_wide_slits():
 
 def _vector_counting(monkeypatch):
     import importlib
-    vz = importlib.import_module("v02_double_slit.viz")
+    vz = importlib.import_module("u32_double_slit.viz")
     calls = []
     orig = vz.vslit.solve
 
@@ -699,7 +699,7 @@ def test_vector_solution_is_not_solved_again_for_the_source_or_the_detector(monk
 
 
 def test_vector_mode_error_estimate_bounds_the_truncation_error():
-    """Review B8 C6: v02 showed T(1.25 M)/T(M) - 1, 3-6 times below the true error. Now the estimate (Richardson from
+    """Review B8 C6: u32 showed T(1.25 M)/T(M) - 1, 3-6 times below the true error. Now the estimate (Richardson from
     sub-blocks, ``SlitSolution.error_estimate``) is shown, and lies above the true error of vector_narrow against the
     Richardson limits from 52, 104 and 208 modes (processing of review B8; the review's s02 gives the same digits)."""
     h = Harness(V, "vector_narrow", seed=1)
@@ -785,7 +785,7 @@ def test_dark_counts_are_bounded_per_step_and_refused_far_above_the_source():
     above 100 per emitted particle is refused before anything is built (check_params, the world, a live change), saying
     what to change; below it every step holds at most ~STEP_EVENTS events. Negative control: the step of before
     (4000/rate) at the limit would hold 100 times more dark counts."""
-    from v02_double_slit.viz import DARK_PER_PARTICLE_MAX, SCHEMA, STEP_EVENTS, Simulation
+    from u32_double_slit.viz import DARK_PER_PARTICLE_MAX, SCHEMA, STEP_EVENTS, Simulation
     with pytest.raises(ValueError) as e:
         Simulation.check_params({**SCHEMA.defaults(), "dark_rate": 1e12})
     assert "Dark counts” to 1e+05" in _txt(e.value)
@@ -825,7 +825,7 @@ def test_refusals_name_the_choice_and_what_to_take():
     the particle, and the choices that work (each of them builds). The schema marks the options per particle
     (option-level show_if, when the framework has it)."""
     import re
-    import v02_double_slit.viz as VZ
+    import u32_double_slit.viz as VZ
     with pytest.raises(ValueError) as e:
         Harness(V, None, {"el1": "rot_y"})
     text = _txt(e.value)
@@ -871,7 +871,7 @@ def test_probe_recoil_and_grw_kicks_beyond_the_screen_are_refused_with_the_thres
 def test_honest_failures_are_marked_expected():
     """Review UX-params P23: the Sorkin parameter of «triple_mod» (the Born rule changed) fails by design; it carries
     `expected` and the preset a note; the same check under the Born rule carries none (negative control)."""
-    from v02_double_slit.viz import SCHEMA as S2
+    from u32_double_slit.viz import SCHEMA as S2
     h = Harness(V, "triple_mod")
     c = h.checks()["sork0"]
     assert c["ok"] is False and "Born rule is changed" in _en(c["expected"])

@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v11 apparatus: the double slit in the plane (x, z) as potentials on a grid, the packet, the detectors, the path
+"""r12 apparatus: the double slit in the plane (x, z) as potentials on a grid, the packet, the detectors, the path
 mark and the flux; references of the approximate theories for the checks. No physics of its own: the wave is evolved
 by lfphys.core.quantum.schrodinger_nd, the trajectories by lfphys.theories.interpretations.bohm.
 
@@ -31,7 +31,7 @@ ABS_W = 6.0            # absorbing layers: width (lambda)
 ABS_STRENGTH = 2.0     # and height (units of E0); chosen by layer_reflection (README): R < 1e-5 for the beam
 SCREEN_GAP = 4.0       # free space between the screen's face z = L and its absorbing layer (lambda): the layer's W''
                        # jumps at its inner face, so the wave is only C^3 there and a difference stencil centred on it
-                       # errs by ~h^4 (1.2e-4 of the flux at lambda/5, v12); the gap keeps the flux's stencil (16 samples
+                       # errs by ~h^4 (1.2e-4 of the flux at lambda/5, r13); the gap keeps the flux's stencil (16 samples
                        # each side, 3.2 lambda at lambda/5) in free space
 
 
@@ -199,7 +199,7 @@ def _coherence_matrix(geo, open_slits, phases, coherence):
 
 
 def paraxial_pattern(xs, geo: Geometry, open_slits=(True, True), phases=None, coherence=1.0):
-    """The screen pattern of the paraxial (Fresnel) theory with Kirchhoff boundary values (v02's engine,
+    """The screen pattern of the paraxial (Fresnel) theory with Kirchhoff boundary values (u32's engine,
     lfphys.theories.approx.paraxial): plane-wave incidence on slits weighted by the packet's transverse amplitude at
     their centres, summed over the packet's wavenumbers (time-integrated flux = sum over energies), distance from the
     plate's exit face; ``phases`` per slit (Aharonov-Bohm), ``coherence`` the marks' overlap <m_B|m_A>. Normalised to
@@ -229,7 +229,7 @@ def kirchhoff_pattern(xs, geo: Geometry, open_slits=(True, True), phases=None, c
         Up = kirchhoff.slit_fields(xs, z + dz, k, c, geo.a)  # per slit, unit amplitude
         Um = kirchhoff.slit_fields(xs, z - dz, k, c, geo.a)
         U0, dU = 0.5 * (Up + Um), (Up - Um) / (2 * dz)
-        # j_z = Im sum_jl G_jl U_l^* dU_j / k (marks through G, as in the Born rule of v02)
+        # j_z = Im sum_jl G_jl U_l^* dU_j / k (marks through G, as in the Born rule of u32)
         P += w * np.einsum("jx,lx,jl->x", dU, U0.conj(), G).imag / k
     return P / np.trapezoid(P, xs)
 

@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v13: the hydrogen atom in 3-D. Every preset builds and passes its checks; the drawn cloud is |psi|^2 of the
+"""u40: the hydrogen atom in 3-D. Every preset builds and passes its checks; the drawn cloud is |psi|^2 of the
 independent route to the 8-bit resolution it is sent with; a superposition's phases are revealed only when the world's
 time reaches them and the record stops growing after one period; real orbitals carry no current, complex ones circulate;
 2p_x + i 2p_y is the m = +1 state; the reduced mass and the charge scale the atom; the slice planes of the shared
@@ -21,10 +21,10 @@ from harness import Harness  # noqa: E402
 
 from lfphys.core.quantum import hydrogen as H  # noqa: E402
 from lfphys.i18n import english, text_of  # noqa: E402
-from v13_hydrogen_3d.engine import atoms as A  # noqa: E402
-from v13_hydrogen_3d.viz import SCHEMA  # noqa: E402
+from u40_hydrogen_3d.engine import atoms as A  # noqa: E402
+from u40_hydrogen_3d.viz import SCHEMA  # noqa: E402
 
-V = "v13_hydrogen_3d"
+V = "u40_hydrogen_3d"
 
 
 def failed(h):
@@ -194,7 +194,7 @@ def test_largest_states_of_the_schema_build():
 def test_quantum_numbers_the_form_cannot_bound_are_fitted_and_said(params, state, note):
     """Review UX-params P10 (was: refused at the start, 102 of 235 combinations, hidden by the player): the world takes
     l < n and |m| <= l nearest to what was asked, says so, and its header carries the state shown; idempotent."""
-    from v13_hydrogen_3d.viz import _fit_numbers
+    from u40_hydrogen_3d.viz import _fit_numbers
     h = Harness(V, None, {**params, "ng": 64})
     hp = h.of("header")[-1]["params"]
     assert (hp["n"], hp["l"], hp["m"]) == state and not failed(h)

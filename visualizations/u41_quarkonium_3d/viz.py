@@ -1,13 +1,13 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""v14: quarkonium in 3-D — wave functions of a heavy quark pair in the Cornell model (a wrapper over lfphys; plan
+"""u41: quarkonium in 3-D — wave functions of a heavy quark pair in the Cornell model (a wrapper over lfphys; plan
 P14.9).
 
 The pair cc̄ or bb̄ bound by V(r) = -kappa/r + r/a^2 (lfphys.theories.models.cornell: a FITTED, non-relativistic,
 spin-averaged model outside the core; it predicts level splittings, not absolute masses, STATUS V17). The radial
 functions come from the radial solver (lfphys.core.quantum.radial.wavefunctions, measured accuracy), interpolated by
 lfphys.core.quantum.central3d.RadialTable; the 3-D clouds, currents, superpositions and slices are those of
-lfviz.orbitals3d, the same as v13's. The cloud is the distribution of the relative coordinate r = r_q - r_q̄ (the
+lfviz.orbitals3d, the same as u40's. The cloud is the distribution of the relative coordinate r = r_q - r_q̄ (the
 centre of mass at the origin). Lengths in femtometres, energies in MeV, time in seconds.
 
 The state is live (review UX-ui U12): changing it prepares the new state at the current moment (an ideal preparation:
@@ -327,7 +327,7 @@ class Simulation(OrbitalWorld):
 
 
 VIZ = {
-    "id": "v14_quarkonium_3d",
+    "id": "u41_quarkonium_3d",
     "title": T("Quarkonium in 3-D: wave functions"),
     "summary": T("A heavy quark pair cc̄ or bb̄ in the Cornell model: the cloud |ψ|², the probability current, slices "
                  "with the phase, superpositions; the model's level splittings against experiment."),
@@ -336,4 +336,17 @@ VIZ = {
     "version": "1.0",
     "schema": SCHEMA,
     "simulation": Simulation,
+    "audience": "university",
+    "section": "particles",
+    "ui": "standard",
+    "teaser": T("Charmonium and bottomonium in 3-D: the quark pair's clouds, their nodes, and level splittings compared with experiment."),
+    "courses": [
+        {"text": T("Griffiths, Introduction to Elementary Particles"), "chapters": "5"},
+    ],
+    "related": [],
+    "recordings": [
+        {"id": "cc_2s", "preset": "cc_2S", "seconds": 30, "fps": 20, "speed": None, "seed": 1, "script": [], "poster": 10},
+        {"id": "bb_1s", "preset": "bb_1S", "seconds": 30, "fps": 20, "speed": None, "seed": 1, "script": [], "poster": 10},
+        {"id": "superposition", "preset": "cc_super", "seconds": 30, "fps": 20, "speed": None, "seed": 1, "script": [], "poster": 20},
+    ],
 }

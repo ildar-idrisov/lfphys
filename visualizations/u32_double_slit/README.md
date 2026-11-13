@@ -1,4 +1,4 @@
-# v02 — The double-slit experiment with single particles and observers
+# u32 — The double-slit experiment with single particles and observers
 
 **English** | [Русский](README.ru.md)
 
@@ -128,7 +128,7 @@ curve is then only a shape comparison: the flux of the vector solution for the s
 analyser, scaled to the same total as the scalar expectation (their units differ: no detector efficiency, no
 elements' transmission). No difference strip is drawn then [error in earlier: before review B8 (C8) the vector curve
 was per particle on the open width n·a and the strip showed its difference from the scalar expectation, dominated by
-that normalisation, e.g. 0.96 of the curve for a zero-phase element]. Open item: `../../STATUS.md`, v02's vector mode.
+that normalisation, e.g. 0.96 of the curve for a zero-phase element]. Open item: `../../STATUS.md`, u32's vector mode.
 
 **What is shown.** The screen panel draws all curves on one scale, that of the hits' own expectation:
 
@@ -255,7 +255,7 @@ Open items: `../../STATUS.md`, "V. Visualizations — open items".
 
 ## Tests
 
-`tests/test_v02_physics.py` (85 tests): kinematics (50 keV electron; slow neutron by E_k against 50-digit mpmath);
+`tests/test_u32_physics.py` (85 tests): kinematics (50 keV electron; slow neutron by E_k against 50-digit mpmath);
 Fresnel → Fraunhofer; Fresnel vs Rayleigh–Sommerfeld; the exact integral for a wide slit in the near field (incident
 wave inside the projection); the exact fields reused across segments; unaffordable columns reported as not verified; closed-form derivative; Parseval; polariser marks and the
 eraser; λ/2 plate; spin flip; Englert duality; readout completeness; dipole coherence vs closed forms; every preset

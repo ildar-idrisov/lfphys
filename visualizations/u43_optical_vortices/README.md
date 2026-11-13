@@ -1,4 +1,4 @@
-# v16 — optical vortices: Laguerre–Gauss beams, orbital angular momentum, the rotational Doppler effect
+# u43 — optical vortices: Laguerre–Gauss beams, orbital angular momentum, the rotational Doppler effect
 
 **English** | [Русский](README.ru.md)
 
@@ -162,7 +162,7 @@ not of a real one.
 
 ## Tests
 
-`tests/test_v16_optical_vortices.py`: every preset builds and passes its checks (with two detector measurements);
+`tests/test_u43_optical_vortices.py`: every preset builds and passes its checks (with two detector measurements);
 the regressions of review B8-beams — the paraxial check is the transverse difference and falls by 4 when w0 doubles
 (E_z by 2), sources beyond q = k are labelled or refused, both splits and the Poynting moment are checks where the
 window holds (the plate world's too), the cost guard refuses at once with the estimate, the fork's shares against the

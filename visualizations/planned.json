@@ -1,0 +1,1710 @@
+[
+ {
+  "id": "S01",
+  "audience": "school",
+  "section": "mechanics",
+  "title": "Straight-line motion: uniform and uniformly accelerated",
+  "grades": [
+   7,
+   9,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 7
+   },
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "AP1",
+    "unit": 1
+   },
+   {
+    "system": "IB-2025",
+    "topic": "A.1"
+   }
+  ],
+  "batch": "AB1",
+  "state": "next"
+ },
+ {
+  "id": "S02",
+  "audience": "school",
+  "section": "mechanics",
+  "title": "Free fall and Galileo's experiments",
+  "grades": [
+   9,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "AP1",
+    "unit": 1
+   },
+   {
+    "system": "IB-2025",
+    "topic": "A.1"
+   }
+  ],
+  "batch": "AB1",
+  "state": "next"
+ },
+ {
+  "id": "S03",
+  "audience": "school",
+  "section": "mechanics",
+  "title": "Motion of a body thrown horizontally and at an angle",
+  "grades": [
+   7,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 7
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "AP1",
+    "unit": 1
+   },
+   {
+    "system": "IB-2025",
+    "topic": "A.1"
+   },
+   {
+    "system": "AQA-7408",
+    "section": "3.4.1"
+   }
+  ],
+  "batch": "AB1",
+  "state": "next"
+ },
+ {
+  "id": "S04",
+  "audience": "school",
+  "section": "mechanics",
+  "title": "Motion in a circle",
+  "grades": [
+   9,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "AP1",
+    "unit": 2
+   },
+   {
+    "system": "IB-2025",
+    "topic": "A.2"
+   }
+  ],
+  "batch": "AB4",
+  "state": "planned"
+ },
+ {
+  "id": "S05",
+  "audience": "school",
+  "section": "mechanics",
+  "title": "Newton's laws",
+  "grades": [
+   9,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "AP1",
+    "unit": 2
+   },
+   {
+    "system": "IB-2025",
+    "topic": "A.2"
+   }
+  ],
+  "batch": "AB2",
+  "state": "planned"
+ },
+ {
+  "id": "S06",
+  "audience": "school",
+  "section": "mechanics",
+  "title": "The elastic force, Hooke's law, weight and weightlessness",
+  "grades": [
+   7,
+   9,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 7
+   },
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "AQA-7408",
+    "section": "3.4.2"
+   }
+  ],
+  "batch": "AB2",
+  "state": "planned"
+ },
+ {
+  "id": "S07",
+  "audience": "school",
+  "section": "mechanics",
+  "title": "Friction; a block on an inclined plane",
+  "grades": [
+   7,
+   9,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 7
+   },
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "AP1",
+    "unit": 2
+   }
+  ],
+  "batch": "AB2",
+  "state": "planned"
+ },
+ {
+  "id": "S08",
+  "audience": "school",
+  "section": "mechanics",
+  "title": "The lever, pulleys, the inclined plane; the moment of a force",
+  "grades": [
+   7,
+   9,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 7
+   },
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "AP1",
+    "unit": 5
+   },
+   {
+    "system": "AP1",
+    "unit": 6
+   },
+   {
+    "system": "IB-2025",
+    "topic": "A.4"
+   }
+  ],
+  "batch": "AB4",
+  "state": "planned"
+ },
+ {
+  "id": "S09",
+  "audience": "school",
+  "section": "mechanics",
+  "title": "Work, kinetic and potential energy, the conservation law",
+  "grades": [
+   7,
+   9,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 7
+   },
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "AP1",
+    "unit": 3
+   },
+   {
+    "system": "IB-2025",
+    "topic": "A.3"
+   }
+  ],
+  "batch": "AB1",
+  "state": "next"
+ },
+ {
+  "id": "S10",
+  "audience": "school",
+  "section": "mechanics",
+  "title": "Momentum, collisions, jet propulsion",
+  "grades": [
+   9,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "AP1",
+    "unit": 4
+   },
+   {
+    "system": "IB-2025",
+    "topic": "A.2"
+   }
+  ],
+  "batch": "AB2",
+  "state": "planned"
+ },
+ {
+  "id": "S11",
+  "audience": "school",
+  "section": "mechanics",
+  "title": "Universal gravitation, satellites, the first cosmic velocity",
+  "grades": [
+   9,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "IB-2025",
+    "topic": "D.1"
+   },
+   {
+    "system": "AP1",
+    "unit": 2
+   }
+  ],
+  "related": [
+   "u34_orbits",
+   "p01_gravity"
+  ],
+  "batch": "AB4",
+  "state": "planned"
+ },
+ {
+  "id": "S12",
+  "audience": "school",
+  "section": "mechanics",
+  "title": "The pendulum and the mass on a spring; damping, forced oscillations, resonance",
+  "grades": [
+   9,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "AP1",
+    "unit": 7
+   },
+   {
+    "system": "IB-2025",
+    "topic": "C.1"
+   }
+  ],
+  "batch": "AB4",
+  "state": "planned"
+ },
+ {
+  "id": "S13",
+  "audience": "school",
+  "section": "waves",
+  "title": "Mechanical waves: the rope and the ripple tank",
+  "grades": [
+   9,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "IB-2025",
+    "topic": "C.2"
+   },
+   {
+    "system": "IB-2025",
+    "topic": "C.3"
+   },
+   {
+    "system": "IB-2025",
+    "topic": "C.4"
+   },
+   {
+    "system": "AP2",
+    "unit": 14
+   }
+  ],
+  "batch": "AB5",
+  "state": "planned"
+ },
+ {
+  "id": "S14",
+  "audience": "school",
+  "section": "waves",
+  "title": "Sound: pitch, loudness, resonance, the Doppler effect",
+  "grades": [
+   9,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "IB-2025",
+    "topic": "C.5"
+   },
+   {
+    "system": "AP2",
+    "unit": 14
+   }
+  ],
+  "batch": "AB5",
+  "state": "planned"
+ },
+ {
+  "id": "S15",
+  "audience": "school",
+  "section": "fluids",
+  "title": "Pressure in liquids and gases: Pascal's law, communicating vessels, the hydraulic press, atmospheric pressure",
+  "grades": [
+   7
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 7
+   },
+   {
+    "system": "AP1",
+    "unit": 8
+   }
+  ],
+  "batch": "AB6",
+  "state": "planned"
+ },
+ {
+  "id": "S16",
+  "audience": "school",
+  "section": "fluids",
+  "title": "Archimedes' principle; floating bodies",
+  "grades": [
+   7
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 7
+   },
+   {
+    "system": "AP1",
+    "unit": 8
+   }
+  ],
+  "batch": "AB6",
+  "state": "planned"
+ },
+ {
+  "id": "S17",
+  "audience": "school",
+  "section": "heat",
+  "title": "Brownian motion and diffusion",
+  "grades": [
+   7,
+   8,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 7
+   },
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 8
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   }
+  ],
+  "batch": "AB5",
+  "state": "planned"
+ },
+ {
+  "id": "S18",
+  "audience": "school",
+  "section": "heat",
+  "title": "Heat transfer, quantity of heat, the heat balance equation",
+  "grades": [
+   8,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 8
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "IB-2025",
+    "topic": "B.1"
+   }
+  ],
+  "batch": "AB5",
+  "state": "planned"
+ },
+ {
+  "id": "S19",
+  "audience": "school",
+  "section": "heat",
+  "title": "Melting, boiling, evaporation, humidity",
+  "grades": [
+   8,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 8
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   }
+  ],
+  "batch": "AB5",
+  "state": "planned"
+ },
+ {
+  "id": "S20",
+  "audience": "school",
+  "section": "heat",
+  "title": "The gas laws: isotherm, isobar, isochore",
+  "grades": [
+   8,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 8
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "IB-2025",
+    "topic": "B.3"
+   },
+   {
+    "system": "AP2",
+    "unit": 9
+   }
+  ],
+  "batch": "AB5",
+  "state": "planned"
+ },
+ {
+  "id": "S21",
+  "audience": "school",
+  "section": "heat",
+  "title": "The first law of thermodynamics and heat engines",
+  "grades": [
+   8,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 8
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "IB-2025",
+    "topic": "B.4"
+   },
+   {
+    "system": "AP2",
+    "unit": 9
+   }
+  ],
+  "batch": "AB5",
+  "state": "planned"
+ },
+ {
+  "id": "S22",
+  "audience": "school",
+  "section": "electromagnetism",
+  "title": "Electric charges and the electric field",
+  "grades": [
+   8,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 8
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "AP2",
+    "unit": 10
+   },
+   {
+    "system": "IB-2025",
+    "topic": "D.2"
+   }
+  ],
+  "batch": "AB3",
+  "state": "planned"
+ },
+ {
+  "id": "S23",
+  "audience": "school",
+  "section": "electromagnetism",
+  "title": "The capacitor",
+  "grades": [
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "APC",
+    "unit": 10
+   },
+   {
+    "system": "AQA-7408",
+    "section": "3.7.4"
+   }
+  ],
+  "batch": "AB3",
+  "state": "planned"
+ },
+ {
+  "id": "S24",
+  "audience": "school",
+  "section": "electromagnetism",
+  "title": "Current, voltage, Ohm's law, the resistance of a conductor",
+  "grades": [
+   8,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 8
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "AP2",
+    "unit": 11
+   },
+   {
+    "system": "IB-2025",
+    "topic": "B.5"
+   }
+  ],
+  "batch": "AB2",
+  "state": "planned"
+ },
+ {
+  "id": "S25",
+  "audience": "school",
+  "section": "electromagnetism",
+  "title": "Series, parallel and mixed connection",
+  "grades": [
+   8,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 8
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "AP2",
+    "unit": 11
+   }
+  ],
+  "batch": "AB2",
+  "state": "planned"
+ },
+ {
+  "id": "S26",
+  "audience": "school",
+  "section": "electromagnetism",
+  "title": "Work and power of a current, the Joule–Lenz law, a lamp, a heater",
+  "grades": [
+   8,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 8
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   }
+  ],
+  "batch": "AB2",
+  "state": "planned"
+ },
+ {
+  "id": "S27",
+  "audience": "school",
+  "section": "electromagnetism",
+  "title": "EMF and internal resistance; Ohm's law for a complete circuit",
+  "grades": [
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   },
+   {
+    "system": "AQA-7408",
+    "section": "3.5.1"
+   },
+   {
+    "system": "IB-2025",
+    "topic": "B.5"
+   }
+  ],
+  "batch": "AB2",
+  "state": "planned"
+ },
+ {
+  "id": "S28",
+  "audience": "school",
+  "section": "electromagnetism",
+  "title": "Current in various media: metals, the semiconductor diode, an electrolyte",
+  "grades": [
+   8,
+   10
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 8
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 10
+   }
+  ],
+  "batch": null,
+  "state": "planned"
+ },
+ {
+  "id": "S29",
+  "audience": "school",
+  "section": "electromagnetism",
+  "title": "The magnetic field of magnets and currents; Oersted's experiment; the electromagnet",
+  "grades": [
+   8,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 8
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "AP2",
+    "unit": 12
+   },
+   {
+    "system": "IB-2025",
+    "topic": "D.2"
+   }
+  ],
+  "batch": "AB3",
+  "state": "planned"
+ },
+ {
+  "id": "S30",
+  "audience": "school",
+  "section": "electromagnetism",
+  "title": "The Ampère force, the electric motor, the Lorentz force",
+  "grades": [
+   8,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 8
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "AP2",
+    "unit": 12
+   },
+   {
+    "system": "IB-2025",
+    "topic": "D.3"
+   }
+  ],
+  "batch": "AB3",
+  "state": "planned"
+ },
+ {
+  "id": "S31",
+  "audience": "school",
+  "section": "electromagnetism",
+  "title": "Electromagnetic induction; Lenz's rule; the generator",
+  "grades": [
+   8,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 8
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "AP2",
+    "unit": 12
+   },
+   {
+    "system": "IB-2025",
+    "topic": "D.4"
+   }
+  ],
+  "batch": "AB4",
+  "state": "planned"
+ },
+ {
+  "id": "S32",
+  "audience": "school",
+  "section": "electromagnetism",
+  "title": "The oscillating circuit, alternating current, resonance, the transformer",
+  "grades": [
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "AQA-7408",
+    "section": "3.7.5"
+   }
+  ],
+  "batch": "AB4",
+  "state": "planned"
+ },
+ {
+  "id": "S33",
+  "audience": "school",
+  "section": "electromagnetism",
+  "title": "Electromagnetic waves: emission, reflection, polarisation, the scale of waves",
+  "grades": [
+   9,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   }
+  ],
+  "batch": "AB5",
+  "state": "planned"
+ },
+ {
+  "id": "S34",
+  "audience": "school",
+  "section": "optics",
+  "title": "Reflection of light; plane and spherical mirrors",
+  "grades": [
+   9,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "AP2",
+    "unit": 13
+   }
+  ],
+  "batch": "AB4",
+  "state": "planned"
+ },
+ {
+  "id": "S35",
+  "audience": "school",
+  "section": "optics",
+  "title": "Refraction of light, total internal reflection, the light guide",
+  "grades": [
+   9,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "AP2",
+    "unit": 13
+   },
+   {
+    "system": "IB-2025",
+    "topic": "C.3"
+   }
+  ],
+  "related": [
+   "u35_optics_bench"
+  ],
+  "batch": "AB3",
+  "state": "planned"
+ },
+ {
+  "id": "S36",
+  "audience": "school",
+  "section": "optics",
+  "title": "Lenses, image construction, optical instruments, the eye",
+  "grades": [
+   9,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "AP2",
+    "unit": 13
+   }
+  ],
+  "batch": "AB4",
+  "state": "planned"
+ },
+ {
+  "id": "S37",
+  "audience": "school",
+  "section": "optics",
+  "title": "Dispersion of light, the spectrum, colour; the rainbow",
+  "grades": [
+   9,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   }
+  ],
+  "related": [
+   "u44_mie_scattering"
+  ],
+  "batch": "AB4",
+  "state": "planned"
+ },
+ {
+  "id": "S38",
+  "audience": "school",
+  "section": "optics",
+  "title": "Interference and diffraction of light; the diffraction grating; polarisation",
+  "grades": [
+   9,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "IB-2025",
+    "topic": "C.3"
+   },
+   {
+    "system": "AP2",
+    "unit": 14
+   }
+  ],
+  "related": [
+   "u32_double_slit",
+   "u38_wave_3d",
+   "r12_double_slit_2d"
+  ],
+  "batch": "AB4",
+  "state": "planned"
+ },
+ {
+  "id": "S39",
+  "audience": "school",
+  "section": "relativity",
+  "title": "Foundations of special relativity: the relativity of simultaneity, time dilation, length contraction, E = mc²",
+  "grades": [
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "IB-2025",
+    "topic": "A.5"
+   },
+   {
+    "system": "AQA-7408",
+    "section": "3.12"
+   },
+   {
+    "system": "AP2",
+    "unit": 15
+   }
+  ],
+  "related": [
+   "u31_light_travel",
+   "u39_fast_observer"
+  ],
+  "batch": "AB6",
+  "state": "planned"
+ },
+ {
+  "id": "S40",
+  "audience": "school",
+  "section": "quantum",
+  "title": "The photoelectric effect: Stoletov's experiments, the laws, Einstein's equation",
+  "grades": [
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "AP2",
+    "unit": 15
+   },
+   {
+    "system": "IB-2025",
+    "topic": "E.2"
+   },
+   {
+    "system": "AQA-7408",
+    "section": "3.2.2"
+   }
+  ],
+  "batch": "AB6",
+  "state": "planned"
+ },
+ {
+  "id": "S41",
+  "audience": "school",
+  "section": "atom",
+  "title": "Rutherford's experiment and the model of the atom",
+  "grades": [
+   9,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   }
+  ],
+  "batch": "AB6",
+  "state": "planned"
+ },
+ {
+  "id": "S42",
+  "audience": "school",
+  "section": "atom",
+  "title": "Line spectra, energy levels, Bohr's postulates",
+  "grades": [
+   9,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "IB-2025",
+    "topic": "E.1"
+   },
+   {
+    "system": "AQA-7408",
+    "section": "3.2.2"
+   }
+  ],
+  "related": [
+   "u40_hydrogen_3d"
+  ],
+  "batch": "AB6",
+  "state": "planned"
+ },
+ {
+  "id": "S43",
+  "audience": "school",
+  "section": "nucleus",
+  "title": "Radioactivity: α, β, γ, the half-life, the background",
+  "grades": [
+   9,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "IB-2025",
+    "topic": "E.3"
+   },
+   {
+    "system": "AP2",
+    "unit": 15
+   },
+   {
+    "system": "AQA-7408",
+    "section": "3.8"
+   }
+  ],
+  "batch": "AB6",
+  "state": "planned"
+ },
+ {
+  "id": "S44",
+  "audience": "school",
+  "section": "nucleus",
+  "title": "Nuclear reactions, binding energy, fission and fusion",
+  "grades": [
+   9,
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-OOO-2025-base",
+    "grade": 9
+   },
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   },
+   {
+    "system": "IB-2025",
+    "topic": "E.4"
+   },
+   {
+    "system": "IB-2025",
+    "topic": "E.5"
+   }
+  ],
+  "batch": "AB6",
+  "state": "planned"
+ },
+ {
+  "id": "S45",
+  "audience": "school",
+  "section": "astrophysics",
+  "title": "The expansion of the Universe: Hubble's law",
+  "grades": [
+   11
+  ],
+  "curriculum": [
+   {
+    "system": "FRP-SOO-2025-base",
+    "grade": 11
+   }
+  ],
+  "batch": "AB6",
+  "state": "planned"
+ },
+ {
+  "id": "U01",
+  "audience": "university",
+  "section": "mechanics",
+  "title": "Lagrangian mechanics and chaos: the double pendulum, the phase portrait, Poincaré sections, the Lyapunov exponent",
+  "priority": "B",
+  "batch": "UB3",
+  "state": "planned"
+ },
+ {
+  "id": "U02",
+  "audience": "university",
+  "section": "mechanics",
+  "title": "The rigid body: Euler's equations, the Dzhanibekov effect, precession and nutation of a gyroscope",
+  "priority": "B",
+  "batch": "UB3",
+  "state": "planned"
+ },
+ {
+  "id": "U03",
+  "audience": "university",
+  "section": "mechanics",
+  "title": "Non-inertial frames: Foucault's pendulum, the Coriolis force",
+  "priority": "B",
+  "batch": "UB3",
+  "state": "planned"
+ },
+ {
+  "id": "U04",
+  "audience": "university",
+  "section": "waves",
+  "title": "Coupled oscillators, normal modes, beats, the resonance curve and the quality factor",
+  "priority": "B",
+  "batch": "UB3",
+  "state": "planned"
+ },
+ {
+  "id": "U05",
+  "audience": "university",
+  "section": "heat",
+  "title": "Kinetic theory from atoms: Maxwell–Boltzmann, the barometric formula, the mean free path, transport",
+  "priority": "A",
+  "batch": "UB4",
+  "state": "planned"
+ },
+ {
+  "id": "U06",
+  "audience": "university",
+  "section": "heat",
+  "title": "Heat engines and entropy: the Carnot and Otto cycles from molecular dynamics, P–V and T–S diagrams, irreversibility",
+  "priority": "A",
+  "batch": "UB4",
+  "state": "planned"
+ },
+ {
+  "id": "U07",
+  "audience": "university",
+  "section": "condensed_matter",
+  "title": "The Ising model and phase transitions",
+  "priority": "C",
+  "batch": "B10",
+  "state": "planned"
+ },
+ {
+  "id": "U08",
+  "audience": "university",
+  "section": "heat",
+  "title": "Black-body radiation: cavity modes, Rayleigh–Jeans versus Planck, Wien, Stefan–Boltzmann",
+  "priority": "A",
+  "batch": "UB4",
+  "state": "planned"
+ },
+ {
+  "id": "U09",
+  "audience": "university",
+  "section": "electromagnetism",
+  "title": "Electrostatics: boundary-value problems, images, multipoles, capacitance, dielectrics",
+  "priority": "B",
+  "batch": "UB3",
+  "state": "planned"
+ },
+ {
+  "id": "U10",
+  "audience": "university",
+  "section": "electromagnetism",
+  "title": "Magnetostatics and inductance: Biot–Savart, Helmholtz coils, Ampère's circuital law, mutual induction",
+  "priority": "B",
+  "batch": "UB3",
+  "state": "planned"
+ },
+ {
+  "id": "U11",
+  "audience": "university",
+  "section": "electromagnetism",
+  "title": "Charged particles in fields: the cyclotron, the mass spectrometer, the E×B drift, the magnetic trap, the Hall effect",
+  "priority": "B",
+  "batch": "UB6",
+  "state": "planned"
+ },
+ {
+  "id": "U12",
+  "audience": "university",
+  "section": "electromagnetism",
+  "title": "Circuits: RLC transients, phasor diagrams, resonance, filters, the transmission line",
+  "priority": "B",
+  "batch": "UB3",
+  "state": "planned"
+ },
+ {
+  "id": "U13",
+  "audience": "university",
+  "section": "electromagnetism",
+  "title": "Radiation of charges: the field of an accelerated charge (the kink in the field lines), the dipole, Larmor's formula, synchrotron radiation",
+  "priority": "A",
+  "batch": "UB1",
+  "state": "planned"
+ },
+ {
+  "id": "U14",
+  "audience": "university",
+  "section": "electromagnetism",
+  "title": "Waves in matter and in waveguides: waveguide modes, the resonator, the evanescent wave, the one-dimensional photonic crystal",
+  "priority": "A",
+  "batch": "UB4",
+  "state": "planned"
+ },
+ {
+  "id": "U15",
+  "audience": "university",
+  "section": "optics",
+  "title": "Interferometers and coherence: Michelson, Mach–Zehnder, Fabry–Pérot, Fourier spectroscopy",
+  "priority": "A",
+  "batch": "UB5",
+  "state": "planned"
+ },
+ {
+  "id": "U16",
+  "audience": "university",
+  "section": "optics",
+  "title": "Fourier optics: Fraunhofer diffraction as a Fourier transform, 4f filtering, the resolution of a grating, Abbe's theory",
+  "priority": "A",
+  "batch": "UB5",
+  "state": "planned"
+ },
+ {
+  "id": "U17",
+  "audience": "university",
+  "section": "optics",
+  "title": "Polarisation and crystal optics: Jones and Mueller calculus, wave plates, birefringence",
+  "priority": "C",
+  "batch": "UB5",
+  "state": "planned"
+ },
+ {
+  "id": "U18",
+  "audience": "university",
+  "section": "quantum",
+  "title": "The Stern–Gerlach experiment and spin: sequential devices, Larmor precession",
+  "priority": "A",
+  "batch": "UB2",
+  "state": "planned"
+ },
+ {
+  "id": "U19",
+  "audience": "university",
+  "section": "atom",
+  "title": "The two-level atom: Rabi, Ramsey, the Bloch sphere, the optical Bloch equations, spontaneous emission, quantum jumps",
+  "priority": "A",
+  "batch": "UB1",
+  "state": "planned"
+ },
+ {
+  "id": "U20",
+  "audience": "university",
+  "section": "quantum",
+  "title": "Photons: the photoelectric effect (h/e after Millikan), the Compton effect",
+  "priority": "A",
+  "batch": "UB2",
+  "state": "planned"
+ },
+ {
+  "id": "U21",
+  "audience": "university",
+  "section": "condensed_matter",
+  "title": "Electron diffraction by a crystal: Davisson–Germer, Debye–Scherrer rings, Bragg's law",
+  "priority": "C",
+  "batch": "UB6",
+  "state": "planned"
+ },
+ {
+  "id": "U22",
+  "audience": "university",
+  "section": "atom",
+  "title": "The atom: the hydrogen series, fine structure, the Zeeman effect, selection rules",
+  "priority": "B",
+  "batch": "UB6",
+  "state": "planned"
+ },
+ {
+  "id": "U23",
+  "audience": "university",
+  "section": "condensed_matter",
+  "title": "Bands: Kronig–Penney, tight binding, Bloch oscillations",
+  "priority": "C",
+  "batch": "B10",
+  "state": "planned"
+ },
+ {
+  "id": "U24",
+  "audience": "university",
+  "section": "atom",
+  "title": "Rutherford scattering and the cross-section",
+  "priority": "B",
+  "batch": "UB6",
+  "state": "planned"
+ },
+ {
+  "id": "U25",
+  "audience": "university",
+  "section": "nucleus",
+  "title": "The nucleus: decay chains (Bateman), α decay as tunnelling (Gamow), the Weizsäcker formula",
+  "priority": "C",
+  "batch": "B11",
+  "state": "planned"
+ },
+ {
+  "id": "U26",
+  "audience": "university",
+  "section": "particles",
+  "title": "Relativistic kinematics: invariant mass, decays, reaction thresholds",
+  "priority": "A",
+  "batch": "UB6",
+  "state": "planned"
+ },
+ {
+  "id": "U27",
+  "audience": "university",
+  "section": "relativity",
+  "title": "Minkowski diagrams and the twin paradox",
+  "priority": "A",
+  "related": [
+   "r11_thomas_3d"
+  ],
+  "batch": "UB6",
+  "state": "planned"
+ },
+ {
+  "id": "U28",
+  "audience": "university",
+  "section": "astrophysics",
+  "title": "Gravitational waves from a binary: the chirp, h₊ and h×, the Hulse–Taylor pulsar",
+  "priority": "A",
+  "batch": "UB2",
+  "state": "planned"
+ },
+ {
+  "id": "U29",
+  "audience": "university",
+  "section": "astrophysics",
+  "title": "Cosmology: the history of the expansion, the Hubble diagram, distances, age, horizons",
+  "priority": "A",
+  "batch": "UB1",
+  "state": "planned"
+ },
+ {
+  "id": "U30",
+  "audience": "university",
+  "section": "fluids",
+  "title": "Flow regimes: Poiseuille, Bernoulli and Venturi, the Reynolds number from creeping flow to the Kármán street",
+  "priority": "A",
+  "batch": "UB6",
+  "state": "planned"
+ },
+ {
+  "id": "R01",
+  "audience": "research",
+  "section": "quantum",
+  "title": "Time-dependent Aharonov–Bohm flux in a real double slit",
+  "rank": 1,
+  "status": "hypothesis",
+  "related": [
+   "u32_double_slit"
+  ],
+  "batch": "RB1",
+  "state": "planned"
+ },
+ {
+  "id": "R02",
+  "audience": "research",
+  "section": "quantum",
+  "title": "A delayed which-path mark and its erasure with massive particles in a spatial double slit",
+  "rank": 2,
+  "status": "hypothesis",
+  "related": [
+   "u32_double_slit"
+  ],
+  "batch": "RB1",
+  "state": "planned"
+ },
+ {
+  "id": "R03",
+  "audience": "research",
+  "section": "quantum",
+  "title": "Higher-order interference in real slits: Sorkin's κ for matter waves with thick slits, and tunnelling through the wall as a third path",
+  "rank": 3,
+  "status": "hypothesis",
+  "batch": "RB1",
+  "state": "planned"
+ },
+ {
+  "id": "R04",
+  "audience": "research",
+  "section": "quantum",
+  "title": "Telling the arrival-time rules apart behind a real plate",
+  "rank": 4,
+  "status": "hypothesis",
+  "batch": "RB2",
+  "state": "planned"
+ },
+ {
+  "id": "R05",
+  "audience": "research",
+  "section": "quantum",
+  "title": "The pulsed scalar (electric) Aharonov–Bohm effect: numerics for an experiment's design",
+  "rank": 5,
+  "status": "hypothesis",
+  "related": [
+   "u32_double_slit"
+  ],
+  "batch": "RB2",
+  "state": "planned"
+ },
+ {
+  "id": "R06",
+  "audience": "research",
+  "section": "quantum",
+  "title": "The recoiling slit (Einstein–Bohr) as an exact two-body problem",
+  "rank": 6,
+  "status": "hypothesis",
+  "batch": "RB2",
+  "state": "planned"
+ },
+ {
+  "id": "R07",
+  "audience": "research",
+  "section": "relativity",
+  "title": "The Thomas–Wigner rotation per rapidity budget",
+  "rank": 7,
+  "status": "hypothesis",
+  "batch": "RB3",
+  "state": "planned"
+ },
+ {
+  "id": "R08",
+  "audience": "research",
+  "section": "quantum",
+  "title": "A graded which-path mark and the crossing of Bohm trajectories",
+  "rank": 8,
+  "status": "hypothesis",
+  "related": [
+   "u32_double_slit"
+  ],
+  "batch": "RB3",
+  "state": "planned"
+ },
+ {
+  "id": "R09",
+  "audience": "research",
+  "section": "quantum",
+  "title": "A time-modulated slit",
+  "rank": 9,
+  "status": "hypothesis",
+  "related": [
+   "u32_double_slit"
+  ],
+  "batch": "RB3",
+  "state": "planned"
+ },
+ {
+  "id": "R10",
+  "audience": "research",
+  "section": "astrophysics",
+  "title": "Non-Kerr photon rings: a reproduction benchmark",
+  "rank": 10,
+  "status": "hypothesis",
+  "related": [
+   "u42_kerr_shadow"
+  ],
+  "batch": "later",
+  "state": "planned"
+ },
+ {
+  "id": "p05",
+  "audience": "playground",
+  "section": "optics",
+  "title": "Optics and waves",
+  "text": "sources, slits, lenses, mirrors, gratings, screens (batch B9)",
+  "batch": "B9",
+  "state": "planned"
+ },
+ {
+  "id": "p06",
+  "audience": "playground",
+  "section": "electromagnetism",
+  "title": "Electricity and magnetism",
+  "text": "charges, currents, magnets, conductors; fields and radiation (batch B9)",
+  "batch": "B9",
+  "state": "planned"
+ },
+ {
+  "id": "p07",
+  "audience": "playground",
+  "section": "relativity",
+  "title": "Relativity",
+  "text": "observers, clocks, rods, rockets: what each of them sees (batch B9)",
+  "batch": "B9",
+  "state": "planned"
+ }
+]

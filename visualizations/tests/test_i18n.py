@@ -182,12 +182,12 @@ def test_every_msgid_has_formats_the_player_renders():
 
 # worlds that are heavy at their defaults: small geometries (as test_restore's)
 SMALL = {
-    "v08_wave_3d": {"n": 128, "zmax": 10.0},
-    "v09_thomas_3d": {"ngrid": 48},
-    "v11_double_slit_2d": {"a": 1.5, "d": 4.0, "w": 1.0, "L": 12.0, "sigma_x": 3.0, "sigma_z": 2.0, "grid": "coarse",
+    "u38_wave_3d": {"n": 128, "zmax": 10.0},
+    "r11_thomas_3d": {"ngrid": 48},
+    "r12_double_slit_2d": {"a": 1.5, "d": 4.0, "w": 1.0, "L": 12.0, "sigma_x": 3.0, "sigma_z": 2.0, "grid": "coarse",
                            "n_bohm": 100, "n_tracks": 10},
-    "v12_arrival_times_2d": {"grid": "coarse", "n_bohm": 100, "n_tracks": 10, "L": 12.0, "sigma_z": 2.0, "sigma_x": 2.0},
-    "v17_mie_scattering": {"radius_um": 1.0, "width": 0.05, "n_lam": 8},
+    "r13_arrival_times_2d": {"grid": "coarse", "n_bohm": 100, "n_tracks": 10, "L": 12.0, "sigma_z": 2.0, "sigma_x": 2.0},
+    "u44_mie_scattering": {"radius_um": 1.0, "width": 0.05, "n_lam": 8},
 }
 
 

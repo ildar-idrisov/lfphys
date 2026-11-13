@@ -5,6 +5,7 @@
   "Centre of mass of the pair (the cloud is the separation r = r_q − r_q̄)": "Центр масс пары (облако — по относительной координате r = r_q − r_q̄)",
   "Changes on the fly: the cloud is recomputed on the new grid; the state and its time stay the same": "Меняется на ходу: облако пересчитывается на новой сетке; состояние и его время те же",
   "Changes on the fly: the new state is prepared at the current moment (an ideal preparation; the former one is discarded); the world, its time and the slices stay": "Меняется на ходу: новое состояние приготовлено в текущий момент (идеальное приготовление; прежнее отброшено); мир, его время и срезы остаются",
+  "Charmonium and bottomonium in 3-D: the quark pair's clouds, their nodes, and level splittings compared with experiment.": "Чармоний и боттомоний в 3D: облака пары кварков, их узлы и расщепления уровней в сравнении с экспериментом.",
   "Cloud grid": "Сетка облака",
   "Cloud grid, points per axis": "Сетка облака, точек на ось",
   "Convergence{tag}: R(r) of the grid N = {n1:d} against N = {n2:d}": "Сходимость{tag}: R(r) сетки N = {n1:d} в сравнении с N = {n2:d}",

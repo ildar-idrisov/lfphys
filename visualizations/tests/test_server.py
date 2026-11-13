@@ -47,7 +47,7 @@ def test_schema_resolve_and_modifications():
 
 def test_registry_lists_visualizations():
     ids = registry.viz_ids()
-    assert "v01_light_travel" in ids and "v02_double_slit" in ids
+    assert "u31_light_travel" in ids and "u32_double_slit" in ids
     for vid in ids:
         v = registry.load(vid)
         assert v["schema"].presets and callable(v["simulation"])
@@ -61,8 +61,8 @@ async def _run_api(tmp_path):
         r = await cl.get("/api/viz")
         assert r.status == 200
         ids = [v["id"] for v in await r.json()]
-        assert "v01_light_travel" in ids
-        r = await cl.post("/api/runs", json={"viz": "v01_light_travel", "preset": "measure_c", "seed": 7})
+        assert "u31_light_travel" in ids
+        r = await cl.post("/api/runs", json={"viz": "u31_light_travel", "preset": "measure_c", "seed": 7})
         body = await r.json()
         assert r.status == 200, body
         rid = body["id"]
@@ -147,7 +147,7 @@ async def _run_api(tmp_path):
         r = await cl.delete(f"/api/runs/{rid}")
         assert r.status == 200 and not rec.exists()
         # a bad request is refused with a reason
-        r = await cl.post("/api/runs", json={"viz": "v01_light_travel", "params": {"kinematics": "nope"}})
+        r = await cl.post("/api/runs", json={"viz": "u31_light_travel", "params": {"kinematics": "nope"}})
         assert r.status == 400
 
 
@@ -158,8 +158,8 @@ def test_api_end_to_end(tmp_path):
 async def _worker_error(tmp_path):
     app = create_app(tmp_path)
     async with TestClient(TestServer(app)) as cl:
-        # a combination the schema accepts but the world refuses when it is built (v04: the start inside the body)
-        r = await cl.post("/api/runs", json={"viz": "v04_orbits", "params": {"radius_km": 1000, "r0": 2.1}})
+        # a combination the schema accepts but the world refuses when it is built (u34: the start inside the body)
+        r = await cl.post("/api/runs", json={"viz": "u34_orbits", "params": {"radius_km": 1000, "r0": 2.1}})
         rid = (await r.json())["id"]
         for _ in range(200):
             meta = await (await cl.get(f"/api/runs/{rid}")).json()
@@ -199,8 +199,8 @@ async def _housekeeping(tmp_path):
     async with TestClient(TestServer(app)) as cl:
         mgr = app[MGR]
         assert mgr.keep_days == 3.0
-        a = (await (await cl.post("/api/runs", json={"viz": "v01_light_travel", "preset": "measure_c"})).json())["id"]
-        r = await cl.post("/api/runs", json={"viz": "v01_light_travel", "preset": "measure_c"})
+        a = (await (await cl.post("/api/runs", json={"viz": "u31_light_travel", "preset": "measure_c"})).json())["id"]
+        r = await cl.post("/api/runs", json={"viz": "u31_light_travel", "preset": "measure_c"})
         b = (await r.json())["id"]
         assert r.status == 200 and mgr.get(a).meta["state"] == "suspended" and mgr.get(b).running
         await cl.post(f"/api/runs/{b}/stop", json={})
@@ -236,7 +236,7 @@ async def _removal_period(tmp_path):
             assert (await cl.put("/api/settings/runs", data=raw)).status == 400, raw
         ids = []
         for _ in range(3):
-            rid = (await (await cl.post("/api/runs", json={"viz": "v01_light_travel", "preset": "measure_c"})).json())["id"]
+            rid = (await (await cl.post("/api/runs", json={"viz": "u31_light_travel", "preset": "measure_c"})).json())["id"]
             await cl.post(f"/api/runs/{rid}/stop", json={})
             ids.append(rid)
         a, b, c = ids
@@ -356,7 +356,7 @@ def test_runner_measures_the_speed_the_world_reaches():
 
 
 def test_runner_refuses_frame_keys_of_its_own():
-    """A world's frame must not carry the runner's keys (review B4-1: `rate` silently overwrote v04's dτ/dt)."""
+    """A world's frame must not carry the runner's keys (review B4-1: `rate` silently overwrote u34's dτ/dt)."""
     from lfviz.sim import RUNNER_FRAME_KEYS, Runner, Simulation
 
     class Clash(Simulation):
@@ -380,7 +380,7 @@ async def _new_world_in_same_run(tmp_path):
     """Owner, 2026-10-23: a new world is created inside the running run (same id, same record), not as a new run."""
     app = create_app(tmp_path)
     async with TestClient(TestServer(app)) as cl:
-        r = await cl.post("/api/runs", json={"viz": "v01_light_travel", "preset": "measure_c", "seed": 3})
+        r = await cl.post("/api/runs", json={"viz": "u31_light_travel", "preset": "measure_c", "seed": 3})
         rid = (await r.json())["id"]
         r = await cl.post(f"/api/runs/{rid}/command",
                           json={"cmd": "new_world", "args": {"params": {"scenario": "measure_c",
@@ -434,7 +434,7 @@ async def _settings_api(tmp_path, monkeypatch):
         r = await cl.get("/settings")
         assert r.status == 200 and "Devices and precision" in await r.text()
         # a run carries the settings in force at its start: in its passport and in its header
-        r = await cl.post("/api/runs", json={"viz": "v06_qcd", "preset": "standard", "seed": 3})
+        r = await cl.post("/api/runs", json={"viz": "u36_qcd", "preset": "standard", "seed": 3})
         rid = (await r.json())["id"]
         ws = await cl.ws_connect(f"/ws/runs/{rid}")
         header = None
@@ -503,10 +503,10 @@ async def _settings_hardening(tmp_path, monkeypatch):
         assert saved["crossover"]["optics.angular_spectrum"] == 4096 and "calibration" in saved
         monkeypatch.setattr(devices, "_backend", real)
         # a run with its own devices: validated, recorded in its passport, the file unchanged
-        r = await cl.post("/api/runs", json={"viz": "v06_qcd", "preset": "standard", "seed": 3,
+        r = await cl.post("/api/runs", json={"viz": "u36_qcd", "preset": "standard", "seed": 3,
                                              "backend": {"kernels": {"optics.angular_spectrum": "gpu"}}})
         assert r.status == 400 and "devices" in (await r.json())["text"]
-        r = await cl.post("/api/runs", json={"viz": "v06_qcd", "preset": "standard", "seed": 3, "backend": {
+        r = await cl.post("/api/runs", json={"viz": "u36_qcd", "preset": "standard", "seed": 3, "backend": {
             "kernels": {"optics.angular_spectrum": {"device": "cpu", "precision": "fp32"}}}})
         rid = (await r.json())["id"]
         meta = await (await cl.get(f"/api/runs/{rid}")).json()
@@ -528,7 +528,7 @@ def test_view_command_is_refused_by_worlds_without_views_and_never_changes_the_w
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from harness import Harness
-    h = Harness("v06_qcd", "standard")
+    h = Harness("u36_qcd", "standard")
     n_err = len(h.errors())
     h.cmd("view", op="plane", id=1)
     # in the owner's terms (review UX-ui U13): what was not done, then the world's own reason
@@ -538,9 +538,9 @@ def test_view_command_is_refused_by_worlds_without_views_and_never_changes_the_w
 async def _approximations_follow_the_world(tmp_path):
     app = create_app(tmp_path / "runs", max_workers=2, idle_pause=60, idle_suspend=3600)
     async with TestClient(TestServer(app)) as cl:
-        # a small grid (as test_i18n's SMALL): at its defaults v08 took over 120 s to its first slice on a loaded host,
+        # a small grid (as test_i18n's SMALL): at its defaults u38 took over 120 s to its first slice on a loaded host,
         # in this version and in the one before (2026-11-13), and the test checks the run list, not the field
-        r = await cl.post("/api/runs", json={"viz": "v08_wave_3d", "preset": "double_slices", "seed": 1,
+        r = await cl.post("/api/runs", json={"viz": "u38_wave_3d", "preset": "double_slices", "seed": 1,
                                              "params": {"n": 128, "zmax": 10.0}})
         rid = (await r.json())["id"]
         ws = await cl.ws_connect(f"/ws/runs/{rid}")
@@ -591,7 +591,7 @@ async def _resume_races_and_failures(tmp_path):
     app = create_app(tmp_path, max_workers=2, idle_pause=60, idle_suspend=3600)
     async with TestClient(TestServer(app)) as cl:
         mgr = app[MGR]
-        rid = (await (await cl.post("/api/runs", json={"viz": "v01_light_travel", "preset": "measure_c"})).json())["id"]
+        rid = (await (await cl.post("/api/runs", json={"viz": "u31_light_travel", "preset": "measure_c"})).json())["id"]
         await cl.post(f"/api/runs/{rid}/command", json={"cmd": "play"})
         await _wait_state(cl, rid, lambda m: m.get("sim_t", 0) > 0)
         await cl.post(f"/api/runs/{rid}/stop", json={})
@@ -616,7 +616,7 @@ async def _resume_races_and_failures(tmp_path):
         assert r.status == 200 and rid not in mgr.runs and not run.dir.exists() and not run.running
 
         # a rebuild that fails (here: the record's parameters unknown to the code, as after a rename) ...
-        rid = (await (await cl.post("/api/runs", json={"viz": "v01_light_travel", "preset": "measure_c"})).json())["id"]
+        rid = (await (await cl.post("/api/runs", json={"viz": "u31_light_travel", "preset": "measure_c"})).json())["id"]
         await cl.post(f"/api/runs/{rid}/command", json={"cmd": "play"})
         await _wait_state(cl, rid, lambda m: m.get("sim_t", 0) > 0)
         await cl.post(f"/api/runs/{rid}/stop", json={})
@@ -666,7 +666,7 @@ async def _resume_from_checkpoint(tmp_path, monkeypatch):
     app = create_app(tmp_path, max_workers=2, idle_pause=60, idle_suspend=3600)
     async with TestClient(TestServer(app)) as cl:
         mgr = app[MGR]
-        rid = (await (await cl.post("/api/runs", json={"viz": "v01_light_travel", "preset": "measure_c"})).json())["id"]
+        rid = (await (await cl.post("/api/runs", json={"viz": "u31_light_travel", "preset": "measure_c"})).json())["id"]
         run = mgr.get(rid)
         await cl.post(f"/api/runs/{rid}/command", json={"cmd": "play"})
         await _wait_state(cl, rid, lambda m: m.get("sim_t", 0) > 0)
@@ -711,7 +711,7 @@ async def _record_during_suspension(tmp_path):
     app = create_app(tmp_path, max_workers=2, idle_pause=60, idle_suspend=3600)
     async with TestClient(TestServer(app)) as cl:
         mgr = app[MGR]
-        rid = (await (await cl.post("/api/runs", json={"viz": "v02_double_slit"})).json())["id"]
+        rid = (await (await cl.post("/api/runs", json={"viz": "u32_double_slit"})).json())["id"]
         run = mgr.get(rid)
         await cl.post(f"/api/runs/{rid}/command", json={"cmd": "play"})
         await _wait_state(cl, rid, lambda m: m.get("sim_t", 0) > 0)
@@ -737,7 +737,7 @@ async def _record_is_the_truth(tmp_path):
     app = create_app(tmp_path, max_workers=2, idle_pause=60, idle_suspend=3600)
     async with TestClient(TestServer(app)) as cl:
         mgr = app[MGR]
-        rid = (await (await cl.post("/api/runs", json={"viz": "v01_light_travel", "preset": "measure_c",
+        rid = (await (await cl.post("/api/runs", json={"viz": "u31_light_travel", "preset": "measure_c",
                                                          "seed": 5})).json())["id"]
         await cl.post(f"/api/runs/{rid}/command", json={"cmd": "play"})
         await _wait_state(cl, rid, lambda m: m.get("sim_t", 0) > 0)
@@ -754,9 +754,9 @@ async def _record_is_the_truth(tmp_path):
              "state": "running"}
     (tmp_path / rid / "meta.json").write_text(json.dumps(stale))
     rec.write_bytes(whole + struct.pack("<I", 1000) + b"cut msg")  # a message cut by the crash
-    bad = tmp_path / "20260101-000000-v01-dead"
+    bad = tmp_path / "20260101-000000-u31-dead"
     bad.mkdir()
-    (bad / "meta.json").write_text(json.dumps({"id": bad.name, "viz": "v01_light_travel", "state": "suspended"}))
+    (bad / "meta.json").write_text(json.dumps({"id": bad.name, "viz": "u31_light_travel", "state": "suspended"}))
     (bad / "stream.lfrec").write_bytes(b"\0" * 64)  # zeros after a power cut: not a record
     app = create_app(tmp_path, max_workers=2, idle_pause=60, idle_suspend=3600)  # the server comes up
     async with TestClient(TestServer(app)) as cl:
@@ -792,7 +792,7 @@ def _fake_record(root, rid, created, last_action=None, mb=1):
     hdr = protocol.encode({"type": "header", "t": 0.0, "world": 1, "params": {}, "seed": 1, "title": rid},
                           {"pad": np.zeros(int(mb * 1e6), np.uint8)})
     (d / "stream.lfrec").write_bytes(protocol.MAGIC + protocol.frame_stream_item(hdr))
-    meta = {"id": rid, "viz": "v01_light_travel", "created": created, "state": "suspended", "restorable": True}
+    meta = {"id": rid, "viz": "u31_light_travel", "created": created, "state": "suspended", "restorable": True}
     if last_action is not None:
         meta["last_action"] = last_action
     (d / "meta.json").write_text(json.dumps(meta))
@@ -912,7 +912,7 @@ def _decoded(stream):
 
 
 def test_a_world_that_fails_to_show_itself_is_not_built(tmp_path, monkeypatch):
-    """UX-params P3: an exception in ``after_header`` (v13's continuity check at a zero scale) killed the worker and
+    """UX-params P3: an exception in ``after_header`` (u40's continuity check at a zero scale) killed the worker and
     every ⏺ repeated «Мир не восстановлен: float division by zero». Now the first world is reported as not built and the
     worker ends with that reason (the server keeps the run failed, never resumable); a new world that fails so is
     refused whole and the previous one goes on."""
