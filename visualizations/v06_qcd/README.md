@@ -1,5 +1,7 @@
 # v06 — QCD: asymptotic freedom and quarkonium
 
+**English** | [Русский](README.ru.md)
+
 A wrapper over `lfphys`.
 
 * `lfphys.core.qcd.running`: alpha_s(mu) from the renormalisation-group equation with the MS-bar beta function to
@@ -26,9 +28,9 @@ alpha_s(M_Z) puts the Landau pole above 2 GeV), the jump at each quark threshold
 written out in the check (on the side away from M_Z), convergence of the loop expansion at 2 GeV, the Casimirs, the
 model splittings against PDG. On the plot values above 0.5 leave the frame (towards the Landau pole) and are marked. alpha_s(M_Z) is a world parameter with its PDG value as the standard: a
 different value is a declared modification. A coupling pushed past the pole bound by a threshold's matching is the
-Landau pole there (α_s(M_Z) = 0.19 at 4 loops: at m_b; it was refused as «RG integration failed», review UX-params P5).
-Failures that are the point of a world carry «Ожидаемо» (the convergence check at a changed α_s(M_Z), the levels of a
-model with other parameters than the fit; P23), and the preset «strong» says so.
+Landau pole there (α_s(M_Z) = 0.19 at 4 loops: at m_b; it was refused as "RG integration failed", review UX-params P5).
+Failures that are the point of a world carry "Expected: …" (the convergence check at a changed α_s(M_Z), the levels of a
+model with other parameters than the fit; P23), and the preset "What if α_s(M_Z) = 0.15 (a changed coupling)" (`strong`) says so.
 
 Limits: perturbative running below ~1.5 GeV is not reliable (the curve starts at 1 GeV for orientation); no lattice
 QCD; quarkonium without spin-dependent forces, relativistic corrections or coupled channels.

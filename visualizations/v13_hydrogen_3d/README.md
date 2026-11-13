@@ -1,9 +1,11 @@
 # v13 — the hydrogen atom in 3-D: orbital clouds, currents, superpositions
 
+**English** | [Русский](README.ru.md)
+
 A wrapper over the engine `lfphys` (plan item P14.5). The exact bound states of a hydrogen-like atom — an electron and
 a nucleus of charge Z (hydrogen, deuterium, He⁺) or positronium — in the 3-D environment of the player: the cloud
 |ψ|² of the relative coordinate, the probability current, up to three slice planes of any orientation with |ψ|² and
-the phase of ψ, and the panels «Состояние», «Радиальное распределение» and «Уровни энергии». A single stationary state
+the phase of ψ, and the panels "State", "Radial distribution r²|R(r)|²" and "Energy levels". A single stationary state
 (real orbital or complex state of definite m) or a superposition of two; a superposition of two levels oscillates
 at the Bohr frequency and is revealed phase by phase as the world's time runs.
 
@@ -28,9 +30,9 @@ v14).
 * **The state.** ψ_nlm = R_nl(r) Y_lm(θ, φ), 1 ≤ n ≤ 12. Real orbitals: √2(−1)^m Re Y_l|m| (m > 0, cos mφ),
   √2(−1)^m Im Y_l|m| (m < 0, sin|m|φ): p_x, p_y, d_xy, d_z², … with positive lobes along the positive axes. A
   superposition c₁ψ₁e^{−iE₁t/ħ} + c₂ψ₂e^{−iE₂t/ħ} of two orthogonal states (|c₂|² and the relative phase set at the
-  preparation; t counted from it, «Live and world parameters»); two states of the same (n, l) whose angular parts overlap are refused (one is a combination of the
+  preparation; t counted from it, section "Live and world parameters"); two states of the same (n, l) whose angular parts overlap are refused (one is a combination of the
   other). The form cannot bound l by n and m by l: the world takes the nearest allowed numbers (n first, then
-  0 ≤ l < n, then |m| ≤ l) and says so; the second state defaults to 1s, so «Суперпозиция» alone is 2p_z + 1s, and a
+  0 ≤ l < n, then |m| ≤ l) and says so; the second state defaults to 1s, so "Superposition" alone is 2p_z + 1s, and a
   default second state equal to the first is replaced (1s → 2p_z) with a notice; one chosen equal by hand is refused
   (review UX-params P10, 2026-11-05).
 * **The cloud.** |ψ|² on a cube that holds the sphere with 1 − 10⁻³ of the probability (the radius found by quadrature
@@ -54,15 +56,16 @@ v14).
 ## Live and world parameters (review UX-ui U12)
 
 The owner (2026-11-04): «плейграунд должен быть больше похож на плейграунд, где я могу ставить эксперименты в рамках
-одного мира, а не перезапускать его постоянно». Every parameter, and whether the world takes it at the current moment:
+одного мира, а не перезапускать его постоянно» ("a playground should be more like a playground, where I can set up
+experiments within one world instead of restarting it all the time"). Every parameter, and whether the world takes it at the current moment:
 
 | parameter | | what an edit does to the state; or why it stays a world parameter |
 |---|---|---|
-| the state: single / superposition, n, l (L), m, real or complex, the second state's numbers and kind, \|c₂\|², the phase of c₂ | **live** (U12) | an ideal preparation of the new state at the current moment t_p: ψ(t) = Σ c_k e^{−iE_k(t − t_p)/ħ} ψ_k from then on, the former state discarded — how the system gets there (a photon absorbed, a measurement) is not modelled, no transition dynamics is claimed. The world, its clock, the record and the slice planes the experimenter placed stay; the box, the cloud and the current of the phases reached, the slices on those planes (clamped into the new box, computed and checked again), the radial distribution and the state's checks are made for the new state at t_p; a superposition's phases are revealed at t_p + kT/24 and the period checked at t_p + T. The checks of the former state that the new one does not give at once are retired («… — прежнее состояние», information; their values stay in the record before t_p). The run sends `prepared` (the header's description of the new state) before the rest, and frames carry t_p; numbers the form cannot bound are fitted and said, a second state equal to the first chosen by hand or not orthogonal to it is refused with the world unchanged. The camera is refitted only when the box changed (the view of a new scene) |
+| the state: single / superposition, n, l (L), m, real or complex, the second state's numbers and kind, \|c₂\|², the phase of c₂ | **live** (U12) | an ideal preparation of the new state at the current moment t_p: ψ(t) = Σ c_k e^{−iE_k(t − t_p)/ħ} ψ_k from then on, the former state discarded — how the system gets there (a photon absorbed, a measurement) is not modelled, no transition dynamics is claimed. The world, its clock, the record and the slice planes the experimenter placed stay; the box, the cloud and the current of the phases reached, the slices on those planes (clamped into the new box, computed and checked again), the radial distribution and the state's checks are made for the new state at t_p; a superposition's phases are revealed at t_p + kT/24 and the period checked at t_p + T. The checks of the former state that the new one does not give at once are retired ("… — former state", information; their values stay in the record before t_p). The run sends `prepared` (the header's description of the new state) before the rest, and frames carry t_p; numbers the form cannot bound are fitted and said, a second state equal to the first chosen by hand or not orthogonal to it is refused with the world unchanged. The camera is refitted only when the box changed (the view of a new scene) |
 | cloud grid (64 / 96 points per axis) | **live** (U12) | the same state at the same t_p resampled on the new grid: the phases reached are computed again |
 | atom (H, D, He⁺, positronium) | world | the nucleus and the reduced mass are the system: no operation turns one atom into another keeping its electron's state; another atom is a new world in the same run (the slice planes are taken over, the state in force too) |
 
-The title names the atom, not the state (the panel «Состояние» names the state in force).
+The title names the atom, not the state (the panel "State" names the state in force).
 
 ## Checks
 
@@ -79,7 +82,7 @@ The title names the atom, not the state (the panel «Состояние» names 
 | `period` | the cloud at T | the cloud at 0 | 10⁻¹² of the peak |
 | `box` | the probability inside the sphere the scene's cube holds | — (information) | — |
 
-Measured values per preset: see «Measured» below.
+Measured values per preset: see section "Measured" below.
 
 ## Measured
 
@@ -123,7 +126,7 @@ one period and the frame at 3.5 T shows phase 12; real orbitals have no current,
 counter-clockwise about z; 2p_x + i·2p_y has the density of 2p, m = +1; the reduced mass and Z scale energies and
 sizes; the slice planes (any orientation, a fourth refused, removal, kept in a new world, coarse unchecked slices while
 moving, reset); a plane placed mid-period gets the phases reached and the rest later; l ≥ n and |m| > l are fitted
-and said, two equal states chosen by hand and two non-orthogonal states are refused with a reason; «Суперпозиция» from
+and said, two equal states chosen by hand and two non-orthogonal states are refused with a reason; "Superposition" from
 the defaults builds; 2p_z + 2s (j = 0, ∂ρ/∂t = 0 everywhere) passes the continuity check with a zero residual (it
 divided by a zero scale and killed the worker: UX-params P3); the largest states (n = 12, l = 11 and
 l = 0; a superposition of n = 12 and 11) build and pass. The live state (review UX-ui U12): 3d_z² set in a running
@@ -133,7 +136,7 @@ phase step) reveals its phases at t_p + kT/24, each the cloud of a world that st
 phases counted from t = 0 would differ (the negative control), and its period is checked at t_p + T; a refused
 preparation (an equal second state chosen by hand) leaves the state, t_p, the planes and the parameters as they were and
 emits only the refusal and the live values; a slice plane placed before a preparation is placed and checked again; the
-cloud grid sent as text («96») resamples the same state at the same t_p; the atom is refused as a live change; a
+cloud grid sent as text ("96") resamples the same state at the same t_p; the atom is refused as a live change; a
 preparation before and after a checkpoint continues byte for byte in a new process. The engine's tests: `../../lfphys/tests/test_central3d.py`,
 `test_hydrogen_wavefunctions.py`.
 

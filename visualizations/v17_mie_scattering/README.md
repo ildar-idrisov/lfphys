@@ -1,5 +1,7 @@
 # v17 — light scattered by a drop: the rainbow, its supernumerary bows, Alexander's dark band and the glory
 
+**English** | [Русский](README.ru.md)
+
 A wrapper over the engine `lfphys` (plan item P14.8, on P1). One drop at one wavelength is solved exactly by the Mie
 series; the same field is split by the Debye series into the light reflected by the surface and the light that
 crosses the drop once, twice or three times, and compared with Descartes' rays and Airy's theory of the rainbow. A
@@ -124,7 +126,7 @@ Measured on the presets (CPU, 16 wavelengths, 2026-11-04, after review B8-mie):
   is estimated, not bounded (`sky_sum`). Above 1600 nodes per wavelength the step grows ("coarse", a header
   approximation): the ripple and the supernumeraries are then aliased into noise. The nodes of one wavelength are
   also capped so that its step takes about 10 s at most on the CPU (cost ~1.4 ns × nodes × terms × angles, measured
-  2026-11-05): drops of 1 mm are coarse at every wavelength; «⏭» goes to the next wavelength (it computed the whole
+  2026-11-05): drops of 1 mm are coarse at every wavelength; "⏭ event" goes to the next wavelength (it computed the whole
   sky at once: 20–40 s, over 2 min for 1 mm drops; review UX-params P16). A drop nearly index-matched to the medium
   (|m − 1| < 10⁻³ at the display wavelength) is refused: it scatters almost nothing, and the series' checks do not hold
   there (m = 1: Mueller NaN, Debye 1163 against 0; the Debye route fails up to |m − 1| ~ 3·10⁻⁵, the energy identity of

@@ -1,0 +1,3 @@
+live : Window size, nm
+disk : Window size, nm, nm
+str(T) live: Window size, nm | str(after JSON): {'$t': 'Window size, nm'}

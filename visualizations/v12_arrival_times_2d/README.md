@@ -1,5 +1,7 @@
 # v12 — when does the particle arrive? Arrival times in 2-D by the rules in use
 
+**English** | [Русский](README.ru.md)
+
 A wrapper over the engine `lfphys` (plan item P14.6, on P6 and v11). A wave packet flies along z to a detecting plane,
 freely or through v11's double slit. Quantum mechanics has no self-adjoint time operator, so the Born rule does not
 fix the distribution of the time at which the particle reaches the plane; several rules are in use, and the run
@@ -81,8 +83,8 @@ ensemble are world parameters for v11's reasons). This world's own:
 | soft detector on / off | world | it is a second run of the whole experiment from t = 0: switched on later it would need its wave from the start |
 
 The world's parameters (the header's `params`) are its own: v11's fixed path mark and flux are not among them. With
-them, «Начать новый мир» without a scenario sent them back and every such new world was refused («нет параметра
-«mark»»; found while processing U12) [error in earlier].
+them, "▶ Start a new world" without a scenario sent them back and every such new world was refused ("there is no
+parameter “mark”"; found while processing U12) [error in earlier].
 
 ## What is shown when
 
@@ -91,14 +93,14 @@ product ψ(x, z, t)·η(y, t) with a free Gaussian η of width σy (world parame
 and their trajectories in x, y, z (y₀·σy(t)/σy); the detecting plane shows P(x, y) (v11's README, "The plane and the
 third dimension"); the plate if any; the window of the plane y = 0. The arrival time does not depend on y (the
 product's flux through the plane is J(x, t)|η(y, t)|²), so the rules below are those of the plane. This world's
-panels: «Распределение времени прихода» — Π(t)·t₀ against t/t₀ for every
+panels: "Distribution of the arrival time" — Π(t)·t₀ against t/t₀ for every
 rule (the Bohm ensemble as a histogram normalised to the whole ensemble), each up to the time shown (the rules
 computed from the initial state too: their curves come with the run's messages as its time reaches them); the time
 axis starts at 2 t₀ (a set-up scale) and grows with the run's time — the window's length is a consequence of the run
-and appears only in the totals (review B4-5); «Место и время
-прихода» — the joint distribution J(x, t) (warm colours into the plane, blue back; bins of t₀/120, a bin drawn once
+and appears only in the totals (review B4-5); "Place and time of
+arrival" — the joint distribution J(x, t) (warm colours into the plane, blue back; bins of t₀/120, a bin drawn once
 it lies wholly in the past) with the Bohm hits (x, t) over it;
-«Итоги по правилам» at the end of the window — each rule's probability within the window and its mean time, what the
+"Totals by rule" at the end of the window — each rule's probability within the window and its mean time, what the
 exponential rules never click, the soft detector's reflection, ABK's weight at t < 0, the backflow. The window of
 observation ends when all but 10⁻⁴ has crossed the plane in free flight (closed form, ×1.02), or when the wave has
 left the window (v11's rule) behind the slits.

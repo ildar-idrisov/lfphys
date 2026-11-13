@@ -1,4 +1,6 @@
-# v04 — Orbits and clocks: general relativity and Newton («Орбиты и часы: ОТО и Ньютон»)
+# v04 — Orbits and clocks: general relativity and Newton
+
+**English** | [Русский](README.ru.md)
 
 One test body orbits a central mass. The run computes the orbit from the body's initial data under the world's law
 of gravity, reveals it as the world's time reaches it, and measures on its own orbit what the owner wants to see:
@@ -11,7 +13,7 @@ the segments, the measurements and the drawing.
 
 | kind | parameter | meaning |
 |---|---|---|
-| world (law) | `gravity` | `GR` — Schwarzschild geodesics (core, standard); `newton` — Newtonian gravity (approximation outside the core; the world is flagged «модифицированная физика») |
+| world (law) | `gravity` | `GR` — Schwarzschild geodesics (core, standard); `newton` — Newtonian gravity (approximation outside the core; the world is flagged "MODIFIED PHYSICS") |
 | world | `mass_msun` | central mass, 1 … 10⁹ M☉ (GM☉ = 1.3271244·10²⁰ m³/s², IAU 2015 B3). It sets the units: M = GM/c² (length), GM/c³ (time) |
 | world | `radius_km` | radius of the central body; 0 = black hole (GR) or point mass (Newton). In GR it must exceed 2M |
 | live | `r0` | launch radius in M (2.1 … 10⁸; the upper end admits Mercury, r ≈ 3.1·10⁷ M) |
@@ -19,8 +21,8 @@ the segments, the measurements and the drawing.
 | live | `angle` | direction of the launch velocity from the tangential direction, −90 … 90° (+ outward) |
 | live | `ghost` | show the other theory's orbit from the same initial data (display; does not change the world) |
 | live | `time_units` | times on the panels in seconds or in GM/c³ (display) |
-| action | «Толчок» (`boost`, `dv`) | at the current moment, the speed measured by the static observer is multiplied by 1 + dv along the motion (−1 ≤ dv ≤ 1); the body's clock runs on |
-| action | «Новый запуск тела» (`relaunch`) | the body is launched again from the live initial data at the current moment; its clock starts from zero |
+| action | "Push" (`boost`, `dv`) | at the current moment, the speed measured by the static observer is multiplied by 1 + dv along the motion (−1 ≤ dv ≤ 1); the body's clock runs on |
+| action | "New launch of the body" (`relaunch`) | the body is launched again from the live initial data at the current moment; its clock starts from zero |
 
 A change of `r0`, `speed` or `angle` applies at once: the body is launched again at the current world time, at
 radius r₀ on the current direction from the centre to the body (φ₀ = the body's current polar angle; 0 at the start
@@ -64,7 +66,7 @@ the apoapsis first if moving out); escape: no apoapsis, or no turning point at a
 An orbit with an apoapsis is followed out to it: the escape radius is max(1000 r₀, 1.5 r_apo) (review V4-6).
 
 **Horizon.** In the coordinate time t of the distant observer the body only approaches r = 2M (t grows
-logarithmically); the integration stops at r = 2M/(1 − 10⁻⁶) ≈ 2M + 2·10⁻⁶ M, where the event «падение за горизонт»
+logarithmically); the integration stops at r = 2M/(1 − 10⁻⁶) ≈ 2M + 2·10⁻⁶ M, where the event "a fall through the horizon"
 is revealed. Going much closer costs ~10⁶ steps in double precision (measured: 10⁻⁸ takes seconds); the proper time
 to that point is reported and checked.
 
@@ -87,14 +89,14 @@ interpolant, velocity from its derivative). **The ghost** switched on late is co
 slices of 0.03 s of wall time per world step, so the worker never blocks (review V4-16); a notice says so until it
 has caught up.
 
-**Clock.** The body's proper time τ is integrated with the orbit (τ = t in Newton). The panel «Часы» shows t, τ,
+**Clock.** The body's proper time τ is integrated with the orbit (τ = t in Newton). The panel "Clocks" shows t, τ,
 their ratio since the launch, and dτ/dt = (1 − 2M/r)/e = √(1 − 2M/r) · √(1 − v²) (gravitational factor of the static
 clock at r times the factor of the speed relative to it). The plot shows 1 − dτ/dt along the revealed orbit.
 
 **Special radii** drawn in the plane (GR): horizon 2M, photon sphere 3M, marginally bound orbit 4M, ISCO 6M, from
 `lfphys.core.gravity.kerr` at zero spin.
 
-## 3. Checks (panel «Проверки»)
+## 3. Checks (panel "Checks: computed ↔ reference")
 
 Each row: the value computed in this run from its own events, the reference, the relative difference, the tolerance.
 
@@ -107,17 +109,17 @@ Each row: the value computed in this run from its own events, the reference, the
 | radial period (GR) | time between periapses | quadrature 2∫e dr/((1 − 2M/r)√R) by the smooth χ-substitution (`orbits.radial_period`) | 10⁻⁹ + 2·10⁻¹⁴/s (review V4-11) |
 | second scheme | advance over the first orbit from the geodesic equations x″ = −Γx′x′ in τ (`orbit_stream.geodesic_tau`) | the main scheme | 2 × the advance tolerance; drifts of e² and of the norm along it relative to the binding energy \|e² − 1\| below max(10⁻⁹, 100ε/\|e² − 1\|) (review V4-8; Mercury: 8.6·10⁻⁷), of l below 10⁻⁹ |
 | Mercury (preset only, unchanged initial data) | advance per Julian century = advance per orbit × 36525 d / the run's radial period | 42.98″/century | 2·10⁻⁴ (the reference is given to 0.01″) |
-| Mercury elements | a = (r_п + r_а)/2 and ε = (r_а − r_п)/(r_а + r_п) from the run's first periapsis and apoapsis events (review V4-9) | 0.38709893 AU, 0.20563069 | 10⁻⁶ |
+| Mercury elements | a = (r_peri + r_apo)/2 and ε = (r_apo − r_peri)/(r_apo + r_peri) from the run's first periapsis and apoapsis events (review V4-9) | 0.38709893 AU, 0.20563069 | 10⁻⁶ |
 | circular orbit | Δτ/Δt over n turns; the time per turn | √(1 − 3M/r); 2π√(r³/GM) (exact for circular geodesics in Schwarzschild t) | 10⁻¹⁰ + 3s (s ≤ 10⁻⁶: the spread of the turning points); on an unstable circle laps are checked only while the largest departure from r₀ seen stays below 1.5s + 2·10⁻¹¹ (review V4-5) |
 | radial fall from rest | τ to the stop radius | cycloid τ = √(r₀³/8M)(η + sin η), r = r₀(1 + cos η)/2 | 10⁻⁹ |
-| any other fall | τ to the stop radius | quadrature τ = ∫dr/√R(r), R = e² − (1 − 2M/r)(1 + l²/r²) (`orbit_stream.plunge_proper_time`, no differential equation); none («—») when the start is on a (nearly) double root of R — an unstable circle, where the integral diverges and the fall time is set by rounding (review V4-5) | 10⁻⁹ |
+| any other fall | τ to the stop radius | quadrature τ = ∫dr/√R(r), R = e² − (1 − 2M/r)(1 + l²/r²) (`orbit_stream.plunge_proper_time`, no differential equation); none ("—") when the start is on a (nearly) double root of R — an unstable circle, where the integral diverges and the fall time is set by rounding (review V4-5) | 10⁻⁹ |
 | impact on the surface | the static observer's speed from the integrator's state at r = R | √(1 − (1 − 2M/R)/e²) | 10⁻⁹ |
 | outcome | the end the run observes (horizon / surface / centre / escape) | the kind predicted from the turning points at the segment start; a circle inside the ISCO may end either way | ✓/✗ (review V4-12; replaces the ISCO statement) |
 | Newton: advance | as above, apsides as zeros of r·v | 0 (closed ellipse) | 10⁻⁹ + 2·10⁻¹³/s rad |
 | Newton: period | time between periapses (or per turn on a circle) | Kepler 2π√(a³/GM), a = −GM/(2E) | 10⁻⁸ + 2×(measured energy drift) + 4·10⁻¹³/s (circle: 10⁻⁸ + 3s) |
 | Newton: conservation | maximal relative drift of E and of h over all samples | — | E: 10⁻⁹ of the largest term v²/2 + GM/r on the orbit (relative to \|E\|: grows ~1/r_peri on very eccentric orbits, review V4-4); h: 10⁻⁹; the row shows the tolerance of its verdict (V4-13) |
 
-Rows with no closed form show the reference «—» (the advance per century outside the Mercury preset, the fall time
+Rows with no closed form show the reference "—" (the advance per century outside the Mercury preset, the fall time
 from an unstable circle).
 
 Typical values in the presets (2026-10-24): advance vs exact 10⁻¹³ (strong field), 1.5·10⁻⁶ (Mercury, absolute
@@ -150,7 +152,7 @@ Newton advance ≤ 10⁻¹¹ rad (also at −89.9° launch angles), period 2·10
 * `viz.py` — schema, presets, the `Simulation` (segments, live changes, actions, the time line, checks).
 * `engine/body.py` — the tracks: chunking of the engine's integrators, the reveal in time, the Newtonian apsides
   and conservation measurements, states at a given time.
-* `web/view.js` — the drawing: orbit plane (pan, zoom), plots r(t) and 1 − dτ/dt, panels «Орбита» and «Часы».
+* `web/view.js` — the drawing: orbit plane (pan, zoom), plots r(t) and 1 − dτ/dt, panels "Orbit" and "Clocks".
 * `tests/test_v04_orbits.py` — the run as a whole: all presets with all checks passing, measured advance vs exact,
   Mercury 42.98″/century, causality (nothing revealed ahead of the world time), live change restarts the body and
   withdraws the old future, a refused change, a boost keeps the clock, the Newton world is flagged and its

@@ -1,5 +1,7 @@
 # v09 — Thomas–Wigner precession in 3-D
 
+**English** | [Русский](README.ru.md)
+
 A wrapper over the engine `lfphys` (plan item P14.1, on P9 and P10) and the second world of the player's 3-D
 environment (`../RULES.md` §2.10). A craft starts at rest and flies a manoeuvre; its gyroscopes are carried without
 rotation; when it is back at rest they are turned. The run computes by how much, in SO(3) and in SU(2), how much fuel
@@ -62,7 +64,7 @@ The loop's plane is set by its normal (θ, φ); everything is checked in any ori
   engine's matrices at every point; or θ divided by the isoperimetric bound at that loop's fuel (always below 1:
   triangles are planar). Blank where |β| > 0.999.
 * **Slices**: up to three planes of any orientation through the ball (the shared environment: gizmo, parameters,
-  kept in a new world, "auto" optional — its speed in c per year of world time). Each is computed by the run at
+  kept in a new world, "auto-shift along the normal" optional — its speed in c per year of world time). Each is computed by the run at
   160 × 160 points for its plane and checked at three of its points against the triangle's area by Gauss–Bonnet.
 * **Ordinary space**: the craft's trajectory (light-years), the gyroscope triads along it, the craft, the rotation
   axis at the end. No field, so no slices. The region starts at the input scale c²/a and doubles whenever the revealed
@@ -102,7 +104,7 @@ The loop's plane is set by its normal (θ, φ); everything is checked in any ori
   ~5e-7 (shown in `roundoff`).
 * The seam is a polygon of 96 burns (a manoeuvre in its own right); the smooth seam is its limit, the difference shown.
 * The isoperimetric bound is a theorem for planar loops; for the others it is a comparison line.
-* The world clock counts seconds; an auto plane's speed is in c per year of world time.
+* The world clock counts seconds; the speed of a plane's auto-shift is in c per year of world time.
 
 ## Tests
 
@@ -117,8 +119,8 @@ loop is that of one loop; the triangle is the Wigner rotation
 (matrices and the closed form); the double cover (area 2π: gyroscopes back, spinor −1; twice: spinor back); crown,
 helix and seam at χ = 0 are planar loops, and out of the plane their axis leaves the normal; the seam converges; the
 Thomas loop in ordinary space is uniform circular motion (speed tanh ρ, radius sinh²ρ c²/a) after hyperbolic motion;
-the field and three slices against Gauss–Bonnet, the ratio below 1; planes kept in a new world, auto coarse, none in
-ordinary space; frames carry an orthonormal gyroscope frame. The engine's own tests: `../../lfphys/tests/test_lorentz_3d.py`,
+the field and three slices against Gauss–Bonnet, the ratio below 1; planes kept in a new world, auto-shifted slices coarse, none
+in ordinary space; frames carry an orthonormal gyroscope frame. The engine's own tests: `../../lfphys/tests/test_lorentz_3d.py`,
 `test_spin_transport.py`. The page: headless Chromium (WebGL by SwiftShader), presets thomas, crown, spin_flip, lab and
 v08's gauss after the shared environment was factored out (2026-10-27, no page errors).
 

@@ -20,8 +20,11 @@ The rules are in `LAYERS.md`; `tests/test_layers.py` checks them.
   `PYTHONPATH=<this repository>/lfphys`.
 * **Catalogue.** Every module carries `ABOUT = {layer, kind, title, statement, validity, basis, conflicts}`.
   * `lfphys.registry.catalogue()` lists all modules.
-  * `registry.describe(names)` returns the entries one world uses. The player shows them in the panel «Физика этого
-    мира».
+  * `registry.describe(names)` returns the entries one world uses. The player shows them in the panel "Physics of this
+    world".
+  * **Languages.** The user-facing fields of `ABOUT` and every other text the engine gives a user (refusals, notes,
+    labels) are translatable texts `lfphys.i18n.T("English msgid {arg}", arg=value)`, rendered in the viewer's
+    language from `lfphys/locales/<lang>.json` (`LAYERS.md` §2 rule 1, `../visualizations/RULES.md` §7).
 
 ```
 docker run --rm --user "$(id -u):$(id -g)" -v <this repository>:/lf -w /lf/lfphys lfphys-viz \

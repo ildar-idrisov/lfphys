@@ -1,0 +1,6 @@
+== json title of near.o1
+[{"id": "near.o1", "label": {"$t": "“{label}”: to the nearest particle", "a": {"label": {"$t": "{type} {n:d}", "a": {"type": {"$t": "Probe"}, "n": 1}}}}, "unit": {"$t": "m"}, "of": "o1", "group": {"$t": "Probes"}, "title": {"$t": "{object}: {label}", "a": {"object": {"$t": "{type} {n:d}", "a": {"type": {"$t": "Probe"}, "n": 1}}, "label": {"$t": "“{label}”: to the nearest particle", "a": {"label": {"$t": "{type} {n:d}", "a": {"type": {"$t": "Probe"}, "n": 1}}}}}}}]
+== CSV header lang=en
+"t, s","Probe 1: “Probe 1”: to the nearest particle, m [near.o1]"
+== CSV header lang=ru
+"t, с","Датчик 1: «Датчик 1»: до ближайшей частицы, м [near.o1]"

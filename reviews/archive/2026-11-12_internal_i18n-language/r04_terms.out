@@ -1,0 +1,1305 @@
+====================================================================================================
+TERM \bdetectors?\b   entries: 151
+  детектор                151  engine:20, framework:1, p01_gravity:8, p02_quantum:19, v02_double_slit:29, v03_quantum_1d:15, v05_optics_bench:8, v11_double_slit_2d:15, v12_arrival_times_2d:24, v16_optical_vortices:12
+  счётчик                   1  v05_optics_bench:1
+  датчик                    1  p02_quantum:1
+  (none of these)           0
+  short labels:
+     [engine] Models of an arrival-time detector  ->  Модели детектора времени прихода
+     [engine] detector  ->  детектор
+     [engine] detector edge  ->  край детектора
+     [engine] detector: absorption strength W0 > 0  ->  детектор: сила поглощения W0 > 0
+     [engine] detector: the region is empty  ->  детектор: область пуста
+     [framework] Detectors  ->  Детекторы
+     [p01_gravity] Wave detector  ->  Детектор волн
+     [p01_gravity] “{label}”: amplitude h× at the detector  ->  «{label}»: амплитуда h× у детектора
+     [p01_gravity] “{label}”: amplitude h₊ at the detector  ->  «{label}»: амплитуда h₊ у детектора
+     [p02_quantum] Detector (absorbing)  ->  Детектор (поглощает)
+     [p02_quantum] Detectors and which-path markers  ->  Детекторы и метки пути
+     [v02_double_slit] Detector at slit no.  ->  Детектор у щели №
+     [v02_double_slit] Detector efficiency  ->  Эффективность детектора
+     [v02_double_slit] Detector pixel, µm (0 = auto)  ->  Пиксель детектора, мкм (0 = авто)
+     [v02_double_slit] Detector reading  ->  Показание детектора
+     [v02_double_slit] detector θ = {th:g}°  ->  детектор θ = {th:g}°
+     [v02_double_slit] the which-path detector showed {r:d}  ->  детектор пути показал {r:d}
+     [v03_quantum_1d] detector:  ->  детектор:
+     [v03_quantum_1d] the left detector clicks (reflected)  ->  щелчок левого детектора (отразилась)
+     [v03_quantum_1d] the right detector clicks (transmitted)  ->  щелчок правого детектора (прошла)
+     [v05_optics_bench] detector R: {k:d}  ->  детектор R: {k:d}
+     [v05_optics_bench] detector T: {k:d}  ->  детектор T: {k:d}
+     [v11_double_slit_2d] detector  ->  детектор
+     [v11_double_slit_2d] the detector's state  ->  состояние детектора
+     [v12_arrival_times_2d] Detectors  ->  Детекторы
+     [v12_arrival_times_2d] Distance to the detector L, λ  ->  Расстояние до детектора L, λ
+     [v12_arrival_times_2d] Soft detector (an absorbing potential)  ->  Мягкий детектор (поглощающий потенциал)
+     [v12_arrival_times_2d] Soft detector: absorbed {a:.5g}, reflected {r:.4g}.  ->  Мягкий детектор: поглотил {a:.5g}, отразил {r:.4g}.
+     [v12_arrival_times_2d] Soft detector: height W₀, in E₀  ->  Мягкий детектор: высота W₀, в E₀
+     [v12_arrival_times_2d] detectors now  ->  детекторы сейчас
+     [v12_arrival_times_2d] soft detector −iW₀  ->  мягкий детектор −iW₀
+     [v12_arrival_times_2d] the soft detector  ->  мягкий детектор
+     [v16_optical_vortices] Detector (single-mode, far zone)  ->  Детектор (одномодовый, дальняя зона)
+     [v16_optical_vortices] Detector: both arms of the interferometer  ->  Детектор: оба плеча интерферометра
+     [v16_optical_vortices] Rotation and detector  ->  Вращение и детектор
+     [v16_optical_vortices] detector  ->  детектор
+====================================================================================================
+TERM \bslices?\b   entries: 130
+  срез                    130  engine:9, framework:36, p02_quantum:3, v01_light_travel:4, v08_wave_3d:26, v09_thomas_3d:11, v13_hydrogen_3d:14, v14_quarkonium_3d:6, v16_optical_vortices:12, v17_mie_scattering:9
+  сечение                   2  v17_mie_scattering:2
+  (none of these)           0
+  short labels:
+     [engine] slice {plane}: {reason}  ->  срез {plane}: {reason}
+     [framework] No slices: “＋ Slice”.  ->  Срезов нет: «＋ Срез».
+     [framework] Remove the slice  ->  Убрать срез
+     [framework] Slice not built  ->  Срез не построен
+     [framework] Slice {id:d}: {label}  ->  Срез {id:d}: {label}
+     [framework] Slice: position and tilt  ->  Срез: положение и наклон
+     [framework] a slice  ->  срез
+     [framework] a slice is being built  ->  строится срез
+     [framework] auto-shift: a coarse slice, not verified  ->  автосмещение: грубый срез, без сверки
+     [framework] default slices  ->  срезы по умолчанию
+     [framework] point at the slice  ->  наведите на срез
+     [framework] slice in 3-D: {label}  ->  срез в 3D: {label}
+     [framework] slice {id:d} removed  ->  срез {id:d} убран
+     [framework] slice {id:d}: {label}  ->  срез {id:d}: {label}
+     [framework] there is no slice {id:d}  ->  нет среза {id:d}
+     [framework] ＋ Slice  ->  ＋ Срез
+     [p02_quantum] slice z = 0  ->  срез z = 0
+     [v01_light_travel] the “now” slice  ->  срез «сейчас»
+     [v08_wave_3d] Slice {pid}: removed  ->  Срез {pid}: убран
+     [v08_wave_3d] Slice: position and tilt  ->  Срез: положение и наклон
+     [v08_wave_3d] Slices only  ->  Только срезы
+     [v08_wave_3d] Square aperture, grid {n:d}: slices only  ->  Квадратное отверстие, сетка {n:d}: только срезы
+     [v08_wave_3d] slices  ->  срезы
+     [v08_wave_3d] {n:d} (slices only)  ->  {n:d} (только срезы)
+     [v09_thomas_3d] Slice {pid}: removed  ->  Срез {pid}: убран
+     [v09_thomas_3d] Slice: position and tilt  ->  Срез: положение и наклон
+     [v09_thomas_3d] auto-move: a coarse slice, not checked  ->  автосмещение: грубый срез, без сверки
+     [v13_hydrogen_3d] Slice {id}: removed  ->  Срез {id}: убран
+     [v13_hydrogen_3d] verified: the slice of phase {k}  ->  сверен срез фазы {k}
+     [v16_optical_vortices] Slice {id}: removed  ->  Срез {id}: убран
+     [v16_optical_vortices] Slice: position and tilt  ->  Срез: положение и наклон
+     [v16_optical_vortices] Slices  ->  Срезы
+     [v16_optical_vortices] a coarse slice (auto-move), not verified  ->  грубый срез (автосмещение), без сверки
+     [v17_mie_scattering] Slice {id}: removed  ->  Срез {id}: убран
+     [v17_mie_scattering] Slice: position and tilt  ->  Срез: положение и наклон
+     [v17_mie_scattering] computed (slices and volume)  ->  считается (срезы и объём)
+====================================================================================================
+TERM \bprobes?\b   entries: 43
+  зонд                     18  engine:3, v02_double_slit:10, v06_qcd:5
+  пробн                     1  p01_gravity:1
+  датчик                   24  engine:4, framework:4, p01_gravity:4, p02_quantum:1, p04_fluids:11
+  (none of these)           1
+     [framework] {values:d} values × {n:d} readings: the record has not measured the cost of computing this world (the world ha
+         -> {values:d} знач. × {n:d} замер.: цену счёта этого мира запись не измерила (мир ещё не играл ⏺ — шаги и паузы её не показывают). Свип измерит
+  short labels:
+     [engine] probe point: {n} coordinates  ->  точка датчика: {n} координаты
+     [engine] the probe is outside the grid  ->  датчик вне сетки
+     [framework] Probe  ->  Датчик
+     [framework] Probes  ->  Датчики
+     [framework] Two particles and a probe  ->  Две частицы и датчик
+     [p01_gravity] Field and tide probe  ->  Датчик поля и приливов
+     [p01_gravity] Probe near the Earth  ->  Датчик у Земли
+     [p01_gravity] Probes  ->  Датчики
+     [p04_fluids] Probe behind the cylinder  ->  Датчик за цилиндром
+     [p04_fluids] Probes  ->  Датчики
+     [p04_fluids] Velocity probe  ->  Датчик скорости
+     [v02_double_slit] Dipole axis (probe polarisation)  ->  Ось диполя (поляризация зонда)
+     [v02_double_slit] Probe beam direction  ->  Направление пучка-зонда
+     [v02_double_slit] Probe photon: wavelength, nm  ->  Фотон-зонд: длина волны, нм
+     [v02_double_slit] probe λ = {lam:.3g} nm  ->  зонд λ = {lam:.3g} нм
+     [v06_qcd] Probe scale μ, GeV  ->  Масштаб зонда μ, ГэВ
+     [v06_qcd] probe μ  ->  μ зонда
+====================================================================================================
+TERM \bplaygrounds?\b   entries: 16
+  плейграунд               15  engine:2, framework:6, p01_gravity:4, p02_quantum:1, p03_molecules:1, p04_fluids:1
+  песочниц                  1  engine:1
+  (none of these)           0
+  short labels:
+     [framework] Playground  ->  Плейграунд
+     [framework] playground  ->  плейграунд
+     [framework] playground · being kept  ->  плейграунд · сохраняется
+     [p01_gravity] Playground: Newtonian N bodies  ->  Плейграунд: ньютоновские N тел
+     [p01_gravity] Playground: space and gravity  ->  Плейграунд: космос и гравитация
+     [p02_quantum] Playground: quantum particles  ->  Плейграунд: квантовые частицы
+     [p03_molecules] Playground: particles and molecules  ->  Плейграунд: частицы и молекулы
+     [p04_fluids] Playground: fluids  ->  Плейграунд: жидкости
+====================================================================================================
+TERM \bsandbox   entries: 6
+  песочниц                  6  framework:2, p01_gravity:1, p02_quantum:1, p03_molecules:1, p04_fluids:1
+  (none of these)           0
+====================================================================================================
+TERM \brefus   entries: 19
+  отказ                    11  engine:4, framework:1, p02_quantum:3, p03_molecules:2, p04_fluids:1
+  отклон                    4  engine:1, p03_molecules:1, p04_fluids:2
+  не принят                 2  framework:2
+  (none of these)           2
+     [engine] a homogeneous lossless background at the faces (correction nodes not in the background are counted in checks()
+         -> однородный фон без потерь у граней (узлы с поправками не в фоне считаются в checks()); грани вне поглощающих слоёв; утечка — округление плюс
+     [engine] a plane wave in a homogeneous lossless background at the faces (bodies on the faces are flagged in checks()); 
+         -> плоская волна в однородном фоне без потерь у граней (тела на гранях отмечаются в checks()); для импульса утечка ~0,3–0,4 хвоста окна: 2–3e-9
+  short labels:
+     [p03_molecules] the engine refused this change  ->  движок отказал в этом изменении
+====================================================================================================
+TERM \brecord(s|ed|ing)?\b   entries: 116
+  запис                   106  engine:1, framework:93, p01_gravity:1, p04_fluids:1, v02_double_slit:1, v08_wave_3d:1, v09_thomas_3d:1, v12_arrival_times_2d:3, v13_hydrogen_3d:2, v16_optical_vortices:1, v17_mie_scattering:1
+  регистр                   9  engine:2, framework:1, v02_double_slit:6
+  (none of these)           1
+     [p02_quantum] A fresh Gaussian packet at the current moment (the widths, the spin and the particle from the parameters): the
+         -> Свежий гауссов пакет в текущий момент (ширины, спин и частица — из параметров): прежняя волна и её учёт поглощённого отбрасываются (перетаск
+  short labels:
+     [framework] Delete the record  ->  Удалить запись
+     [framework] Download the record (.lfrec)  ->  Скачать запись (.lfrec)
+     [framework] Keep the record for good  ->  Хранить запись всегда
+     [framework] Pause the recording (Space)  ->  Пауза записи (Пробел)
+     [framework] Play the record backwards (←)  ->  Проиграть запись назад (←)
+     [framework] Play the record forwards (→)  ->  Проиграть запись вперёд (→)
+     [framework] Record  ->  Запись
+     [framework] Record: window  ->  Запись: окно
+     [framework] Record: {why}  ->  Запись: {why}
+     [framework] a world from the record  ->  мир из записи
+     [framework] end of the record  ->  конец записи
+     [framework] loading the record…  ->  загрузка записи…
+     [framework] no recorded values  ->  нет записанных значений
+     [framework] recording  ->  запись идёт
+     [framework] the record cannot be read: {error}  ->  запись не читается: {error}
+     [framework] the record holds no world  ->  в записи нет ни одного мира
+     [framework] ⏸ recording  ->  ⏸ запись
+     [framework] ● Keep the record  ->  ● Сохранять запись
+     [p04_fluids] the forces are not being recorded  ->  запись сил не идёт
+     [v02_double_slit] Recording of the scattered photon  ->  Регистрация рассеянного фотона
+     [v02_double_slit] direction recorded (4π)  ->  регистрируется направление (4π)
+     [v02_double_slit] not recorded  ->  не регистрируется
+====================================================================================================
+TERM \brecordings?\b   entries: 11
+  запис                     8  framework:8
+  (none of these)           3
+     [engine] The GRW term λ[1 − e^{−d²/4r_C²}] has the same form as a stream of Gaussian kicks from the environment; the fu
+         -> Член GRW λ[1 − e^{−d²/4r_C²}] имеет ту же форму, что поток гауссовых толчков от среды; функция compare даёт видность от GRW, от дефазировки 
+     [engine] The visibility of two paths V = 2|ρ₁₂|/(ρ₁₁ + ρ₂₂): under Lindblad dephasing V = V₀e^{−γ_φ t}; with a recordin
+         -> Видность двух путей V = 2|ρ₁₂|/(ρ₁₁ + ρ₂₂): при дефазировке Линдблада V = V₀e^{−γ_φ t}; при зонде-регистраторе V = V₀|⟨χ₂|χ₁⟩|; при пуассоно
+     [v02_double_slit] Recording of the scattered photon
+         -> Регистрация рассеянного фотона
+  short labels:
+     [framework] Pause the recording (Space)  ->  Пауза записи (Пробел)
+     [framework] recording  ->  запись идёт
+     [framework] ⏸ recording  ->  ⏸ запись
+     [v02_double_slit] Recording of the scattered photon  ->  Регистрация рассеянного фотона
+====================================================================================================
+TERM \bpresets?\b   entries: 4
+  пресет                    1  v17_mie_scattering:1
+  сценари                   3  p03_molecules:1, v08_wave_3d:1, v09_thomas_3d:1
+  (none of these)           0
+====================================================================================================
+TERM \bruns?\b   entries: 218
+  запуск                  135  engine:4, framework:64, p01_gravity:1, p02_quantum:1, p03_molecules:1, v01_light_travel:9, v02_double_slit:6, v03_quantum_1d:2, v04_orbits:6, v05_optics_bench:22, v06_qcd:2, v07_bell_test:4, v08_wave_3d:3, v09_thomas_3d:2, v10_fast_observer:2, v13_hydrogen_3d:3, v15_kerr_shadow:1, v16_optical_vortices:1, v17_mie_scattering:1
+  прогон                   22  engine:1, v11_double_slit_2d:8, v12_arrival_times_2d:13
+  расчёт                    3  p01_gravity:2, v08_wave_3d:1
+  (none of these)          58
+     [engine] Classical MD in 2-D and 3-D: particle species (mass, charge, σ, ε), molecules with bonds and angles, a short-r
+         -> Классическая МД в 2-D и 3-D: сорта частиц (масса, заряд, σ, ε), молекулы со связями и углами, короткодействующий парный потенциал (из theori
+     [engine] GPU cooling down: {seen} (threshold {pause:.0f} °C): runs on the CPU until it has cooled to {resume:.0f} °C
+         -> GPU остывает: {seen} (порог {pause:.0f} °C) — считается на CPU, пока не остынет до {resume:.0f} °C
+     [engine] Maxwell's equations in linear isotropic media (dielectrics, magnetic materials, conductors, Drude, Lorentz and
+         -> Уравнения Максвелла в линейных изотропных средах (диэлектрики, магнетики, проводники, диспергирующие среды Друде, Лоренца и Дебая, идеальный
+     [engine] Point masses and test particles (m = 0) with stable keys: bodies are added, removed and changed at the current
+         -> Точечные массы и пробные частицы (m = 0) с устойчивыми ключами: добавление, удаление и изменение тел в текущий момент; симметричная по време
+     [engine] The engine's heavy kernels run on the CPU or on GPU 0: by default where it is faster (measured), or as chosen;
+         -> Тяжёлые ядра движка считаются на CPU или на GPU 0: по умолчанию там, где это быстрее (измерено), или по выбору; точность fp64, fp32 — только
+     [engine] Time profiles (a Gaussian pulse, a modulated Gaussian, a continuous wave with a smooth switch-on, samples); cu
+         -> Временные профили (гауссов импульс, модулированный гауссов, непрерывная волна с гладким включением, отсчёты); токовые источники J и M в точк
+     [engine] classical electrodynamics of linear isotropic media (no nonlinearity, anisotropy or moving media); the scheme'
+         -> классическая электродинамика линейных изотропных сред (нет нелинейности, анизотропии, движущихся сред); погрешность схемы — численная диспер
+     [engine] the GPU through CuPy (CUDA 12); without a GPU everything runs on the CPU (NumPy) by the same formulas
+         -> GPU — через CuPy (CUDA 12); без GPU всё считается на CPU (NumPy) теми же формулами
+     [engine] the incident wave's series are not zero at the start of the run (the window's tail {tail:.2g} of the peak > {l
+         -> ряды падающей волны не равны нулю в начале счёта (хвост окна {tail:.2g} пика > {lim}; от длины окна не зависит): у импульса есть спектр у кр
+     [engine] the packet's centre is outside the window along {ax}: {c:.4g}, while the window runs from {lo:.4g} to {hi:.4g}
+         -> центр пакета вне окна по оси {ax}: {c:.4g}, а окно от {lo:.4g} до {hi:.4g} — поставьте центр внутрь окна, не ближе {need:.3g} к его краю
+     [engine] water: the table runs from {lo} to {hi} °C
+         -> вода: таблица от {lo} до {hi} °C
+     [engine] {name}: the GPU is chosen but not available ({why}) → runs on the CPU
+         -> {name}: GPU выбран, но недоступен ({why}) → считается на CPU
+  short labels:
+     [framework] About the run  ->  О запуске
+     [framework] For this run:  ->  Для этого запуска:
+     [framework] No run given: /run?id=…  ->  Не указан запуск: /run?id=…
+     [framework] Remove runs without actions after  ->  Удалять запуски без действий через
+     [framework] Run  ->  Запуск
+     [framework] Run not found: {why}  ->  Запуск не найден: {why}
+     [framework] Runs  ->  Запуски
+     [framework] Sweeps of this run:  ->  Свипы этого запуска:
+     [framework] lfphys · run  ->  lfphys · запуск
+     [framework] repeat when other runs stop  ->  повторите, когда другие запуски остановятся
+     [framework] saved — holds for new runs  ->  сохранено — действует для новых запусков
+     [framework] saved; runs removed: {n:d}  ->  сохранено; удалено запусков: {n:d}
+     [framework] the run is not running  ->  запуск не идёт
+     [framework] the run's passport (JSON)  ->  паспорт запуска (JSON)
+     [framework] there is no such run  ->  нет такого запуска
+     [framework] waiting for the run…  ->  ждём запуск…
+     [p01_gravity]  (the companion has not run yet)  ->   (компаньон ещё не считался)
+     [p02_quantum] the tube runs along z  ->  трубка вдоль z
+     [v02_double_slit] the run's expectation  ->  ожидание запуска
+     [v05_optics_bench] Anti-reflection λ/4: the run's R(λ₀, 0°)  ->  Просветление λ/4: R(λ₀, 0°) запуска
+     [v05_optics_bench] Bragg mirror: the run's R(λ₀, 0°)  ->  Брэгговское зеркало: R(λ₀, 0°) запуска
+     [v05_optics_bench] Fabry–Pérot: the run's T(λ, θ)  ->  Фабри–Перо: T(λ, θ) запуска
+     [v05_optics_bench] |E|² (s), the run  ->  |E|² (s), запуск
+     [v11_double_slit_2d] as the main run  ->  как основной прогон
+     [v12_arrival_times_2d] as the main run  ->  как основной прогон
+====================================================================================================
+TERM \bsweeps?\b   entries: 48
+  свип                     44  framework:44
+  (none of these)           4
+     [v06_qcd] On the left: α_s(μ) computed by the run from α_s(M_Z) (PDG 2024) by solving the renormalisation-group equation
+         -> Слева — α_s(μ), посчитанная запуском из α_s(M_Z) (PDG 2024) решением уравнения ренормгруппы с β-функцией КХД в 1–4 петли; пунктир — пороги т
+     [v06_qcd] Sweep speed, decades per world second
+         -> Скорость прохода, декад в секунду мира
+     [v06_qcd] The strong coupling α_s runs with the scale: the run solves the renormalisation-group equation with the QCD β 
+         -> Константа сильного взаимодействия α_s бежит с масштабом: запуск решает уравнение ренормгруппы с β-функцией КХД (до четырёх петель) от мирово
+     [v06_qcd] “Play” sweeps the probe over the scales: the world's time is the logarithm of the scale
+         -> «Пуск» проводит зонд по масштабам: время мира — логарифм масштаба
+  short labels:
+     [framework] Parameter sweep  ->  Свип параметра
+     [framework] Remove this sweep and its results  ->  Удалить этот свип и его результаты
+     [framework] Sweep no. {n:d} started  ->  Свип № {n:d} запущен
+     [framework] Sweep no. {n:d}:   ->  Свип № {n:d}: 
+     [framework] Sweeps of this run:  ->  Свипы этого запуска:
+     [framework] The sweep was not computed: {why}  ->  Свип не посчитан: {why}
+     [framework] the sweep has stopped already  ->  свип уже остановлен
+     [framework] there is no such sweep  ->  нет такого свипа
+     [framework] ▶ Start the sweep  ->  ▶ Запустить свип
+     [v06_qcd] Sweep speed, decades per world second  ->  Скорость прохода, декад в секунду мира
+====================================================================================================
+TERM \bworkers?\b   entries: 13
+  вычислитель              12  framework:12
+  рабочий процесс           1  framework:1
+  (none of these)           0
+  short labels:
+     [framework] the worker exited with code {code}  ->  вычислитель завершился с кодом {code}
+     [framework] this worker writes no saved states  ->  этот вычислитель не пишет сохранённых состояний
+====================================================================================================
+TERM \bset-?ups?\b   entries: 66
+  установк                 61  framework:17, p03_molecules:2, p04_fluids:3, v02_double_slit:9, v03_quantum_1d:3, v05_optics_bench:8, v06_qcd:1, v07_bell_test:7, v11_double_slit_2d:8, v13_hydrogen_3d:1, v14_quarkonium_3d:1, v15_kerr_shadow:1
+  постановк                 5  p04_fluids:5
+  настройк                  2  v07_bell_test:2
+  (none of these)           0
+  short labels:
+     [framework] Set-up — changes at once  ->  Установка — меняется сразу
+     [framework] a change of the set-up  ->  изменение установки
+     [framework] the set-up is being rebuilt  ->  установка перестраивается
+     [framework] the set-up is being rebuilt…  ->  перестраивается установка…
+     [framework] — the set-up as now —  ->  — установка как сейчас —
+     [v02_double_slit] Set-up:  ->  Установка:
+     [v02_double_slit] a new segment, the same set-up  ->  новый отрезок, установка та же
+     [v02_double_slit] set-up changed: {desc}  ->  изменена установка: {desc}
+     [v03_quantum_1d] Set-up:  ->  Установка:
+     [v03_quantum_1d] the set-up changed: {what}  ->  изменена установка: {what}
+     [v05_optics_bench] Set-up of this segment  ->  Установка этого отрезка
+     [v05_optics_bench] Set-up:  ->  Установка:
+     [v05_optics_bench] set-up changed: {changes}  ->  изменена установка: {changes}
+     [v06_qcd] Set-up:  ->  Установка:
+     [v07_bell_test] Set-up and spacetime  ->  Установка и пространство-время
+     [v11_double_slit_2d] Set-up  ->  Установка
+     [v11_double_slit_2d] Set-up now  ->  Установка сейчас
+====================================================================================================
+TERM \breferences?\b   entries: 102
+  эталон                   95  engine:8, framework:7, p03_molecules:2, p04_fluids:3, v01_light_travel:6, v02_double_slit:6, v03_quantum_1d:5, v04_orbits:12, v05_optics_bench:8, v06_qcd:1, v07_bell_test:8, v08_wave_3d:4, v09_thomas_3d:3, v10_fast_observer:1, v11_double_slit_2d:3, v13_hydrogen_3d:5, v14_quarkonium_3d:2, v16_optical_vortices:11
+  ссылк                     1  framework:1
+  сравнени                  1  v11_double_slit_2d:1
+  литератур                 3  engine:2, v02_double_slit:1
+  (none of these)           4
+     [p03_molecules] no reference
+         -> нет отсчёта
+     [v01_light_travel] Deflection of the same ray at infinity (quadrature, a reference computation)
+         -> Отклонение того же луча на бесконечности (квадратура, справочный расчёт)
+     [v01_light_travel] On the left, space on the “now” slice of the chosen frame of reference (or what an observer sees: where the ob
+         -> Слева — пространство на срезе «сейчас» выбранной системы отсчёта (или то, что видит наблюдатель: где были объекты, когда ушёл приходящий к н
+     [v01_light_travel] Whose frame of reference: what counts as “now”, and which coordinates
+         -> Чья система отсчёта: что считается «сейчас» и какие координаты
+  short labels:
+     [engine] Measured and reference values (with sources)  ->  Измеренные и справочные значения (с источниками)
+     [engine] ball arithmetic for references and tests  ->  шаровая арифметика для эталонов и тестов
+     [framework] Checks: computed ↔ reference  ->  Проверки: вычислено ↔ эталон
+     [framework] This quantity has no closed reference  ->  Для этой величины нет замкнутого эталона
+     [framework] reference {value}  ->  эталон {value}
+     [p03_molecules] no reference  ->  нет отсчёта
+     [v02_double_slit] reference: {f}  ->  эталон: {f}
+     [v03_quantum_1d] reference ħω/2  ->  эталон ħω/2
+     [v04_orbits] Exact formula (reference)  ->  Точная формула (эталон)
+     [v05_optics_bench] reference arcsin(n_s/n₀) = arcsin({ns}/{nin})  ->  эталон arcsin(n_s/n₀) = arcsin({ns}/{nin})
+     [v05_optics_bench] reference arctan(n_out/n₀) = arctan({nout}/{nin})  ->  эталон arctg(n_выход/n₀) = arctg({nout}/{nin})
+     [v09_thomas_3d] reference  ->  эталон
+====================================================================================================
+TERM \bchecks?\b   entries: 95
+  проверк                  87  engine:13, framework:17, p01_gravity:3, p02_quantum:3, p03_molecules:3, p04_fluids:4, v01_light_travel:5, v02_double_slit:5, v03_quantum_1d:1, v04_orbits:2, v06_qcd:2, v07_bell_test:4, v08_wave_3d:5, v09_thomas_3d:3, v10_fast_observer:1, v11_double_slit_2d:2, v12_arrival_times_2d:2, v13_hydrogen_3d:3, v14_quarkonium_3d:1, v15_kerr_shadow:1, v16_optical_vortices:3, v17_mie_scattering:4
+  сверк                    10  v02_double_slit:1, v10_fast_observer:3, v11_double_slit_2d:3, v12_arrival_times_2d:3
+  контрол                   1  engine:1
+  (none of these)           3
+     [engine] a homogeneous lossless background at the faces (correction nodes not in the background are counted in checks()
+         -> однородный фон без потерь у граней (узлы с поправками не в фоне считаются в checks()); грани вне поглощающих слоёв; утечка — округление плюс
+     [engine] a plane wave in a homogeneous lossless background at the faces (bodies on the faces are flagged in checks()); 
+         -> плоская волна в однородном фоне без потерь у граней (тела на гранях отмечаются в checks()); для импульса утечка ~0,3–0,4 хвоста окна: 2–3e-9
+     [v08_wave_3d] Slices are planes at any angle, up to three. «＋ Slice» places the next plane through the middle of the region,
+         -> Срезы — плоскости под любым углом, до трёх. «＋ Срез» ставит следующую плоскость в середину области, перпендикулярно уже стоящим (и повёрнуты
+  short labels:
+     [framework] About the check  ->  Пояснение к проверке
+     [framework] Checks: computed ↔ reference  ->  Проверки: вычислено ↔ эталон
+     [framework] Earlier groups of checks: {n:d}  ->  Прежние группы проверок: {n:d}
+     [p03_molecules] the checks count from this moment  ->  отсчёты проверок — с этого момента
+     [p04_fluids] Checks  ->  Проверки
+     [v08_wave_3d] checks  ->  проверки
+     [v10_fast_observer] Check of the tracer  ->  Сверка трассировщика
+====================================================================================================
+TERM \binspector\b   entries: 16
+  инспектор                16  framework:6, p01_gravity:6, p02_quantum:2, p03_molecules:2
+  свойства                  1  p01_gravity:1
+  (none of these)           0
+  short labels:
+     [framework] Inspector  ->  Инспектор
+     [framework] change its parameters in the inspector  ->  меняйте его параметры в инспекторе
+====================================================================================================
+TERM \btolerance   entries: 99
+  допуск                   99  engine:13, framework:2, p01_gravity:3, p02_quantum:8, p03_molecules:1, p04_fluids:1, v01_light_travel:1, v02_double_slit:4, v03_quantum_1d:2, v04_orbits:10, v05_optics_bench:7, v06_qcd:1, v07_bell_test:5, v08_wave_3d:5, v09_thomas_3d:4, v10_fast_observer:2, v11_double_slit_2d:4, v12_arrival_times_2d:1, v13_hydrogen_3d:7, v14_quarkonium_3d:4, v15_kerr_shadow:4, v16_optical_vortices:5, v17_mie_scattering:5
+  порог                     1  v09_thomas_3d:1
+  точност                   9  engine:1, p01_gravity:1, v04_orbits:4, v09_thomas_3d:1, v14_quarkonium_3d:1, v15_kerr_shadow:1
+  (none of these)           0
+  short labels:
+     [framework] relative difference {rel:.3g}, tolerance {tol:.2g}  ->  относительное отличие {rel:.3g}, допуск {tol:.2g}
+     [p04_fluids] tolerance {tol:.3g}  ->  допуск {tol:.3g}
+     [v04_orbits] relative, the maximum; tolerance 10⁻⁹  ->  относительный, максимум; допуск 10⁻⁹
+====================================================================================================
+TERM \breadings?\b   entries: 34
+  замер                    17  framework:16, v01_light_travel:1
+  показани                  8  framework:1, p01_gravity:2, v01_light_travel:2, v02_double_slit:3
+  (none of these)          10
+     [engine] The detection probability is proportional to |ψ|^p; for p ≠ 2 third-order interference appears (the Sorkin par
+         -> Вероятность регистрации пропорциональна |ψ|^p; при p ≠ 2 появляется интерференция третьего порядка (параметр Соркина ≠ 0) и сигнализация чер
+     [v02_double_slit] No signalling: the distribution on the screen with the detector read = without reading
+         -> Без сигнала: распределение на экране с чтением детектора = без чтения
+     [v02_double_slit] under the Born rule an identity (the readout basis is complete); under a modification a difference is a comput
+         -> при правиле Борна — тождество (полнота базиса чтения); при модификации отличие — вычисленное следствие: чтение детектора меняло бы картину (
+     [v03_quantum_1d] Bohm's reading
+         -> прочтение Бома
+     [v03_quantum_1d] Electrons one at a time at a barrier, a double barrier, a step, a well or in a trap: the exact wave, tunnellin
+         -> Электроны по одному у барьера, двойного барьера, ступеньки, ямы или в ловушке: точная волна, туннелирование, детекторы; исход в копенгагенск
+     [v03_quantum_1d] Everett's reading
+         -> прочтение Эверетта
+     [v03_quantum_1d] Reading the outcome
+         -> Чтение исхода
+     [v03_quantum_1d] The particle's outcome is shown in the chosen reading: Copenhagen, a click at a random moment and the wave's c
+         -> Исход частицы показан в выбранном прочтении: копенгагенское — щелчок в случайный момент и коллапс волны в детектор; Бом — красная точка-част
+     [v03_quantum_1d] reading
+         -> прочтение
+     [v03_quantum_1d] the Copenhagen reading
+         -> копенгагенское прочтение
+  short labels:
+     [framework] Readings  ->  Замеров
+     [framework] at the end (1 reading)  ->  в конце (1 замер)
+     [framework] one reading at the end  ->  один замер в конце
+     [framework] undefined in {bad:d} of {n:d} readings  ->  не определена в {bad:d} из {n:d} замеров
+     [framework] {n:d} readings {dt} apart  ->  {n:d} замеров через {dt}
+     [p01_gravity] “{label}”: clock reading  ->  «{label}»: показание часов
+     [v02_double_slit] Detector reading  ->  Показание детектора
+     [v03_quantum_1d] Bohm's reading  ->  прочтение Бома
+     [v03_quantum_1d] Everett's reading  ->  прочтение Эверетта
+     [v03_quantum_1d] Reading the outcome  ->  Чтение исхода
+     [v03_quantum_1d] reading  ->  прочтение
+     [v03_quantum_1d] the Copenhagen reading  ->  копенгагенское прочтение
+====================================================================================================
+TERM \bsamples?\b   entries: 17
+  отсчёт                   14  engine:3, p02_quantum:2, v16_optical_vortices:9
+  выборк                    1  engine:1
+  замер                     1  framework:1
+  (none of these)           1
+     [engine] the DKW bound holds for independent samples (the velocities of one snapshot of a canonical system are independ
+         -> граница DKW — для независимых выборок (скорости одного снимка канонической системы независимы; соседние по времени снимки — нет); блочные ош
+  short labels:
+     [v16_optical_vortices] samples taken  ->  отсчётов
+====================================================================================================
+TERM \bagainst\b   entries: 185
+  против                  161  engine:17, framework:3, p01_gravity:2, p02_quantum:6, p03_molecules:7, p04_fluids:4, v01_light_travel:1, v02_double_slit:1, v03_quantum_1d:1, v04_orbits:1, v05_optics_bench:1, v06_qcd:6, v07_bell_test:4, v08_wave_3d:5, v09_thomas_3d:17, v10_fast_observer:7, v11_double_slit_2d:13, v12_arrival_times_2d:12, v13_hydrogen_3d:7, v14_quarkonium_3d:4, v15_kerr_shadow:17, v16_optical_vortices:8, v17_mie_scattering:17
+  сравнени                  6  engine:1, p01_gravity:1, v04_orbits:1, v09_thomas_3d:2, v17_mie_scattering:1
+  сверк                    21  engine:3, v02_double_slit:2, v04_orbits:1, v08_wave_3d:3, v09_thomas_3d:2, v10_fast_observer:1, v11_double_slit_2d:1, v12_arrival_times_2d:3, v13_hydrogen_3d:3, v14_quarkonium_3d:1, v15_kerr_shadow:1
+  от/зависим               13  engine:3, v06_qcd:2, v11_double_slit_2d:1, v14_quarkonium_3d:1, v15_kerr_shadow:4, v17_mie_scattering:2
+  (none of these)           9
+     [engine] Hairer & Wanner, Solving ODEs II (1996), §IV.5 — Radau IIA (coefficients checked against the collocation condi
+         -> Hairer & Wanner, Solving ODEs II (1996), §IV.5 — Radau IIA (коэффициенты проверены условиями коллокации)
+     [engine] The motion of a body in the field −GM r/r³: exact Kepler hyperbolas and ellipses, numerical integration checke
+         -> Движение тела в поле −GM r/r³: точные гиперболы и эллипсы Кеплера, численное интегрирование с проверкой по коническому сечению.
+     [engine] the equivalence theorem and the vector potentials in the far zone (derived; checked in the tests against the e
+         -> теорема эквивалентности и векторные потенциалы в дальней зоне (выведено; проверено в тестах по точным рядам цилиндра и Ми)
+     [framework] Against the axis {a}
+         -> Навстречу оси {a}
+     [p02_quantum] Tunnelling: a packet against a thin barrier above its energy
+         -> Туннелирование: пакет на тонкий барьер выше своей энергии
+     [v01_light_travel] Measuring c: at rest, moving along the light, against it (SR)
+         -> Измерение c: покой, по ходу света, навстречу (СТО)
+     [v03_quantum_1d] Particles fly out one at a time. The wave of each is a numerical solution of the Schrödinger equation on a gri
+         -> Частицы вылетают по одной. Волна каждой — численное решение уравнения Шрёдингера на сетке (сходимость проверяется эталоном); детекторы по кр
+     [v08_wave_3d] Gaussian beam, w = {w} µm: divergence (checked against the integral)
+         -> Гауссов пучок, w = {w} мкм: расходимость (проверка по интегралу)
+     [v17_mie_scattering] {n:d} printed quantities (Q_ext, Q_sca, g, S₁(0), S₁(90°), S₂(90°), S₁(180°)): the largest deviation in halves
+         -> напечатанных величин: {n:d} (Q_ext, Q_sca, g, S₁(0), S₁(90°), S₂(90°), S₁(180°)) — наибольшее отклонение в половинах последнего напечатанног
+  short labels:
+     [framework] Against the axis {a}  ->  Навстречу оси {a}
+     [v02_double_slit] not verified against the exact solution  ->  не сверено с точным решением
+     [v06_qcd] 4/3·α_s(1/⟨r⟩) against κ  ->  4/3·α_s(1/⟨r⟩) против κ
+     [v06_qcd] {a:.3g} against {k:.3g}  ->  {a:.3g} против {k:.3g}
+     [v07_bell_test] cτ against 2L  ->  cτ против 2L
+     [v09_thomas_3d] Seam: {n:d} burns against {n2:d}  ->  Шов: {n:d} импульсов против {n2:d}
+     [v09_thomas_3d] View against the z axis  ->  Взгляд против оси z
+     [v09_thomas_3d] View against the βz axis  ->  Взгляд против оси βz
+     [v09_thomas_3d] against z  ->  против z
+     [v10_fast_observer] Against the z axis  ->  Против оси z
+     [v11_double_slit_2d] Bohm trajectories against the pattern  ->  Траектории Бома против картины
+     [v11_double_slit_2d] Pattern against an approximation: {label}  ->  Картина против приближения: {label}
+     [v15_kerr_shadow] The disk rotates against the hole  ->  Диск вращается против дыры
+     [v17_mie_scattering] Sky: colour against the scattering angle  ->  Небо: цвет против угла рассеяния
+====================================================================================================
+TERM \bclosed[- ]form   entries: 50
+  замкнут                  49  engine:16, framework:1, v01_light_travel:3, v04_orbits:2, v06_qcd:1, v07_bell_test:4, v08_wave_3d:3, v09_thomas_3d:5, v11_double_slit_2d:1, v12_arrival_times_2d:2, v13_hydrogen_3d:2, v15_kerr_shadow:5, v16_optical_vortices:2, v17_mie_scattering:2
+  точн                     13  engine:4, framework:1, v04_orbits:1, v08_wave_3d:2, v11_double_slit_2d:1, v12_arrival_times_2d:1, v15_kerr_shadow:3
+  формул                   24  engine:6, framework:1, v01_light_travel:3, v04_orbits:2, v08_wave_3d:1, v09_thomas_3d:5, v13_hydrogen_3d:2, v15_kerr_shadow:4
+  (none of these)           0
+  short labels:
+     [v01_light_travel] no closed form for this motion  ->  нет замкнутой формулы для этого движения
+     [v09_thomas_3d] planar (a closed formula exists)  ->  плоская (есть замкнутая формула)
+====================================================================================================
+TERM \berror\b   entries: 119
+  ошибк                   107  engine:35, framework:7, p01_gravity:4, p02_quantum:5, p03_molecules:5, p04_fluids:8, v02_double_slit:8, v03_quantum_1d:1, v05_optics_bench:7, v07_bell_test:1, v08_wave_3d:6, v09_thomas_3d:2, v10_fast_observer:1, v11_double_slit_2d:6, v13_hydrogen_3d:1, v14_quarkonium_3d:1, v15_kerr_shadow:1, v16_optical_vortices:4, v17_mie_scattering:4
+  погрешност                4  engine:3, v03_quantum_1d:1
+  невязк                    1  v13_hydrogen_3d:1
+  (none of these)          10
+     [framework] devices: {error}
+         -> устройства: {error}
+     [framework] settings: {error}
+         -> настройки: {error}
+     [framework] the device settings were not applied: {error}
+         -> настройки устройств не применены: {error}
+     [framework] the engine did not report its devices: {error}
+         -> движок не сообщил устройства: {error}
+     [framework] the engine's catalogue is not available: {error}
+         -> каталог движка недоступен: {error}
+     [framework] the record cannot be read: {error}
+         -> запись не читается: {error}
+     [framework] the visualization does not load: {error}
+         -> визуализация не загружается: {error}
+     [framework] the world's state was not saved: {error}
+         -> состояние мира не сохранилось: {error}
+     [v10_fast_observer] the image was not read: {error}
+         -> изображение не прочитано: {error}
+     [v10_fast_observer] {error} (t = {t:.4g} ns)
+         -> {error} (t = {t:.4g} нс)
+  short labels:
+     [framework] a numerical error  ->  численная ошибка
+     [framework] devices: {error}  ->  устройства: {error}
+     [framework] fp32: error ≤ {bound:.2g}, {use}  ->  fp32: ошибка ≤ {bound:.2g}, {use}
+     [framework] settings: {error}  ->  настройки: {error}
+     [framework] the record cannot be read: {error}  ->  запись не читается: {error}
+     [framework] the visualization does not load: {error}  ->  визуализация не загружается: {error}
+     [p02_quantum] “{label}”: time-step error (accumulated estimate)  ->  «{label}»: ошибка шага по времени (накопленная оценка)
+     [v05_optics_bench] internal error of the world: {err}  ->  внутренняя ошибка мира: {err}
+     [v08_wave_3d] error at z_max  ->  ошибка на z_max
+     [v10_fast_observer] the image was not read: {error}  ->  изображение не прочитано: {error}
+     [v10_fast_observer] {error} (t = {t:.4g} ns)  ->  {error} (t = {t:.4g} нс)
+====================================================================================================
+TERM \btoy\b   entries: 4
+  игрушеч                   4  framework:4
+  (none of these)           0
+  short labels:
+     [framework] Toy (tests)  ->  Игрушка (тесты)
+     [framework] Toy: free particles  ->  Игрушка: свободные частицы
+====================================================================================================
+TERM \bpassport\b   entries: 1
+  паспорт                   1  framework:1
+  (none of these)           0
+  short labels:
+     [framework] the run's passport (JSON)  ->  паспорт запуска (JSON)
+====================================================================================================
+TERM \bworlds?\b   entries: 410
+  мир                     392  engine:21, framework:184, p01_gravity:18, p02_quantum:19, p03_molecules:8, p04_fluids:29, v01_light_travel:4, v02_double_slit:5, v03_quantum_1d:1, v04_orbits:13, v05_optics_bench:4, v06_qcd:6, v07_bell_test:13, v08_wave_3d:4, v09_thomas_3d:2, v10_fast_observer:5, v11_double_slit_2d:8, v12_arrival_times_2d:5, v13_hydrogen_3d:6, v14_quarkonium_3d:5, v15_kerr_shadow:10, v16_optical_vortices:18, v17_mie_scattering:4
+  сцен                     37  engine:1, framework:23, p01_gravity:5, p02_quantum:2, p03_molecules:1, p04_fluids:2, v08_wave_3d:2, v15_kerr_shadow:1
+  (none of these)          18
+     [p03_molecules] The Lennard-Jones potential is cut at this distance; the shift removes the jump. The cutoff changes the substa
+         -> Потенциал Леннард-Джонса обрезан на этом расстоянии; сдвиг убирает скачок. Обрезка меняет вещество: его критическая и тройная точки другие, 
+     [p03_molecules] Verlet scheme: the energy error ~ dt² with continuous forces; for argon 10 fs ≈ 0.005 τ. Changed while the wor
+         -> Схема Верле: ошибка энергии ~ dt² при непрерывных силах; для аргона 10 фс ≈ 0,005 τ. Меняется на ходу (состояние то же, следующие шаги — с н
+     [p03_molecules] a centre-of-mass speed of at most ≈ {v:.2g} m/s, or a “Time step” of at most {dt:.2g} fs (while the world runs
+         -> скорость центра масс не больше ≈ {v:.2g} м/с или «Шаг по времени» не больше {dt:.2g} фс (на ходу)
+     [p03_molecules] a smaller size σ of the atom, or a larger box (while the world runs)
+         -> меньше размер σ атома или больше ящик (на ходу)
+     [p03_molecules] a smaller σ of the atoms or a larger box (while the world runs, with continuous forces)
+         -> меньше σ атомов или ящик больше (на ходу, при непрерывных силах)
+     [p03_molecules] a smaller “Cutoff radius” or a larger box (both change while the world runs)
+         -> меньше «Радиус обрезки» или ящик больше (оба меняются на ходу)
+     [p03_molecules] a speed of at most {v:.3g} m/s, or a “Time step” of at most {dt:.2g} fs (changes while the world runs, in the 
+         -> скорость не больше {v:.3g} м/с или «Шаг по времени» не больше {dt:.2g} фс (меняется на ходу, в «Установке»)
+     [p03_molecules] a temperature of at most {T:.3g} K at this step, or a “Time step” of at most {dt:.2g} fs (changes while the wo
+         -> температура не выше {T:.3g} K при этом шаге или «Шаг по времени» не больше {dt:.2g} фс (меняется на ходу, в «Установке»)
+     [p03_molecules] laws changed while the world runs: {laws}
+         -> законы на ходу: {laws}
+     [p03_molecules] laws changed while the world runs: {laws}; the energy changed by {de:+.4g} kJ/mol per atom (the difference of 
+         -> законы на ходу: {laws}; энергия изменилась на {de:+.4g} кДж/моль на атом (разность потенциалов; учтена в балансе)
+     [p03_molecules] lower the density (a larger box, while the world runs) or the temperature (the weaker the impact, the less the
+         -> уменьшите плотность (ящик больше — на ходу) или температуру (чем слабее удар, тем меньше атомы заходят друг в друга), либо попробуйте в друг
+     [p03_molecules] not computed with the dynamics of continuous forces (switched while the world runs)
+         -> не считается при динамике непрерывных сил (переключена на ходу)
+  short labels:
+     [engine] Everett's many-worlds interpretation: branching without collapse  ->  Многомировая интерпретация Эверетта: ветвление без коллапса
+     [engine] chosen for this world  ->  выбрано для этого мира
+     [engine] this world has no component {comp}  ->  компоненты {comp} нет в этом мире
+     [framework] New world not created  ->  Новый мир не создан
+     [framework] New world: laws and initial conditions  ->  Новый мир: законы и начальные условия
+     [framework] New world: scenario, laws, initial conditions  ->  Новый мир: сценарий, законы, начальные условия
+     [framework] Physics of this world  ->  Физика этого мира
+     [framework] The previous world goes on.  ->  Прежний мир продолжается.
+     [framework] The world is being built…  ->  Мир строится…
+     [framework] The world's plane edge on  ->  Плоскость мира с ребра
+     [framework] This world reports no measurable quantities.  ->  Этот мир не сообщает измеряемых величин.
+     [framework] World  ->  Мир
+     [framework] World not created  ->  Мир не создан
+     [framework] World not restored  ->  Мир не восстановлен
+     [framework] World seconds per second (logarithmic scale)  ->  Секунд мира за секунду (логарифмическая шкала)
+     [framework] World time  ->  Время мира
+     [framework] World {n:d} (current): {title}  ->  Мир {n:d} (текущий): {title}
+     [framework] World {n:d}: {title}  ->  Мир {n:d}: {title}
+     [framework] a new world  ->  новый мир
+     [framework] a new world is being created  ->  создаётся новый мир
+     [framework] a new world is being created…  ->  создаётся новый мир…
+     [framework] a world from the record  ->  мир из записи
+     [framework] a world with these parameters  ->  мир с этими параметрами
+     [framework] carry it into a 3-D world  ->  перенесите её в 3-D мир
+     [framework] the record holds no world  ->  в записи нет ни одного мира
+     [framework] the world is being built  ->  строится мир
+     [framework] the world is being restored  ->  мир восстанавливается
+     [framework] the world is computing  ->  мир считает
+     [framework] the world was not created  ->  мир не создан
+     [framework] the world's latest saved state  ->  последнее сохранённое состояние мира
+     [framework] the world's state carried over  ->  состояние мира перенесено
+     [framework] the world's state carried over: {notes}  ->  состояние мира перенесено: {notes}
+     [framework] the world's state: {notes}  ->  состояние мира: {notes}
+     [framework] the world: {notes}  ->  мир: {notes}
+     [framework] this world has no view requests  ->  у этого мира нет запросов просмотра
+     [framework] to the current world  ->  к текущему миру
+     [framework] waiting for the world…  ->  ждём мир…
+     [framework] world not created  ->  мир не создан
+     [framework] worlds: {n:d}  ->  миров: {n:d}
+     [framework] ▶ Start a new world  ->  ▶ Начать новый мир
+     [framework] ⟳ building the world…  ->  ⟳ строится мир…
+     [p01_gravity] World laws  ->  Законы мира
+     [p02_quantum] World  ->  Мир
+     [v01_light_travel] The world changed dependent parameters: {what}  ->  Мир изменил зависимые параметры: {what}
+     [v02_double_slit] Particles per second (world time)  ->  Частиц в секунду (время мира)
+     [v05_optics_bench] Photons per second (world time)  ->  Фотонов в секунду (время мира)
+     [v05_optics_bench] internal error of the world: {err}  ->  внутренняя ошибка мира: {err}
+     [v06_qcd] Sweep speed, decades per world second  ->  Скорость прохода, декад в секунду мира
+     [v07_bell_test] Pairs per second (world time)  ->  Пар в секунду (время мира)
+     [v07_bell_test] Source (world)  ->  Источник (мир)
+     [v07_bell_test] {law}: the world's law  ->  {law} — закон мира
+     [v11_double_slit_2d] s (the world clock)  ->  с (мировые часы)
+     [v16_optical_vortices] no helical fronts in this world  ->  нет винтовых фронтов в этом мире
+     [v16_optical_vortices] no rotating element in this world  ->  нет вращающегося элемента в этом мире
+     [v16_optical_vortices] the world is marked  ->  мир помечен
+====================================================================================================
+TERM \bscreen\b   entries: 170
+  экран                   166  engine:19, framework:4, p01_gravity:1, p02_quantum:2, v01_light_travel:1, v02_double_slit:77, v03_quantum_1d:1, v04_orbits:1, v05_optics_bench:1, v06_qcd:1, v07_bell_test:1, v11_double_slit_2d:34, v12_arrival_times_2d:4, v15_kerr_shadow:13, v16_optical_vortices:5, v17_mie_scattering:1
+  (none of these)           4
+     [v08_wave_3d] A 3-D scene: the screen with its aperture, the incident wave, the light behind the aperture, the energy curren
+         -> 3D-сцена: заслонка с отверстием, падающая волна, свет за отверстием, поток энергии и мишень; срезы — плоскости под любым углом (до трёх) со 
+     [v08_wave_3d] In the centre is the 3-D scene of this run: the screen with its aperture in the plane z = 0, the incident plan
+         -> В центре — 3D-сцена этого запуска: заслонка с отверстием в плоскости z = 0, падающая плоская волна (задана), свет за отверстием (посчитанный
+     [v08_wave_3d] Screen with the aperture (z = 0)
+         -> Заслонка с отверстием (z = 0)
+     [v08_wave_3d] The field behind the aperture in the plane z = 0 propagates as a sum of plane waves (the angular spectrum); th
+         -> Поле за отверстием в плоскости z = 0 распространяется суммой плоских волн (угловой спектр); отверстие входит своим точным спектром. В 3D-сце
+  short labels:
+     [p02_quantum] Screen  ->  Экран
+     [v01_light_travel] What is on the screen  ->  Что на экране
+     [v02_double_slit] Analyser in front of the screen  ->  Анализатор перед экраном
+     [v02_double_slit] Clear the screen  ->  Очистить экран
+     [v02_double_slit] Distance to the screen, m  ->  Расстояние до экрана, м
+     [v02_double_slit] Flight to the screen  ->  Полёт до экрана
+     [v02_double_slit] Model of the slit screen  ->  Модель экрана со щелями
+     [v02_double_slit] Screen  ->  Экран
+     [v02_double_slit] Screen half-width, µm (0 = auto)  ->  Полуширина экрана, мкм (0 = авто)
+     [v02_double_slit] Screen:  ->  Экран:
+     [v02_double_slit] Segment {s:d}: vector screen (perfect conductor)  ->  Отрезок {s:d}: векторный экран (идеальный проводник)
+     [v02_double_slit] Slits and screen  ->  Щели и экран
+     [v02_double_slit] To the screen  ->  До экрана
+     [v02_double_slit] What is on the screen  ->  Что на экране
+     [v02_double_slit] missed the screen  ->  прошла мимо экрана
+     [v02_double_slit] past the screen  ->  мимо экрана
+     [v02_double_slit] reflected by the conducting screen  ->  отражено экраном-проводником
+     [v02_double_slit] screen cleared  ->  очистка экрана
+     [v02_double_slit] screen, m  ->  экран, м
+     [v03_quantum_1d] What is on the screen  ->  Что на экране
+     [v04_orbits] What is on the screen  ->  Что на экране
+     [v05_optics_bench] What is on the screen  ->  Что на экране
+     [v06_qcd] What is on the screen  ->  Что на экране
+     [v07_bell_test] What is on the screen  ->  Что на экране
+     [v11_double_slit_2d] Bohm particles on the screen  ->  частиц Бома на экране
+     [v11_double_slit_2d] Distance to the screen L, λ  ->  Расстояние до экрана L, λ
+     [v11_double_slit_2d] Screen  ->  Экран
+     [v11_double_slit_2d] on the screen  ->  на экране
+     [v11_double_slit_2d] to the screen  ->  на экран
+     [v15_kerr_shadow] Half-width of the screen, M  ->  Полуширина экрана, M
+     [v15_kerr_shadow] Screen  ->  Экран
+     [v15_kerr_shadow] Screen resolution  ->  Разрешение экрана
+====================================================================================================
+TERM \bcollapse   entries: 23
+  коллапс                  21  engine:9, v02_double_slit:7, v03_quantum_1d:5
+  сжат                      2  p02_quantum:2
+  (none of these)           0
+  short labels:
+     [engine] Everett's many-worlds interpretation: branching without collapse  ->  Многомировая интерпретация Эверетта: ветвление без коллапса
+     [engine] GRW spontaneous collapse  ->  Спонтанный коллапс GRW
+     [engine] lfphys.core.quantum: linear quantum mechanics without collapse  ->  lfphys.core.quantum: линейная квантовая механика без коллапса
+     [v02_double_slit] C60 with enhanced GRW collapse (modification)  ->  C60 с усиленным коллапсом GRW (модификация)
+     [v02_double_slit] Collapse  ->  Коллапс
+     [v02_double_slit] spontaneous collapse (GRW)  ->  спонтанный коллапс (GRW)
+     [v03_quantum_1d] Copenhagen: a click and a collapse  ->  копенгагенская: щелчок и коллапс
+====================================================================================================
+TERM \bhits?\b   entries: 25
+  удар                      5  engine:1, v02_double_slit:4
+  попадан                  19  v02_double_slit:8, v11_double_slit_2d:10, v12_arrival_times_2d:1
+  толч                      2  v02_double_slit:2
+  (none of these)           1
+     [v11_double_slit_2d] {K:d} particles integrated again in the same wave, {tight:d} times more tightly; of the {both:d} that hit in b
+         -> частиц {K:d} проинтегрированы ещё раз в той же волне в {tight:d} раза строже; из попавших в обоих случаях ({both:d}) 95 % отличаются не боль
+  short labels:
+     [v02_double_slit] GRW hits  ->  ударов GRW
+     [v02_double_slit] GRW hits: {n:d}  ->  ударов GRW: {n:d}
+     [v02_double_slit] Hits  ->  Попадания
+====================================================================================================
+TERM \bresolv   entries: 50
+  разреш                   31  engine:5, p03_molecules:6, p04_fluids:9, v02_double_slit:4, v05_optics_bench:1, v11_double_slit_2d:4, v12_arrival_times_2d:1, v17_mie_scattering:1
+  передаёт/передать        20  engine:1, p02_quantum:19
+  (none of these)           0
+====================================================================================================
+TERM \bfluid\b   entries: 48
+  жидкост                  45  engine:8, p03_molecules:2, p04_fluids:35
+  сред                      2  p03_molecules:1, p04_fluids:1
+  течени                    7  p04_fluids:7
+  (none of these)           3
+     [engine] Ladd, J. Fluid Mech. 271, 285 (1994) — moving walls, momentum exchange
+         -> Ladd, J. Fluid Mech. 271, 285 (1994) — подвижные стенки, обмен импульсом
+     [p04_fluids] fluid at rest
+         -> в покое
+     [p04_fluids] {fluid:cap} (ν = {nu:.2g} m²/s) on a grid of spacing {dx:.2g} m is resolved at velocities up to {u_ok:.2g} m/s
+         -> {fluid:cap} (ν = {nu:.2g} м²/с) на сетке с шагом {dx:.2g} м разрешается при скоростях до {u_ok:.2g} м/с (число Рейнольдса ячейки u·dx/ν ≤ {r
+  short labels:
+     [engine] Fluid in 2-D (lattice Boltzmann method)  ->  Жидкость в 2-D (решёточный метод Больцмана)
+     [engine] displaced fluid: 'remove' or 'spread'  ->  вытесненная жидкость: 'remove' или 'spread'
+     [engine] fluid {name}: 'water' or 'air'  ->  жидкость {name}: 'water' или 'air'
+     [p04_fluids] Dye in the incoming fluid (fraction)  ->  Краситель во входящей жидкости (доля)
+     [p04_fluids] Fluid (on the fly)  ->  Жидкость (на ходу)
+     [p04_fluids] Fluid and velocities: {note}  ->  Жидкость и скорости: {note}
+     [p04_fluids] Fluid at the start  ->  Жидкость в начале
+     [p04_fluids] a custom fluid  ->  своя жидкость
+     [p04_fluids] fluid at rest  ->  в покое
+     [p04_fluids] the DFG test fluid  ->  жидкость теста DFG
+====================================================================================================
+TERM \bflux\b   entries: 119
+  поток                   119  engine:32, p01_gravity:2, p02_quantum:23, p04_fluids:1, v02_double_slit:15, v11_double_slit_2d:22, v12_arrival_times_2d:13, v16_optical_vortices:11
+  (none of these)           0
+  short labels:
+     [engine] flux tube Φ = {flux}  ->  трубка потока Φ = {flux}
+     [engine] flux tube: radius > 0  ->  трубка потока: радиус > 0
+     [engine] flux tube: two different grid axes  ->  трубка потока: две разные оси сетки
+     [p02_quantum] Fields, flux tubes, environment  ->  Поля, трубки потока, среда
+     [p02_quantum] Flux behind the barrier  ->  Поток за барьером
+     [p02_quantum] Flux behind the slits  ->  Поток за щелями
+     [p02_quantum] Flux plane  ->  Плоскость потока
+     [p02_quantum] Flux planes  ->  Плоскости потока
+     [p02_quantum] Flux tube  ->  Трубка потока
+     [p02_quantum] Flux tube (Aharonov–Bohm)  ->  Трубка потока (Ааронов–Бом)
+     [p02_quantum] Flux, in quanta h/e  ->  Поток, в квантах h/e
+     [p02_quantum] flux over time  ->  поток за время
+     [p02_quantum] “{label}”: flux of “{particle}” now  ->  «{label}»: поток «{particle}» сейчас
+     [v02_double_slit] Aharonov–Bohm flux {f:g} h/e  ->  поток Ааронова–Бома {f:g} h/e
+     [v02_double_slit] from the vector solution (energy flux)  ->  по векторному решению (поток энергии)
+     [v11_double_slit_2d] Aharonov–Bohm flux between the slits Φ/Φ₀  ->  Поток Ааронова–Бома между щелями Φ/Φ₀
+     [v11_double_slit_2d] flux between the slits  ->  поток между щелями
+     [v12_arrival_times_2d] quantum flux J(t)  ->  квантовый поток J(t)
+     [v16_optical_vortices] by the flux (Barnett): orbit  ->  по потоку (Барнетт): орбита
+     [v16_optical_vortices] by the flux (Barnett): spin  ->  по потоку (Барнетт): спин
+====================================================================================================
+TERM \bcurrent\b   entries: 133
+  ток                      43  engine:8, p02_quantum:4, v02_double_slit:2, v03_quantum_1d:1, v11_double_slit_2d:1, v12_arrival_times_2d:4, v13_hydrogen_3d:17, v14_quarkonium_3d:3, v16_optical_vortices:3
+  текущ                    82  engine:4, framework:25, p01_gravity:11, p02_quantum:4, p03_molecules:6, p04_fluids:5, v01_light_travel:2, v02_double_slit:4, v03_quantum_1d:1, v04_orbits:7, v05_optics_bench:3, v07_bell_test:2, v10_fast_observer:2, v11_double_slit_2d:1, v12_arrival_times_2d:1, v13_hydrogen_3d:2, v14_quarkonium_3d:2
+  (none of these)           9
+     [engine] a homogeneous background without perturbations (recombination is not computed: z_* and z_drag are input data);
+         -> однородный фон без возмущений (рекомбинация не считается: z_*, z_drag — входные данные); нейтрино — тепловые: массивный вид — газ Ферми–Дира
+     [v08_wave_3d] A 3-D scene: the screen with its aperture, the incident wave, the light behind the aperture, the energy curren
+         -> 3D-сцена: заслонка с отверстием, падающая волна, свет за отверстием, поток энергии и мишень; срезы — плоскости под любым углом (до трёх) со 
+     [v08_wave_3d] Energy current (direction and size)
+         -> Поток энергии (направление и величина)
+     [v08_wave_3d] Energy current at points of z_max against the exact one (derivatives of the exact field)
+         -> Поток энергии в точках z_max против точного (производные точного поля)
+     [v08_wave_3d] In the centre is the 3-D scene of this run: the screen with its aperture in the plane z = 0, the incident plan
+         -> В центре — 3D-сцена этого запуска: заслонка с отверстием в плоскости z = 0, падающая плоская волна (задана), свет за отверстием (посчитанный
+     [v08_wave_3d] The field behind the aperture in the plane z = 0 propagates as a sum of plane waves (the angular spectrum); th
+         -> Поле за отверстием в плоскости z = 0 распространяется суммой плоских волн (угловой спектр); отверстие входит своим точным спектром. В 3D-сце
+     [v08_wave_3d] energy current j = Im(U*∇U)/k on 10 planes z, 16×16 points; length ~ √|j|
+         -> поток энергии j = Im(U*∇U)/k на 10 плоскостях z, 16×16 точек; длина ~ √|j|
+     [v08_wave_3d] the whole volume is computed: the light and the energy current in 3-D; any slice is computed exactly for its p
+         -> посчитан весь объём: в 3D — свет и поток энергии; любой срез считается точно для своей плоскости
+     [v08_wave_3d] whole volume: light and energy current in 3-D, any slices
+         -> весь объём: свет и поток энергии в 3D, любые срезы
+  short labels:
+     [framework] A copy (at the current moment)  ->  Копия (в текущий момент)
+     [framework] World {n:d} (current): {title}  ->  Мир {n:d} (текущий): {title}
+     [framework] to the current world  ->  к текущему миру
+     [v02_double_slit] current segment  ->  текущий отрезок
+     [v02_double_slit] in the current segment  ->  в текущем отрезке
+     [v08_wave_3d] Energy current (direction and size)  ->  Поток энергии (направление и величина)
+     [v13_hydrogen_3d] Probability current (arrows)  ->  Ток вероятности (стрелки)
+====================================================================================================
+TERM \bobserver   entries: 143
+  наблюдател              141  engine:16, framework:9, p01_gravity:23, v01_light_travel:25, v02_double_slit:8, v04_orbits:15, v10_fast_observer:23, v11_double_slit_2d:7, v15_kerr_shadow:13, v17_mie_scattering:2
+  (none of these)           2
+     [engine] Peebles & Wilkinson, Phys. Rev. 174, 2168 (1968): the dipole anisotropy of the background for a moving observe
+         -> Peebles & Wilkinson, Phys. Rev. 174, 2168 (1968): дипольная анизотропия фона при движении
+     [v10_fast_observer] {observer}; camera: {camera}, view {fwd}; image: {image}
+         -> {observer}; камера: {camera}, взгляд {fwd}; изображение: {image}
+  short labels:
+     [engine] the observer is inside the body  ->  наблюдатель внутри тела
+     [framework] Observers  ->  Наблюдатели
+     [framework] What the observer sees  ->  Что видит наблюдатель
+     [p01_gravity] Observer  ->  Наблюдатель
+     [p01_gravity] Observer with a clock  ->  Наблюдатель с часами
+     [p01_gravity] observer “{label}”: {why}  ->  наблюдатель «{label}»: {why}
+     [p01_gravity] observer's clock τ, s  ->  часы наблюдателя τ, с
+     [p01_gravity] the observer is under the horizon  ->  наблюдатель под горизонтом
+     [v01_light_travel] Observer  ->  Наблюдатель
+     [v01_light_travel] Observer 1: speed, × c  ->  Наблюдатель 1: скорость, × c
+     [v01_light_travel] Observer 2: speed, × c  ->  Наблюдатель 2: скорость, × c
+     [v01_light_travel] Observer 3: speed, × c  ->  Наблюдатель 3: скорость, × c
+     [v01_light_travel] Observer {k:d}  ->  Наблюдатель {k:d}
+     [v01_light_travel] Observer: distance, rs  ->  Наблюдатель: расстояние, rs
+     [v01_light_travel] choose an observer or a rocket  ->  выберите наблюдателя или ракету
+     [v02_double_slit] Observer and elements  ->  Наблюдатель и элементы
+     [v02_double_slit] Which-path observer  ->  Наблюдатель пути
+     [v02_double_slit] no observer and no elements  ->  без наблюдателя и элементов
+     [v02_double_slit] observer  ->  наблюдатель
+     [v04_orbits] Speed (a static observer)  ->  Скорость (неподвижный наблюдатель)
+     [v10_fast_observer] From behind the observer  ->  Из-за наблюдателя
+     [v10_fast_observer] Observer  ->  Наблюдатель
+     [v10_fast_observer] Observer now  ->  Наблюдатель сейчас
+     [v10_fast_observer] Speed of the observer β  ->  Скорость наблюдателя β
+     [v10_fast_observer] The observer's camera: the computed image  ->  Камера наблюдателя: посчитанное изображение
+     [v10_fast_observer] What a fast observer sees  ->  Что видит быстрый наблюдатель
+     [v10_fast_observer] What a fast observer sees: {scene}  ->  Что видит быстрый наблюдатель: {scene}
+     [v10_fast_observer] observer: at rest (β = 0)  ->  наблюдатель: покоится (β = 0)
+     [v10_fast_observer] observer: β = {b:.4g} along {dir}  ->  наблюдатель: β = {b:.4g} вдоль {dir}
+     [v10_fast_observer] what the observer sees (full physics)  ->  что видит наблюдатель (полная физика)
+     [v11_double_slit_2d] Path mark and observer  ->  Метка пути и наблюдатель
+     [v11_double_slit_2d] observer at slit B  ->  наблюдатель у щели B
+     [v15_kerr_shadow] Observer  ->  Наблюдатель
+     [v15_kerr_shadow] Observer (far away, in this direction)  ->  Наблюдатель (далеко, в этом направлении)
+     [v15_kerr_shadow] observer: θ = {i:.4g}°  ->  наблюдатель: θ = {i:.4g}°
+====================================================================================================
+TERM \bdisc|\bdisk   entries: 84
+  диск                     68  engine:13, framework:1, p03_molecules:16, v08_wave_3d:1, v15_kerr_shadow:29, v16_optical_vortices:8
+  (none of these)          16
+     [engine] The Rayleigh–Sommerfeld field behind an aperture in the plane z = 0: a disc on the axis (closed form), a union
+         -> Поле Рэлея–Зоммерфельда за отверстием в плоскости z = 0: круг на оси (замкнутая формула), объединение прямоугольников в любой точке (одномер
+     [engine] obstacle: the shape is Disk, Rect, Polygon or Mask
+         -> препятствие: форма Disk, Rect, Polygon или Mask
+     [engine] particle {pid}: beyond the band of the new grid (|k| ≥ π/step = {kn:.4g}) lies {share:.3g} of its wave's norm,
+         -> частица {pid}: за полосой новой сетки (|k| ≥ π/шаг = {kn:.4g}) — {share:.3g} нормы её волны, больше допуска {tol}: огрубление сетки отбросил
+     [engine] particle {pid}: outside the new window lies {share:.3g} of its probability, more than the tolerance {tol}: shr
+         -> частица {pid}: вне нового окна — {share:.3g} её вероятности, больше допуска {tol}: уменьшение окна отбросило бы её
+     [framework] Licence, citation and disclaimer
+         -> Лицензия, цитирование и отказ от гарантий
+     [framework] Licence, citation, third-party code and disclaimer
+         -> Лицензия, цитирование, сторонний код и отказ от гарантий
+     [framework] lfphys · licence and disclaimer
+         -> lfphys · лицензия и отказ от гарантий
+     [p02_quantum] Ball (a disc)
+         -> Шар (круг)
+     [p02_quantum] the ball's section by the plane z = 0 is a disc of radius {R:.4g} nm (in the plane, a cylinder along z)
+         -> сечение шара плоскостью z = 0 — круг радиуса {R:.4g} нм (в плоскости — цилиндр вдоль z)
+     [p02_quantum] the plane's disc becomes a cylinder along z
+         -> круг плоскости — цилиндр вдоль z
+     [v13_hydrogen_3d] Changes on the fly: the new state is prepared at the current moment (an ideal preparation; the former one is d
+         -> Меняется на ходу: новое состояние приготовлено в текущий момент (идеальная подготовка; прежнее отброшено); мир, его время и срезы остаются
+     [v13_hydrogen_3d] The state changes on the fly (on the left, “Set-up”): a new n, l, m, kind of orbital or superposition is prepa
+         -> Состояние меняется на ходу (слева, «Установка»): новые n, l, m, вид орбитали или суперпозиция приготовлены в текущий момент — мир, его время
+  short labels:
+     [engine] disk: the radius must be positive  ->  диск: радиус должен быть положительным
+     [framework] Licence, citation and disclaimer  ->  Лицензия, цитирование и отказ от гарантий
+     [framework] Licence, citation, third-party code and disclaimer  ->  Лицензия, цитирование, сторонний код и отказ от гарантий
+     [framework] lfphys · licence and disclaimer  ->  lfphys · лицензия и отказ от гарантий
+     [p02_quantum] Ball (a disc)  ->  Шар (круг)
+     [p03_molecules] Disks  ->  Диски
+     [p03_molecules] Kolafa and Rottner 2006 (disks)  ->  Колафа и Роттнер 2006 (диски)
+     [p03_molecules] hard disks (spheres) would overlap  ->  твёрдые диски (шары) перекрылись бы
+     [p03_molecules] hard disks / spheres (event-driven dynamics)  ->  твёрдые диски / шары (событийная динамика)
+     [p03_molecules] hard disks have no field  ->  у твёрдых дисков нет поля
+     [p03_molecules] hard disks have no molecules (bonds)  ->  у твёрдых дисков нет молекул (связей)
+     [p03_molecules] hard disks have no piston  ->  у твёрдых дисков нет поршня
+     [p03_molecules] hard disks have no thermostats  ->  у твёрдых дисков нет термостатов
+     [p03_molecules] hard disks would overlap: {what}  ->  твёрдые диски перекрылись бы: {what}
+     [v15_kerr_shadow] Cunningham's disk  ->  диск Каннингема
+     [v15_kerr_shadow] Disk  ->  Диск
+     [v15_kerr_shadow] Gas of the disk  ->  Газ диска
+     [v15_kerr_shadow] The disk rotates against the hole  ->  Диск вращается против дыры
+     [v15_kerr_shadow] a Keplerian disk  ->  кеплеровский диск
+     [v16_optical_vortices] Rotating rough disc  ->  Вращающийся шероховатый диск
+====================================================================================================
+TERM \bframes?\b   entries: 55
+  кадр                     24  framework:17, p03_molecules:1, v10_fast_observer:5, v13_hydrogen_3d:1
+  система отсчёта           4  engine:2, v01_light_travel:2
+  систем                   30  engine:9, framework:2, v01_light_travel:9, v04_orbits:1, v07_bell_test:2, v09_thomas_3d:6, v10_fast_observer:1
+  (none of these)           1
+     [v01_light_travel] Measuring c: clocks synchronised in the lab frame (SR)
+         -> Измерение c: часы по лабораторной одновременности (СТО)
+  short labels:
+     [v01_light_travel] Frame of “{name}”  ->  Система «{name}»
+     [v01_light_travel] Frame:  ->  Система:
+     [v07_bell_test] it reverses in no inertial frame  ->  ни в одной инерциальной системе он не обращается
+     [v10_fast_observer] frame time  ->  время кадра
+     [v10_fast_observer] per frame  ->  по кадру
+====================================================================================================
+TERM \bsegments?\b   entries: 41
+  отрез                    40  v02_double_slit:14, v03_quantum_1d:1, v04_orbits:10, v05_optics_bench:13, v06_qcd:1, v09_thomas_3d:1
+  участ                     1  engine:1
+  (none of these)           0
+  short labels:
+     [v02_double_slit] Approximations of this segment  ->  Приближения этого отрезка
+     [v02_double_slit] Segment {s:d}  ->  Отрезок {s:d}
+     [v02_double_slit] Segment {s:d}: consistency (identities)  ->  Отрезок {s:d}: согласованность (тождества)
+     [v02_double_slit] Segment {s:d}: vector screen (perfect conductor)  ->  Отрезок {s:d}: векторный экран (идеальный проводник)
+     [v02_double_slit] a new segment, the same set-up  ->  новый отрезок, установка та же
+     [v02_double_slit] current segment  ->  текущий отрезок
+     [v02_double_slit] in the current segment  ->  в текущем отрезке
+     [v03_quantum_1d] Segment {n:d}  ->  Отрезок {n:d}
+     [v04_orbits] Segment  ->  Отрезок
+     [v04_orbits] Segment {seg:d} ({law}, {kind})  ->  Отрезок {seg:d} ({law}, {kind})
+     [v04_orbits] earlier segments  ->  прежние отрезки
+     [v04_orbits] plots: whole segment  ->  графики: весь отрезок
+     [v05_optics_bench] Reset the counters (new segment)  ->  Обнулить счётчики (новый отрезок)
+     [v05_optics_bench] Segment {seg:d}: consistency (identities)  ->  Отрезок {seg:d}: согласованность (тождества)
+     [v05_optics_bench] Segment {seg:d}: photon statistics  ->  Отрезок {seg:d}: статистика фотонов
+     [v05_optics_bench] Segment {seg:d}: {structure}  ->  Отрезок {seg:d}: {structure}
+     [v05_optics_bench] Set-up of this segment  ->  Установка этого отрезка
+     [v05_optics_bench] counted in this segment  ->  в счёте этого отрезка
+     [v05_optics_bench] new segment: the counters reset  ->  новый отрезок: счётчики обнулены
+     [v06_qcd] Segment {seg:d}  ->  Отрезок {seg:d}
+====================================================================================================
+TERM \bthrows?\b   entries: 32
+  брос                     32  framework:13, p01_gravity:7, p02_quantum:8, p03_molecules:4
+  запуск                    1  p01_gravity:1
+  (none of these)           0
+  short labels:
+     [framework] Largest throw speed  ->  Наибольшая скорость броска
+     [framework] The throw scale — automatic  ->  Масштаб броска — автоматически
+     [framework] Throw (Shift): scale ×  ->  Бросок (Shift): масштаб ×
+     [framework] throw: v = {vec}  ->  бросок: v = {vec}
+     [framework] throw: v = {v} {unit} (×{k:.3g}{auto})  ->  бросок: v = {v} {unit} (×{k:.3g}{auto})
+     [p01_gravity] Largest throw speed  ->  Наибольшая скорость броска
+     [p01_gravity] Throw: {c}  ->  Бросок: {c}
+     [p01_gravity] Throw: {c}, au/s  ->  Бросок: {c}, а. е./с
+     [p02_quantum] = ħk₀/m; set by a throw  ->  = ħk₀/m; задаётся броском
+     [p02_quantum] Largest throw speed, nm/s  ->  Наибольшая скорость броска, нм/с
+     [p03_molecules] Throw: centre-of-mass velocity v{c}, nm/s  ->  Бросок: скорость центра масс v{c}, нм/с
+====================================================================================================
+TERM \bgo(es)? on\b|\bgoing on\b   entries: 37
+  продолж                  29  framework:28, p04_fluids:1
+  идёт/дальше               6  framework:4, v04_orbits:2
+  (none of these)           5
+     [framework] Only the last minutes are kept: older ones are removed. Noticed an effect — press “● Keep the record”: the win
+         -> Хранятся только последние минуты: старое удаляется. Заметили эффект — нажмите «● Сохранять запись»: окно с ним сохранится, и запись пойдёт ц
+     [v15_kerr_shadow] M (G = c = 1): the world's time; the image is stationary, its rows are computed as the time goes on
+         -> M (G = c = 1): время мира; изображение стационарно, строки досчитываются по ходу времени
+     [v15_kerr_shadow] The scene is stationary: the picture does not change in time; the screen's rows are computed as the world's ti
+         -> Сцена стационарна: картина не меняется во времени; строки экрана досчитываются по ходу времени мира, изменение установки начинает новое изоб
+     [v16_optical_vortices] A beam with the phase e^{ilφ}: the surfaces of equal phase are l intertwined helices, the energy flow twists a
+         -> Пучок с фазой e^{ilφ}: поверхности равной фазы — l переплетённых винтов, поток энергии закручивается вокруг оси, каждый фотон несёт орбиталь
+     [v16_optical_vortices] Rotation: a rough disc in the beam's path scatters the light; the detector looks through a ±l mode filter (as 
+         -> Вращение: шероховатый диск на пути пучка рассеивает свет; детектор смотрит через фильтр мод ±l (как у Лавери и др., 2013): часть, сохранивша
+  short labels:
+     [framework] Going on failed: {why}  ->  Продолжение не удалось: {why}
+     [framework] The previous world goes on.  ->  Прежний мир продолжается.
+     [framework] suspended — ⏺ goes on  ->  приостановлен — ⏺ продолжит
+====================================================================================================
+TERM \bmodifi   entries: 33
+  модифи                   29  engine:3, framework:2, v01_light_travel:7, v02_double_slit:11, v04_orbits:1, v07_bell_test:5
+  изменён                   4  engine:1, framework:1, v02_double_slit:2
+  (none of these)           2
+     [framework] MODIFIED PHYSICS: 
+         -> МОДИФ. ФИЗИКА: 
+     [framework] modified physics
+         -> модиф. физика
+  short labels:
+     [engine] alternative (modified laws)  ->  альтернатива (модификация законов)
+     [framework] MODIFIED PHYSICS:   ->  МОДИФ. ФИЗИКА: 
+     [framework] Modified physics:  ->  Модифицированная физика:
+     [framework] modified physics  ->  модиф. физика
+     [v01_light_travel] Measuring c with ballistic light (modification)  ->  Измерение c при баллистическом свете (модификация)
+     [v02_double_slit] C60 with enhanced GRW collapse (modification)  ->  C60 с усиленным коллапсом GRW (модификация)
+     [v02_double_slit] Forced choice of a slit (modification)  ->  Принудительный выбор щели (модификация)
+     [v02_double_slit] Laws (modifications)  ->  Законы (модификации)
+     [v07_bell_test] Laws (modifications)  ->  Законы (модификации)
+     [v07_bell_test] {model}: a modification  ->  {model} — модификация
+====================================================================================================
+TERM \bapproximation   entries: 50
+  приближени               48  engine:15, framework:3, p01_gravity:3, p03_molecules:1, p04_fluids:1, v02_double_slit:3, v04_orbits:2, v05_optics_bench:1, v08_wave_3d:6, v11_double_slit_2d:5, v16_optical_vortices:7, v17_mie_scattering:1
+  аппроксимац               2  engine:1, v17_mie_scattering:1
+  (none of these)           0
+  short labels:
+     [engine] Gaussian beam (paraxial approximation)  ->  Гауссов пучок (параксиальное приближение)
+     [engine] approximation  ->  приближение
+     [framework]  APPROXIMATION:   ->   ПРИБЛИЖЕНИЕ: 
+     [framework] approximation  ->  приближение
+     [v02_double_slit] Approximations of this segment  ->  Приближения этого отрезка
+     [v04_orbits] Newton (approximation)  ->  Ньютон (приближение)
+     [v05_optics_bench] Approximations  ->  Приближения
+     [v11_double_slit_2d] Pattern against an approximation: {label}  ->  Картина против приближения: {label}
+     [v16_optical_vortices] APPROXIMATION: paraxial  ->  ПРИБЛИЖЕНИЕ: параксиальная
+     [v16_optical_vortices] APPROXIMATION: the paraxial model  ->  ПРИБЛИЖЕНИЕ: параксиальная модель
+====================================================================================================
+TERM \bpreparation|\bprepared?\b   entries: 26
+  приготов                 22  engine:1, p02_quantum:14, v13_hydrogen_3d:4, v14_quarkonium_3d:3
+  подготов                  9  framework:2, v01_light_travel:1, v13_hydrogen_3d:3, v14_quarkonium_3d:3
+  (none of these)           1
+     [p02_quantum] the particle's wave is no longer finite: Bohm particles cannot be seeded; prepare the packet anew
+         -> волна частицы перестала быть конечной: частицы Бома не засеять — задайте пакет заново
+  short labels:
+     [p02_quantum] Centre at preparation: {c}, nm  ->  Центр при приготовлении: {c}, нм
+     [p02_quantum] Prepare the packet anew  ->  Приготовить пакет заново
+     [p02_quantum] prepare  ->  приготовить
+     [p02_quantum] prepare the packet from the parameters  ->  приготовьте пакет из параметров
+====================================================================================================
+TERM \bspin\b   entries: 137
+  спин                    129  engine:33, framework:1, p01_gravity:10, p02_quantum:13, v02_double_slit:15, v06_qcd:2, v07_bell_test:9, v09_thomas_3d:1, v11_double_slit_2d:14, v14_quarkonium_3d:5, v15_kerr_shadow:10, v16_optical_vortices:16
+  вращени                  10  engine:2, v04_orbits:1, v15_kerr_shadow:6, v16_optical_vortices:1
+  (none of these)           0
+  short labels:
+     [engine] a smaller spin or charge  ->  спин или заряд меньше
+     [engine] spin filter (direction)  ->  спиновый фильтр (направление)
+     [engine] spin rotation about y (angle)  ->  поворот спина вокруг y (угол)
+     [engine] spin: a non-zero vector (c↑, c↓)  ->  спин: ненулевой вектор (c↑, c↓)
+     [engine] the particle has no spin  ->  у частицы нет спина
+     [framework] Craft: gyroscopes, spin, thrust  ->  Корабль: гироскопы, спин, тяга
+     [p01_gravity] Spin a/M  ->  Спин a/M
+     [p01_gravity] Spin a/M at the start  ->  Спин a/M в начале
+     [p01_gravity] a smaller spin or charge  ->  спин или заряд меньше
+     [p02_quantum] Spin (for particles of spin ½)  ->  Спин (для частиц со спином ½)
+     [p02_quantum] electron (charge −e, spin ½)  ->  электрон (заряд −e, спин ½)
+     [p02_quantum] neutron (spin ½)  ->  нейтрон (спин ½)
+     [p02_quantum] spin ⟨σ⟩  ->  спин ⟨σ⟩
+     [p02_quantum] “{label}”: spin ⟨σ{c}⟩  ->  «{label}»: спин ⟨σ{c}⟩
+     [v02_double_slit] Spin  ->  Спин
+     [v02_double_slit] Spin ½  ->  Спин ½
+     [v02_double_slit] polariser / spin filter  ->  поляризатор / спиновый фильтр
+     [v02_double_slit] spin ({sx:+.2f}, {sy:+.2f}, {sz:+.2f})  ->  спин ({sx:+.2f}, {sy:+.2f}, {sz:+.2f})
+     [v02_double_slit] spin filter  ->  спиновый фильтр
+     [v02_double_slit] spin filter (spin ½)  ->  спиновый фильтр (спин ½)
+     [v02_double_slit] spin rotation about y  ->  поворот спина вокруг y
+     [v02_double_slit] spin rotation about y (spin ½)  ->  поворот спина вокруг y (спин ½)
+     [v02_double_slit] spin ½  ->  спин ½
+     [v02_double_slit] the particle has spin ½  ->  у частицы спин ½
+     [v07_bell_test] Bell's sign model (spin ½)  ->  знаковая модель Белла (спин ½)
+     [v07_bell_test] spin ½, singlet  ->  спин ½, синглет
+     [v09_thomas_3d] spin (the axis of gyroscope 1)  ->  спин (ось гироскопа 1)
+     [v11_double_slit_2d] spin  ->  спин
+     [v11_double_slit_2d] the spin  ->  спин
+     [v15_kerr_shadow] Spin a/M  ->  Спин a/M
+     [v15_kerr_shadow] choose a spin a/M below 1  ->  выберите спин a/M меньше 1
+     [v15_kerr_shadow] spin a/M  ->  спин a/M
+     [v16_optical_vortices] S_z (spin)  ->  S_z (спин)
+     [v16_optical_vortices] S_z (spin, from the model's field)  ->  S_z (спин, по полю модели)
+     [v16_optical_vortices] by the flux (Barnett): spin  ->  по потоку (Барнетт): спин
+====================================================================================================
+TERM \bbeam\b   entries: 64
+  пуч                      62  engine:10, v01_light_travel:6, v02_double_slit:4, v05_optics_bench:3, v08_wave_3d:4, v16_optical_vortices:35
+  луч                       6  engine:2, v01_light_travel:3, v05_optics_bench:1
+  (none of these)           0
+  short labels:
+     [engine] Gaussian beam (paraxial approximation)  ->  Гауссов пучок (параксиальное приближение)
+     [v01_light_travel] Half-width of the beam, rs  ->  Полуширина пучка, rs
+     [v01_light_travel] Parallel beam from the left  ->  Параллельный пучок слева
+     [v02_double_slit] Probe beam direction  ->  Направление пучка-зонда
+     [v02_double_slit] z (along the beam)  ->  z (по пучку)
+     [v02_double_slit] ↑ along z (along the beam)  ->  ↑ по z (по пучку)
+     [v08_wave_3d] Gaussian beam  ->  гауссов пучок
+     [v08_wave_3d] Gaussian beam waist w, µm  ->  Перетяжка гауссова пучка w, мкм
+     [v16_optical_vortices] Beam  ->  Пучок
+     [v16_optical_vortices] Beam model  ->  Модель пучка
+     [v16_optical_vortices] Beam waist (z = 0): w0  ->  Перетяжка пучка (z = 0): w0
+     [v16_optical_vortices] source in the beam  ->  источник в пучке
+     [v16_optical_vortices] {title}, the exact vector beam  ->  {title}, точный векторный пучок
+====================================================================================================
+TERM \bray\b|\brays\b   entries: 72
+  луч                      72  engine:21, framework:1, p01_gravity:4, v01_light_travel:10, v04_orbits:1, v05_optics_bench:2, v10_fast_observer:6, v15_kerr_shadow:14, v17_mie_scattering:13
+  (none of these)           0
+  short labels:
+     [engine] Light rays: flat space-time and Schwarzschild  ->  Лучи света: плоское пространство и Шварцшильд
+     [engine] Ray tracing with light travel time  ->  Трассировка лучей со временем света
+     [p01_gravity] Light ray  ->  Луч света
+     [p01_gravity] Ray near the photon orbit  ->  Луч у фотонной орбиты
+     [p01_gravity] Ray past the hole  ->  Луч мимо дыры
+     [v01_light_travel] Rays per flash  ->  Лучей во вспышке
+     [v01_light_travel] rays  ->  лучи
+     [v10_fast_observer] ray tracing  ->  трассировка лучей
+     [v15_kerr_shadow] Rays in 3-D  ->  Лучей в 3D
+     [v15_kerr_shadow] the ray came from far away  ->  луч пришёл издалека
+     [v17_mie_scattering] bright: Descartes' rays  ->  яркие — лучи Декарта
+     [v17_mie_scattering] this drop has no ray rainbow  ->  лучевой радуги у этой капли нет
+====================================================================================================
+TERM \bpacket   entries: 109
+  пакет                   109  engine:14, framework:1, p02_quantum:22, v03_quantum_1d:23, v05_optics_bench:1, v11_double_slit_2d:14, v12_arrival_times_2d:34
+  (none of these)           0
+  short labels:
+     [engine] a wave packet (v03)  ->  волновой пакет (v03)
+     [engine] particle {pid}: a new packet  ->  частица {pid}: новый пакет
+     [p02_quantum] Particle (wave packet)  ->  Частица (волновой пакет)
+     [p02_quantum] Prepare the packet anew  ->  Приготовить пакет заново
+     [p02_quantum] prepare the packet from the parameters  ->  приготовьте пакет из параметров
+     [v03_quantum_1d] Mean energy of the packet  ->  Средняя энергия пакета
+     [v03_quantum_1d] Packet energy, eV  ->  Энергия пакета, эВ
+     [v03_quantum_1d] Packet offset in the trap, nm  ->  Смещение пакета в ловушке, нм
+     [v03_quantum_1d] Packet width σ, nm  ->  Ширина пакета σ, нм
+     [v03_quantum_1d] packet width σ  ->  ширина пакета σ
+     [v11_double_slit_2d] Incident packet (given)  ->  Падающий пакет (задан)
+     [v11_double_slit_2d] Packet  ->  Пакет
+     [v11_double_slit_2d] Packet: length along σz, λ  ->  Пакет: длина вдоль σz, λ
+     [v11_double_slit_2d] Packet: width across σx, λ  ->  Пакет: ширина поперёк σx, λ
+     [v11_double_slit_2d] Packet: width along y σy, λ  ->  Пакет: ширина вдоль y σy, λ
+     [v12_arrival_times_2d] Distance between the packets, λ  ->  Расстояние между пакетами, λ
+     [v12_arrival_times_2d] Packet width across σx, λ  ->  Ширина пакета поперёк σx, λ
+     [v12_arrival_times_2d] Packet width along y σy, λ  ->  Ширина пакета вдоль y σy, λ
+     [v12_arrival_times_2d] Packet width along σz, λ  ->  Ширина пакета вдоль σz, λ
+     [v12_arrival_times_2d] Packets in the train  ->  Пакетов в цепочке
+     [v12_arrival_times_2d] one packet  ->  один пакет
+====================================================================================================
+TERM \babsorber   entries: 7
+  поглотител                7  engine:2, p02_quantum:2, v12_arrival_times_2d:3
+  поглощающ                 1  v12_arrival_times_2d:1
+  (none of these)           0
+====================================================================================================
+TERM \bgrid\b   entries: 234
+  сетк                    229  engine:69, framework:4, p02_quantum:65, p04_fluids:29, v02_double_slit:5, v03_quantum_1d:4, v08_wave_3d:9, v09_thomas_3d:1, v11_double_slit_2d:15, v12_arrival_times_2d:5, v13_hydrogen_3d:6, v14_quarkonium_3d:8, v16_optical_vortices:7, v17_mie_scattering:2
+  решётк                    1  p04_fluids:1
+  (none of these)           5
+     [engine] the computation became unstable by t = {bad_t:.6g} s (populations not numbers or outside |f| < {guard}); the l
+         -> счёт неустойчив к t = {bad_t:.6g} с (популяции нечисловые или вне |f| < {guard}); последнее здоровое состояние (t = {at:.6g} с): Ma_max = {m
+     [engine] the computation became unstable by t = {bad_t:.6g} s (populations not numbers or outside |f| < {guard}); the l
+         -> счёт неустойчив к t = {bad_t:.6g} с (популяции нечисловые или вне |f| < {guard}); последнее здоровое состояние (t = {at:.6g} с): Ma_max = {m
+     [p04_fluids] {range}; window {window}; {grid}; {known}
+         -> {range}; окно {window}; {grid}; {known}
+     [p04_fluids] {range}; {win}; {grid}; {known}; a developed street is needed (≳ 5 s)
+         -> {range}; {win}; {grid}; {known}; нужна развитая дорожка (≳ 5 с)
+     [v11_double_slit_2d] {f} times finer: a coarser grid would not resolve the edges
+         -> в {f} раза мельче: грубее края не разрешаются
+  short labels:
+     [engine] Electromagnetic field (FDTD, Yee grid)  ->  Электромагнитное поле (FDTD, сетка Йи)
+     [engine] flux tube: two different grid axes  ->  трубка потока: две разные оси сетки
+     [engine] grid: at least one axis  ->  сетка: хотя бы одна ось
+     [engine] new grid: {n} point counts needed  ->  новая сетка: нужно {n} чисел точек
+     [engine] the grid step must be positive  ->  шаг сетки должен быть положительным
+     [engine] the probe is outside the grid  ->  датчик вне сетки
+     [p02_quantum] Grid  ->  Сетка
+     [p02_quantum] Grid points per axis  ->  Точек сетки по оси
+     [p04_fluids] Domain and grid (on the fly)  ->  Область и сетка (на ходу)
+     [p04_fluids] Grid nodes along x  ->  Узлов сетки по x
+     [p04_fluids] {range}; window {window}; {grid}; {known}  ->  {range}; окно {window}; {grid}; {known}
+     [v03_quantum_1d] grid points  ->  точек сетки
+     [v08_wave_3d] Square aperture, grid {n:d}: slices only  ->  Квадратное отверстие, сетка {n:d}: только срезы
+     [v09_thomas_3d] Volume grid, points per axis  ->  Сетка объёма, точек на ось
+     [v11_double_slit_2d] Grid  ->  Сетка
+     [v12_arrival_times_2d] Grid  ->  Сетка
+     [v13_hydrogen_3d] Cloud grid  ->  Сетка облака
+     [v13_hydrogen_3d] Cloud grid, points per axis  ->  Сетка облака, точек на ось
+     [v14_quarkonium_3d] Cloud grid  ->  Сетка облака
+     [v14_quarkonium_3d] Cloud grid, points per axis  ->  Сетка облака, точек на ось
+====================================================================================================
+TERM \blattice\b   entries: 24
+  решётк                   16  engine:1, p03_molecules:8, p04_fluids:7
+  сетк                      2  engine:1, p04_fluids:1
+  (none of these)           7
+     [engine] Fluid in 2-D (lattice Boltzmann method)
+         -> Жидкость в 2-D (решёточный метод Больцмана)
+     [engine] Incompressible fluid in 2-D: the lattice Boltzmann method (D2Q9)
+         -> Несжимаемая жидкость в 2-D: решёточный метод Больцмана (D2Q9)
+     [engine] QCD (lfphys.core.qcd): the potential is not derived from the Lagrangian in this form; lattice QCD gives it onl
+         -> КХД (lfphys.core.qcd): потенциал не выводится из лагранжиана в этой форме; решёточная КХД даёт его лишь приближённо; константы κ, a, m_q — п
+     [p04_fluids] A flow sandbox: obstacles, wings, inlets and outlets, moving walls, dye; an incompressible fluid by the lattic
+         -> Песочница течений: препятствия, крылья, входы и выходы, подвижные стенки, краситель; несжимаемая жидкость решёточным методом Больцмана.
+     [p04_fluids] Add obstacles (cylinders, rectangles, wing profiles), flow inlets and outlets on the sides of the domain, movi
+         -> Добавляйте препятствия (цилиндры, прямоугольники, профили крыла), входы и выходы потока на сторонах области, подвижные стенки, периодичность
+     [p04_fluids] The flow of an incompressible fluid in a plane: the lattice Boltzmann method solves the Navier–Stokes equation
+         -> Течение несжимаемой жидкости в плоскости: решёточный метод Больцмана решает уравнения Навье–Стокса. Добавляйте препятствия, входы и выходы, 
+     [p04_fluids] the lattice Boltzmann method D2Q9 (the Navier–Stokes equations, error ~ Ma²): an approximation
+         -> решёточный метод Больцмана D2Q9 (уравнения Навье–Стокса, ошибка ~ Ma²) — приближение
+  short labels:
+     [engine] Fluid in 2-D (lattice Boltzmann method)  ->  Жидкость в 2-D (решёточный метод Больцмана)
+     [p03_molecules] Crystal (a lattice of atoms)  ->  Кристалл (решётка атомов)
+     [p03_molecules] Lattice density ρσ^d  ->  Плотность решётки ρσ^d
+     [p03_molecules] Liquid (from a lattice)  ->  Жидкость (из решётки)
+     [p03_molecules] lattice density ρσ²  ->  плотность решётки ρσ²
+     [p03_molecules] lattice density ρσ³  ->  плотность решётки ρσ³
+     [p04_fluids] Lattice Mach number, largest  ->  Число Маха решётки, наибольшее
+     [p04_fluids] Momentum balance residual (per lattice mass)  ->  Невязка баланса импульса (на массу решётки)
+====================================================================================================
+TERM \bplot   entries: 6
+  график                    6  framework:2, v04_orbits:2, v07_bell_test:2
+  кривая                    2  v07_bell_test:2
+  (none of these)           0
+  short labels:
+     [framework] At most {n:d} plots at once  ->  Не больше {n:d} графиков сразу
+     [v04_orbits] plots: whole segment  ->  графики: весь отрезок
+====================================================================================================
+TERM \bcatalogue\b   entries: 8
+  каталог                   8  framework:8
+  (none of these)           0
+  short labels:
+     [framework] Catalogue: {why}  ->  Каталог: {why}
+     [framework] ← Catalogue  ->  ← Каталог
+====================================================================================================
+TERM \bpause   entries: 16
+  пауз                     15  framework:15
+  останов                   3  framework:3
+  (none of these)           1
+     [engine] GPU cooling down: {seen} (threshold {pause:.0f} °C): runs on the CPU until it has cooled to {resume:.0f} °C
+         -> GPU остывает: {seen} (порог {pause:.0f} °C) — считается на CPU, пока не остынет до {resume:.0f} °C
+  short labels:
+     [framework] Pause the recording (Space)  ->  Пауза записи (Пробел)
+     [framework] paused  ->  пауза
+====================================================================================================
+TERM \bspeed\b   entries: 157
+  скорост                 154  engine:16, framework:11, p01_gravity:12, p02_quantum:6, p03_molecules:10, p04_fluids:8, v01_light_travel:32, v02_double_slit:7, v04_orbits:28, v05_optics_bench:4, v06_qcd:1, v07_bell_test:7, v09_thomas_3d:1, v10_fast_observer:4, v11_double_slit_2d:4, v12_arrival_times_2d:2, v16_optical_vortices:1
+  (none of these)           3
+     [framework] actual: {speed}
+         -> факт: {speed}
+     [framework] speed-up
+         -> ускорение
+     [p04_fluids] the picture's field: speed | vorticity | pressure | dye
+         -> поле картины: speed | vorticity | pressure | dye
+  short labels:
+     [framework] Largest throw speed  ->  Наибольшая скорость броска
+     [framework] Speed of “{label}”  ->  Скорость «{label}»
+     [framework] actual: {speed}  ->  факт: {speed}
+     [framework] speed  ->  скорость
+     [framework] speed, {unit}/{time}  ->  скорость, {unit}/{time}
+     [framework] speed-up  ->  ускорение
+     [p01_gravity] Largest throw speed  ->  Наибольшая скорость броска
+     [p01_gravity] speed, km/s  ->  скорость, км/с
+     [p01_gravity] “{label}”: speed  ->  «{label}»: скорость
+     [p02_quantum] Largest throw speed, nm/s  ->  Наибольшая скорость броска, нм/с
+     [p02_quantum] speed |⟨v⟩|, km/s  ->  скорость |⟨v⟩|, км/с
+     [p02_quantum] “{label}”: speed |⟨v⟩|  ->  «{label}»: скорость |⟨v⟩|
+     [p03_molecules] “{label}”: speed  ->  «{label}»: скорость
+     [p04_fluids] speed |u|  ->  модуль скорости |u|
+     [v01_light_travel] Observer 1: speed, × c  ->  Наблюдатель 1: скорость, × c
+     [v01_light_travel] Observer 2: speed, × c  ->  Наблюдатель 2: скорость, × c
+     [v01_light_travel] Observer 3: speed, × c  ->  Наблюдатель 3: скорость, × c
+     [v01_light_travel] Speed (changes at once)  ->  Скорость (меняется сразу)
+     [v01_light_travel] Speed of light  ->  Скорость света
+     [v01_light_travel] Speed of light, × c  ->  Скорость света, × c
+     [v01_light_travel] Speed of the pedestrians, m/s  ->  Скорость пешеходов, м/с
+     [v01_light_travel] Speed of the sources, × c  ->  Скорость источников, × c
+     [v01_light_travel] speed, fractions of c  ->  скорость, доли c
+     [v01_light_travel] {obj}: one-way speed (external light)  ->  {obj}: односторонняя скорость (внешний свет)
+     [v01_light_travel] {obj}: round-trip speed (2L₀/Δτ)  ->  {obj}: скорость туда-обратно (2L₀/Δτ)
+     [v02_double_slit] Speed  ->  Скорость
+     [v02_double_slit] Speed, m/s  ->  Скорость, м/с
+     [v02_double_slit] speed (massive)  ->  скорость (массивная частица)
+     [v04_orbits] Speed  ->  Скорость
+     [v04_orbits] Speed (a static observer)  ->  Скорость (неподвижный наблюдатель)
+     [v04_orbits] Speed, fraction of the circular speed  ->  Скорость, доля круговой
+     [v04_orbits] lower the speed  ->  уменьшите скорость
+     [v04_orbits] speed, × circular  ->  скорость, × круговой
+     [v04_orbits] Δv, fraction of the speed  ->  Δv, доля скорости
+     [v06_qcd] Sweep speed, decades per world second  ->  Скорость прохода, декад в секунду мира
+     [v07_bell_test] Speed of the particles  ->  Скорость частиц
+     [v10_fast_observer] Speed of the observer β  ->  Скорость наблюдателя β
+     [v12_arrival_times_2d] t₀ (flight at the mean speed)  ->  t₀ (пролёт со средней скоростью)
+====================================================================================================
+TERM \brate\b   entries: 24
+  скорост                   7  engine:3, p02_quantum:3, p04_fluids:1
+  темп                      4  framework:1, v02_double_slit:2, v05_optics_bench:1
+  частот                    7  engine:3, p02_quantum:1, v02_double_slit:2, v12_arrival_times_2d:1
+  (none of these)           7
+     [engine] Piecewise inertial worldlines and circular orbits; proper time is the integral of the clock rate in the metric
+         -> Кусочно-инерциальные мировые линии и круговые орбиты; собственное время — интеграл хода часов по метрике законов мира (СТО: sqrt(1 - v²/c²);
+     [engine] the clock rate is set by the world's law set (lfphys.laws); the accepted one is lfphys.core.relativity
+         -> ход часов задаёт набор законов мира (lfphys.laws); общепринятый — lfphys.core.relativity
+     [p01_gravity] clock rate dτ/dt
+         -> ход часов dτ/dt
+     [p01_gravity] “{label}”: clock rate dτ/dt
+         -> «{label}»: ход часов dτ/dt
+     [v01_light_travel] Rate of the Earth's clock on its orbit dτ/dt (metric)
+         -> Ход часов Земли на орбите dτ/dt (метрика)
+     [v01_light_travel] Rate of the station's clock dτ/dt (metric): self-consistency
+         -> Ход часов станции dτ/dt (метрика): самосогласованность
+     [v02_double_slit] {dark:.3g} dark counts per second with a source of {rate:.3g} particles/s: that is {r:.3g} false counts per pa
+         -> темновых отсчётов {dark:.3g} 1/с при источнике {rate:.3g} частиц/с — это {r:.3g} ложных отсчётов на одну частицу: экран показал бы только шу
+  short labels:
+     [p01_gravity] clock rate dτ/dt  ->  ход часов dτ/dt
+     [p01_gravity] “{label}”: clock rate dτ/dt  ->  «{label}»: ход часов dτ/dt
+     [p02_quantum] Localization rate λ, 1/ps  ->  Частота локализаций λ, 1/пс
+     [p02_quantum] Marker's turning rate, rad/fs  ->  Скорость поворота метки, рад/фс
+     [v02_double_slit] Source rate  ->  Темп источника
+     [v05_optics_bench] Source rate  ->  Темп источника
+====================================================================================================
+TERM \bphoton sphere|\bphoton ring   entries: 16
+  фотонн                   14  engine:2, v01_light_travel:3, v04_orbits:3, v15_kerr_shadow:6
+  фотонов                   2  engine:1, v15_kerr_shadow:1
+  (none of these)           0
+  short labels:
+     [v04_orbits] {r:.3g}M photon sphere  ->  {r:.3g}M фотонная сфера
+====================================================================================================
+TERM \bwave function|\bwavefunction   entries: 16
+  волнов                   16  engine:7, v03_quantum_1d:1, v06_qcd:1, v13_hydrogen_3d:5, v14_quarkonium_3d:2
+  пси                       4  engine:2, v13_hydrogen_3d:2
+  (none of these)           0
+  short labels:
+     [engine] Central-field wave functions in 3D  ->  Волновые функции центрального поля в 3D
+     [v13_hydrogen_3d] Wave function  ->  Волновая функция
+     [v14_quarkonium_3d] Quarkonium in 3-D: wave functions  ->  Кварконий в 3D: волновые функции
+====================================================================================================
+TERM \bexpectation\b|\bexpected\b   entries: 58
+  ожидани                  32  v02_double_slit:13, v05_optics_bench:7, v07_bell_test:12
+  ожидаем                  26  engine:4, framework:1, p02_quantum:1, p04_fluids:10, v02_double_slit:8, v06_qcd:1, v12_arrival_times_2d:1
+  среднее                   2  v02_double_slit:2
+  (none of these)           1
+     [framework] expected
+         -> ожид.
+  short labels:
+     [framework] Expected: {why}  ->  Ожидаемо: {why}
+     [framework] expected  ->  ожид.
+     [p04_fluids] Largest expected velocity, m/s  ->  Наибольшая ожидаемая скорость, м/с
+     [v02_double_slit] expectation  ->  ожидание
+     [v02_double_slit] the run's expectation  ->  ожидание запуска
+     [v05_optics_bench] expected {p:.5g}  ->  ожидание {p:.5g}
+     [v05_optics_bench] expected {p:.5g}, σ = {s:.2g}  ->  ожидание {p:.5g}, σ = {s:.2g}
+     [v07_bell_test] the expectation of the LHV model  ->  ожидание модели ЛСП
+     [v07_bell_test] the quantum expectation (the engine)  ->  квантовое ожидание (движок)
+====================================================================================================
+TERM \btrajector   entries: 53
+  траектор                 53  engine:13, framework:2, p02_quantum:5, v02_double_slit:3, v03_quantum_1d:7, v09_thomas_3d:3, v11_double_slit_2d:15, v12_arrival_times_2d:5
+  (none of these)           0
+  short labels:
+     [framework] Trajectories (computed)  ->  Траектории (посчитаны)
+     [p02_quantum] Bohm particles (trajectories)  ->  Частицы Бома (траектории)
+     [v02_double_slit] Number of flow lines (Bohm trajectories)  ->  Число линий тока (траекторий Бома)
+     [v03_quantum_1d] Bohm trajectories in the ensemble  ->  Траекторий Бома в ансамбле
+     [v03_quantum_1d] The same through Bohm's eyes: trajectories  ->  То же глазами Бома: траектории
+     [v03_quantum_1d] de Broglie–Bohm: a trajectory  ->  де Бройль–Бом: траектория
+     [v09_thomas_3d] ordinary space: the craft's trajectory, light-years  ->  обычное пространство: траектория корабля, световые годы
+     [v11_double_slit_2d] Bohm trajectories  ->  Траектории Бома
+     [v11_double_slit_2d] Bohm trajectories (by slit), in 3-D  ->  Траектории Бома (по щелям), в 3D
+     [v11_double_slit_2d] Bohm trajectories against the pattern  ->  Траектории Бома против картины
+     [v11_double_slit_2d] Trajectories of them to draw  ->  Из них рисовать траекторий
+     [v12_arrival_times_2d] Trajectories of them to draw  ->  Из них рисовать траекторий
+====================================================================================================
+TERM \bspace-?time\b   entries: 16
+  пространство-время       12  engine:6, v01_light_travel:1, v07_bell_test:5
+  только пространство       4  engine:4
+  (none of these)           0
+  short labels:
+     [engine] Light rays: flat space-time and Schwarzschild  ->  Лучи света: плоское пространство и Шварцшильд
+     [engine] flat spacetime; gravity is in lfphys.core.gravity  ->  плоское пространство-время; гравитация — в lfphys.core.gravity
+     [v07_bell_test] Set-up and spacetime  ->  Установка и пространство-время

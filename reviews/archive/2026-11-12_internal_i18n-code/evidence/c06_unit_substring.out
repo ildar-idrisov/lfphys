@@ -1,0 +1,4 @@
+cases: 0
+sample: p02_quantum size 'Window size, nm' 'nm' | ru: Размер окна, нм | нм
+sample: v11_double_slit_2d sigma_y 'Packet: width along y σy, λ' 'λ' | ru: Пакет: ширина вдоль y σy, λ | λ
+params with a unit: 55

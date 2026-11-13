@@ -1,0 +1,19 @@
+== series CSV lang=en
+"t, s","Total energy, J [E]","Position of the first oscillator, m [x_first]"
+2.916250377893448e-05,0.0,
+0.050111367367208004,0.0,
+== series CSV lang=ru
+"t, с","Полная энергия, Дж [E]","Положение первого осциллятора, м [x_first]"
+2.916250377893448e-05,0.0,
+0.050111367367208004,0.0,
+== series CSV lang=xx
+"t, s","Total energy, J [E]","Position of the first oscillator, m [x_first]"
+2.916250377893448e-05,0.0,
+0.050111367367208004,0.0,
+== series CSV lang=
+"t, s","Total energy, J [E]","Position of the first oscillator, m [x_first]"
+2.916250377893448e-05,0.0,
+0.050111367367208004,0.0,
+== json measurables
+[{"id": "E", "label": {"$t": "Total energy"}, "unit": {"$t": "J"}, "of": null, "group": {"$t": "World"}, "title": {"$t": "Total energy"}}, {"id": "x_first", "label": {"$t": "Position of the first oscillator"}, "unit": {"$t": "m"}, "of": null, "group": {"$t": "World"}, "title": {"$t": "Position of the first oscillator"}}]
+t_unit: {'$t': 's'}

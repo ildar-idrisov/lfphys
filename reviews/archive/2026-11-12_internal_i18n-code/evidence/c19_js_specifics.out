@@ -1,0 +1,6 @@
+en p03 cost note, 12 345 678 events: 400 atoms, 1.23457·10⁷ events
+en {n} with n = 1234567: 1,234,570 coordinates
+ru p03 cost note: атомов: 400, событий: 1,23457·10⁷
+ru {n:d} days, n = 4.6: 5 дня
+ru {n:d} days, n = 21.4: 21 дня
+ru {n:d} days, n = 1.0004: 1 день

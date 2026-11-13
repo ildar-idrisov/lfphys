@@ -1,5 +1,7 @@
 # v14 — quarkonium in 3-D: wave functions of a heavy quark pair (Cornell model)
 
+**English** | [Русский](README.ru.md)
+
 A wrapper over the engine `lfphys` (plan item P14.9). A charm–anticharm (cc̄) or bottom–antibottom (bb̄) pair bound by
 the Cornell potential V(r) = −κ/r + r/a², in the 3-D environment of the player: the cloud |ψ|² of the vector between
 the quarks, the probability current, slice planes with |ψ|² and the phase of ψ, the level diagram of the model against
@@ -25,21 +27,21 @@ The server part and the view are shared with v13 (`../server/lfviz/orbitals3d.py
 * **Units.** GeV and GeV⁻¹ (ħ = c = 1), reduced mass μ = m_q/2; the scene in femtometres (ħc = 0.19733 GeV·fm),
   energies in MeV, the world clock in seconds (ħ/GeV = 6.58·10⁻²⁵ s).
 * **What the model predicts.** Splittings M(n, L) − M(1S) (2–10 % from the measured spin-averaged ones), not absolute
-  masses (with these parameters 2m_c + E(1S) is 870 MeV above the measured 1S; STATUS V17). The panel «Состояние»
+  masses (with these parameters 2m_c + E(1S) is 870 MeV above the measured 1S; STATUS V17). The panel "State"
   gives M − M(1S) and the energy E in the potential; the level diagram draws the model's splittings (solid) and the
   data's (dashed, where PDG lists the multiplet: 1S, 1P, 2S for charmonium; 1S, 1P, 2S, 3S for bottomonium). No spin
   forces, no relativistic corrections, no coupling to open-flavour channels: the states above the D D̄ / B B̄
   threshold (cc̄ 2P, 3S, 1D…) are the model's, not nature's.
 * **The radial functions** are numerical: the drawn ones from N = 800, the checks' from a second solve at N = 1200.
-  Their accuracy is a check of every world («Сходимость»: the two differ by less than half a step of the 8-bit picture;
+  Their accuracy is a check of every world ("Convergence: R(r) of the grid N = 800 against N = 1200": the two differ by less than half a step of the 8-bit picture;
   measured below). The cloud, the current, the time, the phases of a superposition and the slices are those of v13
-  (see its README, «The model»).
+  (see its README, section "The model").
 * **The cloud** is the distribution of r = r_q − r_q̄; each quark's own distribution about the centre of mass is the
   same cloud halved in size.
 
 ## Live and world parameters (review UX-ui U12)
 
-As v13's (its README, «Live and world parameters»): the state — single or superposition, n, L, m, the kind of the
+As v13's (its README, section "Live and world parameters"): the state — single or superposition, n, L, m, the kind of the
 angular part, the second state, |c₂|² and the phase of c₂ — is **live**: an ideal preparation of the new state at the
 current moment t_p (the former one discarded, no transition dynamics modelled), in the same world with its clock, record
 and slice planes; the box, cloud, current, slices and the state's checks (convergence, energy, nodes, the model's

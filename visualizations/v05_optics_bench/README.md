@@ -1,5 +1,7 @@
 # v05 — Optical bench: boundaries between media and coatings
 
+**English** | [Русский](README.ru.md)
+
 Single photons, one by one, on a planar structure between an incidence medium and an exit medium: a single boundary,
 a quarter-wave antireflection layer, a Bragg mirror, a Fabry–Pérot film, a thin metal film, or the face of a prism
 (total internal reflection; with a second prism behind a gap, frustrated total reflection). Owner guide:
@@ -72,8 +74,8 @@ emitted, and the error is reported as a refused change, after which the runner s
 the player rolls its control back. Angles at which a wave grazes inside a layer, and the critical angle itself, are
 accepted (see "Numerics").
 
-Actions: «Выпустить один фотон» (one photon now, in addition to the stream), «Обнулить счётчики» (a new segment with
-the same set-up).
+Actions: "Emit one photon" (one photon now, in addition to the stream), "Reset the counters (new segment)" (a new
+segment with the same set-up).
 
 ## Checks (computed ↔ reference)
 
@@ -81,7 +83,7 @@ Every check is emitted per segment (`<id><segment>`).
 
 | id | computed by the run | reference | tolerance |
 |---|---|---|---|
-| `sum` | R + T + A for the source's polarization | 1 — an identity (A is defined as 1 − R − T), group "consistency" | 1e-12 |
+| `sum` | R + T + A for the source's polarization | 1 — an identity (A is defined as 1 − R − T), group "Segment N: consistency (identities)" | 1e-12 |
 | `energy` (lossless) | max \|1 − R − T\| over every computed angle and wavelength, s and p (R, T from r and t separately) | 0 | 1e-10 (worst seen on random stacks: 2e-13) |
 | `passive` (absorbing) | min A over all computed points | ≥ 0 | −1e-12 |
 | `joule` (absorbing) | R_s + T_s + A_J, A_J = k₀/Re(n₀ cos θ₀) Σ Im(n_j²)∫\|E\|²dz from the run's field (Poynting's theorem) | 1 | 1e-12: composite 16-point Gauss–Legendre, sub-intervals ≤ 4/max(2\|Im k_z\|, 2\|Re k_z\|) (remainder < 1e-25); the rest is float rounding, ≤ 1.5e-14 over 3000 random absorbing films in the ranges (before 2026-10-23: Simpson with 2001 points, +2.9e-8 for a 1.2 nm skin depth, V5-3) |

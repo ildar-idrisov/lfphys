@@ -1,0 +1,14 @@
+v04_orbits schema.speed: label en «Speed, fraction of the circular speed» -> unit «fraction of the circular speed»; ru «Скорость, доля круговой» -> unit «доля круговой»
+v04_orbits schema.angle: label en «Direction of the velocity, ° from the tangent (+ outward)» -> unit «° from the tangent»; ru «Направление скорости, ° от касательной (+ наружу)» -> unit «° от касательной»
+v06_qcd schema.alpha_mz: label en «α_s(M_Z), the coupling constant» -> unit «the coupling constant»; ru «α_s(M_Z) — константа связи» -> unit «»
+v06_qcd schema.sweep: label en «Sweep speed, decades per world second» -> unit «decades per world second»; ru «Скорость прохода, декад в секунду мира» -> unit «декад в секунду мира»
+v08_wave_3d schema.n: label en «Grid in the plane, points per axis» -> unit «points per axis»; ru «Сетка в плоскости, точек на ось» -> unit «точек на ось»
+v09_thomas_3d schema.rho: label en «Loop size ρ (rapidity: the circle's radius, a burn's side)» -> unit «a burn's side)»; ru «Размер петли ρ (быстрота: радиус круга, сторона импульса)» -> unit «сторона импульса)»
+v09_thomas_3d schema.ngrid: label en «Volume grid, points per axis» -> unit «points per axis»; ru «Сетка объёма, точек на ось» -> unit «точек на ось»
+v13_hydrogen_3d schema.real: label en «Real orbital (p_x, d_xy, …) instead of a complex one with e^{imφ}» -> unit «…) instead of a complex one with e^{imφ}»; ru «Вещественная орбиталь (p_x, d_xy, …) вместо комплексной с e^{imφ}» -> unit «…) вместо комплексной с e^{imφ}»
+v13_hydrogen_3d schema.ng: label en «Cloud grid, points per axis» -> unit «points per axis»; ru «Сетка облака, точек на ось» -> unit «точек на ось»
+v14_quarkonium_3d schema.ng: label en «Cloud grid, points per axis» -> unit «points per axis»; ru «Сетка облака, точек на ось» -> unit «точек на ось»
+v16_optical_vortices schema.t_show: label en «Optical phase on the screen: the period, ms of the world's time» -> unit «ms of the world's time»; ru «Оптическая фаза на экране: период, мс времени мира» -> unit «мс времени мира»
+v17_mie_scattering schema.n_re: label en «n, the real part of the index» -> unit «the real part of the index»; ru «n — действительная часть показателя» -> unit «»
+v17_mie_scattering schema.n_im: label en «κ, the imaginary part (absorption, ≥ 0)» -> unit «the imaginary part»; ru «κ — мнимая часть (поглощение, ≥ 0)» -> unit «≥ 0)»
+params whose unit comes from the label: 139; suspicious: 13

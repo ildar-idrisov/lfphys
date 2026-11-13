@@ -1,0 +1,39 @@
+{
+"neg default": "x = -1.5",
+"neg .3g": "x = -1.23e-05",
+"big int default": "12345678",
+"float :d": "2.6 steps",
+"bool": "flag True",
+"None": "v —",
+"list": "items 1.5, open, z",
+"width spec": "   1.500|",
+"percent spec": "12.3%",
+"comma spec": "1,234,567",
+"e spec 0": "0.00e+00",
+"cap number": "2.5",
+"cap plain str": "Done.",
+"unit no comma": "[]",
+"unit with paren": "[m/s]",
+"dots ...": "wait...",
+"dot after number": "2.",
+"missing arg": "a 1 b {y:.2f}",
+"nested dict non-T": "{'k': 1}",
+"proto name": "{constructor}",
+"plural no n en": "{n:d} days",
+"plural n=-1 en": "-1 days",
+"plural n=1.0004 .3g": "1 years",
+"sign zero": "-0.00",
+"g boundary": "0.0001",
+"str number": "1.5"
+}
+--- non-JSON values
+nan default: x = nan | .3g: nan
+inf default: x = inf | .3g: inf
+-inf default: x = -inf | .3g: -inf
+ru plural n= nan -> EXC ValueError cannot convert float NaN to integer
+ru plural n= inf -> EXC OverflowError cannot convert float infinity to integer
+ru plural n= 1e+300 -> 1e+300 дней
+ru plural n= 2.5 -> 2.5 дня
+np.float32 .2f: 0.123456 | np.int64 .3g: 123456
+np.bool_: True
+json np.float32: EXC TypeError Object of type float32 is not JSON serializable

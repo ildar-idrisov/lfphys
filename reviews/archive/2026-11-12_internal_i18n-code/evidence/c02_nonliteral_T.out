@@ -1,0 +1,251 @@
+PY lfphys/lfphys/core/em/fdtd_sources.py:85: T(x)
+PY lfphys/lfphys/i18n.py:180: T(sep.join("{p%d}" % i for i in range(len(items))))
+PY visualizations/server/lfviz/devices.py:111: T(msg)
+PY visualizations/server/lfviz/errors.py:84: T("{n:.3g} " + unit)
+PY visualizations/server/lfviz/errors.py:132: T(head.msgid)
+PY visualizations/server/lfviz/errors.py:153: T((INTERNAL_BUILD if context in ("build", "restore") else INTERNAL).msgid)
+PY visualizations/server/lfviz/instruments.py:68: T(t)
+PY visualizations/server/lfviz/instruments.py:206: T(x)
+PY visualizations/server/lfviz/limits.py:41: T("{n:.3g} " + unit)
+PY visualizations/server/lfviz/playground.py:1002: T("; ".join("{v%d:.4g}" % i for i in range(len(vals))))
+PY visualizations/server/lfviz/playground.py:1089: T("{p0}" + "".join(". {p%d:cap}" % i for i in range(1, len(parts) + 1)))
+PY visualizations/server/lfviz/playground.py:1028: T(u)
+PY visualizations/server/lfviz/playground.py:1036: T("({v}) {unit}" if len(ids) > 1 else "{v} {unit}")
+PY visualizations/server/lfviz/playground.py:1149: T(x)
+PY visualizations/server/lfviz/playground.py:1041: T("({v}) {unit}" if len(ids) > 1 else "{v} {unit}")
+PY visualizations/server/lfviz/sweep.py:159: T("{x:.6g} " + u)
+PY visualizations/tests/playgrounds/p99_toy/viz.py:308: T(xyz)
+PY visualizations/tests/playgrounds/p99_toy/viz.py:309: T(xyz)
+python non-literal T calls: 18
+JS visualizations/p01_gravity/web/view.js:131: t(labels.get(id
+JS visualizations/p02_quantum/web/view.js:56: t(k
+JS visualizations/p02_quantum/web/view.js:56: t(v
+JS visualizations/p03_molecules/web/view.js:81: t(k
+JS visualizations/p03_molecules/web/view.js:81: t(v
+JS visualizations/p03_molecules/web/view.js:110: t(s.p_kind
+JS visualizations/p03_molecules/web/view.js:111: t(s.p_unit
+JS visualizations/p03_molecules/web/view.js:124: t(s.p_unit
+JS visualizations/p04_fluids/web/view.js:46: t(k
+JS visualizations/p04_fluids/web/view.js:46: t(v
+JS visualizations/p04_fluids/web/view.js:150: t(lab
+JS visualizations/player/js/api.js:14: t(j.error
+JS visualizations/player/js/catalog.js:80: t(j.error
+JS visualizations/player/js/catalog.js:92: t(x
+JS visualizations/player/js/catalog.js:100: t(j.error
+JS visualizations/player/js/catalog.js:112: t(why
+JS visualizations/player/js/catalog.js:157: t(v.error
+JS visualizations/player/js/catalog.js:162: t((presets.find((p
+JS visualizations/player/js/catalog.js:191: t(v.title
+JS visualizations/player/js/catalog.js:192: t(v.summary
+JS visualizations/player/js/catalog.js:193: t(v.purpose
+JS visualizations/player/js/catalog.js:211: t((presets.find((p
+JS visualizations/player/js/catalog.js:241: t(v.title
+JS visualizations/player/js/catalog.js:242: t(v.summary
+JS visualizations/player/js/catalog.js:243: t(v.purpose
+JS visualizations/player/js/catalog.js:254: t(r.error
+JS visualizations/player/js/catalog.js:254: t(r.error
+JS visualizations/player/js/catalog.js:255: t(r.busy.what
+JS visualizations/player/js/catalog.js:257: t(r.resume_error
+JS visualizations/player/js/catalog.js:271: t(r.title
+JS visualizations/player/js/catalog.js:274: t(r.scene
+JS visualizations/player/js/catalog.js:275: t(m.label
+JS visualizations/player/js/catalog.js:275: t(m.value
+JS visualizations/player/js/catalog.js:275: t(m.standard
+JS visualizations/player/js/catalog.js:276: t(a
+JS visualizations/player/js/env3d.js:77: t((P.meta || {}
+JS visualizations/player/js/env3d.js:87: t(H.scene3d.units
+JS visualizations/player/js/env3d.js:97: t(n
+JS visualizations/player/js/env3d.js:99: t(p.label
+JS visualizations/player/js/env3d.js:109: t(H.scene3d.planes.time_unit || "s"
+JS visualizations/player/js/i18n.js:122: t(v
+JS visualizations/player/js/i18n.js:129: t(x
+JS visualizations/player/js/i18n.js:134: t(y
+JS visualizations/player/js/i18n.js:197: t(id
+JS visualizations/player/js/i18n.js:202: t(id
+JS visualizations/player/js/i18n.js:207: t(id
+JS visualizations/player/js/imagewin.js:27: t(title
+JS visualizations/player/js/imagewin.js:62: t(cam.axis_label
+JS visualizations/player/js/imagewin.js:79: t(cur.meta.mode_label || cur.meta.mode
+JS visualizations/player/js/imagewin.js:95: t(statusText || meta.mode_label
+JS visualizations/player/js/imagewin.js:103: t(describe(cur.meta
+JS visualizations/player/js/instruments.js:54: t(tu
+JS visualizations/player/js/instruments.js:55: t(tu.split(" ("
+JS visualizations/player/js/instruments.js:59: t(d.label || d.id
+JS visualizations/player/js/instruments.js:59: t(d.unit
+JS visualizations/player/js/instruments.js:59: t(d.group
+JS visualizations/player/js/instruments.js:73: t(v
+JS visualizations/player/js/instruments.js:94: t(label
+JS visualizations/player/js/instruments.js:94: t(unit
+JS visualizations/player/js/instruments.js:98: t(label
+JS visualizations/player/js/instruments.js:98: t(unit
+JS visualizations/player/js/instruments.js:111: t(unit
+JS visualizations/player/js/instruments.js:154: t(o.label
+JS visualizations/player/js/instruments.js:478: t(q.label
+JS visualizations/player/js/instruments.js:614: t(p.label
+JS visualizations/player/js/instruments.js:614: t(p.unit
+JS visualizations/player/js/instruments.js:614: t(p.unit
+JS visualizations/player/js/instruments.js:655: t(j.error
+JS visualizations/player/js/instruments.js:655: t(j.hint
+JS visualizations/player/js/instruments.js:655: t(j.error
+JS visualizations/player/js/instruments.js:656: t(j.estimate.text
+JS visualizations/player/js/instruments.js:662: t(j.estimate.text
+JS visualizations/player/js/instruments.js:694: t(s.target_label
+JS visualizations/player/js/instruments.js:694: t(s.measure_label
+JS visualizations/player/js/instruments.js:710: t(s.message
+JS visualizations/player/js/instruments.js:757: t(s.target_text
+JS visualizations/player/js/instruments.js:757: t(s.measure_label
+JS visualizations/player/js/instruments.js:757: t(s.stat_text
+JS visualizations/player/js/instruments.js:758: t((s.base || {}
+JS visualizations/player/js/instruments.js:763: t(s.message
+JS visualizations/player/js/instruments.js:766: t(s.measure_label
+JS visualizations/player/js/instruments.js:766: t(s.stat_text
+JS visualizations/player/js/instruments.js:770: t(r.error || r.note
+JS visualizations/player/js/instruments.js:771: t(r.error
+JS visualizations/player/js/instruments.js:771: t(r.note
+JS visualizations/player/js/orbitview.js:82: t(H.energy_unit
+JS visualizations/player/js/orbitview.js:86: t(s.label
+JS visualizations/player/js/orbitview.js:87: t(energyName
+JS visualizations/player/js/orbitview.js:89: t(H.scene3d.units
+JS visualizations/player/js/orbitview.js:90: t(k
+JS visualizations/player/js/orbitview.js:90: t(v
+JS visualizations/player/js/orbitview.js:90: t(u
+JS visualizations/player/js/orbitview.js:101: t(H.energy_unit
+JS visualizations/player/js/orbitview.js:129: t(meta.units
+JS visualizations/player/js/orbitview.js:141: t(c
+JS visualizations/player/js/orbitview.js:152: t(v.label
+JS visualizations/player/js/orbitview.js:156: t(H.energy_unit
+JS visualizations/player/js/orbitview.js:160: t(H.energy_unit
+JS visualizations/player/js/orbitview.js:166: t(p
+JS visualizations/player/js/orbitview.js:166: t(p
+JS visualizations/player/js/player.js:64: t(S.viz.title
+JS visualizations/player/js/player.js:65: t(S.viz.title
+JS visualizations/player/js/player.js:74: t(text
+JS visualizations/player/js/player.js:182: t(p.group
+JS visualizations/player/js/player.js:260: t(b.what
+JS visualizations/player/js/player.js:354: t(a.label
+JS visualizations/player/js/player.js:354: t(o.label
+JS visualizations/player/js/player.js:371: t(a.button || a.label
+JS visualizations/player/js/player.js:386: t(p.group
+JS visualizations/player/js/player.js:402: t(pr.note
+JS visualizations/player/js/player.js:475: t(W.header.title
+JS visualizations/player/js/player.js:589: t(i === latest(
+JS visualizations/player/js/player.js:589: t(W.header.title
+JS visualizations/player/js/player.js:627: t(meta.resume_error
+JS visualizations/player/js/player.js:628: t(meta.start_error
+JS visualizations/player/js/player.js:653: t(meta.resume_error
+JS visualizations/player/js/player.js:667: t(meta.text
+JS visualizations/player/js/player.js:668: t(meta.text
+JS visualizations/player/js/player.js:719: t(meta.text
+JS visualizations/player/js/player.js:793: t(v
+JS visualizations/player/js/player.js:794: t(a
+JS visualizations/player/js/player.js:796: t(m.label
+JS visualizations/player/js/player.js:797: t(mods[0].label
+JS visualizations/player/js/player.js:815: t(d.title
+JS visualizations/player/js/player.js:815: t(d.kind
+JS visualizations/player/js/player.js:816: t(d.statement
+JS visualizations/player/js/player.js:817: t(d.validity
+JS visualizations/player/js/player.js:818: t(c
+JS visualizations/player/js/player.js:906: t(c.group
+JS visualizations/player/js/player.js:938: t(c.note
+JS visualizations/player/js/player.js:943: t(c.group
+JS visualizations/player/js/player.js:948: t(c.label
+JS visualizations/player/js/player.js:960: t(v
+JS visualizations/player/js/player.js:962: t(unit
+JS visualizations/player/js/player.js:973: t(e.text
+JS visualizations/player/js/player.js:1185: t(S.viz.title
+JS visualizations/player/js/player.js:1186: t(S.header.text
+JS visualizations/player/js/playground.js:122: t(((scene && scene.palette_state
+JS visualizations/player/js/playground.js:138: t(ot.help || ot.label
+JS visualizations/player/js/playground.js:141: t(ot.label
+JS visualizations/player/js/playground.js:176: t(ot.help
+JS visualizations/player/js/playground.js:456: t(d.unit
+JS visualizations/player/js/playground.js:458: t(p.unit
+JS visualizations/player/js/playground.js:459: t(p.label
+JS visualizations/player/js/playground.js:469: t(o.label
+JS visualizations/player/js/playground.js:752: t(o.label
+JS visualizations/player/js/playground.js:752: t(o.label
+JS visualizations/player/js/playground.js:789: t(o.label
+JS visualizations/player/js/playground.js:793: t(o.label
+JS visualizations/player/js/playground.js:810: t(ot.label
+JS visualizations/player/js/playground.js:823: t(k
+JS visualizations/player/js/playground.js:823: t(v
+JS visualizations/player/js/playground.js:838: t(c.text
+JS visualizations/player/js/playground.js:849: t(o.label
+JS visualizations/player/js/playground.js:850: t(k
+JS visualizations/player/js/playground.js:850: t(v
+JS visualizations/player/js/playground.js:908: t(j.error
+JS visualizations/player/js/scene3d.js:142: t(text
+JS visualizations/player/js/scene3d.js:652: t(label
+JS visualizations/player/js/scene3d.js:813: t(names[k]
+JS visualizations/player/js/scene3d.js:813: t(units
+JS visualizations/player/js/scene3d.js:1792: t(ax[0]
+JS visualizations/player/js/scene3d.js:1792: t(ax[1]
+JS visualizations/player/js/scene3d.js:1795: t(name(R
+JS visualizations/player/js/scene3d.js:1795: t(name(U
+JS visualizations/player/js/scene3d.js:1796: t(name(U
+JS visualizations/player/js/scene3d.js:1796: t(name(R
+JS visualizations/player/js/scene3d.js:1796: t(name(F
+JS visualizations/player/js/scene3d.js:1797: t(name(R
+JS visualizations/player/js/scene3d.js:1797: t(name(R
+JS visualizations/player/js/settings.js:40: t(e
+JS visualizations/player/js/settings.js:70: t(k.title
+JS visualizations/player/js/settings.js:70: t(k.what
+JS visualizations/player/js/settings.js:71: t(k.cpu_reason
+JS visualizations/player/js/settings.js:76: t(k.crossover_note
+JS visualizations/player/js/settings.js:106: t((state.kernels.find((k
+JS visualizations/player/js/slices.js:129: t(p.label
+JS visualizations/player/js/slices.js:149: t(meta.title
+JS visualizations/player/js/slices.js:165: t(m.units
+JS visualizations/player/js/slices.js:165: t(n
+JS visualizations/player/js/slices.js:295: t(w.busy
+JS visualizations/player/js/slices.js:299: t(m.reason
+JS visualizations/player/js/slices.js:299: t(m.route_label
+JS visualizations/player/js/slices.js:300: t(m.verify_title
+JS visualizations/player/js/slices.js:302: t(v.note
+JS visualizations/player/js/slices.js:353: t(q.label
+JS visualizations/player/js/slices.js:353: t(q.unit
+JS visualizations/player/js/slices.js:360: t(q.label
+JS visualizations/player/js/slices.js:360: t(q.unit
+JS visualizations/player/js/ui.js:14: t(v
+JS visualizations/player/js/ui.js:21: t(c
+JS visualizations/player/js/ui.js:28: t(c
+JS visualizations/player/js/ui.js:53: t(unit
+JS visualizations/player/js/ui.js:71: t(unit
+JS visualizations/player/js/ui.js:89: t(text
+JS visualizations/player/js/ui.js:152: t(lab
+JS visualizations/player/js/ui.js:152: t(u
+JS visualizations/player/js/ui.js:200: t(label ?? p.label
+JS visualizations/player/js/ui.js:201: t(p.help
+JS visualizations/player/js/ui.js:250: t(text
+JS visualizations/player/js/ui.js:297: t(p.group
+JS visualizations/player/js/ui.js:314: t(p.help
+JS visualizations/player/js/ui.js:360: t(msg
+JS visualizations/v01_light_travel/web/view.js:289: t(h.name
+JS visualizations/v01_light_travel/web/view.js:353: t(h.name
+JS visualizations/v01_light_travel/web/view.js:415: t(pe.text
+JS visualizations/v01_light_travel/web/view.js:459: t(h.name
+JS visualizations/v01_light_travel/web/view.js:512: t(z.label
+JS visualizations/v02_double_slit/web/view.js:220: t(ELEM[k]
+JS visualizations/v02_double_slit/web/view.js:382: t(p.label
+JS visualizations/v02_double_slit/web/view.js:443: t(s.fate
+JS visualizations/v04_orbits/web/view.js:376: t(s.kind_text
+JS visualizations/v04_orbits/web/view.js:392: t(gi.kind_text
+JS visualizations/v05_optics_bench/web/view.js:160: t(L.name
+JS visualizations/v05_optics_bench/web/view.js:162: t(su.label
+JS visualizations/v05_optics_bench/web/view.js:439: t(su.label
+JS visualizations/v05_optics_bench/web/view.js:440: t(su.pol_label
+JS visualizations/v05_optics_bench/web/view.js:448: t(L.name
+JS visualizations/v05_optics_bench/web/view.js:477: t(a
+JS visualizations/v05_optics_bench/web/view.js:485: t(a
+JS visualizations/v07_bell_test/web/view.js:398: t(H.pair_label
+JS visualizations/v07_bell_test/web/view.js:456: t(meta.title
+JS visualizations/v08_wave_3d/web/view.js:35: t(u.reason
+JS visualizations/v09_thomas_3d/web/view.js:36: t(L.ref_how
+JS visualizations/v10_fast_observer/web/view.js:19: t(meta.bodies[b]
+JS visualizations/v10_fast_observer/web/view.js:68: t(d.reason
+JS visualizations/v10_fast_observer/web/view.js:73: t(meta.mode_label
+JS visualizations/v11_double_slit_2d/web/view.js:219: t(H.device.reason
+JS visualizations/v13_hydrogen_3d/web/view.js:36: t(a.label || ""
+JS visualizations/v14_quarkonium_3d/web/view.js:18: t(s.label || ""
+JS visualizations/v16_optical_vortices/web/view.js:40: t(h.meta.label
+js non-literal t calls: 231

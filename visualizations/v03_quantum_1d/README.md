@@ -1,5 +1,7 @@
 # v03 — a quantum particle in one dimension
 
+**English** | [Русский](README.ru.md)
+
 A wrapper over the physics engine `lfphys` (`../../lfphys`). Electrons are sent one by one as wave packets at a
 potential (rectangular barrier, double barrier, step, well) or released in a harmonic trap.
 
@@ -34,13 +36,14 @@ potential (rectangular barrier, double barrier, step, well) or released in a har
   (transfer matrices over a fine staircase, two resolutions and Richardson extrapolation), averaged over the
   packet's whole momentum distribution (components with k <= 0 count as reflected). The check's tolerance is
   1e-7 + 1e-3 T + the leftover + the detectors' reflection; the presets agree to ~1e-5.
-* The outcome of each particle in the reading chosen by the owner (live; it does not change predictions):
-  `theories.interpretations.copenhagen` (a click at a random moment drawn from the detector's absorption rate, then
-  collapse), `theories.interpretations.bohm` (a trajectory from a |psi|^2-distributed start q, guided by j/|psi|^2; in one
-  dimension trajectories do not cross, so outside the detector ramps it is the q-quantile of |psi(t)|^2, with the
-  absorbed mass counted beyond the edges; inside the ramps this construction is the model of detection; the guidance
-  equation integrated step by step agrees with this rule in the engine tests), `theories.interpretations.everett` (both branches
-  with their weights; the observer is in one of them).
+* The outcome of each particle in the reading chosen by the owner ("Interpretation (does not change the predictions)";
+  live; it does not change predictions): `theories.interpretations.copenhagen` (a click at a random moment drawn from
+  the detector's absorption rate, then collapse), `theories.interpretations.bohm` (a trajectory from a
+  |psi|^2-distributed start q, guided by j/|psi|^2; in one dimension trajectories do not cross, so outside the
+  detector ramps it is the q-quantile of |psi(t)|^2, with the absorbed mass counted beyond the edges; inside the ramps
+  this construction is the model of detection; the guidance equation integrated step by step agrees with this rule in
+  the engine tests), `theories.interpretations.everett` (both branches with their weights; the observer is in one of
+  them).
 
 ## Checks emitted by the run
 
@@ -63,7 +66,7 @@ probability (z-score); in the trap: levels hbar omega (n + 1/2) by the spectral 
   above-barrier part dwells in the barrier): it may reach the budget, with T within its tolerance and the absorption
   check saying the run stopped early.
 * The energy parameter is that of the central component, hbar^2 k0^2/2m; the mean kinetic energy is larger by
-  hbar^2/(8 m sigma^2) (checked). The grey curve in the outcome panel is the packet's distribution per unit energy.
+  hbar^2/(8 m sigma^2) (checked). The grey curve in the panel "Outcomes" is the packet's distribution per unit energy.
 * The trap's levels come from a 256-point sinc DVR on a window around the trap (turning point of the 4th level plus
   8 ground-state widths).
 * A packet of a fixed shape is sent each cycle; outcomes differ by the random draw of the reading.

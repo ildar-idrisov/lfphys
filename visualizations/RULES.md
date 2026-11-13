@@ -1,7 +1,9 @@
 # Visualizations of the consequences of hypotheses: rules, folder contract and the one API
 
 This file applies to every visualization in `visualizations/` and to every agent that builds or changes one.
-Owner guide in Russian: `README.md`. Rules for the whole of `engine/`: `../AGENTS.md` (§3 points here).
+Owner guide: `README.md` (English) and `README.ru.md` (Russian). Rules for the whole of `engine/`: `../AGENTS.md` (§3
+points here). This file and the other developer texts are in English; the interface and the user documents exist in
+every language of `../LANGUAGES.md` (§7).
 
 ## 0. The owner's directions (verbatim, 2026-10-22)
 
@@ -24,8 +26,9 @@ Owner guide in Russian: `README.md`. Rules for the whole of `engine/`: `../AGENT
 
 ```
 visualizations/
-  README.md              owner guide (Russian): start, open from the laptop, use the player
+  README.md              owner guide (English; README.ru.md: Russian): start, open from the laptop, use the player
   RULES.md               this file
+  locales/               the framework's catalogues (server, player, catalogue, instruments): <lang>.json (§7)
   docker/                Dockerfile, docker-compose.yml, requirements.lock (pinned)
   server/                serve.py + package lfviz (protocol, params, runner, worker, run manager, HTTP/WS API; the
                          slice planes of 3-D worlds: lfviz/planes3d.py)
@@ -42,7 +45,9 @@ visualizations/
     engine/              the apparatus logic over lfphys (Python), no drawing; physics itself lives in ../lfphys
     web/view.js          the drawing (ES module, createView(ctx)), no physics
     tests/               physics tests: every route against a closed form or a second method
+    locales/             the world's catalogues: <lang>.json, msgid -> translation (§7)
     README.md            the model in full: equations, what is computed, checks, approximations, sources
+    README.<lang>.md     the same in every other language of ../LANGUAGES.md (README.ru.md)
 ```
 
 A new visualization is a new `vNN_<slug>/` folder; the server and the player pick it up without changes
@@ -130,8 +135,8 @@ engine lacks is added to the engine, with its tests, not to the visualization.
       it at points of the plane.
     Every 3-D world uses the shared parts, not its own copies (B2, 2026-10-27): on the server
     `server/lfviz/planes3d.py` (`SlicePlanes`: the planes, the view command, keeping them in a new world, "auto"),
-    in the player `player/js/env3d.js` (the scene and the windows side by side, the panels «Слои сцены» and «Срез:
-    положение и наклон», «＋ Срез», previews, the 3-D messages) and, for a world that computes what an observer sees,
+    in the player `player/js/env3d.js` (the scene and the windows side by side, the panels "Scene layers" and "Slice:
+    position and tilt", "＋ Slice", previews, the 3-D messages) and, for a world that computes what an observer sees,
     the camera window `player/js/imagewin.js` (B3, v10). A world adds only its own objects, panels and checks.
     A **2-D world** whose plane is the exact reduction of a 3-D set-up (B3: v11, slits long along y) uses the same
     environment: the apparatus in 3-D, the computed field on its plane as a `panel` in the scene, the plane's own
@@ -182,7 +187,8 @@ REST (JSON):
 | POST | `/api/runs/{id}/sweeps/{n}/cancel` | stop a running sweep, what it computed kept (state `cancelled`); a sweep not running answers 200 `{already: true, state}`; also for a run deleted meanwhile (review F10, F3) |
 | DELETE | `/api/runs/{id}/sweeps/{n}` | remove a finished sweep with its results; 409 while it runs (review F10) |
 | GET, PUT | `/api/settings/runs` | the removal period `{keep_days}` (whole days, 1–3650); PUT `{keep_days, confirm?: [id]}` saves and applies it at once, or answers 409 `{would_remove: [id]}` when it would remove runs not all in `confirm` |
-| GET | `/legal`, `/legal/{name}` | the licence page (Russian summary, the disclaimer) and its full texts from a fixed list: `LICENSE.md`, `NOTICE`, `PUBLICATIONS.md`, `COMMERCIAL.md`, `LICENSE-DOCS.txt`, `three.js-LICENSE` (review of 2026-10-29, R4, R8); linked from every page |
+| GET | `/api/i18n/{lang}` | the merged catalogue of a language, `{lang, messages}` (ETag; 304 when unchanged; 404 for a language not in `LANGS`; §7) |
+| GET | `/legal`, `/legal/{name}` | the licence page (a summary in the viewer's language, the disclaimer) and its full texts from a fixed list: `LICENSE.md`, `NOTICE`, `PUBLICATIONS.md`, `COMMERCIAL.md`, `LICENSE-DOCS.txt`, `three.js-LICENSE` (review of 2026-10-29, R4, R8); linked from every page |
 
 WebSocket `/ws/runs/{id}`: server → browser binary messages (`history_start {frame_stride}`, the record so far with its
 frames thinned to 4000 by that uniform stride, `history_end {live, state, resumable, rebuilding, resume_error}`, then
@@ -193,8 +199,8 @@ the server refuses comes back as text `{error}` (not part of the record).
 first world's build are announced by the worker with `busy {on: true, cmd, what, wall}` before they start and
 `busy {on: false}` when they end; the command's own messages are held and written after that end, as one piece
 (`lfviz.worker.Output`). `busy` is forwarded to the viewers and never recorded; a late viewer gets the current one
-after `history_end` with its `elapsed` seconds. The player shows what is being computed, for how long, and «✕
-отменить» (`/cancel`). A world's command must therefore change nothing outside the world's state.
+after `history_end` with its `elapsed` seconds. The player shows what is being computed, for how long, and "✕
+cancel" (`/cancel`). A world's command must therefore change nothing outside the world's state.
 
 Commands: `play`, `pause`, `speed {value}` (simulation seconds per wall second), `step {dt?}`, `next_event`,
 `action {name, args}`, `set {values}` (live parameters; consecutive `set` commands are merged), `new_world {preset?,
@@ -296,18 +302,21 @@ drawn once at `history_end`.
 
 **Refusals and failures (owner, 2026-11-04: «если ошибки … должно быть все понятно и удобно»; reviews UX-params P1–P4,
 UX-ui U13).**
-- What the owner reads is Russian and says what to change; it is never a traceback.
-- A world refuses with `lfviz.errors.Refusal(text, hint)`: the object or the parameter by its label, numbers with
-  units, and in `hint` the change that makes it work. A plain `ValueError` keeps its own text.
-- Any other exception is shown as «<что не сделано>: внутренняя ошибка мира — <что> (<Тип>) — запуск сохранён,
-  можно вернуться назад или изменить параметры». Its one-line text goes into the message's `detail` (folded under
-  «подробности»), and its traceback only into the run's `worker.log`.
+- What the owner reads is a translatable text (`T`, §7), shown in the viewer's language, and says what to change; it
+  is never a traceback.
+- A world refuses with `lfviz.errors.Refusal(text, hint)` (`ValueError(T(...))` for a plain refusal): `text` and
+  `hint` are `T`; the object or the parameter by its label, numbers with units as arguments, and in `hint` the change
+  that makes it work. The player shows `T("{text}. What to change: {hint}")`. A plain `ValueError` keeps its own text.
+- Any other exception is shown as "<what was not done>: internal error of the world — <what> (<Type>) — the run is
+  saved; you can go back or change the parameters" (`lfviz.errors.owner_text`, which returns the `T` and the detail).
+  Its one-line English text goes into the message's `detail` (folded under "details"), and its traceback only into the
+  run's `worker.log`.
 - Parameters are refused by the schema with their label, unit and range, and each error carries the parameter's id
   (`ParamError.pid`; `POST /api/runs` answers `{error, fields}`).
 - A combination a world cannot build is refused before anything is started: `Simulation.check_params(params)`
   (cheap), asked by the server at the start and by the worker for a new world.
-- A first world that fails to show itself (its header, `after_header`, the t = 0 advance) is reported «Мир не
-  создан: …» and ends with `end {reason: "world not built"}`. Such a run is failed, never resumable. `history_end`
+- A first world that fails to show itself (its header, `after_header`, the t = 0 advance) is reported "World not
+  created: …" and ends with `end {reason: "world not built"}`. Such a run is failed, never resumable. `history_end`
   says why (`start_error`), and so do the run list (`error`) and the catalogue's card.
 - A new world that fails so is refused as a whole, and the previous world goes on.
 
@@ -315,8 +324,8 @@ UX-ui U13).**
 - Every worker holds a budget as its hard limit of private writable memory (`RLIMIT_DATA`, `lfviz.limits`). The
   server option is `--worker-mem-gb`. By default it is 60 % of the server's memory (its container's limit, else
   the host's), from 1 to 8 GB.
-- An allocation beyond it fails inside the worker and is reported in Russian. The host and the other runs are not
-  touched.
+- An allocation beyond it fails inside the worker and is reported to the owner as a translatable text (sizes by
+  `lfviz.limits.fmt_bytes`, itself a `T`). The host and the other runs are not touched.
 - A world says what it will allocate: `estimate_bytes(params)` before it is built (checked by the server at the
   start and by the worker for a new world), and `lfviz.limits.require(nbytes, what, change)` before a large
   allocation while it runs. An estimate above the budget is refused at once, with the numbers and what to change.
@@ -324,7 +333,7 @@ UX-ui U13).**
   at least 512 MB), and `oom_score_adj` 1000, so that the kernel ends a sweep before a live world.
 
 A select's option may be `(value, label, show_if)`: the forms show it only when `show_if` holds (the schema does not
-enforce it; the world refuses in Russian).
+enforce it; the world refuses with a translatable text).
 
 Message format (`server/lfviz/protocol.py`, `player/js/api.js`): `u32 json_len | JSON | pad to 8 | arrays`, arrays
 8-byte aligned and described in `JSON.blobs`. Message types emitted by every simulation:
@@ -339,7 +348,7 @@ Message format (`server/lfviz/protocol.py`, `player/js/api.js`): `u32 json_len |
 | `event` | when the run's time reaches it | `{kind, text, obj?, data?}`; actions appear as `kind: action`; `notify?` (shown as a toast when it happens) |
 | `check` | when computed | `{id, label, value, ref, unit, rel, tol, ok?, info?, group, note}`; `ok` overrides the tolerance test; `info: true` marks a comparison shown for information (a model against the core, say), drawn as ≈ and never as a pass or a failure; `expected?` (why a failure is expected here: drawn as an expected ✗ with the reason) |
 | `actions` | after a change | new action forms (defaults) |
-| `notice`, `error` | as needed | text for the owner (Russian, §3 «Refusals and failures»); `detail?` the exception's own one line |
+| `notice`, `error` | as needed | a text for the owner (a `T`, §3 "Refusals and failures", §7); `detail?` the exception's own one line (English) |
 | others | per visualization | accumulative data (e.g. `pulse`, `worldline`, `signal`, `segment`, `detections`); any accumulative message (a playground's `scene` always; a demonstration's header or another message) may carry `measurables [{id, label, unit, of, group}]` (P16.3); a playground's latest scene message is the list it measures now |
 
 Everything except `frame` is accumulative: never dropped, recorded, replayed to late viewers in order.
@@ -367,7 +376,7 @@ is not the second). Messages:
 | `arrow` | `id`, `from`, `vec`, `label` (drawn next to it), `layer?` (the layer's name), `color` |
 | `box` | `box`: a wider region for a world whose extent is revealed as its time runs (e.g. a trajectory); the frame is redrawn, the objects keep their coordinates; an equal box changes nothing; the camera is refitted only if the experimenter has not moved it |
 | `planes` | the planes in force: `{id, origin, normal, u, v, auto, speed, polygon (the cut by the box in (s, t)), label}` |
-| `slice` | `id`, the plane (`origin`, `u`, `v`, `normal`), `s` [s0, s1, ns], `tt` [t0, t1, nt], `route`, `route_label`, `exact`, `approximation`, `reason`, `verify` {points, max_err, tol, ok}, `verify_title?`, `z_near?`, `window_est?`, `units?` (default мкм), `coord_names?`, `depth?` (false: no axis is the depth), `quantity?` (`{label, unit, peak}`: a field that is not a wave, value = I · peak); blobs `I` (float32 nt × ns, value / peak, NaN outside the region) and `phase` (waves) |
+| `slice` | `id`, the plane (`origin`, `u`, `v`, `normal`), `s` [s0, s1, ns], `tt` [t0, t1, nt], `route`, `route_label`, `exact`, `approximation`, `reason`, `verify` {points, max_err, tol, ok}, `verify_title?`, `z_near?`, `window_est?`, `units?` (default µm), `coord_names?`, `depth?` (false: no axis is the depth), `quantity?` (`{label, unit, peak}`: a field that is not a wave, value = I · peak); blobs `I` (float32 nt × ns, value / peak, NaN outside the region) and `phase` (waves) |
 | `mesh` | (B3, v10) a surface computed by the run: `id`, `label`, `count`, `opacity?`, `visible?`, `base` ("lab": absolute vertices; "rest": offsets placed by an affine map from the frames, `scene3d.transformMesh(id, A, b)`); blobs `pos` (float32 count × 3), `idx` (uint32 triangles), `rgb` (uint8 count × 3, sRGB); a world may replace a "lab" mesh's vertices and colours later (`scene3d.updateMesh`) |
 | `image` | (B3, v10; drawn by the shared camera window `player/js/imagewin.js`, not by env3d) what an observer sees: `seq`, `shape` [H, W], `camera` {kind, fov, forward}, `mode`, `mode_label` (a mode that is not what is seen is marked in the window), `codec: "deflate"` and `filter` (fields sent as row differences); blobs deflated: `rgb` (uint8 H × W × 3) and the world's per-pixel fields for the readout (v10: `D`, `delay`, `T`, `body`); frames name the image they show (`img_seq`) |
 | `wave` | (B3, v11) a 2-D world's wave on its plane: `shape` [nx, nz], `peak`, `ds` (grid steps per pixel), `tau`; blobs `amp` (uint16, √(\|ψ\|²/peak)·65535) and `phase` (uint8, (arg ψ + π)/2π·255); accumulative, so that the record keeps every image and a viewer who scrolls back sees the wave of that moment (frames are thinned); drawn on a `panel` object and in a slice window marked `fixed` (not removable; `meta.fixed`, `meta.title`) with the world's overlay (`slices.setOverlay(id, fn(ctx, map))`: computed polylines drawn in the plane's coordinates) |
@@ -401,19 +410,23 @@ read-only).
 4. Tests in `vNN_<slug>/tests/`; run all tests in Docker (`README.md`); look at the pages in a browser (headless
    screenshots are fine). The browser regressions `tests/browser/keyframes.mjs` (key frames, §3),
    `tests/browser/scene3d_checks.mjs` (the 3-D view's rendering contract, §2 rule 10), `tests/browser/manipulation.mjs`
-   (direct manipulation in the playgrounds, §6) and `tests/browser/instruments_checks.mjs` (the panel «Приборы» and
-   the sweeps, §6) run against a private server in Playwright's image, each with the commands in its header.
-5. A different agent reviews the physics into `../reviews/`; the review is processed (RESPONSE.md) before the
+   (direct manipulation in the playgrounds, §6), `tests/browser/instruments_checks.mjs` (the panel "Instruments" and
+   the sweeps, §6) and `tests/browser/i18n_checks.mjs` (every page and world in every language, §7) run against a
+   private server in Playwright's image, each with the commands in its header.
+5. Every text the owner reads is a `T` with an English msgid, translated in the world's `locales/<lang>.json` for every
+   language of `../LANGUAGES.md`; the README exists in every language (`README.md`, `README.<lang>.md`); the world is
+   registered everywhere it belongs (`../AGENTS.md` §3 rules 13, 15; §7).
+6. A different agent reviews the physics into `../reviews/`; the review is processed (RESPONSE.md) before the
    visualization is reported as done.
-6. Open problems of a visualization go to `../STATUS.md`, section "V. Visualizations — open items" (one place).
+7. Open problems of a visualization go to `../STATUS.md`, section "V. Visualizations — open items" (one place).
 
 ## 5. Devices and precision (plan P11, 2026-10-27)
 
 The engine's heavy kernels (`lfphys.core.backend`) run on the CPU or on GPU 0. The owner's choice per kernel —
 auto (the default: the GPU where it is faster, by measurement), CPU or GPU, and fp64 or a validated lower precision —
 is made on the settings page `/settings` and saved at once in `settings.local.json` (per machine, git-ignored). A run
-takes the settings in force at its start, or those with the start form's overrides for that run (catalogue: "Для этого
-запуска"); they are recorded in its passport (`backend_settings`, with `override` when the run chose its own) and its
+takes the settings in force at its start, or those with the start form's overrides for that run (catalogue: "For this
+run:"); they are recorded in its passport (`backend_settings`, with `override` when the run chose its own) and its
 header (`backend`). REST: `GET /api/devices` (devices and kernels as the engine reports them, from a subprocess: the
 server never holds the GPU), `GET`/`PUT /api/settings` (the shape is checked by the server — a malformed body gets
 400 with the reason, a body over 64 KB 413 — then the engine validates the values from stdin; writes of the file are
@@ -433,8 +446,8 @@ the GPU below the temperature where this host once hung, whatever power limit is
 > параметры, смотреть за их изменением и взаимодействием, все должно быть не задано заранее, а просчитываться в
 > реалтайме
 
-Two modes in the catalogue: **Демонстрации** (the `vNN_` folders: prepared set-ups with their checks and story) and
-**Плейграунд** (the `pNN_` folders, one per section of physics). Every rule of §2 holds in the playground: what is shown
+Two modes in the catalogue: **Demonstrations** (the `vNN_` folders: prepared set-ups with their checks and story) and
+**Playground** (the `pNN_` folders, one per section of physics). Every rule of §2 holds in the playground: what is shown
 is computed by the run; accepted physics by default, a changed law is a named world parameter and is flagged; the
 consequences of a change start at the moment it is made.
 
@@ -453,7 +466,7 @@ consequences of a change start at the moment it is made.
   the hole's mass M, the binary's mass m: G = c = M = 1, so a change is a change of units at the current moment — the
   dimensionless state is kept, seconds and metres rescaled, proper times and clocks kept in seconds; said in the
   event). A change of a metric's other parameters under moving bodies, which has no established dynamics, is offered
-  only as a declared «what if» (p01: spin and charge), flagged in the approximations («МОДЕЛЬ») and the event, with
+  only as a declared "what if" (p01: spin and charge), flagged in the approximations ("“WHAT IF” MODEL …") and the event, with
   its rule stated and the checks restarted. A grid, a domain or a time step is live where the engine transfers the
   state with a stated error and closed books (p04: `Flow2D.remap`). A playground's laws marked `live` are shown and
   applied at the current moment as in demonstrations. The initial scene is the hidden world parameter `scene`
@@ -461,11 +474,11 @@ consequences of a change start at the moment it is made.
 * **The scene** is changed by hand at the current moment with the command `scene` (`op`: add, remove, set, edit (a drag: the handles only), duplicate,
   label, clear; export): recorded with its time like every world-changing command, so a restore repeats it; a
   refused change is reported and leaves the scene as it was. After every change the world emits `scene` (the whole
-  object list); the scene's changes are events of kind `scene` (the panel «Изменения сцены»).
-* **A new world that keeps the scene** (plan P16.1, «перенести сцену»; reviews LB1-F5, LB1-F15): `new_world` with
+  object list); the scene's changes are events of kind `scene` (the panel "Scene changes").
+* **A new world that keeps the scene** (plan P16.1, "carry the scene over"; reviews LB1-F5, LB1-F15): `new_world` with
   `carry` re-adds the current world's objects in the new world under their ids, through `place` and the add path, at
-  the current world time; an object the new world refuses is skipped. «Новый мир» has «перенести сцену» (on; off with
-  a scenario); `new_world {carry: true}` puts the current world's export into the new world's `params.scene`; the
+  the current world time; an object the new world refuses is skipped. The panel "New world: …" has "carry the scene
+  over" (on; off with a scenario); `new_world {carry: true}` puts the current world's export into the new world's `params.scene`; the
   carried scene is the new world's parameter, held in its header, so a restore rebuilds the same world (the `command`
   keeps only `carry`). A scene file holds only what `object_state` gives as JSON. A section whose state is large gives
   it for a carry through `carry_state() -> {"objects": {id: state}, "world": state}` (plain data and NumPy arrays of
@@ -480,7 +493,7 @@ consequences of a change start at the moment it is made.
   own — `ObjectType.stateful`, by default the types with a velocity handle — or a state not carried, with the
   reason), which values the new world changed (hidden parameters are not listed:
   `test_hidden_parameters_are_not_listed_as_changed_by_a_carry`), what it refused, and what happened to the world's
-  own state; its `carry` field holds the same as data. The «Новый мир» form shows every law of the new world, the live
+  own state; its `carry` field holds the same as data. The "New world: …" form shows every law of the new world, the live
   ones at their current values. A world accepts objects across a law change where physics allows; its `place` may
   adapt values (drop a coordinate the new dimension lacks) and must refuse the rest with `Refusal`. A playground whose
   state is a field (p04's flow) carries it into a new world through `carry_state` and `carry_world`. On the same grid
@@ -504,14 +517,15 @@ consequences of a change start at the moment it is made.
 * **Direct manipulation: the throw and Delete** (plan P16.2; reviews LB1-F13, LB1-F14, LB1-p02-ux X2, X4): the
   automatic throw scale makes a brisk flick (the view's width in a wall second) cross the world's region in 2 wall
   seconds at the current playback rate, never faster than half the `velocity_max` a type declares (which clamps); a
-  clamp and a refused throw say «уменьшите масштаб броска». The scene's log names an edit as «‹label›: перемещение в
-  (…) ‹unit›; бросок: v = (…) ‹unit›» and says a clamp only when one happened. A type whose throws are better read in
+  clamp and a refused throw say "reduce the throw scale". The scene's log names an edit as "‹label›: move to (…)
+  ‹unit›; throw: v = (…) ‹unit›" and says a clamp only when one happened. A type whose throws are better read in
   another unit than the world's declares `velocity_display = {"unit", "factor"}` (factor × world velocity = shown; the
   readout and the log only, the edit stays in world units). Delete removes the selected object also when it was picked
   in a 2-D world's own window (that window is never removed).
-* **Numbers in the owner's texts** (review LB1-p02-ux X6): one form, `lfviz.playground.fmt` on the server and `ui.js`
-  `num` in the player — a decimal comma also in the mantissa of m·10ⁿ, the minus sign −. Sections format the numbers
-  of their events and refusals with `fmt`.
+* **Numbers in the owner's texts** (review LB1-p02-ux X6; §7): a number is always an argument of a `T`, never
+  formatted into a string on the server; the player formats it in the viewer's language (`i18n.js` `fmt`: a decimal
+  comma in Russian, also in the mantissa of m·10ⁿ, the minus sign −). `lfviz.playground.fmt` is deprecated: it remains
+  only for the worlds' older texts and the tests.
 * **Placing and the palette** (reviews UX-ui U4, U7, U22; UX-params P28):
   - a palette button opens a pre-placement form with the type's parameters; the point is typed, or clicked in the
     3-D scene (the plane z = the middle of the region) or in a slice window;
@@ -536,7 +550,7 @@ consequences of a change start at the moment it is made.
   the record), and `buffer.window_mb`, counting the checkpoint files too; never the newest two segments, so the
   bound may be exceeded by up to two segments — keeps the worlds' headers apart and sends a world's header before its
   first kept message; not while a history or a download is being read. `POST /api/runs/{id}/record {on}`
-  («● Сохранять запись»): what the window holds and everything after it is kept until switched off; the record's state
+  ("● Keep the record"): what the window holds and everything after it is kept until switched off; the record's state
   (`record_state`) is the run's, sent to the viewers, not recorded. A resume continues from a checkpoint; a world whose
   start left the window, or whose kept record has a hole (recording switched on and off), is not rebuilt by replay
   (the resume, or the worker when the checkpoint does not load, says so: start again from a scene file).
@@ -547,7 +561,7 @@ consequences of a change start at the moment it is made.
   dropped to the worker log, never breaking the scene.
 * **Instruments (plan P16.3; owner, 2026-11-04 and 2026-11-11; `lfviz.instruments`, `lfviz.sweep`,
   `player/js/instruments.js`).**
-  - **The panel «Приборы»** lists a world's measurables by group, plots the values the run recorded at its frames'
+  - **The panel "Instruments"** lists a world's measurables by group, plots the values the run recorded at its frames'
     world times, and downloads them as CSV. Nothing it shows is computed by the player.
   - **Nothing the owner is using is rebuilt under him** (review LB1-framework F8): the list, the folded groups (kept per
     run in the browser), the plots, the sweep form (once per world, what was typed kept), and a sweep's result (the
@@ -578,7 +592,7 @@ consequences of a change start at the moment it is made.
     Otherwise it reads `frame()`'s `meas`.
   - **The live world is untouched.** The same state gives the same numbers, and the advance follows the world's own
     steps (a sweep at the current value equals the live world bit for bit).
-  - **Nothing measured** is state `failed`, «не посчитан».
+  - **Nothing measured** is state `failed`, "not computed".
   - **The cost.** It is estimated from the record before the start:
     - only frames computed while the world played, with no command since the previous frame, count — an upper bound,
       the frame's own cost counted as advance;
@@ -594,3 +608,54 @@ consequences of a change start at the moment it is made.
 * **The framework's tests** run on a toy section found only by the tests (`tests/playgrounds/p99_toy`, through the
   environment variable `LFVIZ_EXTRA`): `tests/test_playground.py`, `tests/test_manipulation.py`,
   `tests/test_carryover.py`.
+
+## 7. Languages and i18n (owner, 2026-11-12)
+
+> для всего фронта сделай i18n переводы на русский и английский, по дефолту английский и переключением языка.
+
+The rule for the whole repository is `../AGENTS.md` §3 rule 13; the languages are listed in `../LANGUAGES.md`. This
+section is how the visualizations keep it.
+
+* **Languages.** English is the source language and the default; Russian is the second. Every page (catalogue, run,
+  settings, licence) has the switch EN | RU in its top bar (`player/js/i18n.js`, added to the first `.topbar`); the
+  choice is stored in `localStorage` under `lfviz.lang`, and `?lang=xx` in the address overrides it.
+* **Texts on the server (Python).** A user-facing text is never a ready string in one language: it is
+  `T("English msgid {arg}", arg=value)` from `lfviz.i18n` (the engine's `lfphys.i18n`, re-exported). Numbers are
+  always arguments, never formatted into the msgid. The formats are `{x}`, `{x:.3g}`, `{x:.2f}`, `{x:.2e}`, `{x:d}`
+  (each optionally with the sign flag `+`), `{x:cap}` (a text argument with its first letter capitalised) and
+  `{x:unit}` (the unit a label carries after its last comma). A list argument is joined by ", ". A catalogue entry may
+  hold plural forms `{one, few, many, other}`, chosen by the argument `n`. A `T` may contain other `T`s. It serialises
+  to JSON as `{"$t": msgid, "a": {...}}` and survives `dataclasses.asdict`, `copy`, pickling and a JSON round trip, so
+  a run's record is language-neutral and is read in any language later; records made before 2026-11-12 keep their
+  Russian strings and are shown as they are. `str(T(...))` is the English rendering (logs, tests).
+* **Errors.** A refusal is `ValueError(T(...))` or `Refusal(T, hint=T)`, which the player shows as
+  `T("{text}. What to change: {hint}")` (§3 "Refusals and failures"). `owner_text(exc)` gives the owner's `T` and the
+  English one-line detail. HTTP errors are `{"error": <T>, "text": <English>}` (`error_body`). Sizes in bytes come from
+  `lfviz.limits.fmt_bytes`, a `T`. `lfviz.playground.fmt` is deprecated (§6 "Numbers in the owner's texts").
+* **Catalogues.** `<lang>.json` maps msgid → translation. They are merged in this order: the engine's
+  (`../lfphys/lfphys/locales/`), the framework's (`locales/`), then each world's (`<world>/locales/`, also the folders
+  of `LFVIZ_EXTRA`). `en.json` holds only plural forms and overrides. One msgid never gets two translations:
+  `tests/test_i18n.py` reports a conflict, and the fix is to reuse the framework's msgid with its translation or to
+  choose another msgid. `GET /api/i18n/<lang>` serves the merged catalogue (§3: ETag, 304, 404 for an unknown
+  language).
+* **The player (JS).** `import { t, fmt, lang } from "/static/js/i18n.js";`. Every text from the server goes through
+  `t()`; `el`, `fill`, `panel` and `toast` render a `T` themselves. A static text is a literal `t("…")`, so that the
+  completeness test finds it. Numbers are formatted by `fmt(x, spec)` in the viewer's language (a decimal comma in
+  Russian, the minus sign −, m·10ⁿ). In HTML, `data-t`, `data-t-title` and `data-t-placeholder` mark the texts to
+  translate. A local or a parameter is never named `t` (it would hide the translator). Number inputs are
+  `type=number` (a point); typed text fields accept both "," and ".". Toasts and event rows capitalise their first
+  letter. A CSV download takes `?lang=` for its column headers.
+* **Tests.** `tests/test_i18n.py` checks the catalogues' format and conflicts, static and dynamic completeness (every
+  msgid of the code and every text a world sends is translated), a guard against Cyrillic in code lines (a line that
+  needs it carries the marker `i18n-ok`), and that no local is named `t`. `tests/i18n_pending.txt` lists files not yet
+  converted and must be empty at a commit. `tests/i18n_tools.py --lines FILE… | --pending | --shadow` shows what the
+  guard refuses and where a local hides `t()`. In a browser, `tests/browser/i18n_checks.mjs` opens every page and
+  every world in English and in Russian. The other browser scripts take the language from `-e LFVIZ_LANG=en|ru`; they
+  import `lfi18n.mjs`, so they are copied together (`cp /t/*.mjs /pw/`). The player's JS unit tests:
+  `node --test player/js/tests/*.test.mjs` (from `visualizations/`, Node 22 or newer, e.g. the `node:24` image).
+* **User documents.** A world's README and the owner guide exist as `README.md` (English) and `README.<lang>.md` for
+  every other language, each linking the other at the top. A document names a part of the interface by its label in
+  the document's language: the msgid in an English document, its translation from the catalogues in another.
+* **Adding a language.** A row in `../LANGUAGES.md`; its code in `LANGS` of `lfviz/i18n.py` and of
+  `player/js/i18n.js`; a `locales/<code>.json` next to every catalogue (`tests/test_i18n.py` lists what is missing);
+  and `X.<code>.md` for every user document.

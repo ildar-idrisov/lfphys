@@ -1,0 +1,775 @@
+removed Russian literals: 6928; not found verbatim (modulo placeholders) in the catalogues: 774
+[lfphys/lfphys/core/backend.py] CUDA не видит ни одного устройства
+[lfphys/lfphys/core/backend.py] или по выбору; точность fp64, fp32 — только где проверено и только для рисования; ссылки и проверки 
+[lfphys/lfphys/core/backend.py] устройство 0 на шине {pci}, а разрешено только {want} (LFPHYS_GPU_PCI)
+[lfphys/lfphys/core/em/fdtd.py] 0.06…178 мс/шаг, 3-D 32³…256³ — 0.75…498 мс/шаг; GPU 0 (RTX 2080 Ti, fp64) 2-D 0.06…2.7 мс/шаг, 
+[lfphys/lfphys/core/em/fdtd.py] 2-D TM — равны на 64², GPU ×2.3 на 128², ×19 на 512², ×67 на 4096²; 3-D — ×6 на 32³, ×25 на 
+[lfphys/lfphys/core/em/fdtd.py] 3-D 0.12…6.5 мс/шаг; GPU быстрее с 128² в 2-D (×2.3; ×67 на 4096²) и с 32³ в 3-D (×6; ×76 на 256³)
+[lfphys/lfphys/core/em/fdtd.py] TE: 2.6 → 1.4 → 0.8 % при 40/80/160 ячейках); монитор потока видит плоскую волну слабее на 
+[lfphys/lfphys/core/em/fdtd.py] TM −1.6…−2.0 % при 40 ячейках на единицу) или усреднение по ячейке — только диагональ тензора 
+[lfphys/lfphys/core/em/fdtd.py] {bad} узлов с поправками на гранях области полного поля не в фоновой среде (тело 
+[lfphys/lfphys/core/em/fdtd.py] диэлектрический цилиндр m = 1.5 при 40 ячейках: TM +0.03…+0.06 % / +0.10…+0.37 %, TE −0.12…+0.29 % / 
+[lfphys/lfphys/core/em/fdtd.py] нет источника {sid}
+[lfphys/lfphys/core/em/fdtd.py] точна, утечка не на уровне округления
+[lfphys/lfphys/core/em/fdtd.py] −0.07…+0.60 %; шар при 32 ячейках −0.01…+0.76 % / +0.16…+0.84 % от Ми (ошибка схемы и ошибка 
+[lfphys/lfphys/core/em/fdtd_geometry.py] TE-цилиндр ε = 6 — 2.6, 1.4, 0.8 % при 40, 80, 160 ячейках на единицу) и при малом контрасте 
+[lfphys/lfphys/core/em/fdtd_geometry.py] нужно {n} координат, дано {len(a)}
+[lfphys/lfphys/core/em/fdtd_sources.py] импульса утечка ~0.3–0.4 хвоста окна: 2–3e-9 вдали от отсечки, у отсечки волны Блоха — предвестник, 
+[lfphys/lfphys/core/em/fdtd_sources.py] источник: точка position или область region (одно из двух)
+[lfphys/lfphys/core/em/fdtd_tfsf.py] TF/SF: повторные узлы в одном списке поправок
+[lfphys/lfphys/core/em/fdtd_tfsf.py] поглощающих слоёв; утечка — округление плюс начало ряда: ~0.3–0.4 хвоста окна (2–3e-9 вдали от 
+[lfphys/lfphys/core/em/slit.py] 0.2–0.5 % (измерено при k·w = 40–130); ошибка оценивается (error_estimate) и измеряется 
+[lfphys/lfphys/core/em/slit.py] занижено на 0.04–0.2 % при толщине > 0; у тонкого экрана при k·w > 140 — волноводные моды, 
+[lfphys/lfphys/core/em/slit.py] экспоненциально; волноводные моды — алгебраически (углы экрана, порядок 1.2–1.4), по умолчанию T 
+[lfphys/lfphys/core/fluids/lbm.py] NIST Chemistry WebBook SRD 69 (изобара 0.101325 МПа, загружено 2026-11-04): IAPWS-95 (Wagner & Pruß 2002) 
+[lfphys/lfphys/core/fluids/lbm.py] U.S. Standard Atmosphere 1976 (NASA-TM-X-74335): идеальный газ с M0 = 28.9644 кг/кмоль, R* = 8.31432·10³ 
+[lfphys/lfphys/core/fluids/lbm.py] {what} {lab} оказалось бы срезано краем новой области: уменьшать область можно 
+[lfphys/lfphys/core/fluids/lbm.py] Дж/(кмоль·К) (с. 3, 9); вязкость по формуле (51) с β = 1.458·10⁻⁶, S = 110.4 К (с. 19)
+[lfphys/lfphys/core/fluids/lbm.py] нет препятствия {oid}
+[lfphys/lfphys/core/fluids/lbm.py] ошибки сжимаемости; предел — Ma² при Ma = 0.3
+[lfphys/lfphys/core/fluids/lbm.py] течение несжимаемой жидкости: ошибка сжимаемости O(Ma²) (Ma ≤ 0.3, проверяется; звуковые волны 
+[lfphys/lfphys/core/md/system.py] проверки: NIST SRS (ЛД, 3σ + хвост; линейный сдвиг силы 2.5σ), замкнутые формы (идеальный газ, 
+[lfphys/lfphys/core/md/system.py] шаг целиком (перестройка списка и остальное — на CPU): 3-D ×1.1 / 2.0 / 2.7 / 2.0 при 
+[lfphys/lfphys/core/md/system.py] ядро сил быстрее на GPU с 2·10^4 пар (0.46 против 0.76 мс), ×12 при 10^5, ×28 при 3·10^5; 
+[lfphys/lfphys/core/optics/mie_poly.py] (отрезанная доля вероятности возвращается, её смещение ≲ 3 доли от максимума); интеграл по размерам — 
+[lfphys/lfphys/core/quantum/hydrogen.py] замкнутые формулы есть для k = −2, −1, 1, 2
+[lfphys/lfphys/core/quantum/scene.py] {what}: нужно {n} компонент(ы), дано {len(v)}
+[lfphys/lfphys/core/quantum/scene.py] метка: область пуста
+[lfphys/lfphys/core/quantum/scene.py] оператор сцены на {op.device}, а сцена на {self.device} (нехватка памяти GPU?)
+[lfphys/lfphys/core/quantum/scene.py] скачок локализации: точка в области среды не найдена
+[lfphys/lfphys/core/quantum/scene.py] устройство: 'auto' или 'cpu'
+[lfphys/lfphys/core/quantum/schrodinger_nd.py] порядок разностной производной — чётный
+[lfphys/lfphys/core/quantum/schrodinger_nd.py] спиновый член тока — для спинора в 3-D
+[lfphys/lfphys/core/quantum/schrodinger_nd.py] степень интерполяции — чётная (шаблон из нечётного числа точек вокруг ближайшего узла)
+[lfphys/lfphys/core/quantum/schrodinger_nd.py] сторона поглотителя: 'low' или 'high'
+[lfphys/lfphys/core/raytrace.py] static_render: только тела в покое
+[lfphys/lfphys/core/raytrace.py] направление «вверх» камеры параллельно направлению взгляда
+[lfphys/lfphys/core/raytrace.py] неизвестная камера {self.kind!r}
+[lfphys/lfphys/core/raytrace.py] неизвестный режим {mode!r}
+[lfphys/lfphys/core/raytrace.py] оси тела должны быть ортонормированы
+[lfphys/lfphys/core/raytrace.py] телесные углы пикселей — только для камеры всего неба
+[lfphys/lfphys/theories/models/interatomic.py] 1.312 и 0.687; 2-D: у полного 0.515, у обрезанного на 2.5σ со сдвигом энергии 0.459, тройная 
+[lfphys/lfphys/theories/models/interatomic.py] NIST SRS: эталоны LJ (усечение 3σ + хвост; линейный сдвиг силы 2.5σ)
+[lfphys/lfphys/theories/models/interatomic.py] r_c (3-D: критическая T при линейном сдвиге силы 2.5σ — 0.937, тройная точка 0.560 — у полного 
+[lfphys/lfphys/theories/models/interatomic.py] давление и критическую точку иначе, чем 12-6 (критическая T для 12-6 — 1.312 ε/k, т.е. 157 K 
+[lfphys/lfphys/theories/models/interatomic.py] около 0.42 — жидкость и пар на плоскости сосуществуют лишь в узком интервале)
+[lfphys/lfphys/theories/models/interatomic.py] против 150.7–150.9 K у аргона по NIST WebBook)
+[lfphys/tests/test_backend.py] не читается, последняя 90 °C
+[lfphys/tests/test_em_slit.py] нужна векторная теория
+[lfphys/tests/test_geometry_3d.py] срез y = 0: щель принята бесконечной
+[lfphys/tests/test_geometry_3d.py] угловой спектр точен на любой координатной плоскости
+[lfphys/tests/test_geometry_3d.py] щель длиной L считается бесконечной: ошибка {errs[-1]:.1e} при L = 14λ
+[lfphys/tests/test_geometry_3d.py] щель конечной длины считается как бесконечная
+[lfphys/tests/test_geometry_3d.py] щель принята бесконечной
+[visualizations/p01_gravity/tests/test_p01_lab.py] 0,1 скорости света
+[visualizations/p01_gravity/viz.py] (2,5ПН + 3,5ПН, гармоническая калибровка) перестаёт быть упорядоченным рядом — отброшенное 
+[visualizations/p01_gravity/viz.py] ({g.keys[i]}, {int(c['steps'][i])} шагов); предел — сумма по его шагам 
+[visualizations/p01_gravity/viz.py] (≈ 10,6–13 G m/c², считается при старте двойной)
+[visualizations/p01_gravity/viz.py] 0° — прямо к дыре; 90° — по вращению; измерено наблюдателем без момента (ZAMO)
+[visualizations/p01_gravity/viz.py] 1ПН + 2ПН + реакция излучения 2,5ПН и 3,5ПН
+[visualizations/p01_gravity/viz.py] 1ПН + 2ПН без излучения (сохраняется энергия)
+[visualizations/p01_gravity/viz.py] s scene command; «Очистить сцену» in the hole
+[visualizations/p01_gravity/viz.py] {pair} — расстояние {r:.3g} G m/c² вне диапазона двойной ОТО (8 … 2000 G m/c²)
+[visualizations/p01_gravity/viz.py] «{lab}»: радиальный период (между перицентрами, измерен)
+[visualizations/p01_gravity/viz.py] Для приборов (P16.3): расстояние этого тела до выбранного; элементы орбиты (a, e, период) — всегда 
+[visualizations/p01_gravity/viz.py] Масса и радиус в земных; по умолчанию — на круговой орбите
+[visualizations/p01_gravity/viz.py] Масса и радиус в солнечных; поверхность звезды — граница столкновения; по умолчанию — на 
+[visualizations/p01_gravity/viz.py] Меняется на ходу, в текущий момент: тела уже в касании при «проходят» летят дальше, при «сливаются» — 
+[visualizations/p01_gravity/viz.py] На ISCO-близкой орбите
+[visualizations/p01_gravity/viz.py] На круговой орбите r = 6
+[visualizations/p01_gravity/viz.py] Наибольшее отклонение массовой оболочки p·p = −μ²
+[visualizations/p01_gravity/viz.py] Неподвижный на r = 4
+[visualizations/p01_gravity/viz.py] Ньютон + реакция излучения 2,5ПН
+[visualizations/p01_gravity/viz.py] ОТО: двойная 10 + 10 M☉ с расстояния 20 G m/c² и детектор волн (сближение)
+[visualizations/p01_gravity/viz.py] ОТО: эксцентрическая двойная 30 + 10 M☉ (e = 0,5), прецессия перицентра
+[visualizations/p01_gravity/viz.py] Солнце и Земля (круговая орбита 1 а.е.)
+[visualizations/p01_gravity/viz.py] Тело без собственного поля и заряда: движется по геодезической; свои часы. 
+[visualizations/p01_gravity/viz.py] У чёрной дыры (a = 0,9): тела на орбитах, лучи света, часы наблюдателей
+[visualizations/p01_gravity/viz.py] а.е., доля размера системы — оценка ошибки расчёта на интервале (шаг ∝ √η: 
+[visualizations/p01_gravity/viz.py] были бы в самой дыре; свет и часы ОТО там не определены
+[visualizations/p01_gravity/viz.py] в ней больше учтённой поправки 1ПН, а у r ≈ 9,1 она меняет знак (орбита набирала бы 
+[visualizations/p01_gravity/viz.py] детектор волн — в мире Ньютона гравитационных волн нет
+[visualizations/p01_gravity/viz.py] задать скорость, измеренную наблюдателем без момента (ZAMO), в долях c
+[visualizations/p01_gravity/viz.py] законы «{laws}» ещё не подключены
+[visualizations/p01_gravity/viz.py] излучения уравнений — порядка x² (её поправки 2ПН нет: измерено −35,5 x² при 
+[visualizations/p01_gravity/viz.py] изменение |P| с последнего изменения сцены, относительно Σ|m v|; допуск 10⁻¹² 
+[visualizations/p01_gravity/viz.py] как двух тел круговая для любой массы тела, остальные получают общую отдачу, центр масс системы 
+[visualizations/p01_gravity/viz.py] копия поставлена рядом, в ({_fmt(y)}) а.е., с той же 
+[visualizations/p01_gravity/viz.py] ложится на оригинал; добавьте тело из палитры в другом месте)
+[visualizations/p01_gravity/viz.py] меньше, измерено 4,05–4,11)
+[visualizations/p01_gravity/viz.py] места (r, θ, φ) и с импульсом, который измерял местный наблюдатель без момента (ZAMO); E, L и 
+[visualizations/p01_gravity/viz.py] местным наблюдателем без момента (ZAMO); E, L и постоянная Картера пересчитываются; мир 
+[visualizations/p01_gravity/viz.py] момента (ZAMO; свет — направление и частоту); E, L и постоянная Картера пересчитаны в новой метрике, 
+[visualizations/p01_gravity/viz.py] начните дальше или выберите порядки «Ньютон + 2,5ПН»
+[visualizations/p01_gravity/viz.py] орбиты не определена; сдвиньте его по x или y
+[visualizations/p01_gravity/viz.py] постньютоновские уравнения движения (1ПН, 2ПН; реакция излучения 2,5ПН, 3,5ПН), 
+[visualizations/p01_gravity/viz.py] поток круговой орбиты к 1ПН точности по x = (mΩ)^(2/3) (Blanchet 2014, ур. 314, 
+[visualizations/p01_gravity/viz.py] правило зависит от координат —, собственное время и импульс, измеренный местным наблюдателем без 
+[visualizations/p01_gravity/viz.py] пробные тела, свет и часы у дыры — в единицах G M/c² (километры): в мире Ньютона (а.е.) они 
+[visualizations/p01_gravity/viz.py] рядом с ({_fmt(x0)}) а.е. нет свободного места: {why}
+[visualizations/p01_gravity/viz.py] с реакцией излучения только 2,5ПН совпадение точное, с полными уравнениями — до 
+[visualizations/p01_gravity/viz.py] скорость броска {speed / 1e3:.4g} км/с — не меньше 0,1 скорости света: ньютоновская 
+[visualizations/p01_gravity/viz.py] только не ближе ISCO (ближе орбита неустойчива)
+[visualizations/p01_gravity/viz.py] точка ({_fmt(x)}) а.е. на оси z через центр масс остальных: плоскость круговой орбиты не определена
+[visualizations/p01_gravity/viz.py] точка ({_fmt(x)}) а.е. слишком близко к «{lab}» (касание сразу)
+[visualizations/p01_gravity/viz.py] у дыры Керра–Ньюмена тела — пробные, в единицах G M/c² (1 а.е. ≈ 10⁷ G M/c² у дыры 10 M☉): 
+[visualizations/p01_gravity/viz.py] упорядоченный ряд (≈ 10,6 G m/c² при q = 1 … 13 при q = 0,05)
+[visualizations/p01_gravity/viz.py] упорядоченным рядом (≈ 10,6–13 G m/c² по отношению масс): последние витки и 
+[visualizations/p01_gravity/viz.py] уравнений (2,5ПН + 3,5ПН) уже не упорядоченный ряд, а у r ≈ 9,1 она меняет знак — 
+[visualizations/p01_gravity/viz.py] часы далёкого t, с
+[visualizations/p01_gravity/web/view.js] Законы сохранения проверяются вживую («Проверки»): энергия, импульс, момент импульса (Ньютон), энергия, момент и постоянная Картера каждого тела (Керр–Ньюман), баланс энергии с излучённой волнами (двойная). Численная ошибка — по сравнению с расчётом того же интервала с вдвое меньшим параметром точно
+[visualizations/p01_gravity/web/view.js] Запись держит окно последних минут; заметили эффект — «● Сохранять запись» в панели «Запись: окно». Сцену можно сохранить в файл и начать из него новый мир.
+[visualizations/p01_gravity/web/view.js] Следы — посчитанные орбиты: точки решения не дальше 20° поворота направления движения, между ними — кривая Эрмита по положениям и скоростям; на экране отклонение меньше 0,25 пикселя при любой скорости мира.
+[visualizations/p01_gravity/web/view.js] Тело из палитры ставится в заданную точку, а если она занята — в ближайшее свободное место по оси x (об этом сообщение). Столкновения тел (слияние или пролёт) меняются на ходу, в текущий момент.
+[visualizations/p02_quantum/tests/test_p02_quantum.py] Нет параметра
+[visualizations/p02_quantum/tests/test_p02_quantum.py] внутри «Стенка с двумя щелями»
+[visualizations/p02_quantum/tests/test_p02_quantum.py] пересчитана точно (дополнением спектра нулями)
+[visualizations/p02_quantum/tests/test_p02_quantum.py] поглощено: «Детектор
+[visualizations/p02_quantum/tests/test_p02_quantum.py] трубки «Трубка потока»
+[visualizations/p02_quantum/viz.py] ; бросок ограничен: просили {_f(va, 4)} км/с, быстрее {_f(kk / mass / TU * 1e-12, 4)} 
+[visualizations/p02_quantum/viz.py] The label of the potential object whose box holds the point c («области потенциала» if none).
+[visualizations/p02_quantum/viz.py] «{lab}» найдена в ({', '.join(f'{c:.3g}' for c in x)}) нм ± σ (была в окне с вероятностью 
+[visualizations/p02_quantum/viz.py] Бом: зарегистрировал {self._det_label(key)}
+[visualizations/p02_quantum/viz.py] Метка пути в верхней щели: полосы почти гаснут (видность 0,94 → 0,18)
+[visualizations/p02_quantum/viz.py] Окно — квадрат (куб) с центром в нуле. Меняется на ходу (шаг сетки — размер / число точек): больше — 
+[visualizations/p02_quantum/viz.py] волна частицы мельче, чем передаёт сетка (шаг {self.d:.3g} нм): нужно λ больше 
+[visualizations/p02_quantum/viz.py] км/с в этом направлении сетка здесь и сейчас не передаёт волну
+[visualizations/p02_quantum/viz.py] недопущенной ямы −3 эВ было 0,25
+[visualizations/p02_quantum/viz.py] переносите на меньшее расстояние или от края окна
+[visualizations/p02_quantum/viz.py] стенках (двухщелевой опыт: до 4·10⁻⁵, стенка 30 эВ: 1,7·10⁻⁴), а у 
+[visualizations/p02_quantum/viz.py] сцене — около нуля): действует на спин; для заряда — только однородное Bz
+[visualizations/p02_quantum/viz.py] — при этой ширине σ никакая не годится
+[visualizations/p02_quantum/viz.py] ‖ψ − ψ_точн‖ в главном порядке, не граница (двухщелевой опыт: оценка 3,7·10⁻³ 
+[visualizations/p02_quantum/web/view.js] Проверки: норма + поглощённое = 1, энергия замкнутой системы против строгой границы из ошибки шага, поток через плоскости, ошибка шага (компаньон), качество сетки, отражение краёв окна, стоимость шага.
+[visualizations/p03_molecules/tests/test_p03_lab.py] абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ
+[visualizations/p03_molecules/tests/test_p03_lab.py] изменение ящика остановлено (задан новый размер)
+[visualizations/p03_molecules/tests/test_p03_lab.py] молекулы «Молекулы X₂»
+[visualizations/p03_molecules/tests/test_p03_lab.py] термостат «Нагрев 120 K»
+[visualizations/p03_molecules/tests/test_p03_ux.py] P32: «одинаковая скорость» with one atom or at T = 0 divided 0 by 0.
+[visualizations/p03_molecules/tests/test_p03_ux.py] не больше (\d+) атомов
+[visualizations/p03_molecules/viz.py]  (с уже имеющимися атомами) — случайно без перекрытий укладывается не больше ≈ {lim:.0%}
+[visualizations/p03_molecules/viz.py] (скорости пересчитаны v·√(m/m′)); перекрытия при новом σ отклоняются
+[visualizations/p03_molecules/viz.py] (фактическая плотность — в инспекторе). Плотная упаковка: ρσ² ≈ 0,9, ρσ³ ≈ 1,0
+[visualizations/p03_molecules/viz.py] (≈ 0,03) — профиль плотности по высоте
+[visualizations/p03_molecules/viz.py] engine momentum_drift); сохраняется вдоль периодических осей без поля, 
+[visualizations/p03_molecules/viz.py] {cv['pairs']} пар атомов ближе σ друг к другу (ближайшая — {_num(cv['closest'], 3)} σ)
+[visualizations/p03_molecules/viz.py] {head}: {self._size(L0)} → {self._size(L1)} за {_num(dur, 4)} пс, {r['steps']} шагов; работа над 
+[visualizations/p03_molecules/viz.py] {moved} молекул пересекали грань, ставшую стенкой: сдвинуты внутрь целиком (не 
+[visualizations/p03_molecules/viz.py] {n} {what} в области {area} нм заняли бы {eta:.0%} {'площади' if nd == 2 else 'объёма'}
+[visualizations/p03_molecules/viz.py] «всё при T»: скорость каждого атома по Максвеллу при T, длины связей и углы — по 
+[visualizations/p03_molecules/viz.py] Θ_D = 85 K (теплоёмкость по Дебаю при 20 / 40 / 80 K — {debye_cv_fraction(20, 85):.2f} / 
+[visualizations/p03_molecules/viz.py] Для аргона единица ε/(mσ) ≈ 7,3·10¹³ м/с² (земное g ≈ 1,3·10⁻¹³ в этих единицах): 
+[visualizations/p03_molecules/viz.py] Жидкость и пар в объёме при 90 K в поле: жидкость (ρσ³ ≈ 0,69) внизу, над ней пар 
+[visualizations/p03_molecules/viz.py] Объект движется как целое с этой скоростью (бросок мышью задаёт её); тепловое движение атомов — 
+[visualizations/p03_molecules/viz.py] Плоский кристалл (ρσ² = 0,85) нагревают термостатом до 120 K: порядок ψ6 исчезает, атомы 
+[visualizations/p03_molecules/viz.py] Порядок Q6 (раз в 1 пс)
+[visualizations/p03_molecules/viz.py] Порядок |⟨ψ6⟩| (раз в 1 пс)
+[visualizations/p03_molecules/viz.py] адиабате: газ аргона (300 атомов, 300 K), сжатый 12 → 11 нм и возвращённый, нагревается скачками на 
+[visualizations/p03_molecules/viz.py] атом в точке ({', '.join(f'{_num(q * NM, 4)}' for q in x)}) нм — {where}
+[visualizations/p03_molecules/viz.py] двигайте поршень (его «Положение»), или «Как менять размер ящика» = сдвинуть стенку: тогда меняется верхний 
+[visualizations/p03_molecules/viz.py] его критическая точка и тройная точка другие, чем у полного потенциала (см. приближения). Меняется на 
+[visualizations/p03_molecules/viz.py] медленное оно шло бы по адиабате идеального газа — это неверно
+[visualizations/p03_molecules/viz.py] меньше размер σ атома, или больше ящик (на ходу)
+[visualizations/p03_molecules/viz.py] не удалось разместить {count} молекул без перекрытий: размещено {len(mks)}
+[visualizations/p03_molecules/viz.py] область объекта лежит вне ящика (внутри стенок её не остаётся)
+[visualizations/p03_molecules/viz.py] относительно центра масс — каноническое преобразование, шаг объёма баростата Андерсена). Работа над 
+[visualizations/p03_molecules/viz.py] плотность решётки ρσ^{nd}
+[visualizations/p03_molecules/viz.py] поршня: остаток 1–14 ε за первый ход при 2,5–10 фс, не больше ~1,5 % работы; у идеального 
+[visualizations/p03_molecules/viz.py] порядка F·v·dt на удар, она копится с ударами — ошибка первого порядка по dt (пресет 
+[visualizations/p03_molecules/viz.py] поставьте {'её' if kind == 'wall' else 'его'} поперёк x или y, или вернитесь к объёму 
+[visualizations/p03_molecules/viz.py] при уровне 0,01 ({ks.get('n')} компонент скорости всех атомов, каждая делена 
+[visualizations/p03_molecules/viz.py] радиус обрезки больше половины ящика, ось поршня (двигайте поршень), удары не разрешает шаг по времени 
+[visualizations/p03_molecules/viz.py] раздают энергию вращению и колебаниям (равнораспределение устанавливается)
+[visualizations/p03_molecules/viz.py] системой — изменение энергии, учтена в первом начале. За заданное время (по шагу на каждом шаге счёта) 
+[visualizations/p03_molecules/viz.py] скачком (необратимо). Пока размер меняется, текущий размер — в кадре; конец изменения — событием с 
+[visualizations/p03_molecules/viz.py] скорость не больше {_num(v_ok * U.velocity_m_s, 3)} м/с, или «Шаг по времени» не больше 
+[visualizations/p03_molecules/viz.py] скорость центра масс не больше ≈ {_num(v_ok * U.velocity_m_s, 2)} м/с, или «Шаг по 
+[visualizations/p03_molecules/viz.py] сначала поставьте «Стенку»), или «Динамика» = непрерывные силы, ящик, и обратно
+[visualizations/p03_molecules/viz.py] счёта — малым аффинным шагом, работа каждого шага учтена. Чем дольше (медленнее грани ящика по 
+[visualizations/p03_molecules/viz.py] температура не выше {_num(T_ok * KELVIN, 3)} K при этом шаге, или «Шаг по времени» не 
+[visualizations/p03_molecules/viz.py] температура стенки > 0 K, или стенка зеркальная
+[visualizations/p03_molecules/viz.py] у твёрдых {} нет {}: переключите «Динамика» = непрерывные силы (на ходу, в «Законах»)
+[visualizations/p03_molecules/viz.py] центр и размеры области — внутри ящика {' × '.join(f'{_num(b * NM)}' for b in self.box)} нм 
+[visualizations/p03_molecules/viz.py] −∫S dV по аффинному напряжению до и после — с полем, мягкими стенками или замороженными атомами 
+[visualizations/p03_molecules/viz.py] ≈ 16 K, за 10 пс на ≈ 0,7 K, за 50 пс на ≈ 0,6 K, за 200 пс — 0 ± 0,2 K (измерено, 4 запуска). 0 — 
+[visualizations/p03_molecules/web/view.js] Ориентационный порядок связей ${s.order_kind || ""} (соседи ближе 1,5σ): 1 (ψ6) или 0,575 (Q6 у ГЦК) — кристалл, ~1/√N — жидкость или газ
+[visualizations/p04_fluids/tests/test_p04_lab.py] «Краситель» оказался бы вне новой области
+[visualizations/p04_fluids/tests/test_p04_lab.py] Периодичность по x
+[visualizations/p04_fluids/tests/test_p04_lab.py] Сила вдоль канала
+[visualizations/p04_fluids/tests/test_p04_lab.py] высота области 0,41 → 0,40961 м
+[visualizations/p04_fluids/viz.py] {_num(dm_cs, 3)} кг/м — сжимаемость схемы, не жидкости: давление перенесено как было, а 
+[visualizations/p04_fluids/viz.py] {rep['rest']} узлов, где у прежнего мира было тело, начаты в покое
+[visualizations/p04_fluids/viz.py] Вода: обтекание цилиндра D = 1 мм в канале 22 × 4,1 мм, Re = 20 (как тест DFG 2D-1, 
+[visualizations/p04_fluids/viz.py] Воздух: обтекание цилиндра D = 1 см в канале 22 × 4,1 см, Re = 20 (как тест DFG 2D-1, 
+[visualizations/p04_fluids/viz.py] Вход (парабола, 0,05 м/с)
+[visualizations/p04_fluids/viz.py] Вход (парабола, 0,3 м/с)
+[visualizations/p04_fluids/viz.py] Вход (парабола, 1,5 м/с)
+[visualizations/p04_fluids/viz.py] Вход (парабола, 3 см/с)
+[visualizations/p04_fluids/viz.py] Вход (парабола, 4,55 см/с)
+[visualizations/p04_fluids/viz.py] Профиль крыла NACA 2412 под углом атаки 8° — решётка профилей (сверху и снизу 
+[visualizations/p04_fluids/viz.py] в масштабе, где вода разрешается сеткой)
+[visualizations/p04_fluids/viz.py] в масштабе, где воздух разрешается сеткой)
+[visualizations/p04_fluids/viz.py] внутри тела{f' «{body}»' if body else ''}: здесь нет жидкости — сдвиньте датчик
+[visualizations/p04_fluids/viz.py] вода и воздух при скоростях см/с — в своих сценариях (миллиметровый и сантиметровый каналы)
+[visualizations/p04_fluids/viz.py] неустойчиво: τ = ([\d.e+-]+) слишком близко к 1/2
+[visualizations/p04_fluids/viz.py] периодичность: шаг 0,8 м = 2 хорды, не одиночное крыло)
+[visualizations/p04_fluids/viz.py] сетка: D = {_num(cells, 4)} ячеек, стенка {'интерполированная' if interp else 'ступенчатая'}; 
+[visualizations/p04_fluids/viz.py] число Рейнольдса ячейки u·dx/ν = ([\d.e+-]+) > ([\d.]+)
+[visualizations/player/js/catalog.js] Начать с сцены, сохранённой в файл («💾 Сохранить сцену» в плеере)
+[visualizations/player/js/catalog.js] файл сцены больше 900 000 символов (${text.length})
+[visualizations/player/js/env3d.js] Плотность свечения: оптическая толщина самого плотного луча вдоль оси области (0,05…54; одинаково во всех мирах)
+[visualizations/player/js/player.js] сцена меняется
+[visualizations/player/js/playground.js] Это объект нельзя перетащить здесь
+[visualizations/player/js/playground.js] бросить нельзя: у объекта нет скорости · 
+[visualizations/player/js/scene3d.js]  · срез: щелчок — выбрать, W — двигать, E — наклонять
+[visualizations/player/js/scene3d.js] траектории ${id}: другое число треков
+[visualizations/player/js/slices.js]  · сверено в ${v.points} точк.: ${num(v.max_err, 2)} ≤ ${num(v.tol, 2)} ${v.ok ? "✓" : "✗"}
+[visualizations/server/lfviz/errors.py] не хватает памяти{asked}{lim}. Что изменить: уменьшите сетку, область, число частиц или темп событий
+[visualizations/server/lfviz/errors.py] сдвиньте пакет по x вне стенки
+[visualizations/server/lfviz/instruments.py] A quantity's label for the owner: a probe's quantity names its object («Датчик 1: расстояние»).
+[visualizations/server/lfviz/orbitals3d.py] ; эталон из тех же орбиталей, что и облако: это сверка 
+[visualizations/server/lfviz/orbitals3d.py] допуск 1e-9 амплитуды колебания (квадратуры точны до ~1e-13)
+[visualizations/server/lfviz/orbitals3d.py] матричный элемент ⟨1|r|2⟩ — квадратура
+[visualizations/server/lfviz/orbitals3d.py] матричный элемент ⟨1|r|2⟩ — квадратура (радиальные панели × точное 
+[visualizations/server/lfviz/orbitals3d.py] состояние приготовлено заново в t = {_num(float(f'{self.t:.6g}'))} с; эта сверка относилась к 
+[visualizations/server/lfviz/orbitals3d.py] суперпозиция — не больше двух уровней энергии (один период Бора)
+[visualizations/server/lfviz/orbitals3d.py] ток вероятности j = (ħ/μ) Im(ψ*∇ψ); длина ~ √|j| по наибольшему в этот момент
+[visualizations/server/lfviz/orbitals3d.py] шагом), допуск — |невязка(2h) − невязка(h)| + округление
+[visualizations/server/lfviz/orbitals3d.py] ⟨{'xyz'[i]}⟩ в фазе {k + 1} из {self.nb} (t = {tk * self.tu:.4g} с) — по облаку 
+[visualizations/server/lfviz/playground.py] A parameter's unit: its ``unit``, else the one its label carries after a comma («Центр пакета: x, нм»).
+[visualizations/server/lfviz/sim.py] очищается сцена
+[visualizations/server/lfviz/sweep.py] ; после него в записи ещё {n_fr} кадр(ов) и {n_cmd} изменени(й) — в свип они не вошли
+[visualizations/server/lfviz/sweep.py] What the number is, with its sampling (review F7): «максимум по 201 замеру через 1,5 мс».
+[visualizations/server/lfviz/sweep.py] «label, unit» — unless the label already names the unit («Размер окна, нм», «Число щелей»; review LB1-p02-ux X9).
+[visualizations/server/lfviz/sweep.py] на сервере уже идут {len(self.active)} свипа (больше {MAX_SWEEPS} сразу нельзя): 
+[visualizations/server/lfviz/sweep.py] он играл ({cost.get('frames_played', 0)} кадров записи); свип проверит её сам и остановится, если выйдет 
+[visualizations/server/lfviz/sweep.py] предела. Посчитано {k} значений, они сохранены; уменьшите длительность или шаг мира
+[visualizations/server/lfviz/sweep.py] уменьшите мир (сетку, число частиц) — или сервер с бо́льшим LFVIZ_SWEEP_MEM_GB
+[visualizations/tests/browser/instruments_checks.mjs] 201 замеров через 1,5 с
+[visualizations/tests/browser/instruments_checks.mjs] \"t, с\",\"Полная энергия, Дж [E]\",\"Положение первого осциллятора, м [x_first]\",\"Осциллятор 1: положение, м [o1.x]\"
+[visualizations/tests/browser/instruments_checks.mjs] Задано: 1 м — где объект поставили
+[visualizations/tests/browser/instruments_checks.mjs] Закон: Жёсткость пружины, Н/м
+[visualizations/tests/browser/instruments_checks.mjs] Закон: Занять память, МБ
+[visualizations/tests/browser/instruments_checks.mjs] Мир,Осцилляторы
+[visualizations/tests/browser/instruments_checks.mjs] Осциллятор 1: положение
+[visualizations/tests/browser/instruments_checks.mjs] Осциллятор 1: положение, м
+[visualizations/tests/browser/instruments_checks.mjs] Полная энергия, Дж|Положение первого осциллятора, м
+[visualizations/tests/browser/instruments_checks.mjs] Сколько считать, мс
+[visualizations/tests/browser/instruments_checks.mjs] Сколько считать, с
+[visualizations/tests/browser/manipulation.mjs] ${tag} throw clamped to velocity_max: |v| = 12 m/s, «ограничено до … уменьшите масштаб броска» in the readout and the log
+[visualizations/tests/browser/manipulation.mjs] ${tag} «перенести сцену»: on by default, the 2-D world takes the rest and names what it refuses
+[visualizations/tests/browser/manipulation.mjs] button:has-text('Начать новый мир')
+[visualizations/tests/test_carryover.py] «Зеркало (отражает; ось — номер) 1» — 
+[visualizations/tests/test_carryover.py] «Зеркало (отражает; ось — номер) 1». Состояние мира перенесено
+[visualizations/tests/test_carryover.py] «Облако точек 1» (число точек 5 → 7: облако разыграно заново)
+[visualizations/tests/test_carryover.py] «Частица 2». По параметрам (своего состояния нет) — «Датчик 1», «Стенка (отражает) 1
+[visualizations/tests/test_carryover.py] «Частица 3» — Частица вне плоскости z = 0 (z = 0,8 м, vz = 0,1 м/с). Что изменить: перенесите её в 3-D мир
+[visualizations/tests/test_carryover.py] «Частица 3». По параметрам (своего состояния нет) — «Датчик 1», «Стенка (отражает) 1», 
+[visualizations/tests/test_carryover.py] ». Не перенесены: 
+[visualizations/tests/test_carryover.py] Изменено при переносе — «Облако точек 1»: spread 3 → 2
+[visualizations/tests/test_carryover.py] Состояние мира перенесено: посещения перенесены в плоскость z = 0
+[visualizations/tests/test_carryover.py] Состояние мира перенесено: посещения перенесены в плоскость z = 0 (ячейки по x, y те 
+[visualizations/tests/test_carryover.py] Состояние мира: начато заново — Сетка посещений другая
+[visualizations/tests/test_carryover.py] Состояние мира: посещения ячеек начаты заново с нуля
+[visualizations/tests/test_carryover.py] Состояние не перенесено, начато заново из параметров — «Облако точек 1»
+[visualizations/tests/test_carryover.py] Стенка (отражает) 1
+[visualizations/tests/test_carryover.py] Сцена перенесена в новый мир: 4 из 6 объектов. С состоянием — «Частица 1», 
+[visualizations/tests/test_carryover.py] Сцена перенесена в новый мир: все объекты (6). С состоянием — «Частица 1», «Частица 2», 
+[visualizations/tests/test_carryover.py] после продолжения
+[visualizations/tests/test_carryover.py] сетка посещений другая
+[visualizations/tests/test_instruments.py] Датчик 1: расстояние, м [o1.d]
+[visualizations/tests/test_instruments.py] Осциллятор 1: положение, м [o1.x]
+[visualizations/tests/test_instruments.py] Полная энергия, Дж [E]
+[visualizations/tests/test_instruments.py] Положение первого осциллятора, м [x_first]
+[visualizations/tests/test_manipulation.py] «Облако точек 1»: перемещение в (0,5; 1) м; бросок: v = (25; −150) см/с
+[visualizations/tests/test_manipulation.py] «Стенка (отражает) 1»: Положение = −1,5·10⁻⁵ м; Ось: y
+[visualizations/tests/test_manipulation.py] «Частица 1»: перемещение в (1; 1; 0) м; бросок: v = (−0,5; 2; 0,25) м/с
+[visualizations/tests/test_manipulation.py] «Частица 1»: перемещение в (2; −1,5; 0,75) м
+[visualizations/tests/test_manipulation.py] «Частица 1»: толчок = 0,25; Наибольшая скорость броска = 20 м/с
+[visualizations/tests/test_manipulation.py] «Экран (отражает; ось — номер текстом) 1»: перемещение: x = 4 м
+[visualizations/tests/test_manipulation.py] Сцена не изменена: «Частица 1»: точка вне области игрушки
+[visualizations/tests/test_manipulation.py] Что изменить: отпустите объект внутри области
+[visualizations/tests/test_manipulation.py] только положение и скорость, а не «масса»
+[visualizations/tests/test_manipulation.py] — ограничено наибольшей скоростью 12 м/с (рука дала 31,5; уменьшите масштаб броска)
+[visualizations/tests/test_manipulation.py] — ограничено наибольшей скоростью 12 м/с (рука дала 50; уменьшите 
+[visualizations/tests/test_playground.py] Сцена не изменена: там стенка. Что изменить: сдвиньте x левее
+[visualizations/tests/test_playground.py] датчик закреплён
+[visualizations/tests/test_playground.py] датчик уже есть
+[visualizations/tests/test_playground.py] сдвиньте x левее
+[visualizations/tests/test_server.py] «Длина волны λ, нм»: 2000 — больше наибольшего 1600; можно от 300 до 1600
+[visualizations/tests/test_server.py] «Длина волны λ, нм»: поле пустое — введите число от 300 до 1600
+[visualizations/tests/test_server.py] «Число щелей» нельзя менять на ходу
+[visualizations/tests/test_server.py] «Число щелей»: «abc» — не целое число
+[visualizations/tests/test_server.py] Изменение не применено: не хватает памяти
+[visualizations/tests/test_server.py] Мир не создан: ОТО требует СТО
+[visualizations/tests/test_server.py] Мир не создан: внутренняя ошибка мира — деление на ноль (ZeroDivisionError)
+[visualizations/tests/test_server.py] Мир не создан: не хватает памяти (запрошено 591 ГиБ)
+[visualizations/tests/test_server.py] Мир не создан: проба
+[visualizations/tests/test_server.py] Новый мир не создан: внутренняя ошибка мира
+[visualizations/tests/test_server.py] Отменено: сцена: добавляется объект
+[visualizations/tests/test_server.py] Расчёт мира остановился на t = 1,5 с: внутренняя ошибка мира — деление на ноль (ZeroDivisionError)
+[visualizations/tests/test_server.py] Сетка 440 × 180 400 000 узлов потребует около 80 ГБ памяти, а 
+[visualizations/tests/test_server.py] Срез не построен: у этого мира нет запросов
+[visualizations/tests/test_server.py] Сцена не изменена: внутренняя ошибка мира — KeyError — запуск сохранён, можно вернуться назад или изменить параметры
+[visualizations/tests/test_server.py] Сцена не изменена: пакет внутри стенки. Что изменить: сдвиньте его по x
+[visualizations/tests/test_server.py] Что изменить: возьмите «Сопротивление» ≤ 1
+[visualizations/tests/test_server.py] возьмите «Сопротивление» ≤ 1
+[visualizations/tests/test_server.py] вычислителю отведено 1,5 ГБ. Что изменить: уменьшите nx
+[visualizations/tests/test_server.py] меньше наименьшего 0
+[visualizations/tests/test_server.py] меньше наименьшего 300
+[visualizations/tests/test_server.py] нет сценария «zzz»; есть: «Сценарий А»
+[visualizations/tests/test_server.py] пакет внутри стенки
+[visualizations/tests/test_server.py] сопротивление больше 1 остановит частицы за один шаг
+[visualizations/tests/test_server.py] сцена: добавляется объект «particle»
+[visualizations/tests/test_sweeps.py] \"Жёсткость пружины, Н/м\",\"Осциллятор 1: положение (в конце (1 замер)), м\",примечание
+[visualizations/tests/test_sweeps.py] Готово: измерено 1 из 2 значений
+[visualizations/tests/test_sweeps.py] Не измерено ни одно из 2 значений: 
+[visualizations/tests/test_sweeps.py] Осциллятор 1: масса
+[visualizations/tests/test_sweeps.py] Цилиндр: Радиус, м
+[visualizations/tests/test_sweeps.py] свипу отведено 102 МБ
+[visualizations/tests/test_sweeps.py] среднее за последние 300 мс (31 замер через 10 мс)
+[visualizations/v01_light_travel/engine/world.py] в ОТО локальное измерение сделано для покоящегося (статичного) наблюдателя
+[visualizations/v01_light_travel/engine/world.py] при этой скорости «{obj.name}» влетит в тело (через {fmt_s(s_star)} по лаб. времени); 
+[visualizations/v01_light_travel/engine/world.py] прихода — допуск 1e-9 плюс 4ε(|v|·|t| + |x|)/(c·Δt) на округление абсолютных 
+[visualizations/v01_light_travel/engine/world.py] у этого объекта нет прибора
+[visualizations/v01_light_travel/tests/test_v01_physics.py] Дальний источник
+[visualizations/v01_light_travel/tests/test_v01_physics.py] пешеходы не быстрее света этого мира
+[visualizations/v01_light_travel/viz.py] ({self._laws_text()}); кнопки «у Андромеды ±10 сут» и «у Земли ±10 сут» приближают диаграмму. 
+[visualizations/v01_light_travel/viz.py] : оно поглощает свет, который в него попал.
+[visualizations/v01_light_travel/viz.py] {self.laws.c_factor:g} = {c:.4g} м/с (в СТО тело не догоняет свет). Уменьшите скорость 
+[visualizations/v01_light_travel/viz.py] {w.objects[args['obj']].name}: серия из {count} импульсов, период {fmt_s(period)}
+[visualizations/v01_light_travel/viz.py] «Изменить скорость» разгоняет наблюдателя: прибор разбирается, собирается заново и 
+[visualizations/v01_light_travel/viz.py] «сейчас» и было ли там уже запланированное событие. Части среза, которые лежат в лабораторном 
+[visualizations/v01_light_travel/viz.py] В этой сцене нет тяготеющего тела, поэтому ньютоново притяжение света не на что применить: 
+[visualizations/v01_light_travel/viz.py] Важна в баллистической теории (свет летит с c относительно источника); в СТО не влияет на c.
+[visualizations/v01_light_travel/viz.py] Вспышка источников в момент, мс
+[visualizations/v01_light_travel/viz.py] Исследование конуса времени, абсолютности скорости света и парадокса Андромеды; законы можно 
+[visualizations/v01_light_travel/viz.py] Источники на расстоянии, км
+[visualizations/v01_light_travel/viz.py] Множитель к c = 299 792 458 м/с; любое значение кроме 1 — модификация.
+[visualizations/v01_light_travel/viz.py] ОТО — общепринятая (для сценариев с массой). «Без гравитации» в сценарии с массой — модификация.
+[visualizations/v01_light_travel/viz.py] Парадокс Андромеды: наблюдатели ±1.499·10⁸ м/с (0.5 c при стандартном c)
+[visualizations/v01_light_travel/viz.py] Парадокс Андромеды: пешеходы 1.4 м/с
+[visualizations/v01_light_travel/viz.py] Радиус тела 0 (чёрная дыра) имеет смысл только в ОТО; без неё тело взято радиусом горизонта той 
+[visualizations/v01_light_travel/viz.py] СТО — общепринятая. Эфир и баллистическая теория — исторические альтернативы, опровергнутые опытом; 
+[visualizations/v01_light_travel/viz.py] Событие на Андромеде в момент (лаб.), сут
+[visualizations/v01_light_travel/viz.py] Ход часов станции dτ/dt (метрика) — самосогласованность
+[visualizations/v01_light_travel/viz.py] Чёрная дыра 10 M☉: отклонение, тень, два изображения
+[visualizations/v01_light_travel/viz.py] в этой сцене нет тяготеющего тела, поэтому гравитация — «Без гравитации» (для неё ОТО и 
+[visualizations/v01_light_travel/viz.py] гравитации»: тело не отклоняет и не задерживает свет, только поглощает его; движение тел 
+[visualizations/v01_light_travel/viz.py] для покоящихся часов общая формула метрики совпадает с √(1 − rs/r) тождественно; независимая 
+[visualizations/v01_light_travel/viz.py] или проходит прямо — видно по рассчитанным лучам; наблюдатель получает столько изображений и 
+[visualizations/v01_light_travel/viz.py] когда до A доходит сигнал о показании B. «Измерить» — замер туда-обратно своим светом. 
+[visualizations/v01_light_travel/viz.py] круговая геодезическая: √(1 − 1.5 rs/r)
+[visualizations/v01_light_travel/viz.py] момент. Малые скорости вводите числом (1,4 м/с ≈ 4,67e-9 c).
+[visualizations/v01_light_travel/viz.py] период > 0, импульсов от 1 до 200
+[visualizations/v01_light_travel/viz.py] пешеходы не быстрее света этого мира: скорость пешеходов {v:.4g} м/с ≥ c × 
+[visualizations/v01_light_travel/viz.py] притяжение тела отклоняет их вдвое слабее ОТО и без шапировской задержки.
+[visualizations/v01_light_travel/viz.py] радиус Солнца меньше 1.5 rs: возьмите сценарий «линза»
+[visualizations/v01_light_travel/viz.py] с эфиром свет — волна в эфире: выберите «Кинематика» = баллистическая (Ритц) или 
+[visualizations/v01_light_travel/viz.py] у Андромеды ±10 сут
+[visualizations/v01_light_travel/web/view.js]  · колесо — масштаб, Shift — только t, Alt — только x
+[visualizations/v01_light_travel/web/view.js]  · координаты Шварцшильда
+[visualizations/v01_light_travel/web/view.js] Локальный световой конус наблюдателей на диаграмме
+[visualizations/v02_double_slit/tests/test_v02_physics.py] «поворот спина вокруг y» у щели 1 не действует на фотон
+[visualizations/v02_double_slit/tests/test_v02_physics.py] Темновые отсчёты» до 1e\\+05
+[visualizations/v02_double_slit/viz.py]  При одной щели ширина полосы — условная: период d (иначе не используемый); от неё 
+[visualizations/v02_double_slit/viz.py] (поле в щели = падающее) неточно. Для фотонов — векторное решение: «Модель экрана со щелями» → 
+[visualizations/v02_double_slit/viz.py] (томсоновская/рэлеевская), продольная отдача не учитывается; «регистрация направления» — 
+[visualizations/v02_double_slit/viz.py] (томсоновское) и поляризуемых (рэлеевское) частиц, а не у частицы 
+[visualizations/v02_double_slit/viz.py] 2 — квантовая механика. Иное значение — модификация (проверка Соркина: 3 щели).
+[visualizations/v02_double_slit/viz.py] 20.7 λ (k·a ≤ 130; щель 20 мкм по умолчанию при 632.8 нм — 31.6 λ — не подходит, её отличие от скалярной 
+[visualizations/v02_double_slit/viz.py] ; измерено: оценка в 1.4–3 раза выше истинной ошибки
+[visualizations/v02_double_slit/viz.py] {VEC_ERR_TOL:g} — меньше пикселя кривой ожидания (≈ 200 пикс.) и ниже того, что χ² 
+[visualizations/v02_double_slit/viz.py] {VEC_KA_MAX:.0f}) — векторное решение здесь не считается (дорого); скалярная модель для таких 
+[visualizations/v02_double_slit/viz.py] {po:.2f} наблюдён, взят в [0.5, 1]
+[visualizations/v02_double_slit/viz.py] λ/2 пластинка (фотон)
+[visualizations/v02_double_slit/viz.py] λ/4 пластинка (фотон)
+[visualizations/v02_double_slit/viz.py] Векторная дифракция: щели 0.5 мкм в проводящем экране 0.2 мкм, поляризация D
+[visualizations/v02_double_slit/viz.py] Исследование поведения частицы и причин интерференции и её исчезновения; законы можно намеренно менять 
+[visualizations/v02_double_slit/viz.py] Квантовый ластик: анализатор −45° (антиполосы)
+[visualizations/v02_double_slit/viz.py] Квантовый ластик: метки H/V + анализатор 45°
+[visualizations/v02_double_slit/viz.py] Линий тока (траекторий Бома)
+[visualizations/v02_double_slit/viz.py] Ложные срабатывания экрана, равномерно по нему. Не больше 100 на одну частицу источника (иначе экран 
+[visualizations/v02_double_slit/viz.py] Наблюдатель пути (кубит-детектор, рассеяние фотона), метки поляризацией/спином, квантовый ластик, 
+[visualizations/v02_double_slit/viz.py] Параксиальная оптика Френеля с граничными условиями Кирхгофа (поле в щели = падающему); сверка с 
+[visualizations/v02_double_slit/viz.py] Правило Борна изменено: параметр Соркина отличен от нуля — проверка не проходит ожидаемо, 
+[visualizations/v02_double_slit/viz.py] Три щели при P ∝ |ψ|^2.4 (модификация)
+[visualizations/v02_double_slit/viz.py] Фотоны 633 нм, две щели (Юнг, по одному фотону)
+[visualizations/v02_double_slit/viz.py] Фотоны: детектор-кубит пути, θ = 90°
+[visualizations/v02_double_slit/viz.py] Фуллерены C60, 200 м/с, решётка из 10 щелей (иллюстративно)
+[visualizations/v02_double_slit/viz.py] Холодные нейтроны 2 нм (иллюстративно)
+[visualizations/v02_double_slit/viz.py] Щели ~λ: скалярная параксиальная картина здесь неверна, и её сравнение с точным 
+[visualizations/v02_double_slit/viz.py] Щель 1: угол / фаза, °
+[visualizations/v02_double_slit/viz.py] Щель 2: угол / фаза, °
+[visualizations/v02_double_slit/viz.py] Электроны + детектор пути (θ = 90°, не читается)
+[visualizations/v02_double_slit/viz.py] Электроны + рассеяние фотона (микроскоп Гейзенберга, λ = 1 мкм)
+[visualizations/v02_double_slit/viz.py] Электроны + слабый детектор (θ = 30°)
+[visualizations/v02_double_slit/viz.py] Электроны 50 кэВ (иллюстративно: щели 0.1 мкм через 0.5 мкм, экран 1 м)
+[visualizations/v02_double_slit/viz.py] Электроны: детектор пути читается в базисе 45° (ластик)
+[visualizations/v02_double_slit/viz.py] Элемент у щели 1
+[visualizations/v02_double_slit/viz.py] Элемент у щели 2
+[visualizations/v02_double_slit/viz.py] ведущий член при k·a ≪ 1; поправка порядка (k·a)² (измерено: 3.8 % для TE при 
+[visualizations/v02_double_slit/viz.py] выберите «Наблюдатель пути» = детектор-кубит, или метки поляризацией/
+[visualizations/v02_double_slit/viz.py] выберите «Ось диполя» не {f['mic_dir']}
+[visualizations/v02_double_slit/viz.py] гистограммы заметит до ~3·10⁶ отсчётов. Это оценка, не строгая граница
+[visualizations/v02_double_slit/viz.py] детектор пути у щели №{int(f['wp_slit'])}, а щелей {n}
+[visualizations/v02_double_slit/viz.py] допуск 0.02 — сдвиг огибающей толчками
+[visualizations/v02_double_slit/viz.py] запуска. «Изменить установку» начинает новый отрезок; частицы, пролетевшие щели до изменения и 
+[visualizations/v02_double_slit/viz.py] захвата щели шире периода; увеличьте период щелей
+[visualizations/v02_double_slit/viz.py] идеальный проводник: векторная дифракция (щели до 20.7 λ)
+[visualizations/v02_double_slit/viz.py] иначе отражается или рассеивается назад экраном; TE и TM складываются с весами поляризации 
+[visualizations/v02_double_slit/viz.py] интегралом не проходит — ожидаемо; ответ мира — векторное решение
+[visualizations/v02_double_slit/viz.py] картине нужна сетка {n_e:.3g} точек (~{nbytes / 2 ** 30:.3g} ГБ, предел мира 
+[visualizations/v02_double_slit/viz.py] микроскоп выключен: дипольное рассеяние зонда не задано для этой частицы
+[visualizations/v02_double_slit/viz.py] не больше утроенной оценки ошибки метода ({err_screen:.2g}): не показана
+[visualizations/v02_double_slit/viz.py] не определён, взят 0.5
+[visualizations/v02_double_slit/viz.py] нужно ≥ 8, иначе картина и ожидание согласны между собой, но не с физикой (review R15)
+[visualizations/v02_double_slit/viz.py] он не учитывает сдвиг огибающей отдачей — допуск 0.02 на это приближение эталона
+[visualizations/v02_double_slit/viz.py] ослабьте коллапс GRW (меньше частота λ или больше ширина r_C) — толчки GRW сдвигают частицы
+[visualizations/v02_double_slit/viz.py] падает на полосу шириной n·d = {V['W'] * 1e6:.4g} мкм, проходит с вероятностью P_прош/(n·d), 
+[visualizations/v02_double_slit/viz.py] показывает только шум): при 1000 частиц/с — до 10⁵ 1/с.
+[visualizations/v02_double_slit/viz.py] поляризация (ось диполя) зонда не может совпадать с направлением его распространения
+[visualizations/v02_double_slit/viz.py] порядка 1/(k·a) < 1 %); обе поляризации (E вдоль щелей — TE, поперёк — TM), попадания — по потоку энергии 
+[visualizations/v02_double_slit/viz.py] темп источника должен быть > 0
+[visualizations/v02_double_slit/viz.py] точным решением идёт по 61 точке сечения и разрешена не лучше.
+[visualizations/v02_double_slit/viz.py] установка перестроена: частиц в полёте потеряно {lost}
+[visualizations/v02_double_slit/viz.py] щелей отличается от векторной на величину порядка 1/(k·a)
+[visualizations/v02_double_slit/viz.py] экран-проводник: источник должен быть монохроматическим (ширина спектра 0)
+[visualizations/v02_double_slit/viz.py] экран-проводник: падающая волна должна быть плоской (расстояние источника 0)
+[visualizations/v02_double_slit/viz.py] эталон ван Циттерта–Цернике |sinc(s·d/(λ L₁))|; допуск 0.02 — сдвиг огибающей точкой источника
+[visualizations/v02_double_slit/web/view.js]  Экран-проводник: попадания и оранжевая линия — векторное решение (поток энергии), синяя — скалярное решение Кирхгофа в тех же единицах (с той же эффективностью детектора), зелёная/фиолетовая точки — вклады TE/TM
+[visualizations/v02_double_slit/web/view.js] Вид сверху: волна за щелями (|ψ|², нормирована в каждом сечении), z — логарифм. шкала от 2a до экрана; x отнесён к ширине пучка. В полёте: ${nfl}. Отрезок ${seg.seg}: ${seg.apparatus}
+[visualizations/v02_double_slit/web/view.js] Скалярная модель: поле в щели равно падающему (граничные условия Кирхгофа). Для фотонов с плоской монохроматической волной и щелями не шире 20.7 λ (k·a ≤ 130) можно выбрать идеальный проводник (векторная дифракция) в настройках «Щели и экран».
+[visualizations/v02_double_slit/web/view.js] Скорость набора картины (≈40 частиц в секунду)
+[visualizations/v02_double_slit/web/view.js] Скорость, при которой виден полёт одной частицы (≈2 с на пролёт)
+[visualizations/v02_double_slit/web/view.js] Экран: ${tot} отсчётов показано (из ${n} всего). Гистограмма; оранжевая линия — ожидание запуска (с темновыми отсчётами), серая пунктирная — сумма щелей без интерференции.
+[visualizations/v02_double_slit/web/view.js] детектор пути показал 0
+[visualizations/v02_double_slit/web/view.js] детектор пути показал 1
+[visualizations/v02_double_slit/web/view.js] идеальный проводник, толщина ${lenFmt(v.t)}
+[visualizations/v02_double_slit/web/view.js] параксиально неточно (>1 %)
+[visualizations/v03_quantum_1d/viz.py]  Счёт остановлен по бюджету раньше.
+[visualizations/v03_quantum_1d/viz.py] ; за ступенькой — доля прошедшего, которую правый край возвращает, не больше 
+[visualizations/v03_quantum_1d/viz.py] {E_DET_MIN:g} эВ: более медленные электроны края-детекторы не поглощают, а 
+[visualizations/v03_quantum_1d/viz.py] Доля прошедших среди {n} частиц
+[visualizations/v03_quantum_1d/viz.py] Прохождение волнового пакета (вычислено по времени)
+[visualizations/v03_quantum_1d/viz.py] Туннелирование электрона через барьер 1 эВ × 0,6 нм
+[visualizations/v03_quantum_1d/viz.py] больше самого прохождения; увеличьте размытие краёв δ (до ≈ {min(d_need, 2.0):.2g} нм) или 
+[visualizations/v03_quantum_1d/viz.py] для ямы — глубина (отрицательная)
+[visualizations/v03_quantum_1d/viz.py] края — профиль (1 + tanh(x/δ))/2; прямоугольник — предел δ → 0 (δ ≪ длины волны)
+[visualizations/v03_quantum_1d/viz.py] медленно (до {v_min * 1e3:.2g} нм/пс), и её надо дождаться; поднимите энергию 
+[visualizations/v03_quantum_1d/viz.py] непоглощённый остаток + отражение детекторов = {tolT:.1e}; Ричардсон эталона 
+[visualizations/v03_quantum_1d/viz.py] отражают, и часть волны стоит на месте или летит назад; увеличьте σ или энергию
+[visualizations/v03_quantum_1d/viz.py] уменьшите энергию или ширину пакета σ, или увеличьте размытие краёв δ
+[visualizations/v03_quantum_1d/viz.py] щелчок детектора {'справа (прошла)' if side == 'right' else 'слева (отразилась)'}
+[visualizations/v03_quantum_1d/viz.py] энергия центральной компоненты пакета ħ²k₀²/2m (средняя кинетическая больше на ħ²/(8mσ²))
+[visualizations/v03_quantum_1d/web/view.js] Исходы ${n} частиц: столбики — доли, пунктир — вероятность из волны. Справа: точное T(E) (оранжевое) и распределение пакета по энергии, на единицу энергии (серое).
+[visualizations/v03_quantum_1d/web/view.js] Слева внизу — карта |ψ(x, t)|² одной частицы (время вверх) с траекториями Бома; справа — доли исходов против вероятности из волны и точное прохождение T(E) по спектру пакета.
+[visualizations/v04_orbits/tests/test_v04_orbits.py] Действие «Толчок» не выполнено
+[visualizations/v04_orbits/tests/test_v04_orbits.py] за горизонтом
+[visualizations/v04_orbits/viz.py] (lfphys/tests/test_relativity_gravity.py); допуск 1.5× третьего члена + численный
+[visualizations/v04_orbits/viz.py] ({dE:.2g}: период интегрированной орбиты меняется на 1.5 δE/E)
+[visualizations/v04_orbits/viz.py] 360°, среднее по {orbits_n} обор.; эталон — lfphys.core.gravity.orbits.
+[visualizations/v04_orbits/viz.py] a = 0.38709893 а.е., e = 0.20563069 (NASA NSSDCA, J2000), старт в перигелии; 
+[visualizations/v04_orbits/viz.py] a = −GM/(2E) из начальных данных; допуск 10⁻⁸ + 2× измеренного дрейфа энергии 
+[visualizations/v04_orbits/viz.py] {c2:.3g} отн. и третий член (5/12)(54 + 9ε²)(M/p)² = {c3:.3g} — 
+[visualizations/v04_orbits/viz.py] {n} обор.; разброс точек поворота {s:.2g}): неустойчивость — проверки круга 
+[visualizations/v04_orbits/viz.py] В ОТО радиус должен быть больше 2M (иначе это чёрная дыра — задайте 0). Внешнее поле любого 
+[visualizations/v04_orbits/viz.py] Длина GM/c² (единица M) и время GM/c³ — от этой массы; GM☉ — номинальное значение МАС 2015 B3.
+[visualizations/v04_orbits/viz.py] Меркурий у Солнца (слабое поле, 43″/век)
+[visualizations/v04_orbits/viz.py] ОТО — общепринятая. Ньютоново тяготение — приближение слабого поля и малых скоростей; мир с ним 
+[visualizations/v04_orbits/viz.py] Падение внутрь ISCO (5.5M, скорость −0.5 %)
+[visualizations/v04_orbits/viz.py] Радиальное падение с покоя с 20M (циклоида)
+[visualizations/v04_orbits/viz.py] Собственное время падения с покоя до r = {rs:.10g}M ↔ циклоида
+[visualizations/v04_orbits/viz.py] Солнца (+0.03″); допуск — точность записи эталона (0.01″)
+[visualizations/v04_orbits/viz.py] Тело на орбите вокруг звезды или чёрной дыры: прецессия перицентра (Меркурий 43″/век, нейтронная 
+[visualizations/v04_orbits/viz.py] Чёрная дыра 10 M☉: розетка (перицентр 20M)
+[visualizations/v04_orbits/viz.py] Чёрная дыра: круговая орбита у ISCO (6.2M)
+[visualizations/v04_orbits/viz.py] для ОТО локальная скорость должна быть меньше c
+[visualizations/v04_orbits/viz.py] измерено: смещение за оборот × (36525 сут / радиальный период запуска); эталон 
+[visualizations/v04_orbits/viz.py] иллюстративно: 1.4 M☉, R = 12 км ≈ 5.8M; перицентр 10M
+[visualizations/v04_orbits/viz.py] круговой орбиты там: √(M/(r−2M)) в ОТО, √(GM/r) у Ньютона. Ниже 3M круговых орбит нет — там доля 
+[visualizations/v04_orbits/viz.py] от скорости света.
+[visualizations/v04_orbits/viz.py] смещение за оборот × (36525 сут / радиальный период)
+[visualizations/v04_orbits/viz.py] собственное время тела за {n} обор. к координатному; эталон — замкнутая формула
+[visualizations/v04_orbits/viz.py] тела на орбите нет (
+[visualizations/v04_orbits/viz.py] часов, и чем от этого отличается Ньютон; законы можно намеренно заменить ньютоновыми.
+[visualizations/v04_orbits/viz.py] эталон ОТО 42.98″/век — Will 2014, Living Rev. Relativ. 17, 4, ур. (65)
+[visualizations/v04_orbits/viz.py] — чёрная дыра (задайте радиус 0)
+[visualizations/v04_orbits/web/view.js] Вписать область у центра (до 12M)
+[visualizations/v04_orbits/web/view.js] Толчок: +5 % скорости вдоль движения (в текущий момент)
+[visualizations/v04_orbits/web/view.js] Торможение: −5 % скорости вдоль движения
+[visualizations/v05_optics_bench/engine/bench.py] неизвестная структура {kind!r}
+[visualizations/v05_optics_bench/viz.py] (устранимая особенность), поэтому сравнение — при θ ∓ 0,001 рад
+[visualizations/v05_optics_bench/viz.py] 1.38 — как MgF₂ (иллюстративно); R(λ₀) = 0 при n_f = √(n₀ n_s).
+[visualizations/v05_optics_bench/viz.py] ; F велико (волна в плёнке почти скользит): пути сравнены и при θ − 0,001 рад: 
+[visualizations/v05_optics_bench/viz.py] R и T движок считает по отдельности из r и t; их сумма = 1 — закон сохранения энергии
+[visualizations/v05_optics_bench/viz.py] {len(lg)} длин волн при текущем угле; допуск в каждой точке — сумма оценок ошибки округления обоих путей
+[visualizations/v05_optics_bench/viz.py] {n0} фотон(ов), ещё не долетевших до структуры, встретят уже новую структуру 
+[visualizations/v05_optics_bench/viz.py] {t['chi2']:.3g} при {t['dof']} ст. св. (для сведения)
+[visualizations/v05_optics_bench/viz.py] Бонферрони ({t['m']} исх.); провал при p < {P_5SIGMA:.2g} (как 5σ); χ² Пирсона = 
+[visualizations/v05_optics_bench/viz.py] Борна с этими вероятностями; узнаём её, когда он долетает до детектора (поглощённый — исчезает в 
+[visualizations/v05_optics_bench/viz.py] Брэгговское зеркало (H L)×8: n_H = 2.3, n_L = 1.45 (как TiO₂/SiO₂, иллюстративно) на стекле 1.52
+[visualizations/v05_optics_bench/viz.py] Все структуры считаются одной и той же функцией движка: матрицы переноса (lfphys interfaces.stack).
+[visualizations/v05_optics_bench/viz.py] За критическим углом R = 1: max |1 − R| (s и p, 60 углов от θ_c до 89.9°)
+[visualizations/v05_optics_bench/viz.py] Металлическая плёнка 30 нм, n = 0.2 + 3.3i (как золото у 633 нм, иллюстративно) на стекле
+[visualizations/v05_optics_bench/viz.py] Нарушенное полное отражение: зазор 200 нм до второй призмы (туннелирование фотонов)
+[visualizations/v05_optics_bench/viz.py] Плазмонный резонанс по Кречману: призма 1.5, металл 50 нм (n = 0.2 + 3.3i), воздух, p (иллюстративно)
+[visualizations/v05_optics_bench/viz.py] Полное внутреннее отражение: стекло 1.5 → воздух, θ = 60° за критическим углом
+[visualizations/v05_optics_bench/viz.py] Полёт по плечам (30 см) — со скоростью c/n (без дисперсии фазовая и групповая скорости равны); время 
+[visualizations/v05_optics_bench/viz.py] Просветление идеальным слоем λ/4: n_f = √1.5 ≈ 1.2247, R(λ₀) = 0
+[visualizations/v05_optics_bench/viz.py] Просветление стекла слоем λ/4 с n_f = 1.38 (как MgF₂, иллюстративно), λ₀ = 550 нм
+[visualizations/v05_optics_bench/viz.py] Пуассоновский поток одиночных фотонов. Полёт по плечу 30 см занимает около 1 нс.
+[visualizations/v05_optics_bench/viz.py] Спектр стопки очень частый: 1600 точек могут не разрешить все полосы на коротких волнах.
+[visualizations/v05_optics_bench/viz.py] Стекло n = 1.5 в воздухе под углом Брюстера (неполяризованный свет: отражаются только s)
+[visualizations/v05_optics_bench/viz.py] Толщины слоёв — λ₀/(4n) каждый.
+[visualizations/v05_optics_bench/viz.py] Фабри–Перо: плёнка n = 2.3 толщиной 2 мкм в воздухе (иллюстративно)
+[visualizations/v05_optics_bench/viz.py] пути пучков перестроены (среды или угол): фотонов в полёте потеряно {lost}
+[visualizations/v05_optics_bench/viz.py] сравнены и при θ ∓ 0,001 рад: |Δ| ≤ {max(w[0] for w in side):.2g} при допуске 
+[visualizations/v05_optics_bench/viz.py] формула Эйри в интенсивностях здесь не применима: {e}
+[visualizations/v05_optics_bench/web/view.js] Любое изменение установки (λ, угол, поляризация, среды, структура) применяется сразу и начинает новый отрезок. Фотоны, выпущенные до изменения источника или структуры, долетают и считаются переходными; при смене угла или сред пути пучков перестраиваются — фотоны в полёте теряются (это считается).
+[visualizations/v05_optics_bench/web/view.js] Скорость набора статистики (≈ 2000 фотонов в секунду)
+[visualizations/v05_optics_bench/web/view.js] Скорость, при которой виден полёт одного фотона (плечо ≈ 1,2 с)
+[visualizations/v05_optics_bench/web/view.js] структура — в масштабе, плечи 30 см — нет
+[visualizations/v06_qcd/viz.py] ln(μ²/M_Z²) из 1/(β₀a) + (β₁/β₀²) ln(...) при найденном α_s(500 ГэВ)
+[visualizations/v06_qcd/viz.py] «Что если» α_s(M_Z) = 0,15 (изменённая константа)
+[visualizations/v06_qcd/viz.py] α_s(M_Z) = {a0:g} изменена (что если): при 2 ГэВ ряд теории возмущений не сходится — это 
+[visualizations/v06_qcd/viz.py] Бег α_s(μ) от 1 ГэВ до 10 ТэВ по β-функции до четырёх петель (PDG 2024), цветовые казимиры, 
+[visualizations/v06_qcd/viz.py] Масса кварка в модели, ГэВ (0 = из модели EGKLY)
+[visualizations/v06_qcd/viz.py] При такой константе ряд теории возмущений при 2 ГэВ не сходится: проверка сходимости не 
+[visualizations/v06_qcd/viz.py] Сходимость ряда: α_s(2 ГэВ) в 3 и 4 петли
+[visualizations/v06_qcd/viz.py] Чем слабее связь на малых расстояниях и как модель удержания кварков соотносится с ядром КХД.
+[visualizations/v06_qcd/viz.py] кварки (c, b); для m_q < {MQ_MIN:g} ГэВ энергия связи сравнима с массой, и её уровни 
+[visualizations/v06_qcd/viz.py] ничего не значат (0 — масса из модели)
+[visualizations/v06_qcd/viz.py] параметры модели Корнелла изменены против подгонки EGKLY: 
+[visualizations/v06_qcd/viz.py] проходит ожидаемо
+[visualizations/v06_qcd/viz.py] соотношение развязки при μ = m_q(m_q) на {L - 1} петл{'ю' if L == 2 else 'и'} 
+[visualizations/v06_qcd/viz.py] спектр чармония и боттомония в модели Корнелла против измеренного.
+[visualizations/v06_qcd/viz.py] усечение β-функции — теоретическая неопределённость; порог 1 %
+[visualizations/v06_qcd/web/view.js] петли: 1 (серая), 2–4 (синие); выбранная — оранжевая; полоса — α_s(M_Z) ± 0,0009
+[visualizations/v07_bell_test/viz.py] {MODEL_LABEL[self.law.model]}: исход стороны = функция её настройки и λ 
+[visualizations/v07_bell_test/viz.py] {self.seg_counts['loc']} из {n} пар (по событиям каждой пары, lfphys.core.causality)
+[visualizations/v07_bell_test/viz.py] Без сигнала в законе (точно): маргинал одной стороны от настройки другой
+[visualizations/v07_bell_test/viz.py] Граница CHSH для локальных моделей: |S| ≤ 2 (с допуском 5σ)
+[visualizations/v07_bell_test/viz.py] Граница Цирельсона: |S| ≤ 2√2 (с допуском 5σ)
+[visualizations/v07_bell_test/viz.py] Кривая E(Δ): фотоны, фиксированные настройки a = b = 0° — двигайте b
+[visualizations/v07_bell_test/viz.py] Расстояние источник — станция L, м
+[visualizations/v07_bell_test/viz.py] Синглет спина ½, квантовая механика: оптимальные углы 0°, 90° / 45°, 135°, случайный выбор
+[visualizations/v07_bell_test/viz.py] Станции Алисы (−L) и Боба (+L) на одной прямой с источником; расстояние между ними 2L.
+[visualizations/v07_bell_test/viz.py] Станции передвинуты: пар в полёте потеряно {lost} 
+[visualizations/v07_bell_test/viz.py] Счёты совпадений начинаются заново; установка и пары в полёте те же.
+[visualizations/v07_bell_test/viz.py] Фотоны |Φ+⟩, квантовая механика: оптимальные углы CHSH 0°, 45° / 22.5°, 67.5°, 
+[visualizations/v07_bell_test/viz.py] Фотоны: выбор за 5 мкс до прихода (cτ > 2L) — лазейка локальности открыта
+[visualizations/v07_bell_test/viz.py] другая ячейка; S сводится к 2E одной пары углов, это не проверка CHSH; ошибка S считает каждую пару 
+[visualizations/v07_bell_test/viz.py] модели локальных скрытых параметров. Статистика — счёты совпадений этого запуска; ожидания закона 
+[visualizations/v07_bell_test/viz.py] модели, а не проверка; проверка по счётам запуска — в группе «Без сигнала»
+[visualizations/v07_bell_test/viz.py] набирается: в ячейке не меньше {NMIN} пар нужно для каждой из четырёх пар настроек
+[visualizations/v07_bell_test/viz.py] набирается: ожидание |S| = {abs(s['Sref']):.4f}; для 5σ нужно около 
+[visualizations/v07_bell_test/viz.py] настройки другой стороны совпадают: обе ячейки — одни и те же пары, разность равна 0 
+[visualizations/v07_bell_test/viz.py] переключателя). Выбор вне светового конуса регистрации на другой стороне, если cτ < 2L.
+[visualizations/v07_bell_test/viz.py] поиск нуля Δt′ по матрицам Лоренца (lfphys.core.relativity.boost_matrix)
+[visualizations/v07_bell_test/viz.py] тождественно (не проверка)
+[visualizations/v07_bell_test/viz.py] точек с N ≥ {NMIN}: {dof}; p = {p:.3g}; эталон χ² ≈ числу точек
+[visualizations/v07_bell_test/viz.py] фиксированный или случайный перед приходом частицы (вне светового конуса другой стороны). Счёты 
+[visualizations/v07_bell_test/viz.py] частица порознь — полностью неполяризована: её маргиналы 1/2 при любой настройке
+[visualizations/v07_bell_test/web/view.js] Полёт L/v = ${time(f.flight, 4)}. В полёте пар: ${cnt.in_flight} (показано ${nfl}). Исход + или − — в момент прихода частицы.
+[visualizations/v07_bell_test/web/view.js] Скорость набора статистики (≈2000 пар в секунду)
+[visualizations/v07_bell_test/web/view.js] Скорость, при которой виден полёт одной пары (≈2 с на пролёт)
+[visualizations/v07_bell_test/web/view.js] Справа — счёты совпадений N(±,±) для четырёх пар настроек, корреляции E с ошибкой и ожиданием закона мира, параметр S на шкале с границами 2 (любая локальная модель) и 2√2 (Цирельсон), и кривая E(Δ): точки — измерения этого запуска по всем использованным парам углов (двигайте b в режиме «фиксированн
+[visualizations/v07_bell_test/web/view.js] Счёты совпадений начинаются заново (действие «Сбросить статистику»)
+[visualizations/v08_wave_3d/engine/apparatus.py] {best.describe()}, а нужно ≤ {tol:.0e}. Уменьшите z_max или возьмите источник шире (свет уходит под 
+[visualizations/v08_wave_3d/tests/test_v08_wave3d.py] «Круглое отверстие» (a = 3 мкм, z_max = 40 мкм)
+[visualizations/v08_wave_3d/tests/test_v08_wave3d.py] Что изменить: уменьшите z_max
+[visualizations/v08_wave_3d/tests/test_v08_wave3d.py] возьмите источник шире (свет уходит под меньшими углами)
+[visualizations/v08_wave_3d/tests/test_v08_wave3d.py] окно расчёта мало для глубины z_max = 30 мкм: …, а нужно ≤ 2e-03. Уменьшите z_max или 
+[visualizations/v08_wave_3d/viz.py] (Гиббс), это свойство сетки, а не физики
+[visualizations/v08_wave_3d/viz.py] Гауссов пучок, w = 1,5 мкм: расходимость (проверка по интегралу)
+[visualizations/v08_wave_3d/viz.py] Квадратное отверстие, сетка 512: только срезы
+[visualizations/v08_wave_3d/viz.py] весь объём на сетке 512 занял бы ~1,6 ГБ: для 512 выберите «только срезы»
+[visualizations/v08_wave_3d/viz.py] и поворачиваются руками или параметрами, расчёт на CPU или GPU.
+[visualizations/v08_wave_3d/viz.py] максимальное отличие интенсивности, доля пика; {sl['reason']}
+[visualizations/v08_wave_3d/web/view.js] Окно каждого среза — справа от 3D, в цвете своей плоскости; наведение на окно подсвечивает плоскость. В окне: интенсивность, амплитуда, логарифм или фаза; оси в мкм; под курсором — координаты и значение; CSV — данные среза. Штриховка — зона у отверстия, где поле ограничено сеткой.
+[visualizations/v08_wave_3d/web/view.js] Срезы — плоскости под любым углом, до трёх. «＋ Срез» ставит следующую плоскость в середину области, перпендикулярно уже стоящим (и повёрнутым тоже). Щелчок по плоскости выбирает её: стрелка двигает её вдоль нормали, кольца наклоняют (W / E переключают); то же — числами в панели «Срез: положение и на
+[visualizations/v08_wave_3d/web/view.js] ≈ ${num(a.window, 2)} пика амплитуды (нужно ≤ ${num(a.tol, 2)})
+[visualizations/v09_thomas_3d/engine/loops.py] {2 * SEAM_BURNS} — в проверке); замкнутой формулы нет
+[visualizations/v09_thomas_3d/engine/loops.py] круг через покой (лучшее для плоских петель)
+[visualizations/v09_thomas_3d/engine/loops.py] неизвестная петля {kind!r}
+[visualizations/v09_thomas_3d/viz.py] θ из матриц Лоренца (буст u, затем буст v' = w, увиденная из u) против площади 
+[visualizations/v09_thomas_3d/viz.py] Неплоская корона из 6 импульсов
+[visualizations/v09_thomas_3d/viz.py] Прецессия Томаса: равномерное движение по окружности, γ = 1,34
+[visualizations/v09_thomas_3d/viz.py] Шов мяча на сфере скоростей (неплоский, 96 импульсов)
+[visualizations/v09_thomas_3d/viz.py] последний импульс рассчитан так, чтобы вернуть к покою; 
+[visualizations/v09_thomas_3d/viz.py] с (мировые часы; манёвр — годы)
+[visualizations/v09_thomas_3d/viz.py] угол SU(2) {math.degrees(h['su2_angle']):.6g}° (в [0, 360°]); знак спинора 
+[visualizations/v09_thomas_3d/web/view.js] Пространство скоростей — шар β = v/c; его граница — свет. Импульс постоянного направления — прямой отрезок (так устроена эта картина: геодезические — хорды). Для плоской петли поворот равен её площади (Гаусс–Бонне, кривизна −1), против обхода; для равномерного движения по окружности это 2π(γ − 1) за
+[visualizations/v09_thomas_3d/web/view.js] Топливо L — сумма быстрот (∫|a|dτ/c). Среди плоских петель с данным L наибольшую площадь охватывает круг: √(4π² + L²) − 2π (изопериметрическое неравенство плоскости Лобачевского). Для неплоских петель эта величина — линия сравнения, не доказанная граница.
+[visualizations/v10_fast_observer/viz.py] ; камера: {cam.kind}, взгляд ({', '.join(f'{c:.3f}' for c in cam.forward)}); изображение: 
+[visualizations/v10_fast_observer/viz.py] {int(m.sum())} пикселей: время излучения (отн. ко времени пути света) {e_t:.1e}, D {e_d:.1e}; 
+[visualizations/v10_fast_observer/viz.py] {int(m.sum())} пикселей; γ² = {gu:.4g}; допуск 16 ε γ² (округление бустов)
+[visualizations/v10_fast_observer/viz.py] Небо 4000 K при β = 0,9: диполь, звёзды стягиваются вперёд
+[visualizations/v10_fast_observer/viz.py] Поезд при β = 0,8 мимо столбов: удлинение и укорочение
+[visualizations/v10_fast_observer/viz.py] Показать, что быстрые тела не выглядят сплюснутыми (сокращение Лоренца не видно — видно поворот), 
+[visualizations/v10_fast_observer/viz.py] Полёт по улице при β = 0,9: аберрация, синий цвет впереди, яркость
+[visualizations/v10_fast_observer/viz.py] Пролёт куба и шара при β = 0,9: поворот Террелла, шар остаётся кругом
+[visualizations/v10_fast_observer/viz.py] задержка = (v − 1)/65534·delay_max; 0 — свет не от тела
+[visualizations/v10_fast_observer/viz.py] неизвестная сцена {kind!r}
+[visualizations/v10_fast_observer/viz.py] номер тела; −1 небо; −2 ничего
+[visualizations/v10_fast_observer/viz.py] преобразованный Лоренцем (аберрация); его прошлый световой луч найден до тела, которое его 
+[visualizations/v10_fast_observer/viz.py] температура покоя, K (округлена)
+[visualizations/v11_double_slit_2d/tests/test_v11_double_slit_2d.py] The probability an event names («было 0,0095 вероятности», «было 4,3·10⁻⁶ вероятности»).
+[visualizations/v11_double_slit_2d/tests/test_v11_double_slit_2d.py] было ([0-9,]+)(?:·10([⁻⁰¹²³⁴⁵⁶⁷⁸⁹]+))? вероятности
+[visualizations/v11_double_slit_2d/viz.py] N = {N}; допуск 3,3σ биномиального разброса
+[visualizations/v11_double_slit_2d/viz.py] {K} частиц проинтегрированы ещё раз в той же волне в {CONTROL_TIGHT} раза строже; из {int(both.sum())} 
+[visualizations/v11_double_slit_2d/viz.py] {n} попаданий; y каждого — y₀·σy(t)/σy (точная формула прогона) против dy/dt = j/|η|², 
+[visualizations/v11_double_slit_2d/viz.py] {n} попаданий; расстояние между их распределением по x и картиной потока; критическое 
+[visualizations/v11_double_slit_2d/viz.py] {n} попаданий; эталон — распределение по y потока в экран, Σ_t J(x, t)|η(y, t)|²; критическое 
+[visualizations/v11_double_slit_2d/viz.py] {self.t_end_est / self.pair:.0f} пар шагов): уменьшите экран, пакет или выберите сетку грубее
+[visualizations/v11_double_slit_2d/viz.py] Σ_y P(x, y) Δy против потока в экран по x; {NY_SCREEN} полос по y на ±{self.y_half:.3g} λ, 
+[visualizations/v11_double_slit_2d/viz.py] Метка пути: спин в щели B повёрнут на 180° — полосы почти гаснут, траектории пересекают ось
+[visualizations/v11_double_slit_2d/viz.py] Наблюдатель у щели B: детектор пути (θ = 180°) у атома ⁴He без спина — полосы почти гаснут
+[visualizations/v11_double_slit_2d/viz.py] Узкие щели a = 2λ: дифракция на большие углы, параксиальная теория не годится
+[visualizations/v11_double_slit_2d/viz.py] Частичная метка: поворот на 90°, видность cos 45°
+[visualizations/v11_double_slit_2d/viz.py] Щели a = 6λ в тонкой высокой стенке: ближе к параксиальной теории (отличие ~λ/a)
+[visualizations/v11_double_slit_2d/viz.py] выберите «Полёт: через две щели» (новый мир)
+[visualizations/v11_double_slit_2d/viz.py] значение 99,9 %: 1,95/√n = {crit:.3g} (эквивариантность: старт по |ψ|² → попадания по потоку)
+[visualizations/v11_double_slit_2d/viz.py] значение 99,9 %: 1,95/√n = {crit:.3g}. Проверяет старты по |η₀|²; движение по y так не 
+[visualizations/v11_double_slit_2d/viz.py] метка пути выключена: выберите в «Метка пути в щели B» спин частицы или детектор
+[visualizations/v11_double_slit_2d/viz.py] метки пути в этом мире нет: выберите спин или детектор в «Метка пути в щели B» (новый мир)
+[visualizations/v11_double_slit_2d/viz.py] на экран пришло {n} частиц: мало для сравнения
+[visualizations/v11_double_slit_2d/viz.py] попавших в обоих случаях 95 % отличаются не больше чем на {p95:.2g} λ, наибольшее — 
+[visualizations/v11_double_slit_2d/viz.py] пути спином для неё не определена — выберите электрон или нейтрон, или детектор пути
+[visualizations/v11_double_slit_2d/viz.py] различить (η за полёт расплывается на {100 * grow:.3g} %) — его проверяет «Движение частиц 
+[visualizations/v11_double_slit_2d/viz.py] разрешает — выберите сетку мельче или края шире
+[visualizations/v11_double_slit_2d/viz.py] шаг сетки λ/{1 / g.d[0]:.3g}; k_max = π/шаг; нужно ≥ 2,4·k₀ (спектр пакета и 
+[visualizations/v11_double_slit_2d/web/view.js]  параксиальная теория (Френель, Кирхгоф) · 
+[visualizations/v11_double_slit_2d/web/view.js] отражены пластиной
+[visualizations/v12_arrival_times_2d/engine/apparatus.py] неизвестное начальное состояние: {state}
+[visualizations/v12_arrival_times_2d/tests/test_v12_arrival_times_2d.py] s «Начать новый мир» without a scenario sends the header
+[visualizations/v12_arrival_times_2d/viz.py] АБК, полуклассическое и поглощающая граница — для свободного полёта и разделимого состояния 
+[visualizations/v12_arrival_times_2d/viz.py] Близко к источнику (σz = 1λ, L = 5λ): правила расходятся
+[visualizations/v12_arrival_times_2d/viz.py] Цепочка из 4 пакетов: экспоненциальные правила гасят поздние пики (Das & Struyve 2021)
+[visualizations/v12_arrival_times_2d/viz.py] критическое значение 99,9 %: 1,95/√n = {crit:.3g}
+[visualizations/v12_arrival_times_2d/viz.py] отношения соседних пиков: поток {', '.join(f'{v:.3f}' for v in r_flux)} (ожидается ≈ 1 с 
+[visualizations/v12_arrival_times_2d/viz.py] поправкой на расплывание), Влодаж {', '.join(f'{v:.3f}' for v in r_w)} против 
+[visualizations/v12_arrival_times_2d/web/view.js] медленный (k₀/4, амплитуда 1,5) впереди и быстрый (k₀) позади; встречаются у плоскости
+[visualizations/v13_hydrogen_3d/engine/atoms.py] ион ⁴He⁺: электрон и α-частица (Z = 2)
+[visualizations/v13_hydrogen_3d/tests/test_v13_hydrogen3d.py] приготовлено состояние 3d_z²
+[visualizations/v13_hydrogen_3d/viz.py] 1e-12 + 10 × разность при удвоенном числе панелей
+[visualizations/v13_hydrogen_3d/viz.py] 2p, m = +1 комплексная: бублик и кольцевой ток
+[visualizations/v13_hydrogen_3d/viz.py] 2p_x + i·2p_y: это 2p с m = +1 (суперпозиция одной энергии, стационарна)
+[visualizations/v13_hydrogen_3d/viz.py] 3d, m = +2 комплексная: ток кольцами вокруг z
+[visualizations/v13_hydrogen_3d/viz.py] n = 10, l = 3, m = 1: большое облако, 6 радиальных узлов
+[visualizations/v13_hydrogen_3d/viz.py] Доля вероятности в шаре, который вписан в куб сцены
+[visualizations/v13_hydrogen_3d/viz.py] Ион He⁺, 3d_xy: облако в Z = 2 раза меньше
+[visualizations/v13_hydrogen_3d/viz.py] По умолчанию 1s: «Суперпозиция» с первым состоянием по умолчанию (2p_z) — облако, качающееся с частотой 
+[visualizations/v13_hydrogen_3d/viz.py] вероятности кольцами вокруг оси z. 
+[visualizations/v13_hydrogen_3d/viz.py] выберите другое m или вид орбитали (вещественная / 
+[visualizations/v13_hydrogen_3d/viz.py] выберите другое n, l или m второго состояния (группа «Суперпозиция»)
+[visualizations/v13_hydrogen_3d/viz.py] комплексная) второго состояния
+[visualizations/v13_hydrogen_3d/viz.py] сетка облака: {self.ng} точек на ось — облако пересчитано; состояние и его время те же
+[visualizations/v13_hydrogen_3d/viz.py] смены знака R(r) на сетке 400 001 точек
+[visualizations/v13_hydrogen_3d/viz.py] шар радиуса {self.rb * Lu:.4g} Å выбран так, чтобы снаружи было ≤ 1e-3
+[visualizations/v13_hydrogen_3d/web/view.js] Облако в 3D хранит амплитуду в 8 битах (как и текстура): значения |ψ|² меньше 1,5·10⁻⁵ пика рисуются нулём; точные значения — в окнах срезов.
+[visualizations/v13_hydrogen_3d/web/view.js] Облако — плотность вероятности |ψ|² найти электрон в точке (координата электрона относительно ядра; движение центра масс отделено, отсюда приведённая масса μ). Волновая функция — точное решение уравнения Шрёдингера: R_nl(r) (полиномы Лагерра) × Y_lm(θ, φ); её считает движок в этом запуске, на сетке 
+[visualizations/v13_hydrogen_3d/web/view.js] Состояние меняется на ходу (слева, «Установка»): новое n, l, m, вид орбитали или суперпозиция приготовлены в текущий момент — мир, его время и срезы остаются, облако, ток, срезы и проверки посчитаны для нового состояния, а период суперпозиции отсчитывается от момента подготовки. Подготовка идеальная
+[visualizations/v13_hydrogen_3d/web/view.js] Справа: состояние (энергия, ⟨r⟩ — квадратурой и по формуле), радиальное распределение r²|R|² (его максимумы — «оболочки», нули — радиальные узлы) и уровни энергии (выделены уровни этого мира). Проверки: нормировка, ⟨r⟩, энергия ⟨T⟩ + ⟨V⟩ по самой волновой функции против формулы Бора, число узлов, то
+[visualizations/v14_quarkonium_3d/engine/pair.py] состояния L = {L} не помещаются в ящик {R:.3g} ГэВ⁻¹
+[visualizations/v14_quarkonium_3d/viz.py] (вещественная / комплексная) второго состояния
+[visualizations/v14_quarkonium_3d/viz.py] cc̄ 1P, m = +1 комплексная: кольцевой ток
+[visualizations/v14_quarkonium_3d/viz.py] выберите другое m или вид угловой части 
+[visualizations/v14_quarkonium_3d/viz.py] выберите другое n, L или m второго состояния (группа «Суперпозиция»)
+[visualizations/v14_quarkonium_3d/viz.py] расхождение двух радиальных решений (их точность — проверка «сходимость») и округление гармоник
+[visualizations/v14_quarkonium_3d/viz.py] шар радиуса {self.rb * self.Lu:.4g} фм выбран так, чтобы снаружи было ≤ 1e-3
+[visualizations/v14_quarkonium_3d/web/view.js] Облако — плотность вероятности |ψ|² для вектора r между кварком и антикварком (центр масс в начале координат). Радиальные функции — численное решение радиального уравнения (синус-базис, экстраполяция Ричардсона); его точность проверяется вторым решением на более мелкой сетке («сходимость»: разница м
+[visualizations/v14_quarkonium_3d/web/view.js] Пара тяжёлых кварков (cc̄ — чармоний, bb̄ — боттомоний) в модели Корнелла: кулоновское притяжение обмена глюоном на малых расстояниях и линейно растущая «струна» конфайнмента. Модель нерелятивистская, без спиновых сил, её параметры подогнаны под спектр; она предсказывает расщепления уровней (1P − 1S
+[visualizations/v14_quarkonium_3d/web/view.js] Суперпозиция 1S + 1P колеблется с частотой перехода модели (период ~10⁻²³ с): фазы открываются, когда до них доходит время мира.
+[visualizations/v15_kerr_shadow/viz.py] (при a ≤ 0,5 — любое на ползунке)
+[visualizations/v15_kerr_shadow/viz.py] 163° — так EHT сравнивал снимки M87* при a > 0 (17° при a ≤ 0; EHT 2019 Paper V, рис. 8): джет к нам под 
+[visualizations/v15_kerr_shadow/viz.py] 17°, спин дыры — от нас; 90° — диск с ребра
+[visualizations/v15_kerr_shadow/viz.py] ; ISCO = {o['isco_pro']:.4g} M — край области, где круговые орбиты вообще есть (внутри до 
+[visualizations/v15_kerr_shadow/viz.py] J ∝ r⁻² от внутреннего края до 20 M
+[visualizations/v15_kerr_shadow/viz.py] M87*: a = 0,9, наклон 163° (как у EHT при a > 0), диск Каннингема — тень, кольцо линзирования, 
+[visualizations/v15_kerr_shadow/viz.py] M87*: отклонение размера тени от керровского (та же a и θ) против EHT 2019 ±{s:.2f}
+[visualizations/v15_kerr_shadow/viz.py] Sgr A*: a = 0,5, наклон 30°, сравнение с EHT 2022
+[visualizations/v15_kerr_shadow/viz.py] {int(cmp.sum())} значений дальше 0,05 M от кривой, исход — у всех пикселей строки
+[visualizations/v15_kerr_shadow/viz.py] {sz['median_diameter'] * th_g:.4g} мкс дуги (кольцо EHT 42 ± 3 мкс дуги — кольцо 
+[visualizations/v15_kerr_shadow/viz.py] Диск с ребра (θ = 90°), a = 0,99: тень сплюснута, кольца несимметричны
+[visualizations/v15_kerr_shadow/viz.py] Допустимые значения зависят от спина и других α. При a = 0,9 и остальных α = 0 — α₁₂ ≥ −1,47 
+[visualizations/v15_kerr_shadow/viz.py] Допустимые значения зависят от спина и других α. При a = 0,9 и остальных α = 0 — от −2,06 до 5,13 
+[visualizations/v15_kerr_shadow/viz.py] Край тени: где луч перестаёт захватываться против кривой Бардина (отн.)
+[visualizations/v15_kerr_shadow/viz.py] Показать, откуда берётся тень и кольца на снимках EHT, как их форма зависит от спина и наклона, и чем 
+[visualizations/v15_kerr_shadow/viz.py] Размер тени δ по краю трассировщика против замкнутой формы
+[visualizations/v15_kerr_shadow/viz.py] Узкое кольцо газа у 6 M: видны его изображения n = 0, 1, 2
+[visualizations/v15_kerr_shadow/viz.py] Что если: метрика Йоханнсена α₁₃ = 3 — тень больше, сравнение с EHT
+[visualizations/v15_kerr_shadow/viz.py] внутренняя граница устойчивых круговых орбит (ISCO) не найдена до 200 M
+[visualizations/v15_kerr_shadow/viz.py] горизонтом и 12 M (их несколько или нет): край тени здесь не вычисляется.
+[visualizations/v15_kerr_shadow/viz.py] ломаная из 721 точки может отойти от самой кривой); несовпадений {bad}
+[visualizations/v15_kerr_shadow/viz.py] метрика Йоханнсена здесь — при a < M
+[visualizations/v15_kerr_shadow/viz.py] нет круговой фотонной орбиты между горизонтом и 60 M
+[visualizations/v15_kerr_shadow/viz.py] нет устойчивых круговых орбит даже на 200 M
+[visualizations/v15_kerr_shadow/viz.py] одной полосой: иначе мир не создаётся и называет значения, которые примет. При a = 0,9 и остальных 
+[visualizations/v15_kerr_shadow/viz.py] узкое кольцо у r = 6 M (ширина 0,3 M)
+[visualizations/v15_kerr_shadow/viz.py] фотонной орбиты Ω² < 0: тяготение там отталкивает)
+[visualizations/v15_kerr_shadow/web/view.js] ISCO по / против (этой метрики)
+[visualizations/v15_kerr_shadow/web/view.js] Каждый пиксель — фотон, прослеженный назад: в тени он упал в дыру; снаружи — где пересёк плоскость диска: n — номер пересечения по лучу назад. При умеренном наклоне n = 0 — прямое изображение диска, n = 1 — кольцо линзирования, n = 2 — фотонное кольцо; почти с ребра (θ ≳ 75°) лучи ниже центра сначал
+[visualizations/v15_kerr_shadow/web/view.js] Яркость — модель источника: тонкий диск, каждое пересечение даёт g⁴J(r) (болометрическая яркость), без поправки на толщину диска и длину пути луча в нём (у Gralla, Lupsasca и Marrone 2020 — множитель 1,5 для n ≥ 1, у Chael и др. 2021 — g³ и 2/3); шкала — по 99,5-му процентилю посчитанных пикселей.
+[visualizations/v16_optical_vortices/engine/apparatus.py] {MATRIX_BUDGET / 1e9:.2g} ГБ): уменьшите длину области, w0 или |l|, или увеличьте λ
+[visualizations/v16_optical_vortices/engine/apparatus.py] мир слишком дорог: таблица поля {len(self.r)} радиусов × {self.cost['nq']} узлов квадратуры — 
+[visualizations/v16_optical_vortices/engine/apparatus.py] распространяющегося пучка нет (предел {100 * DROP_REFUSE:.3g} %): увеличьте w0 или уменьшите λ, 
+[visualizations/v16_optical_vortices/engine/apparatus.py] сетка {n} точек на {2 * self.half:.3g} мкм грубее λ/2: уменьшите z или увеличьте период
+[visualizations/v16_optical_vortices/tests/test_v16_optical_vortices.py] до ([\d.]+) мкм или меньше
+[visualizations/v16_optical_vortices/viz.py] 2ħ на фотон, у векторного L_z = l + σ(1 − ⟨cos θ⟩)
+[visualizations/v16_optical_vortices/viz.py] P_z, проинтегрированный по окну на трёх глубинах: {', '.join(f'{v:.6g}' for v in fl)}; 
+[visualizations/v16_optical_vortices/viz.py] RK4, {FLOW_STEPS} шагов по z; две линии пересчитаны с вдвое меньшим шагом — наибольшее 
+[visualizations/v16_optical_vortices/viz.py] w0 = {w0:g} мкм, наименьшую, при которой они расходятся с запасом 20 %: пучок шире, область длиннее 
+[visualizations/v16_optical_vortices/viz.py] |E|² / пик на сетке 56³ (за вращающимся элементом не считается); точные значения — в срезах
+[visualizations/v16_optical_vortices/viz.py] Острая фокусировка: l = 1, σ = −1, w0 = 0,6 λ — продольное поле и спин-орбитальное расщепление
+[visualizations/v16_optical_vortices/viz.py] Призма Дове вращается: сдвиг частоты 2|l|f у пучка l = 2
+[visualizations/v16_optical_vortices/viz.py] Свет с частотой ~10¹⁵ Гц показан замедленно: один оптический период за это время мира.
+[visualizations/v16_optical_vortices/viz.py] Спиральная фазовая пластинка, l = 2: заряд 2, не одна мода LG; орбитальный момент скалярного поля 
+[visualizations/v16_optical_vortices/viz.py] Таблица поля против прямого расчёта (24 точки + 18 на ярком кольце)
+[visualizations/v16_optical_vortices/viz.py] а при потере больше 10 % мощности источника не строится.
+[visualizations/v16_optical_vortices/viz.py] момент, переносимый через плоскость, на фотон, прошедший через неё: l + σ точно
+[visualizations/v16_optical_vortices/viz.py] сумма зарядов ячеек сетки в круге радиуса 1,3 w(z) вокруг порядка (обход по его границе); эталон m·l
+[visualizations/v16_optical_vortices/viz.py] сумма скачков фазы по окружности r = {r_ring:.3g} мкм (самое яркое кольцо), 720 точек; эталон — l
+[visualizations/v16_optical_vortices/viz.py] точный путь углового спектра (тот же, что объём)
+[visualizations/v16_optical_vortices/web/view.js] Модель: «точная» — векторное решение уравнений Максвелла (сумма плоских волн спиральности σ, только распространяющиеся волны: при w0 ≲ λ часть спектра источника за q = k отброшена — мир это помечает, а если отброшено больше 10 % мощности, не строится); «параксиальная» — мода Лагерра–Гаусса на одноро
+[visualizations/v16_optical_vortices/web/view.js] — (нужно 128 отсчётов: два оборота)
+[visualizations/v17_mie_scattering/viz.py] 12 точек окружности пересечения среза с каплей, в 10⁻¹⁰ a снаружи и внутри
+[visualizations/v17_mie_scattering/viz.py] 24 точки поверхности, поле в 10⁻¹⁰ a снаружи и внутри; допуск — изменение поля на этом 
+[visualizations/v17_mie_scattering/viz.py] {w['n']} напечатанных величин (Q_ext, Q_sca, g, S₁(0), S₁(90°), S₂(90°), S₁(180°)) — 
+[visualizations/v17_mie_scattering/viz.py] ~2,7 мкм (x ≤ 45 на всех длинах волн)
+[visualizations/v17_mie_scattering/viz.py] Ближнее поле: капля 1 мкм в свете 550 нм — фокус внутри и за каплей
+[visualizations/v17_mie_scattering/viz.py] Глория: облачные капли 8 мкм ± 10 % — цветные кольца у антисолнечной точки
+[visualizations/v17_mie_scattering/viz.py] Движок против опубликованных значений Уискомба (1979, x = 100, m = 1,5 и 1,5 − 0,1i)
+[visualizations/v17_mie_scattering/viz.py] Длин волн белого света (380–760 нм)
+[visualizations/v17_mie_scattering/viz.py] Дополнительные дуги: одинаковые капли 0,1 мм ± 0,5 %
+[visualizations/v17_mie_scattering/viz.py] Капли дождя — 0,1–1 мм, тумана — 5–50 мкм, облака — 2–20 мкм. Ближнее поле считается для капель до 
+[visualizations/v17_mie_scattering/viz.py] Крупные капли 0,3 мм ± 10 %: дополнительные дуги размыты (тяжёлый расчёт, ~минута)
+[visualizations/v17_mie_scattering/viz.py] Небо: самый яркий угол основной дуги (белый свет) против Декарта при 550 нм
+[visualizations/v17_mie_scattering/viz.py] Поглощающий шар 2 мкм, n = 1,6 + 0,05i: внутренние лучи гаснут, радуги нет
+[visualizations/v17_mie_scattering/viz.py] Показатель воды IAPWS при 589 нм и 0 °C против таблицы проверки (табл. 3)
+[visualizations/v17_mie_scattering/viz.py] Радуга: капли 0,15 мм ± 2 % в солнечном свете — основная и вторичная дуги, полоса 
+[visualizations/v17_mie_scattering/viz.py] Рассеянный свет, неполяризованный падающий (лог. шкала, 5 порядков)
+[visualizations/v17_mie_scattering/viz.py] Солнца (0,5°) не учтён: дуги в небе ещё размыты на полградуса
+[visualizations/v17_mie_scattering/viz.py] Туманная радуга: капли 15 мкм ± 15 % — широкая белая дуга
+[visualizations/v17_mie_scattering/viz.py] арифметику mie.mueller; наибольшее отклонение по 361 углу, отн.
+[visualizations/v17_mie_scattering/viz.py] зазоре (20 x |m|² · 10⁻¹⁰) плюс округление. Проверяет сборку полей (сферические гармоники, 
+[visualizations/v17_mie_scattering/viz.py] измените показатель капли или «Показатель среды вокруг» так, чтобы |m − 1| ≥ 10⁻³, или 
+[visualizations/v17_mie_scattering/viz.py] иллюстративном n_воздуха − 1 = 2,77·10⁻⁴)
+[visualizations/v17_mie_scattering/viz.py] капли слишком крупные: x > 2·10⁴ на 380 нм (предел проверенной точности ряда)
+[visualizations/v17_mie_scattering/viz.py] максимум |S^({p})|² по ряду Дебая (сетка 0,05°) — {self.measured_bows[p]:.3f}°, 
+[visualizations/v17_mie_scattering/viz.py] меньше в n_воздуха раз, и углы дуг сдвигаются на доли градуса (для воды при 10 °C и 
+[visualizations/v17_mie_scattering/viz.py] наибольшая ошибка 0,1–3 этой оценки), не граница и не ошибка в каждом угле; узкие резонансы 
+[visualizations/v17_mie_scattering/viz.py] наибольшее отклонение по {N} порядкам. Тождество формы ряда: верно при любых Dₙ, ψₙ, 
+[visualizations/v17_mie_scattering/viz.py] небо досчитано: {len(lams)} длин волн, капли {self.r_um:g} мкм ± {100 * self.width:g} %
+[visualizations/v17_mie_scattering/viz.py] ряда Ми (Dₙ вниз, ψₙ по Миллеру, χₙ вверх), по всем {c['N']} порядкам, в долях 
+[visualizations/v17_mie_scattering/viz.py] с (время мира: одна длина волны за 0,5 с)
+[visualizations/v17_mie_scattering/viz.py] солнечный (белый): чёрное тело 5772 K
+[visualizations/v17_mie_scattering/viz.py] солнечный свет — чёрное тело 5772 K (без линий поглощения и атмосферы); угловой размер 
+[visualizations/v17_mie_scattering/viz.py] угловые функции и сумму при θ = 0, а не aₙ, bₙ; N = {N} членов, допуск — 100 N ε округления
+[visualizations/v17_mie_scattering/viz.py] яркость Y по {len(lams)} длинам волн, размер {self.r_um:g} мкм ± 
+[visualizations/v17_mie_scattering/web/view.js] : среднее по ячейкам 0,05° из ${M.meta.n_fine} точек, серая полоса — мелкая интерференционная рябь внутри ячейки (её минимум и максимум)
+[visualizations/v17_mie_scattering/web/view.js] Для этой капли лучевой радуги нет (нужно 1 < m < 2 для p = 2).
+[visualizations/v17_mie_scattering/web/view.js] Небо: облако капель разного размера (гамма-распределение) в солнечном свете. С каждым шагом времени мира прибавляется одна длина волны: свет капель всех размеров при ней, умноженный на спектр Солнца (чёрное тело 5772 K), переводится в цвет; окно неба рисует этот цвет вокруг антисолнечной точки (Солн
+[visualizations/v17_mie_scattering/web/view.js] Цветные — члены ряда Дебая (той же капли): каждый — свет одного пути через каплю (p = 0–3 показаны; p ≥ 4 — остаток ряда); сумма всех p с интерференцией даёт белую кривую.
+[visualizations/v17_mie_scattering/web/view.js] Цветные — члены ряда Дебая p = 0–3 той же капли. Для этой капли ряд расходится на ${dbg.diverging_orders} порядках (|R¹¹| > 1) и члены до ${num(dbg.amplification, 2)} раз больше полного ответа: это не пути света, а сокращающиеся слагаемые; белую кривую даёт их сумма в замкнутом виде.

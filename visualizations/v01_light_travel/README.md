@@ -1,5 +1,7 @@
 # v01 — Light over large distances
 
+**English** | [Русский](README.ru.md)
+
 Finite speed of light from the Sun to the Earth, light cones, gravitational bending and delay, the speed of light
 measured by observers at rest and moving along or against the light, synchronisation of clocks, relativity of
 simultaneity (the Andromeda paradox), Doppler and gravitational redshift. Owner guide: `../README.md`; rules:
@@ -33,13 +35,14 @@ slice and applies the matrices the run sends.
 
 GR requires SR and Newtonian corpuscles require the emission theory (`Laws.validate`). When one law is changed and the
 other is left at its standard value, the world takes the nearest law that goes with it and says so (a notice, the
-scenario's text; the header's parameters and the "modified physics" list are the ones in force; review UX-params P12,
+scenario's text; the header's parameters and the list "Modified physics:" are the ones in force; review UX-params P12,
 2026-11-05): ether + GR → ether without gravity (the body only absorbs light); emission + GR → emission + Newtonian
 corpuscles; Newtonian corpuscles + SR → emission. In a scene without a gravitating body (measuring c, Andromeda) the
-gravity law has nothing to act on and is set to «Без гравитации». Two changed laws that do not go together (ether +
-Newtonian corpuscles with a body) are refused, saying what to change. A lens of radius 0 (a black hole) is GR's object:
-without GR it is given the horizon's radius 2GM/c² of its mass (the preset «lensing_newton»'s choice), said too.
-Walkers faster than this world's light (Andromeda, SR) are refused with the numbers to change (P7).
+gravity law has nothing to act on and is set to "No gravity". Two changed laws that do not go together (ether +
+Newtonian corpuscles with a body) are refused, saying what to change. A lens of radius 0 (a black hole) is GR's
+object: without GR it is given the horizon's radius 2GM/c² of its mass (the choice of the preset
+"Newtonian corpuscles at a black hole (modification)", `lensing_newton`), said too. Walkers faster than this world's
+light (Andromeda, SR) are refused with the numbers to change (P7).
 
 ## Scenarios (presets)
 
@@ -54,7 +57,7 @@ Walkers faster than this world's light (Andromeda, SR) are refused with the numb
   infinite-path deflection with Darwin's closed form. The observer receives two images of the flash at different times.
 * **Andromeda.** Three observers pass each other on Earth at t = 0 (walking ±1.4 m/s, or ±0.5c); an event at
   Andromeda at lab time 0. Their simultaneity lines differ by v·D/c² ≈ ±4.26 days at 2.5 Mly; the diagram button
-  "у Андромеды ±10 сут" shows it. Light from the event reaches Earth 2.5 Myr later for everybody.
+  "at Andromeda ±10 d" shows it. Light from the event reaches Earth 2.5 Myr later for everybody.
 
 ## Actions (in the run)
 
@@ -79,7 +82,7 @@ gravitational redshift).
 | deflection at infinity | Darwin (1959) elliptic-integral form |
 | simultaneity at Andromeda | v·D/c² (SR), 0 (absolute time) |
 | local speed of light (GR, static observer, rod of 10⁻³ r) | the same finite radial rod in closed form (→ c as the rod shrinks); the coordinate speed c(1 − rs/r) is shown next to it |
-| flight time in flat runs; clock rate of the static station | marked "Самосогласованность": residuals of the solved equations, not independent checks; the flight time is summed from the solved interval (not a difference of absolute times, which at t ~ 4·10¹¹ s lost 3·10⁻⁸ of it: review UX-params P14 [error in earlier]), and the tolerance adds the round-off of the receiver's position taken at the absolute time, 4ε(\|v\|\|t\| + \|x\|)/(cΔt) |
+| flight time in flat runs; clock rate of the static station | marked "Self-consistency": residuals of the solved equations, not independent checks; the flight time is summed from the solved interval (not a difference of absolute times, which at t ~ 4·10¹¹ s lost 3·10⁻⁸ of it: review UX-params P14 [error in earlier]), and the tolerance adds the round-off of the receiver's position taken at the absolute time, 4ε(\|v\|\|t\| + \|x\|)/(cΔt) |
 
 ## Approximations and limits (stated, not hidden)
 

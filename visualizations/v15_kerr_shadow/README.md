@@ -1,5 +1,7 @@
 # v15 — the shadow of a Kerr black hole and its photon rings; what if the hole is not Kerr
 
+**English** | [Русский](README.ru.md)
+
 A wrapper over the engine `lfphys` (plan item P14.3, on P7, P10, P11). What a distant observer sees of a rotating black
 hole lit by a thin equatorial disk of gas: the shadow, the lensing ring and the photon ring, computed pixel by pixel in
 the 3-D environment of the player, with the horizon, the ergosphere, the disk, the equatorial photon orbits, the ISCO,
@@ -45,8 +47,8 @@ with the Event Horizon Telescope's measurements.
   ISCO; numerically, Johannsen 2013a Eq. 83) and ergosphere (g_tt = 0, his Eq. 69), shown in the scene and the panel
   with Kerr's for comparison; it does not ray-trace the disk in that metric, and the screen shows only the two edges
   (the deviating one and Kerr's with the same spin).
-* **The 3-D scene** has the spin axis up. Views: «Изо»; «Наблюдатель» — from the observer's direction (the arrow), as
-  on the screen; «С ребра» — the disk edge-on; «С полюса» — along the spin axis.
+* **The 3-D scene** has the spin axis up. Views: "Iso"; "Observer" — from the observer's direction (the arrow), as
+  on the screen; "Edge-on" — the disk edge-on; "From the pole" — along the spin axis.
 
 ## Checks shown live
 
@@ -89,7 +91,7 @@ checks come when the image is complete and the size measured on the traced edge 
 Bardeen and √27 M, and a = 0.998 at 81° (which failed a fixed tolerance) within the derived bound; the pixels compared
 up to ~10⁻⁴ M of the curve; M87* in its own definition of δ and a what-if world inside ±0.17; a what-if world computes
 its edge, its own orbits and ergosphere and refuses a metric not regular outside the horizon, or without a single
-band of photon orbits, in Russian, naming for each deviation the values it takes with the others as they are
+band of photon orbits, in the viewer's language, naming for each deviation the values it takes with the others as they are
 (`johannsen_metric.admissible_intervals`; review UX-params P6 — the refusals were the engine's English); a metric with
 a band without circular geodesics (Ω² < 0) builds, its ISCO the band's outer edge (against a 40-digit root); the views and the
 spin axis up; the rays, the orbits and the horizon's surface. The shared tests continue the world from a checkpoint byte for byte

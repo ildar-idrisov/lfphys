@@ -1,0 +1,1052 @@
+1. number placeholder followed by a word that may need agreement (units and function words skipped)
+  [engine] ball: the radius {r:.4g} is less than {k:.2f} edge widths {w:.4g}: the profile has a kink at the centre (a cone, slope {slope:.2g} of the steepest) and does not reach the height (only {frac:.3g} of it); make the ball larger or the edge narrower (the grid finer)
+      -> шар: радиус {r:.4g} меньше {k:.2f} ширины края {w:.4g}: в центре у профиля излом (конус, наклон {slope:.2g} от наибольшего) и он не достигает высоты (только {frac:.3g} её); сделайте шар больше или край уже (сетку мельче)
+      at ['{k:.2f} ширины']
+  [engine] environment: the localization length a = {a} is less than {k} grid steps — the Gaussian jump is not resolved
+      -> среда: длина локализации a = {a} меньше {k} шага сетки — гауссов скачок не разрешён
+      at ['{k} шага']
+  [engine] flux plane #{plid} ({ax} = {pos:.4g}) is outside the new window or closer than {n} steps to its edge
+      -> плоскость потока #{plid} ({ax} = {pos:.4g}) вне нового окна или ближе {n} шагов к его краю
+      at ['{n} шагов']
+  [engine] new grid: {n} point counts needed
+      -> новая сетка: нужно {n} чисел точек
+      at ['{n} чисел']
+  [engine] particle {pid} was absorbed by a detector: there is no wave
+      -> частица {pid} поглощена детектором: волны нет
+      at ['{pid} поглощена']
+  [engine] particle {pid} was registered by a detector: there is no wave — nothing to move or accelerate
+      -> частица {pid} зарегистрирована детектором: волны нет — переносить или разгонять нечего
+      at ['{pid} зарегистрирована']
+  [engine] particle {pid}: at the faces of the present window ({cells} outermost cells) lies {share:.3g} of its probability, more than the tolerance {tol}: the grid is periodic, this part of the wave continues from the other side of the window, and in a larger window its continuation would be cut off
+      -> частица {pid}: у граней прежнего окна ({cells} крайние ячейки) — {share:.3g} её вероятности, больше допуска {tol}: сетка периодична, эта часть волны продолжается с другой стороны окна, а в большем окне её продолжение оборвалось бы
+      at ['{cells} крайние']
+  [engine] particle {pid}: beyond the band of the new grid (|k| ≥ π/step = {kn:.4g}) lies {share:.3g} of its wave's norm, more than the tolerance {tol}: coarsening the grid would discard it
+      -> частица {pid}: за полосой новой сетки (|k| ≥ π/шаг = {kn:.4g}) — {share:.3g} нормы её волны, больше допуска {tol}: огрубление сетки отбросило бы их
+      at ['{share:.3g} нормы']
+  [engine] particle {pid}: with the momentum ħΔk, Δk = {dk}, {share:.3g} of its wave's spectrum would leave the grid's band (π/step = {kn:.4g}) — more than the tolerance {tol}
+      -> частица {pid}: с импульсом ħΔk, Δk = {dk}, за полосу сетки (π/шаг = {kn:.4g}) вышло бы {share:.3g} спектра её волны — больше допуска {tol}
+      at ['{share:.3g} спектра']
+  [engine] probe point: {n} coordinates
+      -> точка датчика: {n} координаты
+      at ['{n} координаты']
+  [engine] region: {n} coordinates
+      -> область: {n} координаты
+      at ['{n} координаты']
+  [engine] source: {n} coordinates
+      -> источник: {n} координаты
+      at ['{n} координаты']
+  [engine] the incident wave's series are not zero at the start of the run (the window's tail {tail:.2g} of the peak > {lim}; it does not depend on the window's length): the pulse has spectrum at the edge of the band of propagating waves (a Bloch wave's cut-off or the grid's band edge), where the spectrum is cut sharply, and the grid's wave has a precursor before the start of the run; the leak through the faces would be ~{leak:.1g}. Narrow the pulse's band, shift its frequency away from the cut-off or delay it (t0)
+      -> ряды падающей волны не равны нулю в начале счёта (хвост окна {tail:.2g} пика > {lim}; от длины окна не зависит): у импульса есть спектр у края полосы распространяющихся волн (отсечка волны Блоха или край полосы сетки), где спектр обрезан резко, и волна сетки имеет предвестник до начала счёта; утечка через грани была бы ~{leak:.1g}. Сузьте полосу импульса, сдвиньте его частоту от отсечки или задержите его (t0)
+      at ['{tail:.2g} пика']
+  [engine] the packet does not fit into the window along {ax}: from the centre to the window's edge is {gap:.4g}, while a packet of width σ = {s:.4g} needs ≥ {need:.4g} (the grid is periodic: the tail beyond the edge would come in from the other side) — move the centre towards the middle of the window or reduce σ
+      -> пакет не помещается в окно по оси {ax}: от центра до края окна {gap:.4g}, а пакету шириной σ = {s:.4g} нужно ≥ {need:.4g} (сетка периодична: хвост за краем вошёл бы с другой стороны) — сдвиньте центр к середине окна или уменьшите σ
+      at ['{s:.4g} нужно']
+  [engine] the pulse has {share:.2g} of its energy at frequencies without a propagating wave of the grid (below a Bloch wave's cut-off or above the grid's band edge; {lim} is allowed): narrow the pulse's band or shift its frequency
+      -> у импульса {share:.2g} энергии на частотах без распространяющейся волны сетки (ниже отсечки волны Блоха или выше края полосы сетки; допускается {lim}): сузьте полосу импульса или сдвиньте его частоту
+      at ['{share:.2g} энергии']
+  [engine] the shape {kind} is given for {dims}-D, but the world is {dim}-D
+      -> форма {kind} задана для {dims}-D, а мир {dim}-D
+      at ['{kind} задана']
+  [engine] total-field region: {n} coordinates
+      -> область полного поля: {n} координаты
+      at ['{n} координаты']
+  [engine] {name}: unknown device {dev} → auto
+      -> {name}: устройство {dev} неизвестно → auto
+      at ['{dev} неизвестно']
+  [engine] {what}: the edge {w:.4g} is narrower than a grid of step {d:.4g} can carry (it needs ≥ {wmin:.4g} = {steps:.2f} steps: the edge's spectrum exp(−k²ε²/4) at k = π/d must be ≤ {tol}); make the edge wider or the grid finer
+      -> {what}: край {w:.4g} уже, чем сетка с шагом {d:.4g} может передать (нужно ≥ {wmin:.4g} = {steps:.2f} шага: спектр края exp(−k²ε²/4) на k = π/d должен быть ≤ {tol}); сделайте край шире или сетку мельче
+      at ['{d:.4g} может', '{steps:.2f} шага']
+  [framework] At most {n:d} plots at once
+      -> Не больше {n:d} графиков сразу
+      at ['{n:d} графиков']
+  [framework] Cancelled: {k:d} of {n:d} values computed; they are kept
+      -> Отменено: посчитано {k:d} из {n:d} значений; они сохранены
+      at ['{n:d} значений']
+  [framework] Delete the run {id} with its record?
+      -> Удалить запуск {id} вместе с записью?
+      at ['{id} вместе']
+  [framework] Done: {k:d} of {n:d} values measured
+      -> Готово: измерено {k:d} из {n:d} значений
+      at ['{n:d} значений']
+  [framework] GPU from {size} points
+      -> GPU с {size} точек
+      at ['{size} точек']
+  [framework] None of the {n:d} values was measured — the reasons per value are in the table
+      -> Не измерено ни одно из {n:d} значений — причины по значениям в таблице
+      at ['{n:d} значений']
+  [framework] None of the {n:d} values was measured: {first} — the reasons per value are in the table
+      -> Не измерено ни одно из {n:d} значений: {first} — причины по значениям в таблице
+      at ['{n:d} значений']
+  [framework] Stopped by the server: the sweep computed longer than {limit} (the budget {budget} × {k:g} and {grace} of margin) — one step of the world was longer than the limit. {n:d} values computed, they are kept; reduce the duration or the world's step
+      -> Остановлено сервером: свип считался дольше {limit} (предел {budget} × {k:g} и {grace} запаса) — один шаг мира оказался длиннее предела. Посчитано значений: {n:d}, они сохранены; уменьшите длительность или шаг мира
+      at ['{grace} запаса']
+  [framework] Sweep no. {n:d} started
+      -> Свип № {n:d} запущен
+      at ['{n:d} запущен']
+  [framework] The computation cannot keep up with the chosen speed: the world runs {k:.2g} times slower. The time on the clock and in the events is always the world's time; lower the speed to match the actual one.
+      -> Счёт не успевает за выбранной скоростью: мир идёт в {k:.2g} раза медленнее. Время на часах и в событиях — всегда время мира; уменьшите скорость, чтобы она совпала с фактической.
+      at ['{k:.2g} раза']
+  [framework] The plane {a}–{b} face on, {a} to the right — as in the window
+      -> Плоскость {a}–{b} прямо, {a} вправо — как в окне
+      at ['{a} вправо']
+  [framework] The scene was carried into the new world: {n:d} of {total:d} objects
+      -> Сцена перенесена в новый мир: {n:d} из {total:d} объектов
+      at ['{total:d} объектов']
+  [framework] The sweep would take about {total} of computing — more than the budget of {budget}
+      -> Свип займёт около {total} счёта — больше предела {budget}
+      at ['{total} счёта']
+  [framework] a sweep of this world needs about {need} of memory (a copy of the world's state and a world made from it), while a sweep is given {mem}
+      -> свипу этого мира нужно около {need} памяти (копия состояния мира и мир из неё), а свипу отведено {mem}
+      at ['{need} памяти']
+  [framework] at most {n:d} quantities at a time
+      -> не больше {n:d} величин за раз
+      at ['{n:d} величин']
+  [framework] from t = {t} ({source}, world {world}); each value — {duration} of the world; {n} readings
+      -> от t = {t} ({source}, мир {world}); каждое значение — {duration} мира; замеров {n}
+      at ['{duration} мира']
+  [framework] name the quantities: ids=a,b (world {n:d} has: {have})
+      -> укажите величины: ids=a,b (в мире {n:d} есть: {have})
+      at ['{n:d} есть']
+  [framework] slice {id:d} removed
+      -> срез {id:d} убран
+      at ['{id:d} убран']
+  [framework] sweep no. {n} of run {run}: {target} → {measure} ({stat})
+      -> свип № {n} запуска {run}: {target} → {measure} ({stat})
+      at ['{n} запуска']
+  [framework] t, {unit} (every {k:d}th frame of the record: a limit of {cap:d} rows)
+      -> t, {unit} (каждый {k:d}-й кадр записи: предел {cap:d} строк)
+      at ['{cap:d} строк']
+  [framework] the axis {axis} crosses the plane of this window: drag “{label}” in the 3-D scene or in another window
+      -> ось {axis} поперёк плоскости этого окна: тяните «{label}» в 3D-сцене или в другом окне
+      at ['{axis} поперёк']
+  [framework] the file of the carried state {name} was changed — this world cannot be restored
+      -> файл перенесённого состояния {name} изменён — этот мир не восстановить
+      at ['{name} изменён']
+  [framework] the quantity is undefined in {bad:d} of the window's {n:d} readings
+      -> величина не определена в {bad:d} из {n:d} замеров окна
+      at ['{n:d} замеров']
+  [framework] the scene already holds {n:d} objects — no more
+      -> в сцене уже {n:d} объектов — больше нельзя
+      at ['{n:d} объектов']
+  [framework] the scene already holds {n:d} objects: no more can be added
+      -> в сцене уже {n:d} объектов: больше нельзя
+      at ['{n:d} объектов']
+  [framework] the scene file is longer than {max:d} characters ({n:d})
+      -> файл сцены больше {max:d} символов ({n:d})
+      at ['{max:d} символов']
+  [framework] the server has {free} of memory free now, while the sweep needs about {need}: the running worlds come first
+      -> на сервере сейчас свободно {free} памяти, а свипу нужно около {need}: идущие миры важнее
+      at ['{free} памяти']
+  [framework] undefined in {bad:d} of {n:d} readings
+      -> не определена в {bad:d} из {n:d} замеров
+      at ['{n:d} замеров']
+  [framework] verified at {n:d} points: {err:.2g} ≤ {tol:.2g}
+      -> сверено в {n:d} точк.: {err:.2g} ≤ {tol:.2g}
+      at ['{n:d} точк']
+  [framework] {k:d} of {n:d} values
+      -> {k:d} из {n:d} значений
+      at ['{n:d} значений']
+  [framework] {name}: {n:d} characters — more than the limit of {max:d}
+      -> {name}: {n:d} символов — больше предела {max:d}
+      at ['{n:d} символов']
+  [framework] {target} → {measure}, {stat}; each value — {duration} of the world from t = {t}
+      -> {target} → {measure}, {stat}; каждое значение — {duration} мира от t = {t}
+      at ['{duration} мира']
+  [framework] {values:d} values × {n:d} readings: the record has not measured the cost of computing this world (the world has not played ⏺ yet — steps and pauses do not show it). The sweep measures it itself in the first {probe} of computing and stops if the whole of it would take more than {limit} (the budget {budget} × {k:g})
+      -> {values:d} знач. × {n:d} замер.: цену счёта этого мира запись не измерила (мир ещё не играл ⏺ — шаги и паузы её не показывают). Свип измерит её сам в первые {probe} счёта и остановится, если весь он займёт больше {limit} (предел {budget} × {k:g})
+      at ['{n:d} замер', '{probe} счёта']
+  [framework] {what:cap} would need about {need} of memory, while the worker is given {budget}
+      -> {what:cap} потребует около {need} памяти, а вычислителю отведено {budget}
+      at ['{need} памяти']
+  [framework] ≈ {total} of computing: {values:d} values × (restoring {restore} + {duration} of the world × {ms:.3g} ms per 1 {unit} + {n:d} readings × {sample:.3g} ms); the budget is {budget}. The estimate comes from the cost of computing this world while it played ({frames:d} frames of the record); the sweep checks it itself and stops if it comes out dearer than {limit}
+      -> ≈ {total} счёта: {values:d} знач. × (восстановление {restore} + {duration} мира × {ms:.3g} мс за 1 {unit} + {n:d} замер. × {sample:.3g} мс); предел {budget}. Оценка — по цене счёта этого мира, пока он играл ({frames:d} кадр. записи); свип проверит её сам и остановится, если выйдет дороже {limit}
+      at ['{total} счёта', '{duration} мира', '{n:d} замер', '{frames:d} кадр']
+  [p01_gravity]  {dt} after “{label}” was added
+      ->  через {dt} после добавления «{label}»
+      at ['{dt} после']
+  [p01_gravity] Trails are the computed orbits: solution points at most {deg}° of turn of the direction of motion apart, joined by Hermite curves through the positions and velocities; on the screen the deviation is below {px} pixel at any speed of the world.
+      -> Следы — посчитанные орбиты: точки решения не дальше {deg}° поворота направления движения, между ними — кривая Эрмита по положениям и скоростям; на экране отклонение меньше {px} пикселя при любой скорости мира.
+      at ['{px} пикселя']
+  [p01_gravity] hole mass {m0:.6g} → {m1:.6g} M☉: a change of scale (G = c = M = 1): bodies in units of M at the same places with the same velocities; G M/c² = {l0:.6g} → {l1:.6g} km, G M/c³ = {t0:.6g} → {t1:.6g} µs; the bodies' proper times and the observers' clocks in seconds are kept; motion in the world's seconds is now {f:.4g} times slower (the playback speed is unchanged)
+      -> масса дыры {m0:.6g} → {m1:.6g} M☉ — смена масштаба (G = c = M = 1): тела в единицах M на прежних местах и с прежними скоростями; G M/c² = {l0:.6g} → {l1:.6g} км, G M/c³ = {t0:.6g} → {t1:.6g} мкс; собственное время тел и часы наблюдателей в секундах сохранены; движение в секундах мира теперь в {f:.4g} раза медленнее (скорость показа — прежняя)
+      at ['{f:.4g} раза']
+  [p01_gravity] the throw's speed {v:.4g} km/s is not below {f} of the speed of light: Newtonian mechanics does not apply here
+      -> скорость броска {v:.4g} км/с — не меньше {f} скорости света: ньютоновская механика здесь неприменима
+      at ['{f} скорости']
+  [p01_gravity] total mass of the binary {m0:.6g} → {m1:.6g} M☉: a change of scale (G = c = m = 1): the orbit in units of m continues as it was; G m/c² = {l0:.6g} → {l1:.6g} km, G m/c³ = {t0:.6g} → {t1:.6g} µs; the waves' frequency and amplitude at the detectors are recomputed (∝ 1/m and ∝ m); motion in the world's seconds is now {f:.4g} times slower (the playback speed is unchanged)
+      -> полная масса двойной {m0:.6g} → {m1:.6g} M☉ — смена масштаба (G = c = m = 1): орбита в единицах m продолжается как была; G m/c² = {l0:.6g} → {l1:.6g} км, G m/c³ = {t0:.6g} → {t1:.6g} мкс; частота волн и амплитуда у детекторов пересчитаны (∝ 1/m и ∝ m); движение в секундах мира теперь в {f:.4g} раза медленнее (скорость показа — прежняя)
+      at ['{f:.4g} раза']
+  [p02_quantum] Grid not changed ({n:d} points per axis, window {size:.4g} nm)
+      -> Сетка не изменена ({n:d} точек по оси, окно {size:.4g} нм)
+      at ['{n:d} точек']
+  [p02_quantum] Grid: {n0:d} → {n1:d} points per axis, step {d0:.4g} → {d1:.4g} nm, window {s0:.4g} → {s1:.4g} nm (no waves in the window)
+      -> Сетка: {n0:d} → {n1:d} точек по оси, шаг {d0:.4g} → {d1:.4g} нм, окно {s0:.4g} → {s1:.4g} нм (волн в окне нет)
+      at ['{n1:d} точек']
+  [p02_quantum] Grid: {n0:d} → {n1:d} points per axis, step {d0:.4g} → {d1:.4g} nm, window {s0:.4g} → {s1:.4g} nm: the wave resampled exactly ({route})
+      -> Сетка: {n0:d} → {n1:d} точек по оси, шаг {d0:.4g} → {d1:.4g} нм, окно {s0:.4g} → {s1:.4g} нм — волна пересчитана точно ({route})
+      at ['{n1:d} точек']
+  [p02_quantum] a grid of {n:d} points per axis is not coarser than the present one ({now})
+      -> сетка из {n:d} точек по оси не грубее нынешней ({now})
+      at ['{n:d} точек']
+  [p02_quantum] against ⟨H⟩ at t = {t:.4g} s; the bound 2‖Hψ‖e + e²‖H‖ with the step error e estimated by a companion (a step dt against two dt/2 every {n:d} steps): a bound at this estimate, not a strict one
+      -> против ⟨H⟩ в t = {t:.4g} с; граница 2‖Hψ‖e + e²‖H‖ при оценке ошибки шага e компаньоном (шаг dt против двух dt/2 каждые {n:d} шагов): граница при этой оценке, не строгая
+      at ['{n:d} шагов']
+  [p02_quantum] grid {n:d}² = {pts:d} points and up to 6 particles
+      -> сетка {n:d}² = {pts:d} точек и до 6 частиц
+      at ['{pts:d} точек']
+  [p02_quantum] grid {n:d}³ = {pts:d} points and up to 6 particles
+      -> сетка {n:d}³ = {pts:d} точек и до 6 частиц
+      at ['{pts:d} точек']
+  [p02_quantum] local {loc:.3g} per step (a step dt against two dt/2, ×4/3, every {n:d} scene steps); the sum over the steps estimates the global error ‖ψ − ψ_exact‖ to leading order, not a bound (the double slit: an estimate of {e1:.2g} at a true {e2:.2g})
+      -> локальная {loc:.3g} на шаг (шаг dt против двух dt/2, ×4/3, каждые {n:d} шагов сцены), сумма по шагам — оценка глобальной ошибки ‖ψ − ψ_точн‖ в главном порядке, не граница (двухщелевой опыт: оценка {e1:.2g} при истинной {e2:.2g})
+      at ['{n:d} шагов']
+  [p02_quantum] peak {peak:.3g} nm⁻², {total:.4g} of the probability in the window (sum over the particles)
+      -> пик {peak:.3g} нм⁻², в окне {total:.4g} вероятности (сумма по частицам)
+      at ['{total:.4g} вероятности']
+  [p02_quantum] peak {peak:.3g} nm⁻³, {total:.4g} of the probability in the window (sum over the particles)
+      -> пик {peak:.3g} нм⁻³, в окне {total:.4g} вероятности (сумма по частицам)
+      at ['{total:.4g} вероятности']
+  [p02_quantum] probability in the window {p:.6g} kept
+      -> вероятность в окне {p:.6g} сохранена
+      at ['{p:.6g} сохранена']
+  [p02_quantum] there is no grid of {n:d} points per axis
+      -> нет сетки из {n:d} точек по оси
+      at ['{n:d} точек']
+  [p02_quantum] {C:d} points of the ensemble integrated once more in the same wave: interpolation of order {order:d} instead of 8, the time step's tolerances {tight:d} times tighter; the median deviation {med:.2g} nm against half the grid step {tol:.3g} nm (what the grid knows |ψ|² on); the largest in the run {dmax:.2g} nm (near the wave's nodes the trajectories are sensitive: single ones diverge even without an error); a different absorber for {fate:d} (1 allowed)
+      -> {C:d} точек ансамбля проинтегрированы ещё раз в той же волне: интерполяция порядка {order:d} вместо 8, допуски шага по времени в {tight:d} раза строже; медиана расхождения {med:.2g} нм против половины шага сетки {tol:.3g} нм (на чём сетка знает |ψ|²); наибольшее за запуск {dmax:.2g} нм (у узлов волны траектории чувствительны: отдельные расходятся и без ошибки); другой поглотитель у {fate:d} (допустимо 1)
+      at ['{C:d} точек', '{tight:d} раза']
+  [p02_quantum] {head}: {p:.3g} of the probability of “{label}” lies at the window's faces, more than the tolerance {tol:.4g}: the grid is periodic, this part of the wave continues on the other side of the window, and in a larger window its continuation would be cut off
+      -> {head}: у граней окна — {p:.3g} вероятности «{label}», больше допуска {tol:.4g}: сетка периодична, эта часть волны продолжается с другой стороны окна, и в большем окне её продолжение оборвалось бы
+      at ['{p:.3g} вероятности']
+  [p02_quantum] {head}: {p:.3g} of the probability of “{label}” lies outside the new window, more than the tolerance {tol:.4g}: shrinking the window would drop it
+      -> {head}: вне нового окна — {p:.3g} вероятности «{label}», больше допуска {tol:.4g}: уменьшение окна её отбросило бы
+      at ['{p:.3g} вероятности']
+  [p02_quantum] {head}: {p:.3g} of the probability of “{label}”, now outside the layers, would lie under the new window's absorbing layers, more than the tolerance {tol:.4g}: the edges' layers (10 % of the window) would move onto the wave and absorb it
+      -> {head}: под поглощающими слоями нового окна оказалось бы {p:.3g} вероятности «{label}», которая сейчас вне слоёв, больше допуска {tol:.4g}: слои краёв (10 % окна) сдвинулись бы на волну и поглотили её
+      at ['{p:.3g} вероятности']
+  [p02_quantum] {p:.2g} of the probability crossed a face into the absorbing layer on the other side of the window: the layer will absorb it (at most {leak:.2g} gets inside)
+      -> {p:.2g} вероятности перешло через грань в поглощающий слой с другой стороны окна — его поглотит слой (внутрь пройдёт не больше {leak:.2g})
+      at ['{p:.2g} вероятности']
+  [p02_quantum] {points:d} points, step {dt:.3g} fs; the real-time limit ≈ {rt:.3g} s of the world per second; an estimate from the kernel's measured rates (RATES), the actual speed is next to the speed slider
+      -> {points:d} точек, шаг {dt:.3g} фс; предел реального времени ≈ {rt:.3g} с мира в секунду; оценка по измеренным скоростям ядра (RATES), фактическая скорость — у ползунка скорости
+      at ['{points:d} точек']
+  [p02_quantum] “{label}”: at such a speed the grid (step {d:.4g} nm) will not resolve the wave: {p:.3g} of the wave's spectrum would lie beyond its band
+      -> «{label}»: с такой скоростью сетка (шаг {d:.4g} нм) волну не передаст — за её полосой оказалось бы {p:.3g} спектра волны
+      at ['{p:.3g} спектра']
+  [p02_quantum] “{label}”: the point {at} nm is outside the window (along {axis} the window runs from {lo:.4g} to {hi:.4g} nm)
+      -> «{label}»: точка {at} нм вне окна (по оси {axis} окно от {lo:.4g} до {hi:.4g} нм)
+      at ['{axis} окно']
+  [p02_quantum] “{label}”: {where} the grid (step {d:.4g} nm) does not resolve the wave next to what acts on it: its wavenumbers reach {K:.3g} nm⁻¹, while next to a potential or a field the grid resolves ≤ {lim:.3g} nm⁻¹ (⅔·π/step)
+      -> «{label}»: {where} сетка (шаг {d:.4g} нм) не передаёт волну рядом с тем, что на неё действует: её волновые числа доходят до {K:.3g} нм⁻¹, а рядом с потенциалом или полем сетка передаёт ≤ {lim:.3g} нм⁻¹ (⅔·π/шаг)
+      at ['{where} сетка']
+  [p03_molecules] Z = 1 + Σ r·Δp / (d N T Δt) over the collisions, the mean of {k:d} blocks ± {se:.2g}; the reference: the fluid at ρσ^{d} = {rho:.4f} in the limit N → ∞ {zinf:.5f} ({src}) minus the ensemble correction for N = {N:d}: {ref:.5f}; the tolerance 5 standard errors + 1e-4
+      -> Z = 1 + Σ r·Δp / (d N T Δt) по столкновениям, среднее {k:d} блоков ± {se:.2g}; эталон: жидкость при ρσ^{d} = {rho:.4f} в пределе N → ∞ {zinf:.5f} ({src}) минус поправка ансамбля для N = {N:d}: {ref:.5f}; допуск 5 стандартных ошибок + 1e-4
+      at ['{k:d} блоков']
+  [p03_molecules] accumulating: {k:d} of {n:d} blocks of {b:.2g} ps after {eq:.2g} ps since the change of the scene; the reference {ref:.5f} ({src})
+      -> набирается: {k:d} из {n:d} блоков по {b:.2g} пс после {eq:.2g} пс с изменения сцены; эталон {ref:.5f} ({src})
+      at ['{n:d} блоков']
+  [p03_molecules] along the axis {a} the piston sets the volume: the box does not change affinely along it
+      -> по оси {a} объём задаёт поршень: аффинно ящик вдоль неё не меняется
+      at ['{a} объём']
+  [p03_molecules] at most {n:d} atoms, or a larger region; denser: “Crystal”
+      -> не больше {n:d} атомов или область больше; плотнее — «Кристалл»
+      at ['{n:d} атомов']
+  [p03_molecules] at most {n:d} molecules, or a larger region; denser: “Crystal”
+      -> не больше {n:d} молекул или область больше; плотнее — «Кристалл»
+      at ['{n:d} молекул']
+  [p03_molecules] box {old} → {new} affinely in {tau:.3g} ps (until t = {t_end:.6g} ps): the box's faces move at up to {v:.3g} m/s
+      -> ящик {old} → {new} аффинно за {tau:.3g} пс (до t = {t_end:.6g} пс): грани ящика движутся со скоростью до {v:.3g} м/с
+      at ['{new} аффинно']
+  [p03_molecules] classical mechanics of the atoms: in solid argon quantum effects matter below the Debye temperature Θ_D = {th} K (the Debye heat capacity at 20 / 40 / 80 K is {c20:.2f} / {c40:.2f} / {c80:.2f} of the classical one)
+      -> классическая механика атомов: у твёрдого аргона квантовые эффекты существенны ниже температуры Дебая Θ_D = {th} K (теплоёмкость по Дебаю при 20 / 40 / 80 K — {c20:.2f} / {c40:.2f} / {c80:.2f} классической)
+      at ['{c80:.2f} классической']
+  [p03_molecules] only {k:d} of {n:d} atoms could be placed without overlaps
+      -> без перекрытий удалось разместить только {k:d} из {n:d} атомов
+      at ['{n:d} атомов']
+  [p03_molecules] outside the DKW bound {b:.3g} at the level {lvl} ({n:d} velocity components of all atoms, each divided by √(kT/m) of its mass): in equilibrium, within
+      -> вне границы ДКВ {b:.3g} при уровне {lvl} ({n:d} компонент скорости всех атомов, каждая делена на √(kT/m) своей массы): в равновесии — в пределах
+      at ['{n:d} компонент']
+  [p03_molecules] the atoms do not fit under the piston at {x:.3g} nm: the highest along the axis {a} reaches {top:.4g} nm
+      -> под поршнем на {x:.3g} нм не помещаются атомы: самый высокий по оси {a} доходит до {top:.4g} нм
+      at ['{a} доходит']
+  [p03_molecules] the axis {a} is periodic and there are atoms at its faces: a wall cannot be put there without moving them
+      -> ось {a} периодическая, и у её граней есть атомы: стенку там не поставить, не сдвинув их
+      at ['{a} периодическая']
+  [p03_molecules] the axis {a} is periodic: there is no wall to move
+      -> ось {a} периодическая: стенки, которую можно сдвинуть, нет
+      at ['{a} периодическая']
+  [p03_molecules] the axis {a} keeps its (specular) walls: atoms at the opposite faces would overlap if it were periodic ({why})
+      -> ось {a} остаётся со стенками (зеркальными): атомы у противоположных граней перекрылись бы при периодичности ({why})
+      at ['{a} остаётся']
+  [p03_molecules] the thermostat's region along the axis {c} lies outside the box
+      -> область термостата по оси {c} лежит вне ящика
+      at ['{c} лежит']
+  [p03_molecules] within the DKW bound {b:.3g} at the level {lvl} ({n:d} velocity components of all atoms, each divided by √(kT/m) of its mass): in equilibrium, within
+      -> в пределах границы ДКВ {b:.3g} при уровне {lvl} ({n:d} компонент скорости всех атомов, каждая делена на √(kT/m) своей массы): в равновесии — в пределах
+      at ['{n:d} компонент']
+  [p03_molecules] {what} in the region {area} would cover {frac} (with the atoms already there): random placement without overlaps fits at most ≈ {lim:.0f} %
+      -> {what} в области {area} заняли бы {frac} (вместе с уже имеющимися атомами), а случайно без перекрытий укладывается не больше ≈ {lim:.0f} %
+      at ['{area} заняли']
+  [p03_molecules] |P − P₀| / the rounding bound over {n:d} steps (P₀ the momentum at the last change of the scene; the bound ε·steps·(sums of |m v|, |F|): the engine's momentum_drift); conserved along periodic axes without a field, thermal walls, Langevin baths and local baths, frozen atoms
+      -> |P − P₀| / граница округления за {n:d} шагов (P₀ — импульс при последнем изменении сцены; граница — ε·шаги·(суммы |m v|, |F|): momentum_drift движка); сохраняется вдоль периодических осей без поля, тепловых стенок, ванн Ланжевена и местных ванн, замороженных атомов
+      at ['{n:d} шагов']
+  [p03_molecules] “{label}”: the bonds are harmonic springs (they do not break, no anharmonicity), ħω/k = {hw:.0f} K; at kT ≲ ħω the vibrations are quantum (the vibration's heat capacity at {T:.3g} K is {frac:.2f} of the classical one), here they are classical
+      -> «{label}»: связи — гармонические пружины (не рвутся, без ангармонизма), ħω/k = {hw:.0f} K; при kT ≲ ħω колебания квантовые (теплоёмкость колебания при {T:.3g} K — {frac:.2f} классической), здесь — классические
+      at ['{frac:.2f} классической']
+  [p04_fluids] a domain of {lx:.2g} × {ly:.2g} m on a grid of nx = {nx:d}: spacing {dx:.2g} m, {ny:d} nodes along y, {n:.2g} nodes in all; that is ≈ {need} of memory, above the limit of {budget}
+      -> область {lx:.2g} × {ly:.2g} м на сетке nx = {nx:d}: шаг {dx:.2g} м, по y {ny:d} узлов, всего {n:.2g} узлов — это ≈ {need} памяти, больше предела {budget}
+      at ['{ny:d} узлов', '{n:.2g} узлов', '{need} памяти']
+  [p04_fluids] a flow grid of {nx:d} × {ny:d} nodes
+      -> сетка течения {nx:d} × {ny:d} узлов
+      at ['{ny:d} узлов']
+  [p04_fluids] a grid of {nx:d} × {ny:d} nodes (spacing {dx:.2g} m) would need ≈ {need} of memory, above the limit of {budget}
+      -> сетка {nx:d} × {ny:d} узлов (шаг {dx:.2g} м) потребует ≈ {need} памяти, больше предела {budget}
+      at ['{ny:d} узлов', '{need} памяти']
+  [p04_fluids] grid {nx0:d} × {ny0:d} → {nx1:d} × {ny1:d} nodes (spacing {dx0:.2g} → {dx1:.2g} m), time step {dt0:.2g} → {dt1:.2g} s (τ {tau0:.3g} → {tau1:.3g})
+      -> сетка {nx0:d} × {ny0:d} → {nx1:d} × {ny1:d} узлов (шаг {dx0:.2g} → {dx1:.2g} м), шаг по времени {dt0:.2g} → {dt1:.2g} с (τ {tau0:.3g} → {tau1:.3g})
+      at ['{ny1:d} узлов']
+  [p04_fluids] grid: D = {cells:.4g} cells, {wall}; C = 2F/(ρU²D), U = 2Um/3 = {u:.4g} m/s
+      -> сетка: D = {cells:.4g} ячеек, {wall}; C = 2F/(ρU²D), U = 2Um/3 = {u:.4g} м/с
+      at ['{cells:.4g} ячеек']
+  [p04_fluids] moving the flow to a grid of {nx:d} × {ny:d} nodes
+      -> перенос течения на сетку {nx:d} × {ny:d} узлов
+      at ['{ny:d} узлов']
+  [p04_fluids] the flow carried over as it was ({nx:d} × {ny:d} nodes, the same time step)
+      -> течение перенесено как было ({nx:d} × {ny:d} узлов, тот же шаг по времени)
+      at ['{ny:d} узлов']
+  [p04_fluids] {nx:d} × {ny:d} nodes (spacing {dx:.2g} m, dt {dt:.2g} s)
+      -> {nx:d} × {ny:d} узлов (шаг {dx:.2g} м, dt {dt:.2g} с)
+      at ['{ny:d} узлов']
+  [p04_fluids] {nx:d}×{ny:d} nodes, step {dt:.3g} s; the real-time limit ≈ {rate:.3g} s of the world per second (estimated; the measured speed depends on the wall clock: it is at the speed slider)
+      -> {nx:d}×{ny:d} узлов, шаг {dt:.3g} с; предел реального времени ≈ {rate:.3g} с мира в секунду (по оценке; измеренная скорость зависит от часов стены — она у ползунка скорости)
+      at ['{ny:d} узлов']
+  [p04_fluids] “Domain length along x” at least {lx:.2g} m with {nx:d} nodes
+      -> «Длина области по x» не меньше {lx:.2g} м при {nx:d} узлах
+      at ['{nx:d} узлах']
+  [v01_light_travel] Laws of the run: {laws}. Three observers meet at the origin at moment 0 with different speeds and carry rods of length L₀ (in their own rest frames) with clocks at the ends A and B (B is the far end). First each one synchronises clock B by an exchange of light (seen on the diagram), then at the moment {tf} the source flashes. The speed of light is computed from the clock readings at the events where the light passes the ends of the rod; the result reaches the observer when the signal with B's reading arrives at A. “Measure” is a round trip with one's own light. “Speed” accelerates an observer: the apparatus is dismantled, assembled again and synchronised again.
+      -> Законы запуска: {laws}. Три наблюдателя встречаются в начале координат в момент 0 с разными скоростями и несут стержни длины L₀ (в своей системе покоя) с часами на концах A и B (B — дальний конец). Сначала каждый синхронизирует часы B световым обменом (видно на диаграмме), затем в момент {tf} источник вспыхивает. Скорость света вычисляется по показаниям часов в событиях прохождения света через концы стержня; результат приходит к наблюдателю, когда до A доходит сигнал с показанием B. «Измерить» — замер туда-обратно своим светом. «Скорость» разгоняет наблюдателя: прибор разбирается, собирается заново и заново синхронизируется.
+      at ['{tf} источник']
+  [v01_light_travel] a pulse train needs a period > 0 and from {lo:d} to {hi:d} pulses
+      -> для серии нужен период > 0 и от {lo:d} до {hi:d} импульсов
+      at ['{hi:d} импульсов']
+  [v01_light_travel] at a constant coordinate speed “{obj}” would move faster than light for the local static observer in {dt}; in GR the “speed” is the coordinate one (Schwarzschild dx/dt)
+      -> при постоянной координатной скорости «{obj}» через {dt} двигался бы быстрее света для местного статичного наблюдателя; в ОТО «скорость» — координатная (dx/dt Шварцшильда)
+      at ['{dt} двигался']
+  [v01_light_travel] not an independent check: the residual of the equation the run solved; the time of flight is solved from the flash event, while the receiver's position is taken at the absolute arrival time — tolerance {tol0:.0e} plus 4ε(|v|·|t| + |x|)/(c·Δt) for the rounding of absolute times and coordinates
+      -> не независимая проверка: остаток уравнения, которое решал запуск; время полёта решено от события вспышки, а положение получателя берётся в абсолютный момент прихода — допуск {tol0:.0e} плюс 4ε(|v|·|t| + |x|)/(c·Δt) на округление абсолютных времён и координат
+      at ['{tol0:.0e} плюс']
+  [v01_light_travel] the event has already happened ({dt} ago)
+      -> событие уже произошло ({dt} назад)
+      at ['{dt} назад']
+  [v01_light_travel] {obj}: light from “{src}” arrived (image {k:d}) after {dt} of Schwarzschild coordinate time (clock of “{obj}”: τ = {tau})
+      -> {obj}: пришёл свет (изображение {k:d}) от «{src}» через {dt} координатного времени Шварцшильда (часы «{obj}»: τ = {tau})
+      at ['{dt} координатного']
+  [v01_light_travel] {obj}: light from “{src}” arrived after {dt} of Schwarzschild coordinate time (clock of “{obj}”: τ = {tau})
+      -> {obj}: пришёл свет от «{src}» через {dt} координатного времени Шварцшильда (часы «{obj}»: τ = {tau})
+      at ['{dt} координатного']
+  [v02_double_slit] A modification of the Born rule: the position from |ψ|^p normalised on the finite screen; the probability of reaching the screen from |ψ|²; the Sorkin parameter from the unnormalised I^(p/2). The expectation is a Monte Carlo over {n:d} particles.
+      -> Модификация правила Борна: положение — из |ψ|^p, нормированного на конечном экране; вероятность дойти до экрана — по |ψ|²; параметр Соркина — по ненормированным I^(p/2). Ожидание — Монте-Карло по {n:d} частицам.
+      at ['{n:d} частицам']
+  [v02_double_slit] At the slits the map's cross-section does not resolve the single slits (step {st:.3g} m > a/2); the comparison with the exact solution there uses {n:d} points of the cross-section and is resolved no better.
+      -> У щелей сечение карты не разрешает отдельные щели (шаг {st:.3g} м > a/2); там же сверка с точным решением идёт по {n:d} точкам сечения и разрешена не лучше.
+      at ['{n:d} точкам']
+  [v02_double_slit] False counts of the screen, uniform over it. At most {k:g} per particle of the source (otherwise the screen shows only noise): at {r:g} particles/s, up to {d:g} 1/s.
+      -> Ложные срабатывания экрана, равномерно по нему. Не больше {k:g} на одну частицу источника (иначе экран показывает только шум): при {r:g} частиц/с — до {d:g} 1/с.
+      at ['{r:g} частиц']
+  [v02_double_slit] Fullerenes C60, {v:g} m/s, a grating of {n:d} slits (illustrative)
+      -> Фуллерены C60, {v:g} м/с, решётка из {n:d} щелей (иллюстративно)
+      at ['{n:d} щелей']
+  [v02_double_slit] Screen grid: {p:.1f} points on the finest fringe (< 8): the pattern is under-resolved.
+      -> Сетка экрана: {p:.1f} точки на самую частую полосу (< 8) — картина недоразрешена.
+      at ['{p:.1f} точки']
+  [v02_double_slit] The speed at which the pattern builds up (≈{n:d} particles per second)
+      -> Скорость набора картины (≈{n:d} частиц в секунду)
+      at ['{n:d} частиц']
+  [v02_double_slit] a basis with edge conditions (thin screen), converging exponentially: the estimate is the change from {a:d} to {b:d} functions per slit (larger than the error at {b:d})
+      -> базис с краевыми условиями (тонкий экран), сходится экспоненциально: оценка — изменение от {a:d} до {b:d} функций на щель (больше ошибки при {b:d})
+      at ['{b:d} функций']
+  [v02_double_slit] difference vector − scalar (±{d:.3g} counts)
+      -> разность вектор − скаляр (±{d:.3g} отсчётов)
+      at ['{d:.3g} отсчётов']
+  [v02_double_slit] slit {j:d} is dark (it passes {r:.1e} of the other's): there is nothing to interfere with, |γ₁₂| = |G₁₂|/√(G₁₁G₂₂) is the indeterminate form 0/0
+      -> щель {j:d} тёмная (пропускает {r:.1e} от другой): интерферировать не с чем, |γ₁₂| = |G₁₂|/√(G₁₁G₂₂) — неопределённость 0/0
+      at ['{j:d} тёмная']
+  [v02_double_slit] the particles are shifted on their way to the screen by up to ±{shift} with a screen of ±{half}: the expected pattern needs a grid of {n:.3g} points (~{gb:.3g} GB; the world's limit is {lim:g} GB)
+      -> частицы сдвигаются на пути к экрану до ±{shift} при экране ±{half}: ожидаемой картине нужна сетка из {n:.3g} точек (~{gb:.3g} ГБ; предел мира — {lim:g} ГБ)
+      at ['{n:.3g} точек']
+  [v02_double_slit] the screen grid does not resolve the fringes ({p:.2g} points on the finest fringe < 8, check “Screen resolution”): a fit of such a pattern means nothing
+      -> сетка экрана не разрешает полосы ({p:.2g} точки на самую частую полосу < 8, проверка «Разрешение экрана»): фит по такой картине ничего не значит
+      at ['{p:.2g} точки']
+  [v02_double_slit] waveguide modes, converging algebraically (the screen's corners): Richardson extrapolation over {a:d}, {b:d}, {c:d} modes per slit (sub-blocks of one operator), order {order}; measured: the estimate is {f1:g}–{f2:g} times the true error
+      -> волноводные моды, сходятся алгебраически (углы экрана): экстраполяция Ричардсона по {a:d}, {b:d}, {c:d} модам на щель (подблоки одного оператора), порядок {order}; измерено: оценка в {f1:g}–{f2:g} раза выше истинной ошибки
+      at ['{c:d} модам', '{f2:g} раза']
+  [v02_double_slit] {dark:.3g} dark counts per second with a source of {rate:.3g} particles/s: that is {r:.3g} false counts per particle; the screen would show only noise, and every count is an event of the record (the limit is {lim:g} per particle)
+      -> темновых отсчётов {dark:.3g} 1/с при источнике {rate:.3g} частиц/с — это {r:.3g} ложных отсчётов на одну частицу: экран показал бы только шум, а каждый отсчёт — событие записи (предел — {lim:g} на частицу)
+      at ['{rate:.3g} частиц', '{r:.3g} ложных']
+  [v02_double_slit] {how}; T: {et:.2g}, flux on the screen: {es:.2g}. Tolerance {tol:g}: less than a pixel of the expected curve (≈ {px:d} px) and below what the histogram's χ² would notice before ~{n:.2g} counts. This is an estimate, not a strict bound
+      -> {how}; T: {et:.2g}, поток на экране: {es:.2g}. Допуск {tol:g} — меньше пикселя кривой ожидания (≈ {px:d} пикс.) и ниже того, что χ² гистограммы заметит до ~{n:.2g} отсчётов. Это оценка, не строгая граница
+      at ['{px:d} пикс', '{n:.2g} отсчётов']
+  [v02_double_slit] {po:.2f} observed, taken within [{lo:g}, {hi:g}]
+      -> {po:.2f} наблюдён, взят в [{lo:g}, {hi:g}]
+      at ['{po:.2f} наблюдён']
+  [v02_double_slit] “{elem}” at slit {j:d} removed: it does not act on {who}
+      -> «{elem}» у щели {j:d} снят: не действует на {who}
+      at ['{j:d} снят']
+  [v03_quantum_1d] the grid would need {n:d} points (more than {nmax:d})
+      -> нужна сетка из {n:d} точек (больше {nmax:d})
+      at ['{n:d} точек']
+  [v03_quantum_1d] this experiment is too costly for a live world: a grid of {n:d} points × {steps:.3g} steps (≈ {sec:.0f} s of computing, the limit is ≈ {lim:.0f} s)
+      -> этот опыт слишком дорог для живого мира: сетка {n:d} точек × {steps:.3g} шагов (≈ {sec:.0f} с счёта, предел ≈ {lim:.0f} с)
+      at ['{n:d} точек', '{steps:.3g} шагов']
+  [v03_quantum_1d] {head}: the barrier's edges are sharp (δ = {d:g} nm) and the transmission is small (T ≈ {T:.2g}): the time step must be {k:.3g} times smaller, otherwise the scheme's error at the edges exceeds the transmission itself
+      -> {head}: края барьера резкие (δ = {d:g} нм), а прохождение мало (T ≈ {T:.2g}): шаг по времени нужен в {k:.3g} раза меньше, иначе ошибка схемы на краях больше самого прохождения
+      at ['{k:.3g} раза']
+  [v04_orbits] a push Δv = {dv:+.4g} of the speed
+      -> толчок Δv = {dv:+.4g} скорости
+      at ['{dv:+.4g} скорости']
+  [v04_orbits] the measured advance is {ratio:.4g} times larger: the expansion in M/p does not work in a strong field (the next-order correction ≈ {c2:.3g})
+      -> измеренное смещение в {ratio:.4g} раза больше: разложение по M/p в сильном поле не работает (поправка следующего порядка ≈ {c2:.3g})
+      at ['{ratio:.4g} раза']
+  [v05_optics_bench] A speed for collecting statistics (≈ {n:d} photons per second)
+      -> Скорость набора статистики (≈ {n:d} фотонов в секунду)
+      at ['{n:d} фотонов']
+  [v05_optics_bench] Beyond the critical angle R = 1: max |1 − R| (s and p, {k:d} angles from θ_c to {th}°)
+      -> За критическим углом R = 1: max |1 − R| (s и p, {k:d} углов от θ_c до {th}°)
+      at ['{k:d} углов']
+  [v05_optics_bench] Fabry–Pérot: a film n = {n}, {d} µm thick, in air (illustrative)
+      -> Фабри–Перо: плёнка n = {n} толщиной {d} мкм в воздухе (иллюстративно)
+      at ['{n} толщиной']
+  [v05_optics_bench] The stack's spectrum is very dense: {m:d} points may not resolve every band at short wavelengths.
+      -> Спектр стопки очень частый: {m:d} точек могут не разрешить все полосы на коротких волнах.
+      at ['{m:d} точек']
+  [v05_optics_bench] {v:.4g} photons/s
+      -> {v:.4g} фотон/с
+      at ['{v:.4g} фотон']
+  [v06_qcd] α_s(M_Z) = {a:.4g} is changed (what if): at {mu} GeV the perturbation series does not converge, which is what this world shows
+      -> α_s(M_Z) = {a:.4g} изменена (что если): при {mu} ГэВ ряд теории возмущений не сходится — это и показывает такой мир
+      at ['{a:.4g} изменена']
+  [v07_bell_test] A speed for collecting statistics (≈{n:d} pairs per second)
+      -> Скорость набора статистики (≈{n:d} пар в секунду)
+      at ['{n:d} пар']
+  [v07_bell_test] S: accumulating; ≥ {nmin:d} pairs are needed in each of the four cells (now the minimum is {k:d})
+      -> S: набирается — нужно ≥ {nmin:d} пар в каждой из четырёх ячеек (сейчас минимум {k:d})
+      at ['{nmin:d} пар']
+  [v07_bell_test] accumulating: at least {nmin:d} pairs per cell are needed for each of the four pairs of settings
+      -> набирается: для каждой из четырёх пар настроек нужно не меньше {nmin:d} пар в ячейке
+      at ['{nmin:d} пар']
+  [v07_bell_test] accumulating: at least {nmin:d} pairs per cell are needed for each of the four pairs of settings; in the mode “fixed” only (a, b) accumulates: switch on the random choice
+      -> набирается: для каждой из четырёх пар настроек нужно не меньше {nmin:d} пар в ячейке; в режиме «фиксированный» набирается только (a, b) — включите случайный выбор
+      at ['{nmin:d} пар']
+  [v07_bell_test] accumulating: the expected |S| = {S:.4f}; {ztol}σ needs about {need:.0f} pairs with a random choice
+      -> набирается: ожидание |S| = {S:.4f}; для {ztol}σ нужно около {need:.0f} пар при случайном выборе
+      at ['{need:.0f} пар']
+  [v07_bell_test] measured in this run (± σ; pale: fewer than {nmin:d} pairs)
+      -> измерено в этом запуске (± σ; бледные — меньше {nmin:d} пар)
+      at ['{nmin:d} пар']
+  [v07_bell_test] the choice at {a} is outside the cone of the detection at {b}: space-like
+      -> выбор у {a} вне конуса регистрации у {b}: пространственноподобно
+      at ['{a} вне']
+  [v08_wave_3d] P(z) = Σ j_z dx dy over the whole window at {n:d} depths against the closed formula of the spectrum: Parseval's identity of the discrete sum; it confirms the code and the normalisation, not the window or the physics (those: the row above)
+      -> P(z) = Σ j_z dx dy по всему окну на {n:d} глубинах против замкнутой формулы по спектру — тождество Парсеваля дискретной суммы: подтверждает код и нормировку, но не окно и не физику (их — строка выше)
+      at ['{n:d} глубинах']
+  [v08_wave_3d] Slice {pid} ({plane}): the field at {n:d} points against the exact one
+      -> Срез {pid} ({plane}): поле в {n:d} точках против точного
+      at ['{n:d} точках']
+  [v08_wave_3d] for a grid of {n:d} choose «slices only»
+      -> для сетки {n:d} выберите «только срезы»
+      at ['{n:d} выберите']
+  [v08_wave_3d] the computation window is too small for the depth z_max = {zmax} µm: light that left at large angles comes back as periodic copies of the source; the best reachable with a window of up to {m:d} points per axis is {best}, and at most {tol:.0e} is needed
+      -> окно расчёта мало для глубины z_max = {zmax} мкм: свет, ушедший под большими углами, возвращается периодическими копиями источника; лучшее, что достижимо при окне до {m:d} точек на ось, — {best}, а нужно не больше {tol:.0e}
+      at ['{m:d} точек']
+  [v08_wave_3d] the kernel's bound for fp32: {b:.0e} of the peak amplitude
+      -> граница ядра для fp32: {b:.0e} пика амплитуды
+      at ['{b:.0e} пика']
+  [v08_wave_3d] the whole volume on a grid of {n:d} would take ~{gb} GB
+      -> весь объём на сетке {n:d} занял бы ~{gb} ГБ
+      at ['{n:d} занял']
+  [v08_wave_3d] window ×{pad:d}, {how}; error estimate {est:.1e} of the peak
+      -> окно ×{pad:d}, {how}; оценка ошибки {est:.1e} пика
+      at ['{est:.1e} пика']
+  [v08_wave_3d] ≈ {err:.2g} of the peak amplitude (at most {tol:.2g} needed)
+      -> ≈ {err:.2g} пика амплитуды (нужно не больше {tol:.2g})
+      at ['{err:.2g} пика']
+  [v09_thomas_3d] A non-planar crown of {n:d} burns
+      -> Неплоская корона из {n:d} импульсов
+      at ['{n:d} импульсов']
+  [v09_thomas_3d] Field: rotation θ at {n:d} points of the volume against Gauss–Bonnet
+      -> Поле: поворот θ в {n:d} точках объёма против Гаусса–Бонне
+      at ['{n:d} точках']
+  [v09_thomas_3d] SU(2) angle {a:.6g}° (in [0, 360°]); the spinor's sign {sign} relative to the SO(3) rotation by ≤ 180°
+      -> угол SU(2) {a:.6g}° (в [0; 360°]); знак спинора {sign} относительно поворота SO(3) на ≤ 180°
+      at ['{sign} относительно']
+  [v09_thomas_3d] Seam: {n:d} burns against {n2:d}
+      -> Шов: {n:d} импульсов против {n2:d}
+      at ['{n:d} импульсов']
+  [v09_thomas_3d] Slice {pid} ({plane}): rotation θ at {n:d} points against Gauss–Bonnet
+      -> Срез {pid} ({plane}): поворот θ в {n:d} точках против Гаусса–Бонне
+      at ['{n:d} точках']
+  [v09_thomas_3d] The seam of a ball on the sphere of velocities (non-planar, {n:d} burns)
+      -> Шов мяча на сфере скоростей (неплоский, {n:d} импульсов)
+      at ['{n:d} импульсов']
+  [v09_thomas_3d] a seam of {n:d} burns (the smooth seam is their limit; the difference from {n2:d} is in the checks); no closed formula
+      -> шов из {n:d} импульсов (гладкий шов — их предел; разница с {n2:d} — в проверках); замкнутой формулы нет
+      at ['{n:d} импульсов']
+  [v09_thomas_3d] piece {k:d} of {n:d}: a burn along {d} of the craft's own frame, rapidity {r:.4g}
+      -> участок {k:d} из {n:d}: импульс вдоль {d} своей системы, быстрота {r:.4g}
+      at ['{d} своей']
+  [v09_thomas_3d] {T:.5g} yr by the clocks at rest, {tau:.5g} yr by the craft's clock
+      -> {T:.5g} лет по часам покоя, {tau:.5g} лет по часам корабля
+      at ['{T:.5g} лет', '{tau:.5g} лет']
+  [v09_thomas_3d] {t:.5g} / {tau:.5g} yr
+      -> {t:.5g} / {tau:.5g} лет
+      at ['{tau:.5g} лет']
+  [v10_fast_observer] A train at β = {b} passing posts: stretching and shortening
+      -> Поезд при β = {b} мимо столбов: удлинение и укорочение
+      at ['{b} мимо']
+  [v10_fast_observer] without velocities the Lorentz transformations are identities: the same bodies in {n:d} pixels, the same distances; the bodies agree: {same}
+      -> без скоростей преобразования Лоренца тождественны: те же тела в {n:d} пикселях, те же расстояния; совпадение тел: {same}
+      at ['{n:d} пикселях']
+  [v10_fast_observer] {how}, correction {ev:.3g} stops
+      -> {how}, поправка {ev:.3g} ступ.
+      at ['{ev:.3g} ступ']
+  [v11_double_slit_2d] the experiment is too heavy: ~{m:.0f} min of computation on {device} (the limit is {lim:.0f} min; grid {nx:d}×{nz:d}, ~{pairs:.0f} pairs of steps)
+      -> опыт слишком тяжёл: ~{m:.0f} мин счёта на {device} (предел {lim:.0f} мин; сетка {nx:d}×{nz:d}, ~{pairs:.0f} пар шагов)
+      at ['{pairs:.0f} пар']
+  [v11_double_slit_2d] the peak of |ψ|² is {p:.3g} of the initial one, the window holds {n:.4g} of the probability (each picture as a fraction of its own peak)
+      -> пик |ψ|² — {p:.3g} от начального, в окне {n:.4g} вероятности (каждый снимок — в долях своего пика)
+      at ['{n:.4g} вероятности']
+  [v11_double_slit_2d] the world has not computed yet: the experiment is as with this plate from the very start (next to the changed wall the initial packet holds {p:.2g} of the probability)
+      -> мир ещё не считал: опыт — как с этой пластиной с самого начала (у изменённой стенки начальный пакет держит {p:.2g} вероятности)
+      at ['{p:.2g} вероятности']
+  [v11_double_slit_2d] where the wall changed there was {p:.2g} of the probability: on this part of the wave the change acted at once (suddenly); the rest will meet the new plate
+      -> там, где стенка изменилась, было {p:.2g} вероятности — на эту часть волны изменение подействовало сразу (внезапно); остальная встретит новую пластину
+      at ['{p:.2g} вероятности']
+  [v11_double_slit_2d] {K:d} particles integrated again in the same wave, {tight:d} times more tightly; of the {both:d} that hit in both cases, 95 % differ by at most {p95:.2g} λ, the largest by {mx:.2g} λ{fringe}; the fate (screen, reflection, sideways) differs for {changed:d}; target: 95 % < {target} λ and at most 2 % of another fate (review B3-4)
+      -> частиц {K:d} проинтегрированы ещё раз в той же волне в {tight:d} раза строже; из попавших в обоих случаях ({both:d}) 95 % отличаются не больше чем на {p95:.2g} λ, наибольшее — {mx:.2g} λ{fringe}; судьба (экран, отражение, вбок) другая у {changed:d}; цель: 95 % < {target} λ и не больше 2 % другой судьбы (review B3-4)
+      at ['{K:d} проинтегрированы', '{tight:d} раза']
+  [v11_double_slit_2d] {f} times coarser
+      -> в {f} раза грубее
+      at ['{f} раза']
+  [v11_double_slit_2d] {f} times finer: a coarser grid would not resolve the edges
+      -> в {f} раза мельче: грубее края не разрешаются
+      at ['{f} раза']
+  [v11_double_slit_2d] {what} turns by {th:.4g}° (the distinguishability of the paths sin²(θ/2) = {dist:.3g})
+      -> {what} поворачивается на {th:.4g}° (различимость путей sin²(θ/2) = {dist:.3g})
+      at ['{what} поворачивается']
+  [v12_arrival_times_2d] A train of {n:d} packets: the exponential rules damp the later peaks (Das & Struyve 2021)
+      -> Цепочка из {n:d} пакетов: экспоненциальные правила гасят поздние пики (Das & Struyve 2021)
+      at ['{n:d} пакетов']
+  [v12_arrival_times_2d] P is the probability of arrival within the observation window ({w:.4g} t₀), ⟨t⟩ and σ_t the mean time and the spread. Backflow through the plane: {b:.3g} of the probability.
+      -> P — вероятность прихода за окно наблюдения ({w:.4g} t₀), ⟨t⟩ и σ_t — среднее время и разброс. Обратный ток через плоскость: {b:.3g} вероятности.
+      at ['{b:.3g} вероятности']
+  [v12_arrival_times_2d] a train of {n:d} packets {sep:.3g} λ apart
+      -> цепочка из {n:d} пакетов через {sep:.3g} λ
+      at ['{n:d} пакетов']
+  [v12_arrival_times_2d] the detector is too close: {p:.1e} of the probability is already beyond its plane at the start (at most {m} is allowed)
+      -> детектор слишком близко: {p:.1e} вероятности уже за его плоскостью в начале (допустимо {m})
+      at ['{p:.1e} вероятности']
+  [v12_arrival_times_2d] {n:d} particles of {N:d}; {law}; the critical value at {p} %: {c}/√n = {crit:.3g}
+      -> {n:d} частиц из {N:d}; {law}; критическое значение {p} %: {c}/√n = {crit:.3g}
+      at ['{n:d} частиц']
+  [v13_hydrogen_3d] The 3-D cloud stores the amplitude in 8 bits (as does the texture): values of |ψ|² below {f} of the peak are drawn as zero; the exact values are in the slice windows.
+      -> Облако в 3D хранит амплитуду в 8 битах (как и текстура): значения |ψ|² меньше {f} пика рисуются нулём; точные значения — в окнах срезов.
+      at ['{f} пика']
+  [v13_hydrogen_3d] The ion He⁺, 3d_xy: the cloud is Z = {Z} times smaller
+      -> Ион He⁺, 3d_xy: облако в Z = {Z} раза меньше
+      at ['{Z} раза']
+  [v13_hydrogen_3d] l{s} = {l} is impossible with n{s} = {n} (0 ≤ l < n): l{s} = {l1} taken; for l = {l} choose n ≥ {n1}
+      -> l{s} = {l} при n{s} = {n} невозможно (0 ≤ l < n) — взято l{s} = {l1}; для l = {l} выберите n ≥ {n1}
+      at ['{n} невозможно', '{l} выберите']
+  [v13_hydrogen_3d] |m{s}| = {am} exceeds l{s} = {l}: m{s} = {m1} taken; for |m| = {am} you need l ≥ {am} and n ≥ {n1}
+      -> |m{s}| = {am} больше l{s} = {l} — взято m{s} = {m1}; для |m| = {am} нужны l ≥ {am} и n ≥ {n1}
+      at ['{am} нужны']
+  [v13_hydrogen_3d] ⟨r⟩(t) by a 3-D quadrature of |ψ(t)|²; reference: the Bohr frequency ω = ΔE/ħ and {how}; tolerance {tol:.0e} of the oscillation's amplitude (the quadratures are exact to ~{acc:.0e})
+      -> ⟨r⟩(t) — 3D-квадратура |ψ(t)|²; эталон: частота Бора ω = ΔE/ħ и {how}; допуск {tol:.0e} амплитуды колебания (квадратуры точны до ~{acc:.0e})
+      at ['{tol:.0e} амплитуды']
+  [v13_hydrogen_3d] ⟨r⟩(t) by a 3-D quadrature of |ψ(t)|²; reference: the Bohr frequency ω = ΔE/ħ and {how}; tolerance {tol:.0e} of the oscillation's amplitude (the quadratures are exact to ~{acc:.0e}); the reference uses the same orbitals as the cloud: this verifies the consistency of the time dependence and of the quadratures, not the functions themselves (those are checked by the energy, ⟨r⟩, the nodes, the current's continuity and the slices; review B4-9)
+      -> ⟨r⟩(t) — 3D-квадратура |ψ(t)|²; эталон: частота Бора ω = ΔE/ħ и {how}; допуск {tol:.0e} амплитуды колебания (квадратуры точны до ~{acc:.0e}); эталон построен из тех же орбиталей, что и облако: это сверка согласованности зависимости от времени и квадратур, а не самих функций (их проверяют энергия, ⟨r⟩, узлы, непрерывность тока и срезы; review B4-9)
+      at ['{tol:.0e} амплитуды']
+  [v14_quarkonium_3d] |m{s}| = {am} exceeds L{s} = {l}: m{s} = {m1} taken; for |m| = {am} choose L ≥ {am}
+      -> |m{s}| = {am} больше L{s} = {l} — взято m{s} = {m1}; для |m| = {am} выберите L ≥ {am}
+      at ['{am} выберите']
+  [v15_kerr_shadow] computing: {k:d} of {n:d} rows
+      -> считается: {k:d} из {n:d} строк
+      at ['{n:d} строк']
+  [v15_kerr_shadow] the photon orbits of the Johannsen metric at a = {a} and {now} do not form one band between the horizon and {r} M (there are several or none): the edge of the shadow cannot be computed here.
+      -> у метрики Йоханнсена при a = {a} и {now} фотонные орбиты не образуют одну полосу между горизонтом и {r} M (их несколько или нет): край тени здесь не вычисляется.
+      at ['{now} фотонные']
+  [v15_kerr_shadow] {k:d} of {n:d} pixels are farther than {margin:.2g} M from the curve (as far as the polyline of {pts:d} points can be from the curve itself); mismatches: {bad:d}
+      -> {k:d} из {n:d} пикселей дальше {margin:.2g} M от кривой (на столько ломаная из {pts:d} точки может отойти от самой кривой); несовпадений: {bad:d}
+      at ['{n:d} пикселей', '{pts:d} точки']
+  [v16_optical_vortices] Field table against the direct calculation ({n1:d} points + {n2:d} on the bright ring)
+      -> Таблица поля против прямого расчёта ({n1:d} точки + {n2:d} на ярком кольце)
+      at ['{n1:d} точки']
+  [v16_optical_vortices] In a beam with the phase e^{ilφ} the surfaces of equal phase are not planes but l intertwined helices with the pitch lλ: in 3-D these are the translucent helical surfaces (the layer “Surfaces of equal phase”). The light on the screen is slowed: one optical period lasts several hundred milliseconds of the world's time, so the helices “rotate” (in fact the front runs along z at the speed of light). The phases of the period are computed by the engine and revealed when the world's time reaches them; after that the fronts repeat.
+      -> У пучка с фазой e^{ilφ} поверхности равной фазы — не плоскости, а l переплетённых винтов с шагом lλ: в 3D это полупрозрачные винтовые поверхности (слой «Поверхности равной фазы»). Свет на экране замедлен: один оптический период длится несколько сотен миллисекунд времени мира, поэтому винты «вращаются» (на самом деле фронт бежит вдоль z со скоростью света). Фазы периода посчитаны движком и открываются, когда до них доходит время мира; дальше фронты повторяются.
+      at ['{ilφ} поверхности']
+  [v16_optical_vortices] from the source's spectrum (Parseval for the Hankel transform); {d:.2e} of the power of the LG waist does not propagate: the field at z = 0 differs from the named one by {n:.2g} in the L2 norm
+      -> из спектра источника (Парсеваль для преобразования Ганкеля); не распространяется {d:.2e} мощности перетяжки LG: поле на z = 0 отличается от названного на {n:.2g} в норме L2
+      at ['{d:.2e} мощности']
+  [v16_optical_vortices] the spectrum is cut at q = k (at the edge {e:.2g} of the maximum): the field's tails ∝ r^−3/2, and in the window this moment converges only as R^−1/2: a comparison for information
+      -> спектр обрезан на q = k (на краю {e:.2g} максимума): хвосты поля ∝ r^−3/2, в окне этот момент сходится лишь как R^−1/2 — сравнение для сведения
+      at ['{e:.2g} максимума']
+  [v16_optical_vortices] the world is too expensive: a field table of {nr:d} radii × {nq:d} quadrature nodes, ~{nb:.3g} million evaluations of Bessel functions (~{sec:.3g} s; the limit ~{lim_s:.3g} s), and a matrix of ~{gb:.2g} GB (the limit {lim_gb:.2g} GB)
+      -> мир слишком дорог: таблица поля — радиусов: {nr:d}, узлов квадратуры: {nq:d}; ~{nb:.3g} млн вычислений функций Бесселя (~{sec:.3g} с; предел ~{lim_s:.3g} с) и матрица ~{gb:.2g} ГБ (предел {lim_gb:.2g} ГБ)
+      at ['{nb:.3g} млн']
+  [v16_optical_vortices] — (it needs {n} samples: two turns)
+      -> — (нужно {n} отсчётов: два оборота)
+      at ['{n} отсчётов']
+  [v17_mie_scattering] brightness Y = {y:.3g} of the maximum
+      -> яркость Y = {y:.3g} максимума
+      at ['{y:.3g} максимума']
+  [v17_mie_scattering] the error estimate of the sum over the sizes ~{e:.2g} of the maximum (by the order of magnitude)
+      -> оценка ошибки суммы по размерам ~{e:.2g} максимума (по порядку величины)
+      at ['{e:.2g} максимума']
+  [v17_mie_scattering] the maximum of |S^({p:d})|² by the Debye series (grid {step}°): {mb:.3f}°, the difference from Airy {d:+.3f}°; Descartes' angle {th:.3f}°, Airy's first maximum {ai:.3f}° (shifted by ~x^(−2/3) to the bright side); at x = {x:.4g} Airy's theory is an approximation
+      -> максимум |S^({p:d})|² по ряду Дебая (сетка {step}°) — {mb:.3f}°, разница с Эйри {d:+.3f}°; угол Декарта {th:.3f}°, первый максимум Эйри {ai:.3f}° (сдвиг ~x^(−2/3) в светлую сторону); при x = {x:.4g} теория Эйри — приближение
+      at ['{x:.4g} теория']
+  [v17_mie_scattering] {head}. Not included: the cut of the distribution at ±4σ, which removes {tail:.1e} of the probability; its bias is ≲ 3 of this fraction of the maximum
+      -> {head}. Не входит: обрезка распределения на ±4σ — отрезано {tail:.1e} вероятности, её смещение ≲ 3 этой доли максимума
+      at ['{tail:.1e} вероятности']
+count 203
+
+2. count placeholder before a plural English noun, no plural object
+  [framework] At most {n:d} plots at once
+      -> Не больше {n:d} графиков сразу
+      at «{n:d} plots»
+  [framework] Cancelled: {k:d} of {n:d} values computed; they are kept
+      -> Отменено: посчитано {k:d} из {n:d} значений; они сохранены
+      at «{n:d} values»
+  [framework] Done: {k:d} of {n:d} values measured
+      -> Готово: измерено {k:d} из {n:d} значений
+      at «{n:d} values»
+  [framework] None of the {n:d} values was measured — the reasons per value are in the table
+      -> Не измерено ни одно из {n:d} значений — причины по значениям в таблице
+      at «{n:d} values was»
+  [framework] None of the {n:d} values was measured: {first} — the reasons per value are in the table
+      -> Не измерено ни одно из {n:d} значений: {first} — причины по значениям в таблице
+      at «{n:d} values was»
+  [framework] Stopped by the server: the sweep computed longer than {limit} (the budget {budget} × {k:g} and {grace} of margin) — one step of the world was longer than the limit. {n:d} values computed, they are kept; reduce the duration or the world's step
+      -> Остановлено сервером: свип считался дольше {limit} (предел {budget} × {k:g} и {grace} запаса) — один шаг мира оказался длиннее предела. Посчитано значений: {n:d}, они сохранены; уменьшите длительность или шаг мира
+      at «{n:d} values»
+  [framework] The scene was carried into the new world: {n:d} of {total:d} objects
+      -> Сцена перенесена в новый мир: {n:d} из {total:d} объектов
+      at «{total:d} objects»
+  [framework] a whole number of days from 1 to {max:d} is needed
+      -> нужно целое число дней от 1 до {max:d}
+      at «{max:d} is»
+  [framework] at most {n:d} quantities at a time
+      -> не больше {n:d} величин за раз
+      at «{n:d} quantities»
+  [framework] name the quantities: ids=a,b (world {n:d} has: {have})
+      -> укажите величины: ids=a,b (в мире {n:d} есть: {have})
+      at «{n:d} has»
+  [framework] no. {n:d} · {target} · {k:d} values → {measure} · {state}
+      -> № {n:d} · {target} · {k:d} знач. → {measure} · {state}
+      at «{k:d} values»
+  [framework] t, {unit} (every {k:d}th frame of the record: a limit of {cap:d} rows)
+      -> t, {unit} (каждый {k:d}-й кадр записи: предел {cap:d} строк)
+      at «{cap:d} rows»
+  [framework] the quantity is undefined in {bad:d} of the window's {n:d} readings
+      -> величина не определена в {bad:d} из {n:d} замеров окна
+      at «{n:d} readings»
+  [framework] the scene already holds {n:d} objects — no more
+      -> в сцене уже {n:d} объектов — больше нельзя
+      at «{n:d} objects»
+  [framework] the scene already holds {n:d} objects: no more can be added
+      -> в сцене уже {n:d} объектов: больше нельзя
+      at «{n:d} objects»
+  [framework] the scene file is longer than {max:d} characters ({n:d})
+      -> файл сцены больше {max:d} символов ({n:d})
+      at «{max:d} characters»
+  [framework] undefined in {bad:d} of {n:d} readings
+      -> не определена в {bad:d} из {n:d} замеров
+      at «{n:d} readings»
+  [framework] verified at {n:d} points: {err:.2g} ≤ {tol:.2g}
+      -> сверено в {n:d} точк.: {err:.2g} ≤ {tol:.2g}
+      at «{n:d} points»
+  [framework] world {n:d} has no quantities {ids} (it has: {have})
+      -> в мире {n:d} нет величин: {ids} (есть: {have})
+      at «{n:d} has»
+  [framework] {k:d} of {n:d} values
+      -> {k:d} из {n:d} значений
+      at «{n:d} values»
+  [framework] {n:d} by this moment: the others when the time reaches them
+      -> {n:d} к этому моменту: остальные — когда до них дойдёт время
+      at «{n:d} by this»
+  [framework] {n:d} of {max:d} running · {runs:d} records in all
+      -> идут {n:d} из {max:d} · всего записей {runs:d}
+      at «{runs:d} records»
+  [framework] {n:d} sweeps already run on the server (no more than {max:d} at once): wait for one of them
+      -> на сервере уже идут свипы ({n:d}; больше {max:d} сразу нельзя): дождитесь одного из них
+      at «{n:d} sweeps»
+  [framework] {n:d} values — at most {max:d}
+      -> значений {n:d} — не больше {max:d}
+      at «{n:d} values»
+  [framework] {name}: {n:d} characters — more than the limit of {max:d}
+      -> {name}: {n:d} символов — больше предела {max:d}
+      at «{n:d} characters»
+  [framework] {note}; after it the record holds {frames:d} more frames and {changes:d} changes — they are not in the sweep
+      -> {note}; после него в записи ещё кадров: {frames:d}, изменений: {changes:d} — в свип они не вошли
+      at «{frames:d} more frames»
+  [framework] {values:d} values × {n:d} readings: the record has not measured the cost of computing this world (the world has not played ⏺ yet — steps and pauses do not show it). The sweep measures it itself in the first {probe} of computing and stops if the whole of it would take more than {limit} (the budget {budget} × {k:g})
+      -> {values:d} знач. × {n:d} замер.: цену счёта этого мира запись не измерила (мир ещё не играл ⏺ — шаги и паузы её не показывают). Свип измерит её сам в первые {probe} счёта и остановится, если весь он займёт больше {limit} (предел {budget} × {k:g})
+      at «{values:d} values»
+  [framework] ≈ {total} of computing: {values:d} values × (restoring {restore} + {duration} of the world × {ms:.3g} ms per 1 {unit} + {n:d} readings × {sample:.3g} ms); the budget is {budget}. The estimate comes from the cost of computing this world while it played ({frames:d} frames of the record); the sweep checks it itself and stops if it comes out dearer than {limit}
+      -> ≈ {total} счёта: {values:d} знач. × (восстановление {restore} + {duration} мира × {ms:.3g} мс за 1 {unit} + {n:d} замер. × {sample:.3g} мс); предел {budget}. Оценка — по цене счёта этого мира, пока он играл ({frames:d} кадр. записи); свип проверит её сам и остановится, если выйдет дороже {limit}
+      at «{values:d} values»
+  [p01_gravity] the relative change of K since the start of the motion for the body closest to its limit (“{label}”, {n:d} steps); the limit is the sum over its steps of the allowed local errors of DOP853 (rtol = {rtol}) converted into K: √6·rtol·Σ|∂K/∂yₖ|·scaleₖ, plus rounding; E and L are conserved exactly (t and φ are cyclic coordinates)
+      -> отн. изменение K с начала движения у тела, ближайшего к своему пределу («{label}», шагов: {n:d}); предел — сумма по его шагам допустимых локальных ошибок DOP853 (rtol = {rtol}), пересчитанных в K: √6·rtol·Σ|∂K/∂yₖ|·масштабₖ, плюс округление; E и L сохраняются точно (t и φ — циклические координаты)
+      at «{n:d} steps»
+  [p02_quantum] Grid not changed ({n:d} points per axis, window {size:.4g} nm)
+      -> Сетка не изменена ({n:d} точек по оси, окно {size:.4g} нм)
+      at «{n:d} points»
+  [p02_quantum] Grid: {n0:d} → {n1:d} points per axis, step {d0:.4g} → {d1:.4g} nm, window {s0:.4g} → {s1:.4g} nm (no waves in the window)
+      -> Сетка: {n0:d} → {n1:d} точек по оси, шаг {d0:.4g} → {d1:.4g} нм, окно {s0:.4g} → {s1:.4g} нм (волн в окне нет)
+      at «{n1:d} points»
+  [p02_quantum] Grid: {n0:d} → {n1:d} points per axis, step {d0:.4g} → {d1:.4g} nm, window {s0:.4g} → {s1:.4g} nm: the wave resampled exactly ({route})
+      -> Сетка: {n0:d} → {n1:d} точек по оси, шаг {d0:.4g} → {d1:.4g} нм, окно {s0:.4g} → {s1:.4g} нм — волна пересчитана точно ({route})
+      at «{n1:d} points»
+  [p02_quantum] a grid of {n:d} points per axis is not coarser than the present one ({now})
+      -> сетка из {n:d} точек по оси не грубее нынешней ({now})
+      at «{n:d} points»
+  [p02_quantum] against ⟨H⟩ at t = {t:.4g} s; the bound 2‖Hψ‖e + e²‖H‖ with the step error e estimated by a companion (a step dt against two dt/2 every {n:d} steps): a bound at this estimate, not a strict one
+      -> против ⟨H⟩ в t = {t:.4g} с; граница 2‖Hψ‖e + e²‖H‖ при оценке ошибки шага e компаньоном (шаг dt против двух dt/2 каждые {n:d} шагов): граница при этой оценке, не строгая
+      at «{n:d} steps»
+  [p02_quantum] grid {n:d}² = {pts:d} points and up to 6 particles
+      -> сетка {n:d}² = {pts:d} точек и до 6 частиц
+      at «{pts:d} points»
+  [p02_quantum] grid {n:d}³ = {pts:d} points and up to 6 particles
+      -> сетка {n:d}³ = {pts:d} точек и до 6 частиц
+      at «{pts:d} points»
+  [p02_quantum] local {loc:.3g} per step (a step dt against two dt/2, ×4/3, every {n:d} scene steps); the sum over the steps estimates the global error ‖ψ − ψ_exact‖ to leading order, not a bound (the double slit: an estimate of {e1:.2g} at a true {e2:.2g})
+      -> локальная {loc:.3g} на шаг (шаг dt против двух dt/2, ×4/3, каждые {n:d} шагов сцены), сумма по шагам — оценка глобальной ошибки ‖ψ − ψ_точн‖ в главном порядке, не граница (двухщелевой опыт: оценка {e1:.2g} при истинной {e2:.2g})
+      at «{n:d} scene steps»
+  [p02_quantum] there is no grid of {n:d} points per axis
+      -> нет сетки из {n:d} точек по оси
+      at «{n:d} points»
+  [p02_quantum] {C:d} points of the ensemble integrated once more in the same wave: interpolation of order {order:d} instead of 8, the time step's tolerances {tight:d} times tighter; the median deviation {med:.2g} nm against half the grid step {tol:.3g} nm (what the grid knows |ψ|² on); the largest in the run {dmax:.2g} nm (near the wave's nodes the trajectories are sensitive: single ones diverge even without an error); a different absorber for {fate:d} (1 allowed)
+      -> {C:d} точек ансамбля проинтегрированы ещё раз в той же волне: интерполяция порядка {order:d} вместо 8, допуски шага по времени в {tight:d} раза строже; медиана расхождения {med:.2g} нм против половины шага сетки {tol:.3g} нм (на чём сетка знает |ψ|²); наибольшее за запуск {dmax:.2g} нм (у узлов волны траектории чувствительны: отдельные расходятся и без ошибки); другой поглотитель у {fate:d} (допустимо 1)
+      at «{C:d} points»
+  [p02_quantum] {points:d} points, step {dt:.3g} fs; the real-time limit ≈ {rt:.3g} s of the world per second; an estimate from the kernel's measured rates (RATES), the actual speed is next to the speed slider
+      -> {points:d} точек, шаг {dt:.3g} фс; предел реального времени ≈ {rt:.3g} с мира в секунду; оценка по измеренным скоростям ядра (RATES), фактическая скорость — у ползунка скорости
+      at «{points:d} points»
+  [p03_molecules] Z = 1 + Σ r·Δp / (d N T Δt) over the collisions, the mean of {k:d} blocks ± {se:.2g}; the reference: the fluid at ρσ^{d} = {rho:.4f} in the limit N → ∞ {zinf:.5f} ({src}) minus the ensemble correction for N = {N:d}: {ref:.5f}; the tolerance 5 standard errors + 1e-4
+      -> Z = 1 + Σ r·Δp / (d N T Δt) по столкновениям, среднее {k:d} блоков ± {se:.2g}; эталон: жидкость при ρσ^{d} = {rho:.4f} в пределе N → ∞ {zinf:.5f} ({src}) минус поправка ансамбля для N = {N:d}: {ref:.5f}; допуск 5 стандартных ошибок + 1e-4
+      at «{k:d} blocks»
+  [p03_molecules] accumulating: {k:d} of {n:d} blocks of {b:.2g} ps after {eq:.2g} ps since the change of the scene; the reference {ref:.5f} ({src})
+      -> набирается: {k:d} из {n:d} блоков по {b:.2g} пс после {eq:.2g} пс с изменения сцены; эталон {ref:.5f} ({src})
+      at «{n:d} blocks»
+  [p03_molecules] at most {n:d} atoms, or a larger region; denser: “Crystal”
+      -> не больше {n:d} атомов или область больше; плотнее — «Кристалл»
+      at «{n:d} atoms»
+  [p03_molecules] at most {n:d} molecules, or a larger region; denser: “Crystal”
+      -> не больше {n:d} молекул или область больше; плотнее — «Кристалл»
+      at «{n:d} molecules»
+  [p03_molecules] only {k:d} of {n:d} atoms could be placed without overlaps
+      -> без перекрытий удалось разместить только {k:d} из {n:d} атомов
+      at «{n:d} atoms»
+  [p03_molecules] outside the DKW bound {b:.3g} at the level {lvl} ({n:d} velocity components of all atoms, each divided by √(kT/m) of its mass): in equilibrium, within
+      -> вне границы ДКВ {b:.3g} при уровне {lvl} ({n:d} компонент скорости всех атомов, каждая делена на √(kT/m) своей массы): в равновесии — в пределах
+      at «{n:d} velocity components»
+  [p03_molecules] within the DKW bound {b:.3g} at the level {lvl} ({n:d} velocity components of all atoms, each divided by √(kT/m) of its mass): in equilibrium, within
+      -> в пределах границы ДКВ {b:.3g} при уровне {lvl} ({n:d} компонент скорости всех атомов, каждая делена на √(kT/m) своей массы): в равновесии — в пределах
+      at «{n:d} velocity components»
+  [p03_molecules] {head}: {old} → {new} in {dur:.4g} ps, {n:d} steps; the work on the system W = {W:+.4g} kJ/mol (by steps, exact; −∫{P} dV by steps: {pdv:+.4g}), counted in the first law
+      -> {head}: {old} → {new} за {dur:.4g} пс, шагов: {n:d}; работа над системой W = {W:+.4g} кДж/моль (по шагам, точно; −∫{P} dV по шагам — {pdv:+.4g}), учтена в первом начале
+      at «{n:d} steps»
+  [p03_molecules] {n:d} molecules could not be placed without overlaps: {k:d} placed
+      -> не удалось разместить без перекрытий все молекулы ({n:d}): размещено {k:d}
+      at «{n:d} molecules»
+  [p03_molecules] {n:d} molecules crossed a face that became a wall: moved inside as a whole (by at most {d:.3g} nm)
+      -> молекул, пересекавших грань, ставшую стенкой: {n:d}; сдвинуты внутрь целиком (не больше чем на {d:.3g} нм)
+      at «{n:d} molecules»
+  [p03_molecules] |P − P₀| / the rounding bound over {n:d} steps (P₀ the momentum at the last change of the scene; the bound ε·steps·(sums of |m v|, |F|): the engine's momentum_drift); conserved along periodic axes without a field, thermal walls, Langevin baths and local baths, frozen atoms
+      -> |P − P₀| / граница округления за {n:d} шагов (P₀ — импульс при последнем изменении сцены; граница — ε·шаги·(суммы |m v|, |F|): momentum_drift движка); сохраняется вдоль периодических осей без поля, тепловых стенок, ванн Ланжевена и местных ванн, замороженных атомов
+      at «{n:d} steps»
+  [p03_molecules] “{label}”: {n:d} atoms would come closer than σ to atoms of other objects (they would overlap)
+      -> «{label}»: атомов, которые оказались бы ближе σ к атомам других объектов (перекрылись бы): {n:d}
+      at «{n:d} atoms»
+  [p04_fluids] St = f D / U ({n:d} periods of C_L)
+      -> St = f D / U (периодов C_L: {n:d})
+      at «{n:d} periods»
+  [p04_fluids] a domain of {lx:.2g} × {ly:.2g} m on a grid of nx = {nx:d}: spacing {dx:.2g} m, {ny:d} nodes along y, {n:.2g} nodes in all; that is ≈ {need} of memory, above the limit of {budget}
+      -> область {lx:.2g} × {ly:.2g} м на сетке nx = {nx:d}: шаг {dx:.2g} м, по y {ny:d} узлов, всего {n:.2g} узлов — это ≈ {need} памяти, больше предела {budget}
+      at «{ny:d} nodes»
+  [p04_fluids] a flow grid of {nx:d} × {ny:d} nodes
+      -> сетка течения {nx:d} × {ny:d} узлов
+      at «{ny:d} nodes»
+  [p04_fluids] a grid of {nx:d} × {ny:d} nodes (spacing {dx:.2g} m) would need ≈ {need} of memory, above the limit of {budget}
+      -> сетка {nx:d} × {ny:d} узлов (шаг {dx:.2g} м) потребует ≈ {need} памяти, больше предела {budget}
+      at «{ny:d} nodes»
+  [p04_fluids] from the means over blocks of {ms:.3g} ms: C_D max and C_L max over the last sound period ({n:d} blocks), St over the last sound periods ({m:d} blocks, from t = {t:.4g} s)
+      -> по средним за блоки по {ms:.3g} мс: C_D max и C_L max — за последний период звука (блоков: {n:d}), St — за последние периоды звука (блоков: {m:d}, с t = {t:.4g} с)
+      at «{n:d} blocks»
+  [p04_fluids] grid {nx0:d} × {ny0:d} → {nx1:d} × {ny1:d} nodes (spacing {dx0:.2g} → {dx1:.2g} m), time step {dt0:.2g} → {dt1:.2g} s (τ {tau0:.3g} → {tau1:.3g})
+      -> сетка {nx0:d} × {ny0:d} → {nx1:d} × {ny1:d} узлов (шаг {dx0:.2g} → {dx1:.2g} м), шаг по времени {dt0:.2g} → {dt1:.2g} с (τ {tau0:.3g} → {tau1:.3g})
+      at «{ny1:d} nodes»
+  [p04_fluids] moving the flow to a grid of {nx:d} × {ny:d} nodes
+      -> перенос течения на сетку {nx:d} × {ny:d} узлов
+      at «{ny:d} nodes»
+  [p04_fluids] the flow carried over as it was ({nx:d} × {ny:d} nodes, the same time step)
+      -> течение перенесено как было ({nx:d} × {ny:d} узлов, тот же шаг по времени)
+      at «{ny:d} nodes»
+  [p04_fluids] {n:d} nodes where the previous world had a body start at rest
+      -> узлов, где у прежнего мира было тело, начато в покое: {n:d}
+      at «{n:d} nodes»
+  [p04_fluids] {nx:d} × {ny:d} nodes (spacing {dx:.2g} m, dt {dt:.2g} s)
+      -> {nx:d} × {ny:d} узлов (шаг {dx:.2g} м, dt {dt:.2g} с)
+      at «{ny:d} nodes»
+  [p04_fluids] {nx:d}×{ny:d} nodes, step {dt:.3g} s; the real-time limit ≈ {rate:.3g} s of the world per second (estimated; the measured speed depends on the wall clock: it is at the speed slider)
+      -> {nx:d}×{ny:d} узлов, шаг {dt:.3g} с; предел реального времени ≈ {rate:.3g} с мира в секунду (по оценке; измеренная скорость зависит от часов стены — она у ползунка скорости)
+      at «{ny:d} nodes»
+  [p04_fluids] “Domain length along x” at least {lx:.2g} m with {nx:d} nodes
+      -> «Длина области по x» не меньше {lx:.2g} м при {nx:d} узлах
+      at «{nx:d} nodes»
+  [v01_light_travel] a pulse train needs a period > 0 and from {lo:d} to {hi:d} pulses
+      -> для серии нужен период > 0 и от {lo:d} до {hi:d} импульсов
+      at «{hi:d} pulses»
+  [v02_double_slit] A modification of the Born rule: the position from |ψ|^p normalised on the finite screen; the probability of reaching the screen from |ψ|²; the Sorkin parameter from the unnormalised I^(p/2). The expectation is a Monte Carlo over {n:d} particles.
+      -> Модификация правила Борна: положение — из |ψ|^p, нормированного на конечном экране; вероятность дойти до экрана — по |ψ|²; параметр Соркина — по ненормированным I^(p/2). Ожидание — Монте-Карло по {n:d} частицам.
+      at «{n:d} particles»
+  [v02_double_slit] Agreement of the histogram with the expectation: χ² = {x2:.4g} for {dof:d} degrees of freedom, p = {p:.3g}
+      -> Согласие гистограммы с ожиданием: χ² = {x2:.4g} на {dof:d} ст. св., p = {p:.3g}
+      at «{dof:d} degrees»
+  [v02_double_slit] At the slits the map's cross-section does not resolve the single slits (step {st:.3g} m > a/2); the comparison with the exact solution there uses {n:d} points of the cross-section and is resolved no better.
+      -> У щелей сечение карты не разрешает отдельные щели (шаг {st:.3g} м > a/2); там же сверка с точным решением идёт по {n:d} точкам сечения и разрешена не лучше.
+      at «{n:d} points»
+  [v02_double_slit] Fullerenes C60, {v:g} m/s, a grating of {n:d} slits (illustrative)
+      -> Фуллерены C60, {v:g} м/с, решётка из {n:d} щелей (иллюстративно)
+      at «{n:d} slits»
+  [v02_double_slit] Screen: {shown:d} counts shown (of {n:d} in all). Histogram; the orange line is the run's expectation (with the dark counts), the grey dashed one the sum of the slits without interference.
+      -> Экран: показано отсчётов {shown:d} (из {n:d}). Гистограмма; оранжевая линия — ожидание запуска (с темновыми отсчётами), серая пунктирная — сумма щелей без интерференции.
+      at «{shown:d} counts»
+  [v02_double_slit] The speed at which the pattern builds up (≈{n:d} particles per second)
+      -> Скорость набора картины (≈{n:d} частиц в секунду)
+      at «{n:d} particles»
+  [v02_double_slit] a basis with edge conditions (thin screen), converging exponentially: the estimate is the change from {a:d} to {b:d} functions per slit (larger than the error at {b:d})
+      -> базис с краевыми условиями (тонкий экран), сходится экспоненциально: оценка — изменение от {a:d} до {b:d} функций на щель (больше ошибки при {b:d})
+      at «{b:d} functions»
+  [v02_double_slit] slit {j:d} is dark (it passes {r:.1e} of the other's): there is nothing to interfere with, |γ₁₂| = |G₁₂|/√(G₁₁G₂₂) is the indeterminate form 0/0
+      -> щель {j:d} тёмная (пропускает {r:.1e} от другой): интерферировать не с чем, |γ₁₂| = |G₁₂|/√(G₁₁G₂₂) — неопределённость 0/0
+      at «{j:d} is»
+  [v02_double_slit] the which-path detector is at slit no. {k:d}, but there are {n:d} slits
+      -> детектор пути стоит у щели № {k:d}, а щелей всего {n:d}
+      at «{n:d} slits»
+  [v02_double_slit] waveguide modes, converging algebraically (the screen's corners): Richardson extrapolation over {a:d}, {b:d}, {c:d} modes per slit (sub-blocks of one operator), order {order}; measured: the estimate is {f1:g}–{f2:g} times the true error
+      -> волноводные моды, сходятся алгебраически (углы экрана): экстраполяция Ричардсона по {a:d}, {b:d}, {c:d} модам на щель (подблоки одного оператора), порядок {order}; измерено: оценка в {f1:g}–{f2:g} раза выше истинной ошибки
+      at «{c:d} modes»
+  [v02_double_slit] which-path detector moved to slit 1 (there are {n:d} slits now)
+      -> детектор пути перенесён к щели 1 (щелей теперь {n:d})
+      at «{n:d} slits»
+  [v02_double_slit] {method}, {n:d} modes per slit
+      -> {method}, мод на щель: {n:d}
+      at «{n:d} modes»
+  [v02_double_slit] “{elem}” at slit {j:d} does not act on {who} ({why})
+      -> «{elem}» у щели {j:d} не действует на {who} ({why})
+      at «{j:d} does»
+  [v03_quantum_1d] the grid would need {n:d} points (more than {nmax:d})
+      -> нужна сетка из {n:d} точек (больше {nmax:d})
+      at «{n:d} points»
+  [v03_quantum_1d] this experiment is too costly for a live world: a grid of {n:d} points × {steps:.3g} steps (≈ {sec:.0f} s of computing, the limit is ≈ {lim:.0f} s)
+      -> этот опыт слишком дорог для живого мира: сетка {n:d} точек × {steps:.3g} шагов (≈ {sec:.0f} с счёта, предел ≈ {lim:.0f} с)
+      at «{n:d} points»
+  [v05_optics_bench] A speed for collecting statistics (≈ {n:d} photons per second)
+      -> Скорость набора статистики (≈ {n:d} фотонов в секунду)
+      at «{n:d} photons»
+  [v05_optics_bench] Beyond the critical angle R = 1: max |1 − R| (s and p, {k:d} angles from θ_c to {th}°)
+      -> За критическим углом R = 1: max |1 − R| (s и p, {k:d} углов от θ_c до {th}°)
+      at «{k:d} angles»
+  [v05_optics_bench] The stack's spectrum is very dense: {m:d} points may not resolve every band at short wavelengths.
+      -> Спектр стопки очень частый: {m:d} точек могут не разрешить все полосы на коротких волнах.
+      at «{m:d} points»
+  [v05_optics_bench] n = {k:d}; {parts}. The exact binomial tail of each outcome, Bonferroni correction (outcomes: {m:d}); fails at p < {p5:.2g} (like 5σ); Pearson's χ² = {chi2:.3g} with {dof:d} degrees of freedom (for information)
+      -> n = {k:d}; {parts}. Точный биномиальный хвост каждого исхода, поправка Бонферрони (исходов: {m:d}); провал при p < {p5:.2g} (как 5σ); χ² Пирсона = {chi2:.3g}, степеней свободы: {dof:d} (для сведения)
+      at «{dof:d} degrees»
+  [v07_bell_test] A speed for collecting statistics (≈{n:d} pairs per second)
+      -> Скорость набора статистики (≈{n:d} пар в секунду)
+      at «{n:d} pairs»
+  [v07_bell_test] S: accumulating; ≥ {nmin:d} pairs are needed in each of the four cells (now the minimum is {k:d})
+      -> S: набирается — нужно ≥ {nmin:d} пар в каждой из четырёх ячеек (сейчас минимум {k:d})
+      at «{nmin:d} pairs»
+  [v07_bell_test] accumulating: at least {nmin:d} pairs per cell are needed for each of the four pairs of settings
+      -> набирается: для каждой из четырёх пар настроек нужно не меньше {nmin:d} пар в ячейке
+      at «{nmin:d} pairs»
+  [v07_bell_test] accumulating: at least {nmin:d} pairs per cell are needed for each of the four pairs of settings; in the mode “fixed” only (a, b) accumulates: switch on the random choice
+      -> набирается: для каждой из четырёх пар настроек нужно не меньше {nmin:d} пар в ячейке; в режиме «фиксированный» набирается только (a, b) — включите случайный выбор
+      at «{nmin:d} pairs»
+  [v07_bell_test] measured in this run (± σ; pale: fewer than {nmin:d} pairs)
+      -> измерено в этом запуске (± σ; бледные — меньше {nmin:d} пар)
+      at «{nmin:d} pairs»
+  [v08_wave_3d] P(z) = Σ j_z dx dy over the whole window at {n:d} depths against the closed formula of the spectrum: Parseval's identity of the discrete sum; it confirms the code and the normalisation, not the window or the physics (those: the row above)
+      -> P(z) = Σ j_z dx dy по всему окну на {n:d} глубинах против замкнутой формулы по спектру — тождество Парсеваля дискретной суммы: подтверждает код и нормировку, но не окно и не физику (их — строка выше)
+      at «{n:d} depths»
+  [v08_wave_3d] Slice {pid} ({plane}): the field at {n:d} points against the exact one
+      -> Срез {pid} ({plane}): поле в {n:d} точках против точного
+      at «{n:d} points»
+  [v08_wave_3d] the computation window is too small for the depth z_max = {zmax} µm: light that left at large angles comes back as periodic copies of the source; the best reachable with a window of up to {m:d} points per axis is {best}, and at most {tol:.0e} is needed
+      -> окно расчёта мало для глубины z_max = {zmax} мкм: свет, ушедший под большими углами, возвращается периодическими копиями источника; лучшее, что достижимо при окне до {m:d} точек на ось, — {best}, а нужно не больше {tol:.0e}
+      at «{m:d} points»
+  [v09_thomas_3d] A non-planar crown of {n:d} burns
+      -> Неплоская корона из {n:d} импульсов
+      at «{n:d} burns»
+  [v09_thomas_3d] Field: rotation θ at {n:d} points of the volume against Gauss–Bonnet
+      -> Поле: поворот θ в {n:d} точках объёма против Гаусса–Бонне
+      at «{n:d} points»
+  [v09_thomas_3d] Seam: {n:d} burns against {n2:d}
+      -> Шов: {n:d} импульсов против {n2:d}
+      at «{n:d} burns»
+  [v09_thomas_3d] Slice {pid} ({plane}): rotation θ at {n:d} points against Gauss–Bonnet
+      -> Срез {pid} ({plane}): поворот θ в {n:d} точках против Гаусса–Бонне
+      at «{n:d} points»
+  [v09_thomas_3d] The seam of a ball on the sphere of velocities (non-planar, {n:d} burns)
+      -> Шов мяча на сфере скоростей (неплоский, {n:d} импульсов)
+      at «{n:d} burns»
+  [v09_thomas_3d] a seam of {n:d} burns (the smooth seam is their limit; the difference from {n2:d} is in the checks); no closed formula
+      -> шов из {n:d} импульсов (гладкий шов — их предел; разница с {n2:d} — в проверках); замкнутой формулы нет
+      at «{n:d} burns»
+  [v10_fast_observer] without velocities the Lorentz transformations are identities: the same bodies in {n:d} pixels, the same distances; the bodies agree: {same}
+      -> без скоростей преобразования Лоренца тождественны: те же тела в {n:d} пикселях, те же расстояния; совпадение тел: {same}
+      at «{n:d} pixels»
+  [v10_fast_observer] {n:d} pixels: emission time (relative to the light's travel time) {et:.1e}, D {ed:.1e}; reference: lorentz.retarded_time for the point of the body found and D = γ_o(1 − u·n)/(γ_b(1 − v·n))
+      -> пикселей: {n:d}; время излучения (отн. ко времени пути света) {et:.1e}, D {ed:.1e}; эталон — lorentz.retarded_time для найденной точки тела и D = γ_н(1 − u·n)/(γ_т(1 − v·n))
+      at «{n:d} pixels»
+  [v10_fast_observer] {n:d} pixels; γ² = {g2:.4g}; tolerance 16 ε γ² (the round-off of the boosts)
+      -> пикселей: {n:d}; γ² = {g2:.4g}; допуск 16 ε γ² (округление бустов)
+      at «{n:d} pixels»
+  [v10_fast_observer] {n:d} stars; cos θ′ = (cos θ + β)/(1 + β cos θ)
+      -> звёзд: {n:d}; cos θ′ = (cos θ + β)/(1 + β cos θ)
+      at «{n:d} stars»
+  [v11_double_slit_2d] {K:d} particles integrated again in the same wave, {tight:d} times more tightly; of the {both:d} that hit in both cases, 95 % differ by at most {p95:.2g} λ, the largest by {mx:.2g} λ{fringe}; the fate (screen, reflection, sideways) differs for {changed:d}; target: 95 % < {target} λ and at most 2 % of another fate (review B3-4)
+      -> частиц {K:d} проинтегрированы ещё раз в той же волне в {tight:d} раза строже; из попавших в обоих случаях ({both:d}) 95 % отличаются не больше чем на {p95:.2g} λ, наибольшее — {mx:.2g} λ{fringe}; судьба (экран, отражение, вбок) другая у {changed:d}; цель: 95 % < {target} λ и не больше 2 % другой судьбы (review B3-4)
+      at «{K:d} particles»
+  [v11_double_slit_2d] {n:d} hits; the distance between their distribution in x and the flux pattern; the critical value at {p} %: {c}/√n = {crit:.3g} (equivariance: starts by |ψ|² → hits by the flux)
+      -> попаданий: {n:d}; расстояние между их распределением по x и картиной потока; критическое значение {p} %: {c}/√n = {crit:.3g} (эквивариантность: старт по |ψ|² → попадания по потоку)
+      at «{n:d} hits»
+  [v11_double_slit_2d] {n:d} hits; the reference is the distribution in y of the flux into the screen, Σ_t J(x, t)|η(y, t)|²; the critical value at {p} %: {c}/√n = {crit:.3g}. It checks the starts by |η₀|²; the motion in y cannot be told this way (η spreads by {g:.3g} % during the flight): the check «Motion of the Bohm particles in y» does that
+      -> попаданий: {n:d}; эталон — распределение по y потока в экран, Σ_t J(x, t)|η(y, t)|²; критическое значение {p} %: {c}/√n = {crit:.3g}. Проверяет старты по |η₀|²; движение по y так не различить (η за полёт расплывается на {g:.3g} %) — его проверяет сверка «Движение частиц Бома по y»
+      at «{n:d} hits»
+  [v11_double_slit_2d] {n:d} hits; the y of each is y₀·σy(t)/σy (the run's exact formula) against dy/dt = j/|η|² integrated by the 4th-order Runge–Kutta method in this run's wave η from the start to the moment of the hit (a second method); the largest difference in widths of η at the moment of the hit; the target is < {tol} (the integration's error); during the flight η spreads by {g:.3g} % (median)
+      -> попаданий: {n:d}; y каждого — y₀·σy(t)/σy (точная формула прогона) против dy/dt = j/|η|², проинтегрированного методом Рунге–Кутты 4-го порядка в волне η этого прогона от старта до момента попадания (второй метод); наибольшая разность в ширинах η в момент попадания; цель < {tol} (ошибка интегрирования); за полёт η расплывается на {g:.3g} % (медиана)
+      at «{n:d} hits»
+  [v11_double_slit_2d] {n:d} particles reached the screen: too few for a comparison
+      -> на экран пришло частиц: {n:d} — мало для сравнения
+      at «{n:d} particles»
+  [v11_double_slit_2d] Σ_y P(x, y) Δy against the flux into the screen in x; {ny:d} bins in y over ±{yh:.3g} λ, |η(y, t)|² of the free Gaussian factor (σy = {sy} λ at t = 0); a fraction of the peak; the target is < 1e-3 (the tails of η cut by the scene's edges, and the bins' step)
+      -> Σ_y P(x, y) Δy против потока в экран по x; полос по y — {ny:d} на ±{yh:.3g} λ, |η(y, t)|² свободного гауссова множителя (σy = {sy} λ при t = 0); доля пика; цель < 1e-3 (обрезка хвостов η краями сцены и шаг полос)
+      at «{ny:d} bins»
+  [v12_arrival_times_2d] A train of {n:d} packets: the exponential rules damp the later peaks (Das & Struyve 2021)
+      -> Цепочка из {n:d} пакетов: экспоненциальные правила гасят поздние пики (Das & Struyve 2021)
+      at «{n:d} packets»
+  [v12_arrival_times_2d] a train of {n:d} packets {sep:.3g} λ apart
+      -> цепочка из {n:d} пакетов через {sep:.3g} λ
+      at «{n:d} packets»
+  [v12_arrival_times_2d] {n:d} particles of {N:d}; {law}; the critical value at {p} %: {c}/√n = {crit:.3g}
+      -> {n:d} частиц из {N:d}; {law}; критическое значение {p} %: {c}/√n = {crit:.3g}
+      at «{n:d} particles»
+  [v15_kerr_shadow] computing: {k:d} of {n:d} rows
+      -> считается: {k:d} из {n:d} строк
+      at «{n:d} rows»
+  [v15_kerr_shadow] the same code on NumPy and CuPy in fp64: the CUDA functions differ from glibc by ≤ 2 ulp; the radii of the crossings within 128 u × the sensitivity (|α ∂r/∂α| + |β ∂r/∂β| + |r|, central differences on the CPU), the redshift within its consequence for g plus the round-off of the formula itself (at the ray's turning point and inside the ISCO, roots of cancelling differences); {n:d} values farther than {d} M from the curve compared, the outcome for every pixel of the row
+      -> тот же код на NumPy и CuPy в fp64: функции CUDA отличаются от glibc на ≤ 2 ulp; радиусы пересечений — в пределах 128 u × чувствительность (|α ∂r/∂α| + |β ∂r/∂β| + |r|, центральные разности на CPU), красное смещение — в пределах её следствия для g плюс округление самой формулы (у точки поворота луча и внутри ISCO корни из сокращающихся разностей); сравнено значений дальше {d} M от кривой: {n:d}, исход — у всех пикселей строки
+      at «{n:d} values»
+  [v15_kerr_shadow] {k:d} of {n:d} pixels are farther than {margin:.2g} M from the curve (as far as the polyline of {pts:d} points can be from the curve itself); mismatches: {bad:d}
+      -> {k:d} из {n:d} пикселей дальше {margin:.2g} M от кривой (на столько ломаная из {pts:d} точки может отойти от самой кривой); несовпадений: {bad:d}
+      at «{n:d} pixels»
+  [v16_optical_vortices] Field table against the direct calculation ({n1:d} points + {n2:d} on the bright ring)
+      -> Таблица поля против прямого расчёта ({n1:d} точки + {n2:d} на ярком кольце)
+      at «{n1:d} points»
+  [v16_optical_vortices] RK4, {steps:d} steps in z; two lines recomputed with half the step: the largest difference, fraction of w0 (an estimate of the error of the lines in the scene)
+      -> RK4, шагов по z: {steps:d}; две линии пересчитаны с вдвое меньшим шагом — наибольшее расхождение, доля w0 (оценка ошибки линий на сцене)
+      at «{steps:d} steps»
+  [v16_optical_vortices] the sum of the phase jumps around the circle r = {r:.3g} µm (the brightest ring), {npts:d} points; reference: l
+      -> сумма скачков фазы по окружности r = {r:.3g} мкм (самое яркое кольцо), точек: {npts:d}; эталон — l
+      at «{npts:d} points»
+  [v16_optical_vortices] the world is too expensive: a field table of {nr:d} radii × {nq:d} quadrature nodes, ~{nb:.3g} million evaluations of Bessel functions (~{sec:.3g} s; the limit ~{lim_s:.3g} s), and a matrix of ~{gb:.2g} GB (the limit {lim_gb:.2g} GB)
+      -> мир слишком дорог: таблица поля — радиусов: {nr:d}, узлов квадратуры: {nq:d}; ~{nb:.3g} млн вычислений функций Бесселя (~{sec:.3g} с; предел ~{lim_s:.3g} с) и матрица ~{gb:.2g} ГБ (предел {lim_gb:.2g} ГБ)
+      at «{nq:d} quadrature nodes»
+  [v17_mie_scattering] (1 − R²² − T²¹T¹²/(1 − R¹¹))/2 from the ratios of the Hankel functions and the Wronskian against aₙ, bₙ of the Mie series (Dₙ downwards, ψₙ by Miller, χₙ upwards), over all {N:d} orders, as fractions of the largest coefficient: a test of the coefficients' values. The tolerance per order u(1000N + 32x|daₙ/dx|/max|a|) (the conditioning at narrow resonances; mie_debye.ACCURACY): from {lo:.1e} to {hi:.1e}; the largest ratio of the deviation to the tolerance {w:.2g} (order {k:d})
+      -> (1 − R²² − T²¹T¹²/(1 − R¹¹))/2 по отношениям функций Ханкеля и вронскиану против aₙ, bₙ ряда Ми (Dₙ вниз, ψₙ по Миллеру, χₙ вверх), по всем порядкам (их {N:d}), в долях наибольшего коэффициента: проверка значений коэффициентов. Допуск по порядкам u(1000N + 32x|daₙ/dx|/max|a|) (обусловленность у узких резонансов; mie_debye.ACCURACY): от {lo:.1e} до {hi:.1e}; наибольшее отношение отклонения к допуску {w:.2g} (порядок {k:d})
+      at «{N:d} orders»
+  [v17_mie_scattering] Scattered light, unpolarised incident light (log scale, {n:d} decades)
+      -> Рассеянный свет, неполяризованный падающий (лог. шкала, порядков: {n:d})
+      at «{n:d} decades»
+  [v17_mie_scattering] a coarse sampling of the sizes: at short wavelengths the step in x is up to {dx:.2g} (≤ {need} is needed, at most {nmax:d} nodes): the ripple of the intensity and the supernumerary bows in the sky are washed into noise, the computation is heavy
+      -> грубая выборка размеров: на коротких волнах шаг по x до {dx:.2g} (нужно ≤ {need}, узлов не больше {nmax:d}) — рябь интенсивности и дополнительные дуги в небе размыты в шум, расчёт тяжёлый
+      at «{nmax:d} nodes»
+  [v17_mie_scattering] an identity of the series' form (πₙ(1) = τₙ(1) = n(n+1)/2): it holds for any coefficients and tests the angular functions and the sum at θ = 0, not aₙ, bₙ; N = {N:d} terms, tolerance: 100 N ε of round-off
+      -> тождество формы ряда (πₙ(1) = τₙ(1) = n(n+1)/2): верно для любых коэффициентов, проверяет угловые функции и сумму при θ = 0, а не aₙ, bₙ; членов N = {N:d}, допуск — 100 N ε округления
+      at «{N:d} terms»
+  [v17_mie_scattering] it holds for any complex S₁, S₂ (the matrix of one particle is pure): it tests only the arithmetic of mie.mueller; the largest deviation over {n:d} angles, rel.
+      -> верно для любых комплексных S₁, S₂ (матрица одной частицы чистая): проверяет только арифметику mie.mueller; наибольшее отклонение по углам (их {n:d}), отн.
+      at «{n:d} angles»
+  [v17_mie_scattering] the brightness Y over {n:d} wavelengths, the size {r} µm ± {w} %: the maximum is {d:+.2f}° from Descartes' angle, shifted to the bright side by Airy's shift and blurred over the wavelengths
+      -> яркость Y по длинам волн (их {n:d}), размер {r} мкм ± {w} %: максимум на {d:+.2f}° от угла Декарта — смещён в светлую сторону на сдвиг Эйри и размыт по длинам волн
+      at «{n:d} wavelengths»
+  [v17_mie_scattering] the largest deviation over {N:d} orders. An identity of the series' form: it holds for any Dₙ, ψₙ, χₙ as long as the computation is real; it tests that no imaginary part got into the coefficients, not their values. Tolerance 16u: the real part of the denominator equals the numerator bit for bit, what remains is the round-off of the complex division. The angular quadrature is used up to N = {nq:d}
+      -> наибольшее отклонение по порядкам (их {N:d}). Тождество формы ряда: верно при любых Dₙ, ψₙ, χₙ, пока счёт вещественный — проверяет, что в коэффициенты не попала мнимая часть, а не их значения. Допуск 16u: вещественная часть знаменателя совпадает с числителем бит в бит, остаётся округление комплексного деления. Квадратура по углам — до N = {nq:d}
+      at «{N:d} orders»
+  [v17_mie_scattering] the sky is complete: {n:d} wavelengths, drops of {r} µm ± {w} %
+      -> небо досчитано: длин волн — {n:d}, капли {r} мкм ± {w} %
+      at «{n:d} wavelengths»
+  [v17_mie_scattering] {n:d} points of the circle where the slice cuts the drop, {d} a outside and inside
+      -> точек окружности пересечения среза с каплей: {n:d}, в {d} a снаружи и внутри
+      at «{n:d} points»
+  [v17_mie_scattering] {n:d} points of the surface, the field {d} a outside and inside; tolerance: the change of the field over this gap (20 x |m|² · {d}) plus round-off. It tests the assembly of the fields (the spherical harmonics, the internal cₙ, dₙ, Z·H) against aₙ, bₙ; Dₙ, ψₙ, χₙ themselves enter both sides consistently: their values are tested by “Debye series”
+      -> точек поверхности: {n:d}, поле в {d} a снаружи и внутри; допуск — изменение поля на этом зазоре (20 x |m|² · {d}) плюс округление. Проверяет сборку полей (сферические гармоники, внутренние cₙ, dₙ, Z·H) против aₙ, bₙ; сами Dₙ, ψₙ, χₙ входят в обе стороны согласованно — их значения проверяет «Ряд Дебая»
+      at «{n:d} points»
+  [v17_mie_scattering] {n:d} printed quantities (Q_ext, Q_sca, g, S₁(0), S₁(90°), S₂(90°), S₁(180°)): the largest deviation in halves of the last printed digit (≤ 1: agrees); a test of the coefficients' values against published numbers, for two spheres, not for this drop
+      -> напечатанных величин: {n:d} (Q_ext, Q_sca, g, S₁(0), S₁(90°), S₂(90°), S₁(180°)) — наибольшее отклонение в половинах последнего напечатанного знака (≤ 1 — совпадает): проверка значений коэффициентов по опубликованным числам, для двух шаров, не для этой капли
+      at «{n:d} printed quantities»
+  [v17_mie_scattering] ∫(|S₁|² + |S₂|²) over the sphere by Fejér's quadrature (the second rule, {k:d} nodes, exact for these polynomials) against Q_ext from the coefficients. At a real m this is an identity of the series' form (every aₙ = A/(A − iB) with real A, B, Re aₙ = |aₙ|² for any Dₙ, ψₙ, χₙ): it tests the angular functions, the sums and the quadrature, not the coefficients. Tolerance: the derived bound of round-off u(x²Q²_ext/(2Q_sca) + 8N + 16): the nodes are rounded cosines under the forward peak of width ~1/x²
+      -> ∫(|S₁|² + |S₂|²) по сфере — квадратура Фейера (второе правило, узлов: {k:d}, точна для этих многочленов) против Q_ext из коэффициентов. При вещественном m это тождество формы ряда (каждое aₙ = A/(A − iB) с вещественными A, B, Re aₙ = |aₙ|² при любых Dₙ, ψₙ, χₙ): проверяет угловые функции, суммы и квадратуру, не коэффициенты. Допуск — выведенная граница округления u(x²Q²_ext/(2Q_sca) + 8N + 16): узлы — округлённые косинусы под пиком вперёд ширины ~1/x²
+      at «{k:d} nodes»
+count 130
+
+3. plural objects
+  [framework] Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)…
+      -> {"one": "Продолжение: мир пересчитывается от начала по записи до t = {t:.6g} с ({n:d} изменение установки)…", "few": "Продолжение: мир пересчитывается от начала по записи до t = {t:.6g} с ({n:d} изменения установки)…", "many": "Продолжение: мир пересчитывается от начала по записи до t = {t:.6g} с ({n:d} изменений установки)…", "other": "Продолжение: мир пересчитывается от начала по записи до t = {t:.6g} с ({n:d} изменения установки)…"}
+  [framework] Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)… The visualization's code changed since last time: the continuation is computed by the new version, the earlier part of the record by the old one
+      -> {"one": "Продолжение: мир пересчитывается от начала по записи до t = {t:.6g} с ({n:d} изменение установки)… Код визуализации изменился с прошлого раза: продолжение считается новой версией, прежняя часть записи — старой", "few": "Продолжение: мир пересчитывается от начала по записи до t = {t:.6g} с ({n:d} изменения установки)… Код визуализации изменился с прошлого раза: продолжение считается новой версией, прежняя часть записи — старой", "many": "Продолжение: мир пересчитывается от начала по записи до t = {t:.6g} с ({n:d} изменений установки)… Код визуализации изменился с прошлого раза: продолжение считается новой версией, прежняя часть записи — старой", "other": "Продолжение: мир пересчитывается от начала по записи до t = {t:.6g} с ({n:d} изменения установки)… Код визуализации изменился с прошлого раза: продолжение считается новой версией, прежняя часть записи — старой"}
+  [framework] The world continued from its saved state at t = {t0:.6g} s (then {n:d} frames of the record were repeated); the record goes on from t = {t1:.6g} s
+      -> {"one": "Мир продолжен с сохранённого состояния на t = {t0:.6g} с (после него повторён {n:d} кадр записи); запись идёт дальше с t = {t1:.6g} с", "few": "Мир продолжен с сохранённого состояния на t = {t0:.6g} с (после него повторены {n:d} кадра записи); запись идёт дальше с t = {t1:.6g} с", "many": "Мир продолжен с сохранённого состояния на t = {t0:.6g} с (после него повторены {n:d} кадров записи); запись идёт дальше с t = {t1:.6g} с", "other": "Мир продолжен с сохранённого состояния на t = {t0:.6g} с (после него повторены {n:d} кадра записи); запись идёт дальше с t = {t1:.6g} с"}
+  [framework] World restored: recomputed from its start along the record ({n:d} changes of the set-up) and going on from t = {t:.6g} s
+      -> {"one": "Мир восстановлен: пересчитан от начала по записи ({n:d} изменение установки) и продолжается с t = {t:.6g} с", "few": "Мир восстановлен: пересчитан от начала по записи ({n:d} изменения установки) и продолжается с t = {t:.6g} с", "many": "Мир восстановлен: пересчитан от начала по записи ({n:d} изменений установки) и продолжается с t = {t:.6g} с", "other": "Мир восстановлен: пересчитан от начала по записи ({n:d} изменения установки) и продолжается с t = {t:.6g} с"}
+  [framework] all {n:d} workers are busy with open runs: close the tab of one of them (it will be suspended and go on when you open it again)
+      -> {"one": "все {n:d} вычислитель занят открытыми запусками: закройте вкладку одного из них (он приостановится и продолжится, когда вы его откроете)", "few": "все {n:d} вычислителя заняты открытыми запусками: закройте вкладку одного из них (он приостановится и продолжится, когда вы его откроете)", "many": "все {n:d} вычислителей заняты открытыми запусками: закройте вкладку одного из них (он приостановится и продолжится, когда вы его откроете)", "other": "все {n:d} вычислителя заняты открытыми запусками: закройте вкладку одного из них (он приостановится и продолжится, когда вы его откроете)"}
+  [framework] the maximum over {n:d} readings {dt} apart
+      -> {"one": "максимум по {n:d} замеру через {dt}", "few": "максимум по {n:d} замерам через {dt}", "many": "максимум по {n:d} замерам через {dt}", "other": "максимум по {n:d} замерам через {dt}"}
+  [framework] the mean over the last {window} ({n:d} readings {dt} apart)
+      -> {"one": "среднее за последние {window} ({n:d} замер через {dt})", "few": "среднее за последние {window} ({n:d} замера через {dt})", "many": "среднее за последние {window} ({n:d} замеров через {dt})", "other": "среднее за последние {window} ({n:d} замера через {dt})"}
+  [framework] the minimum over {n:d} readings {dt} apart
+      -> {"one": "минимум по {n:d} замеру через {dt}", "few": "минимум по {n:d} замерам через {dt}", "many": "минимум по {n:d} замерам через {dt}", "other": "минимум по {n:d} замерам через {dt}"}
+  [framework] {n:d} days
+      -> {"one": "{n:d} день", "few": "{n:d} дня", "many": "{n:d} дней", "other": "{n:d} дня"}
+  [framework] {n:d} readings {dt} apart
+      -> {"one": "{n:d} замер через {dt}", "few": "{n:d} замера через {dt}", "many": "{n:d} замеров через {dt}", "other": "{n:d} замера через {dt}"}
+  [framework] {x} yr
+      -> {"one": "{x} год", "few": "{x} года", "many": "{x} лет", "other": "{x} года"}
+  [p01_gravity] {n:.3g} years
+      -> {"few": "{n:.3g} года", "many": "{n:.3g} лет", "one": "{n:.3g} год", "other": "{n:.3g} года"}
+  [p03_molecules] {n:d} atoms
+      -> {"few": "{n:d} атома", "many": "{n:d} атомов", "one": "{n:d} атом", "other": "{n:d} атома"}
+  [p03_molecules] {n:d} molecules
+      -> {"few": "{n:d} молекулы", "many": "{n:d} молекул", "one": "{n:d} молекула", "other": "{n:d} молекулы"}
+  [p03_molecules] “{label}”: {n:d} lattice sites are taken by atoms already there and were left empty
+      -> {"few": "«{label}»: {n:d} узла решётки заняты уже имеющимися атомами — оставлены пустыми", "many": "«{label}»: {n:d} узлов решётки заняты уже имеющимися атомами — оставлены пустыми", "one": "«{label}»: {n:d} узел решётки занят уже имеющимися атомами — оставлен пустым", "other": "«{label}»: {n:d} узла решётки заняты уже имеющимися атомами — оставлены пустыми"}
+  [v13_hydrogen_3d] Slice {id} ({plane}): ψ at {n} points against an independent calculation
+      -> {"one": "Срез {id} ({plane}): ψ в {n} точке против независимого расчёта", "few": "Срез {id} ({plane}): ψ в {n} точках против независимого расчёта", "many": "Срез {id} ({plane}): ψ в {n} точках против независимого расчёта", "other": "Срез {id} ({plane}): ψ в {n} точках против независимого расчёта"}
+  [v13_hydrogen_3d] Slice {id} ({plane}, phase {k} of {nb}): ψ at {n} points against an independent calculation
+      -> {"one": "Срез {id} ({plane}, фаза {k} из {nb}): ψ в {n} точке против независимого расчёта", "few": "Срез {id} ({plane}, фаза {k} из {nb}): ψ в {n} точках против независимого расчёта", "many": "Срез {id} ({plane}, фаза {k} из {nb}): ψ в {n} точках против независимого расчёта", "other": "Срез {id} ({plane}, фаза {k} из {nb}): ψ в {n} точках против независимого расчёта"}
+  [v16_optical_vortices] Slice {id} ({plane}): |E|² at {n} points against the direct calculation
+      -> {"one": "Срез {id} ({plane}): |E|² в {n} точке против прямого расчёта", "few": "Срез {id} ({plane}): |E|² в {n} точках против прямого расчёта", "many": "Срез {id} ({plane}): |E|² в {n} точках против прямого расчёта", "other": "Срез {id} ({plane}): |E|² в {n} точках против прямого расчёта"}
+  [v16_optical_vortices] a grid of {n:d} points over {w:.3g} µm is coarser than λ/2
+      -> {"one": "сетка из {n:d} точки на {w:.3g} мкм грубее λ/2", "few": "сетка из {n:d} точек на {w:.3g} мкм грубее λ/2", "many": "сетка из {n:d} точек на {w:.3g} мкм грубее λ/2", "other": "сетка из {n:d} точек на {w:.3g} мкм грубее λ/2"}
+  [v16_optical_vortices] detector signal, the last {n} samples ({ms:.4g} ms)
+      -> {"one": "сигнал детектора, последний {n} отсчёт ({ms:.4g} мс)", "few": "сигнал детектора, последние {n} отсчёта ({ms:.4g} мс)", "many": "сигнал детектора, последние {n} отсчётов ({ms:.4g} мс)", "other": "сигнал детектора, последние {n} отсчёта ({ms:.4g} мс)"}
+  [v16_optical_vortices] {what}; {n:d} samples over two turns, the peak of the spectrum; reference 2|l|·f (the modulation depth {d:.3g})
+      -> {"one": "{what}; {n:d} отсчёт за два оборота, пик спектра; эталон 2|l|·f (глубина модуляции {d:.3g})", "few": "{what}; {n:d} отсчёта за два оборота, пик спектра; эталон 2|l|·f (глубина модуляции {d:.3g})", "many": "{what}; {n:d} отсчётов за два оборота, пик спектра; эталон 2|l|·f (глубина модуляции {d:.3g})", "other": "{what}; {n:d} отсчёта за два оборота, пик спектра; эталон 2|l|·f (глубина модуляции {d:.3g})"}
+  [v16_optical_vortices] {what}; {n:d} samples; reference: at l = 0 or f = 0 the frequency is not shifted
+      -> {"one": "{what}; {n:d} отсчёт; эталон: при l = 0 или f = 0 частота не сдвигается", "few": "{what}; {n:d} отсчёта; эталон: при l = 0 или f = 0 частота не сдвигается", "many": "{what}; {n:d} отсчётов; эталон: при l = 0 или f = 0 частота не сдвигается", "other": "{what}; {n:d} отсчёта; эталон: при l = 0 или f = 0 частота не сдвигается"}
+  [v17_mie_scattering] the Debye series diverges at {n:d} orders (|R¹¹| > 1: this happens for a weakly absorbing drop with m ≈ 1)
+      -> {"one": "ряд Дебая расходится на {n:d} порядке (|R¹¹| > 1: так бывает у слабо поглощающей капли с m ≈ 1)", "few": "ряд Дебая расходится на {n:d} порядках (|R¹¹| > 1: так бывает у слабо поглощающей капли с m ≈ 1)", "many": "ряд Дебая расходится на {n:d} порядках (|R¹¹| > 1: так бывает у слабо поглощающей капли с m ≈ 1)", "other": "ряд Дебая расходится на {n:d} порядках (|R¹¹| > 1: так бывает у слабо поглощающей капли с m ≈ 1)"}

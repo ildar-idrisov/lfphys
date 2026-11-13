@@ -1,0 +1,30 @@
+visualizations/player/js/player.js:799
+  owner: «помечать там, где это приближение»
+  msgid: Modified physics:
+  ru:    Модифицированная физика:
+
+visualizations/player/js/player.js:799
+  owner: «помечать там, где это приближение»
+  msgid: {label}: {value} (accepted: {standard})
+  ru:    {label}: {value} (общепринято: {standard})
+
+visualizations/player/js/player.js:799
+  owner: «помечать там, где это приближение»
+  msgid: MODIFIED PHYSICS: 
+  ru:    МОДИФ. ФИЗИКА: 
+
+visualizations/player/js/player.js:799
+  owner: «помечать там, где это приближение»
+  msgid: All laws are the accepted ones
+  ru:    Все законы — общепринятые
+
+visualizations/player/js/player.js:799
+  owner: «помечать там, где это приближение»
+  msgid: standard physics
+  ru:    стандартная физика
+
+visualizations/player/js/player.js:799
+  owner: «помечать там, где это приближение»
+  msgid:  APPROXIMATION: 
+  ru:     ПРИБЛИЖЕНИЕ: 
+

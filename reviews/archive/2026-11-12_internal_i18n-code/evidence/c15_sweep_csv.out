@@ -1,0 +1,16 @@
+== sweep CSV lang=en
+# sweep no. 1 of run 20261112-215545-p97-9c4e: the law “Hold memory, MB” → Total energy (at the end (1 reading))
+# from t = 3.30616 s (the world at the moment the sweep started, world 1); each value — 50 ms of the world; 1 readings; the quantity was read through frame()
+# base_t=3.306157199665904; t_unit=s; duration=0.05; window=None; stat=final; n_samples=200; readings=1; dt_readings=None; sampler=frame; source=now; state=done
+"Hold memory, MB, MB","Total energy (at the end (1 reading)), J",note
+1,0.0,
+2,0.0,
+== sweep CSV lang=ru
+# свип № 1 запуска 20261112-215545-p97-9c4e: закон «Занять память, МБ» → Полная энергия (в конце (1 замер))
+# от t = 3.30616 с (мир в момент запуска свипа, мир 1); каждое значение — 50 мс мира; замеров 1; величина читалась через frame()
+# base_t=3.306157199665904; t_unit=s; duration=0.05; window=None; stat=final; n_samples=200; readings=1; dt_readings=None; sampler=frame; source=now; state=done
+"Занять память, МБ, МБ","Полная энергия (в конце (1 замер)), Дж",примечание
+1,0.0,
+2,0.0,
+== JSON target fields
+{'target_label': {'$t': 'Hold memory, MB'}, 'target_unit': {'$t': 'MB'}, 'stat_text': {'$t': 'at the end (1 reading)'}}

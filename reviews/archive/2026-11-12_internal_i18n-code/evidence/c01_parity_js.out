@@ -1,0 +1,35 @@
+{"neg default":"x = −1.5",
+"neg .3g":"x = −1.23·10⁻⁵",
+"big int default":"1.23457·10⁷",
+"float :d":"3 steps",
+"bool":"flag true",
+"None":"v —",
+"list":"items 1.5, open, z",
+"width spec":"1.5|",
+"percent spec":"12.3 %",
+"comma spec":"1,234,570",
+"e spec 0":"0.00",
+"cap number":"2.5",
+"cap plain str":"Done.",
+"unit no comma":"[]",
+"unit with paren":"[m/s]",
+"dots ...":"wait...",
+"dot after number":"2.",
+"missing arg":"a 1 b {y:.2f}",
+"nested dict non-T":"[object Object]",
+"proto name":"function Object() { [native code] }",
+"plural no n en":"{n:d} days",
+"plural n=-1 en":"−1 day",
+"plural n=1.0004 .3g":"1 year",
+"sign zero":"−0.00",
+"g boundary":"1·10⁻⁴",
+"str number":"1.5"}
+--- non-JSON values
+NaN default: x = — | .3g: —
+Infinity default: x = ∞ | .3g: ∞
+-Infinity default: x = −∞ | .3g: −∞
+ru plural n= NaN -> — дня
+ru plural n= Infinity -> ∞ дня
+ru plural n= 1e+300 -> 1 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 дней
+ru plural n= 2.5 -> 3 дня
+ru 9999999.7 default: 10 000 000 | ru 0.5: 0,5 | ru 1e21 d: 1 000 000 000 000 000 000 000

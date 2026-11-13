@@ -1,0 +1,11 @@
+.............................................................            [100%]
+=============================== warnings summary ===============================
+tests/test_i18n.py::test_unused_catalogue_entries_are_reported
+  /w/visualizations/tests/test_i18n.py:226: UserWarning: visualizations/locales/ru.json: 17 entries not used statically, e.g. ['Gyr', 'Myr', 'World {n:d} (current): {title}', 'World {n:d}: {title}', 'h', 'mm', 'position, m', 'velocity, m/s']
+    warnings.warn(f"{_rel(f)}: {len(unused)} entries not used statically, e.g. {unused[:8]}", stacklevel=1)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+61 passed, 1 warning in 70.58s (0:01:10)
+........................................................................ [ 57%]
+......................................................                   [100%]
+126 passed in 3.13s

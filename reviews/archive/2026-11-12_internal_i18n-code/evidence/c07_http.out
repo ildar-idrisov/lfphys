@@ -1,0 +1,114 @@
+== http://127.0.0.1:8651/api/i18n/ru
+HTTP/1.1 200 OK
+ETag: "08b5ada1678973d9"
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 1338263
+{"lang": "ru", "messages": {" (fringe period {p:.3g} λ)": " (период полос {p:.3g} λ)", " (the companion has not run yet)": " (компаньон ещё не считался)", " (the mass is outside the range of the object's parameters: the inspector shows the former ones, the world an
+ETag="08b5ada1678973d9"
+== -H If-None-Match: "08b5ada1678973d9" http://127.0.0.1:8651/api/i18n/ru
+HTTP/1.1 304 Not Modified
+ETag: "08b5ada1678973d9"
+Cache-Control: no-cache
+
+== -H If-None-Match: W/"08b5ada1678973d9" http://127.0.0.1:8651/api/i18n/ru
+HTTP/1.1 200 OK
+ETag: "08b5ada1678973d9"
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 1338263
+{"lang": "ru", "messages": {" (fringe period {p:.3g} λ)": " (период полос {p:.3g} λ)", " (the companion has not run yet)": " (компаньон ещё не считался)", " (the mass is outside the range of the object's parameters: the inspector shows the former ones, the world an
+== -H If-None-Match: "x", "08b5ada1678973d9" http://127.0.0.1:8651/api/i18n/ru
+HTTP/1.1 200 OK
+ETag: "08b5ada1678973d9"
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 1338263
+{"lang": "ru", "messages": {" (fringe period {p:.3g} λ)": " (период полос {p:.3g} λ)", " (the companion has not run yet)": " (компаньон ещё не считался)", " (the mass is outside the range of the object's parameters: the inspector shows the former ones, the world an
+== -H If-None-Match: * http://127.0.0.1:8651/api/i18n/ru
+HTTP/1.1 200 OK
+ETag: "08b5ada1678973d9"
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 1338263
+{"lang": "ru", "messages": {" (fringe period {p:.3g} λ)": " (период полос {p:.3g} λ)", " (the companion has not run yet)": " (компаньон ещё не считался)", " (the mass is outside the range of the object's parameters: the inspector shows the former ones, the world an
+== -H If-None-Match: "08b5ada1678973d9" http://127.0.0.1:8651/api/i18n/en
+HTTP/1.1 200 OK
+ETag: "4cbd635819fced0a"
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 3967
+{"lang": "en", "messages": {"Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)…": {"one": "Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} change of the set-up)…", "other": "Going on: t
+== -H Accept-Encoding: gzip http://127.0.0.1:8651/api/i18n/ru
+HTTP/1.1 200 OK
+ETag: "08b5ada1678973d9"
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 1338263
+{"lang": "ru", "messages": {" (fringe period {p:.3g} λ)": " (период полос {p:.3g} λ)", " (the companion has not run yet)": " (компаньон ещё не считался)", " (the mass is outside the range of the object's parameters: the inspector shows the former ones, the world an
+== http://127.0.0.1:8651/api/i18n/en
+HTTP/1.1 200 OK
+ETag: "4cbd635819fced0a"
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 3967
+{"lang": "en", "messages": {"Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)…": {"one": "Going on: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} change of the set-up)…", "other": "Going on: t
+== http://127.0.0.1:8651/api/i18n/RU
+HTTP/1.1 404 Not Found
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 164
+{"error": {"$t": "No interface language {lang}; there are: {langs}", "a": {"lang": "RU", "langs": "en, ru"}}, "text": "No interface language RU; there are: en, ru"}
+== http://127.0.0.1:8651/api/i18n/ru-RU
+HTTP/1.1 404 Not Found
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 170
+{"error": {"$t": "No interface language {lang}; there are: {langs}", "a": {"lang": "ru-RU", "langs": "en, ru"}}, "text": "No interface language ru-RU; there are: en, ru"}
+== http://127.0.0.1:8651/api/i18n/%3Cscript%3E
+HTTP/1.1 404 Not Found
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 176
+{"error": {"$t": "No interface language {lang}; there are: {langs}", "a": {"lang": "<script>", "langs": "en, ru"}}, "text": "No interface language <script>; there are: en, ru"}
+== -X HEAD http://127.0.0.1:8651/api/i18n/ru
+HTTP/1.1 200 OK
+ETag: "08b5ada1678973d9"
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 1338263
+{"error": {"$t": "No interface language {lang}; there are: {langs}", "a": {"lang": "<script>", "langs": "en, ru"}}, "text": "No interface language <script>; there are: en, ru"}
+== sizes
+3967
+1338263
+== error bodies
+== http://127.0.0.1:8651/api/runs/nope
+HTTP/1.1 404 Not Found
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 73
+{"error": {"$t": "there is no such run"}, "text": "there is no such run"}
+== -X POST -H Content-Type: application/json -d {"viz":"nope"} http://127.0.0.1:8651/api/runs
+HTTP/1.1 404 Not Found
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 93
+{"error": {"$t": "there is no such visualization"}, "text": "there is no such visualization"}
+== -X POST -H Content-Type: application/json -d not json http://127.0.0.1:8651/api/runs
+HTTP/1.1 400 Bad Request
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 89
+{"error": {"$t": "the request body is not JSON"}, "text": "the request body is not JSON"}
+== -X POST -H Content-Type: application/json -d {"viz":"v01_light_travel","params":{"nonexistent_param":1}} http://127.0.0.1:8651/api/runs
+HTTP/1.1 400 Bad Request
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 255
+{"error": {"$t": "there is no parameter “{id}”", "a": {"id": "nonexistent_param"}}, "text": "there is no parameter “nonexistent_param”", "fields": {"nonexistent_param": {"$t": "there is no parameter “{id}”", "a": {"id": "nonexistent_param"}}}}
+== http://127.0.0.1:8651/api/runs/nope/series?ids=x&format=csv&lang=ru
+HTTP/1.1 404 Not Found
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-cache
+Content-Length: 73
+{"error": {"$t": "there is no such run"}, "text": "there is no such run"}

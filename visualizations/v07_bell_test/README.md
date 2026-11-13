@@ -1,5 +1,7 @@
 # v07 — The Bell test with entangled pairs
 
+**English** | [Русский](README.ru.md)
+
 Pairs of polarization-entangled photons |Φ+⟩ = (|HH⟩ + |VV⟩)/√2 or spin-½ singlets (|↑↓⟩ − |↓↑⟩)/√2 fly from a
 source to two stations; each station measures its particle with one of two settings; the run counts coincidences
 and estimates the correlations E and the CHSH parameter S. Owner guide: `../README.md`; rules: `../RULES.md`.
@@ -23,11 +25,13 @@ Geometry: a line, the source at x = 0, Alice's station at x = −L, Bob's at x =
 spin-½ particles at v = β c (world parameter, illustrative). Both particles of a pair arrive at t_e + L/v.
 
 1. **Emission** at a time of a Poisson stream (rate live).
-2. **Setting choice** (mode "random"): the station's random-number generator delivers a fair bit (0 → a or b,
-   1 → a′ or b′) at t_c = t_arr − τ, i.e. τ before the particle arrives (τ = latency of the generator and the switch).
-   The bit does not depend on anything in the run; it is drawn when the run reaches t_c (or, when τ exceeds the flight
-   time, when the pair is emitted: then t_c lies before the emission, as for a generator whose output is delayed by τ).
-   Mode "fixed": Alice uses a, Bob uses b; the "choice event" of a station is the moment its setting was last set.
+2. **Setting choice** (mode "random": "Choice of the setting" =
+   "random for every particle (as in loophole-free experiments)"): the station's random-number generator delivers a
+   fair bit (0 → a or b, 1 → a′ or b′) at t_c = t_arr − τ, i.e. τ before the particle arrives (τ = latency of the
+   generator and the switch). The bit does not depend on anything in the run; it is drawn when the run reaches t_c
+   (or, when τ exceeds the flight time, when the pair is emitted: then t_c lies before the emission, as for a
+   generator whose output is delayed by τ). Mode "fixed" ("fixed: Alice a, Bob b"): Alice uses a, Bob uses b; the
+   "choice event" of a station is the moment its setting was last set.
 3. **Detection** at t_arr: the analyzer angle in force at that moment (a live change of an angle applies to every
    particle that arrives after it), and the outcomes of both particles by the world's law:
    * quantum: `qubits.sample_pairs(state, Π(α_A), Π(α_B))` — the joint Born probabilities Tr(ρ Π_i ⊗ Π_j); index 0
@@ -55,7 +59,7 @@ spin-½ particles at v = β c (world parameter, illustrative). Both particles of
 
 Coincidence counts are kept per pair of analyzer angles actually used (at most 200 pairs; the oldest unused one is
 dropped). The four CHSH cells are the current (a, b), (a, b′), (a′, b), (a′, b′); after an angle change the cells refer
-to the new angles, and the old angle pairs stay on the E(Δ) plot. The action "Сбросить статистику" starts the counts
+to the new angles, and the old angle pairs stay on the E(Δ) plot. The action "Reset the statistics" starts the counts
 anew.
 
 ## Live set-up, world parameters, actions (RULES.md §2.4)
@@ -70,10 +74,10 @@ anew.
     arrive when they reach it (t_e + L_new/v);
   * the rate: the next emission is drawn anew (the Poisson stream is memoryless).
 * World parameters (a new world): the pair type, the speed of spin-½ particles, the law. The law has
-  `standard = "quantum"`; "lhv" is flagged "modified physics".
-* Action: "Сбросить статистику".
+  `standard = "quantum"`; "lhv" is flagged "MODIFIED PHYSICS".
+* Action: "Reset the statistics".
 
-## Checks (panel «Проверки»)
+## Checks (panel "Checks: computed ↔ reference")
 
 * Source state (quantum worlds): concurrence = 1 and one-particle entropy = 1 bit (engine) — identities.
 * Settings, exact (re-emitted after each angle change): S of the law at the current angles — quantum: the engine's

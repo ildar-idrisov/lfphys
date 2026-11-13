@@ -1,32 +1,37 @@
 # p01 — the gravity playground (space and gravity)
 
+**English** | [Русский](README.ru.md)
+
 A playground section (plan P15.1; framework P15.0: `../RULES.md` §6). The owner's words (2026-10-28): «в плейграунде
 можно добавлять в мир разные объекты, менять параметры, смотреть за их изменением и взаимодействием, все должно быть не
 задано заранее, а просчитываться в реалтайме, чтобы можно было задать комбинацию и силумировать поведение например
-черной дыры или исследовать гравитацию». The scene is built by hand from the palette, changed at any moment in the
-inspector, saved to a file and started again from it; its record is the last minutes unless "● Сохранять запись".
+черной дыры или исследовать гравитацию» ("in the playground one can add different objects to the world, change
+parameters, watch how they change and interact; nothing should be set in advance, everything computed in real time, so
+that one can set up a combination and simulate the behaviour of, for example, a black hole or study gravity"). The scene is built by hand from the palette, changed at any moment in the
+inspector, saved to a file and started again from it; its record is the last minutes unless "● Keep the record".
 
 ## The laws of a world (one family of solvers and of conservation laws each; a change of the laws is a new world)
 
 **Live** (review UX-ui U12): the collisions of Newtonian bodies (merge / pass) change at the current moment with the
-world kept (``nbody.NBody.set_collisions``): to «проходят», bodies already touching pass on; to «сливаются», a pair
+world kept (``nbody.NBody.set_collisions``): to "pass through each other", bodies already touching pass on; to "merge (momentum
+and mass conserved)", a pair
 touching then merges at once (mass and momentum kept); the scene file takes the law in force.
 
 **Masses as properties of the objects** (plan P16.1, batch LB1: the bench never restarts):
 
-* **The Kerr–Newman hole is an object of its world** («Чёрная дыра Керра–Ньюмена», the last object of the scene; a world
-  always has one, made from the world's parameters when the scene has none; it cannot be removed — «Очистить сцену»
-  keeps it — nor doubled). Its **mass** changed at the current moment is **a change of units**: the metric is G = c = M
+* **The Kerr–Newman hole is an object of its world** ("Kerr–Newman black hole", the last object of the scene; a world
+  always has one, made from the world's parameters when the scene has none; it cannot be removed — clearing the scene (the
+  scene operation `clear`) keeps it — nor doubled). Its **mass** changed at the current moment is **a change of units**: the metric is G = c = M
   = 1, so every body keeps its state in units of M (place, momentum, E, L, K) and the world's seconds per unit of M
   change from then on (``Clock``: the geometric time goes on from where it is); proper times (``Geodesics.
   rescale_proper_time``) and the observers' clocks are kept in seconds; lengths in metres scale with M (a body at r = 6 M
   is twice as far in kilometres after M × 2). The event says so. It is not a mass that changed under the bodies (no
   established dynamics for that); it is the same solution read for another mass — after Δs seconds the bodies are where
   a world that kept the old M has them after Δs·M₀/M (test).
-* Its **spin and charge** change only as a declared **model «что если»** (recommended over refusing: it keeps the bench
+* Its **spin and charge** change only as a declared **"what if" model** (recommended over refusing: it keeps the bench
   running and is flagged everywhere): no established dynamics changes a metric under moving bodies. The rule is the
   engine's declared alternative `lfphys.theories.alternatives.kn_change_whatif` (its ABOUT, conflicts and tests; listed
-  in «Физика этого мира»; review LB1-physics P5): each body keeps its Boyer–Lindquist coordinates (r, θ, φ), its proper
+  in "Physics of this world"; review LB1-physics P5): each body keeps its Boyer–Lindquist coordinates (r, θ, φ), its proper
   time and the momentum its local ZAMO measures (the frame energy from the mass shell, so its ZAMO-measured velocity is
   kept with no limit below c — a body falling at γ ≈ 22 near the horizon keeps γ; before, speeds above 0.999 c were cut
   to it without a word [error in earlier], review P6), a ray its direction and its ZAMO-measured frequency (before, it
@@ -35,20 +40,20 @@ touching then merges at once (mass and momentum kept); the scene file takes the 
   the same r the circumferential radius, the distance to the horizon and the area of the r-sphere change), and keeping
   the circumferential radius, or E, L and K, would be equally defensible and give a different world. The event names
   the body whose E changed most (before → after), the largest change of the circumferential radius at the bodies, and
-  the largest γ kept; the approximations say «МОДЕЛЬ» with the module's name. Refused (the world as it was) when a body
+  the largest γ kept; the approximations say "“WHAT IF” MODEL" with the module's name. Refused (the world as it was) when a body
   or a ray would be inside the new capture radius, a static observer inside the new ergosurface, a circular one inside
   the new ISCO, any observer inside the new horizon. A captured body stays captured (at r₊ + 10⁻⁴ of the new hole if
   that is outside where it was stopped).
-* **The binary's total mass is a property of the binary** (its parameter «Полная масса m»; the world's «полная масса
-  новой двойной» only gives the default): a change of the mass alone is a change of units G = c = m = 1 — the orbit
+* **The binary's total mass is a property of the binary** (its parameter "Total mass m, M☉"; the world's "Total mass of a
+  new binary, M☉" only gives the default): a change of the mass alone is a change of units G = c = m = 1 — the orbit
   goes on in units of m, its accumulated phase too; the waves' frequency (∝ 1/m) and their strain at a detector (∝ m)
   follow at once; any other parameter starts the binary anew as before.
 
-Measured latency (CPU, the whole command, 2026-11-11): the hole's mass 1 ms, its spin «what if» 0.1 s (the preset
-«У чёрной дыры»), the binary's mass under 1 ms, a Newtonian throw 1.4 ms; in the browser the event is shown 0.07–0.12 s
+Measured latency (CPU, the whole command, 2026-11-11): the hole's mass 1 ms, its spin "what if" 0.1 s (the preset
+"Near a black hole (a = 0.9): …"), the binary's mass under 1 ms, a Newtonian throw 1.4 ms; in the browser the event is shown 0.07–0.12 s
 after the command.
 
-The laws (Newton / PN binary / Kerr–Newman) stay new worlds; «перенести сцену» carries over what makes sense
+The laws (Newton / PN binary / Kerr–Newman) stay new worlds; "carry the scene over" carries over what makes sense
 (``prepare_scene``): Newton → Kerr–Newman: the most massive Newtonian hole becomes the hole (its mass, the new world's
 spin and charge); Kerr–Newman → Newton: the hole becomes a Newtonian hole at the origin; the PN binary → Newton: its two
 bodies as Newtonian holes (masses m₁, m₂, positions and velocities about the Newtonian centre of mass); Newton → PN: the
@@ -67,9 +72,9 @@ these per object.
 
 | laws | objects (palette) | engine | what is checked live |
 |---|---|---|---|
-| **Ньютон: N тел** | stars (M☉, R☉), planets (M⊕, R⊕), black holes as Newtonian masses with the Schwarzschild radius as a capture radius (an approximation, flagged; what touches a hole is absorbed and its radius stays the Schwarzschild radius of its mass), massless test bodies, field-and-tide probes | `core.gravity.nbody`: time-symmetric 4th-order Hermite with a shared adaptive step (close encounters), collisions merge (mass and momentum kept) or pass (a law of the world) | momentum (exact to rounding: pairwise forces), energy within three times the error a companion measures (the same interval again with half the accuracy parameter η: the step is ∝ √η, so the companion's error is about 4 times smaller and the run's error at most 4/3 of their difference), relative to kinetic + \|potential\| energy (the total may be 0), the companion's position error, angular momentum (information) |
-| **ОТО: двойная** | one binary (mass ratio, start: quasi-circular or Newtonian ellipse, the orders of the equations, the separation where it stops), wave detectors (distance, inclination, azimuth) | `core.gravity.pn_binary` (1PN, 2PN, radiation reaction 2.5PN, 3.5PN; harmonic gauge), `core.gravity.gw_quadrupole` (h₊, h× at the detector) | the energy balance: the orbit's loss of the 2PN energy against the 1PN flux of a circular orbit in the invariant x = (mΩ)^(2/3) (Blanchet 2014 Eq. 314 without the tail), tolerance \|c₁\| x/(1 + c₁x), c₁ = −1247/336 − 35ν/12, x the largest of the run (the reaction series' ordering, below; a binary gaining energy fails it); for eccentric starts the loss against the quadrupole formula (information); without radiation reaction the 2PN energy conserved |
-| **ОТО: у чёрной дыры Керра–Ньюмена** | test bodies (circular equatorial orbits or a velocity measured by the ZAMO), light rays (a direction measured by the ZAMO), observers with clocks (static, ZAMO, on a circular orbit not inside the ISCO) | `core.gravity.kerr_newman` (geodesics in Boyer–Lindquist coordinates, the distant observer's time, each body's proper time; horizons, ergosurface, circular orbits, ISCO) | Carter's constant and the mass shell of every body (E and L exact: cyclic coordinates), each against its own drift budget: the sum over its accepted steps of the local error DOP853 allows, carried into K and μ² by their gradients (√6·rtol·Σ\|∂/∂yₖ\|·scaleₖ; it grows as 1/Δ near the horizon with the shell's terms), plus rounding; the observers' clock rates from the metric |
+| **Newton: N bodies** | stars (M☉, R☉), planets (M⊕, R⊕), black holes as Newtonian masses with the Schwarzschild radius as a capture radius (an approximation, flagged; what touches a hole is absorbed and its radius stays the Schwarzschild radius of its mass), massless test bodies, field-and-tide probes | `core.gravity.nbody`: time-symmetric 4th-order Hermite with a shared adaptive step (close encounters), collisions merge (mass and momentum kept) or pass (a law of the world) | momentum (exact to rounding: pairwise forces), energy within three times the error a companion measures (the same interval again with half the accuracy parameter η: the step is ∝ √η, so the companion's error is about 4 times smaller and the run's error at most 4/3 of their difference), relative to kinetic + \|potential\| energy (the total may be 0), the companion's position error, angular momentum (information) |
+| **GR: a binary** | one binary (mass ratio, start: quasi-circular or Newtonian ellipse, the orders of the equations, the separation where it stops), wave detectors (distance, inclination, azimuth) | `core.gravity.pn_binary` (1PN, 2PN, radiation reaction 2.5PN, 3.5PN; harmonic gauge), `core.gravity.gw_quadrupole` (h₊, h× at the detector) | the energy balance: the orbit's loss of the 2PN energy against the 1PN flux of a circular orbit in the invariant x = (mΩ)^(2/3) (Blanchet 2014 Eq. 314 without the tail), tolerance \|c₁\| x/(1 + c₁x), c₁ = −1247/336 − 35ν/12, x the largest of the run (the reaction series' ordering, below; a binary gaining energy fails it); for eccentric starts the loss against the quadrupole formula (information); without radiation reaction the 2PN energy conserved |
+| **GR: near a Kerr–Newman black hole** | test bodies (circular equatorial orbits or a velocity measured by the ZAMO), light rays (a direction measured by the ZAMO), observers with clocks (static, ZAMO, on a circular orbit not inside the ISCO) | `core.gravity.kerr_newman` (geodesics in Boyer–Lindquist coordinates, the distant observer's time, each body's proper time; horizons, ergosurface, circular orbits, ISCO) | Carter's constant and the mass shell of every body (E and L exact: cyclic coordinates), each against its own drift budget: the sum over its accepted steps of the local error DOP853 allows, carried into K and μ² by their gradients (√6·rtol·Σ\|∂/∂yₖ\|·scaleₖ; it grows as 1/Δ near the horizon with the shell's terms), plus rounding; the observers' clock rates from the metric |
 
 Units inside: au, years and solar masses (Newton); G = c = m = 1 with m the binary's mass (the binary); G = c = M = 1
 (the hole). The world's time is in seconds everywhere, so the speed slider means the same in every world.
@@ -77,8 +82,8 @@ Units inside: au, years and solar masses (Newton); G = c = m = 1 with m the bina
 ## Handles and instruments (plans P16.2, P16.3)
 
 **Handles.** Newton: stars, planets, holes and test bodies are dragged (x, y, z: the velocity kept) and thrown (the
-throw's velocity, in the scene's а.е. per world second, becomes the body's own, written into its vx, vy, vz in km/s with
-«задать»; the player clamps a throw to 0.05 c and says so; the world accepts typed or thrown velocities up to 0.1 c —
+throw's velocity, in the scene's au per world second, becomes the body's own, written into its vx, vy, vz in km/s with
+"set vx, vy, vz"; the player clamps a throw to 0.05 c and says so; the world accepts typed or thrown velocities up to 0.1 c —
 Newtonian mechanics then errs by v²/c² ≤ 1 % — and refuses from 0.1 c; review LB1-physics P15); field probes are
 dragged. Kerr–Newman: test bodies, rays
 and observers are dragged in the drawing coordinates (x + i y = √(r² + a²) sin θ e^{iφ}, z = r cos θ: hidden parameters x,
@@ -86,14 +91,14 @@ y, z turned into r, θ, φ; a circular orbit or observer goes to the equator und
 a body thrown starts with the ZAMO-measured velocity of the throw (the drawn velocity through the inverse Jacobian of
 the drawing map into dr/dt, dθ/dt, dφ/dt, then the ZAMO's frame; 0.99 c and more refused). The throw's limit for the
 player (`velocity_max`, review LB1-p02-ux X4): half the speed of light in the drawing coordinates, 0.5 G M/c² per
-G M/c³ (the hidden parameter `tv_max`, in (G M/c²)/с, set from the hole's mass and renewed when it changes), so a brisk
+G M/c³ (the hidden parameter `tv_max`, in (G M/c²)/s, set from the hole's mass and renewed when it changes), so a brisk
 flick gives a quarter of c; near the hole the ZAMO-measured speed of the same drawn velocity is larger (by 1/α), and a
 throw at 0.99 c or more by it is still refused with the advice to lower the throw scale. The hole sits at the origin.
 The binary sits at its centre of mass (no handle). Every frame carries `at[id]` for every positioned object.
 
 **Measurables** (`measurables()`, every frame's `meas`, `meas_note` for what is undefined, `measure()` for the sweeps):
 Newton — the system's energy (J) and angular momentum (kg·m²/s) and their drifts since the scene's last change; per
-body its distance to the chosen reference (its parameter «Расстояние в приборах — до»: the most massive other body, the
+body its distance to the chosen reference (its parameter "Distance in the instruments — to": the most massive other body, the
 centre of mass, the origin), its speed (km/s) and its osculating two-body elements about the most massive other body
 (a in au, e, the period in years; undefined when unbound); per probe g and the tidal stretch. Kerr–Newman — the largest
 drift of Carter's K and of the mass shell; per body r (G M/c² and km), its ZAMO-measured speed, E, L, the turning points'
@@ -111,7 +116,7 @@ per detector h₊ and h×.
 The 3-D scene (spin axis or orbital angular momentum up): the bodies as spheres (drawn at least 0.6 % of the scene so
 that a star much smaller than its orbit stays visible), their trails (sent as accumulating messages; a segment of the
 record starts with full trails), the hole's horizon, ergosurface and equatorial circular orbits; the panels of the
-playground (palette, objects, inspector with the selected object's state "сейчас", probes, the scene's changes, the
+playground (palette, objects, inspector with the selected object's state "now:", probes, the scene's changes, the
 file, the record's window). A Newtonian black hole is drawn light (its Schwarzschild radius is far below a pixel) with
 a marker and its name (review UX-ui U18: near-black on the dark scene, the hole the stars orbit could not be found).
 
@@ -136,7 +141,7 @@ the first free point along +x (steps of an eighth of the scene) and a toast says
 to the original with its velocity (before, a second star, a copy, a hole on the Sun were refused, or a star landed in the
 Sun and merged unseen, or a hole swallowed the Sun). Every merger is a toast too, with the time since the body was
 added when that is under a year. The Newtonian world advances in chunks of 16 integrator steps, so a high speed lags
-(«факт» below the chosen speed) instead of stalling a frame (review UX-ui U5).
+("actual" below the chosen speed) instead of stalling a frame (review UX-ui U5).
 
 ## Approximations and limits
 
@@ -157,7 +162,7 @@ added when that is under a year. The Newtonian world advances in chunks of 16 in
   r = 10.59 for q = 1, 11.69 for q = 0.25, 13.01 for q = 0.05) and stops there with an event that says why; the
   inspiral from r₀ = 20 (q = 1) takes 2·10⁴ G m/c³. The last orbits, the plunge and the merger are not shown: no PN
   equation of motion in the engine describes them (`../../STATUS.md` V34). Closer starts or stops are possible with
-  the orders "Ньютон + 2,5ПН" (self-consistent, not accurate there).
+  the orders "Newton + radiation reaction 2.5PN" (self-consistent, not accurate there).
 * The hole: a fixed background (test bodies have no field and no charge); bodies are stopped at r₊ + 10⁻⁴ (the
   distant observer never sees them cross); a body that leaves beyond 2000 G M/c² is no longer followed.
 * A scene file keeps the objects with their parameters and dynamic state: Newtonian bodies' positions, velocities,
@@ -174,8 +179,8 @@ added when that is under a year. The Newtonian world advances in chunks of 16 in
 
 `tests/test_p01_lab.py` (LB1): the hole an object of every Kerr–Newman world (not removable, not doubled, kept by a
 clear); its mass as a change of units (state untouched, proper times and clocks continuous in seconds, the evolution
-after Δs that of the unchanged world after Δs/2); spin and charge as the flagged «what if» (place, proper time and ZAMO
-velocity kept to round-off, E and L recomputed, «МОДЕЛЬ» and the engine module in the approximations and the event, the
+after Δs that of the unchanged world after Δs/2); spin and charge as the flagged "what if" (place, proper time and ZAMO
+velocity kept to round-off, E and L recomputed, "“WHAT IF” MODEL" and the engine module in the approximations and the event, the
 checks passing, a body under the new horizon refused with the world as it was, a body near the horizon keeping γ, the
 radial period cleared at a change of the hole; the rule itself is tested in the engine,
 `lfphys/tests/test_kn_change_whatif.py`); the binary's mass (no restart, the phase going on, the

@@ -1,5 +1,7 @@
 # v11 — the double slit with long slits, in 3-D: the exact Schrödinger equation and Bohm trajectories
 
+**English** | [Русский](README.ru.md)
+
 A wrapper over the engine `lfphys` (plan item P14.4, on P6 and P10). A wave packet of a massive particle runs at a
 plate with two slits and on to a detecting screen. The run solves the time-dependent Schrödinger equation on the whole
 plane of the experiment — no paraxial approximation, no Kirchhoff boundary values: the plate is a wall of finite
@@ -34,15 +36,15 @@ regions, the packet, the mark's coupling, the references.
   `core.quantum.schrodinger1d.FreeGaussians`). Its Bohm trajectories move along y exactly as y₀·σy(t)/σy
   (`bohm.gaussian_trajectory`), independently of x and z; their y starts are drawn from |η|² after the x, z starts
   (which therefore do not depend on σy). Since the owner's correction of 2026-10-28 («в 3D моделируется все, но
-  отображается только в виде плоскости») the run sends the third dimension and the scene draws it: |η(y, t)|² on 48
-  points across the scene with every image of the wave (the view draws the volume |ψ(x, z)|²|η(y)|², the outer
-  product, ray-marched), the particles' and trajectories' y, the hits' y, and the screen as P(x, y) =
-  Σ_t J(x, t)|η(y, t)|² dt on 48 bins of y (the flux of the product state through the screen's face). The scene's y
+  отображается только в виде плоскости» — "everything is modelled in 3-D, but shown only as a plane") the run
+  sends the third dimension and the scene draws it: |η(y, t)|² on 48 points across the scene with every image of
+  the wave (the view draws the volume |ψ(x, z)|²|η(y)|², the outer product, ray-marched), the particles' and
+  trajectories' y, the hits' y, and the screen as P(x, y) = Σ_t J(x, t)|η(y, t)|² dt on 48 bins of y (the flux of the product state through the screen's face). The scene's y
   extent is a set-up estimate: four widths of η at twice the time the wave needs to cross the window at the mean speed
   (or a quarter of the window's length, whichever is larger). Before, the scene showed only the plane y = 0 (it is
   still a layer, off by default, and the window on the right).
 * **The plate.** A potential V₀ (in units of E₀) where the plate is solid: thickness w around z = 0, slits of width a at
-  x = ∓d/2 (A at −d/2, B at +d/2); its edges rise over a stated length (the world parameter «Ширина краёв», default
+  x = ∓d/2 (A at −d/2, B at +d/2); its edges rise over a stated length (the world parameter "Width of the wall's and the mark field's edges, λ", default
   0.2 λ, a tanh profile), the same on every grid and never narrower than the grid step (refused otherwise). Until the
   review the edges were one grid step wide, so the grid choice changed the wall itself: the pattern moved by 10–20 % of
   its peak between λ/6 and λ/8 (review B3-2). The wave decays in the wall as e^(−κs), κ = √(2(V₀ − E₀)); the grid
@@ -51,7 +53,7 @@ regions, the packet, the mark's coupling, the references.
   the plate (its tail at the plate < 10⁻⁴); with a flux, multiplied by the gauge factor exp(iqΛ) (Λ = ∫A·dl from its
   centre), so that its kinetic momentum is ħk₀ along z in every gauge (without it the same Gaussian is another state).
 * **Detectors.** Absorbing layers W = 2E₀ (s/6λ)²: the screen (from 4λ behind its face z = L on), the source side
-  (what the plate reflects) and both sides (what flies past the screen). "Reflected" is what is absorbed before the
+  (what the plate reflects) and both sides (what flies past the screen). "reflected by the plate" is what is absorbed before the
   plate's middle (z < 0), whichever layer takes it (review B3-13). The screen's face z = L is a sample of every grid.
   The screen's pattern is the probability that flows through its face, ∫ j_z(x, L) dt (the current by a 32nd-order
   centred difference: error (16!)²/33!·(k dz)³² ≤ 3·10⁻⁶ at the top of a packet's spectrum on the coarse grid λ/5);
@@ -61,16 +63,16 @@ regions, the packet, the mark's coupling, the references.
   large at λ/5 when the layer began at the face; now the stencil (16 samples each side, 3.2λ at λ/5) lies in free
   space and the flux agrees with the exact free evolution to 3·10⁻⁶ (v12, `arr_flux_exact`). Order 16 lost ~10⁻³ at
   the top of the spectrum on λ/5.
-* **The path mark and the observer.** The world parameter «Метка пути в щели B» gives the wave a second component:
-  * «спин частицы» — the particle's own spin ½ (spin up along z). A coupling b·σ with b = b₀ e_y inside slit B's
+* **The path mark and the observer.** The world parameter "Path mark in slit B" gives the wave a second component:
+  * "the particle's spin" — the particle's own spin ½ (spin up along z). A coupling b·σ with b = b₀ e_y inside slit B's
     channel (edges as the wall's) turns the spin by θ = 2b₀w/(ħv₀) for the mean speed (b₀ set from θ). For an electron
     or a neutron this is a magnetic field in the slit (b = −μB); particles without spin ½ in the engine (⁴He, C₆₀) are
     refused this mark (review B3-7);
-  * «наблюдатель: детектор пути у щели B» (B4, the owner's request of 2026-10-28) — an external two-level which-path
+  * "an observer: a path detector at slit B" (B4, the owner's request of 2026-10-28) — an external two-level which-path
     detector at slit B (Englert's model, as v02's detector qubit): the second component is the detector's state, which
     the same coupling turns by θ while the particle is in slit B. Any particle, also one without spin.
 
-  θ itself is live («Метка в щели B: поворот θ»): 0 — the paths cannot be told apart, 180° — fully marked. Since B4
+  θ itself is live ("Mark in slit B: turn θ, °"): 0 — the paths cannot be told apart, 180° — fully marked. Since B4
   (review B4-3) b₀ is calibrated on slit B's channel (`MarkCalibration`): the lowest transverse mode of the slit
   (the plate's profile across x, sinc-DVR) carries E⊥; the ±b₀ eigenstates of b·σ cross the plate's profile along z
   with (E⊥ ± b₀c_x)s(z), and their complex transmission amplitudes (`core.quantum.transfer.staircase_amplitudes`)
@@ -110,7 +112,8 @@ regions, the packet, the mark's coupling, the references.
 ## Live and world parameters (review UX-ui U12)
 
 The owner (2026-11-04): «плейграунд должен быть больше похож на плейграунд, где я могу ставить эксперименты в рамках
-одного мира, а не перезапускать его постоянно». For every parameter: whether the engine applies it at the current
+одного мира, а не перезапускать его постоянно» ("a playground should be more like a playground, where I can set up
+experiments within one world instead of restarting it all the time"). For every parameter: whether the engine applies it at the current
 moment keeping the world, and what an edit does to the state — or why it stays a world parameter (a change of it starts
 a new world in the same run, with the set-up in force carried over).
 
@@ -134,7 +137,7 @@ runs: the wave (images every 16 pairs of steps, kept in the record, so that a vi
 that moment), the particles and their trajectories (colour: the slit), the hits on the screen and the pattern the flux
 builds there; nothing is drawn on the screen while its accumulated probability is below 10⁻¹⁰ (round-off of either
 sign, review B3-5). At the end (all probability absorbed, < 10⁻⁴ left): the fractions detected, reflected and lost,
-the checks, and the approximate theories' patterns for comparison. Scrolled back, the plane's window and «Экран» show
+the checks, and the approximate theories' patterns for comparison. Scrolled back, the plane's window and "Screen" show
 that moment (review B3-10); the trajectories and the screen in the 3-D scene keep all that was revealed.
 
 ## Checks

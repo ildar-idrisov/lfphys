@@ -1,0 +1,102 @@
+1. -ise / -ize stems used both ways (sum over catalogues)
+  localisation {'engine': 1, 'v02_double_slit': 1}  |  localization {'engine': 4, 'p02_quantum': 3}
+  localises {'engine': 1}  |  localizes {'p02_quantum': 1}
+  polarisation {'engine': 7, 'v02_double_slit': 16, 'v05_optics_bench': 8, 'v07_bell_test': 5, 'v16_optical_vortices': 10, 'v17_mie_scattering': 9}  |  polarization {'engine': 11}
+  polarisations {'engine': 2, 'v02_double_slit': 4}  |  polarizations {'engine': 2}
+  polariser {'v02_double_slit': 3, 'v07_bell_test': 1}  |  polarizer {'engine': 1}
+
+2. variant pairs
+  disc: 13 {'engine': 2, 'p02_quantum': 3, 'v16_optical_vortices': 8}
+  disk: 49 {'engine': 9, 'framework': 1, 'v15_kerr_shadow': 39}
+  only disks: 21
+  3-d: 90 {'engine': 31, 'framework': 12, 'p02_quantum': 1, 'p03_molecules': 1, 'p04_fluids': 4, 'v08_wave_3d': 11, 'v09_thomas_3d': 4, 'v10_fast_observer': 4, 'v11_double_slit_2d': 8, 'v12_arrival_times_2d': 1, 'v13_hydrogen_3d': 7, 'v14_quarkonium_3d': 3, 'v15_kerr_shadow': 1, 'v16_optical_vortices': 1, 'v17_mie_scattering': 1}
+  3d: 8 {'engine': 2, 'p02_quantum': 5, 'v13_hydrogen_3d': 1}
+  only 2-d: 50
+  space-time: 5 {'engine': 5}
+  spacetime: 11 {'engine': 5, 'v01_light_travel': 1, 'v07_bell_test': 5}
+  only licence: 12
+  only set-up: 67
+  only modelled: 7
+  only centre: 90
+  only colour: 32
+  only colours: 8
+  only grey: 9
+  only per cent: 1
+  only towards: 12
+  only cancelled: 6
+  only metre: 4
+  only metres: 2
+  only behaviour: 1
+  only neighbouring: 5
+  only normalised: 10
+  polarisation: 55 {'engine': 7, 'v02_double_slit': 16, 'v05_optics_bench': 8, 'v07_bell_test': 5, 'v16_optical_vortices': 10, 'v17_mie_scattering': 9}
+  polarization: 11 {'engine': 11}
+  only e.g.: 3
+  only non-relativistic: 15
+  only wave function: 10
+  only wave packet: 4
+  only black hole: 44
+  only time step: 35
+  cross-section: 9 {'engine': 3, 'v02_double_slit': 6}
+  cross section: 2 {'engine': 2}
+  only post-newtonian: 10
+  only x-ray: 1
+  only fine structure: 2
+  only data set: 1
+
+3. short labels (1-5 words, no sentence punctuation): lowercase-initial vs uppercase-initial per catalogue
+  engine: upper 52, lower 119: a DFT monitor is needed | a body of shape {kind} | a smaller spin or charge | a tool, not physics | a wave of another dimension | a wave packet (v03) | added particle {pid} ({species}) | added {type} #{oid} | alternative (modified laws) | an arbitrary plane | approximation | asymptotics of H_n: DLMF 10.17.5 | at ({x}, {y}) m;  | averaging: subpixel or staircase | background | ball | body | body force: finite numbers | box | centre | changed {type} #{oid}: {changes} | chosen for this flow | chosen for this world | chosen in the settings | collisions: 'trt' or 'bgk'
+  framework: upper 212, lower 233: a change of the scene | a change of the set-up | a new world | a numerical error | a slice | a slice is being built | a step | a step of the computation | a world from the record | a world with these parameters | action “{label}” | actual: {speed} | added at t = {t} | agreement within the numerical precision | alternative | amplitude | amplitude √(I/Imax) | an action | any finite number | approximation | as | at least {lo:.10g} | at least {lo:.6g} | at most {hi:.10g} | at most {hi:.6g}
+  p01_gravity: upper 100, lower 65: a smaller spin or charge | at the horizon (captured) | au | black hole | click farther from the hole | clock rate dτ/dt | collided and merged | distant clock t, s | eccentricity (osculating) | energy E/μ (2PN) | every interval | fraction of c | g, m/s² | gone far away | green | grey | h× | h₊ | kg·m²/s | km | km/s | light blue | m/s² | mass, M☉ | merge (momentum and mass conserved)
+  p02_quantum: upper 85, lower 54: a potential's region | absorbed | absorbed from | along +y | along −y | at the new place | atom of a given mass | ball | choose fewer points | choose from the list | coarsen | cylinder along z | eV | electron (charge −e, spin ½) | flux over time | fullerene C₆₀ | height set, eV | here | in the window (probability) | km/s | marker: P(1) | marker: ⟨0|ρ|1⟩ (coherence) | meV | measure | neutron (spin ½)
+  p03_molecules: upper 99, lower 98: a force would become infinite | a larger size | a new size was set | atoms | atoms beyond a wall: {n:d} | bar | cell strain | centre | chain | change Lx and Ly | continuous forces (Lennard-Jones or WCA) | custom | density ρσ² | density ρσ³ | diatomic | dimensionless | energy per atom | green | hard disks (spheres) would overlap | hard disks have no field | hard disks have no piston | hard disks have no thermostats | hard disks would overlap: {what} | hard spheres have no field | hard spheres have no molecules
+  p04_fluids: upper 87, lower 59: a custom fluid | a single drop | a source (holds the concentration) | a staircase wall | air | air, 20 °C, 1 atm | an interpolated wall | averaging window | bottom | bottom–top (along y) | custom: ρ and ν below | drag, mean, N/m | dye | equally on both sides | flow plane | fluid at rest | force along x (drag) | force along y (lift) | fraction | free: {sides} | kg/(s·m) | left | left–right (along x) | lift, mean, N/m | m
+  v01_light_travel: upper 66, lower 37: across the motion (y axis) | along the motion (x axis) | at Andromeda ±{d:d} d | at rest | at the Earth ±{d:d} d | c × {f} | choose another direction | cones | d | diagram | direction, ° | flash | flash of all sources: {n:d} | flash of the source | flash on the Sun | follow: {name} | free camera | independent of the synchronisation | labels | laboratory | laboratory coordinates | longitudinal Doppler effect | m/s | map | now (simultaneity)
+  v02_double_slit: upper 78, lower 93: a C₆₀ fullerene | a basis with edge conditions | a neutron | a photon | a photon has polarisation | a ⁴He atom | absorbed at the slits | absorbed by the analyser | all particles | an electron | analyser {a:g}° | coupling θ, ° | current segment | custom (azimuth, ellipticity) | dark counts | detector θ = {th:g}° | direction recorded (4π) | emitted | energy (photon: hν; particle: kinetic) | expectation | flow lines | frequency (photon) | from the scalar model | given directly | in the current segment
+  v03_quantum_1d: upper 29, lower 46: a potential step | a, nm | another interpretation: {what} | counters cleared | de Broglie wavelength | de Broglie–Bohm: a trajectory | double barrier (resonant tunnelling) | eV | electron | energy | exact T(E) over the spectrum | fraction transmitted | free particle | fs | grid points | harmonic trap | increase σ or the energy | nm | no | no change | packet width σ | particle | particle cycle | particles | potential
+  v04_orbits: upper 39, lower 50: a black hole | a fall | a fall into the centre | a fall through the horizon | a plunge into the centre | a point mass | angle, ° | bound (a Kepler ellipse) | bound (an ellipse with precession) | bound: no end | circular | dτ/dt now | e (energy per mc²) | earlier segments | escape | escape to infinity | fell into the centre | fell onto the surface | follow the body | ghost | gone to infinity | gravity √(1 − 2M/r) | l (angular momentum, M·c) | launch of the body | lower the speed
+  v05_optics_bench: upper 40, lower 39: absorbed (in all) | boundary between two media | counted in this segment | d, nm | detector R: {k:d} | detector T: {k:d} | emitted in all | evanescent wave | exit medium | expected {p:.5g} | expected {p:.5g}, σ = {s:.2g} | film | gap | incidence medium n₀ = {n:.5g} | layer | lost at a rebuild | metal | metal film | new segment: the counters reset | nm | no changes | p (TM) | polarisation | reference arcsin(n_s/n₀) = arcsin({ns}/{nin}) | reference arctan(n_out/n₀) = arctan({nout}/{nin})
+  v06_qcd: upper 16, lower 20: a jump (11/72)(α_s/π)² | a jump (11/72)(α_s/π)² + c₃(α_s/π)³ | a, GeV⁻¹ | a, GeV⁻¹ (string tension 1/a²) | active flavours n_f | bottomonium (b b̄) | changed: {what} | charmonium (c c̄) | continuous | input α_s(M_Z) | level | loops | loops: {l:d} | model, MeV | no change | order of the β function | probe μ | quarkonium | start | states
+  v07_bell_test: upper 35, lower 36: accumulating | choice | choice space-like to the emission | choice {s} | choice {s}: {dt} before ↓ | chosen for the next particle | curve of the other law | cτ against 2L | detected | detection {side} | emission | fixed | fixed (a, b) | fixed: Alice a, Bob b | in flight | law | light cones | light-like | local models: |S| ≤ 2 | lost (stations moved) | m² | no changes | no quantum theory gives more | none | pair
+  v08_wave_3d: upper 20, lower 16: always fp64 | angular spectrum | band-limited sum | checks | circular aperture | computation window | error at z_max | next to the aperture | plain sum | settings | slices | slit of finite length | square aperture | the Hankel integral (quadrature) | two slits of finite length | why
+  v09_thomas_3d: upper 27, lower 35: a regular polygon through rest | accumulated angle (along the computation) | against z | along x | along z | angle / bound | bound of planar loops | changed its sign (−1) | duration of the manoeuvre | fuel | gyroscopes turned by | is the same (+1) | largest γ | largest γ so far | launch | loop | ly | non-planar | pieces of thrust | planar (a closed formula exists) | planned fuel L | rad | reference | rest | rotation axis, {a:.3g}°
+  v10_fast_observer: upper 28, lower 29: ball | bodies | body {b:d} | cube | exposure | floor (at rest) | frame time | large size | m | medium size | no | ordinary (field of view) | per frame | position | post x = {x} m | posts | proper time τ | ray tracing | settings | size | small size | street (at rest) | time t (lab) | tower ({x}, {z}) | towers
+  v11_double_slit_2d: upper 35, lower 39: as the main run | bounced back | closed | coarse: λ/5 | computed on | de Broglie wavelength λ, pm | detector | fine: λ/8 | flux between the slits | in flight | mark in slit B | no change | no mark | none | normal: λ/6 | not through yet / reflected | observer at slit B | on the screen | open | paraxial theory (Fresnel, Kirchhoff) | particle | plate | pm | probability in the window | rad
+  v12_arrival_times_2d: upper 32, lower 19: absorbing boundary | as the main run | de Broglie wavelength λ, pm | detectors now | flight | freely to the detecting plane | k₀ | one packet | particle | quantum flux J(t) | reflected by the plate | rule | semiclassical | soft detector −iW₀ | state | the Marchewka–Schuss rule | the observation window is over | the soft detector | went back
+  v13_hydrogen_3d: upper 19, lower 11: a superposition of two states | atom | eV | energy E | m (magnetic, |m| ≤ l) | n (principal number) | n = {n} | no changes | one stationary state | reduced mass | s
+  v14_quarkonium_3d: upper 17, lower 12: a superposition of two states | bottomonium bb̄ | charmonium cc̄ | energy in the potential E | fm | n (radial: 1S, 2S, …) | no changes | one stationary state | pair | potential | quark mass | s
+  v15_kerr_shadow: upper 24, lower 16: a Keplerian disk | closed timelike curves (Eq. 76) | computing: {k:d} of {n:d} rows | det g vanishes (Eq. 72) | done: {w:d} × {h:d} | equatorial photon orbits | from {lo:.3g} to {hi:.3g} | horizon r₊ | metric | no comparison | not computed yet | not computed: {why} | observer: θ = {i:.4g}° | px | redshift g (false colours) | spin a/M
+  v16_optical_vortices: upper 37, lower 38: amplitude (1 + cos)/2 | beat: measured | binary amplitude | by Poynting ∫(r×P)_z | by the flux (Barnett): orbit | by the flux (Barnett): spin | charge l, hologram | choose another wavelength | circular σ = +1 | circular σ = −1 | circular, σ = +1 | circular, σ = −1 | depth of the region | detector | element | formula 2|l|f | helical fronts | increase w0 or decrease λ | linear (x) | linear (x): σ̄ = 0 | longitudinal field |E_z|/|E| | model | none | optical phase | period Λ, w0, λ
+  v17_mie_scattering: upper 32, lower 26: a given index | bright: Descartes' rays | computed (slices and volume) | drops | forward {a}–{b}° | g (asymmetry) | glory {a}–{b}° | incident light (along +z) | m relative to the medium | n = {n} + {k}i | near field | one wavelength | one wavelength {lam} nm | outside the computed angles | polarisation E along x | polarisation P = {p:.3g} | rainbow {a}–{b}° | scattering angle θ | substance | sunlight | surrounding medium | terms of the series | the exact Mie series | waiting for the first wavelength… | water
+
+4. Title Case labels (2-6 words, every word capitalised) — the rest are sentence case
+  [framework] Speed of “{label}”
+  [p01_gravity] Azimuth Φ, °
+  [p01_gravity] Falling in
+  [p01_gravity] G M/c²
+  [p01_gravity] L, G M/c
+  [p01_gravity] Mass M, M☉
+  [p01_gravity] Mass, M⊕
+  [p01_gravity] Mass, M☉
+  [p01_gravity] Radius, R⊕
+  [p01_gravity] Radius, R☉
+  [p02_quantum] Bx, T
+  [p02_quantum] By, T
+  [p02_quantum] Bz, T
+  [p02_quantum] Field Bz
+  [p03_molecules] Heating to {T} K
+  [p03_molecules] Kolafa and Rottner 2006 (disks)
+  [p03_molecules] Kolafa, Labík and Malijevský 2004 (spheres)
+  [p03_molecules] Molecules X₂
+  [p03_molecules] Temperature, K
+  [p03_molecules] Thermostat {T} K
+  [p04_fluids] Re = U·L/ν
+  [v01_light_travel] Frame of “{name}”
+  [v07_bell_test] Flight L/v
+  [v08_wave_3d] Wave in 3-D: {source}
+  [v12_arrival_times_2d] W₀ = {W:.3g} E₀
+  [v14_quarkonium_3d] Quarkonium in 3-D
+  [v14_quarkonium_3d] Quarkonium in 3-D: {name}
+  [v15_kerr_shadow] A₁ ≤ 0 (down to {v:.3g})
+  [v15_kerr_shadow] A₂ ≤ 0 (down to {v:.3g})
+  [v15_kerr_shadow] Rays in 3-D

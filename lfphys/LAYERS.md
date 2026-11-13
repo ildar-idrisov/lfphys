@@ -40,7 +40,10 @@ measured spectra in `lfphys.core.data` with the edition and the page they were c
 ## 2. Rules (checked by `tests/test_layers.py`)
 
 1. Every module declares `ABOUT = {layer, kind, title, statement, validity, basis, conflicts}`; `layer` equals the
-   package it lives in.
+   package it lives in. The fields a user reads (`title`, `statement`, `validity`, `conflicts` and the descriptive
+   entries of `basis`) are translatable texts, `lfphys.i18n.T("English text")`; their translations are in
+   `lfphys/locales/<lang>.json` for every language of `../LANGUAGES.md` (`../visualizations/RULES.md` §7). Citations
+   in `basis` (authors, journal, year) stay plain strings.
 2. The core imports nothing from `theories`, `laws` or `tools`. Theories may import the core. A law set may import
    both.
 3. A module in `theories` names at least one conflict: where it disagrees with the core or with another theory (that
@@ -53,8 +56,8 @@ measured spectra in `lfphys.core.data` with the edition and the page they were c
 
 ## 3. What is where (current)
 
-The catalogue is generated: `python -c "from lfphys import registry; ..."` or the player's panel «Физика этого
-мира». `README.md` lists the modules by topic.
+The catalogue is generated: `python -c "from lfphys import registry; ..."` or the player's panel "Physics of this
+world". `README.md` lists the modules by topic.
 
 ## 4. Licence and third-party code (owner, 2026-10-24; `../AGENTS.md` §3 rule 8)
 

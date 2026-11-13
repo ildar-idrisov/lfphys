@@ -1,0 +1,9 @@
+shadowed_t(shadow.js) lines: [8, 9] (cases on lines 3,4,6,7,8; control line 9)
+cyrillic_lines(cyr.js): [4] (Cyrillic data on lines 2,3,4)
+cyrillic_lines(cyr.py): [3] (Cyrillic data on lines 1,2,3)
+cyrillic_lines(cyr.css): [] (.css is not a code file the guard reads)
+code_files() suffixes: ['.html', '.js', '.mjs', '.py']
+msgids_py(msgids.py): []
+msgids_js(msgids.js): []
+msgids() of a schema-like dict with a plain label: {'nm'}
+needs_translation('{n} µs') = True ; ('°C') = True

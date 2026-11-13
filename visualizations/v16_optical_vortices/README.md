@@ -1,5 +1,7 @@
 # v16 — optical vortices: Laguerre–Gauss beams, orbital angular momentum, the rotational Doppler effect
 
+**English** | [Русский](README.ru.md)
+
 A wrapper over the engine `lfphys` (plan item P14.7, batch B8). A beam whose phase winds as e^{ilφ} around its axis:
 its surfaces of equal phase are l intertwined helices, its energy flow spirals around the axis, and every photon
 carries the orbital angular momentum lħ. A rotating element shifts the light's frequency by an amount proportional to
@@ -31,10 +33,10 @@ fields, the grids the scene samples it on, the devices' meshes (geometry, not co
   helicities. J_z = l + σ per photon is a property of this construction (an eigenstate of J_z, Bliokh et al. 2010),
   not of every nonparaxial beam with a phase e^{ilφ}.
 * **What the exact beam keeps of the named source** (review B8-beams, O2). The evanescent part of the source's
-  spectrum (q > k) is not in the beam. The run computes the share of the source's power it keeps (check «Доля мощности
-  источника»; Hankel–Parseval). For an LG waist narrower than about a wavelength w0 is then the width of the spectrum,
+  spectrum (q > k) is not in the beam. The run computes the share of the source's power it keeps (check "Fraction of the
+  source's power the beam carries"; Hankel–Parseval). For an LG waist narrower than about a wavelength w0 is then the width of the spectrum,
   not the measured waist: a world that drops more than 10⁻⁴ of the waist's power (its field on z = 0 differs from the
-  named mode by more than 1 % in L2 norm) is labelled in the header and the title («спектр обрезан на q = k»; the
+  named mode by more than 1 % in L2 norm) is labelled in the header and the title ("the spectrum cut at q = k"; the
   `tight` preset drops 0.66 %), and one that drops more than 10 % (32 % in L2 norm) is refused with the reason (e.g.
   LG₃⁶ at w0 = 0.3 µm, λ = 1.6 µm: 99.96 %). Behind a spiral plate the dropped part is the plate's evanescent near field
   (the singular centre): real, but decaying away from the plate; the beam is the plate's exact far field, and the header
@@ -46,13 +48,14 @@ fields, the grids the scene samples it on, the devices' meshes (geometry, not co
   18 GB matrix; a plate world with w0 = 6 µm, λ = 1 µm took 46 s). The defaults need 10⁶–10⁷.
 * **Paraxial model** (flagged "approximation"): the LG closed form (or the Fresnel integral of the plate's spectrum,
   cut at q = k) times a uniform polarisation vector. It has no longitudinal field; its spin is σ by construction (the
-  run computes it from the model's field, check «Спин S_z»; review O9).
+  run computes it from the model's field, check "Spin S_z per photon per unit length (from the model's field on the
+  same plane)"; review O9).
 * **The table.** The world tabulates the radial functions F0, F2, F1 (exact) or u (paraxial) on at least 320 radii
   (λ/16 apart) × 200 depths, out to the largest radius any part of the run samples (the volume's and the slices'
   corners, the angular-momentum plane, the disc's quadrature, the prism's square; review O14); every drawn value is the
   bicubic interpolation of the envelopes F e^{−ikz} (each extended to negative r by its parity, so that the spline has
   no boundary at the axis) with the carrier put back exactly. Its error is measured against the direct route at 24
-  seeded points and 18 on the brightest ring (check "Таблица поля"): 5.9·10⁻⁸ of the peak for the default world.
+  seeded points and 18 on the brightest ring (check "Field table against the direct calculation"): 5.9·10⁻⁸ of the peak for the default world.
 * **The rotating element** (world parameter; its frequency f is live): a spinning rough disc at 90 % of the depth
   (a thin phase screen of 60 seeded Gaussian bumps, turned exactly) — the detector takes the scattered light through a
   mode filter of the +l and −l superposition (the mode filter of Lavery et al., Science 341, 537 (2013), their second
@@ -80,7 +83,7 @@ fields, the grids the scene samples it on, the devices' meshes (geometry, not co
 
 ## The scene
 
-* **Equiphase surfaces** (layer «Поверхности равной фазы»): the sheets arg ψ = ωt of the field's component along the
+* **Equiphase surfaces** (layer "Surfaces of equal phase"): the sheets arg ψ = ωt of the field's component along the
   input polarisation, extracted by the engine from the field sampled on a cylinder grid (r follows w(z), 192
   azimuths), over at most 36 λ of depth around the waist. The optical phase is shown slowed: one period of e^{−iωt}
   takes `t_show` of world time (400 ms by default; the real period of 1 µm light is 3.3 fs). The 16 phases of the
@@ -88,14 +91,14 @@ fields, the grids the scene samples it on, the devices' meshes (geometry, not co
   computed (the sheets repeat). The helices therefore turn on screen; in fact the wave front runs along z at c. The
   rotating element, by contrast, turns in real world time: the relative rotation of the helices and the element on
   the screen is not the measured shift, which is counted from the true optical frequency (review O11; said in the
-  panel «Время и фаза»).
+  panel "Time and phase").
 * **Intensity** (volume, 56³, |E|²/peak); zero beyond the rotating element (the light there is not computed).
 * **Flow lines**: the Poynting vector (yellow; exact model) and the canonical (orbital) current p_o (cyan), traced by
   RK4 (220 steps) from 16 points on two rings of the first plane; two Poynting lines are traced again with half the
   step, and their difference is the lines' error shown in the checks (review O16). In the paraxial model the Poynting
   vector of u·e_σ has no transverse part (it lacks E_z), so only the orbital current Im(u*∇u)/k is drawn.
 * **Slice planes** (up to three, any orientation): |E|² and the phase of the envelope arg(ψ e^{−ikz}) (the window's
-  «фаза» mode shows it on a colour wheel); computed from the table for the plane's points and checked at three points
+  "phase" mode shows it on a colour wheel); computed from the table for the plane's points and checked at three points
   of the plane against the direct route. For the fork hologram only planes along the axes (exact angular-spectrum
   routes).
 * **Devices**: the spiral phase plate (its thickness h(φ) = lλφ/(2π(n−1)), exaggerated), the hologram's pattern, the

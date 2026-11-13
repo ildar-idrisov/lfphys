@@ -1,9 +1,13 @@
 # p02 — the quantum playground (quantum particles)
 
+**English** | [Русский](README.ru.md)
+
 A playground section (plan P15.3; framework P15.0: `../RULES.md` §6). The owner's words (2026-10-28): «в плейграунде
 можно добавлять в мир разные объекты, менять параметры, смотреть за их изменением и взаимодействием, все должно быть не
-задано заранее, а просчитываться в реалтайме». The scene is built by hand from the palette, changed at any moment in the
-inspector, saved to a file and started again from it; its record is the last minutes unless "● Сохранять запись".
+задано заранее, а просчитываться в реалтайме» ("in the playground one can add different objects to the world, change
+parameters, watch how they change and interact; nothing should be set in advance, everything computed in real
+time"). The scene is built by hand from the palette, changed at any moment in the inspector, saved to a file and
+started again from it; its record is the last minutes unless "● Keep the record".
 
 ## The laws of a world
 
@@ -33,10 +37,10 @@ The event states the probability inside the new layers and, for a larger window,
 attenuated part becomes interior wave). A coarser grid is also refused by the scene's resolution rule (|k| + 6σ_k ≤
 π/d, next to what acts on the particle ≤ ⅔·π/d) and by an object's edge narrower than ≈ 3 new steps; the help names
 all three rules and the refusal says which one refused (review Q7: the help promised the 10⁻⁶ rule alone, and the
-refusal spoke of a potential next to a free packet [error in earlier]). The action «Огрубить сетку с краями по ней»
+refusal spoke of a potential next to a free packet [error in earlier]). The action "Coarsen the grid with edges to match"
 widens the edges set to 0 to the new grid and coarsens in one change (review X10). What a change drops (below the
-tolerance; or gains, by the new grid's quadrature, when the step and the window both change) is banked as «смена сетки
-или окна (отброшено; минус — прибавилось от квадратуры)» (review Q10), so norm + absorbed = 1 stays exact; the event states, per particle,
+tolerance; or gains, by the new grid's quadrature, when the step and the window both change) is banked as "a change of the
+grid or the window (dropped; a minus: added by the quadrature)" (review Q10), so norm + absorbed = 1 stays exact; the event states, per particle,
 the norm before and after and ⟨H⟩ before and after. A refinement carries the spectrum, so the norm and the kinetic
 energy, exactly; its ΔE is the change of ⟨V⟩ evaluated on the finer grid — the grid's own error of the potential energy,
 a reading of convergence (the double slit at 256 → 512 points: 3·10⁻⁶ eV of 0.378 eV). Coarsening a wave whose spectrum
@@ -49,20 +53,20 @@ a localization length under 1.5 steps, is refused naming the object; a flux plan
 new window (the probability inside the old layers goes on as it is), the absorbers' strengths and the time step are
 tuned again, Bohm points outside a smaller window are registered as dropped by it, the energy reference and the flux
 planes restart (`Scene.regrid`'s report, the run's checks). The view's axes and the 3-D box follow (messages `grid`,
-`box`). Measured (CPU, 2 threads, the shared host): see «Latencies» below.
+`box`). Measured (CPU, 2 threads, the shared host): see "Latencies of the live changes" below.
 
-**Another space** (2-D ↔ 3-D) stays a new world; with «перенести сцену» (plan P16.1, the framework's carry-over) it takes
+**Another space** (2-D ↔ 3-D) stays a new world; with "carry the scene over" (plan P16.1, the framework's carry-over) it takes
 over what means the same there (`Simulation._carried`): the plane's set-up is the section z = 0 of one that does not
 change along z, so into space boxes, detectors, markers and regions go unbounded along z, a disk as a cylinder along z,
 a packet with σz = σy (prepared afresh: a scene keeps packets, not waves); out of space only what crosses the plane z =
 0, as its section there (a sphere as the disk of its section, a box bounded in z if it holds z = 0, a packet moving in
 the plane within 2σz of it); walls, steps and flux planes across x or y and flux tubes go as they are (review
-LB1-p02-ux Q4: they were refused with «Нет параметра «z»», 0 of the double slit's 4 objects went into space, and the
+LB1-p02-ux Q4: they were refused with "there is no parameter “z”", 0 of the double slit's 4 objects went into space, and the
 notes came before the add was tried [error in earlier]). Refused, named in the notice: what does not cross the plane, a
 wall, a step or a flux plane across z, a packet moving out of the plane. **The same space** (a new world with the
 scene carried, e.g. another grid from the form): each wave is carried itself (`carry_state`, `carry_world`,
 `Scene.adopt_wave`: resampled exactly to the new grid, refused as a live change of the grid is — then a fresh packet,
-said), with its absorbed records (a detector that was not carried: «в прежнем мире»), the world's random generators and
+said), with its absorbed records (a detector that was not carried: "in the previous world (before the scene was carried)"), the world's random generators and
 measured points; Bohm points are drawn again from the wave. The framework's one notice says what went with its state,
 what was prepared afresh and why; the world's time goes on.
 
@@ -70,13 +74,13 @@ what was prepared afresh and why; the world's time goes on.
 
 **Placing** (review UX-ui U4, U8): a palette object goes where the pre-placement form or a click in the scene puts it.
 A packet the scene cannot take there (inside a wall, against the window's face) goes to the nearest point where it can
-— upstream first, in steps of its width — and a toast says so (in the double slit «＋ Частица» landed at (0, 0) inside
+— upstream first, in steps of its width — and a toast says so (in the double slit "＋ Particle (wave packet)" landed at (0, 0) inside
 the 3 eV wall and was refused); a packet the grid cannot hold anywhere is refused with the wavelength it needs. An
 object wholly outside the window is refused (a box at 10⁶ nm was taken without a word, and a packet there made the wave
 NaN, review UX-params P29 [error in earlier]: the window test squared a negative distance); one partly outside is taken
 with a note. The palette greys out what the scene cannot take now, with the reason (a magnetic field while a charged
 particle is in the window; an object the grid could not hold next to the particles). Refusals say what in the scene is
-wrong and what to change (the engine's sentence under «подробности»).
+wrong and what to change (the engine's sentence under "details").
 
 | object | engine (`core.quantum.scene`) | parameters |
 |---|---|---|
@@ -90,8 +94,8 @@ wrong and what to change (the engine's sentence under «подробности»
 | environment | `Localization` (Lindblad localization by quantum jumps; GRW form when everywhere) | rate λ in 1/ps, length a, region |
 | flux plane | `Scene.add_plane` (the probability flux through it, integrated in time) | axis, position |
 
-Actions: **«Приготовить пакет заново»** — a fresh Gaussian packet from the particle's parameters at the current
-moment (the former wave and its records discarded; dragging and throwing keep the wave, below). **«Измерить положение»** — an unsharp position measurement (Gaussian Kraus operators of resolution σ): the
+Actions: **"Prepare the packet anew"** — a fresh Gaussian packet from the particle's parameters at the current
+moment (the former wave and its records discarded; dragging and throwing keep the wave, below). **"Measure the position"** — an unsharp position measurement (Gaussian Kraus operators of resolution σ): the
 outcome is a point drawn by the Born rule or "already absorbed by detector k" with its probability; the wave collapses
 to it. σ must be at least the grid step and large enough that the wave after it (its spectrum wider by 1/(2σ)) is
 still held by the grid (`Scene.measure_min_sigma`; a refusal names the smallest σ; review B6-Q4); the time step follows
@@ -124,8 +128,8 @@ an environment that fills the scene has no position). The player selects, drags 
   differs between where the wave was and where it goes; the test is the share of the kinetic field (p − qA)ψ not carried
   along, > 10⁻⁶ refuses (review LB1-p02-ux Q1, Q2: the earlier factor, integrals from the mean position for every source,
   cut lines of phase qΦ into a wave that had gone round the AB tube — its high wavenumbers grew 1500–6200×, its
-  kinetic energy 3 % — and moving a wave out of a field region changed its kinetic energy by −9.7 %, both announced as «та же
-  волна» [error in earlier]). In the AB preset a drag along the wall after the electron passed is now exact (the tube's
+  kinetic energy 3 % — and moving a wave out of a field region changed its kinetic energy by −9.7 %, both announced as "the same
+  wave moved by …" [error in earlier]). In the AB preset a drag along the wall after the electron passed is now exact (the tube's
   path stays inside the wall); one across a slit while the wave is in it is refused. The event gives the kinetic energy
   ⟨(p − qA)²⟩/2m before and after besides ⟨H⟩. Refused where more than 10⁻⁶ of its probability would cross a face of the
   periodic window **into the window** (with open edges what lands in the far side's absorbing layer is absorbed there,
@@ -153,7 +157,7 @@ an environment that fills the scene has no position). The player selects, drags 
 * Any other change of a packet (species, widths, spin), or a drag of a packet a detector has taken, prepares a fresh
   packet from its parameters (said in the event). The packet's x, y (z) are **the centre at its preparation** (a drag
   writes the point it moved the wave to; where the wave is now: ⟨x⟩, ⟨y⟩ in the inspector — a mean, which for a wave in
-  parts may lie between them); «Приготовить пакет заново» prepares from the parameters or **where the wave is now**
+  parts may lie between them); "Prepare the packet anew" prepares from the parameters or **where the wave is now**
   (⟨r⟩ and ⟨p − qA⟩; review X11, Q11: after a drag and a throw the fresh packet went back 6.6 nm behind the wave).
 * **A potential, a field, a detector, a marker, a region or a flux plane dragged** moves at the current moment; the
   waves go on as they are. A drag evaluates only the moved object (the scene keeps every object's arrays by its
@@ -222,18 +226,18 @@ excludes what a change of the grid dropped (its own quantity).
 
 ## Presets that demonstrate an effect (measured 2026-11-03)
 
-* **«Метка пути в верхней щели»** (review B6-Q9 [error in earlier]: the earlier 3 × 3 nm marker at the thin wall, with
+* **"Which-path marker in the upper slit: …"** (review B6-Q9 [error in earlier]: the earlier 3 × 3 nm marker at the thin wall, with
   a coupling of 31 % of the electron's energy, acted as a ±0.12 eV lens, turned the marker by ~48° only and left a
   visibility of 0.61, while the label said the interference vanishes): the slits are 12-nm channels and the marker
   fills the upper one, 10 nm along the beam, with c = 0.021 eV = 5.6 % of the electron's energy and its edges across
   inside the wall. The transmitted wave's marker turns to P(1) = 0.95 (coherence 0.04); the screen's visibility near
   the centre falls from 0.94 (marker removed) to 0.18. What remains is the packet's spread of speeds: the marker turns
   by the time spent in it.
-* **«Ааронов–Бом»** (review B6-Q10: the tube sat behind the wall, in the beams' overlap, and the pattern missed the
+* **"Aharonov–Bohm: …"** (review B6-Q10: the tube sat behind the wall, in the beams' overlap, and the pattern missed the
   ideal by 5.6 % of its peak, left-right asymmetric): a tube of half a flux quantum, R = 0.5 nm, inside the 3-nm wall
   between the slits (its field e^{−r²/R²} is e^{−9} at the wall's faces). The screen's pattern equals the ideal
   half-fringe shift 2 (S₁ + S₂) − P₀ built from single-slit runs to 3.4·10⁻⁴ of its peak.
-* **«3-D: электрон рассеивается на шаре»**: λ = 4 nm (with λ = 3 nm the wave's wavenumbers next to the ball exceed 2/3
+* **"3-D: an electron scatters off a ball"**: λ = 4 nm (with λ = 3 nm the wave's wavenumbers next to the ball exceed 2/3
   of the 64³ grid's band, which the scene now refuses).
 
 ## Running checks
@@ -254,7 +258,7 @@ cost per step on the device in use (CPU or GPU 0) and the real-time limit it giv
 ## What the player shows
 
 In a plane the wave's window is the main view, across the whole centre (review UX-ui U15, as p04); the 3-D scene is
-shown beside it on request («Показать 3D-вид рядом», panel «Вид»); in space unchanged. The 3-D scene (z up): the objects (potentials orange / blue for wells, detectors and markers, fields, planes), the wave
+shown beside it on request ("Show the 3D view alongside", panel "View"); in space unchanged. The 3-D scene (z up): the objects (potentials orange / blue for wells, detectors and markers, fields, planes), the wave
 |ψ|² summed over the particles (each its own probability) — an image on the plane z = 0, or a volume in space — and the
 Bohm points (registered ones dimmer); the window of the plane z = 0 (|ψ|², amplitude, log, or the phase of a single
 particle) with the objects' outlines, the Bohm points and the measured positions (×); the playground's panels.
@@ -273,9 +277,10 @@ particle) with the objects' outlines, the Bohm points and the measured positions
 * **A uniform field cannot be changed while a charged particle is in the window** where its vector potential changes
   (review B6-Q3): the impulse of the switch's induced field depends on how the magnet is built, which the scene's
   Landau gauge does not give (two set-ups identical in the window ended 29 nm apart). A flux tube can be changed (its
-  gauge is that of a thin solenoid). Place charged packets after the fields; «Очистить» removes the particles first.
+  gauge is that of a thin solenoid). Place charged packets after the fields; clearing the scene (the scene operation `clear`) removes the
+  particles first.
   A refused removal leaves the object as it was (review UX-params P28 [error in earlier]: the field had already lost
-  its link to the engine and every later removal or «Очистить сцену» failed with «Сцена: 'o1'»).
+  its link to the engine and every later removal or clearing of the scene failed with "Scene: 'o1'").
   A packet needs 7.4 σ to the window's faces (the grid is periodic), so windows are large.
 * Open items: `../../STATUS.md`.
 
@@ -293,7 +298,7 @@ it was; a change at the current moment keeps the balance; the scene file starts 
 that would overflow are refused; a change of only the Bohm count keeps the wave; scene changes are fast and re-tune only
 what they change (U3); a palette packet lands outside the wall and says so (U4); objects wholly outside the window and
 far packets are refused, a wave never becomes NaN, the Bohm draw refuses in words (U8, P29); a refused removal keeps
-the object and «Очистить сцену» still works (P28); the edges change at the current moment (U12). LB1 (plan P16.1–P16.3):
+the object and clearing the scene still works (P28); the edges change at the current moment (U12). LB1 (plan P16.1–P16.3):
 the grid and the window change live in the same world (the refined wave equals the exact resampling; the norm kept; the
 run's checks pass after a refinement, a larger window and a coarsening back); a change that would drop or misplace
 more than 10⁻⁶ of the norm is refused with the number, and an object's edge the coarser grid cannot resolve names the
@@ -302,7 +307,7 @@ dragged packet is the same wave translated (its Bohm points moved), a thrown one
 times the electron's), the throw's limit `v_max` follows the grid; a wall and a detector move at the current moment and
 a registered packet dragged back is prepared afresh; the measurables are declared and every frame carries their values
 as the scene's own readings (NaN with the reason), cheaply; a new world of the other dimension takes over what makes
-sense there and refuses the rest in Russian; a world with live changes continues from its checkpoint byte for byte and
+sense there and refuses the rest in the owner's terms; a world with live changes continues from its checkpoint byte for byte and
 repeats them deterministically. The engine's resampling, moves and boosts: `../../lfphys/tests/test_quantum_scene_live.py`
 (a free packet continued exactly across every kind of change; a second route term by term; the negative control of a
 linear interpolation; the periodic face; the balance; flux planes; the magnetic translation). The

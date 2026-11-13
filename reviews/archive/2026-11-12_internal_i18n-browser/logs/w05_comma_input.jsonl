@@ -1,0 +1,4 @@
+{"locale":"en-US","before":{"value":"633","shown":"633"},"typed":{"value":"6005","valid":false,"bad":false},"after":{"value":"633","errs":["«Длина волны λ, нм»: 6 005 — больше наибольшего 1 600; можно от 300 до 1 600"],"toasts":[]}}
+{"locale":"en-US","point":{"value":"600.5","badInput":false},"after":{"value":"600.5","errs":[]}}
+{"locale":"ru-RU","before":{"value":"633","shown":"633"},"typed":{"value":"6005","valid":false,"bad":false},"after":{"value":"633","errs":["«Длина волны λ, нм»: 6 005 — больше наибольшего 1 600; можно от 300 до 1 600"],"toasts":[]}}
+{"locale":"ru-RU","point":{"value":"600.5","badInput":false},"after":{"value":"600.5","errs":[]}}

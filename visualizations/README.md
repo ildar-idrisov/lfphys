@@ -1,277 +1,312 @@
-# Визуализации следствий гипотез
+# Visualizations of the consequences of hypotheses
 
-Один сервер для всех визуализаций проекта: открывается в браузере с любой машины локальной сети,
-визуализации запускаются из браузера по кнопке, каждая — интерактивный плеер.
+Русская версия: [README.ru.md](README.ru.md)
+
+One server for all of the project's visualizations: it opens in a browser from any machine of the local network, the
+visualizations are started from the browser with a button, and each one is an interactive player.
 
 ```
-http://<адрес машины в локальной сети>:8479/
+http://<the machine's address in the local network>:8479/
 ```
 
-Правила для визуализаций (физика, причинность, модификации законов, единый API) — [`RULES.md`](RULES.md).
-Устройство каждой визуализации и её физическая модель — `vNN_*/README.md`.
-Физика всех визуализаций — в общем движке [`../lfphys/`](../lfphys/README.md): в ядре только проверенная физика,
-приближения, интерпретации, модели и альтернативы — отдельными слоями. Визуализация — обёртка над движком; какие его
-модули использует текущий мир, плеер показывает в панели «Физика этого мира».
+The rules for visualizations (physics, causality, modified laws, the one API, the interface's languages) are in
+[`RULES.md`](RULES.md). How each visualization works and its physical model: `vNN_*/README.md`.
+The physics of all visualizations lives in the shared engine [`../lfphys/`](../lfphys/README.md): its core holds only
+verified physics; approximations, interpretations, models and alternatives are separate layers. A visualization is a
+wrapper over the engine; which of its modules the current world uses, the player shows in the panel "Physics of this
+world".
+
+The interface speaks English (the default) and Russian: the switch **EN | RU** in the top bar of every page changes
+the language at once and is remembered in this browser; `?lang=ru` or `?lang=en` in the address overrides it. Records
+are language-neutral: a run recorded in one language is read in the other (records made before the interface was
+translated, on 2026-11-12, show their texts in Russian, as they were recorded).
 
 ---
 
-## Запуск сервера
+## Starting the server
 
-Из корня репозитория (движок и визуализации):
+From the root of the repository (the engine and the visualizations):
 
 ```bash
-docker compose -f visualizations/docker/docker-compose.yml build        # один раз (и после смены requirements.lock)
-docker compose -f visualizations/docker/docker-compose.yml up -d viz    # поднять; дальше работает сам и перезапускается
+docker compose -f visualizations/docker/docker-compose.yml build        # once (and after a change of requirements.lock)
+docker compose -f visualizations/docker/docker-compose.yml up -d viz    # start; from then on it runs by itself and restarts
 ```
 
-Сервер получает только GPU 0 (вторая карта этой машины считает неверно); тяжёлые части движка уходят на неё там, где это быстрее. Где и с какой точностью считать — страница **⚙ Устройства** (`/settings`): изменения сохраняются сразу и действуют на новые запуски; отдельному запуску можно задать своё устройство и точность прямо в каталоге (строка «Для этого запуска» на карточке визуализации). В каждом запуске в панели «О запуске» записано, что на чём считалось — отдельно для рисунка и для проверок (проверки всегда в fp64). Если мир сам выбрал приближение (например, срез щели упрощённой 2-D моделью), запуск помечен «приближение» в списке и «ПРИБЛИЖЕНИЕ: …» в верхней строке плеера. На машине без видеокарты NVIDIA: `docker compose -f visualizations/docker/docker-compose.yml --profile cpu up -d viz-cpu`.
+The server gets only GPU 0 (the second card of the development machine computes wrongly); the heavy parts of the engine
+move to it where that is faster. Where and with what precision to compute is set on the page **⚙ Devices**
+(`/settings`): changes are saved at once and apply to new runs; a single run can be given its own device and precision
+right in the catalogue (the line "For this run:" on the visualization's card). In every run the panel "About the run"
+records what computed on what — separately for the drawing and for the checks (the checks are always fp64). If a world
+chose an approximation itself (for example, a slice of the slit by the reduced 2-D model), the run is marked
+"approximation" in the list and "APPROXIMATION: …" in the player's top bar. On a machine without an NVIDIA graphics
+card: `docker compose -f visualizations/docker/docker-compose.yml --profile cpu up -d viz-cpu`.
 
-Сервер слушает порт **8479** на всех адресах машины. Адрес в локальной сети: `hostname -I` (например `192.168.1.10`).
-Порт меняется переменной `VIZ_PORT`. **Входа по паролю нет:** запускать миры может любой, кто достучится до порта; в общей сети ограничьте доступ (например, `VIZ_PORT=127.0.0.1:8479` в `visualizations/docker/.env` — только с этой машины). Остановить: `docker compose -f visualizations/docker/docker-compose.yml stop viz`.
+The server listens on port **8479** on all of the machine's addresses. The address in the local network: `hostname -I`
+(for example `192.168.1.10`). The port is changed with the variable `VIZ_PORT`. **There is no login:** anyone who
+reaches the port can start worlds; on a shared network restrict access (for example, `VIZ_PORT=127.0.0.1:8479` in
+`visualizations/docker/.env` — this machine only). To stop it: `docker compose -f
+visualizations/docker/docker-compose.yml stop viz`.
 
-Сервер держит код плеера и визуализаций с диска: правки JS видны после обновления страницы; правки Python
-визуализации — в следующем запуске (каждый запуск — новый процесс). Правки самого сервера (`server/lfviz/`) — после
+The server serves the code of the player and of the visualizations from disk: changes to the JS show after reloading
+the page; changes to a visualization's Python, in the next run (every run is a new process). Changes to the server
+itself (`server/lfviz/`) take effect after
 `docker compose -f visualizations/docker/docker-compose.yml restart viz`.
 
-Проверки (все тесты, в Docker):
+Checks (all tests, in Docker):
 
 ```bash
 docker compose -f visualizations/docker/docker-compose.yml run --rm viz-test
-node --test visualizations/player/js/tests/*.mjs   # разбор сообщений в браузере против байтов Python-кодека
+docker run --rm -v "$PWD":/lf:ro -w /lf/visualizations node:24 \
+    sh -c 'node --test player/js/tests/*.test.mjs'   # the player's JS: message decoding against the Python codec's bytes, the texts' rendering
 ```
 
 ---
 
-## Как пользоваться
+## How to use it
 
-**Каталог** (`/`): карточки визуализаций. Выберите сценарий (пресет) и нажмите «▶ Запустить» — сервер начнёт новый
-запуск и откроет плеер. «Параметры…» — задать законы и параметры мира вручную. Ниже — список запусков: с записью
-идущей, на паузе, приостановленные; «☆» хранить всегда, «✕» удалить (запуск, не открытый ни в одной вкладке; идущий
-сначала приостановится). Остановки нет (2026-10-28): запуск либо пишет (считается дальше), либо на паузе. Без зрителей
-он встаёт на паузу через минуту, а через полчаса освобождает вычислитель («приостановлен»); открыли и нажали ⏺ — мир
-продолжается с сохранённого состояния (2026-10-29): вычислитель сохраняет полное состояние мира, когда запуск
-приостанавливается, когда встаёт на паузу и раз в две минуты счёта, и продолжение идёт с последнего сохранения, как
-одна запись, без пересчёта. Если сохранения нет или с тех пор изменился код, который этот мир загружал (файлы
-движка и визуализации), или версии Python и библиотек, мир пересчитывается по записи от начала (тот же результат кадр в
-кадр; исключение — «призрак» v04, `STATUS.md` V32); каким путём он продолжен, пишет сообщение в событиях. Пока мир
-восстанавливается, в строке состояния — «мир восстанавливается — запись продолжится сама»; менять установку в это
-время нельзя. Назад по истории плеер идёт от ближайшего ключевого кадра (как в видео: снимок накопленного через каждые
-100 сообщений, не больше 256 на мир — дальше реже, равномерно по всей записи), а не от начала записи. От начала
-записи он перестраивает вид там, где ключевой кадр не годится: v13 и v14 (облака), v07 после того как старые
-регистрации вышли за предел, v11 и v12 до последнего изменения установки. Если продолжение не удалось (например, код визуализации с тех пор изменился
-несовместимо), запуск остаётся приостановленным с причиной («продолжение не удалось — ⏺ повторит»), запись цела.
-Запуски, к которым не обращались дольше срока хранения (просмотр, команда), удаляются, кроме отмеченных ★; сверх
-квоты первыми — те, к которым дольше всего не обращались; открытый во вкладке запуск не удаляется. Срок хранения — поле
-над списком запусков в каталоге (по умолчанию 3 дня); он сохраняется на сервере (`runs/settings.json`) и действует
-сразу: если новый срок удалит какие-то запуски, каталог сначала покажет их список и удалит только после подтверждения.
+**The catalogue** (`/`): the visualizations' cards. Choose a scenario (a preset) and press "▶ Start" — the server
+starts a new run and opens the player. "Parameters…" sets the world's laws and parameters by hand. Below is the list of
+runs: recording, paused, suspended; "☆" keeps a run for good, "✕" deletes it (a run not open in any tab; a running one
+is suspended first). There is no stop (2026-10-28): a run either records (computes further) or is paused. Without
+viewers it pauses after a minute and after half an hour frees its worker ("suspended"); open it and press ⏺ — the
+world goes on from its saved state (2026-10-29): the worker saves the world's whole state when the run is suspended,
+when it pauses and every two minutes of computation, and it goes on from the last save, as one record, without
+recomputing. If there is no save, or the code that this world loaded (the files of the engine and of the visualization)
+or the versions of Python and the libraries changed since, the world is recomputed along the record from its start
+(the same result frame for frame; the exception is the "ghost" of v04, `STATUS.md` V32); which way it went on, a
+message in the events says. While the world is being restored, the status line shows "the world is being restored —
+the recording goes on by itself"; the set-up cannot be changed meanwhile. Going back through the history, the player
+starts from the nearest key frame (as in a video: a snapshot of what has accumulated every 100 messages, at most 256
+per world — beyond that sparser, evenly over the whole record), not from the start of the record. From the start of the
+record it rebuilds the view where a key frame does not fit: v13 and v14 (the clouds), v07 after old detections have
+passed the limit, v11 and v12 before their latest change of the set-up. If going on failed (for example, the
+visualization's code has changed incompatibly since), the run stays suspended with the reason ("going on failed — ⏺
+tries again"); the record is intact. Runs not touched for longer than the removal period (a view, a command) are
+removed, except those marked ★; beyond the quota those untouched longest go first; a run open in a tab is not removed.
+The removal period is the field above the list of runs in the catalogue ("Remove runs without actions after … days",
+3 by default); it is saved on the server (`runs/settings.json`) and applies at once: if the new period would remove
+some runs, the catalogue first shows their list and removes them only after confirmation.
 
-**Плеер** (`/run?id=…`):
+**The player** (`/run?id=…`):
 
-| место | что там |
+| where | what is there |
 |---|---|
-| сверху | название, сцена, плашка **«стандартная физика»** или **«МОДИФИЦИРОВАННАЯ ФИЗИКА: …»**, переключатель **«Мир»** (если в запуске их несколько), индикатор «⟳ перестраивается установка…» (и «продолжение: мир пересчитывается по записи…»), состояние (запись идёт / пауза / приостановлен; вживую / история / конец записи), «☆», тема, справка |
-| слева | **Установка — меняется сразу**: всё, что экспериментатор может менять во время опыта (источник, частица, щели, экран, наблюдатель, элементы). Кнопки «применить» нет: изменение действует, как только вы отпустили ползунок, выбрали пункт списка или нажали Enter в поле числа. Невозможное изменение отклоняется, поле возвращается к прежнему значению. **Действия** — разовые события (вспышка, измерение) кнопкой; скорость наблюдателя — ползунком, тоже сразу. **Новый мир** — законы и начальные условия (их нельзя менять внутри идущего мира): новый мир начинается в этом же запуске, прежние остаются в записи |
-| в центре | сцена визуализации; над ней — быстрые элементы установки (в двухщелевом опыте: наблюдатель, связь детектора, расстояние до экрана, ширина и период щелей) — они меняются сразу, как в панели слева |
-| справа | **Проверки**: величина, посчитанная в этом запуске, рядом с эталоном общепринятой физики (✓/✗); сверху — свежие группы, прежние свёрнуты; панели визуализации; **События** (клик — перейти к моменту) |
-| снизу | **⏺ запись**: мир считается дальше, кадры добавляются к истории; ещё раз — пауза. **⏮ / ⏭** — в начало / в конец истории, **◀ / ▶** — проиграть историю назад / вперёд с выбранной скоростью. Бегунок в конце истории — запись показывается вживую; в середине — история растёт дальше, а показывается выбранный момент. «\|▶» — кадр вперёд (в конце — шаг расчёта), «⏭ событие» — к следующему событию (за последним — посчитать до него). Скорость — секунд мира за секунду (для записи и для проигрывания; шкала логарифмическая, подписана в единицах времени — от долей секунды до лет, в пределах, которые допускает мир; если счёт не успевает, рядом оранжевым — «факт: …»), «1:1» реальное время, шкала истории текущего мира |
+| top | the title, the scene, the badge **"standard physics"** or **"MODIFIED PHYSICS: …"**, the switch of worlds ("World 2 (current): …", if the run has several), the indicator "the set-up is being rebuilt…" (and "going on: the world is being restored…"), the state (recording / paused / suspended; live / history / end of the record), "☆", **EN \| RU**, the theme, the help |
+| left | **Set-up — changes at once**: everything the experimenter may change during the experiment (source, particle, slits, screen, observer, elements). There is no "apply" button: a change takes effect as soon as you release the slider, choose an item of a list or press Enter in a number field. An impossible change is refused, and the field goes back to its former value. **Actions** — one-off events (a flash, a measurement) by a button; the observer's speed by a slider, also at once. **New world: …** — the laws and the initial conditions (they cannot change inside a running world): the new world starts in the same run, the earlier ones stay in the record |
+| centre | the visualization's scene; above it, quick elements of the set-up (in the double-slit experiment: the observer, the detector's coupling, the distance to the screen, the width and the period of the slits) — they change at once, as in the panel on the left |
+| right | **Checks: computed ↔ reference**: a quantity computed in this run next to the reference of accepted physics (✓/✗); the fresh groups on top, the earlier ones folded; the visualization's panels; **Events** (a click goes to that moment) |
+| bottom | **⏺ record**: the world is computed further and frames are added to the history; again — pause. **⏮ / ⏭** — to the start / the end of the history, **◀ / ▶** — play the history backwards / forwards at the chosen speed. The slider at the end of the history shows the record live; in the middle, the history goes on growing while the chosen moment is shown. "\|▶" — a frame forward (at the end: a step of the computation), "⏭ event" — to the next event (past the last one: compute up to it). The speed is world seconds per wall second (for recording and for playback; the scale is logarithmic, labelled in time units — from fractions of a second to years, within the limits the world allows; if the computation cannot keep up, "actual: …" appears next to it in orange), "1:1" real time, the history scale of the current world |
 
-Всё показанное — на момент бегунка: сцена (траектории, экран, облака), окна срезов, проверки, установка, события; при
-отмотке назад вид собирается заново из записи до этого момента. Менять установку, совершать действия и двигать срезы
-можно только в конце истории.
+Everything shown is as of the slider: the scene (trajectories, the screen, clouds), the slice windows, the checks, the
+set-up, the events; when you go back, the view is rebuilt from the record up to that moment. The set-up, actions and
+slices can be changed only at the end of the history.
 
-Клавиши: Пробел — запись/пауза, ← / → — проиграть историю назад/вперёд, Home / End — в начало/в конец, N — к событию,
-T — тема, ? — справка.
+Keys: Space — record/pause, ← / → — play the history backwards/forwards, Home / End — to the start/to the end, N — to
+the event, T — the theme, ? — the help.
 
-Если мир долго считает изменение (сцена, установка, новый мир), вверху видно, что именно и сколько секунд; «✕ отменить»
-вернёт мир в момент перед этим изменением. Если мир с выбранными параметрами создать нельзя, каталог скажет почему прямо
-под кнопкой «▶ Запустить», а поле с неподходящим значением подсвечивается. В плейграунде кнопка палитры открывает
-параметры объекта; место можно задать числами или щелчком в сцене («⌖ Указать место в сцене»), затем «Поставить».
-⇤ и ⇥ вверху (клавиши [ и ]) прячут боковые колонки. Каждому вычислителю отведена своя память
-(`--worker-mem-gb`, по умолчанию 60 % памяти сервера, не больше 8 ГБ): мир, которому её не хватит, откажет с объяснением,
-а не займёт память всего компьютера.
+If the world takes long to compute a change (the scene, the set-up, a new world), the top bar shows what exactly and for
+how many seconds; "✕ cancel" returns the world to the moment before that change. If a world cannot be made with the
+chosen parameters, the catalogue says why right under the button "▶ Start", and the field with the unsuitable value is
+highlighted. In a playground, a palette button opens the object's parameters; the place can be typed or clicked in the
+scene ("⌖ Point at a place in the scene"), then "Place". ⇤ and ⇥ at the top (keys [ and ]) hide the side columns. Each
+worker has its own memory (`--worker-mem-gb`, by default 60 % of the server's memory, at most 8 GB): a world that
+does not fit in it refuses with an explanation instead of taking the memory of the whole computer.
 
-**3D-миры** (сейчас — v08, v09, v10, v11, v12, v13, v14, v15, v16 и v17; правило для всех 3D-визуализаций — `RULES.md` §2.10). В центре — 3D-сцена: установка
-(например, заслонка с щелями), падающая волна, посчитанные поля (свет за отверстием, поток энергии) и мишень. Справа —
-окна срезов (до трёх), у каждого свой цвет.
+**3-D worlds** (now v08, v09, v10, v11, v12, v13, v14, v15, v16 and v17; the rule for all 3-D visualizations is
+`RULES.md` §2.10). In the centre is the 3-D scene: the apparatus (for example, a screen with slits), the incident wave,
+the computed fields (the light behind the aperture, the energy flow) and the target. On the right are the slice windows
+(up to three), each with its own colour.
 
-| что сделать | как |
+| to do | how |
 |---|---|
-| повернуть / сдвинуть / приблизить вид | левая кнопка мыши — повернуть; правая (или Shift + левая) — сдвинуть; колесо — приблизить к точке под курсором; двойной щелчок — сделать точку под курсором центром вращения; F — показать всё нарисованное, Shift+F — всю область; кнопки «Изо», «Сбоку», «Сверху», «С источника», «С мишени» (у плоских миров — «Изо», «Сверху»/«Спереди», «С ребра»). Пока вид не двигали руками, он подстраивается под размер окна и под расширение области; после — остаётся, где его поставили |
-| добавить срез | «＋ Срез»: плоскость встаёт в середину области, перпендикулярно уже стоящим (y = c, затем x = c, затем z = c); сразу появляется её окно |
-| выбрать срез | щелчок по плоскости в 3D или по её окну; наведение на окно подсвечивает плоскость |
-| двигать / наклонять срез руками | у выбранного среза: стрелка двигает его вдоль нормали, два кольца наклоняют (W — двигать, E — наклонять) |
-| задать срез числами | панель «Срез: положение и наклон»: центр x, y, z; наклон нормали θ от оси z и азимут φ; кнопки y = c, x = c, z = c, «в центр», «убрать», «по умолчанию» (один срез y = 0) |
-| убрать выбранный срез | клавиша Delete (Backspace срез не удаляет) или «убрать» в панели среза |
-| автосмещение | галочка в той же панели (по умолчанию выключена): срез идёт вдоль нормали, пока идёт время мира (▶); в движении срез грубый, без сверки, полный — когда автосмещение выключено; без галочки срез стоит, где поставлен |
-| выключить часть сцены | панель «Слои сцены»: каждая часть отдельно (заслонка, волна, мишень, свет, поток энергии, каждый срез); у света — плотность (оптическая толщина самого плотного луча вдоль оси области, одинаково во всех мирах) и порог; цветовая шкала — в правом нижнем углу 3D |
-| окно среза | интенсивность / амплитуда / логарифм / фаза; координаты и значение под курсором; CSV — данные; строка под окном — как посчитан срез и сверка с точным полем |
-| снимок | 📷 — PNG 3D-вида |
-| камера наблюдателя (v10) | окно справа от 3D: изображение, посчитанное запуском; наведение — доплеровский множитель D, температура, когда излучён свет; PNG — снимок в разрешении расчёта |
-| плоскость опыта (v11, v12) | окно справа от 3D: волна \|ψ\|² (интенсивность, амплитуда, логарифм, фаза) с траекториями Бома поверх; при отмотке назад показывает волну того момента; у p02 в плоскости окно волны — главный вид во весь центр, 3D-вид — по кнопке «Показать 3D-вид рядом» (панель «Вид») |
-| третье измерение (v11, v12) | вдоль щелей (ось y) установка не меняется, поэтому волна — точное произведение волны на плоскости и свободного гауссова пакета по y (ширина σy — параметр мира «Пакет: ширина вдоль y»). В 3D: слой «Волна \|ψ\|² в объёме» (плотность и порог — ползунками слоя), частицы и траектории Бома во всех трёх координатах, на экране — картина P(x, y). Плоскость y = 0 — отдельный слой (выключен) и окно справа |
-| наблюдатель у щели (v11) | в «Новый мир» → «Метка пути в щели B»: «спин частицы» (электрон, нейтрон: поле в щели поворачивает спин) или «наблюдатель: детектор пути у щели B» (двухуровневый детектор Энглерта, любая частица); затем слева «Метка в щели B: поворот θ» — меняется на ходу: 0 — путь не помечен, 180° — основная поперечная мода щели помечена полностью (полосы почти гаснут; не до нуля — часть волны поворачивается иначе, вероятно высшие моды узкой щели и разброс скоростей). В 3D наблюдатель — оранжевый брусок в щели B, тем плотнее, чем сильнее метка; пресеты «Метка пути…» и «Наблюдатель у щели B…» |
-| облако и фазы (v13, v14) | облако \|ψ\|² — слой «Облако», у него плотность и порог; стрелки — ток вероятности (у вещественных орбиталей их нет). У суперпозиции облако колеблется с периодом Бора: 24 фазы периода открываются, когда до них доходит время мира (панель «Состояние»: какая фаза на рисунке и сколько открыто); при отмотке назад показывается облако того момента; состояние меняется на ходу (слева, «Установка»): новое n, l, m, суперпозиция или сетка облака — в том же мире, с момента изменения (идеальная подготовка: прежнее состояние отброшено), срезы остаются; период суперпозиции отсчитывается от момента подготовки; другой атом (пара кварков) — новый мир |
-| панели атома и кваркония (v13, v14) | «Состояние» — энергия, ⟨r⟩ квадратурой (и по формуле для водорода), вес и фаза каждого состояния суперпозиции; «Радиальное распределение» — r²\|R(r)\|² с ⟨r⟩ штрихом; «Уровни энергии» — уровни мира (выделены его состояния, у суперпозиции — ħω); у кваркония пунктиром опыт PDG |
-| время прихода (v12) | справа: «Распределение времени прихода» — плотность каждого правила против t/t₀ (щелчок по правилу скрывает его; то, что выше рамки, срезано и отмечено ▲), «Место и время прихода» — ток в плоскость j_z(x, t) с попаданиями частиц Бома, «Итоги по правилам» — вероятность прихода за окно, среднее время и разброс по каждому правилу |
+| rotate / pan / zoom the view | left mouse button — rotate; right (or Shift + left) — pan; wheel — zoom to the point under the cursor; double click — make the point under the cursor the centre of rotation; F — show everything drawn, Shift+F — the whole region; the buttons "Iso", "Side", "Top", "From the source", "From the target" (in plane worlds "Iso", "Top"/"Front", "Edge"). Until the view is moved by hand, it follows the size of the window and the growth of the region; after that it stays where it was put |
+| add a slice | "＋ Slice": the plane is placed in the middle of the region, perpendicular to those already there (y = c, then x = c, then z = c); its window appears at once |
+| select a slice | a click on the plane in 3-D or on its window; pointing at a window highlights its plane |
+| move / tilt a slice by hand | on the selected slice: the arrow moves it along its normal, two rings tilt it (W — move, E — tilt) |
+| set a slice by numbers | the panel "Slice: position and tilt": the centre x, y, z; the normal's tilt θ from the z axis and the azimuth φ; the buttons y = c, x = c, z = c, "to the centre", "remove", "default" (one slice y = 0) |
+| remove the selected slice | the Delete key (Backspace does not delete a slice) or "remove" in the slice's panel |
+| auto-shift | the tick "auto-shift along the normal" in the same panel (off by default): the slice moves along its normal while the world's time runs (▶); while it moves the slice is coarse, without verification, and full when the auto-shift is off; without the tick the slice stays where it was put |
+| switch off a part of the scene | the panel "Scene layers": each part on its own (the screen, the wave, the target, the light, the energy flow, each slice); the light has a density (the optical depth of the densest line of sight along an axis of the region, the same in every world) and a threshold; the colour scale is in the lower right corner of the 3-D view |
+| the slice window | intensity / amplitude / logarithm / phase; the coordinates and the value under the cursor; CSV — the data; the line under the window — how the slice was computed and its check against the exact field |
+| a snapshot | 📷 — a PNG of the 3-D view |
+| the observer's camera (v10) | a window to the right of the 3-D view: the image computed by the run; pointing shows the Doppler factor D, the temperature, when the light was emitted; PNG — a snapshot at the computed resolution |
+| the experiment's plane (v11, v12) | a window to the right of the 3-D view: the wave \|ψ\|² (intensity, amplitude, logarithm, phase) with the Bohm trajectories over it; going back, it shows the wave of that moment; in p02 in a plane the wave's window is the main view across the whole centre, the 3-D view comes by the button "Show the 3D view alongside" (the panel "View") |
+| the third dimension (v11, v12) | along the slits (the y axis) the apparatus does not change, so the wave is the exact product of the wave on the plane and a free Gaussian packet along y (the width σy is the world parameter "Packet: width along y σy, λ"). In 3-D: the layer "Wave \|ψ\|² in the volume: ψ(x, z, t)·η(y, t)" (density and threshold by the layer's sliders), the Bohm particles and trajectories in all three coordinates, on the screen the pattern P(x, y). The plane y = 0 is a separate layer (off) and the window on the right |
+| an observer at a slit (v11) | in the new world's form, "Path mark in slit B": "the particle's spin: …" (electron, neutron: a field in the slit turns the spin) or "an observer: a path detector at slit B (…)" (Englert's two-level detector, any particle); then on the left "Mark in slit B: turn θ, °" — it changes on the go: 0 — the path is not marked, 180° — the slit's main transverse mode is marked fully (the fringes almost fade; not to zero — part of the wave is turned differently, probably the higher modes of the narrow slit and the spread of speeds). In 3-D the observer is an orange block in slit B, the denser the stronger the mark; the presets "Path mark: …" and "An observer at slit B: …" |
+| the cloud and its phases (v13, v14) | the cloud \|ψ\|² is the layer "Cloud \|ψ\|² (probability density)", with a density and a threshold; the arrows are the probability current (real orbitals have none). In a superposition the cloud oscillates with the Bohr period: 24 phases of the period are revealed when the world's time reaches them (the panel "State": which phase is drawn and how many are revealed); going back shows the cloud of that moment; the state changes on the go (on the left, "Set-up — changes at once"): a new n, l, m, a superposition or a cloud grid — in the same world, from the moment of the change (an ideal preparation: the former state is discarded), the slices stay; the superposition's period is counted from the moment of preparation; another atom (quark pair) is a new world |
+| the atom's and the quarkonium's panels (v13, v14) | "State" — the energy, ⟨r⟩ by quadrature (and by the formula for hydrogen), the weight and phase of each state of a superposition; "Radial distribution r²\|R(r)\|²" with ⟨r⟩ as a dash; "Energy levels" — the world's levels (its states highlighted, ħω for a superposition); for quarkonium the PDG measurements dotted |
+| arrival time (v12) | on the right: "Distribution of the arrival time" — the density of each rule against t/t₀ (a click on a rule hides it; what is above the frame is cut and marked ▲), "Place and time of arrival" — the current into the plane j_z(x, t) with the hits of the Bohm particles, "Totals by rule" — the probability of arrival within the window, the mean time and the spread for each rule |
 
-Срез считается движком точно для своей плоскости, когда её отпустили; пока плоскость тащат, окно показывает
-предпросмотр (помечен). Оси окна — настоящие координаты x, y, z. Срезы сохраняются, когда вы меняете параметры мира
-(новый мир в том же запуске). Мир из записи (переключатель «Мир») только для просмотра: срезы там не меняются; в
-прошлом опыта (бегунок не в конце) — тоже: «＋ Срез» неактивна, в панели среза сказано почему.
+A slice is computed exactly by the engine for its plane when the plane is released; while the plane is dragged, the
+window shows a preview (marked). The window's axes are the real coordinates x, y, z. The slices are kept when you
+change the world's parameters (a new world in the same run). A world from the record (the switch of worlds) is for viewing
+only: its slices do not change; in the past of the experiment (the slider not at the end), neither: "＋ Slice" is
+inactive and the slice's panel says why.
 
-Записи хранятся в `visualizations/runs/` (срок хранения после последнего обращения — по умолчанию 3 дня, задаётся в каталоге — или до квоты 5 ГБ;
-«☆ хранить» защищает).
-Одновременно считают не больше трёх запусков.
+The records are kept in `visualizations/runs/` (the removal period after the last action is 3 days by default, set in
+the catalogue, or until the quota of 5 GB; "☆" protects a run).
+At most three runs compute at once.
 
 ---
 
-## Визуализации
+## Visualizations
 
-| папка | что показывает | зачем |
+| folder | what it shows | what for |
 |---|---|---|
-| [`v01_light_travel/`](v01_light_travel/README.md) | свет от Солнца до Земли (фронт летит 8 мин 17 с), гравитационное отклонение и задержка у чёрной дыры и звезды, измерение скорости света наблюдателями в покое и в движении по ходу и против хода света, синхронизация часов, относительность одновременности (парадокс Андромеды), Доплер и гравитационное красное смещение | конус времени, абсолютность скорости света, парадокс Андромеды; законы можно менять: эфир, баллистический свет, ньютоновы корпускулы, другое c |
-| [`v02_double_slit/`](v02_double_slit/README.md) | частицы по одной через щели (фотон с энергией, частотой, поляризацией; электрон, нейтрон, атом, C60, своя частица), наблюдатель пути (детектор-кубит, рассеяние фотона), метки поляризацией и спином, квантовый ластик, эффект Ааронова–Бома, частичная когерентность, линии тока Бома; экран со щелями — скалярная модель Кирхгофа (по умолчанию) или идеальный проводник заданной толщины (щели до 20.7 λ): векторная дифракция для обеих поляризаций (TE — E вдоль щелей, TM — поперёк), попадания фотонов — по потоку энергии векторного решения, рядом скалярная кривая, разность (если она больше оценки ошибки метода), баланс мощности и оценка ошибки метода | поведение частицы и причины появления и исчезновения интерференции; законы можно менять: показатель правила Борна, коллапс GRW, принудительный выбор щели |
-| [`v03_quantum_1d/`](v03_quantum_1d/README.md) | электрон волновым пакетом на барьер, двойной барьер, ступеньку, яму или в гармонической ловушке: туннелирование, резонанс, уровни; детекторы по краям поглощают волну | прохождение по точному решению уравнения Шрёдингера против стационарного эталона; один и тот же расчёт в трёх прочтениях: щелчок и коллапс, траектории Бома, ветви Эверетта |
-| [`v04_orbits/`](v04_orbits/README.md) | орбита тела у центральной массы: смещение перицентра (Меркурий 43″ в столетие, нейтронная звезда), неустойчивость внутри ISCO, падение за горизонт, часы тела против часов далёкого наблюдателя; Керр | точная ОТО против Ньютона и слабого поля (PPN) на одной и той же орбите |
-| [`v05_optics_bench/`](v05_optics_bench/README.md) | одиночные фотоны на границе сред и на покрытиях: угол Брюстера, полное и нарушенное полное отражение, просветляющий слой, брэгговское зеркало, Фабри–Перо, металлическая плёнка, плазмонный провал | волновой расчёт решает судьбу каждого фотона; счёт фотонов сходится к R, T, A; кривые по углу и длине волны |
-| [`v06_qcd/`](v06_qcd/README.md) | бег константы сильного взаимодействия α_s от 1 ГэВ до 10 ТэВ (1–4 петли, пороги кварков, полюс Ландау), кварконий в потенциале Корнелла | асимптотическая свобода и рост связи на малых энергиях; модель кваркония — как модель (предсказывает расщепления, не массы) |
-| [`v07_bell_test/`](v07_bell_test/README.md) | запутанные пары фотонов или спинов, две станции с выбором настроек, совпадения, корреляции E и параметр CHSH S | квантовая механика (S до 2√2) против локальных скрытых параметров (\|S\| ≤ 2) на одних и тех же событиях |
-| [`v08_wave_3d/`](v08_wave_3d/README.md) | волна за отверстием в полноценной 3D-сцене: заслонка, падающая волна, свет, поток энергии, мишень (каждую часть можно выключить); до трёх срезов под любым углом со своими окнами — двигаются и вращаются мышью или числами, стоят на месте, автосмещение по желанию; точность каждого мира и каждого среза измерена | как устроено 3D-моделирование движка и выбор устройства: CPU или GPU |
-| [`v09_thomas_3d/`](v09_thomas_3d/README.md) | прецессия Томаса–Вигнера в 3D: корабль выполняет манёвр (импульсы и повороты тяги в своей системе); вернувшись к покою, его гироскопы повёрнуты — поворот в SO(3) и знак спинора в SU(2); топливо и изопериметрическая граница; петли плоские (Томас, круг, треугольник, многоугольник — сверка с площадью) и неплоские (корона, винт, шов мяча); сцена — шар скоростей с полем поворотов и срезами или обычное пространство с траекторией | как гироскоп поворачивается без вращающих сил и сколько поворота даёт единица топлива |
-| [`v10_fast_observer/`](v10_fast_observer/README.md) | что видит наблюдатель или его камера при скоростях, близких к c: куб и шар пролетают мимо (поворот Террелла, шар остаётся кругом), полёт по улице между башнями (аберрация, синий цвет и яркость впереди), небо чёрного тела и звёзды (диполь), поезд мимо столбов; изображение посчитано трассировкой лучей со временем света, цвет — чёрное тело при D·T; в 3D — лаборатория сейчас (тела в лоренцевом сокращении) и места, откуда пришёл видимый свет; скорость наблюдателя меняется на ходу | почему сокращение Лоренца не видно, а видно поворот; как выглядит мир для быстрого наблюдателя |
-| [`v11_double_slit_2d/`](v11_double_slit_2d/README.md) | настоящий двухщелевой опыт (длинные щели, показан в 3D): пакет частицы (электрон, нейтрон, атом, C₆₀) проходит две щели в стенке конечной толщины и попадает на экран; уравнение Шрёдингера решается на всей плоскости — отражение пластиной, волна в щелях, дифракция на любые углы; картина копится по мере прихода волны; ансамбль частиц идёт по траекториям Бома, каждая помечена щелью; на ходу — изменить пластину (ширину щелей, расстояние между ними, толщину, высоту стенки), закрыть щель, повернуть спин в щели B или состояние наблюдателя — детектора пути у щели B (метка пути), включить поток Ааронова–Бома | где ломается параксиальная теория (узкие щели, большие углы), как метка пути гасит интерференцию и как идут траектории Бома |
-| [`v12_arrival_times_2d/`](v12_arrival_times_2d/README.md) | когда частица придёт к детектору: пакет летит к плоскости свободно или через две щели (в 3D: волна объёмом, частицы во всех трёх координатах); прогон решает уравнение Шрёдингера и по записи на плоскости и начальному состоянию считает распределение времени прихода по каждому правилу — квантовый поток, первые прибытия частиц Бома, Ааронов–Бом–Киёвский, полуклассическое, поглощающая граница, Влодаж, Маркевка–Шусс, мягкий детектор (второй прогон с поглощающим потенциалом); цепочка пакетов, обратный ток, совместное распределение места и времени за двумя щелями; на ходу — пластина, сила λ₀ экспоненциальных правил и высота W₀ мягкого детектора | квантовая механика не задаёт время прихода однозначно: где правила совпадают (вдали от источника) и где расходятся (у источника, на цепочке пакетов, при обратном токе) |
-| [`v13_hydrogen_3d/`](v13_hydrogen_3d/README.md) | атом водорода в 3D (а также дейтерий, ион He⁺, позитроний): облако \|ψ\|² точного решения для любых n ≤ 12, l, m; вещественные орбитали (p_x, d_xy, d_z², …) — стоячие волны без тока, комплексные с m ≠ 0 — бублики с кольцевым током; суперпозиция двух уровней (1s + 2p_z) качается с частотой Бора; срезы под любым углом с \|ψ\|² и фазой, сверенные с независимым расчётом; радиальное распределение и уровни; состояние меняется на ходу, в том же мире | как выглядят орбитали и их узлы, чем вещественные состояния отличаются от комплексных, как движется облако в суперпозиции |
-| [`v14_quarkonium_3d/`](v14_quarkonium_3d/README.md) | кварконий cc̄ и bb̄ в модели Корнелла (подогнанная модель, помечена): облака 1S, 2S, 3S, 1P, 1D…, ток, суперпозиция 1S + 1P; радиальные функции — численное решение с измеренной сходимостью; расщепления модели против опыта PDG | как устроены состояния тяжёлой пары кварков и чем чармоний отличается от боттомония; что модель предсказывает (расщепления) и чего не предсказывает (абсолютные массы) |
-| [`v15_kerr_shadow/`](v15_kerr_shadow/README.md) | тень вращающейся чёрной дыры с диском газа: каждый пиксель экрана — луч, прослеженный назад в замкнутом виде; тень, кольцо линзирования, фотонное кольцо; край тени против формулы Бардина, сжатие колец против e^(−γ), размер против EHT (M87*, Sgr A*); «что если»: метрика Йоханнсена | откуда на снимках EHT тень и кольца, как они зависят от спина и наклона, и как по размеру тени проверить, что дыра керровская |
-| [`v16_optical_vortices/`](v16_optical_vortices/README.md) | оптический вихрь в 3D: пучок Лагерра–Гаусса LG_pl (или гауссов пучок за спиральной пластинкой, или голограмма-«вилка», у которой порядок m несёт заряд m·l) — винтовые поверхности равной фазы (вращаются: оптическая фаза показана замедленно), кольцо интенсивности, закрученные линии потока энергии, срезы с фазой на цветовом круге; орбитальный и спиновый момент на фотон, измеренные по полю, — точное векторное решение уравнений Максвелла или параксиальная модель (при острой фокусировке видны продольное поле и то, что деление момента на спин и орбиту зависит от определения: каноническое на единицу длины и по потоку Барнетта расходятся в разные стороны, а полный момент l + σ — один); пучок, перетяжка которого уже длины волны, помечается или не строится (у точного пучка только распространяющиеся волны); вращающийся шероховатый диск или призма Дове сдвигают частоту — детектор копит отсчёты, биения 2|l|f измеряются по спектру; частота вращения меняется на ходу | что такое орбитальный момент света, где ломается параксиальная картина, как вращение даёт сдвиг частоты lΩ |
-| [`v17_mie_scattering/`](v17_mie_scattering/README.md) | капля воды в свете: точный ряд Ми — фазовая функция и поляризация, ряд Дебая (отражение, проход, одно и два внутренних отражения) против лучей Декарта и теории Эйри, рассеянный свет поверхностью вокруг капли, ближнее поле малой капли (фокус за каплей) в объёме и на срезах; облако капель разного размера в солнечном свете — цвет неба против угла рассеяния складывается длина волны за длиной волны: основная и вторичная радуги, полоса Александра, дополнительные дуги (видны у одинаковых капель, размываются при разбросе), туманная радуга, глория у антисолнечной точки; проверки: значения коэффициентов — второй путь счёта (ряд Дебая) и опубликованные значения Уискомба, тождества формы ряда (оптическая теорема в форме ряда, энергия, матрица Мюллера) помечены как тождества; если ряд Дебая расходится (слабо поглощающая капля с m ≈ 1), об этом сообщается | откуда радуга и её дополнительные дуги, где лучевая оптика и теория Эйри ошибаются, почему мелкие капли дают белую радугу, откуда глория |
+| [`v01_light_travel/`](v01_light_travel/README.md) | light from the Sun to the Earth (the front flies for 8 min 17 s), gravitational deflection and delay at a black hole and a star, the speed of light measured by observers at rest and moving along and against the light, clock synchronisation, the relativity of simultaneity (the Andromeda paradox), Doppler and gravitational redshift | the light cone, the absoluteness of the speed of light, the Andromeda paradox; the laws can be changed: an ether, ballistic light, Newtonian corpuscles, another c |
+| [`v02_double_slit/`](v02_double_slit/README.md) | particles one by one through slits (a photon with its energy, frequency, polarisation; an electron, a neutron, an atom, C60, a particle of your own), a which-path observer (a qubit detector, photon scattering), marks by polarisation and spin, the quantum eraser, the Aharonov–Bohm effect, partial coherence, Bohm's flow lines; the screen with slits is Kirchhoff's scalar model (the default) or a perfect conductor of a given thickness (slits up to 20.7 λ): vector diffraction for both polarisations (TE — E along the slits, TM — across), the photons' hits by the energy flow of the vector solution, next to it the scalar curve, the difference (if it exceeds the method's error estimate), the power balance and the method's error estimate | how the particle behaves and why interference appears and disappears; the laws can be changed: the Born-rule exponent, GRW collapse, a forced choice of slit |
+| [`v03_quantum_1d/`](v03_quantum_1d/README.md) | an electron as a wave packet at a barrier, a double barrier, a step, a well or in a harmonic trap: tunnelling, resonance, levels; detectors at the edges absorb the wave | transmission by the exact solution of the Schrödinger equation against the stationary reference; one computation read three ways: a click and a collapse, Bohm trajectories, Everett's branches |
+| [`v04_orbits/`](v04_orbits/README.md) | a body's orbit about a central mass: the periapsis advance (Mercury 43″ per century, a neutron star), the instability inside the ISCO, the fall through the horizon, the body's clock against a distant observer's; Kerr | exact GR against Newton and the weak field (PPN) on one and the same orbit |
+| [`v05_optics_bench/`](v05_optics_bench/README.md) | single photons at a boundary between media and at coatings: Brewster's angle, total and frustrated total reflection, an anti-reflection layer, a Bragg mirror, Fabry–Pérot, a metal film, the plasmon dip | a wave computation decides each photon's fate; the photon counts converge to R, T, A; curves against the angle and the wavelength |
+| [`v06_qcd/`](v06_qcd/README.md) | the running of the strong coupling α_s from 1 GeV to 10 TeV (1–4 loops, quark thresholds, the Landau pole), quarkonium in the Cornell potential | asymptotic freedom and the growth of the coupling at low energies; the quarkonium model as a model (it predicts splittings, not masses) |
+| [`v07_bell_test/`](v07_bell_test/README.md) | entangled pairs of photons or spins, two stations choosing their settings, coincidences, correlations E and the CHSH parameter S | quantum mechanics (S up to 2√2) against local hidden variables (\|S\| ≤ 2) on the same events |
+| [`v08_wave_3d/`](v08_wave_3d/README.md) | a wave behind an aperture in a full 3-D scene: the screen, the incident wave, the light, the energy flow, the target (each part can be switched off); up to three slices at any angle with their own windows — moved and turned by the mouse or by numbers, they stay in place, auto-shift if wanted; the accuracy of every world and every slice is measured | how the engine's 3-D modelling works and the choice of device: CPU or GPU |
+| [`v09_thomas_3d/`](v09_thomas_3d/README.md) | Thomas–Wigner precession in 3-D: a craft performs a manoeuvre (burns and turns of its thrust in its own frame); back at rest, its gyroscopes are turned — a rotation in SO(3) and the spinor's sign in SU(2); the fuel and the isoperimetric bound; planar loops (Thomas, a circle, a triangle, a polygon — checked against the area) and non-planar ones (a crown, a helix, a ball's seam); the scene is the velocity ball with its field of rotations and slices, or ordinary space with the trajectory | how a gyroscope turns without any torque, and how much rotation a unit of fuel gives |
+| [`v10_fast_observer/`](v10_fast_observer/README.md) | what an observer or its camera sees at speeds close to c: a cube and a ball fly past (Terrell rotation, the ball stays a circle), a flight down a street between towers (aberration, blue and brightness ahead), a black-body sky and stars (the dipole), a train passing posts; the image is computed by ray tracing with the light's travel time, the colour is a black body at D·T; in 3-D, the laboratory now (the bodies Lorentz-contracted) and the places the visible light came from; the observer's speed changes on the go | why the Lorentz contraction is not seen and a rotation is; how the world looks to a fast observer |
+| [`v11_double_slit_2d/`](v11_double_slit_2d/README.md) | a real double-slit experiment (long slits, shown in 3-D): the packet of a particle (an electron, a neutron, an atom, C₆₀) passes two slits in a wall of finite thickness and reaches the screen; the Schrödinger equation is solved on the whole plane — reflection by the plate, the wave in the slits, diffraction to any angle; the pattern accumulates as the wave arrives; an ensemble of particles follows Bohm trajectories, each labelled by its slit; on the go — change the plate (the width of the slits, the distance between them, the thickness, the height of the wall), close a slit, turn the spin in slit B or the state of an observer — a path detector at slit B (a path mark), switch on an Aharonov–Bohm flux | where the paraxial theory fails (narrow slits, large angles), how a path mark kills the interference, and how the Bohm trajectories go |
+| [`v12_arrival_times_2d/`](v12_arrival_times_2d/README.md) | when a particle arrives at a detector: a packet flies to a plane freely or through two slits (in 3-D: the wave as a volume, the particles in all three coordinates); a run solves the Schrödinger equation and, from the record on the plane and the initial state, computes the distribution of the arrival time by every rule — the quantum flux, the first arrivals of Bohm particles, Aharonov–Bohm–Kijowski, semiclassical, the absorbing boundary, Włodarz, Marchewka–Schuss, a soft detector (a second run with an absorbing potential); a train of packets, backflow, the joint distribution of place and time behind two slits; on the go — the plate, the strength λ₀ of the exponential rules and the height W₀ of the soft detector | quantum mechanics does not fix the arrival time uniquely: where the rules agree (far from the source) and where they diverge (near the source, for a train of packets, under backflow) |
+| [`v13_hydrogen_3d/`](v13_hydrogen_3d/README.md) | the hydrogen atom in 3-D (also deuterium, the ion He⁺, positronium): the cloud \|ψ\|² of the exact solution for any n ≤ 12, l, m; real orbitals (p_x, d_xy, d_z², …) are standing waves without current, complex ones with m ≠ 0 are doughnuts with a ring current; a superposition of two levels (1s + 2p_z) sways at the Bohr frequency; slices at any angle with \|ψ\|² and the phase, checked against an independent computation; the radial distribution and the levels; the state changes on the go, in the same world | what orbitals and their nodes look like, how real states differ from complex ones, how the cloud moves in a superposition |
+| [`v14_quarkonium_3d/`](v14_quarkonium_3d/README.md) | quarkonium cc̄ and bb̄ in the Cornell model (a fitted model, flagged): the clouds 1S, 2S, 3S, 1P, 1D…, the current, the superposition 1S + 1P; the radial functions are a numerical solution with measured convergence; the model's splittings against the PDG measurements | what the states of a heavy quark pair look like and how charmonium differs from bottomonium; what the model predicts (splittings) and what it does not (absolute masses) |
+| [`v15_kerr_shadow/`](v15_kerr_shadow/README.md) | the shadow of a spinning black hole with a disk of gas: every pixel of the screen is a ray traced back in closed form; the shadow, the lensing ring, the photon ring; the shadow's edge against Bardeen's formula, the rings' demagnification against e^(−γ), the size against EHT (M87*, Sgr A*); "what if": the Johannsen metric | where the shadow and the rings on the EHT images come from, how they depend on the spin and the inclination, and how the shadow's size tests whether the hole is Kerr |
+| [`v16_optical_vortices/`](v16_optical_vortices/README.md) | an optical vortex in 3-D: a Laguerre–Gauss beam LG_pl (or a Gaussian beam behind a spiral phase plate, or a "fork" hologram, whose order m carries the charge m·l) — helical surfaces of equal phase (they rotate: the optical phase is shown slowed down), a ring of intensity, twisted lines of the energy flow, slices with the phase on a colour wheel; the orbital and spin angular momentum per photon measured from the field — the exact vector solution of Maxwell's equations or the paraxial model (under tight focusing the longitudinal field shows, and that the split of the angular momentum into spin and orbit depends on its definition: the canonical one per unit length and the one by Barnett's flux go different ways, while the total l + σ is one); a beam whose waist is narrower than the wavelength is flagged or not built (the exact beam has only propagating waves); a rotating rough disc or a Dove prism shifts the frequency — a detector accumulates counts, the beats 2\|l\|f are measured from the spectrum; the rotation frequency changes on the go | what the orbital angular momentum of light is, where the paraxial picture fails, how rotation gives a frequency shift lΩ |
+| [`v17_mie_scattering/`](v17_mie_scattering/README.md) | a water drop in light: the exact Mie series — the phase function and polarisation, the Debye series (reflection, transmission, one and two internal reflections) against Descartes' rays and Airy's theory, the scattered light as a surface around the drop, the near field of a small drop (the focus behind the drop) in the volume and in slices; a cloud of drops of different sizes in sunlight — the colour of the sky against the scattering angle is summed wavelength by wavelength: the primary and secondary rainbows, Alexander's band, the supernumerary bows (seen for equal drops, washed out by a spread), the fogbow, the glory at the antisolar point; the checks: the values of the coefficients by a second route (the Debye series) and Wiscombe's published values; the identities of the series' form (the optical theorem in series form, energy, the Mueller matrix) are labelled as identities; if the Debye series diverges (a weakly absorbing drop with m ≈ 1), the run says so | where the rainbow and its supernumerary bows come from, where ray optics and Airy's theory go wrong, why small drops give a white bow, where the glory comes from |
 
 ---
 
-## Плейграунд: исследовательские песочницы (B6, 2026-11-03)
+## The playground: research sandboxes (B6, 2026-11-03)
 
-Каталог разделён на два режима (переключатель вверху каталога): **«Демонстрации»** — подготовленные опыты `vNN_*`
-выше, и **«Плейграунд»** — песочницы по разделам физики `pNN_*`, где сцена собирается руками и всё считается в
-реальном времени (ваш запрос 2026-10-28). В карточке раздела: сценарий (готовая сцена или «пустая»), «▶ Начать»,
-«Законы…» (законы мира: какой решатель, пространство, сетка — их смена начинает новый мир) и «📂 Из файла сцены…».
+The catalogue has two modes (the switch at the top of the catalogue): **"Demonstrations"** — the prepared experiments
+`vNN_*` above — and **"Playground"** — sandboxes by section of physics `pNN_*`, where the scene is built by hand and
+everything is computed in real time (the owner's request of 2026-10-28). On a section's card: a scenario (a ready scene),
+"▶ Begin", "Laws…" (the world's laws: which solver, space, grid — changing them starts a new
+world) and "📂 From a scene file…".
 
-В плеере плейграунда слева:
+On the left of a playground's player:
 
-* **Палитра** — добавить объект в текущий момент мира: перед установкой открывается форма его параметров, точку можно указать щелчком в сцене; мир сдвигает объект на свободное место или объясняет, почему поставить нельзя, а недоступные кнопки показывают причину;
-* **Объекты сцены** — выбрать, ⧉ копия, ✕ удалить (тоже в текущий момент);
-* **Перетаскивание и бросок** — объект выбирается щелчком в сцене или в окне среза (кольцо с именем, инспектор
-  показывает его), перетаскивается мышью: перетаскивание двигает «призрак» (в 3D — в плоскости через объект поперёк
-  взгляда, в плоском мире и в окне — в их плоскости, поршень и стенки — вдоль своей оси), изменение применяется при
-  отпускании, в текущий момент мира. Shift + перетащить — бросок: скорость — как двигалась рука за последнюю 0,1 с при
-  текущей скорости воспроизведения, умноженная на «масштаб броска» («Объекты сцены»); скорость видна у курсора.
-  Масштаб броска «авто» подобран по самому миру: быстрый взмах (ширина вида за секунду) бросает объект через всю
-  область мира примерно за 2 секунды при текущей скорости воспроизведения, но не быстрее половины наибольшей скорости,
-  которую мир объявил. Если бросок ограничен этой скоростью или мир его не принял, плеер так и пишет: «уменьшите
-  масштаб броска». Если мир не может так поставить объект, он объясняет почему, а призрак возвращается; в прошлом записи
-  и пока мир считает, двигать нельзя. Delete удаляет выбранный объект, в том числе выбранный в окне плоского мира; Esc
-  отменяет перетаскивание;
-* **Новый мир с переносом сцены** — в форме «Новый мир» видны все законы нового мира, в том числе меняющиеся на ходу
-  (сетка, окно, края — с их текущими значениями). С галочкой «перенести сцену» (включена) объекты переходят в новый мир
-  с теми же номерами, время продолжается. Сообщение после переноса говорит по каждому объекту: перенесён с состоянием,
-  по параметрам (своего состояния у него нет), состояние не перенесено и начато заново из параметров (с причиной),
-  что изменено при переносе, что новый мир не принял — и что стало с состоянием самого мира (например, течение
-  перенесено или начато заново из покоя);
-* **Инспектор** — параметры выбранного объекта, меняются сразу; под ними «сейчас:» — его посчитанное состояние;
-* **Сцена: файл** — сохранить сцену в файл и начать из файла новый мир;
-* **Запись: окно** — запись держит последние 10 минут счёта (пауза и приостановка не в счёт) или 1 ГБ. Увидели
-  эффект — «● Сохранять запись»: окно и всё дальнейшее сохраняются. Продолжить приостановленный мир можно с
-  контрольной точки внутри окна (раз в минуту счёта и на паузе); если начало мира уже вышло из окна (или в
-  сохранённой записи дыра — запись включали и выключали), пересчитать мир с начала нечем — так и пишется.
+* **Palette: add to the scene** — add an object at the world's current moment: before it is placed, a form of its
+  parameters opens, and the point can be given by a click in the scene; the world moves the object to a free spot or
+  explains why it cannot be placed, and unavailable buttons show the reason;
+* **Scene objects** — select, ⧉ copy, ✕ delete (also at the current moment);
+* **Drag and throw** — an object is selected by a click in the scene or in a slice window (a ring with its name; the
+  inspector shows it) and dragged with the mouse: the drag moves a "ghost" (in 3-D, in the plane through the object
+  across the view; in a plane world and in a window, in their plane; the piston and the walls along their axis), and
+  the change is applied on release, at the world's current moment. Shift + drag throws: the speed is how the hand moved
+  over the last 0.1 s at the current playback speed, times the throw scale (the field "Throw (Shift): scale ×" in
+  "Scene objects"); the speed shows at the cursor. The automatic throw scale is fitted to the world itself: a brisk
+  flick (the view's width in a second) throws the object across the whole region of the world in about 2 seconds at
+  the current playback speed, but no faster than half of the largest speed the world has declared. If a throw is
+  clamped by that speed or the world did not accept it, the player says so: "reduce the throw scale". If the world
+  cannot place the object so, it explains why and the ghost goes back; in the past of the record and while the world
+  is computing nothing can be moved. Delete removes the selected object, also one selected in a plane world's window;
+  Esc cancels the drag;
+* **A new world that carries the scene over** — the form "New world: …" shows every law of the new world, including
+  those that change on the go (the grid, the window, the edges — at their current values). With the tick "carry the
+  scene over" (on) the objects pass into the new world under the same numbers, and the time goes on. The message after
+  the carry says object by object: carried with its state; by its parameters (it has no state of its own); its state
+  not carried and started afresh from its parameters (with the reason); what was changed in the carry; what the new
+  world did not accept — and what happened to the state of the world itself (for example, the flow carried over or
+  started afresh from rest);
+* **Inspector** — the parameters of the selected object, changed at once; under them "now:" — its computed state;
+* **Scene: file** — save the scene to a file and start a new world from a file;
+* **Record: window** — the record keeps the last 10 minutes of computation (pauses and suspensions do not count) or
+  1 GB. Saw an effect — "● Keep the record": the window and everything after it are kept. A suspended world can go on
+  from a checkpoint inside the window (one per minute of computation and at a pause); if the world's start has already
+  left the window (or the kept record has a hole — recording was switched on and off), there is nothing to recompute
+  the world from its start with — the player says so.
 
-Справа — проверки законов сохранения вживую, **датчики** (детекторы, часы, датчики поля) и **изменения сцены** (щелчок —
-к этому моменту). Сообщения и отказы появляются справа внизу стопкой, новое сверху; каждое держится, пока на нём курсор,
-и закрывается щелчком.
+On the right: the running checks of the conservation laws, **Probes** (detectors, clocks, field probes) and **Scene
+changes** (a click goes to that moment). Messages and refusals appear at the lower right in a stack, the newest on top;
+each stays while the cursor is on it and closes on a click.
 
-**Приборы и свип параметра.** Если мир сообщает измеряемые величины, справа появляется панель «Приборы»: величины по
-группам и значение каждой на момент бегунка. Отметьте величину — появится её график по записи (у каждой свой): до
-бегунка ярко, после — бледно (будущее записи), черта — бегунок; наведите указатель, чтобы прочитать значение.
-Свёрнутые группы и выбор величин запоминаются для этого запуска. «⤓ CSV» — отмеченные величины из записи, все кадры,
-полная точность («только до бегунка» обрезает); в первой строке — единица времени и подписи с единицами.
+**Instruments and the parameter sweep.** If the world reports measurable quantities, the panel "Instruments" appears on
+the right: the quantities by group and the value of each at the slider. Tick a quantity and its plot over the record
+appears (each its own): bright up to the slider, pale after it (the record's future), a line at the slider; point at it
+to read the value. Folded groups and the chosen quantities are remembered for this run. "⤓ CSV" gives the ticked
+quantities from the record, every frame, full precision ("only up to the slider" cuts it); the first line holds the
+time unit and the labels with their units.
 
-«Свип параметра»: тот же опыт от текущего момента мира повторяется для каждого значения закона (из «Законы мира —
-меняются сразу») или параметра объекта, и для каждого измеряется величина — в конце, среднее за последние N, максимум
-или минимум. Под «Что менять» написано, что задано сейчас; для положения объекта — ещё и где он сейчас. Каждое
-значение применяется заново, и равное заданному тоже: положение и скорость — как перетаскивание и бросок в момент
-свипа. Значения — через «;» или пробел (десятичная точка или запятая), или рядом «от … до …». Время счёта — в единицах
-масштаба мира (например, фс), по умолчанию — пять секунд мира при выбранной скорости; рядом с «Замеров» видно, через
-сколько времени мира берутся замеры. Сначала «Оценить» (сколько займёт счёта; предел 10 мин), потом «▶ Запустить
-свип»; после запуска оценку нужно сделать заново.
+"Parameter sweep": the same experiment from the world's current moment is repeated for each value of a law (from "Laws
+of the world — change at once") or of an object's parameter, and for each a quantity is measured — at the end, the mean
+of the last N, the maximum or the minimum. Under "What to change" it says what is set now; for an object's position,
+also where it is now. Each value is applied afresh, an equal one too: a position and a velocity as a drag and a throw
+at the moment of the sweep. The values are separated by ";" or a space (with a decimal point or a comma), or "from …
+to …". The computing time is in the world's scale units (for example fs), by default five seconds of the world at the
+chosen speed; next to "Readings" it shows how much world time lies between the readings. First "Estimate" (how much
+computation it will take; the limit is 10 min), then "▶ Start the sweep"; after a start the estimate has to be made
+again.
 
-Свип считается в отдельном процессе и идущий мир не меняет: у свипа своя, меньшая доля памяти, и если памяти не хватит,
-система первым остановит свип, а не мир. Свип сам остановится, если окажется дороже предела. «✕ отменить» останавливает
-его, посчитанное остаётся; «удалить» убирает законченный свип с результатами. Результат — таблица, график и «⤓ CSV
-таблицы» (в первых строках CSV — с какого момента, сколько и как часто мерили); отказ мира — в таблице с причиной, а
-если не измерено ни одно значение, свип помечен «не посчитан». Тот же свип от того же состояния даёт те же числа; у
-приостановленного запуска — от последнего сохранённого состояния (сказано над результатом).
+A sweep computes in a separate process and does not change the running world: the sweep has its own, smaller share of
+memory, and if memory runs short the system stops the sweep first, not the world. A sweep stops by itself if it turns
+out dearer than the limit. "✕ cancel" stops it, what was computed stays; "remove" deletes a finished sweep with its
+results. The result is a table, a plot and "⤓ CSV of the table" (the first lines of the CSV say from which moment, how
+many readings and how often); a world's refusal is in the table with its reason, and if not a single value was
+measured, the sweep is marked "not computed". The same sweep from the same state gives the same numbers; for a
+suspended run, from its last saved state (said above the result).
 
-| папка | раздел | что можно собрать |
+| folder | section | what can be built |
 |---|---|---|
-| [`p01_gravity/`](p01_gravity/README.md) | Космос и гравитация | звёзды, планеты, ньютоновские «чёрные дыры», пробные тела (Ньютон: N тел, слияния); двойная в ОТО с излучением гравитационных волн и детектором; тела, лучи света и наблюдатели с часами у чёрной дыры Керра–Ньюмена (спин, заряд); масса чёрной дыры (у дыры Керра–Ньюмена — это объект сцены) и полная масса двойной меняются на ходу как смена масштаба (тела в единицах M или m на прежних местах, секунды и метры пересчитываются); спин и заряд дыры на ходу — модель «что если» движка (lfphys.theories.alternatives.kn_change_whatif: место по координатам Бойера–Линдквиста, собственное время и импульс по ZAMO; ограничения скорости ниже c нет; правило зависит от координат — сказано в событии с числами); тела перетаскиваются, брошенное тело получает скорость броска; брошенное у дыры тело — не быстрее половины скорости света в координатах рисунка (быстрый взмах — четверть); приборы: энергия и момент импульса и их уход, расстояния, скорости, элементы орбит, радиальный период, фаза двойной, h₊ и h× у детектора; при новом мире других законов переносится то, что имеет смысл (дыра ↔ дыра, двойная → два тела); в новом мире с «перенести сцену» тела у дыры продолжают своё состояние (другая масса — смена масштаба; другой спин или заряд — с прежнего места и с импульсом по ZAMO; под новым горизонтом — заново из параметров, сказано) |
-| [`p02_quantum/`](p02_quantum/README.md) | Квантовые частицы | волновые пакеты электрона, нейтрона, атомов (со спином) в плоскости или в объёме; барьеры, ямы, стенки со щелями, ловушка, магнитное поле, трубка Ааронова–Бома, детекторы, метка пути, среда (декогеренция), плоскости потока; «Измерить положение»; частицы Бома; сетка и окно меняются на ходу (волна пересчитывается точно; окно не сдвинет поглощающие края на волну); пакет можно перетащить — та же волна в новом месте (у трубки потока, если её путь относительно волны пересекает волну, и на краю поля такой волны нет — перенос не принимается, с объяснением) — и бросить (k₀ = m v/ħ; слишком быстрый бросок мир ограничит до наибольшей скорости, которую сетка передаёт, и скажет об этом); «Приготовить пакет заново» — из параметров или там, где волна сейчас; «Огрубить сетку с краями по ней»; «Новый мир» того же пространства переносит саму волну; приборы: вероятность, энергия, ⟨x⟩, ⟨p⟩, поток, поглощённое |
-| [`p03_molecules/`](p03_molecules/README.md) | Частицы и молекулы | газ, кристалл, атомы и молекулы (связи и углы) с моделью Леннард-Джонса или только отталкиванием; стенки (зеркальные, мягкие, тепловые — ванны), поршень, термостаты, поле, термометры; распределение Максвелла, g(r), температура, давление, теплота и работа. Мир не перезапускается: на ходу меняются динамика (непрерывные силы ↔ твёрдые диски/шары — те же атомы; к твёрдым — если ни одна пара не ближе σ), модель взаимодействия, радиус обрезки, шаг по времени и размеры ящика (аффинно — вещество сжимается вместе с ящиком за заданное время, по умолчанию 50 пс: чем медленнее, тем ближе к адиабате, работа учтена в первом начале; 0 — скачком, необратимо; или сдвигом стенки по пустому месту). Газ, кристалл, молекулы и атом перетаскиваются целиком и бросаются (бросок (Shift) — до 500 м/с), термометр и поршень перетаскиваются. Приборы: температура, давление, энергия, плотность, теплота и работа, импульс, порядок, смещение, термометры, поршень, температуры мод молекул. Новый мир (плоскость ↔ объём, границы) переносит сцену; в том же пространстве — с атомами, их положениями и скоростями |
-| [`p04_fluids/`](p04_fluids/README.md) | Жидкости | течение в плоскости (решёточный метод Больцмана): цилиндры, прямоугольники, профили крыла NACA, входы и выходы, подвижные стенки, периодичность, краситель, датчики скорости; сопротивление и подъёмная сила, балансы массы и импульса. На ходу меняются вязкость, плотность, оператор столкновений и краситель; вода и воздух — со скоростями, которые разрешает сетка, или в своих сценариях (миллиметровый и сантиметровый каналы). На ходу меняются также сетка (узлов по x), размеры области (со стороны, выбранной в «Область растёт или уменьшается»; новая часть — в покое или с входящим потоком) и наибольшая ожидаемая скорость (шаг по времени): течение переносится на новую сетку, а не начинается заново (событие называет массу и импульс до и после); тела, краситель и датчики перетаскиваются; приборы: C_x и C_y (за шаг и средние за период звука), силы, скорость и давление у датчиков, расходы через стороны, невязки балансов, Re и Ma; при смене сетки, области или наибольшей скорости событие называет новую высоту области (если узлов по y стало целое число иначе) и разлагает изменение массы: сжимаемость схемы (давление то же, скорость звука схемы другая), новая часть области, интерполяция; балансы при переносе сходятся по построению, точность переноса видна в «Эталонах» (канал с объёмной силой и периодическими концами); новый мир с «перенести сцену» продолжает течение (на другой сетке — переносом движка), что начато заново — сказано |
+| [`p01_gravity/`](p01_gravity/README.md) | Space and gravity | stars, planets, Newtonian "black holes", test bodies (Newton: N bodies, mergers); a binary in GR radiating gravitational waves, with a detector; bodies, light rays and observers with clocks at a Kerr–Newman black hole (spin, charge); the black hole's mass (for a Kerr–Newman hole it is an object of the scene) and the binary's total mass change on the go as a change of scale (the bodies in units of M or m at their former places, seconds and metres rescaled); the hole's spin and charge on the go are the engine's "what if" model (lfphys.theories.alternatives.kn_change_whatif: the place by Boyer–Lindquist coordinates, the proper time and the momentum by ZAMO; there is no limit of the speed below c; the rule depends on the coordinates — said in the event with the numbers); bodies can be dragged, a thrown body gets the throw's speed; a body thrown at a hole is no faster than half the speed of light in the picture's coordinates (a brisk flick — a quarter); instruments: the energy and the angular momentum and their drift, distances, speeds, orbital elements, the radial period, the binary's phase, h₊ and h× at the detector; a new world of other laws carries over what makes sense (hole ↔ hole, binary → two bodies); in a new world with "carry the scene over" the bodies at a hole go on with their state (another mass — a change of scale; another spin or charge — from the former place with the momentum by ZAMO; under the new horizon — afresh from their parameters, said) |
+| [`p02_quantum/`](p02_quantum/README.md) | Quantum particles | wave packets of an electron, a neutron, atoms (with spin) in a plane or in a volume; barriers, wells, walls with slits, a trap, a magnetic field, an Aharonov–Bohm tube, detectors, a path mark, an environment (decoherence), flux planes; "Measure the position"; Bohm particles; the grid and the window change on the go (the wave is resampled exactly; the window will not move the absorbing edges onto the wave); a packet can be dragged — the same wave at a new place (with a flux tube, if its path relative to the wave crosses the wave, and at the edge of the field there is no such wave — the move is not accepted, with an explanation) — and thrown (k₀ = m v/ħ; the world clamps a throw that is too fast to the largest speed the grid carries and says so); "Prepare the packet anew" — from the parameters or where the wave is now; "Coarsen the grid with edges to match"; a new world of the same space ("▶ Start a new world") carries the wave itself; instruments: probability, energy, ⟨x⟩, ⟨p⟩, flux, absorbed |
+| [`p03_molecules/`](p03_molecules/README.md) | Particles and molecules | a gas, a crystal, atoms and molecules (bonds and angles) with the Lennard-Jones model or repulsion only; walls (mirror, soft, thermal — baths), a piston, thermostats, a field, thermometers; the Maxwell distribution, g(r), temperature, pressure, heat and work. The world does not restart: on the go change the dynamics (continuous forces ↔ hard disks/spheres — the same atoms; to hard ones if no pair is closer than σ), the interaction model, the cut-off radius, the time step and the box's size (affinely — the matter is compressed with the box over a given time, 50 ps by default: the slower, the closer to adiabatic, the work counted in the first law; 0 — at once, irreversibly; or by shifting a wall through empty space). A gas, a crystal, molecules and an atom are dragged whole and thrown (a throw (Shift) up to 500 m/s), a thermometer and the piston are dragged. Instruments: temperature, pressure, energy, density, heat and work, momentum, order, displacement, thermometers, the piston, the temperatures of the molecules' modes. A new world (plane ↔ volume, boundaries) carries the scene; in the same space, with the atoms, their positions and velocities |
+| [`p04_fluids/`](p04_fluids/README.md) | Fluids | flow in a plane (the lattice Boltzmann method): cylinders, rectangles, NACA wing profiles, inlets and outlets, moving walls, periodicity, dye, velocity probes; drag and lift, the balances of mass and momentum. On the go change the viscosity, the density, the collision operator and the dye; water and air — with the speeds the grid resolves, or in their own scenarios (millimetre and centimetre channels). Also on the go: the grid (nodes along x), the size of the domain (on the side chosen in "The domain grows or shrinks"; the new part at rest or with the incoming flow) and the largest expected speed (the time step): the flow is moved to the new grid, not started afresh (the event names the mass and the momentum before and after); bodies, dye and probes are dragged; instruments: C_x and C_y (per step and averaged over a sound period), forces, velocity and pressure at the probes, the flow rates through the sides, the balances' residuals, Re and Ma; on a change of the grid, the domain or the largest speed the event names the domain's new height (if the number of nodes along y became a different whole number) and splits the change of mass: the scheme's compressibility (the same pressure, a different sound speed of the scheme), the new part of the domain, the interpolation; the balances of a transfer close by construction, the accuracy of the transfer shows in the checks "Benchmarks" (a channel with a body force and periodic ends); a new world with "carry the scene over" continues the flow (on another grid by the engine's transfer), what was started afresh is said |
 
-Остальные разделы (оптика и волны, электричество и магнетизм, относительность) — в пакете B9 плана
-(`../lfphys/PLAN.md`); в каталоге они показаны как запланированные.
+The other sections (optics and waves, electricity and magnetism, relativity) are batch B9 of the plan
+(`../lfphys/PLAN.md`); the catalogue shows them as planned.
 
-Если GPU 0 нагрелся до 82 °C, новые расчёты сами идут на CPU, пока он не остынет до 70 °C (причина выбора
-устройства — «GPU остывает…»); в квантовом разделе устройство видно в проверке «Счёт: секунд на шаг».
-
----
-
-## Новая визуализация — по запросу
-
-Опишите, что нужно увидеть и какая гипотеза или эффект проверяется. Агент создаёт подпапку `vNN_<название>/` по
-контракту [`RULES.md`](RULES.md) §1 и §4: физика берётся из движка `../lfphys/` (недостающее добавляется в движок), в
-`engine/` визуализации — только устройство опыта, рисование в `web/view.js`, проверки и тесты, README с моделью,
-независимое ревью физики в `../reviews/`. Сервер и плеер подхватывают папку сами.
+If GPU 0 has warmed to 82 °C, new computations go to the CPU by themselves until it cools to 70 °C (the reason for the
+choice of device: "GPU cooling down: …"); in the quantum section the device shows in the check "Computation: seconds
+per step (…)".
 
 ---
 
-## Если что-то не так
+## A new visualization — on request
 
-| симптом | причина |
+Describe what you want to see and which hypothesis or effect is tested. The agent creates a folder
+`vNN_<name>/` by the contract of [`RULES.md`](RULES.md) §1 and §4: the physics comes from the engine `../lfphys/`
+(what is missing is added to the engine); the visualization's `engine/` holds only the apparatus, the drawing is in
+`web/view.js`, then the checks and tests, a README with the model in every language of
+[`../LANGUAGES.md`](../LANGUAGES.md), the translations of its texts (`locales/`), and an independent review of the
+physics in `../reviews/`. The server and the player pick the folder up by themselves.
+
+---
+
+## If something is wrong
+
+| symptom | cause |
 |---|---|
-| страница не открывается с ноутбука | сервер не поднят (`docker ps` → `lf-viz`) или порт закрыт сетевым экраном |
-| «все 3 вычислителя заняты открытыми запусками» | три запуска открыты в браузере: закройте вкладку одного (он встанет на паузу и освободит вычислитель; продолжится по ⏺). Запуски без зрителей освобождают вычислитель сами |
-| «эта запись сделана до версии, умеющей продолжать запуски» | запуск создан до 2026-10-28: его можно смотреть, но не продолжить — начните новый мир или новый запуск |
-| запуск сразу «сбой» | законы несовместимы (например, ОТО с эфиром) — причина в «События» и в `runs/<id>/worker.log` |
-| «продолжение не удалось — ⏺ повторит» | мир не удалось пересчитать по записи (причина — в подсказке строки состояния и в «События»); запись цела, ⏺ пробует снова, когда причина устранена |
-| «мир ещё восстанавливается: изменение не принято» | изменение пришло, пока мир восстанавливается по записи (например, из другой вкладки); повторите его, когда запись продолжится |
-| у запуска в каталоге нет «✕» | он открыт во вкладке (👁 в списке): закройте её |
-| мир идёт медленнее выбранной скорости | вычисление не успевает: рядом со скоростью оранжевым «факт: …» (до 2026-10-28 плеер этого не показывал, хотя здесь было написано обратное); уменьшите скорость или темп источника |
-| правка сервера не видна (в том числе «ImportError» у новой визуализации: сервер держит движок, загруженный при старте) | `docker compose -f visualizations/docker/docker-compose.yml restart viz` — запуски не теряются: идущие приостановятся и продолжатся по ⏺ |
+| the page does not open from the laptop | the server is not up (`docker ps` → `lf-viz`) or the port is closed by a firewall |
+| "all 3 workers are busy with open runs: …" | three runs are open in a browser: close the tab of one (it will pause and free its worker; it goes on with ⏺). Runs without viewers free their workers by themselves |
+| "this record was made before the version that can continue runs: …" | the run was created before 2026-10-28: it can be watched but not continued — start a new world or a new run |
+| a run is at once "failure" | the laws are incompatible (for example, GR with an ether) — the reason is in "Events" and in `runs/<id>/worker.log` |
+| "going on failed — ⏺ tries again" | the world could not be recomputed along the record (the reason is in the status line's tooltip and in "Events"); the record is intact, ⏺ tries again once the cause is removed |
+| "the world is still being restored: the change was not accepted — …" | a change came while the world was being restored along the record (for example, from another tab); repeat it when the recording goes on |
+| a run in the catalogue has no "✕" | it is open in a tab (👁 in the list): close it |
+| the world runs slower than the chosen speed | the computation cannot keep up: next to the speed, "actual: …" in orange (before 2026-10-28 the player did not show this, though this guide said otherwise); lower the speed or the source's rate |
+| a change to the server does not show (including an "ImportError" of a new visualization: the server holds the engine loaded at its start) | `docker compose -f visualizations/docker/docker-compose.yml restart viz` — no runs are lost: the running ones are suspended and go on with ⏺ |
 
 ---
 
-## Лицензия, цитирование, контакт
+## Licence, citation, contact
 
-Исходный код открыт для чтения (source-available), но это не open source: программу можно использовать для
-некоммерческих исследований, учёбы и преподавания; любое коммерческое использование — только по отдельному письменному соглашению. В плеере всё это
-и тексты лицензий — на странице «Лицензия» (`/legal`).
+The source code is open for reading (source-available), but it is not open source: the program may be used for
+noncommercial research, study and teaching; any commercial use only under a separate written agreement. In the player
+all of this and the texts of the licences are on the page "Licence" (`/legal`).
 
-* **Код** (сервер, плеер, визуализации, а также тексты и изображения, которые программа показывает при работе, — её
-  интерфейс и справка): lfphys Research Licence 1.0 (`LICENSE.md`). **Коммерческое использование
-  кем угодно — в том числе университетом или институтом, работающим на компанию, — только по соглашению**
-  (`COMMERCIAL.md`).
-* **Документация и рисунки автора** (описания и руководства в файлах, рисунки к ним): CC BY-NC-SA 4.0
-  (`LICENSE-DOCS.txt`); рисунки и короткие цитаты можно публиковать в научных изданиях, в том числе коммерческих
-  издательств и под CC BY, с указанием автора и версии (`PUBLICATIONS.md`). Снимки своих запусков и короткие
-  отрывки кода можно публиковать в любых изданиях с подписью «Ildar Idrisov, lfphys <версия>» (`LICENSE.md` §6.3).
-* **Ваши результаты** — ваши; если программа посчитала, смоделировала, нарисовала или проверила что-то, о чём
-  сообщает публикация, **ссылка на неё с версией обязательна** (`LICENSE.md` §5, `CITATION.cff`; версию и код сборки
-  плеер показывает на странице «Лицензия»). Продавать наборы данных, состоящие в основном из её результатов, — только
-  по соглашению.
-* **Уведомления**: `NOTICE`, тексты лицензий и строки авторства в файлах сопровождают любую копию. **Участие**:
-  `CONTRIBUTING.md`, соглашение участника `CLA.md`.
-* **Без гарантий.** Это исследовательский инструмент: модели, численные методы и результаты могут содержать ошибки;
-  тесты проверяют заявленные случаи, а не любую задачу. Перед использованием результата проверьте исходные данные,
-  применимость модели, сходимость и сам результат (`LICENSE.md` §8).
+* **Code** (the server, the player, the visualizations, and also the texts and images the program shows while it runs —
+  its interface and help): lfphys Research Licence 1.0 (`LICENSE.md`). **Commercial use by anyone — including a
+  university or an institute working for a company — only under an agreement** (`COMMERCIAL.md`).
+* **The author's documentation and figures** (the descriptions and guides in files, their figures): CC BY-NC-SA 4.0
+  (`LICENSE-DOCS.txt`); figures and short quotations may be published in scholarly publications, including those of
+  commercial publishers and under CC BY, with the author and the version named (`PUBLICATIONS.md`). Snapshots of your
+  own runs and short excerpts of the code may be published anywhere with the credit "Ildar Idrisov, lfphys
+  &lt;version&gt;" (`LICENSE.md` §6.3).
+* **Your results** are yours; if the program computed, modelled, drew or checked something a publication reports,
+  **citing it with its version is required** (`LICENSE.md` §5, `CITATION.cff`; the player shows the version and the
+  build code on the page "Licence"). Selling data sets made mainly of its results only under an agreement.
+* **Notices**: `NOTICE`, the texts of the licences and the authorship lines in the files go with every copy.
+  **Contributing**: `CONTRIBUTING.md`, the contributor agreement `CLA.md`.
+* **No warranty.** This is a research tool: the models, the numerical methods and the results may contain errors; the
+  tests check the stated cases, not every problem. Before using a result, check the input data, the model's
+  applicability, the convergence and the result itself (`LICENSE.md` §8).
 
-Copyright (c) 2026 Ildar Idrisov. **По всем вопросам и для коммерческого использования: idrisov.sci@gmail.com**
+Copyright (c) 2026 Ildar Idrisov. **For all questions and for commercial use: idrisov.sci@gmail.com**

@@ -1,5 +1,7 @@
 # v02 — The double-slit experiment with single particles and observers
 
+**English** | [Русский](README.ru.md)
+
 Particles one by one through N slits (photon with energy, frequency, polarization; electron, neutron, He-4 atom,
 C60, a custom particle), with or without an observer of the path. Owner guide: `../README.md`; rules: `../RULES.md`.
 
@@ -38,11 +40,12 @@ change applies at once and starts a new segment:
   as `lost`), the grid, the exact reference fields and the set-up checks are recomputed;
 * source changed: particles already emitted fly on and are transitional (kept out of the new segment's histogram);
 * apparatus, detector or display changed: in-flight particles meet the apparatus present when they reach it;
-* parts of the apparatus the new particle cannot take (a polarizer for an electron, the microscope for a photon)
-  are removed, with a notice; an explicit impossible request is refused and nothing changes. The forms offer only the
-  choices that act on the chosen particle (option-level `show_if`: polarisation elements for photons, spin elements for
-  spin ½, «скорость» for massive particles, «частоту» for photons, the microscope for dipole scatterers); a choice
-  made anyway is refused naming it by its label and what to take instead (review UX-params P17, 2026-11-05).
+* parts of the apparatus the new particle cannot take (a polarizer for an electron, the microscope for a photon) are
+  removed, with a notice; an explicit impossible request is refused and nothing changes. The forms offer only the
+  choices that act on the chosen particle (option-level `show_if`: polarisation elements for photons, spin elements
+  for spin ½, "Set by" = "speed (massive)" for massive particles and "frequency (photon)" for photons, the microscope
+  for dipole scatterers); a choice made anyway is refused naming it by its label and what to take instead (review
+  UX-params P17, 2026-11-05).
 
 Bounds stated in the run's refusals (review UX-params P8, P18): at most 100 dark counts per emitted particle (each is
 an event of the record; at 1e12 1/s one frame drew ~2e9 of them and took 31 GB), and every step of the world holds at
@@ -63,7 +66,7 @@ ensemble-averaged marks (exact for the source's density matrix) convolved with t
 with the product of the characteristic functions (uniform source: sinc; microscope: the dipole pattern's marginal in
 closed form; GRW: exp(−Λ_z[1 − √π erf(a)/(2a)])), and integrated over the spectrum by Gauss–Hermite nodes. The same
 construction gives:
-* the expected curves per detector reading and per class ("без рассеянного фотона"), binned on the server as the
+* the expected curves per detector reading and per class ("no scattered photon"), binned on the server as the
   histogram is, with the dark counts added;
 * the near-field map |Ψ(x, z)|² of the ensemble (with all decoherence), z from 2a to the screen, with the marks
   *before* the analyzer (the analyzer stands right in front of the screen; in the eraser the map has no fringes and the
@@ -98,11 +101,11 @@ shows the same errors), and scaled by √(n_then/n) in between.
 ## Vector mode: a perfectly conducting screen (B8, closes STATUS V4)
 
 The scalar model above puts the incident wave into the slits (Kirchhoff's boundary values). For photons the screen can
-instead be a perfect conductor of thickness t (live parameters «Модель экрана со щелями» = «идеальный проводник» and
-«Толщина экрана»; t = 0 is a screen of zero thickness). The scalar model stays the default. In vector mode the run
-solves Maxwell's equations for the run's own slits (`lfphys.core.em.slit`: for t = 0 and k a ≤ 140 an
-edge-conditioned basis, which converges exponentially; otherwise the waveguide modes of the slits), separately for the
-two polarisations:
+instead be a perfect conductor of thickness t (live parameters "Model of the slit screen" =
+"perfect conductor: vector diffraction (slits up to 20.7 λ)" and "Screen thickness, µm (0 = infinitely thin)"; t = 0
+is a screen of zero thickness). The scalar model stays the default. In vector mode the run solves Maxwell's equations
+for the run's own slits (`lfphys.core.em.slit`: for t = 0 and k a ≤ 140 an edge-conditioned basis, which converges
+exponentially; otherwise the waveguide modes of the slits), separately for the two polarisations:
 
 * **TE**: E along the slits (polarisation V); u = E_y, with u = 0 on the conductor;
 * **TM**: E across the slits (polarisation H); u = Z0 H_y, with ∂u/∂n = 0 on the conductor.
@@ -113,14 +116,14 @@ The distance to the screen is counted from the exit face.
 probability P_t/W, where P_t is the transmitted power per unit length in units of the incident flux. A transmitted
 photon lands with the density of the energy flux through the screen plane, j_z(x)/W, where
 j_z = |χ_H|² j_TM + |χ_V|² j_TE: the flux has no TE–TM cross term. Photons that are not transmitted are reflected or
-scattered back by the screen; they are counted as «отражено экраном-проводником». A set-up whose transmitted power
+scattered back by the screen; they are counted as "reflected by the conducting screen". A set-up whose transmitted power
 exceeds W (a capture cross-section wider than the period) is refused. For one slit (n = 1) the strip is W = d, the
 period, which the scalar model does not use for one slit: a convention. The transmitted fraction and the count of
 reflected photons depend on it; the pattern on the screen does not (the run and the panel say so).
 
 **Where the hits stay scalar.** Which-path marks, elements at the slits, the analyzer and the modified laws (the
 Born exponent, collapse) have no vector counterpart in the engine. With any of them the hits are drawn from the scalar
-model, and the run says so in the segment, its approximations and the panel «Модель экрана со щелями». The vector
+model, and the run says so in the segment, its approximations and the panel "Model of the slit screen". The vector
 curve is then only a shape comparison: the flux of the vector solution for the same slits without the elements and the
 analyzer, scaled to the same total as the scalar expectation (their units differ: no detector efficiency, no
 elements' transmission). No difference strip is drawn then [error in earlier: before review B8 (C8) the vector curve
@@ -139,7 +142,7 @@ that normalisation, e.g. 0.96 of the curve for a zero-phase element]. Open item:
 * red, in a strip below the histogram: vector minus scalar — only when it exceeds three times the estimated error of
   the method on the screen; otherwise the screen's caption says that it is below it.
 
-The panel «Модель экрана со щелями» shows:
+The panel "Model of the slit screen" shows:
 
 * the transmission per slit width T_TE, T_TM and T for the Kirchhoff boundary values;
 * the weights of the two polarisations;
@@ -160,7 +163,7 @@ vector near field or Poynting flow lines in this visualization (same open item).
   extrapolation from M/2, M/√2 and M with the observed order clamped to [0.5, 1] — measured 1.4–3.1 times above the
   true error (the engine's tests). Tolerance 4e-3: below one pixel of the expected curve (the plot is ≈ 200 px tall)
   and below what the histogram's χ² can see before ~3·10⁶ detections. Where the waveguide modes' estimate exceeds it,
-  the run solves again once with twice the modes (the preset «Векторная дифракция…»: TM, 26 → 52). [error in earlier:
+  the run solves again once with twice the modes (the preset "Vector diffraction: …": TM, 26 → 52). [error in earlier:
   before review B8 (C6) the run showed the change T(1.25 M)/T(M) − 1 with a tolerance of 1 %; that understated the
   true error 3–6 times];
 * T_TE, T_TM and T_Kirchhoff, as information;
@@ -209,15 +212,16 @@ All rows are now solved by the edge basis (estimated error ≤ 1.3e-6) and recom
 solved by the waveguide modes, 0.2–0.3 % low in T; its T_TE 0.999, T_TM 0.997 and the TM difference 0.006 — larger than
 at 4 µm — were the method's error, not physics (review B8 C7)]
 
-In a thick screen TE is cut off below a = λ/2: its transmission falls as exp(−2|β₁|t), while TM passes through the
-TEM mode with Fabry–Pérot resonances of height λ/(πa). The preset «Векторная дифракция: щели 0.5 мкм …» (a = 0.5 µm,
-d = 3 µm, t = 0.2 µm, L₂ = 1 cm, polarisation D) gives T_TE = 1.056, T_TM = 0.974 (with 52 modes; 0.973 with the
-default 26) and Kirchhoff 0.805. Its histogram follows the vector curve: for 30 000 emitted photons (≈ 5 000 detected)
-seeds 1–5 give χ² p = 0.33, 0.006, 0.67, 0.44, 0.10, while the scalar Kirchhoff curve is rejected at p ≤ 5e-7 in all
-five [error in earlier: "χ² p = 0.52" was one seed; review B8 C15]. Over 40 seeds the median p is 0.33 and 15 % lie
-below 0.05: Pearson's χ² with ~120 bins, 46 of them expecting only 5–10 counts, is mildly anti-conservative at this
-count (10 % without the TM doubling); with 300 000 photons (≈ 50 000 detected) p = 0.62, 0.39, 0.76 — no systematic
-mismatch between the hits and the curve.
+In a thick screen TE is cut off below a = λ/2: its transmission falls as exp(−2|β₁|t), while TM passes through the TEM
+mode with Fabry–Pérot resonances of height λ/(πa). The preset
+"Vector diffraction: 0.5 µm slits in a 0.2 µm conducting screen, polarisation D" (a = 0.5 µm, d = 3 µm, t = 0.2 µm,
+L₂ = 1 cm, polarisation D) gives T_TE = 1.056, T_TM = 0.974 (with 52 modes; 0.973 with the default 26) and Kirchhoff
+0.805. Its histogram follows the vector curve: for 30 000 emitted photons (≈ 5 000 detected) seeds 1–5 give χ² p =
+0.33, 0.006, 0.67, 0.44, 0.10, while the scalar Kirchhoff curve is rejected at p ≤ 5e-7 in all five [error in earlier:
+"χ² p = 0.52" was one seed; review B8 C15]. Over 40 seeds the median p is 0.33 and 15 % lie below 0.05: Pearson's χ²
+with ~120 bins, 46 of them expecting only 5–10 counts, is mildly anti-conservative at this count (10 % without the TM
+doubling); with 300 000 photons (≈ 50 000 detected) p = 0.62, 0.39, 0.76 — no systematic mismatch between the hits and
+the curve.
 
 ## Conventions
 
@@ -227,7 +231,7 @@ axis, symmetric retardance, no overall phase; spin rotation about y: exp(−iaσ
 n = (sin t, 0, cos t). Born-exponent modification: the position is drawn from |ψ|^p normalised on the finite screen,
 the probability of reaching the screen uses |ψ|², Sorkin's parameter uses the unnormalised I^{p/2}.
 
-## Approximations and limits (also shown in the player, panel "Приближения этого отрезка")
+## Approximations and limits (also shown in the player, panel "Approximations of this segment")
 
 * Paraxial Fresnel optics with Kirchhoff boundary values (the field in a slit is the incident field); the exact
   Rayleigh–Sommerfeld check covers the paraxial step only. Its quadrature: 32-node Gauss–Legendre panels with at

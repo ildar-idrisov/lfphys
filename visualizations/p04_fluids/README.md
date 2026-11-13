@@ -1,19 +1,22 @@
 # p04 — the fluids playground
 
+**English** | [Русский](README.ru.md)
+
 A playground section (plan P15.7; framework P15.0: `../RULES.md` §6), on the engine's lattice Boltzmann solver
 `lfphys.core.fluids.lbm` (P8, batch B7; the owner's subset of 2026-10-29: «молекулярную динамику, решёточный метод
-Больцмана и FLRW»). The flow is built by hand — obstacles, inlets and outlets, moving walls, dye, probes — changed at
-any moment in the inspector, saved to a file and started again from it.
+Больцмана и FLRW» — "molecular dynamics, the lattice Boltzmann method and FLRW"). The flow is built by hand —
+obstacles, inlets and outlets, moving walls, dye, probes — changed at any moment in the inspector, saved to a file and
+started again from it.
 
 ## The laws of a world
 
-World parameters (a change is a new world; «перенести сцену» carries the objects over):
+World parameters (a change is a new world; "carry the scene over" carries the objects over):
 
 | parameter | meaning |
 |---|---|
 | fluid at the start | the DFG benchmark fluid (ν = 10⁻³ m²/s, ρ = 1 kg/m³; the default), water or air at 20 °C (density and viscosity from `lbm.fluid_properties`: water from the NIST WebBook's IAPWS-95 / IAPWS 2008 isobar, air from the U.S. Standard Atmosphere 1976 with Sutherland's viscosity), or ρ and ν of one's own; it sets ρ and ν at the start (both live afterwards) |
 
-Live laws (review 2026-11-04 UX-ui U12: «Установка», changed at the current moment, the flow kept; plan P16.1, batch
+Live laws (review 2026-11-04 UX-ui U12: "Set-up — changes at once", changed at the current moment, the flow kept; plan P16.1, batch
 LB1: the bench never restarts):
 
 | law | engine | what an edit does to the state |
@@ -21,9 +24,9 @@ LB1: the bench never restarts):
 | viscosity ν | `Flow2D.set_viscosity` | τ changes, the time step stays; the populations (density ratio and velocity of every node) are kept: mass and momentum do not jump; the viscous stress carried by the populations' non-equilibrium part is the old τ's and adapts within a few steps; refused below what the grid carries (τ − ½ ≥ 10⁻³, the cell Reynolds limit), with the smallest ν |
 | density ρ | `Flow2D.set_density` | the lattice state is kept, the velocities are the same; pressures, forces, mass and momentum change their physical scale by ρ′/ρ (a flow given ρ′ half-way equals one that had it from the start, bit for bit: engine test); the balances' relative residuals do not change |
 | collision operator TRT / BGK | `Flow2D.set_collision` | the populations kept, the next steps relax with the other odd-moment rate (same equilibrium, same viscosity) |
-| dye on / off, its diffusivity | `enable_dye` / `disable_dye` / `set_dye_diffusivity` | off: the dye field goes, its amount booked as removed (the dye balance closes again when it is switched back on, zero); refused while dye sources are in the scene; «0 — как вязкость» follows ν |
+| dye on / off, its diffusivity | `enable_dye` / `disable_dye` / `set_dye_diffusivity` | off: the dye field goes, its amount booked as removed (the dye balance closes again when it is switched back on, zero); refused while dye sources are in the scene; "0: as the viscosity" follows ν |
 | nodes along x (nx) | `Flow2D.remap` | the spacing dx = Lx / nx changes (ny follows: the same spacing along y); the flow is moved to the new grid: the next step's streaming is done on the old grid, its pre-collision populations split into the equilibrium of their density and velocity and the non-equilibrium rest; the pressure (kept as a physical pressure: the lattice density deviation scales by (c/c′)²), the velocity and the non-equilibrium part are interpolated (four-point cubic where its 4 × 4 stencil is fluid, bilinear near bodies; beyond the sides quadratic ghosts: a Poiseuille profile is carried exactly), the non-equilibrium part rescaled with the relaxation times and the time step (Dupuis & Chopard 2003 — the grid-refinement transfer of the pre-collision populations, which has no singularity at τ = 1, unlike the post-collision rescaling of Filippova & Hänel 1998; their factor τ′dt′/(τ dt) for the symmetric part, τ₋′dt′²/dx′ / (τ₋dt²/dx) for TRT's antisymmetric part — derived here, the same in their convective scaling), and the new grid's collision completes the step (the change takes one step of the old grid); bodies and dye sources are re-voxelised; the time step follows u_max as for a new world |
-| domain length Lx, height Ly | `Flow2D.remap` | the spacing kept, cells added or cut on the side «Область растёт или уменьшается» names (right and top: the objects keep their coordinates; left and bottom, or both sides: the objects move with the fluid and their coordinates change by the shift, the scene says so); a new part of the domain is fluid at rest (the pressure of the nearest node and the body force's hydrostatic part) or moving with the first inlet's velocity («Новая часть области»); a crop that would cut a body or a dye source, or leave a probe or a dye drop outside, is refused with the object named; a whole-cell shift at the same spacing copies the fluid exactly |
+| domain length Lx, height Ly | `Flow2D.remap` | the spacing kept, cells added or cut on the side "The domain grows or shrinks" names (right and top: the objects keep their coordinates; left and bottom, or both sides: the objects move with the fluid and their coordinates change by the shift, the scene says so); a new part of the domain is fluid at rest (the pressure of the nearest node and the body force's hydrostatic part) or moving with the first inlet's velocity ("New part of the domain"); a crop that would cut a body or a dye source, or leave a probe or a dye drop outside, is refused with the object named; a whole-cell shift at the same spacing copies the fluid exactly |
 | largest expected speed u_max | `Flow2D.remap` | the time step from the lattice Mach number (0.1 at u_max, capped at τ ≤ 1) and with it the scheme's sound speed; the fields are carried node by node, the non-equilibrium part rescaled; refused when the grid does not resolve it (the cell Reynolds limit) or the scheme cannot carry the speeds in the scene (Mach 0.3) |
 
 Every grid change is all or nothing (a refused one leaves the flow, the time and the books as they were), is checked
@@ -37,10 +40,10 @@ event computes it from the pressure integral and gives the incompressible fluid'
 the domain, the interpolation and re-voxelisation. A new nx that does not fit a whole number of cells into Ly changes the
 height: the event gives the new height and the nx that keep both lengths, and says when the DFG set-up is no longer
 recognised (review LB1-physics P14; before, the 0.39 mm change at nx 333 went unsaid). The transfer is booked as
-«remap», so the running balances close **by construction** across it and cannot see an error of the transfer itself
+`remap`, so the running balances close **by construction** across it and cannot see an error of the transfer itself
 (review LB1-physics P7: a velocity transferred 1 % wrong passed every running check; before, this README and the test
 cited those checks as evidence for the transfer [error in earlier]); the event says so. The transfer is checked by the
-engine's tests against closed forms and, in a world, by «Эталоны»: the body-force Poiseuille channel (below) stays on its
+engine's tests against closed forms and, in a world, by "Benchmarks": the body-force Poiseuille channel (below) stays on its
 parabola to round-off across nx, Lx, Ly and u_max changes and is off by ~10⁻² after a wrong transfer (test). Each live
 change restarts the
 force record's window and re-emits the approximations. Measured latency of a change on the CPU (the whole command in the
@@ -53,8 +56,8 @@ dragged 27 ms, a probe 1 ms.
 resolves, u_max = 0.9 · 10 ν / dx (cell Reynolds number 9, below the open-domain limit 10), says so in a notice and in
 the approximations, and records the lowered value as the world's law; the palette's speeds follow (a fifth of u_max):
 water on the 5 mm grid runs at speeds up to 1.8 mm/s (the default 8 cm cylinder at the default inlet speed 0.4 mm/s: Re ≈ 33), air up to 2.7 cm/s. The trade-off:
-for faster flows a smaller domain or more nodes — the presets «Вода…» (a 22 × 4.1 mm channel, D = 1 mm, 3 cm/s) and
-«Воздух…» (22 × 4.1 cm, D = 1 cm, 4.55 cm/s) are the DFG 2D-1 set-up at Re = 20 in these fluids.
+for faster flows a smaller domain or more nodes — the presets "Water: …" (a 22 × 4.1 mm channel, D = 1 mm, 3 cm/s) and
+"Air: …" (22 × 4.1 cm, D = 1 cm, 4.55 cm/s) are the DFG 2D-1 set-up at Re = 20 in these fluids.
 
 **The grid's memory** (UX-params P25): a thin or tall domain made grids of 8·10¹⁰ nodes (591 GiB) that the worker tried
 to allocate. The world estimates its peak memory before anything is allocated (`Flow2D.memory_estimate`: 1000 B per node
@@ -68,7 +71,7 @@ u·dx/ν above 25 in a closed or periodic domain or above 10 with an inlet or an
 the cavity at Re 1000 on 64² is accepted at 15.6 and lies 0.017 of the lid speed off Ghia's table). It also refuses an
 outlet pressure or a body force whose rest state would make the scheme's density deviate from ρ0 by more than 0.045
 (the pressure scale is c_s²ρ: 20 Pa in the default world). The section puts these refusals in its own terms: the speed
-limit of this world, the smallest ν, the u_max that would carry a force (never «dt», which is not a parameter here).
+limit of this world, the smallest ν, the u_max that would carry a force (never `dt`, which is not a parameter here).
 
 ## The palette (all changed at the current moment)
 
@@ -94,8 +97,8 @@ nearest place where it does not (a copy ⧉ likewise); a clicked point is the ob
 side); a probe or a dye spot asked inside a body goes to the nearest fluid node; speeds above what the world resolves are
 reduced to it with a note. An edit by hand is checked as it is: a body wholly outside the domain, a probe or a dye spot
 outside it, a body covering 90 % of it, a side already taken (the free sides named), a force or a speed beyond the
-scheme are refused in Russian with what to change; a body partly outside is accepted with a note (the wall cuts it). A
-probe inside a body says «внутри тела …: здесь нет жидкости» instead of NaN.
+scheme are refused in the owner's terms with what to change; a body partly outside is accepted with a note (the wall cuts it). A
+probe inside a body says "inside the body “…”: there is no fluid here; move the probe" instead of NaN.
 
 One condition per side; removing an inlet, an outlet, a moving wall or a periodic pair gives the walls back. The NACA profile is the four-digit series of Abbott & von Doenhoff (1959) with the closed trailing
 edge; a positive angle of attack lowers the trailing edge for a stream along +x.
@@ -114,7 +117,7 @@ edge; a positive angle of attack lowers the trailing edge for a stream along +x.
 ## What the player shows
 
 The window of the plane is the main view (UX-ui U15: it was a side window next to a 3-D view of the flat slab): the
-field chosen across the whole centre; the 3-D scene beside it on request («Показать 3D-вид рядом»). The 3-D scene (z up): the field chosen («Картина течения»: speed, vorticity — signed, zero in the middle of the scale —,
+field chosen across the whole centre; the 3-D scene beside it on request ("Show the 3-D view alongside"). The 3-D scene (z up): the field chosen ("Flow picture": speed, vorticity — signed, zero in the middle of the scale —,
 pressure, dye) as an image on the plane, the velocity arrows, the obstacles as prisms; the window of the plane with
 the obstacles' outlines, the sides' conditions (inlets green, outlets orange, moving walls violet, periodic dashed), the
 dye sources and the probes; the playground's panels. The picture averages the fluid only over each of its points, each
@@ -144,7 +147,7 @@ drag after an impulsive start). Where the scene is a published benchmark's set-u
 objects, and shown only while it is: the DFG 2D-1 and 2D-2 channels, Ghia's cavity at Re 100, a Poiseuille channel
 with a probe 2 H away from the inlet and the bodies, a channel driven by a body force along periodic ends between fixed
 walls (u = g_x y (H − y)/(2ν); review LB1-physics P7), plane Couette flow between a moving and a fixed wall with periodic
-ends), the group «Эталоны» puts the benchmark's range or closed form next to the computed number, with what the
+ends), the group "Benchmarks" puts the benchmark's range or closed form next to the computed number, with what the
 agreement needs (grid, wall, a developed flow) and the engine's own test results at that grid. The estimated
 cost per step on the device in use.
 
@@ -157,14 +160,14 @@ cost per step on the device in use.
 * Walls are staircase half-way bounce-back (curved walls to first order in position) or, per body, interpolated.
 * Bodies do not move through the grid (surface velocities on fixed shapes); periodic sides repeat the bodies.
 * The scene file keeps the set-up, not the flow: a world started from a file starts from rest at the file's time (the
-  engine counts its steps from there). A new world with «перенести сцену» keeps the flow (review LB1-framework F5;
+  engine counts its steps from there). A new world with "carry the scene over" keeps the flow (review LB1-framework F5;
   before, it restarted from rest while the dialog promised the state [error in earlier]): the engine's state goes with
   the carry-over (`carry_state`), and the new world continues it (`carry_world` → `Flow2D.adopt`) — on the same grid and
   time step as it was (bit for bit); on another grid, domain or time step moved there first by the engine's transfer
   (`Flow2D.remap`, as a live change; the domain grows or is cut on the right and the top), with this world's fluid,
   sides, bodies, dye and force from then on; nodes that were a body start at rest, an inlet of the same velocity
   continues its ramp; the balances count from the carried state. What cannot be taken (a transfer the new grid refuses,
-  no flow given) starts from rest, and the carry-over's notice says so («течение начато заново из покоя: …»), as it says
+  no flow given) starts from rest, and the carry-over's notice says so ("the flow restarted from rest: …"), as it says
   every adaptation (another viscosity or density, the dye, a ramp started anew).
 * A live grid, domain or time step (P16.1): the transfer is second order in the fluid away from bodies and exact for a
   Poiseuille profile; next to a curved or interpolated wall it is first order (the ghost of a solid node is the linear
@@ -182,7 +185,7 @@ on the right with the inflow, cropped back, grown on the left (the objects' coor
 through a body, past a dye source and past a probe refused with the world as it was; a grid beyond the budget refused
 before anything is allocated; the live grid repeated by replay bit for bit (populations, scene, live values,
 measurables); the handles (`at` in every frame, a body's drag re-voxelised in well under a second); the measurables (ids,
-Russian labels and units, a value for each in every frame, the averaged coefficients undefined with the reason until
+translated labels and units, a value for each in every frame, the averaged coefficients undefined with the reason until
 their window fills, the probe's values the fields at its node, the inlet's flow the engine's, `measure()` = the frame).
 Review LB1 processing: the body-force Poiseuille channel stays on its parabola across nx and u_max changes, and a
 wrong transfer (velocity × 1.01) is seen there while the momentum balance passes (documented); a new nx states the new

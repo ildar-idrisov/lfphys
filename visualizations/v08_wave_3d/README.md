@@ -1,5 +1,7 @@
 # v08 — a wave in 3-D: diffraction by an aperture, in the 3-D environment
 
+**English** | [Русский](README.ru.md)
+
 A wrapper over the engine `lfphys` and the reference world of the player's 3-D environment (owner, 2026-10-27;
 `../RULES.md` §2.10). Monochromatic scalar light behind an aperture in the plane z = 0 — a Gaussian field, a circle, a
 square, a slit or a double slit of finite length — propagated into the half-space z > 0.
@@ -24,18 +26,19 @@ current's glyphs.
 * **Fields:** the light behind the screen (the computed volume as a glowing cloud: |U|², averaged 2 × 2 across for
   n = 256 — a preview; exact values are in the slices) and the energy current (arrows on 10 planes × 16 × 16 points,
   direction of j, length ~ √|j|; off at start). Only in full 3-D.
-* **Every element switches off on its own** ("Слои сцены"), with the cloud's density and threshold and the arrows'
+* **Every element switches off on its own** ("Scene layers"), with the cloud's density and threshold and the arrows'
   threshold.
-* **Slices:** up to three planes of any orientation, each with its own window in its colour. «＋ Срез» places the next
+* **Slices:** up to three planes of any orientation, each with its own window in its colour. "＋ Slice" places the next
   plane through the middle of the region, perpendicular to the planes there, turned ones included (one plane: its
   default if perpendicular, else n₁ × the axis least along n₁; two planes: n₁ × n₂). A plane is moved and tilted by
-  hand — click it; the arrow moves it along its normal, the two rings tilt it (W / E switch; moves within the plane and
-  the roll about the normal are not offered: they would not change the plane) — or by parameters (centre; the normal
-  by θ from the z axis and azimuth φ; presets y = c, x = c, z = c; «по умолчанию» returns one plane y = 0). Pointing at
-  a window highlights its plane; clicking selects it. **Planes stay where they are put**, and are kept in a new world
-  of the run (any change of the world's parameters); "автосмещение" (per plane, off by default) moves a plane along its
-  normal while world time runs: then the slice is coarse (64 rows, not checked, at most twice per world second, no
-  phase in the record: ~50 kB per message at n = 256) and the full slice returns when "auto" is switched off.
+  hand — click it; the arrow moves it along its normal, the two rings tilt it (W / E switch; moves within the plane
+  and the roll about the normal are not offered: they would not change the plane) — or by parameters (centre; the
+  normal by θ from the z axis and azimuth φ; presets y = c, x = c, z = c; "default" returns one plane y = 0). Pointing
+  at a window highlights its plane; clicking selects it. **Planes stay where they are put**, and are kept in a new
+  world of the run (any change of the world's parameters); "auto-shift along the normal" (per plane, off by default)
+  moves a plane along its normal while world time runs: then the slice is coarse (64 rows, not checked, at most twice
+  per world second, no phase in the record: ~50 kB per message at n = 256) and the full slice returns when the
+  auto-shift is switched off.
 * **A plane's position:** a plane is fixed by its normal n and its distance d = o·n; the run takes its point closest
   to (0, 0, z_max/2) as its centre, with d clamped to the region (a centre given outside the region still gives the
   same plane, never another one).
@@ -59,13 +62,13 @@ normal with axis presets (as in scientific visualization tools), colour-coded sl
 
 ## Modelling (world parameters; owner, 2026-10-24)
 
-* **Full 3-D**: the volume on 96 planes z ∈ [0, z_max] is computed once (the cloud, the current); slices on any
-  plane are computed when placed. Grid ≤ 256.
-* **Slices only**: no volume, nothing but the slices placed (faster; the scene shows the apparatus, the target and
-  the slices). For a slit or a double slit, planes with the normal along y (y = c) can be computed by the **reduced
-  2-D model** (the slit taken as infinitely long): an approximation, flagged per plane (`Modelling` keeps exactness
-  per slice), in the header's `approximations`, the run list, the top bar, the window (red) and the checks, where its
-  size is measured against the exact slice.
+* **Full 3-D** ("Modelling" = "whole volume: light and energy current in 3-D, any slices"): the volume on 96 planes
+  z ∈ [0, z_max] is computed once (the cloud, the current); slices on any plane are computed when placed. Grid ≤ 256.
+* **Slices only** ("slices only (faster): only the planes placed are computed"): no volume, nothing but the slices
+  placed (faster; the scene shows the apparatus, the target and the slices). For a slit or a double slit, planes with
+  the normal along y (y = c) can be computed by the **reduced 2-D model** (the slit taken as infinitely long): an
+  approximation, flagged per plane (`Modelling` keeps exactness per slice), in the header's `approximations`, the run
+  list, the top bar, the window (red) and the checks, where its size is measured against the exact slice.
 
 ## Accuracy, measured by every run
 
@@ -103,7 +106,7 @@ normal with axis presets (as in scientific visualization tools), colour-coded sl
 |---|---|---|---|
 | `window` | error of the drawn field on z_max from the window | 1.5·max\|U_p − U_2p\| | 2e-3 of the peak |
 | `exact_i_j` | the field (fp64, the drawn window and sum) at grid nodes of z_max | the exact field without FFTs | the window estimate × peak + the reference's own error + 1e-9 |
-| `plane_exact_N` | slice N (one row per plane; «убран» when removed), at up to three of its points | the exact field without FFTs | the window estimate × peak |
+| `plane_exact_N` | slice N (one row per plane; "Slice N: removed" when removed), at up to three of its points | the exact field without FFTs | the window estimate × peak |
 | `slice_route` | the plane y = 0 by `propagate_plane` against the transverse planes' rows, at z_max/2 and z_max | the engine's two routes, fp64 | 1e-12 of the peak |
 | `flux_exact` | (full 3-D) the energy current j = Im(U*∇U)/k at the reference points of z_max | Im(U*∇U)/k of the exact field: closed-form derivatives (the Gaussian, the circle on its axis) or five-point differences of the exact field (rectangles; step 1e-3 µm, error < 1e-8) | the window estimate × peak × (\|U\| + \|∇U\|/k) at the point |
 | `flux` | (full 3-D) the power through 10 planes z, Σ j_z dx dy over the whole window, against the spectrum's closed form | information: Parseval's identity of the discrete sum (a check of the code and its normalisation, not of the window or the physics; review C4); for the band-limited sum the power it removes at depth | — |
@@ -128,9 +131,9 @@ normal with axis presets (as in scientific visualization tools), colour-coded sl
 ## Tests
 
 `tests/test_v08_wave3d.py` (Docker; with `--gpus '"device=0"'` the GPU test runs too): every preset builds with all
-checks passing, its scene and an exact reference; planes stay where they are put and move only with "auto"; a tilted
-plane moves uniformly with "auto" and a centre given outside the region keeps its plane; auto-moving slices are coarse
-and rate-limited, and the full slice returns; planes carry over to a new world and «по умолчанию» restores the
+checks passing, its scene and an exact reference; planes stay where they are put and move only with the auto-shift; a
+tilted plane moves uniformly with the auto-shift and a centre given outside the region keeps its plane; auto-moving slices are coarse
+and rate-limited, and the full slice returns; planes carry over to a new world and "default" restores the
 default; planes of any orientation, up to three, each with its own check, every point on its plane and NaN outside
 the region; labels follow the normal; a slice equals the volume on its grid points; the slices mode computes no
 volume and flags the reduced plane alone; a dragged plane in "slices only" gets a coarse preview that changes

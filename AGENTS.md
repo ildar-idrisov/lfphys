@@ -112,7 +112,7 @@ lfphys Research Licence 1.0; the Licensor is the owner as an individual (residen
 | path | content |
 |---|---|
 | `lfphys/` | the physics engine (Python package `lfphys`): layers `LAYERS.md`, catalogue `README.md`, plan `PLAN.md`, sources `sources/`, tests `tests/` |
-| `visualizations/` | one server and one player in Docker (port 8479) and one folder `vNN_<slug>/` per visualization; rules and API `RULES.md`, owner guide (Russian) `README.md`; the player's 3-D environment `player/js/scene3d.js`, `player/js/slices.js`; third-party code only in `player/vendor/` (three.js, MIT, unmodified) |
+| `visualizations/` | one server and one player in Docker (port 8479) and one folder `vNN_<slug>/` per visualization; rules and API `RULES.md`, owner guide `README.md` (English) and `README.ru.md` (Russian); the player's 3-D environment `player/js/scene3d.js`, `player/js/slices.js`; third-party code only in `player/vendor/` (three.js, MIT, unmodified) |
 | `reviews/` | independent reviews of the engine and the visualizations, rules and registry `reviews/README.md` |
 | `STATUS.md` | the one place for open problems and plans of the engine and the visualizations |
 | `LICENSE.md`, `LICENSE-DOCS.txt`, `NOTICE`, `COMMERCIAL.md`, `CITATION.cff`, `CONTRIBUTING.md`, `CLA.md`, `PUBLICATIONS.md` | licence (code: the lfphys Research Licence 1.0, `LicenseRef-lfphys-Research-1.0` — noncommercial research only, citation required; documentation: CC BY-NC-SA 4.0 with additional permissions for scholarly publications; commercial use only by a separate written agreement), citation, contribution terms and the contributor agreement; copies in `lfphys/` and `visualizations/` |
@@ -174,8 +174,8 @@ lfphys Research Licence 1.0; the Licensor is the owner as an individual (residen
     hypotheses. Give every reported result a status tag: [useful] / [neutral] / [weakens] / [error in earlier].
     Persist background work to files. Stop processes by PID or container name, never with `pkill -f`. Never put the
     owner's e-mail or any personal identifier into requests to external services (only into this project's own
-    licence and citation files, as the owner asked). Code and documentation in English; the owner guide and reports
-    to the owner in Russian; a question from the owner is answered first, implied work is not started without a go.
+    licence and citation files, as the owner asked). Code and developer documentation in English; user documents in
+    every language of `LANGUAGES.md` (rule 13); reports to the owner in Russian; a question from the owner is answered first, implied work is not started without a go.
 
 12. **The repository and its documentation stay current and structured (owner, 2026-11-12).** Every change updates,
     in the same commit, every document it makes stale: the READMEs (the front page and every guide), `STATUS.md`,

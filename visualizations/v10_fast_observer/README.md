@@ -1,5 +1,7 @@
 # v10 — What a fast observer really sees
 
+**English** | [Русский](README.ru.md)
+
 A wrapper over the engine `lfphys` (plan item P14.2, on P9, P10 and P11) and the third world of the player's 3-D
 environment (`../RULES.md` §2.10). Self-luminous bodies (black bodies with patterns) move past an observer, or the
 observer flies through them; the run computes the observer's image by light-time ray tracing and shows, in 3-D, the lab
@@ -35,8 +37,8 @@ piecewise-uniform worldline (the live boosts), the colours of the image (exposur
   the dipole of the cosmic background; point stars at rest in the lab are aberrated, seen at D T with flux D² times
   that at rest.
 * **For comparison only** (labelled in the window and the image's status; not what is seen):
-  * "only geometry" — the same light-time and aberration, colours and brightness of the rest frame (D set to 1);
-  * "snapshot" — the observer's simultaneity instead of the past light cone (light of infinite speed in the observer's
+  * "for comparison: geometry only" — the same light-time and aberration, colours and brightness of the rest frame (D set to 1);
+  * "for comparison: an instantaneous snapshot" — the observer's simultaneity instead of the past light cone (light of infinite speed in the observer's
     frame): the Lorentz-contracted bodies of textbooks, which light never shows. For a moving observer that
     simultaneity contains lab times after the world's time; the bodies' motion is fixed for the world (nothing a live
     change could alter), so this comparison reveals no consequence ahead of its time;
@@ -61,7 +63,7 @@ piecewise-uniform worldline (the live boosts), the colours of the image (exposur
 * Slices: `planes.max = 0`. The world computes images (directions) and surfaces (retarded shapes), not a field over
   space; the only candidate fields (the Doppler factor or the emission delay of light from a point to the observer)
   depend on the direction and the distance in closed form and would add nothing a slice could check. Every element is
-  switched off on its own in «Слои сцены».
+  switched off on its own in "Scene layers".
 * The region starts from the scene at t = 0 (bodies where they are, the observer) and grows (`box` messages) when a
   present position nears its edge: it never frames where bodies will be.
 
@@ -73,9 +75,9 @@ body (or the sky), D, the observed temperature D T and the rest temperature, how
 was emitted. The per-pixel data are quantised for the window (log₂ D in 32 octaves on 16 bits: 3.4·10⁻⁴ relative; the
 delay on 16 bits of its maximum; T rounded to 1 K); the checks use the run's fp64 values.
 
-Exposure: "as for the scene at rest" (the default: a fixed scale from the median rest temperature of the scene, so the
-searchlight shows as brighter and darker) or "per image" (the 99th percentile of the luminance; colours visible, the
-brightness levelled), with a correction in stops. The luminance is compressed as L/(1 + L) with the chromaticity kept.
+"Exposure": "as for the scene at rest" (the default: a fixed scale from the median rest temperature of the scene, so the
+searchlight shows as brighter and darker) or "per frame" (the 99th percentile of the luminance; colours visible, the
+brightness levelled), with a correction in stops ("Exposure correction, stops"). The luminance is compressed as L/(1 + L) with the chromaticity kept.
 
 ## Checks
 

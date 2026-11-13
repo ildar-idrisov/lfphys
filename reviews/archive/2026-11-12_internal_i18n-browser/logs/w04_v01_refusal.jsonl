@@ -1,0 +1,6 @@
+{"L":"en","speedField":{"v":"0","max":"0.99"}}
+{"L":"en","refusal":["“speed, fractions of c”: 2 is above the maximum 0.99; allowed: from 0 to 0.99"],"toasts":[]}
+{"where":"v01 en refusal","L":"en","n":226,"bad":[{"k":"opt","s":"GR (Schwarzschild, null geodesics)","at":"div>div>div>div.field>select","why":["undef"]}],"nbad":1,"over":[],"hscroll":false,"lang":"en","errs":[]}
+{"L":"ru","speedField":{"v":"0","max":"0.99"}}
+{"L":"ru","refusal":["«скорость, доли c»: 2 — больше наибольшего 0,99; можно от 0 до 0,99"],"toasts":[]}
+{"where":"v01 ru refusal","L":"ru","n":226,"bad":[],"nbad":0,"over":[],"hscroll":false,"lang":"ru","errs":[]}

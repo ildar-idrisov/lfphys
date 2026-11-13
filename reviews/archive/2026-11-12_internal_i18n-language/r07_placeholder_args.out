@@ -1,0 +1,529 @@
+{v} in: ({v})
+    ru: (no ru entry)
+    visualizations/server/lfviz/playground.py:1042  variable body  = body
+{what} in: Cancelled: {what}. The world is back at the moment before this command (it was not applied) and goes on from it, paused
+    ru: Отменено: {what}. Мир возвращён в момент перед этой командой (она не применена) и продолжается с него на паузе
+    visualizations/server/lfviz/runs.py:503  variable what  = what
+{what} in: Cancelled: {what}. The world is back at the moment before this command (it was not applied) and goes on from it, paused; the commands sent d
+    ru: Отменено: {what}. Мир возвращён в момент перед этой командой (она не применена) и продолжается с него на паузе; не применены и команды, посланные во время расчё
+    visualizations/server/lfviz/runs.py:499  variable what  = what
+{eq} in: Continuity equation {eq} at the arrows' nodes
+    ru: Уравнение непрерывности {eq} в узлах стрелок
+    visualizations/server/lfviz/orbitals3d.py:382  variable what  = what
+{tag} in: Convergence{tag}: R(r) of the grid N = {n1:d} against N = {n2:d}
+    ru: Сходимость{tag}: R(r) сетки N = {n1:d} против N = {n2:d}
+    visualizations/v14_quarkonium_3d/viz.py:245  variable tag  = tag
+{tag} in: Energy ⟨T⟩ + ⟨V⟩ from the wave function{tag}
+    ru: Энергия ⟨T⟩ + ⟨V⟩ по волновой функции{tag}
+    visualizations/v13_hydrogen_3d/viz.py:259  variable tag  = tag
+{tag} in: Energy ⟨T⟩ + ⟨V⟩ from the wave function{tag} against the eigenvalue
+    ru: Энергия ⟨T⟩ + ⟨V⟩ по волновой функции{tag} против собственного значения
+    visualizations/v14_quarkonium_3d/viz.py:253  variable tag  = tag
+{obj} in: Frequency at “{obj}” / frequency of the source
+    ru: Частота у «{obj}» / частота источника
+    visualizations/v01_light_travel/engine/world.py:319  attribute .name  = obj.name
+{route} in: Grid: {n0:d} → {n1:d} points per axis, step {d0:.4g} → {d1:.4g} nm, window {s0:.4g} → {s1:.4g} nm: the wave resampled exactly ({route})
+    ru: Сетка: {n0:d} → {n1:d} точек по оси, шаг {d0:.4g} → {d1:.4g} нм, окно {s0:.4g} → {s1:.4g} нм — волна пересчитана точно ({route})
+    visualizations/p02_quantum/viz.py:1574  variable route  = route
+{tag} in: Mean radius ⟨r⟩{tag}
+    ru: Средний радиус ⟨r⟩{tag}
+    visualizations/v13_hydrogen_3d/viz.py:256  variable tag  = tag
+{state} in: Model: the splitting {state} − 1S
+    ru: Модель: расщепление {state} − 1S
+    visualizations/v06_qcd/viz.py:244  f-string  = f"{lv['n']}{'SPD'[lv['L']]}"
+{pol} in: Narrow slit in a thin screen: T_{pol} against Rayleigh's limit (1897)
+    ru: Узкая щель в тонком экране: T_{pol} против предела Рэлея (1897)
+    visualizations/v02_double_slit/viz.py:784  variable pol  = pol
+{tag} in: Normalisation ∫|ψ|²dV{tag}: quadrature
+    ru: Нормировка ∫|ψ|²dV{tag}: квадратура
+    visualizations/v13_hydrogen_3d/viz.py:251  variable tag  = tag
+{tag} in: Normalisation ∫|ψ|²dV{tag}: quadrature of the spline
+    ru: Нормировка ∫|ψ|²dV{tag}: квадратура сплайна
+    visualizations/v14_quarkonium_3d/viz.py:239  variable tag  = tag
+{body} in: Orbits and clocks: {law}, {m:.6g} M☉, {body}
+    ru: Орбиты и часы: {law}, {m:.6g} M☉, {body}
+    visualizations/v04_orbits/viz.py:934  variable body  = body
+{what} in: Quantum numbers of the second state: {what}.
+    ru: Квантовые числа второго состояния: {what}.
+    visualizations/v14_quarkonium_3d/viz.py:105  variable what  = what
+{what} in: Quantum numbers: {what}.
+    ru: Квантовые числа: {what}.
+    visualizations/v14_quarkonium_3d/viz.py:106  variable what  = what
+{name} in: Quarkonium in 3-D: {name}
+    ru: Кварконий в 3D: {name}
+    visualizations/v14_quarkonium_3d/viz.py:304  variable name  = name
+{tag} in: Radial nodes{tag}: n − 1
+    ru: Радиальные узлы{tag}: n − 1
+    visualizations/v14_quarkonium_3d/viz.py:264  variable tag  = tag
+{tag} in: Radial nodes{tag}: n − l − 1
+    ru: Радиальные узлы{tag}: n − l − 1
+    visualizations/v13_hydrogen_3d/viz.py:269  variable tag  = tag
+{obj} in: Residual of the solution: time of flight to “{obj}” and |Δx|/c
+    ru: Невязка решения: время полёта до «{obj}» и |Δx|/c
+    visualizations/v01_light_travel/engine/world.py:265  attribute .name  = obj.name
+{ax} in: System momentum along {ax}: conserved (pairwise forces)
+    ru: Импульс системы вдоль {ax}: сохраняется (силы попарны)
+    visualizations/p03_molecules/viz.py:2441  variable ax  = ax
+{what} in: The terms p = 0–3 of the Debye series of this drop are up to {amp:.2g} times larger than the full answer: {what}. The coloured curves are no
+    ru: Члены ряда Дебая p = 0–3 этой капли до {amp:.2g} раз больше полного ответа: {what}. Цветные кривые — не пути света, а слагаемые, которые сокращаются; верна их с
+    visualizations/v17_mie_scattering/viz.py:279  variable what  = what
+{kind} in: a body of shape {kind}
+    ru: тело формы {kind}
+    lfphys/lfphys/core/em/fdtd.py:992  attribute .kind  = b["shape"].kind
+{what} in: a file of the old format (before 2026-11-05): {what}; the scene was loaded with the same laws
+    ru: файл старого формата (до 2026-11-05): {what}; сцена загружена с теми же законами
+    visualizations/p03_molecules/viz.py:145  variable what  = what
+{other} in: a scene of another section ({other}), and this is {this}
+    ru: сцена другого раздела ({other}), а это {this}
+    visualizations/server/lfviz/playground.py:428  str()  = str(scene.get("viz"))
+{species} in: added particle {pid} ({species})
+    ru: добавлена частица {pid} ({species})
+    lfphys/lfphys/core/quantum/scene.py:1816  attribute .name  = packet.species.name
+{obj} in: at a constant coordinate speed “{obj}” would move faster than light for the local static observer in {dt}; in GR the “speed” is the coordina
+    ru: при постоянной координатной скорости «{obj}» через {dt} двигался бы быстрее света для местного статичного наблюдателя; в ОТО «скорость» — координатная (dx/dt Шв
+    visualizations/v01_light_travel/engine/world.py:584  attribute .name  = obj.name
+{obj} in: at this speed “{obj}” would fly into the body (in {dt} of lab time)
+    ru: при этой скорости «{obj}» влетит в тело (через {dt} по лабораторному времени)
+    visualizations/v01_light_travel/engine/world.py:573  attribute .name  = obj.name
+{names} in: bodies or sources given as a mask of nodes cannot be carried to another grid or shifted: {names}
+    ru: тела или источники, заданные маской узлов, нельзя перенести на другую сетку или сдвинуть: {names}
+    lfphys/lfphys/core/fluids/lbm.py:2443  variable names  = names
+{kind} in: boundary {kind}: pml, pec, pmc or periodic
+    ru: граница {kind}: pml, pec, pmc или periodic
+    lfphys/lfphys/core/em/fdtd.py:667  str()  = repr(k)
+{changes} in: changed {type} #{oid}: {changes}
+    ru: изменён {type} #{oid}: {changes}
+    lfphys/lfphys/core/quantum/scene.py:1727  variable what  = what
+{axis} in: choose a “Dipole axis” other than {axis}
+    ru: выберите «Ось диполя», отличную от {axis}
+    visualizations/v02_double_slit/viz.py:475  str()  = str(f["mic_dir"])
+{name} in: crossover[{name}] = {value}: an integer > 0 or null is needed
+    ru: crossover[{name}] = {value}: нужно целое > 0 или null
+    visualizations/server/lfviz/devices.py:68  str()  = repr(name)
+{value} in: crossover[{name}] = {value}: an integer > 0 or null is needed
+    ru: crossover[{name}] = {value}: нужно целое > 0 или null
+    visualizations/server/lfviz/devices.py:68  str()  = repr(v)
+{axes} in: d·N − {nc:d}: the momentum along {axes} is conserved
+    ru: d·N − {nc:d}: сохраняется импульс вдоль {axes}
+    lfphys/lfphys/core/md/system.py:2434  variable ax  = ax
+{kind} in: element {kind} does not suit this particle
+    ru: элемент {kind} не подходит для этой частицы
+    lfphys/lfphys/core/quantum/marks.py:94  str()  = repr(kind)
+{name} in: fluid {name}: 'water' or 'air'
+    ru: жидкость {name}: 'water' или 'air'
+    lfphys/lfphys/core/fluids/lbm.py:349  str()  = repr(name)
+{old_n} in: grid {old_n} × {old_d} → {new_n} × {new_d}
+    ru: сетка {old_n} × {old_d} → {new_n} × {new_d}
+    lfphys/lfphys/core/quantum/scene.py:2160  str()  = str(list(old.shape))
+{old_d} in: grid {old_n} × {old_d} → {new_n} × {new_d}
+    ru: сетка {old_n} × {old_d} → {new_n} × {new_d}
+    lfphys/lfphys/core/quantum/scene.py:2160  str()  = str(old.d.tolist())
+{new_n} in: grid {old_n} × {old_d} → {new_n} × {new_d}
+    ru: сетка {old_n} × {old_d} → {new_n} × {new_d}
+    lfphys/lfphys/core/quantum/scene.py:2160  str()  = str(list(new.shape))
+{new_d} in: grid {old_n} × {old_d} → {new_n} × {new_d}
+    ru: сетка {old_n} × {old_d} → {new_n} × {new_d}
+    lfphys/lfphys/core/quantum/scene.py:2160  str()  = str(new.d.tolist())
+{label} in: inside the body “{label}”: there is no fluid here; move the probe
+    ru: внутри тела «{label}»: здесь нет жидкости — сдвиньте датчик
+    visualizations/p04_fluids/viz.py:1388  variable body  = body
+{type} in: its frame carries “meas” as {type}, not as a dict {quantity id: number}
+    ru: его кадр несёт «meas» в виде {type}, а не словаря {id величины: число}
+    visualizations/server/lfviz/sweep.py:1211  attribute .__name__  = type(meas).__name__
+{type} in: its measure() returned {type}, not a dict {quantity id: number}
+    ru: его measure() вернул {type}, а не словарь {id величины: число}
+    visualizations/server/lfviz/sweep.py:1204  attribute .__name__  = type(m).__name__
+{name} in: kernels[{name}] is an object {device: string, precision: string}
+    ru: kernels[{name}] — объект {device: строка, precision: строка}
+    visualizations/server/lfviz/devices.py:61  str()  = repr(name)
+{what} in: light: {what}; the drop at {lam} nm computed anew
+    ru: свет: {what}; капля при {lam} нм — заново
+    visualizations/v17_mie_scattering/viz.py:673  variable what  = what
+{shape} in: mask: shape {shape}, but the grid is {grid}
+    ru: маска: форма {shape}, а сетка {grid}
+    lfphys/lfphys/core/fluids/lbm.py:637  str()  = str(self.m.shape)
+{grid} in: mask: shape {shape}, but the grid is {grid}
+    ru: маска: форма {shape}, а сетка {grid}
+    lfphys/lfphys/core/fluids/lbm.py:637  str()  = str(X.shape)
+{axis} in: move: {axis} = {vec}
+    ru: перемещение: {axis} = {vec}
+    visualizations/server/lfviz/playground.py:797  variable axis  = axis
+{name} in: no action “{name}”
+    ru: нет действия «{name}»
+    visualizations/p02_quantum/viz.py:2636  str()  = str(name)
+{side} in: outlet pressure ({side}) {p} Pa
+    ru: давление выхода ({side}) {p} Па
+    lfphys/lfphys/core/fluids/lbm.py:1345  variable name  = name
+{side} in: outlet pressure ({side}) {p} Pa — lattice density {rho:.4g}
+    ru: давление на выходе ({side}) {p} Па — плотность решётки {rho:.4g}
+    lfphys/lfphys/core/fluids/lbm.py:2079  variable name  = name
+{shift} in: particle {pid}: a move by {shift} does not keep the wave — {share:.3g} of its kinetic field (p − qA)ψ does not move with it (the kinetic ene
+    ru: частица {pid}: перенос на {shift} не сохраняет волну — {share:.3g} её кинетического поля (p − qA)ψ не переносится с ней (кинетическая энергия изменилась бы на {
+    lfphys/lfphys/core/quantum/scene.py:2384  str()  = str(np.round(s, 4).tolist())
+{shift} in: particle {pid}: a shift by {shift} would carry {share:.3g} of its probability across a face of the window (the grid is periodic) — more than
+    ru: частица {pid}: при сдвиге на {shift} через грань окна перешло бы {share:.3g} её вероятности (сетка периодична) — больше допуска {tol}
+    lfphys/lfphys/core/quantum/scene.py:2374  str()  = str(np.round(s, 4).tolist())
+{kind} in: particle {pid}: on this grid {share:.3g} of its norm is lost ({kind}), more than the tolerance {tol}
+    ru: частица {pid}: на этой сетке — {share:.3g} её нормы потеряно ({kind}), больше допуска {tol}
+    lfphys/lfphys/core/quantum/scene.py:1896  variable what  = what
+{shift} in: particle {pid}: wave prepared anew — shift {shift}, Δk {dk}
+    ru: частица {pid}: волна приготовлена заново — сдвиг {shift}, Δk {dk}
+    lfphys/lfphys/core/quantum/scene.py:2424  str()  = str(None if s is None else np.round(s, 6).tolist())
+{dk} in: particle {pid}: wave prepared anew — shift {shift}, Δk {dk}
+    ru: частица {pid}: волна приготовлена заново — сдвиг {shift}, Δk {dk}
+    lfphys/lfphys/core/quantum/scene.py:2424  str()  = str(None if dk is None else np.round(dk, 6).tolist())
+{dk} in: particle {pid}: with the momentum ħΔk, Δk = {dk}, {share:.3g} of its wave's spectrum would leave the grid's band (π/step = {kn:.4g}) — more 
+    ru: частица {pid}: с импульсом ħΔk, Δk = {dk}, за полосу сетки (π/шаг = {kn:.4g}) вышло бы {share:.3g} спектра её волны — больше допуска {tol}
+    lfphys/lfphys/core/quantum/scene.py:2399  str()  = str(np.round(dk, 4).tolist())
+{x} in: position measurement of particle {pid}: x = {x}, σ = {sigma}
+    ru: измерение положения частицы {pid}: x = {x}, σ = {sigma}
+    lfphys/lfphys/core/quantum/scene.py:2837  str()  = str(np.round(x, 4).tolist())
+{name} in: settings of kernel {name}: an object {"device": string, "precision": string}
+    ru: настройки ядра {name}: объект {"device": строка, "precision": строка}
+    lfphys/lfphys/core/backend.py:212  str()  = repr(name)
+{key} in: settings: {key} must be a JSON object (kernel → value)
+    ru: настройки: {key} — объект JSON (ядро → значение)
+    lfphys/lfphys/core/backend.py:206  str()  = repr(key)
+{side} in: side {side}: one of {sides}
+    ru: сторона {side}: одна из {sides}
+    lfphys/lfphys/core/fluids/lbm.py:2260  str()  = repr(name)
+    lfphys/lfphys/core/fluids/lbm.py:2282  str()  = repr(k)
+    lfphys/lfphys/core/fluids/lbm.py:1181  str()  = repr(k)
+{sides} in: side {side}: one of {sides}
+    ru: сторона {side}: одна из {sides}
+    lfphys/lfphys/core/fluids/lbm.py:2260  str()  = str(SIDES)
+    lfphys/lfphys/core/fluids/lbm.py:2282  str()  = str(SIDES)
+    lfphys/lfphys/core/fluids/lbm.py:1181  str()  = str(SIDES)
+{side} in: side: {side}
+    ru: сторона: {side}
+    lfphys/lfphys/core/fluids/lbm.py:767  str()  = repr(s)
+{why} in: the Verlet step failed ({why}): atoms came together to one point or flew through a wall; the time step is too large for these speeds; decrea
+    ru: шаг Верле не удался ({why}): атомы сблизились до одной точки или пролетели сквозь стенку — шаг по времени велик для этих скоростей; уменьшите «Шаг по времени» (
+    visualizations/p03_molecules/viz.py:2074  str()  = str(e)
+{error} in: the engine's catalogue is not available: {error}
+    ru: каталог движка недоступен: {error}
+    visualizations/server/lfviz/sim.py:143  str()  = str(e)
+{name} in: the file of the carried state {name} is not found — this world cannot be restored
+    ru: файл перенесённого состояния {name} не найден — этот мир не восстановить
+    visualizations/server/lfviz/playground.py:226  variable name  = name
+{name} in: the file of the carried state {name} was changed — this world cannot be restored
+    ru: файл перенесённого состояния {name} изменён — этот мир не восстановить
+    visualizations/server/lfviz/playground.py:229  variable name  = name
+{name} in: the observer is inside the body “{name}”: no image is built from inside
+    ru: наблюдатель внутри тела «{name}»: изнутри изображение не строится
+    lfphys/lfphys/core/raytrace.py:256  attribute .name  = body.name
+    lfphys/lfphys/core/raytrace.py:270  attribute .name  = body.name
+{ax} in: the packet does not fit into the window along {ax}: from the centre to the window's edge is {gap:.4g}, while a packet of width σ = {s:.4g} n
+    ru: пакет не помещается в окно по оси {ax}: от центра до края окна {gap:.4g}, а пакету шириной σ = {s:.4g} нужно ≥ {need:.4g} (сетка периодична: хвост за краем вошё
+    lfphys/lfphys/core/quantum/scene.py:1772  variable ax  = ax
+{ax} in: the packet's centre is outside the window along {ax}: {c:.4g}, while the window runs from {lo:.4g} to {hi:.4g} — put the centre inside the w
+    ru: центр пакета вне окна по оси {ax}: {c:.4g}, а окно от {lo:.4g} до {hi:.4g} — поставьте центр внутрь окна, не ближе {need:.3g} к его краю
+    lfphys/lfphys/core/quantum/scene.py:1768  variable ax  = ax
+{source} in: the range of {source}: {lo:.4f} … {hi:.4f}; the value is inside
+    ru: диапазон {source}: {lo:.4f} … {hi:.4f} — значение внутри
+    visualizations/p04_fluids/viz.py:1660  variable source  = source
+{source} in: the range of {source}: {lo:.4f} … {hi:.4f}; the value is outside
+    ru: диапазон {source}: {lo:.4f} … {hi:.4f} — значение вне
+    visualizations/p04_fluids/viz.py:1661  variable source  = source
+{error} in: the record cannot be read: {error}
+    ru: запись не читается: {error}
+    visualizations/server/lfviz/instruments.py:376  str()  = str(e)
+    visualizations/server/lfviz/instruments.py:387  str()  = str(e)
+{id} in: the scene has no object {id}
+    ru: в сцене нет объекта {id}
+    visualizations/server/lfviz/playground.py:863  str()  = repr(oid)
+{what} in: the scheme is unstable in the medium {what} ({label}): the spectral radius of a step is {rho:.6g} > 1 at the Courant number S = cΔt/dx = {S}
+    ru: схема неустойчива в среде {what} ({label}): спектральный радиус шага {rho:.6g} > 1 при числе Куранта S = cΔt/dx = {S} (предел вакуума {lim:.4g}, для ε∞μ = {n2:.
+    lfphys/lfphys/core/em/fdtd.py:836  variable what  = what
+{kind} in: the shape {kind} is given for {dims}-D, but the world is {dim}-D
+    ru: форма {kind} задана для {dims}-D, а мир {dim}-D
+    lfphys/lfphys/core/em/fdtd_geometry.py:96  attribute .kind  = self.kind
+{error} in: the visualization does not load: {error}
+    ru: визуализация не загружается: {error}
+    visualizations/server/lfviz/app.py:117  f-string  = f"{type(e).__name__}: {e}"
+{want} in: the wave of particle {pid}: shape {want}, given {got}
+    ru: волна частицы {pid}: форма {want}, дано {got}
+    lfphys/lfphys/core/quantum/scene.py:1850  str()  = str(want)
+{got} in: the wave of particle {pid}: shape {want}, given {got}
+    ru: волна частицы {pid}: форма {want}, дано {got}
+    lfphys/lfphys/core/quantum/scene.py:1850  str()  = str(psi.shape)
+{pol} in: the wave's polarization {pol} does not match the world's ({world})
+    ru: поляризация волны {pol} не совпадает с миром ({world})
+    lfphys/lfphys/core/em/fdtd_tfsf.py:132  str()  = str(pw.polarization)
+{got} in: the world applied {got} instead of {asked}
+    ru: мир применил {got} вместо {asked}
+    visualizations/server/lfviz/sweep.py:1292  str()  = str(ap)
+{asked} in: the world applied {got} instead of {asked}
+    ru: мир применил {got} вместо {asked}
+    visualizations/server/lfviz/sweep.py:1292  str()  = str(value)
+{keys} in: the world's frame holds keys of the player {keys}: rename them in the world's frame()
+    ru: кадр мира содержит ключи плеера {keys}: переименуйте их в frame() мира
+    visualizations/server/lfviz/sim.py:212  str()  = str(sorted(clash))
+{name} in: this section has no objects “{name}”
+    ru: в этом разделе нет объектов «{name}»
+    visualizations/server/lfviz/playground.py:653  str()  = str(name)
+{comp} in: this world has no component {comp}
+    ru: компоненты {comp} нет в этом мире
+    lfphys/lfphys/core/em/fdtd.py:1726  variable comp  = comp
+    lfphys/lfphys/core/em/fdtd.py:1748  variable comp  = comp
+{name} in: threshold {name} = {size} not accepted (an integer > 0 or null is needed)
+    ru: порог {name} = {size} не принят (нужно целое > 0 или null)
+    lfphys/lfphys/core/backend.py:239  str()  = repr(name)
+{size} in: threshold {name} = {size} not accepted (an integer > 0 or null is needed)
+    ru: порог {name} = {size} не принят (нужно целое > 0 или null)
+    lfphys/lfphys/core/backend.py:239  str()  = repr(size)
+{name} in: unknown action {name}
+    ru: неизвестное действие {name}
+    visualizations/v03_quantum_1d/viz.py:775  str()  = repr(name)
+    visualizations/v02_double_slit/viz.py:1332  str()  = repr(name)
+    visualizations/v04_orbits/viz.py:465  str()  = str(name)
+{name} in: unknown action “{name}”
+    ru: неизвестное действие «{name}»
+    visualizations/v01_light_travel/viz.py:579  str()  = str(name)
+{cmd} in: unknown command {cmd}
+    ru: неизвестная команда {cmd}
+    visualizations/server/lfviz/sim.py:391  str()  = repr(cmd)
+{name} in: unknown gravity {name}
+    ru: неизвестная гравитация {name}
+    lfphys/lfphys/laws/light.py:79  str()  = str(self.gravity)
+{name} in: unknown kernel {name}: skipped
+    ru: неизвестное ядро {name}: пропущено
+    lfphys/lfphys/core/backend.py:209  str()  = repr(name)
+{name} in: unknown kinematics {name}
+    ru: неизвестная кинематика {name}
+    lfphys/lfphys/laws/light.py:77  str()  = str(self.kinematics)
+{name} in: unknown particle {name}: electron, neutron, he4, c60, atom, custom
+    ru: неизвестная частица {name}: electron, neutron, he4, c60, atom, custom
+    lfphys/lfphys/core/quantum/scene.py:330  str()  = repr(name)
+{species} in: unknown particle {species}
+    ru: неизвестная частица {species}
+    lfphys/lfphys/core/quantum/particles.py:84  str()  = str(species)
+{kind} in: unknown profile {kind}
+    ru: неизвестный профиль {kind}
+    lfphys/lfphys/core/em/fdtd_sources.py:239  str()  = repr(k)
+{op} in: unknown scene operation {op}
+    ru: неизвестная операция со сценой {op}
+    visualizations/server/lfviz/playground.py:748  str()  = repr(op)
+{kind} in: unknown shape {kind}
+    ru: неизвестная форма {kind}
+    lfphys/lfphys/core/em/fdtd_geometry.py:405  str()  = repr(k)
+{type} in: unknown shape {type}
+    ru: неизвестная форма {type}
+    lfphys/lfphys/core/fluids/lbm.py:667  str()  = repr(d.get("type"))
+{kind} in: unknown side {kind}
+    ru: неизвестная сторона {kind}
+    lfphys/lfphys/core/fluids/lbm.py:757  str()  = repr(k)
+{kind} in: unknown source {kind}
+    ru: неизвестный источник {kind}
+    lfphys/lfphys/core/em/fdtd_sources.py:391  str()  = repr(d["type"])
+{op} in: unknown view command {op}
+    ru: неизвестная команда просмотра {op}
+    visualizations/server/lfviz/planes3d.py:151  str()  = repr(op)
+{a} in: {a}; {b}
+    ru: {a}; {b}
+    lfphys/lfphys/core/fluids/lbm.py:2442  variable names  = names
+{body} in: {body:cap}
+    ru: (no ru entry)
+    visualizations/server/lfviz/errors.py:154  variable body  = body
+{body} in: {body}: in the lab now
+    ru: {body}: в лаборатории сейчас
+    visualizations/v10_fast_observer/viz.py:587  attribute .name  = b.name
+{body} in: {body}: in the lab now (contracted)
+    ru: {body}: в лаборатории сейчас (сокращён)
+    visualizations/v10_fast_observer/viz.py:586  attribute .name  = b.name
+{body} in: {body}: the emission time and the factor D against the retarded time
+    ru: {body}: время излучения и множитель D против запаздывающего времени
+    visualizations/v10_fast_observer/viz.py:400  attribute .name  = body.name
+{body} in: {body}: the outline is a circle (Penrose), rad
+    ru: {body}: контур — окружность (Пенроуз), рад
+    visualizations/v10_fast_observer/viz.py:422  attribute .name  = body.name
+{body} in: {body}: where the light seen now came from
+    ru: {body}: откуда пришёл свет, видимый сейчас
+    visualizations/v10_fast_observer/viz.py:594  attribute .name  = b.name
+{body} in: {head}: {body}
+    ru: (no ru entry)
+    visualizations/server/lfviz/errors.py:154  variable body  = body
+{name} in: {name}: enter a finite number {range}
+    ru: {name}: нужно конечное число {range}
+    visualizations/server/lfviz/params.py:218  variable name  = name
+{name} in: {name}: precision {prec} is not validated for this kernel → fp64
+    ru: {name}: точность {prec} для этого ядра не проверена → fp64
+    lfphys/lfphys/core/backend.py:226  variable name  = name
+{prec} in: {name}: precision {prec} is not validated for this kernel → fp64
+    ru: {name}: точность {prec} для этого ядра не проверена → fp64
+    lfphys/lfphys/core/backend.py:226  str()  = str(prec)
+{name} in: {name}: the GPU is chosen but not available ({why}) → runs on the CPU
+    ru: {name}: GPU выбран, но недоступен ({why}) → считается на CPU
+    lfphys/lfphys/core/backend.py:232  variable name  = name
+{name} in: {name}: the field is empty — enter a number {range}
+    ru: {name}: поле пустое — введите число {range}
+    visualizations/server/lfviz/params.py:215  variable name  = name
+{name} in: {name}: the field is empty — enter a whole number {range}
+    ru: {name}: поле пустое — введите целое число {range}
+    visualizations/server/lfviz/params.py:221  variable name  = name
+{name} in: {name}: the kernel has no GPU implementation ({why}) → CPU
+    ru: {name}: у ядра нет GPU-реализации ({why}) → CPU
+    lfphys/lfphys/core/backend.py:221  variable name  = name
+{name} in: {name}: there is no option “{value}”; allowed: {options}
+    ru: {name}: нет варианта «{value}»; можно: {options}
+    visualizations/server/lfviz/params.py:244  variable name  = name
+{value} in: {name}: there is no option “{value}”; allowed: {options}
+    ru: {name}: нет варианта «{value}»; можно: {options}
+    visualizations/server/lfviz/params.py:244  str()  = str(v)
+{name} in: {name}: unknown device {dev} → auto
+    ru: {name}: устройство {dev} неизвестно → auto
+    lfphys/lfphys/core/backend.py:218  variable name  = name
+{dev} in: {name}: unknown device {dev} → auto
+    ru: {name}: устройство {dev} неизвестно → auto
+    lfphys/lfphys/core/backend.py:218  str()  = repr(dev)
+{name} in: {name}: unknown parameter type {type}
+    ru: {name}: неизвестный тип параметра {type}
+    visualizations/server/lfviz/params.py:255  variable name  = name
+{type} in: {name}: unknown parameter type {type}
+    ru: {name}: неизвестный тип параметра {type}
+    visualizations/server/lfviz/params.py:255  attribute .type  = p.type
+{name} in: {name}: {n:d} characters — more than the limit of {max:d}
+    ru: {name}: {n:d} символов — больше предела {max:d}
+    visualizations/server/lfviz/params.py:251  variable name  = name
+{name} in: {name}: {x:.10g} is above the maximum {hi:.10g}; allowed: {range}
+    ru: {name}: {x:.10g} — больше наибольшего {hi:.10g}; можно {range}
+    visualizations/server/lfviz/params.py:268  variable name  = name
+{name} in: {name}: {x:.10g} is below the minimum {lo:.10g}; allowed: {range}
+    ru: {name}: {x:.10g} — меньше наименьшего {lo:.10g}; можно {range}
+    visualizations/server/lfviz/params.py:265  variable name  = name
+{name} in: {name}: “{value}” is not a number; allowed: {range}
+    ru: {name}: «{value}» — не число; нужно {range}
+    visualizations/server/lfviz/params.py:261  variable name  = name
+{value} in: {name}: “{value}” is not a number; allowed: {range}
+    ru: {name}: «{value}» — не число; нужно {range}
+    visualizations/server/lfviz/params.py:261  str()  = str(v)
+{name} in: {name}: “{value}” is not a valid value
+    ru: {name}: «{value}» — недопустимое значение
+    visualizations/server/lfviz/params.py:263  variable name  = name
+{value} in: {name}: “{value}” is not a valid value
+    ru: {name}: «{value}» — недопустимое значение
+    visualizations/server/lfviz/params.py:263  str()  = str(v)
+{name} in: {name}: “{value}” is not a whole number; allowed: {range}
+    ru: {name}: «{value}» — не целое число; нужно {range}
+    visualizations/server/lfviz/params.py:258  variable name  = name
+{value} in: {name}: “{value}” is not a whole number; allowed: {range}
+    ru: {name}: «{value}» — не целое число; нужно {range}
+    visualizations/server/lfviz/params.py:258  str()  = str(v)
+{obj} in: {obj}: a measuring pulse sent along the rod
+    ru: {obj}: отправлен измерительный импульс по стержню
+    visualizations/v01_light_travel/engine/world.py:439  attribute .name  = obj.name
+{obj} in: {obj}: a pulse train, pulses: {n:d}, period {period}
+    ru: {obj}: серия импульсов, число импульсов: {n:d}, период {period}
+    visualizations/v01_light_travel/viz.py:577  attribute .name  = w.objects[args["obj"]].name
+{obj} in: {obj}: flash
+    ru: {obj}: вспышка
+    visualizations/v01_light_travel/viz.py:550  attribute .name  = w.objects[args["obj"]].name
+{obj} in: {obj}: light from “{src}” passed the rod {order}, measured c = {c:.9g} m/s
+    ru: {obj}: свет от «{src}» прошёл стержень {order}, измерено c = {c:.9g} м/с
+    visualizations/v01_light_travel/engine/world.py:396  attribute .name  = obj.name
+{obj} in: {obj}: local measurement along a radial rod
+    ru: {obj}: локальное измерение по радиальному стержню
+    visualizations/v01_light_travel/engine/world.py:475  attribute .name  = obj.name
+{obj} in: {obj}: locally c = {c:.9g} m/s (coordinate {v:.9g})
+    ru: {obj}: локально c = {c:.9g} м/с (координатная {v:.9g})
+    visualizations/v01_light_travel/engine/world.py:472  attribute .name  = obj.name
+{obj} in: {obj}: locally measured speed of light (rod {ell:.3g} m, round trip)
+    ru: {obj}: локально измеренная скорость света (стержень {ell:.3g} м, туда-обратно)
+    visualizations/v01_light_travel/engine/world.py:466  attribute .name  = obj.name
+{obj} in: {obj}: one way {dir} (own light)
+    ru: {obj}: в одну сторону {dir} (свой свет)
+    visualizations/v01_light_travel/engine/world.py:426  attribute .name  = obj.name
+{obj} in: {obj}: one-way speed (external light)
+    ru: {obj}: односторонняя скорость (внешний свет)
+    visualizations/v01_light_travel/engine/world.py:399  attribute .name  = obj.name
+{obj} in: {obj}: round trip c = {c:.9g} m/s; A→B {ab:.9g}, B→A {ba:.9g} m/s
+    ru: {obj}: туда-обратно c = {c:.9g} м/с; A→B {ab:.9g}, B→A {ba:.9g} м/с
+    visualizations/v01_light_travel/engine/world.py:428  attribute .name  = obj.name
+{obj} in: {obj}: round trip c = {c:.9g} m/s; one-way speeds are not available: clock B is not synchronised yet
+    ru: {obj}: туда-обратно c = {c:.9g} м/с; односторонние скорости недоступны: часы B ещё не синхронизированы
+    visualizations/v01_light_travel/engine/world.py:431  attribute .name  = obj.name
+{obj} in: {obj}: round-trip speed (2L₀/Δτ)
+    ru: {obj}: скорость туда-обратно (2L₀/Δτ)
+    visualizations/v01_light_travel/engine/world.py:416  attribute .name  = obj.name
+{obj} in: {obj}: speed {v:.6g} m/s ({b:.6g} c), {a:.4g}°
+    ru: {obj}: скорость {v:.6g} м/с ({b:.6g} c), {a:.4g}°
+    visualizations/v01_light_travel/viz.py:566  attribute .name  = w.objects[args["obj"]].name
+{obj} in: {obj}: the apparatus rebuilt in the new rest frame (an idealisation: the new mirror B′ is taken as prepared in advance; the old mirror flies
+    ru: {obj}: прибор пересобран в новой системе покоя (идеализация: новое зеркало B′ считается подготовленным заранее; старое зеркало летит дальше по инерции)
+    visualizations/v01_light_travel/engine/world.py:498  attribute .name  = obj.name
+{obj} in: {obj}: the flash of “{src}” went off between the ends of the rod — the light passed A and B in opposite directions, so the two ends do not m
+    ru: {obj}: вспышка «{src}» случилась между концами стержня — свет прошёл A и B в разные стороны, скорость по двум концам не измеряется
+    visualizations/v01_light_travel/engine/world.py:379  attribute .name  = obj.name
+{obj} in: {obj}: the measurement of external light interrupted — the light had not yet passed both ends of the old apparatus, or its clocks were not s
+    ru: {obj}: замер внешнего света прерван — свет ещё не прошёл оба конца старого прибора или его часы не были синхронизированы
+    visualizations/v01_light_travel/engine/world.py:525  attribute .name  = obj.name
+{obj} in: {obj}: the measuring pulse reflected from B
+    ru: {obj}: измерительный импульс отражён от B
+    visualizations/v01_light_travel/engine/world.py:438  attribute .name  = obj.name
+{obj} in: {obj}: {what}
+    ru: {obj}: {what}
+    visualizations/v01_light_travel/engine/world.py:160  attribute .name  = src.name
+{text} in: {text}. What to change: {hint}
+    ru: {text}. Что изменить: {hint}
+    visualizations/server/lfviz/errors.py:121  variable body  = body
+{what} in: {what:cap} would need about {need} of memory, while the worker is given {budget}
+    ru: {what:cap} потребует около {need} памяти, а вычислителю отведено {budget}
+    visualizations/server/lfviz/limits.py:109  variable what  = what
+{type} in: {what} ({type})
+    ru: (no ru entry)
+    visualizations/server/lfviz/errors.py:166  variable name  = name
+    visualizations/server/lfviz/errors.py:172  variable name  = name
+    visualizations/server/lfviz/errors.py:174  variable name  = name
+{what} in: {what} in the region {area} would cover {frac} (with the atoms already there): random placement without overlaps fits at most ≈ {lim:.0f} %
+    ru: {what} в области {area} заняли бы {frac} (вместе с уже имеющимися атомами), а случайно без перекрытий укладывается не больше ≈ {lim:.0f} %
+    visualizations/p03_molecules/viz.py:876  variable what  = what
+{what} in: {what} {name} would be cut by the edge of the new domain: the domain can be made smaller only where there are no bodies and dye sources
+    ru: {what} {name}: его срезал бы край новой области; уменьшать область можно только там, где нет тел и источников красителя
+    lfphys/lfphys/core/fluids/lbm.py:2480  variable what  = what
+{what} in: {what}: the edge width (10–90 %) must be given and > 0 — it is a physical length, not the grid step
+    ru: {what}: ширина края (10–90 %) должна быть задана и > 0 — это физическая длина, не шаг сетки
+    lfphys/lfphys/core/quantum/scene.py:426  variable what  = what
+{what} in: {what}: the edge {w:.4g} is narrower than a grid of step {d:.4g} can carry (it needs ≥ {wmin:.4g} = {steps:.2f} steps: the edge's spectrum e
+    ru: {what}: край {w:.4g} уже, чем сетка с шагом {d:.4g} может передать (нужно ≥ {wmin:.4g} = {steps:.2f} шага: спектр края exp(−k²ε²/4) на k = π/d должен быть ≤ {to
+    lfphys/lfphys/core/quantum/scene.py:430  variable what  = what
+{what} in: {what}: the scheme's rest density would deviate from ρ0 by {dev:.3g} > {max} ({at}the scheme's pressure scale c_s²ρ(dx/dt)² = {scale:.4g} Pa
+    ru: {what}: плотность покоя схемы отклонилась бы от ρ0 на {dev:.3g} > {max} ({at}масштаб давления схемы c_s²ρ(dx/dt)² = {scale:.4g} Па, её скорость звука c_s = {cs:
+    lfphys/lfphys/core/fluids/lbm.py:1352  variable what  = what
+{what} in: {what}: the wave has not reached the detector yet (< 10⁻⁶ of the probability): the experiment is as with the new value from the very start
+    ru: {what}: волна до детектора ещё не дошла (< 10⁻⁶ вероятности) — опыт как с новым значением с самого начала
+    visualizations/v12_arrival_times_2d/viz.py:308  variable what  = what
+{what} in: {what}: up to this moment computed with the old value, from now on with the new one; a comparison that assumes one value for the whole exper
+    ru: {what}: до этого момента посчитано с прежним значением, дальше — с новым; сверка, которая предполагает одно значение на весь опыт, отключена
+    visualizations/v12_arrival_times_2d/viz.py:310  variable what  = what
+{what} in: {what}: {n} components needed, {m} given
+    ru: {what}: нужно компонент — {n}, дано — {m}
+    lfphys/lfphys/core/quantum/scene.py:405  variable what  = what
+{what} in: {what}; {n:d} samples over two turns, the peak of the spectrum; reference 2|l|·f (the modulation depth {d:.3g})
+    ru: {what}; {n:d} отсчётов за два оборота, пик спектра; эталон 2|l|·f (глубина модуляции {d:.3g})
+    visualizations/v16_optical_vortices/viz.py:812  variable what  = what
+{what} in: {what}; {n:d} samples; reference: at l = 0 or f = 0 the frequency is not shifted
+    ru: {what}; {n:d} отсчётов; эталон: при l = 0 или f = 0 частота не сдвигается
+    visualizations/v16_optical_vortices/viz.py:805  variable what  = what
+{name} in: “{name}” is a number (the world's time)
+    ru: «{name}» — число (время мира)
+    visualizations/server/lfviz/instruments.py:296  variable name  = name
+    visualizations/server/lfviz/instruments.py:294  variable name  = name
+{obj} in: “{obj}” cannot be accelerated
+    ru: «{obj}» нельзя разогнать
+    visualizations/v01_light_travel/engine/world.py:481  attribute .name  = obj.name
+{obj} in: “{obj}” has no apparatus
+    ru: у «{obj}» нет прибора
+    visualizations/v01_light_travel/engine/world.py:411  attribute .name  = obj.name
+{obj} in: “{obj}” is inside the photon sphere (r ≤ 1.5 rs): this run does not compute the arrival of light there (STATUS V-items)
+    ru: «{obj}» внутри фотонной сферы (r ≤ 1.5 rs): приход света туда этот запуск не вычисляет (STATUS V-items)
+    visualizations/v01_light_travel/engine/world.py:222  attribute .name  = obj.name
+{obj} in: “{obj}”: “now” on Andromeda at t = 0 (lab time, days)
+    ru: «{obj}»: «сейчас» на Андромеде в момент t = 0 (лаб. время, сут)
+    visualizations/v01_light_travel/viz.py:481  attribute .name  = o.name
+{what} in: “{what}” is a positive finite number (the world's time)
+    ru: «{what}» — положительное конечное число (время мира)
+    visualizations/server/lfviz/sweep.py:193  variable what  = what
+{what} in: “{what}” is an identifier (a string)
+    ru: «{what}» — идентификатор (строка)
+    visualizations/server/lfviz/sweep.py:200  variable what  = what
+172

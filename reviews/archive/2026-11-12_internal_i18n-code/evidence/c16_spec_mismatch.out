@@ -1,0 +1,3 @@
+visualizations/locales/ru.json: 'kernels[{name}] is an object {device: string, precision: string}'
+    msgid [('device', ' string, precision: string'), ('name', '')] vs translation [('device', ' строка, precision: строка'), ('name', '')]
+translations with the same names but other formats: 1
