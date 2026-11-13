@@ -1,5 +1,9 @@
 # run records of the visualization server (recreated by it; visualizations/RULES.md)
 visualizations/runs/
+# the local recordings of the public site (visualizations/site/record.py; CI makes the published ones)
+visualizations/recordings/
+# a static site built locally (visualizations/site/build.py --out ...)
+_site/
 __pycache__/
 .pytest_cache/
 *.pyc

@@ -15,16 +15,21 @@
 // measured — the cost estimated before the start, the progress, then a table, a plot and a CSV. Nothing here changes a
 // world: a sweep runs in its own process on a copy of the world's state.
 //
+// On a saved recording (/run?rec=<world>/<rec>: the public site, the server's recordings) there is no run on a server:
+// the plots come from the record as always, the CSV is built in the browser from the values in memory (the frames the
+// recording kept, said in its header: «from the recording, one frame in k»), and the sweeps are absent.
+//
 // Nothing the owner is using is rebuilt under him (review LB1-framework F8; the owner's complaint about views jumping
 // back): the list of quantities, its groups (folded or not, kept per run in this browser), the plots, the sweep form
 // (built once per world, what was typed kept) and a sweep's result (the table grows by rows, the plot is redrawn on the
 // same canvas) are updated in place.
-import { getJSON, postJSON } from "./api.js";
+import { getJSON, postJSON, url } from "./api.js";
 import { nice } from "./canvas.js";
 import { fmtField, lang, parseNum, t } from "./i18n.js";
 import { css, el, fill, fresh2d, labelHasUnit, num, panel, time, toast } from "./ui.js";
 
 const runId = new URLSearchParams(location.search).get("id");
+const REC = new URLSearchParams(location.search).get("rec");  // a saved recording "<world>/<rec>": no server behind it
 const MAX_POINTS = 20000;
 const MAX_PLOTS = 6;
 const STAT_LABEL = { final: t("the value at the end"), mean_last: t("the mean over the last …"), max: t("the maximum"), min: t("the minimum") };
@@ -124,6 +129,7 @@ function message(meta, blobs, ctx) {
   switch (meta.type) {
     case "history_start":
       I.worlds = []; I.replaying = true; I.histStride = Math.max(1, meta.frame_stride || 1); I.dirty = true;
+      if (meta.recording) I.recStride = I.histStride;  // the frames the recording kept: one in recStride
       return;
     case "history_end":
       I.replaying = false; I.histStride = 1; I.dirty = true; refreshLists();
@@ -170,8 +176,19 @@ function mount() {
   UI.empty = el("div", { class: "muted", style: { display: "none" } }, t("This world reports no measurable quantities."));
   UI.plots = el("div", { class: "in-plots" });
   UI.upto = el("input", { type: "checkbox", title: t("Only what was recorded up to the history's slider") });
-  UI.csv = el("a", { class: "in-csv", href: "#", download: "", title: t("The values of the chosen quantities from this world's record — every frame, full precision") }, "⤓ CSV");
-  UI.csv.addEventListener("click", (e) => { const h = csvHref(); if (!h) { e.preventDefault(); toast(t("Tick the quantities"), "notice", 3000); } else UI.csv.href = h; });
+  UI.csv = el("a", { class: "in-csv", href: "#", download: "", title: REC ? t("The values of the chosen quantities from the recording — the frames it kept, full precision; made in this browser")
+    : t("The values of the chosen quantities from this world's record — every frame, full precision") }, "⤓ CSV");
+  UI.csv.addEventListener("click", (e) => {
+    if (REC) {  // built here from the values in memory
+      const b = csvBlob();
+      if (!b) { e.preventDefault(); toast(t("Tick the quantities"), "notice", 3000); return; }
+      if (UI.csvUrl) URL.revokeObjectURL(UI.csvUrl);
+      UI.csvUrl = URL.createObjectURL(b.blob);
+      UI.csv.href = UI.csvUrl; UI.csv.download = b.name;
+      return;
+    }
+    const h = csvHref(); if (!h) { e.preventDefault(); toast(t("Tick the quantities"), "notice", 3000); } else UI.csv.href = h;
+  });
   UI.sweep = el("div", { class: "in-sweep" });
   UI.sweepBox = el("details", { class: "in-sweep-box" }, el("summary", {}, t("Parameter sweep")), UI.sweep);
   UI.sweepBox.addEventListener("toggle", () => { if (UI.sweepBox.open) { ensureSweepForm(); loadSweeps(); } });
@@ -179,7 +196,7 @@ function mount() {
     el("div", { class: "help" }, t("The quantities the world measures in every frame. Tick a quantity for its plot along this world's record; the vertical line is the history's slider, after it the future of the record (faint).")),
     UI.list, UI.empty, UI.plots,
     el("div", { class: "in-row" }, UI.csv, el("label", { class: "muted" }, UI.upto, " " + t("only up to the slider"))),
-    UI.sweepBox);
+    REC ? null : UI.sweepBox);  // a sweep computes: not on a recording
   UI.panel = panel(t("Instruments"), UI.body);
   UI.panel.classList.add("in-panel");
   UI.panel.style.display = "none";
@@ -193,8 +210,9 @@ function mount() {
   new ResizeObserver(() => { I.dirty = true; drawSweepPlot(); }).observe(UI.plots);
   requestAnimationFrame(loop);
 }
-const selKey = () => "lfviz.instruments." + runId;  // the quantities chosen, per run (kept in this browser)
-const foldKey = () => "lfviz.instruments.folded." + runId;  // the groups folded, per run
+const runKey = () => (REC ? "rec:" + REC : runId);
+const selKey = () => "lfviz.instruments." + runKey();  // the quantities chosen, per run (kept in this browser)
+const foldKey = () => "lfviz.instruments.folded." + runKey();  // the groups folded, per run
 function saveSel() { try { localStorage.setItem(selKey(), JSON.stringify(I.selected)); } catch (e) { /* private mode */ } }
 function saveFolded() { try { localStorage.setItem(foldKey(), JSON.stringify([...I.folded])); } catch (e) { /* private mode */ } }
 
@@ -307,7 +325,33 @@ function csvHref() {
   if (!ids.length) return "";
   const q = new URLSearchParams({ ids: ids.join(","), world: String(W.n), format: "csv", lang: lang() });
   if (UI.upto.checked && I.ctx) q.set("to", String(I.ctx.t()));
-  return `/api/runs/${encodeURIComponent(runId)}/series?${q}`;
+  return url(`api/runs/${encodeURIComponent(runId)}/series?${q}`);
+}
+
+// a recording's CSV, made here: the header as the server's (the time with its unit, then each quantity's label with its
+// unit and id), the values as JavaScript writes them (shortest round trip, "." as the decimal point), the frames the
+// recording kept (one in k of the run: said in the time column's header)
+const csvCell = (x) => { const s = String(x); return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+function csvBlob() {
+  const W = shownW();
+  if (!W) return null;
+  const ids = I.selected.filter((id) => W.decl.has(id));
+  if (!ids.length) return null;
+  const k = Math.max(1, (I.recStride || 1) * W.stride);
+  const head = [k > 1 ? t("t, {unit} (from the recording: one frame in {k:d} of the run)", { unit: W.tUnit, k })
+    : t("t, {unit} (from the recording: every frame)", { unit: W.tUnit })];
+  for (const id of ids) {
+    const d = W.decl.get(id), label = title(W, d);
+    head.push(d.unit ? t("{label}, {unit} [{id}]", { label, unit: d.unit, id }) : t("{label} [{id}]", { label, id }));
+  }
+  const upto = UI.upto.checked && I.ctx ? I.ctx.t() : Infinity;
+  const rows = [head.map(csvCell).join(",")];
+  for (let i = 0; i < W.t.length; i++) {
+    if (W.t[i] > upto) break;
+    rows.push([String(W.t[i]), ...ids.map((id) => { const v = (W.v.get(id) || [])[i]; return Number.isFinite(v) ? String(v) : ""; })].join(","));
+  }
+  const name = `${String(REC).replace(/[^\w.-]+/g, "-")}-w${W.n}-series.csv`;
+  return { blob: new Blob([rows.join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" }), name };
 }
 
 // --- drawing ----------------------------------------------------------------------------------------------------
@@ -335,7 +379,7 @@ function loop() {
     if (R.val.title !== tip) R.val.title = tip;
   }
   for (const P of UI.plotEls) drawPlot(W, P, tt, i);
-  const h = csvHref() || "#";
+  const h = REC ? (UI.csvUrl || "#") : csvHref() || "#";
   if (UI.csv.getAttribute("href") !== h) UI.csv.setAttribute("href", h);
 }
 
@@ -426,8 +470,8 @@ function drawPlot(W, P, tt, iCur) {
 // --- sweeps -------------------------------------------------------------------------------------------------------
 async function vizSchema() {
   if (I.viz) return I.viz;
-  const meta = await getJSON(`/api/runs/${encodeURIComponent(runId)}`);
-  I.viz = await getJSON(`/api/viz/${encodeURIComponent(meta.viz)}`);
+  const meta = await getJSON(url(`api/runs/${encodeURIComponent(runId)}`));
+  I.viz = await getJSON(url(`api/viz/${encodeURIComponent(meta.viz)}`));
   return I.viz;
 }
 
@@ -646,10 +690,10 @@ async function submit(estimate) {
   let body;
   try { body = request(estimate); } catch (e) { F.est.textContent = e.message; F.est.classList.add("in-bad"); return; }
   F.est.classList.remove("in-bad");
-  const url = `/api/runs/${encodeURIComponent(runId)}/sweep`;
+  const sweepUrl = url(`api/runs/${encodeURIComponent(runId)}/sweep`);
   F.estBtn.disabled = F.go.disabled = true;
   try {
-    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const r = await fetch(sweepUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) {
       const text = j.error !== undefined ? (j.hint ? t("{text}. What to change: {hint}", { text: t(j.error), hint: t(j.hint) }) : t(j.error)) : r.statusText;
@@ -676,7 +720,7 @@ async function submit(estimate) {
 }
 
 async function loadSweeps() {
-  try { I.sweeps = await getJSON(`/api/runs/${encodeURIComponent(runId)}/sweeps`); } catch (e) { I.sweeps = []; }
+  try { I.sweeps = await getJSON(url(`api/runs/${encodeURIComponent(runId)}/sweeps`)); } catch (e) { I.sweeps = []; }
   drawSweepList();
   const act = I.sweeps.find((s) => s.active);
   if (act) { I.sweepShown = act.n; pollSweep(act.n); } else if (I.sweepShown === null && I.sweeps.length) showSweep(I.sweeps[I.sweeps.length - 1].n);
@@ -696,7 +740,7 @@ function drawSweepList() {
 
 async function showSweep(n) {
   I.sweepShown = n;
-  try { renderSweep(await getJSON(`/api/runs/${encodeURIComponent(runId)}/sweeps/${n}`)); } catch (e) { fill(UI.sweepRes, el("div", { class: "muted" }, e.message)); UI.res = null; }
+  try { renderSweep(await getJSON(url(`api/runs/${encodeURIComponent(runId)}/sweeps/${n}`))); } catch (e) { fill(UI.sweepRes, el("div", { class: "muted" }, e.message)); UI.res = null; }
   drawSweepList();
 }
 
@@ -704,7 +748,7 @@ function pollSweep(n) {
   clearTimeout(I.poll);
   const tick = async () => {
     let s;
-    try { s = await getJSON(`/api/runs/${encodeURIComponent(runId)}/sweeps/${n}`); } catch (e) { return; }
+    try { s = await getJSON(url(`api/runs/${encodeURIComponent(runId)}/sweeps/${n}`)); } catch (e) { return; }
     if (I.sweepShown === n) renderSweep(s);
     if (s.active || s.state === "starting" || s.state === "running") I.poll = setTimeout(tick, 700);
     else { loadSweeps(); if (s.state !== "done") toast(s.message ? t(s.message) : STATE_TEXT[s.state], "notice", 6000); }
@@ -719,12 +763,12 @@ function buildRes(s) {
   R.cancel = el("button", { class: "cancel" }, t("✕ cancel"));
   R.cancel.onclick = async () => {
     R.cancel.disabled = true; R.cancel.textContent = t("cancelling…");  // one click is enough (F10)
-    try { await postJSON(`/api/runs/${encodeURIComponent(runId)}/sweeps/${R.n}/cancel`); } catch (e) { toast(e.message); }
+    try { await postJSON(url(`api/runs/${encodeURIComponent(runId)}/sweeps/${R.n}/cancel`)); } catch (e) { toast(e.message); }
   };
   R.remove = el("button", { title: t("Remove this sweep and its results") }, t("remove"));
   R.remove.onclick = async () => {
     R.remove.disabled = true;
-    try { await postJSON(`/api/runs/${encodeURIComponent(runId)}/sweeps/${R.n}`, undefined, "DELETE"); I.sweepShown = null; fill(UI.sweepRes); UI.res = null; loadSweeps(); } catch (e) { toast(e.message); R.remove.disabled = false; }
+    try { await postJSON(url(`api/runs/${encodeURIComponent(runId)}/sweeps/${R.n}`), undefined, "DELETE"); I.sweepShown = null; fill(UI.sweepRes); UI.res = null; loadSweeps(); } catch (e) { toast(e.message); R.remove.disabled = false; }
   };
   R.what = el("div", { class: "help in-what" });
   R.base = el("div", { class: "help in-warn" });
@@ -736,7 +780,7 @@ function buildRes(s) {
   R.th1 = el("th", {}); R.th2 = el("th", {});
   R.tbody = el("tbody", {});
   R.table = el("table", { class: "in-tab" }, el("thead", {}, el("tr", {}, R.th1, R.th2)), R.tbody);
-  R.csv = el("a", { href: `/api/runs/${encodeURIComponent(runId)}/sweeps/${s.n}?format=csv&lang=${lang()}`, class: "in-csv" }, t("⤓ CSV of the table"));
+  R.csv = el("a", { href: url(`api/runs/${encodeURIComponent(runId)}/sweeps/${s.n}?format=csv&lang=${lang()}`), class: "in-csv" }, t("⤓ CSV of the table"));
   R.el = el("div", {}, el("div", { class: "in-sh" }, el("b", {}, t("Sweep no. {n:d}: ", { n: s.n })), R.state, " ", R.cancel, R.remove),
     R.what, R.base, R.progBox, R.msg, R.cv, R.table, R.csv);
   return R;

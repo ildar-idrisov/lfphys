@@ -19,6 +19,10 @@
   "one": "The value was not measured: {first}",
   "other": "None of the {n:d} values was measured: {first} — the reasons per value are in the table"
  },
+ "Prior art: {n:d} references": {
+  "one": "Prior art: {n:d} reference",
+  "other": "Prior art: {n:d} references"
+ },
  "Resuming: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)…": {
   "one": "Resuming: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} change of the set-up)…",
   "other": "Resuming: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)…"
@@ -83,13 +87,29 @@
   "one": "{k:d} of {n:d} value",
   "other": "{k:d} of {n:d} values"
  },
+ "{n:d} benches": {
+  "one": "{n:d} bench",
+  "other": "{n:d} benches"
+ },
  "{n:d} days": {
   "one": "{n:d} day",
   "other": "{n:d} days"
  },
+ "{n:d} demonstrations": {
+  "one": "{n:d} demonstration",
+  "other": "{n:d} demonstrations"
+ },
  "{n:d} readings {dt} apart": {
   "one": "{n:d} reading",
   "other": "{n:d} readings {dt} apart"
+ },
+ "{n:d} recordings": {
+  "one": "{n:d} recording",
+  "other": "{n:d} recordings"
+ },
+ "{n:d} research set-ups": {
+  "one": "{n:d} research set-up",
+  "other": "{n:d} research set-ups"
  },
  "{name}: {n:d} characters — more than the limit of {max:d}": {
   "one": "{name}: {n:d} character — more than the limit of {max:d}",

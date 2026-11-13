@@ -258,6 +258,11 @@ def _check_recordings(viz: dict, audience: str) -> list[str]:
     return out
 
 
+# modules of the server process only (HTTP routes, the runs' bookkeeping): no worker imports them, so they never change
+# what a run computes; leaving them out keeps checkpoints and the site's recordings valid across server-only edits
+SERVER_ONLY = frozenset({"app.py", "runs.py"})
+
+
 def code_hash(viz_id: str) -> str:
     """Hash of the code a run executes: the visualization folder, the lfviz package and the engine (no git needed)."""
     h = hashlib.sha256()
@@ -265,7 +270,7 @@ def code_hash(viz_id: str) -> str:
     files = sorted(list(vf.rglob("*.py")) + list(vf.rglob("*.js"))
                    + list((SERVER / "lfviz").rglob("*.py")) + list((ENGINE / "lfphys").rglob("*.py")))
     for f in files:
-        if "__pycache__" in f.parts:
+        if "__pycache__" in f.parts or f.parent == SERVER / "lfviz" and f.name in SERVER_ONLY:
             continue
         own = f.is_relative_to(vf)
         if ("tests" in f.relative_to(vf).parts) if own else ("tests" in f.relative_to(ROOT.parent).parts):

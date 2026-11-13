@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
 // Settings page (plan P11): the devices the engine sees, its kernels, the device and precision of each kernel.
 // A change is saved at once (no "apply" button) and holds for runs started after it.
-import { getJSON, postJSON } from "./api.js";
+import { getJSON, postJSON, url } from "./api.js";
 import { t } from "./i18n.js";
 import { el, fill, initTheme, num, toast, toggleTheme } from "./ui.js";
 
@@ -88,7 +88,7 @@ function saveKernel(name, value) {
     if (!want) return;
     const kernels = want;
     try {
-      const r = await postJSON("/api/settings", { kernels }, "PUT");
+      const r = await postJSON(url("api/settings"), { kernels }, "PUT");
       state.settings = r.settings;
       if (want === kernels) want = null;
       for (const n of r.notes || []) toast(n, "notice");
@@ -116,7 +116,7 @@ $("calibrate").onclick = async () => {
   const b = $("calibrate");
   b.disabled = true; b.textContent = t("Measuring… (a few seconds)");
   await chain;  // pending choices first
-  try { state.settings = await postJSON("/api/settings/calibrate", {}); toast(t("The “Auto” thresholds were updated by the measurement"), "notice", 4000); }
+  try { state.settings = await postJSON(url("api/settings/calibrate"), {}); toast(t("The “Auto” thresholds were updated by the measurement"), "notice", 4000); }
   catch (e) { toast(t("The measurement failed: {why}", { why: e.message })); }
   b.disabled = false; b.textContent = t("Measure again");
   renderKernels(); renderCalibration();
@@ -126,7 +126,7 @@ $("reset").onclick = async () => {
   await chain;
   want = null;
   try {
-    const r = await postJSON("/api/settings", { kernels: {}, crossover: {} }, "PUT");
+    const r = await postJSON(url("api/settings"), { kernels: {}, crossover: {} }, "PUT");
     state.settings = r.settings;
     toast(t("All kernels: auto and fp64"), "notice", 4000);
   } catch (e) { toast(e.message); }
@@ -144,7 +144,7 @@ function renderHowto() {
 async function load() {
   renderHowto();
   try {
-    const r = await getJSON("/api/devices");
+    const r = await getJSON(url("api/devices"));
     state.devices = r.devices; state.kernels = r.kernels; state.settings = r.settings || {};
   } catch (e) { toast(e.message); return; }
   renderDevices(); renderKernels(); renderCalibration();

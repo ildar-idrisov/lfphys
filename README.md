@@ -23,10 +23,7 @@ of a spinning black hole, and 4 **laboratories**, where you build a scene by han
 ## Contents
 
 * [Quick start](#quick-start)
-* [Demonstrations for school students](#for-school-students)
-* [Demonstrations for university students](#for-university-students)
-* [Demonstrations for researchers](#for-researchers)
-* [Laboratories](#laboratories)
+* [Demonstrations by audience](#demonstrations-by-audience): [School](#school) · [University](#university) · [Research](#research) · [Laboratories](#laboratories)
 * [What is computed and how it is checked](#what-is-computed-and-how-it-is-checked)
 * [Coverage and roadmap](#coverage-and-roadmap)
 * [Documentation](#documentation)
@@ -113,162 +110,205 @@ A research project uses the engine as an external library: `import lfphys` with 
 
 ## Demonstrations by audience
 
-Each card gives a picture of a run, the visualization's name (linked to its README with the model, the checks and the
-approximations), what you will see, the physics sections, and the scenarios (presets) that suit this audience. A
-demonstration that serves several audiences appears in each group with that group's presets. *Enrichment* marks topics
-beyond a typical school curriculum that are still accessible to upper-school students. A preset whose name ends in
-"(modification)", or one marked *(modified)* after its name, runs a world with a deliberately changed law; the
-player's top bar flags such a world with the badge **MODIFIED PHYSICS: …** and the catalogue with "modified physics".
+Each world belongs to exactly one audience (`AGENTS.md` §3 rule 14). Each card gives a picture of a recorded run, the
+visualization's name (linked to its README with the model, the checks and the approximations), what you will see, its
+anchors (the university courses; for research, the question it studies, marked as a hypothesis until it is reproduced,
+and the prior art), links to watch its recordings on the public site, the number of its scenarios and the same topic
+at other levels. A local server computes every scenario live. A recording marked *(modified physics)* shows a world
+with a deliberately changed law; the player's top bar flags such a world with the badge **MODIFIED PHYSICS: …**. The
+section below is generated from the registry by `visualizations/site/readme.py`; edit the worlds' `VIZ`, not this
+text.
 
-### For school students
+<!-- BEGIN generated: catalogue (visualizations/site/readme.py); do not edit -->
 
-School courses begin with mechanics, electricity and magnetism; this collection does not cover them yet (see
-[Coverage and roadmap](#coverage-and-roadmap)). What it has for school is heat and molecules, light, the atom,
-relativity and gravitation, mostly the later chapters of a course. The curriculum references are examples of where the
-topic is taught.
+### School
 
-**Gravitation and orbits**
+Grades 7–11: the ordinary lab experiment, computed and guided step by step.
 
-| | |
-|---|---|
-| <a href="docs/images/p01-inner.jpg"><img src="docs/images/p01-inner.jpg" width="300" alt="p01: the inner planets and Jupiter on their orbits"></a> | **[p01 · Space and gravity](visualizations/p01_gravity/README.md)** (laboratory)<br>Build a planetary system and watch Newton's law move it, body by body; energy, momentum and angular momentum are checked as it runs.<br>*Mechanics: gravitation · Astronomy* · IB D.1, AQA 3.7.2<br>Presets: "The Sun and the Earth (circular orbit of 1 au)"; "The Sun, Mercury, Venus, the Earth, Mars, Jupiter (circular orbits)" |
-| <a href="docs/images/u34-newton.jpg"><img src="docs/images/u34-newton.jpg" width="300" alt="u34: a Newtonian ellipse with the general-relativity orbit as a ghost"></a> | **[u34 · Orbits and clocks: general relativity and Newton](visualizations/u34_orbits/README.md)** · *enrichment*<br>Newton's orbit closes into an ellipse; the ghost of the same start under general relativity does not. The player flags this world as modified physics, since its standard law is general relativity.<br>*Mechanics: gravitation · Relativity*<br>Preset: "Newton: a closed ellipse (ghost: GR)" |
+**Ready: 0 of 45**
 
-**Heat and molecules**
+*Planned demonstrations, by section:*
 
-| | |
-|---|---|
-| <a href="docs/images/p03-maxwell.jpg"><img src="docs/images/p03-maxwell.jpg" width="300" alt="p03: argon atoms and their velocity distribution against Maxwell's"></a> | **[p03 · Particles and molecules](visualizations/p03_molecules/README.md)** (laboratory)<br>A gas computed atom by atom: start every atom with the same speed and the Maxwell distribution appears by itself; a piston does work and a wall exchanges heat, and the first law balances; a crystal melts when heated.<br>*Thermal and molecular physics* · IB B.1, B.3, B.4, AP Physics 2 Unit 9, AQA 3.6.2<br>Presets: "Argon gas started with equal speeds: the Maxwell distribution sets in by itself"; "Gas under a piston: compression by the piston and heat exchange with a wall (the first law)"; "A 2-D crystal (ρσ² = 0.85) is heated by a thermostat to 120 K: the order parameter ψ6 vanishes, the atoms start to diffuse — melting" |
+**Mechanics** · 12
 
-**Fluids**
+* S01 · Straight-line motion: uniform and uniformly accelerated (grades 7, 9, 10) · *next in the plan*
+* S02 · Free fall and Galileo's experiments (grades 9, 10) · *next in the plan*
+* S03 · Motion of a body thrown horizontally and at an angle (grades 7, 10) · *next in the plan*
+* S04 · Motion in a circle (grades 9, 10)
+* S05 · Newton's laws (grades 9, 10)
+* S06 · The elastic force, Hooke's law, weight and weightlessness (grades 7, 9, 10)
+* S07 · Friction; a block on an inclined plane (grades 7, 9, 10)
+* S08 · The lever, pulleys, the inclined plane; the moment of a force (grades 7, 9, 10)
+* S09 · Work, kinetic and potential energy, the conservation law (grades 7, 9, 10) · *next in the plan*
+* S10 · Momentum, collisions, jet propulsion (grades 9, 10)
+* S11 · Universal gravitation, satellites, the first cosmic velocity (grades 9, 10). Already there at another level: [u34 · Orbits and clocks: general relativity and Newton](visualizations/u34_orbits/README.md) (University); [p01 · Space and gravity](visualizations/p01_gravity/README.md) (Laboratories)
+* S12 · The pendulum and the mass on a spring; damping, forced oscillations, resonance (grades 9, 11)
 
-| | |
-|---|---|
-| <a href="docs/images/p04-airfoil.jpg"><img src="docs/images/p04-airfoil.jpg" width="300" alt="p04: flow past a NACA 2412 wing profile"></a> | **[p04 · Fluids](visualizations/p04_fluids/README.md)** (laboratory) · *enrichment*<br>Flow past a wing and a cylinder, computed by the lattice Boltzmann method; dye shows the stream, and drag and lift are measured.<br>*Fluids* · AP Physics 1 Unit 8<br>Presets: "NACA 2412 wing profile at an angle of attack of 8°: a cascade of profiles…"; "Water: flow past a cylinder of D = 1 mm in a 22 × 4.1 mm channel, Re = 20…" |
+**Liquids and gases** · 2
 
-**Light**
+* S15 · Pressure in liquids and gases: Pascal's law, communicating vessels, the hydraulic press, atmospheric pressure (grades 7)
+* S16 · Archimedes' principle; floating bodies (grades 7)
 
-| | |
-|---|---|
-| <a href="docs/images/u35-tir.jpg"><img src="docs/images/u35-tir.jpg" width="300" alt="u35: total internal reflection of single photons"></a> | **[u35 · Optical bench: boundaries and coatings](visualizations/u35_optics_bench/README.md)**<br>Photons one by one at a glass–air boundary: beyond the critical angle every one is reflected, and an evanescent wave appears behind the boundary; a quarter-wave coating cuts the reflection.<br>*Optics* · IB C.3, AQA 3.3.2<br>Presets: "Total internal reflection: glass 1.5 → air, θ = 60° beyond the critical angle"; "Anti-reflection of glass by a λ/4 layer with n_f = 1.38 (like MgF₂, illustrative), λ₀ = 550 nm" |
-| <a href="docs/images/u44-rainbow.jpg"><img src="docs/images/u44-rainbow.jpg" width="300" alt="u44: the sky around the antisolar point with the primary and secondary rainbows"></a> | **[u44 · Mie scattering by a drop: the rainbow and the glory](visualizations/u44_mie_scattering/README.md)**<br>Sunlight on a cloud of water drops, summed wavelength by wavelength from the exact scattering by one drop: the primary and secondary bows, Alexander's dark band between them.<br>*Optics: refraction and dispersion* · AQA 3.3.2<br>Preset: "Rainbow: drops of radius 0.15 mm ± 2 % in sunlight: the primary and secondary bows, Alexander's band, the supernumerary bows" |
-| <a href="docs/images/u32-young.jpg"><img src="docs/images/u32-young.jpg" width="300" alt="u32: Young's experiment, single photons building up the fringes"></a> | **[u32 · The double-slit experiment](visualizations/u32_double_slit/README.md)**<br>Young's experiment with single photons: each lands at one point, and the fringes build up hit by hit.<br>*Optics · Quantum physics* · IB C.3, AQA 3.3.2 and 3.2.2<br>Preset: "Photons 633 nm, two slits (Young, one photon at a time)" |
+**Oscillations and waves** · 2
 
-**Relativity and astronomy**
+* S13 · Mechanical waves: the rope and the ripple tank (grades 9, 11)
+* S14 · Sound: pitch, loudness, resonance, the Doppler effect (grades 9, 11)
 
-| | |
-|---|---|
-| <a href="docs/images/u31-sun-earth.jpg"><img src="docs/images/u31-sun-earth.jpg" width="300" alt="u31: the light front from the Sun reaches the Earth after 8 min 17 s"></a> | **[u31 · Light over large distances](visualizations/u31_light_travel/README.md)**<br>A flash leaves the Sun and reaches the Earth 8 min 17 s later, on a map and on a spacetime diagram; observers moving along and against the light measure the same speed c.<br>*Relativity · Astronomy* · IB A.5 (HL), AQA 3.12 (option)<br>Presets: "Sun → Earth (standard physics)"; "Measuring c: at rest, moving along the light, against it (SR)" |
-| <a href="docs/images/u39-city.jpg"><img src="docs/images/u39-city.jpg" width="300" alt="u39: the view of an observer flying down a street at 0.9 c"></a> | **[u39 · What a fast observer sees](visualizations/u39_fast_observer/README.md)** · *enrichment*<br>The camera image of an observer near the speed of light, traced ray by ray with the light's travel time: the scene crowds forward, turns blue and brightens ahead.<br>*Relativity · Optics*<br>Presets: "Flight down a street at β = 0.9: aberration, blue ahead, brightness"; "The scene at rest (β = 0): an ordinary picture, a check of the tracer" |
-| <a href="docs/images/u42-m87.jpg"><img src="docs/images/u42-m87.jpg" width="300" alt="u42: the shadow of a black hole with its photon ring"></a> | **[u42 · The shadow of a Kerr black hole and its photon rings](visualizations/u42_kerr_shadow/README.md)** · *enrichment*<br>Why the Event Horizon Telescope saw a dark disc in a bright ring: every pixel is a light ray traced back from the observer.<br>*Relativity: black holes · Astronomy*<br>Presets: "No rotation (a = 0): the shadow is a circle of radius √27 M"; "M87*: a = 0.9, inclination 163° (as EHT for a > 0)…" |
+**Heat and molecular physics** · 5
 
-**Atoms and quanta**
+* S17 · Brownian motion and diffusion (grades 7, 8, 10)
+* S18 · Heat transfer, quantity of heat, the heat balance equation (grades 8, 10)
+* S19 · Melting, boiling, evaporation, humidity (grades 8, 10)
+* S20 · The gas laws: isotherm, isobar, isochore (grades 8, 10)
+* S21 · The first law of thermodynamics and heat engines (grades 8, 10)
 
-| | |
-|---|---|
-| <a href="docs/images/u40-2pz.jpg"><img src="docs/images/u40-2pz.jpg" width="300" alt="u40: the 2p_z orbital of hydrogen"></a> | **[u40 · The hydrogen atom in 3-D: orbitals](visualizations/u40_hydrogen_3d/README.md)**<br>Orbitals from the exact solution of the Schrödinger equation: their shapes and nodes, the energy levels and the radial distribution.<br>*Atomic physics* · IB E.1, AQA 3.2.2<br>Presets: "1s: the ground state of hydrogen"; "2p_z: a dumbbell along z, the nodal plane z = 0"; "3d_z²: lobes along z and a ring" |
-| <a href="docs/images/p02-double-slit.jpg"><img src="docs/images/p02-double-slit.jpg" width="300" alt="p02: an electron wave passing two slits"></a> | **[p02 · Quantum particles](visualizations/p02_quantum/README.md)** (laboratory) · *enrichment*<br>An electron's wave passes two slits and interferes; the detector registers single particles.<br>*Quantum physics* · AQA 3.2.2<br>Preset: "Double slit: an electron, a wall with two slits, a detector screen, Bohm particles" |
+**Electricity and magnetism** · 12
 
-### For university students
+* S22 · Electric charges and the electric field (grades 8, 10)
+* S23 · The capacitor (grades 10)
+* S24 · Current, voltage, Ohm's law, the resistance of a conductor (grades 8, 10)
+* S25 · Series, parallel and mixed connection (grades 8, 10)
+* S26 · Work and power of a current, the Joule–Lenz law, a lamp, a heater (grades 8, 10)
+* S27 · EMF and internal resistance; Ohm's law for a complete circuit (grades 10)
+* S28 · Current in various media: metals, the semiconductor diode, an electrolyte (grades 8, 10)
+* S29 · The magnetic field of magnets and currents; Oersted's experiment; the electromagnet (grades 8, 11)
+* S30 · The Ampère force, the electric motor, the Lorentz force (grades 8, 11)
+* S31 · Electromagnetic induction; Lenz's rule; the generator (grades 8, 11)
+* S32 · The oscillating circuit, alternating current, resonance, the transformer (grades 11)
+* S33 · Electromagnetic waves: emission, reflection, polarisation, the scale of waves (grades 9, 11)
 
-**Mechanics and gravitation**
+**Optics** · 5
 
-| | |
-|---|---|
-| <a href="docs/images/u34-rosette.jpg"><img src="docs/images/u34-rosette.jpg" width="300" alt="u34: a precessing orbit around a black hole with the periapsis advance measured"></a> | **[u34 · Orbits and clocks: general relativity and Newton](visualizations/u34_orbits/README.md)**<br>One body on an orbit computed from the exact geodesic equation: the periapsis advance is measured on the orbit and compared with the exact elliptic integral and with the post-Newtonian estimate; the body's clock against a distant one.<br>*Mechanics · General relativity*<br>Presets: "Mercury at the Sun (weak field, 43″ per century)"; "Black hole 10 M☉: a rosette (periapsis 20M)"; "Radial fall from rest at 20M (cycloid)" |
-| <a href="docs/images/p01-inner.jpg"><img src="docs/images/p01-inner.jpg" width="300" alt="p01: planets on their orbits"></a> | **[p01 · Space and gravity](visualizations/p01_gravity/README.md)** (laboratory)<br>Newtonian N bodies with close encounters and mergers, computed by a time-symmetric Hermite scheme.<br>*Mechanics: gravitation, chaos*<br>Presets: "Pythagorean three-body problem (Burrau): masses 3, 4, 5 at rest — close encounters"; "A Newtonian black hole of 1000 M☉ and stars: orbits and capture" |
+* S34 · Reflection of light; plane and spherical mirrors (grades 9, 11)
+* S35 · Refraction of light, total internal reflection, the light guide (grades 9, 11). Already there at another level: [u35 · Optical bench: boundaries and coatings](visualizations/u35_optics_bench/README.md) (University)
+* S36 · Lenses, image construction, optical instruments, the eye (grades 9, 11)
+* S37 · Dispersion of light, the spectrum, colour; the rainbow (grades 9, 11). Already there at another level: [u44 · Mie scattering by a drop: the rainbow and the glory](visualizations/u44_mie_scattering/README.md) (University)
+* S38 · Interference and diffraction of light; the diffraction grating; polarisation (grades 9, 11). Already there at another level: [u32 · The double-slit experiment](visualizations/u32_double_slit/README.md) (University); [u38 · Wave in 3-D: diffraction by an aperture](visualizations/u38_wave_3d/README.md) (University); [r12 · Double slit (long slits, 3-D): the exact Schrödinger equation and Bohm trajectories](visualizations/r12_double_slit_2d/README.md) (Research)
 
-**Fluids, heat and statistical physics**
+**The theory of relativity** · 1
 
-| | |
-|---|---|
-| <a href="docs/images/p04-karman.jpg"><img src="docs/images/p04-karman.jpg" width="300" alt="p04: the Kármán vortex street behind a cylinder"></a> | **[p04 · Fluids](visualizations/p04_fluids/README.md)** (laboratory)<br>Viscous flow by the lattice Boltzmann method: a Poiseuille profile, a vortex street, drag and lift coefficients, the Strouhal number.<br>*Fluids*<br>Presets: "Channel flow (Poiseuille, Re ≈ 2) and a plate across it: the profile upstream against the parabola"; "Kármán vortex street behind a cylinder, Re = 100…" |
-| <a href="docs/images/p03-molecules.jpg"><img src="docs/images/p03-molecules.jpg" width="300" alt="p03: diatomic molecules and the velocity distribution"></a> | **[p03 · Particles and molecules](visualizations/p03_molecules/README.md)** (laboratory)<br>Molecular dynamics: equipartition among the modes of molecules, liquid–vapour coexistence, the radial distribution function g(r), pressure from the virial and from the walls.<br>*Thermal and statistical physics · Condensed matter*<br>Presets: "Diatomic molecules start with translation only: collisions hand energy to rotation and vibration (equipartition sets in)"; "Liquid and vapour in a volume at 90 K in a field: … the density profile along the height" |
+* S39 · Foundations of special relativity: the relativity of simultaneity, time dilation, length contraction, E = mc² (grades 11). Already there at another level: [u31 · Light over large distances](visualizations/u31_light_travel/README.md) (University); [u39 · What a fast observer sees](visualizations/u39_fast_observer/README.md) (University)
 
-**Waves and optics**
+**Quantum physics** · 1
 
-| | |
-|---|---|
-| <a href="docs/images/u35-tir.jpg"><img src="docs/images/u35-tir.jpg" width="300" alt="u35: reflection and transmission curves"></a> | **[u35 · Optical bench](visualizations/u35_optics_bench/README.md)**<br>Fresnel coefficients and multilayers by characteristic matrices decide each photon's fate; the photon counts converge to R, T, A.<br>*Optics*<br>Presets: "Glass n = 1.5 in air at Brewster's angle (unpolarised light: only s is reflected)"; "Frustrated total reflection: a 200 nm gap to a second prism (photon tunnelling)"; "Fabry–Pérot: a film n = 2.3, 2 µm thick, in air (illustrative)" |
-| <a href="docs/images/u38-circle.jpg"><img src="docs/images/u38-circle.jpg" width="300" alt="u38: light behind a circular aperture in 3-D, with a slice"></a> | **[u38 · Wave in 3-D: diffraction by an aperture](visualizations/u38_wave_3d/README.md)**<br>Fresnel diffraction behind apertures in a full 3-D scene with slice planes at any angle; the accuracy of each world and slice is measured.<br>*Waves · Optics*<br>Presets: "Circular aperture: dips and peaks of intensity on the axis"; "Gaussian beam, w = 1.5 µm: divergence (checked against the integral)"; "Two slits of finite length: the whole volume" |
-| <a href="docs/images/u44-rainbow.jpg"><img src="docs/images/u44-rainbow.jpg" width="300" alt="u44: the rainbow"></a> | **[u44 · Mie scattering by a drop](visualizations/u44_mie_scattering/README.md)**<br>The exact Mie series against Descartes' rays and Airy's theory: supernumerary bows, and why small drops give a white fogbow.<br>*Optics: scattering*<br>Presets: "Supernumerary bows: nearly equal drops of radius 0.1 mm ± 0.5 %"; "Fogbow: drops of radius 15 µm ± 15 %, a wide white bow"; "Large drops of radius 0.3 mm ± 10 %: the supernumerary bows are washed out…" |
-| <a href="docs/images/u43-lg3.jpg"><img src="docs/images/u43-lg3.jpg" width="300" alt="u43: helical wavefronts of a Laguerre–Gauss beam"></a> | **[u43 · Optical vortices](visualizations/u43_optical_vortices/README.md)**<br>Laguerre–Gauss beams: helical wavefronts, energy flow spiralling around the axis, orbital and spin angular momentum per photon measured from the field; a rotating disc shifts the frequency.<br>*Optics: beams, angular momentum of light*<br>Presets: "LG₀³, σ = +1: three helical fronts, the exact model, a rotating disc"; "LG₂¹: three rings, fronts with phase jumps at the nodes"; "A “fork” hologram, l = 1: the order m carries the charge m·l"; "Control: a Gaussian beam without a vortex (l = 0): no beat" |
+* S40 · The photoelectric effect: Stoletov's experiments, the laws, Einstein's equation (grades 11)
 
-**Relativity**
+**Atomic physics** · 2
 
-| | |
-|---|---|
-| <a href="docs/images/u31-lensing.jpg"><img src="docs/images/u31-lensing.jpg" width="300" alt="u31: light bent around a black hole"></a> | **[u31 · Light over large distances](visualizations/u31_light_travel/README.md)**<br>Relativity of simultaneity, clock synchronisation, light bending and delay near a black hole; flashes and the observers' speeds are set during the run.<br>*Special and general relativity*<br>Presets: "The Andromeda paradox: pedestrians at 1.4 m/s"; "Measuring c: clocks synchronised in the lab frame (SR)"; "Black hole of 10 M☉: deflection, shadow, two images" |
-| <a href="docs/images/u39-terrell.jpg"><img src="docs/images/u39-terrell.jpg" width="300" alt="u39: a cube and a sphere flying past at 0.9 c"></a> | **[u39 · What a fast observer sees](visualizations/u39_fast_observer/README.md)**<br>Why the Lorentz contraction is invisible and a rotation (Terrell–Penrose) is seen instead; Doppler colour and the searchlight effect, from ray tracing with the light's travel time.<br>*Special relativity · Optics*<br>Presets: "A cube and a ball fly past at β = 0.9: Terrell rotation, the ball stays a circle"; "For comparison: an instantaneous snapshot (the Lorentz contraction that is not seen)"; "A train at β = 0.8 passing posts: stretching and shortening" |
-| <a href="docs/images/r11-thomas.jpg"><img src="docs/images/r11-thomas.jpg" width="300" alt="r11: the velocity ball with the rotation field of Thomas precession"></a> | **[r11 · Thomas–Wigner precession in 3-D](visualizations/r11_thomas_3d/README.md)**<br>A craft flies a loop and comes back to rest with its gyroscopes turned, with no torque on them.<br>*Special relativity*<br>Presets: "Thomas precession: uniform circular motion, γ = 1.34"; "Ordinary space: the trajectory and the gyroscopes in Thomas precession" |
-| <a href="docs/images/u42-edge.jpg"><img src="docs/images/u42-edge.jpg" width="300" alt="u42: a black hole seen edge-on"></a> | **[u42 · The shadow of a Kerr black hole](visualizations/u42_kerr_shadow/README.md)**<br>Photon orbits and the shadow's edge against Bardeen's formula; the images of the disc n = 0, 1, 2.<br>*General relativity*<br>Presets: "The disc edge-on (θ = 90°), a = 0.99: the shadow is flattened, the rings are asymmetric"; "A narrow ring of gas at 6 M: its images n = 0, 1, 2 are seen" |
+* S41 · Rutherford's experiment and the model of the atom (grades 9, 11)
+* S42 · Line spectra, energy levels, Bohr's postulates (grades 9, 11). Already there at another level: [u40 · The hydrogen atom in 3-D: orbitals](visualizations/u40_hydrogen_3d/README.md) (University)
 
-**Quantum physics**
+**Nuclear physics** · 2
 
-| | |
-|---|---|
-| <a href="docs/images/u33-tunnel.jpg"><img src="docs/images/u33-tunnel.jpg" width="300" alt="u33: an electron packet at a barrier, reflected and transmitted parts"></a> | **[u33 · A quantum particle in one dimension](visualizations/u33_quantum_1d/README.md)**<br>An electron packet at a barrier, a step, a well or in a trap: the exact time-dependent solution, its transmission against the stationary one, and detectors that click.<br>*Quantum physics*<br>Presets: "Electron tunnelling through a 1 eV × 0.6 nm barrier"; "Resonant tunnelling: a double barrier"; "Step: reflection at E > V₀"; "A packet in a harmonic trap (coherent state)" |
-| <a href="docs/images/u32-young.jpg"><img src="docs/images/u32-young.jpg" width="300" alt="u32: the double slit"></a> | **[u32 · The double-slit experiment](visualizations/u32_double_slit/README.md)**<br>Which-path detectors, polarisation marks, the quantum eraser, partial coherence, electrons, neutrons and C₆₀.<br>*Quantum physics · Optics*<br>Presets: "Electrons + which-path detector (θ = 90°, not read)"; "Quantum eraser: H/V marks + 45° analyser"; "Photons: a wide source (partial coherence)"; "Electrons: the Aharonov–Bohm effect (flux ½ h/e)" |
-| <a href="docs/images/r12-mark180.jpg"><img src="docs/images/r12-mark180.jpg" width="300" alt="r12: the exact two-slit wave with Bohm trajectories"></a> | **[r12 · Double slit (long slits, 3-D)](visualizations/r12_double_slit_2d/README.md)**<br>The time-dependent Schrödinger equation on the whole plane of the experiment, no paraxial approximation: reflection by the plate, the wave in the slits, the pattern as it arrives.<br>*Quantum physics*<br>Presets: "One slit (B closed): the envelope without fringes"; "Slits a = 6λ in a thin high wall: closer to the paraxial theory (a difference ~λ/a)"; "The Aharonov–Bohm effect: a flux Φ₀/2 between the slits shifts the fringes by half a period" |
-| <a href="docs/images/u37-bell.jpg"><img src="docs/images/u37-bell.jpg" width="300" alt="u37: the Bell test with the CHSH parameter"></a> | **[u37 · The Bell test with entangled pairs](visualizations/u37_bell_test/README.md)**<br>Entangled photons or spins at two stations: coincidences, correlations E and the CHSH parameter S against the bounds 2 and 2√2; the settings are chosen outside each other's light cone.<br>*Quantum physics*<br>Presets: "Photons \|Φ+⟩, quantum mechanics: optimal CHSH angles 0°, 45° / 22.5°, 67.5°, random choice"; "Spin-½ singlet, quantum mechanics: optimal angles 0°, 90° / 45°, 135°, random choice"; "The curve E(Δ): photons, fixed settings a = b = 0°; move b" |
-| <a href="docs/images/p02-trap.jpg"><img src="docs/images/p02-trap.jpg" width="300" alt="p02: a packet in a harmonic trap"></a> | **[p02 · Quantum particles](visualizations/p02_quantum/README.md)** (laboratory)<br>Wave packets in 2-D and 3-D in a scene of barriers, traps and fields you build; position measurements as actions.<br>*Quantum physics*<br>Presets: "Tunnelling: a packet hitting a thin barrier higher than its energy"; "Harmonic trap: a displaced packet oscillates (energy conserved), a position measurement"; "An electron in a 100 T magnetic field: a circular orbit, spin along the field"; "3-D: an electron scatters off a ball" |
+* S43 · Radioactivity: α, β, γ, the half-life, the background (grades 9, 11)
+* S44 · Nuclear reactions, binding energy, fission and fusion (grades 9, 11)
 
-**Atomic and particle physics**
+**Astrophysics and cosmology** · 1
 
-| | |
-|---|---|
-| <a href="docs/images/u40-m1.jpg"><img src="docs/images/u40-m1.jpg" width="300" alt="u40: the complex 2p orbital with m = +1 and its ring current"></a> | **[u40 · The hydrogen atom in 3-D](visualizations/u40_hydrogen_3d/README.md)**<br>Real orbitals are standing waves without current; complex ones with m ≠ 0 carry a ring current; a superposition of two levels oscillates at the Bohr frequency.<br>*Atomic physics · Quantum physics*<br>Presets: "2p_x real: a standing wave, no current"; "2p, m = +1 complex: a doughnut and a ring current"; "1s + 2p_z: the cloud sways along z at the Bohr frequency (a superposition)" |
-| <a href="docs/images/u36-qcd.jpg"><img src="docs/images/u36-qcd.jpg" width="300" alt="u36: the running strong coupling and the charmonium levels"></a> | **[u36 · QCD: asymptotic freedom and quarkonium](visualizations/u36_qcd/README.md)**<br>The strong coupling α_s runs from 1 GeV to 10 TeV (one to four loops, quark thresholds); charmonium and bottomonium levels in the Cornell model against measured ones.<br>*Particle physics*<br>Presets: "Asymptotic freedom and charmonium (PDG 2024, Cornell model)"; "Bottomonium" |
-| <a href="docs/images/u41-1p.jpg"><img src="docs/images/u41-1p.jpg" width="300" alt="u41: the 1P state of charmonium"></a> | **[u41 · Quarkonium in 3-D](visualizations/u41_quarkonium_3d/README.md)**<br>Wave functions of a heavy quark pair in the Cornell model, a heavy-quark analogue of the hydrogen atom; the model's level splittings against the Particle Data Group values.<br>*Particle physics*<br>Presets: "cc̄ 1S (J/ψ, η_c without spin): a cloud without nodes"; "cc̄ 1P (χ_c, h_c), p_z"; "cc̄ 2S (ψ(2S)): one radial node"; "bb̄ 1S (Υ(1S)): a tighter cloud, heavier quarks" |
+* S45 · The expansion of the Universe: Hubble's law (grades 11)
 
-### For researchers
+### University
 
-**General relativity and black holes**
+The experiments of the university courses, computed from the laws.
+
+**Optics** · 4
 
 | | |
 |---|---|
-| <a href="docs/images/u42-m87.jpg"><img src="docs/images/u42-m87.jpg" width="300" alt="u42: the image of M87*"></a> | **[u42 · The shadow of a Kerr black hole and its photon rings](visualizations/u42_kerr_shadow/README.md)**<br>The shadow's size against the EHT measurements of M87* and Sgr A*; the photon ring's demagnification against the Lyapunov exponent; a Johannsen metric as a declared alternative.<br>*General relativity · Astrophysics*<br>Presets: "M87*: a = 0.9, inclination 163° (as EHT for a > 0)…"; "Sgr A*: a = 0.5, inclination 30°, compared with EHT 2022"; "What if: the Johannsen metric with α₁₃ = 3, a larger shadow, compared with EHT" *(modified)* |
-| <a href="docs/images/u34-rosette.jpg"><img src="docs/images/u34-rosette.jpg" width="300" alt="u34: orbits in strong gravity"></a> | **[u34 · Orbits and clocks](visualizations/u34_orbits/README.md)**<br>Exact geodesics against the weak-field (PPN) expansion on the same orbit, the instability inside the ISCO, equatorial Kerr orbits.<br>*General relativity*<br>Presets: "Neutron star: strong precession"; "Black hole: a circular orbit near the ISCO (6.2M)"; "Plunge inside the ISCO (5.5M, speed −0.5 %)" |
-| <a href="docs/images/p01-inspiral.jpg"><img src="docs/images/p01-inspiral.jpg" width="300" alt="p01: a binary inspiral with the gravitational-wave signal"></a> | **[p01 · Space and gravity](visualizations/p01_gravity/README.md)** (laboratory)<br>A post-Newtonian binary with radiation reaction and the wave signal h₊, h× at a detector; bodies, light rays and clocks around a Kerr–Newman black hole.<br>*General relativity · Gravitational waves*<br>Presets: "GR: a binary of 10 + 10 M☉ from a separation of 20 G m/c² and a wave detector (inspiral)"; "GR: an eccentric binary of 30 + 10 M☉ (e = 0.5), periastron precession"; "Near a black hole (a = 0.9): bodies on orbits, light rays, observers' clocks" |
+| <a href="docs/images/u35_optics_bench.jpg"><img src="docs/images/u35_optics_bench.jpg" width="300" alt="u35: Optical bench: boundaries and coatings"></a> | **[u35 · Optical bench: boundaries and coatings](visualizations/u35_optics_bench/README.md)**<br>Photons hit a boundary one by one and split in the fractions that Maxwell's equations give.<br>*Courses:* Hecht, Optics, ch. 4, 9; Sivukhin, General Course of Physics, vol. IV: Optics, ch. V<br>▷ Watch on the site: [Total internal reflection: glass 1.5 → air, θ = 60° beyond the critical angle](https://ildar-idrisov.github.io/lfphys/run.html?rec=u35_optics_bench/tir) · [Glass n = 1.5 in air at Brewster's angle (unpolarised light: only s is reflected)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u35_optics_bench/brewster) · [Surface plasmon resonance (Kretschmann): prism 1.5, metal 50 nm (n = 0.2 + 3.3i), air, p (illustrative)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u35_optics_bench/spr)<br>Scenarios in the player: 9<br>Same topic at other levels: S35 · Refraction of light, total internal reflection, the light guide (School, planned) |
+| <a href="docs/images/u38_wave_3d.jpg"><img src="docs/images/u38_wave_3d.jpg" width="300" alt="u38: Wave in 3-D: diffraction by an aperture"></a> | **[u38 · Wave in 3-D: diffraction by an aperture](visualizations/u38_wave_3d/README.md)**<br>Light passes two slits of finite length: the 3-D field behind them, slices at any angle, the energy current.<br>*Courses:* Halliday, Resnick & Walker, Fundamentals of Physics, ch. 36; Hecht, Optics, ch. 10<br>▷ Watch on the site: [Two slits of finite length: the whole volume](https://ildar-idrisov.github.io/lfphys/run.html?rec=u38_wave_3d/double)<br>Scenarios in the player: 5<br>Same topic at other levels: S38 · Interference and diffraction of light; the diffraction grating; polarisation (School, planned) |
+| <a href="docs/images/u43_optical_vortices.jpg"><img src="docs/images/u43_optical_vortices.jpg" width="300" alt="u43: Optical vortices: Laguerre–Gauss beams, orbital angular momentum, the rotational Doppler effect"></a> | **[u43 · Optical vortices: Laguerre–Gauss beams, orbital angular momentum, the rotational Doppler effect](visualizations/u43_optical_vortices/README.md)**<br>Light with helical fronts: twisted energy flow, angular momentum per photon, and the beat from a rotating disc.<br>*Courses:* Allen, Beijersbergen, Spreeuw & Woerdman, Phys. Rev. A 45, 8185 (1992); Hecht, Optics<br>▷ Watch on the site: [LG₀³, σ = +1: three helical fronts, the exact model, a rotating disc](https://ildar-idrisov.github.io/lfphys/run.html?rec=u43_optical_vortices/lg3) · [Tight focusing: l = 1, σ = −1, w0 = 0.6 λ: the longitudinal field and the spin-orbit splitting](https://ildar-idrisov.github.io/lfphys/run.html?rec=u43_optical_vortices/tight) · [A Dove prism rotates: a frequency shift 2\|l\|f for the beam l = 2](https://ildar-idrisov.github.io/lfphys/run.html?rec=u43_optical_vortices/dove)<br>Scenarios in the player: 9 |
+| <a href="docs/images/u44_mie_scattering.jpg"><img src="docs/images/u44_mie_scattering.jpg" width="300" alt="u44: Mie scattering by a drop: the rainbow and the glory"></a> | **[u44 · Mie scattering by a drop: the rainbow and the glory](visualizations/u44_mie_scattering/README.md)**<br>Sunlight on water drops: the rainbow, its supernumerary bows and the glory from the exact Mie series.<br>*Courses:* Bohren & Huffman, Absorption and Scattering of Light by Small Particles; Hecht, Optics<br>▷ Watch on the site: [Rainbow: drops of radius 0.15 mm ± 2 % in sunlight: the primary and secondary bows, Alexander's band, the supernumerary bows](https://ildar-idrisov.github.io/lfphys/run.html?rec=u44_mie_scattering/rainbow) · [Supernumerary bows: nearly equal drops of radius 0.1 mm ± 0.5 %](https://ildar-idrisov.github.io/lfphys/run.html?rec=u44_mie_scattering/supernumerary) · [Glory: cloud drops of radius 8 µm ± 10 %, coloured rings around the antisolar point](https://ildar-idrisov.github.io/lfphys/run.html?rec=u44_mie_scattering/glory)<br>Scenarios in the player: 7<br>Same topic at other levels: S37 · Dispersion of light, the spectrum, colour; the rainbow (School, planned) |
 
-**Special relativity and the history of its tests**
-
-| | |
-|---|---|
-| <a href="docs/images/r11-seam.jpg"><img src="docs/images/r11-seam.jpg" width="300" alt="r11: a non-planar loop on the velocity sphere"></a> | **[r11 · Thomas–Wigner precession in 3-D](visualizations/r11_thomas_3d/README.md)**<br>The holonomy of a manoeuvre in SO(3) and SU(2), velocity-space geometry and the isoperimetric bound on the rotation per unit of fuel; planar and non-planar loops.<br>*Special relativity · Lorentz group*<br>Presets: "Three burns: the Wigner angle = the area of the triangle of velocities"; "Circle through rest: equality in the isoperimetric bound"; "SU(2): the gyroscopes are back (a rotation by 2π), the spinor changed its sign"; "The seam of a ball on the sphere of velocities (non-planar, 96 burns)" |
-| <a href="docs/images/u39-terrell.jpg"><img src="docs/images/u39-terrell.jpg" width="300" alt="u39: Terrell rotation"></a> | **[u39 · What a fast observer sees](visualizations/u39_fast_observer/README.md)**<br>Light-time ray tracing of moving bodies, each photon Lorentz-transformed, the light as a black body at the Doppler-shifted temperature.<br>*Special relativity*<br>Presets: "A sky of 4000 K at β = 0.9: the dipole, the stars crowd forward"; "The same at β = 0.99"; "The scene at rest (β = 0): an ordinary picture, a check of the tracer" |
-| <a href="docs/images/u31-sun-earth.jpg"><img src="docs/images/u31-sun-earth.jpg" width="300" alt="u31: light cones and simultaneity"></a> | **[u31 · Light over large distances](visualizations/u31_light_travel/README.md)**<br>The same measurements in worlds with other laws of light: an ether, ballistic (Ritz) light, Newtonian corpuscles.<br>*Special relativity · History of physics*<br>Presets: "Measuring c in a world with an ether (modification)"; "Measuring c with ballistic light (modification)"; "An arm across the motion (Michelson–Morley), ether (modification)"; "Newtonian corpuscles at a black hole (modification)" |
-
-**Optics and electromagnetic waves**
+**The theory of relativity** · 3
 
 | | |
 |---|---|
-| <a href="docs/images/u32-vector.jpg"><img src="docs/images/u32-vector.jpg" width="300" alt="u32: vector diffraction by narrow slits in a conducting screen"></a> | **[u32 · The double-slit experiment](visualizations/u32_double_slit/README.md)**<br>Vector diffraction by slits in a perfectly conducting screen of finite thickness (TE and TM) against the scalar model; a three-slit test of the Born rule.<br>*Electromagnetic waves · Quantum foundations*<br>Presets: "Vector diffraction: 0.5 µm slits in a 0.2 µm conducting screen, polarisation D"; "Three slits: a test of the Born rule (Sorkin)" |
-| <a href="docs/images/u43-tight.jpg"><img src="docs/images/u43-tight.jpg" width="300" alt="u43: a tightly focused vortex beam"></a> | **[u43 · Optical vortices](visualizations/u43_optical_vortices/README.md)**<br>The exact vector beam against the paraxial model under tight focusing: the longitudinal field and the spin–orbit split of angular momentum, which depends on its definition; the rotational Doppler effect.<br>*Optics · Angular momentum of light*<br>Presets: "Tight focusing: l = 1, σ = −1, w0 = 0.6 λ: the longitudinal field and the spin-orbit splitting"; "The same in the paraxial model (an approximation): what it does not see"; "A Dove prism rotates: a frequency shift 2\|l\|f for the beam l = 2"; "Linear polarisation, l = 1: J_z = l on average, zero spin" |
-| <a href="docs/images/u44-glory.jpg"><img src="docs/images/u44-glory.jpg" width="300" alt="u44: the glory around the antisolar point"></a> | **[u44 · Mie scattering by a drop](visualizations/u44_mie_scattering/README.md)**<br>The glory, the near field of a small drop, an absorbing sphere; the Debye series against Descartes and Airy, checked against Wiscombe's published values.<br>*Optics: Mie theory*<br>Presets: "Glory: cloud drops of radius 8 µm ± 10 %, coloured rings around the antisolar point"; "Near field: a drop of radius 1 µm in light of 550 nm, the focus inside and behind the drop"; "An absorbing sphere of radius 2 µm, n = 1.6 + 0.05i: the inner rays die out, no rainbow" |
-| <a href="docs/images/u35-spr.jpg"><img src="docs/images/u35-spr.jpg" width="300" alt="u35: the surface plasmon resonance dip"></a> | **[u35 · Optical bench](visualizations/u35_optics_bench/README.md)**<br>Thin metal films and the surface plasmon resonance by Abelès matrices, with the field \|E\|² inside the layers.<br>*Optics*<br>Presets: "Metal film 30 nm, n = 0.2 + 3.3i (like gold at 633 nm, illustrative) on glass"; "Surface plasmon resonance (Kretschmann): prism 1.5, metal 50 nm (n = 0.2 + 3.3i), air, p (illustrative)" |
-| <a href="docs/images/u38-double.jpg"><img src="docs/images/u38-double.jpg" width="300" alt="u38: two slits of finite length, the whole volume"></a> | **[u38 · Wave in 3-D](visualizations/u38_wave_3d/README.md)**<br>Full 3-D modelling against a chosen 2-D slice computed by a simplified model; the method's accuracy measured per world and per slice.<br>*Computational optics*<br>Presets: "Two slits: slices only, y = c by the reduced 2-D model (approximation)"; "Square aperture, grid 512: slices only" |
+| <a href="docs/images/u31_light_travel.jpg"><img src="docs/images/u31_light_travel.jpg" width="300" alt="u31: Light over large distances"></a> | **[u31 · Light over large distances](visualizations/u31_light_travel/README.md)**<br>Light leaves the Sun and reaches the Earth about 8 minutes later; light cones, deflection, simultaneity.<br>*Courses:* Taylor & Wheeler, Spacetime Physics; Hartle, Gravity: An Introduction to Einstein's General Relativity; Halliday, Resnick & Walker, Fundamentals of Physics, ch. 37; Sivukhin, General Course of Physics, vol. IV: Optics, ch. IX<br>▷ Watch on the site: [Sun → Earth (standard physics)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u31_light_travel/sun_earth) · [Measuring c: at rest, moving along the light, against it (SR) *(modified physics)*](https://ildar-idrisov.github.io/lfphys/run.html?rec=u31_light_travel/measure_c) · [Black hole of 10 M☉: deflection, shadow, two images](https://ildar-idrisov.github.io/lfphys/run.html?rec=u31_light_travel/lensing)<br>Scenarios in the player: 10<br>Same topic at other levels: S39 · Foundations of special relativity: the relativity of simultaneity, time dilation, length contraction, E = mc² (School, planned) |
+| <a href="docs/images/u34_orbits.jpg"><img src="docs/images/u34_orbits.jpg" width="300" alt="u34: Orbits and clocks: general relativity and Newton"></a> | **[u34 · Orbits and clocks: general relativity and Newton](visualizations/u34_orbits/README.md)**<br>An orbit near a black hole turns into a rosette, and the body's clock runs slower than a distant one.<br>*Courses:* Hartle, Gravity: An Introduction to Einstein's General Relativity, ch. 9, 10; Taylor, Wheeler & Bertschinger, Exploring Black Holes<br>▷ Watch on the site: [Black hole 10 M☉: a rosette (periapsis 20M)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u34_orbits/rosette) · [Mercury at the Sun (weak field, 43″ per century)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u34_orbits/mercury) · [Plunge inside the ISCO (5.5M, speed −0.5 %)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u34_orbits/plunge)<br>Scenarios in the player: 7<br>Same topic at other levels: S11 · Universal gravitation, satellites, the first cosmic velocity (School, planned); [p01 · Space and gravity](visualizations/p01_gravity/README.md) (Laboratories) |
+| <a href="docs/images/u39_fast_observer.jpg"><img src="docs/images/u39_fast_observer.jpg" width="300" alt="u39: What a fast observer sees"></a> | **[u39 · What a fast observer sees](visualizations/u39_fast_observer/README.md)**<br>A ball flying past at 0.9 c still looks round: the cube turns, colours shift, the view crowds forward.<br>*Courses:* Terrell (1959) and Penrose (1959): the invisibility of the Lorentz contraction; The Feynman Lectures on Physics, vol. I, ch. 34<br>▷ Watch on the site: [A cube and a ball fly past at β = 0.9: Terrell rotation, the ball stays a circle](https://ildar-idrisov.github.io/lfphys/run.html?rec=u39_fast_observer/terrell) · [Flight down a street at β = 0.9: aberration, blue ahead, brightness](https://ildar-idrisov.github.io/lfphys/run.html?rec=u39_fast_observer/city)<br>Scenarios in the player: 7<br>Same topic at other levels: S39 · Foundations of special relativity: the relativity of simultaneity, time dilation, length contraction, E = mc² (School, planned) |
 
-**Quantum foundations**
+**Quantum physics** · 3
 
 | | |
 |---|---|
-| <a href="docs/images/r12-narrow.jpg"><img src="docs/images/r12-narrow.jpg" width="300" alt="r12: narrow slits, diffraction to large angles, Bohm trajectories"></a> | **[r12 · Double slit (long slits, 3-D)](visualizations/r12_double_slit_2d/README.md)**<br>Where paraxial theory fails (narrow slits, large angles); how a which-path mark kills the fringes; Bohm trajectories labelled by their slit.<br>*Quantum foundations*<br>Presets: "Narrow slits a = 2λ: diffraction to large angles, the paraxial theory fails"; "Path mark: the spin in slit B turned by 180°: the fringes almost fade, the trajectories cross the axis"; "A partial mark: a turn by 90°, visibility cos 45°"; "An observer at slit B: a path detector (θ = 180°) for a ⁴He atom without spin: the fringes almost fade" |
-| <a href="docs/images/r13-near.jpg"><img src="docs/images/r13-near.jpg" width="300" alt="r13: arrival-time distributions by several rules"></a> | **[r13 · Particle arrival time: the rules in 2-D](visualizations/r13_arrival_times_2d/README.md)**<br>Quantum mechanics does not fix the arrival time; the run computes it by the quantum flux, Bohm's first arrivals, Aharonov–Bohm–Kijowski, semiclassical and absorbing-boundary rules and detector models, and shows where they agree and where they differ.<br>*Quantum foundations*<br>Presets: "One packet: far from the source all the rules almost agree"; "Close to the source (σz = 1λ, L = 5λ): the rules diverge"; "A train of 4 packets: the exponential rules damp the later peaks (Das & Struyve 2021)"; "Backflow: the flux through the plane is negative in places, Bohm's first arrivals are not"; "Through two slits: the joint distribution of the place and the time of arrival (Das et al. 2024)" |
-| <a href="docs/images/u37-bell.jpg"><img src="docs/images/u37-bell.jpg" width="300" alt="u37: the Bell test"></a> | **[u37 · The Bell test](visualizations/u37_bell_test/README.md)**<br>Quantum mechanics (S up to 2√2) against local hidden-variable models (\|S\| ≤ 2) on the same events; the locality loophole when the choice comes too early.<br>*Quantum foundations*<br>Presets: "Photons, local hidden variables: a polarisation model (modification)"; "Spin-½ singlet, local hidden variables: Bell's sign model (modification)"; "Photons: the choice made 5 µs before arrival (cτ > 2L), the locality loophole is open" |
-| <a href="docs/images/u33-bohm.jpg"><img src="docs/images/u33-bohm.jpg" width="300" alt="u33: Bohm trajectories through a barrier"></a> | **[u33 · A quantum particle in one dimension](visualizations/u33_quantum_1d/README.md)**<br>One computation read three ways: a click and a collapse, Bohm trajectories, Everett's branches; the statistics are the same.<br>*Quantum foundations · Interpretations*<br>Presets: "The same through Bohm's eyes: trajectories"; "The same by Everett: branches" |
-| <a href="docs/images/u32-vector.jpg"><img src="docs/images/u32-vector.jpg" width="300" alt="u32: the double slit"></a> | **[u32 · The double-slit experiment](visualizations/u32_double_slit/README.md)**<br>Changed laws as named parameters: a Born-rule exponent, enhanced GRW collapse, a forced choice of slit.<br>*Quantum foundations*<br>Presets: "Three slits with P ∝ \|ψ\|^2.4 (modification)"; "C60 with enhanced GRW collapse (modification)"; "Forced choice of a slit (modification)" |
-| <a href="docs/images/p02-trap.jpg"><img src="docs/images/p02-trap.jpg" width="300" alt="p02: quantum laboratory"></a> | **[p02 · Quantum particles](visualizations/p02_quantum/README.md)** (laboratory)<br>Which-path markers, Aharonov–Bohm flux tubes, decoherence by an environment, Bohm points, parameter sweeps.<br>*Quantum foundations*<br>Presets: "Which-path marker in the upper slit: the fringes almost vanish (visibility 0.94 → 0.18)"; "Aharonov–Bohm: a flux tube h/2e in the wall between the slits shifts the fringes by half a period" |
+| <a href="docs/images/u32_double_slit.jpg"><img src="docs/images/u32_double_slit.jpg" width="300" alt="u32: The double-slit experiment"></a> | **[u32 · The double-slit experiment](visualizations/u32_double_slit/README.md)**<br>Particles land one by one; the fringes build up hit by hit and vanish under a which-path mark.<br>*Courses:* The Feynman Lectures on Physics, vol. III, ch. 1; Griffiths & Schroeter, Introduction to Quantum Mechanics; Halliday, Resnick & Walker, Fundamentals of Physics, ch. 35, 38; Hecht, Optics, ch. 9<br>▷ Watch on the site: [Photons 633 nm, two slits (Young, one photon at a time)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u32_double_slit/young) · [Quantum eraser: H/V marks + 45° analyser](https://ildar-idrisov.github.io/lfphys/run.html?rec=u32_double_slit/eraser) · [Electrons: the Aharonov–Bohm effect (flux ½ h/e)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u32_double_slit/aharonov_bohm)<br>Scenarios in the player: 19<br>Same topic at other levels: S38 · Interference and diffraction of light; the diffraction grating; polarisation (School, planned); [r12 · Double slit (long slits, 3-D): the exact Schrödinger equation and Bohm trajectories](visualizations/r12_double_slit_2d/README.md) (Research); R01 · Time-dependent Aharonov–Bohm flux in a real double slit (Research, planned); R02 · A delayed which-path mark and its erasure with massive particles in a spatial double slit (Research, planned); R05 · The pulsed scalar (electric) Aharonov–Bohm effect: numerics for an experiment's design (Research, planned); R08 · A graded which-path mark and the crossing of Bohm trajectories (Research, planned); R09 · A time-modulated slit (Research, planned) |
+| <a href="docs/images/u33_quantum_1d.jpg"><img src="docs/images/u33_quantum_1d.jpg" width="300" alt="u33: A quantum particle in one dimension"></a> | **[u33 · A quantum particle in one dimension](visualizations/u33_quantum_1d/README.md)**<br>An electron's wave meets a barrier: part tunnels through, and single detections follow the computed odds.<br>*Courses:* Griffiths & Schroeter, Introduction to Quantum Mechanics, ch. 2; Halliday, Resnick & Walker, Fundamentals of Physics, ch. 39; Young & Freedman, University Physics, ch. 40<br>▷ Watch on the site: [Electron tunnelling through a 1 eV × 0.6 nm barrier](https://ildar-idrisov.github.io/lfphys/run.html?rec=u33_quantum_1d/tunnel) · [The same through Bohm's eyes: trajectories](https://ildar-idrisov.github.io/lfphys/run.html?rec=u33_quantum_1d/bohm)<br>Scenarios in the player: 9 |
+| <a href="docs/images/u37_bell_test.jpg"><img src="docs/images/u37_bell_test.jpg" width="300" alt="u37: The Bell test with entangled pairs"></a> | **[u37 · The Bell test with entangled pairs](visualizations/u37_bell_test/README.md)**<br>Entangled pairs reach two distant stations; the CHSH parameter exceeds 2, the bound of any local theory.<br>*Courses:* Sakurai & Napolitano, Modern Quantum Mechanics, ch. 3; Griffiths & Schroeter, Introduction to Quantum Mechanics, ch. 12; Bell, Speakable and Unspeakable in Quantum Mechanics<br>▷ Watch on the site: [Photons \|Φ+⟩, quantum mechanics: optimal CHSH angles 0°, 45° / 22.5°, 67.5°, random choice](https://ildar-idrisov.github.io/lfphys/run.html?rec=u37_bell_test/chsh) · [Photons, local hidden variables: a polarisation model (modification) *(modified physics)*](https://ildar-idrisov.github.io/lfphys/run.html?rec=u37_bell_test/local_model) · [The curve E(Δ): photons, fixed settings a = b = 0°; move b](https://ildar-idrisov.github.io/lfphys/run.html?rec=u37_bell_test/scan)<br>Scenarios in the player: 6 |
 
-**Atoms, QCD, molecular and fluid benchmarks**
+**Atomic physics** · 1
 
 | | |
 |---|---|
-| <a href="docs/images/u41-1p.jpg"><img src="docs/images/u41-1p.jpg" width="300" alt="u41: quarkonium"></a> | **[u41 · Quarkonium in 3-D](visualizations/u41_quarkonium_3d/README.md)** and **[u40 · The hydrogen atom in 3-D](visualizations/u40_hydrogen_3d/README.md)**<br>What a fitted model predicts (splittings) and what it does not (absolute masses); high-n states and hydrogen-like ions.<br>*Particle and atomic physics*<br>Presets: u41 "cc̄ 1S + 1P_z: the pair sways at the transition frequency (a superposition)"; u40 "n = 10, l = 3, m = 1: a large cloud, 6 radial nodes", "The ion He⁺, 3d_xy: the cloud is smaller by a factor Z = 2" |
-| <a href="docs/images/u36-qcd.jpg"><img src="docs/images/u36-qcd.jpg" width="300" alt="u36: running alpha_s"></a> | **[u36 · QCD](visualizations/u36_qcd/README.md)**<br>How much the higher loops matter, and a world with another coupling.<br>*Particle physics*<br>Presets: "One loop only: how much the higher orders matter"; "What if α_s(M_Z) = 0.15 (a changed coupling)" *(modified)* |
-| <a href="docs/images/p03-molecules.jpg"><img src="docs/images/p03-molecules.jpg" width="300" alt="p03: molecular dynamics"></a> | **[p03 · Particles and molecules](visualizations/p03_molecules/README.md)** and **[p04 · Fluids](visualizations/p04_fluids/README.md)** (laboratories)<br>Published benchmarks inside the laboratories: the hard-disk equation of state; the DFG cylinder benchmarks and Ghia's cavity.<br>*Statistical mechanics · Fluid dynamics*<br>Presets: p03 "Hard disks: the pressure against the equation of state (Kolafa and Rottner)"; p04 "Flow past a cylinder, Re = 20 (the DFG 2D-1 set-up…)", "Lid-driven cavity, Re = 100 (centre-line profiles against the tables of Ghia, Ghia, Shin 1982)" |
+| <a href="docs/images/u40_hydrogen_3d.jpg"><img src="docs/images/u40_hydrogen_3d.jpg" width="300" alt="u40: The hydrogen atom in 3-D: orbitals"></a> | **[u40 · The hydrogen atom in 3-D: orbitals](visualizations/u40_hydrogen_3d/README.md)**<br>The orbitals of hydrogen in 3-D: clouds, nodes, ring currents and a superposition swaying at the Bohr frequency.<br>*Courses:* Griffiths & Schroeter, Introduction to Quantum Mechanics, ch. 4; Young & Freedman, University Physics, ch. 41; Sivukhin, General Course of Physics, vol. V: Atomic and Nuclear Physics<br>▷ Watch on the site: [3d_z²: lobes along z and a ring](https://ildar-idrisov.github.io/lfphys/run.html?rec=u40_hydrogen_3d/3dz2) · [2p, m = +1 complex: a doughnut and a ring current](https://ildar-idrisov.github.io/lfphys/run.html?rec=u40_hydrogen_3d/ring_current) · [1s + 2p_z: the cloud sways along z at the Bohr frequency (a superposition)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u40_hydrogen_3d/superposition)<br>Scenarios in the player: 10<br>Same topic at other levels: S42 · Line spectra, energy levels, Bohr's postulates (School, planned) |
+
+**Particle physics** · 2
+
+| | |
+|---|---|
+| <a href="docs/images/u36_qcd.jpg"><img src="docs/images/u36_qcd.jpg" width="300" alt="u36: QCD: asymptotic freedom and quarkonium"></a> | **[u36 · QCD: asymptotic freedom and quarkonium](visualizations/u36_qcd/README.md)**<br>The strong coupling weakens at short distances; a quark model gives charmonium levels near the measured ones.<br>*Courses:* Griffiths, Introduction to Elementary Particles; Review of Particle Physics (Particle Data Group)<br>▷ Watch on the site: [Asymptotic freedom and charmonium (PDG 2024, Cornell model)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u36_qcd/charmonium) · [Bottomonium](https://ildar-idrisov.github.io/lfphys/run.html?rec=u36_qcd/bottomonium)<br>Scenarios in the player: 4 |
+| <a href="docs/images/u41_quarkonium_3d.jpg"><img src="docs/images/u41_quarkonium_3d.jpg" width="300" alt="u41: Quarkonium in 3-D: wave functions"></a> | **[u41 · Quarkonium in 3-D: wave functions](visualizations/u41_quarkonium_3d/README.md)**<br>Charmonium and bottomonium in 3-D: the quark pair's clouds, their nodes, and level splittings compared with experiment.<br>*Courses:* Griffiths, Introduction to Elementary Particles, ch. 5<br>▷ Watch on the site: [cc̄ 2S (ψ(2S)): one radial node](https://ildar-idrisov.github.io/lfphys/run.html?rec=u41_quarkonium_3d/cc_2s) · [bb̄ 1S (Υ(1S)): a tighter cloud, heavier quarks](https://ildar-idrisov.github.io/lfphys/run.html?rec=u41_quarkonium_3d/bb_1s) · [cc̄ 1S + 1P_z: the pair sways at the transition frequency (a superposition)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u41_quarkonium_3d/superposition)<br>Scenarios in the player: 10 |
+
+**Astrophysics and cosmology** · 1
+
+| | |
+|---|---|
+| <a href="docs/images/u42_kerr_shadow.jpg"><img src="docs/images/u42_kerr_shadow.jpg" width="300" alt="u42: The shadow of a Kerr black hole and its photon rings"></a> | **[u42 · The shadow of a Kerr black hole and its photon rings](visualizations/u42_kerr_shadow/README.md)**<br>A rotating black hole with a disc of gas: the shadow and photon rings, traced ray by ray, compared with EHT.<br>*Courses:* Hartle, Gravity: An Introduction to Einstein's General Relativity, ch. 15; Chandrasekhar, The Mathematical Theory of Black Holes; Event Horizon Telescope Collaboration, ApJ Letters 875 (2019)<br>▷ Watch on the site: [M87*: a = 0.9, inclination 163° (as EHT for a &gt; 0), Cunningham's disc: the shadow, the lensing ring, the photon ring](https://ildar-idrisov.github.io/lfphys/run.html?rec=u42_kerr_shadow/m87) · [The disc edge-on (θ = 90°), a = 0.99: the shadow is flattened, the rings are asymmetric](https://ildar-idrisov.github.io/lfphys/run.html?rec=u42_kerr_shadow/edge_on) · [What if: the Johannsen metric with α₁₃ = 3, a larger shadow, compared with EHT *(modified physics)*](https://ildar-idrisov.github.io/lfphys/run.html?rec=u42_kerr_shadow/whatif)<br>Scenarios in the player: 6<br>Same topic at other levels: R10 · Non-Kerr photon rings: a reproduction benchmark (Research, planned) |
+
+### Research
+
+Set-ups not computed before, to study the harder laws; every novelty is a hypothesis.
+
+**The theory of relativity** · 1
+
+| | |
+|---|---|
+| <a href="docs/images/r11_thomas_3d.jpg"><img src="docs/images/r11_thomas_3d.jpg" width="300" alt="r11: Thomas–Wigner precession in 3-D"></a> | **[r11 · Thomas–Wigner precession in 3-D](visualizations/r11_thomas_3d/README.md)**<br>A craft's manoeuvre in 3-D: back at rest, its gyroscopes are turned by the holonomy of the loop.<br>*Question:* How does the turn of a craft's gyroscopes depend on the shape of its loop in velocity space, beyond planar manoeuvres and per unit of rapidity spent? · **Status: hypothesis**<br>*Prior art:* Aravind, Am. J. Phys. 65, 634 (1997); [Rhodes & Semon, Am. J. Phys. 72, 943 (2004)](https://arxiv.org/abs/gr-qc/0501070); [O'Donnell & Visser, Eur. J. Phys. 32, 1033 (2011)](https://arxiv.org/abs/1102.2001); [Berry & Visser (2020)](https://arxiv.org/abs/2002.10659); [Palge & Pfeifer, Phys. Rev. A 109, 032206 (2024)](https://arxiv.org/abs/2310.08121); Osserman, Bull. Amer. Math. Soc. 84, 1182 (1978)<br>▷ Watch on the site: [Thomas precession: uniform circular motion, γ = 1.34](https://ildar-idrisov.github.io/lfphys/run.html?rec=r11_thomas_3d/thomas) · [The seam of a ball on the sphere of velocities (non-planar, 96 burns)](https://ildar-idrisov.github.io/lfphys/run.html?rec=r11_thomas_3d/seam) · [Ordinary space: the trajectory and the gyroscopes in Thomas precession](https://ildar-idrisov.github.io/lfphys/run.html?rec=r11_thomas_3d/lab)<br>Scenarios in the player: 8<br>Same topic at other levels: U27 · Minkowski diagrams and the twin paradox (University, planned) |
+
+**Quantum physics** · 2
+
+| | |
+|---|---|
+| <a href="docs/images/r12_double_slit_2d.jpg"><img src="docs/images/r12_double_slit_2d.jpg" width="300" alt="r12: Double slit (long slits, 3-D): the exact Schrödinger equation and Bohm trajectories"></a> | **[r12 · Double slit (long slits, 3-D): the exact Schrödinger equation and Bohm trajectories](visualizations/r12_double_slit_2d/README.md)**<br>The exact wave passes two thick slits; Bohm trajectories coloured by their slit build the pattern.<br>*Question:* Where does the paraxial theory of the double slit fail for real slits of finite thickness, and how do a path mark and the Aharonov–Bohm flux change the pattern and the Bohm trajectories? · **Status: hypothesis**<br>*Prior art:* [Das, Deckert, Kellers, Krekels & Struyve, Ann. Phys. 479, 170054 (2025)](https://arxiv.org/abs/2211.13362); [Sanz & Borondo, Eur. Phys. J. D 44, 319 (2007)](https://arxiv.org/abs/quant-ph/0310096); [Xiao, Wiseman et al., Sci. Adv. 5, eaav9547 (2019)](https://arxiv.org/abs/1805.02059); Dürr, Nonn & Rempe, Phys. Rev. Lett. 81, 5705 (1998); [Macdougall, Singleton & Vagenas, Phys. Lett. A 379, 1689 (2015)](https://arxiv.org/abs/1505.01510)<br>▷ Watch on the site: [Narrow slits a = 2λ: diffraction to large angles, the paraxial theory fails](https://ildar-idrisov.github.io/lfphys/run.html?rec=r12_double_slit_2d/narrow) · [Path mark: the spin in slit B turned by 180°: the fringes almost fade, the trajectories cross the axis](https://ildar-idrisov.github.io/lfphys/run.html?rec=r12_double_slit_2d/mark180)<br>Scenarios in the player: 7<br>Same topic at other levels: [u32 · The double-slit experiment](visualizations/u32_double_slit/README.md) (University); S38 · Interference and diffraction of light; the diffraction grating; polarisation (School, planned) |
+| <a href="docs/images/r13_arrival_times_2d.jpg"><img src="docs/images/r13_arrival_times_2d.jpg" width="300" alt="r13: Particle arrival time: the rules in 2-D"></a> | **[r13 · Particle arrival time: the rules in 2-D](visualizations/r13_arrival_times_2d/README.md)**<br>Several rules of the arrival time on one run: they agree far from the source and diverge near it.<br>*Question:* When does a particle arrive at a detector? Where do the rules of the arrival time agree, and where do they diverge: near the source, for a train of packets, under backflow, behind two slits? · **Status: hypothesis**<br>*Prior art:* [Ayatollah Rafsanjani et al., Commun. Phys. 6, 195 (2023)](https://arxiv.org/abs/2301.02641); [Das & Struyve, Phys. Rev. A 104, 042214 (2021)](https://arxiv.org/abs/2105.14744); [Das, Deckert, Kellers, Krekels & Struyve, Ann. Phys. 479, 170054 (2025)](https://arxiv.org/abs/2211.13362); [Cavendish & Das, Phys. Rev. A 112, 062217 (2025)](https://journals.aps.org/pra/abstract/10.1103/332p-4nl1); [Jozani & Tumulka, Phys. Rev. Research 8, 033072 (2026)](https://arxiv.org/abs/2603.22044); [Paterek & Goussev, Phys. Rev. Lett. 136, 090202 (2026)](https://arxiv.org/abs/2511.10155)<br>▷ Watch on the site: [One packet: far from the source all the rules almost agree](https://ildar-idrisov.github.io/lfphys/run.html?rec=r13_arrival_times_2d/gauss) · [Close to the source (σz = 1λ, L = 5λ): the rules diverge](https://ildar-idrisov.github.io/lfphys/run.html?rec=r13_arrival_times_2d/near)<br>Scenarios in the player: 5 |
 
 ### Laboratories
+
+Free benches: build a scene, and the engine computes it live.
+
+*Runs only with a local server* ([Quick start](#quick-start)).
+
+**Liquids and gases** · 1
+
+| | |
+|---|---|
+| <a href="docs/images/p04_fluids.jpg"><img src="docs/images/p04_fluids.jpg" width="300" alt="p04: Fluids"></a> | **[p04 · Fluids](visualizations/p04_fluids/README.md)**<br>Build a flow past bodies and wings and watch the vortices, the lift and the drag.<br>Scenarios in the player: 7 |
+
+**Heat and molecular physics** · 1
+
+| | |
+|---|---|
+| <a href="docs/images/p03_molecules.jpg"><img src="docs/images/p03_molecules.jpg" width="300" alt="p03: Particles and molecules"></a> | **[p03 · Particles and molecules](visualizations/p03_molecules/README.md)**<br>Build matter from atoms and watch temperature, pressure and phases arise.<br>Scenarios in the player: 6 |
+
+**Quantum physics** · 1
+
+| | |
+|---|---|
+| <a href="docs/images/p02_quantum.jpg"><img src="docs/images/p02_quantum.jpg" width="300" alt="p02: Quantum particles"></a> | **[p02 · Quantum particles](visualizations/p02_quantum/README.md)**<br>Build an experiment of wave packets, barriers, slits and fields and watch the wave.<br>Scenarios in the player: 7 |
+
+**Astrophysics and cosmology** · 1
+
+| | |
+|---|---|
+| <a href="docs/images/p01_gravity.jpg"><img src="docs/images/p01_gravity.jpg" width="300" alt="p01: Space and gravity"></a> | **[p01 · Space and gravity](visualizations/p01_gravity/README.md)**<br>Build a system of stars, planets and black holes and watch gravity move it.<br>Scenarios in the player: 7<br>Same topic at other levels: [u34 · Orbits and clocks: general relativity and Newton](visualizations/u34_orbits/README.md) (University); S11 · Universal gravitation, satellites, the first cosmic velocity (School, planned) |
+
+*Planned benches:*
+
+* p05 · Optics and waves: sources, slits, lenses, mirrors, gratings, screens (batch B9)
+* p06 · Electricity and magnetism: charges, currents, magnets, conductors; fields and radiation (batch B9)
+* p07 · Relativity: observers, clocks, rods, rockets: what each of them sees (batch B9)
+
+<!-- END generated -->
 
 In a laboratory the scene is not prepared: you build it from a palette, change it at any moment, and the world computes
 what follows in real time. The catalogue's switch **Laboratories** opens them; each starts from a scenario or from a
@@ -286,13 +326,6 @@ scene file saved earlier.
 * **Scene files and recording**: save a scene to a file and start from it; the record keeps the last 10 minutes of
   computing (at most 1 GB), or everything from the moment you press "● Keep the record".
 * Conservation laws are checked as the world runs.
-
-| | |
-|---|---|
-| <a href="docs/images/p01-inspiral.jpg"><img src="docs/images/p01-inspiral.jpg" width="300" alt="p01 laboratory"></a> | **[p01 · Space and gravity](visualizations/p01_gravity/README.md)**<br>Stars, planets, Newtonian black holes and test bodies (Newton's N bodies with mergers); a general-relativistic binary radiating gravitational waves, with a detector; bodies, light rays and observers with clocks at a Kerr–Newman black hole.<br>All presets: Sun and Earth · inner planets and Jupiter · Pythagorean three-body problem · black hole and stars · Kerr black hole with bodies, rays and clocks · GR binary inspiral · eccentric GR binary |
-| <a href="docs/images/p02-double-slit.jpg"><img src="docs/images/p02-double-slit.jpg" width="300" alt="p02 laboratory"></a> | **[p02 · Quantum particles](visualizations/p02_quantum/README.md)**<br>Wave packets of electrons, neutrons and atoms (with spin) in a plane or a volume; barriers, wells, walls with slits, traps, magnetic fields, Aharonov–Bohm tubes, detectors, which-path marks, an environment; position measurements; Bohm particles.<br>All presets: double slit · which-path mark · Aharonov–Bohm · tunnelling · harmonic trap · electron in 100 T · 3-D scattering by a sphere |
-| <a href="docs/images/p03-maxwell.jpg"><img src="docs/images/p03-maxwell.jpg" width="300" alt="p03 laboratory"></a> | **[p03 · Particles and molecules](visualizations/p03_molecules/README.md)**<br>Gases, crystals, atoms and molecules with bonds and angles; mirror, soft and thermal walls, a piston, thermostats, a field, thermometers; temperature, pressure, heat and work, the Maxwell distribution, g(r).<br>All presets: Maxwell distribution · melting · gas under a piston · liquid and vapour · diatomic molecules · hard disks |
-| <a href="docs/images/p04-karman.jpg"><img src="docs/images/p04-karman.jpg" width="300" alt="p04 laboratory"></a> | **[p04 · Fluids](visualizations/p04_fluids/README.md)**<br>2-D flow by the lattice Boltzmann method: cylinders, rectangles, NACA profiles, inlets and outlets, moving walls, dye, velocity probes; drag and lift, mass and momentum balances; viscosity, grid and domain changed live.<br>All presets: cylinder Re = 20 (DFG 2D-1) · Kármán street Re = 100 (DFG 2D-2) · lid-driven cavity · channel with a plate · water cylinder · air cylinder · NACA 2412 cascade |
 
 ## What is computed and how it is checked
 

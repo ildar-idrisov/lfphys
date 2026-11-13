@@ -213,3 +213,77 @@ details.lgroup > summary { cursor: pointer; font-weight: 600; font-size: 12px; p
 .lang-switch { white-space: nowrap; font-size: 12px; }
 .lang-switch a.on { font-weight: 700; text-decoration: none; color: var(--ink); cursor: default; }
 .lang-switch.failed a.on { color: var(--bad, #c0392b); }  /* the catalogue could not be loaded (F9) */
+
+/* the start page (js/start.js): learning materials by audience — the tiles, the sections, the cards (2026-11-13) */
+.start { --aud-school: #2b8a3e; --aud-university: #1c6dd0; --aud-research: #8e44ad; --aud-labs: #c25e00; }
+:root[data-theme="dark"] .start { --aud-school: #51cf66; --aud-university: #5aa2ff; --aud-research: #c792ea; --aud-labs: #ffa94d; }
+.aud-school { --aud: var(--aud-school); } .aud-university { --aud: var(--aud-university); }
+.aud-research { --aud: var(--aud-research); } .aud-labs { --aud: var(--aud-labs); }
+.start .page { max-width: 1180px; }
+.start .topbar a.title { color: var(--ink); text-decoration: none; }
+.start .cards { grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr)); }
+.st-intro { font-size: 15px; line-height: 1.5; max-width: 48em; margin: 6px 0 18px; }
+.st-note { border-left: 4px solid var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--panel)); padding: 9px 12px;
+  border-radius: 6px; margin: 0 0 16px; font-size: 13px; line-height: 1.5; }
+.st-note.warn { border-left-color: var(--warn); background: color-mix(in srgb, var(--warn) 10%, var(--panel)); color: var(--ink); }
+.st-ready { margin-top: 6px; }
+.st-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); gap: 14px; }
+.st-tile { display: flex; flex-direction: column; gap: 8px; color: var(--ink); text-decoration: none; background: var(--panel);
+  border: 1px solid var(--line); border-top: 4px solid var(--aud); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); }
+.st-tile:hover, .st-tile:focus-visible { border-color: var(--aud); outline: none; }
+.st-tile .name { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--aud); }
+.st-tile .text { font-size: 14px; line-height: 1.45; flex: 1; }
+.st-tile .count { font-size: 13px; color: var(--muted); }
+.st-tile .open { color: var(--aud); font-weight: 600; }
+.st-tile.off, .card.off { filter: grayscale(1); opacity: .72; border-style: dashed; }
+.st-tile.off .warn, .card.off .warn { color: var(--ink); font-weight: 600; }
+img.pic { display: block; width: 100%; aspect-ratio: 2 / 1; object-fit: cover; border-radius: 6px; background: var(--chip); margin-bottom: 8px; }
+.st-continue { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 18px 0 0; }
+.st-continue:empty { display: none; }
+.st-cont { color: var(--ink); text-decoration: none; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
+.st-cont:hover { border-color: var(--accent); }
+.st-foot { margin-top: 28px; line-height: 1.6; }
+.st-head { margin: 4px 0 12px; }
+.st-back { text-decoration: none; }
+.st-head h1 { margin: 6px 0 0; font-size: 20px; font-weight: 400; line-height: 1.35; }
+.st-aud { font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--aud); margin-right: 10px; }
+.st-sub { color: var(--ink); }
+.st-filters { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 0 0 6px; }
+.st-chips, .st-by { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+button.chip { border-radius: 999px; padding: 3px 11px; }
+button.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.st-search { margin-left: auto; width: 15em; max-width: 100%; padding: 4px 8px; }
+.st-local { margin: 4px 0 0; }
+.st-sec h2 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 22px 0 10px; }
+.st-card h3 { font-size: 16px; }
+.st-teaser { font-size: 14px; line-height: 1.45; }
+.st-books { color: var(--muted); font-size: 12px; margin-top: 6px; }
+.st-question { margin-top: 8px; line-height: 1.45; }
+.st-status { margin-top: 6px; }
+.st-hyp { background: color-mix(in srgb, var(--aud-research) 18%, var(--chip)); }
+.st-prior { display: inline-block; vertical-align: top; }
+.st-prior summary { cursor: pointer; color: var(--accent); }
+.st-prior ul { margin: 4px 0 0; padding-left: 18px; font-size: 12px; }
+.st-related, .st-there { font-size: 12px; margin-top: 8px; line-height: 1.5; }
+.st-there { margin: 10px 0 0; }
+.st-moreopts { margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 6px; }
+.st-moreopts > summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+.st-id { margin-top: 8px; }
+.st-more-planned { margin-top: 10px; }
+.st-more-planned > summary { cursor: pointer; color: var(--muted); margin-bottom: 8px; }
+.card.planned-card { border-style: dashed; box-shadow: none; background: transparent; }
+.card.planned-card h3 { font-size: 14px; font-weight: 600; }
+.st-pid { color: var(--muted); font-weight: 400; }
+.st-state { margin-top: 6px; font-size: 12px; color: var(--muted); font-style: italic; }
+.card.focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+a.button { display: inline-block; background: var(--chip); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; color: var(--ink); text-decoration: none; cursor: pointer; }
+a.button:hover { border-color: var(--accent); }
+a.button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+a.button.disabled { opacity: .45; cursor: default; }
+@media (max-width: 600px) { .st-search { margin-left: 0; width: 100%; } .st-head h1 { font-size: 17px; } .start .page { padding: 12px; } }
+/* the player on a saved recording (js/player.js, S.recording) */
+.badge.rec-badge { background: #b02a37; color: #fff; font-weight: 600; letter-spacing: .03em; }
+.rec-note { margin: 8px 10px; padding: 7px 9px; border-left: 4px solid var(--accent); border-radius: 4px; font-size: 12px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel)); }
+.st-tile .pic { margin-bottom: 2px; }
+.st-tile .pic.ph { background: linear-gradient(135deg, color-mix(in srgb, var(--aud) 26%, var(--panel)), color-mix(in srgb, var(--aud) 6%, var(--panel))); }

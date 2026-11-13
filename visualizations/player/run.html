@@ -5,8 +5,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="lf-mode" content="server">
+<meta name="lf-base" content="/">
 <title data-t>lfphys · run</title>
-<link rel="stylesheet" href="/static/assets/chrome.css">
+<link rel="stylesheet" href="static/assets/chrome.css">
 <style id="ux-framework">
 /* The player's frame after the UX reviews of 2026-11-04 (UX-ui U9, U14, U16, U20-U24; UX-params P1, P2, P4, P23). */
 /* side columns that fold away, the centre takes the room (U20) */
@@ -89,11 +91,14 @@ body.picking .s3d-canvas, body.picking .sw-canvas { cursor: crosshair; outline: 
 .run.no-slices .s3d-tools button.s3d-move, .run.no-slices .s3d-tools button.s3d-tilt { display: none; }
 .run.no-field .s3d-tools select.s3d-scale { display: none; }
 </style>
+<!-- the module specifiers of the player and of every world's view, and the 3-D environment's three.js (player/vendor/README.md);
+     the site build points them at its own copies -->
+<script type="importmap">{"imports": {"three": "/static/vendor/three-0.185.1/three.module.min.js", "/static/": "/static/", "/viz/": "/viz/"}}</script>
 </head>
 <body>
 <div class="run" id="app">
   <div class="topbar">
-    <a href="/" data-t-title title="To the catalogue of visualizations and runs" data-t>← Catalogue</a>
+    <a href="/" data-page="" data-t-title title="To the start page: the demonstrations by audience and the laboratories" data-t>← Start page</a>
     <button id="fold-left" class="fold" data-t-title title="Hide / show the left column ([)">⇤</button>
     <span class="title" id="title">…</span>
     <span id="scene" class="muted"></span>
@@ -104,8 +109,8 @@ body.picking .s3d-canvas, body.picking .sw-canvas { cursor: crosshair; outline: 
     <span id="status"><span class="dot"></span><span data-t>connecting…</span></span>
     <span id="runid" class="muted mono"></span>
     <button id="keep" data-t-title title="Keep the record for good">☆</button>
-    <a href="/settings" target="_blank" data-t-title title="Where to compute (CPU / GPU) and with what precision — for new runs">⚙</a>
-    <a href="/legal" target="_blank" data-t-title title="Licence, citation, third-party code and disclaimer">§</a>
+    <a href="/settings" data-page="settings" data-server-only target="_blank" data-t-title title="Where to compute (CPU / GPU) and with what precision — for new runs">⚙</a>
+    <a href="/legal" data-page="legal" target="_blank" data-t-title title="Licence, citation, third-party code and disclaimer">§</a>
     <button id="theme" data-t-title title="Theme (T)">◐</button>
     <button id="help" data-t-title title="Help (?)">?</button>
     <button id="fold-right" class="fold" data-t-title title="Hide / show the right column (])">⇥</button>
@@ -132,9 +137,7 @@ body.picking .s3d-canvas, body.picking .sw-canvas { cursor: crosshair; outline: 
     <span id="time" class="time mono"></span>
   </div>
 </div>
-<!-- third-party modules served by this server (player/vendor/README.md): the 3-D environment's three.js -->
-<script type="importmap">{"imports": {"three": "/static/vendor/three-0.185.1/three.module.min.js"}}</script>
-<script type="module" src="/static/js/player.js"></script>
-<script type="module" src="/static/js/instruments.js"></script><!-- [LB1 P16.3 instruments] the "Instruments" panel -->
+<script type="module" src="static/js/player.js"></script>
+<script type="module" src="static/js/instruments.js"></script><!-- [LB1 P16.3 instruments] the "Instruments" panel -->
 </body>
 </html>

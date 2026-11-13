@@ -6,6 +6,10 @@ REST (JSON):
     GET    /api/health                     server version, counts
     GET    /api/viz                        catalogue: [{id, title, summary, purpose, version, schema}]
     GET    /api/viz/{viz}                  one entry
+    GET    /api/recordings                 [S] the local recordings of the public site: {worlds: {<world>: its index.json},
+                                           site: the public site's address (LFVIZ_SITE_URL)}
+    GET    /api/planned                    the planned items (``visualizations/planned.json``) not yet built: those whose
+                                           id names an existing folder (S02 <-> s02_*) are dropped
     GET    /api/runs                       runs (live and recorded), newest first
     POST   /api/runs                       {viz, preset?, params?, seed?, label?} -> {id}; starts a run
     GET    /api/runs/{id}                  the run's meta (params, seed, code hash, modifications, commands)
@@ -38,9 +42,14 @@ The server's own worker commands (``SERVER_ONLY``: ``checkpoint_now``, which the
 on the client routes, REST and WebSocket (review LB1-framework F6: any page on the LAN could make a playing world pickle
 itself and start a record segment 10 times a second, with any data in the record as its tag).
 
-Pages: ``/`` (catalogue and runs), ``/run?id=<id>`` (player), ``/legal`` (the licences, the third-party notices and the
+Pages: ``/`` (the start page: the four audiences, their demonstrations and the laboratories), ``/runs`` (the runs and
+their retention), ``/run?id=<id>`` (player; ``/run?rec=<world>/<rec>``: a saved recording), ``/legal`` (the licences, the third-party notices and the
 disclaimer; their full texts at ``/legal/<name>``); static files under ``/static/``; the browser module of a
 visualization under ``/viz/<id>/`` (its ``web/`` folder).
+
+Files of the public site's kind [S]: ``/recordings/<world>/<file>`` (the recordings made by ``site/record.py``, from
+``visualizations/recordings/`` or ``LFVIZ_RECORDINGS``; git-ignored) and ``/images/<file>`` (the pictures of the cards
+and the README, ``docs/images/``).
 """
 
 from __future__ import annotations
@@ -48,6 +57,8 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
+import re
 from pathlib import Path
 
 from aiohttp import WSMsgType, web
@@ -78,6 +89,48 @@ def client_command(body) -> dict:
     if body.get("args") is not None and not isinstance(body["args"], dict):
         raise ValueError(T("a command's “args” is an object"))
     return body
+
+
+PLANNED = registry.ROOT / "planned.json"
+
+
+def planned_list() -> list:
+    """The planned items of the catalogue (``GET /api/planned``; the site's ``api/planned.json`` is the same list): the
+    entries of ``planned.json`` whose id names no existing folder (S02 is dropped once ``s02_*`` exists)."""
+    try:
+        items = json.loads(PLANNED.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return []
+    built = {v.split("_", 1)[0].lower() for v in registry.viz_ids()}
+    return [x for x in items if isinstance(x, dict) and str(x.get("id", "")).lower() not in built]
+
+
+RECORDINGS_DEFAULT = registry.ROOT / "recordings"  # [S] site/record.py writes here (git-ignored)
+IMAGES = registry.ROOT.parent / "docs" / "images"  # [S] the pictures of the cards and the README (site/posters.mjs)
+SITE_URL = "https://ildar-idrisov.github.io/lfphys/"  # [S] the public site (CONTRACT S/P; LFVIZ_SITE_URL overrides it)
+_REC_FILE = re.compile(r"^[A-Za-z0-9_.-]{1,120}$")
+
+
+def recordings_dir() -> Path:
+    """[S] The folder of the local recordings: ``LFVIZ_RECORDINGS`` or ``visualizations/recordings``."""
+    return Path(os.environ.get("LFVIZ_RECORDINGS") or RECORDINGS_DEFAULT)
+
+
+def recordings_list(folder: Path | None = None) -> dict:
+    """[S] ``GET /api/recordings`` (the site's ``api/recordings.json`` is the same for its own folder): the index of
+    every world that has one, and the public site's address."""
+    folder = recordings_dir() if folder is None else Path(folder)
+    worlds = {}
+    if folder.is_dir():
+        for f in sorted(folder.glob("*/index.json")):
+            try:
+                idx = json.loads(f.read_text(encoding="utf-8"))
+            except (OSError, ValueError) as e:
+                log.warning("recordings: %s not read: %s", f, e)
+                continue
+            if isinstance(idx, dict) and idx.get("world") == f.parent.name:
+                worlds[f.parent.name] = idx
+    return {"worlds": worlds, "site": os.environ.get("LFVIZ_SITE_URL") or SITE_URL}
 
 
 def _json(data, status=200):
@@ -419,6 +472,12 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
     async def index(request):
         return web.FileResponse(PLAYER / "index.html")
 
+    async def runs_page(request):
+        return web.FileResponse(PLAYER / "runs.html")
+
+    async def api_planned(request):
+        return _json(planned_list())
+
     async def api_i18n(request):
         """The merged catalogue of a language (lfviz.i18n): {lang, messages}; cached until a catalogue file changes; an
         ETag (weak comparison), gzip when the client takes it (review i18n-code F9, F13). Also at
@@ -442,6 +501,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
 
     app.router.add_get("/", index)
     app.router.add_get("/run", run_page)
+    app.router.add_get("/runs", runs_page)
     app.router.add_get("/settings", settings_page)
     app.router.add_get("/legal", legal_page)
     app.router.add_get("/legal/{name}", legal_text)
@@ -458,6 +518,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
     app.router.add_get("/api/i18n/{lang}", api_i18n)
     app.router.add_get("/api/viz", viz_list)
     app.router.add_get("/api/viz/{viz}", viz_one)
+    app.router.add_get("/api/planned", api_planned)
     app.router.add_get("/api/runs", runs_list)
     app.router.add_post("/api/runs", runs_start)
     app.router.add_get("/api/runs/{id}", run_meta)
@@ -470,6 +531,36 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
     app.router.add_get("/api/runs/{id}/stream", run_stream)
     app.router.add_post("/api/runs/{id}/record", run_record)
     app.router.add_get("/ws/runs/{id}", ws_run)
+    # [S] the recordings of the public site and the pictures (CONTRACT S/P): files served as they are; a recording is
+    # gzip that the player inflates itself, so it goes as application/gzip without a Content-Encoding
+    async def api_recordings(request):
+        return _json(recordings_list())
+
+    def _file_in(base: Path, *parts) -> Path | None:
+        if not all(isinstance(p, str) and _REC_FILE.match(p) and p not in (".", "..") for p in parts):
+            return None
+        base = base.resolve()
+        target = base.joinpath(*parts).resolve()
+        return target if base in target.parents and target.is_file() else None
+
+    async def recording_file(request):
+        world = registry.resolve(request.match_info["world"])  # an old id (registry.ALIASES) names the new folder
+        f = _file_in(recordings_dir(), world, request.match_info["file"])
+        if f is None:
+            return _err(T("there is no such file"), 404)
+        ctype = "application/json" if f.suffix == ".json" else (
+            "application/gzip" if f.suffix == ".gz" else "application/octet-stream")
+        return web.Response(body=f.read_bytes(), content_type=ctype, headers={"Access-Control-Allow-Origin": "*"})
+
+    async def image_file(request):
+        f = _file_in(IMAGES, request.match_info["file"])
+        if f is None or f.suffix.lower() not in (".jpg", ".jpeg", ".png", ".webp"):
+            return _err(T("there is no such file"), 404)
+        return web.FileResponse(f)
+
+    app.router.add_get("/api/recordings", api_recordings)
+    app.router.add_get("/recordings/{world}/{file}", recording_file)
+    app.router.add_get("/images/{file}", image_file)
     # [LB1 P16.3 instruments] the measurables' series and CSV, parameter sweeps (lfviz.instruments, lfviz.sweep)
     from . import instruments, sweep  # noqa: PLC0415
     instruments.add_routes(app, mgr)

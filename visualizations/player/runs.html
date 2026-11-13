@@ -1,0 +1,36 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
+     SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="lf-mode" content="server">
+<meta name="lf-base" content="/">
+<title data-t>lfphys · my runs</title>
+<link rel="stylesheet" href="static/assets/chrome.css">
+<style>
+.start-why { max-width: 32em; font-size: 12px; font-weight: 400; }
+.runs-wrap { overflow-x: auto; }
+</style>
+<script type="importmap">{"imports": {"three": "/static/vendor/three-0.185.1/three.module.min.js", "/static/": "/static/", "/viz/": "/viz/"}}</script>
+</head>
+<body>
+<div class="topbar">
+  <a href="/" data-page="" data-t-title title="To the start page: the demonstrations by audience and the laboratories" data-t>← Start page</a>
+  <span class="title" data-t>My runs</span>
+  <span class="grow"></span>
+  <span id="health" class="muted"></span>
+  <a href="/settings" data-page="settings" data-t-title title="Where to compute (CPU / GPU) and with what precision" data-t>⚙ Devices</a>
+  <a href="/legal" data-page="legal" data-t-title title="Licence, citation, third-party code and disclaimer" data-t>Licence</a>
+  <button id="theme" data-t-title title="Theme (T)">◐</button>
+  <button id="help" data-t-title title="Help (?)">?</button>
+</div>
+<div class="page">
+  <h2><span data-t>Runs</span> <span class="muted" style="font-weight:400" data-t>(running and recorded; the records are kept on the server)</span></h2>
+  <div id="retention" class="row" style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:8px"></div>
+  <div id="runs" class="runs-wrap"></div>
+</div>
+<script type="module" src="static/js/runs.js"></script>
+</body>
+</html>

@@ -15,13 +15,22 @@
 // the view is fed the record's messages up to that time and rebuilt from the record when the cursor goes back
 // (syncView). With the cursor at the end, recording is shown live. There is no stop: a run idle without viewers is
 // suspended by the server and resumed (rebuilt from its record) when ⏺ is pressed again.
-import { connectRun, getJSON, postJSON } from "./api.js";
-import { lang, legacy, t } from "./i18n.js";
+//
+// A saved recording (/run?rec=<world>/<rec>: the public site and the server's recordings; DESIGN of the start page §1.7,
+// §4.5) is played by the same player: openRecording hands it the file's messages as a record that has ended. S.recording
+// is then set: ⏺, «Keep», «⚙» and «Cancel» are absent, ▶ plays the recording, the set-up, the actions and the world's
+// laws are a read-only summary, and everything that would change the world (slice planes too) says «a recording: this
+// needs a live run». On the server «▶ Compute this scenario live» starts a run of that world and scenario. The run's
+// passport comes from the recording's index entry.
+import { MODE, apiGet, connectRun, getJSON, openRecording, page, postJSON, url } from "./api.js";
+import { lang, legacy, t, withLang } from "./i18n.js";
 import { control, el, fill, initTheme, modal, num, panel, paramForm, time, toast, toggleTheme } from "./ui.js";
 
 initTheme();
 const $ = (id) => document.getElementById(id);
 const runId = new URLSearchParams(location.search).get("id");
+const recParam = new URLSearchParams(location.search).get("rec");  // a saved recording: "<world>/<rec>"
+const SITE = "https://ildar-idrisov.github.io/lfphys/";  // the public site, when the server does not say (GET /api/recordings)
 const MAX_FRAMES = 20000;  // beyond it the stride of the frames kept doubles: the history stays uniform at any length
 // a key frame of the view every KEY_EVERY messages fed in order (owner, 2026-10-29: «для воспроизведения назад давай
 // как в видео добавлять ключевые кадры»): going back restores the view from the nearest one before the cursor and
@@ -48,6 +57,7 @@ const S = {
   seq: 0,                          // arrival order of checks (the newest groups are shown first)
   liveCtl: {}, bound: {},          // live parameter controls (panel) and copies placed by the view
   actCtl: [],                      // controls of live actions (refreshed on "actions")
+  recording: null,                 // a saved recording: {world, index, entry, src, site} (null: a run on the server)
 };
 
 const curWorld = () => S.worlds[S.w];
@@ -56,20 +66,25 @@ const archived = () => S.w !== latest();
 const liveParams = () => S.viz.schema.params.filter((p) => p.live);
 
 async function main() {
-  if (!runId) { document.body.replaceChildren(el("div", { class: "page" }, t("No run given: /run?id=…"))); return; }
-  try {
-    S.meta = await getJSON(`/api/runs/${encodeURIComponent(runId)}`);
-    S.viz = await getJSON(`/api/viz/${encodeURIComponent(S.meta.viz)}`);
-    // a record made before the translation (its texts are Russian strings): its labels in the language in force, and
-    // a note that its sentences with numbers stay as recorded (review i18n-browser F3)
-    S.legacy = await legacy(S.meta);
-  } catch (e) { document.body.replaceChildren(el("div", { class: "page" }, t("Run not found: {why}", { why: e.message }))); return; }
-  document.title = `${t(S.viz.title)} · ${runId}`;
+  if (!runId && !recParam) { document.body.replaceChildren(el("div", { class: "page" }, t("No run given: /run?id=…"))); return; }
+  if (recParam) {
+    try { await loadRecording(recParam); } catch (e) { recordingRefused(e); return; }
+  } else {
+    try {
+      S.meta = await getJSON(url(`api/runs/${encodeURIComponent(runId)}`));
+      S.viz = await getJSON(url(`api/viz/${encodeURIComponent(S.meta.viz)}`));
+      // a record made before the translation (its texts are Russian strings): its labels in the language in force, and
+      // a note that its sentences with numbers stay as recorded (review i18n-browser F3)
+      S.legacy = await legacy(S.meta);
+    } catch (e) { document.body.replaceChildren(el("div", { class: "page" }, t("Run not found: {why}", { why: e.message }))); return; }
+  }
+  document.title = `${t(S.viz.title)} · ${S.recording ? t("recording") : runId}`;
   $("title").textContent = $("title").title = t(S.viz.title);  // the full name in the tooltip when it is cut
-  $("runid").textContent = runId;
+  $("runid").textContent = S.recording ? S.meta.id : runId;
   $("keep").textContent = S.meta.keep ? "★" : "☆";
+  if (S.recording) recordingChrome();
   if (S.legacy) toast(t("Recorded before the interface was translated (12 November 2026): its sentences with numbers are shown as they were recorded"), "notice", 12000);
-  const mod = await import(`/viz/${S.meta.viz}/view.js`);
+  const mod = await import(`/viz/${S.meta.viz}/view.js`);  // the import map points /viz/ at the site's copy
   const ctx = {
     action: (name, args) => sendAction(name, args),
     send: (cmd, args) => send(cmd, args),
@@ -97,8 +112,95 @@ async function main() {
   S.view = mod.createView(ctx);
   layout();
   bindTransport();
-  S.conn = connectRun(runId, { onOpen: reset, onMessage: onMessage, onClose: () => setStatus("dead", t("connection lost — reconnecting…")) });
+  if (S.recording) {
+    S.conn = openRecording(S.recording.src, {
+      onOpen: reset, onMessage,
+      onProgress: (got, total) => setStatus("", total ? t("loading the recording… {got:.2g} of {total:.2g} MB", { got: got / 1e6, total: total / 1e6 })
+        : t("loading the recording… {got:.2g} MB", { got: got / 1e6 })),
+      onError: (e) => { setStatus("dead", t("the recording could not be read: {why}", { why: e.message })); toast(t("The recording could not be read: {why}", { why: e.message })); },
+    }, { frameStride: S.recording.entry.frame_stride || 1 });
+  } else S.conn = connectRun(runId, { onOpen: reset, onMessage: onMessage, onClose: () => setStatus("dead", t("connection lost — reconnecting…")) });
   requestAnimationFrame(loop);
+}
+
+// --- a saved recording ----------------------------------------------------------------------------------------------
+// The world (an old id resolves: the server's /api/viz/<old>, the site's aliases.json), its index (here; on a server with
+// no local copy, the public site's — only when it was recorded from the same version of the world), the entry, and the
+// passport made from it.
+async function loadRecording(spec) {
+  const [w0, recId] = String(spec).split("/");
+  if (!w0 || !recId) throw new Error(t("a recording is named <world>/<recording>"));
+  let world = w0;
+  if (MODE === "static") {
+    try { world = (await getJSON(url("aliases.json")))[w0] || w0; } catch (e) { /* no alias table: the id as it is */ }
+  }
+  S.viz = await apiGet(`viz/${encodeURIComponent(world)}`);
+  world = S.viz.id;
+  let all = null;
+  try { all = await apiGet("recordings"); } catch (e) { all = null; }
+  const site = (all && all.site) || SITE;
+  let index = all && all.worlds ? all.worlds[world] : null;
+  let entry = index ? (index.recordings || []).find((r) => r.id === recId) : null;
+  let base = url(`recordings/${world}/`), fromSite = false;
+  if (!entry && MODE === "server") {  // the public site's recording, made by the same version of the world (§4.6)
+    let remote = null;
+    try { remote = await getJSON(`${site}recordings/${encodeURIComponent(world)}/index.json`); } catch (e) { remote = null; }
+    const e2 = remote ? (remote.recordings || []).find((r) => r.id === recId) : null;
+    if (e2 && String(remote.version) === String(S.viz.version)) { index = remote; entry = e2; base = `${site}recordings/${world}/`; fromSite = true; }
+    else if (e2) throw Object.assign(new Error(t("No recording for this version: record it locally or compute live")), { version: true });
+  }
+  if (!entry) throw Object.assign(new Error(t("No recording for this version: record it locally or compute live")), { missing: true });
+  const spec0 = (S.viz.recordings || []).find((r) => r.id === recId) || {};
+  S.recording = { world, id: recId, index, entry, site, fromSite, src: base + entry.file };
+  // the run's passport, from the index entry (what «About the run» shows)
+  S.meta = { id: `${world}/${recId}`, viz: world, version: index.version, code: index.code_hash, created: index.made,
+             seed: entry.seed ?? spec0.seed ?? 1, preset: entry.preset, keep: false, python: "", recording: entry };
+}
+
+// the recording cannot be played: why, with the way to compute it live (server) and back to the start page
+function recordingRefused(e) {
+  const v = S.viz, [w0, recId] = String(recParam).split("/");
+  const preset = ((v && v.recordings) || []).find((r) => r.id === recId)?.preset;
+  document.body.replaceChildren(el("div", { class: "page" },
+    el("p", {}, el("a", { href: withLang(page("")) }, t("← Start page"))),
+    el("h2", {}, v ? t(v.title) : w0),
+    el("p", {}, e.message),
+    MODE === "server" && v && preset ? el("p", {}, computeLiveButton(v.id, preset, 1)) : null));
+}
+
+// «▶ Compute this scenario live» (server): a run of the recording's world and scenario, then its page
+function computeLiveButton(viz, preset, seed) {
+  const b = el("button", { class: "primary", title: t("Start a run of this world and scenario on this server: the set-up can then be changed") }, t("▶ Compute this scenario live"));
+  b.onclick = async () => {
+    b.disabled = true;
+    try {
+      const j = await postJSON(url("api/runs"), { viz, preset, seed });
+      location.href = withLang(page("run", { id: j.id }));
+    } catch (e) { toast(t("Not started: {why}", { why: e.message })); b.disabled = false; }
+  };
+  return b;
+}
+
+// the top bar of a recording: its badge; no ⏺, no «Keep», no «⚙»; back to the card on its audience page
+function recordingChrome() {
+  const R = S.recording, ix = R.index || {};
+  const date = String(ix.made || "").slice(0, 10);
+  const code = String(ix.code_hash || "").slice(0, 8);
+  const badge = el("span", { class: "badge rec-badge", id: "recbadge",
+    title: [t("A recording of a real run, made by the recorder from the world's code: it plays without computing. Scenario: {label}", { label: t(R.entry.label) }),
+      R.fromSite ? t("Played from the public site: this server has no local copy (the same version of the world).") : ""].filter(Boolean).join("\n") },
+    t("RECORDING · {date} · code {code}", { date, code }));
+  $("status").before(badge);
+  for (const id of ["rec", "keep"]) $(id).style.display = "none";
+  const gear = document.querySelector('.topbar a[data-page="settings"]');
+  if (gear) gear.remove();
+  const back = document.querySelector('.topbar a[data-page=""]');
+  const aud = { school: "school", university: "university", research: "research", playground: "labs" }[S.viz.audience];
+  if (back && aud) {
+    back.setAttribute("href", page("") + `#${aud}/${S.viz.id}`);
+    back.textContent = "← " + ({ school: t("School"), university: t("University"), research: t("Research"), labs: t("Laboratories") }[aud]);
+  }
+  $("app").classList.add("recording");
 }
 
 // --- layout ---------------------------------------------------------------------------------------
@@ -110,9 +212,15 @@ function layout() {
   const left = $("left"), right = $("right");
   const pg = S.viz.kind === "playground";
   left.replaceChildren(S.banner);
+  if (S.recording) {  // what this is, and (server) the way to a live run of the same scenario
+    left.append(el("div", { class: "rec-note" },
+      el("div", {}, t("A recording: the set-up, the actions and the world's laws are shown as recorded and cannot be changed. Change them in a live run.")),
+      MODE === "server" ? el("div", { style: { marginTop: "6px" } }, computeLiveButton(S.viz.id, S.recording.entry.preset, S.meta.seed)) : null));
+  }
   if (liveParams().length) {  // a playground's live laws too (integrator, 2026-11-05)
-    left.append(panel(pg ? t("Laws of the world — change at once") : t("Set-up — changes at once"), el("div", {},
-      el("div", { class: "help" }, pg ? t("A change applies at once, at the world's current moment, to the scene already running; the other laws change with “▶ Start a new world”.")
+    left.append(panel(S.recording ? (pg ? t("Laws of the world (as recorded)") : t("Set-up (as recorded)"))
+      : pg ? t("Laws of the world — change at once") : t("Set-up — changes at once"), el("div", {},
+      S.recording ? null : el("div", { class: "help" }, pg ? t("A change applies at once, at the world's current moment, to the scene already running; the other laws change with “▶ Start a new world”.")
         : t("Any change applies at once, at the world's current moment, and starts a new stretch of the experiment. There is no “apply” button.")),
       S.liveBox)));
   }
@@ -121,8 +229,9 @@ function layout() {
   left.append(
     S.actionsPanel,
     ...(S.view.leftPanels || []),
-    panel(liveParams().length ? t("New world: laws and initial conditions") : t("New world: scenario, laws, initial conditions"), S.worldBox,
-      { closed: liveParams().length > 0 || pg }),  // a playground's scene is built in this world: closed (U23)
+    panel(S.recording ? t("Laws and initial conditions (as recorded)")
+      : liveParams().length ? t("New world: laws and initial conditions") : t("New world: scenario, laws, initial conditions"), S.worldBox,
+      { closed: liveParams().length > 0 || pg || !!S.recording }),  // a playground's scene is built in this world: closed (U23)
   );
   S.checksBox = el("div", { class: "checks" });
   S.eventsBox = el("div", { class: "events" });
@@ -134,7 +243,7 @@ function layout() {
     S.enginePanel,
     ...(S.view.rightPanels || []),
     panel(t("Events"), S.eventsBox),
-    panel(t("About the run"), S.infoBox, { closed: true }),
+    panel(S.recording ? t("About the recording") : t("About the run"), S.infoBox, { closed: true }),
   );
   $("center").replaceChildren(S.view.center);
   $("theme").onclick = toggleTheme;
@@ -154,7 +263,8 @@ function layout() {
   S.fold = fold;
   $("world").onchange = () => showWorld(Number($("world").value));
   $("keep").onclick = async () => {
-    const r = await postJSON(`/api/runs/${runId}/keep`, { keep: !S.meta.keep });
+    if (S.recording) return;
+    const r = await postJSON(url(`api/runs/${encodeURIComponent(runId)}/keep`), { keep: !S.meta.keep });
     S.meta.keep = r.keep; $("keep").textContent = r.keep ? "★" : "☆";
   };
 }
@@ -276,13 +386,14 @@ function renderBusy() {
 async function cancelBusy() {
   if (!S.busy) return;
   try {
-    const r = await fetch(`/api/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST" });
+    const r = await fetch(url(`api/runs/${encodeURIComponent(runId)}/cancel`), { method: "POST" });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) toast(j.error || r.statusText, "notice", 5000);
   } catch (e) { toast(t("Cancel: {why}", { why: e.message })); }
 }
 
 function editBlock() {
+  if (S.recording) return t("a recording: this needs a live run");
   if (archived()) return t("This is a world from the record: neither its slices nor its scene can be changed.");
   if (S.ended) return t("This is an old record: it cannot be changed.");
   if (!atEnd()) return t("You are looking at the experiment's past: slices and the scene are changed at the end of the record (⏭).");
@@ -291,6 +402,7 @@ function editBlock() {
 }
 
 function sendSet(values, ctl) {
+  if (S.recording) { toast(t("a recording: this needs a live run"), "notice", 3000); refreshLive(); return; }
   if (S.ended || archived()) { toast(t("This is a record: it cannot be changed any more"), "notice", 3000); refreshLive(); return; }
   if (!atEnd()) { toast(t("You are looking at the experiment's past: the set-up can be changed at the end of the record (⏭)"), "notice", 4000); refreshLive(); return; }
   if (S.pending === "resume") { toast(t("The world is being restored: the set-up can be changed when the record resumes"), "notice", 4000); refreshLive(); return; }
@@ -300,6 +412,7 @@ function sendSet(values, ctl) {
 }
 
 function sendAction(name, args) {
+  if (S.recording) { toast(t("a recording: this needs a live run"), "notice", 3000); return; }
   if (S.ended || archived()) { toast(t("This is a record: actions are not available"), "notice", 3000); return; }
   if (!atEnd()) { toast(t("You are looking at the experiment's past: actions at the end of the record (⏭)"), "notice", 4000); return; }
   if (S.pending === "resume") { toast(t("The world is being restored: actions are available when the record resumes"), "notice", 4000); return; }
@@ -381,6 +494,15 @@ function renderWorldPanel() {
   const W = curWorld();
   if (!W) return;
   const params = W.header.params || {};
+  if (S.recording) {  // the world's laws as recorded: a summary, nothing to start here
+    const pr = S.viz.schema.presets.find((x) => x.id === W.header.preset);
+    fill(S.worldBox,
+      el("div", { class: "help" }, t("The laws and the initial conditions of this world, as recorded. A new world needs a live run.")),
+      el("div", { class: "kv" }, el("span", {}, t("Scenario")), el("span", {}, pr ? t(pr.label) : (W.header.preset || t("own parameters"))),
+        el("span", {}, t("Random seed")), el("span", { class: "mono" }, String(W.header.seed ?? S.meta.seed))),
+      paramForm(S.viz.schema, { ...params, ...(W.live || {}) }, { readOnly: true }).el);
+    return;
+  }
   // every law of the new world is in the form (review LB1-p02-ux X3: a world of the other dimension needs its own grid
   // and window, which are live laws): those that change also on the go start at their values in this world now and
   // are marked so; one form, so that a law shown only for some values of another (the grid of the space) appears
@@ -636,6 +758,7 @@ function onMessage({ meta, blobs }) {
     } else if (meta.rebuilding) setPending("resume");  // opened while another tab's ⏺ rebuilds the world
     if (S.frames.length && S.live) S.idx = S.frames.length - 1;
     S.dirty = true; updateTransport();
+    if (S.recording && S.frames.length > 1) { goTo(0); playHistory(+1); }  // a recording plays from its start
     return;
   }
   if (meta.type === "end") {  // a worker finished (suspended, or the end of an old record): the history goes on
@@ -838,6 +961,7 @@ function renderInfo() {
     ? used.map(([k, u]) => t("{kernel}: drawing — {drawn}; checks — {check}", { kernel: k, drawn: u.drawn ? dv(u.drawn) : "—", check: u.check ? dv(u.check) : "—" })).join("; ")
     : t("all computations of this world are on the CPU (it called no kernels with a GPU implementation)");
   const over = (m.backend_settings || {}).override;
+  if (S.recording) { renderRecInfo(); return; }
   const rows = [[t("Run"), m.id], [t("Visualization"), t("{id} (version {version})", { id: m.viz, version: String(m.version) })], [t("Code"), m.code],
     [t("Devices"), devText + (over ? " " + t("(the choice of devices was set for this run)") : "")],
     [t("World"), t("{n:d} of {total:d}", { n: (curWorld() || {}).n || 1, total: S.worlds.length })], [t("Seed"), h.seed ?? m.seed],
@@ -845,7 +969,23 @@ function renderInfo() {
   fill(S.infoBox,
     h.text ? el("p", {}, h.text) : null,
     el("div", { class: "kv" }, rows.flatMap(([k, v]) => [el("span", {}, k), el("span", { class: "mono" }, String(v ?? ""))])),
-    el("p", {}, el("a", { href: `/api/runs/${runId}/stream` }, t("Download the record (.lfrec)")), " · ", el("a", { href: `/api/runs/${runId}`, target: "_blank" }, t("the run's metadata (JSON)"))));
+    el("p", {}, el("a", { href: url(`api/runs/${encodeURIComponent(runId)}/stream`) }, t("Download the record (.lfrec)")), " · ", el("a", { href: url(`api/runs/${encodeURIComponent(runId)}`), target: "_blank" }, t("the run's metadata (JSON)"))));
+}
+// «About the recording»: its passport from the index entry
+function renderRecInfo() {
+  const R = S.recording, ix = R.index || {}, e = R.entry, h = S.header || {};
+  const rows = [[t("Recording"), S.meta.id], [t("Visualization"), t("{id} (version {version})", { id: R.world, version: String(ix.version) })],
+    [t("Code"), ix.code_hash], [t("Recorded"), String(ix.made || "").replace("T", " ")], [t("Recorder"), ix.recorder],
+    [t("Scenario"), t(e.label)], [t("Seed"), h.seed ?? S.meta.seed],
+    [t("Played"), t("{s:g} s at {fps:g} frames per second", { s: e.seconds, fps: e.fps })],
+    [t("Frames"), e.frame_stride > 1 ? t("{n:d} kept of {total:d} (one in {k:d})", { n: e.frames, total: e.frames_recorded ?? e.frames * e.frame_stride, k: e.frame_stride }) : String(e.frames)],
+    [t("Size"), t("{n:.3g} MB", { n: (e.bytes_gz || 0) / 1e6 })],
+    [t("World"), t("{n:d} of {total:d}", { n: (curWorld() || {}).n || 1, total: S.worlds.length })]];
+  fill(S.infoBox,
+    h.text ? el("p", {}, t(h.text)) : null,
+    el("div", { class: "kv" }, rows.flatMap(([k, v]) => [el("span", {}, k), el("span", { class: "mono" }, String(v ?? ""))])),
+    el("p", {}, el("a", { href: R.src, download: "" }, t("Download the recording (.lfrec.gz)")),
+      R.fromSite ? el("span", { class: "muted" }, " · " + t("from the public site")) : null));
 }
 
 // --- render loop ----------------------------------------------------------------------------------
@@ -921,7 +1061,7 @@ function renderChecks() {
   if (older) { older.open = CK.older; older.addEventListener("toggle", () => { CK.older = older.open; }); }
   const sc = S.checksBox.scrollTop;
   S.checksBox.replaceChildren(
-    order.length ? table(recent, true) : el("div", { class: "muted" }, t("Nothing computed yet: start the recording (⏺).")), older);
+    order.length ? table(recent, true) : el("div", { class: "muted" }, S.recording ? t("No checks up to this moment of the recording.") : t("Nothing computed yet: start the recording (⏺).")), older);
   S.checksBox.scrollTop = sc;
 }
 
@@ -1080,15 +1220,16 @@ function bindTransport() {
     goTo(S.frames.length - 1);
     send("next_event");
   };
-  $("rt").onclick = () => send("speed", { value: 1 });
+  // a recording's speed is the player's own (nothing computes): changed here only
+  $("rt").onclick = () => { if (S.recording) { S.speed = 1; S.histT = currentT(); updateTransport(); } else send("speed", { value: 1 }); };
   $("speed").oninput = () => { $("speedv").textContent = speedLabel(sliderToSpeed(Number($("speed").value))); };
-  $("speed").onchange = () => { S.speed = sliderToSpeed(Number($("speed").value)); send("speed", { value: S.speed }); };
+  $("speed").onchange = () => { S.speed = sliderToSpeed(Number($("speed").value)); if (S.recording) updateTransport(); else send("speed", { value: S.speed }); };
   $("timeline").oninput = () => goTo(Number($("timeline").value));
   document.addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT" && e.target.type !== "range" || e.target.tagName === "SELECT") return;
     // a focused slider (the timeline, the speed) takes its own keys; ← also played the history back (review C1, c08 (b))
     if (e.target.type === "range" && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(e.key)) return;
-    if (e.key === " ") { e.preventDefault(); toggleRecord(); }
+    if (e.key === " ") { e.preventDefault(); if (S.recording) playHistory(+1); else toggleRecord(); }
     else if (e.key === "ArrowRight") { e.preventDefault(); playHistory(+1); }
     else if (e.key === "ArrowLeft") { e.preventDefault(); playHistory(-1); }
     else if (e.key === "Home") { e.preventDefault(); goTo(0); }
@@ -1159,7 +1300,8 @@ function updateTransport() {
   $("speedv").textContent = speedLabel(S.speed);
   const where = !S.frames.length ? "" : " · " + (atEnd() ? (S.playing && !archived() ? t("live") : t("end of the record")) : t("history"));
   $("status").title = S.resumeError ? t("Resuming failed: {why}", { why: S.resumeError }) : S.startError ? S.startError : "";
-  if (S.replaying) setStatus("", t("loading the record…"));  // the record's own states are not the run's
+  if (S.replaying) { if (!S.recording) setStatus("", t("loading the record…")); }  // the record's own states are not the run's
+  else if (S.recording) setStatus(S.hist ? "live" : "paused", S.hist ? t("playing the recording") : atEnd() ? t("a recording · at its end") : t("a recording · paused"));
   else if (archived()) setStatus("", t("a world from the record") + where);
   else if (S.startError && (!S.worlds.length || S.ended)) setStatus("dead", t("world not created — the reason is in “Events”"));  // P1, P3
   else if (S.ended) setStatus("", t("an old record — it cannot be resumed") + where);

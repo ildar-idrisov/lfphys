@@ -1,0 +1,149 @@
+{
+ "p01_gravity": {
+  "key": "live:0.1:inner",
+  "from": "live run 20261113-132935-p01-5546, preset inner",
+  "bytes": 31518,
+  "width": 1200,
+  "quality": 85
+ },
+ "p02_quantum": {
+  "key": "live:0.1:double_slit",
+  "from": "live run 20261113-132946-p02-cf67, preset double_slit",
+  "bytes": 46811,
+  "width": 1200,
+  "quality": 85
+ },
+ "p03_molecules": {
+  "key": "live:0.2:maxwell",
+  "from": "live run 20261113-133010-p03-6fbe, preset maxwell",
+  "bytes": 85861,
+  "width": 1200,
+  "quality": 85
+ },
+ "p04_fluids": {
+  "key": "live:0.2:karman",
+  "from": "live run 20261113-133034-p04-49d0, preset karman",
+  "bytes": 32586,
+  "width": 1200,
+  "quality": 85
+ },
+ "r11_thomas_3d": {
+  "key": "812360ef5db79308",
+  "from": "r11_thomas_3d/thomas",
+  "bytes": 89745,
+  "width": 1200,
+  "quality": 85
+ },
+ "r12_double_slit_2d": {
+  "key": "2ab690cb310845d9",
+  "from": "r12_double_slit_2d/narrow",
+  "bytes": 98763,
+  "width": 1200,
+  "quality": 85
+ },
+ "r13_arrival_times_2d": {
+  "key": "bf31291a9964c0db",
+  "from": "r13_arrival_times_2d/gauss",
+  "bytes": 67251,
+  "width": 1200,
+  "quality": 85
+ },
+ "u31_light_travel": {
+  "key": "37351776acf8893d",
+  "from": "u31_light_travel/sun_earth",
+  "bytes": 126224,
+  "width": 1200,
+  "quality": 85
+ },
+ "u32_double_slit": {
+  "key": "f9fb36fda62fd96c",
+  "from": "u32_double_slit/young",
+  "bytes": 129750,
+  "width": 1200,
+  "quality": 85
+ },
+ "u33_quantum_1d": {
+  "key": "83ff3bb4f2f2b710",
+  "from": "u33_quantum_1d/tunnel",
+  "bytes": 63780,
+  "width": 1200,
+  "quality": 85
+ },
+ "u34_orbits": {
+  "key": "acac97279b316cde",
+  "from": "u34_orbits/rosette",
+  "bytes": 72445,
+  "width": 1200,
+  "quality": 85
+ },
+ "u35_optics_bench": {
+  "key": "6880336c6fefb147",
+  "from": "u35_optics_bench/tir",
+  "bytes": 74574,
+  "width": 1200,
+  "quality": 85
+ },
+ "u36_qcd": {
+  "key": "9cd7de88fef9b53c",
+  "from": "u36_qcd/charmonium",
+  "bytes": 67562,
+  "width": 1200,
+  "quality": 85
+ },
+ "u37_bell_test": {
+  "key": "83bac89794fb766f",
+  "from": "u37_bell_test/chsh",
+  "bytes": 104670,
+  "width": 1200,
+  "quality": 85
+ },
+ "u38_wave_3d": {
+  "key": "1164689a325ae2ba",
+  "from": "u38_wave_3d/double",
+  "bytes": 74388,
+  "width": 1200,
+  "quality": 85
+ },
+ "u39_fast_observer": {
+  "key": "2afbb438a9e62b03",
+  "from": "u39_fast_observer/terrell",
+  "bytes": 108815,
+  "width": 1200,
+  "quality": 85
+ },
+ "u40_hydrogen_3d": {
+  "key": "1d4d78f3acd16f9e",
+  "from": "u40_hydrogen_3d/3dz2",
+  "bytes": 60680,
+  "width": 1200,
+  "quality": 85
+ },
+ "u41_quarkonium_3d": {
+  "key": "320023e7cb073226",
+  "from": "u41_quarkonium_3d/cc_2s",
+  "bytes": 58288,
+  "width": 1200,
+  "quality": 85
+ },
+ "u42_kerr_shadow": {
+  "key": "f7605c457223afbd",
+  "from": "u42_kerr_shadow/m87",
+  "bytes": 67406,
+  "width": 1200,
+  "quality": 85
+ },
+ "u43_optical_vortices": {
+  "key": "4fa23048c430a71b",
+  "from": "u43_optical_vortices/lg3",
+  "bytes": 70831,
+  "width": 1200,
+  "quality": 85
+ },
+ "u44_mie_scattering": {
+  "key": "3ffd1727338123a9",
+  "from": "u44_mie_scattering/rainbow",
+  "bytes": 107016,
+  "width": 1200,
+  "quality": 85
+ }
+}

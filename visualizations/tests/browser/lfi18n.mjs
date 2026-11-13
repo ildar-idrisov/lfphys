@@ -16,10 +16,11 @@ export function inLang(url) { return url + (url.includes("?") ? "&" : "?") + "la
 
 // {t, fmt}: the player's i18n.js with the catalogue of LANG
 export async function loadI18n(base) {
-  const src = await (await fetch(`${base}/static/js/i18n.js`)).text();
   const dir = mkdtempSync(join(tmpdir(), "lfi18n-"));
-  const f = join(dir, "i18n.mjs");
-  writeFileSync(f, src);
+  // i18n.js with the module it imports (base.js: where the player lives), as ES modules
+  writeFileSync(join(dir, "package.json"), '{"type": "module"}');
+  for (const m of ["i18n.js", "base.js"]) writeFileSync(join(dir, m), await (await fetch(`${base}/static/js/${m}`)).text());
+  const f = join(dir, "i18n.js");
   const I = await import(pathToFileURL(f).href);
   const j = await (await fetch(`${base}/api/i18n/${LANG}`)).json();
   I.setCatalogue(LANG, j.messages || {});

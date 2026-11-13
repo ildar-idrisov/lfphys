@@ -121,8 +121,9 @@ async function commaTyped(p, v, L) {
   await page.waitForSelector(".lang-switch a[data-lang=ru]");
   await Promise.all([page.waitForNavigation(), page.click(".lang-switch a[data-lang=ru]")]);
   await page.waitForSelector(".lang-switch a.on[data-lang=ru]", { timeout: 30000 });
-  const stored = await page.evaluate(() => ({ ls: localStorage.getItem("lfviz.lang"), lang: document.documentElement.lang, runs: document.querySelector("h2 span")?.textContent }));
-  check("the switch stores the language and reloads the page in it", stored.ls === "ru" && stored.lang === "ru" && stored.runs === tr("ru", "Runs"), stored);
+  // the start page (2026-11-13): its title in the top bar is a static text of the page
+  const stored = await page.evaluate(() => ({ ls: localStorage.getItem("lfviz.lang"), lang: document.documentElement.lang, title: document.querySelector(".topbar a.title")?.textContent }));
+  check("the switch stores the language and reloads the page in it", stored.ls === "ru" && stored.lang === "ru" && stored.title === tr("ru", "lfphys · physics computed, not drawn"), stored);
   await page.goto(base + "/settings");
   await page.waitForSelector(".lang-switch a.on");
   check("the stored language holds on the other pages", await page.evaluate(() => document.documentElement.lang) === "ru");
@@ -165,7 +166,8 @@ async function commaTyped(p, v, L) {
   await ctx.close();
 }
 
-// 2. each language: the catalogue (both modes), the static pages, a run page of every world
+// 2. each language: the start page (the demonstrations of an audience and the laboratories: the old catalogue's two
+// modes, 2026-11-13), the static pages, a run page of every world
 for (const L of LANGS) {
   const ctx = await br.newContext({ viewport: { width: 1600, height: 1000 } });
   const page = await newPage(ctx);
@@ -178,14 +180,12 @@ for (const L of LANGS) {
     }
   };
   for (const mode of ["demo", "playground"]) {
-    await page.goto(`${base}/${q}${mode === "playground" ? "#playground" : ""}`);
-    await page.evaluate((m) => { localStorage.setItem("lfviz.mode", m); }, mode);
-    await page.reload();
+    await page.goto(`${base}/${q}${mode === "playground" ? "#labs" : "#university"}`);
     await page.waitForSelector(".card", { timeout: 60000 });
     await sleep(800);
     const r = await readable(page);
     judge(`catalogue (${mode})`, r);
-    if (L !== "en") check(`${L} catalogue (${mode}): the framework's texts translated`, r.text.includes(tr(L, "Runs")) && r.text.includes(mode === "demo" ? tr(L, "▶ Start") : tr(L, "▶ Begin")), { runs: tr(L, "Runs") });
+    if (L !== "en") check(`${L} catalogue (${mode}): the framework's texts translated`, r.text.includes(tr(L, "‹ All audiences")) && r.text.includes(mode === "demo" ? tr(L, "▶ Compute live") : tr(L, "▶ Begin")), { back: tr(L, "‹ All audiences") });
     await page.screenshot({ path: `${SHOTS}/catalogue_${mode}_${L}.png` });
   }
   for (const url of ["/settings", "/legal"]) {

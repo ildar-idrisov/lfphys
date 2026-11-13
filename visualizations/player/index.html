@@ -5,8 +5,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title data-t>lfphys · visualizations of physics</title>
-<link rel="stylesheet" href="/static/assets/chrome.css">
+<!-- where the player lives (js/base.js): the server serves these as they are; the site build writes "static" and its base -->
+<meta name="lf-mode" content="server">
+<meta name="lf-base" content="/">
+<title data-t>lfphys · physics computed, not drawn</title>
+<link rel="stylesheet" href="static/assets/chrome.css">
 <style id="ux-framework">
 /* refused starts and values said where they were set (reviews 2026-11-04 UX-params P1, P2) */
 .start-err:empty { display: none; }
@@ -14,28 +17,22 @@
 .field-err:empty { display: none; }
 .field-err { grid-column: 1 / -1; color: var(--bad); font-size: 11px; }
 .field.bad input, .field.bad select { border-color: var(--bad); }
-.start-why { max-width: 32em; font-size: 12px; font-weight: 400; }
 </style>
+<!-- the module specifiers of the player and of every world's view (the site build points them at its own copies) -->
+<script type="importmap">{"imports": {"three": "/static/vendor/three-0.185.1/three.module.min.js", "/static/": "/static/", "/viz/": "/viz/"}}</script>
 </head>
-<body>
+<body class="start">
 <div class="topbar">
-  <span class="title" data-t>lfphys · visualizations of physics</span>
+  <a class="title home" href="/" data-page="" data-t>lfphys · physics computed, not drawn</a>
   <span class="grow"></span>
-  <span id="health" class="muted"></span>
-  <a href="/settings" data-t-title title="Where to compute (CPU / GPU) and with what precision" data-t>⚙ Devices</a>
-  <a href="/legal" data-t-title title="Licence, citation, third-party code and disclaimer" data-t>Licence</a>
+  <span id="health" class="muted" data-server-only></span>
+  <a id="myruns" href="/runs" data-page="runs" data-server-only data-t-title title="The runs on this server: open, keep, delete; how long they are kept" data-t>My runs</a>
+  <a href="/settings" data-page="settings" data-server-only data-t-title title="Where to compute (CPU / GPU) and with what precision" data-t>⚙ Devices</a>
+  <a href="/legal" data-page="legal" data-t-title title="Licence, citation, third-party code and disclaimer" data-t>Licence</a>
   <button id="theme" data-t-title title="Theme (T)">◐</button>
   <button id="help" data-t-title title="Help (?)">?</button>
 </div>
-<div class="page">
-  <div class="modes" id="modes"></div>
-  <div id="mode-help" class="help" style="margin-bottom:8px"></div>
-  <div id="cards" class="cards"></div>
-  <h2><span data-t>Runs</span> <span class="muted" style="font-weight:400" data-t>(running and recorded; the records are kept on the server)</span></h2>
-  <div id="retention" class="row" style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:8px"></div>
-  <div id="runs"></div>
-  <p class="muted" style="margin-top:24px"><span data-t>A research tool: the models and the results may contain errors, there is no warranty — check the results yourself. Noncommercial research, study and teaching only; if the software computed or checked what your publication reports, citing lfphys with its version is required.</span> <a href="/legal" data-t>The licence, the version to cite and the terms</a>.</p>
-</div>
-<script type="module" src="/static/js/catalog.js"></script>
+<div class="page" id="start"></div>
+<script type="module" src="static/js/start.js"></script>
 </body>
 </html>

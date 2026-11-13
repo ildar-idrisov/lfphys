@@ -21,9 +21,9 @@
 //
 // The catalogue of the language in force (the engine's, the framework's and every world's locales/<lang>.json merged)
 // is loaded before any module that imports this one runs (top-level await), so t() is usable everywhere, also at a
-// module's top level. It is fetched from ../locales/<lang>.json next to this module's folder: the server answers there
-// with the merged catalogue (as at /api/i18n/<lang>), and a static copy of the player (the public site) carries the
-// files written by `python -m lfviz.i18n --export` (review i18n-code F9). A catalogue that cannot be loaded leaves the
+// module's top level. It is fetched from url("static/locales/<lang>.json") (base.js): the server answers there with the
+// merged catalogue (as at /api/i18n/<lang>), and the public site carries the files written by
+// `python -m lfviz.i18n --export` (review i18n-code F9). A catalogue that cannot be loaded leaves the
 // English texts and marks the switch. Static texts of the HTML pages carry data-t (the element's text is its msgid) or
 // data-t-title (its title attribute is); they are translated here, and every page's top bar gets the switch EN | RU.
 //
@@ -32,11 +32,12 @@
 // (../legacy/ru-2026-11-12.json, from the catalogues of the translation's commit), and t() then shows such a string
 // as its msgid in the language in force (review i18n-browser F3). Sentences formatted with numbers stay as recorded.
 
+import { isPagePath, url } from "./base.js";
+
 export const LANGS = [["en", "EN", "English"], ["ru", "RU", "Русский"]];  // each language by its own name, i18n-ok
 const CODES = LANGS.map((l) => l[0]);
 const KEY = "lfviz.lang";
 const KEY_LINK = "lfviz.lang.link";  // the language a ?lang= link asked for, for this tab (sessionStorage)
-const PAGES = new Set(["/", "/run", "/settings", "/legal"]);  // the pages whose links carry the link's language
 const browser = typeof window !== "undefined" && typeof document !== "undefined";
 
 let LANG = "en";
@@ -78,15 +79,15 @@ function linkLang() {
 }
 
 // an address of one of the pages, with the language a link asked for when one is in force (for navigation by code)
-export function withLang(url) {
+export function withLang(href) {
   const l = linkLang();
-  if (!l) return url;
+  if (!l) return href;
   try {
-    const u = new URL(url, location.href);
-    if (u.origin !== location.origin || !PAGES.has(u.pathname) || u.searchParams.has("lang")) return url;
+    const u = new URL(href, location.href);
+    if (u.origin !== location.origin || !isPagePath(u.pathname) || u.searchParams.has("lang")) return href;
     u.searchParams.set("lang", l);
     return u.pathname + u.search + u.hash;
-  } catch (e) { return url; }
+  } catch (e) { return href; }
 }
 
 // a link about to be followed (click, middle click, keyboard, "open in a new tab") takes the link's language along
@@ -105,7 +106,7 @@ export function setCatalogue(code, messages) {
   LANG = code; CAT = messages || {}; PLURAL = new Map(); NF = new Map(); REV = null;
 }
 
-const catalogueUrl = (code) => new URL(`../locales/${code}.json`, import.meta.url).href;
+const catalogueUrl = (code) => url(`static/locales/${code}.json`);
 
 async function fetchCatalogue(code) {
   const r = await fetch(catalogueUrl(code));
@@ -162,7 +163,7 @@ export async function legacy(x) {
   if (!isLegacy(x)) return false;
   if (LANG === "ru" || REV) return true;
   try {
-    const r = await fetch(new URL("../legacy/ru-2026-11-12.json", import.meta.url).href);
+    const r = await fetch(url("static/legacy/ru-2026-11-12.json"));
     REV = new Map(Object.entries(r.ok ? (await r.json()).messages || {} : {}));
   } catch (e) { REV = new Map(); }
   return true;

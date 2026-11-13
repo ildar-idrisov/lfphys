@@ -5,16 +5,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="lf-mode" content="server">
+<meta name="lf-base" content="/">
 <title data-t>lfphys · devices and precision</title>
-<link rel="stylesheet" href="/static/assets/chrome.css">
+<link rel="stylesheet" href="static/assets/chrome.css">
+<!-- the module specifiers of the player and of every world's view, and the 3-D environment's three.js (player/vendor/README.md);
+     the site build points them at its own copies -->
+<script type="importmap">{"imports": {"three": "/static/vendor/three-0.185.1/three.module.min.js", "/static/": "/static/", "/viz/": "/viz/"}}</script>
 </head>
 <body>
 <div class="topbar">
-  <a href="/" data-t-title title="To the catalogue of visualizations and runs" data-t>← Catalogue</a>
+  <a href="/" data-page="" data-t-title title="To the start page: the demonstrations by audience and the laboratories" data-t>← Start page</a>
   <span class="title" data-t>Devices and precision of the computations</span>
   <span class="grow"></span>
   <span id="saved" class="muted"></span>
-  <a href="/legal" data-t-title title="Licence, citation, third-party code and disclaimer" data-t>Licence</a>
+  <a href="/legal" data-page="legal" data-t-title title="Licence, citation, third-party code and disclaimer" data-t>Licence</a>
   <button id="theme" data-t-title title="Theme (T)">◐</button>
 </div>
 <div class="page">
@@ -31,6 +36,6 @@
   <h2 data-t>How it works</h2>
   <div id="howto" class="muted"></div>
 </div>
-<script type="module" src="/static/js/settings.js"></script>
+<script type="module" src="static/js/settings.js"></script>
 </body>
 </html>

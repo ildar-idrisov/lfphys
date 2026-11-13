@@ -19,6 +19,7 @@
 // `velocity_max` and says so); Delete removes the selected object, Esc
 // cancels a drag. A refusal of the world is shown (the player's toast) and the ghost snaps back. A gesture that starts
 // on an object is never the camera's. Edits respect the read-only history and a busy world (ctx.readOnly, ctx.busy).
+import { url } from "./api.js";
 import { fmtField, parseNum, t } from "./i18n.js";
 import { control, el, fill, num, numberInput, panel, time, toast } from "./ui.js";
 import { armPick, isFixedWindow, picking, redrawWindows, setFrameOverlay, setWindowManipulator } from "./slices.js";
@@ -908,7 +909,7 @@ export function createPlayground(ctx, { onSelect = () => {}, describeProbe = nul
 
   async function postRec(body) {
     try {
-      const r = await fetch(`/api/runs/${encodeURIComponent(runId)}/record`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const r = await fetch(url(`api/runs/${encodeURIComponent(runId)}/record`), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error !== undefined ? t(j.error) : r.statusText);
       rec = j; drawRec();

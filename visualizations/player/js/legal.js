@@ -1,9 +1,10 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// The licence page (/legal): a summary in the viewer's language and the full texts served by the server (GET
-// /legal/<name>, in English), the third-party notices among them, so a viewer of the player gets them with the code the
+// The licence page (/legal; legal.html on the public site): a summary in the viewer's language and the full texts
+// (url("legal/<name>"): the server's GET /legal/<name>, the site's copies; in English), the third-party notices among them, so a viewer of the player gets them with the code the
 // browser loads (review of 2026-10-29, R4 and R8). The summary's texts carry inline markup: they are msgids whose
 // translations keep the same tags.
+import { apiGet, url } from "./api.js";
 import { t } from "./i18n.js";
 import { el, initTheme, toggleTheme } from "./ui.js";
 
@@ -37,7 +38,7 @@ const TEXTS = [
 ];
 
 // what a publication cites: the version and this copy's code identifier (lfphys Research Licence §5)
-fetch("/api/health").then((r) => r.json()).then((h) => {
+apiGet("health").then((h) => {
   if (h.cite) document.getElementById("cite").textContent = h.cite.text;
 }).catch(() => { document.getElementById("cite").textContent = t("the version is in CITATION.cff"); });
 
@@ -45,7 +46,7 @@ const box = document.getElementById("texts");
 for (const [name, label, open] of TEXTS) {
   const pre = el("pre", {}, t("loading…"));
   box.append(el("details", open ? { open: "" } : {}, el("summary", {}, label), pre));
-  fetch(`/legal/${encodeURIComponent(name)}`)
+  fetch(url(`legal/${encodeURIComponent(name)}`))
     .then((r) => (r.ok ? r.text() : Promise.reject(new Error(r.statusText))))
     .then((text) => { pre.textContent = text; })
     .catch((e) => { pre.textContent = t("could not load: {why}", { why: e.message }); });

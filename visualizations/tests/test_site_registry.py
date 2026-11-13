@@ -14,15 +14,19 @@ design of the start page §3, §5.4): the completeness check that fails. It need
   question), of the audiences and sections, and of the planned items is translated into every language of
   ``LANGUAGES.md`` (beyond ``tests/i18n_pending.txt``).
 
-TODO (step S of the start-page work, ``visualizations/site/``): the generated README sections must equal
-``site/readme.py``'s output in every language and carry their markers; every world must have its picture
-``docs/images/<id>.jpg``. Both belong to the site's generator and are not checked here yet.
+* the generated catalogue sections of the root READMEs (``README.md``, ``README.<code>.md`` of every language) carry
+  their markers once and equal ``site/readme.py``'s output (step S);
+* every world has its picture ``docs/images/<id>.jpg`` (``site/posters.mjs``): a JPEG 1200 px wide within the poster
+  budget's hard limit, listed in ``docs/images/posters.json`` (step S).
 """
 
 from __future__ import annotations
 
+import importlib.util
 import json
+import sys
 import re
+import struct
 from collections import Counter
 
 import pytest
@@ -202,3 +206,55 @@ def test_every_catalogue_text_is_translated(lang):
     report += [("registry", m) for m in framework if m not in own]
     report += [(p["id"], m) for p in PLANNED for m in (p["title"], p.get("text")) if m and m not in own]
     assert not report, f"{len(report)} texts without a {lang} translation: {report[:30]}"
+
+
+# --- step S: the generated READMEs and the pictures (visualizations/site/) ------------------------------------------
+def _site_module(name):
+    if f"lfsite_{name}" in sys.modules:
+        return sys.modules[f"lfsite_{name}"]
+    spec = importlib.util.spec_from_file_location(f"lfsite_{name}", VIZ / "site" / f"{name}.py")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod  # a dataclass looks its module up there
+    spec.loader.exec_module(mod)
+    return mod
+
+
+@pytest.mark.parametrize("lang", i18n.LANGS)
+def test_the_readme_catalogue_is_the_registrys_in_every_language(lang):
+    readme = _site_module("readme")
+    f = readme.readme_files()[lang]
+    assert f.is_file(), f"{f.name} is missing (LANGUAGES.md lists {lang})"
+    text = f.read_text(encoding="utf-8")
+    assert text.count(readme.BEGIN) == 1 and text.count(readme.END) == 1, f"{f.name}: the markers of the generated section"
+    assert readme.apply(text, readme.generate(lang), f.name) == text, \
+        f"{f.name}: the generated section differs from the registry: run python3 site/readme.py"
+    for vid in IDS:  # every world in exactly one audience
+        n = len(re.findall(r"\*\*\[%s · " % re.escape(vid.split("_", 1)[0]), text))
+        assert n == 1, (f.name, vid, n)
+
+
+def _jpeg_size(data: bytes):
+    """(width, height) of a JPEG from its first frame header (SOF0..SOF15 but DHT, JPG, DAC)."""
+    i = 2
+    while i + 9 < len(data):
+        if data[i] != 0xFF:
+            return None
+        marker, length = data[i + 1], struct.unpack(">H", data[i + 2:i + 4])[0]
+        if 0xC0 <= marker <= 0xCF and marker not in (0xC4, 0xC8, 0xCC):
+            h, w = struct.unpack(">HH", data[i + 5:i + 9])
+            return w, h
+        i += 2 + length
+    return None
+
+
+@pytest.mark.parametrize("vid", IDS)
+def test_every_world_has_its_picture(vid):
+    pic = registry.picture(vid)
+    assert pic, f"no docs/images/{vid}.jpg: make it with visualizations/site/posters.mjs"
+    data = (VIZ.parent / pic).read_bytes()
+    assert data[:2] == b"\xff\xd8", "not a JPEG"
+    assert len(data) <= 400_000, (vid, len(data))  # the poster's hard limit (design §4.3; the target is 150 kB)
+    size = _jpeg_size(data)
+    assert size and size[0] == 1200, (vid, size)
+    posters = json.loads((VIZ.parent / "docs" / "images" / "posters.json").read_text(encoding="utf-8"))
+    assert vid in posters, f"{vid} is not in docs/images/posters.json"
