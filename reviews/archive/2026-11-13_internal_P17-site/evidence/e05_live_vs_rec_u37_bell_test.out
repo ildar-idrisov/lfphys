@@ -1,0 +1,14 @@
+HEADER keys differing: {'backend': ("{'settings': {'kernels': {}, 'crossover': {}}, 'used': {'optics.angular_spectrum", "{'settings': {'kernels': {}, 'crossover': {}}, 'used': {}, 'notes': []}")}
+REC non-frame types: ['check', 'end', 'event', 'header', 'pairs', 'state']
+LIVE non-frame types: ['check', 'checkpoint', 'event', 'header', 'pairs', 'state']
+live world time reached: 1.2540965411098037e-05 recording t_end: 4.999291876782408e-05
+  rec types Counter({'check': 20, 'event': 1}) live types Counter({'check': 20, 'event': 1})
+non-frame (excluding ['busy', 'checkpoint', 'command', 'end', 'notice', 'record_segment', 'resumed', 'state']) up to t=1.2541e-05: rec 21, live 21
+  same sequence of types/names
+frames: rec 1200 live 302
+frame at t=0: {}
+live frames at exactly a recording frame's t: 0
+  live frame 75 t=3.09386e-06 vs rec frame 74 t=3.08547e-06:  {}
+  live frame 151 t=6.27101e-06 vs rec frame 150 t=6.25433e-06:  {}
+  live frame 301 t=1.2541e-05 vs rec frame 301 t=1.25503e-05:  {'cells': 'differs', 'S': 'differs', 'blob:pts': 0.0099}
+RUN 20261113-163305-u37-45e8

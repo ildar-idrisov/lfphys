@@ -1,0 +1,44 @@
+r11_thomas_3d thomas used: [] seed 1 preset thomas fps 20.0
+r11_thomas_3d seam used: [] seed 1 preset seam fps 20.0
+r11_thomas_3d lab used: [] seed 1 preset lab fps 20.0
+r12_double_slit_2d narrow used: ['quantum.split_operator'] seed 1 preset narrow fps 10.0
+r12_double_slit_2d mark180 used: ['quantum.split_operator'] seed 1 preset mark180 fps 10.0
+r13_arrival_times_2d gauss used: ['quantum.split_operator'] seed 1 preset gauss fps 10.0
+r13_arrival_times_2d near used: ['quantum.split_operator'] seed 1 preset near fps 10.0
+u31_light_travel sun_earth used: ['quantum.split_operator'] seed 1 preset sun_earth fps 20.0
+u31_light_travel measure_c used: ['quantum.split_operator'] seed 1 preset measure_c fps 20.0
+u31_light_travel lensing used: ['quantum.split_operator'] seed 1 preset lensing fps 20.0
+u32_double_slit young used: [] seed 1 preset photon_young fps 20.0
+u32_double_slit eraser used: [] seed 1 preset photon_eraser fps 20.0
+u32_double_slit aharonov_bohm used: [] seed 1 preset electron_ab fps 20.0
+u33_quantum_1d tunnel used: [] seed 1 preset tunnel fps 10.0
+u33_quantum_1d bohm used: [] seed 1 preset tunnel_bohm fps 10.0
+u34_orbits rosette used: ['quantum.split_operator'] seed 1 preset default fps 20.0
+u34_orbits mercury used: ['quantum.split_operator'] seed 1 preset mercury fps 20.0
+u34_orbits plunge used: ['quantum.split_operator'] seed 1 preset plunge fps 20.0
+u35_optics_bench tir used: ['quantum.split_operator'] seed 1 preset tir fps 20.0
+u35_optics_bench brewster used: ['quantum.split_operator'] seed 1 preset brewster fps 20.0
+u35_optics_bench spr used: ['quantum.split_operator'] seed 1 preset spr fps 20.0
+u36_qcd charmonium used: ['quantum.split_operator'] seed 1 preset standard fps 20.0
+u36_qcd bottomonium used: ['quantum.split_operator'] seed 1 preset bottom fps 20.0
+u37_bell_test chsh used: ['gravity.kerr_shadow', 'optics.angular_spectrum', 'relativity.raytrace'] seed 1 preset photon_chsh fps 20.0
+u37_bell_test local_model used: ['gravity.kerr_shadow', 'optics.angular_spectrum', 'relativity.raytrace'] seed 1 preset photon_lhv fps 20.0
+u37_bell_test scan used: ['gravity.kerr_shadow', 'optics.angular_spectrum', 'relativity.raytrace'] seed 1 preset scan fps 20.0
+u38_wave_3d double used: ['optics.angular_spectrum'] seed 1 preset double fps 10.0
+u39_fast_observer terrell used: ['optics.angular_spectrum', 'relativity.raytrace'] seed 1 preset terrell fps 10.0
+u39_fast_observer city used: ['optics.angular_spectrum', 'relativity.raytrace'] seed 1 preset city fps 10.0
+u40_hydrogen_3d 3dz2 used: ['optics.angular_spectrum', 'relativity.raytrace'] seed 1 preset 3dz2 fps 20.0
+u40_hydrogen_3d ring_current used: ['optics.angular_spectrum', 'relativity.raytrace'] seed 1 preset 2p_m1 fps 20.0
+u40_hydrogen_3d superposition used: ['optics.angular_spectrum', 'relativity.raytrace'] seed 1 preset super_1s2p fps 20.0
+u41_quarkonium_3d cc_2s used: ['optics.angular_spectrum', 'relativity.raytrace'] seed 1 preset cc_2S fps 20.0
+u41_quarkonium_3d bb_1s used: ['optics.angular_spectrum', 'relativity.raytrace'] seed 1 preset bb_1S fps 20.0
+u41_quarkonium_3d superposition used: ['optics.angular_spectrum', 'relativity.raytrace'] seed 1 preset cc_super fps 20.0
+u42_kerr_shadow m87 used: ['optics.angular_spectrum', 'relativity.raytrace'] seed 1 preset m87 fps 20.0
+u42_kerr_shadow edge_on used: ['gravity.kerr_shadow', 'optics.angular_spectrum', 'relativity.raytrace'] seed 1 preset edge_on fps 20.0
+u42_kerr_shadow whatif used: ['gravity.kerr_shadow', 'optics.angular_spectrum', 'relativity.raytrace'] seed 1 preset whatif fps 20.0
+u43_optical_vortices lg3 used: [] seed 1 preset lg3 fps 10.0
+u43_optical_vortices tight used: [] seed 1 preset tight fps 10.0
+u43_optical_vortices dove used: [] seed 1 preset dove fps 10.0
+u44_mie_scattering rainbow used: [] seed 1 preset rainbow fps 10.0
+u44_mie_scattering supernumerary used: [] seed 1 preset supernumerary fps 10.0
+u44_mie_scattering glory used: [] seed 1 preset glory fps 10.0

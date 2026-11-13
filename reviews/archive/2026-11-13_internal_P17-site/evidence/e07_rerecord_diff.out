@@ -1,0 +1,12 @@
+u32_double_slit young files differ msgs 3315 3315 diff kinds: {}
+u32_double_slit eraser files differ msgs 2691 2691 diff kinds: {}
+u32_double_slit aharonov_bohm files differ msgs 3315 3315 diff kinds: {}
+u37_bell_test chsh files differ msgs 1277 1277 diff kinds: {('header', ('backend',), ()): 1}
+u37_bell_test local_model files differ msgs 1270 1270 diff kinds: {('header', ('backend',), ()): 1}
+u37_bell_test scan files differ msgs 1277 1277 diff kinds: {('header', ('backend',), ()): 1, ('frame', (), ('flight',)): 905}
+u34_orbits rosette files differ msgs 2224 2224 diff kinds: {('header', ('backend',), ()): 1}
+u34_orbits mercury files differ msgs 1652 1652 diff kinds: {('header', ('backend',), ()): 1}
+u34_orbits plunge files differ msgs 842 842 diff kinds: {('header', ('backend',), ()): 1}
+u42_kerr_shadow m87 files differ msgs 497 497 diff kinds: {('header', ('backend',), ()): 1, ('lines', (), ('pts',)): 2}
+u42_kerr_shadow edge_on files differ msgs 497 497 diff kinds: {('header', ('backend',), ()): 1, ('lines', (), ('pts',)): 2}
+u42_kerr_shadow whatif files differ msgs 413 413 diff kinds: {('header', ('backend',), ()): 1, ('lines', (), ('pts',)): 1}

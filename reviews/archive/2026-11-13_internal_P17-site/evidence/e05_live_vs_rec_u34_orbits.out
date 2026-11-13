@@ -1,0 +1,14 @@
+HEADER keys differing: {'backend': ("{'settings': {'kernels': {}, 'crossover': {}}, 'used': {'quantum.split_operator'", "{'settings': {'kernels': {}, 'crossover': {}}, 'used': {}, 'notes': []}")}
+REC non-frame types: ['apsis', 'check', 'end', 'event', 'header', 'segment', 'state', 'trail']
+LIVE non-frame types: ['apsis', 'check', 'checkpoint', 'event', 'header', 'segment', 'state', 'trail']
+live world time reached: 0.1741530713739617 recording t_end: 0.6966356009519399
+  rec types Counter({'check': 15, 'apsis': 4, 'event': 3}) live types Counter({'check': 15, 'apsis': 4, 'event': 3})
+non-frame (excluding ['busy', 'checkpoint', 'command', 'end', 'notice', 'record_segment', 'resumed', 'state']) up to t=0.174153: rec 22, live 22
+  first difference at 6 rec ('check', 0.05054820457282678, 's0.r_apo') live ('check', 0.050090309803150164, 's0.r_apo')
+frames: rec 1200 live 301
+frame at t=0: {}
+live frames at exactly a recording frame's t: 0
+  live frame 75 t=0.0431003 vs rec frame 74 t=0.042995:  {'v': 0.0009, 'deficit': 0.0007, 'grav': 0.0, 'rate': 0.0, 'kin': 0.0, 'r': 0.0005, 'y': 0.0144, 'phi': 0.0008}
+  live frame 150 t=0.0867829 vs rec frame 149 t=0.0865711:  {'v': 0.0081, 'deficit': 0.0117, 'grav': 0.0002, 'rate': 0.0005, 'kin': 0.0002, 'r': 0.0092, 'y': 0.0105, 'phi': 0.0033}
+  live frame 300 t=0.174153 vs rec frame 300 t=0.174304:  {'v': 0.0038, 'deficit': 0.0042, 'grav': 0.0001, 'rate': 0.0001, 'kin': 0.0001, 'r': 0.0029, 'y': 0.0038, 'phi': 0.0005}
+RUN 20261113-163219-u34-c59f

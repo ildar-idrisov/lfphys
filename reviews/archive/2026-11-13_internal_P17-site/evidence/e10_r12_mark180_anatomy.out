@@ -1,0 +1,12 @@
+header 1 0.01 MB
+check 3 0.0 MB
+wave 101 9.42 MB
+tracks 538 1.1 MB
+state 2 0.0 MB
+frame 200 0.42 MB
+screen 64 0.21 MB
+target 64 1.37 MB
+hits 224 0.09 MB
+end 1 0.0 MB
+frame t range 0.0 1.4123622719537258e-15
+wave t first/last [0.0, 1.40989910458199e-17, 2.829358674384726e-17] 1.4016685228541015e-15

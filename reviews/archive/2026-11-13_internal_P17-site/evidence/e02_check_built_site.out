@@ -1,0 +1,5 @@
+WARN r12_double_slit_2d/narrow: 6.62 MB is over the target 3 MB (accepted: the wave field as 'wave' snapshots (~94 kB each, ~5 per world second, 101 in 20 s) that the record keeps so that scrolling back shows the wave of that moment)
+WARN r12_double_slit_2d/mark180: 8.04 MB is over the target 3 MB (accepted: the wave field as 'wave' snapshots (~94 kB each, ~5 per world second, 101 in 20 s) that the record keeps so that scrolling back shows the wave of that moment)
+WARN r12_double_slit_2d: 14.66 MB is over the world's target 12 MB (accepted: its two recordings of the wave field (see each))
+WARN u38_wave_3d/double: 6.43 MB is over the target 3 MB (accepted: one 6.3 MB float volume of the whole 3-D field, sent once at the start)
+# 0 failures, 4 warnings; the site is 53.0 MB

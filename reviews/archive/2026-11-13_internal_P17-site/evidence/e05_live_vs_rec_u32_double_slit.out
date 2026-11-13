@@ -1,0 +1,14 @@
+HEADER keys differing: {}
+REC non-frame types: ['check', 'detections', 'end', 'header', 'segment', 'state', 'stories']
+LIVE non-frame types: ['check', 'checkpoint', 'detections', 'header', 'segment', 'state', 'stories']
+live world time reached: 0.6007293725758793 recording t_end: 2.3979999999999575
+  rec types Counter({'stories': 262, 'detections': 260, 'check': 6, 'header': 1, 'segment': 1}) live types Counter({'detections': 256, 'stories': 256, 'check': 6, 'header': 1, 'segment': 1})
+non-frame (excluding ['busy', 'checkpoint', 'command', 'end', 'notice', 'record_segment', 'resumed', 'state']) up to t=0.600729: rec 530, live 520
+  first difference at 8 rec ('detections', 0.002, '') live ('detections', 0.002005075179040432, '')
+frames: rec 1200 live 287
+frame at t=0: {}
+live frames at exactly a recording frame's t: 0
+  live frame 71 t=0.145363 vs rec frame 73 t=0.146:  {'coh': 'differs', 'n_seg': 0.2532, 'counts': 'differs', 'chi2': 'differs'}
+  live frame 143 t=0.299776 vs rec frame 150 t=0.3:  {'coh': 'differs', 'n_seg': 0.1038, 'counts': 'differs', 'chi2': 'differs'}
+  live frame 286 t=0.600729 vs rec frame 300 t=0.6:  {'coh': 'differs', 'n_seg': 0.0717, 'counts': 'differs', 'chi2': 'differs'}
+RUN 20261113-163242-u32-d74e

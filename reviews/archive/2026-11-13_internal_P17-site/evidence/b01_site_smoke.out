@@ -1,0 +1,61 @@
+{"check":"en start: the four audiences, in order","ok":true,"tiles":["tile-school","tile-university","tile-research","tile-labs"]}
+{"check":"en start: the audiences' names","ok":true,"tiles":["SCHOOL","UNIVERSITY","RESEARCH","LABORATORIES"]}
+{"check":"en start: the note «recordings of real runs»","ok":true,"note":"These are recordings of real runs: you can play them, go back and look at the checks. To compute live, change the set-up or use the laboratories, run lfphys on "}
+{"check":"en start: the laboratories' tile greyed, «Works only with a running server»","ok":true,"labs":"LABORATORIES\nFree benches: build a scene, and the engine computes it live\n4 benches\nWorks only with a running server\nOpen →"}
+{"check":"en start: no «My runs», no device settings","ok":true}
+{"check":"en start: no Cyrillic","ok":true,"sample":[]}
+{"check":"en #university: the heading","ok":true,"h1":"UNIVERSITYThe experiments of the university courses, computed from the laws"}
+{"check":"en #university: a card per university world","ok":true,"cards":14,"worlds":14}
+{"check":"en #university: recording links under the base, no «▶ Compute live»","ok":true,"live":0,"recs":["/lfphys/run.html?rec=u35_optics_bench%2Ftir&lang=en","/lfphys/run.html?rec=u38_wave_3d%2Fdouble&lang=en","/lfphys/run.html?rec=u43_optical_vortices%2Flg3&lang=en"]}
+{"check":"en #university: no Cyrillic","ok":true,"sample":[]}
+{"check":"en #school: the banner «Ready: k of n» from the catalogue and the plan","ok":true,"ready":"Ready: 0 of 45. Next: S01 Straight-line motion: uniform and uniformly accelerated; S02 Free fall and Galileo's experimen","want":"Ready: 0 of 45."}
+{"check":"en #school: nothing startable","ok":true,"ready":"Ready: 0 of 45. Next: S01 Straight-line motion: uniform and uniformly accelerated; S02 Free fall and Galileo's experiments; S03 Motion of a body thrown horizontally and at an angle; S09 Work, kinetic and potential energy, the conservation law.","startable":0}
+{"check":"en #school: no Cyrillic","ok":true,"sample":[]}
+{"check":"en #labs: greyed, nothing to start","ok":true,"warn":"Works only with a running server: these benches compute what you build, so there is nothing to replay. Run lfphys on your computer (Docker; a GPU is optional). How to run it →","how":"https://github.com/ildar-idrisov/lfphys#quick-start","cards":4,"off":4,"buttons":0}
+{"check":"en #labs: the note «Works only with a running server» with the quick start","ok":true,"warn":"Works only with a running server: these benches compute what you build, so there is nothing to replay. Run lfphys on you","how":"https://github.com/ildar-idrisov/lfphys#quick-start"}
+{"check":"en #labs: no Cyrillic","ok":true,"sample":[]}
+{"check":"en u34_orbits/rosette: it plays (the timeline moves, the world time grows)","ok":true,"t0":0,"t1":0.017430415369940274,"tl0":0,"tl1":30}
+{"check":"en u34_orbits/rosette: the checks appear","ok":true,"checks":2}
+{"check":"en u34_orbits/rosette: the badge «RECORDING»","ok":true,"badge":"RECORDING · 2026-11-13 · code c9984f0d"}
+{"check":"en u34_orbits/rosette: no «Compute live» on the site","ok":true}
+{"check":"en u34_orbits/rosette: the canvas is not blank","ok":true,"share":0.07293860334322766,"colours":181}
+{"check":"en u34_orbits/rosette: no Cyrillic","ok":true,"sample":[]}
+{"check":"en legal.html: every text loaded","ok":true,"texts":[13300,1626,4556,2601,1080,20846],"first":""}
+{"check":"en legal.html: the citation","ok":true,"cite":"I. Idrisov, lfphys: a physics engine and interactive visualizations of physical hypotheses, version 0.1.0 (code 642ec0b5"}
+{"check":"en legal.html: no Cyrillic","ok":true,"sample":[]}
+{"check":"en no request outside the sub-path","ok":true,"outside":[],"favicon":0}
+{"check":"en no request to an API (/api/, api/<name> that is no file, a WebSocket)","ok":true,"api":[],"sockets":[]}
+{"check":"en no failed request","ok":true,"bad":[]}
+{"check":"en no page errors","ok":true,"errs":[]}
+{"check":"en no console errors","ok":true,"console":[]}
+{"check":"ru start: the four audiences, in order","ok":true,"tiles":["tile-school","tile-university","tile-research","tile-labs"]}
+{"check":"ru start: the audiences' names","ok":true,"tiles":["ШКОЛА","УНИВЕРСИТЕТ","ИССЛЕДОВАНИЯ","ЛАБОРАТОРИИ"]}
+{"check":"ru start: the note «recordings of real runs»","ok":true,"note":"Здесь записи настоящих запусков: их можно воспроизводить, перематывать назад и смотреть проверки. Чтобы считать вживую, менять установку или работать в лаборато"}
+{"check":"ru start: the laboratories' tile greyed, «Works only with a running server»","ok":true,"labs":"ЛАБОРАТОРИИ\nСвободные стенды: соберите сцену, и движок рассчитает её вживую\n4 стенда\nРаботает только с запущенным сервером\nОткрыть →"}
+{"check":"ru start: no «My runs», no device settings","ok":true}
+{"check":"ru start: in the language","ok":true,"lang":"ru"}
+{"check":"ru #university: the heading","ok":true,"h1":"УНИВЕРСИТЕТОпыты университетских курсов, рассчитанные из законов"}
+{"check":"ru #university: a card per university world","ok":true,"cards":14,"worlds":14}
+{"check":"ru #university: recording links under the base, no «▶ Compute live»","ok":true,"live":0,"recs":["/lfphys/run.html?rec=u35_optics_bench%2Ftir&lang=ru","/lfphys/run.html?rec=u38_wave_3d%2Fdouble&lang=ru","/lfphys/run.html?rec=u43_optical_vortices%2Flg3&lang=ru"]}
+{"check":"ru #university: in the language","ok":true,"lang":"ru"}
+{"check":"ru #school: the banner «Ready: k of n» from the catalogue and the plan","ok":true,"ready":"Готово: 0 из 45. Следующие: S01 Прямолинейное движение: равномерное и равноускоренное; S02 Свободное падение и опыты Гал","want":"Готово: 0 из 45."}
+{"check":"ru #school: nothing startable","ok":true,"ready":"Готово: 0 из 45. Следующие: S01 Прямолинейное движение: равномерное и равноускоренное; S02 Свободное падение и опыты Галилея; S03 Движение тела, брошенного горизонтально и под углом; S09 Работа, кинетическая и потенциальная энергия, закон сохранения.","startable":0}
+{"check":"ru #school: in the language","ok":true,"lang":"ru"}
+{"check":"ru #labs: greyed, nothing to start","ok":true,"warn":"Работает только с запущенным сервером: эти стенды рассчитывают то, что вы соберёте, поэтому воспроизводить нечего. Запустите lfphys на своём компьютере (Docker; видеокарта не обязательна). Как запустить →","how":"https://github.com/ildar-idrisov/lfphys/blob/main/README.ru.md#%D0%B1%D1%8B%D1%81%D1%82%D1%80%D1%8B%D0%B9-%D1%81%D1%82%D0%B0%D1%80%D1%82","cards":4,"off":4,"buttons":0}
+{"check":"ru #labs: the note «Works only with a running server» with the quick start","ok":true,"warn":"Работает только с запущенным сервером: эти стенды рассчитывают то, что вы соберёте, поэтому воспроизводить нечего. Запус","how":"https://github.com/ildar-idrisov/lfphys/blob/main/README.ru.md#%D0%B1%D1%8B%D1%81%D1%82%D1%80%D1%8B%D0%B9-%D1%81%D1%82%D0%B0%D1%80%D1%82"}
+{"check":"ru #labs: in the language","ok":true,"lang":"ru"}
+{"check":"ru u34_orbits/rosette: it plays (the timeline moves, the world time grows)","ok":true,"t0":0,"t1":0.017430415369940274,"tl0":0,"tl1":30}
+{"check":"ru u34_orbits/rosette: the checks appear","ok":true,"checks":2}
+{"check":"ru u34_orbits/rosette: the badge «ЗАПИСЬ»","ok":true,"badge":"ЗАПИСЬ · 2026-11-13 · код c9984f0d"}
+{"check":"ru u34_orbits/rosette: no «Compute live» on the site","ok":true}
+{"check":"ru u34_orbits/rosette: the canvas is not blank","ok":true,"share":0.07402593344789876,"colours":187}
+{"check":"ru u34_orbits/rosette: in the language","ok":true,"lang":"ru"}
+{"check":"ru legal.html: every text loaded","ok":true,"texts":[13300,1626,4556,2601,1080,20846],"first":""}
+{"check":"ru legal.html: the citation","ok":true,"cite":"I. Idrisov, lfphys: a physics engine and interactive visualizations of physical hypotheses, version 0.1.0 (code 642ec0b5"}
+{"check":"ru legal.html: in the language","ok":true,"lang":"ru"}
+{"check":"ru no request outside the sub-path","ok":true,"outside":[],"favicon":0}
+{"check":"ru no request to an API (/api/, api/<name> that is no file, a WebSocket)","ok":true,"api":[],"sockets":[]}
+{"check":"ru no failed request","ok":true,"bad":[]}
+{"check":"ru no page errors","ok":true,"errs":[]}
+{"check":"ru no console errors","ok":true,"console":[]}
+all passed

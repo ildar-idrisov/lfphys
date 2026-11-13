@@ -1,0 +1,6 @@
+absolute /api and /run in static/js/start.js (manifest rebuilt): exit 0; []
+viz/u34_orbits/ (the view module) missing, manifest rebuilt: exit 0; []
+images/u34_orbits.jpg missing while api/viz.json names its picture (manifest rebuilt): exit 0; []
+static/vendor/.../OrbitControls.js missing (manifest rebuilt): exit 0; []
+an extra index entry the registry does not know: exit 0; []
+static/locales/ru.json missing: exit 1; ['FAIL static/locales/ru.json is missing']
