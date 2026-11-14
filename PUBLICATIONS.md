@@ -1,8 +1,9 @@
 # Research results and publications
 
-What You may do with what You obtain using lfphys, and how to cite it. The binding terms are in `LICENSE.md` (the
-Software: code, and the interface and help the program shows) and `LICENSE-DOCS.txt` (the documentation); this file
-explains them and adds the permissions of section 3 for the documentation.
+What You may do with what You obtain using lfphys, how to cite it, and how to credit it when You use it in public. The
+binding terms are in `LICENSE.md` (the lfphys Research Licence 1.0, text of 14 November 2026: the Software, that is
+code, and the interface and help the program shows) and `LICENSE-DOCS.txt` (the documentation, including the materials
+of the public site); this file explains them and adds the permissions of section 3 for the documentation.
 
 ## 1. Your results are Yours
 
@@ -13,6 +14,7 @@ and short excerpts of the source code, may be reproduced in a publication of any
 CC BY 4.0 — by You, Your publisher and the publisher's licensees, attributed "Ildar Idrisov, lfphys <version>"
 (`LICENSE.md` §6.3). Selling, or licensing for a fee, data sets that consist substantially of output of the Software
 needs a commercial agreement (`LICENSE.md` §6.2); publishing them does not, and readers of a publication are not bound.
+The attribution line of section 5 is a condition of the licence to use lfphys, not a claim to Your results.
 
 ## 2. Citation is a condition, not a request
 
@@ -36,8 +38,8 @@ lets the licensor grant additional permissions, the Licensor (Ildar Idrisov) gra
 
 1. permission to reproduce, in a scholarly publication — an article, preprint, thesis, book, conference contribution,
    report or dataset, including one published, sold or distributed by a commercial publisher — (a) figures and images
-   that the Licensor created and included in the documentation, and (b) short excerpts of the documentation for
-   quotation;
+   that the Licensor created and included in the documentation, including the materials of the public site
+   (`LICENSE.md` §1, item 8, and §9), and (b) short excerpts of the documentation for quotation;
 2. on the condition that each item is attributed "© Ildar Idrisov, lfphys <version>" and that the publication cites
    lfphys as in section 2; this attribution replaces the attribution elements of section 3(a) of that licence;
 3. without the NonCommercial and ShareAlike conditions of that licence applying to the publication or to these items
@@ -58,3 +60,30 @@ business — research or computation that a business pays for, requests or direc
 sponsored research in which a business obtains rights in, an option on, exclusive access to, or access before
 publication to the results — is, and needs a separate agreement (`LICENSE.md` §1, item 4; `COMMERCIAL.md`). Once results
 are published, this licence does not bind the readers of the publication.
+
+## 5. Attribution on public use, and the materials of the public site
+
+Any public use of lfphys — distributing it, showing it in public, or putting it, screenshots, images or videos of its
+runs, or the materials of the public site into teaching materials, websites, presentations, videos or posts — must
+carry this line (`LICENSE.md` §5A):
+
+    lfphys — Ildar Idrisov — https://github.com/ildar-idrisov/lfphys
+
+The address of the public site, https://ildar-idrisov.github.io/lfphys/, may replace the repository's; other
+separators, the author's name in the script of Your material, and "made with" before the line are fine. Put it on or
+next to the item, or in the credits of the material as a whole (the description of a video, the footer of a page, a
+credits slide). In a lesson or a course that is not published, the line once on the material You share or show is
+enough, and showing lfphys running needs no further line. In a publication of results, the citation of section 2,
+with the attribution "Ildar Idrisov, lfphys <version>" of each reproduced item, takes the place of the line. A copy of
+lfphys that You distribute carries the line in its `NOTICE`.
+
+The materials that the Licensor makes and publishes on the public site — recordings, posters, Explore atlases,
+worksheets and guides — are documentation: they are licensed under CC BY-NC-SA 4.0 (`LICENSE-DOCS.txt`) with the
+additional permissions of section 3, and the line above is the identification of the creator that section
+3(a)(1)(A)(i) of that licence asks You to retain (`LICENSE.md` §9). Sharing them also needs the other elements of that
+section: a note that they are under CC BY-NC-SA 4.0, with its address, and a note of any change You made. The player
+that plays them stays under `LICENSE.md`.
+
+The name "lfphys" and any logo of the project are not licensed (`LICENSE.md` §5A, item 8). Factual references are
+welcome: "a course on optics using lfphys" is fine; "lfphys Optics Course", or any product, service, course or site
+named so as to suggest that it comes from the project or that the project endorses it, is not.

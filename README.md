@@ -535,17 +535,23 @@ the author's decision. Plans: [`lfphys/PLAN.md`](lfphys/PLAN.md); open items: [`
 In short:
 * **Allowed:** study, teaching, and academic and research use, free of charge, by individuals, schools, universities
   and other noncommercial institutions.
-* **Required:** a citation of lfphys with its version in any publication of results obtained with it
-  ([`CITATION.cff`](CITATION.cff); the player shows the version on its page "Licence"), and the author's notices kept
-  when you share lfphys or its documentation.
-* **Not allowed:** any commercial use, by anyone, without a separate written agreement ([`COMMERCIAL.md`](COMMERCIAL.md)).
+* **Required:** a link to lfphys whenever you use it in public, and a citation in publications. Screenshots, images and
+  videos of its runs, the materials of its site, teaching materials, websites, presentations, videos and posts carry the
+  line `lfphys — Ildar Idrisov — https://github.com/ildar-idrisov/lfphys` (the site's address will do too; in a lesson,
+  once on the material you show or hand out). Any publication of results obtained with lfphys cites it with its version
+  ([`CITATION.cff`](CITATION.cff); the player shows the version on its page "Licence"). Keep the author's notices when
+  you share lfphys or its documentation.
+* **Not allowed:** any commercial use, by anyone, without a separate written agreement
+  ([`COMMERCIAL.md`](COMMERCIAL.md)); naming your own product, service, course or site after lfphys so that it seems to
+  come from the project.
 * **At your own risk:** lfphys is a research tool provided as is, without any warranty. You use it and its results at
   your own risk; the author is not liable for any consequences ([`LICENSE.md`](LICENSE.md) §8).
 
-The full terms: the code under the [lfphys Research Licence 1.0](LICENSE.md) (source-available, not open source); the
-documentation and the author's figures under CC BY-NC-SA 4.0 ([`LICENSE-DOCS.txt`](LICENSE-DOCS.txt)), with additional
-permissions for scholarly publications ([`PUBLICATIONS.md`](PUBLICATIONS.md)); third-party components under their own
-licences ([`NOTICE`](NOTICE)). Contributions: [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`CLA.md`](CLA.md).
+The full terms: the code under the [lfphys Research Licence 1.0](LICENSE.md), text of 14 November 2026
+(source-available, not open source); the documentation, the author's figures and the materials of the public site under
+CC BY-NC-SA 4.0 ([`LICENSE-DOCS.txt`](LICENSE-DOCS.txt)), with additional permissions for scholarly publications
+([`PUBLICATIONS.md`](PUBLICATIONS.md)); third-party components under their own licences ([`NOTICE`](NOTICE)).
+Contributions: [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`CLA.md`](CLA.md).
 
 Questions and commercial use: [idrisov.sci@gmail.com](mailto:idrisov.sci@gmail.com).
 

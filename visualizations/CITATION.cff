@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "Publications of results obtained substantially with this software must cite it as below (LICENSE.md section 5: the lfphys Research Licence 1.0, SPDX LicenseRef-lfphys-Research-1.0; PUBLICATIONS.md). Questions: idrisov.sci@gmail.com"
+message: "Publications of results obtained substantially with this software must cite it as below (LICENSE.md section 5: the lfphys Research Licence 1.0, text of 14 November 2026, SPDX LicenseRef-lfphys-Research-1.0; PUBLICATIONS.md). Any other public use carries the line 'lfphys — Ildar Idrisov — https://github.com/ildar-idrisov/lfphys' (LICENSE.md section 5A). Questions: idrisov.sci@gmail.com"
 title: "lfphys visualizations: an interactive player and worlds built on the lfphys engine"
 type: software
 authors:

@@ -1,16 +1,27 @@
 lfphys visualizations: an interactive player and worlds built on the lfphys engine
 Copyright (c) 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 
-Licence: the software (code) is licensed under the lfphys Research Licence 1.0 (LICENSE.md; SPDX
-LicenseRef-lfphys-Research-1.0): noncommercial research, study and teaching only. It is source-available, not open
+Licence: the software (code) is licensed under the lfphys Research Licence 1.0, text of 14 November 2026 (LICENSE.md;
+SPDX LicenseRef-lfphys-Research-1.0): noncommercial research, study and teaching only. It is source-available, not open
 source. Any commercial use, by anyone and whatever the user's status, requires a separate written agreement with
 Ildar Idrisov (COMMERCIAL.md).
+
+Attribution: any public use of the software, of screenshots, images and videos of its runs, or of the materials of the
+public site must carry this line (LICENSE.md section 5A; the site's address https://ildar-idrisov.github.io/lfphys/
+may replace the repository's):
+
+    lfphys — Ildar Idrisov — https://github.com/ildar-idrisov/lfphys
+
+The name "lfphys" and any logo of the project are not licensed: they may not name a product, service, course or site
+in a way that implies origin or endorsement; factual references are allowed (LICENSE.md section 5A, item 8).
 
 Citation: publications of results obtained substantially with the software must cite it (LICENSE.md section 5;
 CITATION.cff; PUBLICATIONS.md).
 
-Documentation and the author's figures: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
-(LICENSE-DOCS.txt), with additional permissions for scholarly publications (PUBLICATIONS.md).
+Documentation, the author's figures and the materials of the public site (recordings, posters, Explore atlases,
+worksheets, guides): Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (LICENSE-DOCS.txt), with
+additional permissions for scholarly publications (PUBLICATIONS.md) and the attribution line above (LICENSE.md
+section 9); the software that plays them stays under the licence above.
 
 No warranty: the software is a research tool provided as is, without any warranty; its models, numerical methods and
 results may contain errors, and results must be verified independently before they are relied on (LICENSE.md
