@@ -420,8 +420,8 @@ world's screens exist. `tests/test_i18n.py` picks up the new msgids through its 
 - Address: `run.html?demo=<world>&screen=watch|explore|lab` on the site and `/run?demo=…` on the server
   (`page("run", {demo, screen})`). `?id=` (a live run) and `?rec=` (a recording) keep working. An old world id works
   (aliases). A world without screens opens its first recording, as now.
-- The tabs are «Watch · Explore · Lab work». The RU labels are proposed as «Демонстрация · Исследование ·
-  Лабораторная работа» (question 1 in §10). Switching tabs keeps each screen's state: the cursor, the controls, the
+- The tabs are «Watch · Explore · Lab work». The RU labels are «Наблюдение · Исследование ·
+  Лабораторная работа» (§10, decided). Switching tabs keeps each screen's state: the cursor, the controls, the
   traces, the table. The tab is part of the address (`history.replaceState`), so a link opens the same screen.
 - On a server the top bar also has «▶ Compute live» (a live run of the screen's preset with the controls' current
   values: `POST /api/runs`, then `/run?id=`, the full player).
