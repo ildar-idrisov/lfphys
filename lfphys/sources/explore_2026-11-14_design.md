@@ -877,9 +877,18 @@ deploy, on the site.
 
 ## 10. Risks and open questions
 
-Questions for the owner:
+Questions for the owner, **decided by the integrator on 2026-11-14** under the owner's «решай сам … и делай» (the owner may
+change any of them at the report):
+- 1 → EN «Watch · Explore · Lab work», RU «Наблюдение · Исследование · Лабораторная работа». «Демонстрация» is not used for a
+  screen because the whole item is already called a demonstration in the catalogue, the READMEs and the site.
+- 2 → the answers are on the public site behind the «For the teacher» switch; the repository is public, so hiding them
+  elsewhere would only pretend.
+- 3 → part C stays, marked «beyond the basic programme».
+- 4 → the order as proposed.
 
-1. **The screens' names.** EN «Watch · Explore · Lab work»; RU «Демонстрация · Исследование · Лабораторная работа»
+The questions as they were put:
+
+1. **The screens' names.** EN «Watch · Explore · Lab work»; RU «Наблюдение · Исследование · Лабораторная работа»
    («Смотреть» was the alternative for Watch, rejected because the other two are nouns). They become glossary terms
    (`RULES.md` §7). Agreed?
 2. **The teacher's answers on the public site.** The worksheet prints with or without them behind a «For the teacher»
