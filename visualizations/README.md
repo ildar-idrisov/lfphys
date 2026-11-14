@@ -229,10 +229,9 @@ The site is the same player in its static mode: the start page and the recording
 laboratories are greyed with "Works only with a running server"; there is no "My runs" and no "⚙ Devices". Details:
 [`site/README.md`](site/README.md) (in English).
 
-**What needs the author's go.** Publishing the site on GitHub Pages (`https://ildar-idrisov.github.io/lfphys/`): turning
-Pages on with "GitHub Actions" as its source and copying the draft workflow `site/ci/pages.yml` to `.github/workflows/`;
-the workflow then records in CI, builds, checks and deploys. Until then the links "Watch on the site" in the root README
-and the player's fallback to the public site find nothing.
+**Publication.** The site is published on GitHub Pages (`https://ildar-idrisov.github.io/lfphys/`) by the workflow
+`.github/workflows/pages.yml` (active since 2026-11-14). A push to `main` checks, records and builds; the site is
+deployed only when the author starts the workflow by hand (Actions → pages → Run workflow) with `deploy: true`.
 
 ---
 

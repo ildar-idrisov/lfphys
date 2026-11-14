@@ -215,10 +215,9 @@ cd /tmp && mkdir -p srv && ln -s /tmp/site srv/lfphys && cd srv && python3 -m ht
 «Работает только с запущенным сервером»; «Моих запусков» и «⚙ Устройств» там нет. Подробности:
 [`site/README.md`](site/README.md) (на английском).
 
-**Что требует решения автора.** Публикация сайта на GitHub Pages (`https://ildar-idrisov.github.io/lfphys/`): включить
-Pages с источником «GitHub Actions» и скопировать черновик `site/ci/pages.yml` в `.github/workflows/`; дальше GitHub
-Actions сам записывает, собирает, проверяет и публикует. До этого ссылки «Смотреть на сайте» в корневом README и
-запасной путь плеера к публичному сайту ничего не находят.
+**Публикация.** Сайт публикуется на GitHub Pages (`https://ildar-idrisov.github.io/lfphys/`) процессом
+`.github/workflows/pages.yml` (работает с 2026-11-14). Push в `main` проверяет, записывает и собирает; публикует сайт
+только ручной запуск процесса автором (Actions → pages → Run workflow) с `deploy: true`.
 
 ---
 

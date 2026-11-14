@@ -40,8 +40,8 @@ visualizations/
   tests/                 server/API tests and the test harness
   runs/                  run records (git-ignored; limits: keep days, quota; "keep" protects a record)
   site/                  the public site's scripts (§9; site/README.md): record.py (the offline recorder), plan.py,
-                         build.py, check.py, readme.py (the root READMEs' catalogue), posters.mjs, sitelib.py;
-                         ci/pages.yml (the draft workflow, not active)
+                         build.py, check.py, readme.py (the root READMEs' catalogue), posters.mjs, sitelib.py; its
+                         workflow is .github/workflows/pages.yml
   recordings/            the recordings of the demonstrations (git-ignored; made by site/record.py): <world>/index.json
                          and <world>/<rec>.<hash8>.lfrec.gz; served at /recordings/ (LFVIZ_RECORDINGS overrides it)
   planned.json           the planned items of every audience (S01–S45, U01–U30, R01–R10, benches p05–p07): id,
@@ -882,11 +882,10 @@ he sets `"published": true` and runs `site/readme.py`: every recording is linked
 integrator D7). `tests/test_site_registry.py` checks both states and that the committed READMEs match the committed
 setting.
 
-**CI and publication.** `site/ci/pages.yml` is a draft workflow (check → record per world, cached by the key → build,
+**CI and publication.** `.github/workflows/pages.yml` is the site's workflow (check → record per world, cached by the key → build,
 check, smoke test → deploy to GitHub Pages), every action pinned to a commit SHA with its tag in a comment, recording
-in CI on the CPU. It is **not** in `.github/workflows/`: copying it there, turning Pages on (source "GitHub Actions")
-and the first deployment are the owner's actions, on his go. Until then the site is unpublished (`site/site.json`)
-and the README carries no links to it. In the workflow (integrator D2, D5): `check`, `viz-tests` (the whole visualizations
+in CI on the CPU. It is active since 2026-11-14, on the owner's go, with Pages' source "GitHub Actions". Whether the site is
+published, and so whether the README links to it, is `site/site.json`. In the workflow (integrator D2, D5): `check`, `viz-tests` (the whole visualizations
 suite, in shards) and `engine-tests` (the engine's suite) run in parallel; `record` runs only after all three; a push to
 `main` checks, records and builds, and **the deploy job runs only when the workflow is started by hand
 (`workflow_dispatch`) with `deploy: true`**, the owner's go.

@@ -1,9 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
 #
-# DRAFT, not active: the GitHub Actions workflow of the public site (design of the start page §5.2). It runs only once it
-# is copied to .github/workflows/pages.yml, which is the owner's action, on his go, together with enabling Pages with
-# "GitHub Actions" as the source. Every action is pinned to a commit SHA, with its release tag in a comment (looked up on
+# The GitHub Actions workflow of the public site (design of the start page §5.2), active since 2026-11-14 on the owner's
+# go (moved here from visualizations/site/ci/pages.yml; Pages' source is "GitHub Actions"). Every action is pinned to a commit SHA, with its release tag in a comment (looked up on
 # 2026-11-13 with `git ls-remote https://github.com/<owner>/<action> refs/tags/<tag>`; all were lightweight tags, so
 # the SHA is the tagged commit). To update one, look the new tag up the same way and change the SHA and the comment
 # together. Checked with actionlint 1.7.7 (Docker image rhysd/actionlint:1.7.7).

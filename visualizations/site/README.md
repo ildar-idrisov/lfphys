@@ -17,7 +17,7 @@ This folder is not a Python package (`site` is a standard module's name): each s
 | `check.py` | `SITE [--base /lfphys/] [--allow-missing]`: completeness and budgets of a built site; exit 1 on a failure |
 | `readme.py` | the catalogue sections of `README.md`, `README.ru.md` (every language of `LANGUAGES.md`); `--check`, `--print LANG` |
 | `posters.mjs` | Playwright: `docs/images/<id>.jpg` (1200 px wide, JPEG, ≤ 150 kB) and `docs/images/posters.json` |
-| `ci/pages.yml` | the draft GitHub Actions workflow; not active until the owner copies it to `.github/workflows/` |
+| `../../.github/workflows/pages.yml` | the GitHub Actions workflow of the site (active since 2026-11-14) |
 | `site.json` | `{"published": false, "url": "https://ildar-idrisov.github.io/lfphys/"}`: whether the public site is live, and where (the owner sets `published` on his go) |
 
 ## Recordings
@@ -140,16 +140,16 @@ only when its recording's key changed (`docs/images/posters.json`) or with `--fo
 
 ## CI
 
-`ci/pages.yml` (design §5.2): `check` (the image, the completeness, site and key tests, the matrix), in parallel with
+`.github/workflows/pages.yml` (design §5.2): `check` (the image, the completeness, site and key tests, the matrix), in parallel with
 `viz-tests` (the whole visualizations suite, three shards) and `engine-tests` (the engine's suite); `record` (after all
 three: one job per world, restored from the cache by the world's key, recorded on a miss on the CPU with
 `--memory=12g`, saved under the key also after a forced re-record), `build` (`build.py`, `check.py`, the smoke test
 `tests/browser/site_smoke.mjs` in EN and RU on the site served under `/lfphys/` by `python -m http.server`, every
 recording played), `deploy`. **Deployment is the owner's go:** a push to `main` checks, records and builds only; the
 `deploy` job runs only when the workflow is started by hand (Actions → pages → Run workflow) with `deploy: true`. Every
-action is pinned to a commit SHA, its tag in a comment, and the container images by digest. Enabling Pages and copying
-the workflow to `.github/workflows/` are the owner's actions, on his go; until the first deployment `site.json` says
-`"published": false` and the README carries no links to the site.
+action is pinned to a commit SHA, its tag in a comment, and the container images by digest. Pages (source "GitHub
+Actions") and the workflow are active since 2026-11-14 on the owner's go; `site.json` says whether the site is
+published, and so whether the README links to it.
 
 The smoke test checks that no request leaves `/lfphys/` and none goes to `/api/`, that the start page and an audience
 page render in EN and RU, that a recording plays (the timeline moves, the checks appear, the canvas is drawn), that

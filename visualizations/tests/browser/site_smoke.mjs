@@ -28,7 +28,7 @@
 //
 //   node site_smoke.mjs <site URL, e.g. http://127.0.0.1:8000/lfphys/> [en,ru] [world/rec]
 //
-// With the site in _site (CI: .github/workflows/pages.yml once the owner copies site/ci/pages.yml there):
+// With the site in _site (CI: .github/workflows/pages.yml):
 //   docker run -d --name lf-site-srv --memory=512m -p 127.0.0.1:8000:8000 -v "$PWD/_site:/srv/lfphys:ro" -w /srv \
 //     python:3.11-slim python3 -m http.server 8000
 //   docker run --rm --init --shm-size=2g --network host --memory=4g -v <dir with node_modules/playwright>:/pw \
