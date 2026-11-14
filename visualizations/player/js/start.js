@@ -167,7 +167,9 @@ function footer() {
     el("a", { href: withLang(page("legal")) }, t("Licence and citation")), " · ",
     el("a", { href: GITHUB, target: "_blank", rel: "noopener" }, t("Source (GitHub)")),
     el("br"),
-    t("A research tool: the models and the results may contain errors, there is no warranty — check the results yourself. Noncommercial research, study and teaching only; if the software computed or checked what your publication reports, citing lfphys with its version is required."));
+    t("A research tool: the models and the results may contain errors, there is no warranty — check the results yourself. Noncommercial research, study and teaching only; if the software computed or checked what your publication reports, citing lfphys with its version is required."),
+    el("br"),
+    t("Credit for public use: {line}. The recordings, posters, atlases and worksheets: © 2026 Ildar Idrisov, CC BY-NC-SA 4.0 ({cc}), provided as is, without warranty.", { line: "lfphys — Ildar Idrisov — https://ildar-idrisov.github.io/lfphys/", cc: "https://creativecommons.org/licenses/by-nc-sa/4.0/" }));
 }
 
 // --- an audience's page -----------------------------------------------------------------------------------------------

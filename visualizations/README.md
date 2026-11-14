@@ -382,13 +382,21 @@ noncommercial research, study and teaching; any commercial use only under a sepa
 all of this and the texts of the licences are on the page "Licence" (`/legal`).
 
 * **Code** (the server, the player, the visualizations, and also the texts and images the program shows while it runs —
-  its interface and help): lfphys Research Licence 1.0 (`LICENSE.md`). **Commercial use by anyone — including a
-  university or an institute working for a company — only under an agreement** (`COMMERCIAL.md`).
-* **The author's documentation and figures** (the descriptions and guides in files, their figures): CC BY-NC-SA 4.0
-  (`LICENSE-DOCS.txt`); figures and short quotations may be published in scholarly publications, including those of
-  commercial publishers and under CC BY, with the author and the version named (`PUBLICATIONS.md`). Snapshots of your
-  own runs and short excerpts of the code may be published anywhere with the credit "Ildar Idrisov, lfphys
-  &lt;version&gt;" (`LICENSE.md` §6.3).
+  its interface and help — other than the site's materials): lfphys Research Licence 1.0, text of 14 November 2026
+  (`LICENSE.md`). **Commercial use by anyone — including a university or an institute working for a company — only
+  under an agreement** (`COMMERCIAL.md`).
+* **The author's documentation and figures, and the site's materials** (the descriptions and guides in files, their
+  figures; the recordings, posters, atlases and the texts of the worksheets and of the lab-work steps, wherever they are
+  stored): CC BY-NC-SA 4.0 (`LICENSE-DOCS.txt`), credited with the line `lfphys — Ildar Idrisov —
+  https://ildar-idrisov.github.io/lfphys/ — CC BY-NC-SA 4.0`; figures and short quotations may be published in
+  scholarly publications, including those of commercial publishers and under CC BY, with the author and the version
+  named (`PUBLICATIONS.md`).
+* **Snapshots and videos of your runs** and short excerpts of the code: in a scholarly publication, also under CC BY,
+  with the credit "Ildar Idrisov, lfphys &lt;version&gt;" (`LICENSE.md` §6.3); any other public use — teaching
+  materials, websites, presentations, videos, posts — noncommercial only, with the line `lfphys — Ildar Idrisov —
+  https://github.com/ildar-idrisov/lfphys` (`LICENSE.md` §5A; in a lesson, once on the material shown).
+* **The name** "lfphys" is not licensed: not as, or as part of, the name of your own product, course or site; saying
+  that you use lfphys is fine (`LICENSE.md` §5A, item 8).
 * **Your results** are yours; if the program computed, modelled, drew or checked something a publication reports,
   **citing it with its version is required** (`LICENSE.md` §5, `CITATION.cff`; the player shows the version and the
   build code on the page "Licence"). Selling data sets made mainly of its results only under an agreement.

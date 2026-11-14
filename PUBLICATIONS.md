@@ -7,29 +7,32 @@ of the public site); this file explains them and adds the permissions of section
 
 ## 1. Your results are Yours
 
-The Licensor claims no ownership of the numbers, data, figures and images that Your runs produce in noncommercial
-research, and no rights in Your publications (`LICENSE.md` §6.1). The copyright in the code gives no monopoly on the
-physical laws, methods, facts or numbers it computes. Screenshots and images of the interface produced by Your runs,
-and short excerpts of the source code, may be reproduced in a publication of any kind — also one licensed under
-CC BY 4.0 — by You, Your publisher and the publisher's licensees, attributed "Ildar Idrisov, lfphys <version>"
-(`LICENSE.md` §6.3). Selling, or licensing for a fee, data sets that consist substantially of output of the Software
-needs a commercial agreement (`LICENSE.md` §6.2); publishing them does not, and readers of a publication are not bound.
-The attribution line of section 5 is a condition of the licence to use lfphys, not a claim to Your results.
+The Licensor claims no ownership of the numbers, data and the figures You make from them in noncommercial research,
+and no rights in Your publications (`LICENSE.md` §6.1). The copyright in the code gives no monopoly on the physical
+laws, methods, facts or numbers it computes. Screenshots, images and videos of Your runs may show the interface of the
+Software, in which the Licensor keeps his rights: in a scholarly publication (an article, preprint, thesis, scholarly
+book, report, conference contribution or dataset), also one licensed under CC BY 4.0, You, Your publisher and the
+publisher's licensees may reproduce them, and short excerpts of the source code, attributed "Ildar Idrisov, lfphys
+<version>" (`LICENSE.md` §6.3); any other public use of them needs the line of section 5 below (`LICENSE.md` §5A).
+Selling, or licensing for a fee, data sets that consist substantially of output of the Software needs a commercial
+agreement (`LICENSE.md` §6.2); publishing them does not, and readers of a publication are not bound. The attribution
+line of section 5 below (`LICENSE.md` §5A) is a condition of the licence to use lfphys, not a claim to Your results.
 
 ## 2. Citation is a condition, not a request
 
 If You publish results, data, figures or software obtained substantially with lfphys — that is, lfphys computed,
 simulated or rendered a result, figure, table or data set that the publication reports, or was used to check one — You
 must cite it (`LICENSE.md` §5): the author (Ildar Idrisov), the name (lfphys), the version You used, and the identifier
-or address given in `CITATION.cff`, in the form customary for the venue. The version is the one in `CITATION.cff`; for
-a copy that is not a release, add the code identifier the player shows on its page `/legal` (or the commit identifier).
-A citation does not mean that the author endorses Your results; co-authorship is not required; and You may not present
-Your results as checked or endorsed by the author.
+or address given in `CITATION.cff`, in the form customary for the venue. The version is the one in `CITATION.cff`; for a
+copy that is not a release, add the code identifier the player shows on its page `/legal` (or the commit identifier). In
+informal media (a post, slides, a talk) the line of section 5 below, with the version, suffices. A citation does not
+mean that the author endorses Your results; co-authorship is not required; and You may not present Your results as
+checked or endorsed by the author.
 
-Until the repository is published, `CITATION.cff` gives no web address or DOI; cite the name, the version and the
-author. A form that fits most journals:
+`CITATION.cff` gives the repository's address (a DOI will be added when one exists). A form that fits most journals:
 
-    I. Idrisov, lfphys: a physics engine and interactive visualizations of physical hypotheses, version <version>.
+    I. Idrisov, lfphys: a physics engine and interactive visualizations of physical hypotheses, version <version>,
+    https://github.com/ildar-idrisov/lfphys.
 
 ## 3. Additional permission for the documentation in scholarly publications
 
@@ -40,8 +43,9 @@ lets the licensor grant additional permissions, the Licensor (Ildar Idrisov) gra
    report or dataset, including one published, sold or distributed by a commercial publisher — (a) figures and images
    that the Licensor created and included in the documentation, including the materials of the public site
    (`LICENSE.md` §1, item 8, and §9), and (b) short excerpts of the documentation for quotation;
-2. on the condition that each item is attributed "© Ildar Idrisov, lfphys <version>" and that the publication cites
-   lfphys as in section 2; this attribution replaces the attribution elements of section 3(a) of that licence;
+2. on the condition that each item is attributed "© Ildar Idrisov, lfphys <version or date>" (the date of the site's
+   material where it has no version) and that the publication cites lfphys as in section 2; this attribution replaces
+   the attribution elements of section 3(a) of that licence;
 3. without the NonCommercial and ShareAlike conditions of that licence applying to the publication or to these items
    as they appear in it;
 4. the items may appear in a publication that is itself licensed under any terms, including CC BY 4.0, if each is also
@@ -61,29 +65,44 @@ sponsored research in which a business obtains rights in, an option on, exclusiv
 publication to the results — is, and needs a separate agreement (`LICENSE.md` §1, item 4; `COMMERCIAL.md`). Once results
 are published, this licence does not bind the readers of the publication.
 
+Using lfphys or images of its runs in a video or on a channel that earns advertising or sponsorship income, or in
+teaching by a business (a paid tutoring company, a commercial course provider), is commercial use and needs an
+agreement (`LICENSE.md` §1, item 4). For the documentation and the materials of the public site, commercial use is what
+CC BY-NC-SA 4.0 defines by the purpose of the use (`COMMERCIAL.md`).
+
 ## 5. Attribution on public use, and the materials of the public site
 
-Any public use of lfphys — distributing it, showing it in public, or putting it, screenshots, images or videos of its
-runs, or the materials of the public site into teaching materials, websites, presentations, videos or posts — must
-carry this line (`LICENSE.md` §5A):
+Any public use of lfphys — distributing it, showing it in public, or putting it, or screenshots, images or videos of
+its runs, into teaching materials, websites, presentations, videos or posts — must carry this line (`LICENSE.md` §5A):
 
     lfphys — Ildar Idrisov — https://github.com/ildar-idrisov/lfphys
 
 The address of the public site, https://ildar-idrisov.github.io/lfphys/, may replace the repository's; other
 separators, the author's name in the script of Your material, and "made with" before the line are fine. Put it on or
 next to the item, or in the credits of the material as a whole (the description of a video, the footer of a page, a
-credits slide). In a lesson or a course that is not published, the line once on the material You share or show is
-enough, and showing lfphys running needs no further line. In a publication of results, the citation of section 2,
-with the attribution "Ildar Idrisov, lfphys <version>" of each reproduced item, takes the place of the line. A copy of
-lfphys that You distribute carries the line in its `NOTICE`.
+credits slide). In a lesson or a course that is not published — also on a course platform open only to its students —
+the line once on the material You share or show is enough, and showing lfphys running is enough by itself. Coursework
+handed in for assessment, a manuscript under review and private messages are not public use. In a scholarly
+publication, the attribution "Ildar Idrisov, lfphys <version>" of each reproduced item, with the citation of section
+2, takes the place of the line. A copy of lfphys that You distribute or host carries the line in its `NOTICE`. A
+forgotten line does not end Your licence if You add it within 30 days after You notice (`LICENSE.md` §10).
 
-The materials that the Licensor makes and publishes on the public site — recordings, posters, Explore atlases,
-worksheets and guides — are documentation: they are licensed under CC BY-NC-SA 4.0 (`LICENSE-DOCS.txt`) with the
-additional permissions of section 3, and the line above is the identification of the creator that section
-3(a)(1)(A)(i) of that licence asks You to retain (`LICENSE.md` §9). Sharing them also needs the other elements of that
-section: a note that they are under CC BY-NC-SA 4.0, with its address, and a note of any change You made. The player
-that plays them stays under `LICENSE.md`.
+The materials that the Licensor makes for the public site — the recordings of runs, the posters, the atlases of
+precomputed points for exploring and lab work, and the texts of the worksheets and of the steps of lab work — are
+documentation, wherever they are stored: they are licensed under CC BY-NC-SA 4.0 (`LICENSE-DOCS.txt`), with the
+additional permissions of section 3, and `LICENSE.md` §5A does not apply to them (`LICENSE.md` §1, item 8, §5A, item 9,
+§9). The site supplies, with them, the line and the notices that licence asks You to keep. For a material of the site
+one line satisfies all of it:
+
+    lfphys — Ildar Idrisov — https://ildar-idrisov.github.io/lfphys/ — CC BY-NC-SA 4.0
+    (https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+plus "changed by <You>" if You changed it. If You adapt a material of the site — for example, edit a worksheet — and
+share the result, You must license Your adaptation under CC BY-NC-SA 4.0 (or a later version or a compatible licence)
+and add no terms that restrict it (that licence, sections 2(a)(5)(C) and 3(b)). Quoting short parts in Your own
+material is not an adaptation. The player that plays or prints these materials stays under `LICENSE.md`.
 
 The name "lfphys" and any logo of the project are not licensed (`LICENSE.md` §5A, item 8). Factual references are
-welcome: "a course on optics using lfphys" is fine; "lfphys Optics Course", or any product, service, course or site
-named so as to suggest that it comes from the project or that the project endorses it, is not.
+welcome: "Simulating optics with lfphys" and "a course on optics using lfphys" are fine; "lfphys Optics Course", or any
+product, service, course or site that takes lfphys as (part of) its name or suggests that it comes from the project or
+that the project endorses it, is not.

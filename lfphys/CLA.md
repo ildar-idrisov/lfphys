@@ -58,7 +58,8 @@ the claim is filed.
    the Project, and, at the Licensor's request and cost, You will give reasonable help in enforcing the rights in Your
    Contributions.
 4. The Licensor will keep every Contribution that he distributes available under a licence that permits noncommercial
-   research at least as broadly as the lfphys Research Licence 1.0.
+   research at least as broadly as the lfphys Research Licence 1.0, text of 14 November 2026 (conditions of attribution
+   and of the use of the project's name aside).
 5. This agreement is governed by the law of the Republic of Cyprus, without prejudice to any mandatory rule of law.
 
 ## 6. How You agree

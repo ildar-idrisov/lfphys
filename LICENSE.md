@@ -17,9 +17,9 @@ distributing the Software You accept them, both as conditions of Your licence an
 
 1. **Software** means the source code, scripts, configuration and other files that this licence accompanies, in any
    version, form or modification, including the physics engine `lfphys` and the interactive visualizations built on
-   it, together with the texts and images that the program itself shows when it runs (its interface and help). It does
-   not include the documentation (section 9), the Site Materials (item 8) or the third-party components named in the
-   file `NOTICE`, which are licensed under their own terms.
+   it, together with the texts and images that the program itself shows when it runs (its interface and help), other
+   than the Site Materials. It does not include the documentation (section 9), the Site Materials (item 8) or the
+   third-party components named in the file `NOTICE`, which are licensed under their own terms.
 2. **You** means the individual or legal entity exercising rights under this licence, and, for a legal entity, its
    employees and others acting on its behalf.
 3. **Noncommercial Research** means research, study, teaching, learning, outreach and personal experimentation that is
@@ -62,22 +62,30 @@ distributing the Software You accept them, both as conditions of Your licence an
       sold.
 6. **Obtained substantially with the Software** means that the Software computed, simulated or rendered a result,
    figure, table or data set that a publication reports, or was used to check one.
-7. **Images of Runs** means screenshots, still images, animations and video captures of the Software's runs or of its
-   interface, whole or in part, including those that You resize, crop or annotate.
-8. **Site Materials** means the recordings, posters, Explore atlases, worksheets and guides that the Licensor makes and
-   publishes on the project's public site (https://ildar-idrisov.github.io/lfphys/). It does not include the Software
-   that plays or shows them.
-9. **Public Use** means distributing the Software, Images of Runs or Site Materials, displaying or performing them in
-   public, making them available online, including them in material that others see — such as teaching materials,
-   websites, presentations, videos and posts — or showing them in a class, lecture, talk or exhibition. Use that only
-   You, or only the members of Your own research or working group, see is not Public Use.
+7. **Images of Runs** means screenshots, still images, animations and video captures that You make of the Software's
+   runs or of its interface, whole or in part, including those that You resize, crop or annotate. The Site Materials
+   are not Images of Runs; an image of the Software playing or showing a Site Material is an Image of Runs as to the
+   Software's interface and remains a Site Material as to its content.
+8. **Site Materials** means the following material that the Licensor makes, in every language and wherever it is
+   stored (on the project's public site, https://ildar-idrisov.github.io/lfphys/, in its build, or in the source files
+   of the worlds): the recordings of runs, the posters, the atlases of precomputed points used for exploring and for
+   lab work, the texts of the worksheets and of the steps of lab work (their titles, goals, hints, questions, answers
+   and notes for the teacher), and any other material that the Licensor marks as a Site Material. It does not include
+   the program that plays, shows or prints them, or its interface.
+9. **Public Use** means distributing the Software or Images of Runs, displaying or performing them in public, making
+   them available online, including them in material that others see — such as teaching materials, websites,
+   presentations, videos and posts — or showing them in a class, lecture, talk or exhibition. Use that only You, the
+   members of Your own research or working group, or Your teachers, examiners, supervisors, reviewers and
+   correspondents see — such as coursework handed in for assessment, a manuscript under review, or a private message —
+   is not Public Use.
 
 ## 2. Copyright licence
 
 Subject to the conditions of this licence, the Licensor grants You a worldwide, royalty-free, non-exclusive,
-non-transferable licence, for Noncommercial Research only, to use, run, copy and modify the Software, to make works
-based on it, and to distribute copies of the Software, modified or not, under section 4. You may not sublicense. Every
-recipient of a copy receives its licence for the Licensor's material directly from the Licensor under this licence.
+non-transferable licence, for Noncommercial Research only, to use, run, copy and modify the Software, to display and
+perform it in public, to make works based on it, and to distribute copies of the Software, modified or not, under
+section 4. You may not sublicense. Every recipient of a copy receives its licence for the Licensor's material directly
+from the Licensor under this licence.
 
 ## 3. Patent licence
 
@@ -104,15 +112,15 @@ alleging that the Software infringes a patent, all Your rights under this licenc
 ## 5. Citation of publications
 
 If You publish results, data, figures or software obtained substantially with the Software — in articles, preprints,
-theses, books, reports, conference contributions, datasets, software releases or any other publication — You must
-cite the Software: its author (Ildar Idrisov), its name (lfphys), the version You used (the version in the file
+theses, books, reports, conference contributions, datasets, software releases or any other publication — You must cite
+the Software: its author (Ildar Idrisov), its name (lfphys), the version You used (the version in the file
 `CITATION.cff` and, for a copy that is not a release, the code identifier the player shows on its page `/legal` or the
 commit identifier), and the persistent identifier or web address that the Licensor gives in `CITATION.cff`, in the form
-customary for the venue. Where the venue allows no references, cite it in the acknowledgements or the accompanying
-text; in informal media (a post, slides) "lfphys (Ildar Idrisov)" with the version suffices. A citation does not mean
-that the Licensor endorses Your results, and this licence does not require co-authorship. You may not state or imply
-that the Licensor has checked, validated or endorses Your results, products or services, and You may not use his name
-for that purpose.
+customary for the venue. Where the venue allows no references, cite it in the acknowledgements or the accompanying text;
+in informal media (a post, slides, a talk) the line of section 5A, item 1, with the version, suffices. A citation does
+not mean that the Licensor endorses Your results, and this licence does not require co-authorship. You may not state or
+imply that the Licensor has checked, validated or endorses Your results, products or services, and You may not use his
+name for that purpose.
 
 ## 5A. Attribution on public use; the name
 
@@ -126,45 +134,57 @@ for that purpose.
 2. **Where it goes.** The line must appear in a manner reasonable for the medium, where those who see the material can
    find it: on or next to the item, or in the credits of the material as a whole (for example, the description of a
    video, the footer of a web page, a credits slide, or a page of credits in a printed work).
-3. **Images of Runs.** You may make Public Use of Images of Runs for Noncommercial Research on the condition of this
-   section; section 4 does not apply to them. Item 6.3 continues to govern their use in publications.
-4. **Publications of results.** In a publication to which section 5 applies, the citation that section 5 requires,
-   together with the attribution of item 6.3 for each item reproduced, takes the place of the line for the results and
-   items that it covers.
-5. **Teaching.** In teaching that is not published, such as a lesson, a lecture or a course for its own students, it
-   is enough that the line is visible once on the material You share or show (a slide, a handout, a course page).
-   Showing the Software running, with its interface unaltered, needs no further line.
+3. **Images of Runs and excerpts.** You may make Public Use of Images of Runs, and of short excerpts of the source code
+   for explanation or criticism, for Noncommercial Research, without the conditions of section 4, if each carries the
+   line. Whether or not an Image of Runs reproduces material in which the Licensor holds rights, You undertake to carry
+   the line as an obligation of this licence (see "Acceptance" above). Item 6.3 governs their use in the publications
+   that it covers; every other Public Use, including a video, a web page, a post, a textbook or a popular book, is
+   governed by this item.
+4. **Publications.** In a publication covered by item 6.3, the attribution of item 6.3 for each item reproduced,
+   together with the citation of section 5 where that section applies, takes the place of the line for the items and
+   results that it covers.
+5. **Teaching.** In teaching that is not published, such as a lesson, a lecture or a course for its own students —
+   including material on a platform open only to those students — it is enough that the line is visible once on the
+   material You share or show (a slide, a handout, a course page). Showing the Software running, with its interface
+   unaltered, meets item 1 by itself.
 6. **Distribution of the Software.** When You distribute the Software under section 4, or let others use it over a
    network under item 4.3, the file `NOTICE`, which carries the line and which section 4 requires You to keep and
    show, meets item 1.
-7. **A condition, not a claim.** The line is a condition of the licence under which You use the Software and the Site
-   Materials. It is not a claim of ownership of Your results or of Your works (item 6.1), it does not credit Your work
-   to the Licensor, and it does not mean that the Licensor endorses it (section 5).
+7. **A condition, not a claim.** The line is a condition of this licence for the Software and Images of Runs. It is
+   not a claim of ownership of Your results or of Your works (item 6.1), it does not credit Your work to the Licensor,
+   and it does not mean that the Licensor endorses it (section 5).
 8. **The name.** This licence grants no right in the name "lfphys" or in any logo of the project, now or later; the
-   Licensor reserves them. You may not use the name or a logo, or a name or sign confusingly similar to them, in the
-   name of a product, service, course, website or other work or activity, or in any other way that states or implies
-   that it comes from, or is endorsed by, the Licensor or the project. You may refer to the project by name in a
-   factual way: in the attribution line, in a citation, and to say truthfully that You use the Software, that Your
-   work is based on it, or that Your results were obtained with it. For example, "a course on optics using lfphys" is
-   a factual reference; "lfphys Optics Course" is not. A copy of the Software, modified or not, that You distribute
-   under section 4 may keep the name in its files, identifiers and notices, if it is marked as section 4 requires and a
-   modified copy is not presented as the Licensor's version. The last sentence of section 5, on the author's name,
-   continues to apply.
+   Licensor reserves whatever rights he has in them. You may not use the name or a logo, or a name or sign confusingly
+   similar to them, as the name or as a distinguishing part of the name of a product, service, course, website,
+   organisation, event or software of Your own, or in any other way that states or implies that something comes from,
+   or is endorsed by, the Licensor or the project. You may use the name in a factual way: in the attribution line, in a
+   citation, and in a title or text that says truthfully that You use the Software, that Your work is based on it, or
+   that Your results were obtained with it ("Simulating optics with lfphys", "a course on optics using lfphys");
+   "lfphys Optics Course" is not factual. A copy of the Software, modified or not, that You distribute under section 4
+   or let others use under item 4.3 may keep the name in its files, identifiers, interface and notices, if it is marked
+   as section 4 requires and a modified copy is not presented as the Licensor's version. The last sentence of section
+   5, on the author's name, continues to apply.
+9. **Site Materials.** Items 1 to 7 of this section do not apply to the Site Materials. Their use is governed by
+   CC BY-NC-SA 4.0 alone (section 9), under which the line is the attribution that the Licensor supplies and requests;
+   a breach of that licence has the consequences that licence gives it. That licence grants no right in the name
+   either (its section 2(b)(2)).
 
 ## 6. Your results and publications
 
 1. The Licensor claims no ownership of the results You obtain with the Software in Noncommercial Research (numbers,
-   data, and the figures and images of Your runs) and no rights in Your publications. You may publish them, including
-   through commercial publishers, subject to section 5. The attribution of section 5A is a condition of the licence to
-   use the Software, not a claim to these results or publications.
+   data, and the figures You make from them) and no rights in Your publications. You may publish them, including
+   through commercial publishers, subject to section 5. Images of Runs may reproduce the Software's interface, in which
+   the Licensor keeps his rights; their use is governed by section 5A, item 3, and item 3 of this section. The
+   attribution of section 5A is a condition of this licence, not a claim to Your results or publications.
 2. You may not sell, or license for a fee, data sets or other results that consist substantially of output of the
    Software without a commercial agreement (section 7). This does not restrict publication under item 1, and it does
    not bind anyone who obtains the results from a publication.
 3. You, Your publisher and the publisher's licensees may reproduce, adapt for layout (size, format, lettering, without
-   changing the meaning), translate and distribute, as part of a publication of any kind and in any medium — including
-   one licensed under any terms, such as CC BY 4.0 — (a) screenshots and images of the interface of the Software
-   produced by Your runs, and (b) short excerpts of its source code, for explanation or criticism, each attributed
-   "Ildar Idrisov, lfphys <version>". This permission does not extend to any use of these items outside the
+   changing the meaning), translate and distribute, as part of a scholarly publication — an article, preprint, thesis,
+   scholarly book, report, conference contribution or dataset — in any medium, including one published by a
+   commercial publisher and one licensed under any terms, such as CC BY 4.0, (a) Images of Runs (section 1, item 7)
+   produced by Your runs, and (b) short excerpts of the Software's source code, for explanation or criticism, each
+   attributed "Ildar Idrisov, lfphys <version>". This permission does not extend to any use of these items outside the
    publication, and it continues for publications made before any termination of this licence.
 
 ## 7. Commercial Use
@@ -194,22 +214,25 @@ applicable law.
 The documentation (the texts of the guides and READMEs, and the figures and images the Licensor created for them) and
 the Site Materials are licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
 License (`LICENSE-DOCS.txt`), with the additional permissions given in `PUBLICATIONS.md`. The Site Materials remain
-under that licence where the Software plays or shows them; the Software that does so, including the player that the
-site serves, remains under this licence. For the Site Materials the Licensor supplies, and requests under section
-3(a)(1)(A)(i) of that licence as the identification of the creator, the attribution line of section 5A; the other
-elements of section 3(a) of that licence apply as it states. The third-party components named in `NOTICE` are licensed
-under their own terms, which this licence neither restricts nor extends.
+under that licence where the Software plays or shows them; the Software that does so, including the player that the site
+serves, remains under this licence. For the Site Materials the Licensor supplies, and requests under section 3(a)(1)(A)
+of that licence, the line of section 5A, item 1, with the address of the public site, as the identification of the
+creator and of the project (its item (i)) and the URI of the material (its item (v)), together with the notices of its
+items (ii) to (iv); sections 3(a)(1)(B) and (C) and 3(b) of that licence apply as it states. The third-party components
+named in `NOTICE` are licensed under their own terms, which this licence neither restricts nor extends.
 
 ## 10. Termination
 
-If You breach this licence, Your rights under it end automatically. If it is Your first breach and You stop it and
-remedy it within 30 days after the Licensor notifies You of it (by e-mail or by any other means that reaches You), Your
-rights are reinstated; for a missing citation or attribution line, a correction (an erratum, an updated preprint, a
-corrected repository record, the line added to the material) remedies it. Reinstatement does not affect the Licensor's
-right to seek remedies for the breach. This cure does not apply to Commercial Use, which needs a written agreement
-under section 7 that may also cover past use. Licences that recipients received from the Licensor through Your
-distribution continue as long as they comply. Sections 1, 5, 5A, 6 (for results and publications made before
-termination), 8, 10 and 11 survive termination.
+If You breach this licence, Your rights under it end automatically, except that a missing or incomplete attribution line
+(section 5A) ends them only if You do not add or correct it within 30 days after You learn of the omission; this applies
+to every such omission. If it is Your first breach and You stop it and remedy it within 30 days after the Licensor
+notifies You of it (by e-mail or by any other means that reaches You), Your rights are reinstated; for a missing
+citation, a correction (an erratum, an updated preprint, a corrected repository record) remedies it. Reinstatement does
+not affect the Licensor's right to seek remedies for the breach. This cure does not apply to Commercial Use, which needs
+a written agreement under section 7 that may also cover past use. Licences that recipients received from the Licensor
+through Your distribution continue as long as they comply. Sections 1, 5, 5A (items 1 and 2 for material made public
+before termination, and items 4, 7, 8 and 9; the permission of item 3 does not survive), 6 (for results and publications
+made before termination), 8, 10 and 11 survive termination.
 
 ## 11. General
 
@@ -226,7 +249,12 @@ termination), 8, 10 and 11 survive termination.
 
 ## Note on this text
 
-This text of 14 November 2026 replaces the text of the lfphys Research Licence 1.0 published from 12 to 14 November
-2026. It adds the attribution line on public use and the reservation of the name (section 5A, with section 1, items
-7–9) and places the Site Materials under the documentation's licence (section 9). A copy obtained under the earlier
-text remains under it (item 11.2); the Licensor also offers that copy under this text, which You may choose to accept.
+This text of 14 November 2026 replaces the earlier texts of the lfphys Research Licence 1.0: the text published from
+12 to 14 November 2026 (as of commit 6b72162,
+https://github.com/ildar-idrisov/lfphys/blob/6b72162da808648a72ba4610bde5dc1328f8dad0/LICENSE.md) and a first draft of
+this text, published on 14 November 2026 (commit 1dcd8af,
+https://github.com/ildar-idrisov/lfphys/blob/1dcd8afb4bf35244c0f46e6f211b3fe3b8864920/LICENSE.md). It adds the
+attribution line on public use and the reservation of the name (section 5A, with section 1, items 7–9) and places the
+Site Materials under the documentation's licence (section 9). A copy obtained under an earlier text remains under it,
+as item 11.2 provides for versions; the Licensor also offers that copy under this text, which You may choose to
+accept.

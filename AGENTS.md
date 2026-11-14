@@ -136,7 +136,7 @@ pilots and the rework of the existing worlds before AB1 in full; the number of p
 | `visualizations/recordings/` | the demonstrations' recordings made by `site/record.py` (`<world>/index.json`, `<world>/<rec>.<hash8>.lfrec.gz`); git-ignored, like `runs/`; served at `/recordings/` and played by the start page's "▷ Recording" and `/run?rec=<world>/<rec>` |
 | `reviews/` | independent reviews of the engine and the visualizations, rules and registry `reviews/README.md` |
 | `STATUS.md` | the one place for open problems and plans of the engine and the visualizations |
-| `LICENSE.md`, `LICENSE-DOCS.txt`, `NOTICE`, `COMMERCIAL.md`, `CITATION.cff`, `CONTRIBUTING.md`, `CLA.md`, `PUBLICATIONS.md` | licence (code: the lfphys Research Licence 1.0, `LicenseRef-lfphys-Research-1.0` — noncommercial research only, citation required; documentation: CC BY-NC-SA 4.0 with additional permissions for scholarly publications; commercial use only by a separate written agreement), citation, contribution terms and the contributor agreement; copies in `lfphys/` and `visualizations/` |
+| `LICENSE.md`, `LICENSE-DOCS.txt`, `NOTICE`, `COMMERCIAL.md`, `CITATION.cff`, `CONTRIBUTING.md`, `CLA.md`, `PUBLICATIONS.md` | licence (code: the lfphys Research Licence 1.0, text of 14 November 2026, `LicenseRef-lfphys-Research-1.0` — noncommercial research only, citation required, public use carries the line `lfphys — Ildar Idrisov — https://github.com/ildar-idrisov/lfphys` (§5A), the name not licensed; documentation and the public site's materials: CC BY-NC-SA 4.0 with additional permissions for scholarly publications; commercial use only by a separate written agreement), citation, contribution terms and the contributor agreement; copies in `lfphys/` and `visualizations/` |
 
 ## 3. Rules
 

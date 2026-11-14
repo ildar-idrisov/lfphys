@@ -61,9 +61,10 @@ world". `README.md` lists the modules by topic.
 
 ## 4. Licence and third-party code (owner, 2026-10-24; `../AGENTS.md` §3 rule 8)
 
-The engine is licensed by its author (the lfphys Research Licence 1.0 for code — noncommercial research only, citation
-required; CC BY-NC-SA 4.0 for documentation; commercial use only by a separate agreement: `LICENSE.md`, `NOTICE`,
-`COMMERCIAL.md`). To keep it free to be licensed under any
+The engine is licensed by its author (the lfphys Research Licence 1.0, text of 14 November 2026, for code —
+noncommercial research only, citation required, public use carries the line `lfphys — Ildar Idrisov —
+https://github.com/ildar-idrisov/lfphys`, the name not licensed; CC BY-NC-SA 4.0 for documentation and the public
+site's materials; commercial use only by a separate agreement: `LICENSE.md`, `NOTICE`, `COMMERCIAL.md`). To keep it free to be licensed under any
 terms, it contains only its own code and permissively licensed code; runtime dependencies are permissive or weak
 copyleft used unmodified; third-party physics libraries (CRunDec, KerrGeoPy, tmm, QuTiP, miepython, ...) are used only in
 tests that compare the engine's results with theirs, as independent references (`CONTRIBUTING.md`); copyleft ones

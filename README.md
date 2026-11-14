@@ -535,15 +535,19 @@ the author's decision. Plans: [`lfphys/PLAN.md`](lfphys/PLAN.md); open items: [`
 In short:
 * **Allowed:** study, teaching, and academic and research use, free of charge, by individuals, schools, universities
   and other noncommercial institutions.
-* **Required:** a link to lfphys whenever you use it in public, and a citation in publications. Screenshots, images and
-  videos of its runs, the materials of its site, teaching materials, websites, presentations, videos and posts carry the
-  line `lfphys — Ildar Idrisov — https://github.com/ildar-idrisov/lfphys` (the site's address will do too; in a lesson,
-  once on the material you show or hand out). Any publication of results obtained with lfphys cites it with its version
-  ([`CITATION.cff`](CITATION.cff); the player shows the version on its page "Licence"). Keep the author's notices when
-  you share lfphys or its documentation.
-* **Not allowed:** any commercial use, by anyone, without a separate written agreement
-  ([`COMMERCIAL.md`](COMMERCIAL.md)); naming your own product, service, course or site after lfphys so that it seems to
-  come from the project.
+* **Required:** credit lfphys whenever you use it in public, and cite it in publications. Anything public that uses
+  lfphys — a screenshot, image or video of its runs, or teaching materials, a website, a presentation, a video or a post
+  that includes them — carries the line `lfphys — Ildar Idrisov — https://github.com/ildar-idrisov/lfphys` (the site's
+  address will do too; in a lesson, once on the material you show or hand out; showing lfphys running is enough by
+  itself). A scholarly publication of results obtained with lfphys cites it with its version instead
+  ([`CITATION.cff`](CITATION.cff); the player shows the version on its page "Licence"; images reproduced there are
+  credited "Ildar Idrisov, lfphys &lt;version&gt;"). The site's materials (recordings, posters, worksheets) are under
+  CC BY-NC-SA 4.0: credit them with the same line and that licence, mark your changes, and share adapted copies under
+  the same licence. Keep the author's notices when you share lfphys or its documentation.
+* **Not allowed:** commercial use — of the code, by anyone, without a separate written agreement; of the documentation
+  and the site's materials, as CC BY-NC-SA 4.0 defines it ([`COMMERCIAL.md`](COMMERCIAL.md)); and using the name
+  lfphys as, or as part of, the name of your own product, service, course or site, or so that it seems to come from or
+  be endorsed by the project (saying that you use lfphys is fine).
 * **At your own risk:** lfphys is a research tool provided as is, without any warranty. You use it and its results at
   your own risk; the author is not liable for any consequences ([`LICENSE.md`](LICENSE.md) §8).
 

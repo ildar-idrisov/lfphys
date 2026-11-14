@@ -230,11 +230,14 @@ Open items of the engine are tracked in `../STATUS.md`, section "V. Visualizatio
 
 ## Licence, citation, contact
 
-* **Code**: lfphys Research Licence 1.0 (`LICENSE.md`, SPDX `LicenseRef-lfphys-Research-1.0`): source-available, for
-  noncommercial research, study and teaching only. **Any commercial use, by anyone — including a university or an
+* **Code**: lfphys Research Licence 1.0, text of 14 November 2026 (`LICENSE.md`, SPDX
+  `LicenseRef-lfphys-Research-1.0`): source-available, for noncommercial research, study and teaching only. **Any commercial use, by anyone — including a university or an
   institute working for a business — needs a separate written agreement** (`COMMERCIAL.md`).
-* **Documentation** (Markdown files, `sources/`, figures): CC BY-NC-SA 4.0 (`LICENSE-DOCS.txt`), with additional
-  permissions for scholarly publications (`PUBLICATIONS.md`).
+* **Documentation** (Markdown files, `sources/`, figures) and the public site's materials: CC BY-NC-SA 4.0
+  (`LICENSE-DOCS.txt`), with additional permissions for scholarly publications (`PUBLICATIONS.md`).
+* **Attribution and the name**: public use of the engine or of images of its runs carries the line
+  `lfphys — Ildar Idrisov — https://github.com/ildar-idrisov/lfphys` (`LICENSE.md` §5A); the name "lfphys" is not
+  licensed.
 * **Your results** are yours; publications of results obtained substantially with the engine (it computed, simulated
   or rendered, or checked, something the publication reports) **must cite it** with its version (`LICENSE.md` §5–6,
   `CITATION.cff`, `PUBLICATIONS.md`).

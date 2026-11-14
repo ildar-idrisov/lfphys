@@ -6,22 +6,26 @@ SPDX LicenseRef-lfphys-Research-1.0): noncommercial research, study and teaching
 source. Any commercial use, by anyone and whatever the user's status, requires a separate written agreement with
 Ildar Idrisov (COMMERCIAL.md).
 
-Attribution: any public use of the software, of screenshots, images and videos of its runs, or of the materials of the
-public site must carry this line (LICENSE.md section 5A; the site's address https://ildar-idrisov.github.io/lfphys/
-may replace the repository's):
+Attribution: any public use of the software or of screenshots, images and videos of its runs must carry this line
+(LICENSE.md section 5A; the site's address https://ildar-idrisov.github.io/lfphys/ may replace the repository's):
 
     lfphys — Ildar Idrisov — https://github.com/ildar-idrisov/lfphys
 
-The name "lfphys" and any logo of the project are not licensed: they may not name a product, service, course or site
-in a way that implies origin or endorsement; factual references are allowed (LICENSE.md section 5A, item 8).
+In a publication of results, the citation of LICENSE.md section 5, with the credit of section 6.3 for reproduced
+images, takes its place. The materials of the public site carry the same line, with the site's address, as the
+attribution that their licence, CC BY-NC-SA 4.0, asks You to keep (LICENSE.md section 9).
+
+The name "lfphys" and any logo of the project are not licensed: they may not be used as, or as part of, the name of
+Your own product, service, course or site, or so that something seems to come from or be endorsed by the project;
+factual references are allowed (LICENSE.md section 5A, item 8).
 
 Citation: publications of results obtained substantially with the software must cite it (LICENSE.md section 5;
 CITATION.cff; PUBLICATIONS.md).
 
-Documentation, the author's figures and the materials of the public site (recordings, posters, Explore atlases,
-worksheets, guides): Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (LICENSE-DOCS.txt), with
-additional permissions for scholarly publications (PUBLICATIONS.md) and the attribution line above (LICENSE.md
-section 9); the software that plays them stays under the licence above.
+Documentation, the author's figures and the materials of the public site (recordings, posters, atlases, the texts of
+worksheets and of lab-work steps): Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+(LICENSE-DOCS.txt), with additional permissions for scholarly publications (PUBLICATIONS.md); the software that plays
+them stays under the licence above (LICENSE.md section 9).
 
 No warranty: the software is a research tool provided as is, without any warranty; its models, numerical methods and
 results may contain errors, and results must be verified independently before they are relied on (LICENSE.md
