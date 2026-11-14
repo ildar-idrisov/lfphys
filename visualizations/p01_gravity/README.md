@@ -141,7 +141,7 @@ the first free point along +x (steps of an eighth of the scene) and a toast says
 to the original with its velocity (before, a second star, a copy, a hole on the Sun were refused, or a star landed in the
 Sun and merged unseen, or a hole swallowed the Sun). Every merger is a toast too, with the time since the body was
 added when that is under a year. The Newtonian world advances in chunks of 16 integrator steps, so a high speed lags
-("actual" below the chosen speed) instead of stalling a frame (review UX-ui U5).
+("actual: …" below the chosen speed) instead of stalling a frame (review UX-ui U5).
 
 ## Approximations and limits
 

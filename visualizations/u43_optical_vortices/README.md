@@ -34,7 +34,7 @@ fields, the grids the scene samples it on, the devices' meshes (geometry, not co
   not of every nonparaxial beam with a phase e^{ilφ}.
 * **What the exact beam keeps of the named source** (review B8-beams, O2). The evanescent part of the source's
   spectrum (q > k) is not in the beam. The run computes the share of the source's power it keeps (check "Fraction of the
-  source's power the beam carries"; Hankel–Parseval). For an LG waist narrower than about a wavelength w0 is then the width of the spectrum,
+  source's power the beam carries (propagating waves, q ≤ k)"; Hankel–Parseval). For an LG waist narrower than about a wavelength w0 is then the width of the spectrum,
   not the measured waist: a world that drops more than 10⁻⁴ of the waist's power (its field on z = 0 differs from the
   named mode by more than 1 % in L2 norm) is labelled in the header and the title ("the spectrum cut at q = k"; the
   `tight` preset drops 0.66 %), and one that drops more than 10 % (32 % in L2 norm) is refused with the reason (e.g.

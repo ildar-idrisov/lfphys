@@ -64,11 +64,11 @@ regions, the packet, the mark's coupling, the references.
   space and the flux agrees with the exact free evolution to 3·10⁻⁶ (r13, `arr_flux_exact`). Order 16 lost ~10⁻³ at
   the top of the spectrum on λ/5.
 * **The path mark and the observer.** The world parameter "Path mark in slit B" gives the wave a second component:
-  * "the particle's spin" — the particle's own spin ½ (spin up along z). A coupling b·σ with b = b₀ e_y inside slit B's
+  * "the particle's spin: …" — the particle's own spin ½ (spin up along z). A coupling b·σ with b = b₀ e_y inside slit B's
     channel (edges as the wall's) turns the spin by θ = 2b₀w/(ħv₀) for the mean speed (b₀ set from θ). For an electron
     or a neutron this is a magnetic field in the slit (b = −μB); particles without spin ½ in the engine (⁴He, C₆₀) are
     refused this mark (review B3-7);
-  * "an observer: a path detector at slit B" (B4, the owner's request of 2026-10-28) — an external two-level which-path
+  * "an observer: a path detector at slit B (…)" (B4, the owner's request of 2026-10-28) — an external two-level which-path
     detector at slit B (Englert's model, as u32's detector qubit): the second component is the detector's state, which
     the same coupling turns by θ while the particle is in slit B. Any particle, also one without spin.
 

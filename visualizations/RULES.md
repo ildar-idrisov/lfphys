@@ -714,7 +714,9 @@ section is how the visualizations keep it.
   no ordinal is built as "{k}th". A button is named by its label ("▶ Start a new world", not "New world").
 * **User documents.** A world's README and the owner guide exist as `README.md` (English) and `README.<lang>.md` for
   every other language, each linking the other at the top. A document names a part of the interface by its label in
-  the document's language: the msgid in an English document, its translation from the catalogues in another.
+  the document's language: the msgid in an English document, its translation from the catalogues in another. A quoted
+  label is quoted exactly as the interface shows it, its unit included: "Position, nm", not "Position" (owner,
+  2026-11-14).
 * **Adding a language.** A row in `../LANGUAGES.md`; its code in `LANGS` of `lfviz/i18n.py` and of
   `player/js/i18n.js`; a `locales/<code>.json` next to every catalogue (`tests/test_i18n.py` lists what is missing);
   and `X.<code>.md` for every user document.

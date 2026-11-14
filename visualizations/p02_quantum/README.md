@@ -66,7 +66,7 @@ notes came before the add was tried [error in earlier]). Refused, named in the n
 wall, a step or a flux plane across z, a packet moving out of the plane. **The same space** (a new world with the
 scene carried, e.g. another grid from the form): each wave is carried itself (`carry_state`, `carry_world`,
 `Scene.adopt_wave`: resampled exactly to the new grid, refused as a live change of the grid is — then a fresh packet,
-said), with its absorbed records (a detector that was not carried: "in the previous world (before the scene was carried)"), the world's random generators and
+said), with its absorbed records (a detector that was not carried: "in the previous world (before the scene was carried over)"), the world's random generators and
 measured points; Bohm points are drawn again from the wave. The framework's one notice says what went with its state,
 what was prepared afresh and why; the world's time goes on.
 
