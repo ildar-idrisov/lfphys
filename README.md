@@ -2,18 +2,29 @@
 
 **English** | [Русский](README.ru.md)
 
-[![Licence: lfphys Research Licence 1.0, noncommercial](https://img.shields.io/badge/licence-lfphys%20Research%201.0%20%C2%B7%20noncommercial-informational)](LICENSE.md)
+[![Demo: ildar-idrisov.github.io/lfphys](https://img.shields.io/badge/demo-ildar--idrisov.github.io%2Flfphys-success)](https://ildar-idrisov.github.io/lfphys/)
+[![Licence: lfphys Research Licence 1.0, noncommercial](https://img.shields.io/badge/licence-lfphys%20Research%201.0%20%C2%B7%20noncommercial-informational)](#licence-and-citation)
 
-**lfphys is a noncommercial research project in physics.** It is built on its own physics engine, which computes
-every step of what you see from the known laws of physics. These are not animations: an interference pattern, an
-orbit or a rainbow appears because the run computed it, and every run shows its own checks against independent
-references. Approximations and "what if" worlds with a changed law are always marked as such. The project serves
-research and the popularisation of science, with demonstrations of physical processes for school students,
-university students and researchers.
+**Physics you can watch being computed.** lfphys is a physics engine with interactive visualizations built on it.
+Nothing you see is an animation: a double-slit pattern builds up particle by particle, an orbit precesses, a rainbow
+forms, because the engine solved the equations of that very run. Next to every result the run shows its own checks
+against independent references: exact solutions, published tables, a second numerical method. You see how far each
+number can be trusted.
 
-**Use.** Research, study, teaching and outreach are free for individuals and noncommercial institutions, provided
-the project is cited in publications ([licence](LICENSE.md)). Commercial use is not permitted by the licence. It is
-possible only by a separate written agreement ([`COMMERCIAL.md`](COMMERCIAL.md)).
+**[▶ Open the demos](https://ildar-idrisov.github.io/lfphys/)**: recordings of real runs in the browser, in English
+and Russian, nothing to install. To compute live and change everything, run lfphys on your own computer
+([quick start](#quick-start)).
+
+**Why you can teach and do research with it**
+* **Established physics in the core.** Every function of the engine's core is tested against an exact solution or an
+  independent second method; more than 3,000 automated tests run on every change.
+* **Nothing hidden.** Approximations and "what if" worlds with a changed law are always marked as such, in the
+  interface and in the documentation.
+* **Every run checks itself.** Computed value ↔ reference, with the tolerance, on the screen.
+* **Reproducible.** Every run and every recording names its version and code identifier, so a result can be cited and
+  repeated.
+* **For every level.** Material for school students along the curriculum (in preparation), demonstrations from
+  university courses, research set-ups not studied before, and free laboratories where you build the experiment.
 
 The engine, a Python package, keeps three kinds of physics apart: a **core** of established physics, where every
 function is tested against a closed form or an independent second method; the **approximations, interpretations and
@@ -521,14 +532,20 @@ the author's decision. Plans: [`lfphys/PLAN.md`](lfphys/PLAN.md); open items: [`
 
 ## Licence and citation
 
-lfphys is **source-available, not open source**. The code is under the
-[lfphys Research Licence 1.0](LICENSE.md): use for noncommercial research, study and teaching is free; any commercial
-use, by anyone, needs a separate written agreement ([`COMMERCIAL.md`](COMMERCIAL.md)). The documentation and the
-author's figures are under CC BY-NC-SA 4.0 ([`LICENSE-DOCS.txt`](LICENSE-DOCS.txt)), with additional permissions for
-scholarly publications ([`PUBLICATIONS.md`](PUBLICATIONS.md)). Your results are yours; a publication of results
-obtained substantially with lfphys must cite it with its version, as in [`CITATION.cff`](CITATION.cff) (the player
-shows the version on its page "Licence"). Third-party components keep their own licences ([`NOTICE`](NOTICE)).
-Contributions: [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`CLA.md`](CLA.md). No warranty: [`LICENSE.md`](LICENSE.md) §8.
+In short:
+* **Allowed:** study, teaching, and academic and research use, free of charge, by individuals, schools, universities
+  and other noncommercial institutions.
+* **Required:** a citation of lfphys with its version in any publication of results obtained with it
+  ([`CITATION.cff`](CITATION.cff); the player shows the version on its page "Licence"), and the author's notices kept
+  when you share lfphys or its documentation.
+* **Not allowed:** any commercial use, by anyone, without a separate written agreement ([`COMMERCIAL.md`](COMMERCIAL.md)).
+* **At your own risk:** lfphys is a research tool provided as is, without any warranty. You use it and its results at
+  your own risk; the author is not liable for any consequences ([`LICENSE.md`](LICENSE.md) §8).
+
+The full terms: the code under the [lfphys Research Licence 1.0](LICENSE.md) (source-available, not open source); the
+documentation and the author's figures under CC BY-NC-SA 4.0 ([`LICENSE-DOCS.txt`](LICENSE-DOCS.txt)), with additional
+permissions for scholarly publications ([`PUBLICATIONS.md`](PUBLICATIONS.md)); third-party components under their own
+licences ([`NOTICE`](NOTICE)). Contributions: [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`CLA.md`](CLA.md).
 
 Questions and commercial use: [idrisov.sci@gmail.com](mailto:idrisov.sci@gmail.com).
 
