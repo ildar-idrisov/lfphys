@@ -2,7 +2,8 @@
 
 Developer notes for the scripts that make the public site (GitHub Pages, `https://ildar-idrisov.github.io/lfphys/`)
 and the generated parts of the root READMEs. The site is the player in static mode: it plays saved recordings of the
-demonstrations and reads the catalogue from JSON files; nothing is computed there. A local server computes every
+demonstrations, shows their screens Watch, Explore and Lab work from precomputed **atlases** (`../RULES.md` §10), and
+reads the catalogue from JSON files; nothing is computed there. A local server computes every
 scenario live and can play the same recordings (`/run?rec=<world>/<rec>`).
 
 All scripts run from `visualizations/` in the project's Docker image, on the CPU (`LFPHYS_NO_GPU=1`), with a memory cap.
@@ -11,14 +12,15 @@ This folder is not a Python package (`site` is a standard module's name): each s
 
 | file | does |
 |---|---|
-| `record.py` | the offline recorder: `--world ID` (repeatable), `--all`, `--stale`, `--rec ID`, `--out DIR` (default `visualizations/recordings/`, git-ignored), `--worker-mem-gb N` |
-| `plan.py` | every (world, recording) with its key and state (`present`, `stale`, `missing`) against a folder; `--matrix [--rerecord stale\|all]` prints the CI matrix |
+| `record.py` | the offline recorder: `--world ID` (repeatable), `--all`, `--stale`, `--rec ID` (no atlases), `--no-atlases`, `--out DIR` (default `visualizations/recordings/`, git-ignored), `--worker-mem-gb N`; after a world's recordings it builds its atlases (`atlas.py`) |
+| `atlas.py` | the atlases of the screens Explore and Lab work: `--world ID` (repeatable), `--atlas ID`, `--all`, `--stale`, `--out DIR` |
+| `plan.py` | every (world, recording) and every (world, atlas) with its key and state (`present`, `stale`, `missing`) against a folder; `--matrix [--rerecord stale\|all]` prints the CI matrix (the world key covers the recordings' and the atlases' keys) |
 | `build.py` | `--recordings DIR --out DIR --base /lfphys/`: the static site |
 | `check.py` | `SITE [--base /lfphys/] [--allow-missing]`: completeness and budgets of a built site; exit 1 on a failure |
 | `readme.py` | the catalogue sections of `README.md`, `README.ru.md` (every language of `LANGUAGES.md`); `--check`, `--print LANG` |
 | `posters.mjs` | Playwright: `docs/images/<id>.jpg` (1200 px wide, JPEG, ≤ 150 kB) and `docs/images/posters.json` |
 | `../../.github/workflows/pages.yml` | the GitHub Actions workflow of the site (active since 2026-11-14) |
-| `site.json` | `{"published": false, "url": "https://ildar-idrisov.github.io/lfphys/"}`: whether the public site is live, and where (the owner sets `published` on his go) |
+| `site.json` | `{"published": true \| false, "url": "https://ildar-idrisov.github.io/lfphys/"}`: whether the public site is live, and where (the owner sets `published` on his go; `true` since the site's publication) |
 
 ## Recordings
 
@@ -89,24 +91,76 @@ The server serves that folder at `/recordings/<world>/<file>` and lists it at `G
 true and the site's index has the same world version.
 `/images/<file>` serves `docs/images/`.
 
+## Atlases
+
+An **atlas** is the set of computed points of one Explore screen (its id is the screen's) or of one lab step
+(`<screen>.<step>`) on the grid of its controls (`registry.atlases_of`; design
+`../../lfphys/sources/explore_2026-11-14_design.md` §1). `atlas.py` computes every point with `lfviz.headless.run_spec`,
+the same runner as the recordings and the server's live points: the screen's preset, its `fixed` values and the grid
+values on top, the screen's seed, frames every `frame_dt` of world time from t = 0 until the screen's stop rule. A point
+the world refuses (`check_params`) is `refused`, its text kept for the player; a point that fails (an error, an
+exception, a check ending ✗, the stop event not reached) fails the atlas.
+
+```
+<out>/<world>/atlas/<atlas>/atlas.<hash8>.json   the manifest: {world, atlas, screen, step, atlas_version, key, version,
+                                                  code_hash, recorder_hash, made, seed, preset, fixed, controls, frame_dt,
+                                                  stop, base, points: [[file | null, bytes_gz, state]], refusals,
+                                                  checks, quant, references (lab steps), cpu_s, bytes_gz}
+<out>/<world>/atlas/<atlas>/base.<hash8>.lfpt.gz the default point's header (quantised as the screen says)
+<out>/<world>/atlas/<atlas>/p<i>.<hash8>.lfpt.gz the point i (row-major, the last control fastest): a header delta
+                                                  against the base, the world's messages, end {reason: "atlas"}
+<out>/<world>/index.json                          + atlases: [{id, screen, step, file, key, points, refused, bytes_gz,
+                                                  checks, cpu_s, version, code_hash, made}]
+```
+
+The atlas key is `sha256(atlas spec + ATLAS_VERSION + recorder_hash + registry.code_hash(world))[:16]`; the spec covers
+the preset, the fixed values, the controls' values and defaults, the seed, `frame_dt`, the stop rule, what is dropped,
+the quantisation and a lab step's law reference (labels change no byte). `recorder_hash` covers `atlas.py` and
+`../server/lfviz/headless.py` too. The same spec and code give the same bytes (`tests/test_atlas.py`). An atlas not built
+now keeps its index entry only while its key is current.
+
+**Budgets** (`sitelib.BUDGET`, gzip, decimal): a point 150 kB target / 400 kB limit; an atlas 6 MB / 12 MB; a world,
+recordings and atlases together, 12 MB / 25 MB; the site 600 MB / 900 MB. Over a limit `atlas.py` fails the atlas and
+`check.py` the site; over a target they warn (`sitelib.ACCEPTED` with `("<world>", "atlas:<id>")` says why one is
+accepted). Measured on 2026-11-14 (local re-recording): s03 Explore 940 points (10 refused) 5.70 MB in 9 s of CPU,
+its lab steps 51, 46 and 87 kB, its world 5.93 MB, recorded in 20 s; u32 Explore 48 points 5.50 MB (96.6–132.7 kB per
+point) in 52 s of CPU, its world 8.17 MB. The test worlds of `tests/site_worlds/` (`s98_atlas_toy` with a refused point, `u97_atlas_hog` over the
+budgets) and their built fixture (`tests/site_worlds/recordings/`, remade by `tests/site_worlds/make_fixture.py`) are
+what `tests/test_atlas.py`, `test_site_build.py` and the player's browser tests run on.
+
+Locally the atlases come with the recordings (`record.py --world ID` or `--stale`, the command above); only the atlases:
+
+```
+docker run --rm --name lf-atlas --memory=12g -e LFPHYS_NO_GPU=1 --user "$(id -u):$(id -g)" \
+  -v "$PWD:/lf:ro" -v "$PWD/visualizations/recordings:/lf/visualizations/recordings" -w /lf/visualizations \
+  lfphys-viz python3 site/atlas.py --world s03_projectile
+```
+
+The server serves them under `/recordings/<world>/atlas/<atlas>/<file>`; on a server the screens can also compute a
+point off the grid (`POST /api/atlas/<world>/<atlas>/point`, `lfviz/atlas_live.py`; `../RULES.md` §3, §10).
+
 ## The site
 
-`build.py` writes `index.html`, `run.html`, `legal.html` (the player's pages with `<meta name="lf-mode"
+`build.py` writes `index.html`, `run.html`, `legal.html`, `worksheet.html` (the player's pages with `<meta name="lf-mode"
 content="static">`, `<meta name="lf-base" content="<base>">` and the import map's `/static/`, `/viz/` and `three` made
 relative; nothing else in a page is rewritten), `404.html` (its own, links with the base), `static/` (the player without
 its tests and `legacy/`, and `static/locales/<lang>.json`), `viz/<id>/` (each world's `web/`), `api/viz.json`,
 `api/viz/<id>.json` (also under each old id), `api/audiences.json` (`GET /api/audiences`: the audiences and the sections
 with their labels), `api/planned.json`, `api/recordings.json`, `api/health.json` (the citation),
-`aliases.json`, `recordings/`, `images/<id>.jpg`, `legal/<name>` (the licence page's full texts) and
-`site-manifest.json` (every file's size and sha256; every world and recording with its key and state).
+`aliases.json`, `recordings/` (with the atlases, `recordings/<world>/atlas/<atlas>/`), `images/<id>.jpg`,
+`legal/<name>` (the licence page's full texts) and `site-manifest.json` (every file's size and sha256; every world,
+recording and atlas with its key and state).
 
-`check.py` fails on: a registry world or recording missing from the manifest or the site, or stale; a file that differs
+`check.py` fails on: a registry world, recording or atlas missing from the manifest or the site, or stale; an atlas's
+manifest that disagrees with the index or with its files (a point's size or sha256, the base, a refusal), or that counts
+a check ending failed; a file that differs
 from the manifest or its index; a recording whose index entry counts a check that ends failed; a page without its metas
 or import map, or with an absolute `/static`, `/api`, `/viz` outside the import map; a script (`static/**/*.js`,
 `viz/**/*.js`) with an absolute server address (`"/api…"`, `"/run…"`, `"/runs…"`, `"/settings…"`, `"/legal…"`,
 `"/recordings…"`, `"/images…"`, `"/ws…"`) in a string literal; a catalogue world without `viz/<id>/view.js`, or a named
 picture without `images/<id>.jpg`; a missing catalogue, audiences or i18n file; `api/recordings.json` that disagrees with
-`site.json`; a hard limit exceeded (file 10 MB, world 25 MB, poster 400 kB, site 900 MB). Over a target it warns, and on
+`site.json`; a hard limit exceeded (file 10 MB, world 25 MB with its atlases, atlas point 400 kB, atlas 12 MB, poster
+400 kB, site 900 MB). Over a target it warns, and on
 an index entry or a file the registry does not ask for (`build.py` copies only the entries it asks for).
 
 Locally:
@@ -143,7 +197,8 @@ only when its recording's key changed (`docs/images/posters.json`) or with `--fo
 `.github/workflows/pages.yml` (design §5.2): `check` (the image, the completeness, site and key tests, the matrix), in parallel with
 `viz-tests` (the whole visualizations suite, three shards) and `engine-tests` (the engine's suite); `record` (after all
 three: one job per world, restored from the cache by the world's key, recorded on a miss on the CPU with
-`--memory=12g`, saved under the key also after a forced re-record), `build` (`build.py`, `check.py`, the smoke test
+`--memory=12g` — the recordings, then the world's atlases, in the same matrix entry — saved under the key also after a
+forced re-record), `build` (`build.py`, `check.py`, the smoke test
 `tests/browser/site_smoke.mjs` in EN and RU on the site served under `/lfphys/` by `python -m http.server`, every
 recording played), `deploy`. **Deployment is the owner's go:** a push to `main` checks, records and builds only; the
 `deploy` job runs only when the workflow is started by hand (Actions → pages → Run workflow) with `deploy: true`. Every
@@ -155,5 +210,5 @@ The smoke test checks that no request leaves `/lfphys/` and none goes to `/api/`
 page render in EN and RU, that a recording plays (the timeline moves, the checks appear, the canvas is drawn), that
 every recording loads with the index's frame count and lands on `poster_t` at `poster_frame` (an old id too), that an
 unknown recording id is said with a link to the start page, that `run.html?id=…` says the site plays recordings only,
-that the laboratories are greyed with their note, that the school banner is honest, and that `legal.html` shows the
-texts. `ALL_RECS=0` plays only one recording.
+that the laboratories are greyed with their note, that the school banner is honest, that every screen of every world
+with screens opens (Watch, Explore, Lab work) and a lab's worksheet renders, and that `legal.html` shows the texts. `ALL_RECS=0` plays only one recording.

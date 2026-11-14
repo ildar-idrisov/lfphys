@@ -14,6 +14,7 @@ research audiences by section in teaching order with their counts, one row per w
 (``docs/images/<id>.jpg``, when there is one), its title linked to its README in the language, its teaser, its anchors
 (the courses; the research question with «Status: hypothesis» and the prior art), «Watch on the site» (one link per
 recording, ``<site>run.html?rec=<world>/<rec>``, with ``&lang=<code>`` in a language other than the default: review F6;
+and «On the site» with the world's screens, ``run.html?demo=<world>&screen=<id>``, design of 2026-11-14 §3.10;
 only while ``site/site.json`` says ``published``, else one line at the top says the site is being prepared and the
 recordings play locally, and a world lists its recordings' names without links: integrator D3), the count of scenarios in the player and «Same topic at other levels»;
 the planned university and research items folded after their worlds, by section; the laboratories with «Runs only
@@ -51,6 +52,8 @@ HYPOTHESIS = T("Status: hypothesis")
 PRIOR_ART = T("Prior art")
 WATCH = T("Watch on the site")
 RECORDINGS = T("Recordings")
+SCREENS = T("On the site")
+SCREENS_LOCAL = T("Screens")
 SITE_SOON = T("The public site with the recordings is being prepared; until then the recordings play on a local server")
 SAME_TOPIC = T("Same topic at other levels")
 SCENARIOS = T("Scenarios in the player: {n}")
@@ -91,6 +94,11 @@ class Gen:
         """A recording's address on the public site, in this README's language (F6: the player does not follow the
         browser's language, so a link from a README in another language carries it)."""
         q = f"rec={vid}/{rec}" + ("" if self.lang == i18n.DEFAULT else f"&lang={self.lang}")
+        return f"{self.site['url']}run.html?{q}"
+
+    def screen_link(self, vid: str, screen: str) -> str:
+        """A screen's address on the public site (``run.html?demo=<world>&screen=<id>``), in this README's language."""
+        q = f"demo={vid}&screen={screen}" + ("" if self.lang == i18n.DEFAULT else f"&lang={self.lang}")
         return f"{self.site['url']}run.html?{q}"
 
     def r(self, text, **kw) -> str:
@@ -165,6 +173,13 @@ class Gen:
                 links.append(f"[{label}]({self.site_link(vid, rec['id'])}){tag}" if self.site["published"]
                              else label + tag)
             lines.append(f"▷ {self.r(WATCH if self.site['published'] else RECORDINGS)}: " + " · ".join(links))
+        screens = registry.screens_of(v)
+        if screens:  # Watch · Explore · Lab work (design of 2026-11-14 §3.10): linked once the site is published
+            items = []
+            for sc in screens:
+                label = _md(self.r(sc["label"]))
+                items.append(f"[{label}]({self.screen_link(vid, sc['id'])})" if self.site["published"] else label)
+            lines.append(f"◎ {self.r(SCREENS if self.site['published'] else SCREENS_LOCAL)}: " + " · ".join(items))
         n = len(getattr(v["schema"], "presets", {}) or {})
         if n:
             lines.append(_md(self.r(SCENARIOS, n=n)))

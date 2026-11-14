@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""What the site's scripts share (``visualizations/site/``; design of the start page §4, §5): the paths, the recorder's
-version, the budgets, the keys of the recordings and the reading of a recordings folder.
+"""What the site's scripts share (``visualizations/site/``; design of the start page §4, §5; design of the screens and
+atlases ``lfphys/sources/explore_2026-11-14_design.md`` §1.4, §1.8): the paths, the recorder's and the atlases'
+versions, the budgets, the keys of the recordings and the atlases, and the reading and writing of a recordings folder.
 
 The scripts run from ``visualizations/`` (``python3 site/<script>.py``), in Docker, on the CPU. This folder is not a
 package (``site`` is the name of a standard module), so each script puts this folder and ``server/`` on ``sys.path``.
@@ -27,6 +28,8 @@ from lfviz import registry  # noqa: E402
 #: frames carry no ``cpu_ms``, the header's kernels are this recording's own; site review F1, F2). The recorder's code and
 #: the image's locked dependencies are in the key too (``recorder_hash``), so an edit there needs no raise to be seen.
 RECORDER_VERSION = "2"
+#: the atlases' version: part of every atlas's key; raise it when the atlas's files change their form (design §1.4)
+ATLAS_VERSION = "1"
 RECORDINGS = VIZ / "recordings"  # the local recordings (git-ignored; the server serves them at /recordings/)
 IMAGES = REPO / "docs" / "images"  # the README's and the cards' pictures (posters.mjs)
 
@@ -35,8 +38,9 @@ MB = 1_000_000
 #: the hard limit the recording, or the site's check, fails.
 BUDGET = {
     "file": (3 * MB, 10 * MB),  # one recording file (gzip)
-    "world": (12 * MB, 25 * MB),  # one world, all its recordings
-    "step": (2 * MB, 6 * MB),  # one school step, all its grid points (AB1)
+    "world": (12 * MB, 25 * MB),  # one world, all its recordings and atlases
+    "point": (150_000, 400_000),  # one atlas point file (gzip; design of 2026-11-14 §1.8)
+    "atlas": (6 * MB, 12 * MB),  # one atlas: its base and points (an Explore screen or a lab step)
     "poster": (150_000, 400_000),  # one poster picture (JPEG, 1200 px wide)
     "site": (600 * MB, 900 * MB),  # the whole site (Pages allows 1 GB)
 }
@@ -63,13 +67,20 @@ def accepted(world: str, rec: str | None = None) -> str | None:
 
 
 def spec_of(rec: dict) -> dict:
-    """The part of a recording spec (``registry.recordings_of``) that decides what is recorded."""
-    return {k: rec.get(k) for k in ("id", "preset", "seconds", "fps", "speed", "seed", "poster", "script")}
+    """The part of a recording spec (``registry.recordings_of``) that decides what is recorded (``captions`` and
+    ``quantize`` only when the spec has them, so that a spec without them keeps its key's form)."""
+    out = {k: rec.get(k) for k in ("id", "preset", "seconds", "fps", "speed", "seed", "poster", "script")}
+    for k in ("captions", "quantize"):
+        if rec.get(k):
+            out[k] = rec[k]
+    return out
 
 
-#: the files besides the world's code that decide a recording's bytes (site review F3): the recorder (its frame clock,
-#: ``DROP``, ``STRIDES``, the packing) and the image's locked dependencies (numpy, scipy … decide the numbers)
-RECORDER_FILES = (HERE / "record.py", VIZ / "docker" / "requirements.lock", VIZ / "docker" / "Dockerfile")
+#: the files besides the world's code that decide a recording's or an atlas's bytes (site review F3): the recorder (its
+#: frame clock, ``DROP``, ``STRIDES``, the packing), the atlases' builder, the headless runner and packer, and the image's
+#: locked dependencies (numpy, scipy … decide the numbers)
+RECORDER_FILES = (HERE / "record.py", HERE / "atlas.py", VIZ / "server" / "lfviz" / "headless.py",
+                  VIZ / "docker" / "requirements.lock", VIZ / "docker" / "Dockerfile")
 
 
 def recorder_hash(files=None) -> str:
@@ -96,8 +107,31 @@ def spec_key(rec: dict, code_hash: str, recorder: str | None = None) -> str:
     return hashlib.sha256(f"{spec}\n{RECORDER_VERSION}\n{rh}\n{code_hash}".encode()).hexdigest()[:16]
 
 
+def atlas_spec_of(a: dict) -> dict:
+    """The part of an atlas (``registry.atlases_of``) that decides its files (design §1.4): the preset, the fixed values,
+    the controls' values and defaults, the seed, ``frame_dt``, the stop rule, what is dropped, the quantisation and the
+    law's reference id. Labels are not in it: they change no byte."""
+    return {"id": a["id"], "preset": a["preset"], "fixed": a["fixed"],
+            "controls": [{"param": c["param"], "values": c["values"], "default": c.get("default")}
+                         for c in a["controls"]],
+            "seed": a["seed"], "frame_dt": a["frame_dt"], "stop": a["stop"], "drop": a["drop"],
+            "quantize": a["quantize"], "law": a.get("law")}
+
+
+def atlas_key(a: dict, code_hash: str, recorder: str | None = None, grid: bool = True) -> str:
+    """The atlas's key: sha256(atlas spec + ATLAS_VERSION + the recorder's hash + the world's code hash), 16 hex digits.
+    ``grid=False``: without the controls' values (the key of the server's live points, design §3.7; the defaults stay:
+    they decide the base header)."""
+    spec = atlas_spec_of(a)
+    if not grid:
+        spec["controls"] = [{"param": c["param"], "default": c["default"]} for c in spec["controls"]]
+    text = json.dumps(spec, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    rh = recorder_hash() if recorder is None else recorder
+    return hashlib.sha256(f"{text}\n{ATLAS_VERSION}\n{rh}\n{code_hash}".encode()).hexdigest()[:16]
+
+
 def world_key(keys: list[str]) -> str:
-    """A world's key over the keys of all its recordings (the cache key of the CI's record job)."""
+    """A world's key over the keys of all its recordings and atlases (the cache key of the CI's record job)."""
     return hashlib.sha256("\n".join(keys).encode()).hexdigest()[:16]
 
 
@@ -119,8 +153,16 @@ def planned_world(vid: str) -> dict:
     recs = []
     for r in registry.recordings_of(viz):
         recs.append({**r, "key": spec_key(r, code, rh)})
+    atl = [{"id": a["id"], "screen": a["screen"], "step": a["step"], "key": atlas_key(a, code, rh),
+            "points": len(list(_product(a["controls"])))} for a in registry.atlases_of(viz)]
+    keys = [r["key"] for r in recs] + ([f"atlas:{a['id']}:{a['key']}" for a in atl] if atl else [])
     return {"world": vid, "version": viz.get("version", ""), "code_hash": code, "recorder_hash": rh,
-            "recordings": recs, "key": world_key([r["key"] for r in recs])}
+            "recordings": recs, "atlases": atl, "key": world_key(keys)}
+
+
+def _product(controls):
+    import itertools  # noqa: PLC0415
+    return itertools.product(*[c["values"] for c in controls])
 
 
 def read_index(folder: Path, vid: str) -> dict | None:
@@ -148,6 +190,33 @@ def status(folder: Path, plan: dict) -> dict:
         ok = h.get("key") == r["key"] and f.is_file() and f.stat().st_size == h.get("bytes_gz")
         out[r["id"]] = "present" if ok else "stale"
     return out
+
+
+def atlas_status(folder: Path, plan: dict) -> dict:
+    """{atlas id: "present" | "stale" | "missing"} of a world's atlases against a recordings folder: present when the
+    index holds the atlas with the same key and its manifest file is there; stale when held with another key (or its
+    manifest is gone); missing otherwise."""
+    idx = read_index(folder, plan["world"]) or {}
+    have = {a.get("id"): a for a in idx.get("atlases") or []}
+    out = {}
+    for a in plan.get("atlases") or []:
+        h = have.get(a["id"])
+        if h is None:
+            out[a["id"]] = "missing"
+            continue
+        ok = h.get("key") == a["key"] and (Path(folder) / plan["world"] / str(h.get("file", ""))).is_file()
+        out[a["id"]] = "present" if ok else "stale"
+    return out
+
+
+def write_index(folder: Path, vid: str, index: dict):
+    """``<folder>/<world>/index.json`` written atomically."""
+    import os  # noqa: PLC0415
+    d = Path(folder) / vid
+    d.mkdir(parents=True, exist_ok=True)
+    tmp = d / "index.json.tmp"
+    tmp.write_text(json.dumps(index, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    os.replace(tmp, d / "index.json")
 
 
 def sha256_file(path: Path) -> str:

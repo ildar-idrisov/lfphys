@@ -22,6 +22,33 @@ export function apiError(j, fallback) {
   return e;
 }
 
+// A blob whose descriptor carries q (a quantised blob: protocol.py "Quantised blobs"; design §1.3) is stored as u1 or
+// u2 codes and returned as a Float32Array of the same length, bit for bit what protocol.dequantize gives: M = 255 (u1)
+// or 65535 (u2); top = M − 1 when q.nan (the code M is then NaN), else M; r = v / top in double; lin: lo + r·(hi − lo),
+// sqrt: hi·(r·r); lo and hi are numbers or one per column of the last axis (element k: column k % shape[-1]); the
+// double is rounded to float32 on storing (round to nearest, ties to even, as numpy's astype(float32)).
+const QMAX = { u1: 255, u2: 65535 };
+export function dequantize(codes, dtype, q, shape) {
+  const M = QMAX[dtype];
+  if (!M) throw new Error(`a quantised blob is stored as u1 or u2, not ${dtype}`);
+  const nan = !!q.nan, top = nan ? M - 1 : M;
+  const ncol = Array.isArray(shape) && shape.length ? shape[shape.length - 1] : 1;
+  const lo0 = q.lo ?? 0, hi0 = q.hi;
+  const colLo = Array.isArray(lo0), colHi = Array.isArray(hi0);
+  const sqrt = q.enc === "sqrt";
+  if (!sqrt && q.enc !== "lin") throw new Error(`unknown quantised encoding ${q.enc}`);
+  const out = new Float32Array(codes.length);
+  for (let i = 0; i < codes.length; i++) {
+    const v = codes[i];
+    if (nan && v === M) { out[i] = NaN; continue; }
+    const k = ncol > 0 ? i % ncol : 0;
+    const lo = colLo ? lo0[k] : lo0, hi = colHi ? hi0[k] : hi0;
+    const r = v / top;
+    out[i] = sqrt ? hi * (r * r) : lo + r * (hi - lo);
+  }
+  return out;
+}
+
 export function decode(buf) {
   const dv = new DataView(buf);
   const jlen = dv.getUint32(0, true);
@@ -31,7 +58,8 @@ export function decode(buf) {
   const blobs = {};
   for (const d of meta.blobs || []) {
     const T = DT[d.dtype];
-    blobs[d.name] = new T(buf, base + d.offset, d.nbytes / T.BYTES_PER_ELEMENT);
+    const raw = new T(buf, base + d.offset, d.nbytes / T.BYTES_PER_ELEMENT);
+    blobs[d.name] = d.q ? dequantize(raw, d.dtype, d.q, d.shape) : raw;
   }
   return { meta, blobs };
 }
@@ -121,22 +149,11 @@ export function openRecording(src, { onOpen, onMessage, onClose, onProgress, onE
     } else if (typeof Blob !== "undefined" && src instanceof Blob) bytes = new Uint8Array(await src.arrayBuffer());
     else bytes = src instanceof ArrayBuffer ? new Uint8Array(src) : new Uint8Array(src.buffer, src.byteOffset, src.byteLength);
     if (closed) return;
-    let buf;
-    if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
-      const plain = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
-      buf = await new Response(plain).arrayBuffer();
-    } else buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+    const buf = await inflate(bytes);
     if (closed) return;
-    if (TD.decode(new Uint8Array(buf, 0, Math.min(8, buf.byteLength))) !== MAGIC) throw new Error("not an lfphys recording (LFVREC1)");
-    const dv = new DataView(buf);
+    checkMagic(buf);
     onMessage({ meta: { type: "history_start", frame_stride: Math.max(1, frameStride || 1), recording: true }, blobs: {} });
-    let pos = MAGIC.length;
-    while (pos + 4 <= buf.byteLength && !closed) {
-      const ln = dv.getUint32(pos, true);
-      if (pos + 4 + ln > buf.byteLength) break;  // a cut file: what is whole is played
-      onMessage(decode(buf.slice(pos + 4, pos + 4 + ln)));
-      pos += 4 + ln;
-    }
+    eachMessage(buf, (m) => onMessage(m), () => closed);
     if (!closed) onMessage({ meta: { type: "history_end", live: false, resumable: false, recording: true }, blobs: {} });
   })().catch((e) => { if (onError) onError(e); else console.error(e); });
   return {
@@ -144,4 +161,38 @@ export function openRecording(src, { onOpen, onMessage, onClose, onProgress, onE
     send() { /* a recording takes no commands */ },
     close() { closed = true; onClose && onClose(); },
   };
+}
+
+// The bytes of a recording or of an atlas's point (gzip -9 of an LFVREC1 stream, or already inflated: recognised by
+// the gzip magic) as the stream's ArrayBuffer
+export async function inflate(bytes) {
+  if (bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes);
+  if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
+    const plain = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+    return new Response(plain).arrayBuffer();
+  }
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+}
+function checkMagic(buf) {
+  if (TD.decode(new Uint8Array(buf, 0, Math.min(8, buf.byteLength))) !== MAGIC) throw new Error("not an lfphys recording (LFVREC1)");
+}
+// every whole message of an LFVREC1 stream, each decoded from its own ArrayBuffer (8-aligned arrays); a cut file gives
+// what is whole; stop() ends the reading early
+function eachMessage(buf, fn, stop = () => false) {
+  const dv = new DataView(buf);
+  let pos = MAGIC.length;
+  while (pos + 4 <= buf.byteLength && !stop()) {
+    const ln = dv.getUint32(pos, true);
+    if (pos + 4 + ln > buf.byteLength) break;  // a cut file: what is whole is played
+    fn(decode(buf.slice(pos + 4, pos + 4 + ln)));
+    pos += 4 + ln;
+  }
+}
+// The decoded messages of a recording's or a point's bytes (gzip or not): [{meta, blobs}, …]
+export async function readStream(bytes) {
+  const buf = await inflate(bytes);
+  checkMagic(buf);
+  const out = [];
+  eachMessage(buf, (m) => out.push(m));
+  return out;
 }

@@ -9,6 +9,7 @@
 <meta name="lf-base" content="/">
 <title data-t>lfphys · run</title>
 <link rel="stylesheet" href="static/assets/chrome.css">
+<link rel="stylesheet" href="static/assets/demo.css"><!-- the screens of a demonstration (?demo=): demo.js -->
 <style id="ux-framework">
 /* The player's frame after the UX reviews of 2026-11-04 (UX-ui U9, U14, U16, U20-U24; UX-params P1, P2, P4, P23). */
 /* side columns that fold away, the centre takes the room (U20) */
@@ -176,7 +177,12 @@ body.picking .s3d-canvas, body.picking .sw-canvas { cursor: crosshair; outline: 
     <span id="time" class="time mono"></span>
   </div>
 </div>
+<!-- a demonstration's screens, Watch · Explore · Lab work (run.html?demo=<world>&screen=…; design
+     lfphys/sources/explore_2026-11-14_design.md §3): demo.js fills it and hides the player above; without ?demo= it stays
+     empty and player.js runs the page -->
+<div id="demo" class="demo" hidden></div>
 <script type="module" src="static/js/player.js"></script>
+<script type="module" src="static/js/demo.js"></script>
 <script type="module" src="static/js/instruments.js"></script><!-- [LB1 P16.3 instruments] the "Instruments" panel -->
 </body>
 </html>

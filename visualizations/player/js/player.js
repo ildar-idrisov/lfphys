@@ -25,6 +25,8 @@
 import { MODE, apiGet, connectRun, getJSON, openRecording, page, postJSON, url } from "./api.js";
 import { lang, legacy, t, withLang } from "./i18n.js";
 import { control, el, fill, initTheme, modal, num, panel, paramForm, time, toast, toggleTheme } from "./ui.js";
+import { MAX_FRAMES, asOf, feedView as coreFeed, forget, frameIndexAt as coreFrameAt, ingest, makeWorld, ownerOf,
+  pushFrame, rebuildView as coreRebuild } from "./record_core.js";
 
 initTheme();
 const $ = (id) => document.getElementById(id);
@@ -35,12 +37,11 @@ const GITHUB = "https://github.com/ildar-idrisov/lfphys";
 // the README's quick start in the viewer's language (how to run lfphys locally), as on the start page
 const quickStart = () => (lang() === "ru" ? `${GITHUB}/blob/main/README.ru.md#%D0%B1%D1%8B%D1%81%D1%82%D1%80%D1%8B%D0%B9-%D1%81%D1%82%D0%B0%D1%80%D1%82`
   : `${GITHUB}#quick-start`);
-const MAX_FRAMES = 20000;  // beyond it the stride of the frames kept doubles: the history stays uniform at any length
 // a key frame of the view every KEY_EVERY messages fed in order (owner, 2026-10-29: «для воспроизведения назад давай
 // как в видео добавлять ключевые кадры»): going back restores the view from the nearest one before the cursor and
 // feeds only the messages after it, so a step back does not replay the record from its start
 const KEY_EVERY = Number(new URLSearchParams(location.search).get("key_every")) || 100;  // ?key_every=: tests only
-const MAX_KEYS = 256;  // beyond it every other key frame is dropped: their memory stays bounded at any length
+const KEYS = () => ({ keyEvery: KEY_EVERY, dbg: DBG });  // the key frames' options of record_core (MAX_KEYS there)
 const RESUMING = ["play", "step", "next_event", "set", "action", "view", "new_world"];  // resume a suspended run
 
 const S = {
@@ -70,6 +71,8 @@ const archived = () => S.w !== latest();
 const liveParams = () => S.viz.schema.params.filter((p) => p.live);
 
 async function main() {
+  // a demonstration's screens (run.html?demo=<world>&screen=…; design §3.1) are demo.js's page
+  if (new URLSearchParams(location.search).get("demo")) return;
   // the public site plays recordings only: a run's address (or none) says so, with the ways on (review P17-start-page F12)
   if (MODE === "static" && !recParam) { siteHasNoRuns(); return; }
   if (!runId && !recParam) { document.body.replaceChildren(el("div", { class: "page" }, t("No run given: /run?id=…"))); return; }
@@ -618,18 +621,7 @@ function renderWorldPanel() {
 
 // --- worlds ---------------------------------------------------------------------------------------------
 function newWorld(meta, blobs) {
-  const t0 = meta.t || 0;
-  const W = { n: meta.world || S.worlds.length + 1, header: meta, headerBlobs: blobs, live: { ...(meta.live || {}) },
-              liveHist: [{ t: t0, values: { ...(meta.live || {}) } }],
-              // what later messages change, as of each time (the header itself is never changed: review C1-18)
-              approxHist: [{ t: t0, v: meta.approximations || [] }], engineHist: [{ t: t0, v: meta.engine || [] }],
-              actionsHist: [{ t: t0, v: meta.actions || [] }],
-              frames: [], nArrived: 0, stride: S.histStride,  // frames kept: those whose arrival number is on the stride
-              events: [], checks: new Map(), viewMsgs: [], maxOn: -Infinity, scan: 0,
-              prefix: 0, nOn: 0, keys: [], keyStride: 1,  // messages [0, prefix) all fed; nOn fed in all; key frames
-              lastSet: new Map() };  // the latest message of each set-like (type, id) in the record (repeats: U1)
-  // settings of devices that the engine adjusted for this run (e.g. a GPU asked for but not available)
-  for (const n of ((meta.backend || {}).notes || [])) W.events.push({ t: meta.t || 0, kind: "notice", text: { $t: "ℹ devices: {note}", a: { note: n } } });
+  const W = makeWorld(meta, blobs, { n: S.worlds.length + 1, stride: S.histStride });
   const follow = S.w === latest() || S.w < 0;
   S.worlds.push(W);
   renderWorldSelect();
@@ -666,80 +658,18 @@ function showWorld(i) {
 
 // --- the view at the time shown: fed the record's messages up to it; when going back, restored from its nearest key
 // frame (a view with snapshot() / restore()) or rebuilt from the record (a view without) --------------------------------
-function rebuildView(W, tt) {
-  const k = S.viewOwner === W && S.view.restore ? keyBefore(W, tt) : null;
-  const t0 = performance.now();
-  if (k) {
-    try {
-      S.view.restore(k.snap);
-      const L = W.viewMsgs;
-      for (let i = k.i; i < L.length; i++) L[i].on = false;
-      W.prefix = W.nOn = W.scan = k.i; W.maxOn = k.maxOn;
-      feedView(W, tt);
-      DBG.fromKey++; DBG.lastMs = performance.now() - t0; DBG.lastFed = W.prefix - k.i;
-      return;
-    } catch (e) { console.error("key frame not restored, rebuilding from the record:", e); DBG.keyFailed++; }
-  }
-  S.view.reset && S.view.reset();
-  S.view.onHeader(W.header, W.headerBlobs);
-  S.viewOwner = W;
-  for (const m of W.viewMsgs) m.on = false;
-  W.maxOn = -Infinity; W.scan = 0; W.prefix = 0; W.nOn = 0; W.keys = []; W.keyStride = 1;
-  feedView(W, tt);
-  DBG.full++; DBG.lastMs = performance.now() - t0; DBG.lastFed = W.prefix;
-}
+function rebuildView(W, tt) { coreRebuild(S.view, W, tt, KEYS()); }
 // for automated tests of the page: how the view was last brought to the cursor, and a rebuild from the record on demand
 const DBG = { fromKey: 0, full: 0, keyFailed: 0, lastMs: 0, lastFed: 0, repeats: 0 };
 window.__lfPlayer = {
   dbg: DBG, keys: () => (curWorld() ? curWorld().keys.length : 0), t: () => currentT(), frames: () => S.frames.length,
   goTo: (i) => goTo(i),
-  rebuildFromRecord: () => { const W = curWorld(); S.viewOwner = null; rebuildView(W, currentT()); S.dirty = true; },
+  rebuildFromRecord: () => { const W = curWorld(); forget(S.view); rebuildView(W, currentT()); S.dirty = true; },
+  owner: () => ownerOf(S.view) === curWorld(),  // the view holds the shown world's record
   redraw: () => { S.dirty = true; },
   replaying: () => S.replaying,  // the record is still being loaded (language-neutral, for the tests)
 };
-// the latest key frame at or before t that the view's present state contains (it holds the messages in order up to a
-// later point; a key frame records how long its data were then)
-function keyBefore(W, tt) {
-  if (W.nOn !== W.prefix) return null;  // the view holds messages out of order: only a rebuild is safe
-  const eps = 1e-12 * Math.abs(tt);
-  for (let j = W.keys.length - 1; j >= 0; j--) {
-    const k = W.keys[j];
-    if (k.i <= W.prefix && k.maxOn <= tt + eps) return k;
-  }
-  return null;
-}
-// one key frame per step of KEY_EVERY × keyStride messages; beyond MAX_KEYS the step doubles and the key frames on the
-// coarser grid are kept: uniform over the whole record at any length (review CK-3: dropping every other key frame
-// while new ones came at the full rate left the start of a long session without any)
-function takeKey(W) {
-  const step = KEY_EVERY * W.keyStride, last = W.keys.length ? W.keys[W.keys.length - 1] : null;
-  if (Math.floor(W.prefix / step) <= (last ? Math.floor(last.i / step) : 0)) return;
-  try { W.keys.push({ i: W.prefix, maxOn: W.maxOn, snap: S.view.snapshot() }); } catch (e) { console.error(e); return; }
-  if (W.keys.length > MAX_KEYS) {
-    W.keyStride *= 2;
-    const s2 = KEY_EVERY * W.keyStride, seen = new Set();
-    W.keys = W.keys.filter((k) => { const b = Math.floor(k.i / s2); if (seen.has(b)) return false; seen.add(b); return true; });
-  }
-}
-function feedView(W, tt) {
-  const L = W.viewMsgs, eps = 1e-12 * Math.abs(tt), keyed = !!(S.view.snapshot && S.view.restore);
-  let first = -1;
-  for (let i = W.scan; i < L.length; i++) {
-    const m = L[i];
-    if (m.on) continue;
-    const tm = m.meta.t ?? 0;
-    if (tm <= tt + eps) {
-      m.on = true; W.maxOn = Math.max(W.maxOn, tm); W.nOn++;
-      try { S.view.onMessage(m.meta, m.blobs); } catch (e) { console.error(e); }
-      if (i === W.prefix) {
-        W.prefix++;
-        while (W.prefix < L.length && L[W.prefix].on) W.prefix++;
-        if (keyed && W.nOn === W.prefix) takeKey(W);
-      }
-    } else if (first < 0) first = i;
-  }
-  W.scan = first < 0 ? L.length : first;
-}
+function feedView(W, tt) { coreFeed(S.view, W, tt, KEYS()); }
 function syncView(tt) {
   const W = curWorld();
   if (!W) return;
@@ -747,13 +677,6 @@ function syncView(tt) {
   else feedView(W, tt);
 }
 
-// the latest value of a time-indexed list at or before t
-function asOf(list, tt) {
-  const eps = 1e-12 * Math.abs(tt);
-  let v = list[0].v;
-  for (const h of list) { if (h.t <= tt + eps) v = h.v; else break; }
-  return v;
-}
 function renderAtCursor(W) {  // the top bar's approximations, "Physics of this world" and the actions, as of the cursor
   const tt = currentT();
   renderPhysics(W.header.modifications || [], asOf(W.approxHist, tt));
@@ -776,7 +699,7 @@ function reset() {
   S.histStride = 1; S.runNotes = []; S.startError = null; S.busy = null; S.sent = null; S.busyShown = false;
   S.lastSet = new Map(); S.evDrawn = null;
   S.view.reset && S.view.reset();
-  S.viewOwner = null;
+  forget(S.view);
   setPending(null);
   S.checksDirty = S.eventsDirty = true;
   setStatus("", t("loading the record…"));
@@ -852,120 +775,66 @@ function onMessage({ meta, blobs }) {
     return;
   }
   const shown = S.w === latest();
-  switch (meta.type) {
-    case "frame":
-      addFrame(W, { t: meta.t, meta, blobs }, shown);
-      if (shown) { if (S.live && !S.hist) S.idx = W.frames.length - 1; S.dirty = true; }
-      if (shown && !S.replaying) updateRate(meta);
-      break;
+  if (meta.type === "frame") {
+    addFrame(W, { t: meta.t, meta, blobs }, shown);
+    if (shown) { if (S.live && !S.hist) S.idx = W.frames.length - 1; S.dirty = true; }
+    if (shown && !S.replaying) updateRate(meta);
+    return;
+  }
+  // the record's part of the message (record_core.ingest); what it changes on the page here
+  switch (ingest(W, { meta, blobs }, { seq: () => ++S.seq })) {
     case "event":
-      W.events.push(meta); W.viewMsgs.push({ meta, blobs });
       if (shown) { S.eventsDirty = true; S.dirty = true; }
       // an event the world asks to show at once (e.g. a body just added merged into another; review UX-ui U4)
       if (meta.notify && !S.replaying) toast(meta.text, "notice", 8000);
       if (meta.kind === "scene" && S.sent && !S.busy) { S.sent = null; renderBusy(); }
       break;
-    case "check": {  // every version is kept: the panel shows, per check, the latest one computed by the cursor's time
-      meta._seq = ++S.seq;
-      const vs = W.checks.get(meta.id);
-      if (vs) vs.push(meta); else W.checks.set(meta.id, [meta]);
+    case "check":  // every version is kept: the panel shows, per check, the latest one computed by the cursor's time
       if (shown) S.checksDirty = true;
       break;
-    }
     case "live":  // the live values in force (also after a refused change: the controls roll back)
-      W.live = { ...W.live, ...(meta.values || {}) };
-      W.liveHist.push({ t: meta.t || 0, values: { ...W.live } });
-      if (meta.engine) W.engineHist.push({ t: meta.t || 0, v: meta.engine });
       if (shown) { refreshLive(); if (meta.engine) renderAtCursor(W); }
       if (S.pending === "set") setPending(null);
       break;
-    case "error":
-      // a refusal or a failure arrived live: the page's own pending changes hear of it (a playground's drag: its ghost
-      // snaps back, plan P16.2)
+    case "server_error":  // the server refused a command (not part of the record): say why, roll the controls back
+      // a refusal arrived live: the page's own pending changes hear of it (a playground's drag: its ghost snaps back,
+      // plan P16.2)
       if (!S.replaying) window.dispatchEvent(new CustomEvent("lferror", { detail: meta }));
-      if (meta.server) {  // the server refused a command (not part of the record): say why, roll the controls back
-        toast(meta.text);
-        if (S.pending) setPending(null);
-        if (shown) refreshLive();
-        break;
-      }
-      W.events.push({ t: meta.t, kind: "error", text: meta.text, detail: meta.detail });
+      toast(meta.text);
+      if (S.pending) setPending(null);
+      if (shown) refreshLive();
+      break;
+    case "error":
+      if (!S.replaying) window.dispatchEvent(new CustomEvent("lferror", { detail: meta }));
       if (shown) S.eventsDirty = true;
       if (!S.replaying) toast(meta.text);  // the owner's text (lfviz.errors); the detail only folded in «События»
       if (S.pending === "world") setPending(null);
       if (S.sent && !S.busy) { S.sent = null; renderBusy(); }
       break;
     case "notice":
-      W.events.push({ t: meta.t, kind: "notice", text: "ℹ " + t(meta.text), detail: meta.detail });
       if (shown) S.eventsDirty = true;
       if (!S.replaying) toast(meta.text, "notice", 6000);
       break;
     case "actions":  // the simulation updated its actions (e.g. the current speed of each observer)
-      W.actionsHist.push({ t: meta.t || 0, v: meta.actions });
       if (shown) S.dirty = true;
       break;
-    default:
-      if (meta.repeat && sameAsHeld(W, meta, blobs)) { DBG.repeats++; break; }  // an unchanged repeat changes nothing (U1)
-      if (meta.repeat || SET_TYPES.has(meta.type)) W.lastSet.set(meta.type + ":" + (meta.id ?? ""), { meta, blobs });
-      // a message may carry the world's approximations in force (e.g. a 3-D world's slices changed): top bar
-      if (Array.isArray(meta.approximations)) {
-        W.approxHist.push({ t: meta.t || 0, v: meta.approximations });
-        if (shown) S.dirty = true;
-      }
-      W.viewMsgs.push({ meta, blobs });
+    case "repeat":  // an unchanged repeat changes nothing (U1)
+      DBG.repeats++;
+      break;
+    default:  // a message of the view (one carrying the world's approximations in force too: the top bar)
       if (shown) S.dirty = true;
   }
 }
 
-// A playground repeats the latest set-like messages at every segment start (lfviz.playground: a segment must be drawable
-// on its own) with `repeat: true`. A repeat equal to the message of the same (type, id) this world's record already holds
-// is not given to the view: it would change nothing but re-apply the same box, mesh, scene … (review UX-ui U1: an
-// unchanged box re-sent every minute put the camera back to its first view). A viewer whose record starts at that
-// segment has no earlier one and gets it.
-const SET_TYPES = new Set(["box", "mesh", "lines", "marks", "shapes", "actions", "approx", "arrow", "volume", "target", "scene"]);
-function sameAsHeld(W, meta, blobs) {
-  const prev = W.lastSet.get(meta.type + ":" + (meta.id ?? ""));
-  if (!prev) return false;
-  const strip = (m) => { const o = { ...m }; delete o.t; delete o.repeat; delete o.blobs; return JSON.stringify(o); };
-  if (strip(prev.meta) !== strip(meta)) return false;
-  const ka = Object.keys(prev.blobs || {}), kb = Object.keys(blobs || {});
-  if (ka.length !== kb.length) return false;
-  for (const k of kb) {
-    const a = prev.blobs[k], b = blobs[k];
-    if (!a || a.byteLength !== b.byteLength) return false;
-    const x = new Uint8Array(a.buffer, a.byteOffset, a.byteLength), y = new Uint8Array(b.buffer, b.byteOffset, b.byteLength);
-    for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return false;
-  }
-  return true;
-}
-
-// The frames kept are those whose arrival number is a multiple of the world's stride, and the latest one (the end of
-// the history until the next frame arrives); beyond MAX_FRAMES the stride doubles. The density is the same over the
-// whole history at any length (review C1-12: halving all frames again and again left the start of a long session
-// almost empty). Frames replayed on (re)connection count as the server's stride each. The cursor keeps its time.
+// The frames kept: record_core.pushFrame (the world's stride; frames replayed on (re)connection count as the server's
+// stride each). The cursor keeps its time.
 function addFrame(W, f, shown) {
-  f.n = W.nArrived;
-  W.nArrived += S.replaying ? S.histStride : 1;
-  const F = W.frames, follow = !shown || (S.live && !S.hist);
+  const follow = !shown || (S.live && !S.hist);
   const tt = shown && !follow ? currentT() : 0;
-  if (F.length && F[F.length - 1].n % W.stride !== 0) F.pop();
-  F.push(f);
-  if (F.length > MAX_FRAMES) {
-    W.stride *= 2;
-    let j = 0;
-    for (let i = 0; i < F.length; i++) if (F[i].n % W.stride === 0 || i === F.length - 1) F[j++] = F[i];
-    F.length = j;
-  }
+  pushFrame(W, f, S.replaying ? S.histStride : 1, MAX_FRAMES);
   if (shown && !follow) S.idx = frameIndexAt(tt);
 }
-function frameIndexAt(tt) {  // the last frame at or before tt
-  const F = S.frames;
-  let lo = 0, hi = F.length - 1;
-  if (hi < 0) return -1;
-  if (tt <= F[0].t) return 0;
-  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (F[mid].t <= tt) lo = mid; else hi = mid - 1; }
-  return lo;
-}
+function frameIndexAt(tt) { return coreFrameAt(S.frames, tt); }  // the last frame at or before tt
 
 const short = (s, n) => (String(s).length > n ? String(s).slice(0, n - 1) + "…" : String(s));
 function renderPhysics(mods, approx) {

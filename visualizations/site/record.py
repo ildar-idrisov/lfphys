@@ -5,8 +5,9 @@
     python3 site/record.py --world u32_double_slit [--world ...] [--out DIR]
     python3 site/record.py --all | --stale [--out DIR]
 
-For every recording spec of a world (``VIZ["recordings"]``, ``registry.recordings_of``) it runs the world headless with
-``lfviz.sim.Runner`` (as ``tests/harness.py`` does) on a frame clock of its own: the world's first frame at its start,
+For every recording spec of a world (``VIZ["recordings"]``, ``registry.recordings_of``) it runs the world headless
+(``lfviz.headless.run_spec``, the one runner of the recordings, the atlases and the server's live points; design of
+2026-11-14 §1.2) on a frame clock of its own: the world's first frame at its start,
 then one frame every ``speed / fps`` of world time, exactly ``seconds × fps`` frames, with no wall-time budget, so the
 result does not depend on the speed of the CPU. The spec's ``script`` is applied at its frame (``round(at × fps)``:
 the world is advanced to that frame's time, the command applied, then the frame drawn). The stream it writes is an
@@ -15,6 +16,14 @@ playing), the frames, ``end {reason: "recording"}``; the ``checkpoint``, ``comma
 messages are dropped (they serve the resumption of a live run only). The file is the same bytes for the same spec and
 code (integrator D6): the frames carry no ``cpu_ms`` and no ``speed_actual`` (the recorder's CPU time goes into the
 index as ``cpu_s``), and the header's kernels (``backend.used``) are this recording's own, not the process's so far.
+A script may change the playback ``speed`` (the frames are then ``speed / fps`` of world time apart at the new speed);
+a spec's ``captions`` are written as accumulative ``caption {t, text, n, at, hold?}`` messages at their frames (design of
+2026-11-14 §2.2), and its ``quantize`` map quantises the named blobs (``lfviz.headless.Packer``; the index entry's
+``quant`` says the largest error of each).
+
+After the recordings, the world's atlases are built (``site/atlas.py``: the Explore screens and the lab steps), so that one
+command, and one CI matrix entry per world, makes everything the site needs for that world; the world's budget counts
+both.
 
 A recording fails on an error message or an exception of the world, and when a check of the world ends failed (its
 last state ✗, as the player draws it; a check marked ``expected`` is a ✗ on purpose and does not fail; integrator D5).
@@ -29,8 +38,9 @@ Output, per world: ``<out>/<world>/<rec>.<hash8>.lfrec.gz`` (gzip -9 of the stre
 new recording has a new name) and ``<out>/<world>/index.json`` (CONTRACT). ``poster_t`` is the world time of the
 poster frame (the player seeks to it), ``poster_frame`` its index among the frames in the file.
 
-``--stale`` records every world whose recordings are not all present with their current key (``plan.py``); a world is
-always recorded whole. Exit code: 0 when everything was recorded within the hard limits, 1 otherwise.
+``--stale`` records every world whose recordings or atlases are not all present with their current key (``plan.py``); a
+world is always recorded whole. ``--rec`` records only the named recordings (no atlas); ``--no-atlases`` skips the
+atlases. Exit code: 0 when everything was recorded within the hard limits, 1 otherwise.
 """
 
 from __future__ import annotations
@@ -39,9 +49,7 @@ import argparse
 import datetime as _dt
 import gzip
 import hashlib
-import json
 import os
-import queue
 import sys
 import time
 from dataclasses import dataclass, field
@@ -50,14 +58,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import sitelib as L  # noqa: E402
 
-from lfviz import limits, protocol, registry  # noqa: E402
-from lfviz.i18n import join, render_in  # noqa: E402
-from lfviz.sim import Runner  # noqa: E402
+import atlas as A  # noqa: E402
+from lfviz import headless, limits, protocol, registry  # noqa: E402
+from lfviz.headless import DROP, FRAME_TIMING, check_state  # noqa: E402,F401 - the recorder's names, kept
+from lfviz.i18n import render_in  # noqa: E402
 
-#: messages that serve only the resumption of a live run (design §4.1), and what a worker never records
-DROP = {"checkpoint", "command", "resumed", "record_segment", "busy", "scene_export"}
-#: what the runner adds to a frame from the wall clock or the CPU: never in a recording (integrator D6)
-FRAME_TIMING = ("cpu_ms", "speed_actual")
 STRIDES = (1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 16, 20, 24, 30, 32, 40, 48, 60)
 
 
@@ -76,24 +81,8 @@ class Raw:
     seconds_cpu: float = 0.0
     checks: dict = field(default_factory=dict)  # (world, check id) -> its last state (check_state)
     flips: list = field(default_factory=list)  # (world, id, t) where a check was ✗ before its last state
-
-
-def check_state(c: dict) -> str:
-    """A check's state as the player draws it (``player.js checkState``): info, ok, failed, expected (a ✗ on purpose) or
-    na (no reference)."""
-    if c.get("info"):
-        return "info"
-    ok = None
-    if c.get("ok") is True or c.get("ok") is False:
-        ok = c["ok"]
-    elif c.get("ref") is not None and c.get("rel") is not None:
-        try:
-            ok = abs(float(c["rel"])) <= max(float(c.get("tol") or 1e-9), 1e-12)
-        except (TypeError, ValueError):
-            ok = None
-    if ok is None:
-        return "na"
-    return "ok" if ok else ("expected" if c.get("expected") else "failed")
+    quant: dict = field(default_factory=dict)  # "<type>.<blob>" -> {enc, max_err, max_rel} (a spec's quantize)
+    captions: int = 0
 
 
 @dataclass
@@ -113,96 +102,38 @@ def _log(*a):
 def record(viz_id: str, spec: dict) -> Raw:
     """Run one recording spec of a world headless and return its messages (RecordingFailed on any error message or
     exception of the world: a recording of a failing world is not shipped)."""
-    viz = registry.load(viz_id)
     fps = int(spec["fps"])
-    n = int(round(float(spec["seconds"]) * fps))
     seed = int(spec.get("seed") if spec.get("seed") is not None else 1)
     raw = Raw(spec=dict(spec))
-    errors = []
+    packer = headless.Packer(spec.get("quantize")) if spec.get("quantize") else None
 
     def emit(meta, blobs=None):
         typ = meta.get("type")
-        if typ in DROP:
-            return
-        if typ == "frame":  # no wall-clock or CPU time in a recording (D6)
-            meta = {k: v for k, v in meta.items() if k not in FRAME_TIMING}
-        data = protocol.encode(meta, blobs)
+        data = protocol.encode(meta, blobs) if packer is None else packer.message(meta, blobs)
         if typ == "frame":
             raw.frames.append(len(raw.msgs))
-        elif typ == "header":
-            raw.worlds += 1
-        elif typ == "error":
-            errors.append(meta.get("text"))
-        elif typ == "check" and meta.get("id") is not None:
-            key = (raw.worlds, str(meta["id"]))
-            if raw.checks.get(key) == "failed":
-                raw.flips.append((*key, meta.get("t")))
-            raw.checks[key] = check_state(meta)
+        elif typ == "caption":
+            raw.captions += 1
         t = meta.get("t")
         raw.msgs.append((typ, float(t) if isinstance(t, (int, float)) else None, data))
 
-    try:  # the devices of the engine's kernels, as a worker configures them (LFPHYS_NO_GPU=1: the CPU); the kernels
-        # this process ran for an earlier recording are forgotten, so the header names this recording's own (review F1)
-        from lfphys.core import backend as _backend
-        _backend.reset_used()
-        notes = _backend.configure({})
-    except Exception:  # noqa: BLE001 - the engine without the backend
-        notes = []
-
-    def make_world(pr, values, sd):
-        p, errs = viz["schema"].resolve(pr, values or {})
-        if errs:
-            raise ValueError(join(errs, "; "))
-        limits.check_estimate(viz["simulation"], p)
-        return viz["simulation"](p, seed if sd in (None, "") else int(sd), emit), {"preset": pr}
-
-    params, errs = viz["schema"].resolve(spec["preset"], {})
-    if errs:
-        raise RecordingFailed(f"{viz_id}/{spec['id']}: preset {spec['preset']!r}: {[render_in(e) for e in errs]}")
-    limits.check_estimate(viz["simulation"], params)
-    t0 = time.process_time()
-    sim = viz["simulation"](params, seed, emit)
-    runner = Runner(sim, emit, queue.Queue(), fps=float(fps), make_world=make_world,
-                    world_info={"preset": spec["preset"], "backend_notes": notes})
-
-    def fail(why):
-        raise RecordingFailed(f"{viz_id}/{spec['id']}: {why}")
-
-    if not runner.start():
-        fail(f"the world was not built: {[render_in(e) for e in errors]}")
-    runner._state("start")
-    if spec.get("speed") is not None:
-        runner.handle({"cmd": "speed", "args": {"value": float(spec["speed"])}})
-    runner.handle({"cmd": "play"})
-    script = {}
-    for c in spec.get("script") or []:
-        script.setdefault(min(n - 1, int(round(float(c["at"]) * fps))), []).append(c)
-    last = time.monotonic()
-    for k in range(n):
-        try:
-            if k:
-                runner._advance(runner.sim.t + runner.speed / fps)
-            for c in script.get(k, []):
-                runner.handle({"cmd": c["cmd"], "args": dict(c.get("args") or {})})
-            runner._frame(0.0)  # emit() drops the runner's timing fields
-        except Exception as e:  # noqa: BLE001 - the physics failed: no recording
-            fail(f"frame {k} of {n}: {type(e).__name__}: {e}")
-        if errors:
-            fail(f"the world reported an error at frame {k}: {render_in(errors[0])}")
-        if time.monotonic() - last > 60:
-            last = time.monotonic()
-            _log(f"  {viz_id}/{spec['id']}: frame {k + 1} of {n}, t = {runner.sim.t:.6g}")
-    emit({"type": "end", "t": runner.sim.t, "reason": "recording"})
-    if len(raw.frames) != n:
-        fail(f"{len(raw.frames)} frames instead of {n}")
+    try:
+        oc = headless.run_spec(viz_id, spec["preset"], {}, seed, {"fps": fps, "speed": spec.get("speed")},
+                               {"seconds": spec["seconds"]}, spec.get("script") or [], emit,
+                               captions=spec.get("captions") or [], end_reason="recording",
+                               label=f"{viz_id}/{spec['id']}", log=_log)
+    except headless.RunFailed as e:
+        raise RecordingFailed(str(e)) from None
+    except headless.PointRefused as e:
+        raise RecordingFailed(f"{viz_id}/{spec['id']}: preset {spec['preset']!r} is refused by the world: {e}") from None
+    except ValueError as e:
+        raise RecordingFailed(f"{viz_id}/{spec['id']}: preset {spec['preset']!r}: {render_in(e.args[0]) if e.args else e}") \
+            from None
+    n = len(raw.frames)
+    raw.worlds, raw.checks, raw.flips = oc.worlds, oc.checks, oc.flips
     raw.poster_k = min(n - 1, max(0, int(round(float(spec.get("poster") or 0) * fps))))
-    raw.seconds_cpu = time.process_time() - t0
-    bad = sorted(f"{cid} (world {w})" for (w, cid), st in raw.checks.items() if st == "failed")
-    if bad:
-        fail(f"{len(bad)} check(s) end failed: {', '.join(bad)}")
-    if raw.flips:
-        _log(f"  note: {viz_id}/{spec['id']}: a check was ✗ before its last state: "
-             f"{sorted({f'{cid} (world {w})' for w, cid, _t in raw.flips})}")
+    raw.seconds_cpu = oc.cpu_s
+    raw.quant = packer.quant if packer is not None else {}
     return raw
 
 
@@ -247,9 +178,12 @@ def thin_to(raw: Raw, target: int, start: int = 1) -> Packed:
     return next(p for p in tried if len(p.gz) <= 1.1 * least)
 
 
-def record_world(viz_id: str, out: Path, only: list[str] | None = None) -> tuple[dict, list[str]]:
-    """Record every spec of a world (or those named in ``only``), thin them to the budgets, write the files and the
-    index. Returns (index, problems): a problem is a budget exceeded or a recording that failed."""
+def record_world(viz_id: str, out: Path, only: list[str] | None = None,
+                 atlases: list[str] | bool | None = None) -> tuple[dict, list[str]]:
+    """Record every spec of a world (or those named in ``only``), build its atlases (all when ``only`` is None and
+    ``atlases`` is None or True; those named in a list; none for False or with ``only``: their current entries are
+    kept), thin the recordings to the budgets (the world's counts the atlases too), write the files and the index.
+    Returns (index, problems): a problem is a budget exceeded, a recording or an atlas that failed."""
     plan = L.planned_world(viz_id)
     viz = registry.load(viz_id)
     problems = []
@@ -274,8 +208,21 @@ def record_world(viz_id: str, out: Path, only: list[str] | None = None) -> tuple
         p = packs[r["id"]]
         _log(f"  {len(raws[r['id']].frames)} frames, cpu {raws[r['id']].seconds_cpu:.0f} s, stride {p.stride}: "
              f"{len(p.data) / L.MB:.2f} MB, gzip {len(p.gz) / L.MB:.2f} MB")
+    # the atlases (site/atlas.py): built now unless only some recordings are asked for; the current entries of the
+    # others are kept
+    if plan["atlases"]:
+        which = None if atlases in (None, True) else (list(atlases) if atlases else [])
+        if only is not None and atlases in (None, True):
+            which = []
+        atl_entries, probs, warns = A.build_world(viz_id, out, which, log=_log)
+        problems += probs
+        for w in warns:
+            _log(f"  note: {w}")
+    else:
+        atl_entries = []
+    atl_total = sum(int(e.get("bytes_gz") or 0) for e in atl_entries)
     # the world's budget: thin the largest recording further while the world is over its target
-    while sum(len(p.gz) for p in packs.values()) > world_target:
+    while sum(len(p.gz) for p in packs.values()) + atl_total > world_target:
         cand = [(len(p.gz), rid) for rid, p in packs.items()
                 if p.stride < max_stride(raws[rid]) and not raws[rid].spec.get("_no_thin")]
         if not cand:
@@ -298,7 +245,7 @@ def record_world(viz_id: str, out: Path, only: list[str] | None = None) -> tuple
             why = L.accepted(viz_id, rid)
             _log(f"  note: {viz_id}/{rid} is {len(p.gz) / L.MB:.2f} MB, over the target of {file_target / L.MB:.0f} MB "
                  f"(within the hard limit; " + (f"accepted: {why})" if why else "not accepted: shorten seconds)"))
-    total = sum(len(p.gz) for p in packs.values())
+    total = sum(len(p.gz) for p in packs.values()) + atl_total
     if total > world_limit:
         problems.append(f"{viz_id}: {total / L.MB:.2f} MB for the world is over the hard limit of "
                         f"{world_limit / L.MB:.0f} MB")
@@ -332,16 +279,19 @@ def record_world(viz_id: str, out: Path, only: list[str] | None = None) -> tuple
             "t_end": frames_t[-1], "worlds": raw.worlds, "script": r.get("script") or [],
             "checks": check_counts(raw), "cpu_s": round(raw.seconds_cpu, 1), "sha256": sha, "key": r["key"],
             "version": plan["version"], "code_hash": plan["code_hash"], "made": made})
+        if raw.captions:
+            entries[-1]["captions"] = raw.captions
+        if raw.quant:
+            entries[-1]["quant"] = protocol.clean(raw.quant)
     index = {"world": viz_id, "version": viz.get("version", ""), "recorder": L.RECORDER_VERSION,
              "recorder_hash": plan["recorder_hash"], "code_hash": plan["code_hash"],
-             "made": max([e.get("made") or "" for e in entries] or [made]), "recordings": entries}
+             "made": max([e.get("made") or "" for e in entries + atl_entries] or [made]), "recordings": entries,
+             "atlases": atl_entries}
     keep = {e["file"] for e in entries}
     for f in folder.glob("*.lfrec.gz"):
         if f.name not in keep:
             f.unlink()
-    tmp = folder / "index.json.tmp"
-    tmp.write_text(json.dumps(index, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    os.replace(tmp, folder / "index.json")
+    L.write_index(out, viz_id, index)
     return index, problems
 
 
@@ -350,7 +300,9 @@ def main(argv=None) -> int:
     ap.add_argument("--world", action="append", default=[], help="a world id (repeatable; an old id works too)")
     ap.add_argument("--all", action="store_true", help="every world that has recording specs")
     ap.add_argument("--stale", action="store_true", help="the worlds whose recordings are missing or stale")
-    ap.add_argument("--rec", action="append", default=[], help="only this recording id of the world(s) (repeatable)")
+    ap.add_argument("--rec", action="append", default=[], help="only this recording id of the world(s) (repeatable; "
+                                                                "no atlas is built)")
+    ap.add_argument("--no-atlases", action="store_true", help="record without building the atlases")
     ap.add_argument("--out", default=str(L.RECORDINGS), help="the recordings folder (default visualizations/recordings)")
     ap.add_argument("--worker-mem-gb", type=float, default=None,
                     help="a hard memory limit for this process, as a server gives its workers (lfviz.limits)")
@@ -364,7 +316,8 @@ def main(argv=None) -> int:
     if a.all:
         worlds += demos
     if a.stale:
-        worlds += [w for w in demos if set(L.status(out, L.planned_world(w)).values()) != {"present"}]
+        worlds += [w for w in demos if (set(L.status(out, p := L.planned_world(w)).values())
+                                        | set(L.atlas_status(out, p).values())) - {"present"}]
     worlds = list(dict.fromkeys(worlds))
     bad = [w for w in worlds if w not in demos]
     if bad:
@@ -376,9 +329,9 @@ def main(argv=None) -> int:
     problems = []
     for w in worlds:
         t0 = time.monotonic()
-        index, probs = record_world(w, out, a.rec or None)
+        index, probs = record_world(w, out, a.rec or None, atlases=False if a.no_atlases else None)
         problems += probs
-        sizes = ", ".join(f"{e['id']} {e['bytes_gz'] / L.MB:.2f} MB" for e in index["recordings"])
+        sizes = ", ".join(f"{e['id']} {e['bytes_gz'] / L.MB:.2f} MB" for e in index["recordings"] + index["atlases"])
         _log(f"{w}: done in {time.monotonic() - t0:.0f} s: {sizes}")
     for p in problems:
         _log(f"PROBLEM: {p}")

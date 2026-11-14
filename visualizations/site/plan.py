@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""What the public site needs recorded (design of the start page §5.1).
+"""What the public site needs recorded: the recordings and the atlases of the screens (design of the start page §5.1;
+design of 2026-11-14 §1.4).
 
     python3 site/plan.py [--recordings DIR]            a table: every (world, recording), its key and its state
     python3 site/plan.py --json [--recordings DIR]     the same as JSON
@@ -14,7 +15,9 @@ against a recordings folder is ``present`` (the index holds it with this key and
 key, or its file differs) or ``missing``. ``code_hash`` covers the world's folder, ``lfviz`` and the engine, so a change of
 the engine makes every recording stale (accepted for v1, design §5.1).
 
-The matrix lists every world that has recordings, with its world key (over its recordings' keys): the CI's record job
+An atlas's key is ``sitelib.atlas_key`` (its spec, ``ATLAS_VERSION``, the recorder's hash, the world's code hash) and its
+state ``present``, ``stale`` or ``missing`` in the same way (``sitelib.atlas_status``). The matrix lists every world that
+has recordings, with its world key (over its recordings' and atlases' keys): the CI's record job
 restores ``rec-<world>-<key>`` from its cache and records only on a miss. ``--rerecord all`` sets ``force`` (the job
 then records without looking at the cache); with ``--recordings`` and ``stale`` only the worlds not all present are
 listed. The matrix is never empty: with nothing to list it holds one entry ``{"world": "", ...}`` that the job skips.
@@ -32,13 +35,17 @@ import sitelib as L  # noqa: E402
 
 
 def plan(folder: Path | None) -> list[dict]:
-    """[{world, version, code_hash, key, recordings: [{..., key, state}]}] for every world with recordings."""
+    """[{world, version, code_hash, key, recordings: [{..., key, state}], atlases: [{..., key, state}]}] for every
+    world with recordings."""
     out = []
     for vid in L.demo_worlds():
         p = L.planned_world(vid)
         st = L.status(folder, p) if folder is not None else {r["id"]: "missing" for r in p["recordings"]}
         for r in p["recordings"]:
             r["state"] = st[r["id"]]
+        ast = L.atlas_status(folder, p) if folder is not None else {a["id"]: "missing" for a in p["atlases"]}
+        for a in p["atlases"]:
+            a["state"] = ast[a["id"]]
         out.append(p)
     return out
 
@@ -46,7 +53,7 @@ def plan(folder: Path | None) -> list[dict]:
 def matrix(worlds: list[dict], rerecord: str, have_folder: bool) -> dict:
     inc = []
     for w in worlds:
-        states = {r["state"] for r in w["recordings"]}
+        states = {r["state"] for r in w["recordings"] + w.get("atlases", [])}
         if rerecord == "stale" and have_folder and states == {"present"}:
             continue
         inc.append({"world": w["world"], "key": w["key"], "force": rerecord == "all"})
@@ -72,12 +79,17 @@ def main(argv=None) -> int:
         print(json.dumps(worlds, ensure_ascii=False, indent=1))
         return 0
     n = {"present": 0, "stale": 0, "missing": 0}
+    na = {"present": 0, "stale": 0, "missing": 0}
     for w in worlds:
         for r in w["recordings"]:
             n[r["state"]] += 1
             print(f"{w['world']:24} {r['id']:16} {r['seconds']:>5} s {r['fps']:>3} fps  {r['key']}  {r['state']}")
+        for a in w["atlases"]:
+            na[a["state"]] += 1
+            print(f"{w['world']:24} {'atlas ' + a['id']:16} {a['points']:>5} points    {a['key']}  {a['state']}")
     print(f"# {sum(n.values())} recordings in {len(worlds)} worlds: {n['present']} present, {n['stale']} stale, "
-          f"{n['missing']} missing ({folder or 'no folder'})")
+          f"{n['missing']} missing; {sum(na.values())} atlases: {na['present']} present, {na['stale']} stale, "
+          f"{na['missing']} missing ({folder or 'no folder'})")
     return 0
 
 

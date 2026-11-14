@@ -85,6 +85,12 @@ CODES: dict[str, str] = {
     # QCD (core.qcd.running)
     "qcd.landau_pole": "the running coupling diverges on the way (running.LandauPole)",
     "qcd.rg_failed": "the integration of the renormalisation-group equation failed",
+    # mechanics (core.mechanics, theories.models.drag_quadratic)
+    "mechanics.below_ground": "a body starts below the ground",
+    "mechanics.no_flight": "a body starts on the ground and does not move upwards: there is no flight",
+    "mechanics.nonfinite": "a value of the launch (position, velocity, g, ground, tolerance, time limit) is not finite",
+    "mechanics.bad_gravity": "the gravitational acceleration is not > 0",
+    "mechanics.no_landing": "the body has not landed within the time limit",
     # relativity, kinematics, gravity
     "kinematics.superluminal": "a speed at or above the speed of light",
     "gr.inside_horizon": "a clock, a body or an observer inside a horizon",

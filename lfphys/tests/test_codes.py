@@ -31,7 +31,9 @@ FROZEN = {
     "md.bond_strain", "md.cutoff", "md.drift", "md.ewald", "md.hard_affine", "md.hard_box", "md.hard_overlap",
     "md.hard_unsupported", "md.insertion", "md.jammed", "md.lattice_cell", "md.no_free_site", "md.non_finite",
     "md.outside_walls", "md.overlap", "md.periodic_axis", "md.piston", "md.potential", "md.ramp", "md.refused",
-    "md.region", "md.same_point", "md.samples", "md.thermal_wall", "md.thermostat", "md.value", "mie.index",
+    "md.region", "md.same_point", "md.samples", "md.thermal_wall", "md.thermostat", "md.value",
+    "mechanics.bad_gravity", "mechanics.below_ground", "mechanics.no_flight", "mechanics.no_landing",
+    "mechanics.nonfinite", "mie.index",
     "mie.mx_too_large", "mie.no_convergence", "mie.size", "mie.size_bound", "nbody.body", "nbody.collision",
     "nbody.refused", "newton.unbound", "optics.z", "orbit.horizon", "orbit.no_circular", "orbit.no_fall",
     "orbit.not_bound", "orbit.superluminal", "pn.above_circular", "pn.invalid", "pn.no_circular", "pn.plunge",
@@ -184,3 +186,19 @@ def test_kinematics_and_optics_codes():
     _raises("kinematics.superluminal", R.gamma, 1.5)
     e = _raises("rainbow.order", RB.descartes, 0.9, 2)
     assert e.data == {"p": 2, "m": 0.9}
+
+
+def test_mechanics_codes():
+    from lfphys.core import mechanics as M
+    from lfphys.theories.models import drag_quadratic as DQ
+    ball = M.Body(0.058, 0.067)
+    e = _raises("mechanics.below_ground", M.fly, ball, (0.0, -0.5), (5.0, 1.0))
+    assert e.data["h"] == pytest.approx(0.5)
+    _raises("mechanics.no_flight", M.fly, ball, (0.0, 0.0), (5.0, 0.0))
+    _raises("mechanics.no_flight", M.fly, ball, (0.0, 0.0), (5.0, -1.0))
+    _raises("mechanics.no_flight", DQ.hodograph, 10.0, 0.0, 0.0, 0.01)
+    _raises("mechanics.nonfinite", M.fly, ball, (0.0, 1.0), (float("nan"), 1.0))
+    e = _raises("mechanics.bad_gravity", M.fly, ball, (0.0, 1.0), (5.0, 1.0), g=0.0)
+    assert e.data["g"] == 0.0
+    e = _raises("mechanics.no_landing", M.fly, ball, (0.0, 1000.0), (5.0, 1.0), t_max=1.0)
+    assert e.data["t"] == 1.0

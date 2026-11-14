@@ -9,7 +9,11 @@
   ``api/planned.json``, ``api/recordings.json``, ``aliases.json``), the i18n JSON of every language, the recordings
   with their indexes, the manifest with every file's size and sha256;
 * the check passes on it, and fails on a changed file, a missing recording and a budget exceeded;
-* ``readme.py`` is idempotent in English and Russian and the READMEs are up to date.
+* ``readme.py`` is idempotent in English and Russian and the READMEs are up to date;
+* the atlases of the screens (design ``lfphys/sources/explore_2026-11-14_design.md`` §1.3, §3.8, §8): copied with
+  their manifests, bases and points, listed in ``site-manifest.json`` with their keys and states; the check fails on a
+  missing or changed point, a manifest that disagrees, a stale key and an atlas over its hard limit; the lab's
+  worksheet page is built when the player has it.
 """
 
 from __future__ import annotations
@@ -27,7 +31,7 @@ from lfviz import i18n, registry
 VIZ = registry.ROOT
 SITE_WORLDS = VIZ / "tests" / "site_worlds"
 BASE = "/lfphys/"
-TEST_WORLDS = ("u98_site_toy", "r98_site_probe")
+TEST_WORLDS = ("u98_site_toy", "r98_site_probe", "s98_atlas_toy")
 
 
 def _site(name):
@@ -284,3 +288,82 @@ def test_the_site_setting_reaches_the_player_and_the_check(site, extra, tmp_path
     monkeypatch.setattr(check, "site_setting", A.site_setting)
     if setting["published"] is not True:
         assert any("api/recordings.json: published" in x for x in _fails(check, site["out"]))
+
+
+# --- the atlases of the screens (design of 2026-11-14 §1.3, §3.8, §8) ---------------------------------------------
+
+def test_the_atlases_are_copied_and_in_the_manifest(site, extra):
+    man = _json(site, "site-manifest.json")
+    w = man["worlds"]["s98_atlas_toy"]
+    assert set(w["atlases"]) == {"explore", "lab.heights"}
+    assert {a["state"] for a in w["atlases"].values()} == {"present"}
+    idx = _json(site, "recordings/s98_atlas_toy/index.json")
+    assert [a["id"] for a in idx["atlases"]] == ["explore", "lab.heights"]
+    for a in idx["atlases"]:
+        assert w["atlases"][a["id"]]["key"] == a["key"] and w["atlases"][a["id"]]["file"] == a["file"]
+        m = _json(site, f"recordings/s98_atlas_toy/{a['file']}")
+        folder = f"recordings/s98_atlas_toy/{a['file'].rsplit('/', 1)[0]}"
+        assert man["files"][f"{folder}/{m['base']['file']}"]["sha256"] == m["base"]["sha256"]
+        for name, size, state in m["points"]:
+            if not state:
+                assert man["files"][f"{folder}/{name}"]["bytes"] == size
+    recs = _json(site, "api/recordings.json")
+    assert recs["worlds"]["s98_atlas_toy"]["atlases"] == idx["atlases"]  # the player finds the manifests there
+    d = _json(site, "api/viz/s98_atlas_toy.json")
+    assert [s["kind"] for s in d["screens"]] == ["watch", "explore", "lab"]
+
+
+def test_the_check_fails_on_a_broken_atlas(site, extra, tmp_path, monkeypatch):
+    check = _site("check")
+    assert not [f for f in _fails(check, site["out"]) if "s98_atlas_toy" in f]
+    idx = _json(site, "recordings/s98_atlas_toy/index.json")
+    e = idx["atlases"][0]
+    m = _json(site, f"recordings/s98_atlas_toy/{e['file']}")
+    name = m["points"][4][0]
+    # a missing point
+    copy = _copy(site, tmp_path / "a")
+    (copy / "recordings" / "s98_atlas_toy" / "atlas" / "explore" / name).unlink()
+    assert any("point p4" in f and "missing" in f for f in _fails(check, copy))
+    # a changed point
+    copy = _copy(site, tmp_path / "b")
+    f = copy / "recordings" / "s98_atlas_toy" / "atlas" / "explore" / name
+    data = bytearray(f.read_bytes())
+    data[len(data) // 2] ^= 0xFF
+    f.write_bytes(bytes(data))
+    assert any("point p4" in x and "differs" in x for x in _fails(check, copy))
+    # a manifest that disagrees with its index
+    copy = _copy(site, tmp_path / "c")
+    mf = copy / "recordings" / "s98_atlas_toy" / e["file"]
+    mm = json.loads(mf.read_text(encoding="utf-8"))
+    mm["key"] = "0" * 16
+    mm["points"] = mm["points"][:-1]
+    mf.write_text(json.dumps(mm), encoding="utf-8")
+    fails = _fails(check, copy)
+    assert any("manifest disagrees" in x for x in fails) and any("its grid has 6" in x for x in fails)
+    # a stale key (in the index and the site's manifest)
+    copy = _copy(site, tmp_path / "d")
+    ix = copy / "recordings" / "s98_atlas_toy" / "index.json"
+    j = json.loads(ix.read_text(encoding="utf-8"))
+    j["atlases"][0]["key"] = "1" * 16
+    ix.write_text(json.dumps(j), encoding="utf-8")
+    assert any("atlas explore: stale" in x for x in check.check(copy, BASE, allow_missing=False).fails)
+    # missing altogether
+    copy = _copy(site, tmp_path / "e")
+    shutil.rmtree(copy / "recordings" / "s98_atlas_toy" / "atlas" / "lab.heights")
+    assert any("atlas lab.heights" in x and "missing" in x for x in _fails(check, copy))
+    # over the atlas's and the point's hard limits
+    monkeypatch.setitem(check.L.BUDGET, "atlas", (100, 1000))
+    monkeypatch.setitem(check.L.BUDGET, "point", (100, 1000))
+    fails = _fails(check, site["out"])
+    assert any("atlas explore" in x and "atlas's hard limit" in x for x in fails)
+    assert any("atlas explore: point p" in x and "hard limit" in x for x in fails)
+
+
+def test_the_worksheet_page_is_built_when_the_player_has_it(site, tmp_path, monkeypatch):
+    build, check = _site("build"), _site("check")
+    has = (A.PLAYER / "worksheet.html").is_file()
+    assert ("worksheet.html" in build.pages()) == has
+    assert (site["out"] / "worksheet.html").is_file() == has
+    if has:
+        html = _read(site, "worksheet.html")
+        assert '<meta name="lf-mode" content="static">' in html and check.IMPORTMAP.findall(html)

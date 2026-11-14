@@ -52,7 +52,8 @@ RATE_KB = {"u31_light_travel": 0.33, "u32_double_slit": 1.6, "u33_quantum_1d": 9
            "u35_optics_bench": 0.28, "u36_qcd": 0.2, "u37_bell_test": 0.075, "u38_wave_3d": 5.0,
            "u39_fast_observer": 10.6, "u40_hydrogen_3d": 0.35, "u41_quarkonium_3d": 0.42, "u42_kerr_shadow": 1.6,
            "u43_optical_vortices": 5.4, "u44_mie_scattering": 4.1, "r11_thomas_3d": 1.3, "r12_double_slit_2d": 8.3,
-           "r13_arrival_times_2d": 8.8}
+           "r13_arrival_times_2d": 8.8,
+           "s03_projectile": 0.07}  # S03: 46.6 kB gzip for 800 frames of "independence" (2026-11-14), with a margin
 BASE_KB = {"u38_wave_3d": 6300.0}
 #: the hard limits of the design §4.3 (the site's check fails above them; the targets are 3 MB and 12 MB)
 FILE_LIMIT_KB, WORLD_LIMIT_KB = 10_000.0, 25_000.0
@@ -105,10 +106,22 @@ def test_the_registry_check_refuses_what_the_design_forbids():
     assert any("hypothesis" in x for x in registry.check({**res, "status": "confirmed"}))
     assert any("question" in x for x in registry.check({**res, "question": None}))
     assert any("prior art" in x for x in registry.check({**res, "prior_art": []}))
-    school = {**good, "id": "s02_free_fall", "audience": "school", "ui": "school", "curriculum": [], "guide": None}
+    school = {**good, "id": "s02_free_fall", "audience": "school", "ui": "school", "curriculum": [], "screens": []}
     probs = registry.check(school)
-    assert any("FRP" in x for x in probs) and any("AP, IB" in x for x in probs) and any("guide" in x for x in probs)
+    assert any("FRP" in x for x in probs) and any("AP, IB" in x for x in probs)
+    assert any("Explore screen" in x for x in probs) and any("Lab work" in x for x in probs)  # the guide's successors
     assert any("modified physics" in x for x in probs)  # u32's schema has laws: no school world may
+    assert any("guide is retired" in x for x in registry.check({**school, "guide": [T("a step")]}))
+    assert any("speed takes" in x for x in bad(recordings=[{**rec, "script": [{"at": 1, "cmd": "speed",
+                                                                               "args": {"value": 0}}]}]))
+    assert not [x for x in bad(recordings=[{**rec, "script": [{"at": 1, "cmd": "speed", "args": {"value": 0.1}}]}])
+                if "speed" in x]
+    assert any("captions" in x for x in bad(recordings=[{**rec, "captions": "text"}]))
+    assert any("caption at 2" in x for x in bad(recordings=[{**rec, "captions": [{"at": 2, "text": "plain"}]}]))
+    assert any("order" in x for x in bad(recordings=[{**rec, "captions": [{"at": 2, "text": T("a")},
+                                                                          {"at": 1, "text": T("b")}]}]))
+    assert any("quantize" in x for x in bad(recordings=[{**rec, "quantize": {"segment.map": "f16"}}]))
+    assert any("not declared safe" in x for x in bad(recordings=[{**rec, "quantize": {"segment.nowhere": "u8sqrt"}}]))
 
 
 @pytest.mark.parametrize("vid", [v for v in IDS if not v.startswith("p")])
@@ -116,6 +129,8 @@ def test_a_demonstration_has_recordings_within_the_budgets(vid):
     viz = _viz(vid)
     recs = registry.recordings_of(viz)
     assert 1 <= len(recs) <= 4
+    assert vid in RATE_KB, (f"{vid}: no measured rate in RATE_KB (gzip kB per recorded frame): record it "
+                            f"(site/record.py --world {vid}) and add bytes_gz / frames_recorded of its largest recording")
     presets = viz["schema"].presets
     total = 0.0
     for r in recs:
@@ -189,10 +204,12 @@ def test_the_planned_items_are_well_formed():
 def _world_texts(vid) -> set[str]:
     viz = _viz(vid)
     d = registry.describe(viz)
-    ids = msgids({k: viz.get(k) for k in ("title", "summary", "purpose", "teaser", "question")})
+    ids = msgids({k: viz.get(k) for k in ("title", "summary", "purpose", "teaser", "question", "lab_absent")})
     ids |= msgids([p.get("label") for p in viz["schema"].presets.values()])
     ids |= msgids([r["label"] for r in d["recordings"]])
+    ids |= msgids([r["captions"] for r in d["recordings"]])  # the Watch's captions (design of 2026-11-14 §2.2)
     ids |= msgids(d.get("courses") or [])
+    ids |= msgids(d.get("screens") or [])  # tabs, controls, instruments, steps, columns, laws, the worksheet (§2)
     return ids
 
 
@@ -248,9 +265,12 @@ def test_the_readme_links_to_the_site_follow_its_setting(lang, published, monkey
     url = "https://ildar-idrisov.github.io/lfphys/"
     monkeypatch.setattr(readme, "site_setting", lambda env=True: {"published": published, "url": url})
     g = readme.generate(lang)
-    links = re.findall(r"\]\((https://[^)\s]+run\.html\?[^)\s]+)\)", g)
+    links = re.findall(r"\]\((https://[^)\s]+run\.html\?rec=[^)\s]+)\)", g)  # the recordings' links
+    screens = re.findall(r"\]\((https://[^)\s]+run\.html\?demo=[^)\s]+)\)", g)  # the screens' (design 2026-11-14)
     soon = i18n.render_in(readme.SITE_SOON, lang)
     n_recs = sum(len(registry.recordings_of(registry.load(vid))) for vid in IDS)
+    n_screens = sum(len(registry.screens_of(registry.load(vid))) for vid in IDS)
+    assert len(screens) == (n_screens if published else 0)
     if not published:
         assert links == [] and url not in g, links[:3]
         assert g.count(soon) == 1
@@ -306,3 +326,152 @@ def test_every_world_has_its_picture(vid):
     assert size and size[0] == 1200, (vid, size)
     posters = json.loads((VIZ.parent / "docs" / "images" / "posters.json").read_text(encoding="utf-8"))
     assert vid in posters, f"{vid} is not in docs/images/posters.json"
+
+
+# --- the screens (design lfphys/sources/explore_2026-11-14_design.md §2, §2.5) --------------------------------------
+SITE_WORLDS = VIZ / "tests" / "site_worlds"
+TOY = "s98_atlas_toy"
+
+
+@pytest.fixture
+def toy(monkeypatch):
+    monkeypatch.setenv("LFVIZ_EXTRA", str(SITE_WORLDS))
+    return registry.load(TOY)
+
+
+def test_the_toy_worlds_screens_validate_and_are_described(toy):
+    assert registry.check(toy) == []
+    d = registry.describe(toy)
+    assert [s["kind"] for s in d["screens"]] == ["watch", "explore", "lab"]
+    assert [s["label"]["$t"] for s in d["screens"]] == ["Watch", "Explore", "Lab work"]
+    ex = d["screens"][1]
+    assert ex["atlas"] == "explore" and [c["kind"] for c in ex["controls"]] == ["slider", "slider"]
+    assert ex["controls"][0]["label"]["$t"] == "Height" and ex["controls"][0]["law"] is False
+    lab = d["screens"][2]
+    assert lab["steps"][0]["atlas"] == "lab.heights" and lab["instruments"]["tape"]["error"] == 0.0005
+    assert [a["id"] for a in registry.atlases_of(toy)] == ["explore", "lab.heights"]
+    assert registry.view_declarations(toy) == {"quantSafe": {"traj.s": "u16", "header.ticks": "u16"},
+                                               "overlays": ["path", "strobe", "v"]}
+    assert {"s98_atlas_toy"} <= set(registry.viz_ids())
+
+
+def _screens_problems(toy, **kw):
+    sc = [dict(s) for s in toy["screens"]]
+    for i, ch in kw.items():
+        sc[int(i[1:])] = {**sc[int(i[1:])], **ch}
+    return registry.check({**toy, "screens": sc})
+
+
+def test_the_registry_refuses_what_the_screens_design_forbids(toy):
+    def p(**kw):
+        return _screens_problems(toy, **kw)
+    assert any("kind" in x for x in p(s0={"kind": "slideshow"}))
+    assert any("unique slug" in x for x in p(s1={"id": "watch"}))
+    assert any("label is a T" in x for x in p(s1={"label": "plain"}))
+    assert any("no captions" in x for x in p(s0={"recording": "field"}))
+    assert any("none of the world's recordings" in x for x in p(s0={"recording": "nope"}))
+    assert any("preset" in x for x in p(s1={"preset": "nope"}))
+    assert any("frame_dt" in x for x in p(s1={"frame_dt": 0}))
+    assert any("stop" in x for x in p(s1={"stop": {"seconds": 3}}))
+    assert any("stop" in x for x in p(s1={"stop": {"event": "landing"}}))  # max_world_s is required
+    assert any("cannot be dropped" in x for x in p(s1={"drop": {"types": ["check"], "frame_blobs": []}}))
+    assert any("acts" in x for x in p(s1={"acts": "later"}))
+    assert any("time" in x for x in p(s1={"time": "forever"}))
+    assert any("traces" in x for x in p(s1={"traces": 6}))
+    assert any("not declared by the view" in x for x in p(s1={"overlays": ["path", "rainbow"]}))
+    assert any("not declared safe" in x for x in p(s1={"quantize": {"traj.s": "u8sqrt"}}))
+    assert any("quantize key" in x for x in p(s1={"quantize": {"traj": "u16"}}))
+    assert not [x for x in p(s1={"quantize": {"traj.s": "u16:col"}})]  # u16 declared, the suffix is the packer's
+    ctl = toy["screens"][1]["controls"]
+    assert any("parameter of the schema" in x for x in p(s1={"controls": [{"param": "nope", "values": [1]}]}))
+    assert any("refused by the schema" in x for x in p(s1={"controls": [{"param": "h_m", "values": [0.0, 99.0]}]}))
+    assert any("default" in x for x in p(s1={"controls": [{"param": "h_m", "values": [0.0], "default": 1.0}]}))
+    assert any("distinct" in x for x in p(s1={"controls": [{"param": "h_m", "values": [1.0, 1.0]}]}))
+    assert any("at most 5" in x for x in p(s1={"controls": ctl + [{"param": "v0", "values": [1.0]}] * 4}))
+    big = [{"param": "h_m", "values": [round(0.1 * k, 1) for k in range(50)]},
+           {"param": "v0", "values": [round(0.1 * k, 1) for k in range(1, 100)]}]
+    assert any("grid points, at most 3000" in x for x in p(s1={"controls": big}))
+    assert any("both a control and fixed" in x for x in p(s1={"fixed": {"h_m": 1.0}}))
+    assert any("unit is a T or a string" in x for x in p(s1={"controls": [{**ctl[0], "unit": 3}]}))
+    own = [{**ctl[0], "label": T("λ"), "unit": "nm"}, ctl[1]]
+    assert p(s1={"controls": own}) == []
+    sc = [dict(x) for x in toy["screens"]]
+    sc[1] = {**sc[1], "controls": own}
+    c0, c1 = registry.screens_of({**toy, "screens": sc})[1]["controls"]
+    assert c0["label"]["$t"] == "λ" and c0["unit"] == "nm"  # the control's own label and unit win
+    assert c1["label"]["$t"] == "Angle" and c1["unit"] == "°"  # else the parameter's
+    lab = toy["screens"][2]
+    st = dict(lab["steps"][0])
+    assert any("goal" in x for x in p(s2={"steps": [{**st, "goal": None}]}))
+    assert any("instruments" in x for x in p(s2={"steps": [{**st, "instruments": ["tape", "caliper"]}]}))
+    assert any("from 'caliper'" in x for x in p(s2={"steps": [{**st, "columns": st["columns"] + [
+        {"id": "z", "label": T("z"), "from": "caliper"}]}]}))
+    assert any("earlier column" in x for x in p(s2={"steps": [{**st, "columns": [
+        {"id": "r", "label": T("r"), "of": "L", "op": "sqrt"}] + st["columns"]}]}))
+    assert any("op" in x for x in p(s2={"steps": [{**st, "columns": st["columns"] + [
+        {"id": "z", "label": T("z"), "of": "h", "op": "cube"}]}]}))
+    assert any("plot" in x for x in p(s2={"steps": [{**st, "plot": {"x": "h", "y": "nope"}}]}))
+    assert any("power only above school" in x for x in p(s2={"steps": [{**st, "plot": {**st["plot"],
+                                                                                       "fits": ["power"]}}]}))
+    assert any("law" in x for x in p(s2={"steps": [{**st, "law": {"quantity": "mood"}}]}))
+    assert any("reads" in x for x in p(s2={"instruments": {**lab["instruments"], "ruler": {
+        **lab["instruments"]["ruler"], "reads": "control:nope"}}}))
+    assert any("event is the kind or name" in x for x in p(s2={"instruments": {**lab["instruments"], "tape": {
+        **lab["instruments"]["tape"], "event": 3}}}))
+    ok = p(s2={"instruments": {**lab["instruments"], "tape": {**lab["instruments"]["tape"], "event": "landing"}}})
+    assert ok == []
+    sc = [dict(x) for x in toy["screens"]]
+    sc[2] = {**sc[2], "instruments": {**lab["instruments"], "tape": {**lab["instruments"]["tape"], "event": "landing"}}}
+    got = registry.screens_of({**toy, "screens": sc})[2]["instruments"]
+    assert got["tape"]["event"] == "landing" and got["ruler"]["event"] is None  # passed through to the catalogue
+    assert any("only a stopwatch is manual" in x for x in p(s2={"instruments": {**lab["instruments"], "ruler": {
+        **lab["instruments"]["ruler"], "manual": True}}}))
+    assert any("worksheet" in x for x in p(s2={"worksheet": {**lab["worksheet"], "questions": []}}))
+    assert any("worksheet" in x for x in p(s2={"worksheet": {**lab["worksheet"], "frp": [{"name": "plain"}]}}))
+    # school: Explore and Lab work required; Lab work may be absent only with lab_absent
+    no_lab = [s for s in toy["screens"] if s["kind"] != "lab"]
+    assert any("Lab work" in x for x in registry.check({**toy, "screens": no_lab}))
+    assert registry.check({**toy, "screens": no_lab, "lab_absent": T("a test")}) == []
+    assert any("Explore" in x for x in registry.check({**toy, "screens": [toy["screens"][0], toy["screens"][2]]}))
+    lab_viz = _viz("p01_gravity")
+    assert any("laboratory has no screens" in x for x in registry.check({**lab_viz, "screens": [toy["screens"][1]]}))
+
+
+def test_a_law_parameter_is_no_control_at_school_but_may_be_at_university():
+    viz = _viz("u32_double_slit")
+    law = next(p for p in viz["schema"].params if p.standard is not None)
+    sc = {"id": "explore", "kind": "explore", "preset": next(iter(viz["schema"].presets)), "frame_dt": 0.25,
+          "stop": {"world_s": 1.0}, "controls": [{"param": law.id, "values": [law.standard]}]}
+    assert not [x for x in registry.check({**viz, "screens": [sc]}) if "law parameter" in x]
+    probs = registry.check({**viz, "id": "s02_x", "audience": "school", "ui": "school", "screens": [sc]})
+    assert any("law parameter" in x for x in probs)
+    assert registry.screens_of({**viz, "screens": [sc]})[0]["controls"][0]["law"] is True
+
+
+def test_every_screens_atlas_is_planned_and_every_screens_text_is_translated(toy):
+    import importlib.util as _u  # noqa: PLC0415
+    spec = _u.spec_from_file_location("lfsite_sitelib_reg", VIZ / "site" / "sitelib.py")
+    L = _u.module_from_spec(spec)
+    spec.loader.exec_module(L)
+    plan = L.planned_world(TOY)
+    assert [a["id"] for a in plan["atlases"]] == [a["id"] for a in registry.atlases_of(toy)]
+    for lang in OTHER:
+        own = i18n._merge(lang)[0]
+        miss = sorted(m for m in _world_texts(TOY) if tools.needs_translation(m) and m not in own)
+        assert not miss, f"{lang}: {miss}"
+    for vid in IDS:  # a related world's screens: every repository world with screens names atlases that exist
+        assert [a["id"] for a in registry.atlases_of(_viz(vid))] == \
+            [a["id"] for a in L.planned_world(vid)["atlases"]]
+
+
+@pytest.mark.parametrize("published", [False, True])
+def test_the_readme_catalogue_lists_the_screens(toy, monkeypatch, published):
+    readme = _site_module("readme")
+    url = "https://ildar-idrisov.github.io/lfphys/"
+    monkeypatch.setattr(readme, "site_setting", lambda env=True: {"published": published, "url": url})
+    for lang in i18n.LANGS:
+        row = readme.Gen(lang).row(TOY)
+        labels = [i18n.render_in(T(x), lang) for x in ("Watch", "Explore", "Lab work")]
+        assert all(lab in row for lab in labels), row
+        q = "" if lang == i18n.DEFAULT else f"&lang={lang}"
+        assert (f"({url}run.html?demo={TOY}&screen=explore{q})" in row) == published

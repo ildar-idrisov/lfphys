@@ -138,6 +138,14 @@ docker run --rm --user "$(id -u):$(id -g)" -v <this repository>:/lf -w /lf/lfphy
 | `core.md.observables`, `core.md.cells`, `core.md.units` | core | (P8, B7) g(r), D from the MSD slope, KS against a Gaussian or any CDF with the DKW bound (Massart's constant), speed CDFs, block averages, the canonical Gamma law of the kinetic energy, the bond-orientational order (ψ6 in 2-D, Steinhardt's Q6 in 3-D), the step-cost model and `bench`; cell lists and Verlet pair lists (vectorised, deterministic, checked against all pairs); reduced LJ units (σ0, ε0, m0, k_B = 1) and exact conversions to Å, ps, K, u, bar, e, kg/m³, m²/s |
 | `theories.models.interatomic` | model | (P8, B7) the phenomenological potentials injected into `core.md`: Lennard-Jones 12-6 truncated with the energy shift, the linear force shift or none (Lorentz–Berthelot or geometric mixing, explicit pairs; tail corrections in 2-D and 3-D), WCA, soft repulsion (harmonic, Hertz), harmonic and FENE bonds, harmonic angles in θ or cos θ, LJ walls 9-3 / 10-4 derived from a half-space of wall atoms; argon (σ = 3.405 Å, ε/k_B = 119.8 K, 39.948 u) and its units; forces tested as exact gradients |
 
+### Classical mechanics
+
+| module | layer | content |
+|---|---|---|
+| `core.mechanics.particle` | core | (M1, EX1) a point body in a uniform gravitational field (2-D or 3-D, the vertical last) with any declared forces: `fly` integrates by DOP853 with dense output; the landing, the apex and declared events located by the integrator; the forces' work carried along, so E_k + E_p − W = E₀ is a running check; samples at exact multiples of 1/rate (1/120 s: every 12th is a multiple of 0.1 s); range, flight time, apex height, landing speed and angle as computed results; closed forms in vacuum. Stated error 1e-9, measured 1e-15–4e-11 |
+| `core.mechanics.drag` | core | (M1, EX1) Stokes's law F = −3πμdv of a sphere (Re ≲ 1, error ≈ 3Re/16 by Oseen's correction), the Reynolds number along the path; the closed forms of a flight with linear drag, including the landing time from a height by Lambert's W; air from `core.data` |
+| `theories.models.drag_quadratic` | model | (M1, EX1) quadratic drag F = −½ρC_dA\|v\|v with a constant C_d (0.47 for a smooth sphere, Hoerner 1965) on 10³ < Re < 2·10⁵, where the measured curve runs 0.39–0.50; along a flight the share of the drag's work outside that range and the standard curve's C_d (Morrison 2016); the second method: the hodograph's exact first integral with t, x, y as quadratures; closed forms of vertical motion (tan, tanh) |
+
 ### Fluids
 
 | module | layer | content |
@@ -155,13 +163,13 @@ docker run --rm --user "$(id -u):$(id -g)" -v <this repository>:/lf -w /lf/lfphy
 
 | module | layer | content |
 |---|---|---|
-| `core.constants`, `core.data` | core | CODATA through scipy.constants; PDG 2024 and other measured values, each with its source (`sources/`); Planck 2018 cosmological parameters (Tables 1, 2), T_CMB (Fixsen 2009) (B7); water's refractive index n(λ, T, ρ) (IAPWS R9-97) and density at 0.1 MPa (IAPWS SR6-08), the Sun's nominal T_eff 5772 K (IAU 2015 B3) (B8) |
+| `core.constants`, `core.data` | core | CODATA through scipy.constants; PDG 2024 and other measured values, each with its source (`sources/`); Planck 2018 cosmological parameters (Tables 1, 2), T_CMB (Fixsen 2009) (B7); water's refractive index n(λ, T, ρ) (IAPWS R9-97) and density at 0.1 MPa (IAPWS SR6-08), the Sun's nominal T_eff 5772 K (IAU 2015 B3) (B8); `fluid_properties`: water at 1 atm (IAPWS through the NIST WebBook) and dry air (U.S. Standard Atmosphere 1976, checked against Lemmon et al. 2000 to 2e-4) — moved here from `core.fluids.lbm` (EX1), which re-exports it |
 | `core.numerics` | core | moving roots, Gauss–Legendre panels |
 | `core.elliptic` | core | (P7, B5) Carlson's R_F, F(φ\|m), K(m) for any m < 1, Jacobi sn, cn, dn for any real m (own AGM: SciPy's Cephes loses 1e-7 near m = 1), complete Π and E; the same elementwise code on NumPy and CuPy |
 | `core.geometry` | core | 2-D and 3-D: planes (xy, xz, yz or any normal; `Plane.horizontal` with u horizontal and v towards the depth, for slices of fields behind a source) for 2-D models, grids, slices of 3-D fields, the cut of a plane by a box and its points (`plane_cut`, `plane_points`: the slice planes of every 3-D world), the modelling mode (full 3-D or chosen slices; approximations flagged per slice) |
 | `core.backend` | core | devices and precision of the heavy kernels: CPU or GPU 0 (CuPy), auto by measured crossover, fp32 only where validated and only for what is drawn; checks always fp64 |
 | `core.certified` | core | Arb ball-arithmetic references (python-flint): periapsis advance, light deflection, Kerr ISCO, Hankel functions, Fresnel integrals, Dirac levels, Klein–Nishina, barrier transmission |
-| `tools.stats`, `tools.bell_stats` | tools | coherence fits, bootstrap errors, χ², CHSH estimates and their errors |
+| `tools.stats`, `tools.bell_stats` | tools | coherence fits, bootstrap errors, χ², CHSH estimates and their errors; `linear_fit` (EX1), the lab work's fit: y = bx, a + bx, a + bx + cx² (with the vertex), Ax^n, weighted least squares with the effective variance for errors in x and y (Orear), three re-weightings, errors scaled by the Birge ratio when χ²/dof > 1 — tested against the NIST StRD certified values (Norris, NoInt1, Pontius) and by Monte Carlo coverage |
 | `tools.colour` | tools | display only: the CIE 1931 colour matching functions (the analytic fit of Wyman, Sloan & Shirley 2013), black-body XYZ (tabulated, splines), XYZ → sRGB, tone mapping |
 
 ## CPU and GPU (plan P11)
@@ -202,6 +210,7 @@ phase factor; it is fixed in `core.optics.scalar`.
 
 | visualization | engine modules |
 |---|---|
+| s03 projectile motion | mechanics.particle (the flight, its events and the forces' work; vacuum closed forms), models.drag_quadratic (the air's drag, its validity along the path, the hodograph as the second method), data (air at 20 °C); its lab's fit in the browser is checked against tools.stats.linear_fit |
 | u31 light travel | relativity, worldlines, gravity (rays, arrivals, schwarzschild), laws.light, alternatives (kinematics, newton_light) |
 | u32 double slit | quantum (particles, marks, scattering), optics.scalar, approx (paraxial, kirchhoff — also the Kirchhoff curve of the vector mode, paraxial_ensemble), interpretations.bohm, alternatives (collapse, born_rule), tools.stats, em.slit (vector mode) |
 | u33 quantum 1-D | quantum.schrodinger1d, quantum.transfer, interpretations (Copenhagen, Bohm, Everett) |

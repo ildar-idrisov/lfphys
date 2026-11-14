@@ -23,15 +23,20 @@ and Russian, nothing to install. To compute live and change everything, run lfph
 * **Every run checks itself.** Computed value ↔ reference, with the tolerance, on the screen.
 * **Reproducible.** Every run and every recording names its version and code identifier, so a result can be cited and
   repeated.
-* **For every level.** Material for school students along the curriculum (in preparation), demonstrations from
-  university courses, research set-ups not studied before, and free laboratories where you build the experiment.
+* **For every level.** Material for school students along the curriculum (the first demonstration is ready, the
+  rest in preparation), demonstrations from university courses, research set-ups not studied before, and free
+  laboratories where you build the experiment.
 
 The engine, a Python package, keeps three kinds of physics apart: a **core** of established physics, where every
 function is tested against a closed form or an independent second method; the **approximations, interpretations and
 phenomenological models** that physicists use widely, each stating where it departs from the core; and **declared
-alternatives** for "what if" worlds. The visualizations run in a browser. There are 17 prepared **demonstrations**, from
-Young's experiment and the rainbow to the shadow of a spinning black hole, and 4 **laboratories**, where you build a
-scene by hand and the world computes it live.
+alternatives** for "what if" worlds. The visualizations run in a browser. There are 18 prepared **demonstrations**, from
+a thrown ball, Young's experiment and the rainbow to the shadow of a spinning black hole, and 4 **laboratories**, where
+you build a scene by hand and the world computes it live. School and university demonstrations now get three screens:
+**Watch** (a recording with captions on what to look at), **Explore** (sliders over points the engine computed in
+advance, so it works on the public site) and **Lab work** (measure with instruments, fill a table, fit a line and check
+it against the law, with a printable worksheet). The first are the school's projectile motion (s03, all three) and
+the double slit (u32, Watch and Explore).
 
 > The player speaks English (the default) and Russian: the switch **EN | RU** in the top bar of every page changes the
 > language of the interface, its help, the preset names and every message of the run. Each visualization's README
@@ -147,7 +152,8 @@ only one made from the same version of the world. The public site (GitHub Pages,
 is the same player with these recordings and nothing computed: it is built by `visualizations/site/build.py` and goes
 online only when the author publishes it. Until then the catalogue below names each world's recordings without links,
 and they play on a local server; publishing switches `visualizations/site/site.json` to `"published": true` and
-`site/readme.py` adds the links "Watch on the site". Details:
+`site/readme.py` adds the links "Watch on the site". The same command also builds the **atlases** of the screens
+Explore and Lab work (the precomputed points; s03 and u32 take about a minute each). Details:
 [`visualizations/site/README.md`](visualizations/site/README.md).
 
 ## Demonstrations by audience
@@ -155,8 +161,8 @@ and they play on a local server; publishing switches `visualizations/site/site.j
 Each world belongs to exactly one audience (`AGENTS.md` §3 rule 14). Each card gives a picture of a recorded run, the
 visualization's name (linked to its README with the model, the checks and the approximations), what you will see, its
 anchors (the university courses; for research, the question it studies, marked as a hypothesis until it is reproduced,
-and the prior art), its recordings (with links to the public site once it is published), the number of its scenarios and the same topic at
-other levels. Each audience also lists what is planned for it: the school course by section, the university and research
+and the prior art), its recordings and its screens Watch, Explore and Lab work (with links to the public site once it is
+published), the number of its scenarios and the same topic at other levels. Each audience also lists what is planned for it: the school course by section, the university and research
 items folded under their worlds. A local server computes every scenario live. A recording marked *(modified physics)*
 shows a world with a deliberately changed law; the player's top bar flags such a world with the badge **MODIFIED
 PHYSICS: …**. The section below is generated from the registry by `visualizations/site/readme.py`; edit the worlds'
@@ -168,15 +174,20 @@ PHYSICS: …**. The section below is generated from the registry by `visualizati
 
 Grades 7–11: the ordinary lab experiment, computed and guided step by step.
 
-**Ready: 0 of 45**
+**Ready: 1 of 45**
+
+**Mechanics** · 1
+
+| | |
+|---|---|
+| <a href="docs/images/s03_projectile.jpg"><img src="docs/images/s03_projectile.jpg" width="300" alt="s03: Projectile motion: thrown horizontally and at an angle"></a> | **[s03 · Projectile motion: thrown horizontally and at an angle](visualizations/s03_projectile/README.md)**<br>A dropped ball and a ball thrown sideways land at the same moment.<br>▷ Watch on the site: [Two balls at the same moment: one dropped, one thrown sideways](https://ildar-idrisov.github.io/lfphys/run.html?rec=s03_projectile/independence)<br>◎ On the site: [Watch](https://ildar-idrisov.github.io/lfphys/run.html?demo=s03_projectile&screen=watch) · [Explore](https://ildar-idrisov.github.io/lfphys/run.html?demo=s03_projectile&screen=explore) · [Lab work](https://ildar-idrisov.github.io/lfphys/run.html?demo=s03_projectile&screen=lab)<br>Scenarios in the player: 5 |
 
 *Planned demonstrations, by section:*
 
-**Mechanics** · 12
+**Mechanics** · 11
 
 * S01 · Straight-line motion: uniform and uniformly accelerated (grades 7, 9, 10) · *next in the plan*
 * S02 · Free fall and Galileo's experiments (grades 9, 10) · *next in the plan*
-* S03 · Motion of a body thrown horizontally and at an angle (grades 7, 10) · *next in the plan*
 * S04 · Motion in a circle (grades 9, 10)
 * S05 · Newton's laws (grades 9, 10)
 * S06 · The elastic force, Hooke's law, weight and weightlessness (grades 7, 9, 10)
@@ -275,7 +286,7 @@ The experiments of the university courses, computed from the laws.
 
 | | |
 |---|---|
-| <a href="docs/images/u32_double_slit.jpg"><img src="docs/images/u32_double_slit.jpg" width="300" alt="u32: The double-slit experiment"></a> | **[u32 · The double-slit experiment](visualizations/u32_double_slit/README.md)**<br>Particles land one by one; the fringes build up hit by hit and vanish under a which-path mark.<br>*Courses:* The Feynman Lectures on Physics, vol. III, ch. 1; Griffiths & Schroeter, Introduction to Quantum Mechanics; Halliday, Resnick & Walker, Fundamentals of Physics, ch. 35, 38; Hecht, Optics, ch. 9<br>▷ Watch on the site: [Photons 633 nm, two slits (Young, one photon at a time)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u32_double_slit/young) · [Quantum eraser: H/V marks + 45° analyser](https://ildar-idrisov.github.io/lfphys/run.html?rec=u32_double_slit/eraser) · [Electrons: the Aharonov–Bohm effect (flux ½ h/e)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u32_double_slit/aharonov_bohm)<br>Scenarios in the player: 19<br>Same topic at other levels: S38 · Interference and diffraction of light; the diffraction grating; polarisation (School, planned); [r12 · Double slit (long slits, 3-D): the exact Schrödinger equation and Bohm trajectories](visualizations/r12_double_slit_2d/README.md) (Research); R01 · Time-dependent Aharonov–Bohm flux in a real double slit (Research, planned); R02 · A delayed which-path mark and its erasure with massive particles in a spatial double slit (Research, planned); R05 · The pulsed scalar (electric) Aharonov–Bohm effect: numerics for an experiment's design (Research, planned); R08 · A graded which-path mark and the crossing of Bohm trajectories (Research, planned); R09 · A time-modulated slit (Research, planned) |
+| <a href="docs/images/u32_double_slit.jpg"><img src="docs/images/u32_double_slit.jpg" width="300" alt="u32: The double-slit experiment"></a> | **[u32 · The double-slit experiment](visualizations/u32_double_slit/README.md)**<br>Particles land one by one; the fringes build up hit by hit and vanish under a which-path mark.<br>*Courses:* The Feynman Lectures on Physics, vol. III, ch. 1; Griffiths & Schroeter, Introduction to Quantum Mechanics; Halliday, Resnick & Walker, Fundamentals of Physics, ch. 35, 38; Hecht, Optics, ch. 9<br>▷ Watch on the site: [The double slit, step by step](https://ildar-idrisov.github.io/lfphys/run.html?rec=u32_double_slit/story) · [Photons 633 nm, two slits (Young, one photon at a time)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u32_double_slit/young) · [Quantum eraser: H/V marks + 45° analyser](https://ildar-idrisov.github.io/lfphys/run.html?rec=u32_double_slit/eraser) · [Electrons: the Aharonov–Bohm effect (flux ½ h/e)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u32_double_slit/aharonov_bohm)<br>◎ On the site: [Watch](https://ildar-idrisov.github.io/lfphys/run.html?demo=u32_double_slit&screen=watch) · [Explore](https://ildar-idrisov.github.io/lfphys/run.html?demo=u32_double_slit&screen=explore)<br>Scenarios in the player: 20<br>Same topic at other levels: S38 · Interference and diffraction of light; the diffraction grating; polarisation (School, planned); [r12 · Double slit (long slits, 3-D): the exact Schrödinger equation and Bohm trajectories](visualizations/r12_double_slit_2d/README.md) (Research); R01 · Time-dependent Aharonov–Bohm flux in a real double slit (Research, planned); R02 · A delayed which-path mark and its erasure with massive particles in a spatial double slit (Research, planned); R05 · The pulsed scalar (electric) Aharonov–Bohm effect: numerics for an experiment's design (Research, planned); R08 · A graded which-path mark and the crossing of Bohm trajectories (Research, planned); R09 · A time-modulated slit (Research, planned) |
 | <a href="docs/images/u33_quantum_1d.jpg"><img src="docs/images/u33_quantum_1d.jpg" width="300" alt="u33: A quantum particle in one dimension"></a> | **[u33 · A quantum particle in one dimension](visualizations/u33_quantum_1d/README.md)**<br>An electron's wave meets a barrier: part tunnels through, and single detections follow the computed odds.<br>*Courses:* Griffiths & Schroeter, Introduction to Quantum Mechanics, ch. 2; Halliday, Resnick & Walker, Fundamentals of Physics, ch. 39; Young & Freedman, University Physics, ch. 40<br>▷ Watch on the site: [Electron tunnelling through a 1 eV × 0.6 nm barrier](https://ildar-idrisov.github.io/lfphys/run.html?rec=u33_quantum_1d/tunnel) · [The same through Bohm's eyes: trajectories](https://ildar-idrisov.github.io/lfphys/run.html?rec=u33_quantum_1d/bohm)<br>Scenarios in the player: 9 |
 | <a href="docs/images/u37_bell_test.jpg"><img src="docs/images/u37_bell_test.jpg" width="300" alt="u37: The Bell test with entangled pairs"></a> | **[u37 · The Bell test with entangled pairs](visualizations/u37_bell_test/README.md)**<br>Entangled pairs reach two distant stations; the CHSH parameter exceeds 2, the bound of any local theory.<br>*Courses:* Sakurai & Napolitano, Modern Quantum Mechanics, ch. 3; Griffiths & Schroeter, Introduction to Quantum Mechanics, ch. 12; Bell, Speakable and Unspeakable in Quantum Mechanics<br>▷ Watch on the site: [Photons \|Φ+⟩, quantum mechanics: optimal CHSH angles 0°, 45° / 22.5°, 67.5°, random choice](https://ildar-idrisov.github.io/lfphys/run.html?rec=u37_bell_test/chsh) · [Photons, local hidden variables: a polarisation model (modification)](https://ildar-idrisov.github.io/lfphys/run.html?rec=u37_bell_test/local_model) *(modified physics)* · [The curve E(Δ): photons, fixed settings a = b = 0°; move b](https://ildar-idrisov.github.io/lfphys/run.html?rec=u37_bell_test/scan)<br>Scenarios in the player: 6 |
 

@@ -48,6 +48,13 @@
   "width": 1200,
   "quality": 85
  },
+ "s03_projectile": {
+  "key": "d9cab32ab13b29f7",
+  "from": "s03_projectile/independence",
+  "bytes": 30942,
+  "width": 1200,
+  "quality": 85
+ },
  "u31_light_travel": {
   "key": "91bd51962c8cc0eb",
   "from": "u31_light_travel/sun_earth",

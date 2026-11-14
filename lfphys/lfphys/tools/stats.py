@@ -6,6 +6,9 @@
   or a smooth curve, with the slit envelopes' ratio fixed by the run's own marks (review R2).
 * ``coherence_boot_err``: its standard error by a parametric bootstrap (the Fisher error is only asymptotic).
 * ``chi2``: Pearson chi-square of the histogram against the ensemble prediction (bins with expectation >= 5).
+* ``linear_fit``: the lab work's fit (design explore_2026-11-14 §2.3): y = b x, y = a + b x, y = a + b x + c x^2 (with
+  its vertex) or y = A x^n (a line in log-log), weighted least squares with the effective variance for errors in x and
+  y, the parameters' errors scaled by the Birge ratio when chi^2/dof > 1.
 """
 
 from __future__ import annotations
@@ -21,9 +24,14 @@ ABOUT = {
     "layer": 'tools', "kind": 'statistics',
     "title": T("Statistics of simulated data"),
     "statement": T("The estimate of the degree of coherence from a histogram (Poisson maximum likelihood, parametric "
-                   "bootstrap), χ², the fringe period."),
+                   "bootstrap), χ², the fringe period; the lab work's least-squares fit of a line, a line through the "
+                   "origin, a parabola (with its vertex) or a power law, with errors in x and y (the effective "
+                   "variance) and the Birge scaling of the parameters' errors."),
     "validity": T("a tool, not physics"),
-    "basis": [],
+    "basis": [T("Orear, Notes on Statistics for Physicists, Revised (Cornell LNS, 1982), Appendix III, eqs. (36)–(37): "
+                "the effective variance; Orear, Am. J. Phys. 50, 912 (1982)"),
+              T("Particle Data Group, Review of Particle Physics 2024, Introduction, section 5.2.2: the scale factor "
+                "S = [χ²/(N − 1)]^½; Birge, Phys. Rev. 40, 207 (1932)")],
     "conflicts": [],
 }
 
@@ -152,3 +160,131 @@ def fringe_period_from_curve(x, P, env, guess, window):
             d = lo + g * (hi - lo)
             fd = resid(d)
     return float(2.0 / (lo + hi))
+
+
+# --- the lab work's fit -----------------------------------------------------------------------------------------------
+# The effective variance (Orear, "Notes on Statistics for Physicists, Revised", Cornell LNS 1982, Appendix III, read on
+# 2026-11-14 at ned.ipac.caltech.edu/level5/Sept01/Orear/Orear21.html: eq. (36) sigma~_j^2 = [df/dx]_j^2 [Delta x_j]^2
+# + [Delta y_j]^2, eq. (37) S = sum [(y_j - f(x_j)) / sigma~_j]^2; "guess starting values for df/dx and then solve for
+# the parameters ... Then new [df/dx]_j can be evaluated and the procedure repeated. Usually only two iterations are
+# necessary"; the same method in Orear, Am. J. Phys. 50, 912 (1982), whose full text, Lybanon's comment (Am. J. Phys.
+# 52, 276 (1984)) and Orear's erratum (52, 278) were not read). The iterated solution is the fixed point of the
+# re-weighting, sum_j x_j r_j / sigma~_j^2 = 0; the minimum of S with b-dependent sigma~_j has the extra term
+# b sigma_x^2 sum r_j^2 / sigma~_j^4, so the two differ when the x errors matter (measured on Pearson's data with York's
+# weights, tests/test_stats_fit.py: the fixed point b = -0.4634, the minimum of S b = -0.4805, 0.30 sigma_b apart; three
+# re-weightings are within 1e-5 sigma_b of the fixed point). The design fixes three re-weightings after a start with
+# sigma_y alone (``ITERATIONS``), so that the player's fit.js reproduces this to 1e-12.
+# The Birge scaling: the covariance multiplied by chi^2/dof when that exceeds 1 (the Particle Data Group's scale factor
+# S = [chi^2/(N - 1)]^(1/2) of an average, Review of Particle Physics 2024, Introduction, section 5.2.2, applied here to
+# a fit with dof = n - p; R. T. Birge, Phys. Rev. 40, 207 (1932), cited for the name only, not read).
+FIT_MODELS = ("line0", "line", "quadratic", "power")
+ITERATIONS = 3
+
+
+def _design(model, x):
+    if model == "line0":
+        return x[:, None]
+    if model in ("line", "power"):
+        return np.stack([np.ones_like(x), x], axis=1)
+    return np.stack([np.ones_like(x), x, x * x], axis=1)
+
+
+def _slope(model, p, x):
+    """df/dx at x for the parameters p (in the fitted coordinates)."""
+    if model == "line0":
+        return np.full_like(x, p[0])
+    if model in ("line", "power"):
+        return np.full_like(x, p[1])
+    return p[1] + 2.0 * p[2] * x
+
+
+def _wls(X, y, sig):
+    """Weighted least squares by QR of the column-scaled, row-weighted matrix: the parameters and (X^T W X)^-1."""
+    A = X / sig[:, None]
+    norms = np.linalg.norm(A, axis=0)
+    norms[norms == 0] = 1.0
+    Q, R = np.linalg.qr(A / norms)
+    p = np.linalg.solve(R, Q.T @ (y / sig)) / norms
+    Ri = np.linalg.inv(R)
+    cov = (Ri @ Ri.T) / np.outer(norms, norms)
+    return p, cov
+
+
+def linear_fit(x, y, sx=0.0, sy=0.0, model: str = "line", iterations: int = ITERATIONS) -> dict:
+    """Fit ``model`` to points (x, y) with standard errors sx, sy (scalars or arrays, >= 0).
+
+    Models: "line0" y = b x; "line" y = a + b x; "quadratic" y = a + b x + c x^2 (also its vertex x* = -b/(2c) and its
+    error from the covariance); "power" y = A x^n, fitted as ln y = ln A + n ln x with the errors sx/x and sy/y (x, y >
+    0). The algorithm (the contract with the player's fit.js): the start is a weighted least-squares fit with sigma_y
+    alone (unit weights if any sigma_y is 0); then ``iterations`` times: sigma_i^2 = sy_i^2 + (f'(x_i) sx_i)^2 with f'
+    from the previous parameters, and a weighted least-squares fit with weights 1/sigma_i^2. The covariance is
+    (X^T W X)^-1 with the last weights; chi^2 = sum r_i^2 / sigma_i^2 with the same sigma_i; dof = n - p. When
+    chi^2/dof > 1 the covariance is multiplied by chi^2/dof (the Birge ratio squared) and ``scaled`` is True.
+    Readings without errors (every sx and sy 0), or a point whose sigma_i comes out 0, are fitted by ordinary least
+    squares (``unit``: unit weights, the errors always from the scatter, s^2 (X^T X)^-1 with s^2 = RSS / dof; chi2,
+    chi2_dof, birge and sigma_eff are then None). Returns a dict: params, names, sigma (as used: scaled or not),
+    sigma_unscaled, cov, chi2, dof, chi2_dof, birge, scaled, unit, sigma_eff (sigma_i), n, model; quadratic: vertex,
+    vertex_sigma; power: A, A_sigma, n_exp, n_exp_sigma (params are then ln A and n). Unlike fit.js it refuses
+    non-finite values and negative errors instead of dropping or taking their absolute value."""
+    if model not in FIT_MODELS:
+        raise ValueError(T("fit model {m}: one of line0, line, quadratic, power", m=str(model)))
+    if not (isinstance(iterations, (int, np.integer)) and iterations >= 1):
+        raise ValueError(T("the fit needs at least one re-weighting"))
+    x = np.asarray(x, float).ravel()
+    y = np.asarray(y, float).ravel()
+    n = x.size
+    sx = np.broadcast_to(np.asarray(sx, float), (n,)).astype(float) if np.ndim(sx) == 0 else np.asarray(sx, float)
+    sy = np.broadcast_to(np.asarray(sy, float), (n,)).astype(float) if np.ndim(sy) == 0 else np.asarray(sy, float)
+    if y.size != n or sx.size != n or sy.size != n:
+        raise ValueError(T("x, y and their errors must have the same length"))
+    if not (np.all(np.isfinite(x)) and np.all(np.isfinite(y)) and np.all(np.isfinite(sx)) and np.all(np.isfinite(sy))):
+        raise ValueError(T("the data contain a value that is not a finite number"))
+    if np.any(sx < 0) or np.any(sy < 0):
+        raise ValueError(T("the errors must be ≥ 0"))
+    if model == "power":
+        if np.any(x <= 0) or np.any(y <= 0):
+            raise ValueError(T("a power law is fitted in log-log: x and y must be > 0"))
+        sx, sy, x, y = sx / x, sy / y, np.log(x), np.log(y)
+    npar = {"line0": 1, "line": 2, "quadratic": 3, "power": 2}[model]
+    if n <= npar:
+        raise ValueError(T("the fit needs more points than parameters (points: {n}, parameters: {p})", n=n, p=npar))
+    X = _design(model, x)
+    unit = not (np.any(sx > 0) or np.any(sy > 0))  # readings without errors: ordinary least squares
+    p, cov = _wls(X, y, sy if np.all(sy > 0) else np.ones(n))  # the start: sigma_y alone (unit weights if one is 0)
+    sig = np.ones(n)
+    if not unit:
+        for _ in range(int(iterations)):
+            sig = np.sqrt(sy * sy + (_slope(model, p, x) * sx) ** 2)
+            if np.any(sig <= 0):  # a reading without any error: ordinary least squares, as fit.js
+                unit = True
+                break
+            p, cov = _wls(X, y, sig)
+    if unit:
+        sig = np.ones(n)
+        p, cov = _wls(X, y, sig)
+    r = y - X @ p
+    chi2v = float(np.sum((r / sig) ** 2))
+    dof = n - npar
+    ratio = chi2v / dof
+    scaled = True if unit else ratio > 1.0
+    cov_s = cov * ratio if scaled else cov
+    out = {"model": model, "params": [float(v) for v in p],
+           "names": {"line0": ["b"], "line": ["a", "b"], "quadratic": ["a", "b", "c"], "power": ["lnA", "n"]}[model],
+           "sigma": [float(v) for v in np.sqrt(np.diag(cov_s))],
+           "sigma_unscaled": [float(v) for v in np.sqrt(np.diag(cov))],
+           "cov": cov_s.tolist(), "chi2": None if unit else chi2v, "dof": dof, "chi2_dof": None if unit else ratio,
+           "birge": None if unit else math.sqrt(ratio), "scaled": bool(scaled), "unit": bool(unit),
+           "sigma_eff": None if unit else sig.tolist(), "n": n, "iterations": int(iterations)}
+    if model == "quadratic":
+        a, b, c = p
+        if c != 0:
+            xs = -b / (2.0 * c)
+            grad = np.array([0.0, -1.0 / (2.0 * c), b / (2.0 * c * c)])
+            out["vertex"] = float(xs)
+            out["vertex_sigma"] = float(math.sqrt(grad @ cov_s @ grad))
+        else:
+            out["vertex"], out["vertex_sigma"] = None, None
+    if model == "power":
+        A = math.exp(p[0])
+        out.update({"A": A, "A_sigma": A * out["sigma"][0], "n_exp": float(p[1]), "n_exp_sigma": out["sigma"][1]})
+    return out

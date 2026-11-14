@@ -11,6 +11,10 @@
   "one": "Done: {k:d} of {n:d} value measured",
   "other": "Done: {k:d} of {n:d} values measured"
  },
+ "Measure at least {n:d} points to fit": {
+  "one": "Measure at least {n:d} point to fit",
+  "other": "Measure at least {n:d} points to fit"
+ },
  "None of the {n:d} values was measured — the reasons per value are in the table": {
   "one": "The value was not measured — the reason is in the table",
   "other": "None of the {n:d} values was measured — the reasons per value are in the table"
@@ -122,5 +126,13 @@
  "≈ {total} of computing: {values:d} values × (restoring {restore} + {duration} of the world × {ms:.3g} ms per 1 {unit} + {n:d} readings × {sample:.3g} ms); the budget is {budget}. The estimate comes from the cost of computing this world while it was running ({frames:d} frames of the record); the sweep checks it itself and stops if it exceeds {limit}": {
   "one": "≈ {total} of computing: {values:d} values × (restoring {restore} + {duration} of the world × {ms:.3g} ms per 1 {unit} + {n:d} reading × {sample:.3g} ms); the budget is {budget}. The estimate comes from the cost of computing this world while it was running ({frames:d} frames of the record); the sweep checks it itself and stops if it exceeds {limit}",
   "other": "≈ {total} of computing: {values:d} values × (restoring {restore} + {duration} of the world × {ms:.3g} ms per 1 {unit} + {n:d} readings × {sample:.3g} ms); the budget is {budget}. The estimate comes from the cost of computing this world while it was running ({frames:d} frames of the record); the sweep checks it itself and stops if it exceeds {limit}"
+ },
+ "✓ {n:d} checks agree with the laws": {
+  "one": "✓ {n:d} check agrees with the laws",
+  "other": "✓ {n:d} checks agree with the laws"
+ },
+ "✗ {n:d} of {total:d} checks disagree with the laws": {
+  "one": "✗ {n:d} of {total:d} checks disagrees with the laws",
+  "other": "✗ {n:d} of {total:d} checks disagree with the laws"
  }
 }

@@ -242,7 +242,6 @@
  "moving the flow to a grid of {nx:d} × {ny:d} nodes": "перенос течения на сетку {nx:d} × {ny:d}",
  "no pair of free opposite sides: remove the objects from one of the pairs": "нет пары свободных противоположных сторон: уберите объекты с одной из пар",
  "of this {list}; the mass of the incompressible fluid ρ·S = {m:.6g} kg/m": "из этого {list}; масса несжимаемой жидкости ρ·S = {m:.6g} кг/м",
- "off": "нет",
  "on (a passive tracer)": "есть (пассивная примесь)",
  "on the left and at the bottom": "слева и снизу",
  "on the left and at the bottom (the bodies' coordinates shift with the fluid)": "слева и снизу (тела сдвигаются в координатах вместе с жидкостью)",

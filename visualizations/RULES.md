@@ -31,19 +31,24 @@ visualizations/
   locales/               the framework's catalogues (server, player, catalogue, instruments): <lang>.json (§7)
   docker/                Dockerfile, docker-compose.yml, requirements.lock (pinned)
   server/                serve.py + package lfviz (protocol, params, runner, worker, run manager, HTTP/WS API; the
-                         slice planes of 3-D worlds: lfviz/planes3d.py)
+                         slice planes of 3-D worlds: lfviz/planes3d.py; the headless runner of recordings and atlases:
+                         lfviz/headless.py; «compute live» of an atlas point: lfviz/atlas_live.py)
   player/                the one player: start page (index.html, js/start.js), runs page (runs.html), run page
-                         (run.html; also a saved recording, ?rec=), js/base.js (MODE, BASE, url, page: the same files
+                         (run.html; also a saved recording, ?rec=, and a demonstration's screens, ?demo=: js/demo.js,
+                         watch.js, explore.js, lab.js, atlas.js, fit.js, record_core.js, assets/demo.css; §10), the
+                         worksheet page (worksheet.html, js/worksheet.js), js/base.js (MODE, BASE, url, page: the same files
                          on the server and on the public site, §9), shared JS/CSS, the 3-D environment (js/env3d.js over js/scene3d.js and js/slices.js; the camera window
                          js/imagewin.js); vendor/: third-party modules, unmodified (three.js r185.1, MIT;
                          vendor/README.md)
   tests/                 server/API tests and the test harness
   runs/                  run records (git-ignored; limits: keep days, quota; "keep" protects a record)
-  site/                  the public site's scripts (§9; site/README.md): record.py (the offline recorder), plan.py,
-                         build.py, check.py, readme.py (the root READMEs' catalogue), posters.mjs, sitelib.py; its
+  site/                  the public site's scripts (§9; site/README.md): record.py (the offline recorder), atlas.py
+                         (the screens' atlases, §10), plan.py, build.py, check.py, readme.py (the root READMEs'
+                         catalogue), posters.mjs, sitelib.py; its
                          workflow is .github/workflows/pages.yml
   recordings/            the recordings of the demonstrations (git-ignored; made by site/record.py): <world>/index.json
-                         and <world>/<rec>.<hash8>.lfrec.gz; served at /recordings/ (LFVIZ_RECORDINGS overrides it)
+                         and <world>/<rec>.<hash8>.lfrec.gz; the atlases <world>/atlas/<atlas>/ (manifest, base,
+                         points; §10); served at /recordings/ (LFVIZ_RECORDINGS overrides it)
   planned.json           the planned items of every audience (S01–S45, U01–U30, R01–R10, benches p05–p07): id,
                          audience, section, title (an English msgid), grades/curriculum, batch, state, related
   pNN_<slug>/            ONE FOLDER PER LABORATORY (playground section, plan P15; §6): the same files,
@@ -54,7 +59,7 @@ visualizations/
                          (before 2026-11-13) are aliases: registry.ALIASES
     __init__.py
     viz.py               VIZ = {id, title, summary, purpose, version, schema, simulation, audience, section, ui,
-                         teaser, related, recordings; school: curriculum, guide; university: courses; research:
+                         teaser, related, recordings, screens; school: curriculum; university: courses; research:
                          question, prior_art, status} (§8)
     engine/              the apparatus logic over lfphys (Python), no drawing; physics itself lives in ../lfphys
     web/view.js          the drawing (ES module, createView(ctx)), no physics
@@ -186,14 +191,15 @@ REST (JSON):
 | method | path | meaning |
 |---|---|---|
 | GET | `/api/health` | version, visualizations, running workers |
-| GET | `/api/viz`, `/api/viz/{viz}` | catalogue: id, title, summary, purpose, version, `code_hash` (`registry.code_hash_cached`: this process's code hash of the world, computed once; §9), kind, audience, section, ui, teaser, related, recordings, aliases, picture, the audience's anchors (curriculum / courses / question, prior_art, status), schema (params + presets) (§8); `{viz}` may be an old id (`registry.ALIASES`): the renamed world's entry |
+| GET | `/api/viz`, `/api/viz/{viz}` | catalogue: id, title, summary, purpose, version, `code_hash` (`registry.code_hash_cached`: this process's code hash of the world, computed once; §9), kind, audience, section, ui, teaser, related, recordings, `screens` (`registry.screens_of`: each screen with its `atlas` id, its controls with their labels, units and kinds, a lab's instruments, steps (each with its `atlas`) and worksheet; §10), aliases, picture, the audience's anchors (curriculum / courses / question, prior_art, status), schema (params + presets) (§8); `{viz}` may be an old id (`registry.ALIASES`): the renamed world's entry |
 | GET | `/api/audiences` | `{audiences: [{id, prefix, label, description, ui}], sections: [{id, label}]}` from `registry.AUDIENCES` and `registry.SECTIONS`, in their order (labels and descriptions are `T`); the start page's audiences and sections (§9) |
 | GET | `/api/planned` | the planned items of `planned.json` not yet built (an entry whose id names an existing folder, S02 ↔ `s02_*`, is dropped; §8) |
 | GET | `/api/recordings` | `{worlds: {<world>: <its index.json>}, site: <LFVIZ_SITE_URL or https://ildar-idrisov.github.io/lfphys/>}`: the local recordings (§9) |
 | GET | `/viz/{viz}/{path}` | a world's `web/` files (its view); an old id answers 301 to the new address |
-| GET | `/recordings/{world}/{file}` | a recording file or a world's `index.json` from `visualizations/recordings/` (`LFVIZ_RECORDINGS`); a `.gz` goes as `application/gzip` without a Content-Encoding (the player inflates it); `Access-Control-Allow-Origin: *`; an old id names the new folder |
+| GET | `/recordings/{world}/{file}`, `/recordings/{world}/atlas/{atlas}/{file}` | a recording file or a world's `index.json` from `visualizations/recordings/` (`LFVIZ_RECORDINGS`), or an atlas's manifest, base header or point file (§10); a `.gz` goes as `application/gzip` without a Content-Encoding (the player inflates it); `Access-Control-Allow-Origin: *`; an old id names the new folder |
 | GET | `/images/{file}` | the pictures of the cards and the README, `../docs/images/` (`.jpg`, `.jpeg`, `.png`, `.webp`) |
-| GET | `/`, `/runs`, `/run?id={run}`, `/run?rec={world}/{rec}`, `/settings` | the pages: the start page (§9), the runs and their removal period, the player on a run, the player on a saved recording (an old world id works), the devices (§5) |
+| GET | `/`, `/runs`, `/run?id={run}`, `/run?rec={world}/{rec}`, `/run?demo={world}&screen={id}`, `/worksheet?demo={world}[&teacher=1]`, `/settings` | the pages: the start page (§9), the runs and their removal period, the player on a run, the player on a saved recording (an old world id works), a demonstration's screens (Watch, Explore, Lab work; `screen` is the tab, by default the first; §10), a lab's printable worksheet (`teacher=1`: with the teacher's answers; §10), the devices (§5) |
+| POST | `/api/atlas/{world}/{atlas}/point` | «▶ Compute live» of one atlas point (§10): `{values: {param: value}, seed?}` → `200 application/gzip`, the point's file, the same bytes a site build makes for those values and that seed; headers `X-LF-Source` (`atlas`: an on-grid value from the local atlas whose key is current; `cache`; `computed`) and `X-LF-Key`; a control left out takes its default; `400 {error, hint?}` for a value the schema or the world's `check_params` refuses (the refusal's texts), `429` beyond a queue of `atlas_live.QUEUE` (4) waiting requests, `503 {error}` when the point's process ran out of memory or time (`lfviz.atlas_live`) |
 | GET | `/api/runs` | runs, newest first: state, sim time, size, keep, modifications, approximations, `devices_override` |
 | POST | `/api/runs` | `{viz, preset?, params?, seed?, label?, backend?}` → `{id}`: starts a run (its first world; `viz` may be an old id); `backend` = `{kernels: {name: {device, precision}}}` overrides the device settings for this run only (§5) |
 | GET | `/api/runs/{id}` | the run's passport: current params and seed, `worlds` (each: n, preset, seed, params, modifications), code hash, commands, errors |
@@ -445,6 +451,9 @@ read-only).
 8. A demonstration declares its recordings (§8 `recordings`), records them (`site/record.py --world <id>`, §9), gets
    its picture (`site/posters.mjs`) and its rows in the root READMEs (`site/readme.py`); `tests/test_site_registry.py`
    fails until all of that is in place.
+9. A school demonstration (and a university one when it is reworked) declares its screens (§10: Watch only for a
+   phenomenon that develops in time, Explore, Lab work), builds their atlases with its recordings, and passes
+   `tests/browser/demo_screens.mjs <port> [sizes] <world>` in EN and RU at 1280 and 390 px.
 
 ## 5. Devices and precision (plan P11, 2026-10-27)
 
@@ -711,7 +720,12 @@ section is how the visualizations keep it.
   is «в замкнутом виде»; "against" is rendered by sense («в сравнении с», «в зависимости от», «↔»), not «против»;
   «2D»/«3D» and the decimal comma in Russian; British spelling and "2-D"/"3-D" in English. Every count phrase has
   plural forms (`{n:d}` and the catalogue's plural entry; English one/other in `en.json` where English needs it), and
-  no ordinal is built as "{k}th". A button is named by its label ("▶ Start a new world", not "New world").
+  no ordinal is built as "{k}th". A button is named by its label ("▶ Start a new world", not "New world"). The screens
+  of a demonstration (2026-11-14, §10) are "Watch" / «Наблюдение», "Explore" / «Исследование» and "Lab work" /
+  «Лабораторная работа» — never «Демонстрация» or «Смотреть» for a screen (the whole item is a demonstration); the
+  precomputed points are an "atlas" / «атлас»; a point computed on a server is "computed live" / «расчёт вживую» and
+  "▶ Compute live" / «▶ Рассчитать вживую» starts one; the drawer is "How we know this is right" / «Почему этому можно
+  верить»; the printable sheet is a "worksheet" / «рабочий лист», its answers "For the teacher" / «Для учителя».
 * **User documents.** A world's README and the owner guide exist as `README.md` (English) and `README.<lang>.md` for
   every other language, each linking the other at the top. A document names a part of the interface by its label in
   the document's language: the msgid in an English document, its translation from the catalogues in another. A quoted
@@ -750,10 +764,11 @@ folder's files). The archived reviews keep the old ids as written.
 | `ui` | `school` \| `standard` \| `full`, by default the audience's (`registry.AUDIENCES`); `school` for the school only |
 | `teaser` | a `T`: one line, what you will see |
 | `related` | the same topic at other levels: world ids or planned ids (`S38`, `U27`, `R10`, `p05`); mutual between them |
-| school | `curriculum` (an FRP anchor and an AP/IB/AQA anchor: `{system, grade \| unit \| topic \| section}`), `guide` (the guided steps, AB1); no law parameters (no modified physics) |
+| school | `curriculum` (an FRP anchor and an AP/IB/AQA anchor: `{system, grade \| unit \| topic \| section}`); `screens` with Explore and Lab work (or `lab_absent`: a `T`, why the programme has no lab for the topic); no law parameters (no modified physics). The former `guide` (guided steps) is retired: the lab's steps replace it (2026-11-14) |
 | university | `courses`: `[{text: T(the book), chapters}]` |
 | research | `question` (a `T`), `prior_art` (`[{ref, url}]`), `status: "hypothesis"` until reproduced (`../AGENTS.md` rule 11) |
-| `recordings` | not for the laboratories, at least one: what the public site plays (`[{id, preset, seconds, fps, speed?, seed?, script?, poster?}]`; `registry.RECORDING_LIMITS`: 1–180 s, 1–30 fps, ≤ 3600 frames, script commands `set`, `action`, `view`, `new_world`); chosen so that each file stays within the site's budget (3 MB target, 10 MB limit; a world 12 MB, 25 MB limit) at the measured rates (`tests/test_site_registry.py` `RATE_KB`) |
+| `recordings` | not for the laboratories, at least one: what the public site plays (`[{id, preset, seconds, fps, speed?, seed?, script?, poster?, captions?, quantize?}]`; `registry.RECORDING_LIMITS`: 1–180 s, 1–30 fps, ≤ 3600 frames, script commands `set`, `action`, `view`, `new_world`, `speed` (the playback speed only; a `new_world` resets the speed to the world's default, so a `speed` after it at the same `at`); `captions` `[{at, text: T, hold?}]` and `quantize` as in §10); chosen so that each file stays within the site's budget (3 MB target, 10 MB limit; a world 12 MB, 25 MB limit, its atlases included) at the measured rates (`tests/test_site_registry.py` `RATE_KB`) |
+| `screens` | school and university (optional for a university world until it is reworked; none for research and the laboratories): the demonstration's Watch, Explore and Lab work in tab order, `[{id, kind: watch \| explore \| lab, label?, …}]`; their fields, limits and checks are §10 (`registry.check_screens`, catalogue form `screens_of`, atlases `atlases_of`) |
 
 `planned.json` lists the items not built yet (school S01–S45, university U01–U30, research R01–R10, the benches
 p05–p07): `id`, `audience`, `section`, `title` (an English msgid translated in `locales/`), and per audience `grades`
@@ -773,7 +788,7 @@ server and on the site:
 | route | shows |
 |---|---|
 | `#` | the four audiences (`/api/audiences`), each with its count and a picture of one of its worlds; on the server "Continue" (the last runs open or paused) |
-| `#school` | the school course by section or by grade; until AB1 the planned items (`/api/planned`), honestly, with the worlds of another level on the same topic |
+| `#school` | the school course by section or by grade: the ready worlds (S03 since 2026-11-14) with their screens, and the planned items (`/api/planned`), honestly («Ready: k of n»), with the worlds of another level on the same topic |
 | `#university`, `#research` | the worlds by section in teaching order, section chips with counts, a search box; the planned items folded at the end of their section, or under "Planned in other sections"; a research card shows its question, "Status: hypothesis" and its prior art |
 | `#labs` | the laboratories: on the server today's cards ("▶ Begin", "Laws…", "📂 From a scene file…"); on the site greyed with "Works only with a running server"; the old `#playground` is redirected here |
 | `#<audience>/<id>` | the same page with that card in view |
@@ -782,7 +797,10 @@ A card's buttons: "▶ Compute live" (server: `POST /api/runs`, then the player)
 for a local recording or, when `site/site.json` says `"published": true`, for the public site's recording of the same
 world `version` (`start.js` reads `<site>api/recordings.json` once); otherwise it is disabled with "No recording yet:
 record it locally (site/record.py) or compute live" (integrator D4). "No recording for this scenario: compute it live"
-is only for a preset with no recording spec. The lower the level, the simpler the card (rule 16):
+is only for a preset with no recording spec. A world with screens (§10) shows them first, in tab order: «▷ Watch m:ss»,
+«◎ Explore», «✎ Lab work» (`page("run", {demo, screen})`, class `st-screen`), each greyed with "Not made yet: build it
+locally (site/record.py) or compute live" while its recording or atlases are missing here; a school card has only these
+and, on a server, «▶ Compute live» of its Explore screen's set-up. The lower the level, the simpler the card (rule 16):
 school cards have no parameters, seed or devices; university cards fold them under "More: parameters, seed, device,
 precision"; research cards show them open. The runs are not on the start page: `/runs` (`player/runs.html`,
 `js/runs.js`) has the list and the removal period. The audiences' and sections' labels come from the registry through
@@ -808,7 +826,10 @@ target / 10 MB limit, a world 12 / 25 MB, gzip, decimal; the exceptions accepted
 recorder, recorder_hash, code_hash, made, recordings: [{id, preset, label, file, seconds, fps, frame_stride, frames,
 frames_recorded, bytes, bytes_gz, poster_t, poster_frame, worlds, checks, cpu_s, sha256, key, version, code_hash,
 made, …}]}`; `site/README.md`). Each entry carries its own `version`, `code_hash` and `made` (the player prefers them);
-a recording not made now keeps its old entry only when its key is still the current one (review F9).
+a recording not made now keeps its old entry only when its key is still the current one (review F9). After the
+recordings, `site/record.py` builds the world's atlases (`site/atlas.py`, §10) into `recordings/<world>/atlas/` and
+lists them in the same `index.json` (`atlases`); `--stale` re-records a world whose recordings or atlases are not all
+present, and the world's budget counts both.
 
 * **The key** of a recording is `sha256(spec + RECORDER_VERSION + sitelib.recorder_hash() +
   registry.code_hash(world))[:16]`; `recorder_hash` covers `site/record.py`, the image's
@@ -856,17 +877,20 @@ the site. A view never writes an absolute path: it imports through the import ma
 `page()`; a server-only link (the views' "⚙ Devices") is shown only when `MODE === "server"`.
 
 **The site build** (`site/build.py --recordings DIR --out DIR --base /lfphys/`) writes `index.html`, `run.html`,
-`legal.html`, `404.html` (the metas set to `static` and the base, the import map's targets relative), `static/` (the
+`legal.html`, `worksheet.html`, `404.html` (the metas set to `static` and the base, the import map's targets relative), `static/` (the
 player and `static/locales/<lang>.json`), `viz/<id>/` (each world's `web/`), `api/viz.json`, `api/viz/<id>.json` (also
 under each old id), `api/audiences.json`, `api/planned.json`, `api/recordings.json`, `api/health.json` (the citation),
-`aliases.json`, `recordings/`, `images/`, `legal/<name>` and `site-manifest.json` (every file's size and sha256; every
-world and recording with its key). `site/check.py SITE --base /lfphys/` fails on a world or recording missing or stale,
+`aliases.json`, `recordings/` (the atlases under `recordings/<world>/atlas/`), `images/`, `legal/<name>` and
+`site-manifest.json` (every file's size and sha256; every world, recording and atlas with its key). `site/check.py SITE
+--base /lfphys/` fails on a world, recording or atlas missing or stale (an atlas's manifest against its files: sizes,
+sha256, the base, the refusals; a point or an atlas over its hard limit; a check that ends failed),
 a file that differs from the manifest, a page without its metas or import map or with an absolute `/static`, `/api` or
 `/viz` outside the map, a missing catalogue, audiences or i18n file, or a hard limit exceeded; over a target it warns
 (the accepted ones say so). `tests/browser/site_smoke.mjs` serves the built site with `python -m http.server` under
 `/lfphys/` and checks that no request leaves the sub-path or goes to `/api/`, that the start page and an audience page
 render in EN and RU, that a recording plays (the timeline moves, the checks appear, the canvas is drawn), that the
-laboratories are greyed with their note, the school banner is honest, and `legal.html` shows the texts.
+laboratories are greyed with their note, the school banner is honest, every screen of every world with screens opens
+(§10) and a lab's worksheet renders, and `legal.html` shows the texts.
 
 **What `site/check.py` also checks** (review F5, F13): every catalogue world's `viz/<id>/view.js` and every named
 picture's `images/<id>.jpg`; no absolute server address (`"/api…"`, `"/run…"`, `"/runs…"`, `"/settings…"`,
@@ -895,6 +919,156 @@ suite, in shards) and `engine-tests` (the engine's suite) run in parallel; `reco
 **Tests.** `tests/test_site_registry.py` (the registry's fields, aliases, recording specs within limits, related links,
 translations of every `T`, the READMEs' generated sections up to date, a picture per world; `registry.SERVER_ONLY`
 kept out of `code_hash`), `tests/test_recorder.py`, `tests/test_site_build.py`, `tests/test_aliases.py`; in a browser
-`tests/browser/start_page.mjs`, `record_mode.mjs` (against a private server with the local recordings) and
-`site_smoke.mjs` (on a built site); `node --test player/js/tests/*.test.mjs` (`record.test.mjs`: a gzip fixture
+`tests/browser/start_page.mjs` (with the cards' screen buttons), `record_mode.mjs`, `demo_screens.mjs <port> [sizes]
+[world]` (a world's screens: the toy `s98_atlas_toy`, `s03_projectile`, `u32_double_slit`; §10) (against a private server
+with the local recordings) and `site_smoke.mjs` (on a built site); `node --test player/js/tests/*.test.mjs` (`record.test.mjs`: a gzip fixture
 decoded through `openRecording`).
+
+## 10. Screens and atlases (owner, 2026-11-14; plan P17.5, batch EX1)
+
+The owner's words are in `../AGENTS.md` §1 («Interactive explorations and lab work for school and university»), with his
+answers of the same day: sliders snap only to computed points, nothing between them is drawn; the pilots and the
+rework of the existing worlds come before AB1; quality over quantity. The design and its measurements:
+`../lfphys/sources/explore_2026-11-14_design.md`. The pilots: `s03_projectile` (all three screens) and
+`u32_double_slit` (Watch and Explore). This section is what the code keeps.
+
+**Three screens on one model.** A school or university demonstration may have, as tabs of one page
+(`run.html?demo=<world>&screen=<id>` on the site, `/run?demo=…` on a server; `player/js/demo.js`):
+
+* **Watch** («Наблюдение»): a recording of `VIZ["recordings"]` with captions, only for a phenomenon that develops in
+  time. The caption strip shows the latest caption as of the cursor; each caption is a chapter tick on the timeline,
+  ◀◀ / ▶▶ go to the previous or next one; the screen's `more` recordings are a select («More recordings»;
+  `player/js/watch.js`).
+* **Explore** («Исследование»): an **atlas**, the world's own runs computed beforehand on a grid of a few controls. The
+  sliders stop only at the grid's values on the site; the world's own view draws the point (`player/js/explore.js`,
+  `atlas.js`, `record_core.js`).
+* **Lab work** («Лабораторная работа»): steps, each on its own atlas, with instruments, «Measure», a table, a plot, a
+  fit and «Check against the law», and a printable worksheet (`player/js/lab.js`, `fit.js`, `worksheet.js`).
+
+Checks, «Physics of this world», events and the passport fold into one drawer, «How we know this is right» (a view's
+`rightPanels`, u32's «Particle», «Model of the slit screen» …, fold into it too). On a server the top bar also has
+«▶ Compute live»: a live run of the screen's preset with the controls' current values, in the full player. A world
+without screens opens its first recording, as before. School worlds need Explore and Lab work (or `lab_absent`);
+a university world's screens are optional until it is reworked; research worlds and the laboratories have none and
+keep the full player only. The layout is PhET-like and works at 390 px (one column, a sticky time bar, touch targets
+≥ 44 px, no horizontal scroll).
+
+**`VIZ["screens"]`** (`registry.check_screens`; the catalogue's form `screens_of`; every text a `T`):
+
+| kind | fields |
+|---|---|
+| all | `id` (a slug, unique), `kind`, `label?` (by default «Watch», «Explore», «Lab work») |
+| `watch` | `recording`: a recording id whose spec has `captions`; `more?`: other recording ids for «More recordings» |
+| `explore` | `preset`, `fixed?` (values on top of the preset, shown, not controls), `controls` (below), `acts` (`next`: a change arms the next launch; `now`: the shown point is replaced, the time kept), `time` (`flight`: ▶ Launch from t = 0; `buildup`: the cursor is the build-up, u32's hits; `none`: static), `frame_dt` (world seconds between frames), `stop` (`{event, after_s, max_world_s}` or `{world_s}`), `drop?` (`{types, frame_blobs}`: what the screen does not draw), `quantize?`, `overlays?` (ids the view declares), `traces` (0–5 earlier points kept, fading), `readouts?` (measurables of the world's header, shown once their event is reached, «—» before), `seed?` (1) |
+| `lab` | `instruments`, `steps`, `worksheet` (below) |
+
+A **control** is `{param, values, default, label?, unit?}`: a parameter of the schema and its grid values (2–… per
+control, at most 5 controls at school and 6 at standard, at most 1500 points as the target and 3000 as the limit per
+atlas: `registry.ATLAS_LIMITS`); two booleans make a toggle, other non-numbers a select. Its own `label` and `unit` (a
+`T`, or a plain symbol such as "nm") win over the parameter's, so that a schema label carrying its unit ("Wavelength,
+nm") becomes «λ 600 nm» (u32's λ, d, a). A school screen has no law parameter among its controls (rule 4); a standard
+screen may have one, flagged at the control and in the top bar while a modified point is shown.
+
+**Captions.** A recording spec's `captions: [{at, text, hold?}]` (`at` in played seconds) are written by the recorder
+as accumulative messages `caption {t, text, n, at, hold?}` at their frames, with the world time of that frame, so a
+caption keeps its place under frame thinning and speed changes and is part of the recording's key. `hold` (seconds):
+while the story plays, the playback stops at that caption's frame and waits `hold` seconds before it goes on, so the
+text can be read (`watch.js`; the registry checks only that it is a number > 0); scrubbing, the chapter ticks and ◀◀ / ▶▶
+are not held. A script's `speed` command changes only the playback speed; a
+`new_world` resets the speed to the world's default, so a script that wants another speed in the new world puts a
+`speed` command after the `new_world` at the same `at`.
+
+**The atlas** (`site/atlas.py`, `lfviz/headless.py`; design §1). One per Explore screen (its id is the screen's) and one
+per lab step (`<screen>.<step>`). A point is the world's own `Simulation` run headless by `headless.run_spec`, the one
+runner of the recordings, the atlases and the server's live points: the screen's preset, its `fixed` values and the
+grid values on top, the screen's seed, frames every `frame_dt` from t = 0 until the stop rule. A point the world refuses
+(`check_params`) is `refused`, with its text shown at that combination; a point that fails (an error, an exception, a
+check ending ✗, a stop event not reached by `max_world_s`) fails the atlas. Files, per world:
+`recordings/<world>/atlas/<atlas>/atlas.<hash8>.json` (the manifest), `base.<hash8>.lfpt.gz` (the default point's
+header, loaded once) and `p<i>.<hash8>.lfpt.gz` (the point with the flattened index `i`, row-major, the last control
+fastest: its header as a delta against the base, the world's messages, `end {reason: "atlas"}`); the world's
+`index.json` lists them under `atlases`. The **key** is `sha256(atlas spec + ATLAS_VERSION + recorder_hash +
+code_hash(world))[:16]`; `plan.py` marks each atlas `present`, `stale` or `missing`; `RECORDER_FILES` covers
+`site/atlas.py` and `lfviz/headless.py`. The same spec and code give the same bytes. The player loads points on demand
+(an LRU of 24 points or 40 MB), prefetches the neighbours (±1 along every control, two requests at a time) and shows
+«loading…» after 300 ms, never a blank view.
+
+**Stochastic points** store one seeded sample and the run's own computed distribution (u32: about 5000 hits and the
+expectation curves, with the sample's χ² against them); another sample is drawn only by «Another sample» on a server.
+
+**Quantisation** (`lfviz/protocol.py`, «Quantised blobs»; `api.js decode`). A blob's descriptor may carry `q: {enc: lin
+| sqrt, lo, hi, nan?}` with a stored `u1` or `u2`; both decoders return float arrays (lin `lo + v/top·(hi − lo)`, sqrt
+`hi·(v/top)²`). A screen's or a recording's `quantize` map `{"<type>.<blob>[|<blob>…]": "u8" | "u16" | "u8sqrt" |
+"u16sqrt"[":col" | ":all"]}` names what is packed; the registry refuses a quantisation the view does not declare safe
+in its `QUANT_SAFE` (or `quantSafe`) object literal; only drawn arrays are quantised, never measurables, events or
+checks, and the largest error of each quantised blob is measured and written into the manifest (`quant`) or the index
+entry.
+
+**The view's contract, extended** (optional; old views keep working): `ctx.screen` (`live`, `recording`, `watch`,
+`explore`, `lab`) and `ctx.ui`; `OVERLAYS` (an array literal of `{id, label, default}`, read by
+`registry.view_declarations`) with `setOverlay(id, on)`; `setTraces(list)` (earlier points, each a decoded world drawn
+up to its own time); `worldToPx` / `pxToWorld` (2-D views: where the lab's instruments are drawn); `anchors()`
+(optional: where the tape, the ruler and the protractor sit); tolerance of a frame without its dropped blobs. The view
+still computes no physics.
+
+**Lab work** (design §2.3).
+
+* `instruments: {id: {kind: ruler | protractor | stopwatch | readout, label, unit, division, error?, reads | manual,
+  event?, error_note?}}`. A reading is `division × round(value / division)` with the declared `error` (by default half
+  a division). `reads` names a measurable of the world, read at the cursor («Nothing to measure yet: …» before it is
+  reached), or `control:<param>`, a set-up value. `event` binds the instrument to an event of the point (its kind or
+  name, as a stop rule matches it): it reads only once that event has happened by the frame shown (S03 part C: the grey
+  ball's tape after `companion_landing`). A `manual` stopwatch starts with the launch and stops on the student's press,
+  at real speed only («slow» is refused): it measures the reaction, as a hand-held one does.
+* `steps: [{id, title, goal, hint?, preset, fixed?, controls, instruments, columns, plot, law, frame_dt, stop,
+  quantize?, drop?}]`: `columns` `[{id, label, from: <instrument>}` or `{id, label, of: <column>, op: sqrt | square |
+  sin2 | inverse | log}]` (errors propagated as |f′|·σ); `plot {x, y, fit, fits}` with fits `line0`, `line`,
+  `quadratic` (its vertex with σ) and, at standard, `power`; `law {quantity: slope | intercept | vertex | exponent,
+  label, unit, reference}`. The fit (`fit.js`, tested against `lfphys.tools.stats.linear_fit` on shared fixtures) is a
+  weighted least squares with effective variance, its errors scaled by the Birge ratio when χ²/dof > 1. The law's
+  reference is computed **by the world** when the step's atlas is built (`Simulation.lab_reference(step, fixed,
+  values) -> {value, unit, label, how, kind: "closed form" | "engine"}`) and stored in the manifest's `references`;
+  «Check against the law» says ✓ within two errors or ✗ with the step's hint. The table is kept per step in the
+  browser (`localStorage`, a convenience) and exported as CSV with the errors.
+* `worksheet: {frp: [{name, …}], equipment: [T], questions: [{q, answer}], teacher: [T]}`: data, not a document.
+  `worksheet.html?demo=<world>` (`/worksheet?demo=…`) prints it in the viewer's language, one A4 page per part; the ФРП
+  lab's name is quoted verbatim in Russian, with a marked translation in another language. «For the teacher»
+  (`&teacher=1`) shows the answers, the teacher's notes and the laws' references on pages of their own; they are public
+  (the design's §10, question 2: the repository is public anyway). The texts of `STEPS` and `WORKSHEET` and their
+  translations are Site Materials under CC BY-NC-SA 4.0 (`../LICENSE.md` §1 item 8, §9): a world with them carries the
+  three-line comment of the licence response (`s03_projectile/viz.py`, above `STEPS = [`), and every printed page
+  carries the attribution line.
+
+**Compute live** (`lfviz/atlas_live.py`; §3's `POST /api/atlas/…/point`). On a server the sliders also move between
+the detents: a value within a tenth of a step of a detent snaps to it, any other is computed live when released, drawn
+when it arrives and labelled «computed live» in the passport and on its trace. The point runs in a separate process
+with its own memory limit (`LFVIZ_POINT_MEM_GB`, by default half a worker's budget, at least 512 MB; `oom_score_adj`
+1000, `nice` 10) and CPU-time limit (`LFVIZ_POINT_TIMEOUT_S`, 120 s); one at a time per server, four waiting, then 429.
+Cache: `runs/atlas-live/<world>/<atlas>/<key16>.lfpt.gz`, removed with the runs' period. An on-grid value is served from
+the local atlas when its key is current. The site never posts: there the sliders take grid values only. A live point
+is not fetched from the public site (`STATUS.md` V52).
+
+**Budgets** (`sitelib.BUDGET`, gzip, decimal; design §1.8): a point 150 kB target / 400 kB limit; an atlas 6 / 12 MB;
+a world, recordings and atlases together, 12 / 25 MB; the site 600 / 900 MB. `site/atlas.py` and `site/check.py` fail
+over a limit and warn over a target (`sitelib.ACCEPTED` names the accepted ones with their reasons). Measured on
+2026-11-14 (local build): S03 Explore 940 points, 10 refused, 5.70 MB (largest point 12.6 kB), labs 51, 46 and 87 kB,
+Watch 0.05 MB, its world 5.93 MB; u32 Explore 48 points, 5.50 MB (96.6–132.7 kB per point), Watch 0.61 MB, its world
+8.17 MB.
+
+**Making them.** `site/record.py --world <id>` (or `--stale`, `--all`) records a world's recordings, then builds its
+atlases; `site/atlas.py --world <id> [--atlas <id>]` builds only the atlases. Locally as in §9 (Docker, CPU,
+`--memory`); in CI the `record` job's matrix entry per world makes both, cached by the world key, which covers the
+recordings' and the atlases' keys (`.github/workflows/pages.yml`). `site/build.py` copies the atlases under
+`recordings/<world>/atlas/`; `site/check.py` checks every manifest against its files (size, sha256), the base, the keys,
+the budgets and the checks.
+
+**Tests.** Engine: `lfphys/tests/test_mechanics_projectile.py`, `test_mechanics_air.py`, `test_stats_fit.py`,
+`test_codes.py` (the refusals' machine codes `mechanics.*`). Framework: `tests/test_headless.py`, `test_atlas.py` (on the
+toy world `tests/site_worlds/s98_atlas_toy`, its built fixture in `tests/site_worlds/recordings/`, remade by
+`tests/site_worlds/make_fixture.py`), `test_protocol_quant.py` (shared fixtures `tests/site_worlds/quant/`),
+`test_atlas_live.py`, `test_site_registry.py`, `test_site_build.py`. Worlds: `s03_projectile/tests/test_s03_physics.py`,
+`u32_double_slit/tests/test_u32_screens.py`. Player (Node): `player/js/tests/{quant,fit,atlas,lab,captions}.test.mjs`.
+Browser (EN and RU, 1280 and 390 px, a private server, never port 8479): `tests/browser/demo_screens.mjs <port> [sizes]
+[world]` for the toy, S03 and u32 (with the recordings and atlases built), `u32_double_slit/tests/u32_screens.mjs`
+(what is u32's own: the readout line, the folded panels, «▶ Compute live» from Explore), `start_page.mjs` (the cards'
+screen buttons) and `site_smoke.mjs` (every screen and the worksheet on the built site).

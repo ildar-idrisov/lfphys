@@ -275,6 +275,9 @@ SCHEMA = Schema([
                    "note": T("The Born rule is changed: Sorkin's parameter is not zero, and the check fails as "
                              "expected; that is the consequence of the modification")},
     "slit_collapse": {"label": T("Forced choice of a slit (modification)"), "params": {"collapse": "slit"}},
+    # the Watch screen's story (design §6.1): Young's photons with 20 flow lines on a screen ±50 mm wide (the bands and the
+    # single slit's hump fill it); the script changes only live parameters
+    "story": {"label": T("The double slit, step by step"), "params": {"n_bohm": 20, "screen_um": 50000.0}},
 })
 
 
@@ -1572,6 +1575,27 @@ def _rebin(x, P, edges):
     return np.diff(np.interp(edges, x, c))
 
 
+# Watch (design §6.1): what to look at, at each step of the story (played seconds; the script changes the set-up at the
+# same times)
+STORY_CAPTIONS = [
+    {"at": 0, "text": T("One photon at a time leaves the source on the left, passes the slits and lands at one point "
+                        "of the screen on the right. Each dot is one photon.")},
+    {"at": 8, "text": T("Where the next photon lands cannot be predicted: the hits look random. Only their probability "
+                        "is computed: the orange curve under the screen.")},
+    {"at": 16, "text": T("Ten times faster, thousands of hits: their histogram follows the orange curve, and bright and "
+                         "dark bands appear on the screen.")},
+    {"at": 22, "text": T("The bands are interference: the wave of each photon passes through both slits, and the two "
+                         "parts add up in some places and cancel in others. The grey dashed curve is what the two "
+                         "slits would give without interference."), "hold": 3},
+    {"at": 26, "text": T("Slit 2 is closed, and the screen starts again: the hits pile up in one broad hump, the "
+                         "spread of a single slit, with no bands.")},
+    {"at": 36, "text": T("Both slits are open, but a detector at slit 1 marks which slit each photon took: no bands. "
+                         "The hits follow the grey dashed curve, the two slits without interference.")},
+    {"at": 48, "text": T("The detector is removed, and the bands come back: interference needs the two paths to be "
+                         "indistinguishable.")},
+]
+
+
 VIZ = {
     "id": "u32_double_slit",
     "title": T("The double-slit experiment"),
@@ -1581,7 +1605,7 @@ VIZ = {
     "purpose": T("A study of how a particle behaves and of why interference appears and disappears; the laws can be "
                  "changed on purpose (the exponent in the Born rule, GRW spontaneous collapse, a forced choice of "
                  "slit)."),
-    "version": "1.2",
+    "version": "1.3",
     "schema": SCHEMA,
     "simulation": Simulation,
     "audience": "university",
@@ -1596,11 +1620,53 @@ VIZ = {
     ],
     "related": ["S38", "r12_double_slit_2d", "R01", "R02", "R05", "R08", "R09"],
     "recordings": [
+        # Watch: «The double slit, step by step» (design §6.1). The source sends 1000 photons per second of world time;
+        # the script's speed (world seconds per played second) goes from 2 photons per played second to 200, and each
+        # change of the set-up starts a new segment, which the screen shows on its own
+        {"id": "story", "preset": "story", "seconds": 60, "fps": 20, "speed": None, "seed": 1, "poster": 25,
+         "script": [{"at": 0, "cmd": "speed", "args": {"value": 0.002}},
+                    {"at": 8, "cmd": "speed", "args": {"value": 0.02}},
+                    {"at": 16, "cmd": "speed", "args": {"value": 0.2}},
+                    {"at": 26, "cmd": "set", "args": {"values": {"el2": "block"}}},
+                    {"at": 36, "cmd": "set", "args": {"values": {"el2": "none", "wp_mode": "qubit", "wp_slit": 1,
+                                                                 "wp_theta": 90}}},
+                    {"at": 48, "cmd": "set", "args": {"values": {"wp_mode": "none"}}}],
+         "captions": STORY_CAPTIONS,
+         "quantize": {"segment.map": "u8sqrt", "segment.bohm_x": "u16", "detections.x": "u16", "detections.y": "u8"}},
         {"id": "young", "preset": "photon_young", "seconds": 60, "fps": 20,
-         "speed": None, "seed": 1, "script": [], "poster": 55},
+         "speed": None, "seed": 1, "script": [], "poster": 55,
+         "captions": [{"at": 0, "text": T("Photons of {lam:g} nm pass two slits one at a time; each dot on the screen "
+                                          "is one photon.", lam=632.8)},
+                      {"at": 20, "text": T("Hit by hit, bright and dark bands build up: interference. The orange curve "
+                                           "is the run's computed expectation.")}]},
         {"id": "eraser", "preset": "photon_eraser", "seconds": 60, "fps": 20,
-         "speed": None, "seed": 1, "script": [], "poster": 55},
+         "speed": None, "seed": 1, "script": [], "poster": 55,
+         "captions": [{"at": 0, "text": T("Polarisers H and V at the two slits mark which slit each photon took; an "
+                                          "analyser at {a:g}° in front of the screen erases that mark.", a=45.0)},
+                      {"at": 20, "text": T("The analyser lets only part of the photons through, and among them the "
+                                           "bands are back: the which-path mark is erased.")}]},
         {"id": "aharonov_bohm", "preset": "electron_ab", "seconds": 60, "fps": 20,
-         "speed": None, "seed": 1, "script": [], "poster": 55},
+         "speed": None, "seed": 1, "script": [], "poster": 55,
+         "captions": [{"at": 0, "text": T("Electrons pass two slits; between the slits a thin coil holds a magnetic "
+                                          "flux of ½ h/e, and no magnetic field reaches the electrons' paths.")},
+                      {"at": 20, "text": T("The bands are shifted by half a period: a dark band at the centre. The flux "
+                                           "changes the phase between the two paths (the Aharonov–Bohm effect).")}]},
+    ],
+    # the screens (design §6): Watch with the captioned story and the other recordings; Explore over λ × d × a, 48
+    # points of one seeded sample of 5000 photons each, with the run's expectation and its χ²
+    "screens": [
+        {"id": "watch", "kind": "watch", "recording": "story", "more": ["young", "eraser", "aharonov_bohm"]},
+        {"id": "explore", "kind": "explore", "preset": "photon_young", "fixed": {"n_bohm": 20, "screen_um": 30000.0},
+         "controls": [{"param": "lam_nm", "values": [400.0, 500.0, 600.0, 700.0], "default": 600.0,
+                       "label": T("Wavelength λ"), "unit": "nm"},
+                      {"param": "d_um", "values": [50.0, 100.0, 200.0, 300.0], "default": 100.0,
+                       "label": T("Slit period d"), "unit": "µm"},
+                      {"param": "a_um", "values": [10.0, 20.0, 40.0], "default": 20.0,
+                       "label": T("Slit width a"), "unit": "µm"}],
+         "acts": "now", "time": "buildup", "frame_dt": 0.25, "stop": {"world_s": 5.25}, "seed": 1,
+         "drop": {"types": ["stories"], "frame_blobs": ["flight"]},
+         "quantize": {"segment.map": "u8sqrt", "segment.bohm_x": "u16", "detections.t|x": "u16",
+                      "detections.y": "u8", "header.x": "u16"},
+         "overlays": ["expectation", "no_interference", "wave", "flow_lines"], "traces": 3},
     ],
 }

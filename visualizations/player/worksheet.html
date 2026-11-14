@@ -1,0 +1,55 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
+     SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="lf-mode" content="server">
+<meta name="lf-base" content="/">
+<title data-t>lfphys · worksheet</title>
+<link rel="stylesheet" href="static/assets/chrome.css">
+<link rel="stylesheet" href="static/assets/demo.css">
+<style>
+/* A lab's worksheet (js/worksheet.js; design lfphys/sources/explore_2026-11-14_design.md §2.3): printable, one A4 page per
+   part; the teacher's answers on a page of their own, shown behind «For the teacher» */
+html, body { height: auto; }
+.ws { max-width: 820px; margin: 0 auto; padding: 16px; font-size: 15px; line-height: 1.45; }
+.ws h1 { font-size: 22px; margin: 6px 0 4px; } .ws h2 { font-size: 18px; margin: 18px 0 6px; } .ws h3 { font-size: 16px; margin: 12px 0 4px; }
+.ws .frp { color: var(--muted); }
+.ws .frp .orig { font-style: italic; }
+.ws table.blank { border-collapse: collapse; width: 100%; margin: 6px 0 10px; }
+.ws table.blank th, .ws table.blank td { border: 1px solid var(--ink); padding: 4px 6px; height: 22px; text-align: center; font-weight: 400; }
+.ws .axes { border-left: 2px solid var(--ink); border-bottom: 2px solid var(--ink); height: 180px; margin: 8px 0 4px 30px; position: relative; max-width: 420px; }
+.ws .axes .ax { position: absolute; font-size: 13px; color: var(--muted); }
+.ws .lines { border-bottom: 1px solid var(--line); height: 26px; }
+.ws .part { break-before: page; page-break-before: always; }
+.ws .part.first { break-before: auto; page-break-before: auto; }
+.ws .teacher { display: none; break-before: page; page-break-before: always; border-top: 3px double var(--line); margin-top: 24px; }
+body.teacher-on .ws .teacher { display: block; }
+.ws .answer { color: var(--ok); }
+.ws-tools { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.ws-tools label { display: inline-flex; gap: 6px; align-items: center; min-height: 40px; }
+.ws .note { font-size: 13px; color: var(--muted); }
+.ws .credit { font-size: 11px; color: var(--muted); margin-top: 14px; overflow-wrap: anywhere; }
+@media print {
+  .topbar, .ws-tools { display: none !important; }
+  body { background: #fff; color: #000; }
+  .ws { max-width: none; padding: 0; font-size: 12pt; }
+  @page { size: A4; margin: 16mm; }
+}
+@media (max-width: 600px) { .ws { padding: 10px; } .ws table.blank { font-size: 13px; } }
+</style>
+<script type="importmap">{"imports": {"three": "/static/vendor/three-0.185.1/three.module.min.js", "/static/": "/static/", "/viz/": "/viz/"}}</script>
+</head>
+<body>
+<div class="topbar">
+  <a href="/" data-page="" data-t-title title="To the start page: the demonstrations by audience and the laboratories" data-t>← Start page</a>
+  <span class="title" data-t>Worksheet</span>
+  <span class="grow"></span>
+  <button id="theme" data-t-title title="Theme (T)">◐</button>
+</div>
+<div class="ws" id="ws"></div>
+<script type="module" src="static/js/worksheet.js"></script>
+</body>
+</html>

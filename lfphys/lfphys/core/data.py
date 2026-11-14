@@ -22,14 +22,17 @@ ABOUT = {
                    "Weisberg & Huang 2016); the Planck 2018 cosmological parameters (Tables 1 and 2) and the "
                    "temperature of the cosmic microwave background (Fixsen 2009); the refractive index of water n(λ, "
                    "T, ρ) (IAPWS R9-97) and the density of water at 0.1 MPa (IAPWS SR6-08); the nominal effective "
-                   "temperature of the Sun (IAU 2015 B3)."),
+                   "temperature of the Sun (IAU 2015 B3); the density and viscosity of water at 1 atm (IAPWS "
+                   "through the NIST WebBook) and of dry air (the U.S. Standard Atmosphere 1976)."),
     "validity": T("values with the uncertainties of the source; the PDG 2026 edition differs in some lines (stated)"),
     "basis": ["PDG 2024: Phys. Rev. D 110, 030001", "NASA Mercury Fact Sheet (2024)",
               "Will, Living Rev. Relativ. 17, 4 (2014)", "Weisberg & Huang, ApJ 829, 55 (2016)",
               "Bertotti, Iess, Tortora, Nature 425, 374 (2003)",
               "Planck Collaboration, A&A 641, A6 (2020), Tables 1, 2", "Fixsen, ApJ 707, 916 (2009)",
               T("IAPWS R9-97 (1997): the refractive index of water"), T("IAPWS SR6-08 (2011): liquid water at 0.1 MPa"),
-              "IAU 2015 Resolution B3 (Prša et al., AJ 152, 41, 2016)"],
+              "IAU 2015 Resolution B3 (Prša et al., AJ 152, 41, 2016)",
+              T("NIST Chemistry WebBook SRD 69: water at 0.101325 MPa (IAPWS-95, IAPWS 2008 viscosity)"),
+              T("U.S. Standard Atmosphere 1976 (NOAA/NASA/USAF, NASA-TM-X-74335): dry air")],
     "conflicts": [],
 }
 
@@ -264,3 +267,110 @@ def water_index(lam_nm, t_C: float = 20.0):
 # "T_sun^N = 5772 K"; the paper's best estimate 5772.0 +- 0.8 K. Sunlight as a black body at this temperature is a
 # stated approximation of its spectrum (it ignores absorption lines and the limb), used only for colours.
 SUN_TEFF_NOMINAL_K = 5772.0
+
+
+# --- fluids: cited data ------------------------------------------------------------------------------------------------
+# Water at 0.101325 MPa: NIST Chemistry WebBook, SRD 69, "Isobaric Properties for Water" at 0.101325 MPa, fetched
+# 2026-11-04, computed there from IAPWS-95 (Wagner & Pruss, J. Phys. Chem. Ref. Data 31, 387 (2002); IAPWS R6-95(2016))
+# for the density and the IAPWS 2008 viscosity formulation (Huber et al., J. Phys. Chem. Ref. Data 38, 101 (2009));
+# the WebBook states the uncertainty of the density "0.0001% at 1 atm in the liquid phase"; IAPWS R12-08 states the
+# viscosity's "uncertainty of 0.17 % at 293.15 K" (the releases themselves tabulate neither value at 20 C).
+# (T in deg C, density kg/m^3, dynamic viscosity Pa s), 7 digits as printed.
+WATER_1ATM = (
+    (0.01, 999.8438, 0.001791132),
+    (1, 999.9018, 0.001731021),
+    (2, 999.9430, 0.001673515),
+    (3, 999.9672, 0.001619009),
+    (4, 999.9749, 0.001567292),
+    (5, 999.9666, 0.001518173),
+    (6, 999.9429, 0.001471477),
+    (7, 999.9043, 0.001427043),
+    (8, 999.8510, 0.001384724),
+    (9, 999.7836, 0.001344385),
+    (10, 999.7025, 0.001305900),
+    (11, 999.6079, 0.001269155),
+    (12, 999.5003, 0.001234043),
+    (13, 999.3801, 0.001200468),
+    (14, 999.2474, 0.001168337),
+    (15, 999.1026, 0.001137568),
+    (16, 998.9461, 0.001108081),
+    (17, 998.7780, 0.001079806),
+    (18, 998.5986, 0.001052674),
+    (19, 998.4083, 0.001026624),
+    (20, 998.2072, 0.001001596),
+    (21, 997.9955, 0.0009775372),
+    (22, 997.7735, 0.0009543962),
+    (23, 997.5414, 0.0009321258),
+    (24, 997.2994, 0.0009106817),
+    (25, 997.0476, 0.0008900225),
+    (26, 996.7864, 0.0008701093),
+    (27, 996.5158, 0.0008509058),
+    (28, 996.2360, 0.0008323778),
+    (29, 995.9471, 0.0008144932),
+    (30, 995.6495, 0.0007972218),
+    (31, 995.3431, 0.0007805353),
+    (32, 995.0281, 0.0007644068),
+    (33, 994.7048, 0.0007488114),
+    (34, 994.3731, 0.0007337251),
+    (35, 994.0333, 0.0007191256),
+    (36, 993.6855, 0.0007049918),
+    (37, 993.3298, 0.0006913036),
+    (38, 992.9663, 0.0006780421),
+    (39, 992.5951, 0.0006651895),
+    (40, 992.2164, 0.0006527287))
+WATER_SOURCE = T("NIST Chemistry WebBook SRD 69 (isobar 0.101325 MPa, retrieved 2026-11-04): IAPWS-95 (Wagner & Pruß "
+                 "2002) and the IAPWS 2008 viscosity (Huber et al. 2009)")
+# Air: U.S. Standard Atmosphere 1976 (NOAA/NASA/USAF, NASA-TM-X-74335, NTRS 19770009539): ideal gas
+# rho = P M0 / (R* T) with M0 = 28.9644 kg/kmol (p. 9), R* = 8.31432e3 N m/(kmol K) (p. 3; table 2 on p. 2 prints the
+# exponent wrongly), P0 = 1.013250e5 Pa (table 2); dynamic viscosity eq. (51), p. 19: mu = beta T^(3/2) / (T + S),
+# beta = 1.458e-6 kg/(s m K^(1/2)), S = 110.4 K ("basically from kinetic theory, but with constants derived from
+# experiment"; table 2 prints S = 110 K, the text 110.4 K). Checked against the standard's table I (p. 52): sea level
+# 288.150 K, 1.01325e3 mb, 1.2250 kg/m^3.
+# Re-read from the page images on 2026-11-14 (design explore_2026-11-14 §4; printed page N = PDF page N + 16): R* p. 3,
+# P0 p. 3 ("adopted in 1947 in Resolution 164 of the International Meteorological Organization"), T0 = 288.15 K p. 4,
+# M0 p. 9 (section 1.2.4), eq. (51) p. 19 (section 1.3.11: "S is Sutherland's constant, equal to 110.4 K"; table 2B on
+# p. 2 and the list on p. 4 print 110 K; the tabulated sea-level viscosity, table III p. 100, 1.7894e-5 N s/m^2, is the
+# formula's with 110.4 K, 1.78938e-5, not with 110 K, 1.79118e-5). An independent modern check (test_mechanics_air):
+# dry air on the 0.101325 MPa isobar, Lemmon, Jacobsen, Penoncello & Friend, J. Phys. Chem. Ref. Data 29, 331 (2000),
+# table A2 (290 K: 0.042040 mol/dm^3, 300 K: 0.040634 mol/dm^3, M = 28.9586 g/mol): 1.21742 and 1.17670 kg/m^3, the
+# formula 1.21718 and 1.17661 (-1.9e-4, -8e-5; the standard's M0 is 2e-4 above the modern molar mass); the dilute-gas
+# viscosity of Lemmon & Jacobsen, Int. J. Thermophys. 25, 21 (2004), table V, at 300 K: 18.5230 uPa s ("1 % in the
+# dilute gas for air"), the formula 18.460 uPa s (-0.34 %).
+AIR_M0, AIR_RSTAR, AIR_BETA, AIR_S, P_ATM = 28.9644, 8.31432e3, 1.458e-6, 110.4, 1.013250e5
+AIR_SOURCE = T("U.S. Standard Atmosphere 1976 (NASA-TM-X-74335): ideal gas with M0 = 28.9644 kg/kmol, R* = "
+               "8.31432·10³ J/(kmol·K) (pp. 3, 9); viscosity by formula (51) with β = 1.458·10⁻⁶, S = 110.4 K (p. 19)")
+
+
+def fluid_properties(name: str, T_C: float = 20.0, p: float = P_ATM) -> dict:
+    """Density (kg/m^3), dynamic viscosity mu (Pa s) and kinematic viscosity nu (m^2/s) of "water" (at 1 atm, 0.01-40 C:
+    the WebBook's IAPWS values at whole degrees, density interpolated linearly and log(mu) linearly in T; on every
+    second row the interpolation errs by at most 3.4e-4 in mu and 8.5e-6 in rho, so on the whole-degree table by about
+    a quarter of that: ~1e-4 and ~2e-6, tests) or "air" (dry air, any T from -50 to 100 C and pressure ``p`` in Pa:
+    the U.S. Standard Atmosphere 1976 formulas), with the source."""
+    import numpy as np
+    if name == "water":
+        if p != P_ATM:
+            raise ValueError(T("water: only at 1 atm (101325 Pa)"))
+        tab = np.array(WATER_1ATM)
+        if not (tab[0, 0] <= T_C <= tab[-1, 0]):
+            raise ValueError(T("water: the table runs from {lo} to {hi} °C", lo=float(tab[0, 0]), hi=float(tab[-1, 0])))
+        at = np.flatnonzero(tab[:, 0] == T_C)
+        if len(at):  # a tabulated temperature: the value as printed
+            rho, mu = float(tab[at[0], 1]), float(tab[at[0], 2])
+        else:
+            rho = float(np.interp(T_C, tab[:, 0], tab[:, 1]))
+            mu = float(np.exp(np.interp(T_C, tab[:, 0], np.log(tab[:, 2]))))
+        src = WATER_SOURCE
+    elif name == "air":
+        if not (-50.0 <= T_C <= 100.0) or not p > 0:
+            raise ValueError(T("air: from −50 to 100 °C, pressure > 0"))
+        TK = T_C + 273.15  # kelvin (not "T": that name is the translatable text, lfphys.i18n)
+        rho = p * AIR_M0 / (AIR_RSTAR * TK)
+        mu = AIR_BETA * TK**1.5 / (TK + AIR_S)
+        src = AIR_SOURCE
+    else:
+        raise ValueError(T("fluid {name}: 'water' or 'air'", name=repr(name)))
+    return {"name": name, "T_C": float(T_C), "p": float(p), "rho": rho, "mu": mu, "nu": mu / rho, "source": src}
+
+
+FLUIDS = {"water_20C": fluid_properties("water", 20.0), "air_20C": fluid_properties("air", 20.0)}

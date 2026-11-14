@@ -144,7 +144,8 @@ the collision on ``LBM_THREADS`` threads by row blocks) or on GPU 0 (a CuPy kern
 thread's. Reductions for diagnostics (totals) differ between devices by round-off only. Measured speeds: ``RATES``.
 
 Units: SI (2-D quantities per metre of depth: forces N/m, masses kg/m); ``Units`` converts. Fluid data with their
-sources: ``fluid_properties`` (water: IAPWS values from the NIST WebBook; air: the U.S. Standard Atmosphere 1976).
+sources: ``fluid_properties`` (water: IAPWS values from the NIST WebBook; air: the U.S. Standard Atmosphere 1976), kept
+in ``lfphys.core.data`` since 2026-11-14 and re-exported here.
 """
 
 from __future__ import annotations
@@ -259,99 +260,10 @@ PRIORITY = {"wall": 0, "inlet": 1, "outlet": 2, "periodic": 3}
 
 
 # --- fluids: cited data ------------------------------------------------------------------------------------------------
-# Water at 0.101325 MPa: NIST Chemistry WebBook, SRD 69, "Isobaric Properties for Water" at 0.101325 MPa, fetched
-# 2026-11-04, computed there from IAPWS-95 (Wagner & Pruss, J. Phys. Chem. Ref. Data 31, 387 (2002); IAPWS R6-95(2016))
-# for the density and the IAPWS 2008 viscosity formulation (Huber et al., J. Phys. Chem. Ref. Data 38, 101 (2009));
-# the WebBook states the uncertainty of the density "0.0001% at 1 atm in the liquid phase"; IAPWS R12-08 states the
-# viscosity's "uncertainty of 0.17 % at 293.15 K" (the releases themselves tabulate neither value at 20 C).
-# (T in deg C, density kg/m^3, dynamic viscosity Pa s), 7 digits as printed.
-WATER_1ATM = (
-    (0.01, 999.8438, 0.001791132),
-    (1, 999.9018, 0.001731021),
-    (2, 999.9430, 0.001673515),
-    (3, 999.9672, 0.001619009),
-    (4, 999.9749, 0.001567292),
-    (5, 999.9666, 0.001518173),
-    (6, 999.9429, 0.001471477),
-    (7, 999.9043, 0.001427043),
-    (8, 999.8510, 0.001384724),
-    (9, 999.7836, 0.001344385),
-    (10, 999.7025, 0.001305900),
-    (11, 999.6079, 0.001269155),
-    (12, 999.5003, 0.001234043),
-    (13, 999.3801, 0.001200468),
-    (14, 999.2474, 0.001168337),
-    (15, 999.1026, 0.001137568),
-    (16, 998.9461, 0.001108081),
-    (17, 998.7780, 0.001079806),
-    (18, 998.5986, 0.001052674),
-    (19, 998.4083, 0.001026624),
-    (20, 998.2072, 0.001001596),
-    (21, 997.9955, 0.0009775372),
-    (22, 997.7735, 0.0009543962),
-    (23, 997.5414, 0.0009321258),
-    (24, 997.2994, 0.0009106817),
-    (25, 997.0476, 0.0008900225),
-    (26, 996.7864, 0.0008701093),
-    (27, 996.5158, 0.0008509058),
-    (28, 996.2360, 0.0008323778),
-    (29, 995.9471, 0.0008144932),
-    (30, 995.6495, 0.0007972218),
-    (31, 995.3431, 0.0007805353),
-    (32, 995.0281, 0.0007644068),
-    (33, 994.7048, 0.0007488114),
-    (34, 994.3731, 0.0007337251),
-    (35, 994.0333, 0.0007191256),
-    (36, 993.6855, 0.0007049918),
-    (37, 993.3298, 0.0006913036),
-    (38, 992.9663, 0.0006780421),
-    (39, 992.5951, 0.0006651895),
-    (40, 992.2164, 0.0006527287))
-WATER_SOURCE = T("NIST Chemistry WebBook SRD 69 (isobar 0.101325 MPa, retrieved 2026-11-04): IAPWS-95 (Wagner & Pruß "
-                 "2002) and the IAPWS 2008 viscosity (Huber et al. 2009)")
-# Air: U.S. Standard Atmosphere 1976 (NOAA/NASA/USAF, NASA-TM-X-74335, NTRS 19770009539): ideal gas
-# rho = P M0 / (R* T) with M0 = 28.9644 kg/kmol (p. 9), R* = 8.31432e3 N m/(kmol K) (p. 3; table 2 on p. 2 prints the
-# exponent wrongly), P0 = 1.013250e5 Pa (table 2); dynamic viscosity eq. (51), p. 19: mu = beta T^(3/2) / (T + S),
-# beta = 1.458e-6 kg/(s m K^(1/2)), S = 110.4 K ("basically from kinetic theory, but with constants derived from
-# experiment"; table 2 prints S = 110 K, the text 110.4 K). Checked against the standard's table I (p. 52): sea level
-# 288.150 K, 1.01325e3 mb, 1.2250 kg/m^3.
-AIR_M0, AIR_RSTAR, AIR_BETA, AIR_S, P_ATM = 28.9644, 8.31432e3, 1.458e-6, 110.4, 1.013250e5
-AIR_SOURCE = T("U.S. Standard Atmosphere 1976 (NASA-TM-X-74335): ideal gas with M0 = 28.9644 kg/kmol, R* = "
-               "8.31432·10³ J/(kmol·K) (pp. 3, 9); viscosity by formula (51) with β = 1.458·10⁻⁶, S = 110.4 K (p. 19)")
-
-
-def fluid_properties(name: str, T_C: float = 20.0, p: float = P_ATM) -> dict:
-    """Density (kg/m^3), dynamic viscosity mu (Pa s) and kinematic viscosity nu (m^2/s) of "water" (at 1 atm, 0.01-40 C:
-    the WebBook's IAPWS values at whole degrees, density interpolated linearly and log(mu) linearly in T; on every
-    second row the interpolation errs by at most 3.4e-4 in mu and 8.5e-6 in rho, so on the whole-degree table by about
-    a quarter of that: ~1e-4 and ~2e-6, tests) or "air" (dry air, any T from -50 to 100 C and pressure ``p`` in Pa:
-    the U.S. Standard Atmosphere 1976 formulas), with the source."""
-    if name == "water":
-        if p != P_ATM:
-            raise ValueError(T("water: only at 1 atm (101325 Pa)"))
-        tab = np.array(WATER_1ATM)
-        if not (tab[0, 0] <= T_C <= tab[-1, 0]):
-            raise ValueError(T("water: the table runs from {lo} to {hi} °C", lo=float(tab[0, 0]), hi=float(tab[-1, 0])))
-        at = np.flatnonzero(tab[:, 0] == T_C)
-        if len(at):  # a tabulated temperature: the value as printed
-            rho, mu = float(tab[at[0], 1]), float(tab[at[0], 2])
-        else:
-            rho = float(np.interp(T_C, tab[:, 0], tab[:, 1]))
-            mu = float(np.exp(np.interp(T_C, tab[:, 0], np.log(tab[:, 2]))))
-        src = WATER_SOURCE
-    elif name == "air":
-        if not (-50.0 <= T_C <= 100.0) or not p > 0:
-            raise ValueError(T("air: from −50 to 100 °C, pressure > 0"))
-        TK = T_C + 273.15  # kelvin (not "T": that name is the translatable text, lfphys.i18n)
-        rho = p * AIR_M0 / (AIR_RSTAR * TK)
-        mu = AIR_BETA * TK**1.5 / (TK + AIR_S)
-        src = AIR_SOURCE
-    else:
-        raise ValueError(T("fluid {name}: 'water' or 'air'", name=repr(name)))
-    return {"name": name, "T_C": float(T_C), "p": float(p), "rho": rho, "mu": mu, "nu": mu / rho, "source": src}
-
-
-FLUIDS = {"water_20C": fluid_properties("water", 20.0), "air_20C": fluid_properties("air", 20.0)}
+# moved to lfphys.core.data (one place for measured data, design explore_2026-11-14 §4); re-exported here unchanged, so
+# ``lbm.fluid_properties``, ``lbm.FLUIDS``, ``lbm.WATER_1ATM``, ... keep working
+from ..data import (AIR_BETA, AIR_M0, AIR_RSTAR, AIR_S, AIR_SOURCE, FLUIDS, P_ATM, WATER_1ATM,  # noqa: E402,F401
+                    WATER_SOURCE, fluid_properties)
 
 # --- reference data of the benchmarks (the tests and the playground's comparisons; sources/verification_2026-11-04_p8_lbm.md)
 # Ghia, Ghia & Shin, J. Comput. Phys. 48, 387 (1982), the driven cavity: Table I (u on the vertical centre line) and Table

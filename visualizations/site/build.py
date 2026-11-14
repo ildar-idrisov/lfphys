@@ -7,7 +7,7 @@ page §4.5, §5.1; CONTRACT of steps S and P).
 
 What it writes into ``--out`` (served at ``--base``, e.g. https://ildar-idrisov.github.io/lfphys/):
 
-* ``index.html``, ``run.html``, ``legal.html``: the player's pages with ``<meta name="lf-mode" content="static">``,
+* ``index.html``, ``run.html``, ``legal.html``, ``worksheet.html`` (a lab's worksheet, once the player has it): the player's pages with ``<meta name="lf-mode" content="static">``,
   ``<meta name="lf-base" content="<base>">`` and the import map's targets made relative (``"/static/"`` ->
   ``"./static/"``, ``"/viz/"`` -> ``"./viz/"``, ``three`` -> ``./static/vendor/…``); nothing else in a page is
   rewritten (CONTRACT, Additions). A page that still lacks a meta or the import map gets one, with a warning.
@@ -18,10 +18,12 @@ What it writes into ``--out`` (served at ``--base``, e.g. https://ildar-idrisov.
   ``api/recordings.json``, ``api/health.json`` (``{version, visualizations, cite}``): what the server's ``GET /api/…`` returns;
   ``aliases.json`` (``registry.ALIASES``);
 * ``recordings/<world>/``: each world's ``index.json`` and the files it names, from ``--recordings`` (``DIR/<world>/``
-  or, as the CI's artifacts land, ``DIR/rec-<world>/``), only the entries the registry asks for now (review F13);
+  or, as the CI's artifacts land, ``DIR/rec-<world>/``), only the entries the registry asks for now (review F13); its
+  atlases ``recordings/<world>/atlas/<atlas>/`` (the manifest, the base and the points it names; design of 2026-11-14
+  §1.3), only those the registry asks for;
   ``api/recordings.json`` carries the public site's ``site`` and ``published`` (``site/site.json``);
 * ``images/<id>.jpg``: each world's poster from ``docs/images/`` (the cards' pictures); ``legal/<name>``: the full texts the licence page shows;
-* ``site-manifest.json``: every file with its size and sha256, every world and recording with its key and state
+* ``site-manifest.json``: every file with its size and sha256, every world, recording and atlas with its key and state
   (``present`` | ``stale`` | ``missing``), checked by ``site/check.py``.
 
 The build itself fails only when the output folder is not its own (a non-empty folder without ``site-manifest.json``);
@@ -46,7 +48,12 @@ from lfviz import __version__, i18n, registry  # noqa: E402
 from lfviz import app as A  # noqa: E402
 from lfviz.i18n import T  # noqa: E402
 
-PAGES = ("index.html", "run.html", "legal.html")
+PAGES = ("index.html", "run.html", "legal.html", "worksheet.html")
+
+
+def pages() -> tuple:
+    """The player's pages the site carries (``worksheet.html`` once the player has it)."""
+    return tuple(n for n in PAGES if (A.PLAYER / n).is_file())
 SKIP = {"tests", "legacy", "node_modules", "__pycache__"}
 IMPORTMAP = re.compile(r'<script\s+type="importmap"\s*>(.*?)</script>', re.S)
 META = '<meta name="{name}" content="{value}">'
@@ -183,9 +190,38 @@ def copy_recordings(src: Path | None, out: Path, worlds: list[str]) -> dict:
             shutil.copy2(f, out / "recordings" / vid / f.name)
             keep.append(e)
         idx["recordings"] = keep
+        idx["atlases"] = copy_atlases(d, out / "recordings" / vid, vid, idx.get("atlases") or [])
         _dump(out / "recordings" / vid / "index.json", idx)
         got[vid] = idx
     return got
+
+
+def copy_atlases(src: Path, dst: Path, vid: str, entries: list) -> list:
+    """Copy a world's atlases that the registry asks for (design of 2026-11-14 §1.3): each manifest with its base and
+    the point files it names; an atlas whose files are not all there is left out (the check says it is missing)."""
+    planned = {a["id"] for a in registry.atlases_of(registry.load(vid))}
+    keep = []
+    for e in entries:
+        if e.get("id") not in planned:
+            _warn(f"{vid}: atlas {e.get('id')} is in its index but not asked for by the registry: left out")
+            continue
+        man_f = src / str(e.get("file", ""))
+        try:
+            man = json.loads(man_f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            _warn(f"{vid}: atlas {e.get('id')}: its manifest {e.get('file')} is missing or unreadable")
+            continue
+        names = [man["base"]["file"]] + [p[0] for p in man.get("points") or [] if p and p[0]]
+        missing = [n for n in names if not (man_f.parent / n).is_file()]
+        if missing:
+            _warn(f"{vid}: atlas {e.get('id')}: {len(missing)} files named in its manifest are missing")
+            continue
+        to = dst / Path(e["file"]).parent
+        to.mkdir(parents=True, exist_ok=True)
+        for n in names + [man_f.name]:
+            shutil.copy2(man_f.parent / n, to / n)
+        keep.append(e)
+    return keep
 
 
 def build(recordings: Path | None, out: Path, base: str) -> dict:
@@ -238,7 +274,7 @@ def build(recordings: Path | None, out: Path, base: str) -> dict:
             shutil.copy2(src, out / "legal" / name)
 
     # the pages
-    for name in PAGES:
+    for name in pages():
         (out / name).write_text(page(A.PLAYER / name, base), encoding="utf-8")
     (out / "404.html").write_text(page_404(base), encoding="utf-8")
 
@@ -249,9 +285,13 @@ def build(recordings: Path | None, out: Path, base: str) -> dict:
         st = L.status(out / "recordings", p)
         idx = rec_list["worlds"].get(vid) or {}
         files = {e["id"]: e.get("file") for e in idx.get("recordings") or []}
+        ast = L.atlas_status(out / "recordings", p)
+        afiles = {e["id"]: e.get("file") for e in idx.get("atlases") or []}
         worlds[vid] = {"version": p["version"], "code_hash": p["code_hash"], "key": p["key"],
                        "recordings": {r["id"]: {"key": r["key"], "state": st[r["id"]], "file": files.get(r["id"])}
-                                      for r in p["recordings"]}}
+                                      for r in p["recordings"]},
+                       "atlases": {a["id"]: {"key": a["key"], "state": ast[a["id"]], "file": afiles.get(a["id"])}
+                                   for a in p["atlases"]}}
     for vid in ids:
         if vid not in worlds:
             worlds[vid] = {"version": registry.load(vid).get("version", ""), "recordings": {}}
@@ -262,13 +302,16 @@ def build(recordings: Path | None, out: Path, base: str) -> dict:
             files[rel] = {"bytes": f.stat().st_size, "sha256": L.sha256_file(f)}
     manifest = {"base": base, "built": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
                 "version": __version__, "recorder": L.RECORDER_VERSION, "cite": registry.citation(),
-                "languages": list(i18n.LANGS), "pages": list(PAGES) + ["404.html"], "worlds": worlds,
+                "languages": list(i18n.LANGS), "pages": list(pages()) + ["404.html"], "worlds": worlds,
                 "files": files}
     _dump(out / "site-manifest.json", manifest)
     total = sum(v["bytes"] for v in files.values())
     n_rec = sum(1 for w in worlds.values() for r in w["recordings"].values() if r["state"] == "present")
     n_all = sum(len(w["recordings"]) for w in worlds.values())
-    print(f"site: {len(files)} files, {total / L.MB:.1f} MB, {n_rec} of {n_all} recordings present, base {base}")
+    n_at = sum(1 for w in worlds.values() for a in (w.get("atlases") or {}).values() if a["state"] == "present")
+    n_at_all = sum(len(w.get("atlases") or {}) for w in worlds.values())
+    print(f"site: {len(files)} files, {total / L.MB:.1f} MB, {n_rec} of {n_all} recordings and {n_at} of {n_at_all} "
+          f"atlases present, base {base}")
     return manifest
 
 

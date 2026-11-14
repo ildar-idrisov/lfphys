@@ -13,7 +13,7 @@
 //    the checks appear, the canvas is not blank;
 //  - EVERY recording of api/recordings.json loads (review P17-site F5: a missing view, vendor or locale module shows up
 //    only when its world is played): the frames the player holds are the index's «frames», going to «poster_frame»
-//    shows «poster_t»; an old id (aliases.json) plays too; an unknown recording id says so with a link to the start
+//    shows «poster_t» (a recording of several worlds: it loads, with at most the index's frames; STATUS.md V52); an old id (aliases.json) plays too; an unknown recording id says so with a link to the start
 //    page, not «No recording for this version» (integrator D4);
 //  - the server's addresses on the site (start-page F12): run.html?id=… and a bare run.html say «This site plays
 //    recordings; runs are computed by a local server», never a raw parse error or a server address «/run?id=…»;
@@ -21,6 +21,10 @@
 //    running server» with the way to the quick start;
 //  - the school banner is honest: «Ready: k of n» with k the school worlds of api/viz.json and n = k + the school items
 //    of api/planned.json; nothing startable;
+//  - the screens (design lfphys/sources/explore_2026-11-14_design.md §3, §8 "site_smoke"): every card's screen buttons
+//    link run.html?demo=<world>&screen=<id> under the base; EVERY screen of every world with screens opens on the site
+//    (Watch: its recording and captions; Explore: its atlas's default point; Lab work: its first step's point), with no
+//    request to the live endpoint; the worksheet page (worksheet.html?demo=…) renders a lab's worksheet;
 //  - legal.html shows the full texts (each loaded, not empty) and the citation;
 //  - English: no Cyrillic in the visible text of any page; Russian: the page is in Russian.
 // The texts are compared in the language under test through the player's own i18n.js and the site's catalogue
@@ -164,13 +168,17 @@ for (const lang of LANGS) {
     const s = await page.evaluate(() => ({
       cards: [...document.querySelectorAll(".st-card")].map((c) => c.id),
       live: document.querySelectorAll(".st-card button.primary").length,
-      recs: [...document.querySelectorAll(".st-card a.button")].map((a) => a.getAttribute("href")),
+      recs: [...document.querySelectorAll(".st-card a.button:not(.st-screen)")].map((a) => a.getAttribute("href")),
+      screens: [...document.querySelectorAll(".st-card a.st-screen")].map((a) => a.getAttribute("href")),
       h1: document.querySelector(".st-head h1")?.innerText || "",
     }));
     check("#university: the heading", s.h1.toLowerCase().includes(tr("University").toLowerCase()), { h1: s.h1 });
     check("#university: a card per university world", s.cards.length === count("university") && s.cards.length > 0, { cards: s.cards.length, worlds: count("university") });
     check("#university: recording links under the base, no «▶ Compute live»", s.live === 0 && s.recs.length > 0
       && s.recs.every((h) => h && h.startsWith(`${PREFIX}run.html?rec=`)), { live: s.live, recs: s.recs.slice(0, 3) });
+    const withScreens = viz.filter((v) => v.audience === "university" && (v.screens || []).length);
+    check("#university: the screens' links under the base (run.html?demo=…&screen=…)", s.screens.length >= withScreens.length
+      && s.screens.every((h) => h && new RegExp(`^${PREFIX}run\\.html\\?demo=\\w+&screen=\\w+`).test(h)), { screens: s.screens.slice(0, 4) });
     await language(page, "#university");
     await shot(page, "university");
     await page.close();
@@ -202,6 +210,46 @@ for (const lang of LANGS) {
     await language(page, "#labs");
     await shot(page, "labs");
     await page.close();
+  }
+
+  // every screen of every world with screens, on the site (design of 2026-11-14 §3.8, §8)
+  for (const v of viz.filter((x) => (x.screens || []).length)) {
+    for (const sc of v.screens) {
+      const page = await open(`run.html?demo=${v.id}&screen=${sc.id}`, { ms: 0 });
+      const out = { screen: `${v.id}/${sc.id}` };
+      try {
+        await page.waitForFunction((id) => { const e = document.querySelector(`.dm-screen[data-screen="${id}"]`); return e && !e.hidden; }, sc.id, { timeout: 60000 });
+        if (sc.kind === "watch") {
+          await page.waitForFunction(() => window.__lfWatch && window.__lfWatch.state.story, null, { timeout: 120000 });
+          out.captions = await page.evaluate(() => window.__lfWatch.state.story.captions.length);
+          out.ok = out.captions >= 1;
+        } else if (sc.kind === "explore") {
+          await page.waitForFunction((id) => window.__lfExplore && window.__lfExplore[id] && window.__lfExplore[id].point(), sc.id, { timeout: 60000 });
+          out.point = await page.evaluate((id) => window.__lfExplore[id].point().i, sc.id);
+          out.ok = out.point !== null && out.point !== undefined;
+        } else {
+          await page.waitForFunction(() => window.__lfLab && window.__lfLab.step() && window.__lfLab.step().cur, null, { timeout: 60000 });
+          out.ok = true;
+        }
+        await sleep(400);
+        const nb = await page.evaluate(() => { const c = document.querySelector(".dm-screen:not([hidden]) canvas"); return !!c && c.width > 0; });
+        check(`${out.screen}: the screen opens on the site`, out.ok && nb, out);
+        await language(page, out.screen);
+        await shot(page, `screen_${v.id}_${sc.id}`, false);
+      } catch (e) { check(`${out.screen}: the screen opens on the site`, false, { error: e.message.split("\n")[0].slice(0, 200), errs: errs.slice(-3) }); }
+      await page.close();
+    }
+    const lab = v.screens.find((x) => x.kind === "lab");
+    if (lab) {
+      const page = await open(`worksheet.html?demo=${v.id}`, { ms: 0 });
+      const ok = await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 60000 }).then(() => true, () => false);
+      const txt = ok ? await page.locator("#ws").innerText() : "";
+      check(`${v.id}: the worksheet renders on the site`, ok && txt.includes(tr(lab.steps[0].title)), { ok, sample: txt.slice(0, 120) });
+      // the programme's own lab name is quoted in Russian in every language («…»): the rest is in the language
+      if (lang === "en") check(`worksheet ${v.id}: no Cyrillic but the programme's own wording`, !CYR.test(txt.replace(/«[^»]*»/g, "")));  // i18n-ok
+      else check(`worksheet ${v.id}: in the language`, CYR.test(txt));
+      await page.close();
+    }
   }
 
   // a recording plays
@@ -253,8 +301,12 @@ for (const lang of LANGS) {
           await sleep(200);
           out.t = await page.evaluate(() => window.__lfPlayer.t());
         }
-        const okFrames = out.frames === r.frames;
-        const okPoster = r.poster_frame === undefined || Math.abs(out.t - r.poster_t) <= 1e-9 * Math.max(1, Math.abs(r.poster_t));
+        // a recording of several worlds (a script's new_world; S03's «independence»: 4) holds, in this player, the frames
+        // of the world it shows (the last), so the index's whole count and the poster's index do not apply to it (its
+        // Watch screen plays it whole; STATUS.md V52): it loads with at most the index's frames
+        const multi = (r.worlds || 1) > 1;
+        const okFrames = multi ? out.frames > 0 && out.frames <= r.frames : out.frames === r.frames;
+        const okPoster = multi || r.poster_frame === undefined || Math.abs(out.t - r.poster_t) <= 1e-9 * Math.max(1, Math.abs(r.poster_t));
         if (okFrames && okPoster) played++; else badRecs.push({ ...out, want: r.frames, poster_t: r.poster_t });
       } catch (e) { badRecs.push({ ...out, error: e.message.split("\n")[0].slice(0, 160) }); }
       await page.close();

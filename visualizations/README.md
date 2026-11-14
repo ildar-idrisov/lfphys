@@ -16,7 +16,7 @@ verified physics; approximations, interpretations, models and alternatives are s
 wrapper over the engine; which of its modules the current world uses, the player shows in the panel "Physics of this
 world".
 
-Each visualization belongs to one audience, named by its folder's prefix and numbered as in the plan: `uNN_` university, `rNN_` research, `sNN_` school (planned), `pNN_` laboratories. The worlds were renamed on 2026-11-13 (`v02_double_slit` is now `u32_double_slit`, `v11_double_slit_2d` is `r12_double_slit_2d`, …); the old ids still work in addresses and in old runs (the table: [`RULES.md`](RULES.md) §8).
+Each visualization belongs to one audience, named by its folder's prefix and numbered as in the plan: `uNN_` university, `rNN_` research, `sNN_` school (the first, `s03_projectile`, since 2026-11-14; the rest planned), `pNN_` laboratories. The worlds were renamed on 2026-11-13 (`v02_double_slit` is now `u32_double_slit`, `v11_double_slit_2d` is `r12_double_slit_2d`, …); the old ids still work in addresses and in old runs (the table: [`RULES.md`](RULES.md) §8).
 
 The interface speaks English (the default) and Russian: the switch **EN | RU** in the top bar of every page changes
 the language at once and is remembered in this browser; `?lang=ru` or `?lang=en` in the address overrides it in that
@@ -72,12 +72,17 @@ docker run --rm -v "$PWD":/lf:ro -w /lf/visualizations node:24 \
 **University**, **Research** and **Laboratories**. A tile opens its page (`/#school`, `/#university`, `/#research`,
 `/#labs`; the old address `/#playground` leads to the laboratories): the demonstrations by section in teaching order,
 the section chips with their counts, and a search box ("Search…"); at school, "By:" section or grade. The school
-demonstrations are being built along the curriculum: until they land, the school page shows the planned ones as planned,
-with what is already there at another level on the same topic. The planned university and research items are listed
+demonstrations are being built along the curriculum: the school page shows the ready ones (since 2026-11-14,
+«Projectile motion», s03) and, honestly, the planned ones as planned ("Ready: 1 of 45"), with what is already there at
+another level on the same topic. The planned university and research items are listed
 folded, by section, under the worlds. Under the tiles, "Continue:" shows the last runs that are open or paused, each with its state ("computing" or "paused").
 
 On a demonstration's card: its picture, its title, what you will see, its courses (university) or its question, "Status:
-hypothesis" and the prior art (research); "Scenario:" (the presets); **"▶ Compute live"**: the server starts a new run
+hypothesis" and the prior art (research). A demonstration with screens (see "Screens: Watch, Explore, Lab work" below)
+shows them first: **"▷ Watch m:ss"**, **"◎ Explore"**, **"✎ Lab work"**, each opening its tab of the demonstration's page;
+a screen whose recording or atlas has not been made yet is greyed, with "Not made yet: build it locally (site/record.py)
+or compute live". A school card has only these and, on a server, "▶ Compute live". A university or research card then
+has "Scenario:" (the presets); **"▶ Compute live"**: the server starts a new run
 and opens the player; **"▷ Recording m:ss"**: plays the scenario's saved recording at once, with nothing computed. It
 is enabled when this server has the recording, or when the public site is published and has it from the same version of
 the world; otherwise it is greyed, with the tooltip "No recording yet: record it locally (site/record.py) or compute live"
@@ -209,10 +214,11 @@ docker run --rm --memory=12g -e LFPHYS_NO_GPU=1 --user "$(id -u):$(id -g)" -v "$
     lfphys-viz python3 site/record.py --stale            # or: --world u32_double_slit (repeatable), --all
 ```
 
-`--stale` records the worlds whose recordings are missing or were made by other code: a recording's key covers its
-scenario, the recorder's version and the code a run executes (the world's folder, `server/lfviz/` without the server's
-own `app.py` and `runs.py`, and the engine). Most worlds take seconds to two minutes; the exact two-slit world r12 about
-20 minutes. Each file must stay within the site's budget (3 MB aimed at, 10 MB at most; a world 12 MB, at most 25 MB); a
+`--stale` records the worlds whose recordings or atlases (the screens Explore and Lab work, see below) are missing or
+were made by other code, and builds the atlases after the recordings: a key covers its scenario, the recorder's version
+and the code a run executes (the world's folder, `server/lfviz/` without the server's own `app.py` and `runs.py`, and the
+engine). Most worlds take seconds to two minutes; the exact two-slit world r12 about 20 minutes. Each file must stay
+within the site's budget (3 MB aimed at, 10 MB at most; a world, its atlases included, 12 MB, at most 25 MB); a
 recording over the limit fails with the advice to shorten it in the world's `VIZ["recordings"]`. The pictures of the
 cards and of the README (`docs/images/<id>.jpg`) are taken from the recordings by `site/posters.mjs`.
 
@@ -233,12 +239,61 @@ laboratories are greyed with "Works only with a running server"; there is no "My
 `.github/workflows/pages.yml` (active since 2026-11-14). A push to `main` checks, records and builds; the site is
 deployed only when the author starts the workflow by hand (Actions → pages → Run workflow) with `deploy: true`.
 
+## Screens: Watch, Explore, Lab work
+
+Since 2026-11-14 a school or university demonstration can have three screens, the tabs of one page
+(`/run?demo=<world>&screen=watch|explore|lab` on a server, `run.html?demo=…` on the public site): **Watch**, **Explore**
+and **Lab work**. They work on the public site too, because everything they show was computed by the engine
+beforehand: the recordings and the **atlases** (the world's own runs at every grid point of the controls). The first are
+`s03_projectile` (all three) and `u32_double_slit` (Watch and Explore); the other demonstrations keep the full player
+and get their screens batch by batch. The tab is part of the address, so a link opens the same screen; switching tabs
+keeps each screen's state. **"How we know this is right"** in the top bar (under ☰ on a phone) opens one drawer with the
+checks of what is shown against the accepted formulas, "Physics of this world", the events and the passport (where the
+data came from: the atlas's key, the code, the seed, the point). On a phone (390 px) the page is one column: the
+picture, the controls, the time bar at the bottom.
+
+* **Watch** — a recording of a real run with captions: what to look at, step by step. The caption under the picture
+  changes as the time goes; each caption is a tick on the timeline (a click goes there), and ◀◀ / ▶▶ go to the previous
+  or the next caption. A caption may hold the playback for a few seconds so that it can be read. u32's other recordings
+  are under "More recordings".
+* **Explore** — the controls at the side (sliders and switches) stop only at the computed points: every position is a
+  run the engine computed; nothing between them is drawn. "▶ Launch" (s03) throws the chosen point from t = 0; a change
+  of a control arms the next launch, and the earlier launches stay as faded traces with their values ("Clear traces"
+  removes them). In u32 a change acts at once and keeps the number of hits, so two set-ups are compared at equal
+  counts. "Show" toggles what is drawn (the path, the dots every 0.1 s, the velocity, the forces, the energy; in u32 the
+  expectation curve, the curve without interference, the wave, the flow lines). The readouts (s03: range, flight time,
+  highest point) are "—" until the run's time reaches the event that defines them. A combination the world refuses (s03:
+  from the floor at 0°) says why, and ▶ is off. On a server, **"▶ Compute live"** in the top bar opens the full player
+  on the same set-up, the sliders also move between the computed points, and a value between them is computed on the
+  server when released (labelled "computed live" in the passport and on its trace); in u32 "Another sample" draws
+  another set of hits of the same statistics.
+* **Lab work** (s03) — a laboratory experiment in parts ("Part 1 of 3: …"), each with its goal, its set-up and its
+  instruments drawn over the picture (the measuring tape on the floor, the ruler, the protractor at the launcher, the
+  stopwatch). Launch, then "Measure": every instrument of the part is read at the moment shown, rounded to its division
+  and with its error; a row goes into the table (a row can be deleted, "Clear the table" empties it, the table downloads
+  as CSV with the errors). The plot shows the points with their error bars and the fitted line; the fit gives its
+  parameter with its error. **"Check against the law"** compares it with the law computed by the world (✓ within two
+  errors, or ✗ with a hint). The stopwatch is pressed by hand and measures your own reaction (about 0.1 s), so it
+  refuses the slow speed. The table is kept in this browser.
+* **The worksheet** — "The worksheet (print) →" in the lab's card opens it (`/worksheet?demo=s03_projectile`,
+  `worksheet.html?demo=…` on the site): the programme's lab name (in Russian, with its translation in English), the
+  goal, the parts with their instruments, a blank table and the axes of the plot, the equipment and the questions, one
+  printed A4 page per part ("🖨 Print"). "For the teacher" adds the answers, the notes for the teacher and the laws'
+  values on pages of their own. Every printed page carries the line that credits the materials (they are under
+  CC BY-NC-SA 4.0).
+
+**Making the atlases locally.** `site/record.py` builds a world's atlases right after its recordings (the command in
+"Recording locally" above; s03 and u32 take about a minute each), into `visualizations/recordings/<world>/atlas/`;
+`site/atlas.py --world <id>` builds only the atlases. A screen whose atlas is missing says "Not made yet". The details
+for developers: [`RULES.md`](RULES.md) §10.
+
 ---
 
 ## Visualizations
 
 | folder | what it shows | what for |
 |---|---|---|
+| [`s03_projectile/`](s03_projectile/README.md) | a ball thrown horizontally or at an angle from a height, in vacuum or in air (a light 67 mm ball or a steel 20 mm one): the flight computed by the engine, the range, the flight time and the highest point; a dropped ball next to a thrown one; the same throw in vacuum for comparison; the screens Watch, Explore and Lab work (three parts: height and range, angle and range, how air moves the best angle) with a printable worksheet | school grades 7 and 10: the independence of the horizontal and vertical motions, L ∝ √h, the maximum at 45° without air and below it in air; measuring, plotting and checking against the law |
 | [`u31_light_travel/`](u31_light_travel/README.md) | light from the Sun to the Earth (the front flies for 8 min 17 s), gravitational deflection and delay at a black hole and a star, the speed of light measured by observers at rest and moving along and against the light, clock synchronisation, the relativity of simultaneity (the Andromeda paradox), Doppler and gravitational redshift | the light cone, the absoluteness of the speed of light, the Andromeda paradox; the laws can be changed: an ether, ballistic light, Newtonian corpuscles, another c |
 | [`u32_double_slit/`](u32_double_slit/README.md) | particles one by one through slits (a photon with its energy, frequency, polarisation; an electron, a neutron, an atom, C60, a particle of your own), a which-path observer (a qubit detector, photon scattering), marks by polarisation and spin, the quantum eraser, the Aharonov–Bohm effect, partial coherence, Bohm's flow lines; the screen with slits is Kirchhoff's scalar model (the default) or a perfect conductor of a given thickness (slits up to 20.7 λ): vector diffraction for both polarisations (TE — E along the slits, TM — across), the photons' hits by the energy flow of the vector solution, next to it the scalar curve, the difference (if it exceeds the method's error estimate), the power balance and the method's error estimate | how the particle behaves and why interference appears and disappears; the laws can be changed: the Born-rule exponent, GRW collapse, a forced choice of slit |
 | [`u33_quantum_1d/`](u33_quantum_1d/README.md) | an electron as a wave packet at a barrier, a double barrier, a step, a well or in a harmonic trap: tunnelling, resonance, levels; detectors at the edges absorb the wave | transmission by the exact solution of the Schrödinger equation against the stationary reference; one computation read three ways: a click and a collapse, Bohm trajectories, Everett's branches |

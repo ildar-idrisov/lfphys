@@ -13,8 +13,13 @@
 //    research cards: the question, «Status: hypothesis», «Prior art: n references»; the section chips say aria-pressed;
 //  - «▶ Compute live» starts a run and opens it in the player; the home's «Continue» then names it as computing or
 //    paused, never as a recording (integrator D1); the run is left to suspend (there is no stop);
-//  - the school page before AB1: the honest banner «Ready: 0 of n», planned cards, nothing startable, «Already there at
-//    another level» links;
+//  - the school page before AB1: the honest banner «Ready: k of n» (k = 1 since s03: «Ready: 1 of 45»), planned cards,
+//    the ready card(s) with their screens only (and «▶ Compute live» on a server), no scenario list, no «▷ Recording»,
+//    no options, «Already there at another level» links;
+//  - the screens' buttons of every card with screens (design lfphys/sources/explore_2026-11-14_design.md §3.1, §3.10,
+//    §8): in the registry's order «▷ Watch m:ss», «◎ Explore», «✎ Lab work»; each enabled with its link
+//    /run?demo=<world>&screen=<id> exactly when its recording or atlases exist (/api/recordings), else greyed with the
+//    reason; a click opens the screen's tab in the demonstration page;
 //  - the laboratories (server): «▶ Begin», «Laws…», «📂 From a scene file…» and the planned benches; the old #playground
 //    opens them;
 //  - /runs: the runs table and the retention setting;
@@ -156,20 +161,23 @@ for (const [hash, aud] of [["university", "university"], ["research", "research"
   if (aud === "school") {
     const P = planned.filter((p) => p.audience === "school");
     check("school: the banner «Ready: k of n»", s.text.includes(tr("Ready: {k:d} of {n:d}.", { k: n("school"), n: n("school") + P.length })), { want: tr("Ready: {k:d} of {n:d}.", { k: n("school"), n: n("school") + P.length }) });
-    check("school: planned cards, nothing startable", s.planned >= 1 && !(await page.$(".st-card button.primary")) && (n("school") > 0 || !(await page.$(".st-card"))), { planned: s.planned });
+    check("school: s03 is ready (k ≥ 1) and has its card", n("school") >= 1 && !!(await page.$("#card-s03_projectile")), { k: n("school") });
+    check("school: planned cards; a ready card has its screens only (no scenario list, no «▷ Recording», no primary «▶ Compute live»)",
+      s.planned >= 1 && !(await page.$(".st-card button.primary")) && !(await page.$(".st-card select")) && !(await page.$(".st-card a.button:not(.st-screen)"))
+      && (await page.$$eval(".st-card", (a) => a.every((c) => c.querySelectorAll("a.st-screen").length >= 1))), { planned: s.planned });
     check("school: «Already there at another level» links", s.text.includes(tr("Already there at another level:")) && !!(await page.$(".st-there a[href^='#university/'], .st-there a[href^='#research/']")));
     check("school: no modified physics or options", !(await page.$(".st-moreopts")));
   } else {
     const live = await page.$$eval(".st-card button.primary", (a) => a.map((b) => b.textContent));
     check(`${hash}: «▶ Compute live» on every card`, live.length === s.cards && live.every((x) => x === tr("▶ Compute live")), { n: live.length, cards: s.cards });
-    const rb = await page.$$eval(".st-card a.button", (a) => a.map((b) => ({ text: b.textContent, href: b.getAttribute("href"), off: b.classList.contains("disabled"), title: b.title })));
+    const rb = await page.$$eval(".st-card a.button:not(.st-screen)", (a) => a.map((b) => ({ text: b.textContent, href: b.getAttribute("href"), off: b.classList.contains("disabled"), title: b.title })));
     check(`${hash}: «▷ Recording» on the cards`, rb.length === s.cards && rb.every((b) => b.off ? [tr("No recording yet: record it locally (site/record.py) or compute live"), tr("No recording for this scenario: compute it live")].includes(b.title) : /\/run\?rec=\w+(\/|%2F)\w+/.test(b.href)), { rb: rb.slice(0, 3) });
     // enabled only where this server has the recording (the test server's site is unpublished: D4)
     const pub = (await get("/api/recordings")).published === true;
     if (!pub) {
       const wrong = [];
       for (const v of viz.filter((x) => x.audience === aud)) {
-        const b = await page.$eval(`#card-${v.id} a.button`, (e) => ({ off: e.classList.contains("disabled"), href: e.getAttribute("href") || "" }));
+        const b = await page.$eval(`#card-${v.id} a.button:not(.st-screen)`, (e) => ({ off: e.classList.contains("disabled"), href: e.getAttribute("href") || "" }));
         const m = decodeURIComponent(b.href).match(/rec=[^/]+\/([^&]+)/);
         const local = !!(recs[v.id] && m && (recs[v.id].recordings || []).some((r) => r.id === m[1]));
         if (b.off ? false : !local) wrong.push(v.id);
@@ -178,7 +186,7 @@ for (const [hash, aud] of [["university", "university"], ["research", "research"
     }
     const local = viz.filter((v) => v.audience === aud && recs[v.id]);
     for (const v of local) {
-      const b = await page.$eval(`#card-${v.id} a.button`, (e) => ({ text: e.textContent, href: e.getAttribute("href") }));
+      const b = await page.$eval(`#card-${v.id} a.button:not(.st-screen)`, (e) => ({ text: e.textContent, href: e.getAttribute("href") }));
       const r = recs[v.id].recordings[0];
       check(`${hash}: ${v.id} «▷ Recording m:ss» of its local recording`, b.href.includes(`rec=${v.id}%2F${r.id}`) || b.href.includes(`rec=${v.id}/${r.id}`), b);
     }
@@ -201,6 +209,41 @@ for (const [hash, aud] of [["university", "university"], ["research", "research"
     }
   }
   await page.close();
+}
+
+// the screens' buttons of every card with screens (design of 2026-11-14 §3.1, §3.10, §8)
+{
+  const mss = (sec) => { const x = Math.round(sec || 0); return `${Math.floor(x / 60)}:${String(x % 60).padStart(2, "0")}`; };
+  const withScreens = viz.filter((v) => (v.screens || []).length);
+  check("screens: at least s03 and u32 have screens", ["s03_projectile", "u32_double_slit"].every((id) => withScreens.some((v) => v.id === id)), { ids: withScreens.map((v) => v.id) });
+  for (const v of withScreens) {
+    const page = await open(ctx, `${v.audience === "playground" ? "labs" : v.audience}/${v.id}`);
+    const got = await page.$$eval(`#card-${v.id} a.st-screen`, (a) => a.map((b) => ({ id: b.dataset.screen, text: b.textContent,
+      href: b.getAttribute("href") || "", off: b.classList.contains("disabled"), aria: b.getAttribute("aria-disabled"), title: b.title })));
+    const idx = recs[v.id] || {};
+    const atl = new Set((idx.atlases || []).map((a) => a.id));
+    const want = v.screens.map((s) => {
+      if (s.kind === "watch") {
+        const r = (idx.recordings || []).find((x) => x.id === s.recording);
+        return { id: s.id, ready: !!r, label: r ? tr("▷ Watch {time}", { time: mss(r.seconds) }) : tr("▷ Watch") };
+      }
+      if (s.kind === "explore") return { id: s.id, ready: atl.has(s.atlas), label: tr("◎ Explore") };
+      return { id: s.id, ready: (s.steps || []).length > 0 && s.steps.every((st) => atl.has(st.atlas)), label: tr("✎ Lab work") };
+    });
+    check(`screens: ${v.id} buttons in the registry's order with their labels`, got.length === want.length
+      && want.every((w, i) => got[i].id === w.id && got[i].text === w.label), { got: got.map((g) => g.text), want: want.map((w) => w.label) });
+    const bad = want.filter((w, i) => !got[i] || (w.ready
+      ? got[i].off || !new RegExp(`/run(\\.html)?\\?demo=${v.id}&screen=${w.id}(&|$)`).test(got[i].href)
+      : !got[i].off || got[i].href || got[i].aria !== "true" || got[i].title !== tr("Not made yet: build it locally (site/record.py) or compute live")));
+    check(`screens: ${v.id} enabled with /run?demo=…&screen=… exactly when made, else greyed with the reason`, !bad.length, { bad, got });
+    const first = got.find((g) => !g.off);
+    if (first) {
+      await Promise.all([page.waitForURL(/\/run\?demo=/, { timeout: 30000 }), page.click(`#card-${v.id} a.st-screen[data-screen="${first.id}"]`)]);
+      const tab = await page.waitForSelector(`.dm-tabs button[data-screen="${first.id}"][aria-selected="true"]`, { timeout: 30000 }).then(() => true, () => false);
+      check(`screens: ${v.id} «${first.text}» opens its screen`, tab && new URL(page.url()).searchParams.get("screen") === first.id, { url: page.url() });
+    }
+    await page.close();
+  }
 }
 
 // «▶ Compute live» starts a run and opens the player

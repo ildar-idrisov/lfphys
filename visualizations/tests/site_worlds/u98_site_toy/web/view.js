@@ -4,11 +4,11 @@
 import { el } from "/static/js/ui.js";
 
 export function createView(ctx) {
+  // the player's view contract: the view returns its own `center` element and draws a frame in `render(meta, t, blobs)`
   const out = el("pre", { id: "site-toy-x" });
-  ctx.center.append(out);
   return {
+    center: out,
     onHeader() {},
-    onFrame(meta) { out.textContent = `x = ${meta.x}`; },
-    draw() {},
+    render(meta) { out.textContent = `x = ${meta.x}`; },
   };
 }

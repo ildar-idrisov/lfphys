@@ -395,6 +395,10 @@ audiences.
 
 ### 5.2 The school mode of the player (`VIZ["ui"] = "school"`)
 
+> **Superseded on 2026-11-14** by the screens Watch, Explore and Lab work (design `explore_2026-11-14_design.md`,
+> plan P17.5, batch EX1; what the code keeps: `../../visualizations/RULES.md` §10). The guided steps became the lab's
+> steps; `VIZ["guide"]` is retired. The text below is the plan as written on 2026-11-12.
+
 - One scene (2-D by default; 3-D only where the experiment is 3-D), large labels, SI units with school prefixes;
   works at tablet and Chromebook widths; keyboard and colour-blind-safe palette.
 - **Guided steps** («Шаг 1 из 4»): each step names the goal, enables its controls (≤ 5), and says what to measure; the
@@ -450,6 +454,11 @@ regex to three digits. A is clearer for users and makes the prefix check trivial
 (open question 2).
 
 ### 5.4 The public site and school demos
+
+> **Decided on 2026-11-14** (owner, `../../AGENTS.md` §1): way (a), recorded parameter lattices, as the atlases of the
+> screens Explore and Lab work (design `explore_2026-11-14_design.md` §1; `../../visualizations/RULES.md` §10); the
+> sliders stop only at computed points, and a server computes any value live. The text below is the plan as written on
+> 2026-11-12.
 
 The site plays recordings (rule 15). A school lab is interactive by nature (the student changes the length and
 measures). Two ways, for the owner to choose (open question 3):

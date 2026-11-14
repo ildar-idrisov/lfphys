@@ -16,11 +16,16 @@ the plan of the audiences (owner, 2026-11-13: «Номер = id в плане»;
   §5.1), ``ui`` (``school`` | ``standard`` | ``full``; default by the audience, ``school`` if and only if the audience is
   school), ``teaser`` (one line: what you will see), ``related`` (the same topic at other levels: world ids or the ids
   of planned items, ``planned.json``);
-* per audience: school ``curriculum`` (a ФРП anchor and an AP/IB/AQA anchor) and ``guide``; university ``courses``
+* per audience: school ``curriculum`` (a ФРП anchor and an AP/IB/AQA anchor); university ``courses``
   (``[{"text": T, "chapters": str}]``); research ``question`` (T), ``prior_art`` (``[{"ref", "url"}]``) and ``status``
-  (``"hypothesis"`` until reproduced: ``AGENTS.md`` rule 11);
+  (``"hypothesis"`` until reproduced: ``AGENTS.md`` rule 11); the former school ``guide`` is retired (design of
+  2026-11-14 §2.5: the lab's steps replace it);
 * ``recordings`` (not for the laboratories, at least one): what the public site plays, ``[{"id", "preset", "seconds",
-  "fps"[, "speed", "seed", "script", "poster"]}]`` (``RECORDING_LIMITS``; the recorder of the site follows them);
+  "fps"[, "speed", "seed", "script", "poster", "captions", "quantize"]}]`` (``RECORDING_LIMITS``; the recorder of the
+  site follows them; a script may also change the playback ``speed``; ``captions`` ``[{"at", "text": T, "hold"?}]``);
+* ``screens`` (design ``lfphys/sources/explore_2026-11-14_design.md`` §2): the demonstration's Watch, Explore and Lab work,
+  in tab order (``check_screens``; normalised for the catalogue by ``screens_of``, their atlases listed by
+  ``atlases_of``); a school world needs Explore and Lab work (or ``lab_absent``: a T, why the programme has no lab);
 * ``kind`` is derived from the audience (``playground`` for the laboratories, else ``demo``).
 
 ``load`` checks all of this (``check``); ``describe`` gives the catalogue's entry. The old ids (``v01_light_travel`` …,
@@ -32,6 +37,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib
+import json
 import os
 import re
 import sys
@@ -109,7 +115,7 @@ UIS = ("school", "standard", "full")
 #: what a recording spec may ask of the site's recorder (DESIGN §4.1, §4.3): the played seconds, the frames per played
 #: second, their product, and the commands of a script (the ones a viewer of a live run may send that change the world)
 RECORDING_LIMITS = {"seconds": (1.0, 180.0), "fps": (1, 30), "frames": 3600,
-                    "commands": ("set", "action", "view", "new_world")}
+                    "commands": ("set", "action", "view", "new_world", "speed")}
 _REC_ID = re.compile(r"^[a-z0-9_]{1,40}$")
 _PLANNED_ID = re.compile(r"^[SUR]\d{2}$|^p\d{2}$")
 
@@ -210,8 +216,6 @@ def check(viz: dict) -> list[str]:
             out.append("a school world needs an FRP anchor (the Russian federal programme) in curriculum")
         if not any(s.startswith(("AP", "IB", "AQA")) for s in systems):
             out.append("a school world needs an AP, IB or AQA anchor in curriculum")
-        if not viz.get("guide"):
-            out.append("a school world needs its guide")
         schema = viz.get("schema")
         laws = [p.id for p in getattr(schema, "params", []) if getattr(p, "standard", None) is not None]
         if laws:
@@ -228,7 +232,10 @@ def check(viz: dict) -> list[str]:
             out.append("a research world needs its prior art: [{'ref': ..., 'url': ...}]")
         if viz.get("status") != "hypothesis":
             out.append("a research world's status is 'hypothesis' until reproduced (AGENTS.md rule 11)")
+    if "guide" in viz:
+        out.append("guide is retired (design of 2026-11-14 §2.5): the lab's steps replace it")
     out += _check_recordings(viz, aud["id"])
+    out += check_screens(viz)
     return out
 
 
@@ -271,6 +278,517 @@ def _check_recordings(viz: dict, audience: str) -> list[str]:
                     or not isinstance(c.get("at"), (int, float)) or (isinstance(sec, (int, float)) and not 0 <= c["at"] <= sec):
                 out.append(f"recording {rid}: script entry {c!r}: {{'at': seconds, 'cmd': one of {lim['commands']}, "
                            f"'args': {{...}}}}")
+            elif c["cmd"] == "speed":
+                v = (c.get("args") or {}).get("value")
+                if isinstance(v, bool) or not isinstance(v, (int, float)) or not v > 0:
+                    out.append(f"recording {rid}: script entry {c!r}: speed takes {{'value': world seconds per played "
+                               f"second > 0}}")
+        out += [f"recording {rid}: {x}" for x in _check_captions(r.get("captions"), sec)]
+        out += [f"recording {rid}: {x}" for x in _check_quantize(r.get("quantize"))]
+        if r.get("quantize"):
+            out += _check_quant_declared(r["quantize"], view_declarations(viz), f"recording {rid}")
+    return out
+
+
+def _check_captions(caps, seconds) -> list[str]:
+    """``captions``: ``[{"at": played seconds, "text": T, "hold": seconds?}]``, in order of ``at`` (design §2.2)."""
+    if caps is None:
+        return []
+    if not isinstance(caps, list):
+        return [f"captions {caps!r}: a list of {{'at', 'text': T, 'hold'?}}"]
+    out, last = [], -1.0
+    for c in caps:
+        at = c.get("at") if isinstance(c, dict) else None
+        if not isinstance(c, dict) or isinstance(at, bool) or not isinstance(at, (int, float)) \
+                or (isinstance(seconds, (int, float)) and not 0 <= at <= seconds):
+            out.append(f"caption {c!r}: 'at' is a time within the recording")
+            continue
+        if at < last:
+            out.append(f"caption at {at}: the captions are in the order of their times")
+        last = at
+        if not _is_text(c.get("text")):
+            out.append(f"caption at {at}: its text is a T")
+        hold = c.get("hold")
+        if hold is not None and (isinstance(hold, bool) or not isinstance(hold, (int, float)) or not hold > 0):
+            out.append(f"caption at {at}: hold {hold!r} is a positive number of seconds")
+    return out
+
+
+_QKEY = re.compile(r"^[a-z_][a-z0-9_]*\.[A-Za-z0-9_]+(\|[A-Za-z0-9_]+)*$")
+
+
+def quantize_items(qmap) -> list[tuple[str, str, str]]:
+    """A ``quantize`` map expanded: ``{"detections.t|x": "u16"}`` -> ``[("detections", "t", "u16"), ("detections", "x",
+    "u16")]``."""
+    out = []
+    for key, enc in (qmap or {}).items():
+        typ, _, names = key.partition(".")
+        out += [(typ, b, enc) for b in names.split("|")]
+    return out
+
+
+def _check_quantize(qmap) -> list[str]:
+    """A ``quantize`` map: keys ``<message type>.<blob>[|<blob>…]``, values an encoding of
+    ``protocol.QUANT_ENCODINGS`` (design §1.3, §2.5)."""
+    from .protocol import QUANT_ENCODINGS, quant_encoding_ok  # noqa: PLC0415
+    if qmap is None:
+        return []
+    if not isinstance(qmap, dict):
+        return [f"quantize {qmap!r}: a map {{'<type>.<blob>': encoding}}"]
+    out = []
+    for key, enc in qmap.items():
+        if not isinstance(key, str) or not _QKEY.match(key):
+            out.append(f"quantize key {key!r}: '<message type>.<blob>[|<blob>…]'")
+        if not quant_encoding_ok(enc):
+            out.append(f"quantize {key!r}: {enc!r} is none of {sorted(QUANT_ENCODINGS)} (optionally ':col' or ':all')")
+    return out
+
+
+# --- screens: Watch, Explore, Lab work (design lfphys/sources/explore_2026-11-14_design.md §2) ----------------------
+SCREEN_KINDS = ("watch", "explore", "lab")
+#: the default tab labels (the glossary of the design §10, question 1)
+SCREEN_LABELS = {"watch": T("Watch"), "explore": T("Explore"), "lab": T("Lab work")}
+ACTS = ("next", "now")
+TIMES = ("flight", "buildup", "none")
+INSTRUMENT_KINDS = ("ruler", "protractor", "stopwatch", "readout")
+COLUMN_OPS = ("sqrt", "square", "sin2", "inverse", "log")
+FITS = ("line0", "line", "quadratic", "power")
+LAW_QUANTITIES = ("slope", "intercept", "vertex", "exponent")
+#: the limits of an atlas (design §1.8): controls per atlas by ``ui``; points (the product of the value counts): the
+#: target (over it the registry warns through ``tests/test_site_registry.py``) and the hard limit; earlier points kept
+ATLAS_LIMITS = {"controls": {"school": 5, "standard": 6, "full": 6}, "points": (1500, 3000), "traces": (0, 5)}
+#: what an atlas may never drop: what makes a point a world (rules 2, 3) and what says it is right
+UNDROPPABLE = frozenset({"header", "frame", "end", "check", "event", "error", "notice", "caption", "state", "live"})
+_SLUG = re.compile(r"^[a-z][a-z0-9_]{0,39}$")
+_COL = re.compile(r"^[A-Za-z][A-Za-z0-9_]{0,39}$")  # a lab table's column (L, sqrt_h)
+
+
+def _num(x) -> bool:
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+
+def _check_stop(stop, where: str) -> list[str]:
+    """An atlas point's stop rule (design §1.2): ``{"world_s": t}`` or ``{"event": kind, "after_s": s,
+    "max_world_s": t}``."""
+    if isinstance(stop, dict) and set(stop) == {"world_s"} and _num(stop["world_s"]) and stop["world_s"] > 0:
+        return []
+    if isinstance(stop, dict) and set(stop) <= {"event", "after_s", "max_world_s"} \
+            and isinstance(stop.get("event"), str) and stop["event"] \
+            and _num(stop.get("after_s", 0)) and stop.get("after_s", 0) >= 0 \
+            and _num(stop.get("max_world_s")) and stop["max_world_s"] > 0:
+        return []
+    return [f"{where}: stop {stop!r} is {{'world_s': t}} or {{'event': kind, 'after_s': s, 'max_world_s': t}}"]
+
+
+def _view_js(viz: dict) -> str | None:
+    try:
+        f = folder(viz.get("id") or "") / "web" / "view.js"
+    except KeyError:
+        return None
+    try:
+        return f.read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+
+def _bracketed(text: str, start: int, open_: str, close: str) -> str:
+    """The text from ``start`` (an opening bracket) to its matching close, strings skipped."""
+    depth, i, quote = 0, start, None
+    while i < len(text):
+        ch = text[i]
+        if quote:
+            if ch == "\\":
+                i += 1
+            elif ch == quote:
+                quote = None
+        elif ch in "\"'`":
+            quote = ch
+        elif ch == open_:
+            depth += 1
+        elif ch == close:
+            depth -= 1
+            if depth == 0:
+                return text[start:i + 1]
+        i += 1
+    return text[start:]
+
+
+def view_declarations(viz: dict) -> dict:
+    """What a world's view declares for the screens (design §2.4), read from its ``web/view.js``: ``quantSafe`` (the
+    blobs it accepts quantised: an object literal of string pairs, ``quantSafe: {"traj.s": "u16"}`` or
+    ``const QUANT_SAFE = {…}``) and the ids of its ``overlays`` (an array literal of ``{id: "…", …}``, ``overlays: […]`` or
+    ``const OVERLAYS = […]``). None for a key the view does not declare."""
+    js = _view_js(viz)
+    out = {"quantSafe": None, "overlays": None}
+    if js is None:
+        return out
+    js = re.sub(r"/\*.*?\*/|(?:^|(?<=\s))//.*?$", "", js, flags=re.S | re.M)  # comments (a URL's // stays)
+    m = re.search(r"\b(?:quantSafe|QUANT_SAFE)\s*[:=]\s*\{", js)
+    if m:
+        body = _bracketed(js, m.end() - 1, "{", "}")
+        out["quantSafe"] = dict(re.findall(r"[\"']([^\"']+)[\"']\s*:\s*[\"']([^\"']+)[\"']", body))
+    m = re.search(r"\b(?:overlays|OVERLAYS)\s*[:=]\s*\[", js)
+    if m:
+        body = _bracketed(js, m.end() - 1, "[", "]")
+        out["overlays"] = re.findall(r"\bid\s*:\s*[\"']([\w.-]+)[\"']", body)
+    return out
+
+
+def _quant_safe(enc: str, declared: str | None) -> bool:
+    """A quantisation the view declared safe: the same encoding, or a finer one of the same transform (u16 where u8 is
+    safe, u16sqrt where u8sqrt is)."""
+    if not declared:
+        return False
+    want, have = enc.partition(":")[0], declared.partition(":")[0]
+    return want == have or (want, have) in {("u16", "u8"), ("u16sqrt", "u8sqrt")}
+
+
+def _check_quant_declared(qmap, decl: dict, where: str) -> list[str]:
+    safe = decl.get("quantSafe") or {}
+    return [f"{where}: quantize {typ}.{blob}: {enc} is not declared safe by the view (its quantSafe: "
+            f"{safe.get(f'{typ}.{blob}')!r})" for typ, blob, enc in quantize_items(qmap)
+            if _enc_ok(enc) and not _quant_safe(enc, safe.get(f"{typ}.{blob}"))]
+
+
+def _enc_ok(enc) -> bool:
+    from .protocol import quant_encoding_ok  # noqa: PLC0415
+    return quant_encoding_ok(enc)
+
+
+def _check_drop(drop, where: str) -> list[str]:
+    if drop is None:
+        return []
+    if not isinstance(drop, dict) or set(drop) - {"types", "frame_blobs"} \
+            or not all(isinstance(drop.get(k, []), list) and all(isinstance(x, str) for x in drop.get(k, []))
+                       for k in ("types", "frame_blobs")):
+        return [f"{where}: drop {drop!r} is {{'types': [message types], 'frame_blobs': [blob names]}}"]
+    bad = sorted(set(drop.get("types", [])) & UNDROPPABLE)
+    return [f"{where}: drop: {bad} cannot be dropped (they make a point a world and say it is right)"] if bad else []
+
+
+def _check_controls(viz, controls, preset, fixed, where: str, limit: int) -> list[str]:
+    schema = viz.get("schema")
+    by_id = getattr(schema, "by_id", {}) or {}
+    out = []
+    if not isinstance(controls, list) or not controls:
+        return [f"{where}: controls: a list of {{'param', 'values', 'default'?}}"]
+    if len(controls) > limit:
+        out.append(f"{where}: {len(controls)} controls, at most {limit} at ui {viz.get('ui')!r}")
+    seen, n = set(), 1
+    for c in controls:
+        if not isinstance(c, dict) or c.get("param") not in by_id:
+            out.append(f"{where}: control {c!r}: 'param' is a parameter of the schema")
+            continue
+        pid = c["param"]
+        if pid in seen:
+            out.append(f"{where}: control {pid} twice")
+        seen.add(pid)
+        if pid in (fixed or {}):
+            out.append(f"{where}: {pid} is both a control and fixed")
+        p = by_id[pid]
+        if p.standard is not None and viz.get("ui") == "school":
+            out.append(f"{where}: {pid} is a law parameter: no modified physics at school (rule 4)")
+        vals = c.get("values")
+        if not isinstance(vals, list) or not vals or len({json.dumps(v) for v in vals}) != len(vals):
+            out.append(f"{where}: control {pid}: values is a list of distinct values")
+            continue
+        n *= len(vals)
+        for v in vals:
+            _p, errs = schema.resolve(preset, {**(fixed or {}), pid: v})
+            if errs:
+                out.append(f"{where}: control {pid}: value {v!r} refused by the schema: {[str(e) for e in errs]}")
+        if "default" in c and c["default"] not in vals:
+            out.append(f"{where}: control {pid}: default {c['default']!r} is not one of its values")
+        if c.get("label") is not None and not _is_text(c["label"]):
+            out.append(f"{where}: control {pid}: label is a T")
+        if c.get("unit") is not None and not (_is_text(c["unit"]) or isinstance(c["unit"], str)):
+            out.append(f"{where}: control {pid}: unit is a T or a string (a symbol such as \"nm\")")
+    pmin, pmax = ATLAS_LIMITS["points"]
+    if n > pmax:
+        out.append(f"{where}: {n} grid points, at most {pmax}")
+    return out
+
+
+def _check_atlas_common(viz, sc, where: str, decl: dict) -> list[str]:
+    out = []
+    presets = getattr(viz.get("schema"), "presets", {}) or {}
+    if sc.get("preset") not in presets:
+        out.append(f"{where}: preset {sc.get('preset')!r} is not one of the world's")
+    fixed = sc.get("fixed") or {}
+    if not isinstance(fixed, dict):
+        out.append(f"{where}: fixed is a map of parameter values")
+        fixed = {}
+    elif sc.get("preset") in presets:
+        _p, errs = viz["schema"].resolve(sc["preset"], fixed)
+        if errs:
+            out.append(f"{where}: fixed {fixed!r} refused by the schema: {[str(e) for e in errs]}")
+    fdt = sc.get("frame_dt")
+    if not _num(fdt) or not fdt > 0:
+        out.append(f"{where}: frame_dt {fdt!r} is a positive number of world seconds")
+    if not isinstance(sc.get("seed", 1), int) or isinstance(sc.get("seed", 1), bool):
+        out.append(f"{where}: seed is an integer")
+    out += _check_stop(sc.get("stop"), where)
+    out += _check_drop(sc.get("drop"), where)
+    out += [f"{where}: {x}" for x in _check_quantize(sc.get("quantize"))]
+    out += _check_quant_declared(sc.get("quantize"), decl, where)
+    limit = ATLAS_LIMITS["controls"].get(viz.get("ui"), 6)
+    out += _check_controls(viz, sc.get("controls"), sc.get("preset") if sc.get("preset") in presets else None,
+                           fixed, where, limit)
+    return out
+
+
+def _check_lab(viz, sc, where: str, decl: dict) -> list[str]:
+    out = []
+    by_id = getattr(viz.get("schema"), "by_id", {}) or {}
+    instr = sc.get("instruments")
+    if not isinstance(instr, dict) or not instr:
+        out.append(f"{where}: instruments: a map {{id: {{kind, label, unit, division, error?, reads | manual, event?}}}}")
+        instr = {}
+    for iid, d in instr.items():
+        w = f"{where}: instrument {iid}"
+        if not isinstance(d, dict) or not _SLUG.match(str(iid)):
+            out.append(f"{w}: an id (slug) and a map")
+            continue
+        if d.get("kind") not in INSTRUMENT_KINDS:
+            out.append(f"{w}: kind {d.get('kind')!r} is none of {INSTRUMENT_KINDS}")
+        if not _is_text(d.get("label")):
+            out.append(f"{w}: label is a T")
+        if not isinstance(d.get("unit"), str):
+            out.append(f"{w}: unit is a string")
+        if not _num(d.get("division")) or not d["division"] > 0:
+            out.append(f"{w}: division is a positive number")
+        if d.get("error") is not None and (not _num(d["error"]) or d["error"] < 0):
+            out.append(f"{w}: error is a number ≥ 0 (default: half a division)")
+        if d.get("error_note") is not None and not _is_text(d["error_note"]):
+            out.append(f"{w}: error_note is a T")
+        if d.get("event") is not None and (not isinstance(d["event"], str) or not d["event"]):
+            out.append(f"{w}: event is the kind or name of the event at which its reading stops (a string)")
+        reads, manual = d.get("reads"), bool(d.get("manual"))
+        if manual:
+            if d.get("kind") != "stopwatch":
+                out.append(f"{w}: only a stopwatch is manual")
+        elif not isinstance(reads, str) or not reads:
+            out.append(f"{w}: reads a measurable of the world ('range') or a set-up value ('control:<param>')")
+        elif reads.startswith("control:") and reads[8:] not in by_id:
+            out.append(f"{w}: reads {reads!r}: no such parameter")
+    steps = sc.get("steps")
+    if not isinstance(steps, list) or not steps:
+        out.append(f"{where}: steps: a list of the lab's parts")
+        steps = []
+    sids = set()
+    for st in steps:
+        if not isinstance(st, dict):
+            out.append(f"{where}: step {st!r} is a map")
+            continue
+        sid = st.get("id")
+        w = f"{where}: step {sid}"
+        if not isinstance(sid, str) or not _SLUG.match(sid) or sid in sids:
+            out.append(f"{where}: step id {sid!r}: a unique slug")
+        sids.add(sid)
+        for k in ("title", "goal"):
+            if not _is_text(st.get(k)):
+                out.append(f"{w}: {k} is a T")
+        if st.get("hint") is not None and not _is_text(st["hint"]):
+            out.append(f"{w}: hint is a T")
+        out += _check_atlas_common(viz, st, w, decl)
+        used = st.get("instruments")
+        if not isinstance(used, list) or not used or not all(u in instr for u in used):
+            out.append(f"{w}: instruments {used!r}: a list of the lab's instruments")
+            used = [u for u in used or [] if u in instr] if isinstance(used, list) else []
+        cols, cids = st.get("columns"), []
+        if not isinstance(cols, list) or not cols:
+            out.append(f"{w}: columns: a list of {{id, label, from | of + op}}")
+            cols = []
+        for c in cols:
+            cid = c.get("id") if isinstance(c, dict) else None
+            if not isinstance(cid, str) or not _COL.match(cid) or cid in cids:
+                out.append(f"{w}: column {c!r}: a unique slug id")
+                continue
+            if not _is_text(c.get("label")):
+                out.append(f"{w}: column {cid}: label is a T")
+            if "from" in c:
+                if c["from"] not in used:
+                    out.append(f"{w}: column {cid}: from {c['from']!r} is not an instrument of the step")
+            elif c.get("of") not in cids or c.get("op") not in COLUMN_OPS:
+                out.append(f"{w}: column {cid}: 'from' an instrument, or 'of' an earlier column with 'op' one of "
+                           f"{COLUMN_OPS}")
+            cids.append(cid)
+        plot = st.get("plot")
+        if not isinstance(plot, dict) or plot.get("x") not in cids or plot.get("y") not in cids:
+            out.append(f"{w}: plot {plot!r}: {{x, y}} name columns of the step")
+        else:
+            fits = plot.get("fits") or ([plot["fit"]] if plot.get("fit") else [])
+            allowed = [f for f in FITS if f != "power" or viz.get("ui") != "school"]
+            if plot.get("fit") is not None and plot["fit"] not in fits:
+                out.append(f"{w}: plot: fit {plot['fit']!r} is not among its fits {fits}")
+            for f in fits:
+                if f not in allowed:
+                    out.append(f"{w}: plot: fit {f!r} is none of {allowed} (power only above school)")
+        law = st.get("law")
+        if law is not None:
+            if not isinstance(law, dict) or law.get("quantity") not in LAW_QUANTITIES or not _is_text(law.get("label")) \
+                    or not isinstance(law.get("unit"), str) or not isinstance(law.get("reference"), str) \
+                    or not law["reference"]:
+                out.append(f"{w}: law {law!r}: {{quantity: one of {LAW_QUANTITIES}, label: T, unit, reference: id}}")
+            elif not callable(getattr(viz.get("simulation"), "lab_reference", None)):
+                out.append(f"{w}: law: the world's Simulation has no lab_reference(step_id, fixed, values)")
+    ws = sc.get("worksheet")
+    if not isinstance(ws, dict):
+        out.append(f"{where}: worksheet: {{frp: [{{name: T, …}}], equipment: [T], questions: [{{q: T, answer: T}}], "
+                   f"teacher: [T]}}")
+    else:
+        frp = ws.get("frp")
+        if not isinstance(frp, list) or not frp or not all(isinstance(x, dict) and _is_text(x.get("name"))
+                                                           for x in frp):
+            out.append(f"{where}: worksheet: frp is a list of {{name: T (the programme's words), …}}")
+        for k in ("equipment", "teacher"):
+            if not isinstance(ws.get(k), list) or not all(_is_text(x) for x in ws[k]):
+                out.append(f"{where}: worksheet: {k} is a list of T")
+        qs = ws.get("questions")
+        if not isinstance(qs, list) or not qs or not all(isinstance(x, dict) and _is_text(x.get("q"))
+                                                         and _is_text(x.get("answer")) for x in qs):
+            out.append(f"{where}: worksheet: questions is a list of {{q: T, answer: T}}")
+    return out
+
+
+def check_screens(viz: dict) -> list[str]:
+    """What is wrong with ``VIZ["screens"]`` (design §2.1, §2.3, §2.5). What needs the world built (the readouts and
+    the instruments' measurables in its header, ``lab_reference``, a refused default point) is checked when the atlas
+    is built (``site/atlas.py``)."""
+    aud = viz.get("audience")
+    screens = viz.get("screens")
+    out = []
+    if screens is None:
+        screens = []
+    if not isinstance(screens, list):
+        return ["screens: a list of {id, kind, label?, …} in tab order"]
+    if screens and aud == "playground":
+        return ["a laboratory has no screens: it computes what its user builds"]
+    if viz.get("lab_absent") is not None and not _is_text(viz["lab_absent"]):
+        out.append("lab_absent is a T: why the programme has no lab for the topic")
+    kinds = [s.get("kind") for s in screens if isinstance(s, dict)]
+    if aud == "school":
+        if "explore" not in kinds:
+            out.append("a school world needs an Explore screen (design §2.5)")
+        if "lab" not in kinds and not _is_text(viz.get("lab_absent")):
+            out.append("a school world needs a Lab work screen, or lab_absent: T(why the programme has none)")
+    decl = view_declarations(viz) if screens else {}
+    recs = {r.get("id"): r for r in viz.get("recordings") or [] if isinstance(r, dict)}
+    ids = set()
+    for sc in screens:
+        if not isinstance(sc, dict):
+            out.append(f"screen {sc!r} is a map")
+            continue
+        sid, kind = sc.get("id"), sc.get("kind")
+        w = f"screen {sid}"
+        if not isinstance(sid, str) or not _SLUG.match(sid) or sid in ids:
+            out.append(f"screen id {sid!r}: a unique slug")
+        ids.add(sid)
+        if kind not in SCREEN_KINDS:
+            out.append(f"{w}: kind {kind!r} is none of {SCREEN_KINDS}")
+            continue
+        if sc.get("label") is not None and not _is_text(sc["label"]):
+            out.append(f"{w}: label is a T")
+        if kind == "watch":
+            r = recs.get(sc.get("recording"))
+            if r is None:
+                out.append(f"{w}: recording {sc.get('recording')!r} is none of the world's recordings")
+            elif not r.get("captions"):
+                out.append(f"{w}: its recording {r.get('id')} has no captions (a Watch needs them, design §2.1)")
+            more = sc.get("more") or []
+            if not isinstance(more, list) or not all(m in recs for m in more):
+                out.append(f"{w}: more {more!r}: ids of the world's recordings")
+        elif kind == "explore":
+            out += _check_atlas_common(viz, sc, w, decl)
+            if sc.get("acts", "next") not in ACTS:
+                out.append(f"{w}: acts {sc.get('acts')!r} is none of {ACTS}")
+            if sc.get("time", "flight") not in TIMES:
+                out.append(f"{w}: time {sc.get('time')!r} is none of {TIMES}")
+            tr = sc.get("traces", 0)
+            lo, hi = ATLAS_LIMITS["traces"]
+            if not isinstance(tr, int) or isinstance(tr, bool) or not lo <= tr <= hi:
+                out.append(f"{w}: traces {tr!r}: {lo}–{hi} earlier points kept")
+            ov = sc.get("overlays") or []
+            have = decl.get("overlays")
+            if not isinstance(ov, list) or not all(isinstance(o, str) for o in ov):
+                out.append(f"{w}: overlays: a list of the ids the view declares")
+            elif ov and not set(ov) <= set(have or []):
+                out.append(f"{w}: overlays {sorted(set(ov) - set(have or []))} are not declared by the view "
+                           f"(its overlays: {have})")
+            rd = sc.get("readouts") or []
+            if not isinstance(rd, list) or not all(isinstance(x, str) and x for x in rd):
+                out.append(f"{w}: readouts: a list of the world's measurables (ids in its header)")
+        else:
+            out += _check_lab(viz, sc, w, decl)
+    return out
+
+
+def _control(viz, c: dict) -> dict:
+    p = viz["schema"].by_id[c["param"]]
+    vals = list(c["values"])
+    kind = c.get("kind") or ("toggle" if len(vals) == 2 and all(isinstance(v, bool) for v in vals)
+                             else "slider" if all(_num(v) for v in vals) else "select")
+    # a control's own label and unit (a T or a symbol) win over the parameter's: a schema whose label carries its unit
+    # («Wavelength, nm», unit None) declares them here so the player can write «λ 600 nm»
+    return {"param": p.id, "values": vals, "default": c.get("default", vals[0]), "label": c.get("label") or p.label,
+            "unit": c.get("unit") or p.unit, "kind": kind, "law": p.standard is not None}
+
+
+def _atlas_part(viz, sc: dict) -> dict:
+    return {"preset": sc["preset"], "fixed": dict(sc.get("fixed") or {}),
+            "controls": [_control(viz, c) for c in sc["controls"]], "seed": int(sc.get("seed", 1)),
+            "frame_dt": float(sc["frame_dt"]), "stop": dict(sc["stop"]),
+            "drop": {"types": list((sc.get("drop") or {}).get("types", [])),
+                     "frame_blobs": list((sc.get("drop") or {}).get("frame_blobs", []))},
+            "quantize": dict(sc.get("quantize") or {})}
+
+
+def screens_of(viz: dict) -> list[dict]:
+    """The screens in the catalogue's form (``describe``; the player's contract, design §2, §3): every default filled
+    in, every control with its label, unit, kind (slider | toggle | select) and whether it is a law parameter, each
+    Explore screen and each lab step with the id of its atlas (``atlases_of``)."""
+    out = []
+    for sc in viz.get("screens") or []:
+        kind = sc["kind"]
+        d = {"id": sc["id"], "kind": kind, "label": sc.get("label") or SCREEN_LABELS[kind]}
+        if kind == "watch":
+            d.update(recording=sc["recording"], more=list(sc.get("more") or []))
+        elif kind == "explore":
+            d.update(atlas=sc["id"], **_atlas_part(viz, sc), acts=sc.get("acts", "next"),
+                     time=sc.get("time", "flight"), traces=int(sc.get("traces", 0)),
+                     overlays=list(sc.get("overlays") or []), readouts=list(sc.get("readouts") or []))
+        else:
+            instr = {}
+            for iid, i in sc["instruments"].items():
+                instr[iid] = {"kind": i["kind"], "label": i["label"], "unit": i["unit"], "division": i["division"],
+                              "error": i["error"] if i.get("error") is not None else i["division"] / 2,
+                              "reads": i.get("reads"), "manual": bool(i.get("manual")),
+                              "error_note": i.get("error_note"), "event": i.get("event")}
+            steps = []
+            for st in sc["steps"]:
+                s2 = {"id": st["id"], "atlas": f"{sc['id']}.{st['id']}", "title": st["title"], "goal": st["goal"],
+                      "hint": st.get("hint"), **_atlas_part(viz, st), "instruments": list(st["instruments"]),
+                      "columns": [dict(c) for c in st["columns"]], "plot": dict(st["plot"]),
+                      "law": dict(st["law"]) if st.get("law") else None}
+                s2["plot"].setdefault("fits", [s2["plot"]["fit"]] if s2["plot"].get("fit") else [])
+                steps.append(s2)
+            d.update(instruments=instr, steps=steps, worksheet=dict(sc["worksheet"]))
+        out.append(d)
+    return out
+
+
+def atlases_of(viz: dict) -> list[dict]:
+    """Every atlas of a world (design §1.1, §1.4): one per Explore screen (``id`` = the screen's id) and one per lab
+    step (``<screen id>.<step id>``), each ``{id, screen, step, preset, fixed, controls, seed, frame_dt, stop, drop,
+    quantize, law}``: what ``site/atlas.py`` computes and what its key covers (``law`` is the reference's id)."""
+    out = []
+    for sc in viz.get("screens") or []:
+        if sc["kind"] == "explore":
+            out.append({"id": sc["id"], "screen": sc["id"], "step": None, **_atlas_part(viz, sc), "law": None})
+        elif sc["kind"] == "lab":
+            for st in sc["steps"]:
+                out.append({"id": f"{sc['id']}.{st['id']}", "screen": sc["id"], "step": st["id"],
+                            **_atlas_part(viz, st), "law": (st.get("law") or {}).get("reference")})
     return out
 
 
@@ -342,7 +860,8 @@ def recordings_of(viz: dict) -> list[dict]:
         pre = presets.get(r.get("preset"), {})
         out.append({"id": r["id"], "preset": r.get("preset"), "label": r.get("label") or pre.get("label", r.get("preset")),
                     "seconds": r.get("seconds"), "fps": r.get("fps"), "speed": r.get("speed"),
-                    "seed": r.get("seed", 1), "poster": r.get("poster", 0), "script": list(r.get("script") or [])})
+                    "seed": r.get("seed", 1), "poster": r.get("poster", 0), "script": list(r.get("script") or []),
+                    "captions": list(r.get("captions") or []), "quantize": dict(r.get("quantize") or {})})
     return out
 
 
@@ -373,10 +892,13 @@ def describe(viz: dict | str) -> dict:
         "teaser": viz.get("teaser"),
         "related": list(viz.get("related") or []),
         "recordings": recordings_of(viz),
+        "screens": screens_of(viz),
         "aliases": aliases_of(viz["id"]),
         "picture": picture(viz["id"]),
         "schema": viz["schema"].to_json(),
     }
+    if viz.get("lab_absent") is not None:
+        out["lab_absent"] = viz["lab_absent"]
     if aud == "school":
         out["curriculum"] = list(viz.get("curriculum") or [])
     elif aud == "university":

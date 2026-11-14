@@ -2,5 +2,9 @@
   "The speed at which the pattern builds up (≈{n:d} particles per second)": {
     "one": "The speed at which the pattern builds up (≈{n:d} particle per second)",
     "other": "The speed at which the pattern builds up (≈{n:d} particles per second)"
+  },
+  "χ²: from {n:d} hits on": {
+    "one": "χ²: from {n:d} hit on",
+    "other": "χ²: from {n:d} hits on"
   }
 }

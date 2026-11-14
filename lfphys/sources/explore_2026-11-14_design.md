@@ -12,6 +12,11 @@ Explore, Lab work; needs M1) and the rework of **u32** «Двойная щель
 Numbers marked *measured* were measured for this design in Docker (`lfphys-viz`, CPU, memory-capped containers;
 Appendix A). Numbers marked *estimate* are computed from measured parts and say so.
 
+**After the implementation (batch EX1, 2026-11-14).** The batch is implemented; the numbers below were corrected with
+what the steps E, S, U and I measured on the real code, and each correction of a number or a statement given here
+earlier is marked **[error in earlier]**. What the code keeps is `visualizations/RULES.md` §10; the open points are in
+`STATUS.md` V52.
+
 ## 0. Decisions in brief
 
 1. **Three screens on one model.** A demonstration may have Watch (a captioned recording, only for phenomena that
@@ -54,13 +59,15 @@ Appendix A). Numbers marked *estimate* are computed from measured parts and say 
     the second method. Air properties come from `core.data` (moved there from `core.fluids.lbm`).
 11. **S03** (`s03_projectile`) has all three screens. Watch: yes. The two-ball strobe shows the independence of
     the motions, a cause → effect story that one projectile at a time does not show. Explore: height × speed × angle
-    × air, 1130 points, about 4.4 MB *estimate*. Lab work in three parts: L(h) → L ∝ √h; L(θ) → maximum at 45° and
-    L ∝ sin 2θ; the shift of the maximum in air.
+    × air, 940 points (950 combinations, 10 refused), 5.70 MB *measured* ([error in earlier]: 1130 points, about 4.4 MB
+    *estimate*; the height grid is {0, 1, 2, 5, 10} m). Lab work in three parts: L(h) → L ∝ √h; L(θ) → maximum at 45°
+    and L ∝ sin 2θ; the shift of the maximum in air.
 12. **u32**: Watch («the double slit, step by step»: build-up, fringes, one slit, a which-path detector, back);
-    Explore over λ × d × a, 48 points, 5.16 MB *measured*. The rest of today's interface folds into «How we know this
+    Explore over λ × d × a, 48 points, 5.50 MB *measured* in the build ([error in earlier]: 5.16 MB, measured on the
+    auto-sized screen; the built screen is fixed at ±30 mm, §6.2). The rest of today's interface folds into «How we know this
     is right» or stays in «▶ Compute live» unchanged, with all 19 presets (one more, `story`, is added) and every check.
 13. **Budgets:** a point at most 150 kB target and 400 kB limit; an atlas 6 / 12 MB; a world, recordings and atlases
-    together, 12 / 25 MB (unchanged); the site 600 / 900 MB (unchanged). S03 is about 5 MB, u32 about 8.2 MB.
+    together, 12 / 25 MB (unchanged); the site 600 / 900 MB (unchanged). S03 is 5.93 MB and u32 8.17 MB *measured*.
 14. **Plan:** batch **EX1** = framework (atlas + player screens), S03 with M1, u32 rework. Agents and file ownership
     are in §9; independent reviews and their processing come before the report.
 
@@ -78,7 +85,7 @@ packed:
 | content | S03 point (a flight) | u32 point (a build-up) |
 |---|---|---|
 | header | delta: the launcher's pose, the values, the scene box | delta: geometry, particle, the screen grid `x` (u16) |
-| what the view draws | `traj` chunks: t, x, y, vx, vy, ax, ay and the drag work W, sampled every 1/120 s of world time (u16) | `segment`: the near-field map (u8 of √(I/peak)), its z and w (f4), the expectation curves (f4), 20 flow lines (u16); `detections`: t, x (u16), y, flags (u8) |
+| what the view draws | `traj` chunks: t, x, y sampled at 60 Hz of world time (u16; [error in earlier]: t, x, y, vx, vy, ax, ay and W at 1/120 s, which made the atlas 17 MB; the velocities and the work go in the frames' `meas`), chunks of at least 3 samples, frames every 1/30 s | `segment`: the near-field map (u8 of √(I/peak)), its z and w (f4), the expectation curves (f4), 20 flow lines (u16); `detections`: t, x (u16), y, flags (u8) |
 | measurables | frames' `meas` (t, x, y, v, E_k, E_p, W_drag, Re) in full JSON | frames: hits so far, χ² and p of the sample against the run's expectation, |γ₁₂| with its error |
 | events | apex and landing with their data (H, T, L, v at landing) in full JSON | none (the segment's start) |
 | checks | energy balance; vacuum: T, L, H against the closed forms; air: L, T against the hodograph quadrature; the Reynolds range of the C_d model | the world's own (wavelength, fringe period, paraxial accuracy against Rayleigh–Sommerfeld, …) |
@@ -152,7 +159,7 @@ world's view does not declare as safe (§2.4). Recordings may use the same `quan
 ```
 
 A point's file is found by its flattened index. `base` is the base header (one message), loaded once per screen. The
-manifest is small: about 40 B per point, 45 kB for S03's 1130 points before Pages' gzip.
+manifest is small: about 40 B per point, about 40 kB for S03's 950 points before Pages' gzip.
 
 **Where the files live:**
 
@@ -216,7 +223,8 @@ stores no second sample.
 - CI (`.github/workflows/pages.yml`): no new job. The `record` job's matrix entry per world builds recordings and
   atlases, cached by the world key. CPU time *measured*: u32's 48 points take 47 s, at 0.90–1.12 s per point; S03's
   1130 integrations take 1.7 s, at 1.5 ms each. With the runner and the packing per point, S03 is well under 2 min
-  (*estimate*: 1130 × ~50 ms). Both are far inside the 300-minute job limit.
+  (*estimate*: 1130 × ~50 ms). Both are far inside the 300-minute job limit. *Measured* in the build: S03's whole world
+  (its recording and four atlases) 20 s, its Explore atlas 8.9 s of CPU; u32's Explore atlas 52 s of CPU.
 - Budgets are checked when the atlas is built (§1.8) and again by `site/check.py`.
 
 ### 1.8 Budgets and sizes
@@ -239,21 +247,21 @@ Sizes of the pilots:
 | u32 point, as emitted today | map f4 260 × 300, 40 flow lines f8, 5000 hits with 7 columns | 0.62–0.64 MB | measured, 3 points |
 | u32 point, packed (§1.3) | map u8 √, 20 flow lines u16, hits t, x u16 and y, flags u8, curves f4, header delta | **94–121 kB, median 110 kB** | measured, 168 points |
 | — of which | map 42 kB; flow lines 15 kB; hits t 10 + x 10 + y 5 kB; screen grid 4 kB; curves 1.7–8.7 kB | | measured, typical point |
-| u32 Explore atlas | λ {400, 500, 600, 700} nm × d {50, 100, 200, 300} µm × a {10, 20, 40} µm = 48 points | **5.16 MB**, CPU 47 s | measured (sum of the packed points) |
+| u32 Explore atlas | λ {400, 500, 600, 700} nm × d {50, 100, 200, 300} µm × a {10, 20, 40} µm = 48 points | **5.50 MB**, CPU 52 s, 96.6–132.7 kB per point | measured in the build ([error in earlier]: 5.16 MB, CPU 47 s, on the auto-sized screen) |
 | u32 Watch («story», 60 s × 20 fps, 4 segments) | as emitted today | 2.48 MB, CPU 6.1 s | measured |
-| u32 Watch with quantised segments | segments' map and flow lines quantised as in Explore | ≈ 0.9 MB | estimate from the measured parts |
+| u32 Watch with quantised segments | segments' map and flow lines quantised as in Explore | **0.61 MB**, CPU 7 s | measured ([error in earlier]: ≈ 0.9 MB estimate) |
 | u32 recordings kept (young, eraser, Aharonov–Bohm) | unchanged | 0.74 + 0.65 + 0.68 MB | measured (local index) |
-| **u32 world** | Watch + 3 recordings + Explore | **≈ 8.2 MB** (target 12) | estimate |
+| **u32 world** | Watch + 3 recordings + Explore | **8.17 MB** (target 12) | measured |
 | S03 point, typical (h 1 m, v0 15 m/s, 45°, air) | frames 30 per world second, samples 120 per world second | 7.0 kB f4; **4.5 kB u16** | measured on a stand-in stream (Appendix A) |
 | S03 point, longest (h 10 m, 25 m/s, 90°, 5.47 s) | same | 12.7 kB f4; 7.3 kB u16 | measured, stand-in |
-| S03 Explore atlas | 6 × 5 × 19 × 2 − 10 refused = 1130 points | 7.25 MB f4; **≈ 4.4 MB u16** | f4 measured; u16 estimate (ratio 0.57–0.64 measured on two points) |
-| S03 lab atlases | parts A, B, C (§5.3): 17 + 13 + 22 points | ≈ 0.2 MB | estimate from measured stand-ins (27 points 44 kB; 60 points 0.34 MB f4) |
-| S03 Watch | 40 s × 20 fps, two balls | ≈ 0.2 MB | estimate (S03 frames are a few hundred bytes) |
-| **S03 world** | | **≈ 5 MB** | estimate |
+| S03 Explore atlas | 5 × 5 × 19 × 2 − 10 refused = 940 points (t, x, y at 60 Hz, u16) | **5.70 MB**, largest point 12.6 kB, CPU 8.9 s | measured ([error in earlier]: 6 × 5 × 19 × 2 − 10 = 1130 points, ≈ 4.4 MB u16 estimate; with the first real stream, 120 Hz and five columns, it was 17 MB) |
+| S03 lab atlases | parts A, B, C (§5.3): 17 + 13 + 8 points | **51 + 46 + 87 kB** | measured ([error in earlier]: 22 points in part C, ≈ 0.2 MB estimate) |
+| S03 Watch | 40 s × 20 fps, two balls | **0.05 MB** | measured |
+| **S03 world** | | **5.93 MB** | measured |
 
 The stand-in S03 stream is the integrator's output put into protocol messages: one `traj` chunk and one frame per
-frame, the events and four checks. The real world adds per-frame `meas`, about +40 % before gzip and much less after;
-the S03 agent measures it and updates this table.
+frame, the events and four checks. The real world adds per-frame `meas`; the measured rows above replace the
+estimates.
 
 What this means for the site: today's 17 demonstrations' recordings take 47 MB (the local index). With atlases,
 an average of 5–8 MB per world is affordable for about 80–100 demonstrations inside 600 MB. The levers are written in
@@ -291,8 +299,10 @@ Rules for every field:
 
 - `controls[].param` is a parameter of the schema. Its values are valid for it (type, range, options). Each grid point
   is resolved through `schema.resolve(preset, values)` at build time, and a refusal there is a registry error unless
-  the world's `check_params` refuses it (then the point is `refused`, §1.2). `label` defaults to the parameter's
-  label; `kind: "toggle"` is implied for two boolean values.
+  the world's `check_params` refuses it (then the point is `refused`, §1.2). `label` (a T) and `unit` (a T or a plain
+  symbol such as "nm") default to the parameter's label and unit; a world whose parameter labels carry the unit
+  ("Wavelength, nm") gives its controls a short label and the unit (u32: λ, d, a), so the passport reads «λ 600 nm»
+  (added in step F, 2026-11-14); `kind: "toggle"` is implied for two boolean values.
 - A school screen has no law parameter among its controls (rule 4: no modified physics at school). A standard screen
   may have one. The player then flags it, as the live player does («MODIFIED PHYSICS: …»), at the control and in the
   top bar while a modified point is shown.
@@ -309,10 +319,14 @@ The recording spec (`RULES.md` §8) gains:
   recorder writes each one into the stream as an accumulative message `caption {t, text, n}` at its frame, with the
   world time of that frame. So a caption keeps its place under frame thinning and under the script's speed changes,
   the player shows it as of the cursor like an event, and key frames hold it. The captions are part of the spec and
-  therefore of the key.
+  therefore of the key. *As implemented* (steps F and P): the message is `caption {t, text, n, at, hold?}`; `hold`
+  (seconds, > 0) means that the playback, while the story plays, stops at that caption's frame and waits `hold`
+  seconds before it goes on (`watch.js`); scrubbing, the chapter ticks and ◀◀ / ▶▶ are not held.
 - `speed` among the script's commands (`RECORDING_LIMITS["commands"]`): it changes no world state (the runner's
   playback speed only), and `record()` already advances by `runner.speed / fps`. It lets a story go from one particle
-  at a time to thousands.
+  at a time to thousands. *As implemented* (step F): a `new_world` resets the speed to the world's default, so a script
+  that keeps a slow motion across worlds puts a `speed` command after each `new_world` at the same `at` (S03's
+  `independence` does).
 - `quantize`: as for atlases (§1.3).
 
 ### 2.3 Lab work: instruments, steps, the table, the plot, the fit, the law, the worksheet
@@ -325,8 +339,10 @@ The recording spec (`RULES.md` §8) gains:
             "reads": "control:h_m"},                  # a set-up value, read as the instrument shows it
   "protractor": {"kind": "protractor", "label": T("Protractor"), "unit": "°", "division": 1, "error": 0.5,
                  "reads": "control:angle_deg"},
-  "stopwatch": {"kind": "stopwatch", "label": T("Stopwatch"), "unit": "s", "division": 0.01, "error": 0.2,
-                "manual": True, "error_note": T("your reaction time, about 0.2 s")}},
+  "stopwatch": {"kind": "stopwatch", "label": T("Stopwatch"), "unit": "s", "division": 0.01, "error": 0.1,
+                "manual": True, "error_note": T("your reaction: a start and a stop by hand scatter by about 0.1 s")}},
+                                                      # [error in earlier]: 0.2 s; verified 0.1 s (S: Faux & Godolphin,
+                                                      # Am. J. Phys. 87, 110 (2019): start + stop by hand ~ N(0, 0.10²) s)
 "steps": [{"id": "heights", "title": T("Height and range"), "goal": T("…"), "preset": "chute",
            "controls": [{"param": "h_m", "values": [0.20, 0.25, …, 1.00], "default": 0.5}],
            "fixed": {"v0": 1.5},                      # the chute's speed: part of the step's set-up, shown, not a control
@@ -596,7 +612,10 @@ The layers rule (`LAYERS.md`) places it so:
 **Constants and data with sources:** C_d = 0.47 for a smooth sphere at 10³ < Re < 2·10⁵, a textbook value. It is to
 be checked against a named drag-curve source (e.g. White, *Fluid Mechanics*, the sphere's drag curve) before it is
 quoted (AGENTS rule 11), and is labelled «illustrative» until then (`RULES.md` §2 rule 9). The air at 20 °C and
-101 325 Pa has ρ = 1.204 kg/m³ from the USSA 1976 formula already in the engine.
+101 325 Pa has ρ = 1.2041 kg/m³ from the USSA 1976 formula already in the engine. *Verified* by step E: C_d ≈ 0.47 for a
+sphere at Re 10⁴–10⁵ in Hoerner, *Fluid-Dynamic Drag* (1965), ch. III, p. 3-7, with Morrison's 2016 correlation as the
+comparison curve; g_n = 9.80665 m/s² exact (CODATA 2022). With ρ = 1.2041 kg/m³ the 67 mm, 58 g ball has
+k = ρC_dA/(2m) = 0.017200 1/m ([error in earlier]: 0.01729 1/m, Appendix A).
 
 **Accuracy** *measured* with a stand-in of exactly this design (Appendix A): no drag against the closed form 8e-16;
 linear drag 1.3e-13; quadratic drag against the hodograph 1.4e-12 and against Radau 1.5e-12; energy balance 1.7e-12.
@@ -623,7 +642,8 @@ out so they add modules (`constraints.py`, `contact.py`) without changing `parti
     шарика, пущенного горизонтально, тем больше, чем больше высота пуска»;
   - FRP-SOO-2025-base, grade 10, the demonstration «Наблюдение движения тела, брошенного под углом к горизонту и
     горизонтально» and the lab «Изучение движения тела, брошенного горизонтально»;
-  - AP1 unit 1; IB-2025 A.1; AQA 3.4.1 (projectiles).
+  - AP1 unit 1 (topic 1.5); IB-2025 A.1; AQA 3.4.1.4 ([error in earlier]: «AQA 3.4.1 (projectiles)»; verified by step
+    S, which also checked the ФРП lines word for word).
 
 ### 5.2 The model (`viz.py`, `engine/`)
 
@@ -655,7 +675,8 @@ moment, so the vertical motion does not depend on the horizontal one. Explore la
 strobe only hints at this. The story makes it the point. Recording `independence`: 40 s, 20 fps, slow motion
 (speed 0.1: the 0.50 s flight from 1.25 m lasts 5 s on screen), `companion: drop`, h 1.25 m, v₀ 2 m/s. Each later
 flight ends before the next row: from 5 m it lasts 1.01 s (10 s on screen), and the last throw lasts 2.9 s at speed
-0.5 (5.8 s on screen):
+0.5 (5.8 s on screen). *As built* the rows start at 0, 4, 11, 20 and 32 s, and each `new_world` is followed by its
+`speed` command (§2.2):
 
 | at, s | script | caption |
 |---|---|---|
@@ -665,28 +686,31 @@ flight ends before the next row: from 5 m it lasts 1.01 s (10 s on screen), and 
 | 22 | `new_world`, params `{h_m: 5}` | «Four times higher: the flight lasts twice as long, and the range is doubled: L grows as √h.» |
 | 32 | `new_world`, params `{companion: vacuum, object: ball67, v0: 20, angle_deg: 45, h_m: 0, air: true}`; `speed 0.5` | «In air a light ball falls short of the same throw in vacuum (grey).» |
 
-**Explore** (`explore`, the preset `field`: the 67 mm ball): h {0, 1, 2, 3, 5, 10} m × v₀ {5, 10, 15, 20, 25} m/s ×
-θ {0°, 5°, …, 90°} × air {off, on} = 1140 combinations, of which 10 are refused (h 0 with θ 0) and 1130 computed.
+**Explore** (`explore`, the preset `field`: the 67 mm ball): h {0, 1, 2, 5, 10} m × v₀ {5, 10, 15, 20, 25} m/s ×
+θ {0°, 5°, …, 90°} × air {off, on} = 950 combinations, of which 10 are refused (h 0 with θ 0) and 940 computed
+([error in earlier]: h {0, 1, 2, 3, 5, 10}, 1140 combinations, 1130 computed; the 3 m row was dropped for the size).
 `acts: "next"`, `time: "flight"`, 5 traces. Overlays: path (on), strobe, velocity, components, forces, energy.
-Readouts: range, flight time, apex height. *Measured* in the stand-in: in vacuum at 25 m/s the range peaks at 63.73 m
-at 45°; with air it is 36.47 m at 40° (36.16 m at 45°). So the shift is visible on the 5° grid.
+Readouts: range, flight time, apex height. *Measured* by the engine (step E, k = 0.017200 1/m): in vacuum at 25 m/s
+the range peaks at 63.732 m at 45°; with air it is 36.542 m at 40° and 36.234 m at 45° ([error in earlier]: the
+stand-in's 36.47 m at 40° and 36.16 m at 45°, with k = 0.01729 1/m). So the shift is visible on the 5° grid.
 
 **Lab work** (`lab`), three parts:
 
 | part | ФРП / AP | set-up (atlas) | measure | plot and fit | «Check against the law» |
 |---|---|---|---|---|---|
 | A. Height and range | ФРП 7 hypothesis lab; ФРП 10 lab | steel ball 20 mm off a chute, v₀ 1.5 m/s (the chute's, not told to the student), h {0.20, 0.25, …, 1.00} m, air on: 17 points | h with the ruler (1 cm, ±0.5 cm), L with the tape (1 mm, ±0.5 mm); optionally T with the manual stopwatch | grade 7: L(h), the hypothesis «higher → further» seen; grade 10: L(√h), `line0` | k = v₀·√(2/g) (closed form; the engine's air effect here is 0.1 %, *measured* 0.097 % at 2 m/s from 1 m, below the tape's error) |
-| B. Angle and range | ФРП 10 demonstration; AP1 U1 | the ballistic launcher on the floor (h 0), steel ball, v₀ 5 m/s, θ {15°, 20°, …, 75°}: 13 points | θ with the protractor (1°), L with the tape | L(sin 2θ) `line0` → slope v₀²/g; L(θ) `quadratic` → θ* | slope v₀²/g; θ* = 45° (closed form, no drag) |
-| C. Air moves the maximum | extension (ФРП 10–11 «сопротивление среды»; AP1 U1) | the 67 mm ball, v₀ 20 m/s, h 0, θ {20°, 25°, …, 70°} with and without air: 22 points | θ, L | L(θ) `quadratic` in each medium → θ* | vacuum: 45° (closed form); air: the engine's optimum at 0.1° steps, labelled «computed by the engine; no closed form» |
+| B. Angle and range | ФРП 10 demonstration; AP1 U1 | the ballistic launcher on the floor (h 0), steel ball, v₀ 5 m/s, θ {15°, 20°, …, 75°}, no air (with air the slope misses v₀²/g by 27σ at the tape's resolution, so the launcher is set in vacuum; step S): 13 points | θ with the protractor (1°), L with the tape | L(sin 2θ) `line0` → slope v₀²/g; L(θ) `quadratic` → θ* | slope v₀²/g; θ* = 45° (closed form, no drag) |
+| C. Air moves the maximum | extension (ФРП 10–11 «сопротивление среды»; AP1 U1) | the 67 mm ball, v₀ 20 m/s, h 0, θ {25°, 30°, …, 60°}, air on, with the same throw in vacuum as a grey companion ball: 8 points ([error in earlier]: θ {20°, …, 70°} in each medium, 22 points; the parabola fitted over 20–70° was biased by 1.8σ, over 25–60° it agrees within 0.8σ) | θ, L of the ball (tape) and of the grey ball (its tape reads after the grey ball's landing, `event`) | L(θ) `quadratic` → θ* | vacuum: 45° (closed form); air: the engine's optimum at 0.1° steps (41.9°), labelled «computed by the engine; no closed form» |
 
 The worksheet questions (with the teacher's answers) include: why the stopwatch cannot measure a 0.45 s flight to
-better than ±0.2 s, and what to do instead (compute T = L/v₀ or measure L); which angles give equal ranges without air
+better than ±0.1 s ([error in earlier]: ±0.2 s; a start and a stop by hand scatter by about 0.1 s, Faux & Godolphin,
+Am. J. Phys. 87, 110 (2019), verified by step S), and what to do instead (compute T = L/v₀ or measure L); which angles give equal ranges without air
 and why; why the maximum moves below 45° in air; why the chute's v₀ is found from the slope rather than measured.
 
 ### 5.4 Size and cost
 
-About 5 MB for the world and under 2 min of CPU in CI (§1.8; the S03 agent replaces these estimates with the measured
-numbers).
+*Measured* (2026-11-14): the world 5.93 MB (Explore 5.70 MB, labs 51 + 46 + 87 kB, Watch 0.05 MB), recorded with its
+atlases in 20 s on one CPU (the plan's estimate was about 5 MB and under 2 min; §1.8).
 
 ---
 
@@ -708,24 +732,32 @@ the speed (the script's new `speed`):
 | 36 | `set {el2: "none", wp_mode: "qubit", wp_theta: 90}` | «Both slits open, with a which-path detector at slit 1: no bands, although both slits are open.» |
 | 48 | `set {wp_mode: "none"}` | «The detector is removed: the bands come back.» |
 
-*Measured* as emitted today: 2.48 MB gzip, CPU 6.1 s. Quantised, about 0.9 MB (*estimate*). Each change of the set-up
+*Measured* as emitted today: 2.48 MB gzip, CPU 6.1 s. Quantised, about 0.9 MB (*estimate*); *measured* in the build
+0.61 MB, 7 s of CPU, on the preset `story` (n_bohm 20, the screen at ±50 mm). Each change of the set-up
 starts a new segment, so the view's «current segment» shows each stage on its own, as the captions say. The existing
 recordings `young`, `eraser`, `aharonov_bohm` stay under «More recordings» and get short captions in the same pass.
 
 ### 6.2 Explore: λ, d, a → the pattern and the hit histogram
 
-- The preset `photon_young` (photons, plane wave, L₂ = 1 m) with `fixed: {n_bohm: 20}`; controls λ {400, 500, 600, 700} nm
-  (the slider coloured by the wavelength), d {50, 100, 200, 300} µm, a {10, 20, 40} µm: 48 points, all with d > a.
-- `time: "buildup"`, `stop {world_s: 5.25}` (5000 hits at 1000 per second; *measured* 5193–5196 detected), `frame_dt
+- The preset `photon_young` (photons, plane wave, L₂ = 1 m) with `fixed: {n_bohm: 20, screen_um: 30000}` (the screen
+  fixed at ±30 mm: [error in earlier] — with the automatic screen a = 10 µm fails the paraxial Rayleigh–Sommerfeld check
+  at 10 of 48 points, and the axis scales with λ/a, which hides the effect of λ and a; step U); controls λ {400, 500,
+  600, 700} nm (the slider coloured by the wavelength), d {50, 100, 200, 300} µm, a {10, 20, 40} µm, each with its own
+  short label and unit: 48 points, all with d > a.
+- `time: "buildup"`, `stop {world_s: 5.25}` (5000 hits at 1000 per second; *measured* on the ±30 mm screen 3713–5196
+  hits, [error in earlier]: 5193–5196 on the automatic screen), `frame_dt
   0.25`, `acts: "now"`, 3 traces (earlier points' expectation curves, faded, labelled «λ 500 nm, d 100 µm, a 20 µm»).
 - `drop`: `stories`; frame blob `flight`. `quantize`: `segment.map: u8sqrt`, `segment.bohm_x: u16`,
   `detections.t|x: u16`, `detections.y|f: u8`, `header.x: u16`. *Measured* loss: x is quantised in steps of at most
   0.023 of a detector pixel, below what the detector resolves.
 - Overlays: the expectation curve (on), «without interference» (the `cl` curve), the wave behind the slits (on), flow
-  lines, log scale of the wave.
-- Readouts (from the world's checks and frames): the fringe period as computed by the run, next to λL/d as the check's
-  reference; hits so far; χ²/dof of the sample.
-- 5.16 MB, 47 s CPU (*measured*).
+  lines. *As built*, no log scale of the wave in Explore (the u8 √ map leaves about 6 levels in the lowest decade of
+  a 4-decade log display; step U).
+- Readouts (from the world's checks and frames): hits so far, χ²/dof and p of the sample, in the view's own readout
+  line. *As built*, the fringe period with its reference λL/d stays among the checks in «How we know this is right»
+  (a view gets no checks), so the Explore screen declares no `readouts` and the player hides the empty box (step I).
+- 5.50 MB, 52 s CPU (*measured* in the build; [error in earlier]: 5.16 MB, 47 s on the automatic screen). Quantisation
+  loss *measured*: the map 0.0039 of its peak, x 4.6·10⁻⁷ m (a detector pixel ≥ 1.6·10⁻⁴ m), t 2.1·10⁻⁶ s, y 0.002.
 
 ### 6.3 What of today's interface stays at `ui: "standard"`
 
@@ -916,7 +948,9 @@ Risks (decided here, no owner action needed):
 - **CI time** grows by about 1 min for S03 and 1 min for u32 (*measured* and *estimated*). Heavy worlds (u38, u44, r12)
   get atlases of slices or images only, or none (§7).
 - **The C_d value, the stopwatch's 0.2 s reaction time, Orear's effective variance and the ФРП quotations** are
-  unverified until checked against their sources (AGENTS rule 11).
+  unverified until checked against their sources (AGENTS rule 11). *Verified in EX1*: C_d 0.47 (Hoerner 1965, p. 3-7;
+  step E), Orear's effective variance (Orear's notes, App. III, eqs. 36–37; step E), the ФРП lines word for word and
+  AQA 3.4.1.4 (step S); the stopwatch's error is 0.1 s, not 0.2 s ([error in earlier]; Faux & Godolphin 2019, step S).
   They are labelled «illustrative» or «to be checked» until then. The S, E and I agents verify them.
 
 ---
@@ -941,7 +975,8 @@ named `lf-xd-*`. The scripts were kept outside the repository, in the integrator
 4. **M1 stand-in** (a point projectile with `solve_ivp` DOP853, rtol 1e-11, events for landing and apex; drag work as
    a fifth state). No drag against the closed form: 8.1e-16 (T), 8.3e-16 (L). Linear drag against x(t), y(t):
    1.3e-13, 6.5e-14. Lambert-W landing time: 1.7e-14, 5.0e-15, 8.0e-13 in three cases (h 0, 10, 2 m). Quadratic drag
-   (67 mm, 58 g, C_d 0.47, ρ 1.204 kg/m³: k = 0.01729 1/m) against the hodograph quadrature: 1.4e-12 (T), 1.3e-12 (L);
+   (67 mm, 58 g, C_d 0.47, ρ 1.204 kg/m³: k = 0.01729 1/m; [error in earlier]: with ρ = 1.2041 kg/m³ k = 0.017200 1/m,
+   step E — the agreements below are unaffected, the ranges of §5.3 are corrected) against the hodograph quadrature: 1.4e-12 (T), 1.3e-12 (L);
    against Radau: 1.4e-12, 1.5e-12. Energy balance 1.7e-12. CPU 1.5 ms per trajectory over 1130 grid points. The
    longest flight is 5.47 s and the largest range 73.0 m. Steel 20 mm at 2 m/s from 1 m: air shortens the range by
    0.097 %.

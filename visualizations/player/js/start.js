@@ -14,7 +14,9 @@
 // The lower the level, the simpler the card (rule 16): a school card has no parameters, seed or devices; a university
 // card folds them under «▸ More»; a research card shows them open. On the server a card offers «▶ Compute live» and,
 // when the scenario has one, «▷ Recording m:ss»; on the site it offers only the recordings. The runs are listed on
-// /runs, not here.
+// /runs, not here. A demonstration with screens (design lfphys/sources/explore_2026-11-14_design.md §3.1, §3.10) shows
+// them first as its buttons, «▷ Watch m:ss», «◎ Explore», «✎ Lab work» (run.html?demo=<world>&screen=…), then on a
+// server «▶ Compute live»; a school card with screens has nothing else.
 import { MODE, apiGet, getJSON, page, url } from "./api.js";
 import { lang, t, withLang } from "./i18n.js";
 import { el, fill, initTheme, modal, paramForm, toast, toggleTheme } from "./ui.js";
@@ -339,8 +341,31 @@ function relatedLine(v) {
 }
 
 // --- a demonstration's card ---------------------------------------------------------------------------------------------
+// The screens' buttons of a card: each opens its screen (run.html?demo=…&screen=…); a screen whose recording or atlases
+// are not made yet (here, or on the site) is shown greyed with the reason
+function screenButtons(v) {
+  const idx = (D.rec.worlds || {})[v.id] || null;
+  const atl = new Set(((idx && idx.atlases) || []).map((a) => a.id));
+  const recs = new Map(((idx && idx.recordings) || []).map((r) => [r.id, r]));
+  return (v.screens || []).map((s) => {
+    let ready = true, label;
+    if (s.kind === "watch") {
+      const r = recs.get(s.recording);
+      ready = !!r;
+      label = r ? t("▷ Watch {time}", { time: mss(r.seconds) }) : t("▷ Watch");
+    } else if (s.kind === "explore") { ready = atl.has(s.atlas); label = t("◎ Explore"); }
+    else { ready = (s.steps || []).length > 0 && (s.steps || []).every((st) => atl.has(st.atlas)); label = t("✎ Lab work"); }
+    const a = el("a", { class: "button st-screen" + (ready ? (s.kind === "explore" ? " primary" : "") : " disabled"), "data-screen": s.id,
+      title: ready ? t(s.label) : t("Not made yet: build it locally (site/record.py) or compute live") }, label);
+    if (ready) a.href = withLang(page("run", { demo: v.id, screen: s.id }));
+    else a.setAttribute("aria-disabled", "true");
+    return a;
+  });
+}
+
 function vizCard(v) {
   const school = v.audience === "school", research = v.audience === "research";
+  const screens = (v.screens || []).length ? screenButtons(v) : null;
   const presets = v.schema.presets || [];
   const recs = recsOf(v);
   const errBox = el("div", { class: "start-err" });
@@ -356,6 +381,20 @@ function vizCard(v) {
     parts.push(el("div", { class: "st-status" }, el("span", { class: "badge st-hyp" }, t("Status: {status}", { status: statusText(v.status) })), " ",
       refs.length ? el("details", { class: "st-prior" }, el("summary", {}, t("Prior art: {n:d} references", { n: refs.length })),
         el("ul", {}, refs.map((r) => el("li", {}, r.url ? el("a", { href: r.url, target: "_blank", rel: "noopener" }, r.ref) : r.ref)))) : null));
+  }
+  if (screens) parts.push(el("div", { class: "row st-screens" }, screens));
+  // a school card with screens: the screens, then (server) «▶ Compute live» of the first explore screen's set-up
+  if (screens && school) {
+    const ex = (v.screens || []).find((s) => s.kind === "explore") || (v.screens || []).find((s) => s.preset) || null;
+    const errBox2 = el("div", { class: "start-err" });
+    if (SERVER && ex && ex.preset) {
+      const btn = el("button", { onclick: () => startRun({ viz: v.id, preset: ex.preset, params: ex.fixed && Object.keys(ex.fixed).length ? { ...ex.fixed } : undefined },
+        { btn, label: t("▶ Compute live"), errBox: errBox2, form: null }) }, t("▶ Compute live"));
+      parts.push(el("div", { class: "row" }, btn), errBox2);
+    }
+    parts.push(relatedLine(v));
+    parts.push(el("div", { class: "help st-id" }, t("{id} · version {version}", { id: v.id, version: String(v.version) })));
+    return el("div", { class: "card st-card", id: "card-" + v.id }, parts);
   }
   // the scenario: every preset on the server; on the site the recorded ones
   const options = SERVER ? presets.map((p) => ({ value: p.id, label: t(p.label), preset: p.id }))

@@ -201,6 +201,7 @@ def test_negative_control_a_state_without_its_random_generator_continues_differe
 # removed after); then step and next_event, and a new world on each side of the checkpoint (its header carries its
 # number)
 PLAN = {
+    "s03_projectile": (None, None, None, False),  # no live parameters and no actions (EX1, 2026-11-14)
     "u31_light_travel": (None, None, ("flash", {"obj": "earth"}), False),
     # u32: the change after the checkpoint turns on the vector screen (a perfectly conducting screen, B8): the continued
     # world computes it in the new process (a checkpoint of a vector world: u32's own tests)

@@ -32,7 +32,7 @@ class Simulation(Base):
         self.next_tick = 0.5
 
     def header(self):
-        return {"title": T("A point for the tests of the site"), "actions": [{"name": "kick", "label": T("Kick")}],
+        return {"title": T("A point for the tests of the site"), "actions": [{"name": "kick", "label": T("Kick"), "args": []}],
                 "units": {"t": T("s")}, "checks": []}, {}
 
     def advance(self, t_target):

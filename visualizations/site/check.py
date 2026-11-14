@@ -5,7 +5,7 @@
 * a world or a recording of the registry is missing from ``site-manifest.json``, or its key differs from the one the
   registry gives now (stale), or its state is not ``present``;
 * a file named in the manifest or in a recordings index is missing, or its size or sha256 differs;
-* a page (``index.html``, ``run.html``, ``legal.html``) lacks ``lf-mode=static``, ``lf-base`` equal to the base, or the
+* a page (``index.html``, ``run.html``, ``legal.html``, ``worksheet.html`` once the player has it) lacks ``lf-mode=static``, ``lf-base`` equal to the base, or the
   import map with ``"/static/"`` and ``"/viz/"`` mapped relative; ``404.html`` lacks its metas; a page has an absolute
   ``/static``, ``/api`` or ``/viz`` address outside the import map;
 * a catalogue file (``api/viz.json``, ``api/viz/<id>.json``, ``api/planned.json``, ``api/audiences.json``,
@@ -16,9 +16,12 @@
   ``"/ws…"``; ``/static/`` and ``/viz/`` go through the import map) outside a comment (F5);
 * a recording's index entry counts a check that ends failed (``checks.failed``; integrator D5);
 * ``api/recordings.json`` lacks ``published`` or ``site``, or they differ from ``site/site.json`` (integrator D3, D4);
-* a budget's hard limit is exceeded (one recording 10 MB, one world 25 MB, one poster 400 kB, the site 900 MB); over a
-  target (3 MB, 12 MB, 150 kB, 600 MB) it warns; the recordings accepted over their target (``sitelib.ACCEPTED``) are
-  warned as "over target (accepted: <reason>)".
+* a budget's hard limit is exceeded (one recording 10 MB, one world 25 MB with its atlases, one atlas point 400 kB, one
+  atlas 12 MB, one poster 400 kB, the site 900 MB); over a target (3 MB, 12 MB, 150 kB, 6 MB, 150 kB, 600 MB) it warns;
+  the recordings accepted over their target (``sitelib.ACCEPTED``) are warned as "over target (accepted: <reason>)";
+* an atlas of the registry (design of 2026-11-14 §1.3) is missing or stale, its manifest disagrees with the index or
+  with its files (the base's size and sha256, each point's size and hash8, the grid's size, a state naming no
+  refusal), or it counts a check that ends failed (``check_atlases``).
 
 It warns on an index entry or a recording file the registry does not ask for (F13; ``build.py`` copies only the plan's).
 
@@ -41,7 +44,14 @@ import sitelib as L  # noqa: E402
 from lfviz import registry  # noqa: E402
 from lfviz.app import site_setting  # noqa: E402
 
-PAGES = ("index.html", "run.html", "legal.html")
+PAGES = ("index.html", "run.html", "legal.html", "worksheet.html")
+
+
+def pages(man: dict | None = None) -> tuple:
+    """The pages a site must carry: ``PAGES``, ``worksheet.html`` only once the player has it (its source, or the
+    manifest naming it)."""
+    have = (L.VIZ / "player" / "worksheet.html").is_file() or "worksheet.html" in ((man or {}).get("pages") or [])
+    return tuple(n for n in PAGES if n != "worksheet.html" or have)
 IMPORTMAP = re.compile(r'<script\s+type="importmap"\s*>(.*?)</script>', re.S)
 #: an absolute address of the server's kind in a page: an attribute value or a string literal starting with it
 ABSOLUTE = re.compile(r"""(?:=|\(|\s)\s*["'`](/(?:static|api|viz)(?:/|["'`?]))""")
@@ -78,8 +88,8 @@ class Report:
         self.warns.append(msg)
 
 
-def check_pages(site: Path, base: str, rep: Report):
-    for name in PAGES + ("404.html",):
+def check_pages(site: Path, base: str, rep: Report, man: dict | None = None):
+    for name in pages(man) + ("404.html",):
         f = site / name
         if not f.is_file():
             rep.fail(f"page {name} is missing")
@@ -173,7 +183,7 @@ def check_recordings(site: Path, man: dict, rep: Report, allow_missing: bool):
         named = {str(e.get("file")) for e in entries.values()}
         folder = site / "recordings" / vid
         for f in sorted(folder.iterdir()) if folder.is_dir() else []:
-            if f.name != "index.json" and f.name not in named:
+            if f.name not in ("index.json", "atlas") and f.name not in named:
                 rep.warn(f"recordings/{vid}/{f.name}: a file its index does not name")
         total = 0
         for r in plan["recordings"]:
@@ -204,12 +214,97 @@ def check_recordings(site: Path, man: dict, rep: Report, allow_missing: bool):
                 why = L.accepted(vid, r["id"])
                 rep.warn(f"{vid}/{r['id']}: {n / L.MB:.2f} MB is over the target {file_t / L.MB:.0f} MB"
                          + (f" (accepted: {why})" if why else ""))
+        total += check_atlases(site, vid, plan, mw, idx, rep, allow_missing)
         if total > world_l:
             rep.fail(f"{vid}: {total / L.MB:.2f} MB is over the world's hard limit {world_l / L.MB:.0f} MB")
         elif total > world_t:
             why = L.accepted(vid)
             rep.warn(f"{vid}: {total / L.MB:.2f} MB is over the world's target {world_t / L.MB:.0f} MB"
                      + (f" (accepted: {why})" if why else ""))
+
+
+def check_atlases(site: Path, vid: str, plan: dict, mw: dict, idx: dict, rep: Report, allow_missing: bool) -> int:
+    """A world's atlases (design of 2026-11-14 §1.3, §1.8): each one the registry asks for is in the manifest and the
+    index with its current key; its manifest agrees with the index (key, bytes) and with its files (the base's size and
+    sha256; each point's size, its name's hash8 = its sha256, its state; the grid's size); no check ends failed; the
+    point and atlas budgets. Returns the atlases' bytes (the world's budget counts them)."""
+    pt_t, pt_l = L.BUDGET["point"]
+    at_t, at_l = L.BUDGET["atlas"]
+    say = rep.warn if allow_missing else rep.fail
+    entries = {e.get("id"): e for e in idx.get("atlases") or []}
+    planned = {a["id"] for a in plan["atlases"]}
+    for aid in sorted(set(entries) - planned, key=str):
+        rep.warn(f"{vid}/atlas {aid}: in the site's index, not asked for by the registry")
+    adir = site / "recordings" / vid / "atlas"
+    for d in sorted(adir.iterdir()) if adir.is_dir() else []:
+        if d.name not in planned or d.name not in entries:
+            rep.warn(f"recordings/{vid}/atlas/{d.name}: an atlas folder its index does not name")
+    total = 0
+    for a in plan["atlases"]:
+        where = f"{vid}/atlas {a['id']}"
+        m = (mw.get("atlases") or {}).get(a["id"])
+        e = entries.get(a["id"])
+        if m is None or e is None:
+            say(f"{where}: missing")
+            continue
+        if m.get("key") != a["key"] or e.get("key") != a["key"]:
+            say(f"{where}: stale (key {e.get('key')}, the registry gives {a['key']})")
+        mf = site / "recordings" / vid / str(e.get("file"))
+        try:
+            man = json.loads(mf.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            rep.fail(f"{where}: its manifest {e.get('file')} is missing or unreadable")
+            continue
+        if man.get("key") != e.get("key") or man.get("atlas") != a["id"]:
+            rep.fail(f"{where}: its manifest disagrees with the index (key {man.get('key')}, atlas {man.get('atlas')})")
+        n_grid = 1
+        for c in man.get("controls") or []:
+            n_grid *= len(c.get("values") or [])
+        pts = man.get("points") or []
+        if len(pts) != n_grid:
+            rep.fail(f"{where}: {len(pts)} points in its manifest, its grid has {n_grid}")
+        b = man.get("base") or {}
+        bf = mf.parent / str(b.get("file"))
+        size = 0
+        if not bf.is_file() or bf.stat().st_size != b.get("bytes_gz") or L.sha256_file(bf) != b.get("sha256"):
+            rep.fail(f"{where}: its base {b.get('file')} is missing or differs from the manifest")
+        else:
+            size += bf.stat().st_size
+        n_ref = len(man.get("refusals") or [])
+        named = {b.get("file"), mf.name}
+        for i, pt in enumerate(pts):
+            name, nbytes, state = (list(pt) + [None, None, None])[:3]
+            if state:
+                if not isinstance(state, int) or not 1 <= state <= n_ref:
+                    rep.fail(f"{where}: point p{i}: state {state!r} names no refusal")
+                continue
+            named.add(name)
+            f = mf.parent / str(name)
+            if not name or not f.is_file():
+                rep.fail(f"{where}: point p{i}: its file {name} is missing")
+                continue
+            n = f.stat().st_size
+            h8 = str(name).rsplit(".", 3)[-3] if str(name).count(".") >= 3 else ""
+            if n != nbytes or not L.sha256_file(f).startswith(h8) or len(h8) != 8:
+                rep.fail(f"{where}: point p{i}: {name} differs from the manifest (size or hash)")
+            size += n
+            if n > pt_l:
+                rep.fail(f"{where}: point p{i}: {n / 1e3:.0f} kB is over the hard limit {pt_l / 1e3:.0f} kB")
+            elif n > pt_t and not L.accepted(vid, f"atlas:{a['id']}"):
+                rep.warn(f"{where}: point p{i}: {n / 1e3:.0f} kB is over the target {pt_t / 1e3:.0f} kB")
+        for f in sorted(mf.parent.iterdir()):
+            if f.name not in named:
+                rep.warn(f"recordings/{vid}/{Path(e['file']).parent.as_posix()}/{f.name}: a file its manifest does not name")
+        if (man.get("checks") or {}).get("failed"):
+            rep.fail(f"{where}: {man['checks']['failed']} check(s) end failed")
+        if size > at_l:
+            rep.fail(f"{where}: {size / L.MB:.2f} MB is over the atlas's hard limit {at_l / L.MB:.0f} MB")
+        elif size > at_t:
+            why = L.accepted(vid, f"atlas:{a['id']}")
+            rep.warn(f"{where}: {size / L.MB:.2f} MB is over the atlas's target {at_t / L.MB:.0f} MB"
+                     + (f" (accepted: {why})" if why else ""))
+        total += size
+    return total
 
 
 def check_budgets(site: Path, rep: Report):
@@ -238,7 +333,7 @@ def check(site: Path, base: str = "/lfphys/", allow_missing: bool = False) -> Re
     man = json.loads(mf.read_text(encoding="utf-8"))
     if man.get("base") != base:
         rep.fail(f"the site was built for the base {man.get('base')!r}, not {base!r}")
-    check_pages(site, base, rep)
+    check_pages(site, base, rep, man)
     check_files(site, man, rep)
     check_recordings(site, man, rep, allow_missing)
     rep.total = check_budgets(site, rep)

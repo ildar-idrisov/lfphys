@@ -33,6 +33,9 @@ REST (JSON):
     POST   /api/runs/{id}/sweep            [LB1 P16.3] a parameter sweep from the current moment ({..., estimate?});
     GET    /api/runs/{id}/sweeps[/{n}]     its progress and results (?format=csv); POST /sweeps/{n}/cancel: stop it (what
                                            it computed is kept); DELETE /sweeps/{n}: remove a finished one (lfviz.sweep)
+    POST   /api/atlas/{world}/{atlas}/point {values, seed?} -> the point's file (application/gzip), computed live in a
+                                           memory- and time-limited process, the same bytes a site build makes
+                                           (lfviz.atlas_live; design of 2026-11-14 §3.7); 400 {error, hint?}, 429
     GET    /api/settings/runs              {keep_days}: runs without actions for this many days are removed
     PUT    /api/settings/runs              {keep_days, confirm?: [id]} -> saved and applied at once; 409 with
                                            {would_remove: [id]} if it would remove runs not all in ``confirm``
@@ -46,11 +49,12 @@ on the client routes, REST and WebSocket (review LB1-framework F6: any page on t
 itself and start a record segment 10 times a second, with any data in the record as its tag).
 
 Pages: ``/`` (the start page: the four audiences, their demonstrations and the laboratories), ``/runs`` (the runs and
-their retention), ``/run?id=<id>`` (player; ``/run?rec=<world>/<rec>``: a saved recording), ``/legal`` (the licences, the third-party notices and the
+their retention), ``/run?id=<id>`` (player; ``/run?rec=<world>/<rec>``: a saved recording), ``/worksheet?demo=<world>`` (a lab's printable worksheet), ``/legal`` (the licences, the third-party notices and the
 disclaimer; their full texts at ``/legal/<name>``); static files under ``/static/``; the browser module of a
 visualization under ``/viz/<id>/`` (its ``web/`` folder).
 
-Files of the public site's kind [S]: ``/recordings/<world>/<file>`` (the recordings made by ``site/record.py``, from
+Files of the public site's kind [S]: ``/recordings/<world>/<file>`` and an atlas's ``/recordings/<world>/atlas/<atlas>/<file>``
+(the recordings and atlases made by ``site/record.py``, from
 ``visualizations/recordings/`` or ``LFVIZ_RECORDINGS``; git-ignored) and ``/images/<file>`` (the pictures of the cards
 and the README, ``docs/images/``).
 """
@@ -494,6 +498,10 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
     async def legal_page(request):
         return web.FileResponse(PLAYER / "legal.html")
 
+    async def worksheet_page(request):  # a lab's printable worksheet (design of 2026-11-14 §2.3; ?demo=…)
+        f = PLAYER / "worksheet.html"
+        return web.FileResponse(f) if f.is_file() else _err(T("there is no such file"), 404)
+
     async def legal_text(request):
         path = LEGAL.get(request.match_info["name"])
         if path is None or not path.is_file():
@@ -538,6 +546,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
     app.router.add_get("/runs", runs_page)
     app.router.add_get("/settings", settings_page)
     app.router.add_get("/legal", legal_page)
+    app.router.add_get("/worksheet", worksheet_page)
     app.router.add_get("/legal/{name}", legal_text)
     app.router.add_get("/api/devices", api_devices)
     app.router.add_get("/api/settings", api_settings_get)
@@ -580,7 +589,8 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
 
     async def recording_file(request):
         world = registry.resolve(request.match_info["world"])  # an old id (registry.ALIASES) names the new folder
-        f = _file_in(recordings_dir(), world, request.match_info["file"])
+        parts = request.match_info["file"].split("/")  # an atlas's files: atlas/<atlas>/<file> (design §1.3)
+        f = _file_in(recordings_dir(), world, *parts) if len(parts) <= 3 else None
         if f is None:
             return _err(T("there is no such file"), 404)
         ctype = "application/json" if f.suffix == ".json" else (
@@ -594,10 +604,13 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
         return web.FileResponse(f)
 
     app.router.add_get("/api/recordings", api_recordings)
-    app.router.add_get("/recordings/{world}/{file}", recording_file)
+    app.router.add_get("/recordings/{world}/{file:.+}", recording_file)
     app.router.add_get("/images/{file}", image_file)
     # [LB1 P16.3 instruments] the measurables' series and CSV, parameter sweeps (lfviz.instruments, lfviz.sweep)
     from . import instruments, sweep  # noqa: PLC0415
     instruments.add_routes(app, mgr)
     sweep.add_routes(app, mgr)
+    # «compute live»: an atlas's point for any values (design of 2026-11-14 §3.7; lfviz.atlas_live)
+    from . import atlas_live  # noqa: PLC0415
+    atlas_live.add_routes(app, mgr)
     return app

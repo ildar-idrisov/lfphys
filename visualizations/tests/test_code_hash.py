@@ -137,7 +137,9 @@ def test_the_key_covers_the_recorder_its_budgets_and_the_images_dependencies(tmp
     recording stale, so the CI cache never serves a recording made by another recorder or other libraries."""
     L = _sitelib()
     names = [f.name for f in L.RECORDER_FILES]
-    assert names == ["record.py", "requirements.lock", "Dockerfile"] and all(f.is_file() for f in L.RECORDER_FILES)
+    # the recorder, the atlas maker and the shared headless runner they both use (explore design §1.4)
+    assert names == ["record.py", "atlas.py", "headless.py", "requirements.lock", "Dockerfile"] \
+        and all(f.is_file() for f in L.RECORDER_FILES)
     copies = []
     for f in L.RECORDER_FILES:
         c = tmp_path / f.name

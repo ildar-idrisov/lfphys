@@ -13,10 +13,12 @@
 #      viz-tests, engine-tests (in parallel with check): the whole visualizations suite (in shards) and the engine's
 #               suite (integrator D5: nothing is recorded or published from code whose physics tests fail);
 #   2. record:  one job per world, after all three; restores rec-<world>-<key> from the Actions cache (key = the
-#               world's recording specs + the recorder's version and hash (record.py, the image's requirements.lock
-#               and Dockerfile, the budgets) + the world's code hash) and records only on a miss, on the CPU, in Docker
-#               with a memory cap (site/record.py; a recording fails when a check of the world ends failed); saves
-#               what it recorded under that key and uploads the world's recordings as an artifact;
+#               world's recording specs and atlas specs + the recorder's version and hash (record.py, atlas.py,
+#               lfviz/headless.py, the image's requirements.lock and Dockerfile, the budgets) + the world's code hash)
+#               and records only on a miss, on the CPU, in Docker with a memory cap (site/record.py: the recordings,
+#               then the atlases of the world's screens, site/atlas.py, in the same matrix entry; a recording or an
+#               atlas fails when a check of the world ends failed); saves what it made under that key and uploads
+#               the world's recordings and atlases (rec/<world>/, atlas/ included) as an artifact;
 #   3. build:   assembles the static site from the registry and the recordings (site/build.py), fails when anything is
 #               missing, stale, failed or over budget (site/check.py), smoke-tests it in Chromium served under
 #               /lfphys/ by Python's http.server from a parent folder, EN and RU, playing every recording
@@ -86,7 +88,7 @@ jobs:
           docker run --rm --memory=6g -e LFPHYS_NO_GPU=1 -e PYTHONDONTWRITEBYTECODE=1 -v "$PWD:/lf:ro" \
             -w /lf/visualizations "$IMAGE" python3 -m pytest -q -p no:cacheprovider \
             tests/test_site_registry.py tests/test_i18n.py tests/test_recorder.py tests/test_site_build.py \
-            tests/test_code_hash.py
+            tests/test_code_hash.py tests/test_headless.py tests/test_atlas.py tests/test_protocol_quant.py
       - name: Plan the recordings
         id: plan
         env:
@@ -174,7 +176,7 @@ jobs:
           tags: ${{ env.IMAGE }}
           load: true
           cache-from: type=gha,scope=viz
-      - name: Record (CPU, memory-capped, the recorder's own frame clock)
+      - name: Record and build the atlases (CPU, memory-capped, the recorder's own frame clock)
         id: record
         if: matrix.world != '' && steps.cache.outputs.cache-hit != 'true'
         env:
@@ -194,7 +196,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: rec-${{ matrix.world }}
-          path: rec            # rec/<world>/index.json and its files
+          path: rec            # rec/<world>/index.json and its files, rec/<world>/atlas/<atlas>/…
           retention-days: 7
 
   build:

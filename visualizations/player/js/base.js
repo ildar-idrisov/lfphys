@@ -11,7 +11,8 @@
 //   BASE                 the base path, ending with "/"
 //   url("static/x.js")   BASE + the path without its leading "/"
 //   page("run", {rec})   the address of a player page: "/run?rec=…" on the server, "<base>run.html?rec=…" on the site;
-//                        page("") and page("index") are the start page; "settings" and "runs" exist on the server only
+//                        page("") and page("index") are the start page; "settings" and "runs" exist on the server only;
+//                        page("worksheet", {demo}) is a lab's printable worksheet (design of the screens §2.3)
 
 const doc = typeof document !== "undefined" ? document : null;
 const metaOf = (name) => (doc && doc.querySelector(`meta[name="${name}"]`)?.getAttribute("content")) || "";
@@ -22,7 +23,7 @@ export const BASE = (() => { const b = metaOf("lf-base") || "/"; return b.endsWi
 export function url(path) { return BASE + String(path || "").replace(/^\/+/, ""); }
 
 // the pages of the player, by name: the server's address and the site's file
-const SITE_FILES = { "": "", index: "", run: "run.html", legal: "legal.html", "404": "404.html" };
+const SITE_FILES = { "": "", index: "", run: "run.html", legal: "legal.html", worksheet: "worksheet.html", "404": "404.html" };
 export function page(name, query) {
   name = String(name || "").replace(/^\/+/, "");
   let p;
@@ -39,7 +40,7 @@ export function page(name, query) {
 
 // the pages a link in the player may lead to, by pathname (for i18n.js: a link's language goes along)
 export function isPagePath(pathname) {
-  for (const n of ["", "run", "runs", "settings", "legal"]) if (page(n) === pathname) return true;
+  for (const n of ["", "run", "runs", "settings", "legal", "worksheet"]) if (page(n) === pathname) return true;
   return MODE === "static" && pathname === url("index.html");
 }
 
