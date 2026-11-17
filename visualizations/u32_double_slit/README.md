@@ -12,7 +12,13 @@ design `../../lfphys/sources/explore_2026-11-14_design.md` §6). Both show the w
 from above (the computed wave behind the slits and, where switched on, its flow lines; the slits numbered 1 and 2) and
 the screen (a dot per hit, under it their histogram), with one readout line above them: "Hits in this segment:", χ²/dof
 and p of the histogram against the run's expectation (✓ when p > 10⁻³) and |γ₁₂|, the degree of coherence fitted to the
-histogram, ± its error, next to "(the run's expectation …)". The checks, "Physics of this world", the panels
+histogram, ± its error, next to "(the run's expectation …)". The error is a parametric bootstrap of the fit
+(`lfphys.tools.stats.coherence_boot`: counts drawn from the fitted pattern held to |γ₁₂| ≤ 1 and refitted, their
+standard deviation; near |γ₁₂| = 1 the larger of that and the spread drawn at |γ₁₂| = 1). It and |γ₁₂| are shown only
+from 300 hits on and when at least 90 % of the refits succeed, otherwise "|γ₁₂| —" with "from 300 hits on" or the
+reason. The error is recomputed whenever the hits have grown by 10 % and shown as computed in between, not rescaled.
+Over Poisson samples of the run's own expectation at four Explore points the stated error is 0.81–1.21 of the real
+scatter of |γ₁₂| at 300 to 5000 hits (`tests/test_u32_screens.py`, `tests/test_u32_physics.py`). The checks, "Physics of this world", the panels
 "Particle", "Model of the slit screen", "Counters and statistics" and "Approximations of this segment", the events and
 where the data come from fold into "How we know this is right". The full live player (every parameter, the quick
 set-up bar, the screen's filters, the speeds "▷ flight" and "▷▷ build-up") is unchanged: on a server, "▶ Compute live"
@@ -21,16 +27,16 @@ opens it with the screen's set-up.
 **Watch: "The double slit, step by step"** (recording `story`, preset "The double slit, step by step": photons of
 632.8 nm, two slits a = 20 µm wide and d = 100 µm apart, the screen 1 m away and ±50 mm wide, 20 flow lines; 60 s at 20
 frames per second). The script changes only live parameters and the playback speed; each change of the set-up starts
-a new segment, so the screen starts again and shows each stage on its own. The captions (◀◀ / ▶▶ and the ticks on the
+a new segment, so the count on the screen starts again and shows each stage on its own. The captions (◀◀ / ▶▶ and the ticks on the
 timeline go from one to the next):
 
 | at | script | caption |
 |---|---|---|
 | 0 s | speed 0.002 (2 photons per second) | "One photon at a time leaves the source on the left, passes the slits and lands at one point of the screen on the right. Each dot is one photon." |
 | 8 s | speed 0.02 | "Where the next photon lands cannot be predicted: the hits look random. Only their probability is computed: the orange curve under the screen." |
-| 16 s | speed 0.2 | "Ten times faster, thousands of hits: their histogram follows the orange curve, and bright and dark bands appear on the screen." |
+| 16 s | speed 0.2 | "Ten times faster: hundreds of hits, then about two thousand. Their histogram follows the orange curve, and bright and dark bands appear on the screen." |
 | 22 s | — (the playback waits 3 s here) | "The bands are interference: the wave of each photon passes through both slits, and the two parts add up in some places and cancel in others. The grey dashed curve is what the two slits would give without interference." |
-| 26 s | a shutter at slit 2 | "Slit 2 is closed, and the screen starts again: the hits pile up in one broad hump, the spread of a single slit, with no bands." |
+| 26 s | a shutter at slit 2 | "Slit 2 is closed, and the count starts again. The two-slit fringes are gone: one slit gives a broad diffraction maximum, its first dark minima at ±31.6 mm." (λL/a, computed from the preset; the run's expectation for this stage has its minima there) |
 | 36 s | slit 2 open; a which-path detector at slit 1, θ = 90° | "Both slits are open, but a detector at slit 1 marks which slit each photon took: no bands. The hits follow the grey dashed curve, the two slits without interference." |
 | 48 s | the detector removed | "The detector is removed, and the bands come back: interference needs the two paths to be indistinguishable." |
 
@@ -46,16 +52,17 @@ the axis would scale with λ/a and hide what λ and a do, and at a = 10 µm the 
 region: the check against the exact Rayleigh–Sommerfeld integral fails there). Each point is one seeded sample (seed
 1): 5.25 s of world time at 1000 photons per second, 3700–5200 of them landing on the screen, and the run's own
 expectation (the orange curve, scaled to the hits shown) with its χ² against the sample. ▶ builds the pattern up
-again; the time bar is the number of hits so far, and a change of a slider keeps it, so two points are compared at
-equal times. The last three points stay as faded dashed curves in their light's colour, labelled by their set-up
+again; the time bar is the world's time of the build-up (the hits so far are in the readout line), and a change of a
+slider keeps it, so two points are compared at equal times. The last three points stay as faded dashed curves in their light's colour, labelled by their set-up
 ("λ 600 nm, d 100 µm, a 20 µm"); "Clear traces" removes them. "Show" toggles "expectation", "without interference"
 (the grey dashed sum of the two slits), "wave" and "flow lines". On a server, "Another sample" computes the same point
 live with the next seed: another realisation of the same statistics. The view draws only what the run computed: the
 map, the curves and every hit are the point's own messages; the dots' colour is the light's (a display convention).
 
-**Sizes and cost** (measured 2026-11-14, Docker `lfphys-viz`, CPU): the Explore atlas 5.50 MB gzip for 48 points (97–133
-kB each; budget 6 MB per atlas, 150 kB per point), 45–57 s CPU in three builds; `story` 0.61 MB, 6.8 s CPU; `young` 0.74 MB, `eraser`
-0.65 MB, `aharonov_bohm` 0.68 MB; the world 8.2 MB (budget 12 MB). Quantised for the screens, only what is drawn:
+**Sizes and cost** (measured 2026-11-17, Docker `lfphys-viz`, CPU): the Explore atlas 5.50 MB gzip for 48 points (largest
+132.7 kB; budget 6 MB per atlas, 150 kB per point), 88–131 s CPU in three builds (the error of |γ₁₂| is bootstrapped on
+every 10 % growth of the hits, 53 s before); `story` 0.60 MB, 7 s CPU; `young` 0.73 MB, `eraser` 0.64 MB,
+`aharonov_bohm` 0.67 MB; the world 8.15 MB (budget 12 MB). Quantised for the screens, only what is drawn:
 the near-field map (u8 of √, 1/255 of the peak's square root), the flow lines (u16), the hits' positions (u16: at most
 0.03 of a detector pixel) and display heights (u8), in Explore also the hits' times (u16) and the screen grid (u16); the
 curves, the checks, the counters and χ² are full precision.
@@ -345,12 +352,14 @@ Vector mode (13 of them):
 
 The engine's own tests of the solver: `../../lfphys/tests/test_em_slit.py`.
 
-`tests/test_u32_screens.py` (12 tests): the Watch story's script applies (four segments with the apparatus its
+`tests/test_u32_screens.py` (15 tests): the Watch story's script applies (four segments with the apparatus its
 captions name, at the world times its speeds give; a few photons in the first 8 s, thousands by 26 s; the fitted |γ₁₂|
 above 0.9 with both slits, undefined with one, below 0.15 with the which-path detector, above 0.9 again; every stage's
 histogram agrees with its expectation); the captions are in the stream at their frames with their hold; the eight
 corners of the Explore grid build with every check ✓, thousands of hits and χ² p > 10⁻⁴ on the fixed ±30 mm screen; the
-registry accepts the screens and the view declares every overlay and quantisation they use. The browser check of the
+registry accepts the screens and the view declares every overlay and quantisation they use; the story's hit counts
+at its captions and the single slit's first minima on the run's own expectation (±31.6 mm); the stated error of
+|γ₁₂| against the scatter of Poisson samples (none below 300 hits) and kept, not rescaled, between recomputations. The browser check of the
 screens: `tests/u32_screens.mjs` (EN and RU, 1280 × 800 and 390 × 844; how to run it: its header).
 
 ## Sources

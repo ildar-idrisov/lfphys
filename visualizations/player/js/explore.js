@@ -30,13 +30,32 @@ export function valueText(c, v) {
   if (typeof v === "number") return fmt(v, ".4g");
   return t(v);
 }
-// a short label of a point's values («h 1 m, angle 30°»), for a trace and the passport
+// a value with its control's unit («1 m», «30°»: no space before the degree sign)
+export function valueUnitText(c, v) {
+  const u = c.unit ? t(c.unit) : "";
+  return `${valueText(c, v)}${typeof v === "number" && u ? (u === "°" ? u : "\u00a0" + u) : ""}`;
+}
+// a short label of a point's values («h 1 m, angle 30°»), for the passport
 export function valuesText(controls, values) {
-  return controls.map((c) => {
-    const u = c.unit ? t(c.unit) : "";
-    const v = values[c.param];
-    return `${t(c.label)} ${valueText(c, v)}${typeof v === "number" && u ? (u === "°" ? u : " " + u) : ""}`;
-  }).join(", ");
+  return controls.map((c) => `${t(c.label)} ${valueUnitText(c, values[c.param])}`).join(", ");
+}
+// a trace's label: only the values that differ from the point shown («Launch speed 10 m/s»; review EX1-worlds F11,
+// EX1-screens F8), empty for the same set-up
+export function diffText(controls, values, now) {
+  return controls.filter((c) => now && values[c.param] !== now[c.param]).map((c) => `${t(c.label)} ${valueUnitText(c, values[c.param])}`).join(", ");
+}
+// a moment with its zone, as the server writes it (ISO 8601): «2026-11-17 15:16:08 UTC», «… UTC+03:00»
+export function when(iso) {
+  const m = /^(\d{4}-\d\d-\d\d)[T ](\d\d:\d\d:\d\d)(?:\.\d+)?(Z|[+-]\d\d:?\d\d)?$/.exec(String(iso || ""));
+  if (!m) return iso ? String(iso) : "—";
+  const z = !m[3] ? "" : m[3] === "Z" || /^[+-]00:?00$/.test(m[3]) ? " UTC" : ` UTC${m[3]}`;
+  return `${m[1]} ${m[2]}${z}`;
+}
+// a readout to 4 significant digits with its trailing zeros («23.90 m» next to «18.51 m»; review EX1-worlds F17)
+export function readoutText(v) {
+  if (!Number.isFinite(v)) return "—";
+  const d = v === 0 ? 3 : Math.max(0, Math.min(6, 3 - Math.floor(Math.log10(Math.abs(v)))));
+  return fmt(v, `.${d}f`);
 }
 
 // A control of a grid (site/atlas.py manifest "controls" with the catalogue's label, unit, kind; registry.screens_of):
@@ -50,11 +69,14 @@ export function controlRow(c, value, onPick, { server = false } = {}) {
   let cur = value;
   if (c.kind === "toggle" || c.kind === "select" || !vals.every((x) => typeof x === "number")) {
     const seg = el("div", { class: "dm-seg dm-ctl-seg", role: "group", "aria-label": controlLabel(c) }, vals.map((v) => el("button", {
-      "data-value": JSON.stringify(v), onclick: () => onPick(v, { final: true }) }, valueText(c, v))));
+      "data-value": JSON.stringify(v), "aria-pressed": "false", onclick: () => onPick(v, { final: true }) }, valueText(c, v))));
     row.append(seg);
     return {
       el: row,
-      set(v) { cur = v; out.textContent = valueText(c, v); for (const b of seg.children) b.classList.toggle("on", JSON.parse(b.dataset.value) === v); },
+      set(v) {
+        cur = v; out.textContent = valueText(c, v);
+        for (const b of seg.children) { const on = JSON.parse(b.dataset.value) === v; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); }
+      },
       disable(on) { for (const b of seg.children) b.disabled = on; },
     };
   }
@@ -65,18 +87,31 @@ export function controlRow(c, value, onPick, { server = false } = {}) {
   // value itself in fine steps, snapped to a detent near it, any other value computed live when released
   const input = fine ? el("input", { type: "range", class: "dm-slider", min: lo, max: hi, step: fine, "aria-label": controlLabel(c) })
     : el("input", { type: "range", class: "dm-slider", min: 0, max: vals.length - 1, step: 1, "aria-label": controlLabel(c) });
+  // a value within a tenth of the local step of a detent (the gap to its neighbour on that side) snaps to it (RULES §10;
+  // review EX1-screens F18: the smallest gap of the control snapped only within 0.1 m between 5 and 10 m)
   const valueOf = () => {
     if (!fine) return vals[Number(input.value)];
-    const x = Number(input.value), near = snap(c, x);
-    if (Math.abs(near - x) <= 2 * fine) return near;
+    const x = Number(input.value), near = snap(c, x), k = vals.indexOf(near);
+    const side = x >= near ? vals[k + 1] : vals[k - 1];
+    const gap = side === undefined ? Math.min(...gaps) : Math.abs(side - near);
+    if (Math.abs(near - x) <= 0.1 * gap + 1e-12 * Math.abs(near)) return near;
     return Number(x.toPrecision(3));
   };
-  input.oninput = () => { const v = valueOf(); out.textContent = valueText(c, v); out.classList.toggle("dm-off-grid", gridIndex(c, v) < 0); };
+  const valueSay = (v) => { const tx = valueUnitText(c, v); input.setAttribute("aria-valuetext", tx); return tx; };  // F10: the value, not the index
+  input.oninput = () => { const v = valueOf(); out.textContent = valueText(c, v); valueSay(v); out.classList.toggle("dm-off-grid", gridIndex(c, v) < 0); };
   input.onchange = () => onPick(valueOf(), { final: true });
-  // the detents: a tap on one chooses it (touch: the thumb need not be dragged)
-  const ticks = el("div", { class: "dm-detents" }, vals.map((v, i) => el("button", {
-    class: "dm-detent", style: { left: `${(100 * (fine ? (v - lo) / (hi - lo || 1) : i / Math.max(1, vals.length - 1))).toFixed(3)}%` },
-    title: valueText(c, v), onclick: () => onPick(v, { final: true }) }, vals.length <= 12 || i % Math.ceil(vals.length / 10) === 0 || i === vals.length - 1 ? valueText(c, v) : "")));
+  // the detents: a tap on one chooses it (touch: the thumb need not be dragged). Out of the tab order: the slider is the
+  // keyboard's way (review EX1-screens F10); their hit area is 44 px high and as wide as the gap to the neighbours (F15)
+  const pos = (v, i) => 100 * (fine ? (v - lo) / (hi - lo || 1) : i / Math.max(1, vals.length - 1));
+  const ticks = el("div", { class: "dm-detents" }, vals.map((v, i) => {
+    const gapPct = Math.min(i > 0 ? pos(v, i) - pos(vals[i - 1], i - 1) : Infinity, i < vals.length - 1 ? pos(vals[i + 1], i + 1) - pos(v, i) : Infinity);
+    const b = el("button", {
+      class: "dm-detent", tabindex: "-1", "aria-pressed": "false", style: { left: `${pos(v, i).toFixed(3)}%` },
+      title: valueText(c, v), "aria-label": valueUnitText(c, v), onclick: () => onPick(v, { final: true }) },
+    vals.length <= 12 || i % Math.ceil(vals.length / 10) === 0 || i === vals.length - 1 ? valueText(c, v) : "");
+    b.style.setProperty("--gap", Number.isFinite(gapPct) ? gapPct.toFixed(3) : "100");
+    return b;
+  }));
   row.append(el("div", { class: "dm-slider-box" }, input, ticks));
   return {
     el: row,
@@ -85,8 +120,9 @@ export function controlRow(c, value, onPick, { server = false } = {}) {
       const k = gridIndex(c, v);
       input.value = String(fine ? v : Math.max(0, k));
       out.textContent = valueText(c, v);
+      valueSay(v);
       out.classList.toggle("dm-off-grid", k < 0);
-      for (const [i, b] of [...ticks.children].entries()) b.classList.toggle("on", i === k);
+      for (const [i, b] of [...ticks.children].entries()) { b.classList.toggle("on", i === k); b.setAttribute("aria-pressed", String(i === k)); }
     },
     disable(on) { input.disabled = on; for (const b of ticks.children) b.disabled = on; },
     get value() { return cur; },
@@ -105,14 +141,14 @@ export function localT(shot, clock) {
 }
 
 export async function create(host, kit, spec) {
-  const index = kit.index || {};
-  const entry = (index.atlases || []).find((a) => a.id === spec.atlas);
-  if (!entry) {
-    fill(host, el("div", { class: "page dm-missing" }, el("p", {}, t("No atlas of this screen yet: it is built with the site (site/atlas.py).")),
+  const src = kit.atlasSource ? kit.atlasSource(spec.atlas)
+    : { why: t("No atlas of this screen yet: it is built with the site (site/atlas.py).") };
+  if (!src.entry) {
+    fill(host, el("div", { class: "page dm-missing" }, el("p", {}, src.why),
       kit.server ? el("p", { class: "muted" }, t("“▶ Compute live” at the top runs the same set-up on this server.")) : null));
     return { liveBody: () => ({ preset: spec.preset, params: { ...spec.fixed } }) };
   }
-  const A = await openAtlas(kit.world, entry);
+  const A = await openAtlas(kit.world, src.entry, { base: src.base });
   // the manifest's grid with the catalogue's labels, units and kinds (registry.screens_of)
   A.controls = A.controls.map((c) => ({ ...((spec.controls || []).find((x) => x.param === c.param) || {}), ...c }));
   const timeMode = spec.time || "flight", acts = spec.acts || "next", maxTraces = Math.max(0, spec.traces || 0);
@@ -258,7 +294,9 @@ export async function create(host, kit, spec) {
       if (!tv) { tv = kit.newView({ requestRender: () => {} }); traceViews.set(s.pt.W, tv); }
       showAt(tv, s.pt.W, tt);
       s.pt.W.view = tv;  // a view may draw a trace from the trace's own view (design §2.4: W, a decoded world)
-      return { key: `${s.pt.i}:${s.launchedAt}`, label: s.label + (s.pt.live ? " · " + t("computed live") : ""), W: s.pt.W, t: tt, alpha: 0.6 * (k + 1) / (n + 1) };
+      const diff = diffText(A.controls, s.pt.values, E.cur ? E.cur.pt.values : null);
+      const label = s.pt.live ? (diff ? `${diff} · ${t("computed live")}` : t("computed live")) : diff;
+      return { key: `${s.pt.i}:${s.launchedAt}:${label}`, label, live: !!s.pt.live, W: s.pt.W, t: tt, alpha: 0.6 * (k + 1) / (n + 1) };
     });
   }
   function render() {
@@ -286,7 +324,7 @@ export async function create(host, kit, spec) {
     const meas = (f && f.meta.meas) || {};
     fill(readBox, ms.map((m) => el("div", { class: "dm-readout", "data-readout": m.id }, el("span", {}, t(m.label)),
       el("b", { class: "mono" }, meas[m.id] === null || meas[m.id] === undefined ? "—"
-        : `${num(meas[m.id], 4)}${m.unit ? "\u00a0" + t(m.unit) : ""}`))));
+        : `${readoutText(meas[m.id])}${m.unit ? "\u00a0" + t(m.unit) : ""}`))));
     if (bar) {
       const launched = c.launchedAt !== null;
       bar.update({ playing: E.playing, i: Math.max(0, i), max: Math.max(0, F.length - 1),
@@ -321,17 +359,28 @@ export async function create(host, kit, spec) {
       const tt = (frameAt(W, timeMode === "none" ? c.pt.tEnd : localT(c, E.clock)) || {}).t ?? 0;
       let n = 0;
       for (const vs of W.checks.values()) for (const x of vs) if ((x.t ?? 0) <= tt) n++;
-      return `${c.pt.i}|${c.pt.live}|${n}|${W.events.filter((e) => (e.t ?? 0) <= tt).length}`;
+      return `${c.pt.i}|${c.pt.live}|${c.pt.key}|${n}|${W.events.filter((e) => (e.t ?? 0) <= tt).length}`;
     },
     drawer() {
       const c = E.cur, pt = c && c.pt, W = pt && pt.W;
       const tt = W ? (frameAt(W, timeMode === "none" ? pt.tEnd : localT(c, E.clock)) || {}).t ?? 0 : 0;
       const m = A.manifest;
-      const passport = [[t("Point"), pt ? valuesText(A.controls, pt.values) : "—"], [t("Point's index"), pt && pt.i !== null ? `${pt.i} / ${m.points.length}` : "—"],
-        [t("Atlas"), `${m.atlas} · ${t("key")} ${m.key}`], [t("Code"), m.code_hash], [t("Random seed"), pt && pt.seed ? pt.seed : m.seed],
-        [t("Made"), String(m.made || "").replace("T", " ").slice(0, 19)]];
-      const note = pt && pt.live ? t("Computed live on this server at {at}.", { at: String(pt.at || "").replace("T", " ").slice(0, 19) })
-        : t("Computed by the engine when the site was built: every slider position is such a point; nothing between them is drawn.");
+      // a live point's passport is its own (integrator D13): its key, the code that computed it and when, and where the
+      // server took it from; an atlas point's is the atlas's
+      let passport, note;
+      if (pt && pt.live) {
+        passport = [[t("Point"), valuesText(A.controls, pt.values)], [t("Point's key"), pt.key || "—"], [t("Code"), pt.code || "—"],
+          [t("Random seed"), pt.seed ?? m.seed], [t("Computed"), when(pt.made)], [t("Atlas"), m.atlas]];
+        note = pt.source === "cache" ? t("Computed live on this server earlier, at {at}, and taken from its cache.", { at: when(pt.made) })
+          : pt.source === "atlas" ? t("This value is on the atlas's grid: the server gave the atlas's point, computed when the atlas was built ({at}).", { at: when(pt.made) })
+          : t("Computed live on this server at {at}.", { at: when(pt.made) });
+      } else {
+        passport = [[t("Point"), pt ? valuesText(A.controls, pt.values) : "—"], [t("Point's index"), pt && pt.i !== null ? `${pt.i} / ${m.points.length}` : "—"],
+          [t("Atlas"), `${m.atlas} · ${t("key")} ${m.key}`], [t("Code"), m.code_hash], [t("Random seed"), pt && pt.seed ? pt.seed : m.seed],
+          [t("The atlas was built"), when((A.entry || {}).made ?? m.made)]];
+        if (src.fromSite) passport.push([t("From"), t("the public site")]);
+        note = t("Computed by the engine when the site was built: every slider position is such a point; nothing between them is drawn.");
+      }
       return kit.howWeKnow({ W, tt, passport, note });
     },
     liveBody() { return { preset: m0().preset, params: { ...(m0().fixed || {}), ...E.values } }; },

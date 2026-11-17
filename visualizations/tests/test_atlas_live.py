@@ -4,28 +4,40 @@
 ``lfphys/sources/explore_2026-11-14_design.md`` §3.7, §8), on the toy worlds of ``tests/site_worlds``:
 
 * an off-grid value is computed in a separate process and is a whole point (its header a delta against the screen's
-  base header, the world's messages, ``end {reason: "atlas"}``);
+  base header that names it, ``$base``; the world's messages, ``end {reason: "atlas"}``); ``full_header`` gives the
+  same point with the header merged; the headers name the point's key, code and time (integrator D13, review R-F F2);
 * an on-grid value computed live is the same bytes a site build makes; with the local atlas current it is served
   from it; a second request is served from the cache; another seed is another point;
-* a value the world refuses is ``400 {error, hint}`` with its texts; a value the schema refuses, a parameter that is
-  not a control, a bad seed or body are ``400``; an unknown world or atlas ``404``;
+* the cache follows the code on disk: a point is never served or stored under another code's key (review R-F F1); a
+  point computed while the code changed is not kept;
+* a value the world refuses (``check_params`` or its constructor) is ``400 {error, hint}`` with its texts; a point whose
+  checks end ✗ is ``409`` naming them (integrator D14, review R-F F4); a value the schema refuses or outside the
+  control's span, a parameter that is not a control, a bad seed or body (an integer of 5000 digits too: review R-F F12)
+  are ``400``; an unknown world or atlas ``404``;
 * the memory limit and the time limit end the point's process, not the server (``503``), which then computes the next
   point; more than one computed and ``QUEUE`` waiting is ``429``;
+* the cache's housekeeping: leftovers of killed processes go, the log keeps the last point, the cache keeps under its
+  cap (review R-F F13);
 * the nested route ``/recordings/<world>/atlas/<atlas>/<file>`` serves an atlas's files and nothing outside.
 """
 
 from __future__ import annotations
 
 import asyncio
+import datetime as _dt
 import gzip
+import hashlib
 import importlib.util
 import json
+import os
+import shutil
 import sys
+import time
 
 import pytest
 from aiohttp.test_utils import TestClient, TestServer
 
-from lfviz import atlas_live, headless, registry
+from lfviz import atlas_live, headless, protocol, registry
 from lfviz.app import create_app
 
 VIZ = registry.ROOT
@@ -147,10 +159,10 @@ def test_the_memory_limit_and_the_timeout_end_the_process_not_the_server(tmp_pat
 def test_beyond_the_queue_a_request_is_429(tmp_path, monkeypatch):
     gate = {"n": 0}
 
-    async def slow(self, world, atlas, values, seed, base, out):
+    async def slow(self, world, atlas, values, seed, folder, want):
         gate["n"] += 1
         await asyncio.sleep(0.5)
-        return b"x"
+        return b"x", {"key": f"k{seed}", "base_key": "b", "code_hash": "c", "stable": True}
     monkeypatch.setattr(atlas_live.LivePoints, "_spawn", slow)
 
     async def fn(cl):
@@ -179,3 +191,129 @@ def test_the_nested_route_serves_an_atlas_and_nothing_outside(tmp_path, monkeypa
     assert res[0][0] == 200 and json.loads(res[0][2])["atlas"] == "explore"
     assert res[1][0] == 200 and res[1][1] == "application/gzip" and gzip.decompress(res[1][2]).startswith(b"LFVREC1")
     assert [r[0] for r in res[2:]] == [404, 404, 404]
+
+
+# --- integrator D13, D14; review R-F F1, F2, F4, F12, F13 -----------------------------------------------------------
+def _stream_items(data):
+    raw = gzip.decompress(data)
+    return [m for _o, m in protocol.iter_stream(raw, len(protocol.MAGIC))]
+
+
+def test_a_live_point_names_its_base_its_key_code_and_time_and_comes_whole_on_request(tmp_path):
+    body = {"values": {"h_m": 0.7, "angle_deg": 12.5}}
+
+    async def fn(cl):
+        a = await _post(cl, body)
+        b = await _post(cl, {**body, "full_header": True})
+        c = await _post(cl, {**body, "full_header": "yes"})
+        return a, b, c
+    (st, data, hd), (st2, full, hd2), (st3, _d, _h) = _api(tmp_path, fn)
+    assert st == 200 and st2 == 200 and st3 == 400
+    assert hd["X-LF-Code"] == registry.code_hash("s98_atlas_toy") and hd2["X-LF-Source"] == "cache"
+    assert hd2["X-LF-Key"] == hd["X-LF-Key"] and hd2["X-LF-Made"] == hd["X-LF-Made"]
+    made = _dt.datetime.fromisoformat(hd["X-LF-Made"])
+    assert made.tzinfo is not None and abs((_dt.datetime.now(_dt.timezone.utc) - made).total_seconds()) < 600
+    folder = tmp_path / "runs" / "atlas-live" / "s98_atlas_toy" / "explore"
+    base_f = next(folder.glob("base-*.lfpt.gz"))
+    head = headless.read_stream(data)[0][0]
+    assert head["$delta"] is True and head["$base"] == hashlib.sha256(base_f.read_bytes()).hexdigest()
+    fhead = headless.read_stream(full)[0][0]
+    assert not [k for k in fhead if k.startswith("$")]
+    merged, _blobs = headless.merge_header(headless.read_stream(base_f.read_bytes())[0], headless.read_stream(data)[0])
+    assert {k: v for k, v in fhead.items() if k != "blobs"} == {k: v for k, v in merged.items() if k != "blobs"}
+    assert _stream_items(full)[1:] == _stream_items(data)[1:]  # only the header differs
+
+
+def _toy_copy(tmp_path, monkeypatch):
+    extra = tmp_path / "extra"
+    shutil.copytree(SITE_WORLDS / "s98_atlas_toy", extra / "s98_atlas_toy",
+                    ignore=shutil.ignore_patterns("__pycache__"))
+    monkeypatch.setenv("LFVIZ_EXTRA", str(extra))
+    return extra / "s98_atlas_toy" / "viz.py"
+
+
+def test_the_cache_follows_the_code_on_disk(tmp_path, monkeypatch):
+    """Review R-F F1: a world file edited while the server runs. The point is computed by the edited code under the
+    edited code's key; after the edit is reverted, the first code's point is served again, never the edited one."""
+    f = _toy_copy(tmp_path, monkeypatch)
+    orig = f.read_text(encoding="utf-8")
+    old = 'meta = {"x": x, "y": y, "landed": self.landed, "meas": meas}'
+    assert orig.count(old) == 1
+    body = {"values": {"h_m": 0.7, "angle_deg": 12.5}}
+
+    def probed(data):
+        return any(m.get("probe") for m, _b in headless.read_stream(data) if m["type"] == "frame")
+
+    async def fn(cl):
+        a = await _post(cl, body)
+        time.sleep(0.01)
+        f.write_text(orig.replace(old, old[:-1] + ', "probe": 1}'), encoding="utf-8")
+        b = await _post(cl, body)
+        time.sleep(0.01)
+        f.write_text(orig, encoding="utf-8")
+        c = await _post(cl, body)
+        return a, b, c
+    (st, da, ha), (st2, db, hb), (st3, dc, hc) = _api(tmp_path, fn)
+    assert st == st2 == st3 == 200
+    assert ha["X-LF-Source"] == "computed" and not probed(da)
+    assert hb["X-LF-Source"] == "computed" and probed(db)  # not the first code's cached point
+    assert hb["X-LF-Code"] != ha["X-LF-Code"] and hb["X-LF-Key"] != ha["X-LF-Key"]
+    assert hc["X-LF-Source"] == "cache" and hc["X-LF-Key"] == ha["X-LF-Key"] and not probed(dc)  # not poisoned
+
+
+def test_a_point_computed_while_the_code_changed_is_not_kept(tmp_path, monkeypatch):
+    sigs = iter([("c1", "r", "l"), ("c2", "r", "l")])
+    monkeypatch.setattr(atlas_live, "_code_signature", lambda world, L: next(sigs))
+    folder = tmp_path / "cache"
+    folder.mkdir()
+    data, rep = atlas_live.compute("s98_atlas_toy", "explore", {"h_m": 0.7, "angle_deg": 12.5}, 1, folder)
+    assert data[:2] == b"\x1f\x8b" and rep["stable"] is False and rep["code_hash"] == "c1"
+    assert not list(folder.glob("base-*"))  # its base is not kept either
+
+
+def test_refusals_of_the_constructor_failed_checks_spans_and_huge_numbers(tmp_path):
+    url = "/api/atlas/u97_atlas_hog/explore/point"
+
+    async def fn(cl):
+        out = [await _post(cl, {"values": {"mode": "refuse"}}, url),
+               await _post(cl, {"values": {"mode": "fail"}}, url),
+               await _post(cl, {"values": {"h_m": 2.0}}),
+               await _post(cl, {"values": {"mode": "mem"}}, "/api/atlas/u97_atlas_hog/faults/point")]
+        r = await cl.post(URL, data='{"values": {"h_m": 1' + "1" * 5000 + "}}",
+                          headers={"Content-Type": "application/json"})
+        out.append((r.status, await r.read(), {}))
+        return out
+    ref, fail, span, sel, huge = _api(tmp_path, fn)
+    body = json.loads(ref[1])
+    assert ref[0] == 400 and body["error"]["$t"] == "This test world refuses the mode “refuse” while it is built"
+    assert body["hint"]["$t"] == "choose another mode"  # D14: a constructor's refusal is a refusal, not a 500
+    body = json.loads(fail[1])
+    assert fail[0] == 409 and body["error"]["$t"] == "the world's checks fail at these values: {checks}"
+    assert "a check that fails on purpose" in body["text"]
+    body = json.loads(span[1])
+    assert span[0] == 400 and body["error"]["$t"].startswith("“{label}” = {value:.6g} is outside")
+    assert sel[0] == 400 and json.loads(sel[1])["error"]["$t"] == "“{label}”: this screen offers only its own values"
+    assert huge[0] == 400 and json.loads(huge[1])["error"]["$t"] == "the request body is not JSON"
+
+
+def test_the_cache_housekeeping(tmp_path, monkeypatch):
+    folder = tmp_path / "runs" / "atlas-live" / "s98_atlas_toy" / "explore"
+    folder.mkdir(parents=True)
+    old_t = time.time() - 2 * atlas_live.LEFTOVER_S
+    for name in ("dead.part", "dead.part.json", "base-x.lfpt.gz.tmp"):
+        (folder / name).write_bytes(b"x")
+        os.utime(folder / name, (old_t, old_t))
+    (folder / "fresh.part").write_bytes(b"x")
+    monkeypatch.setenv(atlas_live.ENV_CACHE, "0.001")  # 1000 bytes: only the newest point is kept
+
+    async def fn(cl):
+        a = await _post(cl, {"values": {"h_m": 0.7, "angle_deg": 12.5}})
+        b = await _post(cl, {"values": {"h_m": 0.8, "angle_deg": 12.5}})
+        return a, b
+    a, b = _api(tmp_path, fn)
+    assert a[0] == b[0] == 200
+    names = {f.name for f in folder.iterdir()}
+    assert not names & {"dead.part", "dead.part.json", "base-x.lfpt.gz.tmp"} and "fresh.part" in names
+    assert f"{b[2]['X-LF-Key']}.lfpt.gz" in names and f"{a[2]['X-LF-Key']}.lfpt.gz" not in names
+    log = (folder / "point.log").read_bytes()
+    assert len(log) < 20000  # the last point's log only

@@ -10,7 +10,10 @@
   and sqrt, one range and per-column ranges, NaN codes);
 * the round trip's error is within the stated ``max_err`` and within half a step of the written range; the ranges are
   written short and contain the data; an integer blob that fits is stored unchanged; ``raw`` gives the codes;
-* the registry's encodings and keys.
+* the registry's encodings and keys: a check's, an event's … blob is never quantised, and ``:all`` is refused where the
+  view declared per-column ranges (review R-F F9);
+* a nearly constant range (a few ulps wide, at any offset) ends and is kept exact (review R-F F3); ±inf is refused, not
+  stored as NaN (F9).
 """
 
 from __future__ import annotations
@@ -18,6 +21,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import math
+import signal
 
 import numpy as np
 import pytest
@@ -151,3 +155,51 @@ def test_the_registry_knows_the_encodings_and_the_keys():
     assert registry._quant_safe("u16", "u8") and registry._quant_safe("u16sqrt:col", "u8sqrt")
     assert not registry._quant_safe("u8", "u16") and not registry._quant_safe("u8sqrt", "u8") \
         and not registry._quant_safe("u16", None)
+    assert registry._quant_safe("u16:col", "u16") and registry._quant_safe("u16", "u16:all")
+    assert not registry._quant_safe("u16:all", "u16") and not registry._quant_safe("u16", "u16:col")  # F9
+    bad = registry._check_quantize({"check.v": "u16", "event.data": "u8", "caption.x": "u16", "frame.f": "u16",
+                                    "header.h": "u16", "traj.s": "u16"})
+    assert len(bad) == 3 and all("never quantised" in b for b in bad)
+
+
+def _near_constant_cases():
+    rng = np.random.default_rng(20261117)
+    out = [(1000.1, 1000.1 + 2 * np.spacing(1000.1)), (0.0485, 0.0485 + 7 * np.spacing(0.0485)),
+           (-1921.12, -1921.12 + 2 * np.spacing(1921.12)), (1e12, 1e12 + 1e-3), (-5e-300, 5e-300)]
+    for _ in range(600):
+        x = float(10 ** rng.uniform(-3, 12) * rng.choice([-1.0, 1.0]))
+        k = int(rng.integers(1, 3000))
+        out.append((x, x + k * float(np.spacing(abs(x)))))
+    for _ in range(200):  # ordinary spans at large offsets
+        x = float(10 ** rng.uniform(-3, 12))
+        out.append((x, x + x * float(10 ** rng.uniform(-9, 1))))
+    return out
+
+
+def test_a_nearly_constant_range_ends_and_contains_its_values():
+    """Review R-F F3: ``_short`` looped forever when the step was below an ulp of the values (46 of 400 two-value
+    blobs). Each range now ends, contains its values, widens by at most 4·10⁻³ of the span, and a quantised two-value
+    blob decodes within its stated error."""
+    def stop(*_a):
+        raise TimeoutError("a range did not end")
+    old = signal.signal(signal.SIGALRM, stop)
+    signal.alarm(60)
+    try:
+        for lo, hi in _near_constant_cases():
+            a, b = protocol._short_range(np.float64(lo), np.float64(hi))
+            assert a <= lo and b >= hi and (b - a) <= (hi - lo) * (1 + 4e-3) + 1e-300, (lo, hi, a, b)
+            q = protocol.quantize(np.array([lo, hi]), "u16")
+            dec = protocol.dequantize(q.codes, "u2", q.q).astype(np.float64)
+            assert np.all(np.abs(dec - np.array([lo, hi])) <= q.max_err * (1 + 1e-12) + 1e-300)
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, old)
+
+
+def test_infinities_are_refused_nan_is_coded():
+    with pytest.raises(ValueError, match="inf"):
+        protocol.quantize(np.array([1.0, np.inf, 2.0]), "u16")
+    with pytest.raises(ValueError, match="inf"):
+        protocol.quantize(np.array([[1.0, -np.inf]]), "u8:col")
+    q = protocol.quantize(np.array([1.0, np.nan, 2.0]), "u16")
+    assert q.q["nan"] is True and np.isnan(protocol.dequantize(q.codes, "u2", q.q)[1])

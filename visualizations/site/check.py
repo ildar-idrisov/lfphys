@@ -16,6 +16,8 @@
   ``"/ws…"``; ``/static/`` and ``/viz/`` go through the import map) outside a comment (F5);
 * a recording's index entry counts a check that ends failed (``checks.failed``; integrator D5);
 * ``api/recordings.json`` lacks ``published`` or ``site``, or they differ from ``site/site.json`` (integrator D3, D4);
+  its ``expected`` (per world: the version, the code hash and the keys of its recordings and atlases) is missing or
+  differs from the registry's keys now (integrator D11: a server's player compares the site's atlas keys with its own);
 * a budget's hard limit is exceeded (one recording 10 MB, one world 25 MB with its atlases, one atlas point 400 kB, one
   atlas 12 MB, one poster 400 kB, the site 900 MB); over a target (3 MB, 12 MB, 150 kB, 6 MB, 150 kB, 600 MB) it warns;
   the recordings accepted over their target (``sitelib.ACCEPTED``) are warned as "over target (accepted: <reason>)";
@@ -163,6 +165,25 @@ def check_files(site: Path, man: dict, rep: Report):
         if recs.get("published") is not want["published"] or recs.get("site") != want["url"]:
             rep.fail(f"api/recordings.json: published {recs.get('published')!r}, site {recs.get('site')!r}; "
                      f"site/site.json gives {want['published']!r}, {want['url']!r}")
+        exp = recs.get("expected")
+        if not isinstance(exp, dict):
+            rep.fail("api/recordings.json: no expected keys (integrator D11)")
+        else:
+            for vid in L.demo_worlds():
+                if exp.get(vid) != L.expected(plan_of(vid)):
+                    rep.fail(f"api/recordings.json: expected[{vid}] differs from the registry's keys now")
+            for vid in sorted(set(exp) - set(L.demo_worlds())):
+                rep.fail(f"api/recordings.json: expected names {vid}, not a world with recordings")
+
+
+_PLANS: dict = {}
+
+
+def plan_of(vid: str) -> dict:
+    """``sitelib.planned_world``, once per world and check."""
+    if vid not in _PLANS:
+        _PLANS[vid] = L.planned_world(vid)
+    return _PLANS[vid]
 
 
 def check_recordings(site: Path, man: dict, rep: Report, allow_missing: bool):
@@ -170,7 +191,7 @@ def check_recordings(site: Path, man: dict, rep: Report, allow_missing: bool):
     world_t, world_l = L.BUDGET["world"]
     mworlds = man.get("worlds") or {}
     for vid in L.demo_worlds():
-        plan = L.planned_world(vid)
+        plan = plan_of(vid)
         mw = mworlds.get(vid)
         if mw is None:
             rep.fail(f"{vid}: not in the site's manifest")
@@ -326,6 +347,7 @@ def check_budgets(site: Path, rep: Report):
 
 def check(site: Path, base: str = "/lfphys/", allow_missing: bool = False) -> Report:
     rep = Report()
+    _PLANS.clear()
     mf = site / "site-manifest.json"
     if not mf.is_file():
         rep.fail("site-manifest.json is missing")

@@ -40,12 +40,23 @@ def module_names() -> list[str]:
 
 
 def about(name: str) -> dict:
-    """ABOUT of a module, with its id (the module path without the package prefix)."""
-    if not name.startswith("lfphys."):
-        name = "lfphys." + name
-    mod = importlib.import_module(name)
+    """ABOUT of a module, with its id (the module path without the package prefix). "module:part" (e.g.
+    "core.data:air") is one entry of the module's ``DATASETS``: its own title, statement, validity and basis, the
+    module's layer and kind, id "core.data:air" (review R-W F8: a world lists only the data it reads)."""
+    base, _, part = name.partition(":")
+    if not base.startswith("lfphys."):
+        base = "lfphys." + base
+    mod = importlib.import_module(base)
+    if part:
+        sets = getattr(mod, "DATASETS", {})
+        if part not in sets:
+            raise KeyError(f"{base} has no dataset {part!r} (DATASETS: {sorted(sets)})")
+        top = getattr(mod, "ABOUT", {})
+        d = {"layer": top.get("layer"), "kind": top.get("kind"), "conflicts": [], **sets[part]}
+        d["id"] = f"{base[len('lfphys.'):]}:{part}"
+        return d
     d = dict(getattr(mod, "ABOUT", {}))
-    d["id"] = name[len("lfphys."):]
+    d["id"] = base[len("lfphys."):]
     return d
 
 

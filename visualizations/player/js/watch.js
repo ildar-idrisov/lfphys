@@ -6,16 +6,37 @@
 // («slow»: a quarter of it). The caption strip shows the latest caption as of the cursor: a caption is an accumulative
 // message of the recording at its frame (caption {t, text, n, at, hold?}), so it keeps its place under frame thinning
 // and speed changes. Its chapters are ticks on the timeline: a click jumps there, ◀◀ / ▶▶ go to the previous or next
-// one. A caption with `hold` holds the playback for that many seconds when it is reached, so it can be read. The
-// playback starts at the beginning and pauses at the end. «More recordings» is a select. The view is fed the recording's
-// messages up to the frame shown (record_core.js); nothing is computed here.
+// one. A caption with `hold` holds the playback for that many seconds when it is reached, so it can be read; any action
+// of the viewer (▶/❚❚, a scrub, a chapter) ends the hold (review EX1-screens F12). The playback starts at the beginning
+// and pauses at the end. «More recordings» is a select. The view is fed the recording's messages up to the frame shown
+// (record_core.js); nothing is computed here.
+//
+// The time label states the world's time and the playback factor for every world («world 0.42 s · slow motion ×10»;
+// integrator D8, review EX1-worlds F4): the factor is the frames' own world Δt × the frames per played second × the
+// speed chosen (normal / slow), «real time» within 5 % of 1, so that no view needs to repeat it.
+//
+// An optional view hook (integrator D8): view.setStory({worlds, w, fps}) is called when the world shown changes (a new
+// recording or the next world of the story): `worlds` the recording's decoded worlds (record_core.js), `w` the index of
+// the one shown, `fps` the recording's frames per played second. A view uses it to keep one fixed scale over the whole
+// story and to draw the earlier worlds as faded traces (S03).
 import { readStream, url } from "./api.js";
 import { t } from "./i18n.js";
 import { frameIndexAt, showAt, worldsOf } from "./record_core.js";
-import { el, fill } from "./ui.js";
+import { el, fill, fmt } from "./ui.js";
 import { secs } from "./explore.js";
 
 export const SLOW = 0.25;
+
+// «world 0.42 s · slow motion ×10»: the world's time and the playback factor (world seconds per played second r);
+// «real time» within 5 % of 1 (integrator D8)
+export function rateText(worldT, r) {
+  const w = t("world {t}", { t: secs(worldT) });
+  if (!(r > 0) || !Number.isFinite(r)) return w;
+  if (Math.abs(r - 1) <= 0.05) return `${w} · ${t("real time")}`;
+  const k = r < 1 ? 1 / r : r;
+  const kk = fmt(k < 10 ? Number(k.toPrecision(2)) : Math.round(k), "");  // ×2.5, ×10, ×91
+  return `${w} · ${r < 1 ? t("slow motion ×{k}", { k: kk }) : t("sped up ×{k}", { k: kk })}`;
+}
 
 // The story of a decoded recording: its worlds, the global sequence of their frames [{w, i}] and its captions placed
 // at the frame that follows each one in the stream (the recorder writes a caption just before its frame)
@@ -43,9 +64,12 @@ export function captionAt(captions, k) {
 export async function create(host, kit, spec) {
   const index = kit.index || {};
   const ids = [spec.recording, ...(spec.more || [])];
-  const recs = ids.map((id) => ({ id, entry: (index.recordings || []).find((r) => r.id === id) || null,
-    spec: (kit.viz.recordings || []).find((r) => r.id === id) || null })).filter((r) => r.entry || r.spec);
-  const V = { rec: null, story: null, pos: 0, playing: false, rate: 1, wall: 0, holdUntil: 0, held: -1, started: false };
+  // each recording here, or (a server without it) the published site's of the same world version (integrator D11)
+  const source = (id) => (kit.recordingSource ? kit.recordingSource(id)
+    : { entry: (index.recordings || []).find((r) => r.id === id) || null, base: url(`recordings/${kit.world}/`) });
+  const recs = ids.map((id) => { const src = source(id); return { id, entry: src.entry || null, base: src.base, fromSite: !!src.fromSite,
+    spec: (kit.viz.recordings || []).find((r) => r.id === id) || null }; }).filter((r) => r.entry || r.spec);
+  const V = { rec: null, story: null, pos: 0, playing: false, rate: 1, wall: 0, holdUntil: 0, held: -1, started: false, storySig: null };
   const view = kit.newView();
   const caption = el("div", { class: "dm-caption" + (kit.school ? " big" : ""), role: "status", "aria-live": "polite" });
   const stage = el("div", { class: "dm-stage" }, view.center, caption);
@@ -69,15 +93,16 @@ export async function create(host, kit, spec) {
       return;
     }
     caption.textContent = t("loading the recording…");
-    const resp = await fetch(url(`recordings/${kit.world}/${r.entry.file}`));
+    const resp = await fetch(r.base + r.entry.file);
     if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
     V.story = story(await readStream(new Uint8Array(await resp.arrayBuffer())));
-    V.rec = r; V.pos = 0; V.held = -1;
+    V.rec = r; V.pos = 0; V.held = -1; V.holdUntil = 0; V.storySig = null;
     const S = V.story, n = S.steps.length;
     bar.ticks(S.captions.map((c) => ({ at: n > 1 ? c.step / (n - 1) : 0, title: t(c.text), onclick: () => go(c.step) })));
     const e = r.entry;
     fill(info, el("div", {}, t((e || {}).label)), el("div", {}, t("{s:g} s at {fps:g} frames per second", { s: e.seconds, fps: e.fps })),
-      el("div", {}, t("Captions: {n:d}", { n: S.captions.length })));
+      el("div", {}, t("Captions: {n:d}", { n: S.captions.length })),
+      r.fromSite ? el("div", {}, t("Played from the public site: this server has no local copy (the same version of the world).")) : null);
     kit.dirty();
     V.playing = n > 1; V.wall = performance.now();  // the playback starts at the beginning
   }
@@ -86,10 +111,11 @@ export async function create(host, kit, spec) {
   function go(k) {
     if (!V.story) return;
     V.pos = Math.max(0, Math.min(k, V.story.steps.length - 1));
-    V.playing = false; V.held = curStep(); kit.dirty();
+    V.playing = false; V.held = curStep(); V.holdUntil = 0; kit.dirty();
   }
   function playPressed() {
     if (!V.story) return;
+    V.holdUntil = 0;  // any action of the viewer ends a caption's hold (review EX1-screens F12)
     if (V.playing) { V.playing = false; kit.dirty(); return; }
     if (curStep() >= V.story.steps.length - 1) V.pos = 0;  // at the end: from the start
     V.playing = true; V.wall = performance.now(); V.held = curStep(); kit.dirty();
@@ -101,10 +127,21 @@ export async function create(host, kit, spec) {
     go(target ? target.step : d > 0 ? V.story.steps.length - 1 : 0);
   }
 
+  // world seconds per played second around frame i of world W (its frames' own Δt × the frames per played second)
+  function worldRate(W, i) {
+    const F = W.frames, a = Math.max(0, i - 3), b = Math.min(F.length - 1, i + 3);
+    if (b <= a) return null;
+    const dt = (F[b].t - F[a].t) / (b - a);
+    return dt > 0 ? dt * fps() * V.rate : null;
+  }
   function render() {
     const S = V.story;
     if (!S || !S.steps.length) return;
     const k = curStep(), st = S.steps[k], W = S.worlds[st.w], f = W.frames[st.i];
+    if (view.setStory) {  // the optional hook (integrator D8): the story's worlds, once per world shown
+      const sig = `${V.rec.id}|${st.w}`;
+      if (sig !== V.storySig) { V.storySig = sig; try { view.setStory({ worlds: S.worlds, w: st.w, fps: fps() }); } catch (e) { console.error(e); } }
+    }
     showAt(view, W, f.t);
     kit.self.frame = f;
     try { view.render(f.meta, f.t, f.blobs); } catch (e) { console.error(e); }
@@ -114,21 +151,24 @@ export async function create(host, kit, spec) {
     caption.dataset.n = c ? String(c.n) : "";
     caption.hidden = !text;
     const played = k / fps(), total = (S.steps.length - 1) / fps();
-    bar.update({ playing: V.playing, i: k, max: S.steps.length - 1, text: `${secs(played)} / ${secs(total)}` });
+    bar.update({ playing: V.playing, i: k, max: S.steps.length - 1,
+      text: `${rateText(f.t, worldRate(W, st.i))} · ${secs(played)} / ${secs(total)}`,
+      title: t("The world's own time, how much slower or faster than real time it plays, and the position in the recording") });
   }
 
   const API = {
     tick(now) {
       const S = V.story;
-      if (V.playing && S) {
+      if (V.playing && S && now < V.holdUntil) V.wall = now;  // a caption's hold: the story waits so it can be read
+      else if (V.playing && S) {
         const dt = Math.min(0.25, (now - V.wall) / 1000);
         V.wall = now;
-        if (now < V.holdUntil) return;  // a caption's hold: the story waits so it can be read
         const before = curStep();
         V.pos += dt * fps() * V.rate;
         let k = curStep();
         // a caption with a hold reached: stop at its frame and wait
-        const hc = S.captions.find((c) => c.hold && c.step > before && c.step <= k && c.step !== V.held);
+        // (a caption at the step the playback started from holds too, unless the viewer started it there: V.held)
+        const hc = S.captions.find((c) => c.hold && c.step >= before && c.step <= k && c.step !== V.held);
         if (hc) { V.pos = hc.step; k = hc.step; V.held = hc.step; V.holdUntil = now + 1000 * hc.hold; }
         if (k >= S.steps.length - 1) { V.pos = S.steps.length - 1; V.playing = false; }
         if (k !== before || !V.playing) this.dirty = true;
@@ -168,9 +208,14 @@ export async function create(host, kit, spec) {
         [t("Played"), t("{s:g} s at {fps:g} frames per second", { s: e.seconds, fps: e.fps })]];
       return kit.howWeKnow({ W, tt, passport, note: t("A recording of a real run, made by the recorder from the world's code: it plays without computing.") });
     },
+    // the world shown, as its header says it was made (review EX1-screens F13): its preset, parameters and seed
     liveBody() {
       const s0 = V.rec && (V.rec.entry || V.rec.spec);
-      return s0 ? { preset: s0.preset, seed: s0.seed ?? 1 } : null;
+      if (!s0) return null;
+      const st = V.story && V.story.steps.length ? V.story.steps[curStep()] : null;
+      const h = st ? V.story.worlds[st.w].header : null;
+      if (!h) return { preset: s0.preset, seed: s0.seed ?? 1 };
+      return { preset: h.preset || s0.preset, ...(h.params ? { params: { ...h.params } } : {}), seed: h.seed ?? s0.seed ?? 1 };
     },
     get state() { return V; },
   };

@@ -28,8 +28,10 @@ from lfviz import registry  # noqa: E402
 #: frames carry no ``cpu_ms``, the header's kernels are this recording's own; site review F1, F2). The recorder's code and
 #: the image's locked dependencies are in the key too (``recorder_hash``), so an edit there needs no raise to be seen.
 RECORDER_VERSION = "2"
-#: the atlases' version: part of every atlas's key; raise it when the atlas's files change their form (design §1.4)
-ATLAS_VERSION = "1"
+#: the atlases' version: part of every atlas's key; raise it when the atlas's files change their form (design §1.4; 2:
+#: every point's header names its base file's sha256, ``$base``, and the manifest has no ``made`` and ``cpu_s``, which
+#: stay in the index entry; review R-F F2, F7)
+ATLAS_VERSION = "2"
 RECORDINGS = VIZ / "recordings"  # the local recordings (git-ignored; the server serves them at /recordings/)
 IMAGES = REPO / "docs" / "images"  # the README's and the cards' pictures (posters.mjs)
 
@@ -110,12 +112,12 @@ def spec_key(rec: dict, code_hash: str, recorder: str | None = None) -> str:
 def atlas_spec_of(a: dict) -> dict:
     """The part of an atlas (``registry.atlases_of``) that decides its files (design §1.4): the preset, the fixed values,
     the controls' values and defaults, the seed, ``frame_dt``, the stop rule, what is dropped, the quantisation and the
-    law's reference id. Labels are not in it: they change no byte."""
+    ids of the laws' references (the manifest's ``references``). Labels are not in it: they change no byte."""
     return {"id": a["id"], "preset": a["preset"], "fixed": a["fixed"],
             "controls": [{"param": c["param"], "values": c["values"], "default": c.get("default")}
                          for c in a["controls"]],
             "seed": a["seed"], "frame_dt": a["frame_dt"], "stop": a["stop"], "drop": a["drop"],
-            "quantize": a["quantize"], "law": a.get("law")}
+            "quantize": a["quantize"], "laws": list(a.get("laws") or [])}
 
 
 def atlas_key(a: dict, code_hash: str, recorder: str | None = None, grid: bool = True) -> str:
@@ -145,11 +147,13 @@ def demo_worlds() -> list[str]:
     return out
 
 
-def planned_world(vid: str) -> dict:
-    """What the registry asks of a world's recordings now: {world, version, code_hash, recordings: [spec + key]}."""
+def planned_world(vid: str, code: str | None = None, recorder: str | None = None) -> dict:
+    """What the registry asks of a world's recordings now: {world, version, code_hash, recordings: [spec + key]}.
+    ``code`` and ``recorder``: the world's code hash and the recorder's hash when the caller has them (a server's
+    ``registry.code_hash_current``); by default both are computed from the files."""
     viz = registry.load(vid)
-    code = registry.code_hash(vid)
-    rh = recorder_hash()
+    code = registry.code_hash(vid) if code is None else code
+    rh = recorder_hash() if recorder is None else recorder
     recs = []
     for r in registry.recordings_of(viz):
         recs.append({**r, "key": spec_key(r, code, rh)})
@@ -192,10 +196,24 @@ def status(folder: Path, plan: dict) -> dict:
     return out
 
 
+def atlas_files_ok(folder: Path, vid: str, entry: dict) -> bool:
+    """Whether an index entry's atlas is all there: its manifest, its base with its size, and every point the manifest
+    names with its size (``stat`` only; review R-F F6: a deleted point left the atlas "present" while the build left it
+    out)."""
+    mf = Path(folder) / vid / str(entry.get("file", ""))
+    try:
+        man = json.loads(mf.read_text(encoding="utf-8"))
+        base = man["base"]
+        files = [(base["file"], base["bytes_gz"])] + [(p[0], p[1]) for p in man["points"] if p and p[0]]
+        return all((mf.parent / str(n)).stat().st_size == b for n, b in files)
+    except (OSError, ValueError, KeyError, TypeError, IndexError):
+        return False
+
+
 def atlas_status(folder: Path, plan: dict) -> dict:
     """{atlas id: "present" | "stale" | "missing"} of a world's atlases against a recordings folder: present when the
-    index holds the atlas with the same key and its manifest file is there; stale when held with another key (or its
-    manifest is gone); missing otherwise."""
+    index holds the atlas with the same key and its manifest, its base and every point it names are there with their
+    sizes (``atlas_files_ok``); stale when held with another key (or a file is gone or differs); missing otherwise."""
     idx = read_index(folder, plan["world"]) or {}
     have = {a.get("id"): a for a in idx.get("atlases") or []}
     out = {}
@@ -204,9 +222,19 @@ def atlas_status(folder: Path, plan: dict) -> dict:
         if h is None:
             out[a["id"]] = "missing"
             continue
-        ok = h.get("key") == a["key"] and (Path(folder) / plan["world"] / str(h.get("file", ""))).is_file()
+        ok = h.get("key") == a["key"] and atlas_files_ok(folder, plan["world"], h)
         out[a["id"]] = "present" if ok else "stale"
     return out
+
+
+def expected(plan: dict) -> dict:
+    """What a world's recordings and atlases are expected to be by the code here (``planned_world``): ``{version,
+    code_hash, recordings: {id: key}, atlases: {id: key}}``; ``GET /api/recordings`` and the site's
+    ``api/recordings.json`` carry it per world, so that a server's player takes the public site's atlas or recording
+    only when its key is this one (integrator D11)."""
+    return {"version": plan["version"], "code_hash": plan["code_hash"],
+            "recordings": {r["id"]: r["key"] for r in plan["recordings"]},
+            "atlases": {a["id"]: a["key"] for a in plan.get("atlases") or []}}
 
 
 def write_index(folder: Path, vid: str, index: dict):

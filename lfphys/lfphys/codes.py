@@ -85,6 +85,9 @@ CODES: dict[str, str] = {
     # QCD (core.qcd.running)
     "qcd.landau_pole": "the running coupling diverges on the way (running.LandauPole)",
     "qcd.rg_failed": "the integration of the renormalisation-group equation failed",
+    # statistics (tools.stats.linear_fit, the lab's fit)
+    "fit.singular": "the points do not determine the fit (all x equal, or fewer distinct x than parameters)",
+    "fit.no_convergence": "York's iteration for a line with errors in x and y did not converge",
     # mechanics (core.mechanics, theories.models.drag_quadratic)
     "mechanics.below_ground": "a body starts below the ground",
     "mechanics.no_flight": "a body starts on the ground and does not move upwards: there is no flight",

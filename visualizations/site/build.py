@@ -21,7 +21,8 @@ What it writes into ``--out`` (served at ``--base``, e.g. https://ildar-idrisov.
   or, as the CI's artifacts land, ``DIR/rec-<world>/``), only the entries the registry asks for now (review F13); its
   atlases ``recordings/<world>/atlas/<atlas>/`` (the manifest, the base and the points it names; design of 2026-11-14
   §1.3), only those the registry asks for;
-  ``api/recordings.json`` carries the public site's ``site`` and ``published`` (``site/site.json``);
+  ``api/recordings.json`` carries the public site's ``site`` and ``published`` (``site/site.json``) and ``expected``,
+  the keys of every world's recordings and atlases as the code gives them (``lfviz.app.expected_keys``; integrator D11);
 * ``images/<id>.jpg``: each world's poster from ``docs/images/`` (the cards' pictures); ``legal/<name>``: the full texts the licence page shows;
 * ``site-manifest.json``: every file with its size and sha256, every world, recording and atlas with its key and state
   (``present`` | ``stale`` | ``missing``), checked by ``site/check.py``.

@@ -9,7 +9,10 @@
 # Build and run from the repository root (README.md):
 #   docker compose -f visualizations/docker/docker-compose.yml build
 #   docker compose -f visualizations/docker/docker-compose.yml up -d
-FROM python:3.11-slim
+# The base image is pinned by digest, the same as the workflow's PY_SLIM (.github/workflows/pages.yml): this file is in
+# every recording's and atlas's key (site/sitelib.py RECORDER_FILES), so a floating tag could change the numbers under
+# an unchanged key (review R-F F10, 2026-11-17).
+FROM python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \

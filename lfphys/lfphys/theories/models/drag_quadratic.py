@@ -16,12 +16,22 @@ the wider plateau ``RE_RANGE`` = (10^3, 2·10^5). There the measured curve runs 
 correlation of the data (Morrison, "Data Correlation for Drag Coefficient for Sphere", Michigan Tech, 2016, eq. (1);
 also Fig. 8.13 of his "An Introduction to Fluid Mechanics", Cambridge 2013), 0.484 at 10^3, 0.392 at 1.4·10^4, 0.426 at
 10^5, 0.416 at 2·10^5 (``cd_standard``); the Clift, Grace & Weber (1978) table 5.2 correlations, as transcribed in
-Subramanian's course notes (Clarkson University; the book itself not seen), 0.39–0.50. So the constant 0.47 errs by up
-to -18 % / +7 % on the plateau. ``validity`` computes, along a flight, the Reynolds range, the share of the drag's work
-done outside ``RE_RANGE`` and the standard curve's C_d over the path.
+Subramanian's course notes (Clarkson University; the book itself not seen), 0.39–0.50 (0.387–0.504). So the constant
+0.47 errs by up to +21 % / -7 % on the plateau, relative to the measured value: (0.47 - 0.387) / 0.387 and (0.47 -
+0.504) / 0.504 (review R-E F6; before, the sign and the base of (curve - 0.47) / 0.47 were stated). ``validity``
+computes, along a flight, the Reynolds range, the share of the drag's work done outside ``RE_RANGE`` and the standard
+curve's C_d over the path.
+
+**The second model: the measured curve** (``CurveDrag``). The same force with C_d = ``cd_standard``(Re) taken at the
+body's own Reynolds number at every instant (Morrison's correlation, for 0 < Re <= 10^6: it includes the creeping
+flow, where it gives Stokes's law, and the drag crisis). A world compares the two models' results (the range, the
+optimum angle) to show the constant's model error (review R-E F1, integrator's decision D1). It has no closed form; it
+is tested against Radau IIA with the same curve written independently, and, with a constant curve, against
+``QuadraticDrag`` and the hodograph.
 
 Not in the model: the drag crisis, rough or felt surfaces (a tennis ball's C_d is its own), the Magnus force of a
-spinning ball, the unsteady forces and the buoyancy (of order rho_air / rho_ball).
+spinning ball, the unsteady forces (the added mass, of order rho_air / rho_ball, and the history force) and the
+buoyancy (rho_air / rho_ball: 3.3e-3 for a 67 mm ball of 58 g).
 
 **The second method: the hodograph.** With k = rho C_d A / (2 m), u = v_x = v cos(theta) and p = tan(theta) (theta the
 velocity's angle above the horizontal), dv_x/dt = -k v v_x and dtheta/dt = -g cos(theta) / v give
@@ -65,11 +75,13 @@ ABOUT = {
                    "the range of the constant C_d, the measured drag curve's C_d for comparison; the second method: "
                    "the exact first integral of the hodograph with the time and the coordinates as quadratures (the "
                    "landing time, the range and the apex without integrating in time); the closed forms of vertical "
-                   "motion."),
+                   "motion; the second model: the same force with C_d(Re) from the measured drag curve of a smooth "
+                   "sphere (Morrison 2016, 0 < Re ≤ 10⁶) at the body's Reynolds number along the path."),
     "validity": T("a sphere at 10³ < Re < 2·10⁵ (below the drag crisis), where the measured C_d runs from 0.39 to "
-                  "0.50: the constant 0.47 errs by up to −18 % / +7 %; the run reports the share of the drag's work done "
-                  "outside this range; no spin (Magnus force), no roughness, no buoyancy; the hodograph needs a "
-                  "horizontal speed > 0"),
+                  "0.50: the constant 0.47 errs by up to +21 % / −7 % of the measured value; the run reports the share "
+                  "of the drag's work done outside this range; the measured curve: 0 < Re ≤ 10⁶, a smooth sphere in "
+                  "steady flow; no spin (Magnus force), no roughness, no buoyancy; the hodograph needs a horizontal "
+                  "speed > 0"),
     "basis": [T("Hoerner, Fluid-Dynamic Drag (1965), ch. III, p. 3-7: C_D ≈ 0.47 for a sphere at Re 10⁴–10⁵"),
               T("Morrison, Data Correlation for Drag Coefficient for Sphere (Michigan Technological University, 2016), "
                 "eq. (1); An Introduction to Fluid Mechanics (Cambridge 2013), Fig. 8.13 — the standard drag curve"),
@@ -89,6 +101,9 @@ CD_SPHERE = 0.47
 RE_RANGE = (1.0e3, 2.0e5)
 #: the measured curve's extremes on RE_RANGE (Morrison 2016 eq. (1) and the Clift-Grace-Weber table, see the docstring)
 CD_CURVE_ON_RANGE = (0.387, 0.504)
+#: the largest Reynolds number of Morrison's correlation («We do not recommend using equation 1 for Reynolds numbers
+#: larger than 10^6»)
+RE_CURVE_MAX = 1.0e6
 
 
 def cd_standard(re):
@@ -96,10 +111,11 @@ def cd_standard(re):
     C_D = 24/Re + 2.6 (Re/5) / (1 + (Re/5)^1.52) + 0.411 (Re/2.63e5)^-7.94 / (1 + (Re/2.63e5)^-8)
           + 0.25 (Re/1e6) / (1 + Re/1e6)."""
     re = np.asarray(re, float)
-    if np.any(re <= 0) or np.any(re > 1e6):
+    if np.any(re <= 0) or np.any(re > RE_CURVE_MAX):
         raise ValueError(T("the drag curve correlation covers 0 < Re ≤ 10⁶"))
     a = re / 2.63e5
-    return 24.0 / re + 2.6 * (re / 5.0) / (1.0 + (re / 5.0) ** 1.52) + 0.411 * a ** -7.94 / (1.0 + a ** -8.0) \
+    # the third term a^-7.94 / (1 + a^-8) written as a^0.06 / (1 + a^8): the same number, without overflow at small Re
+    return 24.0 / re + 2.6 * (re / 5.0) / (1.0 + (re / 5.0) ** 1.52) + 0.411 * a ** 0.06 / (1.0 + a ** 8.0) \
         + 0.25 * (re / 1e6) / (1.0 + re / 1e6)
 
 
@@ -140,6 +156,44 @@ class QuadraticDrag:
         if self.mu is None or self.diameter is None:
             raise ValueError(T("the Reynolds number needs the fluid's density, viscosity and the diameter"))
         return self.rho * np.asarray(speed, float) * self.diameter / self.mu
+
+
+class CurveDrag:
+    """F = -(1/2) rho C_d(Re) A |v| v with C_d taken from a drag curve at the body's Reynolds number Re = rho |v| d / mu
+    at every instant (default: the standard curve ``cd_standard``, Morrison 2016, 0 < Re <= 10^6): the second model of
+    a sphere's air drag, against which the constant C_d is compared. A declared force of ``fly`` with the interface of
+    ``QuadraticDrag`` (``force``, ``reynolds``, ``label``) and ``cd_at(speed)``; it has no rate k, since C_d varies.
+    At Re << 1 the curve's 24/Re makes it Stokes's law 3 pi mu d v. A speed whose Re is beyond the curve is refused
+    (``ValueError``, raised from the integration)."""
+
+    def __init__(self, area: float, rho: float, mu: float, diameter: float, curve=None):
+        if not all(math.isfinite(v) and v > 0 for v in (area, rho, mu, diameter)):
+            raise ValueError(T("the area, the fluid's density and viscosity and the diameter must be > 0"))
+        self.area, self.rho, self.mu, self.diameter = float(area), float(rho), float(mu), float(diameter)
+        self.curve = cd_standard if curve is None else curve
+        self.label = T("quadratic drag, the measured C_d(Re)")
+
+    @classmethod
+    def sphere(cls, diameter: float, medium: dict | None = None, curve=None) -> "CurveDrag":
+        """A sphere of the given diameter (m) in a medium {rho, mu} (default: air at 20 C, 101325 Pa)."""
+        if not (math.isfinite(diameter) and diameter > 0):
+            raise ValueError(T("the sphere's diameter must be > 0 (given {d} m)", d=float(diameter)))
+        med = data.fluid_properties("air", 20.0) if medium is None else medium
+        return cls(math.pi * diameter * diameter / 4.0, med["rho"], med["mu"], diameter, curve)
+
+    def reynolds(self, speed):
+        return self.rho * np.asarray(speed, float) * self.diameter / self.mu
+
+    def cd_at(self, speed):
+        """The curve's C_d at the given speed(s) (> 0)."""
+        return self.curve(self.reynolds(speed))
+
+    def force(self, t, r, v):
+        v = np.asarray(v, float)
+        sp = math.sqrt(float(v @ v))
+        if sp == 0.0:
+            return np.zeros_like(v)
+        return -0.5 * self.rho * float(self.cd_at(sp)) * self.area * sp * v
 
 
 def validity(flight, drag: QuadraticDrag, re_range=RE_RANGE) -> dict:

@@ -242,7 +242,9 @@ all of this. Plan item P12 keeps the alternative open: make python-flint a test-
 
 ## 5. Platform: the Docker base image `python:3.11-slim`
 
-Not part of the engine; the platform it runs on. Checked in the image built on 2026-10-27:
+Not part of the engine; the platform it runs on. Since 2026-11-17 `visualizations/docker/Dockerfile` pins it by digest,
+`python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8`, the image this audit was made
+in (review EX1-atlas F10). Checked in the image built on 2026-10-27:
 
 * Debian GNU/Linux 13 (trixie), 87 dpkg packages: the usual Debian base (bash, coreutils, glibc, apt, …) under their
   Debian licences (`/usr/share/doc/*/copyright`; GPL programs such as bash and coreutils are separate programs, not

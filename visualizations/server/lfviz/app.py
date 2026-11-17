@@ -8,7 +8,9 @@ REST (JSON):
     GET    /api/viz/{viz}                  one entry
     GET    /api/recordings                 [S] the local recordings of the public site: {worlds: {<world>: its index.json},
                                            site: the public site's address (site/site.json; LFVIZ_SITE_URL overrides),
-                                           published: whether that site is live (site/site.json)}
+                                           published: whether that site is live (site/site.json), expected: {<world>:
+                                           {version, code_hash, recordings: {id: key}, atlases: {id: key}}}: the keys
+                                           the code here gives (integrator D11)}
     GET    /api/audiences                  the audiences and the sections in their order: {audiences: [{id, prefix, label,
                                            description, ui}], sections: [{id, label}]} (registry.AUDIENCES, SECTIONS)
     GET    /api/planned                    the planned items (``visualizations/planned.json``) not yet built: those whose
@@ -33,9 +35,11 @@ REST (JSON):
     POST   /api/runs/{id}/sweep            [LB1 P16.3] a parameter sweep from the current moment ({..., estimate?});
     GET    /api/runs/{id}/sweeps[/{n}]     its progress and results (?format=csv); POST /sweeps/{n}/cancel: stop it (what
                                            it computed is kept); DELETE /sweeps/{n}: remove a finished one (lfviz.sweep)
-    POST   /api/atlas/{world}/{atlas}/point {values, seed?} -> the point's file (application/gzip), computed live in a
-                                           memory- and time-limited process, the same bytes a site build makes
-                                           (lfviz.atlas_live; design of 2026-11-14 §3.7); 400 {error, hint?}, 429
+    POST   /api/atlas/{world}/{atlas}/point {values, seed?, full_header?} -> the point's file (application/gzip),
+                                           computed live in a memory- and time-limited process, as a site build packs
+                                           it (lfviz.atlas_live; design of 2026-11-14 §3.7); headers X-LF-Source,
+                                           X-LF-Key, X-LF-Code, X-LF-Made; 400 {error, hint?}, 409 (its checks end ✗),
+                                           429, 503
     GET    /api/settings/runs              {keep_days}: runs without actions for this many days are removed
     PUT    /api/settings/runs              {keep_days, confirm?: [id]} -> saved and applied at once; 409 with
                                            {would_remove: [id]} if it would remove runs not all in ``confirm``
@@ -149,10 +153,30 @@ def recordings_dir() -> Path:
     return Path(os.environ.get("LFVIZ_RECORDINGS") or RECORDINGS_DEFAULT)
 
 
+def expected_keys() -> dict:
+    """[S] Per world with recordings: the version, the code hash and the keys of its recordings and atlases as the code
+    here gives them (``sitelib.expected``; the code hash by ``registry.code_hash_current``): a server's player takes the
+    public site's atlas only when its key is this one, and a local atlas with another key is stale (integrator D11)."""
+    from .atlas_live import _sitelib  # noqa: PLC0415
+    L = _sitelib()
+    rh = L.recorder_hash()
+    out = {}
+    for vid in registry.viz_ids():  # sitelib.demo_worlds, one world at a time: a broken world must not hide the others
+        try:
+            viz = registry.load(vid)
+            if viz.get("kind") == "playground" or not viz.get("recordings"):
+                continue
+            out[vid] = L.expected(L.planned_world(vid, registry.code_hash_current(vid), rh))
+        except Exception as e:  # noqa: BLE001
+            log.warning("recordings: the keys of %s not computed: %s", vid, e)
+    return out
+
+
 def recordings_list(folder: Path | None = None) -> dict:
     """[S] ``GET /api/recordings`` (the site's ``api/recordings.json`` is the same for its own folder): the index of
     every world that has one, the public site's address and whether it is published (``site_setting``): the player
-    looks for a recording there only when ``published`` is true (integrator D4)."""
+    looks for a recording there only when ``published`` is true (integrator D4); ``expected``: the keys the code here
+    gives (``expected_keys``; integrator D11)."""
     folder = recordings_dir() if folder is None else Path(folder)
     worlds = {}
     if folder.is_dir():
@@ -165,7 +189,7 @@ def recordings_list(folder: Path | None = None) -> dict:
             if isinstance(idx, dict) and idx.get("world") == f.parent.name:
                 worlds[f.parent.name] = idx
     site = site_setting()
-    return {"worlds": worlds, "site": site["url"], "published": site["published"]}
+    return {"worlds": worlds, "site": site["url"], "published": site["published"], "expected": expected_keys()}
 
 
 def _json(data, status=200):
@@ -175,6 +199,19 @@ def _json(data, status=200):
 def _err(text, status=400, **extra):
     """An error for an API client: ``{"error": <T or text>, "text": <English>}`` (RULES.md «Languages and i18n»)."""
     return _json(i18n.error_body(text, **extra), status)
+
+
+class NotJSON(ValueError):
+    """A request body that is not JSON."""
+
+
+async def _body(request):
+    """A request's JSON body; ``NotJSON`` for any body that is not JSON: not UTF-8, malformed, or an integer of more
+    than 4300 digits (a ``ValueError`` that is not a ``JSONDecodeError``; review R-F F12)."""
+    try:
+        return await request.json()
+    except ValueError:
+        raise NotJSON(T("the request body is not JSON")) from None
 
 
 @web.middleware
@@ -233,9 +270,9 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
 
     async def runs_start(request):
         try:
-            body = await request.json()
-        except json.JSONDecodeError:
-            return _err(T("the request body is not JSON"))
+            body = await _body(request)
+        except NotJSON as e:
+            return _err(e.args[0])
         if not isinstance(body, dict):
             return _err(T("the request body is a JSON object"))
         vid = registry.resolve(body.get("viz"))  # an old id (registry.ALIASES) starts the renamed world
@@ -278,7 +315,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
     async def run_command(request):
         try:
             r = _run(request)
-            body = client_command(await request.json())
+            body = client_command(await _body(request))
             await r.command_resuming(body, request.remote or "")
         except KeyError:
             return _err(T("there is no such run"), 404)
@@ -287,7 +324,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
         except (RuntimeError, OverflowError) as e:
             return _err(text_of(e), 409)
         except ValueError as e:  # not JSON, or not a command [LB1 F6]
-            return _err(T("the request body is not JSON") if isinstance(e, (json.JSONDecodeError, UnicodeDecodeError))
+            return _err(T("the request body is not JSON") if isinstance(e, (NotJSON, json.JSONDecodeError))
                         else text_of(e))
         return _json({"ok": True})
 
@@ -325,9 +362,13 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
     async def run_keep(request):
         try:
             r = _run(request)
-            body = await request.json()
+            body = await _body(request)
         except KeyError:
             return _err(T("there is no such run"), 404)
+        except NotJSON as e:
+            return _err(e.args[0])
+        if not isinstance(body, dict):
+            return _err(T("the request body is a JSON object"))
         r.meta["keep"] = bool(body.get("keep", True))
         r.save_meta()
         return _json({"ok": True, "keep": r.meta["keep"]})
@@ -379,7 +420,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
     async def run_record(request):
         try:
             r = _run(request)
-            body = await request.json()
+            body = await _body(request)
             # validated (review B6-F12): an object; "on" a JSON boolean, unchanged when absent; the window numbers
             if not isinstance(body, dict):
                 raise ValueError(T("the request body is a JSON object"))
@@ -393,9 +434,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
             return _json(r.set_recording(on, body.get("window_s"), body.get("window_mb")))
         except KeyError:
             return _err(T("there is no such run"), 404)
-        except json.JSONDecodeError:
-            return _err(T("the request body is not JSON"))
-        except ValueError as e:
+        except ValueError as e:  # NotJSON too
             return _err(text_of(e), 400)
         except RuntimeError as e:
             return _err(text_of(e), 409)
@@ -451,9 +490,9 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
         if (request.content_length or 0) > devices.MAX_BYTES:
             return _err(T("the settings are longer than {n:d} KB", n=devices.MAX_BYTES // 1024), 413)
         try:
-            body = await request.json()
-        except json.JSONDecodeError:
-            return _err(T("the request body is not JSON"))
+            body = await _body(request)
+        except NotJSON as e:
+            return _err(e.args[0])
         try:
             clean, notes = await devices.update(body)
         except ValueError as e:
@@ -477,9 +516,9 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
 
     async def api_runs_settings_put(request):
         try:
-            body = await request.json()
-        except json.JSONDecodeError:
-            return _err(T("the request body is not JSON"))
+            body = await _body(request)
+        except NotJSON as e:
+            return _err(e.args[0])
         if not isinstance(body, dict) or set(body) - {"keep_days", "confirm"}:
             return _err(T("an object {keep_days, confirm?} is needed"))
         try:

@@ -1,12 +1,14 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
 """``registry.code_hash``: what a run executes, and nothing else (the key of the site's recordings and of a run's
-checkpoints). The server's own modules (``registry.SERVER_ONLY``: ``app.py``, ``runs.py``: the HTTP routes and the runs'
-bookkeeping, which no worker imports) are left out, so an edit there re-records nothing; an edit of the framework a run
-executes (``sim.py``), of the engine, or of the world's own files (``viz.py``, ``web/view.js``) changes it.
+checkpoints). The server's own modules (``registry.SERVER_ONLY``: ``app.py``, ``runs.py``, ``atlas_live.py``: the HTTP
+routes, the runs' bookkeeping and the live points' endpoint, which no worker imports; review R-F F11) are left out, so an
+edit there re-records nothing; an edit of the framework a run executes (``sim.py``), of the engine, or of the world's
+own files (``viz.py``, ``web/view.js``) changes it.
 
 The checks run on a small copy of the tree in a temporary folder (``registry.ROOT``, ``SERVER``, ``ENGINE`` patched), so
-nothing of the real tree is touched. ``code_hash_cached`` (the catalogue's ``code_hash``) is computed once per process.
+nothing of the real tree is touched. ``code_hash_current`` (the catalogue's ``code_hash``, the live points' key) is cached
+by the files' sizes and times: an edit, a new file or a removed one is seen at the next call (review R-F F1).
 """
 
 from __future__ import annotations
@@ -26,6 +28,7 @@ def tree(tmp_path, monkeypatch):
     files = {
         viz / "server" / "lfviz" / "app.py": "ROUTES = 1\n",
         viz / "server" / "lfviz" / "runs.py": "KEEP = 1\n",
+        viz / "server" / "lfviz" / "atlas_live.py": "LIVE = 1\n",
         viz / "server" / "lfviz" / "sim.py": "STEP = 1\n",
         viz / "server" / "lfviz" / "tests" / "test_x.py": "X = 1\n",
         tmp_path / "lfphys" / "lfphys" / "core.py": "G = 1\n",
@@ -46,8 +49,8 @@ def _edit(path):
     path.write_text(path.read_text(encoding="utf-8") + "# an edit\n", encoding="utf-8")
 
 
-def test_the_server_only_modules_are_app_and_runs():
-    assert registry.SERVER_ONLY == {"app.py", "runs.py"}
+def test_the_server_only_modules_are_app_runs_and_the_live_points():
+    assert registry.SERVER_ONLY == {"app.py", "runs.py", "atlas_live.py"}
 
 
 @pytest.mark.parametrize("name", sorted(registry.SERVER_ONLY))
@@ -76,13 +79,23 @@ def test_the_framework_tests_are_not_hashed(tree):
     assert registry.code_hash(WORLD) == before
 
 
-def test_the_catalogue_hash_is_computed_once_per_process(tree, monkeypatch):
+def test_the_current_hash_sees_an_edit_a_new_file_and_a_removed_one(tree, monkeypatch):
     monkeypatch.setattr(registry, "_CODE_HASHES", {})
-    first = registry.code_hash_cached(WORLD)
-    assert first == registry.code_hash(WORLD)
+    first = registry.code_hash_current(WORLD)
+    assert first == registry.code_hash(WORLD) and registry.code_hash_cached is registry.code_hash_current
+    calls = []
+    real = registry.code_hash
+    monkeypatch.setattr(registry, "code_hash", lambda v: calls.append(v) or real(v))
+    assert registry.code_hash_current(WORLD) == first and calls == []  # nothing changed: not read again
     _edit(tree["viz"] / "server" / "lfviz" / "sim.py")
-    assert registry.code_hash_cached(WORLD) == first  # cached: the running server's code
-    assert registry.code_hash(WORLD) != first
+    second = registry.code_hash_current(WORLD)
+    assert second != first and second == real(WORLD)  # review R-F F1: the code on disk, not the process's first view
+    extra = tree["viz"] / "server" / "lfviz" / "new.py"
+    extra.write_text("NEW = 1\n", encoding="utf-8")
+    third = registry.code_hash_current(WORLD)
+    assert third not in (first, second)
+    extra.unlink()
+    assert registry.code_hash_current(WORLD) == second
 
 
 # --- the catalogue: the code a recording is compared with, and the audiences' API ---------------------------------------

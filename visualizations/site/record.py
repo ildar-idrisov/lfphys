@@ -38,8 +38,9 @@ Output, per world: ``<out>/<world>/<rec>.<hash8>.lfrec.gz`` (gzip -9 of the stre
 new recording has a new name) and ``<out>/<world>/index.json`` (CONTRACT). ``poster_t`` is the world time of the
 poster frame (the player seeks to it), ``poster_frame`` its index among the frames in the file.
 
-``--stale`` records every world whose recordings or atlases are not all present with their current key (``plan.py``); a
-world is always recorded whole. ``--rec`` records only the named recordings (no atlas); ``--no-atlases`` skips the
+``--stale`` records every world whose recordings or atlases are not all present with their current key and all their
+files (``plan.py``; an atlas with a missing point or base is stale: ``sitelib.atlas_status``); a world is always recorded
+whole. The recorder runs on the CPU (``LFPHYS_NO_GPU=1``, as in CI: the key does not cover the device). ``--rec`` records only the named recordings (no atlas); ``--no-atlases`` skips the
 atlases. Exit code: 0 when everything was recorded within the hard limits, 1 otherwise.
 """
 
@@ -307,6 +308,7 @@ def main(argv=None) -> int:
     ap.add_argument("--worker-mem-gb", type=float, default=None,
                     help="a hard memory limit for this process, as a server gives its workers (lfviz.limits)")
     a = ap.parse_args(argv)
+    os.environ["LFPHYS_NO_GPU"] = "1"  # the CPU, as in CI: a recording's key does not cover the device (review R-F F10)
     if a.worker_mem_gb:
         os.environ[limits.ENV] = str(int(a.worker_mem_gb * limits.GIB))
         limits.apply_hard_limit()

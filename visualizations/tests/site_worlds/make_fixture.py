@@ -15,8 +15,14 @@
     docker run --rm --memory=4g -e LFPHYS_NO_GPU=1 -e LFVIZ_EXTRA=/lf/visualizations/tests/site_worlds \\
       --user "$(id -u):$(id -g)" -v "$PWD:/lf" -w /lf/visualizations lfphys-viz python3 tests/site_worlds/make_fixture.py
 
-The keys in the fixture's index go stale with any change of the engine or of ``lfviz`` (they cover the code's hash): the
-fixture is for the player, which does not compare keys; the tests that need current keys build their own.
+The keys in the fixture's index go stale with any change of the engine, of ``lfviz`` or of the toy world (they cover the
+code's hash), and a server's player refuses a recording or an atlas whose key is not the one its code gives (integrator
+D11). So the committed fixture serves only the player's Node tests (``player/js/tests``: the decoding, the header
+merge, the fit), which compare no keys; a browser test against a server builds what it needs first into a folder of its
+own with ``site/fixtures.py`` (integrator, 2026-11-17), and the Python tests that need current keys build their own.
+The fixture's files are guarded against drift from the builder: ``tests/test_atlas.py`` checks its format versions and
+rebuilds the toy world, comparing every recording, base and point file, and the manifests but for their keys (review
+R-F F14); when it fails, run this script.
 """
 
 from __future__ import annotations

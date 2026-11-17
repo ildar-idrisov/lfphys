@@ -36,6 +36,39 @@ ABOUT = {
     "conflicts": [],
 }
 
+#: Parts of this module that a world may name on their own in its ``engine_modules`` as "core.data:<key>"
+#: (``lfphys.registry.about``): the catalogue entry of only the data the world reads, not of the whole module (a thrown
+#: ball's panel then lists the air, not the PDG masses or the cosmology; review R-W F8, the integrator's decision D10).
+#: Each entry has the fields of ABOUT that describe data (title, statement, validity, basis); the layer and the kind are
+#: the module's. A world that reads data of a part not listed here names the whole module, "core.data".
+DATASETS = {
+    "air": {
+        "title": T("Dry air: density and viscosity"),
+        "statement": T("The density of dry air from the ideal gas law and its dynamic viscosity from Sutherland's "
+                       "formula, as in the U.S. Standard Atmosphere 1976: 1.2041 kg/m³ and 1.8134·10⁻⁵ Pa·s at "
+                       "20 °C and 101 325 Pa."),
+        "validity": T("dry air from −50 to 100 °C; against modern reference data at 290–300 K (Lemmon et al. 2000, "
+                      "Lemmon & Jacobsen 2004): the density within 2·10⁻⁴, the viscosity within 0.4 %"),
+        "basis": [T("U.S. Standard Atmosphere 1976 (NOAA/NASA/USAF, NASA-TM-X-74335): dry air")],
+    },
+    "water": {
+        "title": T("Liquid water at 1 atm: density and viscosity"),
+        "statement": T("The density and the dynamic viscosity of liquid water at 101 325 Pa from 0.01 to 40 °C, "
+                       "tabulated at whole degrees from the IAPWS formulations (through the NIST Chemistry WebBook) "
+                       "and interpolated between them."),
+        "validity": T("liquid water at 1 atm, 0.01–40 °C; the viscosity's stated uncertainty 0.17 % at 20 °C; "
+                      "between whole degrees the interpolation adds about 10⁻⁴ to the viscosity"),
+        "basis": [T("NIST Chemistry WebBook SRD 69: water at 0.101325 MPa (IAPWS-95, IAPWS 2008 viscosity)")],
+    },
+    "qcd": {
+        "title": T("Particle data: the strong coupling and the heavy quarks (PDG 2024)"),
+        "statement": T("α_s(M_Z), M_Z, the heavy quark masses, the charmonium and bottomonium masses (PDG 2024)."),
+        "validity": T("values with the uncertainties of the source; the PDG 2026 edition differs in some lines "
+                      "(stated)"),
+        "basis": ["PDG 2024: Phys. Rev. D 110, 030001"],
+    },
+}
+
 # --- QCD (PDG 2024) ---------------------------------------------------------------------------------------------
 ALPHA_S_MZ = (0.1180, 0.0009)        # PDG 2024 review 9, Eq. (9.25); same in PDG 2026
 M_Z = (91.1880, 0.0020)              # GeV, PDG 2024 (2026: 91.1879)

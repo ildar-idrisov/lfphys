@@ -25,7 +25,7 @@
 import { MODE, apiGet, connectRun, getJSON, openRecording, page, postJSON, url } from "./api.js";
 import { lang, legacy, t, withLang } from "./i18n.js";
 import { control, el, fill, initTheme, modal, num, panel, paramForm, time, toast, toggleTheme } from "./ui.js";
-import { MAX_FRAMES, asOf, feedView as coreFeed, forget, frameIndexAt as coreFrameAt, ingest, makeWorld, ownerOf,
+import { MAX_FRAMES, asOf, feedState, feedView as coreFeed, forget, frameIndexAt as coreFrameAt, ingest, makeWorld, ownerOf,
   pushFrame, rebuildView as coreRebuild } from "./record_core.js";
 
 initTheme();
@@ -662,7 +662,7 @@ function rebuildView(W, tt) { coreRebuild(S.view, W, tt, KEYS()); }
 // for automated tests of the page: how the view was last brought to the cursor, and a rebuild from the record on demand
 const DBG = { fromKey: 0, full: 0, keyFailed: 0, lastMs: 0, lastFed: 0, repeats: 0 };
 window.__lfPlayer = {
-  dbg: DBG, keys: () => (curWorld() ? curWorld().keys.length : 0), t: () => currentT(), frames: () => S.frames.length,
+  dbg: DBG, keys: () => { const st = feedState(S.view); return st && st.W === curWorld() ? st.keys.length : 0; }, t: () => currentT(), frames: () => S.frames.length,
   goTo: (i) => goTo(i),
   rebuildFromRecord: () => { const W = curWorld(); forget(S.view); rebuildView(W, currentT()); S.dirty = true; },
   owner: () => ownerOf(S.view) === curWorld(),  // the view holds the shown world's record
@@ -673,7 +673,8 @@ function feedView(W, tt) { coreFeed(S.view, W, tt, KEYS()); }
 function syncView(tt) {
   const W = curWorld();
   if (!W) return;
-  if (W.maxOn > tt + 1e-12 * Math.abs(tt)) rebuildView(W, tt);  // the view holds something from later
+  const st = feedState(S.view);
+  if (!st || st.W !== W || st.maxOn > tt + 1e-12 * Math.abs(tt)) rebuildView(W, tt);  // the view holds another world, or something from later
   else feedView(W, tt);
 }
 

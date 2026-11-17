@@ -22,9 +22,13 @@ sqrt(2 g h)), energy E_0) times rtol. Events are located on the dense output by 
 downwards, reported only for a launch upwards) and any declared ``Event``. Samples are taken at t_k = k / rate
 exactly (k / 120 by default, so that every 12th sample is a multiple of 0.1 s: a strobe), from the dense output.
 
-Stated error: 1e-9 relative in the landing time, the range, the apex and the trajectory, and in the energy balance
-(tests: against the closed forms in vacuum and with linear drag, against the hodograph quadrature and Radau IIA for the
-quadratic drag; measured 1e-15–4e-11). The gravitational field is uniform: g = 9.80665 m/s^2 by default, the
+Stated error: 1e-9 relative in the landing time, the apex time and the energy balance; the lengths (the range, the
+apex height, the trajectory) within 1e-9 of the flight's length scale max(h, v0^2/g) (tests: against the closed forms
+in vacuum and with linear drag, against the hodograph quadrature and Radau IIA for the quadratic drag; measured
+1e-15–4e-11). For a throw that is not near-vertical this is also 1e-9 of the range itself; for a near-vertical throw the
+range is a small part of that scale and its own relative error grows as 1/cos(theta): with quadratic drag at 25 m/s,
+1.0e-9 of L at 88°, 1.7e-8 at 89.9°, 1.4e-7 at 89.99°, while staying ~3e-11 of v0^2/g (review R-E F7).
+The gravitational field is uniform: g = 9.80665 m/s^2 by default, the
 standard acceleration of gravity g_n (exact; CODATA 2022, physics.nist.gov, checked 2026-11-14;
 ``scipy.constants.g``); a local g differs from it by up to 0.3 %, and the
 field's change with height (2 h / R_earth: 3e-6 at 10 m) and the Earth's rotation (the Coriolis deflection relative
@@ -58,7 +62,9 @@ ABOUT = {
                   "field: g = 9.80665 m/s² by default (the standard gravity; a local g differs by up to 0.3 %), the "
                   "decrease of g with height and the Earth's rotation are neglected (of order 10⁻⁶ and 10⁻⁴ of the "
                   "range for school flights); the ground is a horizontal plane; stated numerical error 10⁻⁹ relative "
-                  "(measured 10⁻¹⁵–4·10⁻¹¹)"),
+                  "in times and the energy balance and 10⁻⁹ of the flight's length scale max(h, v₀²/g) in lengths "
+                  "(measured 10⁻¹⁵–4·10⁻¹¹; the short range of a near-vertical throw is accurate to that scale, not "
+                  "to 10⁻⁹ of itself)"),
     "basis": ["Newton, Philosophiae Naturalis Principia Mathematica (1687), Book I, laws of motion",
               T("DOP853: Hairer, Nørsett, Wanner, Solving Ordinary Differential Equations I, 2nd ed. (Springer 1993), "
                 "section II.10 (scipy.integrate.solve_ivp)"),

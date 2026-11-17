@@ -77,7 +77,6 @@ ELEM_FOR = {"pol": ("polarizer", "hwp", "qwp", "phase", "block"), "spin": ("rot_
 # exact Rayleigh-Sommerfeld checks: at most this many kernel evaluations per map column or screen check (a few
 # seconds); beyond it a column is reported as not verified instead of being computed for minutes
 RS_BUDGET = 2e7
-COH_ERR_FRAMES = 20  # frames between recomputations of the bootstrap error of |gamma_12| (about a second of play)
 # review UX-params P8: every dark count is an event of the record (time, place, flags); a dark rate far above the
 # source's made one frame draw ~2e9 events (31 GB). At most this many dark counts per emitted particle (beyond it the
 # screen shows only noise: at 100 the dark counts per bin exceed the pattern's peak tenfold), and at most
@@ -312,7 +311,6 @@ class Simulation(BaseSimulation):
         self._adopt(self._build(self.params))
         self.dark_rate = params["dark_rate"]
         self.seg = -1
-        self.nframe = 0
         self.src_epoch = 0  # incremented when the source changes: particles emitted before are transitional
         self.app = self._apparatus({k: params[k] for k in APP_FIELDS})
         _check_rates(self.params)
@@ -1200,18 +1198,23 @@ class Simulation(BaseSimulation):
         return None
 
     def _coherence_err(self, h, dark):
-        """Error of the histogram |gamma_12| shown to the user: parametric bootstrap (about 0.1 s), recomputed when the
-        count has grown by 10 % but at most once per COH_ERR_FRAMES frames (about a second of play), and scaled by
-        sqrt(n_then / n) in between (the Fisher error is only asymptotic). Counted in frames, not wall time, so that a
-        world rebuilt from its record (frames replayed in a burst) shows the same errors (review C1-6)."""
+        """Error of the histogram |gamma_12| shown to the user, and why there is none: ``stats.coherence_boot``
+        (a parametric bootstrap from the fit projected onto |gamma| <= 1; None with the reason below
+        ``stats.COH_BOOT_MIN_HITS`` hits, when the fit fails or when too few refits succeed). Recomputed when the
+        segment changes and whenever the count has grown by 10 % since the last computation (also while it is below
+        the threshold, where the call is cheap); in between the last value is shown unchanged, as the error of the count
+        it was computed at (review R-W F2, D9: the error does not scale as 1/sqrt(n) near |gamma| = 1, so the former
+        sqrt(n_then / n) rescaling is dropped, and the former throttle of COH_ERR_FRAMES frames is dropped too, since it
+        let a fast build-up show an error computed at a much smaller count). The count alone decides, so that a world
+        rebuilt from its record shows the same errors (review C1-6); at most ~log(n / 300) / log(1.1) bootstraps of
+        0.1–0.2 s per segment. Returns (err or None, why or None)."""
         n = float(h.sum())
         c = self._coh_err_cache
-        due = c is not None and self.nframe - c[3] >= COH_ERR_FRAMES
-        if c is None or c[0] != self.seg or c[2] is None and due or n >= 1.1 * c[1] and due:
+        if c is None or c[0] != self.seg or n >= 1.1 * c[1] or (c[2] is None and c[1] < stats.COH_BOOT_MIN_HITS < n + 1):
             rng = np.random.default_rng([self.seed, 4243, self.seg, int(n)])
-            err, _ = stats.coherence_boot_err(h, *self._coh_basis(True), dark=dark, rng=rng)
-            self._coh_err_cache = c = (self.seg, n, err, self.nframe)
-        return None if c[2] is None else c[2] * math.sqrt(c[1] / max(n, 1.0))
+            r = stats.coherence_boot(h, *self._coh_basis(True), dark=dark, rng=rng)
+            self._coh_err_cache = c = (self.seg, n, r["err"], r["why"])
+        return c[2], (None if c[2] is not None else c[3])
 
     # --- time -----------------------------------------------------------------------------------------
     def max_step(self):
@@ -1291,7 +1294,6 @@ class Simulation(BaseSimulation):
 
     # --- frames ---------------------------------------------------------------------------------------
     def frame(self):
-        self.nframe += 1  # frames drawn in this world: the clock of the error's bootstrap (_coherence_err)
         st = {"counts": self.counts, "seg": self.seg, "n_seg": self.hist["n"]}
         fl = []
         for b in self.batches:
@@ -1312,8 +1314,9 @@ class Simulation(BaseSimulation):
                     nb = len(h)
                     dark = np.full(nb, self.dark_rate * (self.t - self.seg_t0) / nb)
                     gh, _ = self._coherence(h, bins=True, dark=dark)
-                    err = self._coherence_err(h, dark) if gh is not None else None
-                    st["coh"] = {"hist": gh, "err": err, "expected": getattr(self, "gamma_expected", None)}
+                    err, err_why = self._coherence_err(h, dark) if gh is not None else (None, None)
+                    st["coh"] = {"hist": gh, "err": err, "err_why": err_why, "min_hits": stats.COH_BOOT_MIN_HITS,
+                                 "expected": getattr(self, "gamma_expected", None)}
         return st, {"flight": fl.astype(np.float64)}
 
     def next_event_time(self):
@@ -1575,6 +1578,13 @@ def _rebin(x, P, edges):
     return np.diff(np.interp(edges, x, c))
 
 
+def _story_single_slit_minimum_mm() -> float:
+    """The first dark minimum of one slit of the story's preset on its screen, λ·L/a in mm (the far field: the story's
+    Fresnel number a²/(λL) is 6·10⁻⁴), for the caption of the stage with slit 2 closed."""
+    p, _errs = SCHEMA.resolve("story", {})
+    return float(p["lam_nm"]) * 1e-9 * float(p["L2_m"]) / (float(p["a_um"]) * 1e-6) * 1e3
+
+
 # Watch (design §6.1): what to look at, at each step of the story (played seconds; the script changes the set-up at the
 # same times)
 STORY_CAPTIONS = [
@@ -1582,13 +1592,15 @@ STORY_CAPTIONS = [
                         "of the screen on the right. Each dot is one photon.")},
     {"at": 8, "text": T("Where the next photon lands cannot be predicted: the hits look random. Only their probability "
                         "is computed: the orange curve under the screen.")},
-    {"at": 16, "text": T("Ten times faster, thousands of hits: their histogram follows the orange curve, and bright and "
-                         "dark bands appear on the screen.")},
+    {"at": 16, "text": T("Ten times faster: hundreds of hits, then about two thousand. Their histogram follows the orange "
+                         "curve, and bright and dark bands appear on the screen.")},
     {"at": 22, "text": T("The bands are interference: the wave of each photon passes through both slits, and the two "
                          "parts add up in some places and cancel in others. The grey dashed curve is what the two "
                          "slits would give without interference."), "hold": 3},
-    {"at": 26, "text": T("Slit 2 is closed, and the screen starts again: the hits pile up in one broad hump, the "
-                         "spread of a single slit, with no bands.")},
+    # review R-W F9: one slit still diffracts; its first dark minima at ±λL/a (Fraunhofer: a²/(λL) = 6·10⁻⁴), which
+    # the run's expectation for this segment shows (tests/test_u32_screens.py finds them on its curve)
+    {"at": 26, "text": T("Slit 2 is closed, and the count starts again. The two-slit fringes are gone: one slit gives a "
+                         "broad diffraction maximum, its first dark minima at ±{x:.3g} mm.", x=_story_single_slit_minimum_mm())},
     {"at": 36, "text": T("Both slits are open, but a detector at slit 1 marks which slit each photon took: no bands. "
                          "The hits follow the grey dashed curve, the two slits without interference.")},
     {"at": 48, "text": T("The detector is removed, and the bands come back: interference needs the two paths to be "

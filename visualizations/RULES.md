@@ -79,7 +79,9 @@ their `VIZ`, §8; the start page lists them, the run page loads `web/view.js`). 
 оберткой над этим движком»). Its core holds established physics only; approximations, interpretations, models and
 alternatives are separate layers (`../lfphys/LAYERS.md`, `../lfphys/README.md`). A visualization is a wrapper: its
 `engine/` keeps the apparatus and the orchestration, imports the physics from `lfphys`, and lists the modules a world
-uses in `Simulation.engine_modules()`; the player shows them with their layer. Physics a visualization needs and the
+uses in `Simulation.engine_modules()`; the player shows them with their layer. `engine_modules()` names modules, or one
+dataset of a module as `module:part` (e.g. `core.data:air`, an entry of the module's `DATASETS`), so that the panel
+lists only what the world uses (review R-W F8, integrator D10). Physics a visualization needs and the
 engine lacks is added to the engine, with its tests, not to the visualization.
 
 ## 2. Physics rules (owner's directions made operational)
@@ -191,15 +193,15 @@ REST (JSON):
 | method | path | meaning |
 |---|---|---|
 | GET | `/api/health` | version, visualizations, running workers |
-| GET | `/api/viz`, `/api/viz/{viz}` | catalogue: id, title, summary, purpose, version, `code_hash` (`registry.code_hash_cached`: this process's code hash of the world, computed once; §9), kind, audience, section, ui, teaser, related, recordings, `screens` (`registry.screens_of`: each screen with its `atlas` id, its controls with their labels, units and kinds, a lab's instruments, steps (each with its `atlas`) and worksheet; §10), aliases, picture, the audience's anchors (curriculum / courses / question, prior_art, status), schema (params + presets) (§8); `{viz}` may be an old id (`registry.ALIASES`): the renamed world's entry |
+| GET | `/api/viz`, `/api/viz/{viz}` | catalogue: id, title, summary, purpose, version, `code_hash` (`registry.code_hash_current`: the world's code hash as its files are now, recomputed when a file's size or modification time changes; §9), kind, audience, section, ui, teaser, related, recordings, `screens` (`registry.screens_of`: each screen with its `atlas` id, its controls with their labels, units and kinds, a lab's instruments, steps (each with its `atlas`) and worksheet; §10), aliases, picture, the audience's anchors (curriculum / courses / question, prior_art, status), schema (params + presets) (§8); `{viz}` may be an old id (`registry.ALIASES`): the renamed world's entry |
 | GET | `/api/audiences` | `{audiences: [{id, prefix, label, description, ui}], sections: [{id, label}]}` from `registry.AUDIENCES` and `registry.SECTIONS`, in their order (labels and descriptions are `T`); the start page's audiences and sections (§9) |
 | GET | `/api/planned` | the planned items of `planned.json` not yet built (an entry whose id names an existing folder, S02 ↔ `s02_*`, is dropped; §8) |
-| GET | `/api/recordings` | `{worlds: {<world>: <its index.json>}, site: <LFVIZ_SITE_URL or https://ildar-idrisov.github.io/lfphys/>}`: the local recordings (§9) |
+| GET | `/api/recordings` | `{worlds: {<world>: <its index.json>}, site: <LFVIZ_SITE_URL or https://ildar-idrisov.github.io/lfphys/>, published, expected: {<world>: {version, code_hash, recordings: {id: key}, atlases: {id: key}}}}`: the local recordings (§9), whether the public site is published (`site/site.json`), and the keys the code on this server gives (`app.expected_keys`): a screen uses only an atlas with that key (§10, integrator D11) |
 | GET | `/viz/{viz}/{path}` | a world's `web/` files (its view); an old id answers 301 to the new address |
 | GET | `/recordings/{world}/{file}`, `/recordings/{world}/atlas/{atlas}/{file}` | a recording file or a world's `index.json` from `visualizations/recordings/` (`LFVIZ_RECORDINGS`), or an atlas's manifest, base header or point file (§10); a `.gz` goes as `application/gzip` without a Content-Encoding (the player inflates it); `Access-Control-Allow-Origin: *`; an old id names the new folder |
 | GET | `/images/{file}` | the pictures of the cards and the README, `../docs/images/` (`.jpg`, `.jpeg`, `.png`, `.webp`) |
 | GET | `/`, `/runs`, `/run?id={run}`, `/run?rec={world}/{rec}`, `/run?demo={world}&screen={id}`, `/worksheet?demo={world}[&teacher=1]`, `/settings` | the pages: the start page (§9), the runs and their removal period, the player on a run, the player on a saved recording (an old world id works), a demonstration's screens (Watch, Explore, Lab work; `screen` is the tab, by default the first; §10), a lab's printable worksheet (`teacher=1`: with the teacher's answers; §10), the devices (§5) |
-| POST | `/api/atlas/{world}/{atlas}/point` | «▶ Compute live» of one atlas point (§10): `{values: {param: value}, seed?}` → `200 application/gzip`, the point's file, the same bytes a site build makes for those values and that seed; headers `X-LF-Source` (`atlas`: an on-grid value from the local atlas whose key is current; `cache`; `computed`) and `X-LF-Key`; a control left out takes its default; `400 {error, hint?}` for a value the schema or the world's `check_params` refuses (the refusal's texts), `429` beyond a queue of `atlas_live.QUEUE` (4) waiting requests, `503 {error}` when the point's process ran out of memory or time (`lfviz.atlas_live`) |
+| POST | `/api/atlas/{world}/{atlas}/point` | «▶ Compute live» of one atlas point (§10): `{values: {param: value}, seed?, full_header?}` → `200 application/gzip`, the point's file, as a site build packs it for those values and that seed on the same CPU type; its header is a delta naming its base (`$base`, the base file's sha256), or whole with `full_header: true`; headers `X-LF-Source` (`atlas`: an on-grid value from the local atlas whose key is current; `cache`; `computed`), `X-LF-Key` (the point's key), `X-LF-Code` (the world's code hash that computed it) and `X-LF-Made` (when it was computed, ISO 8601 in UTC: a cached point's original time, an atlas's build time); a control left out takes its default; `400 {error, hint?}` for a body that is not `{values, seed?, full_header?}`, a value outside the control's span (a slider's lowest to highest value, a toggle's or select's own values) or one the schema or the world refuses (`check_params`, its memory estimate, its constructor: the refusal's texts; integrator D14); `409 {error}` when the world's checks end ✗ at those values (naming the checks); `429` beyond a queue of `atlas_live.QUEUE` (4) waiting requests; `503 {error}` when the point's process ran out of memory or time, or the server's code changed while the point was computed (`lfviz.atlas_live`) |
 | GET | `/api/runs` | runs, newest first: state, sim time, size, keep, modifications, approximations, `devices_override` |
 | POST | `/api/runs` | `{viz, preset?, params?, seed?, label?, backend?}` → `{id}`: starts a run (its first world; `viz` may be an old id); `backend` = `{kernels: {name: {device, precision}}}` overrides the device settings for this run only (§5) |
 | GET | `/api/runs/{id}` | the run's passport: current params and seed, `worlds` (each: n, preset, seed, params, modifications), code hash, commands, errors |
@@ -369,7 +371,7 @@ Message format (`server/lfviz/protocol.py`, `player/js/api.js`): `u32 json_len |
 
 | type | when | content |
 |---|---|---|
-| `header` | first in every world | scene, actions (forms), modifications, approximations (optional, list of strings), units, anything static; added by the runner: `world`, `params`, `preset`, `seed`, `live`, `engine` (the lfphys modules of the world, `engine_modules()` with their ABOUT), `backend` (the device settings in force, what each engine kernel ran on so far — `used[kernel].drawn` for the results drawn, `used[kernel].check` for references and checks — and the engine's notes about adjusted settings; plan P11) |
+| `header` | first in every world | scene, actions (forms), modifications, approximations (optional, list of strings), units, anything static; added by the runner: `world`, `params`, `preset`, `seed`, `live`, `engine` (the lfphys modules of the world, `engine_modules()` with their ABOUT; a `module:part` name gives that dataset's own entry), `backend` (the device settings in force, what each engine kernel ran on so far — `used[kernel].drawn` for the results drawn, `used[kernel].check` for references and checks — and the engine's notes about adjusted settings; plan P11) |
 | `live` | after every `set` | `{values, engine}`: the live parameters in force (also after a refused change) and the engine modules in force (a live change may bring one in or out) |
 | `state` | on change | playing, speed, speed range |
 | `command` | with every world-changing command | `{cmd, args}` at the world time it was applied (`set`, `action`, `view`, `scene`, `new_world`): what a restore repeats; the player does not show it |
@@ -600,7 +602,7 @@ consequences of a change start at the moment it is made.
   `player/js/instruments.js`).**
   - **The panel "Instruments"** lists a world's measurables by group, plots the values the run recorded at its frames'
     world times, and downloads them as CSV. Nothing it shows is computed by the player.
-  - **Nothing the owner is using is rebuilt under him** (review LB1-framework F8): the list, the folded groups (kept per
+  - **Nothing is rebuilt while the owner is using it** (review LB1-framework F8): the list, the folded groups (kept per
     run in the browser), the plots, the sweep form (once per world, what was typed kept), and a sweep's result (the
     table grows by rows, the plot is redrawn on the same canvas).
   - **The base state.** A sweep starts from the world as it is now: the server's `checkpoint_now`, sent only by the
@@ -717,7 +719,8 @@ section is how the visualizations keep it.
   «… · идёт расчёт», the «Continue» strip and "My runs" say so), and what ⏺ adds to is the run's "record" / «запись
   запуска» — never "recording" for a live run (integrator D1, 2026-11-13; review P17-start-page F3); "MODIFIED PHYSICS" / «МОДИФИЦИРОВАННАЯ ФИЗИКА» in full; a parameter sweep is «перебор
   параметра»; a worker is «рабочий процесс»; a numerical error is «погрешность» (a fault stays «ошибка»); "closed form"
-  is «в замкнутом виде»; "against" is rendered by sense («в сравнении с», «в зависимости от», «↔»), not «против»;
+  is «в замкнутом виде» (in a school text «по формуле»); a random seed is «затравка» (never «зерно»); the lab's fit
+  of the measured points is «аппроксимация» (not «подгонка»; 2026-11-17, review R-W F13); "against" is rendered by sense («в сравнении с», «в зависимости от», «↔»), not «против»;
   «2D»/«3D» and the decimal comma in Russian; British spelling and "2-D"/"3-D" in English. Every count phrase has
   plural forms (`{n:d}` and the catalogue's plural entry; English one/other in `en.json` where English needs it), and
   no ordinal is built as "{k}th". A button is named by its label ("▶ Start a new world", not "New world"). The screens
@@ -798,8 +801,9 @@ for a local recording or, when `site/site.json` says `"published": true`, for th
 world `version` (`start.js` reads `<site>api/recordings.json` once); otherwise it is disabled with "No recording yet:
 record it locally (site/record.py) or compute live" (integrator D4). "No recording for this scenario: compute it live"
 is only for a preset with no recording spec. A world with screens (§10) shows them first, in tab order: «▷ Watch m:ss»,
-«◎ Explore», «✎ Lab work» (`page("run", {demo, screen})`, class `st-screen`), each greyed with "Not made yet: build it
-locally (site/record.py) or compute live" while its recording or atlases are missing here; a school card has only these
+«◎ Explore», «✎ Lab work» (`page("run", {demo, screen})`, class `st-screen`), each greyed with "Not built here: run
+site/record.py --world <id>" while its recording or atlases are missing here or not of the key this server expects (and
+not on the published site with that key; §10, integrator D11); a school card has only these
 and, on a server, «▶ Compute live» of its Explore screen's set-up. The lower the level, the simpler the card (rule 16):
 school cards have no parameters, seed or devices; university cards fold them under "More: parameters, seed, device,
 precision"; research cards show them open. The runs are not on the start page: `/runs` (`player/runs.html`,
@@ -833,10 +837,12 @@ present, and the world's budget counts both.
 
 * **The key** of a recording is `sha256(spec + RECORDER_VERSION + sitelib.recorder_hash() +
   registry.code_hash(world))[:16]`; `recorder_hash` covers `site/record.py`, the image's
-  `docker/requirements.lock` and `Dockerfile`, and the budgets that decide the thinning (review F3); `plan.py` marks
+  `docker/requirements.lock` and `Dockerfile` (whose base image is pinned by digest, the same as the workflow's
+  `PY_SLIM`: review R-F F10, 2026-11-17), and the budgets that decide the thinning (review F3); `plan.py` marks
   each `present`, `stale` or `missing`. `code_hash` covers the world's folder (`*.py`, `*.js`, not its `tests/`),
-  `server/lfviz/` and the engine, except `registry.SERVER_ONLY` (`app.py`, `runs.py`: the server process's own modules,
-  which no worker imports), so an edit of an HTTP route or of the runs' bookkeeping re-records nothing; an edit of
+  `server/lfviz/` and the engine, except `registry.SERVER_ONLY` (`app.py`, `runs.py`, `atlas_live.py`: the server
+  process's own modules, which no worker imports; the live points' key covers `atlas_live.py` itself, §10), so an edit
+  of an HTTP route, of the runs' bookkeeping or of the live endpoint re-records nothing; an edit of
   `sim.py`, of the engine or of a world's file makes that world's (or every world's) recordings stale.
 * **Recording locally** (Docker, CPU, a memory cap; at most a few containers at once on a shared host):
   `docker run --rm --memory=12g -e LFPHYS_NO_GPU=1 --user "$(id -u):$(id -g)" -v "$PWD:/lf" -w /lf/visualizations
@@ -844,11 +850,12 @@ present, and the world's budget counts both.
   `site/posters.mjs` remakes the pictures whose recording's key changed (`../docs/images/posters.json`), and
   `site/readme.py` the READMEs' catalogue.
 * **On the server**, `/recordings/…` serves `visualizations/recordings/` (git-ignored; `LFVIZ_RECORDINGS` points
-  elsewhere) and `/api/recordings` lists it with the public site's address and whether it is published
-  (`{worlds, site, published}`; **`site/site.json`** `{"published": false, "url": …}`, committed; `LFVIZ_SITE_URL`
+  elsewhere) and `/api/recordings` lists it with the public site's address, whether it is published and the keys the
+  code on this server gives (`{worlds, site, published, expected}`; **`site/site.json`** `{"published": false, "url": …}`, committed; `LFVIZ_SITE_URL`
   overrides the address). Without a local recording of a world the player falls back to the public site's (Pages sends
   `Access-Control-Allow-Origin: *`) only when `published` is true and that index's `version` equals the local world's
-  (integrator D3, D4). The player's refusals: "No such recording" (an unknown world or recording; the only one on the
+  (integrator D3, D4); a screen's atlas is taken from there only with the key this server expects (§10, integrator
+  D11). The player's refusals: "No such recording" (an unknown world or recording; the only one on the
   site), "No recording yet: …", "The public site could not be reached: …", and "No recording for this version: …"
   only for a real version mismatch.
 * **The player on a recording** (`/run?rec=<world>/<rec>`; `api.js openRecording`, the handler interface of
@@ -857,7 +864,7 @@ present, and the world's budget counts both.
   give the reason "a recording: this needs a live run" (the set-up, the actions, new worlds, adding slice planes); the
   passport ("About the recording") is built from the index entry; the instruments' CSV is made in the browser from
   the kept frames, and the sweeps are absent. The badge "RECORDING · date · code X" compares the index's `code_hash`
-  with this server's (`describe()["code_hash"]`, `registry.code_hash_cached`, computed once per process) and, when they
+  with this server's (`describe()["code_hash"]`, `registry.code_hash_current`, by the code files' sizes and times) and, when they
   differ, its tooltip says "recorded with code X; this server runs Y" (design §4.6); the badge prefers the index
   entry's own `code_hash` and `made`. A view's `ctx.send("speed")` sets the player's own speed; any other view command
   gives the read-only toast. Below 1000 px the player is one scrolling column: the view first, the side columns under
@@ -926,7 +933,7 @@ decoded through `openRecording`).
 
 ## 10. Screens and atlases (owner, 2026-11-14; plan P17.5, batch EX1)
 
-The owner's words are in `../AGENTS.md` §1 («Interactive explorations and lab work for school and university»), with his
+The owner's words are in `../AGENTS.md` §1 («Interactive explorations and lab work for school and university»), with the owner's
 answers of the same day: sliders snap only to computed points, nothing between them is drawn; the pilots and the
 rework of the existing worlds come before AB1; quality over quantity. The design and its measurements:
 `../lfphys/sources/explore_2026-11-14_design.md`. The pilots: `s03_projectile` (all three screens) and
@@ -938,7 +945,8 @@ rework of the existing worlds come before AB1; quality over quantity. The design
 * **Watch** («Наблюдение»): a recording of `VIZ["recordings"]` with captions, only for a phenomenon that develops in
   time. The caption strip shows the latest caption as of the cursor; each caption is a chapter tick on the timeline,
   ◀◀ / ▶▶ go to the previous or next one; the screen's `more` recordings are a select («More recordings»;
-  `player/js/watch.js`).
+  `player/js/watch.js`). Its time label states the world's time and the playback factor («world 0.42 s · slow motion
+  ×10 · 6.50 s / 39.95 s»), so a view does not repeat it (integrator D8).
 * **Explore** («Исследование»): an **atlas**, the world's own runs computed beforehand on a grid of a few controls. The
   sliders stop only at the grid's values on the site; the world's own view draws the point (`player/js/explore.js`,
   `atlas.js`, `record_core.js`).
@@ -947,11 +955,18 @@ rework of the existing worlds come before AB1; quality over quantity. The design
 
 Checks, «Physics of this world», events and the passport fold into one drawer, «How we know this is right» (a view's
 `rightPanels`, u32's «Particle», «Model of the slit screen» …, fold into it too). On a server the top bar also has
-«▶ Compute live»: a live run of the screen's preset with the controls' current values, in the full player. A world
+«▶ Compute live»: a live run of the screen's preset with the controls' current values, in the full player (on Watch,
+of the world shown: its preset, parameters and seed from that world's header; review R-P F13). A world
 without screens opens its first recording, as before. School worlds need Explore and Lab work (or `lab_absent`);
 a university world's screens are optional until it is reworked; research worlds and the laboratories have none and
-keep the full player only. The layout is PhET-like and works at 390 px (one column, a sticky time bar, touch targets
-≥ 44 px, no horizontal scroll).
+keep the full player only. The layout is PhET-like and works at 390 px (one column, touch targets ≥ 44 px, no
+horizontal scroll). Below 1000 px the top bar scrolls away; Explore's and Lab work's view stays at the top (sticky)
+while the controls scroll under it, the time bar stays at the bottom, and in Lab work «Measure», the stopwatch's
+«⏱ Stop» and the last message sit in a sticky dock above it; the page's scroll padding equals the sticky parts'
+heights, so a control the focus or a tap scrolls into view is not hidden under them (integrator D12). **Keys:** Space,
+← / → and Home are the screen's shortcuts only when the focus is not on an interactive control (a button, a slider, an
+input, a select, a tab, a link); on a button Space presses it, on a slider the arrows move it, and the tabs move with
+← / → among themselves (ARIA tabs); T, ? and Escape work anywhere but in a text field (integrator D7).
 
 **`VIZ["screens"]`** (`registry.check_screens`; the catalogue's form `screens_of`; every text a `T`):
 
@@ -973,8 +988,8 @@ screen may have one, flagged at the control and in the top bar while a modified 
 as accumulative messages `caption {t, text, n, at, hold?}` at their frames, with the world time of that frame, so a
 caption keeps its place under frame thinning and speed changes and is part of the recording's key. `hold` (seconds):
 while the story plays, the playback stops at that caption's frame and waits `hold` seconds before it goes on, so the
-text can be read (`watch.js`; the registry checks only that it is a number > 0); scrubbing, the chapter ticks and ◀◀ / ▶▶
-are not held. A script's `speed` command changes only the playback speed; a
+text can be read (`watch.js`; the registry checks only that it is a number > 0), also at the recording's first frame;
+any action (▶ / ❚❚, a scrub, a chapter) ends a hold, and scrubbing, the chapter ticks and ◀◀ / ▶▶ are not held. A script's `speed` command changes only the playback speed; a
 `new_world` resets the speed to the world's default, so a script that wants another speed in the new world puts a
 `speed` command after the `new_world` at the same `at`.
 
@@ -982,14 +997,22 @@ are not held. A script's `speed` command changes only the playback speed; a
 per lab step (`<screen>.<step>`). A point is the world's own `Simulation` run headless by `headless.run_spec`, the one
 runner of the recordings, the atlases and the server's live points: the screen's preset, its `fixed` values and the
 grid values on top, the screen's seed, frames every `frame_dt` from t = 0 until the stop rule. A point the world refuses
-(`check_params`) is `refused`, with its text shown at that combination; a point that fails (an error, an exception, a
-check ending ✗, a stop event not reached by `max_world_s`) fails the atlas. Files, per world:
+(`check_params`, its memory estimate, its constructor or its first showing: `headless.PointRefused`; integrator D14) is
+`refused`, with its text and hint shown at that combination; a point that fails (an error, an exception, a check ending
+✗, a stop event not reached by `max_world_s`, a value that cannot be packed, such as ±inf in a quantised blob) fails the
+atlas. Files, per world:
 `recordings/<world>/atlas/<atlas>/atlas.<hash8>.json` (the manifest), `base.<hash8>.lfpt.gz` (the default point's
 header, loaded once) and `p<i>.<hash8>.lfpt.gz` (the point with the flattened index `i`, row-major, the last control
 fastest: its header as a delta against the base, the world's messages, `end {reason: "atlas"}`); the world's
 `index.json` lists them under `atlases`. The **key** is `sha256(atlas spec + ATLAS_VERSION + recorder_hash +
-code_hash(world))[:16]`; `plan.py` marks each atlas `present`, `stale` or `missing`; `RECORDER_FILES` covers
-`site/atlas.py` and `lfviz/headless.py`. The same spec and code give the same bytes. The player loads points on demand
+code_hash(world))[:16]` (`ATLAS_VERSION` 2 since 2026-11-17); `plan.py` marks each atlas `present`, `stale` or
+`missing`, and an atlas whose manifest names a base or a point that is missing or of another size is `stale`
+(`sitelib.atlas_files_ok`), so `--stale` rebuilds it; `RECORDER_FILES` covers `site/atlas.py` and `lfviz/headless.py`.
+The same spec and code give the same bytes, the manifest included (it holds no build or CPU time: those are the index
+entry's `made` and `cpu_s`), on the same CPU type (numpy's SIMD paths can change the last bits of a world's computed
+values). A point's header delta names its base (`"$base"`, the base file's sha256, which the manifest has as
+`base.sha256`): a reader merges it only with that base and drops `$base` from the merged header, as it drops `$delta`
+(review R-F F2, integrator D13). The player loads points on demand
 (an LRU of 24 points or 40 MB), prefetches the neighbours (±1 along every control, two requests at a time) and shows
 «loading…» after 300 ms, never a blank view.
 
@@ -1000,14 +1023,20 @@ expectation curves, with the sample's χ² against them); another sample is draw
 | sqrt, lo, hi, nan?}` with a stored `u1` or `u2`; both decoders return float arrays (lin `lo + v/top·(hi − lo)`, sqrt
 `hi·(v/top)²`). A screen's or a recording's `quantize` map `{"<type>.<blob>[|<blob>…]": "u8" | "u16" | "u8sqrt" |
 "u16sqrt"[":col" | ":all"]}` names what is packed; the registry refuses a quantisation the view does not declare safe
-in its `QUANT_SAFE` (or `quantSafe`) object literal; only drawn arrays are quantised, never measurables, events or
-checks, and the largest error of each quantised blob is measured and written into the manifest (`quant`) or the index
-entry.
+in its `QUANT_SAFE` (or `quantSafe`) object literal, or one coarser than declared there (the range suffixes rank
+`:all` < none < `:col`); only drawn arrays are quantised, never measurables, events or checks (the registry refuses the
+blobs of `end`, `check`, `event`, `error`, `notice`, `caption`, `state` and `live`: `registry.QUANT_TYPES_REFUSED`);
+±inf is refused (NaN keeps its code); a range a few ulps wide is kept exact (`protocol.SHORT_MIN_ULPS`, 64 ulps); and
+the largest error of each quantised blob is measured and written into the manifest (`quant`) or the index entry.
 
 **The view's contract, extended** (optional; old views keep working): `ctx.screen` (`live`, `recording`, `watch`,
 `explore`, `lab`) and `ctx.ui`; `OVERLAYS` (an array literal of `{id, label, default}`, read by
 `registry.view_declarations`) with `setOverlay(id, on)`; `setTraces(list)` (earlier points, each a decoded world drawn
-up to its own time); `worldToPx` / `pxToWorld` (2-D views: where the lab's instruments are drawn); `anchors()`
+up to its own time; a trace's `label` names only the values that differ from the point shown, with « · computed live»
+and `live: true` for a live point, and the view keeps the label inside the canvas, clear of its other labels);
+`setStory({worlds, w, fps})` (optional; Watch: called when the world shown changes, with the recording's decoded worlds,
+the index of the one shown and the frames per played second: S03 keeps one scene box for the whole recording and draws
+the earlier worlds' throws faded, integrator D8); `worldToPx` / `pxToWorld` (2-D views: where the lab's instruments are drawn); `anchors()`
 (optional: where the tape, the ruler and the protractor sit); tolerance of a frame without its dropped blobs. The view
 still computes no physics.
 
@@ -1015,24 +1044,59 @@ still computes no physics.
 
 * `instruments: {id: {kind: ruler | protractor | stopwatch | readout, label, unit, division, error?, reads | manual,
   event?, error_note?}}`. A reading is `division × round(value / division)` with the declared `error` (by default half
-  a division). `reads` names a measurable of the world, read at the cursor («Nothing to measure yet: …» before it is
-  reached), or `control:<param>`, a set-up value. `event` binds the instrument to an event of the point (its kind or
-  name, as a stop rule matches it): it reads only once that event has happened by the frame shown (S03 part C: the grey
-  ball's tape after `companion_landing`). A `manual` stopwatch starts with the launch and stops on the student's press,
-  at real speed only («slow» is refused): it measures the reaction, as a hand-held one does.
-* `steps: [{id, title, goal, hint?, preset, fixed?, controls, instruments, columns, plot, law, frame_dt, stop,
+  a division), written to the decimals of its division or of its error, whichever is finer («0.600 ± 0.005»); an
+  `error` of 0 declares an exact set-up, with its reason in `error_note` (S03's «Height scale of the stand»: the stand
+  sets the chute's height exactly at its marks; integrator D2). `reads` names a measurable of the world, read at the
+  cursor («Nothing to measure yet: …» before it is reached), or `control:<param>`, a set-up value: the shown point's own
+  (its header's `params`, then its grid values, then the atlas's `fixed`), never the slider's (integrator D6). `event`
+  binds the instrument to an event of the point (its kind or name, as a stop rule matches it): it reads only once that
+  event has happened by the frame shown (S03 part 3: `tape_grey` declares `event: "companion_landing"`, so the grey
+  ball's tape reads only after the grey ball lands; review R-P F18). A `manual` stopwatch starts with the launch and
+  stops on the student's press, on the wall clock (`performance.now()`) whatever the playback does; while it runs,
+  ▶ / ❚❚, a scrub of the time bar and ← / → are refused, and «slow» is refused for a step with one: it measures the
+  reaction, as a hand-held one does (review R-P F5). «Measure» puts its reading into the step's stopwatch column when
+  it was stopped for the shown launch; otherwise the cell stays empty («—», empty in the CSV, never 0), and the plot and
+  the fit skip it (review R-W F6).
+* `steps: [{id, title, goal, hint?, preset, fixed?, controls, instruments, columns, plot, laws, frame_dt, stop,
   quantize?, drop?}]`: `columns` `[{id, label, from: <instrument>}` or `{id, label, of: <column>, op: sqrt | square |
-  sin2 | inverse | log}]` (errors propagated as |f′|·σ); `plot {x, y, fit, fits}` with fits `line0`, `line`,
-  `quadratic` (its vertex with σ) and, at standard, `power`; `law {quantity: slope | intercept | vertex | exponent,
-  label, unit, reference}`. The fit (`fit.js`, tested against `lfphys.tools.stats.linear_fit` on shared fixtures) is a
-  weighted least squares with effective variance, its errors scaled by the Birge ratio when χ²/dof > 1. The law's
-  reference is computed **by the world** when the step's atlas is built (`Simulation.lab_reference(step, fixed,
-  values) -> {value, unit, label, how, kind: "closed form" | "engine"}`) and stored in the manifest's `references`;
-  «Check against the law» says ✓ within two errors or ✗ with the step's hint. The table is kept per step in the
-  browser (`localStorage`, a convenience) and exported as CSV with the errors.
-* `worksheet: {frp: [{name, …}], equipment: [T], questions: [{q, answer}], teacher: [T]}`: data, not a document.
-  `worksheet.html?demo=<world>` (`/worksheet?demo=…`) prints it in the viewer's language, one A4 page per part; the ФРП
-  lab's name is quoted verbatim in Russian, with a marked translation in another language. «For the teacher»
+  sin2 | inverse | log}]` (errors propagated as σ_f² = f′²σ² + ½f″²σ⁴, so sin 2θ at 45° keeps an error); `plot {x, y,
+  fit, fits}` with fits `line0`, `line`, `quadratic` (its vertex with σ) and, at standard, `power`; `laws: [{x, y,
+  model, quantity, label, unit, reference}, …]`, several per step (`registry._check_laws`; integrator D4): `x` and `y`
+  are two columns of the step, `model` one of its plot's fits, `quantity` one the model gives (`registry.LAW_MODELS`:
+  slope ← `line0` or `line`, intercept ← `line`, vertex ← `quadratic`, exponent ← `power`), `label` a `T` naming the
+  quantity, `unit` a `T` or a plain symbol, `reference` an id unique in the step; the step's own plot is one of its
+  laws, and the former single `law` is refused. The fit (`fit.js`, mirroring `lfphys.tools.stats.linear_fit` step by
+  step; shared fixture `player/js/tests/fixtures/fit_cases.json`, Pearson–York included, to 1e-12) is York's line (York
+  et al. 2004, eqs. (13), with errors in both x and y) for `line0`, `line` and `power` (on the logs), and the effective
+  variance (three re-weightings, a stated approximation) for `quadratic`; both refuse a singular design (`fit.singular`;
+  review R-E F5, F8; integrator D3). Its errors are scaled by the Birge ratio when χ²/dof > 1, and the scaling is shown.
+  Each law's reference is computed **by the world** when the step's atlas is built (`Simulation.lab_reference(step,
+  fixed, values, reference) -> {value, unit, label, how, kind: "closed form" | "engine"}`; without `reference`, the
+  step's first law) and stored in the manifest's `references` under the law's id. «Check against the law» applies only
+  when the plot is one of the step's laws' (x, y, fit); otherwise it is off with the reason, and the part's laws are
+  listed with their plots («plot it»). It compares that law's quantity with its reference: ✓ within k errors, or ✗ with
+  the step's hint, where k = 2 when the errors are the instruments' declared ones, and Student's t quantile with the
+  same coverage (95.45 %) for n − p degrees of freedom when they come from the scatter (no declared errors, or the
+  Birge scaling applied); a fit whose √(χ²/dof) exceeds 3 (`fit.js BIRGE_MAX`) gives no verdict, with the reason. One
+  row per set-up: «Measure» on a set-up already in the table replaces its row and says so (the bench repeats exactly,
+  so a repeat is not a new independent point; integrator D5). A point's reply is applied only when it is still the one
+  asked for, and «Measure» is refused while the slider's set-up is not the one shown (loading, refused or failed;
+  integrator D6). The drawer of Lab work lists the events without their times, since a landing's time would give a
+  hidden value away (integrator D10). The table is kept per step in the browser (`localStorage`, a convenience) with
+  its atlas's key, dropped with a message when the atlas is rebuilt, and exported as CSV with the errors.
+* `worksheet: {frp: [{name, programme, …}], equipment: [T], questions: [{q, answer}], teacher: [T], variants?}`: data,
+  not a document. Every `frp` entry names its `programme` (a `T`: the programme's name to print, never its raw id).
+  `variants: [{id, grade, label, steps, plot: {step: {x, y, fit}}, goals?: {step: T}, questions}]` are other sheets of
+  the same lab (`registry._check_variants`: a unique slug, a grade 1–12, a `T` label, distinct steps of the lab, per step
+  two of its columns and a fit among its plot's fits or none, questions of two `T`), chosen on the page
+  (`&variant=<id>`, a select): S03's grade-7 variant has part 1 only, L against h with no fitted curve, its own goal and
+  questions. `worksheet.html?demo=<world>` (`/worksheet?demo=…`) prints it in the viewer's language. Every printed page
+  is one sheet, a fixed A4 page box with the attribution line at its foot: the head («Name», «Class», «Date») and part
+  1, one sheet per part, the questions, the teacher's sheets; no part is split and no page carries a single line. A
+  part has one blank row per set-up of the step, the plots of its laws (or the variant's), the curve each law fits named
+  in its instruction, and «Conclusion» lines. The ФРП lab's name is quoted verbatim in Russian, with the translation
+  marked once in another language. The laws' references come from the steps' atlases with the key the server expects
+  (the published site's is asked for only when a step has none here). «For the teacher»
   (`&teacher=1`) shows the answers, the teacher's notes and the laws' references on pages of their own; they are public
   (the design's §10, question 2: the repository is public anyway). The texts of `STEPS` and `WORKSHEET` and their
   translations are Site Materials under CC BY-NC-SA 4.0 (`../LICENSE.md` §1 item 8, §9): a world with them carries the
@@ -1040,20 +1104,43 @@ still computes no physics.
   carries the attribution line.
 
 **Compute live** (`lfviz/atlas_live.py`; §3's `POST /api/atlas/…/point`). On a server the sliders also move between
-the detents: a value within a tenth of a step of a detent snaps to it, any other is computed live when released, drawn
-when it arrives and labelled «computed live» in the passport and on its trace. The point runs in a separate process
-with its own memory limit (`LFVIZ_POINT_MEM_GB`, by default half a worker's budget, at least 512 MB; `oom_score_adj`
-1000, `nice` 10) and CPU-time limit (`LFVIZ_POINT_TIMEOUT_S`, 120 s); one at a time per server, four waiting, then 429.
-Cache: `runs/atlas-live/<world>/<atlas>/<key16>.lfpt.gz`, removed with the runs' period. An on-grid value is served from
-the local atlas when its key is current. The site never posts: there the sliders take grid values only. A live point
-is not fetched from the public site (`STATUS.md` V52).
+the detents: a value within a tenth of the local step of a detent (the gap from the nearest detent to its neighbour on
+that side) snaps to it, any other is computed live when released and drawn when it arrives. It is labelled «computed
+live» on its trace (inside the canvas) and in its own passport: the point's key, the code that computed it and the
+time with its zone (`X-LF-Key`, `X-LF-Code`, `X-LF-Made`), and whether it was computed now, taken from the server's
+cache, or is the atlas's own on-grid point (integrator D13). A value outside a control's span is refused (400). The
+point's key follows the code on disk (`registry.code_hash_current`, by the code files' sizes and times) and covers
+`atlas_live.py` itself (`atlas_live.live_hash`); the point's process hashes the code before and after it computes, and
+a point computed while the code changed is neither cached nor served (503: try again; review R-F F1, F11). Its header
+is a delta naming its base (`$base`): the player merges it only when that is the manifest's `base.sha256`, and
+otherwise posts the same request with `full_header: true` and gets the same point (the same key) with a whole header.
+The point runs in a separate process with its own memory limit (`LFVIZ_POINT_MEM_GB`, by default half a worker's
+budget, at least 512 MB; `oom_score_adj` 1000, `nice` 10) and CPU-time limit (`LFVIZ_POINT_TIMEOUT_S`, 120 s); one at a
+time per server, four waiting, then 429 (in the viewer's language). Cache: `runs/atlas-live/<world>/<atlas>/<key16>.lfpt.gz`,
+removed with the runs' period and capped at `LFVIZ_POINT_CACHE_MB` (512 MB; the oldest files go first); a killed
+process's leftovers older than 10 minutes are removed, and `point.log` holds the last point's log only. An on-grid
+value is served from the local atlas when its key is current; when the screen uses the published site's atlas (below),
+an on-grid value comes from the site's files, and the server computes only the off-grid ones. The site never posts:
+there the sliders take grid values only.
+
+**Atlases on a server** (integrator D11). A screen uses an atlas only with the key the server would build now
+(`GET /api/recordings` → `expected`, from the code on that server): the local one when its key is current, else, when
+the public site is published, the site's of the same world version and the same key (its files read from
+`<site>recordings/<world>/`); otherwise the screen is greyed with «Not built here: run site/record.py --world <id>».
+A stale local atlas is not opened. Watch plays the local recording, else the published site's of the same version.
+The worksheet takes the laws' references from the same atlases. The site is asked only when a screen (or a worksheet's
+step) has nothing current here, and through its `api/recordings.json` (every world's index), so a world not yet
+published there logs no 404 (`demo.js`, `worksheet.js`). So a browser test needs recordings and atlases built by
+the code under test (`site/fixtures.py`, below); `site/check.py` fails when the site's `expected` is missing or differs
+from the registry's keys.
 
 **Budgets** (`sitelib.BUDGET`, gzip, decimal; design §1.8): a point 150 kB target / 400 kB limit; an atlas 6 / 12 MB;
 a world, recordings and atlases together, 12 / 25 MB; the site 600 / 900 MB. `site/atlas.py` and `site/check.py` fail
 over a limit and warn over a target (`sitelib.ACCEPTED` names the accepted ones with their reasons). Measured on
-2026-11-14 (local build): S03 Explore 940 points, 10 refused, 5.70 MB (largest point 12.6 kB), labs 51, 46 and 87 kB,
-Watch 0.05 MB, its world 5.93 MB; u32 Explore 48 points, 5.50 MB (96.6–132.7 kB per point), Watch 0.61 MB, its world
-8.17 MB.
+2026-11-17 (local build, Docker, CPU, the pinned image): S03 Explore 940 points, 10 refused, 5.85 MB (largest point
+12.9 kB; 11 s of CPU), labs 39, 46 and 89 kB, Watch `independence` 0.03 MB and `air` 0.02 MB, its world 6.11 MB; u32
+Explore 48 points, 5.50 MB (largest point 132.7 kB; 93 s of CPU), Watch `story` 0.60 MB (`young`, `eraser`,
+`aharonov_bohm` 0.73, 0.64, 0.67 MB), its world 8.15 MB.
 
 **Making them.** `site/record.py --world <id>` (or `--stale`, `--all`) records a world's recordings, then builds its
 atlases; `site/atlas.py --world <id> [--atlas <id>]` builds only the atlases. Locally as in §9 (Docker, CPU,
@@ -1062,13 +1149,24 @@ recordings' and the atlases' keys (`.github/workflows/pages.yml`). `site/build.p
 `recordings/<world>/atlas/`; `site/check.py` checks every manifest against its files (size, sha256), the base, the keys,
 the budgets and the checks.
 
-**Tests.** Engine: `lfphys/tests/test_mechanics_projectile.py`, `test_mechanics_air.py`, `test_stats_fit.py`,
-`test_codes.py` (the refusals' machine codes `mechanics.*`). Framework: `tests/test_headless.py`, `test_atlas.py` (on the
-toy world `tests/site_worlds/s98_atlas_toy`, its built fixture in `tests/site_worlds/recordings/`, remade by
-`tests/site_worlds/make_fixture.py`), `test_protocol_quant.py` (shared fixtures `tests/site_worlds/quant/`),
-`test_atlas_live.py`, `test_site_registry.py`, `test_site_build.py`. Worlds: `s03_projectile/tests/test_s03_physics.py`,
-`u32_double_slit/tests/test_u32_screens.py`. Player (Node): `player/js/tests/{quant,fit,atlas,lab,captions}.test.mjs`.
-Browser (EN and RU, 1280 and 390 px, a private server, never port 8479): `tests/browser/demo_screens.mjs <port> [sizes]
-[world]` for the toy, S03 and u32 (with the recordings and atlases built), `u32_double_slit/tests/u32_screens.mjs`
-(what is u32's own: the readout line, the folded panels, «▶ Compute live» from Explore), `start_page.mjs` (the cards'
-screen buttons) and `site_smoke.mjs` (every screen and the worksheet on the built site).
+**Tests.** Engine: `lfphys/tests/test_mechanics_projectile.py`, `test_mechanics_air.py`, `test_stats_fit.py` (York's
+line against York et al. 2004 and Pearson–York, the minimum of S, NIST StRD, Monte Carlo coverage),
+`test_stats_coherence.py` (u32's |γ₁₂| bootstrap against the scatter of Monte Carlo histograms), `test_layers.py` (a
+dataset of a module, `core.data:air`, is its own entry), `test_codes.py` (the refusals' machine codes `mechanics.*`,
+`fit.*`). Framework: `tests/test_headless.py`, `test_atlas.py` (on the toy world `tests/site_worlds/s98_atlas_toy`: its
+committed fixture in `tests/site_worlds/recordings/`, remade by `tests/site_worlds/make_fixture.py`, is compared byte
+for byte with a fresh build, and `site/fixtures.py` builds everything present with the expected keys),
+`test_protocol_quant.py` (shared fixtures `tests/site_worlds/quant/`), `test_atlas_live.py`, `test_code_hash.py`,
+`test_site_registry.py`, `test_site_build.py`. Worlds: `s03_projectile/tests/test_s03_physics.py` (every law's
+reference and every number of the worksheet against the engine), `u32_double_slit/tests/test_u32_screens.py`. Player
+(Node, `node --test player/js/tests/*.test.mjs`, also in CI): `quant`, `fit` (the shared fixture
+`fixtures/fit_cases.json` made by `fixtures/make_fit_cases.py`, and Student's t against SciPy,
+`fixtures/t_quantiles.json`), `atlas`, `lab`, `captions`, `record`, `i18n`, `decode`; the instrument model is tested on
+hand-computed cases (there is no Python one). Browser (EN and RU, 1280 and 390 px, a private server, never port 8479):
+the committed toy fixture's keys are not current once any code changes, so a server's player greys its screens (D11);
+`site/fixtures.py --out DIR [--world …]` builds what a browser test needs now (by default the toy world's recordings
+and atlases) into a folder served with `LFVIZ_RECORDINGS=DIR`. `tests/browser/demo_screens.mjs <port> [sizes] [world]`
+for the toy, S03 and u32 (with the recordings and atlases built by the code under test; CI's `build` job runs it for
+the toy in EN and RU), `u32_double_slit/tests/u32_screens.mjs` (what is u32's own: the readout line, the folded panels,
+«▶ Compute live» from Explore), `start_page.mjs` (the cards' screen buttons, each enabled one clicked) and
+`site_smoke.mjs` (every screen used and the worksheet on the built site).

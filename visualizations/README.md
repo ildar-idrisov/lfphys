@@ -80,8 +80,8 @@ folded, by section, under the worlds. Under the tiles, "Continue:" shows the las
 On a demonstration's card: its picture, its title, what you will see, its courses (university) or its question, "Status:
 hypothesis" and the prior art (research). A demonstration with screens (see "Screens: Watch, Explore, Lab work" below)
 shows them first: **"▷ Watch m:ss"**, **"◎ Explore"**, **"✎ Lab work"**, each opening its tab of the demonstration's page;
-a screen whose recording or atlas has not been made yet is greyed, with "Not made yet: build it locally (site/record.py)
-or compute live". A school card has only these and, on a server, "▶ Compute live". A university or research card then
+a screen whose recording or atlas has not been built here with the code this server runs (and is not on the published
+site with the same key) is greyed, with "Not built here: run site/record.py --world …". A school card has only these and, on a server, "▶ Compute live". A university or research card then
 has "Scenario:" (the presets); **"▶ Compute live"**: the server starts a new run
 and opens the player; **"▷ Recording m:ss"**: plays the scenario's saved recording at once, with nothing computed. It
 is enabled when this server has the recording, or when the public site is published and has it from the same version of
@@ -250,12 +250,18 @@ and get their screens batch by batch. The tab is part of the address, so a link 
 keeps each screen's state. **"How we know this is right"** in the top bar (under ☰ on a phone) opens one drawer with the
 checks of what is shown against the accepted formulas, "Physics of this world", the events and the passport (where the
 data came from: the atlas's key, the code, the seed, the point). On a phone (390 px) the page is one column: the
-picture, the controls, the time bar at the bottom.
+picture stays at the top while the controls scroll under it, the time bar stays at the bottom, and in Lab work
+"Measure" and the stopwatch's "⏱ Stop" stay just above it. The keys: Space (▶ / ❚❚), ← / → (a step) and Home work as
+the screen's shortcuts only when no button, slider, field or tab has the focus; on a slider the arrows move the
+slider, on a button Space presses it.
 
 * **Watch** — a recording of a real run with captions: what to look at, step by step. The caption under the picture
   changes as the time goes; each caption is a tick on the timeline (a click goes there), and ◀◀ / ▶▶ go to the previous
-  or the next caption. A caption may hold the playback for a few seconds so that it can be read. u32's other recordings
-  are under "More recordings".
+  or the next caption. A caption may hold the playback for a few seconds so that it can be read; ▶ goes on at once. The
+  time label says the world's time and how much it is slowed ("world 0.42 s · slow motion ×10"). In s03 the earlier
+  throws stay on the picture, faded, on one scale, so "four times higher" and "twice as far" can be seen. The other
+  recordings (s03's "A light ball at 20 m/s in air, and the same throw in vacuum", u32's) are under "More
+  recordings".
 * **Explore** — the controls at the side (sliders and switches) stop only at the computed points: every position is a
   run the engine computed; nothing between them is drawn. "▶ Launch" (s03) throws the chosen point from t = 0; a change
   of a control arms the next launch, and the earlier launches stay as faded traces with their values ("Clear traces"
@@ -265,26 +271,37 @@ picture, the controls, the time bar at the bottom.
   highest point) are "—" until the run's time reaches the event that defines them. A combination the world refuses (s03:
   from the floor at 0°) says why, and ▶ is off. On a server, **"▶ Compute live"** in the top bar opens the full player
   on the same set-up, the sliders also move between the computed points, and a value between them is computed on the
-  server when released (labelled "computed live" in the passport and on its trace); in u32 "Another sample" draws
-  another set of hits of the same statistics.
+  server when released, labelled "computed live" on its trace and in its own passport (the point's key, the code that
+  computed it, the time, and whether it was computed now or taken from the server's cache); in u32 "Another sample"
+  draws another set of hits of the same statistics.
 * **Lab work** (s03) — a laboratory experiment in parts ("Part 1 of 3: …"), each with its goal, its set-up and its
-  instruments drawn over the picture (the measuring tape on the floor, the ruler, the protractor at the launcher, the
-  stopwatch). Launch, then "Measure": every instrument of the part is read at the moment shown, rounded to its division
-  and with its error; a row goes into the table (a row can be deleted, "Clear the table" empties it, the table downloads
-  as CSV with the errors). The plot shows the points with their error bars and the fitted line; the fit gives its
-  parameter with its error. **"Check against the law"** compares it with the law computed by the world (✓ within two
-  errors, or ✗ with a hint). The stopwatch is pressed by hand and measures your own reaction (about 0.1 s), so it
-  refuses the slow speed. The table is kept in this browser.
+  instruments drawn over the picture (the measuring tape on the floor, "Height scale of the stand", the protractor at the
+  launcher, the stopwatch). Launch, then "Measure": every instrument of the part is read for the set-up shown, rounded to
+  its division and with its error (the stand sets the height exactly, so h has no error; part 1 runs without air, as
+  its goal says); a row goes into the table (a row can be deleted, "Clear the table" empties it, the table downloads as
+  CSV with the errors). "Measure" again on a set-up already in the table replaces its row and says so: the bench
+  repeats exactly, so a repeat is not a new point. The plot shows the points with their error bars and the fitted
+  curve over the measured range; the fit gives its parameter with its error. A part may have several laws, each on its
+  own plot (listed under the plot, with "plot it"); **"Check against the law"** works only on a law's own plot and
+  compares its parameter with the value computed by the world: ✓ within two errors of the instruments (or, when the
+  errors come from the points' scatter, within Student's bound, which the verdict names), or ✗ with a hint; when the
+  points scatter more than three times their errors there is no verdict, with the reason. The stopwatch is pressed by
+  hand and measures your own reaction (about 0.1 s): it runs on the real clock from the launch, the flight cannot be
+  paused or scrubbed while it runs, and the slow speed is refused; its reading goes into part 1's "T, s" column when it
+  was stopped for the launch shown. In Lab work the drawer lists the events without their times (they would give the
+  answer away). The table is kept in this browser and dropped when the atlas is rebuilt.
 * **The worksheet** — "The worksheet (print) →" in the lab's card opens it (`/worksheet?demo=s03_projectile`,
-  `worksheet.html?demo=…` on the site): the programme's lab name (in Russian, with its translation in English), the
-  goal, the parts with their instruments, a blank table and the axes of the plot, the equipment and the questions, one
-  printed A4 page per part ("🖨 Print"). "For the teacher" adds the answers, the notes for the teacher and the laws'
-  values on pages of their own. Every printed page carries the line that credits the materials (they are under
-  CC BY-NC-SA 4.0).
+  `worksheet.html?demo=…` on the site): the programme and its lab name (in Russian, with its translation in English),
+  "Name", "Class" and "Date", the goal, the parts with their instruments, a blank table with one row per set-up, the
+  axes of each law's plot with the curve to draw, "Conclusion:" lines, the equipment and the questions; one printed A4
+  page per part, never split ("🖨 Print"). "Variant:" chooses another sheet of the same lab: s03 has "Grade 7: the
+  higher the launch, the farther the ball flies" (part 1 only, L against h, no curve fitted; `&variant=grade7`). "For the teacher" adds the
+  answers, the notes for the teacher and the laws' values on pages of their own. Every printed page carries the line
+  that credits the materials (they are under CC BY-NC-SA 4.0).
 
 **Making the atlases locally.** `site/record.py` builds a world's atlases right after its recordings (the command in
-"Recording locally" above; s03 and u32 take about a minute each), into `visualizations/recordings/<world>/atlas/`;
-`site/atlas.py --world <id>` builds only the atlases. A screen whose atlas is missing says "Not made yet". The details
+"Recording locally" above; s03 takes about half a minute, u32 about two minutes), into `visualizations/recordings/<world>/atlas/`;
+`site/atlas.py --world <id>` builds only the atlases. A screen whose atlas is missing, or was built by other code, says "Not built here: run site/record.py --world …". The details
 for developers: [`RULES.md`](RULES.md) §10.
 
 ---

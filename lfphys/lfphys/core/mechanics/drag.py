@@ -11,8 +11,15 @@ the exact force of the steady creeping (Stokes) flow, valid while the Reynolds n
 Its first correction (Oseen) multiplies it by (1 + 3 Re / 16) (Veysey & Goldenfeld, Rev. Mod. Phys. 79, 883 (2007),
 eq. (39): C_D = (6 pi / R)[1 + 3R/8 + O(R^2)] with R = U a / nu = Re / 2), so the law's relative error is about
 3 Re / 16 (``oseen_error``): 1.9 % at Re = 0.1, 19 % at Re = 1. The flight reports its Reynolds number along the path
-(``Flight.reynolds``), and a world states the largest. The unsteady forces (added mass, Basset's history force) and the
-buoyancy are not included: they are of order rho_fluid / rho_body (1.5e-4 for steel in air).
+(``Flight.reynolds``), and a world states the largest. The unsteady forces and the buoyancy are not included. The added
+mass and the buoyancy are of order R = rho_fluid / rho_body (1.5e-4 for steel in air, 1.2e-3 for water in air).
+Basset's history force is larger, of order sqrt(R), while the body accelerates: in the Maxey–Riley equation of a sphere
+in the Stokes regime released from rest (Maxey & Riley, Phys. Fluids 26, 883 (1983), not read; the history term
+6 a^2 sqrt(pi mu rho_fluid) int (dv/ds) / sqrt(t - s) ds, a the radius), in units of tau_p = m / (6 pi mu a) and
+g tau_p, (1 + R/2) dv/dt = (1 - R) - v - 1.197 sqrt(R) int_0^t (dv/ds) / sqrt(t - s) ds; at t = tau_p it lowers the
+speed by 1.4 % for steel and 3.9 % for a water droplet in air, as much as Oseen's error, and decays as t^(-1/2) towards
+the terminal speed (review R-E F3; computed by product integration, converged in the step, and repeated by
+tests/test_mechanics_projectile.py).
 
 A linear drag F = -b v with b given directly (``LinearDrag(b)``) is the same equation; its physical basis is then the
 caller's (it is used here as the reference problem with closed forms).
@@ -28,8 +35,20 @@ c = (vy0 + g tau) / (g tau), h' = h / (g tau^2), the landing condition h' + c (1
     T = tau [c + h' + W0(-c e^{-(c + h')})]
 
 (W0 the principal branch of Lambert's W; for h = 0 the other branch gives the start, s = 0). Derived for the design
-(Appendix A) and checked there against DOP853 to 5e-15–8e-13; the tests repeat it. The closed form loses digits when
-the drag is weak (s << 1: the argument nears -1/e, relative error ~ 1e-16 / s); the tests use s of order 1.
+(Appendix A) and checked there against DOP853 to 5e-15–8e-13; the tests repeat it. It holds for any c, also c <= 0 (a
+launch downwards at or beyond the terminal speed: the argument of W0 is then >= 0; c = 0 is uniform motion at v_t, T =
+h / v_t). The closed form alone loses digits when the drag is weak (s << 1): near the branch point W ~ -1 + sqrt(2 (1 +
+e z)), and 1 + e z = O(s^2) is formed from terms of order 1, so a rounding of z moves s by ~1e-16 / s, a relative error
+~1e-16 / s^2 (review R-E F2: 1e-8 at s = 1.4e-4, the Stokes drag of a 20 mm steel ball in air). So the root is polished
+by Newton's method on
+
+    f(s) = h' + c1 (1 - e^{-s}) - (s - (1 - e^{-s})),   f'(s) = c1 e^{-s} - (1 - e^{-s}),   c1 = c - 1 = vy0 / (g tau),
+
+whose terms are formed without cancellation (c1 directly, the last bracket by its series): f is concave for c > 0 and
+convex for c < 0, decreasing at the landing, so Newton's iterates from the right (c > 0) or the left (c < 0) of the root
+converge monotonically; the start is W's value, or k T_vacuum (the vacuum landing time, longer than the flight with
+drag for c > 0, shorter for c < 0) when W's value is not on the descending branch. Measured against a 50-digit
+bisection: <= 8e-16 relative from s = 1e-5 to 10 (W alone: up to 7e-7; tests).
 """
 
 from __future__ import annotations
@@ -51,8 +70,11 @@ ABOUT = {
                    "along the path; the closed forms of the flight with linear drag: x(t), y(t), the apex time and the "
                    "landing time from a height by Lambert's W; the air's density and viscosity from lfphys.core.data."),
     "validity": T("creeping flow: Re = ρ|v|d/μ ≲ 1; the law's relative error is about 3·Re/16 (Oseen's correction): "
-                  "1.9 % at Re = 0.1, 19 % at Re = 1 — the run reports its Reynolds number; steady drag only (no added "
-                  "mass, no Basset force, no buoyancy: of order ρ_fluid/ρ_body); a sphere far from walls"),
+                  "1.9 % at Re = 0.1, 19 % at Re = 1 — the run reports its Reynolds number; steady drag only: no added "
+                  "mass and no buoyancy (of order ρ_fluid/ρ_body) and no Basset history force (of order "
+                  "√(ρ_fluid/ρ_body) while the body accelerates: about 1.4 % of the speed for steel and 4 % for water "
+                  "droplets in air one relaxation time after release, fading towards the terminal speed); a sphere far "
+                  "from walls"),
     "basis": [T("Stokes, Trans. Cambridge Philos. Soc. 9, part II, [8] (1851), art. 42, eq. (126)"),
               T("Oseen, Ark. Mat. Astron. Fys. 6, no. 29 (1910); the drag correction 3·Re/16 as stated by Veysey & "
                 "Goldenfeld, Rev. Mod. Phys. 79, 883 (2007), eq. (39)"),
@@ -161,18 +183,36 @@ def linear_drag_state(t, r0, v0, k: float, g: float):
     return r, v  # (dim,) for a scalar t, (n, dim) for an array
 
 
+def _landing_f(s: float, hp: float, c1: float) -> tuple[float, float]:
+    """f(s) = h' + c1 (1 - e^{-s}) - (s - (1 - e^{-s})) and f'(s) = c1 e^{-s} - (1 - e^{-s}), without cancellation."""
+    one = float(_one_minus_exp(s))
+    return hp + c1 * one - float(_s_minus_one_minus_exp(np.array([s]))[0]), c1 * math.exp(-s) - one
+
+
 def linear_drag_landing_time(h: float, vy0: float, k: float, g: float) -> float:
     """The landing time from a height h >= 0 with the vertical speed vy0 (h = 0 needs vy0 > 0), linear drag rate k:
-    T = tau [c + h' + W0(-c e^{-(c + h')})]."""
+    T = tau [c + h' + W0(-c e^{-(c + h')})], polished by Newton's method (module docstring; review R-E F2). Any vy0,
+    also downwards at or beyond the terminal speed (c <= 0, review R-E F10)."""
     if not (k > 0 and g > 0 and h >= 0) or (h == 0 and not vy0 > 0):
         raise ValueError(T("the landing time needs k > 0, g > 0, h ≥ 0, and an upward speed when h = 0"))
     tau = 1.0 / k
-    c = (vy0 + g * tau) / (g * tau)
-    if not c > 0:
-        raise ValueError(T("the body moves down faster than its terminal speed"))
+    c1 = vy0 / (g * tau)
+    c = 1.0 + c1
     hp = h / (g * tau * tau)
-    w = special.lambertw(-c * math.exp(-(c + hp)), 0).real
-    return tau * (c + hp + w)
+    w = special.lambertw(-c * math.exp(-(c + hp)), 0)
+    s = float((c + hp + w).real)
+    if not (math.isfinite(s) and s > 0 and _landing_f(s, hp, c1)[1] < 0):  # not on the descending branch
+        s = k * (vy0 + math.sqrt(vy0 * vy0 + 2.0 * g * h)) / g if vy0 >= 0 else \
+            k * 2.0 * h / (math.sqrt(vy0 * vy0 + 2.0 * g * h) - vy0)  # k T_vacuum
+    for _ in range(60):  # quadratic convergence: 1-3 steps from W's value; monotone from k T_vacuum
+        f, fp = _landing_f(s, hp, c1)
+        if not fp < 0:
+            break
+        ds = f / fp
+        s -= ds
+        if abs(ds) <= 2.0 * np.finfo(float).eps * s:
+            break
+    return tau * s
 
 
 def linear_drag_apex_time(vy0: float, k: float, g: float) -> float | None:

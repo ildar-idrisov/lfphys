@@ -17,15 +17,18 @@ Files, per world (``<out>/<world>/atlas/<atlas>/``):
 * ``base.<hash8>.lfpt.gz``: gzip -9 (mtime 0) of an ``LFVREC1`` stream of one message, the screen's base header: the
   header of the default point (every control at its default), its blobs quantised by the screen's ``quantize``;
 * ``p<i>.<hash8>.lfpt.gz``: the point with the flattened index ``i`` (row-major over the controls in their order, the
-  last control fastest): its header as a delta against the base header, then the world's messages in order (frames at
+  last control fastest): its header as a delta against the base header (with ``$base``, the base file's sha256: a
+  reader merges it only with that base), then the world's messages in order (frames at
   ``frame_dt``, the screen's dropped message types and frame blobs left out, the ``quantize`` map's blobs quantised:
   ``lfviz.headless.Packer``, ``lfviz.protocol``), then ``end {reason: "atlas"}``;
 * ``atlas.<hash8>.json``, the manifest: ``{world, atlas, screen, step, atlas_version, key, version, code_hash,
-  recorder_hash, made, seed, preset, fixed, controls: [{param, values, default}], frame_dt, stop, base: {file,
-  bytes_gz, sha256}, points: [[file | null, bytes_gz, state]] (state 0: computed; k ≥ 1: refused, refusals[k-1]),
-  refusals: [T], checks: {ok, failed, expected, info, na} (summed over the points), quant: {"<type>.<blob>": {enc,
-  max_err, max_rel}}, references: {<law reference id>: {value, unit, label, how, kind}} (lab steps), cpu_s, bytes_gz
-  (base and points)}``. ``hash8`` is the first 8 hex digits of the file's sha256.
+  recorder_hash, seed, preset, fixed, controls: [{param, values, default}], frame_dt, stop, base: {file, bytes_gz,
+  sha256}, points: [[file | null, bytes_gz, state]] (state 0: computed; k ≥ 1: refused, refusals[k-1]), refusals: [T],
+  checks: {ok, failed, expected, info, na} (summed over the points), quant: {"<type>.<blob>": {enc, max_err,
+  max_rel}}, references: {<law reference id>: {value, unit, label, how, kind}} (lab steps: one per law of the step),
+  bytes_gz (base and points)}``. ``hash8`` is the first 8 hex digits of the file's sha256. The manifest holds nothing
+  of the build's time or CPU, so the same spec and code give the same bytes and the same name (review R-F F7): the
+  build's ``made`` and ``cpu_s`` are in the index entry.
 
 The world's ``index.json`` lists its atlases (``atlases: [{id, screen, step, file, key, points, refused, bytes_gz,
 checks, cpu_s, version, code_hash, made}]``; ``file`` relative to the world's folder). An atlas not built now keeps its
@@ -36,7 +39,9 @@ over a target it warns (``sitelib.ACCEPTED`` with ``("<world>", "atlas:<id>")`` 
 budget (recordings and atlases together) is ``site/record.py``'s, which calls ``build_world`` after the recordings.
 
 Checks against the world's own declarations that need it built: the Explore screen's ``readouts`` and the lab
-instruments' measurables are among the base header's ``measurables``; ``lab_reference`` answers each step's law.
+instruments' measurables are among the base header's ``measurables``; ``lab_reference(step, fixed, values,
+reference=<id>)`` answers each law of a step (integrator D4). The builders run on the CPU (``LFPHYS_NO_GPU=1``, as in
+CI: the key does not cover the device; review R-F F10).
 Exit code: 0 when every atlas was built within its hard limits, 1 otherwise.
 """
 
@@ -106,9 +111,10 @@ def base_header(spec: dict, msgs: list) -> tuple:
     return headless.Packer(spec["quantize"], spec["drop"]).pack_base(meta, blobs)
 
 
-def pack_point(spec: dict, msgs: list, base: tuple) -> tuple[bytes, headless.Packer]:
-    """A point's file (gzip of its packed stream) and the packer (its quantisation's errors)."""
-    pk = headless.Packer(spec["quantize"], spec["drop"], base)
+def pack_point(spec: dict, msgs: list, base: tuple | None, base_sha: str | None = None) -> tuple[bytes, headless.Packer]:
+    """A point's file (gzip of its packed stream) and the packer (its quantisation's errors): its header a delta against
+    ``base`` naming ``base_sha`` (the base file's sha256), or a full header when ``base`` is None."""
+    pk = headless.Packer(spec["quantize"], spec["drop"], base, base_sha)
     enc = [b for b in (pk.message(m, bl) for m, bl in msgs) if b is not None]
     return headless.gz(headless.stream(enc)), pk
 
@@ -159,12 +165,14 @@ def check_declarations(viz: dict, spec: dict, header_meta: dict) -> list[str]:
     return out
 
 
-def reference(viz: dict, spec: dict, params: dict) -> dict:
-    """The law's reference of a lab step, computed by the world (``Simulation.lab_reference``, design §2.3)."""
+def reference(viz: dict, spec: dict, params: dict, ref_id: str) -> dict:
+    """The reference of one law of a lab step, computed by the world (``Simulation.lab_reference(step_id, fixed, values,
+    reference)``, design §2.3, integrator D4)."""
     ref = viz["simulation"].lab_reference(spec["step"], dict(params),
-                                          {c["param"]: list(c["values"]) for c in spec["controls"]})
+                                          {c["param"]: list(c["values"]) for c in spec["controls"]}, reference=ref_id)
     if not isinstance(ref, dict) or not isinstance(ref.get("value"), (int, float)) or isinstance(ref["value"], bool):
-        raise ValueError(f"lab_reference({spec['step']!r}) gave {ref!r}: {{value, unit, label, how, kind}}")
+        raise ValueError(f"lab_reference({spec['step']!r}, reference={ref_id!r}) gave {ref!r}: "
+                         f"{{value, unit, label, how, kind}}")
     return protocol.clean(ref)
 
 
@@ -188,14 +196,19 @@ def build_atlas(vid: str, spec: dict, out: Path, plan_entry: dict, log=_log) -> 
         return None, [f"{where}: the default point {dflt} is refused by the world: {e}"], warns
     except (headless.RunFailed, ValueError) as e:
         return None, [f"{where}: the default point {dflt} failed: {e}"], warns
-    base = base_header(spec, msgs0)
+    try:
+        base = base_header(spec, msgs0)
+    except ValueError as e:  # a blob the quantisation refuses (±inf)
+        return None, [f"{where}: the default point's header cannot be packed: {e}"], warns
+    base_gz = pack_base_file(base)
+    bsha = hashlib.sha256(base_gz).hexdigest()
     problems += [f"{where}: {x}" for x in check_declarations(viz, spec, base[0])]
     refs = {}
-    if spec.get("law"):
+    for ref_id in spec.get("laws") or []:
         try:
-            refs[spec["law"]] = reference(viz, spec, headless.resolve(viz, spec["preset"], spec["fixed"]))
+            refs[ref_id] = reference(viz, spec, headless.resolve(viz, spec["preset"], spec["fixed"]), ref_id)
         except Exception as e:  # noqa: BLE001 - the world gave no reference: the step cannot be checked
-            problems.append(f"{where}: lab_reference failed: {type(e).__name__}: {e}")
+            problems.append(f"{where}: lab_reference({ref_id!r}) failed: {type(e).__name__}: {e}")
     files: dict[str, bytes] = {}
     entries, refusals, rkeys = [], [], {}
     checks = {"ok": 0, "failed": 0, "expected": 0, "info": 0, "na": 0}
@@ -223,7 +236,12 @@ def build_atlas(vid: str, spec: dict, out: Path, plan_entry: dict, log=_log) -> 
         cpu += oc.cpu_s
         for st, n in oc.check_counts().items():
             checks[st] = checks.get(st, 0) + n
-        data, pk = pack_point(spec, msgs, base)
+        try:
+            data, pk = pack_point(spec, msgs, base, bsha)
+        except ValueError as e:  # a blob the quantisation refuses (±inf)
+            problems.append(f"{where}: point p{i} {values} cannot be packed: {e}")
+            entries.append([None, 0, 0])
+            continue
         _merge_quant(quant, pk)
         sha = hashlib.sha256(data).hexdigest()
         name = f"p{i}.{sha[:8]}.lfpt.gz"
@@ -237,8 +255,6 @@ def build_atlas(vid: str, spec: dict, out: Path, plan_entry: dict, log=_log) -> 
         if time.monotonic() - t0 > 60:
             t0 = time.monotonic()
             log(f"  {where}: point {i + 1} of {len(pts)}")
-    base_gz = pack_base_file(base)
-    bsha = hashlib.sha256(base_gz).hexdigest()
     base_name = f"base.{bsha[:8]}.lfpt.gz"
     total = len(base_gz) + sum(len(d) for d in files.values())
     if total > at_l:
@@ -254,14 +270,14 @@ def build_atlas(vid: str, spec: dict, out: Path, plan_entry: dict, log=_log) -> 
     made = _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")
     manifest = {"world": vid, "atlas": spec["id"], "screen": spec["screen"], "step": spec["step"],
                 "atlas_version": L.ATLAS_VERSION, "key": plan_entry["key"], "version": viz.get("version", ""),
-                "code_hash": plan_entry["code_hash"], "recorder_hash": plan_entry["recorder_hash"], "made": made,
+                "code_hash": plan_entry["code_hash"], "recorder_hash": plan_entry["recorder_hash"],
                 "seed": spec["seed"], "preset": spec["preset"], "fixed": spec["fixed"],
                 "controls": [{"param": c["param"], "values": c["values"], "default": c.get("default")}
                              for c in spec["controls"]],
                 "frame_dt": spec["frame_dt"], "stop": spec["stop"],
                 "base": {"file": base_name, "bytes_gz": len(base_gz), "sha256": bsha},
                 "points": entries, "refusals": refusals, "checks": checks, "quant": quant, "references": refs,
-                "cpu_s": round(cpu, 2), "bytes_gz": total}
+                "bytes_gz": total}
     text = json.dumps(protocol.clean(manifest), ensure_ascii=False, separators=(",", ":")) + "\n"
     msha = hashlib.sha256(text.encode("utf-8")).hexdigest()
     man_name = f"atlas.{msha[:8]}.json"
@@ -338,6 +354,7 @@ def main(argv=None) -> int:
     ap.add_argument("--stale", action="store_true", help="the worlds whose atlases are missing or stale")
     ap.add_argument("--out", default=str(L.RECORDINGS), help="the recordings folder (default visualizations/recordings)")
     a = ap.parse_args(argv)
+    os.environ["LFPHYS_NO_GPU"] = "1"  # the CPU, as in CI: an atlas's key does not cover the device (review R-F F10)
     out = Path(a.out)
     have = [w for w in L.demo_worlds() if registry.atlases_of(registry.load(w))]
     worlds = [registry.resolve(w) for w in a.world]

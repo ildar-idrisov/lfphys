@@ -119,7 +119,7 @@ for (const [W, H] of SIZES) {
     await settle(page);
     const n0 = await page.evaluate(() => { const F = window.__lfExplore.explore.point().W.frames; return F[F.length - 1].meta.n_seg; });
     const r0 = await readout(page);
-    check(`${tag0} explore: at the end the readout shows the point's hits and χ² ✓`, r0.replace(/[\s,  ]/g, "").includes(String(n0)) && r0.includes("χ²/dof") && r0.includes("✓"), { r0, n0 });
+    check(`${tag0} explore: at the end the readout shows the point's hits and χ² ✓`, r0.replace(/[\s,  ]/g, "").includes(String(n0)) && r0.includes(tr("χ²/dof")) && r0.includes("✓"), { r0, n0 });  // RU «приведённый χ²» (review R-W F13)
     await page.screenshot({ path: `${SHOTS}/u32_explore_${LANG}_${tag0}.png` });
     // two changes: λ 400 nm, then a 40 µm; the time is kept and the earlier points stay as traces
     const tEnd = await page.evaluate(() => { const E = window.__lfExplore.explore.state; return Math.min(E.cur.pt.tEnd, E.clock - E.cur.launchedAt); });

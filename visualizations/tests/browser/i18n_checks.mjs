@@ -65,10 +65,13 @@ const readable = (page) => page.evaluate(() => {
 // Latin words that are not English prose: symbols, units, proper names, code-ish tokens (review i18n-code, b01)
 const OK = new Set("Bohm Kerr Mie Newton Einstein Schwarzschild Lorentz Thomas Bell CHSH Young Planck Debye Airy Fresnel Brewster Fabry Perot Kretschmann Cornell PDG EHT GeV MeV keV TeV GPU CPU CSV JSON Lennard Jones Maxwell Boltzmann Reynolds Mach Kármán Gauss Bonnet Faraday Landau Rydberg Bohr Sgr M87 FLRW Hubble ΛCDM Coulomb Verlet Langevin Berendsen Andersen Nosé Hoover Poiseuille Couette Stokes Navier LBM BGK TRT MRT Ladd Zou PML FDTD TFSF Yee Courant Tsirelson GHZ Peters Mathews Johannsen Penrose Doppler Terrell Wigner Hamilton Heisenberg Schrödinger Dirac Pauli Feynman Kirchhoff Huygens Snell Rayleigh Lorenz Laguerre Hermite Bessel Hankel Legendre Runge Kutta Crank Nicolson Lindblad Born Copenhagen Everett EGKLY Upsilon chi_c0 psi eta_c PubMed arXiv NIST CODATA Sun Earth Moon Mercury Venus Mars Jupiter Saturn lfphys lfviz Shift Ctrl Delete Enter Space".split(" "));
 // words of English prose: lower-case Latin words of four letters or more, each once, outside addresses (the licence's
-// attribution line in the start page's footer: https://…), identifiers (u31_light_travel, lfphys.core.gravity.orbits) and
-// names (capitalised: citations such as «Gralla, Lupsasca & Marrone»), and not a mathematical function
+// attribution line in the start page's footer: https://…), identifiers (u31_light_travel, lfphys.core.gravity.orbits),
+// commands (a path such as site/record.py and an option such as --world: «Здесь не собрано: запустите site/record.py
+// --world …», integrator D11) and names (capitalised: citations such as «Gralla, Lupsasca & Marrone»), and not a
+// mathematical function
 const MATH = new Set(["arctg", "arcsin", "arccos", "arctan", "sinc", "sech", "cosh", "sinh", "tanh", "erfc"]);
-const latinWords = (s) => [...new Set((s.replace(/\bhttps?:\/\/\S+/g, " ").replace(/[\w.-]*[_.][\w.-]*\w/g, " ").match(/(?<![\p{L}])[a-z][a-z'’-]{3,}/gu) || [])
+const latinWords = (s) => [...new Set((s.replace(/\bhttps?:\/\/\S+/g, " ").replace(/[\w.-]+\/[\w./-]*/g, " ")
+  .replace(/(?<![\p{L}\d])--[\w-]+/gu, " ").replace(/[\w.-]*[_.][\w.-]*\w/g, " ").match(/(?<![\p{L}])[a-z][a-z'’-]{3,}/gu) || [])
   .filter((w) => !OK.has(w) && !MATH.has(w)))];
 const englishLines = (r) => [...new Set([...r.text.split("\n"), ...r.titles, ...r.options, ...r.ph]
   .filter((s) => s && latinWords(s).length >= 2).map((s) => s.trim().slice(0, 140)))].slice(0, 8);

@@ -94,7 +94,9 @@ class Apparatus:
     def describe(self, internal) -> T:
         parts = []
         for j, (kind, ang) in enumerate(self.elements):
-            if kind != "none":
+            if kind == "block":  # a shutter has no angle (review R-W F14)
+                parts.append(T("slit {j:d}: {elem}", j=j + 1, elem=ELEMENT_NAMES.get(kind, kind)))
+            elif kind != "none":
                 parts.append(T("slit {j:d}: {elem} {a:g}°", j=j + 1, elem=ELEMENT_NAMES.get(kind, kind), a=float(ang)))
         if self.analyzer[0] != "none":
             parts.append(T("analyser {a:g}°", a=float(self.analyzer[1])))

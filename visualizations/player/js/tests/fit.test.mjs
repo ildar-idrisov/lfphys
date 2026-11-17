@@ -1,13 +1,14 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// The lab's fit (fit.js; design lfphys/sources/explore_2026-11-14_design.md §2.3): every model on exact data, the
-// effective variance and the Birge scaling on cases computed by hand. The cross-check against the Python reference
-// lfphys.tools.stats.linear_fit on shared fixtures is added when that function lands (step E of batch EX1; until then
-// the cases here are the hand-computed ones). Run from visualizations/: node --test player/js/tests/*.test.mjs
+// The lab's fit (fit.js; design lfphys/sources/explore_2026-11-14_design.md §2.3): every model on exact data, York's
+// line and the Birge scaling on cases computed by hand, the cross-check against the Python reference
+// lfphys.tools.stats.linear_fit on the shared fixture (fixtures/fit_cases.json, Pearson–York included; integrator D3),
+// and the verdict's bound (two errors, or Student's t for σ from the scatter; integrator D4) against SciPy's quantiles
+// (fixtures/t_quantiles.json). Run from visualizations/: node --test player/js/tests/*.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-import { agrees, fit, quantity } from "../fit.js";
+import { BIRGE_MAX, COVER, agrees, fit, quantity, tCoverage, tQuantile, verdict } from "../fit.js";
 
 const close = (a, b, tol, msg) => assert.ok(Math.abs(a - b) <= tol * Math.max(1, Math.abs(b)), `${msg}: ${a} vs ${b}`);
 
@@ -20,13 +21,25 @@ test("line0 on exact data: b, σ_b = σ/√Σx², χ² = 0 (no scaling)", () => 
   assert.equal(r.dof, 2);
 });
 
-test("line0 with x errors: the effective variance by hand", () => {
-  // first pass (σ_y only, equal): b = Σxy/Σx² = 10.4/5 = 2.08; then σ_i² = 0.01 + (2.08·0.05)² = 0.020816 (equal: b stays)
-  const r = fit([1, 2], [2, 4.2], [0.05, 0.05], [0.1, 0.1], "line0");
-  close(r.params.b, 2.08, 1e-14, "b");
-  close(r.sigma.b, Math.sqrt(0.020816 / 5), 1e-13, "σ_b");
-  close(r.chi2, (0.0064 + 0.0016) / 0.020816, 1e-12, "χ²");
-  assert.equal(r.scaled, false, "χ²/dof = 0.38 < 1: not scaled");
+test("line0 with equal x and y errors: York's line is the orthogonal (total) least squares through the origin", () => {
+  // S(b) = Σ(y − b·x)²/(σ²(1 + b²)) is least where Sxy·b² + (Sxx − Syy)·b − Sxy = 0: Sxx = 5, Syy = 21.64, Sxy = 10.4
+  const r = fit([1, 2], [2, 4.2], [0.1, 0.1], [0.1, 0.1], "line0");
+  const b = (16.64 + Math.sqrt(16.64 ** 2 + 4 * 10.4 ** 2)) / 20.8;
+  close(r.params.b, b, 1e-14, "b");
+  close(r.chi2, ((2 - b) ** 2 + (4.2 - 2 * b) ** 2) / (0.01 * (1 + b * b)), 1e-12, "χ² = S at the minimum");
+  assert.equal(r.method, "york");
+  assert.equal(r.scaled, false, "χ²/dof < 1: not scaled");
+});
+
+test("York's line on Pearson's data with York's weights (York et al. 2004, Table II, data set 3)", () => {
+  const X = [0.0, 0.9, 1.8, 2.6, 3.3, 4.4, 5.2, 6.1, 6.5, 7.4], Y = [5.9, 5.4, 4.4, 4.6, 3.5, 3.7, 2.8, 2.8, 2.4, 1.5];
+  const WX = [1000, 1000, 500, 800, 200, 80, 60, 20, 1.8, 1], WY = [1, 1.8, 4, 8, 20, 20, 70, 70, 100, 500];
+  const r = fit(X, Y, WX.map((w) => 1 / Math.sqrt(w)), WY.map((w) => 1 / Math.sqrt(w)), "line");
+  assert.ok(Math.abs(r.params.a - 5.47991) < 5e-6 && Math.abs(r.params.b + 0.480533) < 5e-7, `a ${r.params.a}, b ${r.params.b}`);
+  assert.ok(Math.abs(r.chi2 / r.dof - 1.483) < 5e-4, `S/(n − 2) ${r.chi2 / r.dof}`);
+  // the paper's σ are unscaled; the lab scales by the Birge ratio since χ²/dof > 1
+  assert.equal(r.scaled, true);
+  close(r.sigma.b / r.birge, 0.057985, 2e-5, "σ_b unscaled"); close(r.sigma.a / r.birge, 0.294970, 2e-5, "σ_a unscaled");
 });
 
 test("line on exact data and a scatter that scales the errors (Birge)", () => {
@@ -68,6 +81,7 @@ test("power: y = A·x^p in log–log; non-positive values refused", () => {
   assert.throws(() => fit([0, 1, 2], [1, 2, 3], null, null, "power"), (e) => e.why === "positive");
   assert.throws(() => fit([1], [2], null, null, "line"), (e) => e.why === "points");
   assert.throws(() => fit([1, 1, 1], [1, 2, 3], null, null, "line"), (e) => e.why === "singular");
+  assert.throws(() => fit([30, 30, 30, 40], [1, 2, 3, 4], null, [0.1, 0.1, 0.1, 0.1], "quadratic"), (e) => e.why === "singular", "R-E F8");
 });
 
 test("readings without errors: ordinary least squares, σ from the scatter", () => {
@@ -85,17 +99,57 @@ test("the law's quantity and the agreement within two errors", () => {
   assert.equal(agrees(2.0, 0.01, 2.03).agrees, false);
 });
 
-// The cross-check with Python's lfphys.tools.stats.linear_fit: tests/fixtures/fit_cases.json, written by
-// lfphys/tests (step E), when present: each case {x, y, sx, sy, model, params, sigma, chi2}; agreement to 1e-12
+// The cross-check with Python's lfphys.tools.stats.linear_fit: fixtures/fit_cases.json, written by
+// fixtures/make_fit_cases.py: each case {x, y, sx, sy, model, params, sigma, chi2, scaled, method} or {…, refused:
+// "singular"}; agreement to 1e-12, the same method, the same refusals
 const FIX = new URL("./fixtures/fit_cases.json", import.meta.url);
 test("against lfphys.tools.stats.linear_fit (Python) on shared cases", { skip: !existsSync(FIX) && "no fixture (fixtures/make_fit_cases.py)" }, () => {
   const cases = JSON.parse(readFileSync(FIX, "utf-8"));
   assert.ok(cases.length >= 8 && new Set(cases.map((c) => c.model)).size === 4, "every model");
+  assert.ok(cases.some((c) => c.method === "york") && cases.some((c) => c.method === "effective_variance") && cases.some((c) => c.method === "ols"), "every method");
+  assert.ok(cases.some((c) => c.x[9] === 7.4 && c.y[0] === 5.9), "Pearson–York");
+  assert.ok(cases.filter((c) => c.refused).length >= 3, "the singular designs");
   for (const [i, c] of cases.entries()) {
+    if (c.refused) { assert.throws(() => fit(c.x, c.y, c.sx, c.sy, c.model), (e) => e.why === c.refused, `case ${i} ${c.model} refused`); continue; }
     const r = fit(c.x, c.y, c.sx, c.sy, c.model);
+    if (c.method) assert.equal(r.method, c.method, `case ${i} ${c.model}: method`);
     for (const [k, v] of Object.entries(c.params)) close(r.params[k], v, 1e-12, `case ${i} ${c.model} ${k}`);
     for (const [k, v] of Object.entries(c.sigma || {})) close(r.sigma[k], v, 1e-12, `case ${i} ${c.model} σ ${k}`);
     if (c.chi2 !== null) close(r.chi2, c.chi2, 1e-12, `case ${i} ${c.model} χ²`); else assert.ok(Number.isNaN(r.chi2));
     assert.equal(r.scaled, c.scaled, `case ${i} ${c.model}: scaled`);
   }
+});
+
+// --- the verdict (integrator D4; review EX1-mechanics F9) ---------------------------------------------------------------
+const TQ = new URL("./fixtures/t_quantiles.json", import.meta.url);
+test("Student's t: the coverage of ±2σ and the quantiles against SciPy", { skip: !existsSync(TQ) && "no fixture" }, () => {
+  const q = JSON.parse(readFileSync(TQ, "utf-8"));
+  close(COVER, q.cover, 1e-15, "erf(√2)");
+  for (const [nu, k] of Object.entries(q.k)) close(tQuantile(Number(nu)), k, 1e-10, `t quantile, ν = ${nu}`);
+  close(tCoverage(1, 1), 0.5, 1e-15, "ν = 1: P(|T| ≤ 1) = 1/2");
+  close(tCoverage(Math.sqrt(2), 2), Math.sqrt(2) / Math.sqrt(2 + 2), 1e-15, "ν = 2: t/√(2 + t²)");
+});
+
+test("the verdict: two errors for declared errors, Student's t for errors from the scatter, none above BIRGE_MAX", () => {
+  // declared errors, no scaling: k = 2
+  const a = fit([1, 2, 3], [2, 4, 6.01], null, [0.1, 0.1, 0.1], "line0");
+  assert.equal(a.fromScatter, false);
+  const va = verdict(a, a.params.b, a.sigma.b, 2.0);
+  assert.equal(va.kind, "normal"); assert.equal(va.k, 2); assert.equal(va.agrees, true);
+  // no errors: σ from the scatter, k = t(dof)
+  const b = fit([0, 1, 2, 3, 4], [1.0, 3.1, 4.9, 7.2, 8.8], null, null, "line");
+  const vb = verdict(b, b.params.b, b.sigma.b, 2.0);
+  assert.equal(b.fromScatter, true); assert.equal(vb.kind, "t"); assert.equal(vb.dof, 3);
+  close(vb.k, tQuantile(3), 1e-15, "k = t(3)");
+  // a reference 2.5 σ away: rejected by k = 2, accepted by t(3) = 3.31
+  assert.equal(verdict(b, b.params.b, b.sigma.b, b.params.b + 2.5 * b.sigma.b).agrees, true);
+  // the Birge scaling applied (χ²/dof > 1): t as well; above BIRGE_MAX no verdict
+  const x = [0, 1, 2, 3, 4], y = [1.0, 3.1, 4.9, 7.2, 8.8];
+  const c = fit(x, y, null, x.map(() => 0.1), "line");
+  assert.ok(c.scaled && c.birge > 1 && c.birge <= BIRGE_MAX, `birge ${c.birge}`);
+  assert.equal(verdict(c, c.params.b, c.sigma.b, 2).kind, "t");
+  const d = fit(x, y, null, x.map(() => 0.01), "line");
+  assert.ok(d.birge > BIRGE_MAX);
+  const vd = verdict(d, d.params.b, d.sigma.b, d.params.b);
+  assert.equal(vd.refused, "birge"); assert.equal(vd.agrees, false, "a scatter far above the errors gives no «agrees»");
 });

@@ -1,6 +1,10 @@
 {
- "computed by the engine: the largest range among {n:d} computed flights, at 1° and then at 0.1° steps ({L:.4g} m); there is no closed form; without air θ* = 45°": {
-  "one": "computed by the engine: the largest range among {n:d} computed flight, at 1° and then at 0.1° steps ({L:.4g} m); there is no closed form; without air θ* = 45°",
-  "other": "computed by the engine: the largest range among {n:d} computed flights, at 1° and then at 0.1° steps ({L:.4g} m); there is no closed form; without air θ* = 45°"
+ "computed by the engine with this world's drag model, the constant C_d = {cd:.2f}: the largest range among {n:d} computed flights, at 1° and then at 0.1° steps ({L:.4g} m). The optimum depends on the drag model: with the measured drag curve the same search gives {b:.1f}°. There is no formula for it; without air θ* = 45°": {
+  "one": "computed by the engine with this world's drag model, the constant C_d = {cd:.2f}: the largest range among {n:d} computed flight, at 1° and then at 0.1° steps ({L:.4g} m). The optimum depends on the drag model: with the measured drag curve the same search gives {b:.1f}°. There is no formula for it; without air θ* = 45°",
+  "other": "computed by the engine with this world's drag model, the constant C_d = {cd:.2f}: the largest range among {n:d} computed flights, at 1° and then at 0.1° steps ({L:.4g} m). The optimum depends on the drag model: with the measured drag curve the same search gives {b:.1f}°. There is no formula for it; without air θ* = 45°"
+ },
+ "computed by the engine: the largest range among {n:d} computed flights without air, at 1° and then at 0.1° steps ({L:.4g} m)": {
+  "one": "computed by the engine: the largest range among {n:d} computed flight without air, at 1° and then at 0.1° steps ({L:.4g} m)",
+  "other": "computed by the engine: the largest range among {n:d} computed flights without air, at 1° and then at 0.1° steps ({L:.4g} m)"
  }
 }

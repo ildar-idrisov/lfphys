@@ -310,23 +310,34 @@ def test_R2_coherence_estimator_unbiased_on_samples():
 
 
 def test_coherence_error_is_calibrated_at_full_coherence():
-    """|gamma| = 1 at N = 100: the Fisher error was 14x smaller than the real scatter (zero expected minima); the shown
-    error is the parametric bootstrap, within 30 % of the scatter (response to the u32 review)."""
+    """|gamma| = 1, the hardest case (zero expected minima: the Fisher error was 14x smaller than the real scatter at
+    N = 100). The shown error is the parametric bootstrap (stats.coherence_boot): below stats.COH_BOOT_MIN_HITS hits
+    there is none, with the reason (the screen shows «—»: review R-W F2, D9); from that count on it is within a factor 2
+    of the real scatter of the fitted |gamma| (the median over 40 samples), through the world's own path
+    (Simulation._coherence_err)."""
     h = Harness(V, "photon_young")
     sim = h.sim
     P = sim.theory["curves"]["all"]
     basis = sim._coh_basis(True)
     rng = np.random.default_rng(1)
-    vals, errs = [], []
-    for _ in range(40):
-        cnt = rng.multinomial(100, P / P.sum()).astype(float)
-        g, _ = stats.coherence_ml(cnt, *basis)
-        e, _ = stats.coherence_boot_err(cnt, *basis, rng=rng)
-        if g is not None and e is not None:
-            vals.append(g)
-            errs.append(e)
-    ratio = np.median(errs) / np.std(vals, ddof=1)
-    assert len(vals) >= 35 and 0.7 < ratio < 1.3
+    cnt = rng.multinomial(100, P / P.sum()).astype(float)
+    r = stats.coherence_boot(cnt, *basis, rng=rng)
+    assert 100 < stats.COH_BOOT_MIN_HITS and r["err"] is None and r["why"] is not None
+    sim._coh_err_cache = None
+    err, why = sim._coherence_err(cnt, np.zeros(len(P)))
+    assert err is None and why is not None
+    for n in (stats.COH_BOOT_MIN_HITS, 1000):
+        vals, errs = [], []
+        for _ in range(40):
+            cnt = rng.multinomial(n, P / P.sum()).astype(float)
+            g, _ = stats.coherence_ml(cnt, *basis)
+            sim._coh_err_cache = None
+            e, _why = sim._coherence_err(cnt, np.zeros(len(P)))
+            if g is not None and e is not None:
+                vals.append(g)
+                errs.append(e)
+        ratio = np.median(errs) / np.std(vals, ddof=1)
+        assert len(vals) >= 36 and 0.5 < ratio < 2.0, (n, len(vals), ratio)
 
 
 def test_R3_map_shows_the_decoherence():

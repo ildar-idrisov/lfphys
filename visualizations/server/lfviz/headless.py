@@ -6,9 +6,11 @@
 (``lfviz.atlas_live``).
 
 ``run_spec(viz_id, base, values, seed, clock, stop, script, emit)`` resolves the preset ``base`` and ``values`` through
-the world's schema, asks ``check_params`` (a ``Refusal`` there is ``PointRefused``: not a failure) and
-``estimate_bytes``, builds ``viz["simulation"]`` and drives ``lfviz.sim.Runner`` with no wall-time budget, so that the
-result does not depend on the speed of the CPU. It drops what serves only the resumption of a live run (``DROP``) and
+the world's schema, asks ``check_params`` and ``estimate_bytes``, builds ``viz["simulation"]`` and drives
+``lfviz.sim.Runner`` with no wall-time budget, so that the result does not depend on the speed of the CPU. A ``Refusal``
+from ``check_params``, from the memory estimate, from the world's constructor or from its first showing is
+``PointRefused``: the world refuses these values, not a failure (integrator D14; review R-F F4: u32 refuses d ≤ a in its
+constructor). It drops what serves only the resumption of a live run (``DROP``) and
 strips the frames' timing fields (``FRAME_TIMING``): the same spec and code give the same messages (integrator D6).
 
 * ``clock``: ``{"fps": f, "speed": s | None}`` (the recordings: one frame every ``speed / fps`` of world time, the speed
@@ -24,18 +26,22 @@ strips the frames' timing fields (``FRAME_TIMING``): the same spec and code give
 
 A run **fails** (``RunFailed``) on an error message or an exception of the world, a world not built, a stop event not
 reached, and a check whose last state is ✗ (``check_state``: a check marked ``expected`` is a ✗ on purpose and does
-not fail). It returns an ``Outcome`` (frames, worlds, the checks' last states, the CPU time, the stop time).
+not fail; ``RunFailed.checks`` then holds the failing checks' labels, so that a live point can say which). It returns an
+``Outcome`` (frames, worlds, the checks' last states, the CPU time, the stop time).
 
 ``Packer`` packs messages for a point file or a quantised recording: it drops the message types and frame blobs a
 screen does not draw, quantises the blobs of a ``quantize`` map (``protocol.quantize``; the largest error per blob is
 measured) and writes a header as a delta against the screen's base header:
 
-    {"type": "header", "t", "$delta": true, <the top-level keys whose JSON differs from the base header>,
-     "$drop": [keys of the base header this header lacks]?, "$drop_blobs": [base blobs it lacks]?}
+    {"type": "header", "t", "$delta": true, "$base": <sha256 of the base file>?, <the top-level keys whose JSON differs
+     from the base header>, "$drop": [keys of the base header this header lacks]?, "$drop_blobs": [base blobs it lacks]?}
 
-with only the header blobs whose stored bytes (or ``q``) differ from the base's. A reader rebuilds the header as
-``{...base, ...delta}`` without the ``$``-keys and the dropped keys (a top-level key is replaced whole, not merged), and
-its blobs as the base's blobs overridden by the delta's (``merge_header``).
+with only the header blobs whose stored bytes (or ``q``) differ from the base's. ``$base`` (the hex sha256 of the base
+header's file, ``base.<hash8>.lfpt.gz``, as the manifest's ``base.sha256`` gives it) names the base the delta was made
+against: a reader merges only with that base (review R-F F2: a live point merged with a stale local base showed another
+code's header). A reader rebuilds the header as ``{...base, ...delta}`` without the ``$``-keys and the dropped keys (a
+top-level key is replaced whole, not merged), and its blobs as the base's blobs overridden by the delta's
+(``merge_header``).
 """
 
 from __future__ import annotations
@@ -60,7 +66,12 @@ FRAME_TIMING = ("cpu_ms", "speed_actual")
 
 
 class RunFailed(Exception):
-    """A headless run that must not be shipped: what failed, in English for the build's log."""
+    """A headless run that must not be shipped: what failed, in English for the build's log. ``checks``: the labels
+    (``T``) of the checks whose last state is ✗, when that is why it failed (else empty)."""
+
+    def __init__(self, text: str, checks: list | None = None):
+        super().__init__(text)
+        self.checks = list(checks or [])
 
 
 class PointRefused(Exception):
@@ -100,6 +111,7 @@ class Outcome:
     cpu_s: float = 0.0
     t_end: float = 0.0
     stop_event_t: float | None = None  # the world time of the stop event (an event stop rule)
+    labels: dict = field(default_factory=dict)  # (world, check id) -> the check's label (a T) or its id
 
     def check_counts(self) -> dict:
         out = {"ok": 0, "failed": 0, "expected": 0, "info": 0, "na": 0}
@@ -154,6 +166,7 @@ def run_spec(viz_id: str, base: str | None, values: dict | None, seed: int, cloc
             if out.checks.get(key) == "failed":
                 out.flips.append((*key, meta.get("t")))
             out.checks[key] = check_state(meta)
+            out.labels[key] = meta.get("label") or str(meta["id"])
         elif typ == "event" and stop_event is not None and out.stop_event_t is None \
                 and stop_event in (meta.get("kind"), meta.get("name")):
             out.stop_event_t = float(meta.get("t", 0.0))
@@ -178,7 +191,10 @@ def run_spec(viz_id: str, base: str | None, values: dict | None, seed: int, cloc
     refused = refusal(viz, params)
     if refused is not None:
         raise refused
-    limits.check_estimate(viz["simulation"], params)
+    try:  # the world's own refusals while it is estimated and built are refusals too (D14)
+        limits.check_estimate(viz["simulation"], params)
+    except Refusal as e:
+        raise PointRefused(e.text, e.hint) from None
 
     if "fps" in clock:
         fps = float(clock["fps"])
@@ -188,14 +204,23 @@ def run_spec(viz_id: str, base: str | None, values: dict | None, seed: int, cloc
         dt = float(clock["frame_dt"])
         step_of = dt
     t0 = time.process_time()
-    sim = viz["simulation"](params, seed, keep)
+    try:
+        sim = viz["simulation"](params, seed, keep)
+    except Refusal as e:
+        raise PointRefused(e.text, e.hint) from None
     runner = Runner(sim, keep, queue.Queue(), fps=fps, make_world=make_world,
                     world_info={"preset": base, "backend_notes": notes})
 
-    def fail(why):
-        raise RunFailed(f"{label}: {why}")
+    def fail(why, checks=None):
+        raise RunFailed(f"{label}: {why}", checks)
 
-    if not runner.start():
+    try:  # Runner.start, with the world's refusal while it shows itself told apart from a failure (D14)
+        runner._start_world()
+    except Refusal as e:
+        raise PointRefused(e.text, e.hint) from None
+    except Exception as e:  # noqa: BLE001 - the world was not built: nothing is shipped
+        fail(f"the world was not built: {type(e).__name__}: {e}")
+    if out.errors:
         fail(f"the world was not built: {[render_in(e) for e in out.errors]}")
     runner._state("start")
     if clock.get("speed") is not None:
@@ -267,7 +292,8 @@ def run_spec(viz_id: str, base: str | None, values: dict | None, seed: int, cloc
     out.t_end = runner.sim.t
     bad = sorted(f"{cid} (world {w})" for (w, cid), st in out.checks.items() if st == "failed")
     if bad:
-        fail(f"{len(bad)} check(s) end failed: {', '.join(bad)}")
+        fail(f"{len(bad)} check(s) end failed: {', '.join(bad)}",
+             [out.labels.get(k, k[1]) for k in sorted(out.checks) if out.checks[k] == "failed"])
     if out.flips and log is not None:
         log(f"  note: {label}: a check was ✗ before its last state: "
             f"{sorted({f'{cid} (world {w})' for w, cid, _t in out.flips})}")
@@ -290,10 +316,12 @@ def _blob_sig(b) -> tuple:
 class Packer:
     """Packs a run's messages for a point file or a quantised recording (the module's docstring). ``quantize``: a
     screen's map ``{"<type>.<blob>[|<blob>…]": encoding}``; ``drop``: ``{"types": [...], "frame_blobs": [...]}``;
-    ``base``: the screen's base header ``(meta, blobs)`` as packed (``pack_base``), or None (a full header). ``quant``
-    collects, per ``<type>.<blob>``, the encoding and the largest error and relative error (to the range) seen."""
+    ``base``: the screen's base header ``(meta, blobs)`` as packed (``pack_base``), or None (a full header);
+    ``base_sha``: the hex sha256 of the base header's file, written into a delta as ``$base``. ``quant`` collects, per
+    ``<type>.<blob>``, the encoding and the largest error and relative error (to the range) seen."""
 
-    def __init__(self, quantize: dict | None = None, drop: dict | None = None, base: tuple | None = None):
+    def __init__(self, quantize: dict | None = None, drop: dict | None = None, base: tuple | None = None,
+                 base_sha: str | None = None):
         self.qmap: dict = {}
         for typ, blob, enc in registry.quantize_items(quantize or {}):
             self.qmap[(typ, blob)] = enc
@@ -301,6 +329,7 @@ class Packer:
         self.drop_types = set(drop.get("types") or [])
         self.drop_frame_blobs = set(drop.get("frame_blobs") or [])
         self.base = base
+        self.base_sha = base_sha
         self.quant: dict = {}
 
     def _note(self, key: str, enc: str, qb):
@@ -352,6 +381,8 @@ class Packer:
     def delta(self, meta: dict, blobs: dict) -> tuple[dict, dict]:
         bmeta, bblobs = self.base
         out = {"type": "header", "t": meta.get("t"), "$delta": True}
+        if self.base_sha:
+            out["$base"] = self.base_sha
         for k, v in meta.items():
             if k in ("type", "t", "blobs"):
                 continue
@@ -376,7 +407,7 @@ def merge_header(base: tuple, delta: tuple) -> tuple[dict, dict]:
         return dmeta, dblobs
     meta = {k: v for k, v in bmeta.items() if k != "blobs"}
     meta.update({k: v for k, v in dmeta.items() if k != "blobs"})
-    for k in list(dmeta.get("$drop") or []) + ["$delta", "$drop", "$drop_blobs"]:
+    for k in list(dmeta.get("$drop") or []) + ["$delta", "$base", "$drop", "$drop_blobs"]:
         meta.pop(k, None)
     blobs = {n: a for n, a in bblobs.items() if n not in (dmeta.get("$drop_blobs") or [])}
     blobs.update(dblobs)

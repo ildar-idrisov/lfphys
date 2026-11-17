@@ -30,7 +30,7 @@ button.link { background: none; border: 0; color: var(--accent); padding: 4px 6p
 .dm-screen[hidden] { display: none; }
 .dm-main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; flex: 1; min-height: 0; }
 .dm-lab .dm-main { flex: none; height: calc(100vh - 110px); min-height: 420px; }
-.dm-lab .dm-bar { position: sticky; bottom: 0; z-index: 20; }
+.dm-lab .dm-dock { position: sticky; bottom: 0; z-index: 20; }
 .dm-stage { position: relative; min-height: 0; display: flex; flex-direction: column; background: var(--canvas); border-right: 1px solid var(--line); }
 .dm-stage > :first-child { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .dm-stage .canvas-wrap { flex: 1; min-height: 0; }
@@ -50,6 +50,11 @@ button.link { background: none; border: 0; color: var(--accent); padding: 4px 6p
 .dm-detent { position: absolute; transform: translateX(-50%); background: none; border: 0; padding: 2px 3px; font-size: 12px; color: var(--muted);
   min-width: 18px; min-height: 24px; line-height: 1.1; white-space: nowrap; }
 .dm-detent::before { content: ""; position: absolute; left: 50%; top: -6px; width: 1px; height: 6px; background: var(--muted); }
+/* a detent's hit area: 44 px high, as wide as the gap to its neighbours (at most 44 px), without changing its look
+   (review EX1-screens F15); --gap is that gap in per cent of the row (explore.js) */
+.dm-detents { container-type: inline-size; }
+.dm-detent::after { content: ""; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); height: 44px;
+  width: max(24px, min(44px, calc(var(--gap, 100) * 1cqw))); }
 .dm-detent.on { color: var(--accent); font-weight: 700; }
 .dm-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .dm-seg > button { border: 0; border-radius: 0; background: var(--chip); padding: 6px 12px; min-height: 34px; }
@@ -95,6 +100,9 @@ body.dm-drawer-open .dm-drawer { transform: none; }
 .dm-scrim { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.25); z-index: 55; }
 body.dm-drawer-open .dm-scrim { display: block; }
 .dm-drawer-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.dm-drawer-head h2 { font-size: 16px; margin: 0; }
+.dm-drawer[inert] { visibility: hidden; }  /* closed: out of the tab order and of the accessibility tree (F10) */
+body.dm-drawer-open .dm-drawer { visibility: visible; }
 .dm-close { min-width: 40px; min-height: 40px; }
 .dm-drawer-body { overflow-y: auto; padding: 8px 14px 24px; font-size: 14px; }
 .dm-drawer-body h4 { margin: 10px 0 4px; }
@@ -116,6 +124,7 @@ body.dm-drawer-open .dm-scrim { display: block; }
 .dm-card .dm-part { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
 .dm-goal { margin: 4px 0 12px; }
 .dm-steps { margin-bottom: 10px; }
+.dm-steps > button { min-width: 44px; }
 .dm-sub { font-weight: 600; margin-top: 8px; }
 .dm-instr-list { padding-left: 18px; margin: 4px 0 10px; }
 .dm-instr-list li { margin: 3px 0; }
@@ -138,6 +147,14 @@ body.dm-drawer-open .dm-scrim { display: block; }
 .dm-fit { font-size: 14px; overflow-wrap: anywhere; }
 .dm-law { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
 .dm-law:empty { display: none; }
+.dm-law-box { border-top: 1px solid var(--line); padding-top: 6px; }
+.dm-laws { margin: 4px 0 6px; padding-left: 18px; }
+.dm-laws li { margin: 3px 0; }
+.dm-laws li.on { font-weight: 600; }
+.dm-law-plot { min-height: 32px; }
+.dm-law-why { margin-top: 4px; }
+.dm-act { display: block; }
+.dm-from-site { font-size: 13px; }
 .dm-instr { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 .dm-instr .tape { stroke: #b08900; stroke-width: 4; fill: none; opacity: .75; }
 .dm-instr .tick { stroke: #7a5f00; stroke-width: 1; }
@@ -150,7 +167,22 @@ body.dm-drawer-open .dm-scrim { display: block; }
   .demo { height: auto; min-height: 100vh; }
   .dm-screens { overflow: visible; }
   .dm-lab .dm-main { height: auto; }
-  .demo .dm-top { flex-wrap: wrap; padding: 6px 8px; }
+  /* the phenomenon and its controls on the screen together (integrator D12; review EX1-worlds F10): the top bar scrolls
+     away, the view stays at the top while the controls scroll under it, the time bar (and in Lab work «Measure» and the
+     stopwatch's «Stop») stay at the bottom */
+  .demo .dm-top { flex-wrap: wrap; padding: 6px 8px; position: relative; }
+  .dm-explore .dm-stage, .dm-lab .dm-stage { position: sticky; top: 0; z-index: 15; }
+  html { scroll-padding-top: var(--dm-sticky-top, 0px); scroll-padding-bottom: var(--dm-sticky-bottom, 0px); }
+  .dm-explore .dm-bar { position: sticky; bottom: 0; z-index: 20; }
+  .dm-lab .dm-dock { background: var(--panel); border-top: 1px solid var(--line); box-shadow: 0 -2px 8px rgba(0,0,0,.08); }
+  .dm-lab .dm-dock .dm-bar { position: static; border-top: 0; }
+  .dm-dock .dm-act { padding: 6px 8px 0; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+  .dm-dock .dm-act .dm-sw { margin: 0; flex: 0 1 auto; gap: 6px; flex-wrap: nowrap; }
+  .dm-dock .dm-act .dm-measure { margin: 0; flex: 1 1 8em; width: auto; }
+  .dm-dock .dm-act .dm-msg { flex: 1 1 100%; margin: 0; font-size: 13px; min-height: 0; line-height: 1.3; }
+  .dm-dock .dm-act .dm-msg:empty { display: none; }
+  .dm-top .dm-back { min-height: 44px; display: inline-flex; align-items: center; }
+  .demo .lang-switch a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
   .demo .dm-top > .dm-sep, .demo .dm-top > .dm-how, .demo .dm-top > .dm-live, .demo .dm-top > #dm-theme, .demo .dm-top > button[title] { display: none; }
   .demo .dm-top > .grow { display: none; }
   .demo .dm-top > .dm-title { flex: 1 1 8em; }
@@ -166,6 +198,7 @@ body.dm-drawer-open .dm-scrim { display: block; }
   .dm-seg > button { min-height: 44px; }
   .dm-check { min-height: 44px; }
   .dm-bar { position: sticky; bottom: 0; z-index: 20; flex-wrap: wrap; gap: 6px; padding: 6px 8px; }
+  .dm-steps > button { min-height: 44px; }
   .dm-speed-l { display: none; }
   .dm-speed > button { padding: 6px 8px; }
   .dm-bar > button { min-height: 44px; min-width: 44px; }

@@ -437,6 +437,72 @@ def test_the_registry_refuses_what_the_screens_design_forbids(toy):
     assert any("laboratory has no screens" in x for x in registry.check({**lab_viz, "screens": [toy["screens"][1]]}))
 
 
+def test_a_steps_laws_name_their_columns_model_and_reference(toy):
+    """Integrator D4 (review R-E F9, R-P F3, R-W F5): «Check against the law» judges a fit only when the plotted columns
+    and the model are a law's own; a step may declare several laws; the old single ``law`` is refused."""
+    lab = toy["screens"][2]
+    st = dict(lab["steps"][0])
+    law = dict(st["laws"][0])
+
+    def p(**ch):
+        return _screens_problems(toy, s2={"steps": [{**st, **ch}]})
+    assert p() == []
+    assert any("declares laws" in x for x in p(law=law))
+    assert any("two columns" in x for x in p(laws=[{**law, "x": "nope"}]))
+    assert any("two columns" in x for x in p(laws=[{**law, "y": "sqrt_h"}]))
+    assert any("not among the plot's fits" in x for x in p(laws=[{**law, "model": "quadratic"}]))
+    assert any("comes from the models" in x for x in p(laws=[{**law, "quantity": "vertex"}]))
+    assert any("quantity" in x for x in p(laws=[{**law, "quantity": "mood"}]))
+    assert any("unique in the step" in x for x in p(laws=[law, {**law, "model": "line"}]))
+    assert any("unknown fields" in x for x in p(laws=[{**law, "tolerance": 2}]))
+    assert any("label is a T" in x for x in p(laws=[{**law, "label": "plain"}]))
+    assert any("unit is a T or a string" in x for x in p(laws=[{**law, "unit": 1}]))
+    assert any("plot's own pair" in x for x in p(laws=[{**law, "x": "h"}]))
+    assert p(laws=[{**law, "unit": T("m^½")}]) == []
+    assert p(laws=[]) == [] and p(laws=None) == []  # no law: no check
+    sim = toy["simulation"]
+
+    class Old(sim):
+        @classmethod
+        def lab_reference(cls, step_id, fixed, values):  # the form before D4
+            return {}
+    assert any("lab_reference(step_id, fixed, values, reference)" in x
+               for x in registry.check({**toy, "simulation": Old}))
+    steps = registry.screens_of(toy)[2]["steps"]
+    assert [x["reference"] for x in steps[0]["laws"]] == ["k_horizontal", "zero_intercept"] and "law" not in steps[0]
+    assert next(a for a in registry.atlases_of(toy) if a["id"] == "lab.heights")["laws"] == \
+        ["k_horizontal", "zero_intercept"]
+
+
+def test_a_worksheets_programme_and_variants(toy):
+    """A worksheet's ``frp`` entries name their programme (a T), and its ``variants`` (a grade's own sheet) name the
+    lab's steps, their columns and fits (integrator, 2026-11-17)."""
+    lab = toy["screens"][2]
+    ws = dict(lab["worksheet"])
+    var = dict(ws["variants"][0])
+
+    def p(**ch):
+        return _screens_problems(toy, s2={"worksheet": {**ws, **ch}})
+    assert p() == []
+    assert any("programme" in x for x in p(frp=[{k: v for k, v in ws["frp"][0].items() if k != "programme"}]))
+    assert any("steps" in x for x in p(variants=[{**var, "steps": ["nope"]}]))
+    assert any("not a step of the variant" in x for x in p(variants=[{**var, "plot": {"angles": {"x": "h", "y": "L"}}}]))
+    assert any("two columns" in x for x in p(variants=[{**var, "plot": {"heights": {"x": "h", "y": "z", "fit": None}}}]))
+    assert any("fit 'quadratic'" in x for x in p(variants=[{**var, "plot": {"heights": {"x": "h", "y": "L",
+                                                                                        "fit": "quadratic"}}}]))
+    assert p(variants=[{**var, "plot": {"heights": {"x": "h", "y": "L", "fit": "line"}}}]) == []
+    assert any("grade" in x for x in p(variants=[{**var, "grade": "7"}]))
+    assert any("label is a T" in x for x in p(variants=[{**var, "label": "plain"}]))
+    assert any("unique slug" in x for x in p(variants=[var, var]))
+    assert any("questions" in x for x in p(variants=[{**var, "questions": [{"q": "plain", "answer": T("a")}]}]))
+    assert any("unknown fields" in x for x in p(variants=[{**var, "notes": []}]))
+    assert p(variants=None) == []
+    assert p(variants=[{**var, "goals": {"heights": T("a test")}}]) == []  # a step's goal for the variant's sheet
+    assert any("not a step of the variant" in x for x in p(variants=[{**var, "goals": {"angles": T("a test")}}]))
+    assert any("goal of heights is a T" in x for x in p(variants=[{**var, "goals": {"heights": "plain"}}]))
+    assert any("goals is a map" in x for x in p(variants=[{**var, "goals": ["x"]}]))
+
+
 def test_a_law_parameter_is_no_control_at_school_but_may_be_at_university():
     viz = _viz("u32_double_slit")
     law = next(p for p in viz["schema"].params if p.standard is not None)

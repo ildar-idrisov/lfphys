@@ -276,7 +276,8 @@ def test_the_site_setting_reaches_the_player_and_the_check(site, extra, tmp_path
     monkeypatch.delenv("LFVIZ_SITE_URL", raising=False)
     assert A.site_setting() == {"published": True, "url": "https://example.org/x/"}
     got = A.recordings_list(tmp_path / "none")
-    assert got == {"worlds": {}, "site": "https://example.org/x/", "published": True}
+    assert {k: v for k, v in got.items() if k != "expected"} == {"worlds": {}, "site": "https://example.org/x/",
+                                                                 "published": True}
     monkeypatch.setenv("LFVIZ_SITE_URL", "http://127.0.0.1:9/")
     assert A.site_setting()["url"] == "http://127.0.0.1:9/" and A.site_setting(env=False)["url"] == "https://example.org/x/"
     monkeypatch.delenv("LFVIZ_SITE_URL")
@@ -357,6 +358,34 @@ def test_the_check_fails_on_a_broken_atlas(site, extra, tmp_path, monkeypatch):
     fails = _fails(check, site["out"])
     assert any("atlas explore" in x and "atlas's hard limit" in x for x in fails)
     assert any("atlas explore: point p" in x and "hard limit" in x for x in fails)
+
+
+def test_the_expected_keys_reach_the_player_and_the_check(site, extra, tmp_path):
+    """Integrator D11: ``GET /api/recordings`` and the site's ``api/recordings.json`` carry, per world with recordings,
+    the version, the code hash and the keys of its recordings and atlases as the code gives them; a server's player
+    takes the public site's atlas only when its key is the expected one. The check fails when they differ."""
+    check, L = _site("check"), _site("check").L
+    recs = _json(site, "api/recordings.json")
+    exp = recs["expected"]
+    assert set(exp) == set(L.demo_worlds())
+    toy = exp["s98_atlas_toy"]
+    plan = L.planned_world("s98_atlas_toy")
+    assert toy == {"version": plan["version"], "code_hash": registry.code_hash("s98_atlas_toy"),
+                   "recordings": {r["id"]: r["key"] for r in plan["recordings"]},
+                   "atlases": {a["id"]: a["key"] for a in plan["atlases"]}}
+    idx = _json(site, "recordings/s98_atlas_toy/index.json")
+    assert {a["id"]: a["key"] for a in idx["atlases"]} == toy["atlases"]  # what the player compares
+    assert A.recordings_list(tmp_path / "none")["expected"] == exp  # a server gives the same
+    assert not [f for f in _fails(check, site["out"]) if "expected" in f]
+    copy = _copy(site, tmp_path / "x")
+    f = copy / "api" / "recordings.json"
+    j = json.loads(f.read_text(encoding="utf-8"))
+    j["expected"]["s98_atlas_toy"]["atlases"]["explore"] = "0" * 16
+    f.write_text(json.dumps(j), encoding="utf-8")
+    assert any("expected[s98_atlas_toy]" in x for x in _fails(check, copy))
+    del j["expected"]
+    f.write_text(json.dumps(j), encoding="utf-8")
+    assert any("no expected keys" in x for x in _fails(check, copy))
 
 
 def test_the_worksheet_page_is_built_when_the_player_has_it(site, tmp_path, monkeypatch):

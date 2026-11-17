@@ -17,6 +17,11 @@ what the steps E, S, U and I measured on the real code, and each correction of a
 earlier is marked **[error in earlier]**. What the code keeps is `visualizations/RULES.md` §10; the open points are in
 `STATUS.md` V52.
 
+**After the four EX1 reviews (2026-11-17).** The reviews R-E (mechanics), R-F (the atlas framework), R-P (the screens)
+and R-W (the pilot worlds) were processed under the integrator's decisions D1–D15 (`reviews/archive/
+2026-11-14_internal_EX1-*/RESPONSE_*.md`). What they changed in this design is noted in place, dated 2026-11-17, with
+the review's finding and the decision.
+
 ## 0. Decisions in brief
 
 1. **Three screens on one model.** A demonstration may have Watch (a captioned recording, only for phenomena that
@@ -51,15 +56,21 @@ earlier is marked **[error in earlier]**. What the code keeps is `visualizations
 9. **Lab measurement** reads a computed value at the cursor through a declared instrument. The reading is rounded to
    the division and carries the declared error. The manual stopwatch measures the student's own reaction. The fit is
    a weighted least-squares fit with effective variance, its errors scaled by the Birge ratio when χ²/dof > 1, and is
-   tested against `lfphys.tools.stats.linear_fit`. The reference for «Check against the law» comes from the world's
-   own check, computed at build time.
+   tested against `lfphys.tools.stats.linear_fit`. [error in earlier, review R-E F5, changed 2026-11-17: straight
+   lines (and the power law in log–log) are fitted by York et al. (2004), the minimum of S with the maximum-likelihood
+   errors; the effective variance is kept for the parabola only, as a stated approximation.] The reference for «Check against the law» comes from the world's
+   own check, computed at build time. [2026-11-17, review R-E F9, R-P F3, R-W F5, integrator D4: a step declares its
+   laws, each with its own x, y and model, several per step; the check applies only on a law's own plot, within two
+   errors when they are the instruments' declared ones and within Student's t bound when they come from the scatter;
+   no verdict when the points scatter more than three times their errors.]
 10. **Engine M1 (first scope for S03):** `lfphys.core.mechanics` (point bodies in a uniform field, DOP853 with event
     location, energy bookkeeping, closed-form references), linear Stokes drag in the core, and the quadratic
     constant-C_d drag as a model in `theories.models.drag_quadratic`. The latter carries the hodograph quadrature as
     the second method. Air properties come from `core.data` (moved there from `core.fluids.lbm`).
 11. **S03** (`s03_projectile`) has all three screens. Watch: yes. The two-ball strobe shows the independence of
     the motions, a cause → effect story that one projectile at a time does not show. Explore: height × speed × angle
-    × air, 940 points (950 combinations, 10 refused), 5.70 MB *measured* ([error in earlier]: 1130 points, about 4.4 MB
+    × air, 940 points (950 combinations, 10 refused), 5.70 MB *measured* (5.85 MB on 2026-11-17, with the information
+    row of the measured drag curve, review R-E F1; [error in earlier]: 1130 points, about 4.4 MB
     *estimate*; the height grid is {0, 1, 2, 5, 10} m). Lab work in three parts: L(h) → L ∝ √h; L(θ) → maximum at 45°
     and L ∝ sin 2θ; the shift of the maximum in air.
 12. **u32**: Watch («the double slit, step by step»: build-up, fringes, one slit, a which-path detector, back);
@@ -67,7 +78,8 @@ earlier is marked **[error in earlier]**. What the code keeps is `visualizations
     auto-sized screen; the built screen is fixed at ±30 mm, §6.2). The rest of today's interface folds into «How we know this
     is right» or stays in «▶ Compute live» unchanged, with all 19 presets (one more, `story`, is added) and every check.
 13. **Budgets:** a point at most 150 kB target and 400 kB limit; an atlas 6 / 12 MB; a world, recordings and atlases
-    together, 12 / 25 MB (unchanged); the site 600 / 900 MB (unchanged). S03 is 5.93 MB and u32 8.17 MB *measured*.
+    together, 12 / 25 MB (unchanged); the site 600 / 900 MB (unchanged). S03 is 5.93 MB and u32 8.17 MB *measured*
+    (6.11 and 8.15 MB on 2026-11-17, §1.8).
 14. **Plan:** batch **EX1** = framework (atlas + player screens), S03 with M1, u32 rework. Agents and file ownership
     are in §9; independent reviews and their processing come before the report.
 
@@ -113,11 +125,18 @@ A point **fails** when a recording would: an error message, an exception, or a c
 `expected`. A failed point fails the atlas build, which is the honest outcome: the author changes the grid or the world.
 A point the world **refuses** (`check_params` raises `Refusal`, e.g. h = 0 with θ = 0 in S03) is not a failure. Its
 manifest entry says `refused` with the refusal's `T`, and the slider shows that text at that combination.
+[2026-11-17, review R-F F4, integrator D14: a refusal raised by the world's memory estimate, its constructor or its first
+showing is a refused point too (`headless.PointRefused`, with its text and hint); a world's constructor no longer fails
+the atlas. Live, a refusal and a value outside a control's span are `400`, a point whose checks end ✗ is `409`.]
 
 **Seeds.** Every point of a screen uses the screen's seed (default 1). The seed is in the manifest and in the passport.
 
 **Determinism.** The same spec, code and recorder give the same bytes for every point, as for recordings (integrator
-D6). This is tested.
+D6), on the same CPU type ([error in earlier], review R-F F8, 2026-11-17: numpy's SIMD paths can change the last bits
+of a world's computed values on another CPU type; the reviewer measured it). This is tested. The manifest is
+byte-reproducible too: it holds no build time or CPU time, which stay in the index entry (review R-F F7). The
+recorder and the atlas builder run on the CPU (`LFPHYS_NO_GPU=1` in their `main`), and the image's base is pinned by
+digest (`visualizations/docker/Dockerfile`, review R-F F10), so a key names the numbers it stands for.
 
 ### 1.3 File format
 
@@ -126,7 +145,9 @@ recording:
 
 1. `header` with `"$delta": true`: only the top-level keys whose JSON differs from the base header, plus the point's
    own header blobs. The player rebuilds the header as `{...base, ...delta}`, not recursively: a top-level key is
-   replaced whole. The base header is the header of the screen's default point.
+   replaced whole. The base header is the header of the screen's default point. [2026-11-17, review R-F F2,
+   integrator D13: the delta names its base, `"$base"` = the base file's sha256 (the manifest's `base.sha256`); a
+   reader merges it only with that base and drops `$base` as it drops `$delta`. `ATLAS_VERSION` is 2.]
 2. The world's messages in order. Frames come at the screen's `frame_dt`. A frame's dropped blobs are absent, and the
    view must cope with that (§2.4).
 3. `end {reason: "atlas"}`.
@@ -158,8 +179,9 @@ world's view does not declare as safe (§2.4). Recordings may use the same `quan
  "cpu_s": 61.0, "bytes_gz": 4.4e6, "frame_dt": 0.0333, "stop": {…}}
 ```
 
-A point's file is found by its flattened index. `base` is the base header (one message), loaded once per screen. The
-manifest is small: about 40 B per point, about 40 kB for S03's 950 points before Pages' gzip.
+[2026-11-17: `made` and `cpu_s` moved from the manifest to the index entry (review R-F F7); `atlas_version` is "2";
+`references` holds one value per law id of the step (§2.3).] A point's file is found by its flattened index. `base` is
+the base header (one message), loaded once per screen. The manifest is small: about 40 B per point, about 40 kB for S03's 950 points before Pages' gzip.
 
 **Where the files live:**
 
@@ -188,7 +210,10 @@ of dragging a slider.
   version, code_hash, made). An atlas not built now keeps its old entry only while its key is current (review F9's
   rule, as for recordings).
 - `/api/recordings` and `api/recordings.json` carry the `atlases` of each world through `index.json` with no change of
-  route. The player finds a manifest there.
+  route. The player finds a manifest there. [2026-11-17: an atlas whose manifest names a base or a point that is
+  missing or of another size is `stale` (review R-F F6). `/api/recordings` and `api/recordings.json` also carry
+  `expected`, the keys the code on that server gives; a screen uses only an atlas with that key, the local one or the
+  published site's (review R-P F9, integrator D11).]
 
 ### 1.5 How a view renders a point without the server
 
@@ -258,6 +283,12 @@ Sizes of the pilots:
 | S03 lab atlases | parts A, B, C (§5.3): 17 + 13 + 8 points | **51 + 46 + 87 kB** | measured ([error in earlier]: 22 points in part C, ≈ 0.2 MB estimate) |
 | S03 Watch | 40 s × 20 fps, two balls | **0.05 MB** | measured |
 | **S03 world** | | **5.93 MB** | measured |
+
+*Measured again* on 2026-11-17, after the reviews' processing (Docker, CPU, the pinned image): S03 Explore 940 points,
+5.85 MB, largest point 12.9 kB, 11 s of CPU (the information row of the measured drag curve in its 470 air points, review
+R-E F1); labs 39 + 46 + 89 kB; Watch split into `independence` (30 s, 0.03 MB) and `air` (9 s, 0.02 MB; integrator D8);
+the S03 world 6.11 MB. u32 Explore 5.50 MB, largest point 132.7 kB, 93 s of CPU (the coherence bootstrap recomputed on
+every 10 % growth of the hits, review R-W F2); Watch `story` 0.60 MB; the u32 world 8.15 MB.
 
 The stand-in S03 stream is the integrator's output put into protocol messages: one `traj` chunk and one frame per
 frame, the events and four checks. The real world adds per-frame `meas`; the measured rows above replace the
@@ -362,11 +393,20 @@ The recording spec (`RULES.md` §8) gains:
   or a set-up value (`control:<param>`). A manual stopwatch starts with the launch and stops when the student presses
   it: the reading is the world time at the press, at the playback speed in force (1× by default, and «slow» is
   refused for a manual stopwatch, so the reaction is real). The instrument model is not physics: it rounds a computed
-  value. It is declared data, tested against Python fixtures.
+  value. It is declared data, tested on hand-computed cases ([error in earlier], review R-P F19, 2026-11-17: «tested
+  against Python fixtures»; there is no Python instrument model). [2026-11-17: a `control:` instrument reads the shown
+  point's own set-up (its header's `params`, then its grid values, then the atlas's `fixed`), never the slider, and a
+  point's reply is applied only when it is still the one asked for (review R-P F1, integrator D6). An `error` of 0
+  declares an exact set-up: part A's heights are set by the stand («Height scale of the stand»), and the tape measures
+  L (review R-E F4, integrator D2). The manual stopwatch runs on the wall clock from the launch to the press, and while
+  it runs the flight cannot be paused, scrubbed or stepped (review R-P F5). `event` binds an instrument to an event of
+  the point (part C's grey-ball tape to `companion_landing`, review R-P F18).]
 - **Columns**: `from` an instrument, or derived `of` + `op`: `sqrt`, `square`, `sin2` (sin 2θ, θ in degrees),
   `inverse`, `log`. An error is propagated as |f′(x)|·σ_x. The table keeps rows per step in the browser
   (`localStorage`, wrapped in try/catch; a convenience only). It can be cleared, a row deleted, and the table exported
-  as CSV with the errors.
+  as CSV with the errors. [2026-11-17: the error is σ_f² = f′²σ² + ½f″²σ⁴, so sin 2θ at 45° keeps an error (review R-P
+  F14); one row per set-up, «Measure» on a set-up already in the table replaces its row (review R-P F4, integrator D5);
+  the table is kept with its atlas's key and dropped when the atlas is rebuilt.]
 - **Plot**: any two columns (school: the step's default, changeable), with error bars.
 - **Fit** (`fit.js`): `line0` (y = b·x), `line` (y = a + b·x), `quadratic` (its vertex x* with σ from the covariance:
   a maximum found from points), and at `standard` also `power` (a line in log–log). It is a weighted least squares with
@@ -376,20 +416,35 @@ The recording spec (`RULES.md` §8) gains:
   the virtual bench repeats exactly, so the scatter of the points comes only from rounding, and the errors must come
   from the instruments. A real bench scatters, and the scaling then takes the scatter into account. The Python
   reference is the new `lfphys.tools.stats.linear_fit(x, y, sx, sy, model)`. `fit.test.mjs` compares the two on
-  fixtures to 1e-12.
+  fixtures to 1e-12. [Changed 2026-11-17 (review R-E F5, F8; integrator's decision D3): the effective variance's
+  fixed point is not the least-squares line (0.30 σ_b off on Pearson–York) and, with random x errors comparable to
+  the spread of x, it is the attenuated slope of ordinary least squares. `line`, `line0` and `power` now use York,
+  Evensen, Martínez López & De Basabe Delgado, Am. J. Phys. 72, 367 (2004), eqs. (13), iterated to convergence (the line
+  through the origin: the same equations with the intercept fixed at 0); `quadratic` keeps three re-weightings of the
+  effective variance. A singular design is refused in both (`fit.singular`). Orear's notes were read in step E; his AJP
+  paper, Lybanon's comment and the erratum were not.]
 - **Law** (`«Check against the law»`): the reference is computed **by the world** when the step's atlas is built. The
   world provides `Simulation.lab_reference(step_id, fixed, values) -> {"value", "unit", "label": T, "how": T, "kind":
   "closed form" | "engine"}`, using its own checks' references (closed forms of accepted physics are allowed there,
   rule 2). The reference is stored in the manifest's `references`. The check is shown as «k = 0.452 ± 0.004 m^½ —
   law: 0.4518 m^½ (closed form k = v₀·√(2/g)) ✓ agrees within two errors» or «✗ does not agree: look at …» with the
   step's hint. When there is no closed form (the optimum angle in air), the reference is the engine's own computed
-  value, labelled so («computed by the engine at 0.1° steps; there is no closed form»).
+  value, labelled so («computed by the engine at 0.1° steps; there is no closed form»). [2026-11-17, review R-E F9,
+  R-P F3, R-W F5, integrator D4: the single `law` became `laws: [{x, y, model, quantity, label, unit, reference}, …]`,
+  several per step, validated by `registry._check_laws`; `lab_reference(step_id, fixed, values, reference)` answers each
+  law, and the manifest's `references` holds one per id. The check applies only when the plot is one of the step's
+  laws' (x, y, fit), else it is off with the reason. The bound is two errors when the errors are the instruments'
+  declared ones, Student's t quantile with the same coverage (95.45 %) for n − p degrees of freedom when they come from
+  the scatter; a fit whose √(χ²/dof) exceeds 3 gives no verdict, and a Birge scaling applied is shown.]
 - **Worksheet**: data, not a separate document. The ФРП lab's name is verbatim in Russian, with the English version
   marked as a translation. The goal and the steps come from `steps`. The equipment list, the questions with the
   teacher's answers, and the teacher's notes are all `T` in the i18n catalogues, so the completeness tests cover them
   (rule 13). `player/worksheet.html` + `js/worksheet.js` render it printable (print CSS, one A4 page per part), in the
   viewer's language. The teacher's answers print on a separate page, behind a «For the teacher» switch (question 2 in
-  §10).
+  §10). [2026-11-17, review R-P F6, R-W F7: every printed page is one A4 sheet with the attribution line (the head and
+  part 1, one sheet per part, the questions, the teacher's sheets), one blank row per set-up of the step, the plots of
+  its laws, «Conclusion» lines; every `frp` entry names its `programme`; `variants` (grade, steps, plots with a fit or
+  none, goals, questions) are other sheets of the same lab: S03's grade-7 variant plots L against h with no curve.]
 
 ### 2.4 The view's contract (optional additions; old views keep working)
 
@@ -402,6 +457,8 @@ The recording spec (`RULES.md` §8) gains:
 | `view.worldToPx(p)`, `view.pxToWorld(q)` | 2-D views: the mapping the lab's instruments overlay uses (a ruler on the ground, a protractor at the launcher) |
 | `view.quantSafe` | the blobs the view accepts quantised, `{"traj.s": "u16"}`: the registry refuses a `quantize` the view does not declare |
 | tolerance of absent blobs | a frame without its dropped blobs is drawn without them (u32: no particles in flight in Explore) |
+| `view.setStory({worlds, w, fps})` | (2026-11-17, integrator D8) Watch: the recording's decoded worlds, the index of the one shown and the frames per played second, called when the world shown changes; S03 keeps one scene box for the whole recording and draws the earlier throws faded |
+| trace `label`, `live` | (2026-11-17, review R-P F8, R-W F11) a trace's label names only the values that differ from the point shown, « · computed live» and `live: true` for a live point; the view keeps it inside the canvas, clear of its other labels |
 
 The view still computes no physics. It draws computed polylines, interpolates along them (allowed, `RULES.md` §4) and
 places a body on its computed path at the cursor's time.
@@ -420,7 +477,9 @@ places a body on its computed path at the cursor's time.
 - Lab: steps with goal, controls, instruments that exist, columns with sources that exist (instrument ids, earlier
   columns), plot columns that exist, a fit model allowed at the level (`power` only at standard), a law with a
   reference id that the world's `lab_reference` answers (called once per step by the test), a worksheet with the ФРП
-  item, the questions and the answers.
+  item, the questions and the answers. [2026-11-17: the laws as in §2.3 (`_check_laws`); the worksheet's `programme`
+  and `variants` (`_check_variants`); an instrument's `event`; quantisation refused for the blobs of `end`, `check`,
+  `event`, `error`, `notice`, `caption`, `state`, `live` and coarser than declared (review R-F F9).]
 
 `tests/test_site_registry.py` extended: every `T` of the screens, captions, instruments, steps and worksheet is
 translated in every language; every screen's atlas is in `plan.py`; the README catalogue lists the screens; a related
@@ -543,7 +602,11 @@ divisions, the protractor at the launcher, the stopwatch as a widget), «Measure
 step read at the cursor, with errors; refused with a reason when an instrument has nothing to read), the table, the
 plot with the selected fit and its line, the fit's result with σ and, at standard, χ²/dof, and «Check against the law»
 (§2.3). The steps run in order, and a step can be revisited: each step keeps its own table. Lab work uses the step's
-atlas (`lab.<step>`) exactly as Explore uses its own, so it works on the public site.
+atlas (`lab.<step>`) exactly as Explore uses its own, so it works on the public site. [2026-11-17: «Measure» is refused
+while the slider's set-up is not the one shown (integrator D6); the part's laws are listed under the plot, each with
+its plot; the curve is drawn over the measured range only (review R-P F11); the drawer of Lab work lists the events
+without their times (review R-W F8, integrator D10); a stopwatch column records the hand-timed T in part A (review R-W
+F6).]
 
 ### 3.6 `watch.js`: captions over the recording
 
@@ -552,7 +615,10 @@ shows the latest `caption` message as of the cursor, in large type at school; it
 desktop and under the view at 390 px. The **chapters** are the captions as ticks on the timeline: a click jumps there,
 and ◀◀ / ▶▶ go to the previous or next chapter. The playback starts at the beginning and pauses at the end. A
 recording without captions (today's) plays as now. «More recordings» (u32's young, eraser, Aharonov–Bohm) is a select
-in the Watch screen.
+in the Watch screen. [2026-11-17, review R-W F3, F4, R-P F12, integrator D8: the time label states the world's time and
+the playback factor («world 0.42 s · slow motion ×10»); any action ends a caption's hold, also at the first frame;
+Watch calls the view's `setStory` (§2.4); «▶ Compute live» sends the shown world's preset, parameters and seed (review
+R-P F13).]
 
 ### 3.7 Server mode: «compute live»
 
@@ -569,6 +635,14 @@ in the Watch screen.
 - In the player, on a server: the sliders also move freely between the detents. Releasing at an off-grid value
   computes the point. It is drawn when it arrives and labelled «computed live» in the passport and on its trace.
   «Another sample» on a stochastic point asks for the next seed.
+- [2026-11-17, review R-F F1, F2, F11, F13, R-P F8, integrator D13: the cache key follows the code on disk
+  (`registry.code_hash_current`, by the files' sizes and times) and covers `atlas_live.py`; the point's process hashes
+  the code before and after it computes, and a point computed while the code changed is not kept (503). The point's
+  header names its base (`$base`); the player merges only with that base and otherwise asks again with
+  `full_header: true`. The response names the point's key, code and time (`X-LF-Key`, `X-LF-Code`, `X-LF-Made`), which
+  the passport shows. The cache is capped (`LFVIZ_POINT_CACHE_MB`, 512 MB). A screen on a server uses only an atlas
+  with the key that server would build now, the local one or the published site's; else «Not built here: run
+  site/record.py --world …» (review R-P F9, integrator D11).]
 
 ### 3.8 Sub-path and static-site compatibility
 
@@ -585,6 +659,10 @@ the keys. `site_smoke.mjs` serves the site under `/lfphys/` and opens every scre
   sticky. The tabs become a segmented control. «How we know this is right», the theme and help go under ☰.
 - Touch targets are at least 44 × 44 px (sliders' thumbs, ▶, «Measure»). Sliders move by drag and by tap on a
   detent. Labels never shrink below 14 px.
+- [2026-11-17, review R-W F10, integrator D12: below 1000 px the top bar scrolls away; Explore's and Lab work's view
+  stays at the top (sticky) while the controls scroll under it, the time bar stays at the bottom, and Lab work's
+  «Measure», «⏱ Stop» and last message sit in a sticky dock above it. Review R-P F2, integrator D7: Space, ← / → and
+  Home are the screen's shortcuts only when the focus is not on an interactive control.]
 - The table scrolls inside its box, and the page never scrolls sideways. The browser test checks
   `document.scrollingElement.scrollWidth ≤ 390` on every screen of both pilots, in EN and in RU (Russian labels are
   longer).
@@ -603,11 +681,11 @@ The layers rule (`LAYERS.md`) places it so:
 
 | module | layer | content | references for the tests |
 |---|---|---|---|
-| `lfphys.core.mechanics` (`__init__`, `particle.py`) | core | point bodies in a uniform gravitational field with any declared force per body; integration by `scipy.integrate.solve_ivp` DOP853 (rtol 1e-11, atol by scale) with dense output; event location (landing on y = y_ground, apex vy = 0, and any declared event) by the integrator's events; sampling at a fixed Δt (1/120 s by default, so that strobe times of 0.1 s fall on samples); the drag's work W carried as a fifth state, so that E_k + E_p − W = E₀ is a running check; `g` from `scipy.constants.g` (the conventional standard gravity, 9.80665 m/s²; a world states that local g differs by up to 0.3 %) | no drag: x(t), y(t), T, L, H in closed form; linear drag: x(t), y(t) and the landing time from a height h in closed form, T = τ·[c + h′ + W₀(−c·e^{−(c+h′)})] with c = (v₀y + gτ)/(gτ), h′ = h/(gτ²) (Lambert W, principal branch; derived and checked for this design to 5e-15–8e-13, Appendix A); energy bookkeeping |
+| `lfphys.core.mechanics` (`__init__`, `particle.py`) | core | point bodies in a uniform gravitational field with any declared force per body; integration by `scipy.integrate.solve_ivp` DOP853 (rtol 1e-11, atol by scale) with dense output; event location (landing on y = y_ground, apex vy = 0, and any declared event) by the integrator's events; sampling at a fixed Δt (1/120 s by default, so that strobe times of 0.1 s fall on samples); the drag's work W carried as a fifth state, so that E_k + E_p − W = E₀ is a running check; `g` from `scipy.constants.g` (the conventional standard gravity, 9.80665 m/s²; a world states that local g differs by up to 0.3 %) | no drag: x(t), y(t), T, L, H in closed form; linear drag: x(t), y(t) and the landing time from a height h in closed form, T = τ·[c + h′ + W₀(−c·e^{−(c+h′)})] with c = (v₀y + gτ)/(gτ), h′ = h/(gτ²) (Lambert W, principal branch; derived and checked for this design to 5e-15–8e-13, Appendix A. [2026-11-17, review R-E F2: W alone errs by ~1e-16/s² relative for weak drag, s = T/τ ≪ 1 (7e-7 at s = 2e-5); the engine polishes it by Newton's method, ≤ 8e-16 against a 50-digit reference; F10: it holds also for c ≤ 0]); energy bookkeeping |
 | `lfphys.core.mechanics.drag` | core | linear (Stokes) drag F = −3πμ·d·v of a sphere, with its validity Re ≲ 1 stated and the Reynolds number computed along the path; the air's density and viscosity from `core.data` | Stokes's law; terminal speed v_t = mg/(3πμd) in closed form; the run's own Re |
 | `lfphys.theories.models.drag_quadratic` | theories/models | F = −½·ρ·C_d·A·|v|·v with a constant C_d. A model with a fitted parameter: it conflicts with the real C_d(Re) (the drag crisis near Re ≈ 3·10⁵, rough or felt surfaces, the Magnus force of a spinning ball). Its validity is computed along the path (the Reynolds number against the stated range of the constant C_d). It also provides the **second method**: the hodograph quadrature | vertical motion: up v(t) = v_t·tan(arctan(v₀/v_t) − g·t/v_t), down v(t) = v_t·tanh(g·t/v_t); 2-D: (1) the hodograph's exact first integral 1/u² = 1/u₀² + (k/g)·(F(θ₀) − F(θ)), F(θ) = sin θ/cos²θ + ln tan(θ/2 + π/4), u = v·cos θ, k = ρC_dA/(2m), with t, x, y as quadratures in θ (derived here from dv_x/dθ = k·v_x³/(g·cos³θ); measured agreement with DOP853 1.4e-12 in T and 1.3e-12 in L); (2) an independent integrator, Radau IIA (implicit, another family), measured 1.5e-12 |
 | `lfphys.core.data.fluid_properties` | core (data) | moved from `core.fluids.lbm` (one place for the data: water, IAPWS through the NIST WebBook; air, the U.S. Standard Atmosphere 1976), with `lbm` re-exporting it | its existing tests move with it |
-| `lfphys.tools.stats.linear_fit` | tools | the lab's fit (§2.3): `line0`, `line`, `quadratic`, `power`, effective variance, Birge scaling | closed forms on exact data; Monte Carlo coverage of σ (95 % intervals cover in 95 ± 1 % of 20 000 draws) |
+| `lfphys.tools.stats.linear_fit` | tools | the lab's fit (§2.3): `line0`, `line`, `quadratic`, `power`, effective variance, Birge scaling [2026-11-17: York (2004) for the straight lines, the effective variance for the parabola only; review R-E F5] | closed forms on exact data; Monte Carlo coverage of σ (95 % intervals cover in 95 ± 1 % of 20 000 draws) [2026-11-17: also York's Pearson–York benchmark, the minimum of S, the major axis, Monte Carlo with random x errors] |
 
 **Constants and data with sources:** C_d = 0.47 for a smooth sphere at 10³ < Re < 2·10⁵, a textbook value. It is to
 be checked against a named drag-curve source (e.g. White, *Fluid Mechanics*, the sphere's drag curve) before it is
@@ -686,6 +764,14 @@ flight ends before the next row: from 5 m it lasts 1.01 s (10 s on screen), and 
 | 22 | `new_world`, params `{h_m: 5}` | «Four times higher: the flight lasts twice as long, and the range is doubled: L grows as √h.» |
 | 32 | `new_world`, params `{companion: vacuum, object: ball67, v0: 20, angle_deg: 45, h_m: 0, air: true}`; `speed 0.5` | «In air a light ball falls short of the same throw in vacuum (grey).» |
 
+[2026-11-17, review R-W F3, F4, integrator D8: the story is split so that one scene box stays readable. `independence`
+(30 s at speed 0.1: worlds at 0, 8 and 16 s, h ≤ 5 m, L ≤ 4.04 m) keeps the first three rows; its first caption holds
+the start for 2.5 s, and the second comes at 1 s played, before a quarter of the flight. The light ball in air is its
+own recording `air` (9 s at speed 0.5, the preset `air_max`), under «More recordings». The view keeps one box over the
+recording's worlds and draws the earlier throws faded with their «L = …», so the 1 : 2 : 4 of the ranges is seen; the
+time label states the slow motion. The events' texts carry no measured value, and `engine_modules()` names
+`core.data:air` only (review R-W F8, integrator D10).]
+
 **Explore** (`explore`, the preset `field`: the 67 mm ball): h {0, 1, 2, 5, 10} m × v₀ {5, 10, 15, 20, 25} m/s ×
 θ {0°, 5°, …, 90°} × air {off, on} = 950 combinations, of which 10 are refused (h 0 with θ 0) and 940 computed
 ([error in earlier]: h {0, 1, 2, 3, 5, 10}, 1140 combinations, 1130 computed; the 3 m row was dropped for the size).
@@ -702,6 +788,20 @@ stand-in's 36.47 m at 40° and 36.16 m at 45°, with k = 0.01729 1/m). So the sh
 | B. Angle and range | ФРП 10 demonstration; AP1 U1 | the ballistic launcher on the floor (h 0), steel ball, v₀ 5 m/s, θ {15°, 20°, …, 75°}, no air (with air the slope misses v₀²/g by 27σ at the tape's resolution, so the launcher is set in vacuum; step S): 13 points | θ with the protractor (1°), L with the tape | L(sin 2θ) `line0` → slope v₀²/g; L(θ) `quadratic` → θ* | slope v₀²/g; θ* = 45° (closed form, no drag) |
 | C. Air moves the maximum | extension (ФРП 10–11 «сопротивление среды»; AP1 U1) | the 67 mm ball, v₀ 20 m/s, h 0, θ {25°, 30°, …, 60°}, air on, with the same throw in vacuum as a grey companion ball: 8 points ([error in earlier]: θ {20°, …, 70°} in each medium, 22 points; the parabola fitted over 20–70° was biased by 1.8σ, over 25–60° it agrees within 0.8σ) | θ, L of the ball (tape) and of the grey ball (its tape reads after the grey ball's landing, `event`) | L(θ) `quadratic` → θ* | vacuum: 45° (closed form); air: the engine's optimum at 0.1° steps (41.9°), labelled «computed by the engine; no closed form» |
 
+[2026-11-17, after the reviews. **Part A** (review R-E F4, integrator D2): the stand sets the heights exactly
+(«Height scale of the stand», error 0), the tape measures L; with σ_h = 0 the bench resolves the air (k = 0.676920 ±
+0.000157 against 0.677401, z = −3.07), so part A runs **without air**, and its goal says so; the reference's «how»
+computes, per height, how much shorter the range would be in air (0.09 mm at 0.20 m to 0.54 mm at 1.00 m, more than
+the tape's ±0.5 mm from 0.95 m on). A column «T, s» records the hand-timed flight, with no law (review R-W F6). **Laws**
+(integrator D4): A `k_horizontal` (L against √h, `line0`, slope); B `v2_over_g` (L against sin 2θ, `line0`, slope) and
+`theta_max_vacuum` (L against θ, `quadratic`, vertex); C `theta_max_air` and `theta_max_vacuum` (the grey ball). **Part
+C** (review R-E F1, integrator D1): the reference says that the optimum depends on the drag model: 41.9° with the
+constant C_d = 0.47, 42.3° with the measured drag curve (`CurveDrag`, Morrison 2016), both computed; the verdict is
+against the world's model. Every flight in air carries the check «the drag model's range of validity (Re)» and a
+computed information row, the range with the measured drag curve (28.2371 m against 27.2222 m at 20 m/s and 40°). The
+worksheet has a grade-7 variant (part A, L against h, no curve) and every number it states is tested against the engine
+(review R-W F7, R-E F11).]
+
 The worksheet questions (with the teacher's answers) include: why the stopwatch cannot measure a 0.45 s flight to
 better than ±0.1 s ([error in earlier]: ±0.2 s; a start and a stop by hand scatter by about 0.1 s, Faux & Godolphin,
 Am. J. Phys. 87, 110 (2019), verified by step S), and what to do instead (compute T = L/v₀ or measure L); which angles give equal ranges without air
@@ -710,7 +810,8 @@ and why; why the maximum moves below 45° in air; why the chute's v₀ is found 
 ### 5.4 Size and cost
 
 *Measured* (2026-11-14): the world 5.93 MB (Explore 5.70 MB, labs 51 + 46 + 87 kB, Watch 0.05 MB), recorded with its
-atlases in 20 s on one CPU (the plan's estimate was about 5 MB and under 2 min; §1.8).
+atlases in 20 s on one CPU (the plan's estimate was about 5 MB and under 2 min; §1.8). *Measured* again on 2026-11-17:
+6.11 MB (Explore 5.85 MB, labs 39 + 46 + 89 kB, Watch 0.03 + 0.02 MB), 25 s.
 
 ---
 
@@ -736,6 +837,9 @@ the speed (the script's new `speed`):
 0.61 MB, 7 s of CPU, on the preset `story` (n_bohm 20, the screen at ±50 mm). Each change of the set-up
 starts a new segment, so the view's «current segment» shows each stage on its own, as the captions say. The existing
 recordings `young`, `eraser`, `aharonov_bohm` stay under «More recordings» and get short captions in the same pass.
+[2026-11-17, review R-W F9: the 16 s caption says «hundreds of hits, then about two thousand» (the run's counts), and
+the 26 s caption names the single slit's first dark minima at ±31.6 mm, λL/a computed from the preset; a shutter is
+described without an angle (review R-W F14).]
 
 ### 6.2 Explore: λ, d, a → the pattern and the hit histogram
 
@@ -758,6 +862,12 @@ recordings `young`, `eraser`, `aharonov_bohm` stay under «More recordings» and
   (a view gets no checks), so the Explore screen declares no `readouts` and the player hides the empty box (step I).
 - 5.50 MB, 52 s CPU (*measured* in the build; [error in earlier]: 5.16 MB, 47 s on the automatic screen). Quantisation
   loss *measured*: the map 0.0039 of its peak, x 4.6·10⁻⁷ m (a detector pixel ≥ 1.6·10⁻⁴ m), t 2.1·10⁻⁶ s, y 0.002.
+- [2026-11-17, review R-W F2, integrator D9, [error in earlier]: the |γ₁₂| error was 30× too small to 50× too large.
+  `stats.coherence_boot` now fits by Newton on the Poisson likelihood, draws from the model projected onto |γ| ≤ 1 and
+  states the larger spread near full coherence; below 300 hits (`COH_BOOT_MIN_HITS`) it gives no error, and the readout
+  shows «|γ₁₂| —» with the reason. u32 recomputes it whenever the count has grown by 10 %, without the √(n_then/n)
+  rescaling. The stated error is 0.81–1.21 of the scatter of Poisson histograms at four Explore points and 300–5000
+  hits. The Explore atlas now takes 93 s of CPU.]
 
 ### 6.3 What of today's interface stays at `ui: "standard"`
 
@@ -825,7 +935,8 @@ The owner confirms the order (question 4 in §10).
 - `test_layers.py` (existing) covers the new modules' `ABOUT` and their translations; `test_licences.py` is unchanged
   (no new dependency).
 - `test_stats_fit.py`: `linear_fit` for every model on exact data; the effective variance against a hand-computed
-  case; coverage of σ by Monte Carlo.
+  case; coverage of σ by Monte Carlo. [2026-11-17: York's lines against the paper's Table II, the minimum of S and the
+  major axis; the parabola's effective variance against the normal equations; singular designs refused.]
 
 **Framework** (`visualizations/tests/`):
 - `test_headless.py`: `run_spec` reproduces today's recordings byte for byte (`test_recorder.py`'s fixtures); the
@@ -841,6 +952,13 @@ The owner confirms the order (question 4 in §10).
   manifest that disagrees, a stale key, an atlas over its limit.
 - `test_atlas_live.py`: the live point endpoint (off-grid value; a refusal is 400 with its `T`; the cache hit; the
   memory limit and the timeout end the process, not the server; 429 beyond the queue).
+- [2026-11-17: `test_atlas_live.py` also covers the cache following the code on disk, a point computed while the code
+  changed, `$base` and `full_header`, the 400/409 refusals and the cache's housekeeping; `test_atlas.py` compares the
+  committed toy fixture with a fresh build and checks that `site/fixtures.py` builds everything with the expected
+  keys; `test_code_hash.py`; `test_protocol_quant.py` covers ranges a few ulps wide and ±inf. The engine adds
+  `test_stats_coherence.py` (D9) and `CurveDrag`'s tests (D1). The browser tests run on recordings and atlases built
+  by the code under test (`site/fixtures.py`), since a server's player refuses a stale atlas (D11); CI runs the
+  player's Node tests (D15) and `demo_screens.mjs` for the toy world.]
 
 **Worlds**:
 - `s03_projectile/tests/test_s03_physics.py`: every check ✓ at the corners of every atlas grid; the events'

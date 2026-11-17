@@ -234,6 +234,23 @@ for (const lang of LANGS) {
         await sleep(400);
         const nb = await page.evaluate(() => { const c = document.querySelector(".dm-screen:not([hidden]) canvas"); return !!c && c.width > 0; });
         check(`${out.screen}: the screen opens on the site`, out.ok && nb, out);
+        // and is used (review EX1-screens F19): Watch goes to its next chapter; Explore launches (or plays) its point;
+        // Lab work launches, goes to the landing and measures a row
+        if (sc.kind === "watch") {
+          await page.locator(".dm-screen:not([hidden]) .dm-chap").nth(1).click();
+          const k = await page.evaluate(() => window.__lfWatch.step());
+          check(`${out.screen}: ▶▶ goes to a caption on the site`, k > 0, { k });
+        } else if (sc.kind === "explore" && sc.time !== "none") {
+          await page.locator(".dm-screen:not([hidden]) .dm-play").click();
+          const launched = await page.waitForFunction((id) => window.__lfExplore[id].state.cur.launchedAt !== null, sc.id, { timeout: 10000 }).then(() => true, () => false);
+          check(`${out.screen}: ▶ starts the point on the site`, launched);
+        } else if (sc.kind === "lab") {
+          await page.evaluate(() => { const s = document.querySelector(".dm-screen:not([hidden]) .dm-timeline"); s.value = s.max; s.dispatchEvent(new Event("input")); });
+          await sleep(200);
+          await page.locator(".dm-screen:not([hidden]) .dm-measure").click();
+          const rows = await page.evaluate(() => window.__lfLab.rows().length);
+          check(`${out.screen}: «Measure» at the landing adds a row on the site`, rows >= 1, { rows, msg: await page.locator(".dm-msg").first().innerText() });
+        }
         await language(page, out.screen);
         await shot(page, `screen_${v.id}_${sc.id}`, false);
       } catch (e) { check(`${out.screen}: the screen opens on the site`, false, { error: e.message.split("\n")[0].slice(0, 200), errs: errs.slice(-3) }); }

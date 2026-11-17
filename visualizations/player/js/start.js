@@ -66,8 +66,8 @@ async function load() {
   D.audiences = auds.value.audiences || [];
   D.sections = auds.value.sections || [];
   D.planned = planned.status === "fulfilled" && Array.isArray(planned.value) ? planned.value : [];
-  D.rec = rec.status === "fulfilled" && rec.value ? { worlds: rec.value.worlds || {}, site: rec.value.site || "", published: rec.value.published === true }
-    : { worlds: {}, site: "", published: false };
+  D.rec = rec.status === "fulfilled" && rec.value ? { worlds: rec.value.worlds || {}, site: rec.value.site || "", published: rec.value.published === true,
+    expected: rec.value.expected || null } : { worlds: {}, site: "", published: false, expected: null };
   // a server without a local recording of a world plays the public site's, only when the site is published and its
   // recording was made from the same version of the world (integrator D4): its index is read once, here
   if (SERVER && D.rec.published && D.rec.site) {
@@ -341,22 +341,35 @@ function relatedLine(v) {
 }
 
 // --- a demonstration's card ---------------------------------------------------------------------------------------------
-// The screens' buttons of a card: each opens its screen (run.html?demo=…&screen=…); a screen whose recording or atlases
-// are not made yet (here, or on the site) is shown greyed with the reason
+// The screens' buttons of a card: each opens its screen (run.html?demo=…&screen=…). A screen is ready when its atlases
+// are here with the key this server would build now (GET /api/recordings "expected"), or (server) on the published site
+// with the same world version and the same key; its recording here, or on the published site of the same version, as the
+// recordings' buttons (integrator D11; review EX1-screens F9). Otherwise it is greyed with «Not built here: run
+// site/record.py --world …».
 function screenButtons(v) {
   const idx = (D.rec.worlds || {})[v.id] || null;
-  const atl = new Set(((idx && idx.atlases) || []).map((a) => a.id));
-  const recs = new Map(((idx && idx.recordings) || []).map((r) => [r.id, r]));
+  const exp = D.rec.expected ? D.rec.expected[v.id] || null : null;
+  const sidx = SERVER && D.siteRec && D.siteRec.worlds ? D.siteRec.worlds[v.id] || null : null;
+  const sameVersion = (e, ix) => String(e.version ?? (ix || {}).version) === String(v.version);
+  const atlasReady = (id) => {
+    const want = exp && exp.atlases ? exp.atlases[id] : undefined;
+    const loc = ((idx && idx.atlases) || []).find((a) => a.id === id);
+    if (loc && (want === undefined || loc.key === want)) return true;
+    const rem = ((sidx && sidx.atlases) || []).find((a) => a.id === id);
+    return !!rem && want !== undefined && rem.key === want && sameVersion(rem, sidx);
+  };
+  const recOf = (id) => ((idx && idx.recordings) || []).find((r) => r.id === id)
+    || ((sidx && sidx.recordings) || []).find((r) => r.id === id && sameVersion(r, sidx)) || null;
   return (v.screens || []).map((s) => {
     let ready = true, label;
     if (s.kind === "watch") {
-      const r = recs.get(s.recording);
+      const r = recOf(s.recording);
       ready = !!r;
       label = r ? t("▷ Watch {time}", { time: mss(r.seconds) }) : t("▷ Watch");
-    } else if (s.kind === "explore") { ready = atl.has(s.atlas); label = t("◎ Explore"); }
-    else { ready = (s.steps || []).length > 0 && (s.steps || []).every((st) => atl.has(st.atlas)); label = t("✎ Lab work"); }
+    } else if (s.kind === "explore") { ready = atlasReady(s.atlas); label = t("◎ Explore"); }
+    else { ready = (s.steps || []).length > 0 && (s.steps || []).every((st) => atlasReady(st.atlas)); label = t("✎ Lab work"); }
     const a = el("a", { class: "button st-screen" + (ready ? (s.kind === "explore" ? " primary" : "") : " disabled"), "data-screen": s.id,
-      title: ready ? t(s.label) : t("Not made yet: build it locally (site/record.py) or compute live") }, label);
+      title: ready ? t(s.label) : t("Not built here: run site/record.py --world {world}", { world: v.id }) }, label);
     if (ready) a.href = withLang(page("run", { demo: v.id, screen: s.id }));
     else a.setAttribute("aria-disabled", "true");
     return a;

@@ -182,7 +182,7 @@ docker run --rm --memory=12g -e LFPHYS_NO_GPU=1 --user "$(id -u):$(id -g)" -v "$
 
 | | |
 |---|---|
-| <a href="docs/images/s03_projectile.jpg"><img src="docs/images/s03_projectile.jpg" width="300" alt="s03: Движение тела, брошенного горизонтально и под углом к горизонту"></a> | **[s03 · Движение тела, брошенного горизонтально и под углом к горизонту](visualizations/s03_projectile/README.ru.md)**<br>Отпущенный шарик и шарик, брошенный горизонтально, падают на пол в один и тот же момент.<br>▷ Смотреть на сайте: [Два шарика в один момент: один отпущен, другой брошен горизонтально](https://ildar-idrisov.github.io/lfphys/run.html?rec=s03_projectile/independence&lang=ru)<br>◎ На сайте: [Наблюдение](https://ildar-idrisov.github.io/lfphys/run.html?demo=s03_projectile&screen=watch&lang=ru) · [Исследование](https://ildar-idrisov.github.io/lfphys/run.html?demo=s03_projectile&screen=explore&lang=ru) · [Лабораторная работа](https://ildar-idrisov.github.io/lfphys/run.html?demo=s03_projectile&screen=lab&lang=ru)<br>Сценариев в плеере: 5 |
+| <a href="docs/images/s03_projectile.jpg"><img src="docs/images/s03_projectile.jpg" width="300" alt="s03: Движение тела, брошенного горизонтально и под углом к горизонту"></a> | **[s03 · Движение тела, брошенного горизонтально и под углом к горизонту](visualizations/s03_projectile/README.ru.md)**<br>Отпущенный шарик и шарик, брошенный горизонтально, падают на пол в один и тот же момент.<br>▷ Смотреть на сайте: [Два шарика в один момент: один отпущен, другой брошен горизонтально](https://ildar-idrisov.github.io/lfphys/run.html?rec=s03_projectile/independence&lang=ru) · [Лёгкий мяч при 20 м/с в воздухе и тот же бросок в вакууме](https://ildar-idrisov.github.io/lfphys/run.html?rec=s03_projectile/air&lang=ru)<br>◎ На сайте: [Наблюдение](https://ildar-idrisov.github.io/lfphys/run.html?demo=s03_projectile&screen=watch&lang=ru) · [Исследование](https://ildar-idrisov.github.io/lfphys/run.html?demo=s03_projectile&screen=explore&lang=ru) · [Лабораторная работа](https://ildar-idrisov.github.io/lfphys/run.html?demo=s03_projectile&screen=lab&lang=ru)<br>Сценариев в плеере: 5 |
 
 *Запланированные демонстрации по разделам:*
 
@@ -498,7 +498,7 @@ docker run --rm --memory=12g -e LFPHYS_NO_GPU=1 --user "$(id -u):$(id -g)" -v "$
 * **Тесты.** Около 1600 тестовых функций: каждая функция движка сверяется с замкнутой формулой или вторым методом, для
   ключевых величин — строгие интервальные эталоны (шаровая арифметика Arb); каждая визуализация и сервер.
 * **Ревью.** Новую физику проверяет рецензент, который её не писал, и на каждое замечание дан ответ: исправлено,
-  отклонено с причиной или отложено в `STATUS.md`. Все 32 обработанных ревью пока внутренние (проведены в рамках
+  отклонено с причиной или отложено в `STATUS.md`. Все 42 обработанных ревью пока внутренние (проведены в рамках
   проекта) и хранятся вместе с ответами в [`reviews/archive/`](reviews/archive/).
 * **Сторонние библиотеки — только для сравнения.** 2961 сравнение с CRunDec (rundec), KerrGeoPy, tmm, QuTiP, Astropy и
   miepython: расхождений сверх допуска нет, 19 известных расхождений записаны с числами

@@ -62,8 +62,10 @@ function addStyle() {
 .u32-stories > summary { cursor: pointer; font-weight: 600; }
 .u32-c.u32-watch .u32-panes { margin-bottom: 128px; }
 .u32-app .overlay, .u32-scr .overlay { right: 8px; }
+.u32-narrow { display: none; }
 @media (max-width: 999px) {
   .u32-wide { display: none; }
+  .u32-narrow { display: inline; }
   .dm-stage:has(> .u32-c) { aspect-ratio: auto; max-height: none; }
   .dm-stage > .u32-c.u32-on { min-height: 460px; }
   .u32-panes { flex-direction: column; }
@@ -323,7 +325,8 @@ export function createView(ctx) {
       if (!k || k === "none" || j >= xs.length) return;
       const Y = yOf(xs[j] / w0);
       g.fillStyle = "#ae3ec9"; g.fillRect(plateX - 10, Y - 6, 6, 12);
-      g.fillText(t("{elem} {a:g}°", { elem: ELEM[k] ? t(ELEM[k]) : k, a: ang }), 18, Y + 4);
+      const elem = ELEM[k] ? t(ELEM[k]) : k;  // a shutter has no angle (review R-W F14)
+      g.fillText(k === "block" ? elem : t("{elem} {a:g}°", { elem, a: ang }), 18, Y + 4);
     });
     if (app.wp_mode === "qubit") {
       const Y = yOf(xs[app.wp_slit - 1] / w0);
@@ -369,7 +372,9 @@ export function createView(ctx) {
         t("Set-up: {app}", { app: seg.apparatus })];
       if (ovApp.dataset.txt !== txt.join("|")) {
         ovApp.dataset.txt = txt.join("|");
-        ovApp.replaceChildren(txt[0] + " ", el("span", { class: "u32-wide" }, txt[1] + " "), txt[2]);
+        // on a narrow screen the distortion is still said, shortly (review R-W F10): the map is not photon paths
+        ovApp.replaceChildren(txt[0] + " ", el("span", { class: "u32-wide" }, txt[1] + " "),
+          el("span", { class: "u32-narrow" }, t("Log scale of the distance, widths rescaled: the beams only seem to bend.") + " "), txt[2]);
       }
       return;
     }
@@ -639,14 +644,22 @@ export function createView(ctx) {
     const ch = frame.chi2;
     items.push(ch && ch.x2 !== null && ch.dof
       ? el("span", { "data-r": "chi2", title: t("Agreement of the histogram with the expectation: χ² = {x2:.4g} for {dof:d} degrees of freedom, p = {p:.3g}", { x2: ch.x2, dof: ch.dof, p: ch.p }) },
-        "χ²/dof ", el("b", { class: "mono" }, fmt(ch.x2 / ch.dof, ".3g")), ", p ", el("b", { class: "mono" }, fmt(ch.p, ".2g")),
+        t("χ²/dof") + " ", el("b", { class: "mono" }, fmt(ch.x2 / ch.dof, ".3g")), ", p ", el("b", { class: "mono" }, fmt(ch.p, ".2g")),
         el("span", { class: ch.p > 1e-3 ? "st-ok" : "st-bad" }, ch.p > 1e-3 ? " ✓" : " ✗"))
       : el("span", { "data-r": "chi2", class: "muted" }, t("χ²: from {n:d} hits on", { n: 50 })));
+    // |γ₁₂| with its bootstrap error, only when the run says the error is meaningful (review R-W F2, D9); else «—» and
+    // why (too few hits, too many refits failed)
     const c = frame.coh;
-    if (c && !c.why && c.hist !== null && c.hist !== undefined)
-      items.push(el("span", { "data-r": "coh", title: t("A fit of the histogram to the computed slit functions |A₁|², |A₂|², A₁A₂*: 1 is full interference, 0 none.") },
-        "|γ₁₂| ", el("b", { class: "mono" }, fmt(c.hist, ".3f")), c.err ? ` ± ${fmt(c.err, ".3f")}` : "",
-        c.expected !== null && c.expected !== undefined ? " " + t("(the run's expectation {g})", { g: fmt(c.expected, ".3f") }) : ""));
+    if (c && !c.why && c.hist !== null && c.hist !== undefined) {
+      const tip = t("A fit of the histogram to the computed slit functions |A₁|², |A₂|², A₁A₂*: 1 is full interference, 0 none.");
+      const exp = c.expected !== null && c.expected !== undefined ? " " + t("(the run's expectation {g})", { g: fmt(c.expected, ".3f") }) : "";
+      if (c.err !== null && c.err !== undefined)
+        items.push(el("span", { "data-r": "coh", title: tip }, "|γ₁₂| ", el("b", { class: "mono" }, fmt(c.hist, ".3f")), ` ± ${fmt(c.err, ".2g")}`, exp));
+      else
+        items.push(el("span", { "data-r": "coh", title: c.err_why ? t(c.err_why) : tip }, "|γ₁₂| ", el("b", { class: "mono" }, "—"),
+          el("span", { class: "muted" }, " " + (c.min_hits && (frame.n_seg ?? 0) < c.min_hits ? t("from {n:d} hits on", { n: c.min_hits })
+            : c.err_why ? t(c.err_why) : "")), exp));
+    }
     readBox.replaceChildren(...items);
   }
 

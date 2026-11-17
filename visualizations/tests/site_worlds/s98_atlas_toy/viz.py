@@ -3,7 +3,8 @@
 """A toy school demonstration for the tests of the atlases and the screens (``tests/test_atlas.py``,
 ``tests/test_atlas_live.py``, the player's screens; design ``lfphys/sources/explore_2026-11-14_design.md`` §8; found
 only through ``LFVIZ_EXTRA``, never in the catalogue). It is the fixture of the player's step: its built atlases are
-committed in ``tests/site_worlds/recordings/s98_atlas_toy/`` (``tests/make_atlas_fixture.py`` remakes them).
+committed in ``tests/site_worlds/recordings/s98_atlas_toy/`` (``tests/site_worlds/make_fixture.py`` remakes them;
+``tests/test_atlas.py`` checks that they are what the builder makes now).
 
 A ball thrown from a height ``h_m`` at a speed ``v0`` and an angle ``angle_deg`` in a uniform field, without air. It is
 a test world: its motion is the closed form of the uniform field (not an engine module), sampled every 1/120 s of
@@ -15,7 +16,8 @@ of y(t) = 0 against the quadratic formula, and the energy at the landing against
 second ball is dropped at the same moment (its height in the frames, ``drop_y``). The world refuses h = 0 with an angle
 ≤ 0 (no flight), so that an atlas has a refused point. Its three screens: Watch (the recording ``story`` with captions,
 a ``speed`` change and a new world in its script), Explore (h × angle, 2 × 3 points, one refused) and Lab work (one
-step, five heights off a chute, with its law's reference from ``lab_reference``).
+step, five heights off a chute, with two laws: the slope of L against √h, and the intercept of the line through the same
+points, zero; their references from ``lab_reference``).
 """
 
 from __future__ import annotations
@@ -74,13 +76,17 @@ class Simulation(Base):
                           T("raise the height or the angle"))
 
     @classmethod
-    def lab_reference(cls, step_id, fixed, values):
-        """The law of a lab step (design §2.3): ``heights``: L = k·√h with k = v₀·√(2/g) (a horizontal throw)."""
-        if step_id != "heights":
-            raise ValueError(T("no law for the step {step}", step=step_id))
-        v0 = float(fixed["v0"])
-        return {"value": v0 * math.sqrt(2.0 / G), "unit": "m^½", "label": T("k = v₀·√(2/g)"),
-                "how": T("closed form of a horizontal throw without air"), "kind": "closed form"}
+    def lab_reference(cls, step_id, fixed, values, reference):
+        """The laws of a lab step (design §2.3, integrator D4): ``heights``: L = k·√h with k = v₀·√(2/g) (a horizontal
+        throw; ``k_horizontal``), so the line through the points has no intercept (``zero_intercept``)."""
+        if step_id == "heights" and reference == "k_horizontal":
+            v0 = float(fixed["v0"])
+            return {"value": v0 * math.sqrt(2.0 / G), "unit": "m^½", "label": T("k = v₀·√(2/g)"),
+                    "how": T("closed form of a horizontal throw without air"), "kind": "closed form"}
+        if step_id == "heights" and reference == "zero_intercept":
+            return {"value": 0.0, "unit": "m", "label": T("no intercept: L = k·√h"),
+                    "how": T("closed form of a horizontal throw without air"), "kind": "closed form"}
+        raise ValueError(T("no law for the step {step}", step=step_id))
 
     def pos(self, t):
         t = min(t, self.T)
@@ -210,12 +216,20 @@ VIZ = {
                     "controls": [{"param": "h_m", "values": [0.2, 0.4, 0.6, 0.8, 1.0], "default": 0.6}],
                     "fixed": {"v0": 1.5}, "instruments": ["ruler", "tape", "stopwatch"], "columns": _STEP_COLS,
                     "plot": {"x": "sqrt_h", "y": "L", "fit": "line0", "fits": ["line0", "line"]},
-                    "law": {"quantity": "slope", "label": T("k = L / √h"), "unit": "m^½", "reference": "k_horizontal"},
+                    "laws": [{"x": "sqrt_h", "y": "L", "model": "line0", "quantity": "slope", "label": T("k = L / √h"),
+                              "unit": "m^½", "reference": "k_horizontal"},
+                             {"x": "sqrt_h", "y": "L", "model": "line", "quantity": "intercept",
+                              "label": T("intercept of L against √h"), "unit": "m", "reference": "zero_intercept"}],
                     "hint": T("measure the range from the edge of the table"),
                     "frame_dt": 1 / 60, "stop": {"event": "landing", "after_s": 0.2, "max_world_s": 3.0},
                     "quantize": {"traj.s": "u16"}}],
          "worksheet": {"frp": [{"system": "FRP-OOO-2025-base", "grade": 7,
+                                "programme": T("A programme for the tests of the site"),
                                 "name": T("Testing the hypothesis: the higher the launch, the farther the ball flies")}],
+                       "variants": [{"id": "grade7", "grade": 7, "label": T("Grade 7: the range against the height"),
+                                     "steps": ["heights"], "plot": {"heights": {"x": "h", "y": "L", "fit": None}},
+                                     "questions": [{"q": T("Does the range grow with the height?"),
+                                                    "answer": T("Yes, but more slowly than the height.")}]}],
                        "equipment": [T("a chute"), T("a steel ball"), T("a ruler"), T("a measuring tape")],
                        "questions": [{"q": T("Why does the range grow more slowly than the height?"),
                                       "answer": T("The time of the fall grows as the square root of the height.")}],

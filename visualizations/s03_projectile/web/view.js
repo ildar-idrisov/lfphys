@@ -8,10 +8,13 @@
 // of 0.1 s; the newest piece of the path joins the last sample sent to the ball's computed position in the frame).
 //
 // The screens' contract (design §2.4): `overlays` + `setOverlay`, `setTraces` (earlier points drawn faded, each from its
-// own decoded world), `worldToPx` / `pxToWorld` and `anchors()` for the lab's instruments, `quantSafe`. A view's own
-// toolbar of overlays is shown where no screen panel offers them (a live run, a recording, Watch).
+// own decoded world), `worldToPx` / `pxToWorld` and `anchors()` for the lab's instruments, `quantSafe`, and Watch's
+// `setStory({worlds, w})` (review R-W F3, D8): one scale over all the recording's throws (the box over the worlds'
+// computed scene boxes) and the earlier worlds' throws kept as faded traces with their ranges, read from the recording's
+// own messages. A view's own toolbar of overlays is shown where no screen panel offers them (a live run, a recording,
+// Watch). In Watch the view leaves room under the scene for the caption laid over it, so that it never covers a landing.
 import { t } from "/static/js/i18n.js";
-import { css, el, fresh2d, num } from "/static/js/ui.js";
+import { css, el, fmt, fresh2d, num } from "/static/js/ui.js";
 
 // what the view accepts quantised (registry.view_declarations reads this literal): the samples' table t, x, y
 export const QUANT_SAFE = { "traj.s": "u16" };
@@ -29,6 +32,7 @@ export const OVERLAYS = [
 const COLORS = { main: "#e8590c", drop: "#1c7ed6", vacuum: "#868e96", v: "#2f9e44", g: "#c2255c", drag: "#7048e8",
   ek: "#f08c00", ep: "#1971c2", q: "#e03131" };
 const PAD = 28;           // pixels around the scene
+const TOP = 18;           // pixels above it for the ball's name
 
 function niceStep(span, n = 6) {
   const raw = span / n, p = 10 ** Math.floor(Math.log10(raw)), r = raw / p;
@@ -46,6 +50,8 @@ export function createView(ctx) {
   const touched = new Set();  // overlays the experimenter set (the comparison's default strobe never overrides them)
   let header = null, main = cols(), other = cols(), apex = null, landing = null, oland = null;
   let traces = [], map = null, user = null, drag = null;
+  let story = null;  // Watch: {worlds, w, box, earlier: [{main, landing}]} (setStory)
+  let placed = [];   // the labels drawn in this frame (their boxes): a new one moves until it overlaps none
 
   function cols() { return { t: [], x: [], y: [], i: [] }; }
   function push(c, meta, s) {  // s: n × 3 (t, x, y), a Float32Array (quantised) or Float64Array
@@ -63,7 +69,11 @@ export function createView(ctx) {
       onchange: () => { touched.add(o.id); on[o.id] = cb.checked; redraw(); } });
     return { id: o.id, cb, label: el("label", { class: "check" }, cb, " ", t(o.label)) };
   });
-  const toolbar = embedded ? null : el("div", { class: "toolbar" }, el("span", { class: "muted" }, t("Show")), boxes.map((b) => b.label));
+  // Watch on a phone: the overlays fold under «Show», so that the scene keeps the height (review R-W F10)
+  const narrow = ctx.screen === "watch" && typeof window !== "undefined" && window.innerWidth < 600;
+  const toolbar = embedded ? null : narrow
+    ? el("details", { class: "toolbar" }, el("summary", { class: "muted" }, t("Show")), boxes.map((b) => b.label))
+    : el("div", { class: "toolbar" }, el("span", { class: "muted" }, t("Show")), boxes.map((b) => b.label));
   const center = el("div", { style: { display: "flex", flexDirection: "column", flex: 1, minHeight: 0 } }, toolbar, wrap);
   new ResizeObserver(() => redraw()).observe(cv);
   function redraw() { if (ctx.requestRender) ctx.requestRender(); }
@@ -93,7 +103,8 @@ export function createView(ctx) {
   function sceneBox() {
     const all = [];
     const add = (h) => { const b = h && h.scene && h.scene.box; if (b) all.push(b); };
-    add(header);
+    if (story) for (const W of story.worlds) add(W.header);  // Watch: one box for the whole recording
+    else add(header);
     for (const tr of traces) add(tr.W && tr.W.header);
     let x0 = 0, x1 = 0.5, y1 = 0.3;
     for (const [[a], [b, c]] of all) { x0 = Math.min(x0, a); x1 = Math.max(x1, b); y1 = Math.max(y1, c); }
@@ -106,11 +117,51 @@ export function createView(ctx) {
       const { k, ox, oy } = user;
       return { k, ox, oy, toPx: ([x, y]) => [ox + x * k, oy - y * k], toWorld: ([px, py]) => [(px - ox) / k, (oy - py) / k] };
     }
-    const b = sceneBox();
-    const k = Math.max(1e-9, Math.min((W - 2 * PAD) / (b.x1 - b.x0), (H - 2 * PAD) / (b.y1 - b.y0)));
+    const b = sceneBox(), Hs = H - captionRoom();
+    // (TOP: a line kept free above the scene for the ball's name)
+    const top = TOP * (story && story.earlier.length && W < 600 ? 2 : 1);  // a second line: the earlier throws (phone)
+    const k = Math.max(1e-9, Math.min((W - 2 * PAD) / (b.x1 - b.x0), (Hs - 2 * PAD - top) / (b.y1 - b.y0)));
     const ox = PAD + ((W - 2 * PAD) - (b.x1 - b.x0) * k) / 2 - b.x0 * k;
-    const oy = H - PAD + b.y0 * k;  // the floor stays low in the view: the room left over is sky
+    const oy = Hs - PAD + b.y0 * k;  // the floor stays low in the view: the room left over is sky
     return { k, ox, oy, toPx: ([x, y]) => [ox + x * k, oy - y * k], toWorld: ([px, py]) => [(px - ox) / k, (oy - py) / k] };
+  }
+
+  // Watch lays its caption over the bottom of the stage (wide screens): the scene keeps above it a band of a fixed
+  // height (its bottom offset, its padding and two lines of its text, three on a narrower stage, and the floor's
+  // numbers), so that the scale does not change from caption to caption and the caption covers no landing (D8)
+  function captionRoom() {
+    if (ctx.screen !== "watch") return 0;
+    const cap = cv.closest(".dm-stage") && cv.closest(".dm-stage").querySelector(".dm-caption");
+    if (!cap) return 0;
+    const cs = getComputedStyle(cap);
+    if (cs.position !== "absolute") return 0;  // a caption in its own place (a phone): nothing to leave
+    const fs = parseFloat(cs.fontSize) || 16, lh = parseFloat(cs.lineHeight) || 1.35 * fs;
+    const lines = cv.clientWidth > 900 ? 2 : 3;
+    return (parseFloat(cs.bottom) || 0) + (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0)
+      + lines * lh + 26;
+  }
+
+  // a label's box kept free of the labels drawn before it in this frame: moved up (or down) by a line until it fits,
+  // and kept inside the canvas
+  function freeSpot(x, y, w, align, dir = -1) {
+    const W = cv.clientWidth, h = 15;
+    let x0 = align === "right" ? x - w : align === "center" ? x - w / 2 : x;
+    x0 = Math.max(4, Math.min(x0, W - 4 - w));
+    let y1 = Math.min(Math.max(y, 14), cv.clientHeight - 4);
+    for (let k = 0; k < 8; k++) {
+      const r = { x0, x1: x0 + w, y0: y1 - h + 3, y1: y1 + 3 };
+      if (!placed.some((q) => r.x0 < q.x1 && q.x0 < r.x1 && r.y0 < q.y1 && q.y0 < r.y1)) { placed.push(r); break; }
+      y1 += dir * 16;
+    }
+    return { x: x0, y: y1 };
+  }
+  function textWidth(g, text, bold) { g.save(); g.font = `${bold ? "600 " : ""}13px system-ui, sans-serif`; const w = g.measureText(text).width; g.restore(); return w; }
+  // a label placed free of the others (left-aligned at the returned spot)
+  function placeLabel(g, text, x, y, { color = null, align = "left", bold = false, dir = -1, alpha = 1, bg = false } = {}) {
+    const w = textWidth(g, text, bold), p = freeSpot(x, y, w, align, dir);
+    g.save(); g.globalAlpha = alpha;
+    if (bg) { g.fillStyle = css("--canvas") || "#fff"; g.globalAlpha = 0.85 * alpha; g.fillRect(p.x - 2, p.y - 12, w + 4, 16); g.globalAlpha = alpha; }
+    label(g, text, p.x, p.y, { color, bold }); g.restore();
   }
 
   // --- drawing parts ----------------------------------------------------------------------------------------------
@@ -142,7 +193,7 @@ export function createView(ctx) {
       for (let x = Math.ceil(x0 / step) * step; x <= x1; x += step) {
         const [px] = map.toPx([x, 0]);
         line(g, [px, fy], [px, fy + 6]);
-        label(g, `${num(Math.abs(x) < 1e-12 ? 0 : x, 4)}`, px, fy + 8, { color: muted(), align: "center", base: "top" });
+        if (px < W - 26) label(g, `${num(Math.abs(x) < 1e-12 ? 0 : x, 4)}`, px, fy + 8, { color: muted(), align: "center", base: "top" });
       }
       label(g, t("m"), W - 6, fy + 8, { color: muted(), align: "right", base: "top" });
     }
@@ -157,16 +208,26 @@ export function createView(ctx) {
       g.fillRect(p[0] - w, p[1], w, 6); g.strokeRect(p[0] - w, p[1], w, 6);
       g.lineWidth = 3; g.strokeStyle = muted();
       line(g, [p[0] - w + 6, p[1] + 6], [p[0] - w + 6, fy]); line(g, [p[0] - 6, p[1] + 6], [p[0] - 6, fy]);
-      if (ctx.screen !== "lab") label(g, t("h = {h} m", { h: num(L.h, 3) }), p[0] - w / 2, (p[1] + fy) / 2, { color: muted(), align: "center", base: "middle" });
+      if (ctx.screen !== "lab") {  // left of the table where there is room, else on it, over a backing
+        const text = t("h = {h} m", { h: num(L.h, 3) }), tw = textWidth(g, text, false), room = p[0] - w - 6 - tw >= 4;
+        placeLabel(g, text, room ? p[0] - w - 6 : p[0] - w / 2, (p[1] + fy) / 2 + 4, { color: muted(), align: room ? "right" : "center", bg: !room });
+      }
     }
     const a = (L.angle * Math.PI) / 180;
     g.strokeStyle = ink(); g.lineCap = "round";
     if (L.angle === 0 && L.h > 0) {  // a chute: a curved ramp ending horizontally at the launch point
       const r = 26;
       g.lineWidth = 3; g.beginPath(); g.arc(p[0], p[1] - r, r, Math.PI / 2, Math.PI, false); g.stroke();
-    } else {  // a launcher's barrel along the launch direction
+    } else {  // a launcher's barrel along the launch direction, its muzzle at the launch point
+      // the barrel never reaches below the floor (review R-W F16): shortened to the room above it, and from the floor
+      // itself (no room) it lies forward on a mount, its breech at the launch point
+      const room = a > 0 ? (fy - p[1]) / Math.sin(a) - 1 : Infinity, len = Math.min(28, room);
       g.lineWidth = 7; g.globalAlpha = 0.8;
-      line(g, [p[0] - 28 * Math.cos(a), p[1] + 28 * Math.sin(a)], p);
+      if (len >= 10) line(g, [p[0] - len * Math.cos(a), p[1] + len * Math.sin(a)], p);
+      else {
+        line(g, p, [p[0] + 28 * Math.cos(a), p[1] - 28 * Math.sin(a)]);
+        if (L.h <= 0) { g.globalAlpha = 1; g.fillStyle = muted(); g.beginPath(); g.arc(p[0], fy, 9, Math.PI, 2 * Math.PI); g.fill(); }
+      }
       g.globalAlpha = 1;
     }
     g.restore();
@@ -202,15 +263,24 @@ export function createView(ctx) {
     g.beginPath(); g.arc(px, py - (y <= 0 ? r : 0), r, 0, 2 * Math.PI); g.fill(); g.stroke(); g.restore();
     return [px, py];
   }
-  function landMark(g, x, color, text) {
+  // a landing's mark and label: its place is taken now (before the earlier throws' labels, which give way), and it
+  // is painted by the returned function after the paths, so that no path crosses its text
+  function landMark(g, x, color, text, short = null) {
     const [px, py] = map.toPx([x, 0]);
-    g.save(); g.strokeStyle = color; g.lineWidth = 2; line(g, [px, py - 9], [px, py + 9]); g.restore();
-    if (text) {  // beside the mark, on the side that keeps the text inside the view
-      g.save(); g.font = "600 13px system-ui, sans-serif"; const w = g.measureText(text).width; g.restore();
-      const right = px + 5 + w > cv.clientWidth - 4;
-      label(g, text, right ? px - 5 : px + 5, py - 12, { color, bold: true, align: right ? "right" : "left" });
+    let spot = null;
+    if (text) {  // beside the mark, on the side that keeps the text inside the view, free of the other labels; on a
+      // narrow view a label that would cross the path (left of the mark) is the short one
+      let w = textWidth(g, text, true), right = px + 5 + w > cv.clientWidth - 4;
+      if (right && short && cv.clientWidth < 600) { text = short; w = textWidth(g, text, true); right = px + 5 + w > cv.clientWidth - 4; }
+      spot = freeSpot(right ? px - 5 : px + 5, py - 12, w, right ? "right" : "left", -1);
     }
+    return () => {
+      g.save(); g.strokeStyle = color; g.lineWidth = 2; line(g, [px, py - 9], [px, py + 9]); g.restore();
+      if (spot) label(g, text, spot.x, spot.y, { color, bold: true });
+    };
   }
+  // fixed decimals for the school's numbers (review R-W F17): metres to the centimetre, seconds to the millisecond
+  const m2 = (x) => fmt(x, ".2f"), s3 = (x) => fmt(x, ".3f");
   function legendArrow(g, x, y, px, text, color) {
     arrow(g, [x, y], px, 0, color, 2);
     label(g, text, x + px + 8, y + 4, { color });
@@ -225,9 +295,46 @@ export function createView(ctx) {
       if (ld && ld.t <= tr.t + 1e-9) {
         const [px, py] = map.toPx([ld.x, 0]);
         g.save(); g.globalAlpha = Math.min(1, (tr.alpha ?? 0.35) + 0.25); g.strokeStyle = ink(); line(g, [px, py - 5], [px, py + 5]); g.restore();
-        if (tr.label) { g.save(); g.globalAlpha = Math.min(1, (tr.alpha ?? 0.35) + 0.3); label(g, tr.label, px + 3, py + 20, { color: muted() }); g.restore(); }
+        // its label above the mark, inside the canvas (right-aligned near the right edge), free of the other labels
+        // (review R-W F11, R-P F8)
+        if (tr.label) {
+          const w = textWidth(g, tr.label, false), right = px + 3 + w > cv.clientWidth - 4;
+          placeLabel(g, tr.label, right ? px - 3 : px + 3, py - 12, { color: muted(), align: right ? "right" : "left",
+            alpha: Math.min(1, (tr.alpha ?? 0.35) + 0.3) });
+        }
       }
     }
+  }
+
+  // Watch: the recording's earlier throws, faded, each with its landing mark and its range (setStory)
+  function drawStory(g) {
+    if (!story) return;
+    // their ranges: beside their marks on a wide view; on a narrow one, where three labels do not fit between the
+    // marks, in one line under the ball's name
+    const narrow = cv.clientWidth < 600, ranges = [];
+    for (const e of story.earlier) {
+      pathOf(g, e.main, Infinity, COLORS.main, { alpha: 0.3, width: 1.5, end: e.landing });
+      if (e.landing) {
+        const [px, py] = map.toPx([e.landing.x ?? e.landing.L, 0]);
+        g.save(); g.globalAlpha = 0.55; g.strokeStyle = COLORS.main; g.lineWidth = 2; line(g, [px, py - 7], [px, py + 7]); g.restore();
+        const text = t("L = {L} m", { L: m2(e.landing.L) }), w = textWidth(g, text, false), right = px + 5 + w > cv.clientWidth - 4;
+        if (narrow) ranges.push(text);
+        else placeLabel(g, text, right ? px - 5 : px + 5, py - 12, { color: muted(), align: right ? "right" : "left" });
+      }
+    }
+    if (ranges.length) placeLabel(g, t("earlier throws: {list}", { list: ranges.join("; ") }), 12, 36, { color: muted(), dir: 1 });
+    return ranges.length > 0;
+  }
+  // the earlier throws of a decoded world, read from its own messages (the samples and the landing): nothing computed
+  function throwOf(W) {
+    const c = cols();
+    let ld = null;
+    for (const m of W.viewMsgs || []) {
+      const meta = m.meta;
+      if (meta.type === "traj" && meta.body !== "other" && m.blobs && m.blobs.s) push(c, meta, m.blobs.s);
+      else if (meta.type === "event" && meta.kind === "landing") ld = { ...meta.data, T: meta.data.T ?? meta.t };
+    }
+    return { main: c, landing: ld };
   }
 
   function energyBars(g, W, f) {
@@ -240,11 +347,11 @@ export function createView(ctx) {
     if (header && header.air) rows.push(["heat (air)", q, COLORS.q]);  // i18n-msgids: "heat (air)"
     g.save();
     label(g, t("Energy, J"), x, 18, { bold: true });
-    rows.forEach(([name, val, col], j) => {
-      const y = 28 + j * 22;
+    rows.forEach(([name, val, col], j) => {  // a row of 34 px: the bar, then its label under it (review R-W F15)
+      const y = 28 + j * 34;
       g.fillStyle = col; g.fillRect(x, y, Math.max(0, bw * val / e0), 12);
       g.strokeStyle = muted(); g.strokeRect(x, y, bw, 12);
-      label(g, `${t(name)} ${num(val, 3)}`, x, y + 24 - 2, { color: muted() });
+      label(g, `${t(name)} ${num(val, 3)}`, x, y + 27, { color: muted() });
     });
     g.restore();
   }
@@ -256,6 +363,14 @@ export function createView(ctx) {
     overlays: OVERLAYS.map((o) => ({ ...o, label: t(o.label) })),
     setOverlay(id, v) { touched.add(id); on[id] = !!v; const b = boxes.find((x) => x.id === id); if (b) b.cb.checked = !!v; redraw(); },
     setTraces(list) { traces = list || []; redraw(); },
+    // Watch (D8): the recording's worlds and the one shown; the box over all of them, the earlier ones as traces
+    setStory(s) {
+      if (!s || !s.worlds || !s.worlds.length) { story = null; redraw(); return; }
+      const w = Math.max(0, Math.min(s.w | 0, s.worlds.length - 1));
+      if (!story || story.worlds !== s.worlds) story = { worlds: s.worlds, w, all: s.worlds.map(throwOf) };
+      story.w = w; story.earlier = story.all.slice(0, w);
+      user = null; redraw();
+    },
     worldToPx(p) { return map ? map.toPx(p) : [NaN, NaN]; },
     pxToWorld(q) { return map ? map.toWorld(q) : [NaN, NaN]; },
     // for the lab's instruments: the launch point, the floor's height, the landing point once reached
@@ -288,11 +403,28 @@ export function createView(ctx) {
       g.fillStyle = css("--canvas") || "#fff"; g.fillRect(0, 0, W, H);
       if (!header) return;
       map = makeMap(W, H);
+      placed = [];
       const tNow = frame && frame.t !== undefined ? frame.t : Infinity;
+      // which ball flies (review R-W F12): its label, or its size and mass where the label does not fit; first, so
+      // that the other labels keep clear of it
+      // (on a phone Explore lays its readouts over the view's top right corner: about 180 px are kept for them)
+      const bl = header.ball || {}, room = W - 24 - (on.energy ? Math.min(170, W * 0.36) + 14 : 0)
+        - (ctx.screen === "explore" && W < 600 ? 180 : 0);
+      let ballText = bl.label ? t(bl.label) : "";
+      if (ballText && textWidth(g, ballText, false) > room) ballText = t("ball {d} mm, {m} g", { d: num(1000 * bl.d, 3), m: num(1000 * bl.m, 3) });
+      if (ballText) placeLabel(g, ballText, 12, 18, { color: muted() });
       floorAndScale(g, W);
-      drawTraces(g);
-      launcher(g);
+      launcher(g);  // first, so that the labels of the traces keep clear of its own
+      // the landings shown now are labelled before the earlier throws, so that theirs give way
       const comp = header.companion, ocol = comp === "drop" ? COLORS.drop : COLORS.vacuum;
+      const late = [];
+      if (landing && landing.T <= tNow + 1e-9) {
+        late.push(landMark(g, landing.x ?? landing.L, COLORS.main, ctx.screen === "lab" ? null
+          : t("L = {L} m, T = {T} s", { L: m2(landing.L), T: s3(landing.T) }), t("L = {L} m", { L: m2(landing.L) })));
+      }
+      if (oland && oland.T <= tNow + 1e-9 && comp === "vacuum") late.push(landMark(g, oland.x ?? oland.L, COLORS.vacuum, ctx.screen === "lab" ? null : t("L = {L} m", { L: m2(oland.L) })));
+      const storyLine = drawStory(g);
+      drawTraces(g);
       if (on.path) {
         pathOf(g, other, tNow, ocol, { dash: [6, 4], width: 1.5, end: oland, now: frame && frame.other ? [frame.other.x, frame.other.y] : null });
         pathOf(g, main, tNow, COLORS.main, { width: 2, end: landing, now: frame ? [frame.x, frame.y] : null });
@@ -301,20 +433,16 @@ export function createView(ctx) {
       if (apex && on.path && apex.t <= tNow + 1e-9 && ctx.screen !== "lab") {
         const [px, py] = map.toPx([apex.x, apex.H]), [, fy] = map.toPx([apex.x, 0]);
         g.save(); g.strokeStyle = muted(); g.setLineDash([3, 4]); line(g, [px, py], [px, fy]); g.restore();
-        label(g, t("H = {H} m", { H: num(apex.H, 3) }), px + 5, py - 6, { color: muted() });
+        placeLabel(g, t("H = {H} m", { H: m2(apex.H) }), px + 5, py - 6, { color: muted() });
       }
-      if (oland && oland.T <= tNow + 1e-9 && comp === "vacuum") landMark(g, oland.x ?? oland.L, COLORS.vacuum, ctx.screen === "lab" ? null : t("L = {L} m", { L: num(oland.L, 4) }));
-      if (landing && landing.T <= tNow + 1e-9) {
-        landMark(g, landing.x ?? landing.L, COLORS.main, ctx.screen === "lab" ? null
-          : t("L = {L} m, T = {T} s", { L: num(landing.L, 4), T: num(landing.T, 3) }));
-      }
+      for (const paint of late) paint();
       if (!frame) return;
       const d = (header.ball && header.ball.d) || 0.02;
       if (frame.other) ball(g, frame.other.x, frame.other.y, ocol, d);
       const bp = ball(g, frame.x, frame.y, COLORS.main, d);
       const L = launch(), vmax = Math.max(L.v0, Math.sqrt(2 * (header.g || 9.8) * Math.max(L.h, 0)), 1);
       const sv = 70 / vmax;  // pixels per m/s
-      let legendY = 18;
+      let legendY = 18 + (ballText ? 22 : 0) + (storyLine ? 20 : 0);
       const flying = !frame.landed;
       if ((on.v || on.v_parts) && flying) {
         if (on.v) arrow(g, bp, frame.vx * sv, -frame.vy * sv, COLORS.v, 2.5);

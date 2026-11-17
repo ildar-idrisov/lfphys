@@ -147,3 +147,62 @@ test("(server) a live point: its bytes decoded and labelled; a refusal is a refu
   assert.equal(r.state, "refused");
   assert.deepEqual(r.refusal, { $t: "{text}. What to change: {hint}", a: { text: { $t: "no flight" }, hint: { $t: "raise it" } } });
 });
+
+// integrator D13: a packed header names its base file ("$base", the base's sha256): merged only against that base; a
+// live point packed against another base is asked again with "full_header": true; the point carries its own passport
+// (X-LF-Source, X-LF-Key, X-LF-Code, X-LF-Made); any other error than a refusal says the server's text in the viewer's
+// language (review EX1-screens F7: t(error), not the English "text")
+test("(server) a live point's own passport; another base asks for the full header; a 429 in the viewer's language", async () => {
+  const entry = index.atlases.find((a) => a.id === "explore");
+  const mf = JSON.parse(readFileSync(new URL(`s98_atlas_toy/${entry.file}`, REC), "utf-8"));
+  const bytes = readFileSync(new URL(`s98_atlas_toy/atlas/explore/${mf.points[4][0]}`, REC));
+  const posts = [];
+  let busy = false;
+  const fx = async (u, init) => {
+    if (init && init.method === "POST") {
+      const body = JSON.parse(init.body);
+      posts.push(body);
+      if (busy) return new Response(JSON.stringify({ error: { $t: "the server computes other points now; try again in a moment" }, text: "ENGLISH ONLY" }), { status: 429, statusText: "Too Many Requests" });
+      return new Response(bytes, { status: 200, headers: { "X-LF-Source": "cache", "X-LF-Key": "abc", "X-LF-Code": "c0de", "X-LF-Made": "2026-11-17T15:16:08+00:00" } });
+    }
+    return fakeFetch(u);
+  };
+  const A = await openAtlas("s98_atlas_toy", entry, { fetchImpl: fx });
+  assert.equal(A.baseMatches({ $delta: true }), true, "no $base: an older packing, merged as before");
+  assert.equal(A.baseMatches({ $delta: true, $base: mf.base.sha256 }), true);
+  assert.equal(A.baseMatches({ $delta: true, $base: "f".repeat(64) }), mf.base.sha256 ? false : true);
+  assert.equal(A.baseMatches({ type: "header" }), true, "a full header");
+  const [m] = mergeHeader(A.base, [{ type: "header", $delta: true, $base: "x", q: 1 }, {}]);
+  assert.ok(!("$base" in m) && m.q === 1, "$base dropped like $delta");
+  // the first reply packed against another base: asked again with the full header
+  const orig = A.baseMatches.bind(A);
+  A.baseMatches = (meta) => (posts.length > 1 ? orig(meta) : false);
+  const p = await A.live({ h_m: 1, angle_deg: 40 });
+  assert.equal(posts.length, 2);
+  assert.deepEqual(posts[1], { values: { h_m: 1, angle_deg: 40 }, full_header: true });
+  assert.deepEqual([p.source, p.key, p.code, p.made], ["cache", "abc", "c0de", "2026-11-17T15:16:08+00:00"]);
+  A.baseMatches = orig;
+  busy = true;
+  await assert.rejects(A.live({ h_m: 1, angle_deg: 41 }), (e) => e.status === 429 && e.message === "the server computes other points now; try again in a moment");
+});
+
+// review EX1-worlds F1: the feed state belongs to the view. A re-launched shot and its trace share one decoded point;
+// two views of it at different times each hold exactly the messages up to their own time, however their feeding
+// interleaves (before: the shared marks on W made each view rebuild the other's record every frame, a fan of lines)
+test("two views of one world at different times: each fed its own messages, no rebuild by the other", async () => {
+  const entry = index.atlases.find((a) => a.id === "explore");
+  const A = await openAtlas("s98_atlas_toy", entry, { fetchImpl: fakeFetch });
+  const p = await A.point({ h_m: 1, angle_deg: 30 });
+  const mk = () => { const v = { seen: [], resets: 0, reset() { v.seen.length = 0; v.resets++; }, onHeader() {}, onMessage(m) { v.seen.push(m.t ?? 0); } }; return v; };
+  const trace = mk(), shot = mk();
+  const T = p.tEnd, n = (tt) => p.W.viewMsgs.filter((m) => (m.meta.t ?? 0) <= tt + 1e-12).length;
+  for (let k = 0; k <= 20; k++) {  // the trace at its end, the new shot flying: fed in turns every frame
+    showAt(trace, p.W, T);
+    showAt(shot, p.W, (T * k) / 20);
+    assert.equal(trace.seen.length, n(T), `the trace holds the whole flight (k ${k})`);
+    assert.equal(shot.seen.length, n((T * k) / 20), `the shot holds its flight so far (k ${k})`);
+  }
+  assert.equal(trace.resets, 1, "the trace was built once");
+  assert.equal(shot.resets, 1, "the shot was built once and fed on");
+  assert.deepEqual([...shot.seen].sort(), [...trace.seen].sort(), "at the end both hold the same messages");
+});

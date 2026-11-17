@@ -20,8 +20,8 @@ from lfphys.core.mechanics import G_STANDARD as G  # noqa: E402
 from lfphys.theories.models import drag_quadratic as dq  # noqa: E402
 from lfphys.tools.stats import linear_fit  # noqa: E402
 from lfviz import headless, registry  # noqa: E402
-from s03_projectile.engine.shot import OBJECTS, Shot  # noqa: E402
-from s03_projectile.viz import SCHEMA, VIZ, Simulation  # noqa: E402
+from s03_projectile.engine.shot import OBJECTS, Shot, curve_flight, optimum_angle  # noqa: E402
+from s03_projectile.viz import DEFAULT_LAW, SCHEMA, VIZ, WORKSHEET, Simulation  # noqa: E402
 
 V = "s03_projectile"
 
@@ -172,34 +172,58 @@ def _params(step):
     return headless.resolve(registry.load(V), step["preset"], step["fixed"])
 
 
-def test_lab_reference_of_every_step_against_an_independent_computation():
+def _ref(sid, reference, st=None):
+    st = st or _step(sid)[1]
+    return Simulation.lab_reference(sid, _params(st), {c["param"]: c["values"] for c in st["controls"]}, reference)
+
+
+def test_lab_reference_of_every_law_against_an_independent_computation():
     _lab, st = _step("heights")
-    ref = Simulation.lab_reference("heights", _params(st), {"h_m": st["controls"][0]["values"]})
+    assert _params(st)["air"] is False  # part 1 runs without air (review R-E F4, D2)
+    ref = _ref("heights", "k_horizontal")
     assert ref["value"] == pytest.approx(1.5 * math.sqrt(2 / 9.80665), rel=1e-15) and ref["kind"] == "closed form"
-    _lab, st = _step("angles")
-    ref = Simulation.lab_reference("angles", _params(st), {})
-    assert ref["value"] == pytest.approx(25.0 / 9.80665, rel=1e-15)
-    _lab, st = _step("air")
-    ref = Simulation.lab_reference("air", _params(st), {})
+    assert ref["unit"].msgid == "m^½"
+    # the air's effect is computed for every height and the sentence is true at every height (review R-E F4)
+    hs = st["controls"][0]["values"]
+    short = [Shot("steel20", h, 1.5, 0.0, False).L - Shot("steel20", h, 1.5, 0.0, True).L for h in hs]
+    a = ref["how"].args
+    assert a["a"] == pytest.approx(1e3 * short[0], rel=1e-12) and a["b"] == pytest.approx(1e3 * short[-1], rel=1e-12)
+    assert a["h0"] == hs[0] and a["h1"] == hs[-1] and a["e"] == 0.5
+    assert all(np.diff(short) > 0)  # the effect grows with the height, so «from h = … on» is exact
+    over = [h for h, d in zip(hs, short) if d > 0.0005]
+    assert over and a["h2"] == over[0] == 0.95 and "from h = {h2:.2f} m on" in ref["how"].msgid
+    ref = _ref("angles", "v2_over_g")
+    assert ref["value"] == pytest.approx(25.0 / 9.80665, rel=1e-15) and ref["unit"].msgid == "m"
+    ref = _ref("angles", "theta_max_vacuum")
+    assert ref["value"] == 45.0 and optimum_angle("steel20", 0.0, 5.0, False, 0.1)[0] == 45.0
+    assert _ref("air", "theta_max_vacuum")["value"] == 45.0
+    ref = _ref("air", "theta_max_air")
     # the second method: the hodograph quadrature's range maximised by Brent's method (no time integration)
     k = dq.QuadraticDrag.sphere(OBJECTS["ball67"]["d"]).k(OBJECTS["ball67"]["m"])
     best = optimize.minimize_scalar(lambda a: -dq.hodograph(20.0, math.radians(a), 0.0, k, G)["L"],
                                     bounds=(35.0, 48.0), method="bounded", options={"xatol": 1e-6}).x
     assert ref["kind"] == "engine" and abs(ref["value"] - best) <= 0.05 + 1e-9, (ref["value"], best)
+    # the optimum depends on the drag model (review R-E F1, D1): the measured curve's optimum is stated beside it
+    best_c = optimize.minimize_scalar(lambda a: -curve_flight("ball67", 0.0, 20.0, a).range, bounds=(38.0, 46.0),
+                                      method="bounded", options={"xatol": 1e-4}).x
+    assert ref["value"] == 41.9 and ref["how"].args["b"] == 42.3 and abs(ref["how"].args["b"] - best_c) <= 0.05 + 1e-3
+    assert DEFAULT_LAW == {"heights": "k_horizontal", "angles": "v2_over_g", "air": "theta_max_air"}
+    st_air = _step("air")[1]
+    assert Simulation.lab_reference("air", _params(st_air), {})["value"] == ref["value"]  # no reference: the first law
     with pytest.raises(ValueError):
         Simulation.lab_reference("nothing", _params(st), {})
+    with pytest.raises(ValueError):
+        Simulation.lab_reference("heights", _params(st), {}, "theta_max_air")
 
 
 def _reading(value, inst):
     return inst["division"] * round(value / inst["division"])
 
 
-@pytest.mark.parametrize("sid", ["heights", "angles", "air"])
-def test_the_lab_measurement_and_fit_on_the_computed_points_agree_with_the_law(sid):
-    """What a student does on the screen, done here on the world's computed points: every grid value measured with
-    the step's instruments (a reading rounded to the division, its error the declared one), the derived columns with
-    errors propagated, the default plot fitted with the step's default model (lfphys.tools.stats.linear_fit, the
-    player's fit.js contract), and «Check against the law»: the fitted quantity within two errors of the reference."""
+def _table(sid):
+    """What a student does on the screen, done on the world's computed points: every grid value measured with the
+    step's instruments (a reading rounded to the division, its error the declared one), the derived columns with
+    errors propagated."""
     lab, st = _step(sid)
     inst = lab["instruments"]
     p = _params(st)
@@ -214,7 +238,9 @@ def test_the_lab_measurement_and_fit_on_the_computed_points_agree_with_the_law(s
         for c in st["columns"]:
             if "from" in c:
                 i = inst[c["from"]]
-                row[c["id"]] = (_reading(meas[i["reads"]], i), i["error"])
+                if i.get("manual"):
+                    continue
+                row[c["id"]] = (_reading(meas[i["reads"]], i), i["division"] / 2 if i.get("error") is None else i["error"])
             else:
                 x, sx = row[c["of"]]
                 if c["op"] == "sqrt":
@@ -223,26 +249,147 @@ def test_the_lab_measurement_and_fit_on_the_computed_points_agree_with_the_law(s
                     a = math.radians(2 * x)
                     row[c["id"]] = (math.sin(a), abs(2 * math.cos(a)) * math.radians(sx))
         rows.append(row)
-    px, py = st["plot"]["x"], st["plot"]["y"]
-    x = np.array([r[px][0] for r in rows])
-    sx = np.array([r[px][1] for r in rows])
-    y = np.array([r[py][0] for r in rows])
-    sy = np.array([r[py][1] for r in rows])
-    fit = linear_fit(x, y, sx, sy, st["plot"]["fit"])
-    law = st["law"]
-    ref = Simulation.lab_reference(sid, p, {c["param"]: c["values"] for c in st["controls"]})["value"]
-    got, sig = (fit["vertex"], fit["vertex_sigma"]) if law["quantity"] == "vertex" else (fit["params"][-1], fit["sigma"][-1])
-    assert abs(got - ref) <= 2 * sig, (sid, got, sig, ref)
-    if sid == "air":  # the grey ball (vacuum) peaks at 45° within its error
-        fv = linear_fit(x, np.array([r["L_vac"][0] for r in rows]), sx, 0.0005, "quadratic")
-        assert abs(fv["vertex"] - 45.0) <= 2 * fv["vertex_sigma"]
-        assert got < 45.0 - 2 * sig  # and the maximum in air is measurably lower
+    return st, p, rows
+
+
+def _fit(rows, law):
+    x = np.array([r[law["x"]][0] for r in rows])
+    sx = np.array([r[law["x"]][1] for r in rows])
+    y = np.array([r[law["y"]][0] for r in rows])
+    sy = np.array([r[law["y"]][1] for r in rows])
+    fit = linear_fit(x, y, sx, sy, law["model"])
+    return (fit["vertex"], fit["vertex_sigma"]) if law["quantity"] == "vertex" else (fit["params"][-1], fit["sigma"][-1])
+
+
+@pytest.mark.parametrize("sid", ["heights", "angles", "air"])
+def test_the_lab_measurement_and_fit_on_the_computed_points_agree_with_every_law(sid):
+    """Each law of the step (its x, y and model, review D4) fitted on the student's table (lfphys.tools.stats.linear_fit,
+    the player's fit.js contract): «Check against the law», the fitted quantity within two errors of the reference."""
+    st, p, rows = _table(sid)
+    assert (st["plot"]["x"], st["plot"]["y"], st["plot"]["fit"]) == \
+        (st["laws"][0]["x"], st["laws"][0]["y"], st["laws"][0]["model"])
+    for law in st["laws"]:
+        ref = _ref(sid, law["reference"], st)["value"]
+        got, sig = _fit(rows, law)
+        assert abs(got - ref) <= 2 * sig, (sid, law["reference"], got, sig, ref)
+    if sid == "heights":  # the stand sets the heights exactly (D2)
+        assert all(r["h"][1] == 0.0 and r["sqrt_h"][1] == 0.0 for r in rows)
+    if sid == "air":  # the maximum in air is measurably lower than the grey ball's 45°
+        got, sig = _fit(rows, st["laws"][0])
+        assert got < 45.0 - 2 * sig
+
+
+def test_part_1_with_air_would_be_seen_by_the_exact_bench():
+    """Why part 1 runs without air (review R-E F4, D2): with the heights exact, the tape resolves the air's −0.08 %."""
+    st, p, _rows = _table("heights")
+    hs = st["controls"][0]["values"]
+    L = np.array([_reading(Shot("steel20", h, 1.5, 0.0, True).L, {"division": 0.001}) for h in hs])
+    fit = linear_fit(np.sqrt(hs), L, 0.0, 0.0005, "line0")
+    z = (fit["params"][-1] - 1.5 * math.sqrt(2 / G)) / fit["sigma"][-1]
+    assert z < -2.5, z
+
+
+# --- the worksheet's numbers (review R-E F11, R-W F7a) -------------------------------------------------------------------
+def _text(msgid_start, items):
+    hits = [x for x in items if x.msgid.startswith(msgid_start)]
+    assert len(hits) == 1, msgid_start
+    return hits[0].msgid
+
+
+def test_the_worksheets_numbers_are_the_engines():
+    qs = WORKSHEET["questions"]
+    hs = _step("heights")[1]["controls"][0]["values"]
+    ts = [Shot("steel20", h, 1.5, 0.0, False).T for h in hs]
+    # Q1: «the flight lasts 0.2–0.45 s»; «0.1 s: from a fifth to a half of the whole flight»
+    assert "0.2–0.45 s" in qs[0]["q"].msgid and round(min(ts), 1) == 0.2 and round(max(ts), 2) == 0.45
+    assert "from a fifth to a half" in qs[0]["answer"].msgid
+    assert 0.19 <= 0.1 / max(ts) <= 0.25 and 0.45 <= 0.1 / min(ts) <= 0.55
+    # the stopwatch question (review R-W F6): «0.1 s … 0.2–0.45 s … neighbouring heights 5 cm apart differ by only
+    # 0.01–0.02 s … averaging 10 runs … about 0.03 s»
+    sw = next(q for q in qs if "hand stopwatch. Compare" in q["q"].msgid)["answer"].msgid
+    steps = np.diff(ts)
+    assert np.allclose(np.diff(hs), 0.05) and round(min(steps), 2) == 0.01 and round(max(steps), 2) == 0.02
+    assert "0.01–0.02 s" in sw and "0.2–0.45 s" in sw and "about 0.03 s" in sw and round(0.1 / math.sqrt(10), 2) == 0.03
+    lab = _step("heights")[0]
+    assert lab["instruments"]["stopwatch"]["error"] == 0.1 and "about 0.1 s" in sw
+    assert [c["id"] for c in _step("heights")[1]["columns"]] == ["h", "L", "sqrt_h", "T"]
+    # the grey ball's tape reads at its own landing (review R-P F18), the event the world emits for it
+    assert lab["instruments"]["tape_grey"]["event"] == "companion_landing"
+    h = _run("air_max")
+    assert [e["kind"] for e in h.of("event")].count("companion_landing") == 1
+    # «near 42°»
+    best = optimum_angle("ball67", 0.0, 20.0, True, 0.1)[0]
+    assert "near 42°" in next(q for q in qs if q["q"].msgid.startswith("Part 3: why does the maximum"))["answer"].msgid
+    assert round(best) == 42
+    notes = WORKSHEET["teacher"]
+    # part 1: the chute's speed and k
+    assert notes[0].args == {"v": 1.5, "k": 1.5 * math.sqrt(2 / G)}
+    # «in part 1 it would shorten the range by up to 0.54 mm (0.08 %, at 1 m), more than the tape's error of 0.5 mm at
+    # the largest heights; in part 2 the slope would be about 0.5 % lower»
+    m = _text("Parts 1 and 2 are computed without air", notes)
+    vac1, air1 = Shot("steel20", 1.0, 1.5, 0.0, False).L, Shot("steel20", 1.0, 1.5, 0.0, True).L
+    assert "up to 0.54 mm (0.08 %, at 1 m)" in m and round(1e3 * (vac1 - air1), 2) == 0.54
+    assert round(100 * (1 - air1 / vac1), 2) == 0.08 and max(hs) == 1.0
+    assert vac1 - air1 > 0.0005 > Shot("steel20", 0.2, 1.5, 0.0, False).L - Shot("steel20", 0.2, 1.5, 0.0, True).L
+    angles = _step("angles")[1]["controls"][0]["values"]
+    s2 = np.sin(np.radians(2 * np.array(angles, float)))
+    sl = [linear_fit(s2, np.array([Shot("steel20", 0.0, 5.0, a, air).L for a in angles]), 0.0, 0.0005, "line0")["params"][-1]
+          for air in (False, True)]
+    assert "about 0.5 % lower" in m and 0.45 <= 100 * (1 - sl[1] / sl[0]) <= 0.55
+    # part 3: «41.9° … 42.3° … its vertex agrees with the world's optimum within one error … peaks at 45°»
+    m = _text("Part 3: the best angle in air depends on the drag model", notes)
+    ref = _ref("air", "theta_max_air")
+    assert "gives 41.9°" in m and ref["value"] == 41.9 and "gives 42.3°" in m and ref["how"].args["b"] == 42.3
+    st, _p, rows = _table("air")
+    got, sig = _fit(rows, st["laws"][0])
+    assert "within one error" in m and abs(got - ref["value"]) <= sig, (got, sig)
+    got_v, sig_v = _fit(rows, st["laws"][1])
+    assert "peaks at 45°" in m and abs(got_v - 45.0) <= 2 * sig_v
+    # grade 7: «four times higher (0.25 m → 1.00 m) gives twice the range»; «from 0.339 m to 0.677 m»
+    L25, L100 = Shot("steel20", 0.25, 1.5, 0.0, False).L, Shot("steel20", 1.0, 1.5, 0.0, False).L
+    assert L100 / L25 == pytest.approx(2.0, rel=1e-12) and 0.25 in hs and 1.0 in hs
+    g7 = WORKSHEET["variants"][0]
+    assert g7["id"] == "grade7" and g7["steps"] == ["heights"] and g7["plot"]["heights"] == {"x": "h", "y": "L", "fit": None}
+    assert "√h" not in g7["goals"]["heights"].msgid and "air is switched off" in g7["goals"]["heights"].msgid
+    ans = g7["questions"][1]["answer"].msgid
+    assert f"from {L25:.3f} m to {L100:.3f} m" in ans and "only doubles" in ans
+    assert "0.25 m → 1.00 m" in _text("Grade 7", notes)
+
+
+# --- the world's own messages (reviews R-E F1, R-W F8; D1, D10) -------------------------------------------------------------
+def test_the_drag_model_is_checked_where_it_is_used_and_compared_with_the_measured_curve():
+    h = _run(None, {"object": "ball67", "h_m": 0.0, "v0": 20.0, "angle_deg": 40.0, "air": True})
+    cs = h.checks()
+    assert cs["main.cd"]["label"]["$t"] == "the drag model's range of validity (Re)" and cs["main.cd"]["ok"]
+    cc = cs["main.cd_curve"]
+    assert cc.get("info") and cc["ref"] == h.sim.main.L
+    # the review's own number (R-E F1, d_energy_validity.out): 28.2371 m with the measured curve against 27.2222 m
+    assert cc["value"] == pytest.approx(28.2371, abs=5e-5) and h.sim.main.L == pytest.approx(27.2222, abs=5e-5)
+    assert cc["note"]["a"]["d"] == pytest.approx(100 * (cc["value"] / cc["ref"] - 1), rel=1e-12)
+    # a vertical throw compares the flight time
+    h = _run(None, {"object": "ball67", "h_m": 3.0, "v0": 10.0, "angle_deg": 90.0, "air": True})
+    cc = h.checks()["main.cd_curve"]
+    assert cc["unit"] == "s" and cc["ref"] == h.sim.main.T and cc["value"] > 0
+
+
+def test_the_engine_modules_and_the_events_reveal_no_lab_value():
+    h = _run("chute", {"air": False})
+    assert h.sim.engine_modules() == ["core.mechanics.particle", "theories.models.drag_quadratic", "core.data:air"]
+    eng = h.of("header")[0]["engine"]
+    assert [d["id"] for d in eng if d["id"].startswith("core.data")] == ["core.data:air"]
+    # an event's text carries no measured value: the lab's instruments measure them (D10)
+    for e in h.of("event"):
+        assert not e["text"].get("a"), e["text"]
+    h = _run("story")
+    assert {e["text"]["$t"] for e in h.of("event")} == {"the ball lands", "the dropped ball lands"}
 
 
 # --- the Watch's story ------------------------------------------------------------------------------------------------
 def test_the_watch_story_says_what_the_run_computes():
-    rec = VIZ["recordings"][0]
-    assert rec["id"] == "independence" and len(rec["captions"]) == 5
+    recs = {r["id"]: r for r in VIZ["recordings"]}
+    watch = next(s for s in VIZ["screens"] if s["kind"] == "watch")
+    assert watch["recording"] == "independence" and watch["more"] == ["air"]
+    rec = recs["independence"]
     base = SCHEMA.presets["story"]["params"]
     w1 = (Shot("steel20", 1.25, 2.0, 0.0, False), Shot("steel20", 1.25, 0.0, 0.0, False))
     w2 = (Shot("steel20", 1.25, 4.0, 0.0, False), Shot("steel20", 1.25, 0.0, 0.0, False))
@@ -251,12 +398,21 @@ def test_the_watch_story_says_what_the_run_computes():
     assert w1[0].T == pytest.approx(w1[1].T, rel=1e-12) and w2[0].T == pytest.approx(w2[1].T, rel=1e-12)
     assert w2[0].L == pytest.approx(2 * w1[0].L, rel=1e-12)  # twice the speed: twice as far, the same moment
     assert w3.T == pytest.approx(2 * w2[0].T, rel=1e-12) and w3.L == pytest.approx(2 * w2[0].L, rel=1e-12)
-    air, vac = Shot("ball67", 0.0, 20.0, 45.0, True), Shot("ball67", 0.0, 20.0, 45.0, False)
-    assert air.L < 0.8 * vac.L
+    # one box for the three throws (D8): from a table, h ≤ 5 m, L ≤ 4.1 m
+    assert max(w.L for w in (w1[0], w2[0], w3)) < 4.1
     # each flight ends before the next world starts, and the last one before the recording ends
     starts = [0.0] + [c["at"] for c in rec["script"] if c["cmd"] == "new_world"] + [rec["seconds"]]
-    speeds = [rec["speed"], 0.1, 0.1, 0.5]
-    flights = [w1[0].T, w2[0].T, w3.T, vac.T]
-    for k in range(4):
-        assert starts[k] + flights[k] / speeds[k] < starts[k + 1] - 0.5, (k, starts, flights)
-    assert [c["at"] for c in rec["captions"]][2:] == starts[1:4]
+    flights = [w1[0].T, w2[0].T, w3.T]
+    for k in range(3):
+        assert starts[k] + flights[k] / rec["speed"] < starts[k + 1] - 0.5, (k, starts, flights)
+    caps = rec["captions"]
+    assert [c["at"] for c in caps][2:] == starts[1:3]
+    # a caption comes no later than what it describes (review R-W F4): «at every moment both balls are at the same
+    # height» while they fall, long before the landing
+    assert caps[1]["at"] * rec["speed"] < 0.25 * w1[0].T and caps[0].get("hold")
+    air = recs["air"]
+    pa = SCHEMA.presets[air["preset"]]["params"]
+    a, v = Shot("ball67", 0.0, pa["v0"], pa["angle_deg"], True), Shot("ball67", 0.0, pa["v0"], pa["angle_deg"], False)
+    assert a.L < 0.8 * v.L and a.H < v.H  # «rises lower and falls short of the grey one»
+    assert air["captions"][0]["text"].args == {"v": pa["v0"], "a": pa["angle_deg"]}
+    assert air["captions"][1]["at"] * air["speed"] < a.t_apex and v.T / air["speed"] < air["seconds"] - 0.5

@@ -7,15 +7,23 @@
 // (record_core.js) that the world's own view draws. Nothing between grid points is computed or interpolated here: a
 // value off the grid is either refused (the site) or computed by the server (POST /api/atlas/<world>/<atlas>/point).
 //
-//   openAtlas(world, entry)        the manifest and the base header of an index entry ({id, file, …} of index.json's
-//                                  "atlases"): an Atlas
+//   openAtlas(world, entry, {base}) the manifest and the base header of an index entry ({id, file, …} of index.json's
+//                                  "atlases"), its files relative to `base` (by default this server's or this site's
+//                                  recordings/<world>/; the public site's on a server without a current local atlas,
+//                                  integrator D11): an Atlas
 //   atlas.point(values)            Promise of a point {i, values, state "computed" | "refused", refusal, W, live, …}:
 //                                  from the LRU, else fetched (one request per point; at most two prefetches at a time)
 //   atlas.prefetch(values)         its neighbours (±1 along every control), at low priority
 //   atlas.live(values, seed)       (server) the point computed by the server for any values: the same bytes a site build
-//                                  makes; a refusal comes back as a refused point with the world's text
+//                                  makes; a refusal comes back as a refused point with the world's text. The point
+//                                  carries its own passport (integrator D13): source (X-LF-Source: atlas | cache |
+//                                  computed), key (X-LF-Key), code (X-LF-Code) and made (X-LF-Made, with its zone)
+//
+// A packed point's header is a delta against the atlas's base file, named by "$base" (the sha256 of that file): it is
+// merged only when "$base" is this manifest's base.sha256; a live point that does not match is asked again with
+// "full_header": true (a full header, no delta); an atlas point that does not match is an error (integrator D13).
 //   flatIndex, gridIndex, snap, neighbours, mergeHeader, LRU: the parts (atlas.test.mjs)
-import { MODE, readStream, url } from "./api.js";
+import { MODE, apiError, readStream, url } from "./api.js";
 import { worldsOf } from "./record_core.js";
 
 export const LRU_POINTS = 24, LRU_BYTES = 40e6, PREFETCH_AT_ONCE = 2;
@@ -68,11 +76,11 @@ export function neighbours(controls, values) {
 // is a full header.
 export function mergeHeader(base, delta) {
   const [bm, bb] = base, [dm, db] = delta;
-  if (!dm.$delta) return [dm, db];
+  if (!dm.$delta) { if (!("$base" in dm)) return [dm, db]; const m = { ...dm }; delete m.$base; return [m, db]; }
   const meta = {};
   for (const [k, v] of Object.entries(bm)) if (k !== "blobs") meta[k] = v;
   for (const [k, v] of Object.entries(dm)) if (k !== "blobs") meta[k] = v;
-  for (const k of [...(dm.$drop || []), "$delta", "$drop", "$drop_blobs"]) delete meta[k];
+  for (const k of [...(dm.$drop || []), "$delta", "$drop", "$drop_blobs", "$base"]) delete meta[k];
   const dropB = new Set(dm.$drop_blobs || []);
   const blobs = {};
   for (const [k, v] of Object.entries(bb || {})) if (!dropB.has(k)) blobs[k] = v;
@@ -105,8 +113,8 @@ function sizeOf(msgs) {
 
 // --- an atlas -----------------------------------------------------------------------------------------------------------
 // entry: the world's index.json "atlases" item; its file relative to the world's folder of the recordings
-export async function openAtlas(world, entry, { fetchImpl = (...a) => fetch(...a) } = {}) {
-  const mfUrl = url(`recordings/${world}/${entry.file}`);
+export async function openAtlas(world, entry, { fetchImpl = (...a) => fetch(...a), base = null } = {}) {
+  const mfUrl = (base || url(`recordings/${world}/`)) + entry.file;
   const dir = mfUrl.slice(0, mfUrl.lastIndexOf("/") + 1);
   const r = await fetchImpl(mfUrl);
   if (!r.ok) throw Object.assign(new Error(`${r.status} ${r.statusText}`), { status: r.status });
@@ -165,9 +173,22 @@ export class Atlas {
     this.pending.set(key, p);
     return p;
   }
-  // a point's bytes → the point: its messages, its header merged with the base, one world's record
-  async build(inf, bytes, extra) {
+  // does a packed header belong to this atlas's base file? (a full header, or a delta without "$base" as written
+  // before ATLAS_VERSION 2, always does)
+  baseMatches(meta) {
+    if (!meta || !meta.$delta || meta.$base === undefined) return true;
+    const want = this.manifest.base && this.manifest.base.sha256;
+    return !want || meta.$base === want;
+  }
+  // a point's bytes → the point: its messages, its header merged with the base, one world's record. A header packed
+  // against another base: null (live: asked again with the full header) or an error (an atlas point)
+  async build(inf, bytes, extra, { mismatch = "throw" } = {}) {
     const msgs = await readStream(bytes);
+    const h = msgs.find((m) => m.meta.type === "header");
+    if (h && !this.baseMatches(h.meta)) {
+      if (mismatch === "null") return null;
+      throw new Error("the point was packed against another base of this atlas");
+    }
     const worlds = worldsOf(msgs, { header: (m, b) => mergeHeader(this.base, [m, b]) });
     if (!worlds.length) throw new Error("the point has no header");
     const W = worlds[0];
@@ -195,19 +216,27 @@ export class Atlas {
     const key = "live:" + JSON.stringify(values) + ":" + (seed ?? "");
     const hit = this.cache.get(key);
     if (hit) return hit;
-    const r = await this.fetchImpl(url(`api/atlas/${encodeURIComponent(this.world)}/${encodeURIComponent(this.id)}/point`), {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(seed === null ? { values } : { values, seed }) });
     const inf = { i: null, values: { ...values }, file: null, seed };
-    if (!r.ok) {
-      const j = await r.json().catch(() => ({}));
-      // the world's refusal, as a manifest's refusals are written (lfviz: "{text}. What to change: {hint}")
-      const refusal = j.hint ? { $t: "{text}. What to change: {hint}", a: { text: j.error, hint: j.hint } } : j.error || null;
-      if (r.status === 400) return { ...inf, state: "refused", refusal, W: null, live: true };
-      throw Object.assign(new Error(j.text || r.statusText), { status: r.status, body: j });
+    const ask = (full) => this.fetchImpl(url(`api/atlas/${encodeURIComponent(this.world)}/${encodeURIComponent(this.id)}/point`), {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ values, ...(seed === null ? {} : { seed }), ...(full ? { full_header: true } : {}) }) });
+    let pt = null;
+    for (const full of [false, true]) {
+      const r = await ask(full);
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        // the world's refusal, as a manifest's refusals are written (lfviz: "{text}. What to change: {hint}")
+        const refusal = j.hint ? { $t: "{text}. What to change: {hint}", a: { text: j.error, hint: j.hint } } : j.error || null;
+        if (r.status === 400) return { ...inf, state: "refused", refusal, W: null, live: true };
+        // any other status: the server's text in the viewer's language (review EX1-screens F7: a 429 on a Russian page)
+        throw Object.assign(apiError(j, `${r.status} ${r.statusText}`), { status: r.status });
+      }
+      const H = (k) => r.headers.get(k) || null;
+      pt = await this.build(inf, new Uint8Array(await r.arrayBuffer()), {
+        state: "computed", refusal: null, live: true, source: H("X-LF-Source") || "computed", key: H("X-LF-Key"),
+        code: H("X-LF-Code"), made: H("X-LF-Made") }, { mismatch: full ? "throw" : "null" });
+      if (pt) break;  // else: packed against another base (a rebuilt atlas): asked again with the full header
     }
-    const pt = await this.build(inf, new Uint8Array(await r.arrayBuffer()), {
-      state: "computed", refusal: null, live: true, source: r.headers.get("X-LF-Source") || "computed",
-      key: r.headers.get("X-LF-Key") || null, at: new Date().toISOString() });
     this.cache.set(key, pt, pt.size);
     return pt;
   }

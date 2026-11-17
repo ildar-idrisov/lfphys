@@ -180,7 +180,7 @@ Grades 7–11: the ordinary lab experiment, computed and guided step by step.
 
 | | |
 |---|---|
-| <a href="docs/images/s03_projectile.jpg"><img src="docs/images/s03_projectile.jpg" width="300" alt="s03: Projectile motion: thrown horizontally and at an angle"></a> | **[s03 · Projectile motion: thrown horizontally and at an angle](visualizations/s03_projectile/README.md)**<br>A dropped ball and a ball thrown sideways land at the same moment.<br>▷ Watch on the site: [Two balls at the same moment: one dropped, one thrown sideways](https://ildar-idrisov.github.io/lfphys/run.html?rec=s03_projectile/independence)<br>◎ On the site: [Watch](https://ildar-idrisov.github.io/lfphys/run.html?demo=s03_projectile&screen=watch) · [Explore](https://ildar-idrisov.github.io/lfphys/run.html?demo=s03_projectile&screen=explore) · [Lab work](https://ildar-idrisov.github.io/lfphys/run.html?demo=s03_projectile&screen=lab)<br>Scenarios in the player: 5 |
+| <a href="docs/images/s03_projectile.jpg"><img src="docs/images/s03_projectile.jpg" width="300" alt="s03: Projectile motion: thrown horizontally and at an angle"></a> | **[s03 · Projectile motion: thrown horizontally and at an angle](visualizations/s03_projectile/README.md)**<br>A dropped ball and a ball thrown sideways land at the same moment.<br>▷ Watch on the site: [Two balls at the same moment: one dropped, one thrown sideways](https://ildar-idrisov.github.io/lfphys/run.html?rec=s03_projectile/independence) · [A light ball at 20 m/s in air, and the same throw in vacuum](https://ildar-idrisov.github.io/lfphys/run.html?rec=s03_projectile/air)<br>◎ On the site: [Watch](https://ildar-idrisov.github.io/lfphys/run.html?demo=s03_projectile&screen=watch) · [Explore](https://ildar-idrisov.github.io/lfphys/run.html?demo=s03_projectile&screen=explore) · [Lab work](https://ildar-idrisov.github.io/lfphys/run.html?demo=s03_projectile&screen=lab)<br>Scenarios in the player: 5 |
 
 *Planned demonstrations, by section:*
 
@@ -494,7 +494,7 @@ shows them greyed out.
 * **Tests.** About 1,600 test functions: each engine function against a closed form or a second method, with
   certified interval references (Arb ball arithmetic) for key quantities; each visualization and the server.
 * **Reviews.** New physics is reviewed by a reviewer other than its author, and each finding is answered in a
-  response: fixed, rejected with a reason, or deferred to `STATUS.md`. The 32 processed reviews so far are internal
+  response: fixed, rejected with a reason, or deferred to `STATUS.md`. The 42 processed reviews so far are internal
   (run within the project) and are kept with their responses in [`reviews/archive/`](reviews/archive/).
 * **Third-party libraries, for comparison only.** 2,961 comparisons with CRunDec (rundec), KerrGeoPy, tmm, QuTiP,
   Astropy and miepython: no failures, 19 known disagreements recorded with their numbers

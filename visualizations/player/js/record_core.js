@@ -14,6 +14,12 @@
 //                                           later, else restored from the nearest key frame (a view with snapshot() and
 //                                           restore()) or rebuilt from the record
 //   rebuildView / feedView / keyBefore      the parts of showAt (player.js calls them as before)
+//   feedState(view)                         what the view holds of its world's record: {W, maxOn, scan, prefix, nOn,
+//                                           on, keys, keyStride}
+//
+// The feed state belongs to the view, not to the world (review EX1-worlds F1): two views may hold the same world's
+// record at different times (Explore's trace of a re-launched shot and the shot itself share one decoded point), and
+// each is fed and keyed on its own; one view's progress never marks the other's messages as given.
 //   frameAt(W, t), frameIndexAt(F, t), asOf the last frame / value at or before t
 //
 // Nothing here computes physics: a world's messages are given to its view in their order, up to a time.
@@ -35,8 +41,7 @@ export function makeWorld(meta, blobs, { n = 1, stride = 1 } = {}) {
               approxHist: [{ t: t0, v: meta.approximations || [] }], engineHist: [{ t: t0, v: meta.engine || [] }],
               actionsHist: [{ t: t0, v: meta.actions || [] }],
               frames: [], nArrived: 0, stride,  // frames kept: those whose arrival number is on the stride
-              events: [], checks: new Map(), viewMsgs: [], maxOn: -Infinity, scan: 0,
-              prefix: 0, nOn: 0, keys: [], keyStride: 1,  // messages [0, prefix) all fed; nOn fed in all; key frames
+              events: [], checks: new Map(), viewMsgs: [],  // the feed state of a view showing it: feedState(view)
               lastSet: new Map(),  // the latest message of each set-like (type, id) in the record (repeats: U1)
               captions: [] };      // the recording's captions (design §2.2), also among the view's messages
   // settings of devices that the engine adjusted for this run (e.g. a GPU asked for but not available)
@@ -150,82 +155,90 @@ export function asOf(list, tt) {
 
 // --- the view at a time: fed the record's messages up to it; when going back, restored from its nearest key frame (a
 // view with snapshot() / restore()) or rebuilt from the record (a view without) ------------------------------------------
-const OWNER = new WeakMap();  // the world whose record a view holds (rebuilt from its header)
-export function ownerOf(view) { return OWNER.get(view) || null; }
-export function forget(view) { OWNER.delete(view); }  // the next showAt / rebuildView rebuilds from the record
+// FEED: a view → what it holds of its world's record (the world W, rebuilt from its header): the messages [0, prefix)
+// all given, nOn given in all, on[i] whether message i was given, scan the first not given, maxOn the latest time given,
+// the view's key frames
+const FEED = new WeakMap();
+const freshState = (W) => ({ W, maxOn: -Infinity, scan: 0, prefix: 0, nOn: 0, on: [], keys: [], keyStride: 1 });
+export function feedState(view) { return FEED.get(view) || null; }
+export function ownerOf(view) { const st = FEED.get(view); return st ? st.W : null; }
+export function forget(view) { FEED.delete(view); }  // the next showAt / rebuildView rebuilds from the record
 
 // opts: {keyEvery, maxKeys, dbg} (dbg: counters {fromKey, full, keyFailed, lastMs, lastFed} for the tests of the page)
 export function rebuildView(view, W, tt, opts = {}) {
   const dbg = opts.dbg || {};
-  const k = OWNER.get(view) === W && view.restore ? keyBefore(W, tt) : null;
+  const held = FEED.get(view);
+  const k = held && held.W === W && view.restore ? keyBefore(held, tt) : null;
   const t0 = performance.now();
   if (k) {
     try {
       view.restore(k.snap);
-      const L = W.viewMsgs;
-      for (let i = k.i; i < L.length; i++) L[i].on = false;
-      W.prefix = W.nOn = W.scan = k.i; W.maxOn = k.maxOn;
+      held.on.length = Math.min(held.on.length, k.i);
+      held.prefix = held.nOn = held.scan = k.i; held.maxOn = k.maxOn;
       feedView(view, W, tt, opts);
-      dbg.fromKey = (dbg.fromKey || 0) + 1; dbg.lastMs = performance.now() - t0; dbg.lastFed = W.prefix - k.i;
+      dbg.fromKey = (dbg.fromKey || 0) + 1; dbg.lastMs = performance.now() - t0; dbg.lastFed = held.prefix - k.i;
       return;
     } catch (e) { console.error("key frame not restored, rebuilding from the record:", e); dbg.keyFailed = (dbg.keyFailed || 0) + 1; }
   }
   view.reset && view.reset();
   view.onHeader(W.header, W.headerBlobs);
-  OWNER.set(view, W);
-  for (const m of W.viewMsgs) m.on = false;
-  W.maxOn = -Infinity; W.scan = 0; W.prefix = 0; W.nOn = 0; W.keys = []; W.keyStride = 1;
+  const st = freshState(W);
+  FEED.set(view, st);
   feedView(view, W, tt, opts);
-  dbg.full = (dbg.full || 0) + 1; dbg.lastMs = performance.now() - t0; dbg.lastFed = W.prefix;
+  dbg.full = (dbg.full || 0) + 1; dbg.lastMs = performance.now() - t0; dbg.lastFed = st.prefix;
 }
 // the latest key frame at or before t that the view's present state contains (it holds the messages in order up to a
-// later point; a key frame records how long its data were then)
-export function keyBefore(W, tt) {
-  if (W.nOn !== W.prefix) return null;  // the view holds messages out of order: only a rebuild is safe
+// later point; a key frame records how long its data were then). st: the view's feed state (feedState(view))
+export function keyBefore(st, tt) {
+  if (!st || st.nOn !== st.prefix) return null;  // the view holds messages out of order: only a rebuild is safe
   const eps = 1e-12 * Math.abs(tt);
-  for (let j = W.keys.length - 1; j >= 0; j--) {
-    const k = W.keys[j];
-    if (k.i <= W.prefix && k.maxOn <= tt + eps) return k;
+  for (let j = st.keys.length - 1; j >= 0; j--) {
+    const k = st.keys[j];
+    if (k.i <= st.prefix && k.maxOn <= tt + eps) return k;
   }
   return null;
 }
 // one key frame per step of keyEvery × keyStride messages; beyond maxKeys the step doubles and the key frames on the
 // coarser grid are kept: uniform over the whole record at any length (review CK-3: dropping every other key frame
 // while new ones came at the full rate left the start of a long session without any)
-function takeKey(view, W, keyEvery, maxKeys) {
-  const step = keyEvery * W.keyStride, last = W.keys.length ? W.keys[W.keys.length - 1] : null;
-  if (Math.floor(W.prefix / step) <= (last ? Math.floor(last.i / step) : 0)) return;
-  try { W.keys.push({ i: W.prefix, maxOn: W.maxOn, snap: view.snapshot() }); } catch (e) { console.error(e); return; }
-  if (W.keys.length > maxKeys) {
-    W.keyStride *= 2;
-    const s2 = keyEvery * W.keyStride, seen = new Set();
-    W.keys = W.keys.filter((k) => { const b = Math.floor(k.i / s2); if (seen.has(b)) return false; seen.add(b); return true; });
+function takeKey(view, st, keyEvery, maxKeys) {
+  const step = keyEvery * st.keyStride, last = st.keys.length ? st.keys[st.keys.length - 1] : null;
+  if (Math.floor(st.prefix / step) <= (last ? Math.floor(last.i / step) : 0)) return;
+  try { st.keys.push({ i: st.prefix, maxOn: st.maxOn, snap: view.snapshot() }); } catch (e) { console.error(e); return; }
+  if (st.keys.length > maxKeys) {
+    st.keyStride *= 2;
+    const s2 = keyEvery * st.keyStride, seen = new Set();
+    st.keys = st.keys.filter((k) => { const b = Math.floor(k.i / s2); if (seen.has(b)) return false; seen.add(b); return true; });
   }
 }
+// the view fed the messages of W up to t that it has not been given yet (a view that holds another world, or none, is
+// rebuilt from W's header first)
 export function feedView(view, W, tt, opts = {}) {
+  let st = FEED.get(view);
+  if (!st || st.W !== W) { rebuildView(view, W, tt, opts); return; }
   const keyEvery = opts.keyEvery || KEY_EVERY, maxKeys = opts.maxKeys || MAX_KEYS;
-  const L = W.viewMsgs, eps = 1e-12 * Math.abs(tt), keyed = !!(view.snapshot && view.restore);
+  const L = W.viewMsgs, on = st.on, eps = 1e-12 * Math.abs(tt), keyed = !!(view.snapshot && view.restore);
   let first = -1;
-  for (let i = W.scan; i < L.length; i++) {
-    const m = L[i];
-    if (m.on) continue;
-    const tm = m.meta.t ?? 0;
+  for (let i = st.scan; i < L.length; i++) {
+    if (on[i]) continue;
+    const m = L[i], tm = m.meta.t ?? 0;
     if (tm <= tt + eps) {
-      m.on = true; W.maxOn = Math.max(W.maxOn, tm); W.nOn++;
+      on[i] = true; st.maxOn = Math.max(st.maxOn, tm); st.nOn++;
       try { view.onMessage(m.meta, m.blobs); } catch (e) { console.error(e); }
-      if (i === W.prefix) {
-        W.prefix++;
-        while (W.prefix < L.length && L[W.prefix].on) W.prefix++;
-        if (keyed && W.nOn === W.prefix) takeKey(view, W, keyEvery, maxKeys);
+      if (i === st.prefix) {
+        st.prefix++;
+        while (st.prefix < L.length && on[st.prefix]) st.prefix++;
+        if (keyed && st.nOn === st.prefix) takeKey(view, st, keyEvery, maxKeys);
       }
     } else if (first < 0) first = i;
   }
-  W.scan = first < 0 ? L.length : first;
+  st.scan = first < 0 ? L.length : first;
 }
 // the view brought to time t of world W: fed on, or (it holds another world, or something from later) rebuilt
 export function showAt(view, W, tt, opts = {}) {
   if (!W) return;
-  if (OWNER.get(view) !== W || W.maxOn > tt + 1e-12 * Math.abs(tt)) rebuildView(view, W, tt, opts);
+  const st = FEED.get(view);
+  if (!st || st.W !== W || st.maxOn > tt + 1e-12 * Math.abs(tt)) rebuildView(view, W, tt, opts);
   else feedView(view, W, tt, opts);
 }
 

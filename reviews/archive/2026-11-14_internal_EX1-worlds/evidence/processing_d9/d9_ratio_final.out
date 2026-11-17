@@ -1,0 +1,17 @@
+default n=300: mean|g|=1.0319 scatter=0.0594 stated median=0.05742535976705678 ratio=0.9662918243780161 none=31
+default n=600: mean|g|=1.0072 scatter=0.0344 stated median=0.03406223854658656 ratio=0.9910350120773384 none=0
+default n=2000: mean|g|=1.0022 scatter=0.0132 stated median=0.012501083259991675 ratio=0.9499764214970952 none=0
+default n=5000: mean|g|=0.9995 scatter=0.0074 stated median=0.007339495891436376 ratio=0.9871256473886909 none=0
+{'lam_nm': 500.0, 'd_um': 50.0, 'a_um': 40.0} n=300: mean|g|=1.0369 scatter=0.0670 stated median=0.06542509528336375 ratio=0.9770099251490191 none=25
+{'lam_nm': 500.0, 'd_um': 50.0, 'a_um': 40.0} n=600: mean|g|=1.0181 scatter=0.0453 stated median=0.036855148194703355 ratio=0.8126897671511717 none=0
+{'lam_nm': 500.0, 'd_um': 50.0, 'a_um': 40.0} n=2000: mean|g|=1.0017 scatter=0.0111 stated median=0.012056536119379943 ratio=1.081356504194099 none=0
+{'lam_nm': 500.0, 'd_um': 50.0, 'a_um': 40.0} n=5000: mean|g|=0.9994 scatter=0.0055 stated median=0.0063997796999490045 ratio=1.1563617617634763 none=0
+{'lam_nm': 600.0, 'd_um': 100.0, 'a_um': 10.0} n=300: mean|g|=1.0218 scatter=0.0642 stated median=0.056484830744276154 ratio=0.8797351861972716 none=34
+{'lam_nm': 600.0, 'd_um': 100.0, 'a_um': 10.0} n=600: mean|g|=1.0061 scatter=0.0318 stated median=0.03213397511585622 ratio=1.0095874016440647 none=0
+{'lam_nm': 600.0, 'd_um': 100.0, 'a_um': 10.0} n=2000: mean|g|=1.0020 scatter=0.0123 stated median=0.012713907233134905 ratio=1.0366697673116216 none=0
+{'lam_nm': 600.0, 'd_um': 100.0, 'a_um': 10.0} n=5000: mean|g|=0.9997 scatter=0.0073 stated median=0.0076309148039661575 ratio=1.0459844463500716 none=0
+{'lam_nm': 400.0, 'd_um': 300.0, 'a_um': 10.0} n=300: mean|g|=1.0120 scatter=0.0454 stated median=0.05493271881968652 ratio=1.2094751103574257 none=26
+{'lam_nm': 400.0, 'd_um': 300.0, 'a_um': 10.0} n=600: mean|g|=1.0052 scatter=0.0351 stated median=0.031036419603904637 ratio=0.8838937089864202 none=0
+{'lam_nm': 400.0, 'd_um': 300.0, 'a_um': 10.0} n=2000: mean|g|=1.0014 scatter=0.0125 stated median=0.013114037374281264 ratio=1.0465329755163928 none=0
+{'lam_nm': 400.0, 'd_um': 300.0, 'a_um': 10.0} n=5000: mean|g|=0.9992 scatter=0.0096 stated median=0.008226490986731824 ratio=0.8560465186409054 none=0
+exit 0

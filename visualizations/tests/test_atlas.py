@@ -5,15 +5,20 @@
 h × angle = 2 × 3 points, one refused; Lab work: one step of five heights):
 
 * the grid is flattened row-major (the last control fastest); the manifest names every point, the refused one with its
-  state and text, its base, its checks, its quantisation's errors and the lab's law reference; the index lists the
-  atlases;
-* the same spec and code give the same point files twice; a point's header merged with the base is the run's header;
-  the quantised path is within the manifest's ``max_err`` of the run's;
+  state and text, its base, its checks, its quantisation's errors and the references of the lab step's laws (one per
+  law: integrator D4); the index lists the atlases with the build's time and CPU, the manifest has neither (review R-F
+  F7);
+* the same spec and code give the same point files and the same manifest twice; a point's header names its base
+  (``$base``: the base file's sha256) and merged with the base is the run's header; the quantised path is within the
+  manifest's ``max_err`` of the run's;
 * budgets: a point over its target warns, over its hard limit fails; an atlas over its hard limit fails;
-* keys and states in ``plan.py`` (missing, present, stale; the world's key covers the atlases), ``--stale``;
+* keys and states in ``plan.py`` (missing, present, stale; the world's key covers the atlases), ``--stale``; an atlas
+  with a missing point or base is stale (review R-F F6);
 * a check that ends ✗ fails the atlas; a readout that is not among the header's measurables fails it; a refused default
-  point fails it; an atlas not built now keeps its entry only while its key is current;
-* the committed fixture of the player (``tests/site_worlds/recordings/s98_atlas_toy``) is whole and decodes.
+  point fails it; an atlas not built now keeps its entry only while its key is current; a world that refuses in its
+  constructor gives refused points, not a failed atlas (integrator D14; review R-F F4);
+* the committed fixture of the player (``tests/site_worlds/recordings/s98_atlas_toy``) is whole, decodes, and is what
+  the builder makes now (review R-F F14).
 """
 
 from __future__ import annotations
@@ -81,9 +86,9 @@ def test_the_grid_the_manifest_and_the_index(A, tmp_path):
     e = entries[0]
     assert e["points"] == 5 and e["refused"] == 1 and e["file"].startswith("atlas/explore/atlas.")
     man = _manifest(tmp_path, e)
-    assert {"world", "atlas", "atlas_version", "key", "version", "code_hash", "recorder_hash", "made", "seed", "controls",
-            "base", "points", "refusals", "checks", "quant", "references", "cpu_s", "bytes_gz", "frame_dt",
-            "stop"} <= set(man)
+    assert {"world", "atlas", "atlas_version", "key", "version", "code_hash", "recorder_hash", "seed", "controls",
+            "base", "points", "refusals", "checks", "quant", "references", "bytes_gz", "frame_dt", "stop"} <= set(man)
+    assert "made" not in man and "cpu_s" not in man and e["made"] and e["cpu_s"] >= 0  # F7: in the index only
     assert man["key"] == e["key"] == _site("plan").L.atlas_key(spec, registry.code_hash(W))
     assert man["controls"] == [{"param": "h_m", "values": [0.0, 1.0], "default": 1.0},
                                {"param": "angle_deg", "values": [0.0, 30.0, 60.0], "default": 0.0}]
@@ -96,8 +101,15 @@ def test_the_grid_the_manifest_and_the_index(A, tmp_path):
     total = (folder / man["base"]["file"]).stat().st_size + sum(p[1] for p in man["points"])
     assert man["bytes_gz"] == e["bytes_gz"] == total
     lab = _manifest(tmp_path, entries[1])
+    assert set(lab["references"]) == {"k_horizontal", "zero_intercept"}  # one per law of the step (D4)
     ref = lab["references"]["k_horizontal"]
     assert ref["value"] == pytest.approx(1.5 * (2 / 9.80665) ** 0.5, rel=1e-15) and ref["kind"] == "closed form"
+    assert lab["references"]["zero_intercept"]["value"] == 0.0 and _spec("lab.heights")["laws"] == \
+        ["k_horizontal", "zero_intercept"]
+    for p in man["points"]:  # every point names its base (D13)
+        if p[0]:
+            head = headless.read_stream((folder / p[0]).read_bytes())[0][0]
+            assert head["$delta"] is True and head["$base"] == man["base"]["sha256"]
 
 
 def test_the_same_bytes_twice_the_header_merge_and_the_quantisation_error(A, tmp_path):
@@ -105,6 +117,8 @@ def test_the_same_bytes_twice_the_header_merge_and_the_quantisation_error(A, tmp
     e2, _p, _w = _build(A, tmp_path / "b", ["explore"])
     m1, m2 = _manifest(tmp_path / "a", e1[0]), _manifest(tmp_path / "b", e2[0])
     assert m1["points"] == m2["points"] and m1["base"] == m2["base"] and m1["key"] == m2["key"]
+    assert e1[0]["file"] == e2[0]["file"]  # F7: the manifest too is the same bytes, so its hashed name is the same
+    assert (tmp_path / "a" / W / e1[0]["file"]).read_bytes() == (tmp_path / "b" / W / e2[0]["file"]).read_bytes()
     for p in [m1["base"]["file"]] + [p[0] for p in m1["points"] if p[0]]:
         assert (tmp_path / "a" / W / "atlas" / "explore" / p).read_bytes() == \
             (tmp_path / "b" / W / "atlas" / "explore" / p).read_bytes()
@@ -169,7 +183,7 @@ def test_keys_states_and_the_stale_rule(A, tmp_path):
     # the key follows the spec: values, defaults, frame_dt, stop, quantize, drop, the law; not the labels
     spec = _spec()
     k = L.atlas_key(spec, "abc")
-    for change in ({"frame_dt": 0.02}, {"stop": {"world_s": 1}}, {"quantize": {}}, {"seed": 2}, {"law": "x"},
+    for change in ({"frame_dt": 0.02}, {"stop": {"world_s": 1}}, {"quantize": {}}, {"seed": 2}, {"laws": ["x"]},
                    {"drop": {"types": [], "frame_blobs": []}}, {"fixed": {"v0": 3}},
                    {"controls": [{**spec["controls"][0], "default": 0.0}, spec["controls"][1]]},
                    {"controls": [{**spec["controls"][0], "values": [0.0, 2.0]}, spec["controls"][1]]}):
@@ -227,9 +241,15 @@ def test_record_world_builds_the_atlases_after_the_recordings(tmp_path):
 
 
 def test_the_committed_fixture_of_the_player_is_whole():
+    """The committed fixture (the player's Node tests read it; its keys may be stale: they compare none) is whole,
+    decodes, and is of the builder's format versions."""
     folder = SITE_WORLDS / "recordings" / W
     idx = json.loads((folder / "index.json").read_text(encoding="utf-8"))
     assert idx["world"] == W and [a["id"] for a in idx["atlases"]] == ["explore", "lab.heights"]
+    L = _site("atlas").L
+    assert idx["recorder"] == L.RECORDER_VERSION, "remake the fixture: tests/site_worlds/make_fixture.py"
+    for a in idx["atlases"]:
+        assert json.loads((folder / a["file"]).read_text(encoding="utf-8"))["atlas_version"] == L.ATLAS_VERSION
     for r in idx["recordings"]:
         data = (folder / r["file"]).read_bytes()
         assert len(data) == r["bytes_gz"] and gzip.decompress(data).startswith(protocol.MAGIC)
@@ -247,3 +267,80 @@ def test_the_committed_fixture_of_the_player_is_whole():
             assert msgs[0][0]["$delta"] and msgs[-1][0]["reason"] == "atlas"
         assert {f.name for f in d.iterdir()} == {man["base"]["file"], a["file"].rsplit("/", 1)[1]} \
             | {p[0] for p in man["points"] if p[0]}
+
+
+def test_a_missing_point_or_base_makes_the_atlas_stale(A, tmp_path):
+    """Review R-F F6: ``atlas_status`` (and so ``plan.py`` and ``record.py --stale``) checks the base and every point the
+    manifest names, with their sizes, not only the manifest."""
+    L = A.L
+    p = L.planned_world(W)
+    entries, _pr, _w = _build(A, tmp_path)
+    assert set(L.atlas_status(tmp_path, p).values()) == {"present"}
+    man = _manifest(tmp_path, entries[0])
+    folder = tmp_path / W / "atlas" / "explore"
+    victim = folder / man["points"][4][0]
+    data = victim.read_bytes()
+    victim.unlink()
+    assert L.atlas_status(tmp_path, p) == {"explore": "stale", "lab.heights": "present"}
+    victim.write_bytes(data + b"x")  # another size
+    assert L.atlas_status(tmp_path, p)["explore"] == "stale"
+    victim.write_bytes(data)
+    assert L.atlas_status(tmp_path, p)["explore"] == "present"
+    (folder / man["base"]["file"]).unlink()
+    assert L.atlas_status(tmp_path, p)["explore"] == "stale"
+    stale = [w for w in [W] if set(L.atlas_status(tmp_path, L.planned_world(w)).values()) - {"present"}]
+    assert stale == [W]  # what record.py --stale and atlas.py --stale take
+
+
+def test_a_refusal_of_the_worlds_constructor_is_a_refused_point(A, tmp_path):
+    """Integrator D14, review R-F F4: u32 refuses d ≤ a in its constructor; a toy world does so for ``mode: refuse``.
+    Such a grid point is refused, with the world's text and hint, and the atlas is built."""
+    spec = next(a for a in registry.atlases_of(registry.load("u97_atlas_hog")) if a["id"] == "faults")
+    with pytest.raises(headless.PointRefused) as ex:
+        A.run_point("u97_atlas_hog", spec, {"h_m": 1.0, "mode": "refuse"})
+    assert ex.value.text["$t"].startswith("This test world refuses") and ex.value.hint["$t"] == "choose another mode"
+    entries, problems, _w = A.build_world("u97_atlas_hog", tmp_path, ["faults"])
+    assert problems == [] and [e["id"] for e in entries] == ["faults"]
+    assert entries[0]["points"] == 2 and entries[0]["refused"] == 2
+    man = json.loads((tmp_path / "u97_atlas_hog" / entries[0]["file"]).read_text(encoding="utf-8"))
+    assert [p[2] for p in man["points"]] == [0, 1, 0, 1]
+    assert man["refusals"][0]["a"]["text"]["$t"].startswith("This test world refuses")
+
+
+def test_the_committed_fixture_is_what_the_builder_makes_now(tmp_path):
+    """Review R-F F14: the player's Node tests and browser tests read the committed fixture; a change of the packing,
+    the header's delta or the recorder would leave them testing an old format. A fresh build of the toy world gives
+    the same recording, base and point files (by name and bytes) and the same manifests but for the code's keys
+    (``tests/site_worlds/make_fixture.py`` remakes it)."""
+    rec = _site("record")
+    index, problems = rec.record_world(W, tmp_path)
+    assert problems == []
+    folder = SITE_WORLDS / "recordings" / W
+    old = json.loads((folder / "index.json").read_text(encoding="utf-8"))
+    remake = "the fixture is stale: remake it with tests/site_worlds/make_fixture.py"
+    assert [(r["id"], r["file"], r["bytes_gz"]) for r in index["recordings"]] == \
+        [(r["id"], r["file"], r["bytes_gz"]) for r in old["recordings"]], remake
+    for r in index["recordings"]:
+        assert (tmp_path / W / r["file"]).read_bytes() == (folder / r["file"]).read_bytes(), remake
+    assert [a["id"] for a in index["atlases"]] == [a["id"] for a in old["atlases"]], remake
+    code_keys = ("key", "code_hash", "recorder_hash")
+    for new_e, old_e in zip(index["atlases"], old["atlases"]):
+        new_m = json.loads((tmp_path / W / new_e["file"]).read_text(encoding="utf-8"))
+        old_m = json.loads((folder / old_e["file"]).read_text(encoding="utf-8"))
+        assert {k: v for k, v in new_m.items() if k not in code_keys} == \
+            {k: v for k, v in old_m.items() if k not in code_keys}, remake
+        d_new, d_old = (tmp_path / W / new_e["file"]).parent, (folder / old_e["file"]).parent
+        for name in [new_m["base"]["file"]] + [p[0] for p in new_m["points"] if p[0]]:
+            assert (d_new / name).read_bytes() == (d_old / name).read_bytes(), (name, remake)
+
+
+def test_the_browser_tests_fixtures_are_built_current(tmp_path, monkeypatch):
+    """``site/fixtures.py`` (integrator, 2026-11-17): what a browser test serves is built now, so every key is the
+    expected one (a server's player refuses a stale atlas: D11); it finds the test worlds by itself."""
+    monkeypatch.delenv("LFVIZ_EXTRA", raising=False)
+    fx = _site("fixtures")
+    assert fx.main(["--out", str(tmp_path)]) == 0
+    monkeypatch.setenv("LFVIZ_EXTRA", str(SITE_WORLDS))
+    plan = _site("atlas").L.planned_world(W)
+    assert set(_site("atlas").L.atlas_status(tmp_path, plan).values()) == {"present"}
+    assert set(_site("atlas").L.status(tmp_path, plan).values()) == {"present"}

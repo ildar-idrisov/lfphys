@@ -2,9 +2,9 @@
  "world": "s98_atlas_toy",
  "version": "1.0",
  "recorder": "2",
- "recorder_hash": "456f4996e134626e",
- "code_hash": "16d21d6bebab",
- "made": "2026-11-14T12:47:43+00:00",
+ "recorder_hash": "842c60cd30b8993e",
+ "code_hash": "f78b3452bddf",
+ "made": "2026-11-17T16:06:20+00:00",
  "recordings": [
   {
    "id": "story",
@@ -55,10 +55,10 @@
    },
    "cpu_s": 0.0,
    "sha256": "f992d4cfcc0297f365659cee7672836405732141962043827c275d83be37b232",
-   "key": "fbb580ec1ed6aa72",
+   "key": "f850e9592ba8c8e1",
    "version": "1.0",
-   "code_hash": "16d21d6bebab",
-   "made": "2026-11-14T12:47:43+00:00",
+   "code_hash": "f78b3452bddf",
+   "made": "2026-11-17T16:06:20+00:00",
    "captions": 3,
    "quant": {
     "traj.s": {
@@ -111,10 +111,10 @@
    },
    "cpu_s": 0.0,
    "sha256": "481d8bf80f308aa10037b9781f174a175a298d436e995d8e9a3a039372faf127",
-   "key": "18c87da53c3ece7c",
+   "key": "d3d3a7640c4f96b6",
    "version": "1.0",
-   "code_hash": "16d21d6bebab",
-   "made": "2026-11-14T12:47:43+00:00"
+   "code_hash": "f78b3452bddf",
+   "made": "2026-11-17T16:06:20+00:00"
   }
  ],
  "atlases": [
@@ -122,11 +122,11 @@
    "id": "explore",
    "screen": "explore",
    "step": null,
-   "file": "atlas/explore/atlas.1894e6d2.json",
-   "key": "3e3e84264247c349",
+   "file": "atlas/explore/atlas.b80e5fbb.json",
+   "key": "d5c0e20380e348da",
    "points": 5,
    "refused": 1,
-   "bytes_gz": 12557,
+   "bytes_gz": 12808,
    "checks": {
     "ok": 10,
     "failed": 0,
@@ -136,18 +136,18 @@
    },
    "cpu_s": 0.0,
    "version": "1.0",
-   "code_hash": "16d21d6bebab",
-   "made": "2026-11-14T12:47:43+00:00"
+   "code_hash": "f78b3452bddf",
+   "made": "2026-11-17T16:06:20+00:00"
   },
   {
    "id": "lab.heights",
    "screen": "lab",
    "step": "heights",
-   "file": "atlas/lab.heights/atlas.48dbe90b.json",
-   "key": "7845d23442ec5abd",
+   "file": "atlas/lab.heights/atlas.51292887.json",
+   "key": "6c218fea8461c130",
    "points": 5,
    "refused": 0,
-   "bytes_gz": 15106,
+   "bytes_gz": 15355,
    "checks": {
     "ok": 10,
     "failed": 0,
@@ -157,8 +157,8 @@
    },
    "cpu_s": 0.0,
    "version": "1.0",
-   "code_hash": "16d21d6bebab",
-   "made": "2026-11-14T12:47:43+00:00"
+   "code_hash": "f78b3452bddf",
+   "made": "2026-11-17T16:06:20+00:00"
   }
  ]
 }

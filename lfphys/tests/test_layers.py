@@ -94,3 +94,20 @@ def test_refuted_kinematics_is_not_computed_in_the_core():
     for kin, t in (("SR", 10.0 / C), ("ether", 10.0 / C), ("emission", 10.0 / (1.5 * C))):
         res = flat_arrival(Laws(kinematics=kin, gravity="none"), 0.0, np.zeros(2), np.array([0.5 * C, 0.0]), wl)
         assert res["t"] == pytest.approx(t, rel=1e-15)
+
+
+def test_a_dataset_of_a_module_is_its_own_entry():
+    """A world names only the data it reads (review R-W F8, decision D10): "core.data:air" is its own entry with the
+    module's layer and kind and every required field; the whole module stays nameable; an unknown part is refused."""
+    from lfphys.core import data
+    for key in data.DATASETS:
+        d = registry.about(f"core.data:{key}")
+        assert d["id"] == f"core.data:{key}" and d["layer"] == "core" and d["kind"] == "data"
+        assert all(k in d for k in registry.REQUIRED) and d["basis"]
+    air = registry.about("core.data:air")
+    assert "Standard Atmosphere" in str(air["basis"]) and "PDG" not in str(air) and "Planck" not in str(air)
+    desc = registry.describe(["theories.models.drag_quadratic", "core.data:air", "core.mechanics.particle"])
+    assert [d["id"] for d in desc] == ["core.data:air", "core.mechanics.particle", "theories.models.drag_quadratic"]
+    assert registry.about("core.data")["id"] == "core.data"
+    with pytest.raises(KeyError):
+        registry.about("core.data:cosmology_of_a_ball")

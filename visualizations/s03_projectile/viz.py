@@ -11,12 +11,15 @@ What the run computes (README.md of this folder has the model in full):
   motion), or the same throw in vacuum for comparison (grey; it does not affect the world's ball);
 * the run's measurements: the range L, the flight time T, the highest point H, the energy, the heat given to the air;
 * checks: T, L, H against the closed forms in vacuum, against the hodograph quadrature in air (the second method, no
-  integration in time), the energy balance along the path, the validity of the constant drag coefficient along the
-  path, the dropped ball's fall time and its height next to the thrown one's.
+  integration in time), the energy balance along the path, the drag model's range of validity (the Reynolds numbers
+  where the constant C_d is used) and, as information, the same throw with the measured drag curve (the second drag
+  model: how much the constant itself moves the range; review R-E F1), the dropped ball's fall time and its height next
+  to the thrown one's.
 
 The screens (design ``lfphys/sources/explore_2026-11-14_design.md`` §5): Watch (the recording ``independence`` with
-captions), Explore (height × speed × angle × air on a grid of computed points) and Lab work (three parts: L(h), L(θ),
-the maximum in air). No law parameter (school: no modified physics, rule 4): the air is a medium, not a modification.
+captions, and ``air`` under «More recordings»), Explore (height × speed × angle × air on a grid of computed points) and
+Lab work (three parts: L(h) and L(θ) without air, the maximum in air). No law parameter (school: no modified physics,
+rule 4): the air is a medium, not a modification.
 """
 
 from __future__ import annotations
@@ -31,7 +34,7 @@ from lfviz.sim import Simulation as BaseSimulation
 from lfphys.i18n import T, text_of
 from lfphys.theories.models.drag_quadratic import CD_SPHERE, RE_RANGE
 
-from .engine.shot import OBJECTS, RATE, STROBE_EVERY, VALID_SHARE, G, Shot, medium, optimum_angle
+from .engine.shot import OBJECTS, RATE, STROBE_EVERY, VALID_SHARE, G, Shot, curve_flight, medium, optimum_angle
 
 def _r(x: float, digits: int = 6) -> float:
     """A value that is only drawn, to 6 significant digits (the record's size): a position of a 100 m flight to 0.1 mm,
@@ -62,7 +65,8 @@ SCHEMA = Schema([
                  "angle downwards.")),
     Param("air", T("Air resistance"), "bool", False,
           help=T("Off: the ball flies in vacuum. On: air at 20 °C and 101 325 Pa, the drag of a smooth sphere with a "
-                 "constant drag coefficient of 0.47 (a model; its validity is checked along the path).")),
+                 "constant drag coefficient of 0.47 (a model: the run also computes the same throw with the measured "
+                 "drag curve and shows the difference).")),
     Param("companion", T("Ball for comparison"), "select", "none", options=COMPANIONS,
           help=T("A second ball: dropped from the same point at the same moment, or the same throw computed in vacuum "
                  "(grey). It does not affect the first ball.")),
@@ -82,9 +86,9 @@ SCHEMA = Schema([
 })
 
 GROUPS = {"main": T("The thrown ball"), "drop": T("The dropped ball"), "vacuum": T("The same throw in vacuum")}
-HOW = {"vacuum": T("closed form in vacuum"),
+HOW = {"vacuum": T("by the formulas of a flight in vacuum"),
        "hodograph": T("second method: the hodograph quadrature of the quadratic drag (no integration in time)"),
-       "vertical": T("closed form of vertical motion with quadratic drag")}
+       "vertical": T("by the formulas of vertical motion with quadratic drag")}
 
 
 class Simulation(BaseSimulation):
@@ -105,32 +109,68 @@ class Simulation(BaseSimulation):
                           T("turn the air resistance on, or choose another ball for comparison"))
 
     @classmethod
-    def lab_reference(cls, step_id, fixed, values):
-        """The law of a lab step (design §2.3), computed by the world: ``heights`` k = v₀·√(2/g) (closed form; the
-        engine's air effect over the step's heights is stated); ``angles`` v₀²/g (closed form, no air);
-        ``air`` the angle of the largest range in air, found by the engine at 0.1° steps (no closed form)."""
+    def lab_reference(cls, step_id, fixed, values, reference=None):
+        """A law of a lab step (design §2.3; the step's ``laws``, review D4), computed by the world when the step's atlas
+        is built: ``k_horizontal`` k = v₀·√(2/g) (formula; the part is computed without air, and the air's effect is
+        computed for each of the step's heights and stated); ``v2_over_g`` v₀²/g (formula, no air);
+        ``theta_max_vacuum`` the angle of the largest range without air (45° from the floor by the formula, else the
+        engine's scan); ``theta_max_air`` the angle of the largest range in air, found by the engine at 0.1° steps with
+        the world's drag model (the constant C_d), with the measured drag curve's optimum stated beside it (review R-E
+        F1: the optimum depends on the drag model)."""
         p = dict(fixed)
-        if step_id == "heights":
-            v0 = float(p["v0"])
-            hs = [float(h) for h in values.get("h_m") or [p["h_m"]]]
-            effect = max(1.0 - Shot(p["object"], h, v0, 0.0, True).L / Shot(p["object"], h, v0, 0.0, False).L
-                         for h in hs)
-            return {"value": v0 * math.sqrt(2.0 / G), "unit": "m^½", "label": T("k = v₀·√(2/g)"),
-                    "how": T("closed form of a horizontal throw without air; the air shortens the range here by at most "
-                             "{d:.2g} % (computed by the engine), less than the tape's error", d=100.0 * effect),
+        ref = reference or DEFAULT_LAW.get(step_id)
+        if step_id == "heights" and ref == "k_horizontal":
+            v0, obj = float(p["v0"]), p["object"]
+            hs = sorted(float(h) for h in (values.get("h_m") or [p["h_m"]]))
+            # the air's shortening of the range at each height (m), computed by the engine: the part runs without air
+            short = [(h, Shot(obj, h, v0, 0.0, False).L - Shot(obj, h, v0, 0.0, True).L) for h in hs]
+            tape = INSTRUMENTS["tape"]["error"]
+            over = [h for h, d in short if d > tape]
+            args = dict(a=1e3 * short[0][1], h0=short[0][0], b=1e3 * short[-1][1], h1=short[-1][0], e=1e3 * tape)
+            if not over:
+                how = T("the formula of a horizontal throw without air, L = v₀·√(2h/g); this part is computed without "
+                        "air. In air the range would be shorter by {a:.2f} mm at h = {h0:.2f} m to {b:.2f} mm at "
+                        "h = {h1:.2f} m (computed by the engine for each height), less than the tape's error of "
+                        "±{e:.1f} mm at every height", **args)
+            elif over == [h for h in hs if h >= over[0]]:
+                how = T("the formula of a horizontal throw without air, L = v₀·√(2h/g); this part is computed without "
+                        "air. In air the range would be shorter by {a:.2f} mm at h = {h0:.2f} m to {b:.2f} mm at "
+                        "h = {h1:.2f} m (computed by the engine for each height): more than the tape's error of "
+                        "±{e:.1f} mm from h = {h2:.2f} m on, so the bench would see the air", h2=over[0], **args)
+            else:
+                how = T("the formula of a horizontal throw without air, L = v₀·√(2h/g); this part is computed without "
+                        "air. In air the range would be shorter by {a:.2f} mm at h = {h0:.2f} m to {b:.2f} mm at "
+                        "h = {h1:.2f} m (computed by the engine for each height): at some heights more than the tape's "
+                        "error of ±{e:.1f} mm, so the bench would see the air", **args)
+            return {"value": v0 * math.sqrt(2.0 / G), "unit": T("m^½"), "label": T("k = v₀·√(2/g)"), "how": how,
                     "kind": "closed form"}
-        if step_id == "angles":
+        if step_id == "angles" and ref == "v2_over_g":
             v0 = float(p["v0"])
-            return {"value": v0 * v0 / G, "unit": "m", "label": T("v₀²/g"),
-                    "how": T("closed form of a throw from the floor without air: L = (v₀²/g)·sin 2θ"),
+            return {"value": v0 * v0 / G, "unit": T("m"), "label": T("v₀²/g"),
+                    "how": T("the formula of a throw from the floor without air: L = (v₀²/g)·sin 2θ"),
                     "kind": "closed form"}
-        if step_id == "air":
-            best, L, n = optimum_angle(p["object"], float(p["h_m"]), float(p["v0"]), True, 0.1)
+        if step_id in ("angles", "air") and ref == "theta_max_vacuum":
+            h = float(p["h_m"])
+            if h == 0.0:
+                return {"value": 45.0, "unit": "°", "label": T("θ* without air"),
+                        "how": T("the formula of a throw from the floor without air, L = (v₀²/g)·sin 2θ, is largest "
+                                 "where sin 2θ = 1, at θ = 45°"), "kind": "closed form"}
+            best, L, n = optimum_angle(p["object"], h, float(p["v0"]), False, 0.1)
+            return {"value": best, "unit": "°", "label": T("θ* without air"),
+                    "how": T("computed by the engine: the largest range among {n:d} computed flights without air, at "
+                             "1° and then at 0.1° steps ({L:.4g} m)", n=n, L=L), "kind": "engine"}
+        if step_id == "air" and ref == "theta_max_air":
+            obj, h, v0 = p["object"], float(p["h_m"]), float(p["v0"])
+            best, L, n = optimum_angle(obj, h, v0, True, 0.1)
+            best_c, _L_c, _n_c = optimum_angle(obj, h, v0, True, 0.1, curve=True)
             return {"value": best, "unit": "°", "label": T("θ* in air"),
-                    "how": T("computed by the engine: the largest range among {n:d} computed flights, at 1° and then "
-                             "at 0.1° steps ({L:.4g} m); there is no closed form; without air θ* = 45°", n=n, L=L),
+                    "how": T("computed by the engine with this world's drag model, the constant C_d = {cd:.2f}: the "
+                             "largest range among {n:d} computed flights, at 1° and then at 0.1° steps ({L:.4g} m). The "
+                             "optimum depends on the drag model: with the measured drag curve the same search gives "
+                             "{b:.1f}°. There is no formula for it; without air θ* = 45°",
+                             n=n, L=L, cd=CD_SPHERE, b=best_c),
                     "kind": "engine"}
-        raise ValueError(T("no law for the step {step}", step=step_id))
+        raise ValueError(T("no law {ref} for the step {step}", ref=str(ref), step=step_id))
 
     def __init__(self, params, seed, emit):
         super().__init__(params, seed, emit)
@@ -153,10 +193,11 @@ class Simulation(BaseSimulation):
         self.landed = {"main": False, "other": self.other is None}
 
     def engine_modules(self):
-        """The modules of this world's physics: the flight, the air's drag model and the air's data. Listed for every
-        world of S03 (the air is one switch of the same world; a vacuum run simply has no drag force), so that the
-        atlases' headers do not repeat the catalogue's entries per point."""
-        return ["core.mechanics.particle", "theories.models.drag_quadratic", "core.data"]
+        """The modules of this world's physics: the flight, the air's drag model and the one data set it reads, the
+        air (``core.data:air``; review R-W F8, D10: no other data set is named). Listed for every world of S03 (the air
+        is one switch of the same world; a vacuum run simply has no drag force), so that the atlases' headers do not
+        repeat the catalogue's entries per point."""
+        return ["core.mechanics.particle", "theories.models.drag_quadratic", "core.data:air"]
 
     # --- messages -----------------------------------------------------------------------------------------------------
     def _check(self, out, body, cid, label, value, ref, unit, note, tol=TOL, ok=None, info=False, t=None):
@@ -196,19 +237,36 @@ class Simulation(BaseSimulation):
         val = shot.validity()
         if val is not None:
             share = val["share_outside"]
-            self._check(out, body, "cd", T("the constant drag coefficient holds along the path"), 100.0 * share, None,
-                        "%", T("share of the drag's work done at Reynolds numbers outside {lo:.3g}–{hi:.3g}: it must stay "
-                               "under {lim:.3g} %; Re along the path {a:.3g}–{b:.3g}; the measured C_d of a smooth sphere "
-                               "there {c1:.2f}–{c2:.2f}, the model's {cd:.2f}", lo=RE_RANGE[0], hi=RE_RANGE[1],
-                               lim=100.0 * VALID_SHARE, a=val["re_min"], b=val["re_max"], c1=val["cd_curve_min"],
-                               c2=val["cd_curve_max"], cd=CD_SPHERE), ok=share <= VALID_SHARE, t=t)
+            # what this check tests: that the path stays where the model uses its constant (review R-E F1), not that
+            # the constant equals the measured C_d there; the next row computes that difference
+            self._check(out, body, "cd", T("the drag model's range of validity (Re)"), 100.0 * share, None, "%",
+                        T("the model uses its constant C_d = {cd:.2f} at Reynolds numbers {lo:.3g}–{hi:.3g}: the share "
+                          "of the drag's work done outside them must stay under {lim:.3g} %; Re along the path "
+                          "{a:.3g}–{b:.3g}. This tests where the model is used, not how close its constant is to the "
+                          "measured C_d (the next row)", lo=RE_RANGE[0], hi=RE_RANGE[1], lim=100.0 * VALID_SHARE,
+                          a=val["re_min"], b=val["re_max"], cd=CD_SPHERE), ok=share <= VALID_SHARE, t=t)
+            # the second drag model: the same launch with the measured drag curve, computed by the engine (information)
+            cf = curve_flight(shot.obj, shot.h, shot.v0, shot.angle)
+            sideways = shot.vx0 > 0.0
+            got, ref_v = (cf.range, shot.L) if sideways else (cf.flight_time, shot.T)
+            pct = 100.0 * (got - ref_v) / ref_v
+            self._check(out, body, "cd_curve",
+                        T("range with the measured drag curve") if sideways else T("flight time with the measured drag curve"),
+                        got, ref_v, "m" if sideways else "s",
+                        T("the same throw computed by the engine with the measured drag curve of a smooth sphere "
+                          "(Morrison 2016; C_d {c1:.2f}–{c2:.2f} along this path) in place of the constant {cd:.2f}: "
+                          "{d:+.2g} %. This is the uncertainty of the drag model itself; the world's ball flies with "
+                          "the constant", c1=val["cd_curve_min"], c2=val["cd_curve_max"], cd=CD_SPHERE, d=pct),
+                        info=True, t=t)
 
     def _landing_main(self, out):
         s = self.main
         ld = s.flight.landing
         res = s.flight.results()
         out.append((s.T, {"type": "event", "kind": "landing", "t": s.T,
-                          "text": T("landing: range {L:.4g} m, flight time {T:.4g} s", L=s.L, T=s.T),
+                          # no measured value in the text: a lab step's instruments measure them (review R-W F8,
+                          # D10); the values are the event's data, the readouts and the checks
+                          "text": T("the ball lands"),
                           "data": {"T": s.T, "L": s.L, "H": s.H, "x": ld["x"], "v": res["v_land"],
                                    "angle": res["angle_land_deg"]}}, None))
         self._flight_checks(out, "main", s, s.T)
@@ -216,13 +274,13 @@ class Simulation(BaseSimulation):
     def _landing_other(self, out):
         o = self.other
         out.append((o.T, {"type": "event", "kind": "companion_landing", "t": o.T,
-                          "text": (T("the dropped ball lands after {T:.4g} s", T=o.T) if self.comp == "drop" else
-                                   T("the grey ball (vacuum) lands: range {L:.4g} m", L=o.L)),
+                          "text": (T("the dropped ball lands") if self.comp == "drop" else
+                                   T("the grey ball (vacuum) lands")),
                           "data": {"T": o.T, "L": o.L, "H": o.H, "x": o.flight.landing["x"]}}, None))
         if self.comp == "drop":
             ref = o.references()
             self._check(out, "other", "T", T("fall time of the dropped ball"), o.T, ref["T"], "s",
-                        T("closed form √(2h/g)") if not o.air else HOW["vertical"], t=o.T)
+                        T("by the formula √(2h/g)") if not o.air else HOW["vertical"], t=o.T)
             e = o.energy_balance()
             self._check(out, "other", "energy", T("energy balance E_k + E_p + Q = E₀ along the path"), e, None, "",
                         T("the largest deviation along the path, relative to E₀"), ok=e <= TOL, t=o.T)
@@ -256,7 +314,7 @@ class Simulation(BaseSimulation):
             self.apex_done = True
             ap = self.main.flight.apex
             out.append((ap["t"], {"type": "event", "kind": "apex", "t": ap["t"],
-                                  "text": T("the top of the path: {H:.4g} m above the floor", H=ap["y"]),
+                                  "text": T("the ball at the top of its path"),
                                   "data": {"H": ap["y"], "x": ap["x"], "t": ap["t"]}}, None))
         if not self.landed["main"] and self.main.T <= t_target:
             self.landed["main"] = True
@@ -335,8 +393,8 @@ class Simulation(BaseSimulation):
             "measurables": meas, "units": {"x": T("m"), "t": T("s")}, "actions": [],
         }
         if p["air"]:
-            h["approximations"] = [T("air: a smooth sphere with a constant drag coefficient C_d = {cd:.2f} (a model; its "
-                                     "validity is checked along the path); no spin, no buoyancy", cd=CD_SPHERE)]
+            h["approximations"] = [T("air: a smooth sphere with a constant drag coefficient C_d = {cd:.2f} (a model; the "
+                                     "run compares it with the measured drag curve); no spin, no buoyancy", cd=CD_SPHERE)]
         return h, {}
 
 
@@ -349,10 +407,13 @@ _ANGLES_C = list(range(25, 61, 5))
 INSTRUMENTS = {
     "tape": {"kind": "ruler", "label": T("Measuring tape"), "unit": "m", "division": 0.001, "error": 0.0005,
              "reads": "range"},
+    # reads only once the grey ball has landed (its own event; review R-P F18)
     "tape_grey": {"kind": "ruler", "label": T("Measuring tape, grey ball"), "unit": "m", "division": 0.001,
-                  "error": 0.0005, "reads": "range_vacuum"},
-    "ruler": {"kind": "ruler", "label": T("Ruler"), "unit": "m", "division": 0.01, "error": 0.005,
-              "reads": "control:h_m"},
+                  "error": 0.0005, "reads": "range_vacuum", "event": "companion_landing"},
+    # the stand sets the chute's height exactly at its marks (review R-E F4, D2): the heights carry no reading error
+    "stand": {"kind": "ruler", "label": T("Height scale of the stand"), "unit": "m", "division": 0.01, "error": 0.0,
+              "reads": "control:h_m",
+              "error_note": T("the stand sets the chute's height exactly at its marks: the height has no reading error")},
     "protractor": {"kind": "protractor", "label": T("Protractor"), "unit": "°", "division": 1, "error": 0.5,
                    "reads": "control:angle_deg"},
     # the error of a start and a stop by hand: Faux & Godolphin, Am. J. Phys. 87, 110 (2019), from 4304 timekeepers'
@@ -369,23 +430,28 @@ STEPS = [
     {"id": "heights", "title": T("Height and range"),
      "goal": T("Find how the range of a ball rolling off a chute depends on the height of the chute above the floor. "
                "Check the hypothesis: the higher the launch, the farther the ball flies. Then plot L against √h and "
-               "find the slope k."),
+               "find the slope k. In this part the air is switched off, so the law L ∝ √h can be checked exactly; how "
+               "much the air would change the range is computed below, and part 3 studies it."),
      "hint": T("measure the range from the point under the chute's end to the landing mark; plot L against √h"),
-     "preset": "chute", "fixed": {},
+     "preset": "chute", "fixed": {"air": False},
      "controls": [{"param": "h_m", "values": _HEIGHTS, "default": 0.6}],
-     "instruments": ["ruler", "tape", "stopwatch"],
-     "columns": [{"id": "h", "label": T("h, m"), "from": "ruler"},
+     "instruments": ["stand", "tape", "stopwatch"],
+     # the hand-timed flight (review R-W F6): recorded, with no law; its scatter against √(2h/g) is the teaching point
+     "columns": [{"id": "h", "label": T("h, m"), "from": "stand"},
                  {"id": "L", "label": T("L, m"), "from": "tape"},
-                 {"id": "sqrt_h", "label": T("√h, m^½"), "of": "h", "op": "sqrt"}],
+                 {"id": "sqrt_h", "label": T("√h, m^½"), "of": "h", "op": "sqrt"},
+                 {"id": "T", "label": T("T, s"), "from": "stopwatch"}],
      "plot": {"x": "sqrt_h", "y": "L", "fit": "line0", "fits": ["line0", "line"]},
-     "law": {"quantity": "slope", "label": T("k = L / √h"), "unit": "m^½", "reference": "k_horizontal"},
+     "laws": [{"x": "sqrt_h", "y": "L", "model": "line0", "quantity": "slope", "label": T("k = L / √h"),
+               "unit": T("m^½"), "reference": "k_horizontal"}],
      "frame_dt": 1 / 60, "stop": {"event": "landing", "after_s": 0.2, "max_world_s": 3.0},
      "quantize": {"traj.s": "u16"}},
     {"id": "angles", "title": T("Angle and range"),
      "goal": T("Launch the ball from the floor at different angles with the same speed and find the angle of the "
                "largest range. Check the law L = (v₀²/g)·sin 2θ: plot L against sin 2θ. The air is off in this part, "
                "so that the law can be checked exactly."),
-     "hint": T("read the angle on the protractor and the range on the tape; the slope of L against sin 2θ is v₀²/g"),
+     "hint": T("read the angle on the protractor and the range on the tape; the slope of L against sin 2θ is v₀²/g; a "
+               "parabola through L against θ gives the angle of the largest range"),
      "preset": "launcher", "fixed": {"v0": 5.0, "air": False},
      "controls": [{"param": "angle_deg", "values": _ANGLES_B, "default": 45}],
      "instruments": ["protractor", "tape"],
@@ -393,7 +459,10 @@ STEPS = [
                  {"id": "L", "label": T("L, m"), "from": "tape"},
                  {"id": "sin2", "label": T("sin 2θ"), "of": "theta", "op": "sin2"}],
      "plot": {"x": "sin2", "y": "L", "fit": "line0", "fits": ["line0", "line", "quadratic"]},
-     "law": {"quantity": "slope", "label": T("slope of L against sin 2θ"), "unit": "m", "reference": "v2_over_g"},
+     "laws": [{"x": "sin2", "y": "L", "model": "line0", "quantity": "slope",
+               "label": T("the slope of L against sin 2θ"), "unit": T("m"), "reference": "v2_over_g"},
+              {"x": "theta", "y": "L", "model": "quadratic", "quantity": "vertex",
+               "label": T("θ* of the largest range"), "unit": "°", "reference": "theta_max_vacuum"}],
      "frame_dt": 1 / 60, "stop": {"event": "landing", "after_s": 0.2, "max_world_s": 3.0},
      "quantize": {"traj.s": "u16"}},
     {"id": "air", "title": T("Air moves the maximum (beyond the basic programme)"),
@@ -407,31 +476,50 @@ STEPS = [
                  {"id": "L", "label": T("L, m"), "from": "tape"},
                  {"id": "L_vac", "label": T("L in vacuum, m"), "from": "tape_grey"}],
      "plot": {"x": "theta", "y": "L", "fit": "quadratic", "fits": ["quadratic"]},
-     "law": {"quantity": "vertex", "label": T("θ* of the largest range"), "unit": "°", "reference": "theta_max_air"},
+     "laws": [{"x": "theta", "y": "L", "model": "quadratic", "quantity": "vertex",
+               "label": T("θ* of the largest range in air"), "unit": "°", "reference": "theta_max_air"},
+              {"x": "theta", "y": "L_vac", "model": "quadratic", "quantity": "vertex",
+               "label": T("θ* of the largest range of the grey ball (vacuum)"), "unit": "°",
+               "reference": "theta_max_vacuum"}],
      "frame_dt": 1 / 30, "stop": {"event": "companion_landing", "after_s": 0.3, "max_world_s": 8.0},
      "quantize": {"traj.s": "u16"}},
 ]
+#: the law a step's reference answers when none is named (the step's default plot)
+DEFAULT_LAW = {st["id"]: st["laws"][0]["reference"] for st in STEPS}
 
+#: the lab's numbers the worksheet's answers and notes state as fixed text (review R-E F11): each is asserted against
+#: the engine in tests/test_s03_physics.py
 WORKSHEET = {
     "frp": [
-        {"system": "FRP-OOO-2025-base", "grade": 7, "kind": "lab", "part": "heights",
+        {"system": "FRP-OOO-2025-base", "programme": T("Russian federal programme, basic level, grades 7–9 (2025)"),
+         "grade": 7, "kind": "lab", "part": "heights",
          "name": T("“Research to test the hypothesis: the higher the launch, the farther a ball launched horizontally "
-                   "flies” (our translation)")},
-        {"system": "FRP-SOO-2025-base", "grade": 10, "kind": "demonstration",
-         "name": T("“Observing the motion of a body thrown at an angle to the horizontal and horizontally” (our "
-                   "translation)")},
-        {"system": "FRP-SOO-2025-base", "grade": 10, "kind": "lab", "part": "heights",
-         "name": T("“Studying the motion of a body thrown horizontally” (our translation)")},
+                   "flies”")},
+        {"system": "FRP-SOO-2025-base", "programme": T("Russian federal programme, basic level, grades 10–11 (2025)"),
+         "grade": 10, "kind": "demonstration",
+         "name": T("“Observing the motion of a body thrown at an angle to the horizontal and horizontally”")},
+        {"system": "FRP-SOO-2025-base", "programme": T("Russian federal programme, basic level, grades 10–11 (2025)"),
+         "grade": 10, "kind": "lab", "part": "heights",
+         "name": T("“Studying the motion of a body thrown horizontally”")},
     ],
-    "equipment": [T("a chute on a table and a steel ball, 20 mm"), T("a ruler with centimetre divisions"),
+    "equipment": [T("a chute on a stand and a steel ball, 20 mm; the stand sets the chute's height at its centimetre "
+                    "marks"),
                   T("a measuring tape with millimetre divisions"), T("a stopwatch"),
                   T("a ballistic launcher with a protractor"), T("a light ball, 67 mm")],
     "questions": [
         {"q": T("Part 1: the flight lasts 0.2–0.45 s. Why can a hand stopwatch not measure it well, and what do you do "
                 "instead?"),
-         "answer": T("Starting and stopping a stopwatch by hand scatters by about 0.1 s, a third or more of the whole "
-                     "flight. Measure the range with the tape instead (its error is 0.5 mm); the time follows from the "
-                     "height, T = √(2h/g), or from the range, T = L / v₀.")},
+         "answer": T("Starting and stopping a stopwatch by hand scatters by about 0.1 s: from a fifth to a half of the "
+                     "whole flight. Measure the range with the tape instead (its error is 0.5 mm); the time follows "
+                     "from the height, T = √(2h/g), or from the range, T = L / v₀.")},
+        {"q": T("Part 1: you also timed each flight with the hand stopwatch. Compare your times with T = √(2h/g). Why "
+                "does the hand-timed T barely help here, and how could the time still be measured?"),
+         "answer": T("A start and a stop by hand scatter by about 0.1 s, while the whole flight lasts 0.2–0.45 s and "
+                     "neighbouring heights 5 cm apart differ by only 0.01–0.02 s: the readings scatter around √(2h/g) "
+                     "and the steps between heights are lost in the scatter. Averaging 10 runs at each height brings "
+                     "the scatter down to about 0.03 s: enough to see T grow over the whole range, not to tell "
+                     "neighbouring heights apart. Light gates with an electronic timer would measure it to a "
+                     "millisecond; here the time is best computed, T = √(2h/g), and compared with the readings.")},
         {"q": T("Part 1: why is the range plotted against √h and not against h?"),
          "answer": T("The fall from the height h lasts T = √(2h/g), and meanwhile the ball moves sideways at the "
                      "constant speed v₀: L = v₀·T = v₀·√(2/g)·√h. So L is proportional to √h: the points of L(√h) lie "
@@ -458,18 +546,51 @@ WORKSHEET = {
     "teacher": [
         T("Part 1: the chute's speed is {v} m/s; the students are not told it, they find it from the slope "
           "k = v₀·√(2/g) = {k:.4f} m^½.", v=1.5, k=1.5 * math.sqrt(2.0 / G)),
-        T("Part 1 is computed with the air on: it shortens the range by less than 0.1 %, below the tape's error, so the "
-          "law without air agrees."),
-        T("Part 2 is computed without air, so that L = (v₀²/g)·sin 2θ and the 45° maximum hold exactly; in air the "
-          "slope would be about 0.5 % lower, which the virtual tape (±0.5 mm) would detect."),
-        T("Part 3 goes beyond the basic programme of the Russian federal programme (FRP); AP Physics 1 neglects air resistance; IB A.1 and AQA "
-          "3.4.1.4 treat its effect on a projectile qualitatively."),
-        T("A reading is rounded to the instrument's division; its error is half a division. The hand stopwatch's error "
-          "of 0.1 s: Faux and Godolphin, Am. J. Phys. 87, 110 (2019) (4304 timekeepers' reaction times: 0.11 ± 0.07 s "
-          "each; a start and a stop by hand scatter by about 0.10 s)."),
-        T("The fit is a weighted least-squares fit with effective variance; with χ²/dof above 1 its errors are scaled "
-          "by √(χ²/dof). The parabola of part 3 is a model of L(θ) near its top only: fitted from 25° to 60° its vertex "
-          "agrees with the engine's optimum within one error."),
+        T("Parts 1 and 2 are computed without air, so that their laws hold exactly. The virtual tape reads to 1 mm and "
+          "the stand sets the heights exactly, so the bench would resolve the air: in part 1 it would shorten the range "
+          "by up to 0.54 mm (0.08 %, at 1 m), more than the tape's error of 0.5 mm at the largest heights; in part 2 "
+          "the slope would be about 0.5 % lower. Part 3 studies the air."),
+        T("Part 3: the best angle in air depends on the drag model. The world's model, a constant drag coefficient "
+          "0.47, gives 41.9°, and “Check against the law” compares with it; the measured drag curve of a smooth sphere "
+          "gives 42.3°. The parabola is a model of L(θ) near its top only: fitted from 25° to 60° its vertex agrees "
+          "with the world's optimum within one error. The grey ball's parabola peaks at 45°."),
+        T("Part 3 goes beyond the basic programme of the Russian federal programme (FRP); AP Physics 1 neglects air "
+          "resistance; IB A.1 and AQA 3.4.1.4 treat its effect on a projectile qualitatively."),
+        T("Grade 7 (the hypothesis “the higher the launch, the farther the ball flies”): part 1 only, with L plotted "
+          "against h. The range grows with the height, but not in proportion: four times higher (0.25 m → 1.00 m) "
+          "gives twice the range. Square roots come only in grade 8 algebra, so grade 7 does not plot L against √h "
+          "and does not check a formula."),
+        T("A reading is rounded to the instrument's division; its error is half a division, except the heights, "
+          "which the stand sets exactly. The hand stopwatch's error of 0.1 s: Faux and Godolphin, Am. J. Phys. 87, "
+          "110 (2019) (4304 timekeepers' reaction times: 0.11 ± 0.07 s each; a start and a stop by hand scatter by "
+          "about 0.10 s)."),
+        T("The fit takes the errors of both coordinates into account (York's method for a straight line, the "
+          "effective variance for the parabola). When the points scatter more than their errors (the reduced χ², χ² "
+          "divided by the number of degrees of freedom, above 1), the errors are enlarged accordingly."),
+    ],
+    # a grade-7 variant of the worksheet (review R-W F7d): part 1 only, L against h, the hypothesis tested by the sign
+    # of the change and the shape of the graph (no square roots, no formula); printed by the worksheet's layout
+    "variants": [
+        {"id": "grade7", "grade": 7, "label": T("Grade 7: the higher the launch, the farther the ball flies"),
+         "steps": ["heights"], "plot": {"heights": {"x": "h", "y": "L", "fit": None}},
+         "goals": {"heights": T("Find how the range of a ball launched horizontally depends on the launch height. Check "
+                                "the hypothesis: the higher the launch, the farther the ball flies. Measure the range at "
+                                "different heights, write the results into the table and plot L against h. In this "
+                                "experiment the air is switched off.")},
+         "questions": [
+             {"q": T("Does the range grow with the height of the chute? Use your table."),
+              "answer": T("Yes: every greater height gives a greater range, so the hypothesis is confirmed.")},
+             {"q": T("Is the graph of L against h a straight line? Compare the ranges from 0.25 m and from 1.00 m."),
+              "answer": T("No, it bends: the range grows more and more slowly. Four times higher, from 0.25 m to 1.00 m, "
+                          "the range only doubles, from 0.339 m to 0.677 m.")},
+             {"q": T("Why does the ball land farther when it starts higher?"),
+              "answer": T("It falls for longer, and all that time it keeps moving sideways at the same speed, so it "
+                          "covers a longer distance.")},
+             {"q": T("Part 1: the flight lasts 0.2–0.45 s. Why can a hand stopwatch not measure it well, and what do "
+                     "you do instead?"),
+              "answer": T("Starting and stopping a stopwatch by hand scatters by about 0.1 s: from a fifth to a half of "
+                          "the whole flight. Measure the range with the tape instead (its error is 0.5 mm); the time "
+                          "follows from the height, T = √(2h/g), or from the range, T = L / v₀.")}]},
     ],
 }
 
@@ -491,29 +612,38 @@ VIZ = {
                    {"system": "AP1", "unit": 1, "topic": "1.5"}, {"system": "IB-2025", "topic": "A.1"},
                    {"system": "AQA-7408", "section": "3.4.1.4"}],
     "related": [],
+    # Watch (review R-W F3, F4; D8): one recording per comparison, so that the screen keeps one scale for all its
+    # throws (the view fits the box over every world of the recording and keeps the earlier throws as faded traces):
+    # «independence» (three throws from a table, h ≤ 5 m, L ≤ 4.1 m) and «air» (the light ball, a 40 m scale). A
+    # caption comes no later than what it describes; the first one holds the start so that it can be read
     "recordings": [
-        {"id": "independence", "preset": "story", "seconds": 40, "fps": 20, "speed": 0.1, "seed": 1, "poster": 29,
+        {"id": "independence", "preset": "story", "seconds": 30, "fps": 20, "speed": 0.1, "seed": 1, "poster": 24,
          "script": [
-             {"at": 11.0, "cmd": "new_world", "args": {"preset": "story", "params": {"v0": 4.0}}},
-             {"at": 11.0, "cmd": "speed", "args": {"value": 0.1}},
-             {"at": 20.0, "cmd": "new_world", "args": {"preset": "story", "params": {"v0": 4.0, "h_m": 5.0}}},
-             {"at": 20.0, "cmd": "speed", "args": {"value": 0.1}},
-             {"at": 32.0, "cmd": "new_world", "args": {"preset": "story", "params": {
-                 "object": "ball67", "v0": 20.0, "angle_deg": 45.0, "h_m": 0.0, "air": True, "companion": "vacuum"}}},
-             {"at": 32.0, "cmd": "speed", "args": {"value": 0.5}}],
+             {"at": 8.0, "cmd": "new_world", "args": {"preset": "story", "params": {"v0": 4.0}}},
+             {"at": 8.0, "cmd": "speed", "args": {"value": 0.1}},
+             {"at": 16.0, "cmd": "new_world", "args": {"preset": "story", "params": {"v0": 4.0, "h_m": 5.0}}},
+             {"at": 16.0, "cmd": "speed", "args": {"value": 0.1}}],
          "captions": [
-             {"at": 0.0, "text": T("Two balls start at the same moment: one is dropped, the other is thrown sideways.")},
-             {"at": 4.0, "text": T("The dots are the positions every 0.1 s. At every moment both balls are at the same "
+             {"at": 0.0, "text": T("Two balls start at the same moment: one is dropped, the other is thrown sideways."),
+              "hold": 2.5},
+             {"at": 1.0, "text": T("The dots are the positions every 0.1 s. At every moment both balls are at the same "
                                    "height.")},
-             {"at": 11.0, "text": T("Twice the sideways speed: the ball lands twice as far, at the same moment as the "
-                                    "dropped one.")},
-             {"at": 20.0, "text": T("Four times higher: the flight lasts twice as long, and the range doubles: L grows "
-                                    "as √h.")},
-             {"at": 32.0, "text": T("In air a light ball falls short of the same throw in vacuum (grey).")}],
+             {"at": 8.0, "text": T("Twice the sideways speed: the ball lands twice as far, at the same moment as the "
+                                   "dropped one.")},
+             {"at": 16.0, "text": T("Four times higher: the flight lasts twice as long, and the range doubles: L grows "
+                                    "as √h.")}],
+         "quantize": {"traj.s": "u16"}},
+        {"id": "air", "preset": "air_max", "seconds": 9, "fps": 20, "speed": 0.5, "seed": 1, "poster": 7,
+         "captions": [
+             {"at": 0.0, "text": T("A light ball is thrown at {v:g} m/s and {a:g}° in air; the grey ball is the same "
+                                   "throw computed without air.", v=SCHEMA.presets["air_max"]["params"]["v0"],
+                                   a=SCHEMA.presets["air_max"]["params"]["angle_deg"]), "hold": 2.5},
+             {"at": 1.5, "text": T("The air takes speed away all the time: the ball in air rises lower and falls "
+                                   "short of the grey one.")}],
          "quantize": {"traj.s": "u16"}},
     ],
     "screens": [
-        {"id": "watch", "kind": "watch", "recording": "independence"},
+        {"id": "watch", "kind": "watch", "recording": "independence", "more": ["air"]},
         {"id": "explore", "kind": "explore", "preset": "field", "fixed": {},
          "controls": [{"param": "h_m", "values": [0.0, 1.0, 2.0, 5.0, 10.0], "default": 1.0},
                       {"param": "v0", "values": [5.0, 10.0, 15.0, 20.0, 25.0], "default": 15.0},

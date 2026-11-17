@@ -21,7 +21,8 @@ FROZEN = {
     "airy.grazing", "airy.lossy_index", "airy.total_reflection", "angular_spectrum.backward",
     "angular_spectrum.plane_extent", "beams.memory", "beams.mode_index", "beams.z", "cornell.box",
     "fdtd.incident_memory", "fdtd.monitor_region", "fdtd.non_finite", "fdtd.outside_grid", "fdtd.unstable_interface",
-    "fdtd.unstable_medium", "film.below_critical", "film.too_many_nodes", "geometry.zero_normal", "gr.inside_horizon",
+    "fdtd.unstable_medium", "film.below_critical", "film.too_many_nodes", "fit.no_convergence", "fit.singular",
+    "geometry.zero_normal", "gr.inside_horizon",
     "gr.not_timelike", "hydrogen.level", "jp.irregular", "jp.no_bound_orbit", "jp.no_isco", "jp.no_photon_orbit",
     "jp.no_stable_orbit", "jp.outside_bounds", "jp.photon_sphere", "kerr.axis_view", "kerr.image", "kerr.spin",
     "kinematics.superluminal", "kn.inside_capture", "kn.no_horizon", "kn.no_isco", "kn.no_photon_orbit", "kn.observer",
@@ -202,3 +203,16 @@ def test_mechanics_codes():
     assert e.data["g"] == 0.0
     e = _raises("mechanics.no_landing", M.fly, ball, (0.0, 1000.0), (5.0, 1.0), t_max=1.0)
     assert e.data["t"] == 1.0
+
+
+def test_fit_codes(monkeypatch):
+    from lfphys.tools import stats as S
+    _raises("fit.singular", S.linear_fit, [2.0, 2.0, 2.0, 2.0], [1.0, 1.1, 0.9, 1.05], 0.0, 0.05, "line")
+    _raises("fit.singular", S.linear_fit, [30.0, 30.0, 30.0, 40.0], [1.0, 1.1, 0.9, 1.05], 0.5, 0.05, "quadratic")
+    _raises("fit.singular", S.linear_fit, [0.0, 0.0, 0.0], [1.0, 1.1, 0.9], 0.1, 0.05, "line0")
+    monkeypatch.setattr(S, "YORK_MAX_ITER", 2)  # Pearson-York needs more: the refusal of a slope that has not settled
+    x = [0.0, 0.9, 1.8, 2.6, 3.3, 4.4, 5.2, 6.1, 6.5, 7.4]
+    y = [5.9, 5.4, 4.4, 4.6, 3.5, 3.7, 2.8, 2.8, 2.4, 1.5]
+    wx = [1000, 1000, 500, 800, 200, 80, 60, 20, 1.8, 1]
+    wy = [1, 1.8, 4, 8, 20, 20, 70, 70, 100, 500]
+    _raises("fit.no_convergence", S.linear_fit, x, y, [v ** -0.5 for v in wx], [v ** -0.5 for v in wy], "line")

@@ -3,14 +3,23 @@
 """«Compute live»: an atlas's point computed on the server for any values (design
 ``lfphys/sources/explore_2026-11-14_design.md`` §3.7).
 
-    POST /api/atlas/<world>/<atlas>/point  {values: {param: value}, seed?}  ->  200 application/gzip
+    POST /api/atlas/<world>/<atlas>/point  {values: {param: value}, seed?, full_header?}  ->  200 application/gzip
 
-The answer is the point's file, the same bytes a site build (``site/atlas.py``) makes for those values and that seed:
-the world's own run (``lfviz.headless.run_spec``), packed against the screen's base header (the default point's). A
-control left out takes its default; a parameter that is not a control of the atlas, or a value the schema refuses, is
-``400 {error}``; a value the world refuses (``check_params``) is ``400 {error, hint}`` with the refusal's texts. The
-response's headers say where the point came from: ``X-LF-Source`` = ``atlas`` (an on-grid value served from the local
-atlas when its key is current), ``cache`` or ``computed``, and ``X-LF-Key`` (the point's key).
+The answer is the point's file: the world's own run (``lfviz.headless.run_spec``), packed as a site build
+(``site/atlas.py``) packs it for those values and that seed, its header a delta against the screen's base header (the
+default point's) that names its base (``$base``: the sha256 of the base file, as a manifest's ``base.sha256``). On the
+same CPU type as the site's build, an on-grid point is the same bytes (numpy's SIMD paths can change the last bits of a
+world's computed values; review R-F F8). With ``full_header: true`` the same point comes with a full header (no
+``$delta``, ``$base`` or ``$drop``): what a player asks for when its own base is another (integrator D13).
+
+A control left out takes its default; a parameter that is not a control of the atlas, a value outside the control's
+span (a slider's lowest to highest value, a toggle's or a select's own values) or one the schema refuses is ``400
+{error}``; a value the world refuses (``check_params``, its memory estimate, its constructor) is ``400 {error, hint}``
+with the refusal's texts; a point whose checks end ✗ is ``409 {error}`` naming the checks (integrator D14). The
+response's headers say where the point came from and what made it: ``X-LF-Source`` = ``atlas`` (an on-grid value
+served from the local atlas when its key is current), ``cache`` or ``computed``; ``X-LF-Key`` (the point's key);
+``X-LF-Code`` (the world's code hash that computed it); ``X-LF-Made`` (when it was computed, ISO 8601 in UTC: a cached
+point's original time, an atlas's build time).
 
 The computation runs in a separate process, the sweeps' pattern (``lfviz.sweep``): its own hard memory limit
 (``RLIMIT_DATA``) from ``LFVIZ_POINT_MEM_GB`` (by default half a worker's budget, at least 512 MB), ``oom_score_adj``
@@ -20,13 +29,19 @@ server, a wall-clock limit of 1.5 × that + 10 s. A process that runs out of mem
 ``429``.
 
 Cache: ``<runs>/atlas-live/<world>/<atlas>/<key16>.lfpt.gz`` (and the base header ``base-<key16>.lfpt.gz``), removed with
-the runs' removal period. The key covers the atlas's key without its grid (``sitelib.atlas_key(grid=False)``: the spec,
-the recorder's hash, the world's code hash), the values and the seed.
+the runs' removal period, at most ``LFVIZ_POINT_CACHE_MB`` (512 MB) in all, the oldest first. The key covers the atlas's
+key without its grid (``sitelib.atlas_key(grid=False)``: the spec, the recorder's hash, the world's code hash), this
+module's own hash (``SERVER_ONLY`` in the registry: it is not in the code hash), the values and the seed. The code hash
+is the code on disk as the request comes (``registry.code_hash_current``, checked by the files' times); the point's
+process hashes the code itself, before and after it computes, and the point is cached under the key of the code it ran,
+never under another's: a point computed while the code changed is not kept and is ``503`` (review R-F F1).
 """
 
 from __future__ import annotations
 
 import asyncio
+import datetime as _dt
+import gzip
 import hashlib
 import json
 import os
@@ -35,12 +50,15 @@ import time
 from pathlib import Path
 
 from . import headless, limits, protocol, registry
-from .i18n import T, json_hook, render_in
+from .i18n import T, join, json_hook, render_in
 
 ENV_MEM = "LFVIZ_POINT_MEM_GB"
 ENV_TIMEOUT = "LFVIZ_POINT_TIMEOUT_S"
+ENV_CACHE = "LFVIZ_POINT_CACHE_MB"
 QUEUE = 4  # requests that may wait while one point is computed
 MIB = 2 ** 20
+LEFTOVER_S = 600.0  # a temporary file of the cache older than this is a killed process's leftover
+EXIT_REFUSED, EXIT_MEMORY, EXIT_CHECKS = 3, 4, 5  # the point process's exit codes besides 0 and 1
 
 
 def timeout_s() -> float:
@@ -49,6 +67,27 @@ def timeout_s() -> float:
     except ValueError:
         v = 120.0
     return v if v > 0 else 120.0
+
+
+def cache_cap() -> int:
+    """The live points' cache's largest size in bytes: ``LFVIZ_POINT_CACHE_MB`` (512 MB by default)."""
+    try:
+        mb = float(os.environ.get(ENV_CACHE, "") or 512.0)
+    except ValueError:
+        mb = 512.0
+    return int((mb if mb > 0 else 512.0) * 1e6)
+
+
+def live_hash() -> str:
+    """This module's own hash (12 hex digits): part of a live point's key, as the module is not in the code hash."""
+    try:
+        return hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:12]
+    except OSError:
+        return "missing"
+
+
+def _iso(ts: float) -> str:
+    return _dt.datetime.fromtimestamp(ts, _dt.timezone.utc).isoformat(timespec="seconds")
 
 
 def point_mem(worker_mem: int) -> int:
@@ -92,10 +131,19 @@ def atlas_spec(world: str, atlas: str) -> tuple[dict, dict]:
     return viz, spec
 
 
-def request_values(viz: dict, spec: dict, body) -> tuple[dict, int]:
-    """The request's values over the controls' defaults, and its seed (Refused 400 for anything else)."""
-    if not isinstance(body, dict) or not isinstance(body.get("values", {}), dict) or set(body) - {"values", "seed"}:
-        raise Refused(400, T("the request body is an object {values, seed?}"))
+def _is_num(x) -> bool:
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+
+def request_values(viz: dict, spec: dict, body) -> tuple[dict, int, bool]:
+    """The request's values over the controls' defaults, its seed and whether it asks for a full header (Refused 400
+    for anything else: a value outside a control's span too, review R-F F4)."""
+    if not isinstance(body, dict) or not isinstance(body.get("values", {}), dict) \
+            or set(body) - {"values", "seed", "full_header"}:
+        raise Refused(400, T("the request body is an object {values, seed?, full_header?}"))
+    full = body.get("full_header", False)
+    if not isinstance(full, bool):
+        raise Refused(400, T("“full_header” is true or false"))
     ctl = {c["param"]: c for c in spec["controls"]}
     extra = sorted(set(body.get("values") or {}) - set(ctl))
     if extra:
@@ -109,21 +157,33 @@ def request_values(viz: dict, spec: dict, body) -> tuple[dict, int]:
         params = headless.resolve(viz, spec["preset"], {**spec["fixed"], **values})
     except ValueError as e:
         raise Refused(400, e.args[0] if e.args else T("the values are refused")) from None
+    for p, c in ctl.items():  # within the screen's span: a slider between its ends, a toggle or a select its values
+        v, vals = params[p], c["values"]
+        if all(_is_num(x) for x in vals) and _is_num(v):
+            if not min(vals) <= v <= max(vals):
+                raise Refused(400, T("“{label}” = {value:.6g} is outside this screen's range {lo:.6g} … {hi:.6g}",
+                                     label=c.get("label") or p, value=v, lo=min(vals), hi=max(vals)))
+        elif not any(type(x) is type(v) and x == v for x in vals):
+            raise Refused(400, T("“{label}”: this screen offers only its own values", label=c.get("label") or p))
     ref = headless.refusal(viz, params)
     if ref is not None:
         raise Refused(400, ref.text, ref.hint)
     # the values as the schema coerced them (a "1" is 1.0): the key and the run see the same numbers
-    return {p: params[p] for p in values}, int(seed)
+    return {p: params[p] for p in values}, int(seed), full
 
 
-def point_key(base_key: str, values: dict, seed: int) -> str:
+def point_key(base_key: str, values: dict, seed: int, live: str | None = None) -> str:
+    """A live point's key: the atlas's key without its grid, this module's hash (``live_hash``), the values, the
+    seed."""
     text = json.dumps({"values": protocol.clean(values), "seed": seed}, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(f"{base_key}\n{text}".encode()).hexdigest()[:16]
+    live = live_hash() if live is None else live
+    return hashlib.sha256(f"{base_key}\n{live}\n{text}".encode()).hexdigest()[:16]
 
 
-def local_point(world: str, spec: dict, values: dict, seed: int, folder: Path, plan: dict) -> bytes | None:
-    """The point's file from the local atlas (``visualizations/recordings``) when it is on the grid, with the atlas's
-    seed, and the atlas's key is current."""
+def local_point(world: str, spec: dict, values: dict, seed: int, folder: Path, atlas_key: str) -> dict | None:
+    """The point from the local atlas (``visualizations/recordings``) when it is on the grid, with the atlas's seed, and
+    the atlas's key is ``atlas_key`` (the current one): ``{data, base, made}`` (the point's file, its base file's bytes,
+    the atlas's build time), or None."""
     if seed != spec["seed"]:
         return None
     idx = 0
@@ -135,29 +195,48 @@ def local_point(world: str, spec: dict, values: dict, seed: int, folder: Path, p
         idx = idx * len(c["values"]) + k
     try:
         index = json.loads((folder / world / "index.json").read_text(encoding="utf-8"))
-        cur = next(a for a in plan["atlases"] if a["id"] == spec["id"])
         entry = next(a for a in index.get("atlases") or [] if a.get("id") == spec["id"])
-        if entry.get("key") != cur["key"]:
+        if entry.get("key") != atlas_key:
             return None
-        man = json.loads((folder / world / entry["file"]).read_text(encoding="utf-8"))
+        mf = folder / world / entry["file"]
+        man = json.loads(mf.read_text(encoding="utf-8"))
+        if man.get("key") != atlas_key:
+            return None
         name, size, state = man["points"][idx]
         if state or not name:
             return None
-        data = (folder / world / entry["file"]).parent.joinpath(name).read_bytes()
-        return data if len(data) == size else None
+        data = mf.parent.joinpath(name).read_bytes()
+        base = mf.parent.joinpath(man["base"]["file"]).read_bytes()
+        if len(data) != size or hashlib.sha256(base).hexdigest() != man["base"]["sha256"]:
+            return None
+        return {"data": data, "base": base, "made": entry.get("made") or _iso(mf.stat().st_mtime)}
     except (OSError, ValueError, KeyError, StopIteration, IndexError, TypeError):
         return None
+
+
+def _packed(meta: dict, blobs: dict) -> tuple[dict, dict]:
+    q = {d["name"]: d.get("q") for d in meta.get("blobs") or []}
+    return ({k: v for k, v in meta.items() if k != "blobs"},
+            {k: (protocol.Quantized(v, q[k]) if q.get(k) else v) for k, v in blobs.items()})
 
 
 def read_packed(data: bytes) -> list[tuple[dict, dict]]:
     """The messages of a packed stream with their quantised blobs as ``protocol.Quantized`` (as the packer made them),
     so that a header compared with them gives the bytes a build gives."""
-    out = []
-    for meta, blobs in headless.read_stream(data, raw=True):
-        q = {d["name"]: d.get("q") for d in meta.get("blobs") or []}
-        out.append(({k: v for k, v in meta.items() if k != "blobs"},
-                    {k: (protocol.Quantized(v, q[k]) if q.get(k) else v) for k, v in blobs.items()}))
-    return out
+    return [_packed(meta, blobs) for meta, blobs in headless.read_stream(data, raw=True)]
+
+
+def with_full_header(data: bytes, base_data: bytes) -> bytes:
+    """A packed point's file with its header merged with its base (``base_data``, the base file): a full header with no
+    ``$``-keys, the rest of the stream byte for byte (``full_header: true``; integrator D13)."""
+    raw = gzip.decompress(data) if data[:2] == b"\x1f\x8b" else data
+    items = [m for _o, m in protocol.iter_stream(raw, len(protocol.MAGIC))]
+    head = _packed(*protocol.decode(items[0], raw=True))
+    if not head[0].get("$delta"):
+        return data
+    base = read_packed(base_data)[0]
+    meta, blobs = headless.merge_header(base, head)
+    return headless.gz(headless.stream([protocol.encode(meta, blobs)] + items[1:]))
 
 
 # --- the process (python -m lfviz.atlas_live) ------------------------------------------------------------------------
@@ -173,31 +252,52 @@ def _lower_priority():
         pass
 
 
-def compute(world: str, atlas: str, values: dict, seed: int, base_file: Path) -> bytes:
-    """The point's file, computed (the base header taken from ``base_file`` or computed and written there)."""
-    _sitelib()
+def _code_signature(world: str, L) -> tuple[str, str, str]:
+    """(the world's code hash, the recorder's hash, this module's hash) of the files as they are now."""
+    return registry.code_hash(world), L.recorder_hash(), live_hash()
+
+
+def compute(world: str, atlas: str, values: dict, seed: int, folder: Path) -> tuple[bytes, dict]:
+    """The point's file, computed by the code on disk, and its report ``{key, base_key, code_hash, stable}``: the keys of
+    the code this process hashed before it computed; ``stable`` when the code was the same after (else nothing is
+    kept). The base header is read from ``folder/base-<base_key>.lfpt.gz``, or computed and written there (when
+    stable)."""
+    L = _sitelib()
     import atlas as A  # noqa: PLC0415 - site/atlas.py: the very packing of a build
     viz, spec = atlas_spec(world, atlas)
+    sig0 = _code_signature(world, L)
+    base_key = L.atlas_key(spec, sig0[0], sig0[1], grid=False)
+    key = point_key(base_key, values, seed, sig0[2])
+    base_file = folder / f"base-{base_key}.lfpt.gz"
     dflt = A.defaults(spec)
-    base = None
+    base, base_gz, new_base = None, None, False
     if base_file.is_file():
         try:
-            base = read_packed(base_file.read_bytes())[0]
+            base_gz = base_file.read_bytes()
+            base = read_packed(base_gz)[0]
         except (OSError, ValueError, IndexError):
-            base = None
+            base, base_gz = None, None
     msgs = None
     if base is None:
         msgs0, _oc = A.run_point(world, spec, dflt, log=lambda *a: None)
         base = A.base_header(spec, msgs0)
-        tmp = base_file.with_suffix(".tmp")
-        tmp.write_bytes(A.pack_base_file(base))
-        os.replace(tmp, base_file)
+        base_gz, new_base = A.pack_base_file(base), True
         if values == dflt and seed == spec["seed"]:
             msgs = msgs0
     if msgs is None:
         msgs, _oc = A.run_point(world, spec, values, seed, log=lambda *a: None)
-    data, _pk = A.pack_point(spec, msgs, base)
-    return data
+    data, _pk = A.pack_point(spec, msgs, base, hashlib.sha256(base_gz).hexdigest())
+    stable = _code_signature(world, L) == sig0
+    if stable and new_base:
+        tmp = base_file.with_name(base_file.name + ".tmp")
+        tmp.write_bytes(base_gz)
+        os.replace(tmp, base_file)
+    elif stable:
+        try:
+            os.utime(base_file)  # in use: the cache's housekeeping keeps it as long as its points
+        except OSError:
+            pass
+    return data, {"key": key, "base_key": base_key, "code_hash": sig0[0], "stable": stable}
 
 
 def main(argv=None) -> int:
@@ -207,8 +307,8 @@ def main(argv=None) -> int:
     ap.add_argument("--atlas", required=True)
     ap.add_argument("--values", required=True, help="the values as JSON")
     ap.add_argument("--seed", type=int, required=True)
-    ap.add_argument("--base", required=True, help="the base header's cache file")
-    ap.add_argument("--out", required=True, help="the point's file; <out>.json gets a failure")
+    ap.add_argument("--folder", required=True, help="the cache's folder of the atlas (the base header's file)")
+    ap.add_argument("--out", required=True, help="the point's file; <out>.json gets the report or a failure")
     a = ap.parse_args(argv)
     limits.apply_hard_limit()  # before anything large is allocated (RULES.md §3, «Memory budget»)
     try:
@@ -220,23 +320,32 @@ def main(argv=None) -> int:
     _lower_priority()
     registry.ensure_path()
     out = Path(a.out)
+    report = out.with_name(out.name + ".json")
+
+    def say(obj):
+        report.write_text(json.dumps(protocol.clean(obj), ensure_ascii=False))
+
     try:
-        data = compute(a.world, a.atlas, json.loads(a.values), a.seed, Path(a.base))
+        data, rep = compute(a.world, a.atlas, json.loads(a.values), a.seed, Path(a.folder))
     except headless.PointRefused as e:
-        out.with_suffix(".json").write_text(json.dumps(protocol.clean({"refused": {"text": e.text, "hint": e.hint}})))
-        return 3
+        say({"refused": {"text": e.text, "hint": e.hint}})
+        return EXIT_REFUSED
     except MemoryError:
-        out.with_suffix(".json").write_text(json.dumps({"error": "memory"}))
-        return 4
+        say({"error": "memory"})
+        return EXIT_MEMORY
     except Exception as e:  # noqa: BLE001 - reported to the server, which answers the request
         if isinstance(e.__context__, MemoryError) or isinstance(e.__cause__, MemoryError):  # the world's MemoryError
-            out.with_suffix(".json").write_text(json.dumps({"error": "memory"}))
-            return 4
-        out.with_suffix(".json").write_text(json.dumps({"error": f"{type(e).__name__}: {e}"[:2000]}))
+            say({"error": "memory"})
+            return EXIT_MEMORY
+        if isinstance(e, headless.RunFailed) and e.checks:  # the world's checks end ✗ at these values (D14)
+            say({"checks": e.checks, "error": str(e)[:2000]})
+            return EXIT_CHECKS
+        say({"error": f"{type(e).__name__}: {e}"[:2000]})
         return 1
-    tmp = out.with_suffix(".part")
+    tmp = out.with_name(out.name + ".tmp")
     tmp.write_bytes(data)
     os.replace(tmp, out)
+    say(rep)
     return 0
 
 
@@ -253,15 +362,38 @@ class LivePoints:
         self.procs: set = set()
 
     def _cleanup(self):
-        """Remove the cached points older than the runs' removal period."""
-        try:
-            limit = time.time() - float(self.keep_days()) * 86400.0
-        except (TypeError, ValueError):
+        """The cache's housekeeping (review R-F F13): the points and bases older than the runs' removal period, the
+        leftovers of a killed process (``*.part``, ``*.tmp``, ``*.json``) older than ``LEFTOVER_S``, then the oldest
+        files while the cache is over ``cache_cap``."""
+        if not self.root.is_dir():
             return
-        for f in self.root.rglob("*.lfpt.gz") if self.root.is_dir() else []:
+        now = time.time()
+        try:
+            limit = now - float(self.keep_days()) * 86400.0
+        except (TypeError, ValueError):
+            limit = None
+        kept = []
+        for f in self.root.rglob("*"):
             try:
-                if f.stat().st_mtime < limit:
+                if not f.is_file():
+                    continue
+                st = f.stat()
+                if f.name.endswith(".lfpt.gz"):
+                    if limit is not None and st.st_mtime < limit:
+                        f.unlink()
+                    else:
+                        kept.append((st.st_mtime, st.st_size, f))
+                elif f.name != "point.log" and st.st_mtime < now - LEFTOVER_S:
                     f.unlink()
+            except OSError:
+                pass
+        total, cap = sum(n for _t, n, _f in kept), cache_cap()
+        for _t, n, f in sorted(kept, key=lambda x: x[0]):
+            if total <= cap:
+                break
+            try:
+                f.unlink()
+                total -= n
             except OSError:
                 pass
 
@@ -269,49 +401,76 @@ class LivePoints:
         """(the point's file, headers) or Refused."""
         world = registry.resolve(world)
         viz, spec = atlas_spec(world, atlas)
-        values, seed = request_values(viz, spec, body)
+        values, seed, full = request_values(viz, spec, body)
         L = _sitelib()
-        code = registry.code_hash_cached(world)
-        base_key = L.atlas_key(spec, code, grid=False)
+        code, rh = registry.code_hash_current(world), L.recorder_hash()
+        base_key = L.atlas_key(spec, code, rh, grid=False)
         key = point_key(base_key, values, seed)
         folder = self.root / world / atlas
         f = folder / f"{key}.lfpt.gz"
-        if f.is_file():
-            return f.read_bytes(), {"X-LF-Source": "cache", "X-LF-Key": key}
+        base_f = folder / f"base-{base_key}.lfpt.gz"
+        heads = {"X-LF-Key": key, "X-LF-Code": code}
+        hit = self._cached(f, base_f, full)
+        if hit is not None:
+            return hit[0], {**heads, "X-LF-Source": "cache", "X-LF-Made": hit[1]}
         from .app import recordings_dir  # noqa: PLC0415
-        plan = {"atlases": [{"id": spec["id"], "key": L.atlas_key(spec, code)}]}
-        data = local_point(world, spec, values, seed, recordings_dir(), plan)
-        if data is not None:
-            return data, {"X-LF-Source": "atlas", "X-LF-Key": key}
+        loc = local_point(world, spec, values, seed, recordings_dir(), L.atlas_key(spec, code, rh))
+        if loc is not None:
+            data = with_full_header(loc["data"], loc["base"]) if full else loc["data"]
+            return data, {**heads, "X-LF-Source": "atlas", "X-LF-Made": loc["made"]}
         if self.waiting >= QUEUE + 1:  # the one computed and QUEUE waiting
             raise Refused(429, T("the server computes other points now; try again in a moment"))
         self.waiting += 1
         try:
             async with self.lock:
-                if f.is_file():  # computed while this request waited
-                    return f.read_bytes(), {"X-LF-Source": "cache", "X-LF-Key": key}
+                hit = self._cached(f, base_f, full)  # computed while this request waited
+                if hit is not None:
+                    return hit[0], {**heads, "X-LF-Source": "cache", "X-LF-Made": hit[1]}
                 folder.mkdir(parents=True, exist_ok=True)
-                data = await self._spawn(world, atlas, values, seed, folder / f"base-{base_key}.lfpt.gz", f)
+                data, rep = await self._spawn(world, atlas, values, seed, folder, f)
         finally:
             self.waiting -= 1
         self._cleanup()
-        return data, {"X-LF-Source": "computed", "X-LF-Key": key}
+        if not rep.get("stable"):
+            raise Refused(503, T("the server's code changed while the point was computed: try again"))
+        key, code = rep["key"], rep["code_hash"]
+        kept = folder / f"{key}.lfpt.gz"
+        tmp = kept.with_name(kept.name + ".tmp")
+        tmp.write_bytes(data)
+        os.replace(tmp, kept)
+        made = _iso(kept.stat().st_mtime)
+        if full:
+            data = with_full_header(data, (folder / f"base-{rep['base_key']}.lfpt.gz").read_bytes())
+        return data, {"X-LF-Key": key, "X-LF-Code": code, "X-LF-Source": "computed", "X-LF-Made": made}
 
-    async def _spawn(self, world, atlas, values, seed, base: Path, out: Path) -> bytes:
+    @staticmethod
+    def _cached(f: Path, base_f: Path, full: bool) -> tuple[bytes, str] | None:
+        """(the cached point, as asked for, and when it was computed), or None (not cached; or a full header asked for
+        and its base gone: computed again)."""
+        try:
+            data, made = f.read_bytes(), _iso(f.stat().st_mtime)
+            if full:
+                data = with_full_header(data, base_f.read_bytes())
+            return data, made
+        except (OSError, ValueError, IndexError, KeyError):
+            return None
+
+    async def _spawn(self, world, atlas, values, seed, folder: Path, want: Path) -> tuple[bytes, dict]:
         env = dict(os.environ)
         env["PYTHONPATH"] = os.pathsep.join([str(registry.SERVER), str(registry.ROOT), str(registry.ENGINE)])
         env.setdefault("OMP_NUM_THREADS", "2")
         env.setdefault("OPENBLAS_NUM_THREADS", "2")
         env[limits.ENV] = str(point_mem(self.worker_mem))
         env["LFPHYS_NO_GPU"] = "1"  # GPU 0 belongs to the live worlds
-        fail = out.with_suffix(".json")
-        for p in (fail, out):
+        out = folder / f"{want.name[:-len('.lfpt.gz')]}.part"
+        report = out.with_name(out.name + ".json")
+        for p in (report, out):
             p.unlink(missing_ok=True)
-        log = open(out.parent / "point.log", "ab")
+        log = open(folder / "point.log", "wb")  # the last point's log only (review R-F F13)
         try:
             proc = await asyncio.create_subprocess_exec(
                 sys.executable, "-m", "lfviz.atlas_live", "--world", world, "--atlas", atlas,
-                "--values", json.dumps(protocol.clean(values)), "--seed", str(seed), "--base", str(base),
+                "--values", json.dumps(protocol.clean(values)), "--seed", str(seed), "--folder", str(folder),
                 "--out", str(out), stdin=asyncio.subprocess.DEVNULL, stdout=log, stderr=log, env=env,
                 cwd=str(registry.ROOT))
         finally:
@@ -327,17 +486,27 @@ class LivePoints:
             await proc.wait()
         finally:
             self.procs.discard(proc)
-        if proc.returncode == 0 and out.is_file():
-            return out.read_bytes()
         info = {}
         try:
-            info = json.loads(fail.read_text(), object_hook=json_hook)
-            fail.unlink()
+            info = json.loads(report.read_text(), object_hook=json_hook)
         except (OSError, ValueError):
             pass
-        if proc.returncode == 3 and info.get("refused"):
+        data = None
+        if proc.returncode == 0:
+            try:
+                data = out.read_bytes()
+            except OSError:
+                data = None
+        for p in (report, out):
+            p.unlink(missing_ok=True)
+        if data is not None and info.get("key"):
+            return data, info
+        if proc.returncode == EXIT_REFUSED and info.get("refused"):
             raise Refused(400, info["refused"]["text"], info["refused"].get("hint"))
-        if proc.returncode == 4 or info.get("error") == "memory":
+        if proc.returncode == EXIT_CHECKS and info.get("checks"):
+            raise Refused(409, T("the world's checks fail at these values: {checks}",
+                                 checks=join(list(info["checks"]), ", ")))
+        if proc.returncode == EXIT_MEMORY or info.get("error") == "memory":
             raise Refused(503, T("the point needs more memory than a live point is given ({budget}): it was not "
                                  "computed", budget=limits.fmt_bytes(point_mem(self.worker_mem))))
         if proc.returncode is not None and proc.returncode < 0 or not info:
@@ -362,7 +531,7 @@ def add_routes(app, mgr):
     async def post_point(request):
         try:
             body = await request.json()
-        except (json.JSONDecodeError, UnicodeDecodeError):
+        except ValueError:  # not JSON, not UTF-8, or an integer of more than 4300 digits (review R-F F12)
             return _err(T("the request body is not JSON"))
         try:
             data, headers = await live.point(request.match_info["world"], request.match_info["atlas"], body)

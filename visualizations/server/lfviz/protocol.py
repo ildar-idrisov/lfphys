@@ -136,7 +136,7 @@ def _num_list(a):
 def quantize(arr, encoding: str) -> "Quantized | np.ndarray":
     """Quantise an array by an encoding of ``QUANT_ENCODINGS`` (with ``:col`` / ``:all``). An integer array that
     already fits the stored type (``u1`` into u8, ``u1``/``u2``/``i1`` … that fit) is returned unchanged: nothing would be
-    gained or lost. Non-finite values make the code M mean NaN (``nan: true``)."""
+    gained or lost. NaN values make the code M mean NaN (``nan: true``); ±inf is refused (ValueError): it would decode as NaN."""
     if not quant_encoding_ok(encoding):
         raise ValueError(f"unknown quantisation {encoding!r}: one of {sorted(QUANT_ENCODINGS)} [':col' | ':all']")
     base, _, suf = encoding.partition(":")
@@ -146,6 +146,9 @@ def quantize(arr, encoding: str) -> "Quantized | np.ndarray":
             and arr.dtype.itemsize <= np.dtype(_DTYPES[code]).itemsize:
         return arr  # lossless already: an integer blob that fits (flags)
     x = arr.astype(np.float64)
+    if np.isinf(x).any():  # ±inf would decode as NaN, an error no max_err could state (review R-F F9)
+        raise ValueError(f"a blob with ±inf values cannot be quantised ({int(np.isinf(x).sum())} of {x.size}): "
+                         f"leave it unquantised, or send NaN for a missing value")
     percol = (suf == "col") or (suf == "" and x.ndim == 2 and 0 < x.shape[-1] <= COL_MAX)
     if suf == "col" and x.ndim < 2:
         percol = False
@@ -193,20 +196,30 @@ def quantize(arr, encoding: str) -> "Quantized | np.ndarray":
     return Quantized(codes, q, max_err, _num_list(span) if percol else float(span))
 
 
+#: ``_short_range`` widens a range only when its step ``q`` is at least this many ulps of the range's largest magnitude;
+#: a narrower range (a nearly constant column: a conserved quantity, two detections at "the same" time) is kept exact,
+#: as a zero span is (review R-F F3: the widening loop never ended when ``q`` was below an ulp)
+SHORT_MIN_ULPS = 64
+
+
 def _short(x: float, q: float, up: bool) -> float:
-    """``x`` moved outward to a multiple of ``q`` (a power of ten), as a float with a short decimal form."""
+    """``x`` moved outward to a multiple of ``q`` (a power of ten), as a float with a short decimal form; ``x`` itself
+    when that takes more than a few steps (the caller keeps ``q`` well above an ulp, so it never does)."""
     nd = max(0, -int(math.floor(math.log10(q))))
     v = (math.ceil(x / q) if up else math.floor(x / q)) * q
     v = round(v, nd)
-    while (v < x) if up else (v > x):  # a rounding that went inward
-        v = round(v + (q if up else -q), nd)
-    return v
+    for _ in range(4):
+        if not ((v < x) if up else (v > x)):  # outward (or equal): done
+            return v
+        v = round(v + (q if up else -q), nd)  # a rounding that went inward
+    return v if ((v >= x) if up else (v <= x)) else x
 
 
 def _short_range(lo, hi):
     """The range widened to 4–5 significant digits of its span, so that it is written in a few characters (the JSON of a
-    small chunk's ranges would otherwise outweigh its data); a range of zero width is kept exact. The widening is at
-    most 2·10⁻³ of the span: the resolution changes by as much, the decoding stays exact for the written range."""
+    small chunk's ranges would otherwise outweigh its data); a range of zero width, or one whose step would be below
+    ``SHORT_MIN_ULPS`` ulps of its values, is kept exact. The widening is at most 2·10⁻³ of the span: the resolution
+    changes by as much, the decoding stays exact for the written range."""
     lo = np.array(lo, dtype=np.float64, copy=True)
     hi = np.array(hi, dtype=np.float64, copy=True)
     flo, fhi = lo.reshape(-1), hi.reshape(-1)
@@ -214,7 +227,11 @@ def _short_range(lo, hi):
         span = fhi[k] - flo[k]
         if span > 0 and math.isfinite(span):
             q = 10.0 ** (math.floor(math.log10(span)) - 3)
-            flo[k], fhi[k] = _short(float(flo[k]), q, False), _short(float(fhi[k]), q, True)
+            if q < SHORT_MIN_ULPS * math.ulp(max(abs(float(flo[k])), abs(float(fhi[k])))):
+                continue  # too narrow for a short decimal form: exact
+            a, b = _short(float(flo[k]), q, False), _short(float(fhi[k]), q, True)
+            if a <= flo[k] and b >= fhi[k] and (b - a) <= span * (1 + 4e-3):  # a sanity bound: never wide
+                flo[k], fhi[k] = a, b
     return lo, hi
 
 

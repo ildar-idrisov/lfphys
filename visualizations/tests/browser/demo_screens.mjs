@@ -17,24 +17,33 @@
 //    /api/atlas/…/point) and labelled «computed live» in the passport; a refused off-grid value says why;
 //  - Watch: the recording plays from its start; the caption shown is the latest one as of the cursor (each caption's
 //    chapter tick on the timeline jumps to it; ◀◀ / ▶▶); the captions are the recording's texts in the language;
-//  - Lab work (its first step): «Measure» before a launch says there is nothing to measure yet; up to five values of the
-//    step's control measured → as many rows with ±; the plot drawn, the step's fit gives b ± σ; «Check against the law» ✓
-//    against the reference of the step's atlas; a manual stopwatch, when the step has one, refuses «slow»;
-//  - the worksheet: printed (page.pdf) without and with the teacher's answers (on pages of their own: one page more for a
-//    one-step lab), its texts in the language;
+//  - Explore, the keyboard (integrator D7): Space on a focused toggle presses it, → on a focused slider moves it (and its
+//    aria-valuetext tells the value); at 390 px every control on the screen together with the view and the time bar (D12);
+//  - Explore on the server: the live point's own passport (its key, code and time with its zone; D13);
+//  - Watch: a caption's hold (F12), the time label with the world's time and the playback factor (D8);
+//  - Lab work, every step: «Measure» before a launch says there is nothing to measure yet; a slow reply of an earlier pick
+//    is not shown and «Measure» waits for the set-up (D6); → on a focused slider; the manual stopwatch on the wall clock,
+//    a pause refused while it runs, its reading in its column; the set-ups measured (Space on a focused «Measure» too),
+//    one row each, a repeat replaces its row (D5); each law ✓ on its own plot, another plot refused with the reason (D4);
+//    the RU verdict without Latin units; an empty time without the stopwatch; the drawer's events without times (D10);
+//    at 390 px the view, a control, «Measure», «⏱ Stop» and the time bar together (D12); Space on a focused tab;
+//  - the worksheet: one A4 page per sheet (the PDF's pages = the sheets, none overflowing at A4's printable width), each
+//    with the attribution line; one blank row per set-up; the teacher's sheets; a variant's steps, columns and questions;
+//    no raw id or Latin unit in Russian;
 //  - every screen: no horizontal scroll (scrollWidth ≤ the window's width), no page error, in English no Cyrillic in
 //    the visible text and in Russian the tabs' Russian labels; screenshots of every screen per language and size.
 //
-// Run against a PRIVATE server with the toy world and its built atlases (never the shared one on 8479):
+// Run against a PRIVATE server (never the shared one on 8479) whose recordings and atlases were built by the code under
+// test: a screen opens an atlas only with the key the server would build now (integrator D11), so the committed fixture
+// goes stale with any code change. Build them fresh with site/fixtures.py (the toy by default; --world for others):
+//   docker run --rm --memory=8g -e LFPHYS_NO_GPU=1 --user "$(id -u):$(id -g)" -v <repo>:/lf:ro -v <scratch>/rec:/rec \
+//     -w /lf/visualizations lfphys-viz python3 site/fixtures.py --out /rec [--world s03_projectile --world u32_double_slit]
 //   docker run -d --name lf-p3-srv --memory=6g -p 8692:8479 -v <repo>:/lf:ro -v <scratch>/runs:/lf/visualizations/runs \
-//     -e LFPHYS_NO_GPU=1 -e LFVIZ_EXTRA=/lf/visualizations/tests/site_worlds \
-//     -e LFVIZ_RECORDINGS=/lf/visualizations/tests/site_worlds/recordings \
+//     -v <scratch>/rec:/rec:ro -e LFPHYS_NO_GPU=1 -e LFVIZ_EXTRA=/lf/visualizations/tests/site_worlds -e LFVIZ_RECORDINGS=/rec \
 //     -w /lf/visualizations lfphys-viz python3 server/serve.py --host 0.0.0.0 --port 8479 --max-workers 2
 //   docker run --rm --init --shm-size=2g --network host --memory=4g -v <scratch with node_modules/playwright@1.58.2>:/pw \
 //     -v <repo>/visualizations/tests/browser:/t:ro -w /pw -e LFVIZ_LANG=en|ru -e SHOTS=/pw/shots \
 //     mcr.microsoft.com/playwright:v1.58.2-jammy sh -c "cp /t/*.mjs /pw/ && node /pw/demo_screens.mjs 8692 [1280x800,390x844] [world]"
-//   For s03_projectile and u32_double_slit the server needs their recordings (visualizations/recordings, the default, or
-//   LFVIZ_RECORDINGS); for the toy, LFVIZ_RECORDINGS=…/tests/site_worlds/recordings.
 // Prints one JSON line per check and "all passed" or the number failed (exit code 1).
 import { chromium } from "playwright";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -140,6 +149,7 @@ for (const [W, H] of SIZES) {
         await choose(page, c, vals[c.param]);
         await until(`X.values()[${JSON.stringify(c.param)}] === ${JSON.stringify(vals[c.param])} && (X.state.refused || (X.point() && X.point().values[${JSON.stringify(c.param)}] === ${JSON.stringify(vals[c.param])}))`);
         await note();
+        shown.push(flat(mfE, await page.evaluate(`${X}.values()`)));  // the set-up asked for (a refused one too: its neighbours are prefetched)
       }
     };
     await note();
@@ -191,6 +201,48 @@ for (const [W, H] of SIZES) {
     } else skip(`${tag0} explore: overlays (none)`);
     await settle(page);
     await page.screenshot({ path: `${SHOTS}/demo_${WORLD}_explore_traces_${LANG}_${tag0}.png` });
+    // the keyboard (D7): Space on a focused toggle presses it (no playback); → on a focused slider moves the slider
+    const tog = mfE.controls.find((c) => !isNum(c));
+    if (tog) {
+      const cur = (await page.evaluate(`${X}.values()`))[tog.param];
+      const other = tog.values.find((v) => v !== cur);
+      const btn = page.locator(`.dm-screen:not([hidden]) .dm-ctl[data-param="${tog.param}"] .dm-ctl-seg button[data-value='${JSON.stringify(other)}']`);
+      await btn.focus();
+      await page.keyboard.press("Space");
+      await until(`X.values()[${JSON.stringify(tog.param)}] === ${JSON.stringify(other)}`).catch(() => {});
+      const st = await page.evaluate(`({ v: ${X}.values()[${JSON.stringify(tog.param)}], playing: ${X}.state.playing, pressed: document.activeElement.getAttribute("aria-pressed") })`);
+      check(`${tag0} explore: Space on a focused toggle presses it, not ▶ (D7)`, st.v === other && !st.playing && st.pressed === "true", st);
+      await until(`X.state.refused || (X.point() && X.point().values[${JSON.stringify(tog.param)}] === X.values()[${JSON.stringify(tog.param)}])`).catch(() => {});
+      await note();
+    }
+    if (varied) {
+      const sl = page.locator(`.dm-screen:not([hidden]) .dm-ctl[data-param="${varied.param}"] .dm-slider`);
+      const v0 = (await page.evaluate(`${X}.values()`))[varied.param];
+      const clock0 = await page.evaluate(`${X}.state.clock`);
+      await sl.focus();
+      await page.keyboard.press(varied.values.indexOf(v0) < varied.values.length - 1 ? "ArrowRight" : "ArrowLeft");
+      await until(`X.values()[${JSON.stringify(varied.param)}] !== ${JSON.stringify(v0)}`).catch(() => {});
+      const st = await page.evaluate(`({ v: ${X}.values()[${JSON.stringify(varied.param)}], clock: ${X}.state.clock, vt: document.activeElement.getAttribute("aria-valuetext") })`);
+      check(`${tag0} explore: → on a focused slider moves it, not the time; it tells its value, not its index (D7, F10)`, st.v !== v0 && st.clock === clock0 && !!st.vt && st.vt.includes(String(st.v).replace(".", LANG === "ru" ? "," : ".")), { v0, ...st });
+      await until(`X.point() && X.point().values[${JSON.stringify(varied.param)}] === X.values()[${JSON.stringify(varied.param)}]`).catch(() => {});
+      await note();
+    }
+    // D12: at phone width every control on the screen together with the view and the time bar
+    if (W < 1000) {
+      const bad = [];
+      for (const c of mfE.controls) {
+        await page.locator(`.dm-screen:not([hidden]) .dm-ctl[data-param="${c.param}"]`).scrollIntoViewIfNeeded();
+        await settle(page, 50);
+        const vis = await page.evaluate((prm) => {
+          const r = (q) => { const e = document.querySelector(`.dm-screen:not([hidden]) ${q}`); if (!e) return null; const b = e.getBoundingClientRect(); return { top: Math.round(b.top), bottom: Math.round(b.bottom) }; };
+          return { H: innerHeight, canvas: r(".dm-stage canvas"), ctl: r(`.dm-ctl[data-param="${prm}"]`), bar: r(".dm-bar") };
+        }, c.param);
+        const inV = (b) => b && b.top >= -1 && b.bottom <= vis.H + 1;
+        const overlap = vis.bar && vis.ctl && vis.ctl.bottom > vis.bar.top + 1;
+        if (!(inV(vis.canvas) && inV(vis.ctl) && inV(vis.bar)) || overlap) bad.push({ param: c.param, ...vis });
+      }
+      check(`${tag0} explore (phone): each control on the screen together with the view and the time bar (D12)`, !bad.length, { bad });
+    }
     // a refused combination: the manifest's first
     if (firstRefused >= 0) {
       const rv = valuesAt(mfE, firstRefused);
@@ -211,7 +263,7 @@ for (const [W, H] of SIZES) {
     const re = new RegExp(`/atlas/${SID}/p(\\d+)\\.`);
     const pts = reqs.filter((u) => re.test(u)).map((u) => Number(u.match(re)[1]));
     const nb = new Set(shown.flatMap((i) => nbOf(mfE, i)));
-    check(`${tag0} explore: only the points shown and their neighbours were fetched`, pts.length > 0 && pts.every((i) => nb.has(i)), { fetched: [...new Set(pts)].slice(0, 40), shown });
+    check(`${tag0} explore: only the points shown and their neighbours were fetched`, pts.length > 0 && pts.every((i) => nb.has(i)), { outside: [...new Set(pts)].filter((i) => !nb.has(i)), shown });
     check(`${tag0} explore: no request to the API's live endpoint on the site`, !reqs.some((u) => u.includes("/api/atlas/")));
     // «How we know this is right»: the point's checks
     if (W < 1000) { await page.locator(".dm-menu > summary").click(); await page.locator(".dm-menu-box button").first().click(); }
@@ -265,7 +317,10 @@ for (const [W, H] of SIZES) {
       else await page.locator(".dm-how").click();
       await settle(page);
       const dr = await page.locator(".dm-drawer-body").innerText();
-      check(`${tag0} explore (server): the passport says «computed live»`, dr.includes(tr("Computed live on this server at {at}.", { at: "" }).replace(/\.$/, "").trim()), { dr: dr.slice(0, 300) });
+      const lp = await page.evaluate(`({ key: ${X}.point().key, code: ${X}.point().code, made: ${X}.point().made, source: ${X}.point().source })`);
+      check(`${tag0} explore (server): the passport says «computed live», with the point's own key, code and time with its zone (D13)`,
+        dr.includes(tr("Computed live on this server at {at}.", { at: "" }).replace(/\.$/, "").trim().split(" ").slice(0, 3).join(" ")) && !!lp.key && dr.includes(lp.key)
+        && (!lp.code || dr.includes(lp.code)) && /UTC/.test(dr), { dr: dr.slice(0, 400), lp });
       await page.screenshot({ path: `${SHOTS}/demo_explore_live_${LANG}_${tag0}.png` });
       await page.keyboard.press("Escape");
     }
@@ -292,7 +347,16 @@ for (const [W, H] of SIZES) {
     const caps = await page.evaluate(() => window.__lfWatch.state.story.captions.map((c) => ({ step: c.step, text: c.text, n: c.n })));
     const n = await page.evaluate(() => window.__lfWatch.state.story.steps.length);
     const s0 = await page.evaluate(() => window.__lfWatch.step());
-    await sleep(800);
+    const hold0 = await page.evaluate(() => (window.__lfWatch.state.story.captions.find((c) => c.step === 0 && c.hold) || {}).hold || 0);
+    if (hold0) {  // the first caption's hold: the story waits at its start; ❚❚ then ▶ go on at once (F12)
+      await sleep(Math.min(600, 400 * hold0));
+      const held = await page.evaluate(() => window.__lfWatch.step());
+      await page.locator(".dm-screen:not([hidden]) .dm-play").click();
+      await page.locator(".dm-screen:not([hidden]) .dm-play").click();
+      await sleep(400);
+      const after = await page.evaluate(() => ({ k: window.__lfWatch.step(), btn: document.querySelector(".dm-screen:not([hidden]) .dm-play").textContent }));
+      check(`${tag0} watch: the first caption's hold keeps the start; ▶ during it goes on at once`, held === 0 && after.k > 0 && after.btn === "❚❚", { held, after, hold0 });
+    } else await sleep(800);
     const s1 = await page.evaluate(() => window.__lfWatch.step());
     check(`${tag0} watch: the recording plays from its start`, s1 > s0, { s0, s1 });
     const capNow = async () => (await page.locator(".dm-screen:not([hidden]) .dm-caption").innerText()).trim();
@@ -321,94 +385,274 @@ for (const [W, H] of SIZES) {
     await page.locator(".dm-screen:not([hidden]) .dm-chap").nth(1).click();
     await settle(page, 100);
     check(`${tag0} watch: ▶▶ goes to the next caption`, (await page.evaluate(() => window.__lfWatch.step())) === caps[m - 1].step);
+    // the time label: the world's time and the playback factor (integrator D8)
+    const tl = (await page.locator(".dm-screen:not([hidden]) .dm-time").innerText()).trim();
+    check(`${tag0} watch: the time label states the world's time and the playback factor`, tl.startsWith(tr("world {t}", { t: "" }).trim())
+      && [tr("real time"), tr("slow motion ×{k}", { k: "" }), tr("sped up ×{k}", { k: "" })].some((x) => tl.includes(x.trim())), { tl });
+    // a caption's hold stops the playback there; ❚❚ then ▶ during the hold go on at once (review EX1-screens F12)
+    const hc = await page.evaluate(() => window.__lfWatch.state.story.captions.find((c) => c.hold && c.step > 0));
+    if (hc) {
+      await page.evaluate((k) => { const s = document.querySelector(".dm-screen:not([hidden]) .dm-timeline"); s.value = String(Math.max(0, k - 3)); s.dispatchEvent(new Event("input")); }, hc.step);
+      await page.locator(".dm-screen:not([hidden]) .dm-play").click();
+      await page.waitForFunction((k) => window.__lfWatch.step() === k, hc.step, { timeout: 10000 });
+      await sleep(Math.min(600, 500 * hc.hold));
+      const held = await page.evaluate(() => window.__lfWatch.step());
+      await page.locator(".dm-screen:not([hidden]) .dm-play").click();  // ❚❚
+      await page.locator(".dm-screen:not([hidden]) .dm-play").click();  // ▶
+      await sleep(400);
+      const after = await page.evaluate(() => ({ k: window.__lfWatch.step(), playing: window.__lfWatch.state.playing, btn: document.querySelector(".dm-screen:not([hidden]) .dm-play").textContent }));
+      check(`${tag0} watch: a hold stops at its caption; ▶ during the hold goes on at once, the button says so`, held === hc.step && after.playing && after.k > hc.step && after.btn === "❚❚", { held, after, at: hc.step, hold: hc.hold });
+    } else skip(`${tag0} watch: a caption's hold (none declared)`);
     await common(page, `${tag0} watch`, W, errs);
     await ctx.close();
   } else skip(`${tag0} watch (the world has no Watch screen)`);
   // --- Lab work ------------------------------------------------------------------------------------------------------
+  // every step (review EX1-screens F19): the race of two picks (integrator D6), the keyboard (D7), one row per set-up
+  // (D5), the manual stopwatch on the wall clock (F5), each law's own plot checked ✓ and another plot refused (D4), at
+  // 390 px «Measure» and the view on the screen together (D12)
   if (lab) {
     const ctx = await br.newContext({ viewport: { width: W, height: H } });
     await asSite(ctx);
     const { page, errs } = await open(ctx, lab.id);
-    await page.waitForFunction(() => window.__lfLab && window.__lfLab.step() && window.__lfLab.step().cur, null, { timeout: 20000 });
+    const LB = (body, timeout = 15000) => page.waitForFunction(`(() => { const s = window.__lfLab && window.__lfLab.step(); return ${body}; })()`, null, { timeout });
+    await LB("s && s.cur", 20000);
+    const msgNow = async () => (await page.locator(".dm-screen:not([hidden]) .dm-msg").innerText()).trim();
     await page.locator(".dm-measure").click();
-    const msg0 = await page.locator(".dm-msg").innerText();
-    check(`${tag0} lab: «Measure» before the landing says there is nothing to measure yet`, msg0.includes(tr("Nothing to measure yet: “{what}” has not been reached at this moment", { what: tr("Range") }).slice(0, 12)), { msg0 });
-    const st0 = lab.steps[0];
-    if (st0.instruments.some((id) => (lab.instruments[id] || {}).manual)) {
-      const slow = page.locator('.dm-screen:not([hidden]) .dm-speed [data-rate="0.25"]');
-      check(`${tag0} lab: the manual stopwatch refuses «slow»`, await slow.isDisabled());
-    } else skip(`${tag0} lab: the manual stopwatch (not in the first step)`);
-    const lc = mfL.controls[0], all = lc.values;
-    const hv = all.length <= 5 ? all : [0, 1, 2, 3, 4].map((j) => all[Math.round(j * (all.length - 1) / 4)]);
-    for (const v of hv) {
-      await detent(page, lc.param, all.indexOf(v)).click();
-      await page.waitForFunction(([p, x]) => { const s = window.__lfLab.step(); return s.cur && s.cur.pt.values[p] === x; }, [lc.param, v], { timeout: 10000 });
-      // to the landing: the last frame of the point
-      await page.evaluate(() => { const s = document.querySelector(".dm-screen:not([hidden]) .dm-timeline"); s.value = s.max; s.dispatchEvent(new Event("input")); });
-      await settle(page, 50);
+    const msg0 = await msgNow();
+    check(`${tag0} lab: «Measure» before the landing says there is nothing to measure yet`, msg0.includes(tr("Nothing to measure yet: “{what}” has not been reached at this moment", { what: "" }).slice(0, 12)), { msg0 });
+    const toEnd = async () => { await settle(page, 30); await page.evaluate(() => { const s = document.querySelector(".dm-screen:not([hidden]) .dm-timeline"); s.value = s.max; s.dispatchEvent(new Event("input")); }); await settle(page, 50); };
+    const pickAndWait = async (param, values, v) => {
+      await detent(page, param, values.indexOf(v)).click();
+      await LB(`s.cur && s.cur.pt.values[${JSON.stringify(param)}] === ${JSON.stringify(v)} && !s.pending`);
+    };
+    for (const [k, st] of lab.steps.entries()) {
+      const tagS = `${tag0} lab part ${k + 1}`;
+      if (k > 0) { await page.locator(".dm-steps button").nth(k).click(); await LB(`s && s.step.id === ${JSON.stringify(st.id)} && s.cur`); }
+      const entryS = index.atlases.find((a) => a.id === st.atlas);
+      const mf = await get(`/recordings/${WORLD}/${entryS.file}`);
+      const lc = mf.controls[0], all = lc.values;
+      const manual = st.instruments.some((id) => (lab.instruments[id] || {}).manual);
+      check(`${tagS}: a manual stopwatch refuses «slow»`, (await page.locator('.dm-screen:not([hidden]) .dm-speed [data-rate="0.25"]').isDisabled()) === manual);
+      if (k === 0 && all.length >= 5) {  // D6: a slow reply of an earlier pick is not applied; «Measure» waits for the set-up
+        const d = all.indexOf(lc.default ?? all[0]);
+        const far = [...all.keys()].filter((j) => Math.abs(j - d) > 2).sort((a, b) => Math.abs(b - d) - Math.abs(a - d));
+        const A = far[0], B = far.find((j) => Math.abs(j - A) > 1);
+        if (B !== undefined) {
+          const pA = flat(mf, { [lc.param]: all[A] });
+          await page.route(new RegExp(`/atlas/${st.atlas.replace(".", "\\.")}/p${pA}\\.`), async (route) => { await sleep(2500); await route.continue(); });
+          await detent(page, lc.param, A).click();
+          await sleep(150);
+          const pending = await page.locator(".dm-measure").isDisabled();
+          await detent(page, lc.param, B).click();
+          await LB(`s.cur && s.cur.pt.values[${JSON.stringify(lc.param)}] === ${JSON.stringify(all[B])}`);
+          await sleep(3000);
+          const after = await page.evaluate((p) => { const s = window.__lfLab.step(); return { slider: s.values[p], shown: s.cur.pt.values[p] }; }, lc.param);
+          check(`${tagS}: a slower reply of an earlier pick is not shown; «Measure» waited for the set-up (D6)`, pending && after.slider === all[B] && after.shown === all[B], { pending, after });
+          await page.unroute(new RegExp(`/atlas/${st.atlas.replace(".", "\\.")}/p${pA}\\.`));
+        }
+      }
+      // the keyboard (D7): the arrows on a focused slider move it and do not launch; Space on a focused «Measure» measures
+      if (k === 0) {
+        const slider = page.locator(`.dm-screen:not([hidden]) .dm-ctl[data-param="${lc.param}"] .dm-slider`);
+        const before = await page.evaluate((p) => { const s = window.__lfLab.step(); return { v: s.values[p], launched: s.cur.launchedAt }; }, lc.param);
+        await slider.focus();
+        await page.keyboard.press(all.indexOf(before.v) < all.length - 1 ? "ArrowRight" : "ArrowLeft");
+        await LB(`s.values[${JSON.stringify(lc.param)}] !== ${JSON.stringify(before.v)} && s.cur && s.cur.pt.values[${JSON.stringify(lc.param)}] === s.values[${JSON.stringify(lc.param)}]`).catch(() => {});
+        const moved = await page.evaluate((p) => { const s = window.__lfLab.step(); return { v: s.values[p], launched: s.cur.launchedAt, playing: window.__lfLab.state.playing }; }, lc.param);
+        check(`${tagS}: → on a focused slider moves the slider, not the time (D7)`, moved.v !== before.v && moved.launched === null && !moved.playing, { before, moved });
+      }
+      // the manual stopwatch: launched with the flight, on the wall clock; pause refused while it runs (F5)
+      if (manual) {
+        await page.locator(".dm-screen:not([hidden]) .dm-play").click();
+        await sleep(200);
+        await page.evaluate(() => document.activeElement && document.activeElement.blur());
+        await page.keyboard.press("Space");
+        const refusedPause = await msgNow();
+        const stillPlaying = await page.evaluate(() => window.__lfLab.state.playing || (window.__lfLab.step().sw && window.__lfLab.step().sw.running));
+        await sleep(600);
+        await page.locator(".dm-screen:not([hidden]) .dm-sw-btn").click();
+        const sw = await page.evaluate(() => window.__lfLab.step().sw);
+        check(`${tagS}: the stopwatch runs on the wall clock; a pause is refused while it runs (F5)`, refusedPause.length > 10 && stillPlaying && sw && sw.stopped && sw.t >= 0.7, { refusedPause, sw });
+        await LB("!window.__lfLab.state.playing", 20000);
+        // its reading goes into its column (review EX1-worlds F6); a row measured without it leaves the cell empty
+        const swCol = st.columns.find((c) => c.from && (lab.instruments[c.from] || {}).manual);
+        if (swCol) {
+          await page.locator(".dm-measure").click();
+          const got = await page.evaluate((cid) => { const r = window.__lfLab.rows(); const x = r[r.length - 1]; return x ? x.cols[cid] : undefined; }, swCol.id);
+          check(`${tagS}: «Measure» records the stopwatch's reading in «${swCol.id}»`, !!got && Math.abs(got.v - sw.t) < 0.011, { got, sw: sw.t });
+          await page.locator(".dm-del").last().click();  // the set-ups are measured below without the stopwatch
+        }
+      }
+      // measure the set-ups (every one up to 17, else five spread over the grid)
+      const hv = all.length <= 17 ? all : [0, 1, 2, 3, 4].map((j) => all[Math.round(j * (all.length - 1) / 4)]);
+      const before0 = await page.evaluate(() => window.__lfLab.rows().length);
+      const said = [];
+      for (const [j, v] of hv.entries()) {
+        await pickAndWait(lc.param, all, v);
+        await toEnd();
+        if (j === 0) {  // Space on the focused «Measure» measures (D7)
+          await page.locator(".dm-measure").focus();
+          await page.keyboard.press("Space");
+        } else await page.locator(".dm-measure").click();
+        said.push(`${v}: ${await msgNow()}`);
+      }
+      const rows = await page.evaluate(() => window.__lfLab.rows().length);
+      check(`${tagS}: ${hv.length} set-ups measured, one row each`, rows - before0 <= hv.length && rows >= hv.length, { rows, before0, n: hv.length, said });
+      // D5: a repeat replaces its row
       await page.locator(".dm-measure").click();
+      const rows2 = await page.evaluate(() => window.__lfLab.rows().length);
+      const m2 = await msgNow();
+      check(`${tagS}: «Measure» again on the same set-up replaces its row and says so (D5)`, rows2 === rows && m2.includes(tr("Row {n:d} replaced: this set-up was already measured; the bench repeats exactly, so a repeat is not a new independent point", { n: 1 }).slice(-30)), { rows, rows2, m2 });
+      const cell = await page.locator(".dm-table tbody tr").first().innerText();
+      check(`${tagS}: a reading carries its error`, cell.includes("±"), { cell });
+      // each law on its own plot: ✓; another plot: the check is off with the reason (D4)
+      const refs = mf.references || {};
+      for (const [j, law] of (st.laws || []).entries()) {
+        // the law's plot: «plot it» when offered, else the selects (x, y, fit)
+        const sels = page.locator(".dm-screen:not([hidden]) .dm-work select");
+        await sels.nth(0).selectOption(law.x); await sels.nth(1).selectOption(law.y); await sels.nth(2).selectOption(law.model);
+        await settle(page, 50);
+        const disabled = await page.locator(".dm-check-law").isDisabled();
+        if (!disabled) await page.locator(".dm-check-law").click();
+        await settle(page, 100);
+        const out = await page.evaluate(() => window.__lfLab.check());
+        const txt = await page.locator(".dm-law").innerText().catch(() => "");
+        const okLaw = out && out.law === law.reference && out.ok;
+        check(`${tagS}: law ${j + 1} (${law.y} against ${law.x}, ${law.model}) ✓ against its reference`, okLaw && !!refs[law.reference], { out, txt: txt.slice(0, 200) });
+        if (LANG === "ru") check(`${tagS}: law ${j + 1}'s verdict has no Latin unit or id (F7)`, !/\b(m|slope|vertex|dof)\b|m\^½/.test(txt), { txt: txt.slice(0, 200) });
+      }
+      if ((st.laws || []).length) {  // a plot that is no law's: the check off, with the reason
+        const cols = st.columns.map((c) => c.id), L0 = st.laws[0];
+        const other = cols.find((c) => c !== L0.x && c !== L0.y && !(st.laws || []).some((L) => L.x === c && L.y === L0.y));
+        if (other) {
+          await page.locator(".dm-screen:not([hidden]) .dm-work select").first().selectOption(other);
+          await settle(page, 50);
+          const off = await page.locator(".dm-check-law").isDisabled();
+          const why = (await page.locator(".dm-law-why").innerText().catch(() => "")).trim();
+          check(`${tagS}: on a plot that is no law's, «Check against the law» is off with the reason (D4)`, off && why.length > 5, { other, why });
+        }
+      }
+      const plotInk = await page.evaluate(() => { const c = document.querySelector(".dm-screen:not([hidden]) .dm-plot"); const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data; const s = new Set(); for (let i = 0; i < d.length; i += 64) s.add(d[i] << 16 | d[i + 1] << 8 | d[i + 2]); return s.size; });
+      check(`${tagS}: the plot is drawn`, plotInk > 3, { colours: plotInk });
+      const csvHref = await page.locator('a[download$=".csv"]').getAttribute("href");
+      const csv = decodeURIComponent(csvHref.replace(/^data:text\/csv;charset=utf-8,/, ""));
+      check(`${tagS}: the CSV has the rows and the errors`, csv.trim().split("\n").length === rows + 1 && csv.split("\n")[0].includes("σ"));
+      const swCol2 = st.columns.findIndex((c) => c.from && (lab.instruments[c.from] || {}).manual);
+      if (swCol2 >= 0) {  // measured without the stopwatch: an empty cell, «—» in the table, never 0
+        const line = csv.trim().split("\n")[1].split(",");
+        const td = await page.locator(".dm-screen:not([hidden]) .dm-table tbody tr").first().locator("td").nth(swCol2 + 1).innerText();
+        check(`${tagS}: a row without a stopwatch reading has an empty time («—», empty in the CSV)`, line[2 * swCol2] === "" && td.trim() === "—", { td, line });
+      }
+      // the drawer of Lab work lists the events without their times (integrator D10: the flight time is measured)
+      if (W >= 1000) {
+        await page.locator(".dm-how").click();
+        await settle(page);
+        const evs = await page.$$eval(".dm-drawer-body .dm-ev", (a) => a.map((e) => ({ mono: !!e.querySelector(".mono"), text: e.textContent })));
+        check(`${tagS}: the drawer's events have no times in Lab work (D10)`, evs.every((e) => !e.mono), { evs: evs.slice(0, 3) });
+        await page.keyboard.press("Escape");
+      }
+      // D12: at phone width «Measure» and the view on the screen together, with the time bar
+      if (W < 1000) {
+        await page.locator(".dm-screen:not([hidden]) .dm-ctl").first().scrollIntoViewIfNeeded();
+        await settle(page);
+        const vis = await page.evaluate(() => {
+          const r = (q) => { const e = document.querySelector(`.dm-screen:not([hidden]) ${q}`); if (!e) return null; const b = e.getBoundingClientRect(); return { top: b.top, bottom: b.bottom }; };
+          return { H: innerHeight, canvas: r(".dm-stage canvas"), measure: r(".dm-measure"), bar: r(".dm-bar"), ctl: r(".dm-ctl"), stop: r(".dm-sw-btn") };
+        });
+        const inView = (b) => b && b.top >= -1 && b.bottom <= vis.H + 1;
+        check(`${tagS} (phone): the view, a control, «Measure»${manual ? ", «⏱ Stop»" : ""} and the time bar on the screen together (D12)`,
+          inView(vis.canvas) && inView(vis.measure) && inView(vis.bar) && inView(vis.ctl) && (!manual || inView(vis.stop)), vis);
+      }
+      await page.evaluate(() => { document.querySelector(".dm-screens").scrollTop = 0; window.scrollTo(0, 0); });
+      await settle(page);
+      await page.screenshot({ path: `${SHOTS}/demo_${WORLD}_lab${k + 1}_${LANG}_${tag0}.png` });
+      await page.evaluate(() => { document.querySelector(".dm-screens").scrollTop = 1e6; window.scrollTo(0, 1e6); });
+      await settle(page);
+      await page.screenshot({ path: `${SHOTS}/demo_${WORLD}_lab${k + 1}_table_${LANG}_${tag0}.png` });
     }
-    const rows = await page.evaluate(() => window.__lfLab.rows().length);
-    check(`${tag0} lab: ${hv.length} measurements, ${hv.length} rows`, rows === hv.length, { rows });
-    const cell = await page.locator(".dm-table tbody tr").first().innerText();
-    check(`${tag0} lab: a reading carries its error`, cell.includes("±"), { cell });
-    const fitTxt = await page.locator(".dm-fit").innerText();
-    check(`${tag0} lab: the fit gives b ± σ`, /b = .*±/.test(fitTxt), { fitTxt });
-    await page.locator(".dm-check-law").click();
-    await settle(page, 100);
-    const law = await page.locator(".dm-law").innerText();
-    const ok = await page.evaluate(() => window.__lfLab.check());
-    const ref = Object.values(mfL.references)[0].value;
-    const res = await page.evaluate(() => ({ b: window.__lfLab.fit().params.b, s: window.__lfLab.fit().sigma.b }));
-    check(`${tag0} lab: «Check against the law» agrees with the reference`, ok && ok.ok && law.includes(tr("✓ agrees within two errors")) && Math.abs(res.b - ref) <= 2 * res.s, { law, ref, res });
-    // the plot is drawn (not blank)
-    const plotInk = await page.evaluate(() => { const c = document.querySelector(".dm-plot"); const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data; const s = new Set(); for (let i = 0; i < d.length; i += 64) s.add(d[i] << 16 | d[i + 1] << 8 | d[i + 2]); return s.size; });
-    check(`${tag0} lab: the plot is drawn`, plotInk > 3, { colours: plotInk });
-    const tb = await page.evaluate(() => { const b = document.querySelector(".dm-table-box"); return { sw: b.scrollWidth, cw: b.clientWidth }; });
+    const tb = await page.evaluate(() => { const b = document.querySelector(".dm-screen:not([hidden]) .dm-table-box"); return { sw: b.scrollWidth, cw: b.clientWidth }; });
     check(`${tag0} lab: the table scrolls inside its box`, tb.cw <= W);
-    await page.evaluate(() => { document.querySelector(".dm-screens").scrollTop = 0; window.scrollTo(0, 0); });
-    await settle(page);
-    await page.screenshot({ path: `${SHOTS}/demo_${WORLD}_lab_${LANG}_${tag0}.png` });
-    await page.evaluate(() => { document.querySelector(".dm-screens").scrollTop = 1e6; window.scrollTo(0, 1e6); });
-    await settle(page);
-    await page.screenshot({ path: `${SHOTS}/demo_${WORLD}_lab_table_${LANG}_${tag0}.png` });
-    // the CSV
-    const csvHref = await page.locator('a[download$=".csv"]').getAttribute("href");
-    const csv = decodeURIComponent(csvHref.replace(/^data:text\/csv;charset=utf-8,/, ""));
-    check(`${tag0} lab: the CSV has the rows and the errors`, csv.trim().split("\n").length === hv.length + 1 && csv.split("\n")[0].includes("σ"));
+    // D7: Space on a focused tab opens it (the tab's own key), not the playback
+    const tabOther = viz.screens.find((s) => s.id !== lab.id);
+    if (tabOther) {
+      await page.locator(`.dm-tab[data-screen="${tabOther.id}"]`).focus();
+      await page.keyboard.press("Space");
+      await page.waitForFunction((sid) => !document.querySelector(`.dm-screen[data-screen="${sid}"]`)?.hidden, tabOther.id, { timeout: 15000 }).catch(() => {});
+      check(`${tag0}: Space on a focused tab opens that tab (D7)`, new URL(page.url()).searchParams.get("screen") === tabOther.id);
+      await page.locator(`.dm-tab[data-screen="${lab.id}"]`).click();
+    }
     await common(page, `${tag0} lab`, W, errs);
     await ctx.close();
   } else skip(`${tag0} lab work (the world has no Lab work screen)`);
   // --- the worksheet -------------------------------------------------------------------------------------------------
+  // one A4 page per sheet (the head and part 1, each part, the questions, the teacher's sheets), each with the
+  // attribution line, no sheet overflowing its page, one blank row per set-up (review EX1-screens F6, EX1-worlds F7)
   if (W >= 1000 && lab) {
     const ctx = await br.newContext({ viewport: { width: W, height: H } });
     const page = await ctx.newPage();
     const errs = [];
     page.on("pageerror", (e) => errs.push(e.message));
+    const pages = (b) => (b.toString("latin1").match(/\/Type\s*\/Page[^s]/g) || []).length;
+    const sheets = () => page.evaluate(() => [...document.querySelectorAll(".ws .sheet")].filter((x) => getComputedStyle(x).display !== "none").map((x) => {
+      const b = x.querySelector(".sheet-body");
+      return { cls: x.className, over: b.scrollHeight - b.clientHeight, credit: !!x.querySelector(".credit"), rows: [...x.querySelectorAll("table.blank tr")].length - (x.querySelector("table.blank") ? 1 : 0), cols: x.querySelector("table.blank") ? x.querySelectorAll("table.blank tr:first-child th").length - 1 : 0 };
+    }));
+    const printed = async (tag) => {
+      await page.emulateMedia({ media: "print" });
+      await page.setViewportSize({ width: 703, height: 1000 });  // A4's width less the page's margins (186 mm): the printed layout
+      const sh = await sheets();
+      await page.setViewportSize({ width: W, height: H });
+      const pdf = await page.pdf({ format: "A4" });
+      await page.emulateMedia({ media: "screen" });
+      check(`worksheet${tag}: one A4 page per sheet, none overflowing, each with the attribution line`, pages(pdf) === sh.length && sh.every((x) => x.over <= 1 && x.credit), { pages: pages(pdf), sheets: sh });
+      return { pdf, sh };
+    };
     await page.goto(inLang(`${base}/worksheet?demo=${WORLD}`));
     await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 20000 });
     const txt = await page.locator("#ws").innerText();
-    check("worksheet: the programme's lab, the step, the questions, the equipment in the language", txt.includes(tr(lab.worksheet.frp[0].name)) && txt.includes(tr(lab.steps[0].title))
+    const frp0 = lab.worksheet.frp[0];
+    check("worksheet: the programme's lab by its name (no raw id), the step, the questions, the equipment in the language", txt.includes(tr(frp0.name)) && txt.includes(tr(lab.steps[0].title))
+      && (!frp0.programme || txt.includes(tr(frp0.programme))) && !txt.includes(frp0.system)
       && txt.includes(tr(lab.worksheet.questions[0].q)) && txt.includes(tr(lab.worksheet.equipment[0])) && !txt.includes("[object"));
-    check("worksheet: the answers hidden without «For the teacher»", !(await page.locator(".teacher").isVisible()));
-    await page.emulateMedia({ media: "print" });
-    const pdf0 = await page.pdf({ format: "A4" });
-    await page.emulateMedia({ media: "screen" });
+    check("worksheet: the answers hidden without «For the teacher»", !(await page.locator(".teacher").first().isVisible()));
+    const { pdf: pdf0, sh: sh0 } = await printed("");
+    const setups = (st) => (st.controls || []).reduce((n, c) => n * c.values.length, 1);
+    const parts = sh0.filter((x) => x.cls.includes("part"));
+    check("worksheet: a sheet per part, one blank row per set-up of its step", parts.length === lab.steps.length && parts.every((x, k) => x.rows === setups(lab.steps[k])), { rows: parts.map((x) => x.rows), want: lab.steps.map(setups) });
     await page.locator(".ws-tools input[type=checkbox]").check();
-    check("worksheet: «For the teacher» shows the answers", (await page.locator(".teacher").innerText()).includes(tr(lab.worksheet.questions[0].answer)));
+    check("worksheet: «For the teacher» shows the answers", (await page.locator(".teacher").first().innerText()).includes(tr(lab.worksheet.questions[0].answer)));
     check("worksheet: the switch is in the address", new URL(page.url()).searchParams.get("teacher") === "1");
-    await page.emulateMedia({ media: "print" });
-    const pdf1 = await page.pdf({ format: "A4" });
-    const pages = (b) => (b.toString("latin1").match(/\/Type\s*\/Page[^s]/g) || []).length;
+    const { pdf: pdf1, sh: sh1 } = await printed(" (for the teacher)");
+    check("worksheet: the teacher's sheets are pages of their own", pages(pdf1) > pages(pdf0) && sh1.filter((x) => x.cls.includes("teacher")).length === pages(pdf1) - pages(pdf0));
     writeFileSync(`${SHOTS}/worksheet_${WORLD}_${LANG}.pdf`, pdf0);
     writeFileSync(`${SHOTS}/worksheet_${WORLD}_teacher_${LANG}.pdf`, pdf1);
-    const brk = await page.evaluate(() => getComputedStyle(document.querySelector(".teacher")).breakBefore);
-    check("worksheet: printed; the teacher's answers on pages of their own (a page break before them)", pages(pdf0) >= 1 && pages(pdf1) > pages(pdf0)
-      && (lab.steps.length > 1 || pages(pdf1) === pages(pdf0) + 1) && brk === "page", { pages: [pages(pdf0), pages(pdf1)], brk });
     if (LANG === "en") check("worksheet: no Cyrillic but the programme's own wording", !CYR.test(txt.replace(/«[^»]*»/g, "")));  // i18n-ok: the quoted original
-    await page.emulateMedia({ media: "screen" });
+    else check("worksheet: no Latin unit or raw id in the Russian text (F7)", !/\bm\^½|\bFRP-|\b(slope|vertex)\b/.test(txt), { sample: (txt.match(/.{0,30}(m\^½|FRP-|slope|vertex).{0,30}/) || [""])[0] });
     await page.screenshot({ path: `${SHOTS}/worksheet_${WORLD}_${LANG}.png`, fullPage: true });
+    // a variant (S03's grade 7): its steps, its plot's columns only, its questions
+    for (const v of lab.worksheet.variants || []) {
+      await page.goto(inLang(`${base}/worksheet?demo=${WORLD}&variant=${v.id}`));
+      await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 20000 });
+      const vt = await page.locator("#ws").innerText();
+      const { sh } = await printed(` variant ${v.id}`);
+      const vparts = sh.filter((x) => x.cls.includes("part"));
+      const vsteps = lab.steps.filter((st) => v.steps.includes(st.id));
+      const wantCols = vsteps.map((st) => st.columns.filter((c) => c.from || c.id === v.plot[st.id].x || c.id === v.plot[st.id].y).length);
+      check(`worksheet variant ${v.id}: its steps, the measured and plotted columns, its questions`, vparts.length === vsteps.length
+        && vparts.every((x, k) => x.cols === wantCols[k]) && vt.includes(tr(v.label)) && v.questions.every((q) => vt.includes(tr(q.q))), { cols: vparts.map((x) => x.cols), wantCols });
+      await page.screenshot({ path: `${SHOTS}/worksheet_${WORLD}_${v.id}_${LANG}.png`, fullPage: true });
+    }
     check("worksheet: no page error", errs.length === 0, { errs });
+    await ctx.close();
+  }
+  if (W < 1000 && lab) {  // the worksheet at phone width: no horizontal scroll
+    const ctx = await br.newContext({ viewport: { width: W, height: H } });
+    const page = await ctx.newPage();
+    await page.goto(inLang(`${base}/worksheet?demo=${WORLD}`));
+    await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 20000 });
+    const sw = await page.evaluate(() => document.scrollingElement.scrollWidth);
+    check(`${tag0} worksheet: no horizontal scroll`, sw <= W, { sw });
+    await page.screenshot({ path: `${SHOTS}/worksheet_${WORLD}_${LANG}_${tag0}.png`, fullPage: true });
     await ctx.close();
   }
 }

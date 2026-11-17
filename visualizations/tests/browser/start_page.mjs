@@ -52,7 +52,9 @@ const { t: tr } = await loadI18n(base);
 const viz = (await get("/api/viz")).filter((v) => !v.error);
 const audiences = (await get("/api/audiences")).audiences || [];
 const planned = await get("/api/planned");
-const recs = (await get("/api/recordings")).worlds || {};
+const REC = await get("/api/recordings");
+const recs = REC.worlds || {};
+const EXPECTED = REC.expected || {};  // the atlases' and recordings' keys this server would build now (integrator D11)
 const n = (aud) => viz.filter((v) => v.audience === aud).length;
 
 const br = await chromium.launch();
@@ -221,7 +223,9 @@ for (const [hash, aud] of [["university", "university"], ["research", "research"
     const got = await page.$$eval(`#card-${v.id} a.st-screen`, (a) => a.map((b) => ({ id: b.dataset.screen, text: b.textContent,
       href: b.getAttribute("href") || "", off: b.classList.contains("disabled"), aria: b.getAttribute("aria-disabled"), title: b.title })));
     const idx = recs[v.id] || {};
-    const atl = new Set((idx.atlases || []).map((a) => a.id));
+    // an atlas counts only with the key this server would build now (GET /api/recordings "expected"; integrator D11)
+    const exp = (EXPECTED[v.id] || {}).atlases || {};
+    const atl = new Set((idx.atlases || []).filter((a) => exp[a.id] === undefined || exp[a.id] === a.key).map((a) => a.id));
     const want = v.screens.map((s) => {
       if (s.kind === "watch") {
         const r = (idx.recordings || []).find((x) => x.id === s.recording);
@@ -234,15 +238,17 @@ for (const [hash, aud] of [["university", "university"], ["research", "research"
       && want.every((w, i) => got[i].id === w.id && got[i].text === w.label), { got: got.map((g) => g.text), want: want.map((w) => w.label) });
     const bad = want.filter((w, i) => !got[i] || (w.ready
       ? got[i].off || !new RegExp(`/run(\\.html)?\\?demo=${v.id}&screen=${w.id}(&|$)`).test(got[i].href)
-      : !got[i].off || got[i].href || got[i].aria !== "true" || got[i].title !== tr("Not made yet: build it locally (site/record.py) or compute live")));
+      : !got[i].off || got[i].href || got[i].aria !== "true" || got[i].title !== tr("Not built here: run site/record.py --world {world}", { world: v.id })));
     check(`screens: ${v.id} enabled with /run?demo=…&screen=… exactly when made, else greyed with the reason`, !bad.length, { bad, got });
-    const first = got.find((g) => !g.off);
-    if (first) {
-      await Promise.all([page.waitForURL(/\/run\?demo=/, { timeout: 30000 }), page.click(`#card-${v.id} a.st-screen[data-screen="${first.id}"]`)]);
-      const tab = await page.waitForSelector(`.dm-tabs button[data-screen="${first.id}"][aria-selected="true"]`, { timeout: 30000 }).then(() => true, () => false);
-      check(`screens: ${v.id} «${first.text}» opens its screen`, tab && new URL(page.url()).searchParams.get("screen") === first.id, { url: page.url() });
-    }
     await page.close();
+    // every enabled button opens its own tab (review EX1-screens F19: not only the first)
+    for (const g of got.filter((x) => !x.off)) {
+      const pg = await open(ctx, `${v.audience === "playground" ? "labs" : v.audience}/${v.id}`);
+      await Promise.all([pg.waitForURL(/\/run\?demo=/, { timeout: 30000 }), pg.click(`#card-${v.id} a.st-screen[data-screen="${g.id}"]`)]);
+      const tab = await pg.waitForSelector(`.dm-tabs button[data-screen="${g.id}"][aria-selected="true"]`, { timeout: 30000 }).then(() => true, () => false);
+      check(`screens: ${v.id} «${g.text}» opens its screen`, tab && new URL(pg.url()).searchParams.get("screen") === g.id, { url: pg.url() });
+      await pg.close();
+    }
   }
 }
 

@@ -9,7 +9,9 @@ in the state); the air is the quadratic drag of a sphere with a constant drag co
 closed forms of the flight in vacuum (``lfphys.core.mechanics``), the hodograph quadrature of the quadratic drag (the
 second method: no time integration) and, for a vertical throw in air, the closed forms of vertical motion with
 quadratic drag. Here: the choice of the ball, the launch vector, the samples every 1/60 s of world time (every 6th is a
-multiple of 0.1 s: the strobe), and the comparisons.
+multiple of 0.1 s: the strobe), and the comparisons. The second drag model, the measured drag curve of a smooth sphere
+(``drag_quadratic.CurveDrag``: C_d(Re) of Morrison 2016 at every instant), flies the same launch for comparison only:
+the world's ball always flies with the constant C_d.
 """
 
 from __future__ import annotations
@@ -47,6 +49,14 @@ def body_of(obj: str) -> Body:
 
 def drag_of(obj: str) -> dq.QuadraticDrag:
     return dq.QuadraticDrag.sphere(OBJECTS[obj]["d"], medium())
+
+
+def curve_flight(obj: str, h: float, v0: float, angle_deg: float):
+    """The same launch in air with the second drag model, the measured drag curve (``drag_quadratic.CurveDrag``): the
+    engine's flight (its ``range``, ``flight_time``). For comparison only (R-E F1): it shows how much the constant C_d
+    itself moves the result."""
+    vx, vy = launch_vector(v0, angle_deg)
+    return fly(body_of(obj), (0.0, float(h)), (vx, vy), forces=[dq.CurveDrag.sphere(OBJECTS[obj]["d"], medium())])
 
 
 def launch_vector(v0: float, angle_deg: float) -> tuple[float, float]:
@@ -120,12 +130,13 @@ class Shot:
         return dq.validity(self.flight, self.drag) if self.air else None
 
 
-def optimum_angle(obj: str, h: float, v0: float, air: bool, step: float = 0.1) -> tuple[float, float, int]:
+def optimum_angle(obj: str, h: float, v0: float, air: bool, step: float = 0.1,
+                  curve: bool = False) -> tuple[float, float, int]:
     """The launch angle of the largest range (degrees), that range and the number of flights computed: a scan at 1°
     steps, then at ``step`` around the best one. No closed form exists with quadratic drag; it is the engine's
-    computation."""
+    computation. ``curve``: in air with the measured drag curve instead of the constant C_d (the second model)."""
     def rng(a):
-        return Shot(obj, h, v0, a, air).L
+        return curve_flight(obj, h, v0, a).range if (air and curve) else Shot(obj, h, v0, a, air).L
     coarse = np.arange(1.0, 89.5, 1.0)
     best = float(coarse[int(np.argmax([rng(a) for a in coarse]))])
     fine = np.round(np.arange(best - 1.0, best + 1.0 + step / 2, step), 6)

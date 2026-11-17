@@ -9,7 +9,9 @@
 #
 # What it does:
 #   1. check:   builds the Docker image once (cached), runs the registry/README/picture completeness tests, the i18n
-#               tests and the site's own tests, and plans the matrix of worlds to record (site/plan.py);
+#               tests and the site's own tests, the player's Node tests (player/js/tests/*.test.mjs: the decoder's bit
+#               equality with Python, the header merge, the fit's parity with lfphys.tools.stats; integrator D15), and
+#               plans the matrix of worlds to record (site/plan.py);
 #      viz-tests, engine-tests (in parallel with check): the whole visualizations suite (in shards) and the engine's
 #               suite (integrator D5: nothing is recorded or published from code whose physics tests fail);
 #   2. record:  one job per world, after all three; restores rec-<world>-<key> from the Actions cache (key = the
@@ -22,7 +24,9 @@
 #   3. build:   assembles the static site from the registry and the recordings (site/build.py), fails when anything is
 #               missing, stale, failed or over budget (site/check.py), smoke-tests it in Chromium served under
 #               /lfphys/ by Python's http.server from a parent folder, EN and RU, playing every recording
-#               (tests/browser/site_smoke.mjs), and uploads the Pages artifact;
+#               (tests/browser/site_smoke.mjs), checks the screens on a server (tests/browser/demo_screens.mjs, EN and
+#               RU, on the toy world's recordings and atlases built now by site/fixtures.py: a server's player refuses
+#               a stale atlas, so no browser test uses the committed fixture), and uploads the Pages artifact;
 #   4. deploy:  publishes it to GitHub Pages ONLY when started by hand (workflow_dispatch) with the input
 #               deploy: true, which is the owner's go (integrator D2, owner: «деплой по моему go»). A push to main
 #               checks, records and builds; it never deploys.
@@ -30,8 +34,9 @@
 # (site/readme.py) are made locally and committed by a person; the check job fails when they are out of date. When the
 # site is first published, the owner also sets "published": true in visualizations/site/site.json and runs
 # site/readme.py, which brings the README's links to the site back (integrator D3).
-# The container images are pinned by digest (python:3.11-slim, the Playwright image), as the actions are by SHA;
-# looked up on 2026-11-13 with `docker image inspect --format '{{.RepoDigests}}'` of the images pulled by tag.
+# The container images are pinned by digest (python:3.11-slim, the Playwright image, node:24), as the actions are by
+# SHA; looked up with `docker image inspect --format '{{.RepoDigests}}'` of the images pulled by tag (2026-11-13; node:24
+# on 2026-11-17, Node 24.22.2).
 
 name: pages
 
@@ -64,6 +69,7 @@ env:
   SITE_BASE: /lfphys/         # the project site's sub-path (https://ildar-idrisov.github.io/lfphys/)
   PY_SLIM: python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8
   PLAYWRIGHT: mcr.microsoft.com/playwright:v1.58.2-jammy@sha256:4698a73749c5848d3f5fcd42a2174d172fcad2b2283e087843b115424303a565
+  NODE: node:24@sha256:e7add2a490bb17d97b485b8641bd88455fff7839ade0f5eba493c3508124d413
 
 jobs:
   check:
@@ -89,6 +95,10 @@ jobs:
             -w /lf/visualizations "$IMAGE" python3 -m pytest -q -p no:cacheprovider \
             tests/test_site_registry.py tests/test_i18n.py tests/test_recorder.py tests/test_site_build.py \
             tests/test_code_hash.py tests/test_headless.py tests/test_atlas.py tests/test_protocol_quant.py
+      - name: The player's Node tests (the JS decoder bit for bit with Python, the header merge, the fit's parity)
+        run: |
+          docker run --rm --memory=1g -v "$PWD:/lf:ro" -w /lf/visualizations "$NODE" \
+            sh -c 'node --test player/js/tests/*.test.mjs'
       - name: Plan the recordings
         id: plan
         env:
@@ -106,7 +116,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: ["tests", "u3", "u4 r1 p0"]
+        # every world folder with tests is in one shard: the school worlds (s0*: s03_projectile) go with tests/
+        shard: ["tests s0", "u3", "u4 r1 p0"]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f  # v3.12.0
@@ -240,11 +251,28 @@ jobs:
             -v "$PWD/visualizations/tests/browser:/t:ro" -w /pw "$PLAYWRIGHT" \
             sh -c "npm i --no-save --no-audit --no-fund playwright@1.58.2 >/dev/null && cp /t/*.mjs /pw/ \
                    && node /pw/site_smoke.mjs http://lf-site-srv:8000${SITE_BASE} en,ru"
-      - name: Stop the site's server
+      - name: The screens on a server in Chromium, EN and RU, on the toy world built now (site/fixtures.py)
+        run: |
+          mkdir -p fx runs-demo
+          docker run --rm --memory=4g -e PYTHONDONTWRITEBYTECODE=1 --user "$(id -u):$(id -g)" -v "$PWD:/lf:ro" \
+            -v "$PWD/fx:/fx" -w /lf/visualizations "$IMAGE" python3 site/fixtures.py --out /fx
+          docker run -d --name lf-demo-srv --network host --memory=4g -e LFPHYS_NO_GPU=1 -e PYTHONDONTWRITEBYTECODE=1 \
+            -e LFVIZ_EXTRA=/lf/visualizations/tests/site_worlds -e LFVIZ_RECORDINGS=/fx --user "$(id -u):$(id -g)" \
+            -v "$PWD:/lf:ro" -v "$PWD/fx:/fx:ro" -v "$PWD/runs-demo:/runs" -w /lf/visualizations "$IMAGE" \
+            python3 server/serve.py --host 127.0.0.1 --port 8705 --runs-dir /runs --max-workers 1
+          for _ in $(seq 1 60); do curl -sf http://127.0.0.1:8705/api/health >/dev/null && break; sleep 1; done
+          for lang in en ru; do
+            docker run --rm --init --network host --shm-size=2g --memory=4g -e LFVIZ_LANG="$lang" \
+              -v "$PWD/visualizations/tests/browser:/t:ro" -w /pw "$PLAYWRIGHT" \
+              sh -c "npm i --no-save --no-audit --no-fund playwright@1.58.2 >/dev/null && cp /t/*.mjs /pw/ \
+                     && node /pw/demo_screens.mjs 8705 1280x800,390x844 s98_atlas_toy"
+          done
+      - name: Stop the servers
         if: always()
         run: |
           docker logs --tail 50 lf-site-srv || true
-          docker rm -f lf-site-srv || true
+          docker logs --tail 50 lf-demo-srv || true
+          docker rm -f lf-site-srv lf-demo-srv || true
           docker network rm site-smoke || true
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa  # v3.0.1
         with:

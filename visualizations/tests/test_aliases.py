@@ -96,7 +96,9 @@ def _texts(path: Path) -> list[str]:
 async def _old_record(tmp_path):
     runs = tmp_path / "runs"
     shutil.copytree(FIXTURE, runs / OLD_RUN)
-    app = create_app(runs, max_workers=1, idle_pause=60, idle_suspend=3600)
+    # the fixture's last action is of 2026-11-13: a removal period of a year keeps it (the default 3 days removed it at
+    # load from 2026-11-17 on)
+    app = create_app(runs, max_workers=1, idle_pause=60, idle_suspend=3600, keep_days=365)
     async with TestClient(TestServer(app)) as cl:
         mgr = app[MGR]
         listed = {r["id"]: r for r in await (await cl.get("/api/runs")).json()}

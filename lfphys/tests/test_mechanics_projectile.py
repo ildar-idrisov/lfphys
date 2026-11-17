@@ -103,9 +103,61 @@ def test_lambert_landing_is_the_principal_root():
     assert linear_drag_state(T, [0.0, 0.0], [8.0, 6.0], 0.3, G)[0][1] == pytest.approx(0.0, abs=1e-13)
 
 
+def _landing_s_mp(h, vy0, k, g):
+    """The landing condition h' + c (1 - e^{-s}) - s = 0 solved by bisection in 50-digit arithmetic (mpmath)."""
+    import mpmath as mp
+    mp.mp.dps = 50
+    tau = 1 / mp.mpf(k)
+    c = (mp.mpf(vy0) + g * tau) / (g * tau)
+    hp = mp.mpf(h) / (g * tau * tau)
+
+    def f(s):
+        return hp + c * (1 - mp.exp(-s)) - s
+    lo = mp.mpf(0) if h > 0 else mp.mpf(k) * mp.mpf(vy0) / g  # past the start (s = 0) when h = 0: beyond the apex
+    hi = mp.mpf(1)
+    while f(hi) > 0:
+        hi *= 2
+    for _ in range(400):
+        mid = (lo + hi) / 2
+        if f(mid) > 0:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2
+
+
+@pytest.mark.parametrize("k", [3.0, 1.0, 0.1, 1e-2, 1e-3, 1e-4, 1e-5])
+@pytest.mark.parametrize("h,vy0", [(0.0, 10.0), (2.0, 6.0), (10.0, 0.0), (10.0, -3.0)])
+def test_lambert_landing_time_is_exact_also_for_weak_drag(h, vy0, k):
+    """Review R-E F2: Lambert's W alone erred by ~1e-16 / s^2 relative (1e-8 at s = 1.4e-4, 7e-7 at s = 2e-5); with the
+    Newton polish the landing time is exact to round-off against a 50-digit bisection of the landing condition, from
+    the Stokes regime of a real ball (k = 1e-4 1/s: a 20 mm steel ball in air) to strong drag. Measured: <= 8e-16
+    (W alone: up to 7.3e-7 at k = 1e-5, as the review found)."""
+    T = linear_drag_landing_time(h, vy0, k, G)
+    ref = float(_landing_s_mp(h, vy0, k, G)) / k
+    assert _rel(T, ref) < 2e-15
+
+
+@pytest.mark.parametrize("ratio", [1.0, 1.5, 3.0])
+def test_lambert_landing_time_downwards_beyond_the_terminal_speed(ratio):
+    """Review R-E F10: launched downwards at or beyond the terminal speed (c <= 0) the same formula holds (the argument
+    of W0 is >= 0); c = 0 is uniform motion at v_t, T = h / v_t. Against the 50-digit bisection and the flight
+    integrated by DOP853."""
+    k, h = 0.5, 20.0
+    vt = G / k
+    T = linear_drag_landing_time(h, -ratio * vt, k, G)
+    assert _rel(T, float(_landing_s_mp(h, -ratio * vt, k, G)) / k) < 2e-15
+    if ratio == 1.0:
+        assert T == pytest.approx(h / vt, rel=1e-15)
+    f = fly(STEEL, [0.0, h], [1.0, -ratio * vt], forces=[LinearDrag(k * STEEL.mass)])
+    assert _rel(f.flight_time, T) < TOL
+
+
 def test_stokes_law_and_reynolds():
     """b = 3 pi mu d with the air of core.data; a 50 um droplet of water reaches v_t = m g / b, and its Reynolds number
-    along the path is rho |v| d / mu (here up to 0.25: the law's error 3 Re/16 = 4.7 %)."""
+    along the path is rho |v| d / mu (here up to 0.25: the law's error 3 Re/16 = 4.7 %). This checks the engine's law,
+    not the droplet's real fall: the history force, not modelled, changes its speed by ~4 % while it accelerates
+    (``test_the_stated_size_of_the_history_force``)."""
     a = air()
     d = 50e-6
     drag = stokes_drag(d)
@@ -118,6 +170,37 @@ def test_stokes_law_and_reynolds():
     assert re.max() == pytest.approx(a["rho"] * vt * d / a["mu"], rel=1e-6)
     assert re.max() < 0.26 and float(oseen_error(re.max())) < 0.048
     assert f.energy_balance() < TOL
+
+
+def _maxey_riley(R, history=True, unsteady=True, dt=1e-3, T=1.0):
+    """A sphere in the Stokes regime released from rest (units tau_p, g tau_p): (1 + R/2) a = (1 - R) - v - 1.5
+    sqrt(2/pi) sqrt(R) int_0^t a(s) / sqrt(t - s) ds, by product integration (a constant on each step, implicit in the
+    newest step). history/unsteady False: without the history term / without the added mass and the buoyancy."""
+    C = 1.5 * math.sqrt(2.0 / math.pi) * math.sqrt(R) if history else 0.0
+    m, src = (1.0 + R / 2.0, 1.0 - R) if unsteady else (1.0, 1.0)
+    n = int(round(T / dt))
+    a, v, tj = np.zeros(n), np.zeros(n + 1), np.arange(n + 1) * dt
+    for k in range(n):
+        tm = (k + 0.5) * dt
+        hist = float(2.0 * (np.sqrt(tm - tj[:k]) - np.sqrt(tm - tj[1:k + 1])) @ a[:k]) if k else 0.0
+        a[k] = (src - v[k] - C * hist) / (m + dt / 2.0 + 2.0 * C * math.sqrt(dt / 2.0))
+        v[k + 1] = v[k] + a[k] * dt
+    return v[-1]
+
+
+@pytest.mark.parametrize("rho_body,stated", [(7850.0, 0.014), (998.2, 0.039)])
+def test_the_stated_size_of_the_history_force(rho_body, stated):
+    """Review R-E F3: core.mechanics.drag states the unsteady forces Stokes's law leaves out. At t = tau_p the full
+    Maxey–Riley speed is below the steady law's by 1.44 % for steel in air and 4.03 % for a water droplet (the history
+    term alone 1.42 % and 3.89 %: of order sqrt(rho_air / rho_body), not rho_air / rho_body = 1.5e-4 and 1.2e-3 as
+    stated before). The integration converges in the step (2e-3 and 5e-4 give the same three digits)."""
+    R = air()["rho"] / rho_body
+    v_steady = 1.0 - math.exp(-1.0)
+    alone = 1.0 - _maxey_riley(R, unsteady=False) / v_steady
+    full = 1.0 - _maxey_riley(R) / v_steady
+    print("history force", rho_body, alone, full)
+    assert alone == pytest.approx(stated, rel=0.05) and 0.5 * math.sqrt(R) < alone < 1.5 * math.sqrt(R)
+    assert full > alone > 10 * R
 
 
 # --- quadratic drag (the model) ---------------------------------------------------------------------------------------
@@ -191,6 +274,18 @@ def test_quadratic_2d_against_the_hodograph_and_radau(h, v, th):
     assert max(errs.values()) < TOL
 
 
+@pytest.mark.parametrize("th", [88.0, 89.9, 89.99])
+def test_a_near_vertical_range_is_accurate_to_the_flight_s_length_scale(th):
+    """Review R-E F7: the stated 1e-9 applies to lengths relative to the flight's length scale max(h, v0^2/g); the
+    range of a near-vertical throw is a small part of it (L = 0.0126 m at 89.99° and 25 m/s), so its own relative error
+    is larger. Measured against the hodograph: 4e-11, 3e-11, 3e-11 of v0^2/g; 1.0e-9, 1.7e-8, 1.4e-7 of L."""
+    drag = dq.QuadraticDrag.sphere(BALL.diameter)
+    f = fly(BALL, [0.0, 0.0], _v(25.0, th), forces=[drag])
+    hd = dq.hodograph(25.0, math.radians(th), 0.0, drag.k(BALL.mass))
+    assert abs(f.range - hd["L"]) < TOL * 25.0 ** 2 / G
+    assert _rel(f.flight_time, hd["T"]) < TOL and _rel(f.apex_height, hd["H"]) < TOL
+
+
 def test_air_shortens_the_range_and_moves_the_optimum_below_45():
     """Design §5.3 (stand-in, App. A): with air the 67 mm ball at 25 m/s from the ground flies furthest below 45°.
     The engine's own numbers (the stand-in's 36.47 m at 40° and 36.16 m at 45° used k = 0.01729 1/m; with the air of
@@ -232,6 +327,102 @@ def test_standard_drag_curve_values():
     """Morrison's correlation at the values computed when it was checked (2026-11-14)."""
     assert dq.cd_standard([1e3, 1e4, 1e5, 2e5]) == pytest.approx([0.48376, 0.39260, 0.42571, 0.41594], abs=1e-5)
     assert dq.cd_standard(0.5) == pytest.approx(24 / 0.5, rel=0.03)  # creeping flow
+    # the third term rewritten without overflow (a^0.06 / (1 + a^8) for a^-7.94 / (1 + a^-8)): the published form
+    re = np.array([1e-3, 0.5, 1e3, 1e5, 2.63e5, 1e6])
+    a = re / 2.63e5
+    pub = 24 / re + 2.6 * (re / 5) / (1 + (re / 5) ** 1.52) + 0.411 * a ** -7.94 / (1 + a ** -8) \
+        + 0.25 * (re / 1e6) / (1 + re / 1e6)
+    assert dq.cd_standard(re) == pytest.approx(pub, rel=1e-14)
+    assert np.isfinite(dq.cd_standard(1e-200)) and dq.cd_standard(1e-200) == pytest.approx(2.4e201, rel=1e-12)
+
+
+# --- the second model: the measured curve C_d(Re) (review R-E F1, decision D1) ----------------------------------------
+def _morrison(re):
+    """Morrison (2016), eq. (1), written out here as published (not through dq.cd_standard)."""
+    a = re / 2.63e5
+    return 24 / re + 2.6 * (re / 5.0) / (1 + (re / 5.0) ** 1.52) + 0.411 * a ** -7.94 / (1 + a ** -8.0) \
+        + 0.25 * (re / 1e6) / (1 + re / 1e6)
+
+
+def _radau_curve(body, h, v0):
+    """Radau IIA (rtol 1e-13) with the curve's force written out: the second method for ``CurveDrag``."""
+    a = air()
+    rho, mu, d = a["rho"], a["mu"], body.diameter
+    A = math.pi * d * d / 4
+
+    def rhs(t, Y):
+        vx, vy = Y[2], Y[3]
+        sp = math.hypot(vx, vy)
+        c = 0.5 * rho * _morrison(rho * sp * d / mu) * A * sp / body.mass
+        return [vx, vy, -c * vx, -G - c * vy]
+
+    def land(t, Y):
+        return Y[1]
+    land.terminal, land.direction = True, -1
+
+    def apex(t, Y):
+        return Y[3]
+    apex.direction = -1
+    sol = integrate.solve_ivp(rhs, (0.0, 100.0), [0.0, h, v0[0], v0[1]], method="Radau", rtol=1e-13,
+                              atol=[1e-12] * 4, events=[land, apex])
+    T = float(sol.t_events[0][0])
+    H = float(sol.y_events[1][0][1]) if len(sol.t_events[1]) else h
+    return T, float(sol.y_events[0][0][0]), H
+
+
+@pytest.mark.parametrize("body,h,v,th", [(BALL, 0.0, 25.0, 45.0), (BALL, 0.0, 20.0, 40.0), (BALL, 0.0, 25.0, 42.0),
+                                         (BALL, 10.0, 25.0, 20.0), (STEEL, 1.0, 1.5, 0.0), (BALL, 0.5, 0.05, 0.0)])
+def test_curve_drag_against_radau(body, h, v, th):
+    """The flight with the measured C_d(Re) (``CurveDrag``) against Radau IIA with Morrison's eq. (1) written out
+    independently: T, L, H within 1e-9 (measured: up to 2e-11; 3e-10 in the 1.6 cm range of the last case), and its
+    energy balance. The last case starts at Re = 222, below the plateau, and passes through the creeping-flow part of
+    the curve."""
+    drag = dq.CurveDrag.sphere(body.diameter)
+    v0 = _v(v, th)
+    f = fly(body, [0.0, h], v0, forces=[drag])
+    T_r, L_r, H_r = _radau_curve(body, h, v0)
+    res = f.results()
+    errs = {"T": _rel(res["T"], T_r), "L": _rel(res["L"], L_r), "H": _rel(res["H"], H_r) if th > 0 else 0.0,
+            "E": f.energy_balance()}
+    print("curve drag", body.name, h, v, th, errs)
+    assert max(errs.values()) < TOL
+
+
+def test_curve_drag_with_a_constant_curve_is_the_constant_model():
+    """With C_d(Re) = 0.47 the force is QuadraticDrag's (to round-off) and the flight is the hodograph's."""
+    cst = dq.CurveDrag.sphere(BALL.diameter, curve=lambda re: 0.47 + 0.0 * np.asarray(re, float))
+    q = dq.QuadraticDrag.sphere(BALL.diameter)
+    for vv in ([3.0, 4.0], [-20.0, 0.1], [0.0, -7.0]):
+        assert cst.force(0.0, None, vv) == pytest.approx(q.force(0.0, None, vv), rel=1e-15)
+    f = fly(BALL, [0.0, 0.0], _v(25.0, 45.0), forces=[cst])
+    hd = dq.hodograph(25.0, math.radians(45.0), 0.0, q.k(BALL.mass))
+    assert _rel(f.range, hd["L"]) < TOL and _rel(f.flight_time, hd["T"]) < TOL
+
+
+def test_curve_drag_is_stokes_in_creeping_flow_and_the_review_numbers():
+    """At Re = 1e-6 the curve's force is Stokes's 3 pi mu d v (the curve's other terms: 4e-9 relative). The ranges with
+    the measured curve against the constant 0.47, as the review R-E F1 computed them independently
+    (d_energy_validity.out: 27.2222 / 28.2371 m and 36.2338 / 37.8905 m, i.e. +3.73 % and +4.57 %)."""
+    drag = dq.CurveDrag.sphere(BALL.diameter)
+    a = air()
+    v_small = 1e-6 * a["mu"] / (a["rho"] * BALL.diameter)
+    F = drag.force(0.0, None, [v_small, 0.0])
+    assert -F[0] == pytest.approx(3 * math.pi * a["mu"] * BALL.diameter * v_small, rel=1e-7)
+    assert np.all(drag.force(0.0, None, [0.0, 0.0]) == 0.0)
+    q = dq.QuadraticDrag.sphere(BALL.diameter)
+    for v, th, Lc, Lm in ((20.0, 40.0, 27.2222, 28.2371), (25.0, 45.0, 36.2338, 37.8905)):
+        assert fly(BALL, [0.0, 0.0], _v(v, th), forces=[q]).range == pytest.approx(Lc, abs=6e-5)
+        assert fly(BALL, [0.0, 0.0], _v(v, th), forces=[drag]).range == pytest.approx(Lm, abs=6e-5)
+    assert float(drag.cd_at(25.0)) == pytest.approx(float(dq.cd_standard(drag.reynolds(25.0))), rel=1e-15)
+
+
+def test_curve_drag_refusals():
+    with pytest.raises(ValueError):
+        dq.CurveDrag.sphere(0.0)
+    with pytest.raises(ValueError):
+        dq.CurveDrag(1.0, 1.2, -1.0, 0.1)
+    with pytest.raises(ValueError):  # a 1 m sphere at 30 m/s: Re 2e6, beyond the curve
+        fly(Body(500.0, 1.0), [0.0, 1.0], [30.0, 0.0], forces=[dq.CurveDrag.sphere(1.0)])
 
 
 # --- energy, events, sampling, refusals -------------------------------------------------------------------------------

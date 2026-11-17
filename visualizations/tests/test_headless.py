@@ -229,3 +229,30 @@ def test_the_same_spec_gives_the_same_bytes_twice():
     time.sleep(0.01)
     two = atlas.pack_point(spec, atlas.run_point("s98_atlas_toy", spec, {"h_m": 0.0, "angle_deg": 30.0})[0], base)[0]
     assert one == two
+
+
+def test_a_refusal_while_the_world_is_built_is_a_refused_point():
+    """Integrator D14, review R-F F4: a ``Refusal`` from the world's constructor (u32: d ≤ a) is ``PointRefused`` with its
+    text and hint, as one from ``check_params``; checks that end ✗ fail the run naming their labels."""
+    with pytest.raises(headless.PointRefused) as e:
+        headless.run_spec("u97_atlas_hog", "field", {"mode": "refuse"}, 1, {"frame_dt": 0.05}, {"world_s": 0.1})
+    assert e.value.text["$t"].startswith("This test world refuses") and e.value.hint["$t"] == "choose another mode"
+    with pytest.raises(headless.RunFailed) as f:
+        headless.run_spec("u97_atlas_hog", "field", {"mode": "fail"}, 1, {"frame_dt": 0.05},
+                          {"event": "landing", "after_s": 0.0, "max_world_s": 5.0})
+    assert [c["$t"] for c in f.value.checks] == ["a check that fails on purpose"]
+
+
+def test_a_delta_names_its_base_and_the_merge_drops_the_name():
+    spec = next(a for a in registry.atlases_of(registry.load("s98_atlas_toy")) if a["id"] == "explore")
+    atlas = _site("atlas")
+    m0, _oc = atlas.run_point("s98_atlas_toy", spec, atlas.defaults(spec))
+    base = atlas.base_header(spec, m0)
+    msgs, _oc = atlas.run_point("s98_atlas_toy", spec, {"h_m": 1.0, "angle_deg": 60.0})
+    data, _pk = atlas.pack_point(spec, msgs, base, "ab" * 32)
+    head = headless.read_stream(data)[0]
+    assert head[0]["$base"] == "ab" * 32
+    meta, _b = headless.merge_header(headless.read_stream(atlas.pack_base_file(base))[0], head)
+    assert not [k for k in meta if k.startswith("$")]
+    full, _pk = atlas.pack_point(spec, msgs, None)  # no base: a full header
+    assert "$delta" not in headless.read_stream(full)[0][0]
