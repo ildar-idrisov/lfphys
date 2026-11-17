@@ -1,0 +1,13 @@
+== LFVIZ_POINT_MEM_GB=0.25
+u32 default: 503 src=None 2.0s {"error": {"$t": "the point's computation was ended: it took longer than {s:.0f} s or more memory than it is given", "a": {"s": 120.0}}, "text": "the point's computation was ended: it took longer than 120 s or more memory than it is given"}
+s03 h=3: 200 src=computed 0.8s <gzip 5670 B>
+OpenBLAS error: Memory allocation still failed after 10 retries, giving up.
+health 200
+== LFVIZ_POINT_MEM_GB=0.45
+u32 default: 200 src=computed 2.6s <gzip 111186 B>
+s03 h=3: 200 src=computed 0.8s <gzip 5670 B>
+health 200
+== LFVIZ_POINT_MEM_GB=0.7
+u32 default: 200 src=computed 2.7s <gzip 111186 B>
+s03 h=3: 200 src=computed 0.9s <gzip 5670 B>
+health 200

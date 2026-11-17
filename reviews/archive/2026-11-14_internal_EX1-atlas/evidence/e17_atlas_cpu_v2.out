@@ -1,0 +1,9 @@
+# atlases rebuilt with NPY_DISABLE_CPU_FEATURES=X86_V3 (numpy's baseline X86_V2 paths) vs the local atlases (X86_V3, i9-9900K)
+s03_projectile/explore: key True manifest-file False (atlas.45aa6b34.json vs atlas.546edd55.json) points-list equal True; point files byte-equal 940/940; base equal True; manifest keys differing: ['cpu_s', 'made']
+s03_projectile/lab.heights: key True manifest-file False (atlas.c847a2f9.json vs atlas.400a3796.json) points-list equal True; point files byte-equal 17/17; base equal True; manifest keys differing: ['made']
+s03_projectile/lab.angles: key True manifest-file False (atlas.74afc851.json vs atlas.9bb6673f.json) points-list equal True; point files byte-equal 13/13; base equal True; manifest keys differing: ['made']
+s03_projectile/lab.air: key True manifest-file False (atlas.a85442a2.json vs atlas.23131ade.json) points-list equal True; point files byte-equal 8/8; base equal True; manifest keys differing: ['made']
+u32 explore: 48 of 48 point files differ between numpy's AVX2 (X86_V3) and baseline (X86_V2) paths on the same machine
+what differs (message.field: number of messages): {'frame.meta.coh': 1008, 'check.meta.value': 57, 'check.meta.rel': 35}
+largest relative difference of float blobs: {}
+largest relative difference, frame meta coh: 4.1e-10; a check value: 3.7e-13

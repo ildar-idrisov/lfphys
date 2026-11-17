@@ -1,0 +1,31 @@
+Sources read by the reviewer (2026-11-17), downloaded to the reviewer's scratch folder, not into the repository.
+Quotations below are the downloaded text, grepped (OCR text kept as printed by the OCR).
+
+1. S. F. Hoerner, Fluid-Dynamic Drag (1965). archive.org item FluidDynamicDragHoerner1965, file
+   Fluid-dynamic_drag__Hoerner__1965_djvu.txt (OCR). Page header "III —PRESSURE DRAG 3-7" precedes the passage:
+     "Characteristics of Spheres are extensively reported in (16). As illustrated in fig ure 10, the sphere has
+      a fairly constant drag coefficient (in the order of Cq. = 0.47), within the R'number range between
+      1 (r and 10 s ."            [OCR of "10^4 and 10^5"]
+   Figure 9 legend on the same page: "ABC (16,g) AT B d = 1.6 10 5 } Cjj, = 0.47"   [R_d = 1.6·10^5, C_D = 0.47]
+   -> drag_quadratic.py's quotation and page: VERIFIED.
+
+2. F. A. Morrison, "Data Correlation for Drag Coefficient for Sphere", MTU, 10 November 2016,
+   https://pages.mtu.edu/~fmorriso/DataCorrelationForSphereDrag2016.pdf, eq. (1) read from the rendered page:
+     C_D = 24/Re + 2.6(Re/5.0)/(1+(Re/5.0)^1.52) + 0.411(Re/2.63e5)^-7.94/(1+(Re/2.63e5)^-8.00)
+           + 0.25(Re/1e6)/(1+(Re/1e6));  "We do not recommend using equation 1 for Reynolds numbers larger than 10^6."
+   -> cd_standard: VERIFIED term by term.
+
+3. Veysey & Goldenfeld, "Simple viscous flows: from boundary layers to the renormalization group",
+   arXiv:physics/0609138v2 (Rev. Mod. Phys. 79, 883 (2007)), eq. (39): "C_D = (6π/R)(1 + 3R/8 + O(R²))",
+   with "R = U∞ a/ν" (radius-based). -> drag.py's Oseen factor 1 + 3 Re/16 (Re on the diameter): VERIFIED.
+
+4. Particle Data Group, RPP 2024, Introduction (rpp2024-rev-rpp-intro.pdf), "5.2.2 Unconstrained averaging":
+     "(a) We increase our quoted error, δx in Eq. (1), by a scale factor S defined as S = [χ2/(N − 1)]^1/2"
+   and, two paragraphs earlier: "If χ2/(N − 1) is very large, we may choose not to use the average at all."
+   -> tools/stats.py's citation: VERIFIED (see F9 for the second sentence).
+
+Not read: Stokes 1851 (art. 42, eq. 126), Orear's notes and AJP paper, Lybanon 1984, Clift-Grace-Weber 1978 /
+Subramanian's notes, Lemmon et al. 2000 / Lemmon & Jacobsen 2004, USSA 1976 (its numbers were recomputed only:
+sea level 1.22500 kg/m^3 and 1.7894e-5 Pa s from the formulas, matching the standard's tables as the code says).
+York et al., Am. J. Phys. 72, 367 (2004) is used from the reviewer's knowledge; its Pearson-York benchmark
+(a = 5.47991, b = -0.480533, sigma_b = 0.057985) is reproduced by g_fit.py.

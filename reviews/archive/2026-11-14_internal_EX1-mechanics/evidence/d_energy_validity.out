@@ -1,0 +1,31 @@
+air 20 C: 1.2041054298790526 1.8134058821488238e-05
+== C energy: carried W vs independent quadrature of the drag power on a Radau solution
+ ball67 h=0.0 v0=25.0 th=45.0: W engine -11.1144334715, W Radau+quad -11.1144334714 (rel 8.9e-12); Radau balance at landing 4.5e-15; engine energy_balance() 8.9e-12; T rel 6.2e-12
+ ball67 h=10.0 v0=25.0 th=85.0: W engine -12.8908961435, W Radau+quad -12.8908961437 (rel 1.5e-11); Radau balance at landing 2.8e-14; engine energy_balance() 1.4e-11; T rel 3.5e-13
+ steel20 h=1.0 v0=1.5 th=0.0: W engine -0.00121235922219, W Radau+quad -0.00121235922117 (rel 8.4e-10); Radau balance at landing 5.2e-15; engine energy_balance() 2.0e-11; T rel 6.1e-12
+ ball67 h=20.0 v0=40.0 th=-30.0: W engine -36.2314145261, W Radau+quad -36.2314145261 (rel 1.5e-12); Radau balance at landing 7.0e-15; engine energy_balance() 1.8e-12; T rel 3.8e-13
+== D validity(): share of drag work outside 1e3<Re<2e5, engine vs independent (Radau, 2e6-point trapezoid + exact cuts)
+ ball67 h=0.5 v0=0.05 th=0.0: engine share 2.815459e-05  independent 2.815449e-05  (rel 3.6e-06); Re 222.4-1.387e+04
+ steel20 h=0.0 v0=5.0 th=85.0: engine share 7.272546e-04  independent 7.272543e-04  (rel 3.1e-07); Re 576.7-6640
+ steel20 h=2.0 v0=5.0 th=80.0: engine share 0.000000e+00  independent 0.000000e+00  (rel 0.0e+00); Re 1149-1.059e+04
+ ball67 h=20.0 v0=0.3 th=0.0: engine share 0.000000e+00  independent 0.000000e+00  (rel 0.0e+00); Re 1335-7.492e+04
+ steel20 h=1.0 v0=1.5 th=0.0: engine share 0.000000e+00  independent 0.000000e+00  (rel 0.0e+00); Re 1992-6199
+ ball67 h=0.0 v0=3.0 th=89.0: engine share 3.392643e-05  independent 3.392568e-05  (rel 2.2e-05); Re 231.1-1.335e+04
+== drag curve: Morrison eq (1) extremes on RE_RANGE; Clift-Grace-Weber table 5.2 (as recalled by the reviewer)
+ Morrison: min 0.3918 at Re=1.355e+04, max 0.4838 at Re=1000; at 1e3 0.4838, 2e5 0.4159
+ CGW: min 0.3871 at Re=5363, max 0.5040 at Re=1.295e+05
+ constant 0.47 relative to the curve: (0.47-0.387)/0.387 = +21.4 %, (0.47-0.504)/0.504 = -6.7 %; the code's -18 %/+7 % = (curve-0.47)/0.47: -17.7 / +7.2
+== the measured curve (Morrison) instead of the constant: S03's ranges and the optimum of lab part C
+ ball67 v0=20.0 th=40.0: L const 27.2222 m, L Morrison 28.2371 m (+3.73 %)
+ ball67 v0=25.0 th=45.0: L const 36.2338 m, L Morrison 37.8905 m (+4.57 %)
+ ball67 v0=15.0 th=45.0: L const 17.7511 m, L Morrison 18.2818 m (+2.99 %)
+ lab C optimum with C_d 0.47: 41.887 deg, L 27.2714 m
+ lab C optimum with Morrison C_d(Re): 42.303 deg, L 28.3142 m
+ validity at lab C (42 deg): share outside 0.0, Re 4.84e+04-8.9e+04, curve C_d 0.405-0.422 -> check 'holds' = True
+== E Basset history force (Maxey-Riley, Stokes regime) for a sphere falling from rest; R = rho_f/rho_p
+ steel: R=0.000153, dt=0.002: |dv|/v at t=tau_p 1.440%, max over [0.2,6]tau_p 1.489%, fallen distance at 6 tau_p 1.163%; the stated estimate rho_f/rho_p = 0.02%, sqrt = 1.24%
+ steel: R=0.000153, dt=0.001: |dv|/v at t=tau_p 1.440%, max over [0.2,6]tau_p 1.489%, fallen distance at 6 tau_p 1.163%; the stated estimate rho_f/rho_p = 0.02%, sqrt = 1.24%
+ water droplet: R=0.0012, dt=0.002: |dv|/v at t=tau_p 4.032%, max over [0.2,6]tau_p 4.153%, fallen distance at 6 tau_p 3.277%; the stated estimate rho_f/rho_p = 0.12%, sqrt = 3.47%
+ water droplet: R=0.0012, dt=0.001: |dv|/v at t=tau_p 4.032%, max over [0.2,6]tau_p 4.153%, fallen distance at 6 tau_p 3.277%; the stated estimate rho_f/rho_p = 0.12%, sqrt = 3.47%
+ light ball 67 mm (368 kg/m3): R=0.00327, dt=0.002: |dv|/v at t=tau_p 6.639%, max over [0.2,6]tau_p 6.817%, fallen distance at 6 tau_p 5.431%; the stated estimate rho_f/rho_p = 0.33%, sqrt = 5.72%
+ light ball 67 mm (368 kg/m3): R=0.00327, dt=0.001: |dv|/v at t=tau_p 6.638%, max over [0.2,6]tau_p 6.817%, fallen distance at 6 tau_p 5.431%; the stated estimate rho_f/rho_p = 0.33%, sqrt = 5.72%

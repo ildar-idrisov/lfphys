@@ -1,0 +1,12 @@
+[before] h=1.5: 200 src=computed 1.8s <gzip 5415 B>
+   X-LF-Key 6d979b90383ae22a; frames carry the edited code's mark: False
+--- world file edited while the server runs
+[edited] h=1.5: 200 src=cache 0.0s <gzip 5415 B>
+   X-LF-Key 6d979b90383ae22a; frames carry the edited code's mark: False
+[edited] h=1.7: 200 src=computed 0.8s <gzip 5489 B>
+   X-LF-Key 78d9e82336124a7a; frames carry the edited code's mark: True
+--- edit reverted, server restarted
+[reverted] h=1.5: 200 src=cache 0.3s <gzip 5415 B>
+   X-LF-Key 6d979b90383ae22a; frames carry the edited code's mark: False
+[reverted] h=1.7: 200 src=cache 0.0s <gzip 5489 B>
+   X-LF-Key 78d9e82336124a7a; frames carry the edited code's mark: True

@@ -1,0 +1,34 @@
+refused h=0 angle=0: 400 src=None 0.0s {"error": {"$t": "The ball starts on the floor and does not move upwards: there is no flight"}, "text": "The ball starts on the floor and does not move upwards: there is no flight", "hint": {"$t": "raise the launch height, or throw upwards with a speed above z
+refused h=0 angle=-20 (off-grid): 400 src=None 0.0s {"error": {"$t": "The ball starts on the floor and does not move upwards: there is no flight"}, "text": "The ball starts on the floor and does not move upwards: there is no flight", "hint": {"$t": "raise the launch height, or throw upwards with a speed above z
+off-grid h=1.5: 200 src=computed 0.8s <gzip 5415 B>
+off-grid angle=-30 h=20 v0=40: 200 src=computed 0.8s <gzip 2696 B>
+schema max h=21: 400 src=None 0.0s {"error": {"$t": "{name}: {x:.10g} is above the maximum {hi:.10g}; allowed: {range}", "a": {"name": {"$t": "“{label}, {unit}”", "a": {"label": {"$t": "Launch height"}, "unit": {"$t": "m"}}}, "x": 21.0, "hi": 20.0, "range": {"$t": "from {lo:.10g} to {hi:.10
+string number: 200 src=computed 0.8s <gzip 5551 B>
+bool for float: 200 src=cache 0.0s <gzip 5279 B>
+not a control (object): 400 src=None 0.0s {"error": {"$t": "not a control of this screen: {names}", "a": {"names": "object"}}, "text": "not a control of this screen: object"}
+not a param: 400 src=None 0.0s {"error": {"$t": "not a control of this screen: {names}", "a": {"names": "zzz"}}, "text": "not a control of this screen: zzz"}
+seed bool: 400 src=None 0.0s {"error": {"$t": "the seed is a whole number ≥ 0"}, "text": "the seed is a whole number ≥ 0"}
+seed -1: 400 src=None 0.0s {"error": {"$t": "the seed is a whole number ≥ 0"}, "text": "the seed is a whole number ≥ 0"}
+seed 2^63: 400 src=None 0.0s {"error": {"$t": "the seed is a whole number ≥ 0"}, "text": "the seed is a whole number ≥ 0"}
+seed float: 400 src=None 0.0s {"error": {"$t": "the seed is a whole number ≥ 0"}, "text": "the seed is a whole number ≥ 0"}
+seed 7 (deterministic world): 200 src=computed 0.8s <gzip 5284 B>
+extra body key: 400 src=None 0.0s {"error": {"$t": "the request body is an object {values, seed?}"}, "text": "the request body is an object {values, seed?}"}
+values list: 400 src=None 0.0s {"error": {"$t": "the request body is an object {values, seed?}"}, "text": "the request body is an object {values, seed?}"}
+body list: 400 src=None 0.0s {"error": {"$t": "the request body is an object {values, seed?}"}, "text": "the request body is an object {values, seed?}"}
+body null: 400 src=None 0.0s {"error": {"$t": "the request body is an object {values, seed?}"}, "text": "the request body is an object {values, seed?}"}
+unknown world: 404 src=None 0.0s {"error": {"$t": "there is no such visualization"}, "text": "there is no such visualization"}
+unknown atlas: 404 src=None 0.0s {"error": {"$t": "this world has no atlas “{atlas}”", "a": {"atlas": "nope"}}, "text": "this world has no atlas “nope”"}
+alias id u32 (v02_double_slit): 200 src=cache 0.0s <gzip 111186 B>
+world=.. encoded: 404 src=None 0.0s {"error": {"$t": "there is no such visualization"}, "text": "there is no such visualization"}
+atlas=../ encoded: 404 src=None 0.0s {"error": {"$t": "this world has no atlas “{atlas}”", "a": {"atlas": "../explore"}}, "text": "this world has no atlas “../explore”"}
+world=../../etc encoded: 404 src=None 0.0s {"error": {"$t": "there is no such visualization"}, "text": "there is no such visualization"}
+world with dot-dot path: 404 src=None 0.0s 404: Not Found
+playground world: 404 src=None 0.1s {"error": {"$t": "this world has no atlas “{atlas}”", "a": {"atlas": "explore"}}, "text": "this world has no atlas “explore”"}
+world without screens: 404 src=None 0.0s {"error": {"$t": "this world has no atlas “{atlas}”", "a": {"atlas": "explore"}}, "text": "this world has no atlas “explore”"}
+NaN literal: 400 src=None 0.0s {"error": {"$t": "{name}: enter a finite number {range}", "a": {"name": {"$t": "“{label}, {unit}”", "a": {"label": {"$t": "Launch height"}, "unit": {"$t": "m"}}}, "range": {"$t": "from {lo:.10g} to {hi:.10g}", "a": {"lo": 0.0, "hi": 20.0}}}}, "text": "“L
+Infinity literal: 400 src=None 0.0s {"error": {"$t": "{name}: enter a finite number {range}", "a": {"name": {"$t": "“{label}, {unit}”", "a": {"label": {"$t": "Launch speed"}, "unit": {"$t": "m/s"}}}, "range": {"$t": "from {lo:.10g} to {hi:.10g}", "a": {"lo": 0.0, "hi": 40.0}}}}, "text": "“
+not JSON: 400 src=None 0.0s {"error": {"$t": "the request body is not JSON"}, "text": "the request body is not JSON"}
+bad utf8: 400 src=None 0.0s {"error": {"$t": "the request body is not JSON"}, "text": "the request body is not JSON"}
+huge int value: 500 src=None 0.0s 500 Internal Server Error
+
+Server got itself in trouble

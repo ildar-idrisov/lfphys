@@ -1,0 +1,24 @@
+== A heights: steel20 v0=1.5 air=True angle=0.0
+ reference: 0.6774011336276813 | closed form of a horizontal throw without air; the air shortens the range here by at most 0.08 % (computed by the engine), less than the tape's error
+  h=0.20 L_air=0.302854 L_vac=0.302943 air shortens by 0.029 % = 0.089 mm (tape error 0.5 mm, reading 0.303)
+  h=0.40 L_air=0.428237 L_vac=0.428426 air shortens by 0.044 % = 0.190 mm (tape error 0.5 mm, reading 0.428)
+  h=0.60 L_air=0.524413 L_vac=0.524713 air shortens by 0.057 % = 0.300 mm (tape error 0.5 mm, reading 0.524)
+  h=0.80 L_air=0.605468 L_vac=0.605886 air shortens by 0.069 % = 0.418 mm (tape error 0.5 mm, reading 0.605)
+  h=1.00 L_air=0.676857 L_vac=0.677401 air shortens by 0.080 % = 0.544 mm (tape error 0.5 mm, reading 0.677)
+  h=1.00 L_air=0.676857 L_vac=0.677401 air shortens by 0.080 % = 0.544 mm (tape error 0.5 mm, reading 0.677)
+  largest shortening 0.544 mm at h=1.0 (0.080 %); relative to 0.5 mm: 1.09 x
+ all 17 rows, line0: k=0.676871 ± 0.000654 (chi2/dof 0.0155, scaled False) vs 0.677401: z=-0.81 -> agrees
+ all 17 rows, line: k=0.676241 ± 0.003741 (chi2/dof 0.0146, scaled False) vs 0.677401: z=-0.31 -> agrees
+ (sx=0) line0: k=0.676920 ± 0.000157 chi2/dof 0.375 scaled False: z=-3.07 -> DOES NOT AGREE
+ every subset of rows: {'line0': '0 of 131054 do not agree, largest |z| 0.89', 'line': '0 of 130918 do not agree, largest |z| 0.47'}
+== B angles: steel20 v0=5.0 h=0.0 air=False
+ air=False: all rows line0 slope=2.549008 ± 0.000497 chi2/dof 0.00199 vs v0^2/g=2.549291: rel -0.011 %, z=-0.57 -> agrees
+ air=True: all rows line0 slope=2.536002 ± 0.000497 chi2/dof 0.00549 vs v0^2/g=2.549291: rel -0.521 %, z=-26.73 -> DOES NOT AGREE
+ vacuum, every subset (line0): 0 of 8178 do not agree; largest |z| 0.58 at [15, 45]
+ vacuum, every subset (line): 0 of 8100 do not agree
+== C air: ball67 v0=20.0 h=0.0
+ reference: 41.9 | computed by the engine: the largest range among 110 computed flights, at 1° and then at 0.1° steps (27.27 m); there is no closed form; without air θ* = 45°
+ true optimum (golden section): 41.88676 deg, L=27.271386; reference's discretisation error +0.0132 deg
+ all 8 rows quadratic: vertex 42.0324 ± 0.1783 (unscaled σ 0.1783), chi2/dof 0.101 scaled False; vs ref 41.9: z=+0.74 -> agrees; vs true optimum z=+0.82
+ every subset of >= 4 rows: 0 of 163 do not agree
+ exact ranges, 25-60 deg, unweighted-equivalent: vertex 42.1405 (model bias vs true optimum +0.2538 deg)

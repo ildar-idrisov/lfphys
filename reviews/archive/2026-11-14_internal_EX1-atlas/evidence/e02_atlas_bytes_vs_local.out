@@ -1,0 +1,15 @@
+s03_projectile/explore: key True manifest-file False (atlas.45aa6b34.json vs atlas.555cf51b.json) points-list equal True; point files byte-equal 940/940; base equal True; manifest keys differing: ['cpu_s', 'made']
+    cpu_s: 8.93 | 13.38
+    made: 2026-11-14T13:37:11+00:00 | 2026-11-17T15:11:49+00:00
+s03_projectile/lab.heights: key True manifest-file False (atlas.c847a2f9.json vs atlas.bfc20c35.json) points-list equal True; point files byte-equal 17/17; base equal True; manifest keys differing: ['cpu_s', 'made']
+    cpu_s: 0.1 | 0.19
+    made: 2026-11-14T13:37:11+00:00 | 2026-11-17T15:11:50+00:00
+s03_projectile/lab.angles: key True manifest-file False (atlas.74afc851.json vs atlas.10006e77.json) points-list equal True; point files byte-equal 13/13; base equal True; manifest keys differing: ['cpu_s', 'made']
+    cpu_s: 0.07 | 0.08
+    made: 2026-11-14T13:37:12+00:00 | 2026-11-17T15:11:50+00:00
+s03_projectile/lab.air: key True manifest-file False (atlas.a85442a2.json vs atlas.3f785586.json) points-list equal True; point files byte-equal 8/8; base equal True; manifest keys differing: ['cpu_s', 'made']
+    cpu_s: 0.15 | 0.21
+    made: 2026-11-14T13:37:12+00:00 | 2026-11-17T15:11:51+00:00
+u32_double_slit/explore: key True manifest-file False (atlas.90d5e86c.json vs atlas.153eb57f.json) points-list equal True; point files byte-equal 48/48; base equal True; manifest keys differing: ['cpu_s', 'made']
+    cpu_s: 52.35 | 94.49
+    made: 2026-11-14T13:38:30+00:00 | 2026-11-17T15:13:22+00:00

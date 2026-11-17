@@ -1,0 +1,11 @@
+s03_projectile/explore: 950 points (5 × 5 × 19 × 2), default p284
+s03_projectile/explore: 940 points, 10 refused, 5704 kB gzip (largest point 12.6 kB), cpu 13.4 s
+s03_projectile/lab.heights: 17 points (17), default p8
+s03_projectile/lab.heights: 17 points, 0 refused, 51 kB gzip (largest point 3.3 kB), cpu 0.2 s
+s03_projectile/lab.angles: 13 points (13), default p6
+s03_projectile/lab.angles: 13 points, 0 refused, 46 kB gzip (largest point 4.2 kB), cpu 0.1 s
+s03_projectile/lab.air: 8 points (8), default p3
+s03_projectile/lab.air: 8 points, 0 refused, 87 kB gzip (largest point 12.5 kB), cpu 0.2 s
+u32_double_slit/explore: 48 points (4 × 4 × 3), default p28
+  u32_double_slit/explore: point 31 of 48
+u32_double_slit/explore: 48 points, 0 refused, 5501 kB gzip (largest point 132.7 kB), cpu 94.5 s

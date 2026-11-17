@@ -1,0 +1,3 @@
+u16:all accepted where the view declared u16: True
+u8:all accepted where the view declared u8:col: True
+check./event. keys refused: none (accepted when the view declares them)

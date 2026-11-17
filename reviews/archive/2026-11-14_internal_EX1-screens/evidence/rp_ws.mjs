@@ -1,0 +1,37 @@
+// R-P probe: the worksheet printed (A4) with and without «For the teacher», in the language; u32 (no lab)
+import { chromium } from "playwright";
+import { writeFileSync } from "node:fs";
+const port = process.argv[2] || "8702", base = `http://127.0.0.1:${port}`;
+const LANG = process.env.LFVIZ_LANG || "en";
+const SH = process.env.SHOTS || "/pw/shots";
+const out = (k, v) => console.log(JSON.stringify({ k, ...v }));
+const br = await chromium.launch();
+const ctx = await br.newContext({ viewport: { width: 1280, height: 900 } });
+const page = await ctx.newPage();
+const errs = []; page.on("pageerror", (e) => errs.push(e.message));
+await page.goto(`${base}/worksheet?demo=s03_projectile&lang=${LANG}`);
+await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 30000 });
+await page.emulateMedia({ media: "print" });
+// each part's height at the printable width of A4 with 16 mm margins (178 mm) against the printable height (265 mm)
+await page.setViewportSize({ width: 673, height: 1001 });
+const parts = await page.evaluate(() => [...document.querySelectorAll(".ws .part, .ws .teacher")].map((s) => ({ cls: s.className, h: Math.round(s.getBoundingClientRect().height), credits: s.querySelectorAll(".credit").length })));
+out("print layout: each part's height (px at 96 dpi; one A4 page holds ~1001 px)", { parts });
+writeFileSync(`${SH}/ws_s03_${LANG}.pdf`, await page.pdf({ format: "A4" }));
+await page.emulateMedia({ media: "screen" });
+await page.locator(".ws-tools input[type=checkbox]").check();
+await page.emulateMedia({ media: "print" });
+const parts2 = await page.evaluate(() => [...document.querySelectorAll(".ws .part, .ws .teacher")].map((s) => ({ cls: s.className, h: Math.round(s.getBoundingClientRect().height) })));
+out("print layout with the teacher's page", { parts2 });
+writeFileSync(`${SH}/ws_s03_teacher_${LANG}.pdf`, await page.pdf({ format: "A4" }));
+const tt = await page.locator(".teacher").innerText();
+out("the teacher's page", { text: tt.slice(0, 2600) });
+await page.emulateMedia({ media: "screen" });
+await page.setViewportSize({ width: 390, height: 844 });
+out("390: scrollWidth", { sw: await page.evaluate(() => document.scrollingElement.scrollWidth) });
+await page.goto(`${base}/worksheet?demo=u32_double_slit&lang=${LANG}`);
+await page.waitForTimeout(2500);
+out("u32 worksheet", { text: (await page.locator("#ws").innerText()).slice(0, 200) });
+await page.goto(`${base}/worksheet?demo=nonexistent&lang=${LANG}`);
+await page.waitForTimeout(2500);
+out("unknown worksheet", { text: (await page.locator("#ws").innerText()).slice(0, 200), errs });
+await br.close();

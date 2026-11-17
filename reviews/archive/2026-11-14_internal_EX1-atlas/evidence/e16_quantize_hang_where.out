@@ -1,0 +1,7 @@
+400 two-value blobs [x, x + k ulp] (1 <= k <= 8), x log-uniform in 1e-3..1e12: 46 hang in protocol.quantize; e.g. [(12685327411.248915, 4), (479974611954.9151, 4), (-1921.121196162074, 2), (57054324.02064228, 6), (0.04853847444176493, 7)]
+Timeout (0:00:02)!
+Thread 0x00007f5a5669d340 (most recent call first):
+  File "/lf/visualizations/server/lfviz/protocol.py", line 202 in _short
+  File "/lf/visualizations/server/lfviz/protocol.py", line 217 in _short_range
+  File "/lf/visualizations/server/lfviz/protocol.py", line 170 in quantize
+  File "/s/work/fuzz_short2.py", line 22 in <module>

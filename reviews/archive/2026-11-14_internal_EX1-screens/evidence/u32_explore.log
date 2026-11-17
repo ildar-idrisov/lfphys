@@ -1,0 +1,1 @@
+{"k":"u32 explore: cursor at frame 8, then d 100 → 200 µm","before":{"t":2,"i":28,"label":"2.00 s / 5.25 s"},"after":{"t":2,"i":31,"label":"2.00 s / 5.25 s","traces":1,"frames":[0,0.25,0.5,0.75,1,1.25,1.5,1.75,2,2.25,2.5,2.75]}}

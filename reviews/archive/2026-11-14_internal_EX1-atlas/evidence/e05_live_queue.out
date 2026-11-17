@@ -1,0 +1,9 @@
+req 0: 200 src=computed after 2.1s 
+req 1: 200 src=computed after 4.2s 
+req 2: 200 src=computed after 6.1s 
+req 3: 200 src=computed after 8.0s 
+req 4: 200 src=computed after 9.9s 
+req 5: 429 src=None after 0.0s {"error": {"$t": "the server computes other points now; try again in a moment"}, "text": "the server computes other poin
+req 6: 429 src=None after 0.0s {"error": {"$t": "the server computes other points now; try again in a moment"}, "text": "the server computes other poin
+req 7: 429 src=None after 0.0s {"error": {"$t": "the server computes other points now; try again in a moment"}, "text": "the server computes other poin
+total 10.1s

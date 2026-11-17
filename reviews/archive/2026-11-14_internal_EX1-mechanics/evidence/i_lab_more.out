@@ -1,0 +1,8 @@
+ A heights line0: EV slope 0.6768713 ± 0.0006542; min S 0.6768714: gap -0.0002 σ
+ B angles line0: EV slope 2.5490082 ± 0.0004972; min S 2.5490082: gap -0.0000 σ
+ C air quadratic: EV vertex 42.03242 ± 0.17833; min S vertex 42.03226: gap +0.001 σ
+ C with exact ranges and the lab's errors: vertex 42.0317 ± 0.1783; true optimum 41.8868: z +0.81
+ heights, x = h, line0: slope 0.79682 ± 0.03507 vs k 0.67740 m^1/2: z +3.4 -> does not agree
+ heights, x = h, line: slope 0.45598 ± 0.01215 vs k 0.67740 m^1/2: z -18.2 -> does not agree
+ heights, x = sqrt h, line0: slope 0.67687 ± 0.00065 vs k 0.67740 m^1/2: z -0.8 -> agrees
+ heights, x = sqrt h, line: slope 0.67624 ± 0.00374 vs k 0.67740 m^1/2: z -0.3 -> agrees

@@ -1,0 +1,3 @@
+u32 default, CPU limit 1 s: 503 src=None 1.6s {"error": {"$t": "the point's computation was ended: it took longer than {s:.0f} s or more memory than it is given", "a": {"s": 1.0}}, "text": "the point's computation was ended: it took longer than 1 s or more memory than it is given"}
+u32 again: 503 src=None 1.0s {"error": {"$t": "the point's computation was ended: it took longer than {s:.0f} s or more memory than it is given", "a": {"s": 1.0}}, "text": "the point's computation was ended: it took longer than 1 s or more memory than it is given"}
+s03 (fast) under 1 s: 200 src=computed 0.8s <gzip 5670 B>

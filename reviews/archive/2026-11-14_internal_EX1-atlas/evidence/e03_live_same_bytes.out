@@ -1,0 +1,24 @@
+s03_projectile/explore p284 {'h_m': 1.0, 'v0': 15.0, 'angle_deg': 45.0, 'air': False}: 200 src=computed key=a5a551b4fa1083ea 1.1s <gzip 5279 B sha 3d2d4129>
+   equal to the site's p284.3d2d4129.lfpt.gz: True (5279 vs 5279 B)
+   again: 200 src=cache key=a5a551b4fa1083ea 0.0s <gzip 5279 B sha 3d2d4129>
+   again equal: True
+s03_projectile/explore p697 {'h_m': 5.0, 'v0': 20.0, 'angle_deg': 30.0, 'air': True}: 200 src=computed key=c0cf0f56d30561b9 0.8s <gzip 7363 B sha ae910300>
+   equal to the site's p697.ae910300.lfpt.gz: True (7363 vs 7363 B)
+   again: 200 src=cache key=c0cf0f56d30561b9 0.0s <gzip 7363 B sha ae910300>
+   again equal: True
+s03_projectile/explore p189 {'h_m': 0.0, 'v0': 25.0, 'angle_deg': 90.0, 'air': True}: 200 src=computed key=70d455a78faf2032 0.8s <gzip 8734 B sha e2a7e957>
+   equal to the site's p189.e2a7e957.lfpt.gz: True (8734 vs 8734 B)
+   again: 200 src=cache key=70d455a78faf2032 0.0s <gzip 8734 B sha e2a7e957>
+   again equal: True
+s03_projectile/lab.air p3 {}: 200 src=computed key=3775667b018fe11f 0.8s <gzip 10257 B sha f5957ac1>
+   equal to the site's p3.f5957ac1.lfpt.gz: True (10257 vs 10257 B)
+   again: 200 src=cache key=3775667b018fe11f 0.0s <gzip 10257 B sha f5957ac1>
+   again equal: True
+u32_double_slit/explore p9 {'lam_nm': 400.0, 'd_um': 300.0, 'a_um': 10.0}: 200 src=computed key=bd8dda03757a3a5f 3.3s <gzip 121129 B sha 046cae2c>
+   equal to the site's p9.046cae2c.lfpt.gz: True (121129 vs 121129 B)
+   again: 200 src=cache key=bd8dda03757a3a5f 0.0s <gzip 121129 B sha 046cae2c>
+   again equal: True
+u32_double_slit/explore p28 {}: 200 src=computed key=d087179bbac87f27 2.0s <gzip 111186 B sha 30be5b8f>
+   equal to the site's p28.30be5b8f.lfpt.gz: True (111186 vs 111186 B)
+   again: 200 src=cache key=d087179bbac87f27 0.0s <gzip 111186 B sha 30be5b8f>
+   again equal: True

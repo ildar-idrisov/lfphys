@@ -1,0 +1,13 @@
+/recordings/s03_projectile/atlas/explore/atlas.45aa6b34.json                     200 application/json 32474
+/recordings/v02_double_slit/index.json                                           200 application/json 5235
+/recordings/s03_projectile/atlas/explore/../../index.json                        200 application/json 3858
+/recordings/s03_projectile/atlas/explore/%2e%2e/%2e%2e/index.json                404 application/json; charset=utf-8 75
+/recordings/s03_projectile/atlas/%2e%2e/%2e%2e/u32_double_slit/index.json        404 application/json; charset=utf-8 75
+/recordings/s03_projectile/atlas/explore/a/b                                     404 application/json; charset=utf-8 75
+/recordings/..%2F..%2Fdocker/Dockerfile                                          404 application/json; charset=utf-8 75
+/recordings/s03_projectile/..%2F..%2Fdocker%2FDockerfile                         404 application/json; charset=utf-8 75
+/recordings/%2e%2e/docker/Dockerfile                                             404 application/json; charset=utf-8 75
+/recordings/s03_projectile/atlas%2Fexplore%2F..%2F..%2Findex.json                404 application/json; charset=utf-8 75
+/recordings/s03_projectile/atlas/explore/../../index.json (path-as-is) 404 75
+/recordings/s03_projectile/../../docker/Dockerfile (path-as-is)        404 75
+/recordings/s03_projectile/atlas/../../../docker/Dockerfile (path-as-is) 404 75

@@ -1,0 +1,10 @@
+A line0                js [0.6768713] py [0.6768713] max rel diff 6.6e-16 scaled js False py False
+A line                 js [0.00053375, 0.67624128] py [0.00053375, 0.67624128] max rel diff 1.3e-12 scaled js False py False
+A quadratic            js [0.00356605, 0.66799029, 0.00538137, -62.06505257] py [0.00356605, 0.66799029, 0.00538137, -62.06505257] max rel diff 7.3e-14 scaled js False py False
+A power                js [0.67677843, 0.99910165] py [0.67677843, 0.99910165] max rel diff 1.2e-15 scaled js False py False
+A L(h) power           js [0.67677843, 0.49955083] py [0.67677843, 0.49955083] max rel diff 8.9e-16 scaled js False py False
+B line0                js [2.54900817] py [2.54900817] max rel diff 2.2e-16 scaled js False py False
+B line                 js [0.00232584, 2.54668082] py [0.00232584, 2.54668082] max rel diff 1.7e-11 scaled js False py False
+B L(θ) quadratic       js [-0.39882958, 0.13101266, -0.0014557, 45.0] py [-0.39882958, 0.13101266, -0.0014557, 45.0] max rel diff 8.6e-14 scaled js False py False
+C quadratic            js [2.97210934, 1.15629004, -0.01375474, 42.03241706] py [2.97210934, 1.15629004, -0.01375474, 42.03241706] max rel diff 2.2e-13 scaled js False py False
+worst 1.7095931036665635e-11

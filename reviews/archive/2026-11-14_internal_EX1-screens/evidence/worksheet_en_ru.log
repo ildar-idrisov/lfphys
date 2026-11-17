@@ -1,0 +1,12 @@
+{"k":"print layout: each part's height (px at 96 dpi; one A4 page holds ~1001 px)","parts":[{"cls":"part first","h":1512,"credits":1},{"cls":"part","h":922,"credits":1},{"cls":"part","h":1578,"credits":1},{"cls":"teacher","h":0,"credits":1}]}
+{"k":"print layout with the teacher's page","parts2":[{"cls":"part first","h":1512},{"cls":"part","h":922},{"cls":"part","h":1578},{"cls":"teacher","h":1443}]}
+{"k":"the teacher's page","text":"For the teacher\nPart 1: the flight lasts 0.2–0.45 s. Why can a hand stopwatch not measure it well, and what do you do instead?\nStarting and stopping a stopwatch by hand scatters by about 0.1 s, a third or more of the whole flight. Measure the range with the tape instead (its error is 0.5 mm); the time follows from the height, T = √(2h/g), or from the range, T = L / v₀.\nPart 1: why is the range plotted against √h and not against h?\nThe fall from the height h lasts T = √(2h/g), and meanwhile the ball moves sideways at the constant speed v₀: L = v₀·T = v₀·√(2/g)·√h. So L is proportional to √h: the points of L(√h) lie on a straight
+{"k":"390: scrollWidth","sw":390}
+{"k":"u32 worksheet","text":"This demonstration has no lab work."}
+{"k":"unknown worksheet","text":"No such demonstration","errs":[]}
+{"k":"print layout: each part's height (px at 96 dpi; one A4 page holds ~1001 px)","parts":[{"cls":"part first","h":1535,"credits":1},{"cls":"part","h":992,"credits":1},{"cls":"part","h":1625,"credits":1},{"cls":"teacher","h":0,"credits":1}]}
+{"k":"print layout with the teacher's page","parts2":[{"cls":"part first","h":1535},{"cls":"part","h":992},{"cls":"part","h":1625},{"cls":"teacher","h":1629}]}
+{"k":"the teacher's page","text":"Для учителя\nЧасть 1: полёт длится 0,2–0,45 с. Почему ручной секундомер плохо его измеряет и что делать вместо этого?\nПуск и остановка секундомера рукой дают разброс около 0,1 с — треть всего полёта и больше. Вместо этого измерьте рулеткой дальность (её погрешность 0,5 мм); время находится по высоте, T = √(2h/g), или по дальности, T = L / v₀.\nЧасть 1: почему дальность откладывают
+{"k":"390: scrollWidth","sw":390}
+{"k":"u32 worksheet","text":"В этой демонстрации нет лабораторной работы."}
+{"k":"unknown worksheet","text":"Такой демонстрации нет","errs":[]}

@@ -1,0 +1,35 @@
+# pdftotext of the printed worksheets (ws_s03_*.pdf made by rp_ws.mjs)
+## EN page 1, the programme's lines
+FRP-OOO-2025-base, grade 7: “Research to test the hypothesis: the higher the launch, the
+farther a ball launched horizontally flies” (our translation) (translated; the programme's own
+wording: «Проведение исследования по проверке гипотезы: дальность полета шарика,
+пущенного горизонтально, тем больше, чем больше высота пуска»)
+FRP-SOO-2025-base, grade 10: “Observing the motion of a body thrown at an angle to the
+horizontal and horizontally” (our translation) (translated; the programme's own wording:
+«Наблюдение движения тела, брошенного под углом к горизонту и горизонтально»)
+FRP-SOO-2025-base, grade 10: “Studying the motion of a body thrown horizontally” (our
+## EN teacher page: the laws' references
+The laws' references (computed by the world when the site was built)
+Height and range: k = L / √h = 0.6774 m^½ — k = v₀·√(2/g) (closed form of a horizontal
+throw without air; the air shortens the range here by at most 0.08 % (computed by the
+engine), less than the tape's error)
+Angle and range: slope of L against sin 2θ = 2.549 m — v₀²/g (closed form of a throw
+from the floor without air: L = (v₀²/g)·sin 2θ)
+Air moves the maximum (beyond the basic programme): θ* of the largest range = 41.9 °
+— θ* in air (computed by the engine: the largest range among 110 computed flights, at
+1° and then at 0.1° steps (27.27 m); there is no closed form; without air θ* = 45°)
+## RU teacher page: the laws' references
+Эталонные значения законов (рассчитаны миром при сборке сайта)
+Высота и дальность: k = L / √h = 0,6774 m^½ — k = v₀·√(2/g) (в замкнутом виде:
+горизонтальный бросок без воздуха; воздух уменьшает здесь дальность не
+больше чем на 0,08 % (рассчитано движком), меньше погрешности рулетки)
+Угол и дальность: угловой коэффициент зависимости L от sin 2θ = 2,549 m —
+v₀²/g (в замкнутом виде: бросок с пола без воздуха, L = (v₀²/g)·sin 2θ)
+Воздух сдвигает максимум (за пределами базовой программы): θ* наибольшей
+дальности = 41,9 ° — θ* в воздухе (рассчитано движком: наибольшая дальность
+среди 110 рассчитанных полётов, с шагом 1°, затем 0,1° (27,27 м); формулы в
+замкнутом виде нет; без воздуха θ* = 45°)
+## RU page 4 (whole page)
+изменённые копии распространяйте под той же лицензией
+
+

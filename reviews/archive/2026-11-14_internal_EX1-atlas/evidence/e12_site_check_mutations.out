@@ -1,0 +1,24 @@
+=== clean
+# 0 failures, 4 warnings; the site is 65.6 MB
+check exit 0
+=== failedchecks
+FAIL s03_projectile/atlas explore: 1 check(s) end failed
+# 1 failures, 4 warnings; the site is 65.6 MB
+check exit 1
+=== stale
+FAIL u32_double_slit/atlas explore: stale (key 0000000000000000, the registry gives c8912d1dd6dcef55)
+FAIL u32_double_slit/atlas explore: its manifest disagrees with the index (key c8912d1dd6dcef55, atlas explore)
+# 2 failures, 4 warnings; the site is 65.6 MB
+check exit 1
+=== nofolder
+FAIL s03_projectile/atlas lab.air: missing
+# 1 failures, 4 warnings; the site is 65.5 MB
+check exit 1
+=== noentry
+FAIL s03_projectile/atlas lab.angles: missing
+# 1 failures, 4 warnings; the site is 65.5 MB
+check exit 1
+=== nopoint
+FAIL s03_projectile/atlas explore: missing
+# 1 failures, 4 warnings; the site is 59.7 MB
+check exit 1

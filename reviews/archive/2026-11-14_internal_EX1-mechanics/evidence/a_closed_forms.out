@@ -1,0 +1,62 @@
+== A1 vacuum landing time & apex (formula vs mpmath)
+ h=0 vy0=5.0: T=1.0197162129779282 rel.err=-5.24e-17; H=1.2746452662224104
+ h=1.25 vy0=0.0: T=0.504904994275638 rel.err=-1.60e-16; H=1.25
+ h=5.0 vy0=-3.0: T=0.7492155152204221 rel.err=-6.01e-17; H=5.0
+ h=10.0 vy0=24.9: T=5.452240735130912 rel.err=4.02e-17; H=41.61171246042226
+ h=1e-06 vy0=-30.0: T=3.333333315172871e-08 rel.err=1.49e-16; H=1e-06
+== A2 linear drag landing time (Lambert W) vs 50-digit bisection; s = T/tau
+ k=3       h=0.0   vy0=10.0 : s=3.984e+00 rel.err=-8.10e-17  (doc ~1e-16/s=2.5e-17; 1e-16/s^2=6.3e-18)
+ k=3       h=2.0   vy0=6.0  : s=4.644e+00 rel.err=-2.38e-17  (doc ~1e-16/s=2.2e-17; 1e-16/s^2=4.6e-18)
+ k=3       h=10.0  vy0=0.0  : s=1.018e+01 rel.err=-5.64e-17  (doc ~1e-16/s=9.8e-18; 1e-16/s^2=9.7e-19)
+ k=3       h=10.0  vy0=-3.0 : s=9.260e+00 rel.err=+9.27e-17  (doc ~1e-16/s=1.1e-17; 1e-16/s^2=1.2e-18)
+ k=1       h=0.0   vy0=10.0 : s=1.620e+00 rel.err=-1.86e-16  (doc ~1e-16/s=6.2e-17; 1e-16/s^2=3.8e-17)
+ k=1       h=2.0   vy0=6.0  : s=1.430e+00 rel.err=+4.40e-17  (doc ~1e-16/s=7.0e-17; 1e-16/s^2=4.9e-17)
+ k=1       h=10.0  vy0=0.0  : s=1.865e+00 rel.err=+1.19e-16  (doc ~1e-16/s=5.4e-17; 1e-16/s^2=2.9e-17)
+ k=1       h=10.0  vy0=-3.0 : s=1.569e+00 rel.err=+1.19e-16  (doc ~1e-16/s=6.4e-17; 1e-16/s^2=4.1e-17)
+ k=0.3     h=0.0   vy0=10.0 : s=5.599e-01 rel.err=+1.96e-16  (doc ~1e-16/s=1.8e-16; 1e-16/s^2=3.2e-16)
+ k=0.3     h=2.0   vy0=6.0  : s=4.385e-01 rel.err=-1.29e-16  (doc ~1e-16/s=2.3e-16; 1e-16/s^2=5.2e-16)
+ k=0.3     h=10.0  vy0=0.0  : s=4.613e-01 rel.err=+3.18e-16  (doc ~1e-16/s=2.2e-16; 1e-16/s^2=4.7e-16)
+ k=0.3     h=10.0  vy0=-3.0 : s=3.771e-01 rel.err=+3.65e-16  (doc ~1e-16/s=2.7e-16; 1e-16/s^2=7.0e-16)
+ k=0.1     h=0.0   vy0=10.0 : s=1.974e-01 rel.err=+5.21e-17  (doc ~1e-16/s=5.1e-16; 1e-16/s^2=2.6e-15)
+ k=0.1     h=2.0   vy0=6.0  : s=1.483e-01 rel.err=+8.03e-15  (doc ~1e-16/s=6.7e-16; 1e-16/s^2=4.5e-15)
+ k=0.1     h=10.0  vy0=0.0  : s=1.463e-01 rel.err=+6.94e-16  (doc ~1e-16/s=6.8e-16; 1e-16/s^2=4.7e-15)
+ k=0.1     h=10.0  vy0=-3.0 : s=1.187e-01 rel.err=-1.05e-15  (doc ~1e-16/s=8.4e-16; 1e-16/s^2=7.1e-15)
+ k=0.03    h=0.0   vy0=10.0 : s=6.057e-02 rel.err=+9.06e-14  (doc ~1e-16/s=1.7e-15; 1e-16/s^2=2.7e-14)
+ k=0.03    h=2.0   vy0=6.0  : s=4.476e-02 rel.err=-1.06e-13  (doc ~1e-16/s=2.2e-15; 1e-16/s^2=5.0e-14)
+ k=0.03    h=10.0  vy0=0.0  : s=4.315e-02 rel.err=+1.75e-14  (doc ~1e-16/s=2.3e-15; 1e-16/s^2=5.4e-14)
+ k=0.03    h=10.0  vy0=-3.0 : s=3.492e-02 rel.err=-3.74e-15  (doc ~1e-16/s=2.9e-15; 1e-16/s^2=8.2e-14)
+ k=0.01    h=0.0   vy0=10.0 : s=2.033e-02 rel.err=+1.79e-13  (doc ~1e-16/s=4.9e-15; 1e-16/s^2=2.4e-13)
+ k=0.01    h=2.0   vy0=6.0  : s=1.495e-02 rel.err=-6.12e-13  (doc ~1e-16/s=6.7e-15; 1e-16/s^2=4.5e-13)
+ k=0.01    h=10.0  vy0=0.0  : s=1.431e-02 rel.err=-1.44e-14  (doc ~1e-16/s=7.0e-15; 1e-16/s^2=4.9e-13)
+ k=0.01    h=10.0  vy0=-3.0 : s=1.158e-02 rel.err=+1.76e-13  (doc ~1e-16/s=8.6e-15; 1e-16/s^2=7.5e-13)
+ k=0.001   h=0.0   vy0=10.0 : s=2.039e-03 rel.err=-4.34e-11  (doc ~1e-16/s=4.9e-14; 1e-16/s^2=2.4e-11)
+ k=0.001   h=2.0   vy0=6.0  : s=1.496e-03 rel.err=-9.95e-11  (doc ~1e-16/s=6.7e-14; 1e-16/s^2=4.5e-11)
+ k=0.001   h=10.0  vy0=0.0  : s=1.428e-03 rel.err=+1.54e-11  (doc ~1e-16/s=7.0e-14; 1e-16/s^2=4.9e-11)
+ k=0.001   h=10.0  vy0=-3.0 : s=1.155e-03 rel.err=+7.47e-11  (doc ~1e-16/s=8.7e-14; 1e-16/s^2=7.5e-11)
+ k=0.0001  h=0.0   vy0=10.0 : s=2.039e-04 rel.err=-2.25e-09  (doc ~1e-16/s=4.9e-13; 1e-16/s^2=2.4e-09)
+ k=0.0001  h=2.0   vy0=6.0  : s=1.496e-04 rel.err=+8.10e-09  (doc ~1e-16/s=6.7e-13; 1e-16/s^2=4.5e-09)
+ k=0.0001  h=10.0  vy0=0.0  : s=1.428e-04 rel.err=+9.58e-09  (doc ~1e-16/s=7.0e-13; 1e-16/s^2=4.9e-09)
+ k=0.0001  h=10.0  vy0=-3.0 : s=1.155e-04 rel.err=+5.29e-09  (doc ~1e-16/s=8.7e-13; 1e-16/s^2=7.5e-09)
+ k=1e-05   h=0.0   vy0=10.0 : s=2.039e-05 rel.err=+7.30e-07  (doc ~1e-16/s=4.9e-12; 1e-16/s^2=2.4e-07)
+ k=1e-05   h=2.0   vy0=6.0  : s=1.496e-05 rel.err=+1.44e-07  (doc ~1e-16/s=6.7e-12; 1e-16/s^2=4.5e-07)
+ k=1e-05   h=10.0  vy0=0.0  : s=1.428e-05 rel.err=+1.57e-07  (doc ~1e-16/s=7.0e-12; 1e-16/s^2=4.9e-07)
+ k=1e-05   h=10.0  vy0=-3.0 : s=1.155e-05 rel.err=+5.00e-07  (doc ~1e-16/s=8.7e-12; 1e-16/s^2=7.5e-07)
+== A3 c <= 0 (launched down at or above the terminal speed): refused by the code; the formula still holds
+ vy0=-9.8066 (= -1.00 v_t): code refuses: the body moves down faster than its terminal speed
+   formula T=np.float64(0.30591486389337846)  exact=0.30591486389337846  rel=-3.0e-17; DOP853 fly T=0.3059148638933785 rel=1.5e-16
+ vy0=-14.7100 (= -1.50 v_t): code refuses: the body moves down faster than its terminal speed
+   formula T=np.float64(0.21085899318883972)  exact=0.2108589931888398  rel=-4.1e-16; DOP853 fly T=0.2108589931857483 rel=-1.5e-11
+== A4 apex time: tau ln(1+vy0/(g tau)) vs vy(t)=0 from linear_drag_state
+ k=0.3 vy0=6.0: t_a=0.5617249424498368, vy(t_a)=0.00e+00 (scale vy0 6.0)
+ k=0.0001 vy0=6.0: t_a=0.611811011769364, vy(t_a)=0.00e+00 (scale vy0 6.0)
+ k=5.0 vy0=0.1: t_a=0.009945718198774746, vy(t_a)=-1.39e-17 (scale vy0 0.1)
+== A5 linear_drag_state vs mpmath exact at a few times
+ k=0.3 t=0.0001: rel.err x -6.0e-17 y +7.7e-17
+ k=0.3 t=0.5: rel.err x +1.1e-16 y +1.4e-16
+ k=0.3 t=3.0: rel.err x +7.1e-17 y +2.3e-16
+ k=0.001 t=0.0001: rel.err x +6.0e-17 y -9.9e-18
+ k=0.001 t=0.5: rel.err x -1.0e-16 y +3.3e-17
+ k=0.001 t=3.0: rel.err x +1.1e-16 y -4.6e-17
+ k=1e-06 t=0.0001: rel.err x -9.8e-17 y +9.2e-17
+ k=1e-06 t=0.5: rel.err x -4.6e-17 y -1.3e-16
+ k=1e-06 t=3.0: rel.err x -1.1e-17 y -2.8e-16

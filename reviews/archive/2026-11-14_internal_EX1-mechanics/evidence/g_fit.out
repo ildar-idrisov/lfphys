@@ -1,0 +1,19 @@
+== Pearson-York
+ York 2004: a=5.479910 b=-0.480533 sa=0.294971 sb=0.057985 S=11.8664 S/dof=1.4833
+ linear_fit (3 re-weightings): a=5.396053 b=-0.463449 sigma_unscaled=[0.29566593171934996, 0.05780064662593478] sigma(Birge)=[0.36145878413005145, 0.07066269464948918] chi2/dof=1.4946
+ gap in b: +0.01708 = +0.295 York sb = +0.296 unscaled EV sb = +0.242 Birge-scaled sb
+== attenuation: random x errors comparable to the x spread (homoscedastic): EV fixed point = OLS
+ n=10 x in [0,4.5] sx=0.1 sy=0.2 (b sx/sy=1): mean b EV 1.9934, York 2.0010 (true 2); 95 % coverage EV 0.942, York 0.943
+ n=10 x in [0,1.0] sx=0.2 sy=0.05 (b sx/sy=8): mean b EV 1.5503, York 2.0944 (true 2); 95 % coverage EV 0.543, York 0.935
+ n=8 x in [0,1.0] sx=0.3 sy=0.05 (b sx/sy=12): mean b EV 1.2423, York 2.3176 (true 2); 95 % coverage EV 0.365, York 0.909
+== singular design: every x equal
+ linear_fit raised LinAlgError Singular matrix
+ quadratic on two distinct x: [-1039253365267474.0, 60623112973936.055, -866044471056.2296] [2.626373240588147e+27, 1.5320510570097529e+26, 2.1886443671567905e+24] 34.99999999999999
+== the verdict |q - ref| <= 2 sigma at small dof when sigma comes from the scatter (unit weights, or Birge > 1)
+ dof=1: false 'does not agree' rate of a correct law, sigma from the scatter: 0.295 (normal 0.046)
+ dof=2: false 'does not agree' rate of a correct law, sigma from the scatter: 0.184 (normal 0.046)
+ dof=3: false 'does not agree' rate of a correct law, sigma from the scatter: 0.139 (normal 0.046)
+ dof=5: false 'does not agree' rate of a correct law, sigma from the scatter: 0.102 (normal 0.046)
+ dof=10: false 'does not agree' rate of a correct law, sigma from the scatter: 0.073 (normal 0.046)
+ dof=30: false 'does not agree' rate of a correct law, sigma from the scatter: 0.055 (normal 0.046)
+exported 61 cases

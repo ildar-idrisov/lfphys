@@ -1,0 +1,23 @@
+{"k":"server sliders","sl":[{"min":"0","max":"10","step":"0.05"},{"min":"5","max":"25","step":"0.25"},{"min":"0","max":"90","step":"0.25"}]}
+{"k":"off-grid 37.3° computed live","p1":{"values":{"h_m":1,"v0":15,"angle_deg":37.3,"air":false},"live":true,"source":"computed","at":"2026-11-17T15:16:08.308Z","out":"37.3","offGridMark":"dm-ctl-val mono dm-off-grid"},"resp":[{"st":200,"src":"computed","url":"atlas/s03_projectile/explore/point"}]}
+{"k":"its drawer","text":"Checks: computed ↔ reference |  | Each check compares a quantity computed in this run with the accepted formula (or a second method). ✓ — they agree within the numerical precision. |  | ✓ 4 checks agree with the laws |  | ✓ flight time T | closed form in vacuum | ✓ range L | closed form in vacuum | ✓ highest point H above the floor | closed form in vacuum | ✓ energy balance E_k + E_p + Q = E₀ along the path | the largest deviation along the path, relative to E₀ (Q is the heat given to the air); the engine's stated error is 1·10⁻⁹ | Physics of this world | Events: 2 | Where these data come from |  | Computed live on this server at 2026-11-17 15:16:08. |  | Point | Launch height 1 m, Launch speed 15 m/s, Launch angle 37.3°, Air resistance off | Point's index | — | Atlas | explore · key 641ab5d011d20d4e | Code | f087384c7444 | Random seed | 1 | Made | 2026-11-14 13:37:11"}
+{"k":"refused: grid (h 0, θ 0) then off-grid v0 12.5","grid":"The ball starts on the floor and does not move upwards: there is no flight. What to change: raise the launch height, or throw upwards with a speed above zero","offGrid":"The ball starts on the floor and does not move upwards: there is no flight. What to change: raise the launch height, or throw upwards with a speed above zero","resp":[{"st":400,"src":null,"url":"atlas/s03_projectile/explore/point"}],"playDisabled":true}
+{"k":"«▶ Compute live» from Explore","vals":{"h_m":5,"v0":12.5,"angle_deg":30,"air":true},"url":"/run?id=20261117-151619-s03-8c24&lang=en","preset":"field","params":{"h_m":5,"v0":12.5,"angle_deg":30,"air":true,"object":"ball67","companion":"none"}}
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.waitForFunction: TypeError: Cannot read properties of undefined (reading 'step')
+    at eval (eval at predicate (eval at evaluate (:290:30)), <anonymous>:1:28)
+    at predicate (eval at evaluate (:290:30), <anonymous>:7:23)
+    at next (eval at evaluate (:290:30), <anonymous>:29:29)
+    at eval (eval at evaluate (:290:30), <anonymous>:42:9)
+    at UtilityScript.evaluate (<anonymous>:292:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at /pw/rp_live.mjs:66:14
+
+Node.js v24.13.0
+{"k":"«▶ Compute live» from Lab part 2 at 60°","preset":"launcher","params":{"h_m":0,"v0":5,"angle_deg":60,"air":false,"object":"steel20","companion":"none"}}
+{"k":"«▶ Compute live» from Watch at its 4th world (the vacuum comparison)","preset":"story","params":{"h_m":1.25,"v0":2,"angle_deg":0,"air":false,"object":"steel20","companion":"drop"}}
+{"k":"u32 «Another sample»","seed":2,"drawerSeed":"Затравка ГСЧ\n2","live":true}
+{"k":"u32: a full queue (7 concurrent + 1 from the UI)","statuses":[200,200,200,200,200,429,429],"shown":"Эту точку не удалось загрузить: the server computes other points now; try again in a moment","lang":"ru"}

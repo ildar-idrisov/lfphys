@@ -1,0 +1,6 @@
+fit.js vs linear_fit on 61 cases: largest relative difference params 3.9e-11, sigma 2.1e-11, vertex/vertex sigma 2.9e-11 (rand50)
+singular line -> throws singular the points do not determine the fit
+singular quadratic -> throws singular the points do not determine the fit
+negative sy taken as |sy|: 2.023333 2.203e-2
+NaN row dropped: n = 3
+agrees(0.6769, 0.000654, 0.677401): {"agrees":true,"diff":-0.000530133627681284,"sigma":0.000654}

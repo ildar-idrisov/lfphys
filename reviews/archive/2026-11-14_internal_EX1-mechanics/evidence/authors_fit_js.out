@@ -1,0 +1,20 @@
+✔ line0 on exact data: b, σ_b = σ/√Σx², χ² = 0 (no scaling) (2.440919ms)
+✔ line0 with x errors: the effective variance by hand (0.272056ms)
+✔ line on exact data and a scatter that scales the errors (Birge) (0.626181ms)
+✔ quadratic: exact parabola, its vertex and the vertex's σ from the covariance (0.446841ms)
+✔ power: y = A·x^p in log–log; non-positive values refused (0.787255ms)
+✔ readings without errors: ordinary least squares, σ from the scatter (0.911646ms)
+✔ the law's quantity and the agreement within two errors (0.901922ms)
+✔ against lfphys.tools.stats.linear_fit (Python) on shared cases (1.485383ms)
+✔ an instrument rounds to its division and carries its error (90.042116ms)
+✔ derived columns and their errors |f′(x)|·σ_x (0.383084ms)
+✔ a row of the step's columns from the readings; the CSV with the errors (0.432937ms)
+✔ a value with its error (794.259223ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1030.677946

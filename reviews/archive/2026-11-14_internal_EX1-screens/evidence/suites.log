@@ -1,0 +1,10 @@
+ds_toy_en: 102 ok, 0 failed, last: all passed
+ds_s03_projectile_en: 106 ok, 0 failed, last: all passed
+ds_s03_projectile_ru: 105 ok, 0 failed, last: all passed
+ds_u32_double_slit_en: 75 ok, 0 failed, last: all passed
+ds_u32_double_slit_ru: 75 ok, 0 failed, last: all passed
+site_smoke en,ru on the built site under /lfphys/: 94 ok, 0 failed, last: all passed
+start_page en: 87 ok, 0 failed, last: all passed
+start_page ru: 87 ok, 0 failed, last: all passed
+node player/js/tests: 35 pass, 0 fail
+site build: 1237 files, 65.4 MB, 46/46 recordings, 5/5 atlases; check.py: 0 failures, 4 warnings (accepted r12, u38)

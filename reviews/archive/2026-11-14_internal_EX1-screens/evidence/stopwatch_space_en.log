@@ -1,0 +1,3 @@
+{"k":"Space on «⏱ Stop» during the flight","sw":{"t":0.145,"running":true,"stopped":false},"playing":false,"paused":true,"local":0.145}
+{"k":"after the landing (the stopwatch still running)","sw":{"t":1.63,"running":true,"stopped":false},"playing":false,"paused":false,"local":0.563}
+{"k":"Space on «⏱ Stop» after the landing","sw":{"t":0.295,"running":true,"stopped":false},"playing":true,"paused":false,"local":0.295}

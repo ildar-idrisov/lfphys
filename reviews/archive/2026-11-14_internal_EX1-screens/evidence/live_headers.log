@@ -1,0 +1,15 @@
+# POST /api/atlas/s03_projectile/explore/point twice with angle 37.3 (already computed once by the page), then an on-grid 45
+HTTP/1.1 200 OK
+X-LF-Source: cache
+X-LF-Key: 756d7d59d0664183
+Server: Python/3.11 aiohttp/3.14.5
+HTTP/1.1 200 OK
+X-LF-Source: cache
+X-LF-Key: 756d7d59d0664183
+Server: Python/3.11 aiohttp/3.14.5
+HTTP/1.1 200 OK
+X-LF-Source: atlas
+X-LF-Key: a5a551b4fa1083ea
+Server: Python/3.11 aiohttp/3.14.5
+# a world refusal and a schema refusal
+{"error": {"$t": "The ball starts on the floor and does not move upwards: there is no flight"}, "text": "The ball starts on the floor and does not move upwards: there is no flight", "hint": {"$t": "raise the launch height, or throw upwards with a speed above zero"}}

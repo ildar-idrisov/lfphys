@@ -1,0 +1,6 @@
+live h=1.5 (server runs the edited code): 200 src=computed 1.3s <gzip 5421 B>
+delta's keys: ['$delta', 'launcher', 'params', 'scene', 't', 'type']
+header the player shows (local atlas base): g = 9.80665  weight = 0.5687857
+header the server computed with (its base): g = 9.81  weight = 0.56898
+events of the drawn flight: [('apex', 1.081572), ('landing', 2.296362)]
+local atlas key in index: 641ab5d011d20d4e | X-LF-Key: c16df14152740a2f

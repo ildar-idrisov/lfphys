@@ -1,0 +1,8 @@
+{"k":"race: two picks in a row (the first point slow)","slider":0.8,"shown":0.3}
+{"k":"race: the row measured","row":{"values":{"h_m":0.8},"h":{"v":0.8,"e":0.005},"L":{"v":0.371,"e":0.0005}},"Lof030":0.371,"Lof080":0.605}
+{"k":"stopwatch: paused at the landing, then ⏱ Stop after 1.5 s","T":0.34993739380806727,"sw":0.36329999942779534,"clock":0.36329999942779545,"paused":true,"shown":"0.36 s"}
+{"k":"Space on the focused «Measure»","rowsBefore":1,"rowsAfter":1,"playingBefore":false,"playingAfter":false}
+{"k":"five «Measure» on one point","rows":["0.6/0.524","0.6/0.524","0.6/0.524","0.6/0.524","0.6/0.524"],"msg":"Measured: row 6"}
+{"k":"390: sizes",".dm-play":"96x44",".dm-reset":"44x44",".dm-measure":"362x44",".dm-sw-btn":"68x44",".dm-check-law":"370x44",".dm-steps button":"32x44",".dm-del":"44x44",".dm-chap":null}
+{"k":"390: scrollWidth","sw390":390}
+{"k":"page errors","errs":[]}

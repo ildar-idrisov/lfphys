@@ -1,0 +1,40 @@
+r11_thomas_3d/thomas: prev==new True; new==local True; key prev 31aac0ca8980ba76 new ac11e6349f9bf54e local ac11e6349f9bf54e
+r11_thomas_3d/seam: prev==new True; new==local True; key prev 84c27d9cc129c00d new 295e87c934bc1cc9 local 295e87c934bc1cc9
+r11_thomas_3d/lab: prev==new True; new==local True; key prev 1428620e1658b49e new 180612dc5f4a786b local 180612dc5f4a786b
+r13_arrival_times_2d/gauss: prev==new True; new==local True; key prev 5f95c51f38fba1b6 new 65393d36b949af45 local 65393d36b949af45
+r13_arrival_times_2d/near: prev==new True; new==local True; key prev 70e8b791afc70e93 new 5fa3cf14171e6754 local 5fa3cf14171e6754
+u31_light_travel/sun_earth: prev==new True; new==local True; key prev 91bd51962c8cc0eb new e24081b433488670 local e24081b433488670
+u31_light_travel/measure_c: prev==new True; new==local True; key prev 3745f9e426e6a979 new 6413aa4eb8021eeb local 6413aa4eb8021eeb
+u31_light_travel/lensing: prev==new True; new==local True; key prev 1149d9c1460ed781 new a9a2e6638a8cf105 local a9a2e6638a8cf105
+u33_quantum_1d/tunnel: prev==new True; new==local True; key prev fc22a26a55519768 new acafbf770065b325 local acafbf770065b325
+u33_quantum_1d/bohm: prev==new True; new==local True; key prev 9e49d6df4771e977 new e650f626647bdaaa local e650f626647bdaaa
+u34_orbits/rosette: prev==new True; new==local True; key prev 480d9391fb3d92f0 new 02477ae3eb23954d local 02477ae3eb23954d
+u34_orbits/mercury: prev==new True; new==local True; key prev 401271aa8fab5c11 new 8c326c06d4c9c958 local 8c326c06d4c9c958
+u34_orbits/plunge: prev==new True; new==local True; key prev 0762907435981a43 new a5904e3c06b56732 local a5904e3c06b56732
+u35_optics_bench/tir: prev==new True; new==local True; key prev b4a9214f5459347c new 260b051796fbd067 local 260b051796fbd067
+u35_optics_bench/brewster: prev==new True; new==local True; key prev f84a7b02976fa19b new a868559411f03237 local a868559411f03237
+u35_optics_bench/spr: prev==new True; new==local True; key prev 54a525514bf86df3 new fd4e245d4f6d679e local fd4e245d4f6d679e
+u36_qcd/charmonium: prev==new False; new==local True; key prev 27dac43c8a6bfa6c new 3d9191f8d54e99c6 local 3d9191f8d54e99c6 DIFF: 1 of 816/816 messages differ, first at 0 type header; keys differing ['engine']
+u36_qcd/bottomonium: prev==new False; new==local True; key prev 81112af3a18d6023 new 67c8d25889270f98 local 67c8d25889270f98 DIFF: 1 of 618/618 messages differ, first at 0 type header; keys differing ['engine']
+u37_bell_test/chsh: prev==new True; new==local True; key prev 5617e026c5a7d987 new a40f6e5045eb0953 local a40f6e5045eb0953
+u37_bell_test/local_model: prev==new True; new==local True; key prev f9f5e259b093783a new 58e2fa308b3c1557 local 58e2fa308b3c1557
+u37_bell_test/scan: prev==new True; new==local True; key prev 805430b39d22cc06 new 390c89ee20cb5b2d local 390c89ee20cb5b2d
+u38_wave_3d/double: prev==new True; new==local True; key prev 071dc2fcd734c36d new 45c563b54e29e0e2 local 45c563b54e29e0e2
+u39_fast_observer/terrell: prev==new True; new==local True; key prev 1db86b1df7c611cf new 642192bc1431b69b local 642192bc1431b69b
+u39_fast_observer/city: prev==new True; new==local True; key prev cc1c08c31cc2fc95 new b0a870ea4ad85bf7 local b0a870ea4ad85bf7
+u40_hydrogen_3d/3dz2: prev==new True; new==local True; key prev 1cbbf363d2295e1f new ffcd9548e41f222c local ffcd9548e41f222c
+u40_hydrogen_3d/ring_current: prev==new True; new==local True; key prev 7b2581a0d662efeb new 0d70d8876b0edfdf local 0d70d8876b0edfdf
+u40_hydrogen_3d/superposition: prev==new True; new==local True; key prev 796b428c248e46db new aa3cc7b88effe8fa local aa3cc7b88effe8fa
+u41_quarkonium_3d/cc_2s: prev==new False; new==local True; key prev c94872e86ed11ee3 new c5847807ad450924 local c5847807ad450924 DIFF: 1 of 616/616 messages differ, first at 0 type header; keys differing ['engine']
+u41_quarkonium_3d/bb_1s: prev==new False; new==local True; key prev 7c8c0fa4bd4415a1 new 9fa54300087fa7e8 local 9fa54300087fa7e8 DIFF: 1 of 615/615 messages differ, first at 0 type header; keys differing ['engine']
+u41_quarkonium_3d/superposition: prev==new False; new==local True; key prev 94b5a491c94947fd new dd7928b468779d00 local dd7928b468779d00 DIFF: 1 of 714/714 messages differ, first at 0 type header; keys differing ['engine']
+u42_kerr_shadow/m87: prev==new False; new==local True; key prev d02d4fd77fbf6526 new aa431ae0adca4cb1 local aa431ae0adca4cb1 DIFF: 1 of 497/497 messages differ, first at 0 type header; keys differing ['engine']
+u42_kerr_shadow/edge_on: prev==new False; new==local True; key prev cfc6121728a2f799 new d6696532760dae3f local d6696532760dae3f DIFF: 1 of 497/497 messages differ, first at 0 type header; keys differing ['engine']
+u42_kerr_shadow/whatif: prev==new False; new==local True; key prev b328a8a1ad7bcd77 new 562444bbe252a44d local 562444bbe252a44d DIFF: 1 of 413/413 messages differ, first at 0 type header; keys differing ['engine']
+u43_optical_vortices/lg3: prev==new True; new==local True; key prev de8ffae4d85b2327 new 11f6fb3f8153a0cb local 11f6fb3f8153a0cb
+u43_optical_vortices/tight: prev==new True; new==local True; key prev 899f2b39dfcea92d new 980f0afd363af8d0 local 980f0afd363af8d0
+u43_optical_vortices/dove: prev==new True; new==local True; key prev 8fdc2fc9db447c7e new 3111d613219ccb07 local 3111d613219ccb07
+u44_mie_scattering/rainbow: prev==new False; new==local True; key prev 22bb54c96fc7ba04 new 630b389d4e27c0bc local 630b389d4e27c0bc DIFF: 1 of 448/448 messages differ, first at 0 type header; keys differing ['engine']
+u44_mie_scattering/supernumerary: prev==new False; new==local True; key prev 2565697e6571ffee new e848608e24d5199a local e848608e24d5199a DIFF: 1 of 448/448 messages differ, first at 0 type header; keys differing ['engine']
+u44_mie_scattering/glory: prev==new False; new==local True; key prev 41e8756d9db8e2a8 new f18b0c626b6fbcad local f18b0c626b6fbcad DIFF: 1 of 448/448 messages differ, first at 0 type header; keys differing ['engine']
+# 39 recordings: 28 byte-identical between ee6da3f and 507c059; 39 new == the local (committed run's) files

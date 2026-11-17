@@ -1,0 +1,11 @@
+## pytest (Docker lfphys-viz, repo read-only)
+..............                                                           [100%]
+158 passed in 29.48s
+## node --test (node:20-slim) quant, atlas, captions, fit, lab
+# tests 24
+# pass 24
+# fail 0
+## actionlint 1.7.7 .github/workflows/pages.yml
+exit 0
+## CI steps that run node
+0
