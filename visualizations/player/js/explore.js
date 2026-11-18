@@ -39,17 +39,18 @@ export function factorText(r) {
   return r < 1 ? t("slow motion ×{k}", { k: kk }) : t("sped up ×{k}", { k: kk });
 }
 // a time of the world in its own unit: the header's units.t_show {unit, s: world seconds per unit} (u34: GM/c³), else
-// seconds on a human scale (ns … s: u35's photons, u37's pairs)
-export function worldTime(tt, header) {
+// at school in seconds («0.45 s», never «452 ms»: the EX1 design, review EX1-worlds F8), else seconds on a human scale
+// (ns … s: u35's photons, u37's pairs). Watch writes its label with it too (EX2 §5 F12).
+export function worldTime(tt, header, school = false) {
   const ts = header && header.units && header.units.t_show;
   if (ts && ts.s > 0 && ts.unit) return `${num(tt / ts.s, 4)}\u00a0${t(ts.unit)}`;
-  return time(tt, 3);
+  return school ? secs(tt) : time(tt, 3);
 }
 // the time bar's label of a screen that declares its speed: «world 1 234 GM/c³ · slow motion ×289 · 3.10 s / 24.00 s»
 // (the world's time, the playback factor with normal or slow, the position and the end in played seconds)
-export function timeLabel({ tt, tEnd, speed, rate = 1, header = null }) {
+export function timeLabel({ tt, tEnd, speed, rate = 1, header = null, school = false }) {
   const f = factorText(speed * rate);
-  return [t("world {t}", { t: worldTime(tt, header) }), f, `${secs(tt / speed)} / ${secs(tEnd / speed)}`].filter(Boolean).join(" · ");
+  return [t("world {t}", { t: worldTime(tt, header, school) }), f, `${secs(tt / speed)} / ${secs(tEnd / speed)}`].filter(Boolean).join(" · ");
 }
 
 // --- labels and values ------------------------------------------------------------------------------------------------
@@ -450,7 +451,7 @@ export async function create(host, kit, spec) {
       const launched = c.launchedAt !== null;
       const declared = spec.speed !== undefined && spec.speed !== null;
       bar.update({ playing: E.playing, i: Math.max(0, i), max: Math.max(0, F.length - 1),
-        text: declared ? timeLabel({ tt, tEnd: c.pt.tEnd, speed, rate: E.rate, header: W.header }) : `${secs(tt)} / ${secs(c.pt.tEnd)}`,
+        text: declared ? timeLabel({ tt, tEnd: c.pt.tEnd, speed, rate: E.rate, header: W.header, school: !!kit.school }) : `${secs(tt)} / ${secs(c.pt.tEnd)}`,
         title: declared ? t("The world's own time, how much slower or faster than real time it plays, and the position in the point") : "",
         canPlay: !E.refused, why: E.refused || "",
         launch: timeMode === "flight" && (!launched || ended(c, E.clock)) });

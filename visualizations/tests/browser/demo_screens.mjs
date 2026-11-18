@@ -20,7 +20,10 @@
 //  - Explore, the keyboard (integrator D7): Space on a focused toggle presses it, → on a focused slider moves it (and its
 //    aria-valuetext tells the value); at 390 px every control on the screen together with the view and the time bar (D12);
 //  - Explore on the server: the live point's own passport (its key, code and time with its zone; D13);
-//  - Watch: a caption's hold (F12), the time label with the world's time and the playback factor (D8);
+//  - Watch: a caption's hold (F12), the time label with the world's time and the playback factor (D8), written as
+//    Explore's (EX2 §5 F12): at the start, at each caption and at the end, the world's time of the frame shown on its
+//    human scale (ps … s), in the header's units.t_show or at school in seconds, and the factor (the frames' own Δt × the
+//    frames per played second × the speed chosen, normal and slow) in powers of ten from 10⁶ on;
 //  - Lab work, every step (a bench, EX2 §1.4, §5 F6): «Measure» before a launch says there is nothing to measure yet; a
 //    slow reply of an earlier pick is not shown and «Measure» waits for the set-up (D6); → on a focused slider; the
 //    manual stopwatch on the wall clock, a pause refused while it runs, its reading in its column; the set-ups measured
@@ -95,6 +98,48 @@ const nbOf = (mf, i) => { const v = valuesAt(mf, i), out = [i];
 const varied = mfE && mfE.controls.filter(isNum).reduce((a, c) => (!a || c.values.length > a.values.length ? c : a), null);
 const firstRefused = mfE ? mfE.points.findIndex((p) => p[2] >= 1) : -1;
 const skip = (what) => console.log(JSON.stringify({ check: `${LANG} ${what}`, skipped: true }));
+
+// Watch's time label against the frame shown (EX2 §5 F12), computed here without the player's code: null when right,
+// else what is wrong. st: {tt (the frame's world time), units (its header's), r (world seconds per played second)}.
+const schoolUi = (viz.ui === "school" || viz.ui === "full") ? viz.ui === "school" : viz.audience === "school";
+const SUPS = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+function shownNumber(x) {  // a number as the player writes it, in the language: «1,015», «1 015», «0,45», «1.2·10⁹»
+  let s = x.replace(/[\s\u00a0\u202f]/g, "").replace("−", "-");
+  let e = 0;
+  const m = /^(.*)·10(⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+)$/.exec(s);
+  if (m) { s = m[1]; e = Number(m[2].replace("⁻", "-").replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, (d) => String(SUPS.indexOf(d)))); }
+  s = LANG === "ru" ? s.replace(",", ".") : s.replace(/,/g, "");
+  return /^-?\d+(\.\d+)?$/.test(s) ? Number(s) * 10 ** e : NaN;
+}
+function watchLabelWrong(label, st, school) {
+  const parts = label.split(" · ");
+  const head = tr("world {t}", { t: "\u0000" }).split("\u0000");
+  if (!(parts[0].startsWith(head[0]) && parts[0].endsWith(head[1] || ""))) return "no «world …» first";
+  const wt = parts[0].slice(head[0].length, parts[0].length - (head[1] || "").length).trim();
+  const sp = wt.lastIndexOf("\u00a0");
+  const num = shownNumber(sp > 0 ? wt.slice(0, sp) : wt), unit = sp > 0 ? wt.slice(sp + 1) : "";
+  const ts = st.units && st.units.t_show;
+  const human = [[1e-9, "ps", 1e-12], [1e-6, "ns", 1e-9], [1e-3, "µs", 1e-6], [1, "ms", 1e-3], [120, "s", 1]];
+  if (ts && ts.s > 0) {  // the world's own unit, four significant digits
+    if (unit !== tr(ts.unit) || !(Math.abs(num - st.tt / ts.s) <= 5e-4 * Math.abs(st.tt / ts.s) + 1e-12)) return `not ${st.tt / ts.s} ${ts.unit}`;
+  } else if (school) {  // seconds to two decimals
+    if (unit !== tr("s") || !(Math.abs(num - st.tt) <= 0.0051)) return `not ${st.tt} s at school`;
+  } else if (st.tt === 0) {
+    if (!(num === 0 && unit === tr("s"))) return "not 0 s";
+  } else if (st.tt < 120) {  // the human scale, three significant digits
+    const [, u, f] = human.find(([lim]) => st.tt < lim);
+    if (unit !== tr(u) || !(Math.abs(num * f - st.tt) <= 5e-3 * st.tt)) return `not ${st.tt / f} ${u}`;
+  }
+  if (!(st.r > 0)) return parts.length === 2 ? null : "a factor without a rate";
+  if (Math.abs(st.r - 1) <= 0.05) return parts[1] === tr("real time") ? null : "not «real time»";
+  const k = st.r < 1 ? 1 / st.r : st.r;
+  const pre = tr(st.r < 1 ? "slow motion ×{k}" : "sped up ×{k}", { k: "\u0000" }).split("\u0000");
+  if (!(parts[1] && parts[1].startsWith(pre[0]))) return `not «${pre[0]}…»`;
+  const ks = parts[1].slice(pre[0].length, parts[1].length - (pre[1] || "").length), kv = shownNumber(ks);
+  if (k >= 1e6 && !ks.includes("·10")) return `×${ks}: not in powers of ten`;
+  if (k < 1e6 && ks.includes("·10")) return `×${ks}: a power of ten below 10⁶`;
+  return Math.abs(kv - k) <= 0.051 * k ? null : `×${ks}: not ${k}`;
+}
 
 const br = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 
@@ -428,6 +473,29 @@ for (const [W, H] of SIZES) {
     const tl = (await page.locator(".dm-screen:not([hidden]) .dm-time").innerText()).trim();
     check(`${tag0} watch: the time label states the world's time and the playback factor`, tl.startsWith(tr("world {t}", { t: "" }).trim())
       && [tr("real time"), tr("slow motion ×{k}", { k: "" }), tr("sped up ×{k}", { k: "" })].some((x) => tl.includes(x.trim())), { tl });
+    // the label as Explore's (EX2 §5 F12), read back against the frame shown: at the start, each caption, the end, at
+    // normal speed and at «slow»
+    const bad = [], seen = [];
+    for (const rate of [1, 0.25]) {
+      await page.locator(`.dm-screen:not([hidden]) .dm-speed [data-rate="${rate}"]`).click();
+      for (const k of [...new Set([0, ...caps.map((c) => c.step), n - 1])]) {
+        await page.evaluate((j) => { const s = document.querySelector(".dm-screen:not([hidden]) .dm-timeline"); s.value = String(j); s.dispatchEvent(new Event("input")); }, k);
+        await settle(page, 30);
+        const lab = (await page.locator(".dm-screen:not([hidden]) .dm-time").innerText()).trim();
+        const st = await page.evaluate(() => {
+          const V = window.__lfWatch.state, S = V.story, k = window.__lfWatch.step(), { w, i } = S.steps[k], F = S.worlds[w].frames;
+          const a = Math.max(0, i - 3), b = Math.min(F.length - 1, i + 3), e = V.rec.entry;
+          const fps = (e.fps || 20) / Math.max(1, e.frame_stride || 1);
+          return { k, tt: F[i].t, units: (S.worlds[w].header || {}).units || null, r: b > a ? ((F[b].t - F[a].t) / (b - a)) * fps * V.rate : null };
+        });
+        const why = watchLabelWrong(lab, st, schoolUi);
+        if (why) bad.push({ k, rate, lab, why, tt: st.tt, r: st.r });
+        if (seen.length < 6) seen.push(lab);
+      }
+    }
+    await page.locator('.dm-screen:not([hidden]) .dm-speed [data-rate="1"]').click();
+    check(`${tag0} watch: the time label as Explore's: the frame's world time on its scale, the factor in powers of ten, normal and slow (EX2 F12)`,
+      bad.length === 0, { bad: bad.slice(0, 4), seen });
     // a caption's hold stops the playback there; ❚❚ then ▶ during the hold go on at once (review EX1-screens F12)
     const hc = await page.evaluate(() => window.__lfWatch.state.story.captions.find((c) => c.hold && c.step > 0));
     if (hc) {

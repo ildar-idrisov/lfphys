@@ -32,7 +32,7 @@
 //    flight with the student's reaction, as a hand-held one does).
 import { openAtlas } from "./atlas.js";
 import { ExprError, Undefined, evaluate as evalExpr, parse as parseExpr } from "./expr.js";
-import { MODELS as FIT_MODELS, fit } from "./fit.js";
+import { MODELS as FIT_MODELS, fit, pValueText } from "./fit.js";
 import { t } from "./i18n.js";
 import { SLOW, controlRow, ended, expandValues, localT, measText, secs, speedOf, timeLabel, valuesText, when } from "./explore.js";
 import { frameAt, frameIndexAt, showAt } from "./record_core.js";
@@ -186,7 +186,8 @@ export function computedFor(step, references, colLabel = (id) => id) {
 }
 // the fit's output (EX2 §5 F6 (c)), as lines of text: the model and its parameters with the σ from the declared errors;
 // at standard also χ², dof, χ²/dof, p and the Birge ratio, and, when χ²/dof > 1, the σ scaled by that ratio on a line of
-// its own; without declared errors, that the σ come from the scatter. No verdict.
+// its own; without declared errors, that the σ come from the scatter. No verdict. The p is printed from ln p (EX2 §5
+// F11: «3.05·10⁻²¹⁷¹³⁴» for χ² = 10⁶ on 7 degrees of freedom, never «0»).
 export function fitLines(res, label, school) {
   const keys = Object.keys(res.params).filter((k) => k !== "yv");
   const name = (k) => (k === "xv" ? "x*" : k);
@@ -195,7 +196,7 @@ export function fitLines(res, label, school) {
   if (school) return lines;
   const ratio = res.dof > 0 ? res.chi2 / res.dof : NaN;
   lines.push(t("χ² = {chi2}, dof = {dof:d}, χ²/dof = {ratio}, p = {p}, Birge ratio √(χ²/dof) = {birge}", {
-    chi2: fmt(res.chi2, ".4g"), dof: res.dof, ratio: fmt(ratio, ".3g"), p: fmt(res.p, ".3g"), birge: fmt(res.birge, ".3g") }));
+    chi2: fmt(res.chi2, ".4g"), dof: res.dof, ratio: fmt(ratio, ".3g"), p: pValueText(res.lnp), birge: fmt(res.birge, ".3g") }));
   if (res.birge > 1) {
     lines.push(t("σ scaled by the Birge ratio: {values}", { values: keys.map((k) => `${name(k)} = ${pm(res.params[k], res.sigmaScaled[k])}`).join(", ") }));
   }
@@ -618,7 +619,7 @@ export async function create(host, kit, spec) {
     kit.self.rate = speed * L.rate;  // the view's ctx.speed(): world seconds per played second
     const declared = step().speed !== undefined && step().speed !== null;
     bar.update({ playing: L.playing, i: Math.max(0, i), max: Math.max(0, F.length - 1),
-      text: declared ? timeLabel({ tt, tEnd: c.pt.tEnd, speed, rate: L.rate, header: W.header }) : `${secs(tt)} / ${secs(c.pt.tEnd)}`,
+      text: declared ? timeLabel({ tt, tEnd: c.pt.tEnd, speed, rate: L.rate, header: W.header, school: !!kit.school }) : `${secs(tt)} / ${secs(c.pt.tEnd)}`,
       title: declared ? t("The world's own time, how much slower or faster than real time it plays, and the position in the point") : "",
       launch: c.launchedAt === null || ended(c, s.clock) });
   }

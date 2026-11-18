@@ -9,7 +9,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { computedFor, csv, derived, fitLines, instrumentText, loadRows, placeRow, pm, reading, readingText, rowOf, setupKey, sig4, variantOf, withUnit } from "../lab.js";
-import { fit } from "../fit.js";
+import { fit, pValueText } from "../fit.js";
 
 const close = (a, b, tol, msg) => assert.ok(Math.abs(a - b) <= tol * Math.max(1, Math.abs(b)), `${msg}: ${a} vs ${b}`);
 const tape = { division: 0.001, error: 0.0005 }, ruler = { division: 0.01, error: 0.005 }, prot = { division: 1, error: 0.5 };
@@ -129,6 +129,14 @@ test("the fit's output: parameters with the declared σ, χ², dof, χ²/dof, p,
   const none = fit(x, y, null, null, "line");
   assert.equal(fitLines(none, "line", false)[1], "(no declared errors: the σ come from the scatter of the points)");
   assert.ok(!fitLines(r, "line", false).join(" ").match(/✓|✗|agree/), "no verdict");
+});
+
+test("the fit's p beyond the double's range: printed from ln p, never «p = 0» (EX2 §5 F11)", () => {
+  // a straight line through a zigzag of ±500 with σ = 1: χ² ≈ 2.2·10⁶ on 7 degrees of freedom, p ≈ 10⁻⁴⁸²⁵³⁵ (0 as a double)
+  const r = fit([0, 1, 2, 3, 4, 5, 6, 7, 8], [0, 1e3, 0, 1e3, 0, 1e3, 0, 1e3, 0], null, new Array(9).fill(1), "line");
+  assert.ok(r.p === 0 && r.lnp < -1e5, `p ${r.p}, ln p ${r.lnp}`);
+  const line = fitLines(r, "line", false)[1];
+  assert.ok(line.includes(`, p = ${pValueText(r.lnp)}, `) && /, p = \d\.\d+·10⁻[⁰¹²³⁴⁵⁶⁷⁸⁹]+, /.test(line), line);
 });
 
 test("the teacher's variant: found by its id, only in a task sheet (EX2 §5 F8 (b))", () => {

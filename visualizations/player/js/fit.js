@@ -31,7 +31,16 @@
 //                             and p (the p-value of χ² for dof degrees of freedom, chi2Sf). The fit is a tool: it prints
 //                             its output and judges nothing (the owner, 2026-11-18: «Check against the law» and its
 //                             verdict are withdrawn, with their bounds of two errors or Student's t).
-//   chi2Sf(χ², ν)             P(X² ≥ χ²) for ν degrees of freedom: the regularised upper incomplete gamma Q(ν/2, χ²/2).
+//   chi2Sf(χ², ν)             P(X² ≥ χ²) for ν degrees of freedom: the regularised upper incomplete gamma Q(ν/2, χ²/2);
+//                             0 only where the double underflows (beyond χ² ≈ 1 500): what is printed is pValueText.
+//   chi2LogSf(χ², ν)          ln P(X² ≥ χ²), computed in logarithms (EX2 §5 F11): finite for every finite χ² (χ² = 10⁶,
+//                             ν = 7: ln p = −499 968.395…, p = 3.05·10⁻²¹⁷¹³⁴), to 1e-12 of |ln p| against mpmath
+//                             (fixtures/chi2_sf.json, made by fixtures/make_chi2_sf.py).
+//   pValueText(ln p)          the p-value as the fit prints it, in the viewer's language: «0.0123», «3.2·10⁻⁴⁵» from p,
+//                             and below 10⁻³⁰⁰ «3.21·10⁻⁴⁵⁶» from log₁₀ p, never «0» (a p below the double's range is not
+//                             zero). The fit's result carries lnp beside p for it.
+import { fmt } from "./i18n.js";
+
 export const MODELS = {
   // min: more points than parameters (so that χ²/dof exists; lfphys.tools.stats.linear_fit refuses fewer)
   line0: { names: ["b"], basis: (x) => [x], min: 2 },
@@ -214,7 +223,8 @@ export function fit(x, y, sx, sy, model) {
   // the σ scaled by the Birge ratio √(χ²/dof) when it exceeds 1: printed beside the declared ones, never instead (EX2 F6 (c))
   const sigmaScaled = Object.fromEntries(Object.entries(sigmaDeclared).map(([k, v]) => [k, out.unit || !(out.birge > 1) ? v : v * out.birge]));
   return { model, names: m.names, params, sigma, sigmaDeclared, sigmaScaled, cov: out.cov, chi2: out.chi2, dof: out.dof,
-           birge: out.birge, p: out.unit ? NaN : chi2Sf(out.chi2, out.dof), scaled: out.scaled, fromScatter: !!(out.unit || out.scaled),
+           birge: out.birge, p: out.unit ? NaN : chi2Sf(out.chi2, out.dof), lnp: out.unit ? NaN : chi2LogSf(out.chi2, out.dof),
+           scaled: out.scaled, fromScatter: !!(out.unit || out.scaled),
            unit: !!out.unit, method: out.method, iterations: out.iterations, n: x.length, f: out.f };
 }
 
@@ -230,31 +240,66 @@ export function lnGamma(x) {
   for (let i = 1; i < 9; i++) a += LANCZOS[i] / (x + i);
   return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(tt) - tt + Math.log(a);
 }
-// the regularised lower incomplete gamma P(a, x) by its series (x < a + 1), the upper Q(a, x) by Lentz's continued
-// fraction (x ≥ a + 1) (Numerical Recipes, §6.2)
-function gammaP(a, x) {
+// The regularised incomplete gamma functions in logarithms (EX2 §5 F11; Numerical Recipes, §6.2): the lower P(a, x) by
+// its series (x < a + 1), the upper Q(a, x) by Lentz's continued fraction (x ≥ a + 1), each as the logarithm of its
+// prefactor x^a·e^(−x)/Γ(a) plus the logarithm of the series' sum or of the fraction. The prefactor alone underflows the
+// double beyond x ≈ 750 (χ² ≈ 1 500); its logarithm stays finite for every finite x, so ln Q keeps its digits where Q
+// itself does not exist as a double. The series stops at a term below 1e-17 of its sum, the fraction at a factor within
+// an ulp of 1 (Number.EPSILON: a stricter test never ends for x near the double's limit, where (1/b)·b is not 1 exactly);
+// one that has not converged in ITMAX steps gives NaN, never a wrong number (ν = 10⁶ converges: fit.test.mjs).
+const ITMAX = 100000, CF_TINY = 1e-300;
+const lnPrefactor = (a, x) => -x + a * Math.log(x) - lnGamma(a);
+function lnGammaP(a, x) {
   let ap = a, del = 1 / a, sum = del;
-  for (let n = 0; n < 1000; n++) { ap += 1; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-17) break; }
-  return sum * Math.exp(-x + a * Math.log(x) - lnGamma(a));
+  for (let n = 0; n < ITMAX; n++) {
+    ap += 1; del *= x / ap; sum += del;
+    if (Math.abs(del) < Math.abs(sum) * 1e-17) return Math.log(sum) + lnPrefactor(a, x);
+  }
+  return NaN;
 }
-function gammaQ(a, x) {
-  const tiny = 1e-300;
-  let b = x + 1 - a, c = 1 / tiny, d = 1 / b, h = d;
-  for (let i = 1; i < 1000; i++) {
+function lnGammaQ(a, x) {
+  let b = x + 1 - a, c = 1 / CF_TINY, d = 1 / b, h = d;
+  for (let i = 1; i < ITMAX; i++) {
     const an = -i * (i - a);
     b += 2;
-    d = an * d + b; if (Math.abs(d) < tiny) d = tiny;
-    c = b + an / c; if (Math.abs(c) < tiny) c = tiny;
+    d = an * d + b; if (Math.abs(d) < CF_TINY) d = CF_TINY;
+    c = b + an / c; if (Math.abs(c) < CF_TINY) c = CF_TINY;
     d = 1 / d;
     const del = d * c;
     h *= del;
-    if (Math.abs(del - 1) < 1e-17) break;
+    if (Math.abs(del - 1) <= Number.EPSILON) return Math.log(h) + lnPrefactor(a, x);  // a factor within an ulp of 1
   }
-  return Math.exp(-x + a * Math.log(x) - lnGamma(a)) * h;
+  return NaN;
+}
+// ln P(X² ≥ χ²) for ν degrees of freedom: ln Q(ν/2, χ²/2); on the series' side ln(1 − P) by log1p (there Q > 0.08,
+// so 1 − P loses no digit)
+export function chi2LogSf(chi2, dof) {
+  if (!(dof > 0) || !(chi2 >= 0) || !Number.isFinite(chi2)) return NaN;
+  const a = dof / 2, x = chi2 / 2;
+  if (x === 0) return 0;
+  return x < a + 1 ? Math.log1p(-Math.exp(lnGammaP(a, x))) : lnGammaQ(a, x);
 }
 export function chi2Sf(chi2, dof) {
   if (!(dof > 0) || !(chi2 >= 0) || !Number.isFinite(chi2)) return NaN;
   const a = dof / 2, x = chi2 / 2;
   if (x === 0) return 1;
-  return x < a + 1 ? Math.max(0, 1 - gammaP(a, x)) : gammaQ(a, x);
+  return x < a + 1 ? Math.max(0, 1 - Math.exp(lnGammaP(a, x))) : Math.exp(lnGammaQ(a, x));
+}
+
+// The p-value as printed (EX2 §5 F11), from ln p: p itself (fmt, «0.0123», «3.2·10⁻⁴⁵») while p ≥ 10⁻³⁰⁰; below, the
+// mantissa and the exponent from log₁₀ p = ln p / ln 10 («3.21·10⁻⁴⁵⁶»), never «0». The mantissa's relative error is
+// about ln 10 · |log₁₀ p| · 2⁻⁵² (10⁻¹⁰ at χ² = 10⁶); beyond |log₁₀ p| = 10¹¹ (χ² ≈ 5·10¹¹) it would have no correct
+// digit, and only log₁₀ p is printed, «10^(−2.171·10¹¹)».
+const SUP = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+const sup = (n) => String(n).replace("-", "⁻").replace(/\d/g, (k) => SUP[k]);
+export const P_FLOOR = 1e-300, LOG10_P_MANTISSA = 1e11;
+export function pValueText(lnp, digits = 3) {
+  if (typeof lnp !== "number" || Number.isNaN(lnp)) return fmt(NaN);
+  const p = Math.exp(Math.min(lnp, 0));
+  if (p >= P_FLOOR) return fmt(p, `.${digits}g`);
+  const l10 = lnp / Math.LN10;
+  if (!(l10 > -LOG10_P_MANTISSA)) return `10^(${fmt(l10, ".4g")})`;
+  let e = Math.floor(l10), m = Number((10 ** (l10 - e)).toPrecision(digits));
+  if (m >= 10) { m /= 10; e += 1; }
+  return `${fmt(m, `.${digits}g`)}·10${sup(e)}`;
 }

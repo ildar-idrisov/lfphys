@@ -11,9 +11,12 @@
 // and pauses at the end. «More recordings» is a select. The view is fed the recording's messages up to the frame shown
 // (record_core.js); nothing is computed here.
 //
-// The time label states the world's time and the playback factor for every world («world 0.42 s · slow motion ×10»;
-// integrator D8, review EX1-worlds F4): the factor is the frames' own world Δt × the frames per played second × the
-// speed chosen (normal / slow), «real time» within 5 % of 1, so that no view needs to repeat it.
+// The time label states the world's time and the playback factor for every world («world 420 ms · slow motion ×10»;
+// integrator D8, review EX1-worlds F4), written as Explore's (EX2 §5 F12: explore.js worldTime and factorText): the
+// world's time on a human scale (ns … s), in the world's own unit when its header declares units.t_show (u34: GM/c³),
+// in seconds at school («0.45 s»); the factor is the frames' own world Δt × the frames per played second × the speed
+// chosen (normal / slow), «real time» within 5 % of 1, and in powers of ten from 10⁶ on («slow motion ×1.2·10⁹», not
+// «×1199040767»), so that no view needs to repeat it.
 //
 // An optional view hook (integrator D8): view.setStory({worlds, w, fps}) is called when the world shown changes (a new
 // recording or the next world of the story): `worlds` the recording's decoded worlds (record_core.js), `w` the index of
@@ -22,20 +25,15 @@
 import { readStream, url } from "./api.js";
 import { t } from "./i18n.js";
 import { frameIndexAt, showAt, worldsOf } from "./record_core.js";
-import { el, fill, fmt } from "./ui.js";
-import { secs } from "./explore.js";
+import { el, fill } from "./ui.js";
+import { factorText, secs, worldTime } from "./explore.js";
 
 export const SLOW = 0.25;
 
-// «world 0.42 s · slow motion ×10»: the world's time and the playback factor (world seconds per played second r);
-// «real time» within 5 % of 1 (integrator D8)
-export function rateText(worldT, r) {
-  const w = t("world {t}", { t: secs(worldT) });
-  if (!(r > 0) || !Number.isFinite(r)) return w;
-  if (Math.abs(r - 1) <= 0.05) return `${w} · ${t("real time")}`;
-  const k = r < 1 ? 1 / r : r;
-  const kk = fmt(k < 10 ? Number(k.toPrecision(2)) : Math.round(k), "");  // ×2.5, ×10, ×91
-  return `${w} · ${r < 1 ? t("slow motion ×{k}", { k: kk }) : t("sped up ×{k}", { k: kk })}`;
+// «world 420 ms · slow motion ×10»: the world's time (header: the shown world's, for units.t_show; school: in seconds) and
+// the playback factor (world seconds per played second r), as Explore's (EX2 §5 F12); without a rate, the time alone
+export function rateText(worldT, r, header = null, school = false) {
+  return [t("world {t}", { t: worldTime(worldT, header, school) }), factorText(r)].filter(Boolean).join(" · ");
 }
 
 // The story of a decoded recording: its worlds, the global sequence of their frames [{w, i}] and its captions placed
@@ -152,7 +150,7 @@ export async function create(host, kit, spec) {
     caption.hidden = !text;
     const played = k / fps(), total = (S.steps.length - 1) / fps();
     bar.update({ playing: V.playing, i: k, max: S.steps.length - 1,
-      text: `${rateText(f.t, worldRate(W, st.i))} · ${secs(played)} / ${secs(total)}`,
+      text: `${rateText(f.t, worldRate(W, st.i), W.header, !!kit.school)} · ${secs(played)} / ${secs(total)}`,
       title: t("The world's own time, how much slower or faster than real time it plays, and the position in the recording") });
   }
 

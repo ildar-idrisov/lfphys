@@ -4,12 +4,13 @@
 // line and the Birge scaling on cases computed by hand, the cross-check against the Python reference
 // lfphys.tools.stats.linear_fit on the shared fixture (fixtures/fit_cases.json, Pearson–York included; integrator D3),
 // and the fit's printed output (EX2 §5 F6 (c): the σ from the declared errors, the σ scaled by the Birge ratio on its own,
-// χ² and its p-value against SciPy, fixtures/chi2_sf.json); the verdict of «Check against the law» is withdrawn (the
+// χ² and its p-value against mpmath, fixtures/chi2_sf.json made by fixtures/make_chi2_sf.py, to χ² = 10⁶ and far below the
+// double's range: ln p, and the printed p never «0», EX2 §5 F11); the verdict of «Check against the law» is withdrawn (the
 // owner, 2026-11-18). Run from visualizations/: node --test player/js/tests/*.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-import { chi2Sf, fit, lnGamma } from "../fit.js";
+import { chi2LogSf, chi2Sf, fit, lnGamma, pValueText } from "../fit.js";
 
 const close = (a, b, tol, msg) => assert.ok(Math.abs(a - b) <= tol * Math.max(1, Math.abs(b)), `${msg}: ${a} vs ${b}`);
 
@@ -115,14 +116,46 @@ test("against lfphys.tools.stats.linear_fit (Python) on shared cases", { skip: !
 
 // --- the fit's output (EX2 §5 F6 (c)): no verdict, the σ declared and scaled, χ² and its p-value ---------------------------
 const SF = new URL("./fixtures/chi2_sf.json", import.meta.url);
-test("the p-value of χ² against SciPy's chi2.sf, from p near 1 to 1e-60", { skip: !existsSync(SF) && "no fixture" }, () => {
+test("the p-value of χ² against mpmath, from p near 1 to χ² = 10⁶ (p = 3.05·10⁻²¹⁷¹³⁴): ln p, p and the printed p (EX2 §5 F11)", { skip: !existsSync(SF) && "no fixture" }, () => {
   const cases = JSON.parse(readFileSync(SF, "utf-8"));
-  assert.ok(cases.length >= 50);
-  for (const c of cases) close(chi2Sf(c.chi2, c.dof), c.p, 1e-10, `χ² ${c.chi2}, ν ${c.dof}`);
+  assert.ok(cases.length >= 200 && cases.some((c) => c.chi2 === 1e6) && cases.filter((c) => c.p === null).length >= 50, "to χ² = 10⁶, far below 1e-300");
+  for (const c of cases) {
+    const tag = `χ² ${c.chi2}, ν ${c.dof}`;
+    const lnp = chi2LogSf(c.chi2, c.dof);
+    close(lnp, c.ln_p, 1e-12, `${tag}: ln p`);
+    if (c.p !== null) close(chi2Sf(c.chi2, c.dof), c.p, 1e-10, `${tag}: p`);
+    else assert.ok(chi2Sf(c.chi2, c.dof) < 1e-299, `${tag}: p as a double, below the floor`);
+    assert.equal(pValueText(lnp), c.text, `${tag}: the printed p`);
+    assert.notEqual(pValueText(lnp), "0", `${tag}: never «p = 0»`);
+  }
   assert.equal(chi2Sf(0, 3), 1);
-  assert.ok(Number.isNaN(chi2Sf(1, 0)) && Number.isNaN(chi2Sf(-1, 2)));
+  assert.equal(chi2LogSf(0, 3), 0);
+  assert.ok(Number.isNaN(chi2Sf(1, 0)) && Number.isNaN(chi2Sf(-1, 2)) && Number.isNaN(chi2LogSf(Infinity, 2)));
   close(lnGamma(0.5), Math.log(Math.sqrt(Math.PI)), 1e-15, "ln Γ(½)");
   close(lnGamma(10), Math.log(362880), 1e-15, "ln Γ(10) = ln 9!");
+});
+
+test("the printed p beyond the double: u34's power law of the body's clock (χ²/dof 7·10⁴, ν = 7), the mantissa's limit, never 0", () => {
+  // EX2 §2.3, u34's way 2: χ² = 4.9·10⁵ on 7 degrees of freedom; ln p by mpmath −244 970.178 429 674 (the fixture)
+  assert.equal(pValueText(chi2LogSf(4.9e5, 7)), "6.36·10⁻¹⁰⁶³⁹⁰");
+  assert.equal(pValueText(chi2LogSf(1e6, 7)), "3.05·10⁻²¹⁷¹³⁴");
+  // across the double's floor the text goes on in the same form: 3.86·10⁻²⁹⁸ from p, 5.85·10⁻³⁰⁹ from log₁₀ p
+  assert.equal(pValueText(chi2LogSf(1400, 7)), "3.86·10⁻²⁹⁸");
+  assert.equal(pValueText(chi2LogSf(1450, 7)), "5.85·10⁻³⁰⁹");
+  // a χ² whose mantissa would have no correct digit (|log₁₀ p| > 10¹¹): log₁₀ p alone, still not 0
+  const huge = pValueText(chi2LogSf(1e15, 7));
+  assert.ok(/^10\^\(−2\.171·10¹⁴\)$/.test(huge), huge);
+  assert.ok(/^10\^\(/.test(pValueText(chi2LogSf(1e300, 2))), pValueText(chi2LogSf(1e300, 2)));
+  assert.ok(Number.isFinite(chi2LogSf(1.7e308, 2)), "finite for every finite χ²");
+  // the fit's own result carries ln p
+  const r = fit([0, 1, 2, 3, 4, 5, 6, 7, 8], [0, 1e3, 0, 1e3, 0, 1e3, 0, 1e3, 0], null, new Array(9).fill(1), "line");
+  assert.ok(r.chi2 > 1e6 && r.p === 0 && r.lnp < -2e5, `χ² ${r.chi2}, p ${r.p}, ln p ${r.lnp}`);
+  close(r.lnp, chi2LogSf(r.chi2, r.dof), 1e-15, "lnp");
+  assert.ok(/^\d\.\d+·10⁻[⁰¹²³⁴⁵⁶⁷⁸⁹]+$/.test(pValueText(r.lnp)), pValueText(r.lnp));
+  // many degrees of freedom: the iterations converge (ν = 10⁶, χ² at its mean: p near ½; far in the tail)
+  const big = chi2Sf(1e6, 1e6);
+  assert.ok(big > 0.49 && big < 0.51, `ν 10⁶: ${big}`);
+  assert.ok(Number.isFinite(chi2LogSf(2e6, 1e6)) && chi2LogSf(2e6, 1e6) < -1e5);
 });
 
 test("the σ from the declared errors and, when χ²/dof > 1, the σ scaled by the Birge ratio, each printed on its own", () => {
