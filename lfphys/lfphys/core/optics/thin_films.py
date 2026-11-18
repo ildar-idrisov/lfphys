@@ -25,12 +25,13 @@ matrices, so a visualization can check its run against them:
 * the evanescent wave beyond the critical angle: amplitude decay length 1/kappa = lambda / (2 pi sqrt(n1^2 sin^2
   theta - n2^2)), with q = n1^2 sin^2 theta - n2^2 evaluated in 160-bit arithmetic (``evanescent_q``): in binary64
   the subtraction loses digits as eps n1^2 sin^2 theta / q near the critical angle (review 2026-10-23, V5-2);
-* absorption as Joule heating (Poynting's theorem), s polarization: A = k0 / Re(n0 cos theta0) *
+* absorption as Joule heating (Poynting's theorem), s and p polarization: A = k0 / Re(n0 cos theta0) *
   sum_j Im(n_j^2) * integral over layer j of |E|^2 dz, with |E|^2 from ``interfaces.field_profile`` (field of
-  unit incident amplitude); it equals 1 - R - T, which the transfer matrices give from r and t alone. Inside a
-  homogeneous layer |E|^2 is a sum of exp(-+2 Im(k_z) z) and of a cross term oscillating as exp(2i Re(k_z) z); the
-  quadrature (composite 16-point Gauss-Legendre) takes sub-intervals of at most 4 / max(2|Im k_z|, 2|Re k_z|), so
-  a skin depth of 1 nm is resolved like a thick transparent film (review 2026-10-23, V5-3).
+  unit incident amplitude; for p |E_x|^2 + |E_z|^2); it equals 1 - R - T, which the transfer matrices give from r
+  and t alone. Inside a homogeneous layer |E|^2 is a sum of exp(-+2 Im(k_z) z) and of a cross term oscillating as
+  exp(2i Re(k_z) z); the quadrature (composite 16-point Gauss-Legendre) takes sub-intervals of at most
+  4 / max(2|Im k_z|, 2|Re k_z|), so a skin depth of 1 nm is resolved like a thick transparent film (review
+  2026-10-23, V5-3).
 
 Rounding: ``single_film`` returns a first-order bound of its own rounding (the Airy sum is a ratio whose
 denominator D = 1 + r01 r12 e^{2i beta} vanishes when the wave grazes inside the layer, so the bound grows as 1/|D|);
@@ -322,6 +323,22 @@ def joule_absorption_s(ns, ds, lam: float, theta0: float, points: int | None = N
     GL_WIDTH / max(2 |Im k_z|, 2 |Re k_z|, 1/d) (``_layer_nodes``), so the nodes follow the skin depth (review
     2026-10-23, V5-3: Simpson with 2001 points could not resolve 1.2 nm in 500 nm). ``points``: an optional minimum
     number of nodes per layer. Returns dict(A, per_layer, nodes)."""
+    return _joule(ns, ds, lam, theta0, "s", points)
+
+
+def joule_absorption_p(ns, ds, lam: float, theta0: float, points: int | None = None) -> dict:
+    """Absorbed fraction of p-polarized light as Joule heating in the layers, the p counterpart of
+    ``joule_absorption_s``: A = k0 / Re(n0 cos theta0) sum_j Im(n_j^2) integral over layer j of |E|^2 dz with
+    |E|^2 = |E_x|^2 + |E_z|^2 of ``interfaces.field_profile(..., "p")`` (field of unit incident amplitude; the
+    incident flux of a p wave in the lossless incidence medium is n0 cos theta0 as for s). E_x and E_z = -n0 sin theta0
+    Z0 H_y / n_j^2 are combinations of the same exponentials exp(+-i k_z z), so the same nodes resolve them. An
+    independent route to 1 - R_p - T_p of the transfer matrices (Poynting's theorem). Returns dict(A, per_layer,
+    nodes)."""
+    return _joule(ns, ds, lam, theta0, "p", points)
+
+
+def _joule(ns, ds, lam: float, theta0: float, pol: str, points: int | None) -> dict:
+    """The Joule integral of ``joule_absorption_s`` and ``joule_absorption_p`` (the field of polarization pol)."""
     ns = [complex(n) for n in ns]
     if len(ds) != len(ns) - 2:
         raise ValueError("need one thickness per inner layer")
@@ -340,7 +357,7 @@ def joule_absorption_s(ns, ds, lam: float, theta0: float, points: int | None = N
         kz = k0 * n * _cos(ns[0], n, theta0)
         rate = max(2 * abs(kz.imag), 2 * abs(kz.real), 1.0 / (b - a))
         z, w = _layer_nodes(a, b, rate, points or 0)  # Gauss-Legendre nodes are interior: no boundary ambiguity
-        E2 = interfaces.field_profile(ns, list(ds), lam, theta0, z, "s")
+        E2 = interfaces.field_profile(ns, list(ds), lam, theta0, z, pol)
         nodes += len(z)
         per.append(float(k0 * im_eps * float(np.dot(w, E2)) / flux))
     return {"A": float(sum(per)), "per_layer": per, "nodes": nodes}
