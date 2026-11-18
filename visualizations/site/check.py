@@ -21,7 +21,9 @@
 * a budget's hard limit is exceeded (one recording 10 MB, one world 25 MB with its atlases, one atlas point 400 kB, one
   atlas 12 MB, one poster 400 kB, the site 900 MB); over a target (3 MB, 12 MB, 150 kB, 6 MB, 150 kB, 600 MB) it warns;
   the recordings accepted over their target (``sitelib.ACCEPTED``) are warned as "over target (accepted: <reason>)";
-* an atlas of the registry (design of 2026-11-14 §1.3) is missing or stale, its manifest disagrees with the index or
+* an atlas of the registry (design of 2026-11-14 §1.3) is missing or stale, its manifest names no clock or two (EX2 §5
+  F1: ``frame_dt`` or ``fps``) or a compound control whose sets do not align with its values (F3), its pool (F10) is
+  missing or differs from the manifest, its manifest disagrees with the index or
   with its files (the base's size and sha256, each point's size and hash8, the grid's size, a state naming no
   refusal), or it counts a check that ends failed (``check_atlases``).
 
@@ -281,6 +283,14 @@ def check_atlases(site: Path, vid: str, plan: dict, mw: dict, idx: dict, rep: Re
         n_grid = 1
         for c in man.get("controls") or []:
             n_grid *= len(c.get("values") or [])
+            sets = c.get("sets")  # a compound control (EX2 §5 F3): one value of each parameter per grid value
+            if sets is not None and (not isinstance(sets, dict) or not sets or any(
+                    not isinstance(v, list) or len(v) != len(c.get("values") or []) for v in sets.values())):
+                rep.fail(f"{where}: its compound control {c.get('param')}: the parameters it sets do not align with "
+                         f"its values")
+        if (man.get("frame_dt") is None) == (man.get("fps") is None):  # the clock (EX2 §5 F1)
+            rep.fail(f"{where}: its manifest names one clock, frame_dt or fps (frame_dt {man.get('frame_dt')!r}, fps "
+                     f"{man.get('fps')!r})")
         pts = man.get("points") or []
         if len(pts) != n_grid:
             rep.fail(f"{where}: {len(pts)} points in its manifest, its grid has {n_grid}")
@@ -291,8 +301,15 @@ def check_atlases(site: Path, vid: str, plan: dict, mw: dict, idx: dict, rep: Re
             rep.fail(f"{where}: its base {b.get('file')} is missing or differs from the manifest")
         else:
             size += bf.stat().st_size
+        pl = man.get("pool")  # the blobs the points share (EX2 §5 F10)
+        if pl is not None:
+            pf = mf.parent / str(pl.get("file"))
+            if not pf.is_file() or pf.stat().st_size != pl.get("bytes_gz") or L.sha256_file(pf) != pl.get("sha256"):
+                rep.fail(f"{where}: its pool {pl.get('file')} is missing or differs from the manifest")
+            else:
+                size += pf.stat().st_size
         n_ref = len(man.get("refusals") or [])
-        named = {b.get("file"), mf.name}
+        named = {b.get("file"), mf.name} | ({pl.get("file")} if pl else set())
         for i, pt in enumerate(pts):
             name, nbytes, state = (list(pt) + [None, None, None])[:3]
             if state:

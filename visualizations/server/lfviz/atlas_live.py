@@ -12,14 +12,14 @@ same CPU type as the site's build, an on-grid point is the same bytes (numpy's S
 world's computed values; review R-F F8). With ``full_header: true`` the same point comes with a full header (no
 ``$delta``, ``$base`` or ``$drop``): what a player asks for when its own base is another (integrator D13).
 
-A control left out takes its default; a parameter that is not a control of the atlas, a value outside the control's
-span (a slider's lowest to highest value, a toggle's or a select's own values) or one the schema refuses is ``400
-{error}``; a value the world refuses (``check_params``, its memory estimate, its constructor) is ``400 {error, hint}``
-with the refusal's texts; a point whose checks end ✗ is ``409 {error}`` naming the checks (integrator D14). The
-response's headers say where the point came from and what made it: ``X-LF-Source`` = ``atlas`` (an on-grid value
-served from the local atlas when its key is current), ``cache`` or ``computed``; ``X-LF-Key`` (the point's key);
-``X-LF-Code`` (the world's code hash that computed it); ``X-LF-Made`` (when it was computed, ISO 8601 in UTC: a cached
-point's original time, an atlas's build time).
+A control left out takes its default; a parameter that is not a control of the atlas, a value outside the control's span
+(a slider's lowest to highest value, a toggle's or a select's own values), a compound control's value off its grid (it
+sets several parameters at once: EX2 §5 F3) or one the schema refuses is ``400 {error}``; a value the world refuses
+(``check_params``, its memory estimate, its constructor) is ``400 {error, hint}`` with the refusal's texts; a point
+whose checks end ✗ is ``409 {error}`` naming the checks (integrator D14). The response's headers say where the point
+came from and what made it: ``X-LF-Source`` = ``atlas`` (an on-grid value served from the local atlas when its key is
+current), ``cache`` or ``computed``; ``X-LF-Key`` (the point's key); ``X-LF-Code`` (the world's code hash that computed
+it); ``X-LF-Made`` (when it was computed, ISO 8601 in UTC: a cached point's original time, an atlas's build time).
 
 The computation runs in a separate process, the sweeps' pattern (``lfviz.sweep``): its own hard memory limit
 (``RLIMIT_DATA``) from ``LFVIZ_POINT_MEM_GB`` (by default half a worker's budget, at least 512 MB), ``oom_score_adj``
@@ -153,11 +153,25 @@ def request_values(viz: dict, spec: dict, body) -> tuple[dict, int, bool]:
     seed = body.get("seed", spec["seed"])
     if isinstance(seed, bool) or not isinstance(seed, int) or not 0 <= seed < 2 ** 63:
         raise Refused(400, T("the seed is a whole number ≥ 0"))
+    for p, c in ctl.items():  # a compound control takes its grid values only (EX2 §5 F3): it sets several parameters
+        if c.get("sets") is None:
+            continue
+        v = values[p]
+        k = next((j for j, x in enumerate(c["values"]) if type(x) is type(v) and x == v), None)
+        if k is None and not isinstance(v, bool):
+            k = next((j for j, x in enumerate(c["values"]) if not isinstance(x, bool) and x == v), None)
+        if k is None:
+            raise Refused(400, T("“{label}” sets several parameters at once: it takes only its own values",
+                                 label=c.get("label") or p))
+        values[p] = c["values"][k]  # the grid's own value (0 and 0.0 are one point)
     try:
-        params = headless.resolve(viz, spec["preset"], {**spec["fixed"], **values})
+        params = headless.resolve(viz, spec["preset"], {**spec["fixed"], **registry.expand_values(spec["controls"],
+                                                                                                  values)})
     except ValueError as e:
         raise Refused(400, e.args[0] if e.args else T("the values are refused")) from None
     for p, c in ctl.items():  # within the screen's span: a slider between its ends, a toggle or a select its values
+        if c.get("sets") is not None:
+            continue
         v, vals = params[p], c["values"]
         if all(_is_num(x) for x in vals) and _is_num(v):
             if not min(vals) <= v <= max(vals):
@@ -168,8 +182,9 @@ def request_values(viz: dict, spec: dict, body) -> tuple[dict, int, bool]:
     ref = headless.refusal(viz, params)
     if ref is not None:
         raise Refused(400, ref.text, ref.hint)
-    # the values as the schema coerced them (a "1" is 1.0): the key and the run see the same numbers
-    return {p: params[p] for p in values}, int(seed), full
+    # the values as the schema coerced them (a "1" is 1.0): the key and the run see the same numbers; a compound
+    # control's value is its grid value
+    return {p: (values[p] if ctl[p].get("sets") is not None else params[p]) for p in values}, int(seed), full
 
 
 def point_key(base_key: str, values: dict, seed: int, live: str | None = None) -> str:
@@ -209,6 +224,11 @@ def local_point(world: str, spec: dict, values: dict, seed: int, folder: Path, a
         base = mf.parent.joinpath(man["base"]["file"]).read_bytes()
         if len(data) != size or hashlib.sha256(base).hexdigest() != man["base"]["sha256"]:
             return None
+        if man.get("pool"):  # a live point is never pooled (EX2 §5 F10): its pooled blobs put back
+            pool = mf.parent.joinpath(man["pool"]["file"]).read_bytes()
+            if hashlib.sha256(pool).hexdigest() != man["pool"]["sha256"]:
+                return None
+            data = headless.unpool(data, pool)
         return {"data": data, "base": base, "made": entry.get("made") or _iso(mf.stat().st_mtime)}
     except (OSError, ValueError, KeyError, StopIteration, IndexError, TypeError):
         return None

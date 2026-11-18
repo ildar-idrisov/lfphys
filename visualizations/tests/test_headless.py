@@ -214,7 +214,7 @@ def test_the_packer_drops_quantises_and_the_header_delta_merges_back():
     assert out[0][0]["$delta"] and "params" in out[0][0] and "title" not in out[0][0]
     # a key the point lacks and a blob it lacks are dropped from the merged header
     dm, db = headless.Packer(base=({**bmeta, "extra": 1}, {**bblobs, "more": np.zeros(2)})).delta(
-        {k: v for k, v in full_meta.items()}, {"ticks": bblobs["ticks"]})
+        {k: v for k, v in full_meta.items()}, dict(bblobs))
     assert dm["$drop"] == ["extra"] and dm["$drop_blobs"] == ["more"]
     mm, bb = headless.merge_header(({**bmeta, "extra": 1}, {**bblobs, "more": np.zeros(2)}), (dm, db))
     assert "extra" not in mm and "more" not in bb and "$drop" not in mm
@@ -256,3 +256,60 @@ def test_a_delta_names_its_base_and_the_merge_drops_the_name():
     assert not [k for k in meta if k.startswith("$")]
     full, _pk = atlas.pack_point(spec, msgs, None)  # no base: a full header
     assert "$delta" not in headless.read_stream(full)[0][0]
+
+
+# --- EX2 (design lfphys/sources/explore_EX2_2026-11-18_design.md §5 F1, F2, F8) ------------------------------------------
+def test_the_fps_clock_of_an_atlas():
+    """F1: an atlas may take frames per played second at the world's default speed (the toy's: 1 world s per played
+    s), so a frame every 1/fps of world time; with a world_s or event stop the last frame is at the stop time."""
+    msgs, oc = _run("s98_atlas_toy", {}, {"world_s": 0.33}, clock={"fps": 20, "speed": None})
+    ts = _frames_t(msgs)
+    assert ts[0] == 0.0 and ts[-1] == pytest.approx(0.33, abs=1e-12) and len(ts) == 8
+    assert all(abs(b - a - 0.05) < 1e-12 for a, b in zip(ts[:-2], ts[1:-1]))
+    msgs, _oc = _run("s98_atlas_toy", {}, {"world_s": 0.33}, clock={"fps": 20, "speed": 0.5})  # a slower clock: Δt 0.025
+    assert _frames_t(msgs)[1] == pytest.approx(0.025, abs=1e-15)
+    T = (2 * 1.0 / 9.80665) ** 0.5
+    msgs, oc = _run("s98_atlas_toy", {}, {"events": {"landing": 1}, "after_s": 0.12, "max_world_s": 5},
+                    clock={"fps": 20, "speed": None})
+    assert _frames_t(msgs)[-1] == pytest.approx(T + 0.12, abs=1e-12)  # (a stop within the event's own frame step is
+    # that step's end, as with frame_dt)
+    states = [m for m, _b in msgs if m["type"] == "state"]
+    assert states and states[0]["speed"] == 1.0  # the point keeps the world's default speed (a screen's "world" speed)
+
+
+def test_stops_by_counted_events():
+    """F2: ``{events: {kind: n, …}, after_s, max_world_s}``: the first kind to reach its count stops the point after_s
+    later; an event counts for its kind and its name; ``{event: k}`` is the shorthand of ``{events: {k: 1}}``; a count
+    not reached by max_world_s fails."""
+    T = (2 * 1.0 / 9.80665) ** 0.5  # the toy's landing from 1 m, thrown horizontally: 0.4516 s, ticks at 0.1 … 0.4
+    msgs, oc = _run("s98_atlas_toy", {}, {"events": {"tick": 3, "landing": 1}, "after_s": 0.02, "max_world_s": 5})
+    assert oc.stop_event == "tick" and oc.stop_event_t == pytest.approx(0.3, abs=1e-12)
+    assert _frames_t(msgs)[-1] == pytest.approx(0.32, abs=1e-12) and oc.counts == {"tick": 3}
+    msgs, oc = _run("s98_atlas_toy", {}, {"events": {"tick": 9, "landing": 1}, "after_s": 0.0, "max_world_s": 5})
+    assert oc.stop_event == "landing" and oc.stop_event_t == pytest.approx(T, rel=1e-12) and oc.counts["tick"] == 4
+    a, oa = _run("s98_atlas_toy", {}, {"event": "landing", "after_s": 0.12, "max_world_s": 5})
+    b, ob = _run("s98_atlas_toy", {}, {"events": {"landing": 1}, "after_s": 0.12, "max_world_s": 5})
+    assert [protocol.encode(m, x) for m, x in a] == [protocol.encode(m, x) for m, x in b]  # the shorthand
+    with pytest.raises(headless.RunFailed, match="max_world_s") as e:
+        _run("s98_atlas_toy", {}, {"events": {"tick": 9}, "after_s": 0.0, "max_world_s": 0.8})
+    assert "tick 4 of 9" in str(e.value)
+    assert registry.stop_events({"event": "x"}) == {"x": 1} and registry.stop_events({"world_s": 1}) == {}
+
+
+def test_the_packer_drops_blobs_of_any_type():
+    """F8: ``drop.blobs`` (``<type>.<blob>``, a ``*`` at the end of a name a prefix) drops blobs of any message type;
+    ``frame_blobs`` stays the shorthand of ``frame.*`` names."""
+    pk = headless.Packer(drop={"blobs": ["header.tick*", "frame.ghost"]})
+    assert pk.blobs("header", {"ticks": np.zeros(3), "other": np.ones(2)}).keys() == {"other"}
+    assert pk.blobs("frame", {"ghost": np.zeros(2), "ghosts": np.ones(2)}).keys() == {"ghosts"}
+    assert pk.blobs("traj", {"ghost": np.zeros(2)}).keys() == {"ghost"}
+    old = headless.Packer(drop={"frame_blobs": ["ghost"]})
+    assert old.blobs("frame", {"ghost": np.zeros(2)}) == {} and old.blobs("header", {"ghost": np.zeros(2)}).keys() == {"ghost"}
+    spec = next(a for a in registry.atlases_of(registry.load("s98_atlas_toy")) if a["id"] == "throws")
+    atlas = _site("atlas")
+    m0, _oc = atlas.run_point("s98_atlas_toy", spec, atlas.defaults(spec))
+    base = atlas.base_header(spec, m0)
+    assert "ticks" not in base[1]  # the base header drops it too
+    data, _pk = atlas.pack_point(spec, m0, base)
+    out = headless.read_stream(data)
+    assert all("ghost" not in b for m, b in out if m["type"] == "frame") and "ticks" not in out[0][1]

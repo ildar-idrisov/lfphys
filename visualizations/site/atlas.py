@@ -6,11 +6,13 @@
     python3 site/atlas.py --world s03_projectile [--atlas explore] [--out DIR]
     python3 site/atlas.py --all | --stale [--out DIR]
 
-An atlas is the set of points of one Explore screen (its id is the screen's) or of one lab step (``<screen>.<step>``)
-on the grid of its controls (``registry.atlases_of``). A point is the world's own run (``lfviz.headless.run_spec``):
-the screen's preset, its ``fixed`` values and the grid values on top, the screen's seed, frames every ``frame_dt`` of
-world time from t = 0 until the screen's stop rule. A point the world refuses (``check_params``) is ``refused`` with its
-text; a point that fails (an error, an exception, a check ending ✗, a stop event not reached) fails the atlas.
+An atlas is the set of points of one Explore screen (its id is the screen's) or of one lab step (``<screen>.<step>``) on
+the grid of its controls (``registry.atlases_of``). A point is the world's own run (``lfviz.headless.run_spec``): the
+screen's preset, its ``fixed`` values and the grid values on top (a compound control's value as the parameters it sets),
+the screen's seed, frames every ``frame_dt`` of world time (or ``fps`` frames per played second at the point's own
+default speed) from t = 0 until the screen's stop rule (a time, an event, or counted events: EX2 §5 F1–F3). A point the
+world refuses (``check_params``) is ``refused`` with its text; a point that fails (an error, an exception, a check
+ending ✗, a stop event not reached) fails the atlas.
 
 Files, per world (``<out>/<world>/atlas/<atlas>/``):
 
@@ -22,7 +24,9 @@ Files, per world (``<out>/<world>/atlas/<atlas>/``):
   ``frame_dt``, the screen's dropped message types and frame blobs left out, the ``quantize`` map's blobs quantised:
   ``lfviz.headless.Packer``, ``lfviz.protocol``), then ``end {reason: "atlas"}``;
 * ``atlas.<hash8>.json``, the manifest: ``{world, atlas, screen, step, atlas_version, key, version, code_hash,
-  recorder_hash, seed, preset, fixed, controls: [{param, values, default}], frame_dt, stop, base: {file, bytes_gz,
+  recorder_hash, seed, preset, fixed, controls: [{param, values, default, compound?, sets?}] (a compound control's
+  ``param`` is its id, its ``sets`` the parameters each value sets: EX2 §5 F3), frame_dt, fps? (frames per played
+  second at the world's default speed, then ``frame_dt`` is null: EX2 §5 F1), stop, base: {file, bytes_gz,
   sha256}, points: [[file | null, bytes_gz, state]] (state 0: computed; k ≥ 1: refused, refusals[k-1]), refusals: [T],
   checks: {ok, failed, expected, info, na} (summed over the points), quant: {"<type>.<blob>": {enc, max_err,
   max_rel}}, references: {<law reference id>: {value, unit, label, how, kind}} (lab steps: one per law of the step),
@@ -95,12 +99,26 @@ def defaults(spec: dict) -> dict:
     return {c["param"]: c.get("default", c["values"][0]) for c in spec["controls"]}
 
 
+def clock_of(spec: dict) -> dict:
+    """An atlas's clock for ``headless.run_spec`` (EX2 §5 F1): ``{"frame_dt": dt}`` (world seconds between frames) or
+    ``{"fps": f, "speed": None}`` (frames per played second at the world's default speed: the point's own)."""
+    if spec.get("fps") is not None:
+        return {"fps": float(spec["fps"]), "speed": None}
+    return {"frame_dt": spec["frame_dt"]}
+
+
+def params_of(spec: dict, values: dict) -> dict:
+    """The values a point is run with: the atlas's ``fixed``, then the grid values, a compound control's value replaced
+    by the parameters it sets (EX2 §5 F3; ValueError for a compound value off its grid)."""
+    return {**spec["fixed"], **registry.expand_values(spec["controls"], values)}
+
+
 def run_point(vid: str, spec: dict, values: dict, seed: int | None = None, log=_log):
     """One point run headless: (messages [(meta, blobs)], Outcome). Raises ``headless.PointRefused``,
     ``headless.RunFailed`` or ``ValueError`` (the schema refuses the values)."""
     msgs = []
-    oc = headless.run_spec(vid, spec["preset"], {**spec["fixed"], **values}, spec["seed"] if seed is None else seed,
-                           {"frame_dt": spec["frame_dt"]}, spec["stop"], emit=lambda m, b=None: msgs.append((m, b)),
+    oc = headless.run_spec(vid, spec["preset"], params_of(spec, values), spec["seed"] if seed is None else seed,
+                           clock_of(spec), spec["stop"], emit=lambda m, b=None: msgs.append((m, b)),
                            end_reason="atlas", label=f"{vid}/{spec['id']}", log=log)
     return msgs, oc
 
@@ -117,6 +135,18 @@ def pack_point(spec: dict, msgs: list, base: tuple | None, base_sha: str | None 
     pk = headless.Packer(spec["quantize"], spec["drop"], base, base_sha)
     enc = [b for b in (pk.message(m, bl) for m, bl in msgs) if b is not None]
     return headless.gz(headless.stream(enc)), pk
+
+
+def pack_items(spec: dict, msgs: list, base: tuple | None, base_sha: str | None = None) -> tuple[list, headless.Packer]:
+    """A point's packed messages ``[(meta, blobs)]`` before encoding (``pack_point`` encodes them; the atlas's pool is
+    made from them, EX2 §5 F10) and the packer."""
+    pk = headless.Packer(spec["quantize"], spec["drop"], base, base_sha)
+    return [x for x in (pk.packed(m, bl) for m, bl in msgs) if x is not None], pk
+
+
+def encode_items(items: list) -> bytes:
+    """A point's file from its packed messages (pooled blobs as ``protocol.PoolRef``)."""
+    return headless.gz(headless.stream([protocol.encode(m, b) for m, b in items]))
 
 
 def pack_base_file(base: tuple) -> bytes:
@@ -146,34 +176,102 @@ def _screen_of(viz: dict, sid: str) -> dict:
 
 
 def check_declarations(viz: dict, spec: dict, header_meta: dict) -> list[str]:
-    """What needs the world built (design §2.1, §2.5): the readouts and the instruments' measurables in its header."""
+    """What needs the world built (design §2.1, §2.5; EX2 §5 F4, F7): the readouts and the instruments' measurables in
+    its header; a measurable's ``sigma`` and ``ref`` name other measurables of the header (its ``ref_label`` a text);
+    a readout instrument's ``sigma`` names one; a ``control:`` instrument reads a control of the step (a compound one
+    by its id), a parameter a compound control sets, or a fixed value."""
     have = _measurables(header_meta)
     sc = _screen_of(viz, spec["screen"])
     out = []
+    for m in header_meta.get("measurables") or []:
+        if not isinstance(m, dict):
+            continue
+        for k in ("sigma", "ref"):
+            if m.get(k) is not None and (m[k] not in have or m[k] == m.get("id")):
+                out.append(f"measurable {m.get('id')!r}: its {k} {m[k]!r} is not another measurable of the world's "
+                           f"header ({sorted(have)})")
+        rl = m.get("ref_label")
+        if rl is not None and not (isinstance(rl, str) or (isinstance(rl, dict) and "$t" in rl)):
+            out.append(f"measurable {m.get('id')!r}: its ref_label is a text (a T)")
     if sc["kind"] == "explore":
         out += [f"readout {r!r} is not a measurable of the world's header ({sorted(have)})"
                 for r in sc.get("readouts") or [] if r not in have]
-    else:
-        step = next(s for s in sc["steps"] if s["id"] == spec["step"])
+    settable = {c["param"] for c in spec["controls"]} | {p for c in spec["controls"] for p in c.get("sets") or {}}
+    for lab, step in steps_of(viz, spec):
+        out += [f"step {step['id']}: readout {r!r} is not a measurable of the world's header ({sorted(have)})"
+                for r in step.get("readouts") or [] if r not in have]
+        sc = lab
         for iid in step["instruments"]:
             reads = sc["instruments"][iid].get("reads")
             if reads and not reads.startswith("control:") and reads not in have:
                 out.append(f"instrument {iid} reads {reads!r}, not a measurable of the world's header ({sorted(have)})")
-            if reads and reads.startswith("control:") and reads[8:] not in {c["param"] for c in spec["controls"]} \
-                    and reads[8:] not in spec["fixed"]:
-                out.append(f"instrument {iid} reads {reads!r}: not a control or a fixed value of the step")
+            if reads and reads.startswith("control:") and reads[8:] not in settable and reads[8:] not in spec["fixed"]:
+                out.append(f"instrument {iid} reads {reads!r}: not a control, a parameter a compound control sets, or "
+                           f"a fixed value of the step")
+            sg = sc["instruments"][iid].get("sigma")
+            if sg and sg not in have:
+                out.append(f"instrument {iid}: its sigma {sg!r} is not a measurable of the world's header "
+                           f"({sorted(have)})")
     return out
+
+
+def steps_of(viz: dict, spec: dict) -> list[tuple[dict, dict]]:
+    """The lab steps whose points an atlas holds, as ``(lab screen, step)``: a lab step's own atlas, or the steps on an
+    Explore screen's atlas (``atlas: <screen>``, EX2 §5 F9)."""
+    out = []
+    for sc in viz.get("screens") or []:
+        if sc.get("kind") != "lab":
+            continue
+        for st in sc["steps"]:
+            if (spec.get("step") is not None and sc["id"] == spec["screen"] and st["id"] == spec["step"]) \
+                    or (spec.get("step") is None and st.get("atlas") == spec["id"]):
+                out.append((sc, st))
+    return out
+
+
+def counted(viz: dict, spec: dict) -> set:
+    """The measurables a lab step's counters read (EX2 §5 F4): each frame's value must be a whole number or None."""
+    return {sc["instruments"][iid].get("reads") for sc, step in steps_of(viz, spec) for iid in step["instruments"]
+            if sc["instruments"][iid].get("kind") == "counter"}
+
+
+def not_counts(msgs: list, names: set) -> list[str]:
+    """The counted measurables whose value in a frame is not a whole number ≥ 0 (``counted``)."""
+    bad = set()
+    for m, _b in msgs:
+        if m.get("type") != "frame" or not names:
+            continue
+        meas = m.get("meas") or {}
+        for k in names:
+            v = meas.get(k)
+            if v is not None and (isinstance(v, bool) or not isinstance(v, (int, float)) or v < 0 or v != int(v)):
+                bad.add(k)
+    return sorted(bad)
 
 
 def reference(viz: dict, spec: dict, params: dict, ref_id: str) -> dict:
     """The reference of one law of a lab step, computed by the world (``Simulation.lab_reference(step_id, fixed, values,
-    reference)``, design §2.3, integrator D4)."""
-    ref = viz["simulation"].lab_reference(spec["step"], dict(params),
-                                          {c["param"]: list(c["values"]) for c in spec["controls"]}, reference=ref_id)
+    reference)``, design §2.3, integrator D4): ``values`` the grid's values of each control (a compound control's by its
+    id, and the lists of the parameters it sets). On an Explore screen's atlas a step's law is ``<step>/<law>`` (EX2 §5
+    F9)."""
+    grid = {c["param"]: list(c["values"]) for c in spec["controls"]}
+    for c in spec["controls"]:  # a compound control: its id's values and the values it sets (EX2 §5 F3)
+        grid.update({p: list(v) for p, v in (c.get("sets") or {}).items()})
+    step, law = ref_id.split("/", 1) if "/" in ref_id else (spec["step"], ref_id)  # a step on an Explore's atlas (F9)
+    ref = viz["simulation"].lab_reference(step, dict(params), grid, reference=law)
     if not isinstance(ref, dict) or not isinstance(ref.get("value"), (int, float)) or isinstance(ref["value"], bool):
         raise ValueError(f"lab_reference({spec['step']!r}, reference={ref_id!r}) gave {ref!r}: "
                          f"{{value, unit, label, how, kind}}")
     return protocol.clean(ref)
+
+
+def _manifest_control(c: dict) -> dict:
+    """A control in the manifest: its key (``param``: a parameter, or a compound control's id), grid and default; a
+    compound control also the parameters it sets (EX2 §5 F3: «the manifest records the sets»)."""
+    out = {"param": c["param"], "values": c["values"], "default": c.get("default")}
+    if c.get("sets") is not None:
+        out.update(compound=True, sets=c["sets"])
+    return out
 
 
 def build_atlas(vid: str, spec: dict, out: Path, plan_entry: dict, log=_log) -> tuple[dict | None, list[str], list[str]]:
@@ -209,6 +307,8 @@ def build_atlas(vid: str, spec: dict, out: Path, plan_entry: dict, log=_log) -> 
             refs[ref_id] = reference(viz, spec, headless.resolve(viz, spec["preset"], spec["fixed"]), ref_id)
         except Exception as e:  # noqa: BLE001 - the world gave no reference: the step cannot be checked
             problems.append(f"{where}: lab_reference({ref_id!r}) failed: {type(e).__name__}: {e}")
+    counts = counted(viz, spec)
+    packed: dict = {}  # point index -> its packed messages, kept until the pool is made (EX2 §5 F10)
     files: dict[str, bytes] = {}
     entries, refusals, rkeys = [], [], {}
     checks = {"ok": 0, "failed": 0, "expected": 0, "info": 0, "na": 0}
@@ -234,29 +334,46 @@ def build_atlas(vid: str, spec: dict, out: Path, plan_entry: dict, log=_log) -> 
             entries.append([None, 0, 0])
             continue
         cpu += oc.cpu_s
+        bad_counts = not_counts(msgs, counts)
+        if bad_counts:
+            problems.append(f"{where}: point p{i} {values}: a counter reads {bad_counts}, not whole numbers ≥ 0")
         for st, n in oc.check_counts().items():
             checks[st] = checks.get(st, 0) + n
         try:
-            data, pk = pack_point(spec, msgs, base, bsha)
+            items, pk = pack_items(spec, msgs, base, bsha)
+            for _m, bl in items:  # the quantisation's refusals (±inf) are raised when a blob is stored
+                for arr in bl.values():
+                    protocol.stored(arr)
         except ValueError as e:  # a blob the quantisation refuses (±inf)
             problems.append(f"{where}: point p{i} {values} cannot be packed: {e}")
             entries.append([None, 0, 0])
             continue
         _merge_quant(quant, pk)
-        sha = hashlib.sha256(data).hexdigest()
-        name = f"p{i}.{sha[:8]}.lfpt.gz"
-        files[name] = data
-        entries.append([name, len(data), 0])
-        if len(data) > pt_l:
-            problems.append(f"{where}: point p{i} {values} is {len(data) / 1e3:.0f} kB, over the hard limit of "
-                            f"{pt_l / 1e3:.0f} kB: a coarser display grid, more quantisation or fewer frames")
-        elif len(data) > pt_t and not L.accepted(vid, f"atlas:{spec['id']}"):
-            warns.append(f"{where}: point p{i} is {len(data) / 1e3:.0f} kB, over the target of {pt_t / 1e3:.0f} kB")
+        packed[i] = items
+        entries.append(None)  # filled once the pool is known
         if time.monotonic() - t0 > 60:
             t0 = time.monotonic()
             log(f"  {where}: point {i + 1} of {len(pts)}")
+    # the pool (EX2 §5 F10): a blob stored by two or more points is kept once; the points name it
+    order = [i for i in range(len(pts)) if i in packed]
+    pooled, pool = headless.pool_points([packed[i] for i in order])
+    for i, items in zip(order, pooled):
+        data = encode_items(items)
+        sha = hashlib.sha256(data).hexdigest()
+        name = f"p{i}.{sha[:8]}.lfpt.gz"
+        files[name] = data
+        entries[i] = [name, len(data), 0]
+        if len(data) > pt_l:
+            problems.append(f"{where}: point p{i} {dict(zip(params, pts[i]))} is {len(data) / 1e3:.0f} kB, over the "
+                            f"hard limit of {pt_l / 1e3:.0f} kB: a coarser display grid, more quantisation or fewer "
+                            f"frames")
+        elif len(data) > pt_t and not L.accepted(vid, f"atlas:{spec['id']}"):
+            warns.append(f"{where}: point p{i} is {len(data) / 1e3:.0f} kB, over the target of {pt_t / 1e3:.0f} kB")
+    pool_gz = headless.pool_file(pool) if pool else None
+    pool_sha = hashlib.sha256(pool_gz).hexdigest() if pool_gz else None
+    pool_name = f"pool.{pool_sha[:8]}.lfpt.gz" if pool_gz else None
     base_name = f"base.{bsha[:8]}.lfpt.gz"
-    total = len(base_gz) + sum(len(d) for d in files.values())
+    total = len(base_gz) + sum(len(d) for d in files.values()) + (len(pool_gz) if pool_gz else 0)
     if total > at_l:
         problems.append(f"{where}: {total / L.MB:.2f} MB for the atlas is over the hard limit of {at_l / L.MB:.0f} MB")
     elif total > at_t:
@@ -272,10 +389,11 @@ def build_atlas(vid: str, spec: dict, out: Path, plan_entry: dict, log=_log) -> 
                 "atlas_version": L.ATLAS_VERSION, "key": plan_entry["key"], "version": viz.get("version", ""),
                 "code_hash": plan_entry["code_hash"], "recorder_hash": plan_entry["recorder_hash"],
                 "seed": spec["seed"], "preset": spec["preset"], "fixed": spec["fixed"],
-                "controls": [{"param": c["param"], "values": c["values"], "default": c.get("default")}
-                             for c in spec["controls"]],
-                "frame_dt": spec["frame_dt"], "stop": spec["stop"],
+                "controls": [_manifest_control(c) for c in spec["controls"]],
+                "frame_dt": spec["frame_dt"], **({"fps": spec["fps"]} if spec.get("fps") is not None else {}),
+                "stop": spec["stop"],
                 "base": {"file": base_name, "bytes_gz": len(base_gz), "sha256": bsha},
+                **({"pool": {"file": pool_name, "bytes_gz": len(pool_gz), "sha256": pool_sha}} if pool_gz else {}),
                 "points": entries, "refusals": refusals, "checks": checks, "quant": quant, "references": refs,
                 "bytes_gz": total}
     text = json.dumps(protocol.clean(manifest), ensure_ascii=False, separators=(",", ":")) + "\n"
@@ -289,6 +407,8 @@ def build_atlas(vid: str, spec: dict, out: Path, plan_entry: dict, log=_log) -> 
     for name, data in files.items():
         (tmp / name).write_bytes(data)
     (tmp / base_name).write_bytes(base_gz)
+    if pool_gz:
+        (tmp / pool_name).write_bytes(pool_gz)
     (tmp / man_name).write_text(text, encoding="utf-8")
     if folder.exists():
         shutil.rmtree(folder)

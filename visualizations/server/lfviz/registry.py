@@ -52,6 +52,8 @@ if str(ENGINE) not in sys.path:  # the texts below are the engine's T
     sys.path.insert(0, str(ENGINE))
 from lfphys.i18n import T, is_t  # noqa: E402
 
+from . import expr as _expr  # noqa: E402
+
 #: the old ids (folders renamed on 2026-11-13; the archived reviews and old run records keep them) -> the new ones
 ALIASES = {
     "v01_light_travel": "u31_light_travel", "v02_double_slit": "u32_double_slit", "v03_quantum_1d": "u33_quantum_1d",
@@ -359,7 +361,9 @@ SCREEN_KINDS = ("watch", "explore", "lab")
 SCREEN_LABELS = {"watch": T("Watch"), "explore": T("Explore"), "lab": T("Lab work")}
 ACTS = ("next", "now")
 TIMES = ("flight", "buildup", "none")
-INSTRUMENT_KINDS = ("ruler", "protractor", "stopwatch", "readout")
+INSTRUMENT_KINDS = ("ruler", "protractor", "stopwatch", "readout", "counter")
+#: the instruments drawn over the view at the world's places (the view's ``anchors()`` and ``worldToPx``; EX2 §5 F8)
+PLACED_KINDS = ("ruler", "protractor")
 COLUMN_OPS = ("sqrt", "square", "sin2", "inverse", "log")
 FITS = ("line0", "line", "quadratic", "power")
 LAW_QUANTITIES = ("slope", "intercept", "vertex", "exponent")
@@ -380,16 +384,36 @@ def _num(x) -> bool:
 
 
 def _check_stop(stop, where: str) -> list[str]:
-    """An atlas point's stop rule (design §1.2): ``{"world_s": t}`` or ``{"event": kind, "after_s": s,
-    "max_world_s": t}``."""
+    """An atlas point's stop rule (design §1.2; EX2 §5 F2): ``{"world_s": t}``, ``{"event": kind, "after_s": s,
+    "max_world_s": t}`` or ``{"events": {kind: n, …}, "after_s": s, "max_world_s": t}`` (the point stops ``after_s``
+    after the first kind, or name, that has occurred n times; ``{"event": k}`` is the shorthand of ``{"events": {k:
+    1}}``). ``max_world_s`` is required with an event: a run whose events do not come by then fails."""
     if isinstance(stop, dict) and set(stop) == {"world_s"} and _num(stop["world_s"]) and stop["world_s"] > 0:
         return []
-    if isinstance(stop, dict) and set(stop) <= {"event", "after_s", "max_world_s"} \
-            and isinstance(stop.get("event"), str) and stop["event"] \
-            and _num(stop.get("after_s", 0)) and stop.get("after_s", 0) >= 0 \
-            and _num(stop.get("max_world_s")) and stop["max_world_s"] > 0:
+    tail = isinstance(stop, dict) and _num(stop.get("after_s", 0)) and stop.get("after_s", 0) >= 0 \
+        and _num(stop.get("max_world_s")) and stop["max_world_s"] > 0
+    if tail and set(stop) <= {"event", "after_s", "max_world_s"} and isinstance(stop.get("event"), str) \
+            and stop["event"]:
         return []
-    return [f"{where}: stop {stop!r} is {{'world_s': t}} or {{'event': kind, 'after_s': s, 'max_world_s': t}}"]
+    ev = stop.get("events") if isinstance(stop, dict) else None
+    if tail and set(stop) <= {"events", "after_s", "max_world_s"} and isinstance(ev, dict) and ev \
+            and all(isinstance(k, str) and k and isinstance(n, int) and not isinstance(n, bool) and n >= 1
+                    for k, n in ev.items()):
+        return []
+    return [f"{where}: stop {stop!r} is {{'world_s': t}}, {{'event': kind, 'after_s': s, 'max_world_s': t}} or "
+            f"{{'events': {{kind: n ≥ 1, …}}, 'after_s': s, 'max_world_s': t}}"]
+
+
+def stop_events(stop: dict) -> dict:
+    """The counted events of a stop rule (EX2 §5 F2): ``{kind or name: n}``; ``{"event": k}`` is ``{k: 1}``; empty for
+    ``world_s`` or ``seconds``."""
+    if not isinstance(stop, dict):
+        return {}
+    if isinstance(stop.get("events"), dict):
+        return {str(k): int(n) for k, n in stop["events"].items()}
+    if stop.get("event"):
+        return {str(stop["event"]): 1}
+    return {}
 
 
 def _view_js(viz: dict) -> str | None:
@@ -429,12 +453,16 @@ def view_declarations(viz: dict) -> dict:
     """What a world's view declares for the screens (design §2.4), read from its ``web/view.js``: ``quantSafe`` (the
     blobs it accepts quantised: an object literal of string pairs, ``quantSafe: {"traj.s": "u16"}`` or
     ``const QUANT_SAFE = {…}``) and the ids of its ``overlays`` (an array literal of ``{id: "…", …}``, ``overlays: […]`` or
-    ``const OVERLAYS = […]``). None for a key the view does not declare."""
+    ``const OVERLAYS = […]``). None for a key the view does not declare. ``anchors`` and ``worldToPx``: whether the view
+    defines them (a method or a property, ``anchors() {…}`` or ``anchors: …``; EX2 §5 F8: a lab step with a ruler or a
+    protractor needs both, so that its instruments are drawn where the world is)."""
     js = _view_js(viz)
-    out = {"quantSafe": None, "overlays": None}
+    out = {"quantSafe": None, "overlays": None, "anchors": False, "worldToPx": False}
     if js is None:
         return out
     js = re.sub(r"/\*.*?\*/|(?:^|(?<=\s))//.*?$", "", js, flags=re.S | re.M)  # comments (a URL's // stays)
+    for name in ("anchors", "worldToPx"):
+        out[name] = bool(re.search(rf"(?<![\w.]){name}\s*(?:\([^)]*\)\s*\{{|:|=)", js))
     m = re.search(r"\b(?:quantSafe|QUANT_SAFE)\s*[:=]\s*\{", js)
     if m:
         body = _bracketed(js, m.end() - 1, "{", "}")
@@ -476,15 +504,129 @@ def _enc_ok(enc) -> bool:
     return quant_encoding_ok(enc)
 
 
+_DROP_BLOB = re.compile(r"^[a-z_][a-z0-9_]*\.[A-Za-z0-9_]+\*?$")
+
+
 def _check_drop(drop, where: str) -> list[str]:
+    """What an atlas does not keep (design §1.3; EX2 §5 F8): ``{types: [message types], frame_blobs: [blob names],
+    blobs: ["<type>.<blob>", …]}``; a blob name may end with ``*`` (every blob whose name starts so); ``frame_blobs:
+    [b]`` is the shorthand of ``blobs: ["frame.b"]``. Never what makes a point a world or says it is right: the types
+    ``UNDROPPABLE``, and the blobs of the types ``QUANT_TYPES_REFUSED`` (checks, events, errors, …)."""
     if drop is None:
         return []
-    if not isinstance(drop, dict) or set(drop) - {"types", "frame_blobs"} \
+    keys = ("types", "frame_blobs", "blobs")
+    if not isinstance(drop, dict) or set(drop) - set(keys) \
             or not all(isinstance(drop.get(k, []), list) and all(isinstance(x, str) for x in drop.get(k, []))
-                       for k in ("types", "frame_blobs")):
-        return [f"{where}: drop {drop!r} is {{'types': [message types], 'frame_blobs': [blob names]}}"]
+                       for k in keys):
+        return [f"{where}: drop {drop!r} is {{'types': [message types], 'frame_blobs': [blob names], 'blobs': "
+                f"['<type>.<blob>', …]}}"]
+    out = []
     bad = sorted(set(drop.get("types", [])) & UNDROPPABLE)
-    return [f"{where}: drop: {bad} cannot be dropped (they make a point a world and say it is right)"] if bad else []
+    if bad:
+        out.append(f"{where}: drop: {bad} cannot be dropped (they make a point a world and say it is right)")
+    for b in drop.get("blobs", []):
+        if not _DROP_BLOB.match(b):
+            out.append(f"{where}: drop blob {b!r} is '<message type>.<blob>' (a '*' at the end of the blob's name "
+                       f"allowed)")
+        elif b.partition(".")[0] in QUANT_TYPES_REFUSED:
+            out.append(f"{where}: drop blob {b!r}: the blobs of a {b.partition('.')[0]} message are never dropped "
+                       f"(they say the run is right)")
+    return out
+
+
+def drop_blob_rules(drop: dict | None) -> list[tuple[str, str, bool]]:
+    """An atlas's dropped blobs as ``(type, name, prefix)``: ``frame_blobs`` as ``frame.<name>``, ``blobs`` as given,
+    a name ending with ``*`` a prefix (EX2 §5 F8)."""
+    out = []
+    for b in (drop or {}).get("frame_blobs") or []:
+        out.append(("frame", b, False))
+    for b in (drop or {}).get("blobs") or []:
+        typ, _, name = b.partition(".")
+        out.append((typ, name[:-1], True) if name.endswith("*") else (typ, name, False))
+    return out
+
+
+#: names a compound control's id cannot take: the keys a control's values share in the player's objects (EX2 §5 F3)
+_JS_OWN = frozenset({"constructor", "prototype", "toString", "valueOf", "hasOwnProperty", "isPrototypeOf",
+                     "propertyIsEnumerable", "toLocaleString", "__proto__", "__defineGetter__", "__defineSetter__",
+                     "__lookupGetter__", "__lookupSetter__"})
+
+
+def control_key(c: dict) -> str | None:
+    """The key of a control's value in a point's values (the manifest's and the player's ``param``): its parameter, or
+    a compound control's ``id`` (EX2 §5 F3)."""
+    return c.get("id") if "sets" in c else c.get("param")
+
+
+def expand_values(controls: list[dict], values: dict) -> dict:
+    """The world's parameter values of a point: a compound control's grid value replaced by the parameters it sets
+    (``sets[param][k]`` for the value's index k among its ``values``); a plain control's value as it is. ValueError
+    for a compound value off its grid (a compound control takes grid values only, EX2 §5 F3)."""
+    out = dict(values)
+    for c in controls:
+        if "sets" not in c:
+            continue
+        key = control_key(c)
+        if key not in out:
+            continue
+        v = out.pop(key)
+        k = next((j for j, x in enumerate(c["values"]) if type(x) is type(v) and x == v), None)
+        if k is None:
+            k = next((j for j, x in enumerate(c["values"]) if x == v), None)
+        if k is None:
+            raise ValueError(f"{key} = {v!r} is not one of the compound control's values {c['values']}")
+        for p, vals in c["sets"].items():
+            out[p] = vals[k]
+    return out
+
+
+def _check_compound(viz, c: dict, preset, fixed, where: str) -> tuple[list[str], set, int]:
+    """A compound control (EX2 §5 F3): ``{id, label, unit?, values, labels?, sets: {param: [one value per grid value]},
+    default?}``; returns (problems, the parameters it sets, its number of values)."""
+    schema = viz.get("schema")
+    by_id = getattr(schema, "by_id", {}) or {}
+    out = []
+    cid = c.get("id")
+    w = f"{where}: compound control {cid!r}"
+    extra = sorted(set(c) - {"id", "label", "unit", "values", "labels", "sets", "default"})
+    if "param" in c:
+        out.append(f"{w}: a compound control has an id and sets, no param")
+    elif extra:
+        out.append(f"{w}: unknown fields {extra}")
+    if not isinstance(cid, str) or not _SLUG.match(cid) or cid in by_id or cid in _JS_OWN:
+        out.append(f"{w}: id is a slug that is no parameter of the schema")
+    if not _is_text(c.get("label")):
+        out.append(f"{w}: label is a T (a compound control has no parameter to take it from)")
+    if c.get("unit") is not None and not (_is_text(c["unit"]) or isinstance(c["unit"], str)):
+        out.append(f"{w}: unit is a T or a string (a symbol such as \"°\")")
+    vals = c.get("values")
+    if not isinstance(vals, list) or not vals or len({json.dumps(v) for v in vals}) != len(vals) \
+            or not all(isinstance(v, (str, int, float)) for v in vals):
+        return out + [f"{w}: values is a list of distinct numbers or strings"], set(), 1
+    if "default" in c and c["default"] not in vals:
+        out.append(f"{w}: default {c['default']!r} is not one of its values")
+    labels = c.get("labels")
+    if labels is not None and (not isinstance(labels, list) or len(labels) != len(vals)
+                               or not all(_is_text(x) for x in labels)):
+        out.append(f"{w}: labels is a list of T, one per value")
+    sets = c.get("sets")
+    if not isinstance(sets, dict) or not sets:
+        return out + [f"{w}: sets is a map {{param: [one value per grid value]}}"], set(), len(vals)
+    for pid, lst in sets.items():
+        if pid not in by_id:
+            out.append(f"{w}: sets {pid!r}, no parameter of the schema")
+        elif pid in (fixed or {}):
+            out.append(f"{w}: {pid} is both set by the control and fixed")
+        if not isinstance(lst, list) or len(lst) != len(vals):
+            out.append(f"{w}: sets {pid}: one value per grid value ({len(vals)})")
+        elif pid in by_id and by_id[pid].standard is not None and viz.get("ui") == "school":
+            out.append(f"{w}: sets {pid}, a law parameter: no modified physics at school (rule 4)")
+    if not out and schema is not None:
+        for k, v in enumerate(vals):
+            _p, errs = schema.resolve(preset, {**(fixed or {}), **{pid: lst[k] for pid, lst in sets.items()}})
+            if errs:
+                out.append(f"{w}: value {v!r} sets values the schema refuses: {[str(e) for e in errs]}")
+    return out, set(sets) if isinstance(sets, dict) else set(), len(vals)
 
 
 def _check_controls(viz, controls, preset, fixed, where: str, limit: int) -> list[str]:
@@ -492,11 +634,26 @@ def _check_controls(viz, controls, preset, fixed, where: str, limit: int) -> lis
     by_id = getattr(schema, "by_id", {}) or {}
     out = []
     if not isinstance(controls, list) or not controls:
-        return [f"{where}: controls: a list of {{'param', 'values', 'default'?}}"]
+        return [f"{where}: controls: a list of {{'param', 'values', 'default'?}} or compound "
+                f"{{'id', 'label', 'values', 'sets'}}"]
     if len(controls) > limit:
         out.append(f"{where}: {len(controls)} controls, at most {limit} at ui {viz.get('ui')!r}")
     seen, n = set(), 1
+    compound_sets: dict = {}  # param -> the compound control that sets it
     for c in controls:
+        if isinstance(c, dict) and "sets" in c:
+            probs, params, nv = _check_compound(viz, c, preset, fixed, where)
+            out += probs
+            n *= nv
+            key = c.get("id")
+            if key in seen:
+                out.append(f"{where}: control {key} twice")
+            seen.add(key)
+            for pid in params:
+                if pid in compound_sets:
+                    out.append(f"{where}: {pid} is set by two compound controls")
+                compound_sets[pid] = key
+            continue
         if not isinstance(c, dict) or c.get("param") not in by_id:
             out.append(f"{where}: control {c!r}: 'param' is a parameter of the schema")
             continue
@@ -524,9 +681,48 @@ def _check_controls(viz, controls, preset, fixed, where: str, limit: int) -> lis
             out.append(f"{where}: control {pid}: label is a T")
         if c.get("unit") is not None and not (_is_text(c["unit"]) or isinstance(c["unit"], str)):
             out.append(f"{where}: control {pid}: unit is a T or a string (a symbol such as \"nm\")")
+    for pid, key in compound_sets.items():
+        if pid in seen:
+            out.append(f"{where}: {pid} is both a control and set by the compound control {key}")
     pmin, pmax = ATLAS_LIMITS["points"]
     if n > pmax:
         out.append(f"{where}: {n} grid points, at most {pmax}")
+    elif compound_sets and not out and schema is not None:  # every combination resolves (EX2 §5 F3)
+        import itertools  # noqa: PLC0415
+        for combo in itertools.product(*[c["values"] for c in controls]):
+            vals = expand_values(controls, {control_key(c): v for c, v in zip(controls, combo)})
+            _p, errs = schema.resolve(preset, {**(fixed or {}), **vals})
+            if errs:
+                out.append(f"{where}: the combination {dict(zip([control_key(c) for c in controls], combo))} is "
+                           f"refused by the schema: {[str(e) for e in errs]}")
+                break
+    return out
+
+
+#: the speed of a screen or a step (EX2 §5 F1): world seconds per played second, or "world" (the point's own default)
+SPEED_WORLD = "world"
+#: frames per played second an atlas may take (EX2 §5 F1: ``fps`` instead of ``frame_dt``)
+ATLAS_FPS = (0.1, 120.0)
+
+
+def _check_clock(sc, where: str) -> list[str]:
+    """An atlas's clock and a screen's speed (EX2 §5 F1): exactly one of ``frame_dt`` (world seconds between frames)
+    and ``fps`` (frames per played second at the world's default speed, ``headless.run_spec``'s recording clock);
+    ``speed`` optional: world seconds per played second > 0, or ``"world"`` (the point's own default speed, from its
+    ``state`` message)."""
+    out = []
+    fdt, fps = sc.get("frame_dt"), sc.get("fps")
+    if (fdt is None) == (fps is None):
+        out.append(f"{where}: one of frame_dt (world seconds between frames) and fps (frames per played second at the "
+                   f"world's default speed), not {'both' if fdt is not None else 'neither'}")
+    elif fdt is not None and (not _num(fdt) or not fdt > 0):
+        out.append(f"{where}: frame_dt {fdt!r} is a positive number of world seconds")
+    elif fps is not None and (not _num(fps) or not ATLAS_FPS[0] <= fps <= ATLAS_FPS[1]):
+        out.append(f"{where}: fps {fps!r} is a number of frames per played second in {ATLAS_FPS}")
+    speed = sc.get("speed")
+    if speed is not None and speed != SPEED_WORLD and (not _num(speed) or not speed > 0):
+        out.append(f"{where}: speed {speed!r} is world seconds per played second (> 0) or \"world\" (the point's own "
+                   f"default speed)")
     return out
 
 
@@ -540,12 +736,15 @@ def _check_atlas_common(viz, sc, where: str, decl: dict) -> list[str]:
         out.append(f"{where}: fixed is a map of parameter values")
         fixed = {}
     elif sc.get("preset") in presets:
-        _p, errs = viz["schema"].resolve(sc["preset"], fixed)
+        params, errs = viz["schema"].resolve(sc["preset"], fixed)
         if errs:
             out.append(f"{where}: fixed {fixed!r} refused by the schema: {[str(e) for e in errs]}")
-    fdt = sc.get("frame_dt")
-    if not _num(fdt) or not fdt > 0:
-        out.append(f"{where}: frame_dt {fdt!r} is a positive number of world seconds")
+        elif viz.get("ui") == "school":  # rule 4 (EX2 §5 F6): no modified physics at school, by a preset or fixed
+            mods = [m.get("id") for m in viz["schema"].modifications(params)]
+            if mods:
+                out.append(f"{where}: its preset and fixed values set the law parameters {mods}: no modified physics "
+                           f"at school (rule 4)")
+    out += _check_clock(sc, where)
     if not isinstance(sc.get("seed", 1), int) or isinstance(sc.get("seed", 1), bool):
         out.append(f"{where}: seed is an integer")
     out += _check_stop(sc.get("stop"), where)
@@ -572,14 +771,15 @@ def _lab_reference_takes_reference(sim) -> bool:
     return "reference" in params or any(p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values())
 
 
-def _check_laws(viz, st: dict, w: str, cids: list, fits: list, plot: dict | None) -> list[str]:
-    """A lab step's laws (integrator D4 of 2026-11-17; review R-E F9, R-P F3, R-W F5): «Check against the law» judges a
-    fit only when the plotted columns and the fit's model are a law's own. ``laws``: a list (absent or empty: no
-    check) of ``{x, y, model, quantity, label, unit, reference}``: ``x`` and ``y`` two columns of the step; ``model``
-    one of the step's plot ``fits``; ``quantity`` what the model gives (``LAW_MODELS``); ``label`` a T; ``unit`` a T
-    or a plain symbol; ``reference`` an id unique in the step, answered by ``Simulation.lab_reference(step_id, fixed,
-    values, reference)`` when the step's atlas is built. The step's own plot (its ``x``, ``y`` and ``fit``) is one of
-    its laws, so that the step opens on a pair that can be checked."""
+def _check_laws(viz, st: dict, w: str, cids: list, fits: list) -> list[str]:
+    """A lab step's laws: data, optional (EX2 §5 F6 (d); integrator D4 of 2026-11-17 for their form): the world's
+    computed values for the bench, listed in Lab work's drawer under «Computed for this bench» with the quantity and the
+    columns they belong to, never set beside the student's fit (the app judges nothing: the owner, 2026-11-18).
+    ``laws``: ``[{x, y, model, quantity, label, unit, reference}]``: ``x`` and ``y`` two columns of the step; ``model``
+    one of the step's plot ``fits``; ``quantity`` what the model gives (``LAW_MODELS``); ``label`` a T; ``unit`` a T or
+    a plain symbol; ``reference`` an id unique in the step, answered by ``Simulation.lab_reference(step_id, fixed,
+    values, reference)`` when the atlas is built. **[error in earlier]** The step's plot no longer has to be one of its
+    laws (that served «Check against the law», which is withdrawn)."""
     out = []
     if "law" in st:
         out.append(f"{w}: law: a step declares laws: [{{x, y, model, quantity, label, unit, reference}}, …] "
@@ -615,19 +815,53 @@ def _check_laws(viz, st: dict, w: str, cids: list, fits: list, plot: dict | None
             out.append(f"{lw}: label is a T")
         if not (_is_text(law.get("unit")) or isinstance(law.get("unit"), str)):
             out.append(f"{lw}: unit is a T or a string (a plain symbol)")
-    if laws:
-        if not _lab_reference_takes_reference(viz.get("simulation")):
-            out.append(f"{w}: laws: the world's Simulation has no lab_reference(step_id, fixed, values, reference)")
-        if plot is not None and not any(isinstance(x, dict) and (x.get("x"), x.get("y"), x.get("model"))
-                                        == (plot.get("x"), plot.get("y"), plot.get("fit")) for x in laws):
-            out.append(f"{w}: the plot's own pair ({plot.get('x')}, {plot.get('y')}, {plot.get('fit')}) is none of "
-                       f"its laws' (x, y, model)")
+    if laws and not _lab_reference_takes_reference(viz.get("simulation")):
+        out.append(f"{w}: laws: the world's Simulation has no lab_reference(step_id, fixed, values, reference)")
+    return out
+
+
+#: what a step on an Explore screen's atlas takes from the screen (EX2 §5 F9) and so may not declare itself
+SHARED_FIELDS = ("preset", "fixed", "controls", "frame_dt", "fps", "stop", "seed", "quantize", "drop")
+#: the task sheet's fields (EX2 §5 F8): ``frp`` at school, ``basis`` at university
+WORKSHEET_FIELDS = ("frp", "basis", "goal", "bench", "procedure", "record", "record_rows", "variants")
+#: TRANSITION (EX2 step F, 2026-11-18): the worlds whose Lab work still has EX1's worksheet (questions with their
+#: answers, the teacher's notes, the equipment, the variants' plots, goals and questions) and EX1's laws as verdicts.
+#: The registry accepts that form for them only; the player prints what of it a task sheet has (the parts, their
+#: instruments, blank tables) and shows no question, answer or verdict. WS03 reworks S03 to the task sheet (design §10)
+#: and removes it from here; the set must then be empty and this path is deleted.
+EX1_WORKSHEETS = frozenset({"s03_projectile"})
+
+
+def shared_screen(viz: dict, st: dict) -> dict | None:
+    """The Explore screen whose atlas a lab step uses (``atlas: <screen id>``; EX2 §5 F9), or None."""
+    sid = st.get("atlas") if isinstance(st, dict) else None
+    if not isinstance(sid, str):
+        return None
+    return next((x for x in viz.get("screens") or [] if isinstance(x, dict) and x.get("id") == sid
+                 and x.get("kind") == "explore"), None)
+
+
+def _check_step_view(viz, st: dict, w: str, decl: dict) -> list[str]:
+    """A lab step's ``overlays`` and ``readouts`` (EX2 §5 F6 (b)), as an Explore screen's."""
+    out = []
+    ov = st.get("overlays") or []
+    have = decl.get("overlays")
+    if not isinstance(ov, list) or not all(isinstance(o, str) for o in ov):
+        out.append(f"{w}: overlays: a list of the ids the view declares")
+    elif ov and not set(ov) <= set(have or []):
+        out.append(f"{w}: overlays {sorted(set(ov) - set(have or []))} are not declared by the view (its overlays: "
+                   f"{have})")
+    rd = st.get("readouts") or []
+    if not isinstance(rd, list) or not all(isinstance(x, str) and x for x in rd):
+        out.append(f"{w}: readouts: a list of the world's measurables (ids in its header)")
     return out
 
 
 def _check_lab(viz, sc, where: str, decl: dict) -> list[str]:
     out = []
     by_id = getattr(viz.get("schema"), "by_id", {}) or {}
+    compound_ids = {c.get("id") for st in sc.get("steps") or [] if isinstance(st, dict)
+                    for c in st.get("controls") or [] if isinstance(c, dict) and "sets" in c}
     instr = sc.get("instruments")
     if not isinstance(instr, dict) or not instr:
         out.append(f"{where}: instruments: a map {{id: {{kind, label, unit, division, error?, reads | manual, event?}}}}")
@@ -643,10 +877,25 @@ def _check_lab(viz, sc, where: str, decl: dict) -> list[str]:
             out.append(f"{w}: label is a T")
         if not isinstance(d.get("unit"), str):
             out.append(f"{w}: unit is a string")
-        if not _num(d.get("division")) or not d["division"] > 0:
-            out.append(f"{w}: division is a positive number")
-        if d.get("error") is not None and (not _num(d["error"]) or d["error"] < 0):
-            out.append(f"{w}: error is a number ≥ 0 (default: half a division)")
+        counter = d.get("kind") == "counter"
+        if counter:  # a count (EX2 §5 F4): its division is one count; its error √N ("poisson") or a number
+            if d.get("division", 1) != 1:
+                out.append(f"{w}: a counter's division is one count (1)")
+            if d.get("error") != "poisson" and (not _num(d.get("error")) or d["error"] < 0):
+                out.append(f"{w}: a counter's error is \"poisson\" (√N, one count for N = 0) or a number ≥ 0 (0: an "
+                           f"exact count)")
+        else:
+            if not _num(d.get("division")) or not d["division"] > 0:
+                out.append(f"{w}: division is a positive number")
+            if d.get("error") is not None and (not _num(d["error"]) or d["error"] < 0):
+                out.append(f"{w}: error is a number ≥ 0 (default: half a division)")
+        if d.get("sigma") is not None:  # the run's own standard error at the cursor (EX2 §5 F4)
+            if d.get("kind") != "readout":
+                out.append(f"{w}: only a readout takes the run's own error (sigma)")
+            elif not isinstance(d["sigma"], str) or not d["sigma"] or d["sigma"].startswith("control:"):
+                out.append(f"{w}: sigma names a measurable of the world (the run's standard error of what it reads)")
+            elif d.get("error") is not None:
+                out.append(f"{w}: an error and a sigma: the run's own error replaces the declared one")
         if d.get("error_note") is not None and not _is_text(d["error_note"]):
             out.append(f"{w}: error_note is a T")
         if d.get("event") is not None and (not isinstance(d["event"], str) or not d["event"]):
@@ -657,14 +906,16 @@ def _check_lab(viz, sc, where: str, decl: dict) -> list[str]:
                 out.append(f"{w}: only a stopwatch is manual")
         elif not isinstance(reads, str) or not reads:
             out.append(f"{w}: reads a measurable of the world ('range') or a set-up value ('control:<param>')")
-        elif reads.startswith("control:") and reads[8:] not in by_id:
-            out.append(f"{w}: reads {reads!r}: no such parameter")
+        elif reads.startswith("control:") and (counter or d.get("sigma") is not None):
+            out.append(f"{w}: a counter or a readout with the run's error reads a measurable, not a set-up value")
+        elif reads.startswith("control:") and reads[8:] not in by_id and reads[8:] not in compound_ids:
+            out.append(f"{w}: reads {reads!r}: no such parameter or compound control")
     steps = sc.get("steps")
     if not isinstance(steps, list) or not steps:
         out.append(f"{where}: steps: a list of the lab's parts")
         steps = []
     sids = set()
-    shapes: dict = {}  # step id -> (its column ids, its plot's fits): what a worksheet variant may name
+    shapes: dict = {}  # step id -> (its column ids, its plot's fits, its controls): what a sheet's variant may name
     for st in steps:
         if not isinstance(st, dict):
             out.append(f"{where}: step {st!r} is a map")
@@ -679,25 +930,58 @@ def _check_lab(viz, sc, where: str, decl: dict) -> list[str]:
                 out.append(f"{w}: {k} is a T")
         if st.get("hint") is not None and not _is_text(st["hint"]):
             out.append(f"{w}: hint is a T")
-        out += _check_atlas_common(viz, st, w, decl)
+        if "atlas" in st:  # the points of an Explore screen of this world (EX2 §5 F9)
+            screen = shared_screen(viz, st)
+            if screen is None:
+                out.append(f"{w}: atlas {st.get('atlas')!r} is no Explore screen of this world")
+            own = sorted(k for k in SHARED_FIELDS if k in st)
+            if own:
+                out.append(f"{w}: its points are the Explore screen's: it does not declare {own}")
+            if st.get("speed") is not None and st["speed"] != SPEED_WORLD \
+                    and (not _num(st["speed"]) or not st["speed"] > 0):
+                out.append(f"{w}: speed {st['speed']!r} is world seconds per played second (> 0) or \"world\"")
+            controls = list((screen or {}).get("controls") or [])
+        else:
+            out += _check_atlas_common(viz, st, w, decl)
+            controls = list(st.get("controls") or []) if isinstance(st.get("controls"), list) else []
+        out += _check_step_view(viz, st, w, decl)
         used = st.get("instruments")
         if not isinstance(used, list) or not used or not all(u in instr for u in used):
             out.append(f"{w}: instruments {used!r}: a list of the lab's instruments")
             used = [u for u in used or [] if u in instr] if isinstance(used, list) else []
+        speed = st.get("speed") if st.get("speed") is not None or "atlas" not in st \
+            else (shared_screen(viz, st) or {}).get("speed")
+        if any(isinstance(instr.get(u), dict) and instr[u].get("manual") for u in used) \
+                and speed not in (None, 1, 1.0):
+            out.append(f"{w}: a manual stopwatch times the flight on the wall clock: its step plays in real time (no "
+                       f"speed; EX2 §5 F1)")
         cols, cids = st.get("columns"), []
         if not isinstance(cols, list) or not cols:
-            out.append(f"{w}: columns: a list of {{id, label, from | of + op}}")
+            out.append(f"{w}: columns: a list of {{id, label, from | of + op | expr}}")
             cols = []
+        all_ids = [c.get("id") for c in cols if isinstance(c, dict)]
         for c in cols:
             cid = c.get("id") if isinstance(c, dict) else None
             if not isinstance(cid, str) or not _COL.match(cid) or cid in cids:
                 out.append(f"{w}: column {c!r}: a unique slug id")
                 continue
+            if cid in _expr.RESERVED or cid in _JS_OWN:
+                out.append(f"{w}: column {cid}: the name is the formulas' own ({sorted(_expr.RESERVED)}) or a "
+                           f"property every object has: choose another")
             if not _is_text(c.get("label")):
                 out.append(f"{w}: column {cid}: label is a T")
-            if "from" in c:
+            kinds = [k for k in ("from", "of", "expr") if k in c]
+            if len(kinds) != 1:
+                out.append(f"{w}: column {cid}: one of 'from' an instrument, 'of' an earlier column with 'op', or "
+                           f"'expr' a formula of earlier columns")
+            elif "from" in c:
                 if c["from"] not in used:
                     out.append(f"{w}: column {cid}: from {c['from']!r} is not an instrument of the step")
+            elif "expr" in c:  # a formula of earlier columns (EX2 §5 F5): parsed by the grammar of lfviz.expr
+                why = _expr.check(c["expr"], cids, [x for x in all_ids if x not in cids]) \
+                    if isinstance(c["expr"], str) else "a formula is a string"
+                if why:
+                    out.append(f"{w}: column {cid}: expr {c['expr']!r} refused: {why}")
             elif c.get("of") not in cids or c.get("op") not in COLUMN_OPS:
                 out.append(f"{w}: column {cid}: 'from' an instrument, or 'of' an earlier column with 'op' one of "
                            f"{COLUMN_OPS}")
@@ -706,7 +990,6 @@ def _check_lab(viz, sc, where: str, decl: dict) -> list[str]:
         fits = []
         if not isinstance(plot, dict) or plot.get("x") not in cids or plot.get("y") not in cids:
             out.append(f"{w}: plot {plot!r}: {{x, y}} name columns of the step")
-            plot = None
         else:
             fits = plot.get("fits") or ([plot["fit"]] if plot.get("fit") else [])
             allowed = [f for f in FITS if f != "power" or viz.get("ui") != "school"]
@@ -715,34 +998,183 @@ def _check_lab(viz, sc, where: str, decl: dict) -> list[str]:
             for f in fits:
                 if f not in allowed:
                     out.append(f"{w}: plot: fit {f!r} is none of {allowed} (power only above school)")
-        out += _check_laws(viz, st, w, cids, fits, plot)
-        shapes[sid] = (list(cids), list(fits))
+        out += _check_laws(viz, st, w, cids, fits)
+        shapes[sid] = (list(cids), list(fits), controls)
+    placed = sorted({iid for st in steps if isinstance(st, dict) for iid in st.get("instruments") or []
+                     if isinstance(instr.get(iid), dict) and instr[iid].get("kind") in PLACED_KINDS})
+    if placed and not (decl.get("anchors") and decl.get("worldToPx")):  # EX2 §5 F8 (STATUS V52 (l))
+        out.append(f"{where}: the instruments {placed} are drawn over the view: its web/view.js defines anchors() and "
+                   f"worldToPx (where the tape, the ruler and the protractor sit)")
     ws = sc.get("worksheet")
+    if viz.get("id") in EX1_WORKSHEETS:  # TRANSITION: EX1's worksheet until WS03 (see EX1_WORKSHEETS)
+        return out + _check_ex1_worksheet(viz, ws, shapes, where)
+    return out + _check_task_sheet(viz, ws, shapes, where)
+
+
+def _check_task_sheet(viz, ws, shapes: dict, where: str) -> list[str]:
+    """Lab work's task sheet (EX2 §5 F8 (a), (b)): ``frp`` (school: the programme's lab, as EX1) or ``basis``
+    (university: the course or the manual, quoted verbatim), ``goal: T``, ``bench: [T]`` (what the bench is and what can
+    be set on it), ``procedure: [T]`` (one suggested procedure, not the only one), ``record: [T]`` (what to record and
+    hand in), ``record_rows`` (blank rows per step, default 10), ``variants`` (the teacher's tasks computed in the
+    atlases). **[error in earlier]** EX1's ``questions`` with their answers, the ``teacher``'s notes and the first EX2
+    form's ``grading`` are refused: Lab work is a bench, not a test (the owner, 2026-11-18)."""
+    out = []
+    w = f"{where}: worksheet"
+    school = viz.get("ui") == "school"
     if not isinstance(ws, dict):
-        out.append(f"{where}: worksheet: {{frp: [{{name: T, …}}], equipment: [T], questions: [{{q: T, answer: T}}], "
-                   f"teacher: [T]}}")
-    else:
-        frp = ws.get("frp")
-        if not isinstance(frp, list) or not frp or not all(isinstance(x, dict) and _is_text(x.get("name"))
-                                                           and _is_text(x.get("programme")) for x in frp):
-            out.append(f"{where}: worksheet: frp is a list of {{name: T (the programme's words), programme: T (the "
-                       f"programme's name to show), …}}")
-        for k in ("equipment", "teacher"):
-            if not isinstance(ws.get(k), list) or not all(_is_text(x) for x in ws[k]):
-                out.append(f"{where}: worksheet: {k} is a list of T")
-        qs = ws.get("questions")
-        if not isinstance(qs, list) or not qs or not all(isinstance(x, dict) and _is_text(x.get("q"))
-                                                         and _is_text(x.get("answer")) for x in qs):
-            out.append(f"{where}: worksheet: questions is a list of {{q: T, answer: T}}")
-        out += _check_variants(ws.get("variants"), shapes, f"{where}: worksheet")
+        return [f"{w}: the task sheet {{frp | basis, goal, bench, procedure, record, record_rows?, variants?}}"]
+    gone = sorted(k for k in ("questions", "teacher", "grading", "equipment") if k in ws)
+    if gone:
+        out.append(f"{w}: {gone} are gone: the task sheet has no questions, answers, teacher's pages or grading (the "
+                   f"bench is open and the teacher judges; EX2 §5 F8); the equipment is the sheet's «bench»")
+    extra = sorted(set(ws) - set(WORKSHEET_FIELDS) - {"questions", "teacher", "grading", "equipment"})
+    if extra:
+        out.append(f"{w}: unknown fields {extra} (a task sheet has {list(WORKSHEET_FIELDS)})")
+    frp = ws.get("frp")
+    if school and (not isinstance(frp, list) or not frp
+                   or not all(isinstance(x, dict) and _is_text(x.get("name")) and _is_text(x.get("programme"))
+                              for x in frp)):
+        out.append(f"{w}: frp is a list of {{name: T (the programme's words), programme: T (the programme's name to "
+                   f"show), …}}")
+    if not school and frp is not None:
+        out.append(f"{w}: a university task sheet names its basis (worksheet.basis: the course or the manual it "
+                   f"follows), not a school programme (frp)")
+    out += _check_basis(ws.get("basis"), not school, w)
+    if not _is_text(ws.get("goal")):
+        out.append(f"{w}: goal is a T (the bench's goal; each part's own goal is its step's)")
+    for k in ("bench", "procedure", "record"):
+        v = ws.get(k)
+        if not isinstance(v, list) or not v or not all(_is_text(x) for x in v):
+            out.append(f"{w}: {k} is a list of T (paragraphs)")
+    rr = ws.get("record_rows", 10)
+    if isinstance(rr, bool) or not isinstance(rr, int) or not 1 <= rr <= 40:
+        out.append(f"{w}: record_rows {rr!r} is a whole number of blank rows, 1–40")
+    out += _check_task_variants(ws.get("variants"), shapes, w, school)
     return out
 
 
-def _check_variants(variants, shapes: dict, where: str) -> list[str]:
-    """A worksheet's ``variants`` (optional; integrator, 2026-11-17: a grade's own sheet, e.g. grade 7 without √h):
+def _check_task_variants(variants, shapes: dict, where: str, school: bool) -> list[str]:
+    """The teacher's tasks (EX2 §5 F8 (b)): ``[{id, label: T, grade?, steps?: [step ids], values?: {<step>: {<control
+    id>: value}}, text?: {goal?: T, procedure?: [T], record?: [T]}}]``: computed in the atlases (each value one of its
+    control's grid values), preselected by ``&variant=<id>`` on run.html and worksheet.html (nothing locked). ``grade``
+    is required at school only."""
+    if variants is None:
+        return []
+    if not isinstance(variants, list):
+        return [f"{where}: variants is a list of {{id, label, grade?, steps?, values?, text?}}"]
+    out, ids = [], set()
+    for v in variants:
+        if not isinstance(v, dict):
+            out.append(f"{where}: variant {v!r} is a map")
+            continue
+        vid = v.get("id")
+        w = f"{where}: variant {vid!r}"
+        if not isinstance(vid, str) or not _SLUG.match(vid) or vid in ids:
+            out.append(f"{w}: id is a unique slug")
+        ids.add(vid)
+        extra = sorted(set(v) - {"id", "label", "grade", "steps", "values", "text"})
+        if extra:
+            out.append(f"{w}: unknown fields {extra} (a variant has id, label, grade?, steps?, values?, text?)")
+        g = v.get("grade")
+        if (school or g is not None) and (isinstance(g, bool) or not isinstance(g, int) or not 1 <= g <= 12):
+            out.append(f"{w}: grade {g!r} is a school grade (a whole number 1–12; optional at university)")
+        if not _is_text(v.get("label")):
+            out.append(f"{w}: label is a T")
+        steps = v.get("steps", list(shapes))
+        if not isinstance(steps, list) or not steps or not all(isinstance(x, str) and x in shapes for x in steps) \
+                or len(set(steps)) != len(steps):
+            out.append(f"{w}: steps {steps!r}: distinct step ids of the lab ({sorted(shapes)})")
+            steps = [x for x in steps if x in shapes] if isinstance(steps, list) else []
+        values = v.get("values", {})
+        if not isinstance(values, dict):
+            out.append(f"{w}: values is a map {{step id: {{control id: value}}}}")
+            values = {}
+        for sid, vals in values.items():
+            if sid not in steps:
+                out.append(f"{w}: values name {sid!r}, not a step of the variant")
+                continue
+            ctl = {control_key(c): c for c in shapes[sid][2] if isinstance(c, dict)}
+            if not isinstance(vals, dict):
+                out.append(f"{w}: values of {sid}: a map {{control id: value}}")
+                continue
+            for k, x in vals.items():
+                c = ctl.get(k)
+                if c is None:
+                    out.append(f"{w}: values of {sid}: {k!r} is no control of the step ({sorted(ctl)})")
+                elif not any(type(y) is type(x) and y == x for y in c.get("values") or []) \
+                        and not any(y == x and not isinstance(y, bool) and not isinstance(x, bool)
+                                    for y in c.get("values") or []):
+                    out.append(f"{w}: values of {sid}: {k} = {x!r} is not on its grid (a variant is computed in the "
+                               f"atlas)")
+        text = v.get("text", {})
+        if not isinstance(text, dict) or set(text) - {"goal", "procedure", "record"}:
+            out.append(f"{w}: text is a map {{goal?: T, procedure?: [T], record?: [T]}}")
+        else:
+            if "goal" in text and not _is_text(text["goal"]):
+                out.append(f"{w}: text.goal is a T")
+            for k in ("procedure", "record"):
+                if k in text and (not isinstance(text[k], list) or not all(_is_text(x) for x in text[k])):
+                    out.append(f"{w}: text.{k} is a list of T")
+    return out
+
+
+def _check_ex1_worksheet(viz, ws, shapes: dict, where: str) -> list[str]:
+    """TRANSITION (``EX1_WORKSHEETS``; WS03 removes it): EX1's worksheet, as EX1 checked it."""
+    out = []
+    if not isinstance(ws, dict):
+        return [f"{where}: worksheet: {{frp, equipment: [T], questions: [{{q: T, answer: T}}], teacher: [T]}}"]
+    frp = ws.get("frp")
+    if not isinstance(frp, list) or not frp or not all(isinstance(x, dict) and _is_text(x.get("name"))
+                                                       and _is_text(x.get("programme")) for x in frp):
+        out.append(f"{where}: worksheet: frp is a list of {{name: T (the programme's words), programme: T (the "
+                   f"programme's name to show), …}}")
+    for k in ("equipment", "teacher"):
+        if not isinstance(ws.get(k), list) or not all(_is_text(x) for x in ws[k]):
+            out.append(f"{where}: worksheet: {k} is a list of T")
+    qs = ws.get("questions")
+    if not isinstance(qs, list) or not qs or not all(isinstance(x, dict) and _is_text(x.get("q"))
+                                                     and _is_text(x.get("answer")) for x in qs):
+        out.append(f"{where}: worksheet: questions is a list of {{q: T, answer: T}}")
+    out += _check_variants(ws.get("variants"), {k: (v[0], v[1]) for k, v in shapes.items()}, f"{where}: worksheet",
+                           True)
+    return out
+
+
+def _check_basis(basis, required: bool, where: str) -> list[str]:
+    """A university worksheet's sources (EX2 §1.4, §5 F8; replaces ``frp`` at ``standard``): ``[{text: T (what the lab
+    takes from it), source: the citation (a string or a T), quote?: the source's words verbatim (a string, printed in
+    its language and marked as a quotation), quote_lang?: that language's code (default "en")}]``."""
+    if basis is None:
+        return [f"{where}: basis: [{{text: T, source, quote?}}]: the course or the manual the lab follows"] \
+            if required else []
+    if not isinstance(basis, list) or not basis:
+        return [f"{where}: basis is a list of {{text: T, source, quote?, quote_lang?}}"]
+    out = []
+    for b in basis:
+        if not isinstance(b, dict) or set(b) - {"text", "source", "quote", "quote_lang"}:
+            out.append(f"{where}: basis {b!r}: {{text: T, source, quote?, quote_lang?}}")
+            continue
+        if not _is_text(b.get("text")):
+            out.append(f"{where}: basis: text is a T (what the lab takes from the source)")
+        src = b.get("source")
+        if not (_is_text(src) or (isinstance(src, str) and src.strip())):
+            out.append(f"{where}: basis: source is the citation (a string or a T)")
+        q = b.get("quote")
+        if q is not None and (not isinstance(q, str) or not q.strip()):
+            out.append(f"{where}: basis: quote is the source's words verbatim (a string, not translated)")
+        ql = b.get("quote_lang")
+        if ql is not None and (not isinstance(ql, str) or not re.match(r"^[a-z]{2}$", ql)):
+            out.append(f"{where}: basis: quote_lang is a language code such as \"en\"")
+    return out
+
+
+def _check_variants(variants, shapes: dict, where: str, school: bool = True) -> list[str]:
+    """TRANSITION (``EX1_WORKSHEETS`` only; WS03 removes it): EX1's worksheet ``variants`` (integrator, 2026-11-17: a
+    grade's own sheet, e.g. grade 7 without √h):
     ``[{id, grade, label: T, steps: [step ids of the lab], plot: {step id: {x, y, fit: model | None}}, goals?: {step id:
     T}, questions: [{q: T, answer: T}]}]``. A variant's ``plot`` names steps of the variant, columns of that step and a
-    fit among the step's plot fits (or None: no fit); its ``goals`` replace the named steps' own goals on its sheet."""
+    fit among the step's plot fits (or None: no fit); its ``goals`` replace the named steps' own goals on its sheet. The
+    ``grade`` (a school grade) is required at school only (EX2 §5 F8: a university lab's variants are its works)."""
     if variants is None:
         return []
     if not isinstance(variants, list):
@@ -761,8 +1193,8 @@ def _check_variants(variants, shapes: dict, where: str) -> list[str]:
         if extra:
             out.append(f"{w}: unknown fields {extra}")
         g = v.get("grade")
-        if isinstance(g, bool) or not isinstance(g, int) or not 1 <= g <= 12:
-            out.append(f"{w}: grade {g!r} is a school grade (a whole number 1–12)")
+        if (school or g is not None) and (isinstance(g, bool) or not isinstance(g, int) or not 1 <= g <= 12):
+            out.append(f"{w}: grade {g!r} is a school grade (a whole number 1–12; optional at university)")
         if not _is_text(v.get("label")):
             out.append(f"{w}: label is a T")
         steps = v.get("steps")
@@ -876,6 +1308,14 @@ def check_screens(viz: dict) -> list[str]:
 
 
 def _control(viz, c: dict) -> dict:
+    if "sets" in c:  # a compound control (EX2 §5 F3): its id is the key of its value, its sets the parameters it sets
+        vals = list(c["values"])
+        by_id = viz["schema"].by_id
+        return {"param": c["id"], "id": c["id"], "compound": True, "values": vals, "default": c.get("default", vals[0]),
+                "label": c["label"], "unit": c.get("unit"), "labels": list(c["labels"]) if c.get("labels") else None,
+                "sets": {k: list(v) for k, v in c["sets"].items()},
+                "kind": "slider" if all(_num(v) for v in vals) else "select",
+                "law": any(by_id[k].standard is not None for k in c["sets"])}
     p = viz["schema"].by_id[c["param"]]
     vals = list(c["values"])
     kind = c.get("kind") or ("toggle" if len(vals) == 2 and all(isinstance(v, bool) for v in vals)
@@ -887,19 +1327,30 @@ def _control(viz, c: dict) -> dict:
 
 
 def _atlas_part(viz, sc: dict) -> dict:
+    """What an Explore screen and a lab step share: the atlas's spec (``sitelib.atlas_spec_of`` keys it) and the
+    screen's playback ``speed`` (EX2 §5 F1: world seconds per played second, ``"world"`` or None for 1). The clock is
+    ``frame_dt`` or ``fps`` (the other None); ``drop.blobs`` only when declared, so that an atlas without it keeps its
+    spec's form."""
+    drop = sc.get("drop") or {}
+    d = {"types": list(drop.get("types", [])), "frame_blobs": list(drop.get("frame_blobs", []))}
+    if drop.get("blobs"):
+        d["blobs"] = list(drop["blobs"])
     return {"preset": sc["preset"], "fixed": dict(sc.get("fixed") or {}),
             "controls": [_control(viz, c) for c in sc["controls"]], "seed": int(sc.get("seed", 1)),
-            "frame_dt": float(sc["frame_dt"]), "stop": dict(sc["stop"]),
-            "drop": {"types": list((sc.get("drop") or {}).get("types", [])),
-                     "frame_blobs": list((sc.get("drop") or {}).get("frame_blobs", []))},
-            "quantize": dict(sc.get("quantize") or {})}
+            "frame_dt": float(sc["frame_dt"]) if sc.get("frame_dt") is not None else None,
+            "fps": float(sc["fps"]) if sc.get("fps") is not None else None,
+            "speed": sc.get("speed") if sc.get("speed") in (None, SPEED_WORLD) else float(sc["speed"]),
+            "stop": dict(sc["stop"]), "drop": d, "quantize": dict(sc.get("quantize") or {})}
 
 
 def screens_of(viz: dict) -> list[dict]:
     """The screens in the catalogue's form (``describe``; the player's contract, design §2, §3): every default filled
     in, every control with its label, unit, kind (slider | toggle | select) and whether it is a law parameter, each
-    Explore screen and each lab step with the id of its atlas (``atlases_of``); a lab step's ``laws`` is always a list
-    (``_check_laws``; empty: the step has no «Check against the law»)."""
+    Explore screen and each lab step with the id of its atlas (``atlases_of``; a step on an Explore screen's atlas has
+    ``shared: true``, the screen's atlas id and its spec, EX2 §5 F9); a lab step's ``laws`` (the world's computed values
+    for the bench: «Computed for this bench», EX2 §5 F6 (d)), ``overlays`` and ``readouts`` are always lists; the
+    worksheet is the task sheet (``record_rows`` filled in) with ``ex1`` true for EX1's form (TRANSITION,
+    ``EX1_WORKSHEETS``)."""
     out = []
     for sc in viz.get("screens") or []:
         kind = sc["kind"]
@@ -913,34 +1364,64 @@ def screens_of(viz: dict) -> list[dict]:
         else:
             instr = {}
             for iid, i in sc["instruments"].items():
-                instr[iid] = {"kind": i["kind"], "label": i["label"], "unit": i["unit"], "division": i["division"],
-                              "error": i["error"] if i.get("error") is not None else i["division"] / 2,
-                              "reads": i.get("reads"), "manual": bool(i.get("manual")),
-                              "error_note": i.get("error_note"), "event": i.get("event")}
+                div = i.get("division", 1)
+                # a counter's error is "poisson" (√N) or a number; a readout with the run's own error (sigma) has
+                # error None: the run gives it at the cursor (EX2 §5 F4)
+                err = i["error"] if i.get("error") is not None else (None if i.get("sigma") else div / 2)
+                instr[iid] = {"kind": i["kind"], "label": i["label"], "unit": i["unit"], "division": div,
+                              "error": err, "sigma": i.get("sigma"), "reads": i.get("reads"),
+                              "manual": bool(i.get("manual")), "error_note": i.get("error_note"),
+                              "event": i.get("event")}
             steps = []
             for st in sc["steps"]:
-                s2 = {"id": st["id"], "atlas": f"{sc['id']}.{st['id']}", "title": st["title"], "goal": st["goal"],
-                      "hint": st.get("hint"), **_atlas_part(viz, st), "instruments": list(st["instruments"]),
+                screen = shared_screen(viz, st)
+                if screen is not None:  # the points of an Explore screen (EX2 §5 F9): its atlas, its spec
+                    part = _atlas_part(viz, screen)
+                    if st.get("speed") is not None:
+                        part["speed"] = st["speed"] if st["speed"] == SPEED_WORLD else float(st["speed"])
+                    head = {"atlas": screen["id"], "shared": True}
+                else:
+                    part = _atlas_part(viz, st)
+                    head = {"atlas": f"{sc['id']}.{st['id']}", "shared": False}
+                s2 = {"id": st["id"], **head, "title": st["title"], "goal": st["goal"],
+                      "hint": st.get("hint"), **part, "instruments": list(st["instruments"]),
                       "columns": [dict(c) for c in st["columns"]], "plot": dict(st["plot"]),
-                      "laws": [dict(x) for x in st.get("laws") or []]}
+                      "laws": [dict(x) for x in st.get("laws") or []],
+                      "overlays": list(st.get("overlays") or []), "readouts": list(st.get("readouts") or [])}
                 s2["plot"].setdefault("fits", [s2["plot"]["fit"]] if s2["plot"].get("fit") else [])
                 steps.append(s2)
-            d.update(instruments=instr, steps=steps, worksheet=dict(sc["worksheet"]))
+            ws = dict(sc["worksheet"])
+            if viz.get("id") not in EX1_WORKSHEETS:
+                ws.setdefault("record_rows", 10)
+            ws["ex1"] = viz.get("id") in EX1_WORKSHEETS  # TRANSITION: the player prints EX1's form as a task sheet
+            d.update(instruments=instr, steps=steps, worksheet=ws)
         out.append(d)
     return out
 
 
 def atlases_of(viz: dict) -> list[dict]:
     """Every atlas of a world (design §1.1, §1.4): one per Explore screen (``id`` = the screen's id) and one per lab
-    step (``<screen id>.<step id>``), each ``{id, screen, step, preset, fixed, controls, seed, frame_dt, stop, drop,
-    quantize, laws}``: what ``site/atlas.py`` computes and what its key covers (``laws``: the ids of the step's laws'
-    references, in order; the manifest's ``references`` holds one per id)."""
+    step (``<screen id>.<step id>``), each ``{id, screen, step, preset, fixed, controls, seed, frame_dt, fps, speed,
+    stop, drop, quantize, laws}``: what ``site/atlas.py`` computes and what its key covers (``laws``: the ids of the
+    step's laws' references, in order; the manifest's ``references`` holds one per id). A lab step on an Explore
+    screen's atlas (``atlas: <screen>``, EX2 §5 F9) has none of its own: the screen's atlas carries its laws as
+    ``<step>/<law>`` (so the screen's key covers them)."""
     out = []
+    shared: dict = {}  # an Explore screen's id -> the laws of the lab steps on its atlas, as "<step>/<law>" (EX2 §5 F9)
+    for sc in viz.get("screens") or []:
+        if sc["kind"] == "lab":
+            for st in sc["steps"]:
+                if shared_screen(viz, st) is not None:
+                    shared.setdefault(st["atlas"], []).extend(f"{st['id']}/{x.get('reference')}"
+                                                              for x in st.get("laws") or [])
     for sc in viz.get("screens") or []:
         if sc["kind"] == "explore":
-            out.append({"id": sc["id"], "screen": sc["id"], "step": None, **_atlas_part(viz, sc), "laws": []})
+            out.append({"id": sc["id"], "screen": sc["id"], "step": None, **_atlas_part(viz, sc),
+                        "laws": list(shared.get(sc["id"], []))})
         elif sc["kind"] == "lab":
             for st in sc["steps"]:
+                if shared_screen(viz, st) is not None:
+                    continue  # no atlas of its own: the screen's (EX2 §5 F9)
                 out.append({"id": f"{sc['id']}.{st['id']}", "screen": sc["id"], "step": st["id"],
                             **_atlas_part(viz, st), "laws": [x.get("reference") for x in st.get("laws") or []]})
     return out
@@ -953,22 +1434,36 @@ def atlases_of(viz: dict) -> list[dict]:
 SERVER_ONLY = frozenset({"app.py", "runs.py", "atlas_live.py"})
 
 
-def _code_files(viz_id: str) -> tuple[Path, list[Path]]:
+def _shared_raw() -> list[Path]:
+    """The lfviz package's and the engine's ``*.py`` (unfiltered, as listed): what every world's code hash reads."""
+    return list((SERVER / "lfviz").rglob("*.py")) + list((ENGINE / "lfphys").rglob("*.py"))
+
+
+def _keep(f: Path, vf: Path | None) -> bool:
+    """Whether ``code_hash`` reads a listed file: not ``__pycache__``, not a server-only module, not a test (of the
+    world's folder ``vf``, or of the repository; ``vf`` None: a shared file, no world's own)."""
+    if "__pycache__" in f.parts or f.parent == SERVER / "lfviz" and f.name in SERVER_ONLY:
+        return False
+    own = vf is not None and f.is_relative_to(vf)
+    # a folder's own tests are not the code a run executes (a section found through LFVIZ_EXTRA, e.g. in
+    # tests/playgrounds, is: review B6-F24)
+    return not (("tests" in f.relative_to(vf).parts) if own else ("tests" in f.relative_to(ROOT.parent).parts))
+
+
+def _code_files(viz_id: str, shared: list[Path] | None = None) -> tuple[Path, list[Path]]:
     """The files ``code_hash`` reads, sorted: the visualization folder's ``*.py`` and ``*.js``, the lfviz package and the
-    engine, without ``__pycache__``, the server-only modules and the tests."""
+    engine, without ``__pycache__``, the server-only modules and the tests (``_keep``). ``shared``: the lfviz package's
+    and the engine's files already kept (``_shared_cached``), when the caller has them."""
     vf = folder(viz_id)
-    files = sorted(list(vf.rglob("*.py")) + list(vf.rglob("*.js"))
-                   + list((SERVER / "lfviz").rglob("*.py")) + list((ENGINE / "lfphys").rglob("*.py")))
-    out = []
-    for f in files:
-        if "__pycache__" in f.parts or f.parent == SERVER / "lfviz" and f.name in SERVER_ONLY:
-            continue
-        own = f.is_relative_to(vf)
-        if ("tests" in f.relative_to(vf).parts) if own else ("tests" in f.relative_to(ROOT.parent).parts):
-            continue  # a folder's own tests are not the code a run executes (a section found through LFVIZ_EXTRA,
-            # e.g. in tests/playgrounds, is: review B6-F24)
-        out.append(f)
-    return vf, out
+    if shared is None:
+        files = sorted(list(vf.rglob("*.py")) + list(vf.rglob("*.js")) + _shared_raw())
+        return vf, [f for f in files if _keep(f, vf)]
+    own = [f for f in list(vf.rglob("*.py")) + list(vf.rglob("*.js")) if _keep(f, vf)]
+    return vf, sorted(own + shared)
+
+
+def _rel(f: Path, vf: Path) -> Path:
+    return f.relative_to(ROOT.parent) if f.is_relative_to(ROOT.parent) else Path("extra") / vf.name / f.relative_to(vf)
 
 
 def code_hash(viz_id: str) -> str:
@@ -976,14 +1471,52 @@ def code_hash(viz_id: str) -> str:
     vf, files = _code_files(viz_id)
     h = hashlib.sha256()
     for f in files:
-        rel = (f.relative_to(ROOT.parent) if f.is_relative_to(ROOT.parent)
-               else Path("extra") / vf.name / f.relative_to(vf))  # a section outside engine/
+        rel = _rel(f, vf)  # a section outside engine/
         h.update(str(rel).encode())
         h.update(f.read_bytes())
     return h.hexdigest()[:12]
 
 
 _CODE_HASHES: dict[str, tuple[tuple, str]] = {}
+#: the shared files' listing per (lfviz, engine) roots: (its directories' mtimes, the files); trusted only while no
+#: directory changed (a file added or removed changes its directory's time) and only when the directories had settled
+#: before the listing (a change within one tick of the file system's clock is not hidden): STATUS V52 (af)
+_SHARED_LIST: dict[tuple, tuple[dict, list]] = {}
+#: the hash of the engine's files, which come first in every world's sorted list: (their signature, the sha256 state
+#: after them), so that a world's hash does not read the engine again (STATUS V52 (af); the keys are the same bytes)
+_ENGINE_PREFIX: dict[tuple, tuple[tuple, object]] = {}
+_SETTLED_S = 2.0
+
+
+def _shared_cached() -> list[Path]:
+    """``_shared_raw`` without what ``code_hash`` does not read (``_keep``), listed again only when a directory of the
+    lfviz package or the engine changed (or the listing could not be trusted: ``_SHARED_LIST``)."""
+    import time  # noqa: PLC0415
+    key = (str(SERVER), str(ENGINE))
+    hit = _SHARED_LIST.get(key)
+    if hit is not None:
+        try:
+            if all(os.stat(d).st_mtime_ns == m for d, m in hit[0].items()):
+                return hit[1]
+        except OSError:
+            pass
+    now = time.time()
+    dirs: dict = {}
+    for root in (SERVER / "lfviz", ENGINE / "lfphys"):
+        try:
+            dirs[str(root)] = os.stat(root).st_mtime_ns
+            for d in root.rglob("*"):
+                if d.is_dir() and "__pycache__" not in d.parts:
+                    dirs[str(d)] = d.stat().st_mtime_ns
+        except OSError:
+            _SHARED_LIST.pop(key, None)
+            return [f for f in _shared_raw() if _keep(f, None)]
+    files = [f for f in _shared_raw() if _keep(f, None)]
+    if all(m < (now - _SETTLED_S) * 1e9 for m in dirs.values()):
+        _SHARED_LIST[key] = (dirs, files)
+    else:
+        _SHARED_LIST.pop(key, None)
+    return files
 
 
 def code_hash_current(viz_id: str) -> str:
@@ -991,17 +1524,49 @@ def code_hash_current(viz_id: str) -> str:
     file edited, added or removed while the process runs is seen at the next call (the files are listed and stat'ed,
     not read, when nothing changed). What a recording's or an atlas's key is compared with on a server, and what the
     catalogue's ``code_hash`` is («recorded with code X; this server runs Y», design of the start page §4.6); the live
-    points' key (review R-F F1: a hash computed once per process named code the point's process did not run)."""
+    points' key (review R-F F1: a hash computed once per process named code the point's process did not run).
+
+    STATUS V52 (af): ``/api/viz`` asked this for every world, and each listed the lfviz package and the engine again
+    (about 3 ms a world) and, after an edit, read the engine again. The shared files' listing is kept while their
+    directories are unchanged (``_shared_cached``), and the engine's part of the hash (its files come first in every
+    world's sorted list) is kept with its files' signature (``_ENGINE_PREFIX``): the same bytes are hashed in the same
+    order, so the keys are ``code_hash``'s."""
     viz_id = resolve(viz_id)
-    vf, files = _code_files(viz_id)
+    vf, files = _code_files(viz_id, _shared_cached())
     try:
-        sig = tuple((str(f), st.st_size, st.st_mtime_ns) for f in files for st in (f.stat(),))
+        stats = [(str(f), st.st_size, st.st_mtime_ns) for f in files for st in (f.stat(),)]
     except OSError:  # a file removed between the listing and the stat: no cache
         return code_hash(viz_id)
+    sig = tuple(stats)
     hit = _CODE_HASHES.get(viz_id)
     if hit is not None and hit[0] == sig:
         return hit[1]
-    h = code_hash(viz_id)
+    eng = ENGINE / "lfphys"
+    n = 0
+    while n < len(files) and files[n].is_relative_to(eng):
+        n += 1
+    if any(f.is_relative_to(eng) for f in files[n:]) or not eng.is_relative_to(ROOT.parent):
+        # the engine's files are not one run at the start, or their names depend on the world: no prefix
+        h = code_hash(viz_id)
+        _CODE_HASHES[viz_id] = (sig, h)
+        return h
+    pkey = (str(ENGINE), str(ROOT.parent))
+    pre = _ENGINE_PREFIX.get(pkey)
+    try:
+        if pre is not None and pre[0] == sig[:n]:
+            hh = pre[1].copy()
+        else:
+            hh = hashlib.sha256()
+            for f in files[:n]:
+                hh.update(str(_rel(f, vf)).encode())
+                hh.update(f.read_bytes())
+            _ENGINE_PREFIX[pkey] = (sig[:n], hh.copy())
+        for f in files[n:]:
+            hh.update(str(_rel(f, vf)).encode())
+            hh.update(f.read_bytes())
+    except OSError:
+        return code_hash(viz_id)
+    h = hh.hexdigest()[:12]
     _CODE_HASHES[viz_id] = (sig, h)
     return h
 

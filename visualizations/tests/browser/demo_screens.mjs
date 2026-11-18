@@ -21,15 +21,25 @@
 //    aria-valuetext tells the value); at 390 px every control on the screen together with the view and the time bar (D12);
 //  - Explore on the server: the live point's own passport (its key, code and time with its zone; D13);
 //  - Watch: a caption's hold (F12), the time label with the world's time and the playback factor (D8);
-//  - Lab work, every step: «Measure» before a launch says there is nothing to measure yet; a slow reply of an earlier pick
-//    is not shown and «Measure» waits for the set-up (D6); → on a focused slider; the manual stopwatch on the wall clock,
-//    a pause refused while it runs, its reading in its column; the set-ups measured (Space on a focused «Measure» too),
-//    one row each, a repeat replaces its row (D5); each law ✓ on its own plot, another plot refused with the reason (D4);
-//    the RU verdict without Latin units; an empty time without the stopwatch; the drawer's events without times (D10);
-//    at 390 px the view, a control, «Measure», «⏱ Stop» and the time bar together (D12); Space on a focused tab;
-//  - the worksheet: one A4 page per sheet (the PDF's pages = the sheets, none overflowing at A4's printable width), each
-//    with the attribution line; one blank row per set-up; the teacher's sheets; a variant's steps, columns and questions;
-//    no raw id or Latin unit in Russian;
+//  - Lab work, every step (a bench, EX2 §1.4, §5 F6): «Measure» before a launch says there is nothing to measure yet; a
+//    slow reply of an earlier pick is not shown and «Measure» waits for the set-up (D6); → on a focused slider; the
+//    manual stopwatch on the wall clock, a pause refused while it runs, its reading in its column; the set-ups measured
+//    (Space on a focused «Measure» too), one row each, a repeat replaces its row (D5); the fit on each law's plot prints
+//    its parameters with their σ (and, at standard, χ², dof, p and the Birge ratio, the scaled σ on its own line) and no
+//    verdict, no «Check against the law» (the owner, 2026-11-18); an empty time without the stopwatch; the drawer's
+//    events with their times, as in Explore (EX1's D10 withdrawn); at 390 px the view, a control, «Measure», «⏱ Stop» and
+//    the time bar together (D12); Space on a focused tab;
+//  - EX2: every Explore screen's compound controls, time label, readouts with error and reference, counted stop and
+//    «CSV of this point» (standard); every lab step's counters, the run's σ, formula columns (an empty cell with its
+//    reason), the drawer as Explore's with «Computed for this bench», «MODIFIED PHYSICS»; &variant= preselecting the
+//    controls (nothing locked);
+//  - the task sheet (F8): the goal, the bench, the procedure, the record list, the programme or the basis (quoted
+//    verbatim in its language), no questions, answers or teacher's pages; one A4 page per sheet (the PDF's pages = the
+//    sheets, none overflowing at A4's printable width), each with the attribution line; record_rows blank rows per part;
+//    an edit printed, kept in the browser and restored; &computed=1 on a page of its own; each variant's sheet; no raw id
+//    or Latin unit in Russian;
+//  - TRANSITION: a world with EX1's worksheet (S03 until WS03) is only opened: each screen and its sheet without a page
+//    error;
 //  - every screen: no horizontal scroll (scrollWidth ≤ the window's width), no page error, in English no Cyrillic in
 //    the visible text and in Russian the tabs' Russian labels; screenshots of every screen per language and size.
 //
@@ -88,6 +98,7 @@ const skip = (what) => console.log(JSON.stringify({ check: `${LANG} ${what}`, sk
 
 const br = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 
+
 // the page as the public site serves it: lf-mode "static", the API as JSON files (api/<name>.json), no live endpoint
 async function asSite(ctx) {
   await ctx.route(/\/run(\.html)?(\?|$)/, async (route) => {
@@ -121,7 +132,7 @@ async function common(page, tag, W, errs) {
   check(`${tag}: no horizontal scroll`, sw <= W, { scrollWidth: sw, width: W });
   const txt = await visibleText(page);
   if (LANG === "en") check(`${tag}: no Cyrillic in the visible text`, !CYR.test(txt), { sample: (txt.match(/.{0,30}[Ѐ-ӿ].{0,30}/) || [""])[0] });  // i18n-ok
-  else check(`${tag}: the tabs in Russian`, viz.screens.map((s) => tr({ watch: "Watch", explore: "Explore", lab: "Lab work" }[s.kind])).every((s) => txt.includes(s)) && CYR.test(txt));
+  else check(`${tag}: the tabs in Russian`, viz.screens.map((s) => tr(s.label || { watch: "Watch", explore: "Explore", lab: "Lab work" }[s.kind])).every((s) => txt.includes(s)) && CYR.test(txt));
   check(`${tag}: no page error`, errs.length === 0, { errs });
 }
 // a slider's control row by its parameter; a detent by its value
@@ -129,6 +140,34 @@ const detent = (page, param, k) => page.locator(`.dm-screen:not([hidden]) .dm-ct
 // choose a grid value of a control: its detent (a slider) or its button (a toggle, a select)
 const choose = (page, c, v) => (isNum(c) ? detent(page, c.param, c.values.indexOf(v))
   : page.locator(`.dm-screen:not([hidden]) .dm-ctl[data-param="${c.param}"] .dm-ctl-seg button[data-value='${JSON.stringify(v)}']`)).click();
+
+// TRANSITION (registry.EX1_WORKSHEETS; WS03 removes it): a world whose Lab work still has EX1's worksheet (S03 until its
+// rework) is only opened: each screen and the task sheet without a page error, in every size (the integrator, 2026-11-18)
+if (lab && lab.worksheet && lab.worksheet.ex1) {
+  for (const [W, H] of SIZES) {
+    for (const sc of viz.screens) {
+      const ctx = await br.newContext({ viewport: { width: W, height: H } });
+      const { page, errs } = await open(ctx, sc.id);
+      await settle(page, 1500);
+      check(`${W}x${H} ${sc.id} (EX1 world, transition): the screen opens without a page error`, errs.length === 0, { errs });
+      await page.screenshot({ path: `${SHOTS}/demo_${WORLD}_${sc.id}_${LANG}_${W}x${H}.png` });
+      await ctx.close();
+    }
+    const ctx = await br.newContext({ viewport: { width: W, height: H } });
+    const page = await ctx.newPage();
+    const errs = [];
+    page.on("pageerror", (e) => errs.push(e.message));
+    await page.goto(inLang(`${base}/worksheet?demo=${WORLD}`));
+    await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 20000 });
+    const txt = await page.locator("#ws").innerText();
+    check(`${W}x${H} task sheet (EX1 world, transition): opens, prints its parts, no question or answer`, errs.length === 0
+      && lab.steps.every((st) => txt.includes(tr(st.title))) && !lab.worksheet.questions.some((q) => txt.includes(tr(q.answer))), { errs });
+    await ctx.close();
+  }
+  await br.close();
+  console.log(failed ? `FAILED: ${failed}` : "all passed");
+  process.exit(failed ? 1 : 0);
+}
 
 for (const [W, H] of SIZES) {
   const tag0 = `${W}x${H}`;
@@ -154,7 +193,7 @@ for (const [W, H] of SIZES) {
     };
     await note();
     const tabs = await page.locator(".dm-tab").allInnerTexts();
-    const want = viz.screens.map((s) => tr({ watch: "Watch", explore: "Explore", lab: "Lab work" }[s.kind]));
+    const want = viz.screens.map((s) => tr(s.label || { watch: "Watch", explore: "Explore", lab: "Lab work" }[s.kind]));  // a screen's own label (the toy's «Throws»)
     check(`${tag0} tabs`, tabs.length === want.length && want.every((w, i) => tabs[i].includes(w)), { tabs, want });
     const nums = mfE.controls.filter(isNum);
     const sl = await page.evaluate(() => [...document.querySelectorAll(".dm-screen:not([hidden]) .dm-slider")].map((s) => ({ min: s.min, max: s.max, step: s.step })));
@@ -421,9 +460,9 @@ for (const [W, H] of SIZES) {
     const msg0 = await msgNow();
     check(`${tag0} lab: «Measure» before the landing says there is nothing to measure yet`, msg0.includes(tr("Nothing to measure yet: “{what}” has not been reached at this moment", { what: "" }).slice(0, 12)), { msg0 });
     const toEnd = async () => { await settle(page, 30); await page.evaluate(() => { const s = document.querySelector(".dm-screen:not([hidden]) .dm-timeline"); s.value = s.max; s.dispatchEvent(new Event("input")); }); await settle(page, 50); };
-    const pickAndWait = async (param, values, v) => {
-      await detent(page, param, values.indexOf(v)).click();
-      await LB(`s.cur && s.cur.pt.values[${JSON.stringify(param)}] === ${JSON.stringify(v)} && !s.pending`);
+    const pickAndWait = async (c, v) => {  // a slider's detent, or a select's button (a compound control's values)
+      if (await page.evaluate((p) => window.__lfLab.step().values[p], c.param) !== v) await choose(page, c, v);
+      await LB(`s.cur && s.cur.pt.values[${JSON.stringify(c.param)}] === ${JSON.stringify(v)} && !s.pending`);
     };
     for (const [k, st] of lab.steps.entries()) {
       const tagS = `${tag0} lab part ${k + 1}`;
@@ -433,7 +472,7 @@ for (const [W, H] of SIZES) {
       const lc = mf.controls[0], all = lc.values;
       const manual = st.instruments.some((id) => (lab.instruments[id] || {}).manual);
       check(`${tagS}: a manual stopwatch refuses «slow»`, (await page.locator('.dm-screen:not([hidden]) .dm-speed [data-rate="0.25"]').isDisabled()) === manual);
-      if (k === 0 && all.length >= 5) {  // D6: a slow reply of an earlier pick is not applied; «Measure» waits for the set-up
+      if (k === 0 && all.length >= 5 && isNum(lc)) {  // D6: a slow reply of an earlier pick is not applied; «Measure» waits for the set-up
         const d = all.indexOf(lc.default ?? all[0]);
         const far = [...all.keys()].filter((j) => Math.abs(j - d) > 2).sort((a, b) => Math.abs(b - d) - Math.abs(a - d));
         const A = far[0], B = far.find((j) => Math.abs(j - A) > 1);
@@ -452,7 +491,7 @@ for (const [W, H] of SIZES) {
         }
       }
       // the keyboard (D7): the arrows on a focused slider move it and do not launch; Space on a focused «Measure» measures
-      if (k === 0) {
+      if (k === 0 && isNum(lc)) {
         const slider = page.locator(`.dm-screen:not([hidden]) .dm-ctl[data-param="${lc.param}"] .dm-slider`);
         const before = await page.evaluate((p) => { const s = window.__lfLab.step(); return { v: s.values[p], launched: s.cur.launchedAt }; }, lc.param);
         await slider.focus();
@@ -488,7 +527,7 @@ for (const [W, H] of SIZES) {
       const before0 = await page.evaluate(() => window.__lfLab.rows().length);
       const said = [];
       for (const [j, v] of hv.entries()) {
-        await pickAndWait(lc.param, all, v);
+        await pickAndWait(lc, v);
         await toEnd();
         if (j === 0) {  // Space on the focused «Measure» measures (D7)
           await page.locator(".dm-measure").focus();
@@ -505,33 +544,22 @@ for (const [W, H] of SIZES) {
       check(`${tagS}: «Measure» again on the same set-up replaces its row and says so (D5)`, rows2 === rows && m2.includes(tr("Row {n:d} replaced: this set-up was already measured; the bench repeats exactly, so a repeat is not a new independent point", { n: 1 }).slice(-30)), { rows, rows2, m2 });
       const cell = await page.locator(".dm-table tbody tr").first().innerText();
       check(`${tagS}: a reading carries its error`, cell.includes("±"), { cell });
-      // each law on its own plot: ✓; another plot: the check is off with the reason (D4)
-      const refs = mf.references || {};
+      // the fit on each of the step's laws' plots prints its output and no verdict (EX2 §5 F6 (c): the parameters with
+      // their σ; at standard χ², dof, p and the Birge ratio, the scaled σ on a line of its own when χ²/dof > 1)
       for (const [j, law] of (st.laws || []).entries()) {
-        // the law's plot: «plot it» when offered, else the selects (x, y, fit)
         const sels = page.locator(".dm-screen:not([hidden]) .dm-work select");
         await sels.nth(0).selectOption(law.x); await sels.nth(1).selectOption(law.y); await sels.nth(2).selectOption(law.model);
         await settle(page, 50);
-        const disabled = await page.locator(".dm-check-law").isDisabled();
-        if (!disabled) await page.locator(".dm-check-law").click();
-        await settle(page, 100);
-        const out = await page.evaluate(() => window.__lfLab.check());
-        const txt = await page.locator(".dm-law").innerText().catch(() => "");
-        const okLaw = out && out.law === law.reference && out.ok;
-        check(`${tagS}: law ${j + 1} (${law.y} against ${law.x}, ${law.model}) ✓ against its reference`, okLaw && !!refs[law.reference], { out, txt: txt.slice(0, 200) });
-        if (LANG === "ru") check(`${tagS}: law ${j + 1}'s verdict has no Latin unit or id (F7)`, !/\b(m|slope|vertex|dof)\b|m\^½/.test(txt), { txt: txt.slice(0, 200) });
+        const res = await page.evaluate(() => { const r = window.__lfLab.fit(); return r ? { birge: r.birge, unit: r.unit, p: r.p } : null; });
+        const txt = (await page.locator(".dm-screen:not([hidden]) .dm-fit").innerText()).trim();
+        const lines = txt.split("\n").filter(Boolean);
+        const wantLines = !res ? 0 : res.unit ? 2 : viz.ui === "school" ? 1 : res.birge > 1 ? 3 : 2;
+        check(`${tagS}: law ${j + 1}'s plot (${law.y} against ${law.x}, ${law.model}): the fit prints its output, no verdict`,
+          !!res && lines.length === wantLines && lines[0].includes("±") && !/[✓✗]/.test(txt) && !(await page.locator(".dm-check-law").count())
+          && (viz.ui === "school" || res.unit || (txt.includes("χ²") && txt.includes("p = "))), { txt: txt.slice(0, 300), res, wantLines });
+        if (LANG === "ru") check(`${tagS}: law ${j + 1}'s fit output has no Latin word (F7)`, !/\b(slope|vertex|dof|Birge)\b/.test(txt), { txt: txt.slice(0, 200) });
       }
-      if ((st.laws || []).length) {  // a plot that is no law's: the check off, with the reason
-        const cols = st.columns.map((c) => c.id), L0 = st.laws[0];
-        const other = cols.find((c) => c !== L0.x && c !== L0.y && !(st.laws || []).some((L) => L.x === c && L.y === L0.y));
-        if (other) {
-          await page.locator(".dm-screen:not([hidden]) .dm-work select").first().selectOption(other);
-          await settle(page, 50);
-          const off = await page.locator(".dm-check-law").isDisabled();
-          const why = (await page.locator(".dm-law-why").innerText().catch(() => "")).trim();
-          check(`${tagS}: on a plot that is no law's, «Check against the law» is off with the reason (D4)`, off && why.length > 5, { other, why });
-        }
-      }
+      if (!(await page.locator(".dm-check-law").count())) check(`${tagS}: no «Check against the law» anywhere in Lab work (the owner, 2026-11-18)`, !(await page.locator(".dm-screen:not([hidden])").innerText()).includes(tr("Check against the law")));
       const plotInk = await page.evaluate(() => { const c = document.querySelector(".dm-screen:not([hidden]) .dm-plot"); const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data; const s = new Set(); for (let i = 0; i < d.length; i += 64) s.add(d[i] << 16 | d[i + 1] << 8 | d[i + 2]); return s.size; });
       check(`${tagS}: the plot is drawn`, plotInk > 3, { colours: plotInk });
       const csvHref = await page.locator('a[download$=".csv"]').getAttribute("href");
@@ -543,12 +571,13 @@ for (const [W, H] of SIZES) {
         const td = await page.locator(".dm-screen:not([hidden]) .dm-table tbody tr").first().locator("td").nth(swCol2 + 1).innerText();
         check(`${tagS}: a row without a stopwatch reading has an empty time («—», empty in the CSV)`, line[2 * swCol2] === "" && td.trim() === "—", { td, line });
       }
-      // the drawer of Lab work lists the events without their times (integrator D10: the flight time is measured)
+      // the drawer of Lab work lists the events with their times, as Explore does (the owner, 2026-11-18: a lab is a
+      // bench, nothing is hidden; EX1's D10 withdrawn)
       if (W >= 1000) {
         await page.locator(".dm-how").click();
         await settle(page);
         const evs = await page.$$eval(".dm-drawer-body .dm-ev", (a) => a.map((e) => ({ mono: !!e.querySelector(".mono"), text: e.textContent })));
-        check(`${tagS}: the drawer's events have no times in Lab work (D10)`, evs.every((e) => !e.mono), { evs: evs.slice(0, 3) });
+        check(`${tagS}: the drawer's events have their times in Lab work, as in Explore`, evs.every((e) => e.mono), { evs: evs.slice(0, 3) });
         await page.keyboard.press("Escape");
       }
       // D12: at phone width «Measure» and the view on the screen together, with the time bar
@@ -584,9 +613,215 @@ for (const [W, H] of SIZES) {
     await common(page, `${tag0} lab`, W, errs);
     await ctx.close();
   } else skip(`${tag0} lab work (the world has no Lab work screen)`);
-  // --- the worksheet -------------------------------------------------------------------------------------------------
-  // one A4 page per sheet (the head and part 1, each part, the questions, the teacher's sheets), each with the
-  // attribution line, no sheet overflowing its page, one blank row per set-up (review EX1-screens F6, EX1-worlds F7)
+  // --- EX2 (design lfphys/sources/explore_EX2_2026-11-18_design.md §5, §7) -----------------------------------------
+  // every Explore screen: its compound controls (their values' names, the parameters a value sets in the point and in
+  // the passport), its time label (the world's time, the playback factor with normal and slow), readouts with their
+  // error and reference, a stop by counted events, «CSV of this point» (standard only); Lab work: counters (√N), the
+  // run's own σ, formula columns (an empty cell says why, empty in the CSV), the drawer as Explore's (every check's value
+  // and reference, the events with their texts and times: the owner, 2026-11-18), «MODIFIED PHYSICS» on a modified step
+  // (F6). A feature the world has not is skipped with a line.
+  for (const ex of (viz.screens || []).filter((x) => x.kind === "explore")) {
+    const compound = (ex.controls || []).filter((c) => c.sets);
+    const declared = ex.speed !== undefined && ex.speed !== null;
+    const csvWanted = viz.ui === "standard";
+    const entryX = index.atlases.find((a) => a.id === ex.atlas);
+    const mfX = await get(`/recordings/${WORLD}/${entryX.file}`);
+    const tagX = `${tag0} explore «${ex.id}» (EX2)`;
+    const ctx = await br.newContext({ viewport: { width: W, height: H } });
+    await asSite(ctx);
+    const { page, errs } = await open(ctx, ex.id);
+    const X = `(window.__lfExplore || {})[${JSON.stringify(ex.id)}]`;
+    const until = (body, timeout = 15000) => page.waitForFunction(`(() => { const X = ${X}; return ${body}; })()`, null, { timeout });
+    await until("X && X.point()", 30000);
+    const playToEnd = async () => {
+      if (await page.evaluate(`${X}.state.refused`)) return;
+      await page.locator(".dm-screen:not([hidden]) .dm-play").click();
+      await until("!X.state.playing && X.state.cur && X.state.cur.launchedAt !== null", 60000);
+      await settle(page);
+    };
+    const tlabel = async () => (await page.locator(".dm-screen:not([hidden]) .dm-time").innerText()).trim();
+    // the time label (F1)
+    if (declared) {
+      await page.locator('.dm-screen:not([hidden]) .dm-speed [data-rate="1"]').click();
+      const l1 = await tlabel();
+      await page.locator('.dm-screen:not([hidden]) .dm-speed [data-rate="0.25"]').click();
+      await settle(page, 50);
+      const l2 = await tlabel();
+      await page.locator('.dm-screen:not([hidden]) .dm-speed [data-rate="1"]').click();
+      const factor = (x) => { const m = /×\s?([\d.,·⁰-⁹⁻]+)/.exec(x); return m ? m[1] : null; };
+      check(`${tagX}: the time label states the world's time and the playback factor; «slow» makes it four times slower (F1)`,
+        l1.startsWith(tr("world {t}", { t: "" }).trim()) && [tr("real time"), tr("slow motion ×{k}", { k: "" }).trim(), tr("sped up ×{k}", { k: "" }).trim()].some((x) => l1.includes(x))
+        && l1 !== l2 && factor(l1) !== factor(l2), { l1, l2 });
+      const pt = await page.evaluate(`({ speed: ${X}.point().speed, want: ${JSON.stringify(ex.speed)} })`);
+      check(`${tagX}: the point knows the world's default speed (its state message), for a «world» speed`, ex.speed !== "world" || pt.speed > 0, pt);
+    } else skip(`${tagX}: the time label (no speed declared)`);
+    // compound controls (F3)
+    for (const c of compound) {
+      const names = await page.$$eval(`.dm-screen:not([hidden]) .dm-ctl[data-param="${c.param}"] .dm-ctl-seg button, .dm-screen:not([hidden]) .dm-ctl[data-param="${c.param}"] .dm-detent`, (a) => a.map((x) => x.getAttribute("title") || x.textContent));
+      check(`${tagX}: the compound control «${c.param}» names its values`, !c.labels || c.labels.every((l) => names.includes(tr(l))), { names });
+      const cur = (await page.evaluate(`${X}.values()`))[c.param];
+      const k = (c.values.indexOf(cur) + 1) % c.values.length, v = c.values[k];
+      await choose(page, c, v);
+      await until(`X.state.refused || (X.point() && X.point().values[${JSON.stringify(c.param)}] === ${JSON.stringify(v)})`);
+      const params = await page.evaluate(`${X}.state.refused ? null : ${X}.point().W.header.params`);
+      const want = Object.fromEntries(Object.entries(c.sets).map(([p, list]) => [p, list[k]]));
+      check(`${tagX}: «${c.param}» = ${JSON.stringify(v)} sets ${JSON.stringify(want)} in the point shown`, params === null || Object.entries(want).every(([p, x]) => params[p] === x), { params, want });
+      if (W >= 1000 && params) {
+        await page.locator(".dm-how").click();
+        await settle(page);
+        const dr = await page.locator(".dm-drawer-body").innerText();
+        const setNames = Object.keys(c.sets).map((p) => tr(((viz.schema.params || []).find((x) => x.id === p) || { label: p }).label));
+        check(`${tagX}: the passport names the parameters «${c.param}» set`, setNames.every((x) => dr.includes(x)), { setNames, dr: dr.slice(-400) });
+        await page.keyboard.press("Escape");
+      }
+    }
+    if (!compound.length) skip(`${tagX}: compound controls (none)`);
+    await playToEnd();
+    // readouts with an error and a reference (F7)
+    const decl = await page.evaluate(`${X}.point() && ${X}.point().W ? ${X}.point().W.header.measurables || [] : []`);
+    const shownR = decl.filter((m) => (ex.readouts || []).includes(m.id));
+    const withE = shownR.filter((m) => m.sigma), withR = shownR.filter((m) => m.ref);
+    if (withE.length || withR.length) {
+      const got = {};
+      for (const m of shownR) got[m.id] = (await page.locator(`.dm-screen:not([hidden]) [data-readout="${m.id}"]`).innerText()).replace(/\s+/g, " ");
+      check(`${tagX}: a readout with the run's error shows «±», one with a reference names it (F7)`,
+        withE.every((m) => got[m.id].includes("±") || got[m.id].includes("—")) && withR.every((m) => got[m.id].includes(`(${m.ref_label ? tr(m.ref_label) : tr("reference")}`) || got[m.id].includes("—"))
+        && [...withE, ...withR].some((m) => !got[m.id].includes("—")), got);
+    } else skip(`${tagX}: readouts with an error or a reference (none)`);
+    // a stop by counted events (F2): the point ends after_s after the first kind to reach its count (or its own frame)
+    const evs = ex.stop && ex.stop.events;
+    if (evs) {
+      const r = await page.evaluate(`(() => { const W = ${X}.point().W, out = {}; for (const e of W.events) { for (const k of [e.kind, e.name]) if (k in ${JSON.stringify(evs)}) (out[k] = out[k] || []).push(e.t); } return { out, tEnd: ${X}.point().tEnd, dt: W.frames.length > 1 ? W.frames[1].t - W.frames[0].t : 0 }; })()`);
+      const firsts = Object.entries(evs).map(([k, n]) => (r.out[k] || [])[n - 1]).filter((x) => x !== undefined);
+      const stopT = Math.min(...firsts) + (ex.stop.after_s || 0);
+      check(`${tagX}: the point stops after_s after the first counted event kind (F2)`, firsts.length > 0 && r.tEnd >= stopT - 1e-9 && r.tEnd <= stopT + r.dt + 1e-9, { ...r, stopT });
+    } else skip(`${tagX}: a stop by counted events (none)`);
+    // «CSV of this point» (F7): standard only, one row per frame up to the time shown
+    const btn = page.locator(".dm-screen:not([hidden]) .dm-point-csv");
+    if (csvWanted) {
+      await btn.scrollIntoViewIfNeeded().catch(() => {});
+      await btn.click({ modifiers: [] }).catch(() => {});
+      const href = await btn.getAttribute("href");
+      const text = href ? decodeURIComponent(href.replace(/^data:text\/csv;charset=utf-8,/, "")) : "";
+      const lines = text.trim().split("\n");
+      const n = await page.evaluate(`(() => { const p = ${X}.point(), F = p.W.frames, tt = Math.min(p.tEnd, ${X}.state.clock - (${X}.state.cur.launchedAt ?? 0)); return F.filter((f) => f.t <= tt + 1e-9).length; })()`);
+      check(`${tagX}: «CSV of this point» has t and the declared measurables, with σ, one row per frame shown (F7)`, lines.length === n + 1
+        && lines[0].startsWith(`"${tr("t, {unit}", { unit: tr("s") })}"`) && (!decl.some((m) => m.sigma) || lines[0].includes("σ ")), { head: lines[0], rows: lines.length - 1, frames: n });
+    } else check(`${tagX}: no «CSV of this point» at school`, (await btn.count()) === 0);
+    await page.screenshot({ path: `${SHOTS}/demo_${WORLD}_ex2_${ex.id}_${LANG}_${tag0}.png` });
+    await common(page, `${tagX}`, W, errs);
+    await ctx.close();
+  }
+  if (lab) {
+    const ctx = await br.newContext({ viewport: { width: W, height: H } });
+    await asSite(ctx);
+    const { page, errs } = await open(ctx, lab.id);
+    const LB = (body, timeout = 15000) => page.waitForFunction(`(() => { const s = window.__lfLab && window.__lfLab.step(); return ${body}; })()`, null, { timeout });
+    await LB("s && s.cur", 20000);
+    const toEnd = async () => { await settle(page, 30); await page.evaluate(() => { const s = document.querySelector(".dm-screen:not([hidden]) .dm-timeline"); s.value = s.max; s.dispatchEvent(new Event("input")); }); await settle(page, 50); };
+    for (const [k, st] of lab.steps.entries()) {
+      const tagS = `${tag0} lab part ${k + 1} (EX2)`;
+      if (k > 0) { await page.locator(".dm-steps button").nth(k).click(); await LB(`s && s.step.id === ${JSON.stringify(st.id)} && s.cur`); }
+      const counters = st.instruments.filter((id) => (lab.instruments[id] || {}).kind === "counter");
+      const sigmas = st.instruments.filter((id) => (lab.instruments[id] || {}).sigma);
+      const formulas = st.columns.filter((c) => c.expr);
+      if (counters.length || sigmas.length || formulas.length) {
+        const entryS = index.atlases.find((a) => a.id === st.atlas);
+        const mf = await get(`/recordings/${WORLD}/${entryS.file}`);
+        const lc = mf.controls[0];
+        await page.locator(".dm-screen:not([hidden]) .dm-work button").filter({ hasText: tr("Clear the table") }).click().catch(() => {});
+        for (const v of lc.values.slice(0, 17)) {
+          if (await page.evaluate((p) => window.__lfLab.step().values[p], lc.param) !== v) await choose(page, lc, v);
+          await LB(`s.cur && s.cur.pt.values[${JSON.stringify(lc.param)}] === ${JSON.stringify(v)} && !s.pending`);
+          await toEnd();
+          await page.locator(".dm-measure").click();
+        }
+        const rows = await page.evaluate(() => window.__lfLab.rows());
+        const cells = await page.$$eval(".dm-screen:not([hidden]) .dm-table tbody tr", (trs) => trs.map((tr) => [...tr.querySelectorAll("td")].map((td) => ({ text: td.innerText.trim(), undef: td.classList.contains("dm-undef"), why: (td.querySelector(".dm-why") || {}).textContent || "" }))));
+        const colIdx = (id) => st.columns.findIndex((c) => c.id === id) + 1;
+        for (const id of counters) {
+          const c = st.columns.find((x) => x.from === id), i = lab.instruments[id];
+          if (!c) continue;
+          const okc = rows.every((r) => !r.cols[c.id] || (Number.isInteger(r.cols[c.id].v) && Math.abs(r.cols[c.id].e - (i.error === "poisson" ? (r.cols[c.id].v > 0 ? Math.sqrt(r.cols[c.id].v) : 1) : Number(i.error))) < 1e-12));
+          const texts = cells.map((r) => r[colIdx(c.id)].text);
+          check(`${tagS}: the counter «${id}» reads whole counts with ${i.error === "poisson" ? "√N" : "its exact count"} (F4)`, okc && texts.every((x) => (i.error === "poisson" ? /^\d[\d,\s ]* ± \d/.test(x) : /^\d+$/.test(x))), { texts });
+        }
+        for (const id of sigmas) {
+          const c = st.columns.find((x) => x.from === id);
+          if (!c) continue;
+          check(`${tagS}: the readout «${id}» carries the run's own error (F4)`, rows.every((r) => r.cols[c.id] && r.cols[c.id].e > 0) && cells.every((r) => r[colIdx(c.id)].text.includes("±")), { texts: cells.map((r) => r[colIdx(c.id)].text) });
+        }
+        if (formulas.length) {
+          const undef = cells.flat().filter((x) => x.undef);
+          const okF = rows.every((r) => formulas.every((f) => (r.cols[f.id] && Number.isFinite(r.cols[f.id].v) && r.cols[f.id].e >= 0) || (r.why && r.why[f.id])));
+          check(`${tagS}: formula columns have values with errors, an undefined cell is empty with its reason (F5)`, okF && undef.every((x) => x.text.startsWith("—") && x.why.length > 5), { undef: undef.slice(0, 2) });
+          if (WORLD === "s98_atlas_toy" && st.id === "ticks") check(`${tagS}: the toy's √(n − 2.5) is empty at n = 2, with its reason`, undef.length >= 1 && undef[0].why === tr("the square root of a negative number"), { undef });
+          const csvHref = await page.locator('.dm-screen:not([hidden]) a[download$=".csv"]').first().getAttribute("href");
+          const text = decodeURIComponent(csvHref.replace(/^data:text\/csv;charset=utf-8,/, ""));
+          check(`${tagS}: the CSV leaves an undefined cell empty, never «null» (F5)`, !text.includes("null") && !text.includes("NaN"));
+        }
+        // the fit on the law's plot, with the counted and computed columns: its parameters with errors (no verdict)
+        for (const law of st.laws || []) {
+          const sels = page.locator(".dm-screen:not([hidden]) .dm-work select");
+          await sels.nth(0).selectOption(law.x); await sels.nth(1).selectOption(law.y); await sels.nth(2).selectOption(law.model);
+          await settle(page, 50);
+          const r = await page.evaluate(() => { const x = window.__lfLab.fit(); return x ? { params: x.params, s: x.sigmaDeclared } : null; });
+          check(`${tagS}: the fit «${law.model}» of ${law.y} against ${law.x} on the counted and computed columns`, !!r && Object.values(r.params).every(Number.isFinite), r);
+        }
+      } else skip(`${tagS}: counters, the run's σ and formula columns (none)`);
+      // F6: the modified-physics band of a step whose points carry modifications
+      const mods = await page.evaluate(() => { const s = window.__lfLab.step(); return (s.cur && s.cur.pt.W && s.cur.pt.W.header.modifications) || []; });
+      await settle(page);
+      const band = await page.evaluate(() => { const b = document.querySelector(".dm-screen:not([hidden]) .dm-lab-mod"); return { shown: !!b && !b.hidden, text: b ? b.textContent : "", body: document.body.classList.contains("dm-modified") }; });
+      if (mods.length) check(`${tagS}: «MODIFIED PHYSICS» on the step card and in the bar (F6)`, band.shown && band.text.startsWith(tr("MODIFIED PHYSICS:")) && band.body, band);
+      else check(`${tagS}: no «MODIFIED PHYSICS» band on accepted physics`, !band.shown && !band.body, band);
+      // the drawer of Lab work is Explore's (the owner, 2026-11-18): at the point's end, every check of the point with
+      // its value and reference (the table at standard, the list with the notes at school), the events with their times
+      if (W >= 1000) {
+        await toEnd();
+        await page.locator(".dm-how").click();
+        await settle(page);
+        const dr = await page.evaluate(() => ({ rows: document.querySelectorAll(".dm-drawer-body .dm-ck-table tr").length - (document.querySelector(".dm-drawer-body .dm-ck-table") ? 1 : 0),
+          items: document.querySelectorAll(".dm-drawer-body .dm-ck-list li").length,
+          evs: [...document.querySelectorAll(".dm-drawer-body .dm-ev")].map((e) => ({ mono: !!e.querySelector(".mono"), text: e.textContent.trim() })) }));
+        const nCk = await page.evaluate(() => window.__lfLab.step().cur.pt.W.checks.size);
+        const nEv = await page.evaluate(() => window.__lfLab.step().cur.pt.W.events.length);
+        check(`${tagS}: the drawer of Lab work shows every check of the point, with its value at standard, and the events with their times, as Explore (the owner, 2026-11-18)`,
+          (viz.ui === "school" ? dr.items : dr.rows) === nCk && dr.evs.length === nEv && dr.evs.every((e) => e.mono), { ...dr, evs: dr.evs.slice(0, 3), nCk, nEv });
+        // «Computed for this bench» (F6 (d)): the step's laws with the atlas's references, in the drawer only
+        const comp = await page.$$eval(".dm-drawer-body .dm-computed-list li", (a) => a.map((li) => ({ law: li.dataset.law, text: li.textContent })));
+        const refs = await page.evaluate(() => { const s = window.__lfLab.step(); return s.A ? s.A.manifest.references || {} : {}; });
+        const key = (law) => (st.shared ? `${st.id}/${law.reference}` : law.reference);
+        const want = (st.laws || []).filter((law) => refs[key(law)]);
+        check(`${tagS}: «Computed for this bench» lists the step's laws with the world's values (F6 (d))`, comp.length === want.length
+          && want.every((law) => comp.some((c) => c.law === law.reference && c.text.includes(tr(law.label === undefined ? "" : refs[key(law)].label)))), { comp: comp.slice(0, 3), want: want.length });
+        check(`${tagS}: the computed values are not beside the student's fit`, !(await page.locator(".dm-screen:not([hidden]) .dm-work .dm-computed-list").count()));
+        await page.keyboard.press("Escape");
+      }
+    }
+    await common(page, `${tag0} lab (EX2)`, W, errs);
+    await ctx.close();
+  }
+  // the teacher's variant from the address (EX2 §5 F8 (b)): run.html?…&screen=lab&variant=<id> preselects its controls
+  for (const v of (lab && !lab.worksheet.ex1 ? lab.worksheet.variants || [] : []).filter((x) => x.values)) {
+    const ctx = await br.newContext({ viewport: { width: W, height: H } });
+    await asSite(ctx);
+    const { page, errs } = await open(ctx, lab.id, `&variant=${v.id}`);
+    await page.waitForFunction(() => window.__lfLab && window.__lfLab.step() && window.__lfLab.step().cur, null, { timeout: 20000 });
+    const firstId = v.steps ? v.steps[0] : lab.steps[0].id;
+    const got = await page.evaluate(() => ({ step: window.__lfLab.step().step.id, values: window.__lfLab.step().values, shown: window.__lfLab.step().cur.pt.values }));
+    const want = v.values[firstId] || {};
+    check(`${tag0} lab: &variant=${v.id} opens its first step with its controls preselected, the point shown (nothing locked)`, got.step === firstId
+      && Object.entries(want).every(([k, x]) => got.values[k] === x && got.shown[k] === x)
+      && !(await page.locator(".dm-screen:not([hidden]) .dm-ctl input:disabled, .dm-screen:not([hidden]) .dm-ctl button:disabled").count()), { got, want });
+    const href = await page.locator(".dm-screen:not([hidden]) .dm-ws a").getAttribute("href");
+    check(`${tag0} lab: the task sheet's link keeps the variant`, (href || "").includes(`variant=${v.id}`), { href });
+    await common(page, `${tag0} lab variant ${v.id}`, W, errs);
+    await ctx.close();
+  }
+  // --- the task sheet (EX2 §5 F8) ---------------------------------------------------------------------------------------
+  // one A4 page per sheet (the head and the task, each part, «Computed for this bench» when asked for), each with the
+  // attribution line, no sheet overflowing its page, record_rows blank rows per part (review EX1-screens F6, EX1-worlds F7)
   if (W >= 1000 && lab) {
     const ctx = await br.newContext({ viewport: { width: W, height: H } });
     const page = await ctx.newPage();
@@ -610,36 +845,69 @@ for (const [W, H] of SIZES) {
     await page.goto(inLang(`${base}/worksheet?demo=${WORLD}`));
     await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 20000 });
     const txt = await page.locator("#ws").innerText();
-    const frp0 = lab.worksheet.frp[0];
-    check("worksheet: the programme's lab by its name (no raw id), the step, the questions, the equipment in the language", txt.includes(tr(frp0.name)) && txt.includes(tr(lab.steps[0].title))
-      && (!frp0.programme || txt.includes(tr(frp0.programme))) && !txt.includes(frp0.system)
-      && txt.includes(tr(lab.worksheet.questions[0].q)) && txt.includes(tr(lab.worksheet.equipment[0])) && !txt.includes("[object"));
-    check("worksheet: the answers hidden without «For the teacher»", !(await page.locator(".teacher").first().isVisible()));
+    const WS = lab.worksheet;
+    const frp0 = (WS.frp || [])[0], basis0 = (WS.basis || [])[0];
+    // the task sheet (EX2 §5 F8): the head with the programme (school) or the basis (university), the goal, the bench,
+    // the procedure, the record list; no questions, answers or teacher's pages
+    const task = [tr(WS.goal), ...(WS.bench || []).map(tr), ...(WS.procedure || []).map(tr), ...(WS.record || []).map(tr)];
+    check("task sheet: the goal, the bench, the procedure and the record list in the language, the parts' titles", task.every((x) => txt.includes(x))
+      && lab.steps.every((st) => txt.includes(tr(st.title))) && !txt.includes("[object"), { missing: task.filter((x) => !txt.includes(x)).slice(0, 2) });
+    if (frp0) check("task sheet: the programme's lab by its name (no raw id)", txt.includes(tr(frp0.name)) && (!frp0.programme || txt.includes(tr(frp0.programme))) && !txt.includes(frp0.system));
+    else {  // a university sheet names its basis, its words quoted verbatim in their own language (EX2 §5 F8)
+      const q = await page.evaluate(() => [...document.querySelectorAll(".ws .basis q.quote")].map((e) => ({ text: e.textContent, lang: e.lang })));
+      check("task sheet (university): its basis, the source and the quotation verbatim in its language", !!basis0
+        && txt.includes(tr(basis0.text)) && txt.includes(tr(basis0.source)) && (!basis0.quote || q.some((x) => x.text === basis0.quote && x.lang === (basis0.quote_lang || "en"))), { q });
+    }
+    check("task sheet: no questions, answers or teacher's pages (the owner, 2026-11-18)", !(await page.locator(".ws .teacher, .ws .answer").count())
+      && !txt.includes(tr("For the teacher")) && !txt.includes(tr("Answers")));
+    // every instrument as the step card writes it: an exact one with its reason, never «±0» (V52 (y)); a counter's √N
+    const instrTxt = (await page.locator(".ws .instr").allInnerTexts()).join(" | ");
+    check("task sheet: no instrument says «±0» (V52 (y)); a counter's line its √N (EX2 §5 F4)", !/±\s?0(?![.,\d])/.test(instrTxt)
+      && (!Object.values(lab.instruments).some((i) => i.kind === "counter" && i.error === "poisson") || instrTxt.includes(tr("counts; error √N (a count of 0 has the error of one count)"))), { instrTxt: instrTxt.slice(0, 300) });
     const { pdf: pdf0, sh: sh0 } = await printed("");
-    const setups = (st) => (st.controls || []).reduce((n, c) => n * c.values.length, 1);
     const parts = sh0.filter((x) => x.cls.includes("part"));
-    check("worksheet: a sheet per part, one blank row per set-up of its step", parts.length === lab.steps.length && parts.every((x, k) => x.rows === setups(lab.steps[k])), { rows: parts.map((x) => x.rows), want: lab.steps.map(setups) });
-    await page.locator(".ws-tools input[type=checkbox]").check();
-    check("worksheet: «For the teacher» shows the answers", (await page.locator(".teacher").first().innerText()).includes(tr(lab.worksheet.questions[0].answer)));
-    check("worksheet: the switch is in the address", new URL(page.url()).searchParams.get("teacher") === "1");
-    const { pdf: pdf1, sh: sh1 } = await printed(" (for the teacher)");
-    check("worksheet: the teacher's sheets are pages of their own", pages(pdf1) > pages(pdf0) && sh1.filter((x) => x.cls.includes("teacher")).length === pages(pdf1) - pages(pdf0));
+    check("task sheet: a sheet per part, record_rows blank rows each", parts.length === lab.steps.length && parts.every((x) => x.rows === (WS.record_rows || 10)), { rows: parts.map((x) => x.rows), want: WS.record_rows });
     writeFileSync(`${SHOTS}/worksheet_${WORLD}_${LANG}.pdf`, pdf0);
-    writeFileSync(`${SHOTS}/worksheet_${WORLD}_teacher_${LANG}.pdf`, pdf1);
-    if (LANG === "en") check("worksheet: no Cyrillic but the programme's own wording", !CYR.test(txt.replace(/«[^»]*»/g, "")));  // i18n-ok: the quoted original
-    else check("worksheet: no Latin unit or raw id in the Russian text (F7)", !/\bm\^½|\bFRP-|\b(slope|vertex)\b/.test(txt), { sample: (txt.match(/.{0,30}(m\^½|FRP-|slope|vertex).{0,30}/) || [""])[0] });
+    if (LANG === "en") check("task sheet: no Cyrillic but the programme's own wording", !CYR.test(txt.replace(/«[^»]*»/g, "")));  // i18n-ok: the quoted original
+    else check("task sheet: no Latin unit or raw id in the Russian text (F7)", !/\bm\^½|\bFRP-|\b(slope|vertex)\b/.test(txt.replace(/“[^”]*”/g, "")), { sample: (txt.match(/.{0,30}(m\^½|FRP-|slope|vertex).{0,30}/) || [""])[0] });
     await page.screenshot({ path: `${SHOTS}/worksheet_${WORLD}_${LANG}.png`, fullPage: true });
-    // a variant (S03's grade 7): its steps, its plot's columns only, its questions
-    for (const v of lab.worksheet.variants || []) {
+    // the sheet is editable before printing: an edit prints, is kept in this browser, and «Restore the original» undoes it
+    const mark = "EDITED-BY-THE-TEST";
+    await page.locator('.ws .editable[data-edit="goal"]').click();
+    await page.keyboard.press("End");
+    await page.keyboard.type(` ${mark}`);
+    await page.locator('.ws .editable[data-edit="teacher_task"]').click();
+    await page.keyboard.type(mark);
+    await page.reload();
+    await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 20000 });
+    const kept = (await page.locator('.ws .editable[data-edit="goal"]').innerText()).includes(mark) && (await page.locator('.ws .editable[data-edit="teacher_task"]').innerText()).includes(mark);
+    await page.emulateMedia({ media: "print" });
+    const printedTxt = await page.locator("#ws").innerText();
+    await page.emulateMedia({ media: "screen" });
+    await page.locator(".ws-restore").click();
+    const restored = !(await page.locator("#ws").innerText()).includes(mark);
+    await page.reload();
+    await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 20000 });
+    check("task sheet: an edit is kept in this browser and prints; «Restore the original» restores the original", kept && printedTxt.includes(mark) && restored
+      && !(await page.locator("#ws").innerText()).includes(mark), { kept, restored });
+    // «Computed for this bench» on a page of its own (&computed=1)
+    await page.goto(inLang(`${base}/worksheet?demo=${WORLD}&computed=1`));
+    await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 20000 });
+    const comp = await page.locator(".ws .sheet.computed").innerText().catch(() => "");
+    const nLaws = lab.steps.reduce((n, st) => n + (st.laws || []).length, 0);
+    const { pdf: pdfC } = await printed(" (computed)");
+    check("task sheet: &computed=1 prints the world's computed values for the bench on a page of their own", comp.includes(tr("Computed for this bench"))
+      && (nLaws === 0 || (await page.locator(".ws .sheet.computed li").count()) === nLaws) && pages(pdfC) === pages(pdf0) + 1, { comp: comp.slice(0, 300), nLaws });
+    // a variant (the teacher's task): its label and id, the set-up it preselects, its own goal
+    for (const v of WS.variants || []) {
       await page.goto(inLang(`${base}/worksheet?demo=${WORLD}&variant=${v.id}`));
       await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 20000 });
       const vt = await page.locator("#ws").innerText();
       const { sh } = await printed(` variant ${v.id}`);
-      const vparts = sh.filter((x) => x.cls.includes("part"));
-      const vsteps = lab.steps.filter((st) => v.steps.includes(st.id));
-      const wantCols = vsteps.map((st) => st.columns.filter((c) => c.from || c.id === v.plot[st.id].x || c.id === v.plot[st.id].y).length);
-      check(`worksheet variant ${v.id}: its steps, the measured and plotted columns, its questions`, vparts.length === vsteps.length
-        && vparts.every((x, k) => x.cols === wantCols[k]) && vt.includes(tr(v.label)) && v.questions.every((q) => vt.includes(tr(q.q))), { cols: vparts.map((x) => x.cols), wantCols });
+      const vsteps = lab.steps.filter((st) => !v.steps || v.steps.includes(st.id));
+      check(`task sheet variant ${v.id}: its label and id, its steps, its goal, the set-up it preselects`, vt.includes(tr("Variant {id}: {label}", { id: v.id, label: tr(v.label) }))
+        && sh.filter((x) => x.cls.includes("part")).length === vsteps.length && (!v.text || !v.text.goal || vt.includes(tr(v.text.goal)))
+        && (!v.values || (await page.locator(".ws .preset").count()) === Object.keys(v.values).filter((sid) => vsteps.some((st) => st.id === sid)).length), { vt: vt.slice(0, 200) });
       await page.screenshot({ path: `${SHOTS}/worksheet_${WORLD}_${v.id}_${LANG}.png`, fullPage: true });
     }
     check("worksheet: no page error", errs.length === 0, { errs });

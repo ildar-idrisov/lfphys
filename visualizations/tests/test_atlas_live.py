@@ -18,7 +18,8 @@
   point; more than one computed and ``QUEUE`` waiting is ``429``;
 * the cache's housekeeping: leftovers of killed processes go, the log keeps the last point, the cache keeps under its
   cap (review R-F F13);
-* the nested route ``/recordings/<world>/atlas/<atlas>/<file>`` serves an atlas's files and nothing outside.
+* the nested route ``/recordings/<world>/atlas/<atlas>/<file>`` serves an atlas's files and nothing outside;
+* a compound control (EX2 §5 F3) takes its grid values only: off its grid ``400``; its on-grid point the build's bytes.
 """
 
 from __future__ import annotations
@@ -100,7 +101,9 @@ def test_an_on_grid_point_is_the_bytes_of_a_build_then_the_atlas_and_the_cache(t
     atlas.write_atlases(built, "s98_atlas_toy", entries)
     man = json.loads((built / "s98_atlas_toy" / entries[0]["file"]).read_text(encoding="utf-8"))
     p4 = man["points"][4]  # h 1, angle 30
-    want = (built / "s98_atlas_toy" / "atlas" / "explore" / p4[0]).read_bytes()
+    folder = built / "s98_atlas_toy" / "atlas" / "explore"
+    # a live point is never pooled (EX2 §5 F10): the build's point with its pooled blobs put back
+    want = headless.unpool((folder / p4[0]).read_bytes(), (folder / man["pool"]["file"]).read_bytes())
 
     async def fn(cl):
         a = await _post(cl, {"values": {"h_m": 1.0, "angle_deg": 30.0}})
@@ -317,3 +320,36 @@ def test_the_cache_housekeeping(tmp_path, monkeypatch):
     assert f"{b[2]['X-LF-Key']}.lfpt.gz" in names and f"{a[2]['X-LF-Key']}.lfpt.gz" not in names
     log = (folder / "point.log").read_bytes()
     assert len(log) < 20000  # the last point's log only
+
+
+def test_a_compound_control_takes_its_grid_values_only(tmp_path):
+    """EX2 §5 F3: a compound control sets several parameters at once, so the live endpoint takes its grid values only
+    (400 off the grid, on a server too); an on-grid value of it with an off-grid plain control is computed live, and an
+    on-grid point is the bytes of a build; the run sees the parameters the value sets."""
+    url = "/api/atlas/s98_atlas_toy/throws/point"
+    atlas = _site("atlas")
+    built = tmp_path / "built"
+    entries, problems, _w = atlas.build_world("s98_atlas_toy", built, ["throws"])
+    assert problems == []
+    man = json.loads((built / "s98_atlas_toy" / entries[0]["file"]).read_text(encoding="utf-8"))
+    i = atlas.flat_index(man["controls"], {"throw": "steep", "h_m": 0.5})
+    folder = built / "s98_atlas_toy" / "atlas" / "throws"
+    want = (folder / man["points"][i][0]).read_bytes()
+    if man.get("pool"):
+        want = headless.unpool(want, (folder / man["pool"]["file"]).read_bytes())
+
+    async def fn(cl):
+        return [await _post(cl, {"values": {"throw": "sideways"}}, url),
+                await _post(cl, {"values": {"throw": 3.0}}, url),
+                await _post(cl, {"values": {"throw": "steep", "h_m": 0.5}}, url),
+                await _post(cl, {"values": {"throw": "flat", "h_m": 0.75}}, url),
+                await _post(cl, {"values": {"v0": 2.0}}, url)]
+    off, num, on, live, param = _api(tmp_path, fn)
+    body = json.loads(off[1])
+    assert off[0] == 400 and body["error"]["$t"] == "“{label}” sets several parameters at once: it takes only its own values"
+    assert num[0] == 400
+    assert on[0] == 200 and on[1] == want
+    assert live[0] == 200 and live[2]["X-LF-Source"] == "computed"
+    head = headless.read_stream(live[1])[0][0]
+    assert head["params"]["v0"] == 2.0 and head["params"]["angle_deg"] == 0.0 and head["params"]["h_m"] == 0.75
+    assert param[0] == 400  # a parameter the compound control sets is not a control of the screen

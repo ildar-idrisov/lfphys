@@ -19,7 +19,7 @@ What it writes into ``--out`` (served at ``--base``, e.g. https://ildar-idrisov.
   ``aliases.json`` (``registry.ALIASES``);
 * ``recordings/<world>/``: each world's ``index.json`` and the files it names, from ``--recordings`` (``DIR/<world>/``
   or, as the CI's artifacts land, ``DIR/rec-<world>/``), only the entries the registry asks for now (review F13); its
-  atlases ``recordings/<world>/atlas/<atlas>/`` (the manifest, the base and the points it names; design of 2026-11-14
+  atlases ``recordings/<world>/atlas/<atlas>/`` (the manifest, the base, the pool and the points it names; design of 2026-11-14
   §1.3), only those the registry asks for;
   ``api/recordings.json`` carries the public site's ``site`` and ``published`` (``site/site.json``) and ``expected``,
   the keys of every world's recordings and atlases as the code gives them (``lfviz.app.expected_keys``; integrator D11);
@@ -198,8 +198,9 @@ def copy_recordings(src: Path | None, out: Path, worlds: list[str]) -> dict:
 
 
 def copy_atlases(src: Path, dst: Path, vid: str, entries: list) -> list:
-    """Copy a world's atlases that the registry asks for (design of 2026-11-14 §1.3): each manifest with its base and
-    the point files it names; an atlas whose files are not all there is left out (the check says it is missing)."""
+    """Copy a world's atlases that the registry asks for (design of 2026-11-14 §1.3): each manifest with its base, its
+    pool (EX2 §5 F10) and the point files it names; an atlas whose files are not all there is left out (the check says
+    it is missing)."""
     planned = {a["id"] for a in registry.atlases_of(registry.load(vid))}
     keep = []
     for e in entries:
@@ -212,7 +213,8 @@ def copy_atlases(src: Path, dst: Path, vid: str, entries: list) -> list:
         except (OSError, ValueError):
             _warn(f"{vid}: atlas {e.get('id')}: its manifest {e.get('file')} is missing or unreadable")
             continue
-        names = [man["base"]["file"]] + [p[0] for p in man.get("points") or [] if p and p[0]]
+        names = [man["base"]["file"]] + [p[0] for p in man.get("points") or [] if p and p[0]] \
+            + ([man["pool"]["file"]] if man.get("pool") else [])  # the blobs the points share (EX2 §5 F10)
         missing = [n for n in names if not (man_f.parent / n).is_file()]
         if missing:
             _warn(f"{vid}: atlas {e.get('id')}: {len(missing)} files named in its manifest are missing")

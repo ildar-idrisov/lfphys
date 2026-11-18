@@ -25,7 +25,7 @@ A section subclasses ``PlaygroundSimulation`` and gives:
   them (review UX-ui U1: an unchanged ``box`` re-sent every minute reset the camera);
 * optionally (the integrator's API of 2026-11-05 for reviews UX-ui U4, U7, U22 and UX-params P28):
   ``place(kind, values) -> values`` — called on every palette add with what the owner set in the pre-placement form
-  (and ``position`` [x, y, z] when he clicked a point in the scene or its window); returns the completed values (e.g.
+  (and ``position`` [x, y, z] when the user clicked a point in the scene or its window); returns the completed values (e.g.
   moved to a free spot, a free side chosen) or raises ``lfviz.errors.Refusal``. Without it the values are used as they
   are, ``position`` going to the type's ``x``, ``y``, ``z``. ``palette_state() -> {kind: None | reason}`` — the palette
   types the world cannot take now and why (Russian, with what to change), sent in every ``scene`` message (after each
@@ -503,7 +503,7 @@ class PlaygroundSimulation(Simulation):
 
     def place(self, kind: str, values: dict) -> dict:
         """Complete the values of a new object of palette type ``kind`` before it is added: ``values`` are what the
-        owner set in the pre-placement form, with ``position`` [x, y, z] when he clicked a point. Return the values to
+        owner set in the pre-placement form, with ``position`` [x, y, z] when the user clicked a point. Return the values to
         add (moved to a free spot, a free side chosen; ``position`` may be left: the framework maps it to x, y, z) or
         raise ``lfviz.errors.Refusal``. Deterministic: a restore repeats it."""
         return values

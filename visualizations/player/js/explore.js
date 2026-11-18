@@ -14,11 +14,43 @@
 import { openAtlas, snap, gridIndex } from "./atlas.js";
 import { t } from "./i18n.js";
 import { frameAt, frameIndexAt, showAt } from "./record_core.js";
-import { el, fill, fmt, num } from "./ui.js";
+import { el, fill, fmt, num, time } from "./ui.js";
 
-export const SLOW = 0.25;  // the «slow» speed: a quarter of real time
+export const SLOW = 0.25;  // the «slow» speed: a quarter of the screen's speed
 // a time of the world on the time bar, in seconds (school: «0.45 s», never «451.6 ms»)
 export const secs = (x) => `${fmt(x, ".2f")}\u00a0${t("s")}`;
+
+// --- the screen's time scale (EX2 §5 F1) ------------------------------------------------------------------------------
+// world seconds per played second of a screen or a step at normal speed: its `speed`, or "world" (the point's own
+// default speed, from its state message: atlas.js keeps it as pt.speed), or 1 (a screen that declares none: real time)
+export function speedOf(spec, pt) {
+  const sp = spec ? spec.speed : undefined;
+  if (typeof sp === "number" && sp > 0) return sp;
+  if (sp === "world") return pt && pt.speed > 0 ? pt.speed : 1;
+  return 1;
+}
+// how much slower or faster than real time the world plays (r: world seconds per played second), as Watch says it
+// (watch.js rateText, integrator D8): «real time» within 5 %, «slow motion ×120», «sped up ×2.5»
+export function factorText(r) {
+  if (!(r > 0) || !Number.isFinite(r)) return "";
+  if (Math.abs(r - 1) <= 0.05) return t("real time");
+  const k = r < 1 ? 1 / r : r;
+  const kk = k < 10 ? fmt(Number(k.toPrecision(2)), "") : k < 1e6 ? fmt(Math.round(k), "") : fmt(k, ".2g");  // ×2.5, ×120, ×1.2·10⁹
+  return r < 1 ? t("slow motion ×{k}", { k: kk }) : t("sped up ×{k}", { k: kk });
+}
+// a time of the world in its own unit: the header's units.t_show {unit, s: world seconds per unit} (u34: GM/c³), else
+// seconds on a human scale (ns … s: u35's photons, u37's pairs)
+export function worldTime(tt, header) {
+  const ts = header && header.units && header.units.t_show;
+  if (ts && ts.s > 0 && ts.unit) return `${num(tt / ts.s, 4)}\u00a0${t(ts.unit)}`;
+  return time(tt, 3);
+}
+// the time bar's label of a screen that declares its speed: «world 1 234 GM/c³ · slow motion ×289 · 3.10 s / 24.00 s»
+// (the world's time, the playback factor with normal or slow, the position and the end in played seconds)
+export function timeLabel({ tt, tEnd, speed, rate = 1, header = null }) {
+  const f = factorText(speed * rate);
+  return [t("world {t}", { t: worldTime(tt, header) }), f, `${secs(tt / speed)} / ${secs(tEnd / speed)}`].filter(Boolean).join(" · ");
+}
 
 // --- labels and values ------------------------------------------------------------------------------------------------
 export function controlLabel(c) {
@@ -26,6 +58,10 @@ export function controlLabel(c) {
   return unit && !label.includes(unit) ? t("{label}, {unit}", { label, unit }) : label;
 }
 export function valueText(c, v) {
+  if (c && Array.isArray(c.labels)) {  // a compound control's own names of its values («air → glass»; EX2 §5 F3)
+    const k = c.values.findIndex((x) => x === v);
+    if (k >= 0 && c.labels[k]) return t(c.labels[k]);
+  }
   if (typeof v === "boolean") return v ? t("on") : t("off");
   if (typeof v === "number") return fmt(v, ".4g");
   return t(v);
@@ -33,11 +69,38 @@ export function valueText(c, v) {
 // a value with its control's unit («1 m», «30°»: no space before the degree sign)
 export function valueUnitText(c, v) {
   const u = c.unit ? t(c.unit) : "";
-  return `${valueText(c, v)}${typeof v === "number" && u ? (u === "°" ? u : "\u00a0" + u) : ""}`;
+  const named = c && Array.isArray(c.labels) && c.labels[c.values.findIndex((x) => x === v)];
+  return `${valueText(c, v)}${typeof v === "number" && u && !named ? (u === "°" ? u : "\u00a0" + u) : ""}`;
 }
-// a short label of a point's values («h 1 m, angle 30°»), for the passport
-export function valuesText(controls, values) {
-  return controls.map((c) => `${t(c.label)} ${valueUnitText(c, values[c.param])}`).join(", ");
+// a compound control's grid value as the parameters it sets ({param: value}); a plain control's own value
+export function expandValues(controls, values) {
+  const out = { ...values };
+  for (const c of controls || []) {
+    if (!c.sets || !(c.param in out)) continue;
+    const k = c.values.findIndex((x) => x === out[c.param]);
+    delete out[c.param];
+    if (k < 0) continue;
+    for (const [p, list] of Object.entries(c.sets)) out[p] = list[k];
+  }
+  return out;
+}
+// the parameters a compound control set, in words («a 0°, b 22.5°, a′ 45°, b′ 67.5°»), with the schema's labels and units
+export function setsText(c, v, params = []) {
+  const k = c.values.findIndex((x) => x === v);
+  if (!c.sets || k < 0) return "";
+  return Object.entries(c.sets).map(([p, list]) => {
+    const d = params.find((x) => x.id === p) || { label: p, unit: "" };
+    const opt = (d.options || []).find((o) => o.value === list[k]);
+    return `${t(d.label)} ${opt ? t(opt.label) : valueUnitText({ unit: d.unit }, list[k])}`;
+  }).join(", ");
+}
+// a short label of a point's values («h 1 m, angle 30°»), for the passport; with the schema's `params`, a compound
+// control's value names the parameters it set too («Δ 22.5° (a 0°, b 22.5°, …)»; EX2 §5 F3)
+export function valuesText(controls, values, params = null) {
+  return controls.map((c) => {
+    const base = `${t(c.label)} ${valueUnitText(c, values[c.param])}`;
+    return params && c.sets ? `${base} (${setsText(c, values[c.param], params)})` : base;
+  }).join(", ");
 }
 // a trace's label: only the values that differ from the point shown («Launch speed 10 m/s»; review EX1-worlds F11,
 // EX1-screens F8), empty for the same set-up
@@ -52,10 +115,54 @@ export function when(iso) {
   return `${m[1]} ${m[2]}${z}`;
 }
 // a readout to 4 significant digits with its trailing zeros («23.90 m» next to «18.51 m»; review EX1-worlds F17)
-export function readoutText(v) {
+export function readoutText(v, digits = 4) {
   if (!Number.isFinite(v)) return "—";
-  const d = v === 0 ? 3 : Math.max(0, Math.min(6, 3 - Math.floor(Math.log10(Math.abs(v)))));
+  const d = v === 0 ? digits - 1 : Math.max(0, Math.min(8, digits - 1 - Math.floor(Math.log10(Math.abs(v)))));
   return fmt(v, `.${d}f`);
+}
+// the decimals a value with an error is written to: the error's two significant digits
+const errDecimals = (e) => Math.min(12, Math.max(0, 1 - Math.floor(Math.log10(e))));
+// A readout of a measurable as its declaration says (EX2 §5 F7): {id, label, unit, sigma?, ref?, ref_label?}; sigma
+// and ref name other measurables of the same frame. «S 2.864 ± 0.040 (law 2.828)», «advance per orbit 52.155°
+// (formula 52.155°)»: with an error, the value and the reference to the error's two digits; with a reference only, both
+// to 5 significant digits; a whole number without a unit, an error or a reference is a count («6»); else 4 significant
+// digits («23.90 m»). Returns {value, ref} texts (null: not reached).
+export function measText(m, meas) {
+  const v = meas[m.id];
+  if (v === null || v === undefined || !Number.isFinite(v)) return { value: null, ref: null };
+  const u = m.unit ? t(m.unit) : "";
+  const unit = (x) => (!u ? x : u === "°" ? x + u : `${x}\u00a0${u}`);
+  const e = m.sigma ? meas[m.sigma] : null, r = m.ref ? meas[m.ref] : null;
+  const hasE = e !== null && e !== undefined && Number.isFinite(e) && e > 0;
+  const hasR = r !== null && r !== undefined && Number.isFinite(r);
+  let value, ref = null;
+  if (hasE) {
+    const d = errDecimals(e);
+    value = unit(`${fmt(v, `.${d}f`)} ± ${fmt(e, `.${d}f`)}`);
+    if (hasR) ref = unit(fmt(r, `.${d}f`));
+  } else if (Number.isInteger(v) && !u && !m.sigma && !m.ref) {
+    value = fmt(v, "d");  // a count («6», not «6.000»): a whole number without a unit, an error or a reference
+  } else {
+    value = unit(readoutText(v, hasR ? 5 : 4));
+    if (hasR) ref = unit(readoutText(r, 5));
+  }
+  return { value, ref: hasR ? t("({label} {value})", { label: m.ref_label ? t(m.ref_label) : t("reference"), value: ref }) : null };
+}
+// «CSV of this point» (EX2 §5 F7; ui "standard"): one row per frame up to the time shown, t and every declared
+// measurable (not those that serve as another's sigma, which are its «σ» column), built from the decoded point
+export function pointCsv(W, tt, measurables, label = (m) => m.id, tHead = "t, s") {
+  const ms = measurables || [];
+  const sig = new Set(ms.map((m) => m.sigma).filter(Boolean));
+  const cols = ms.filter((m) => !sig.has(m.id));
+  const q = (x) => (/[",\n]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x);
+  const head = [tHead, ...cols.flatMap((m) => (m.sigma ? [label(m), "σ " + label(m)] : [label(m)]))].map(q);
+  const cell = (x) => (x === null || x === undefined || (typeof x === "number" && !Number.isFinite(x)) ? "" : String(x));
+  const eps = 1e-12 * Math.abs(tt);
+  const lines = (W ? W.frames : []).filter((f) => f.t <= tt + eps).map((f) => {
+    const meas = (f.meta && f.meta.meas) || {};
+    return [String(f.t), ...cols.flatMap((m) => (m.sigma ? [cell(meas[m.id]), cell(meas[m.sigma])] : [cell(meas[m.id])]))].join(",");
+  });
+  return [head.join(","), ...lines].join("\n") + "\n";
 }
 
 // A control of a grid (site/atlas.py manifest "controls" with the catalogue's label, unit, kind; registry.screens_of):
@@ -153,7 +260,7 @@ export async function create(host, kit, spec) {
   A.controls = A.controls.map((c) => ({ ...((spec.controls || []).find((x) => x.param === c.param) || {}), ...c }));
   const timeMode = spec.time || "flight", acts = spec.acts || "next", maxTraces = Math.max(0, spec.traces || 0);
   const E = { values: { ...A.defaults }, cur: null, traces: [], clock: 0, playing: false, rate: 1, wall: 0, loading: 0,
-    sig: "", tracesSig: "", refused: null, seq: 0, live: null };
+    sig: "", tracesSig: "", refused: null, seq: 0, live: null, readSig: "" };
   const view = kit.newView();
   const stage = el("div", { class: "dm-stage" }, view.center);
   const refusedBox = el("div", { class: "dm-refusal", role: "status", hidden: true });
@@ -161,8 +268,10 @@ export async function create(host, kit, spec) {
   stage.append(el("div", { class: "dm-stage-note" }, refusedBox));
   // readouts: the measurables the world declares in its header, shown once the time has reached them («—» before)
   const readBox = el("div", { class: "dm-readouts" });
+  const params = ((kit.viz && kit.viz.schema) || {}).params || [];  // the schema's labels: a compound control's sets
   const ctls = A.controls.map((c) => {
-    const r = controlRow(c, E.values[c.param], (v) => pick(c, v), { server: kit.server });
+    // a compound control takes its grid values only, on a server too (EX2 §5 F3: it sets several parameters at once)
+    const r = controlRow(c, E.values[c.param], (v) => pick(c, v), { server: kit.server && !c.sets });
     r.set(E.values[c.param]);
     return r;
   });
@@ -176,16 +285,20 @@ export async function create(host, kit, spec) {
   const clearBtn = maxTraces ? el("button", { class: "dm-clear", onclick: () => { E.traces = []; kit.dirty(); } }, t("Clear traces")) : null;
   const anotherBtn = kit.server && timeMode === "buildup" ? el("button", { title: t("Compute this point again on the server with the next random seed: another sample of the same statistics"),
     onclick: () => another() }, t("Another sample")) : null;
+  // «CSV of this point» (ui "standard"; EX2 §5 F7): the shown point's series up to the time shown, from the decoded point
+  const csvBtn = kit.ui === "standard" ? el("a", { class: "button dm-point-csv", download: `${kit.world}_${spec.id}_point.csv`,
+    title: t("This point's measurables, one row per frame up to the time shown, with their errors, as CSV"),
+    onclick: (e) => { const h = pointCsvHref(); if (!h) { e.preventDefault(); return; } e.currentTarget.href = h; } }, t("⤓ CSV of this point")) : null;
   // a law control (standard worlds only; never at school, registry) changes the physics: flagged as the live player does
   const modBox = el("div", { class: "dm-mod", hidden: true });
   const side = el("div", { class: "dm-side" }, modBox,
     el("div", { class: "dm-ctls" }, ctls.map((r) => r.el)), loadingBox,
     el("div", { class: "dm-refusal-side", role: "status" }),
-    ovBox, readBox, el("div", { class: "row" }, clearBtn, anotherBtn));
+    ovBox, readBox, el("div", { class: "row" }, clearBtn, anotherBtn, csvBtn));
   const sideRefusal = side.querySelector(".dm-refusal-side");
   const bar = timeMode === "none" ? null : kit.transport({
     launchLabel: timeMode === "flight" ? t("▶ Launch") : "▶",
-    play: () => playPressed(), reset: () => resetPressed(), scrub: (i) => scrub(i), rate: (r) => { E.rate = r === 1 ? 1 : SLOW; kit.self.rate = E.rate; },
+    play: () => playPressed(), reset: () => resetPressed(), scrub: (i) => scrub(i), rate: (r) => { E.rate = r === 1 ? 1 : SLOW; kit.dirty(); },
   });
   fill(host, el("div", { class: "dm-main" }, stage, side), bar ? bar.el : null);
   // the readouts: in the side column on a desktop, over the view's corner on a phone (design §3.2)
@@ -319,18 +432,36 @@ export async function create(host, kit, spec) {
     if (mods.length) modBox.textContent = t("MODIFIED PHYSICS:") + " " + mods.map((m) => t("{label}: {value} (accepted: {standard})", { label: t(m.label), value: val(m.value), standard: val(m.standard) })).join("; ");
     for (const [j, r] of ctls.entries()) r.el.classList.toggle("dm-law", !!A.controls[j].law && mods.length > 0);
     document.body.classList.toggle("dm-modified", mods.length > 0);
-    // readouts
+    // readouts: each with its error and its reference when the world declares them (EX2 §5 F7)
     const ms = (W.header.measurables || []).filter((m) => (spec.readouts || []).includes(m.id));
     const meas = (f && f.meta.meas) || {};
-    fill(readBox, ms.map((m) => el("div", { class: "dm-readout", "data-readout": m.id }, el("span", {}, t(m.label)),
-      el("b", { class: "mono" }, meas[m.id] === null || meas[m.id] === undefined ? "—"
-        : `${readoutText(meas[m.id])}${m.unit ? "\u00a0" + t(m.unit) : ""}`))));
+    const rsig = JSON.stringify(ms.map((m) => [m.id, meas[m.id], m.sigma ? meas[m.sigma] : null, m.ref ? meas[m.ref] : null]));
+    if (rsig !== E.readSig) {
+      E.readSig = rsig;
+      fill(readBox, ms.map((m) => {
+        const x = measText(m, meas);
+        return el("div", { class: "dm-readout", "data-readout": m.id }, el("span", {}, t(m.label)),
+          el("span", { class: "dm-rv" }, el("b", { class: "mono" }, x.value === null ? "—" : x.value), x.ref ? el("span", { class: "mono dm-ref" }, x.ref) : null));
+      }));
+    }
+    const speed = speedOf(spec, c.pt);
+    kit.self.rate = speed * E.rate;  // the view's ctx.speed(): world seconds per played second
     if (bar) {
       const launched = c.launchedAt !== null;
+      const declared = spec.speed !== undefined && spec.speed !== null;
       bar.update({ playing: E.playing, i: Math.max(0, i), max: Math.max(0, F.length - 1),
-        text: `${secs(tt)} / ${secs(c.pt.tEnd)}`, canPlay: !E.refused, why: E.refused || "",
+        text: declared ? timeLabel({ tt, tEnd: c.pt.tEnd, speed, rate: E.rate, header: W.header }) : `${secs(tt)} / ${secs(c.pt.tEnd)}`,
+        title: declared ? t("The world's own time, how much slower or faster than real time it plays, and the position in the point") : "",
+        canPlay: !E.refused, why: E.refused || "",
         launch: timeMode === "flight" && (!launched || ended(c, E.clock)) });
     }
+  }
+  function pointCsvHref() {
+    const c = E.cur, W = c && c.pt && c.pt.W;
+    if (!W) return null;
+    const tt = (frameAt(W, timeMode === "none" ? c.pt.tEnd : localT(c, E.clock)) || {}).t ?? 0;
+    const lab = (m) => (m.unit ? `${t(m.label)}, ${t(m.unit)}` : t(m.label));
+    return "data:text/csv;charset=utf-8," + encodeURIComponent(pointCsv(W, tt, W.header.measurables || [], lab, t("t, {unit}", { unit: t("s") })));
   }
 
   const API = {
@@ -338,7 +469,7 @@ export async function create(host, kit, spec) {
       if (E.playing) {
         const dt = Math.min(0.25, (now - E.wall) / 1000);
         E.wall = now;
-        E.clock += dt * E.rate;
+        E.clock += dt * E.rate * speedOf(spec, E.cur && E.cur.pt);  // world seconds: the screen's speed × normal or slow (EX2 §5 F1)
         if (timeMode === "flight" ? !flying() : ended(E.cur, E.clock)) E.playing = false;  // flight: until every shot has landed
         this.dirty = true;
       } else E.wall = now;
@@ -369,13 +500,13 @@ export async function create(host, kit, spec) {
       // server took it from; an atlas point's is the atlas's
       let passport, note;
       if (pt && pt.live) {
-        passport = [[t("Point"), valuesText(A.controls, pt.values)], [t("Point's key"), pt.key || "—"], [t("Code"), pt.code || "—"],
+        passport = [[t("Point"), valuesText(A.controls, pt.values, params)], [t("Point's key"), pt.key || "—"], [t("Code"), pt.code || "—"],
           [t("Random seed"), pt.seed ?? m.seed], [t("Computed"), when(pt.made)], [t("Atlas"), m.atlas]];
         note = pt.source === "cache" ? t("Computed live on this server earlier, at {at}, and taken from its cache.", { at: when(pt.made) })
           : pt.source === "atlas" ? t("This value is on the atlas's grid: the server gave the atlas's point, computed when the atlas was built ({at}).", { at: when(pt.made) })
           : t("Computed live on this server at {at}.", { at: when(pt.made) });
       } else {
-        passport = [[t("Point"), pt ? valuesText(A.controls, pt.values) : "—"], [t("Point's index"), pt && pt.i !== null ? `${pt.i} / ${m.points.length}` : "—"],
+        passport = [[t("Point"), pt ? valuesText(A.controls, pt.values, params) : "—"], [t("Point's index"), pt && pt.i !== null ? `${pt.i} / ${m.points.length}` : "—"],
           [t("Atlas"), `${m.atlas} · ${t("key")} ${m.key}`], [t("Code"), m.code_hash], [t("Random seed"), pt && pt.seed ? pt.seed : m.seed],
           [t("The atlas was built"), when((A.entry || {}).made ?? m.made)]];
         if (src.fromSite) passport.push([t("From"), t("the public site")]);
@@ -383,7 +514,7 @@ export async function create(host, kit, spec) {
       }
       return kit.howWeKnow({ W, tt, passport, note });
     },
-    liveBody() { return { preset: m0().preset, params: { ...(m0().fixed || {}), ...E.values } }; },
+    liveBody() { return { preset: m0().preset, params: { ...(m0().fixed || {}), ...expandValues(A.controls, E.values) } }; },
     get state() { return E; },
   };
   const m0 = () => A.manifest;

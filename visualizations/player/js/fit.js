@@ -26,7 +26,12 @@
 //                             throws an Error with .why ("points", "positive", "singular", "converge") when it cannot
 //                             fit. fromScatter: the parameters' σ come from the scatter of the
 //                             points (no declared errors, or the Birge scaling applied), not from the declared errors.
-//   verdict(res, value, σ, ref)  «Check against the law»: two errors, or Student's t for σ from the scatter (below).
+//                             EX2 §5 F6 (c): also sigmaDeclared (the σ from the declared errors, unscaled; from the
+//                             scatter when there are none), sigmaScaled (multiplied by the Birge ratio when χ²/dof > 1)
+//                             and p (the p-value of χ² for dof degrees of freedom, chi2Sf). The fit is a tool: it prints
+//                             its output and judges nothing (the owner, 2026-11-18: «Check against the law» and its
+//                             verdict are withdrawn, with their bounds of two errors or Student's t).
+//   chi2Sf(χ², ν)             P(X² ≥ χ²) for ν degrees of freedom: the regularised upper incomplete gamma Q(ν/2, χ²/2).
 export const MODELS = {
   // min: more points than parameters (so that χ²/dof exists; lfphys.tools.stats.linear_fit refuses fewer)
   line0: { names: ["b"], basis: (x) => [x], min: 2 },
@@ -166,7 +171,7 @@ function linearFit(m, model, x, y, sx, sy) {
   const birge = dof > 0 ? Math.sqrt(chi2 / dof) : NaN;
   const scaled = unit ? dof > 0 : birge > 1;
   const cov = scaled ? C.map((r) => r.map((c) => c * birge * birge)) : C;
-  return { p, cov, chi2: unit ? NaN : chi2, dof, birge: unit ? NaN : birge, scaled, unit, method, iterations };
+  return { p, cov, cov0: unit ? cov : C, chi2: unit ? NaN : chi2, dof, birge: unit ? NaN : birge, scaled, unit, method, iterations };
 }
 
 export function fit(x, y, sx, sy, model) {
@@ -185,90 +190,71 @@ export function fit(x, y, sx, sy, model) {
     const L = linearFit(MODELS.line, "power", x.map(Math.log), y.map(Math.log), sx.map((s, i) => s / x[i]), sy.map((s, i) => s / y[i]));
     const A = Math.exp(L.p[0]);
     // the covariance of (A, p) from that of (ln A, p): dA = A·d(ln A)
-    const cov = [[A * A * L.cov[0][0], A * L.cov[0][1]], [A * L.cov[1][0], L.cov[1][1]]];
-    out = { ...L, p: [A, L.p[1]], cov, f: (xv) => A * xv ** L.p[1] };
+    const tr = (C) => [[A * A * C[0][0], A * C[0][1]], [A * C[1][0], C[1][1]]];
+    out = { ...L, p: [A, L.p[1]], cov: tr(L.cov), cov0: tr(L.cov0), f: (xv) => A * xv ** L.p[1] };
   } else {
     const L = linearFit(m, model, x, y, sx, sy);
     out = { ...L, f: (xv) => m.basis(xv).reduce((s, b, j) => s + b * L.p[j], 0) };
   }
-  const params = {}, sigma = {};
-  m.names.forEach((nm, j) => { params[nm] = out.p[j]; sigma[nm] = Math.sqrt(Math.max(0, out.cov[j][j])); });
+  const params = {}, sigma = {}, sigmaDeclared = {};
+  m.names.forEach((nm, j) => {
+    params[nm] = out.p[j];
+    sigma[nm] = Math.sqrt(Math.max(0, out.cov[j][j]));
+    sigmaDeclared[nm] = Math.sqrt(Math.max(0, out.cov0[j][j]));
+  });
   if (model === "quadratic") {  // the vertex x* = −c1 / (2·c2) and its σ from the covariance (the gradient)
     const [, c1, c2] = out.p;
     params.xv = -c1 / (2 * c2);
     params.yv = out.f(params.xv);
     const g = [0, -1 / (2 * c2), c1 / (2 * c2 * c2)];
-    let v = 0;
-    for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) v += g[a] * out.cov[a][b] * g[b];
-    sigma.xv = Math.sqrt(Math.max(0, v));
+    const vOf = (C) => { let v = 0; for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) v += g[a] * C[a][b] * g[b]; return Math.sqrt(Math.max(0, v)); };
+    sigma.xv = vOf(out.cov);
+    sigmaDeclared.xv = vOf(out.cov0);
   }
-  return { model, names: m.names, params, sigma, cov: out.cov, chi2: out.chi2, dof: out.dof, birge: out.birge,
-           scaled: out.scaled, fromScatter: !!(out.unit || out.scaled), method: out.method, iterations: out.iterations,
-           n: x.length, f: out.f };
+  // the σ scaled by the Birge ratio √(χ²/dof) when it exceeds 1: printed beside the declared ones, never instead (EX2 F6 (c))
+  const sigmaScaled = Object.fromEntries(Object.entries(sigmaDeclared).map(([k, v]) => [k, out.unit || !(out.birge > 1) ? v : v * out.birge]));
+  return { model, names: m.names, params, sigma, sigmaDeclared, sigmaScaled, cov: out.cov, chi2: out.chi2, dof: out.dof,
+           birge: out.birge, p: out.unit ? NaN : chi2Sf(out.chi2, out.dof), scaled: out.scaled, fromScatter: !!(out.unit || out.scaled),
+           unit: !!out.unit, method: out.method, iterations: out.iterations, n: x.length, f: out.f };
 }
 
-// The law's quantity of a fit (design §2.3 "law"): "slope" (b; p of a power law), "intercept" (a), "vertex" (x* of a
-// quadratic), "exponent" (p), "coefficient" (A): {value, sigma} or null when the fit has no such quantity
-export function quantity(res, q) {
-  const P = res.params, S = res.sigma;
-  const pick = (k) => (k in P ? { value: P[k], sigma: S[k] } : null);
-  if (q === "slope") return res.model === "power" ? pick("p") : pick("b");
-  if (q === "intercept") return pick("a");
-  if (q === "vertex" || q === "maximum" || q === "x_max") return pick("xv");
-  if (q === "exponent") return pick("p");
-  if (q === "coefficient") return pick("A");
-  return pick(q);
+// --- the p-value of χ² (EX2 §5 F6 (c)) -------------------------------------------------------------------------------------
+// ln Γ(x) for x > 0: Lanczos (g = 7, nine coefficients; relative error below 1e-15), with the reflection for x < 0.5
+const LANCZOS = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059,
+  12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+export function lnGamma(x) {
+  if (x < 0.5) return Math.log(Math.PI / Math.abs(Math.sin(Math.PI * x))) - lnGamma(1 - x);
+  x -= 1;
+  let a = LANCZOS[0];
+  const tt = x + 7.5;
+  for (let i = 1; i < 9; i++) a += LANCZOS[i] / (x + i);
+  return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(tt) - tt + Math.log(a);
 }
-
-// agreement with the reference within k combined errors (the reference's own error, when it has one, added in
-// quadrature): {agrees, diff, sigma}
-export function agrees(value, sigma, ref, refSigma = 0, k = 2) {
-  const s = Math.sqrt(sigma * sigma + refSigma * refSigma);
-  const diff = value - ref;
-  return { agrees: Math.abs(diff) <= k * s, diff, sigma: s };
+// the regularised lower incomplete gamma P(a, x) by its series (x < a + 1), the upper Q(a, x) by Lentz's continued
+// fraction (x ≥ a + 1) (Numerical Recipes, §6.2)
+function gammaP(a, x) {
+  let ap = a, del = 1 / a, sum = del;
+  for (let n = 0; n < 1000; n++) { ap += 1; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-17) break; }
+  return sum * Math.exp(-x + a * Math.log(x) - lnGamma(a));
 }
-
-// --- the verdict of «Check against the law» (integrator D4; review EX1-mechanics F9) -------------------------------------
-// The bound is two errors (a normal 95.45 % interval) when the errors are the instruments' declared ones. When they come
-// from the scatter of the points (readings without errors, or the Birge scaling applied), the error is itself estimated
-// from n − p residuals, and the bound with the same coverage is Student's t quantile for n − p degrees of freedom
-// (29.5 % false rejections at dof 1 with k = 2 instead of 4.55 %). A fit whose χ²/dof exceeds BIRGE_MAX² gives no verdict:
-// a scatter that large means the model does not describe the points, and scaling the error up would turn a wrong model
-// into an «agrees» (the PDG's caution for its scale factor: «we may choose not to use the average at all»).
-export const COVER = 0.9544997361036416;  // erf(√2): the two-sided coverage of ±2σ of the normal distribution
-export const BIRGE_MAX = 3;
-// P(|T| ≤ t) for Student's t with ν (an integer ≥ 1) degrees of freedom, by its finite series in θ = atan(t/√ν)
-// (Abramowitz & Stegun 26.7.3–26.7.4; exact for integer ν)
-export function tCoverage(t, nu) {
-  if (!(t > 0)) return 0;
-  if (!Number.isFinite(t)) return 1;
-  const th = Math.atan(t / Math.sqrt(nu)), c2 = Math.cos(th) ** 2, sn = Math.sin(th);
-  if (nu % 2 === 1) {
-    if (nu === 1) return 2 * th / Math.PI;
-    let term = Math.cos(th), sum = term;  // cos θ · [1 + (2/3)cos²θ + (2·4)/(3·5)cos⁴θ + …], up to cos^(ν−2)θ
-    for (let k = 1; k <= (nu - 3) / 2; k++) { term *= c2 * (2 * k) / (2 * k + 1); sum += term; }
-    return (2 / Math.PI) * (th + sn * sum);
+function gammaQ(a, x) {
+  const tiny = 1e-300;
+  let b = x + 1 - a, c = 1 / tiny, d = 1 / b, h = d;
+  for (let i = 1; i < 1000; i++) {
+    const an = -i * (i - a);
+    b += 2;
+    d = an * d + b; if (Math.abs(d) < tiny) d = tiny;
+    c = b + an / c; if (Math.abs(c) < tiny) c = tiny;
+    d = 1 / d;
+    const del = d * c;
+    h *= del;
+    if (Math.abs(del - 1) < 1e-17) break;
   }
-  let term = 1, sum = 1;  // 1 + (1/2)cos²θ + (1·3)/(2·4)cos⁴θ + …, up to cos^(ν−2)θ
-  for (let k = 1; k <= (nu - 2) / 2; k++) { term *= c2 * (2 * k - 1) / (2 * k); sum += term; }
-  return sn * sum;
+  return Math.exp(-x + a * Math.log(x) - lnGamma(a)) * h;
 }
-// the t with P(|T| ≤ t) = cover (by bisection: the coverage grows with t)
-export function tQuantile(nu, cover = COVER) {
-  if (!(nu >= 1)) return NaN;
-  let lo = 0, hi = 1;
-  while (tCoverage(hi, nu) < cover) hi *= 2;
-  for (let i = 0; i < 200 && hi - lo > 1e-14 * hi; i++) { const mid = 0.5 * (lo + hi); if (tCoverage(mid, nu) < cover) lo = mid; else hi = mid; }
-  return 0.5 * (lo + hi);
-}
-// the verdict on a fit's quantity against a reference: {agrees, diff, sigma, k, kind: "normal" | "t", dof, refused:
-// null | "birge" (the scatter is more than BIRGE_MAX times the errors) | "dof" (no degree of freedom to estimate it)}
-export function verdict(res, value, sigma, ref, refSigma = 0) {
-  const dof = res.dof;
-  if (res.fromScatter && !(dof >= 1)) return { agrees: false, diff: value - ref, sigma, k: NaN, kind: "t", dof, refused: "dof" };
-  if (res.scaled && Number.isFinite(res.birge) && res.birge > BIRGE_MAX) {
-    return { agrees: false, diff: value - ref, sigma, k: NaN, kind: "t", dof, refused: "birge" };
-  }
-  const kind = res.fromScatter ? "t" : "normal", k = kind === "t" ? tQuantile(dof) : 2;
-  return { ...agrees(value, sigma, ref, refSigma, k), k, kind, dof, refused: null };
+export function chi2Sf(chi2, dof) {
+  if (!(dof > 0) || !(chi2 >= 0) || !Number.isFinite(chi2)) return NaN;
+  const a = dof / 2, x = chi2 / 2;
+  if (x === 0) return 1;
+  return x < a + 1 ? Math.max(0, 1 - gammaP(a, x)) : gammaQ(a, x);
 }

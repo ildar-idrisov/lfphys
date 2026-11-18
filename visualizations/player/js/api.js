@@ -49,19 +49,43 @@ export function dequantize(codes, dtype, q, shape) {
   return out;
 }
 
-export function decode(buf) {
+// A pooled blob (protocol.py «Pooled blobs»; EX2 §5 F10): its descriptor {name, pool: <16 hex>} names a blob of the
+// atlas's pool (readPool), resolved here (a copy: the pool's arrays are shared by the atlas's points); without the pool
+// the message cannot be read
+export function decode(buf, pool = null) {
   const dv = new DataView(buf);
   const jlen = dv.getUint32(0, true);
   const meta = JSON.parse(TD.decode(new Uint8Array(buf, 4, jlen)));
   let base = 4 + jlen;
   base += (8 - (base % 8)) % 8;
   const blobs = {};
-  for (const d of meta.blobs || []) {
+  for (const [i, d] of (meta.blobs || []).entries()) {
+    if (d.pool !== undefined) {
+      const P = pool ? pool.get(d.pool) : undefined;
+      if (!P) throw new Error(`the blob ${d.name} is in the atlas's pool (${d.pool}), which was not given`);
+      meta.blobs[i] = { name: d.name, pool: d.pool, dtype: P.d.dtype, shape: P.d.shape, nbytes: P.d.nbytes, ...(P.d.q ? { q: P.d.q } : {}) };
+      blobs[d.name] = P.d.q ? dequantize(P.raw, P.d.dtype, P.d.q, P.d.shape) : P.raw.slice();
+      continue;
+    }
     const T = DT[d.dtype];
     const raw = new T(buf, base + d.offset, d.nbytes / T.BYTES_PER_ELEMENT);
     blobs[d.name] = d.q ? dequantize(raw, d.dtype, d.q, d.shape) : raw;
   }
   return { meta, blobs };
+}
+// An atlas's pool (EX2 §5 F10) from its message: Map pool id → {raw (the stored array), d (its descriptor)}
+export function poolOf(buf) {
+  const dv = new DataView(buf);
+  const jlen = dv.getUint32(0, true);
+  const meta = JSON.parse(TD.decode(new Uint8Array(buf, 4, jlen)));
+  let base = 4 + jlen;
+  base += (8 - (base % 8)) % 8;
+  const out = new Map();
+  for (const d of meta.blobs || []) {
+    const T = DT[d.dtype];
+    out.set(d.name, { raw: new T(buf, base + d.offset, d.nbytes / T.BYTES_PER_ELEMENT), d });
+  }
+  return out;
 }
 
 export async function getJSON(u) {
@@ -178,21 +202,30 @@ function checkMagic(buf) {
 }
 // every whole message of an LFVREC1 stream, each decoded from its own ArrayBuffer (8-aligned arrays); a cut file gives
 // what is whole; stop() ends the reading early
-function eachMessage(buf, fn, stop = () => false) {
+function eachMessage(buf, fn, stop = () => false, pool = null) {
   const dv = new DataView(buf);
   let pos = MAGIC.length;
   while (pos + 4 <= buf.byteLength && !stop()) {
     const ln = dv.getUint32(pos, true);
     if (pos + 4 + ln > buf.byteLength) break;  // a cut file: what is whole is played
-    fn(decode(buf.slice(pos + 4, pos + 4 + ln)));
+    fn(decode(buf.slice(pos + 4, pos + 4 + ln), pool));
     pos += 4 + ln;
   }
 }
-// The decoded messages of a recording's or a point's bytes (gzip or not): [{meta, blobs}, …]
-export async function readStream(bytes) {
+// The decoded messages of a recording's or a point's bytes (gzip or not): [{meta, blobs}, …]; pool: the atlas's pool
+// (readPool) for a point with pooled blobs
+export async function readStream(bytes, pool = null) {
   const buf = await inflate(bytes);
   checkMagic(buf);
   const out = [];
-  eachMessage(buf, (m) => out.push(m));
+  eachMessage(buf, (m) => out.push(m), () => false, pool);
   return out;
+}
+// An atlas's pool file (gzip of an LFVREC1 stream of one message {"type": "pool"}): Map pool id → {raw, d}
+export async function readPool(bytes) {
+  const buf = await inflate(bytes);
+  checkMagic(buf);
+  const dv = new DataView(buf);
+  const ln = dv.getUint32(MAGIC.length, true);
+  return poolOf(buf.slice(MAGIC.length + 4, MAGIC.length + 4 + ln));
 }

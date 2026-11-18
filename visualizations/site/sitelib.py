@@ -30,8 +30,9 @@ from lfviz import registry  # noqa: E402
 RECORDER_VERSION = "2"
 #: the atlases' version: part of every atlas's key; raise it when the atlas's files change their form (design §1.4; 2:
 #: every point's header names its base file's sha256, ``$base``, and the manifest has no ``made`` and ``cpu_s``, which
-#: stay in the index entry; review R-F F2, F7)
-ATLAS_VERSION = "2"
+#: stay in the index entry; review R-F F2, F7; 3: a pool of the blobs the points share, ``pool.<hash8>.lfpt.gz``, named
+#: in the manifest as the base is, EX2 §5 F10)
+ATLAS_VERSION = "3"
 RECORDINGS = VIZ / "recordings"  # the local recordings (git-ignored; the server serves them at /recordings/)
 IMAGES = REPO / "docs" / "images"  # the README's and the cards' pictures (posters.mjs)
 
@@ -109,15 +110,27 @@ def spec_key(rec: dict, code_hash: str, recorder: str | None = None) -> str:
     return hashlib.sha256(f"{spec}\n{RECORDER_VERSION}\n{rh}\n{code_hash}".encode()).hexdigest()[:16]
 
 
+def _control_spec(c: dict, grid: bool = True) -> dict:
+    out = {"param": c["param"], "values": c["values"], "default": c.get("default")} if grid \
+        else {"param": c["param"], "default": c.get("default")}
+    if c.get("sets") is not None:  # a compound control: the parameters it sets decide every point (EX2 §5 F3)
+        out["sets"] = c["sets"]
+    return out
+
+
 def atlas_spec_of(a: dict) -> dict:
     """The part of an atlas (``registry.atlases_of``) that decides its files (design §1.4): the preset, the fixed values,
-    the controls' values and defaults, the seed, ``frame_dt``, the stop rule, what is dropped, the quantisation and the
-    ids of the laws' references (the manifest's ``references``). Labels are not in it: they change no byte."""
-    return {"id": a["id"], "preset": a["preset"], "fixed": a["fixed"],
-            "controls": [{"param": c["param"], "values": c["values"], "default": c.get("default")}
-                         for c in a["controls"]],
-            "seed": a["seed"], "frame_dt": a["frame_dt"], "stop": a["stop"], "drop": a["drop"],
-            "quantize": a["quantize"], "laws": list(a.get("laws") or [])}
+    the controls' values and defaults (a compound control's ``sets`` too), the seed, the clock (``frame_dt``, or ``fps``
+    when the atlas takes frames per played second: EX2 §5 F1), the stop rule, what is dropped, the quantisation and the
+    ids of the laws' references (the manifest's ``references``). Labels and the playback ``speed`` are not in it: they
+    change no byte."""
+    out = {"id": a["id"], "preset": a["preset"], "fixed": a["fixed"],
+           "controls": [_control_spec(c) for c in a["controls"]],
+           "seed": a["seed"], "frame_dt": a.get("frame_dt"), "stop": a["stop"], "drop": a["drop"],
+           "quantize": a["quantize"], "laws": list(a.get("laws") or [])}
+    if a.get("fps") is not None:
+        out["fps"] = a["fps"]
+    return out
 
 
 def atlas_key(a: dict, code_hash: str, recorder: str | None = None, grid: bool = True) -> str:
@@ -126,7 +139,7 @@ def atlas_key(a: dict, code_hash: str, recorder: str | None = None, grid: bool =
     they decide the base header)."""
     spec = atlas_spec_of(a)
     if not grid:
-        spec["controls"] = [{"param": c["param"], "default": c["default"]} for c in spec["controls"]]
+        spec["controls"] = [_control_spec(c, grid=False) for c in a["controls"]]
     text = json.dumps(spec, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
     rh = recorder_hash() if recorder is None else recorder
     return hashlib.sha256(f"{text}\n{ATLAS_VERSION}\n{rh}\n{code_hash}".encode()).hexdigest()[:16]
@@ -197,14 +210,16 @@ def status(folder: Path, plan: dict) -> dict:
 
 
 def atlas_files_ok(folder: Path, vid: str, entry: dict) -> bool:
-    """Whether an index entry's atlas is all there: its manifest, its base with its size, and every point the manifest
-    names with its size (``stat`` only; review R-F F6: a deleted point left the atlas "present" while the build left it
-    out)."""
+    """Whether an index entry's atlas is all there: its manifest, its base with its size, its pool with its size (EX2 §5
+    F10), and every point the manifest names with its size (``stat`` only; review R-F F6: a deleted point left the
+    atlas "present" while the build left it out)."""
     mf = Path(folder) / vid / str(entry.get("file", ""))
     try:
         man = json.loads(mf.read_text(encoding="utf-8"))
         base = man["base"]
         files = [(base["file"], base["bytes_gz"])] + [(p[0], p[1]) for p in man["points"] if p and p[0]]
+        if man.get("pool"):
+            files.append((man["pool"]["file"], man["pool"]["bytes_gz"]))
         return all((mf.parent / str(n)).stat().st_size == b for n, b in files)
     except (OSError, ValueError, KeyError, TypeError, IndexError):
         return False

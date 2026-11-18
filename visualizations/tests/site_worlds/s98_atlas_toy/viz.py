@@ -14,11 +14,19 @@ apex and the landing are events when the time reaches them (the landing's data: 
 message at the landing (dropped by the Explore screen). Its checks at the landing: the landing time found by bisection
 of y(t) = 0 against the quadratic formula, and the energy at the landing against the start. With ``companion: drop`` a
 second ball is dropped at the same moment (its height in the frames, ``drop_y``). The world refuses h = 0 with an angle
-≤ 0 (no flight), so that an atlas has a refused point. Its three screens: Watch (the recording ``story`` with captions,
-a ``speed`` change and a new world in its script), Explore (h × angle, 2 × 3 points, one refused) and Lab work (one
-step, five heights off a chute, with two laws: the slope of L against √h, and the intercept of the line through the same
-points, zero; their references from ``lab_reference``).
-"""
+≤ 0 (no flight), so that an atlas has a refused point. Its screens: Watch (the recording ``story`` with captions, a
+``speed`` change and a new world in its script), Explore (h × angle, 2 × 3 points, one refused), a second Explore
+``throws`` and Lab work (step 1: five heights off a chute, with two laws: the slope of L against √h, and the intercept
+of the line through the same points, zero; their references from ``lab_reference``; step 2: the timer's ticks).
+
+EX2 (design ``lfphys/sources/explore_EX2_2026-11-18_design.md`` §5, §7): a timer ticks every 0.1 s of the flight (an
+event of kind ``tick`` and the counted measurable ``n_ticks``); ``range`` declares its reference ``range_ref`` (the
+closed form) and ``v_mean`` (the mean speed of the path's samples so far) its run's own standard error ``v_mean_se``;
+the screen ``throws`` has a compound control (``throw``: the speed and the angle together), frames per played second
+at half speed (``fps``, ``speed``), a stop by counted events (six ticks or the landing) and ``drop.blobs``; the lab's
+step ``ticks`` has a counter (√N), a readout with the run's σ, formula columns (one of them undefined at the first
+height, with its reason) and a stop by counted events. ``g`` is an attribute (``u96_lab_toy`` changes it, a law
+parameter)."""
 
 from __future__ import annotations
 
@@ -46,17 +54,27 @@ SCHEMA = Schema([
     "story": {"label": T("Two balls at the same moment"), "params": {"h_m": 1.25, "v0": 2.0, "companion": "drop"}},
 })
 
-MEASURABLES = [{"id": "range", "label": T("Range"), "unit": "m"},
+TICK = 0.1  # the timer's period, world seconds
+
+MEASURABLES = [{"id": "range", "label": T("Range"), "unit": "m", "ref": "range_ref", "ref_label": T("formula")},
                {"id": "flight_time", "label": T("Flight time"), "unit": "s"},
-               {"id": "apex_h", "label": T("Apex height"), "unit": "m"}]
+               {"id": "apex_h", "label": T("Apex height"), "unit": "m"},
+               {"id": "range_ref", "label": T("Range by the formula"), "unit": "m"},
+               {"id": "v_mean", "label": T("Mean speed"), "unit": "m/s", "sigma": "v_mean_se"},
+               {"id": "v_mean_se", "label": T("Standard error of the mean speed"), "unit": "m/s"},
+               {"id": "n_ticks", "label": T("Timer ticks"), "unit": ""}]
 
 
 class Simulation(Base):
     default_speed = 1.0
     speed_range = (0.01, 10.0)
 
+    g = G  # the field's strength (a subclass may change it: u96_lab_toy's law parameter)
+
     def __init__(self, params, seed, emit):
         super().__init__(params, seed, emit)
+        self.g = self.field(params)
+        G = self.g  # noqa: N806 - the formulas below read the field as the module's constant does
         self.h = float(params["h_m"])
         self.v0 = float(params["v0"])
         a = math.radians(float(params["angle_deg"]))
@@ -68,6 +86,13 @@ class Simulation(Base):
         self.next_sample = 0  # index of the next sample to send
         self.landed = False
         self.apexed = self.T_apex is None
+        self.ticks = 0  # the timer's ticks during the flight (EX2: a counted measurable and a stop by counted events)
+        self.speeds = []  # the speeds of the path's samples sent so far (v_mean and its standard error)
+
+    @classmethod
+    def field(cls, params) -> float:
+        """The field's strength for these parameters (m/s²)."""
+        return G
 
     @classmethod
     def check_params(cls, params):
@@ -79,10 +104,14 @@ class Simulation(Base):
     def lab_reference(cls, step_id, fixed, values, reference):
         """The laws of a lab step (design §2.3, integrator D4): ``heights``: L = k·√h with k = v₀·√(2/g) (a horizontal
         throw; ``k_horizontal``), so the line through the points has no intercept (``zero_intercept``)."""
+        g = cls.field(fixed)
         if step_id == "heights" and reference == "k_horizontal":
             v0 = float(fixed["v0"])
-            return {"value": v0 * math.sqrt(2.0 / G), "unit": "m^½", "label": T("k = v₀·√(2/g)"),
+            return {"value": v0 * math.sqrt(2.0 / g), "unit": "m^½", "label": T("k = v₀·√(2/g)"),
                     "how": T("closed form of a horizontal throw without air"), "kind": "closed form"}
+        if step_id == "ticks" and reference == "fall_coefficient":
+            return {"value": math.sqrt(2.0 / g), "unit": T("s/m^½"), "label": T("T = √(2/g)·√h"),
+                    "how": T("closed form of a fall from rest without air"), "kind": "closed form"}
         if step_id == "heights" and reference == "zero_intercept":
             return {"value": 0.0, "unit": "m", "label": T("no intercept: L = k·√h"),
                     "how": T("closed form of a horizontal throw without air"), "kind": "closed form"}
@@ -90,21 +119,29 @@ class Simulation(Base):
 
     def pos(self, t):
         t = min(t, self.T)
-        return self.vx * t, self.h + self.vy * t - 0.5 * G * t * t
+        return self.vx * t, self.h + self.vy * t - 0.5 * self.g * t * t
 
     def vel(self, t):
         if t >= self.T:
             return 0.0, 0.0
-        return self.vx, self.vy - G * t
+        return self.vx, self.vy - self.g * t
 
     def header(self):
         L = self.vx * self.T
-        H = self.h + (self.vy ** 2 / (2 * G) if self.vy > 0 else 0.0)
+        H = self.h + (self.vy ** 2 / (2 * self.g) if self.vy > 0 else 0.0)
         return {"title": T("A thrown ball for the tests of the atlases"),
                 "scene": {"box": [[-0.2, -0.05], [max(1.0, L * 1.1), max(1.0, H * 1.15)]]},
                 "launcher": {"h": self.h, "angle": float(self.params["angle_deg"]), "v0": self.v0},
                 "companion": self.params.get("companion"), "measurables": MEASURABLES,
-                "units": {"t": T("s"), "x": T("m")}, "actions": []}, {"ticks": np.linspace(0.0, 5.0, 51)}
+                "units": {"t": T("s"), "x": T("m")}, "actions": []}, \
+            {"ticks": np.linspace(0.0, 5.0, 51), "aim": self.aim()}
+
+    def aim(self):
+        """The launcher's aim line (64 points along the launch direction): the same for every point of an atlas with the
+        same angle, so an atlas's pool stores it once (EX2 §5 F10)."""
+        a = math.radians(float(self.params["angle_deg"]))
+        r = np.linspace(0.0, 0.3, 64)
+        return np.column_stack([r * math.cos(a), r * math.sin(a)]).ravel()
 
     def _samples(self, t_target):
         rows = []
@@ -113,8 +150,9 @@ class Simulation(Base):
             if ts > t_target + 1e-12:
                 break
             x, y = self.pos(ts)
-            vx, vy = self.vel(ts) if ts < self.T else (self.vx, self.vy - G * self.T)
+            vx, vy = self.vel(ts) if ts < self.T else (self.vx, self.vy - self.g * self.T)
             rows.append((ts, x, y, vx, vy))
+            self.speeds.append(math.hypot(vx, vy))
             self.next_sample += 1
             if ts >= self.T:
                 self.next_sample = 10 ** 9  # the last sample is the landing itself
@@ -123,6 +161,10 @@ class Simulation(Base):
             self.emit({"type": "traj", "t": t_target, "n": len(rows)}, {"s": np.array(rows, dtype=np.float64)})
 
     def advance(self, t_target):
+        while (self.ticks + 1) * TICK < self.T and (self.ticks + 1) * TICK <= t_target + 1e-12:  # the timer, in flight
+            self.ticks += 1
+            self.emit({"type": "event", "kind": "tick", "t": self.ticks * TICK, "text": T("a tick of the timer"),
+                       "data": {"n": self.ticks}})
         if not self.apexed and self.T_apex <= t_target:
             self.apexed = True
             self.emit({"type": "event", "kind": "apex", "t": self.T_apex, "text": T("apex"),
@@ -131,14 +173,14 @@ class Simulation(Base):
         if not self.landed and self.T <= t_target:
             self.landed = True
             L = self.vx * self.T
-            vy = self.vy - G * self.T
+            vy = self.vy - self.g * self.T
             self.emit({"type": "event", "kind": "landing", "t": self.T, "text": T("landing"),
                        "data": {"T": self.T, "L": L, "v": math.hypot(self.vx, vy)}})
             self.emit({"type": "story", "t": self.T, "text": T("the ball has landed")})
             lo, hi = 0.0, self.T * 2 + 1.0  # the second method: bisection of y(t) = 0 on the path's own formula
             for _ in range(200):
                 mid = 0.5 * (lo + hi)
-                if self.h + self.vy * mid - 0.5 * G * mid * mid > 0:
+                if self.h + self.vy * mid - 0.5 * self.g * mid * mid > 0:
                     lo = mid
                 else:
                     hi = mid
@@ -146,7 +188,7 @@ class Simulation(Base):
             self.emit({"type": "check", "t": self.T, "id": "landing_time", "label": T("landing time"),
                        "value": t_bis, "ref": self.T, "unit": "s", "rel": (t_bis - self.T) / self.T, "tol": 1e-12,
                        "group": "", "note": T("bisection of y(t) = 0 against the quadratic formula")})
-            e0 = 0.5 * self.v0 ** 2 + G * self.h
+            e0 = 0.5 * self.v0 ** 2 + self.g * self.h
             e1 = 0.5 * (self.vx ** 2 + vy ** 2)
             self.emit({"type": "check", "t": self.T, "id": "energy", "label": T("energy at the landing"),
                        "value": e1, "ref": e0, "unit": "J/kg", "rel": (e1 - e0) / e0, "tol": 1e-12, "group": "",
@@ -156,19 +198,24 @@ class Simulation(Base):
     def frame(self):
         x, y = self.pos(self.t)
         vx, vy = self.vel(self.t)
+        n = len(self.speeds)
+        mean = sum(self.speeds) / n if n else None
+        se = (math.sqrt(sum((v - mean) ** 2 for v in self.speeds) / (n - 1)) / math.sqrt(n)) if n >= 2 else None
         meas = {"x": x, "y": y, "v": math.hypot(vx, vy),
                 "range": self.vx * self.T if self.landed else None,
                 "flight_time": self.T if self.landed else None,
-                "apex_h": (self.pos(self.T_apex)[1] if self.T_apex is not None else self.h) if self.apexed else None}
+                "apex_h": (self.pos(self.T_apex)[1] if self.T_apex is not None else self.h) if self.apexed else None,
+                "range_ref": self.vx * self.T, "v_mean": mean, "v_mean_se": se if se else None,
+                "n_ticks": self.ticks}
         meta = {"x": x, "y": y, "landed": self.landed, "meas": meas}
         if self.drop:
-            meta["drop_y"] = max(0.0, self.h - 0.5 * G * self.t * self.t)
+            meta["drop_y"] = max(0.0, self.h - 0.5 * self.g * self.t * self.t)
         return meta, {"ghost": np.full(16, x, dtype=np.float32)}
 
     def next_event_time(self):
-        if not self.apexed:
-            return self.T_apex
-        return None if self.landed else self.T
+        tick = (self.ticks + 1) * TICK if (self.ticks + 1) * TICK < self.T else None
+        nxt = self.T_apex if not self.apexed else (None if self.landed else self.T)
+        return min(x for x in (tick, nxt) if x is not None) if (tick, nxt) != (None, None) else None
 
     def max_step(self):
         return 0.05
@@ -177,6 +224,14 @@ class Simulation(Base):
 _STEP_COLS = [{"id": "h", "label": T("h, m"), "from": "ruler"},
               {"id": "L", "label": T("L, m"), "from": "tape"},
               {"id": "sqrt_h", "label": T("√h, m^½"), "of": "h", "op": "sqrt"}]
+# the step "ticks" (EX2 §5 F4, F5): a counter, a readout with the run's own σ, formula columns (one undefined at the
+# first height: √ of a negative number)
+_TICK_COLS = [{"id": "h", "label": T("h, m"), "from": "ruler"},
+              {"id": "n", "label": T("n, ticks"), "from": "ticks"},
+              {"id": "v", "label": T("v, m/s"), "from": "speedo"},
+              {"id": "sqrt_h", "label": T("√h, m^½"), "expr": "sqrt(h)"},
+              {"id": "T", "label": T("T = 0.1·n, s"), "expr": "0.1 * n"},
+              {"id": "d", "label": T("√(n − 2.5)"), "expr": "sqrt(n - 2.5)"}]
 
 VIZ = {
     "id": "s98_atlas_toy", "title": T("A thrown ball for the tests of the atlases"), "summary": "", "purpose": "",
@@ -202,7 +257,18 @@ VIZ = {
          "stop": {"event": "landing", "after_s": 0.2, "max_world_s": 5.0},
          "drop": {"types": ["story"], "frame_blobs": ["ghost"]},
          "quantize": {"traj.s": "u16", "header.ticks": "u16"},
-         "overlays": ["path", "strobe", "v"], "traces": 3, "readouts": ["range", "flight_time", "apex_h"]},
+         "overlays": ["path", "strobe", "v"], "traces": 3, "readouts": ["range", "flight_time", "apex_h", "v_mean"]},
+        # EX2 §5 F1–F3, F8: a compound control, frames per played second at half speed, counted events, drop.blobs
+        {"id": "throws", "kind": "explore", "label": T("Throws"), "preset": "field", "fixed": {},
+         "controls": [{"id": "throw", "label": T("Throw"), "values": ["flat", "lob", "steep"],
+                       "labels": [T("flat, 2 m/s"), T("a lob, 3 m/s at 30°"), T("steep, 2.5 m/s at 60°")],
+                       "sets": {"v0": [2.0, 3.0, 2.5], "angle_deg": [0.0, 30.0, 60.0]}, "default": "lob"},
+                      {"param": "h_m", "values": [0.5, 1.0], "default": 1.0}],
+         "acts": "next", "time": "flight", "fps": 20, "speed": 0.5,
+         "stop": {"events": {"tick": 6, "landing": 1}, "after_s": 0.1, "max_world_s": 5.0},
+         "drop": {"types": ["story"], "blobs": ["frame.ghost", "header.tick*"]},
+         "quantize": {"traj.s": "u16"}, "overlays": ["path", "v"], "traces": 2,
+         "readouts": ["range", "v_mean", "n_ticks"]},
         {"id": "lab", "kind": "lab",
          "instruments": {
              "tape": {"kind": "ruler", "label": T("Measuring tape"), "unit": "m", "division": 0.001, "error": 0.0005,
@@ -210,7 +276,11 @@ VIZ = {
              "ruler": {"kind": "ruler", "label": T("Ruler"), "unit": "m", "division": 0.01, "error": 0.005,
                        "reads": "control:h_m"},
              "stopwatch": {"kind": "stopwatch", "label": T("Stopwatch"), "unit": "s", "division": 0.01, "error": 0.2,
-                           "manual": True, "error_note": T("your reaction time, about 0.2 s")}},
+                           "manual": True, "error_note": T("your reaction time, about 0.2 s")},
+             "ticks": {"kind": "counter", "label": T("Tick counter"), "unit": "", "error": "poisson",
+                       "reads": "n_ticks"},
+             "speedo": {"kind": "readout", "label": T("Speedometer"), "unit": "m/s", "division": 0.001,
+                        "sigma": "v_mean_se", "reads": "v_mean"}},
          "steps": [{"id": "heights", "title": T("Height and range"),
                     "goal": T("Find how the range depends on the height of the throw"), "preset": "chute",
                     "controls": [{"param": "h_m", "values": [0.2, 0.4, 0.6, 0.8, 1.0], "default": 0.6}],
@@ -222,17 +292,35 @@ VIZ = {
                               "label": T("intercept of L against √h"), "unit": "m", "reference": "zero_intercept"}],
                     "hint": T("measure the range from the edge of the table"),
                     "frame_dt": 1 / 60, "stop": {"event": "landing", "after_s": 0.2, "max_world_s": 3.0},
-                    "quantize": {"traj.s": "u16"}}],
+                    "quantize": {"traj.s": "u16"}},
+                   {"id": "ticks", "title": T("The timer's ticks"),
+                    "goal": T("Count the timer's ticks during the fall and find how the fall time depends on the height"),
+                    "preset": "chute", "controls": [{"param": "h_m", "values": [0.2, 0.45, 0.8, 1.25], "default": 0.45}],
+                    "fixed": {"v0": 0.0}, "instruments": ["ruler", "ticks", "speedo"], "columns": _TICK_COLS,
+                    "plot": {"x": "sqrt_h", "y": "T", "fit": "line0", "fits": ["line0", "line"]},
+                    "laws": [{"x": "sqrt_h", "y": "T", "model": "line0", "quantity": "slope", "label": T("T / √h"),
+                              "unit": T("s/m^½"), "reference": "fall_coefficient"}],
+                    "frame_dt": 1 / 60, "stop": {"events": {"landing": 1}, "after_s": 0.05, "max_world_s": 3.0},
+                    "drop": {"blobs": ["frame.ghost"]}, "quantize": {"traj.s": "u16"}}],
+         # the task sheet (EX2 §5 F8): no questions, answers or teacher's pages; the teacher's variant preselects
          "worksheet": {"frp": [{"system": "FRP-OOO-2025-base", "grade": 7,
                                 "programme": T("A programme for the tests of the site"),
                                 "name": T("Testing the hypothesis: the higher the launch, the farther the ball flies")}],
+                       "goal": T("Find how the range and the fall time of a ball depend on the height of its launch"),
+                       "bench": [T("A ball leaves a chute horizontally at 1.5 m/s from a stand 0.2–1.0 m high; a ruler "
+                                   "on the stand, a measuring tape on the floor, a hand stopwatch."),
+                                 T("In part 2 the ball falls from rest; a timer ticks every 0.1 s of the fall, with a "
+                                   "tick counter and a speedometer.")],
+                       "procedure": [T("Part 1: for each height launch the ball, read the range on the tape and plot "
+                                       "the range against the square root of the height."),
+                                     T("Part 2: count the ticks during the fall at each height and plot T = 0.1·n "
+                                       "against the square root of the height.")],
+                       "record": [T("the table of your readings with their errors"),
+                                  T("each fit: the model, the points used, the parameters with their errors")],
+                       "record_rows": 8,
                        "variants": [{"id": "grade7", "grade": 7, "label": T("Grade 7: the range against the height"),
-                                     "steps": ["heights"], "plot": {"heights": {"x": "h", "y": "L", "fit": None}},
-                                     "questions": [{"q": T("Does the range grow with the height?"),
-                                                    "answer": T("Yes, but more slowly than the height.")}]}],
-                       "equipment": [T("a chute"), T("a steel ball"), T("a ruler"), T("a measuring tape")],
-                       "questions": [{"q": T("Why does the range grow more slowly than the height?"),
-                                      "answer": T("The time of the fall grows as the square root of the height.")}],
-                       "teacher": [T("The chute's speed is not told to the students: they find it from the slope.")]}},
+                                     "steps": ["heights"], "values": {"heights": {"h_m": 1.0}},
+                                     "text": {"goal": T("Does the range grow with the height?"),
+                                              "procedure": [T("Plot the range against the height, without a line.")]}}]}},
     ],
 }

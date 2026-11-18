@@ -7,11 +7,13 @@
 // (record_core.js) that the world's own view draws. Nothing between grid points is computed or interpolated here: a
 // value off the grid is either refused (the site) or computed by the server (POST /api/atlas/<world>/<atlas>/point).
 //
-//   openAtlas(world, entry, {base}) the manifest and the base header of an index entry ({id, file, …} of index.json's
+//   openAtlas(world, entry, {base}) the manifest, the base header and the pool (the blobs the points share, EX2 §5 F10)
+//                                  of an index entry ({id, file, …} of index.json's
 //                                  "atlases"), its files relative to `base` (by default this server's or this site's
 //                                  recordings/<world>/; the public site's on a server without a current local atlas,
 //                                  integrator D11): an Atlas
-//   atlas.point(values)            Promise of a point {i, values, state "computed" | "refused", refusal, W, live, …}:
+//   atlas.point(values)            Promise of a point {i, values, state "computed" | "refused", refusal, W, live, speed,
+//                                  …} (speed: the world's default speed, from the point's first state message):
 //                                  from the LRU, else fetched (one request per point; at most two prefetches at a time)
 //   atlas.prefetch(values)         its neighbours (±1 along every control), at low priority
 //   atlas.live(values, seed)       (server) the point computed by the server for any values: the same bytes a site build
@@ -23,7 +25,7 @@
 // merged only when "$base" is this manifest's base.sha256; a live point that does not match is asked again with
 // "full_header": true (a full header, no delta); an atlas point that does not match is an error (integrator D13).
 //   flatIndex, gridIndex, snap, neighbours, mergeHeader, LRU: the parts (atlas.test.mjs)
-import { MODE, apiError, readStream, url } from "./api.js";
+import { MODE, apiError, readPool, readStream, url } from "./api.js";
 import { worldsOf } from "./record_core.js";
 
 export const LRU_POINTS = 24, LRU_BYTES = 40e6, PREFETCH_AT_ONCE = 2;
@@ -124,7 +126,15 @@ export async function openAtlas(world, entry, { fetchImpl = (...a) => fetch(...a
   const bmsgs = await readStream(new Uint8Array(await rb.arrayBuffer()));
   const bh = bmsgs.find((m) => m.meta.type === "header");
   if (!bh) throw new Error("the atlas's base has no header");
-  return new Atlas(world, entry, manifest, dir, [bh.meta, bh.blobs], fetchImpl);
+  let pool = null;  // the blobs the points share, fetched once per atlas (EX2 §5 F10)
+  if (manifest.pool) {
+    const rp = await fetchImpl(dir + manifest.pool.file);
+    if (!rp.ok) throw Object.assign(new Error(`${rp.status} ${rp.statusText}`), { status: rp.status });
+    pool = await readPool(new Uint8Array(await rp.arrayBuffer()));
+  }
+  const A = new Atlas(world, entry, manifest, dir, [bh.meta, bh.blobs], fetchImpl);
+  A.pool = pool;
+  return A;
 }
 
 export class Atlas {
@@ -183,7 +193,7 @@ export class Atlas {
   // a point's bytes → the point: its messages, its header merged with the base, one world's record. A header packed
   // against another base: null (live: asked again with the full header) or an error (an atlas point)
   async build(inf, bytes, extra, { mismatch = "throw" } = {}) {
-    const msgs = await readStream(bytes);
+    const msgs = await readStream(bytes, this.pool || null);
     const h = msgs.find((m) => m.meta.type === "header");
     if (h && !this.baseMatches(h.meta)) {
       if (mismatch === "null") return null;
@@ -193,7 +203,11 @@ export class Atlas {
     if (!worlds.length) throw new Error("the point has no header");
     const W = worlds[0];
     const F = W.frames;
-    return { ...inf, ...extra, W, size: sizeOf(msgs), tEnd: F.length ? F[F.length - 1].t : 0, bytes_gz: bytes.byteLength };
+    // the world's own default speed (world seconds per played second), from the point's first state message: a screen
+    // whose speed is "world" plays the point at it (EX2 §5 F1)
+    const st = msgs.find((m) => m.meta.type === "state");
+    const speed = st && Number(st.meta.speed) > 0 ? Number(st.meta.speed) : null;
+    return { ...inf, ...extra, W, speed, size: sizeOf(msgs), tEnd: F.length ? F[F.length - 1].t : 0, bytes_gz: bytes.byteLength };
   }
   // the neighbours of a point, at low priority, at most PREFETCH_AT_ONCE at a time; a newer prefetch replaces the queue
   prefetch(values) {

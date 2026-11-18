@@ -2,9 +2,9 @@
  "world": "s98_atlas_toy",
  "version": "1.0",
  "recorder": "2",
- "recorder_hash": "842c60cd30b8993e",
- "code_hash": "f78b3452bddf",
- "made": "2026-11-17T16:06:20+00:00",
+ "recorder_hash": "a8bea314b6314769",
+ "code_hash": "2d038492e307",
+ "made": "2026-11-18T13:10:41+00:00",
  "recordings": [
   {
    "id": "story",
@@ -12,7 +12,7 @@
    "label": {
     "$t": "Two balls at the same moment"
    },
-   "file": "story.f992d4cf.lfrec.gz",
+   "file": "story.bb0ef5dd.lfrec.gz",
    "seconds": 6,
    "fps": 10,
    "speed": 0.25,
@@ -20,8 +20,8 @@
    "frame_stride": 1,
    "frames": 60,
    "frames_recorded": 60,
-   "bytes": 37588,
-   "bytes_gz": 4989,
+   "bytes": 47524,
+   "bytes_gz": 6359,
    "poster": 1.5,
    "poster_t": 0.37500000000000006,
    "poster_frame": 15,
@@ -54,11 +54,11 @@
     "na": 0
    },
    "cpu_s": 0.0,
-   "sha256": "f992d4cfcc0297f365659cee7672836405732141962043827c275d83be37b232",
-   "key": "f850e9592ba8c8e1",
+   "sha256": "bb0ef5ddf6e59d142f5b35190832979a4c3b1f70cda0ca406e37e9451a23365c",
+   "key": "94ffc40305911ff8",
    "version": "1.0",
-   "code_hash": "f78b3452bddf",
-   "made": "2026-11-17T16:06:20+00:00",
+   "code_hash": "2d038492e307",
+   "made": "2026-11-18T13:10:41+00:00",
    "captions": 3,
    "quant": {
     "traj.s": {
@@ -86,7 +86,7 @@
    "label": {
     "$t": "A throw from a table"
    },
-   "file": "field.481d8bf8.lfrec.gz",
+   "file": "field.30da166c.lfrec.gz",
    "seconds": 2,
    "fps": 10,
    "speed": null,
@@ -94,8 +94,8 @@
    "frame_stride": 1,
    "frames": 20,
    "frames_recorded": 20,
-   "bytes": 13380,
-   "bytes_gz": 2849,
+   "bytes": 17172,
+   "bytes_gz": 3538,
    "poster": 1.0,
    "poster_t": 0.9999999999999999,
    "poster_frame": 10,
@@ -110,11 +110,11 @@
     "na": 0
    },
    "cpu_s": 0.0,
-   "sha256": "481d8bf80f308aa10037b9781f174a175a298d436e995d8e9a3a039372faf127",
-   "key": "d3d3a7640c4f96b6",
+   "sha256": "30da166c36a63862b625d2d1c36f3d3c030afe429d751bda2c37204c6dd5aa30",
+   "key": "3b38bad0c624bcb0",
    "version": "1.0",
-   "code_hash": "f78b3452bddf",
-   "made": "2026-11-17T16:06:20+00:00"
+   "code_hash": "2d038492e307",
+   "made": "2026-11-18T13:10:41+00:00"
   }
  ],
  "atlases": [
@@ -122,11 +122,11 @@
    "id": "explore",
    "screen": "explore",
    "step": null,
-   "file": "atlas/explore/atlas.b80e5fbb.json",
-   "key": "d5c0e20380e348da",
+   "file": "atlas/explore/atlas.d11f1acd.json",
+   "key": "ec651ceba8d876eb",
    "points": 5,
    "refused": 1,
-   "bytes_gz": 12808,
+   "bytes_gz": 16885,
    "checks": {
     "ok": 10,
     "failed": 0,
@@ -136,18 +136,39 @@
    },
    "cpu_s": 0.0,
    "version": "1.0",
-   "code_hash": "f78b3452bddf",
-   "made": "2026-11-17T16:06:20+00:00"
+   "code_hash": "2d038492e307",
+   "made": "2026-11-18T13:10:41+00:00"
+  },
+  {
+   "id": "throws",
+   "screen": "throws",
+   "step": null,
+   "file": "atlas/throws/atlas.55d558c3.json",
+   "key": "32e32a0979cb237c",
+   "points": 6,
+   "refused": 0,
+   "bytes_gz": 18278,
+   "checks": {
+    "ok": 10,
+    "failed": 0,
+    "expected": 0,
+    "info": 0,
+    "na": 0
+   },
+   "cpu_s": 0.0,
+   "version": "1.0",
+   "code_hash": "2d038492e307",
+   "made": "2026-11-18T13:10:41+00:00"
   },
   {
    "id": "lab.heights",
    "screen": "lab",
    "step": "heights",
-   "file": "atlas/lab.heights/atlas.51292887.json",
-   "key": "6c218fea8461c130",
+   "file": "atlas/lab.heights/atlas.d95705d1.json",
+   "key": "017aa0a2c012deca",
    "points": 5,
    "refused": 0,
-   "bytes_gz": 15355,
+   "bytes_gz": 19119,
    "checks": {
     "ok": 10,
     "failed": 0,
@@ -157,8 +178,29 @@
    },
    "cpu_s": 0.0,
    "version": "1.0",
-   "code_hash": "f78b3452bddf",
-   "made": "2026-11-17T16:06:20+00:00"
+   "code_hash": "2d038492e307",
+   "made": "2026-11-18T13:10:41+00:00"
+  },
+  {
+   "id": "lab.ticks",
+   "screen": "lab",
+   "step": "ticks",
+   "file": "atlas/lab.ticks/atlas.558638cc.json",
+   "key": "ea29767f73ae7994",
+   "points": 4,
+   "refused": 0,
+   "bytes_gz": 12863,
+   "checks": {
+    "ok": 8,
+    "failed": 0,
+    "expected": 0,
+    "info": 0,
+    "na": 0
+   },
+   "cpu_s": 0.0,
+   "version": "1.0",
+   "code_hash": "2d038492e307",
+   "made": "2026-11-18T13:10:41+00:00"
   }
  ]
 }

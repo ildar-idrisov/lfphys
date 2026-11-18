@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""Write fit_cases.json: the lab's fit (player/js/fit.js) against its Python reference lfphys.tools.stats.linear_fit
+"""Write fit_cases.json (and chi2_sf.json, the p-values of χ² by SciPy): the lab's fit (player/js/fit.js) against its
+Python reference lfphys.tools.stats.linear_fit
 (design lfphys/sources/explore_2026-11-14_design.md §2.3; fit.test.mjs compares them to 1e-12). Each case: {x, y, sx,
 sy, model, params, sigma, chi2, scaled, method} with fit.js's names (line0: b; line: a, b; quadratic: c0, c1, c2 and the
 vertex xv;
@@ -84,12 +85,12 @@ out = Path(__file__).with_name("fit_cases.json")
 out.write_text(json.dumps(cases, indent=1) + "\n", encoding="utf-8")
 print(f"{out}: {len(cases)} cases")
 
-# the verdict's bound with σ from the scatter (integrator D4): Student's t with the coverage of the normal ±2σ,
-# erf(√2) = 0.9545, two-sided, for n − p degrees of freedom (scipy.stats.t; fit.js tQuantile)
+# the p-value of χ² that the fit prints (EX2 §5 F6 (c); fit.js chi2Sf): scipy.stats.chi2.sf on a grid of χ² and dof,
+# from p near 1 to p near 1e-60 (the verdict's Student's t quantiles of EX1 D4 went with «Check against the law»)
 from scipy import stats as sps  # noqa: E402
 
-cover = float(sps.norm.cdf(2.0) - sps.norm.cdf(-2.0))
-tq = {"cover": cover, "k": {str(nu): float(sps.t.ppf(0.5 + cover / 2, nu)) for nu in (1, 2, 3, 4, 5, 7, 10, 15, 16, 30, 100)}}
-out2 = Path(__file__).with_name("t_quantiles.json")
-out2.write_text(json.dumps(tq, indent=1) + "\n", encoding="utf-8")
-print(f"{out2}: {len(tq['k'])} quantiles")
+sf = [{"chi2": float(c), "dof": int(d), "p": float(sps.chi2.sf(c, d))}
+      for d in (1, 2, 3, 4, 5, 7, 10, 15, 30, 100) for c in (0.01, 0.5, 1.0, 2.0, 3.84, 7.5, 15.0, 40.0, 120.0, 300.0)]
+out2 = Path(__file__).with_name("chi2_sf.json")
+out2.write_text(json.dumps(sf, indent=1) + "\n", encoding="utf-8")
+print(f"{out2}: {len(sf)} p-values")

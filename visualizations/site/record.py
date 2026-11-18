@@ -297,10 +297,16 @@ def record_world(viz_id: str, out: Path, only: list[str] | None = None,
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description="Record the public site's demonstrations offline (design §4.1).")
-    ap.add_argument("--world", action="append", default=[], help="a world id (repeatable; an old id works too)")
+    ap = argparse.ArgumentParser(
+        description="Record the public site's demonstrations offline (design §4.1). The worlds recorded are the union of "
+                    "--world, --all and --stale: --stale adds every world whose recordings or atlases are missing or "
+                    "stale to those named by --world; it does not narrow them (STATUS V52 (ae)).")
+    ap.add_argument("--world", action="append", default=[], help="a world id (repeatable; an old id works too); every "
+                                                                  "recording and atlas of it is made, current or not")
     ap.add_argument("--all", action="store_true", help="every world that has recording specs")
-    ap.add_argument("--stale", action="store_true", help="the worlds whose recordings are missing or stale")
+    ap.add_argument("--stale", action="store_true", help="add every world whose recordings or atlases are missing or "
+                                                         "stale (in addition to --world: it adds worlds, it never "
+                                                         "narrows --world to its stale recordings)")
     ap.add_argument("--rec", action="append", default=[], help="only this recording id of the world(s) (repeatable; "
                                                                 "no atlas is built)")
     ap.add_argument("--no-atlases", action="store_true", help="record without building the atlases")

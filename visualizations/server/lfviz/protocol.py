@@ -47,6 +47,19 @@ Quantised blobs (design ``lfphys/sources/explore_2026-11-14_design.md`` §1.3; t
 optionally with ``:col`` — one range per column of the last axis — or ``:all`` — one range; without a suffix a 2-D
 blob with at most ``COL_MAX`` columns, a table of samples, gets one range per column, anything else one range).
 Nothing else in the format changes; a decoder that ignores ``q`` would see the raw integers.
+
+Pooled blobs (design ``lfphys/sources/explore_EX2_2026-11-18_design.md`` §5 F10; an atlas's points, never a live point or
+a recording). A blob that two or more points of an atlas store with the same bytes is kept once in the atlas's pool, one
+message ``{"type": "pool"}`` whose blobs are named by their ``pool_id`` (the first 16 hex digits of the sha256 of the
+blob's descriptor ``{dtype, shape, q?}`` as compact sorted JSON, a newline, and its stored bytes); a point's message names
+it by a descriptor without data::
+
+    descriptor  {"name", "pool": "<16 hex>"}
+
+``decode(buf, pool=...)`` resolves it from ``read_pool`` of the pool's message (the descriptor in the decoded ``meta``
+gains the pool's ``dtype``, ``shape``, ``nbytes`` and ``q``); a reader without the pool refuses such a message
+(``KeyError``).
+``encode`` writes a ``PoolRef`` blob as such a descriptor.
 """
 
 from __future__ import annotations
@@ -256,12 +269,62 @@ def dequantize(codes: np.ndarray, dtype_code: str, q: dict) -> np.ndarray:
     return out
 
 
+class PoolRef:
+    """A blob kept in an atlas's pool (the module's docstring, «Pooled blobs»): ``encode`` writes ``{"name", "pool":
+    id}`` and no data."""
+
+    def __init__(self, pool_id: str):
+        self.pool_id = str(pool_id)
+
+    def __eq__(self, other):
+        return isinstance(other, PoolRef) and other.pool_id == self.pool_id
+
+    def __hash__(self):
+        return hash(("PoolRef", self.pool_id))
+
+
+def stored(arr) -> tuple[dict, bytes]:
+    """A blob as ``encode`` stores it: its descriptor's ``{dtype, shape, q?}`` and its bytes (a ``Quantized`` as its
+    codes)."""
+    q = None
+    if isinstance(arr, Quantized):
+        arr, q = arr.codes, arr.q
+    arr = np.asarray(arr)
+    code = _code(arr.dtype)
+    arr = np.ascontiguousarray(arr, dtype=_DTYPES[code])
+    d = {"dtype": code, "shape": list(arr.shape)}
+    if q is not None:
+        d["q"] = clean(q)
+    return d, arr.tobytes()
+
+
+def pool_id(arr) -> str:
+    """A blob's name in an atlas's pool: the first 16 hex digits of sha256(its descriptor as compact sorted JSON, a
+    newline, its stored bytes)."""
+    import hashlib  # noqa: PLC0415
+    d, raw = stored(arr)
+    head = json.dumps(d, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(head + b"\n" + raw).hexdigest()[:16]
+
+
+def read_pool(buf: bytes) -> dict:
+    """An atlas's pool from its message: ``{pool id: (stored array, descriptor)}`` (the arrays as stored: codes for a
+    quantised blob)."""
+    meta, blobs = decode(buf, raw=True)
+    by_name = {d["name"]: d for d in meta.get("blobs", [])}
+    return {k: (v, by_name[k]) for k, v in blobs.items()}
+
+
 def encode(meta: dict, blobs: dict[str, np.ndarray] | None = None) -> bytes:
-    """Encode one message. A blob may be a ``Quantized`` (its codes are stored, its ``q`` goes into the descriptor)."""
+    """Encode one message. A blob may be a ``Quantized`` (its codes are stored, its ``q`` goes into the descriptor) or
+    a ``PoolRef`` (only its descriptor ``{name, pool}``: the blob is in the atlas's pool)."""
     descr = []
     chunks = []
     offset = 0
     for name, arr in (blobs or {}).items():
+        if isinstance(arr, PoolRef):
+            descr.append({"name": name, "pool": arr.pool_id})
+            continue
         q = None
         if isinstance(arr, Quantized):
             arr, q = arr.codes, arr.q
@@ -288,15 +351,26 @@ def encode(meta: dict, blobs: dict[str, np.ndarray] | None = None) -> bytes:
     return head + b"".join(chunks)
 
 
-def decode(buf: bytes, raw: bool = False) -> tuple[dict, dict[str, np.ndarray]]:
+def decode(buf: bytes, raw: bool = False, pool: dict | None = None) -> tuple[dict, dict[str, np.ndarray]]:
     """Decode one message (inverse of ``encode``). A quantised blob (``q`` in its descriptor) comes back as float32
-    values (``dequantize``), or as its stored codes with ``raw``."""
+    values (``dequantize``), or as its stored codes with ``raw``. A pooled blob (``{"name", "pool"}``) is taken from
+    ``pool`` (``read_pool``), its descriptor in ``meta`` replaced by the pool's (KeyError without the pool)."""
     (jlen,) = struct.unpack_from("<I", buf, 0)
     meta = json.loads(bytes(buf[4 : 4 + jlen]).decode("utf-8"), object_hook=json_hook)
     base = 4 + jlen
     base += (-base) % ALIGN
     blobs = {}
-    for d in meta.get("blobs", []):
+    for i, d in enumerate(meta.get("blobs", [])):
+        if "pool" in d:
+            if pool is None or d["pool"] not in pool:
+                raise KeyError(f"the blob {d.get('name')!r} is in the atlas's pool ({d['pool']}), which was not given")
+            arr, pd = pool[d["pool"]]
+            meta["blobs"][i] = {"name": d["name"], "pool": d["pool"],
+                                **{k: v for k, v in pd.items() if k in ("dtype", "shape", "nbytes", "q")}}
+            if pd.get("q") is not None and not raw:
+                arr = dequantize(arr, pd["dtype"], pd["q"])
+            blobs[d["name"]] = arr
+            continue
         dt = _DTYPES[d["dtype"]]
         start = base + d["offset"]
         arr = np.frombuffer(buf, dtype=dt, count=d["nbytes"] // dt.itemsize, offset=start).reshape(d["shape"])

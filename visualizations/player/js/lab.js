@@ -1,45 +1,62 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// The Lab work screen (design lfphys/sources/explore_2026-11-14_design.md §2.3, §3.5): steps in order, each on its own
-// atlas (lab.<step>) as Explore uses its own, so it works on the public site. The step card (part k of n, the goal, the
-// step's controls, its instruments and «Measure»), the instruments drawn over the view through the view's worldToPx (an
-// SVG layer), the table (kept per step in this browser; a row can be deleted, the table cleared and exported as CSV with
-// the errors), the plot of any two columns with error bars and the selected fit, the fit's result, and «Check against
-// the law» against the reference the world computed when the atlas was built (the manifest's "references").
+// The Lab work screen (design lfphys/sources/explore_2026-11-14_design.md §2.3, §3.5; revised by EX2 §1.4, §5 F6, F8, F9):
+// a narrow bench (the owner, 2026-11-18: «что-то вроде стенда для проведения эксперимента, который можно проводить разными
+// путями»). Steps in order, each on its own atlas (lab.<step>) or on an Explore screen's (atlas: <screen>, F9), as
+// Explore uses its own, so it works on the public site. The step card (part k of n, the goal, the step's controls, its
+// instruments, «Measure», its overlays and readouts), the instruments drawn over the view through the view's worldToPx
+// (an SVG layer), the table (kept per step in this browser; a row can be deleted, the table cleared and exported as CSV
+// with the errors), the plot of any two columns with error bars and the chosen fit, and the fit's output.
 //
 // An instrument does not compute physics: it reads a value the run computed (a measurable at the cursor, or a set-up
 // value "control:<param>" of the point shown) and rounds it to its division; the reading carries the declared error (by
-// default half a division). The derived columns and the fit are arithmetic and statistics on the readings (fit.js).
+// default half a division), a count its √N, a readout with the run's σ that σ. The formula columns and the fit are
+// arithmetic and statistics on the readings (expr.js, fit.js).
 //
-// What keeps the bench honest (review EX1-screens F1, F3–F5; integrator D4–D6):
+// Nothing is hidden and nothing is judged (EX2 §5 F6): the drawer is Explore's, with «Computed for this bench» (the
+// world's computed values for the bench: the step's laws' references, with their quantity and columns, never beside the
+// student's fit); the fit prints its parameters with the σ from the declared errors, χ², dof, χ²/dof, the p-value and
+// the Birge ratio, and, when χ²/dof > 1, the σ scaled by that ratio on a line of its own (at school the parameters with
+// their errors only). «Check against the law» and its verdict (EX1 D4) are withdrawn. The teacher's variant
+// (&variant=<id>, F8) preselects the steps' controls; nothing is locked.
+//
+// What keeps the bench honest (review EX1-screens F1, F4, F5; integrator D5, D6):
 //  - a point's reply is applied only when it is still the one asked for (a request counter); every instrument reads
 //    the shown point's own values (its header's parameters, its frames), never the slider; «Measure» is refused while
 //    the slider's set-up is not the one shown (loading, refused or failed);
 //  - one row per set-up: «Measure» on a set-up already in the table replaces that row and says so (the bench repeats
 //    exactly: a repeat is not an independent point); the table is kept with the atlas's key and dropped when the atlas
 //    was rebuilt;
-//  - «Check against the law» applies only when the plot is one of the step's laws' (x, y, fit): the step's `laws`
-//    (registry), each with its own reference; otherwise it is disabled with the reason, and the laws' plots are offered.
-//    The bound is two errors when the errors are the instruments' declared ones, Student's t for n − p degrees of
-//    freedom when they come from the scatter (fit.js verdict); a fit whose scatter exceeds its errors more than
-//    BIRGE_MAX times gives no verdict;
 //  - a manual stopwatch starts with the launch and runs on the wall clock until the student stops it: at real speed
 //    only («slow» is refused), and while it runs the flight cannot be paused, scrubbed or stepped (it times the real
 //    flight with the student's reaction, as a hand-held one does).
 import { openAtlas } from "./atlas.js";
-import { BIRGE_MAX, MODELS as FIT_MODELS, fit, quantity, verdict } from "./fit.js";
+import { ExprError, Undefined, evaluate as evalExpr, parse as parseExpr } from "./expr.js";
+import { MODELS as FIT_MODELS, fit } from "./fit.js";
 import { t } from "./i18n.js";
-import { SLOW, controlRow, ended, localT, secs, valuesText, when } from "./explore.js";
+import { SLOW, controlRow, ended, expandValues, localT, measText, secs, speedOf, timeLabel, valuesText, when } from "./explore.js";
 import { frameAt, frameIndexAt, showAt } from "./record_core.js";
 import { css, el, fill, fmt } from "./ui.js";
 
 // --- readings (pure: lab.test.mjs) ----------------------------------------------------------------------------------------
 export const decimals = (d) => { const s = String(d); if (s.includes("e-")) return Number(s.split("e-")[1]) + (s.split("e-")[0].split(".")[1] || "").length; return (s.split(".")[1] || "").length; };
-// a value read by an instrument: division × round(value / division), its error the declared one (half a division)
-export function reading(instr, value) {
+// a value read by an instrument: division × round(value / division), its error the declared one (half a division).
+// A counter (EX2 §5 F4) reads a whole count N: its error √N with error "poisson" (one count for N = 0: a finite sample
+// cannot exclude a rare event), or its declared number (0: an exact count). A readout with `sigma` takes the run's own
+// standard error at the cursor (`sigmaValue`, the measurable it names): its division is then only the display precision.
+export function reading(instr, value, sigmaValue) {
   if (value === null || value === undefined || !Number.isFinite(Number(value))) return null;
+  if (instr.kind === "counter") {
+    const n = Math.round(Number(value));
+    if (n < 0) return null;
+    return { v: n, e: instr.error === "poisson" ? (n > 0 ? Math.sqrt(n) : 1) : Number(instr.error ?? 0) };
+  }
   const d = Number(instr.division);
   const v = Number((Math.round(Number(value) / d) * d).toFixed(Math.min(15, decimals(d))));
+  if (instr.sigma) {
+    if (sigmaValue === null || sigmaValue === undefined || !(Number(sigmaValue) >= 0)) return null;
+    return { v: Object.is(v, -0) ? 0 : v, e: Number(sigmaValue) };
+  }
   return { v: Object.is(v, -0) ? 0 : v, e: instr.error ?? d / 2 };
 }
 // a derived column: its value and its error σ_f² = f′(x)²·σ² + ½·f″(x)²·σ⁴ (the second-order term keeps an error at a
@@ -59,20 +76,49 @@ export function derived(op, r) {
   const e = Math.sqrt(a * a + 0.5 * b * b);
   return Number.isFinite(v) ? { v, e: Number.isFinite(e) ? e : NaN } : null;
 }
-// a table row from the instruments' readings ({instrument id: {v, e}}): every column of the step
-export function rowOf(columns, readings) {
+// a formula column's parsed formula (expr.js), parsed once per text; the registry parsed it too (only earlier columns)
+const PARSED = new Map();
+function formula(text) {
+  if (!PARSED.has(text)) PARSED.set(text, parseExpr(text));
+  return PARSED.get(text);
+}
+// a table row from the instruments' readings ({instrument id: {v, e}}): every column of the step. A formula column
+// {id, label, expr} (EX2 §5 F5) is evaluated on the row's earlier columns with its error propagated (expr.js); an
+// undefined value (√ of a negative number, a division by 0, an empty input …) leaves the cell empty (null) and, when
+// `why` is given, its reason there ({column id: reason code}, REASONS of expr.js)
+export function rowOf(columns, readings, why = null) {
   const cols = {};
   for (const c of columns) {
     if (c.from) cols[c.id] = readings[c.from] || null;
     else if (c.of) cols[c.id] = derived(c.op, cols[c.of]);
+    else if (c.expr) {
+      try {
+        const r = evalExpr(formula(c.expr), new Map(Object.entries(cols).map(([k, x]) => [k, x])));
+        cols[c.id] = { v: r.v, e: r.e };
+      } catch (e) {
+        cols[c.id] = null;
+        if (why) why[c.id] = e instanceof Undefined ? e.reason : e instanceof ExprError ? "syntax" : "not_finite";
+      }
+    }
   }
   return cols;
 }
-// CSV with the errors: a header of the columns' labels (and «σ …»), one line per row; numbers as plain decimals
+// why a formula's cell is empty, in the viewer's language (expr.js REASONS)
+export function whyText(reason) {
+  return ({
+    sqrt_negative: t("the square root of a negative number"), division_by_zero: t("a division by zero"),
+    log_nonpositive: t("the logarithm of a number that is not positive"), asin_domain: t("arcsine of a number outside −1 … 1"),
+    acos_domain: t("arccosine of a number outside −1 … 1"), power: t("a power of a negative number with a fractional exponent"),
+    not_finite: t("the value is not a finite number"), missing: t("a column it needs is empty"),
+    error_undefined: t("its error is undefined here (an infinite derivative)"), syntax: t("the formula cannot be read"),
+  })[reason] || t("the value is undefined here");
+}
+// CSV with the errors: a header of the columns' labels (and «σ …»), one line per row; numbers as plain decimals; an
+// empty cell (no reading, or a formula undefined there) is empty in both
 export function csv(columns, rows, label = (c) => c.id) {
   const q = (s) => (/[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
   const head = columns.flatMap((c) => [q(label(c)), q("σ " + label(c))]);
-  const lines = rows.map((r) => columns.flatMap((c) => { const x = r.cols[c.id]; return x ? [String(x.v), String(x.e)] : ["", ""]; }).join(","));
+  const lines = rows.map((r) => columns.flatMap((c) => { const x = r.cols[c.id]; return x && x.v !== null && x.v !== undefined ? [String(x.v), String(x.e)] : ["", ""]; }).join(","));
   return [head.join(","), ...lines].join("\n") + "\n";
 }
 // a value to four significant digits, its trailing zeros kept («1.000» next to «0.4472»: V52 (y))
@@ -94,6 +140,7 @@ export function pm(v, e) {
 // («0.600 ± 0.005», not «0.60 ± 0.005»; review EX1-screens F14); an exact reading (error 0: the stand's heights) to its
 // division's decimals, without «± 0» («0.20»; V52 (y))
 export function readingText(instr, x) {
+  if (instr.kind === "counter") return x.e > 0 ? `${fmt(x.v, "d")} ± ${fmt(x.e, ".2g")}` : fmt(x.v, "d");  // a count
   if (!(x.e > 0)) return fmt(x.v, `.${Math.min(12, decimals(instr.division))}f`);
   const n = Math.max(decimals(instr.division), decimals(Number(x.e.toPrecision(2))));
   return `${fmt(x.v, `.${Math.min(12, n)}f`)} ± ${fmt(x.e, ".2g")}`;
@@ -101,7 +148,12 @@ export function readingText(instr, x) {
 // an instrument in the step's list: its division and its error, or, for an exact one (error 0), its own reason
 // («exact: the stand sets the chute's height at its marks»), never «error ±0» (V52 (y))
 export function instrumentText(i) {
+  if (i.kind === "counter") {  // EX2 §5 F4: a count and its error
+    if (i.error === "poisson") return t("counts; error √N (a count of 0 has the error of one count)");
+    return Number(i.error) > 0 ? t("counts; error ±{e}", { e: fmt(Number(i.error), ".6g") }) : t("counts; an exact count");
+  }
   const d = withUnit(fmt(i.division, ".6g"), t(i.unit));
+  if (i.sigma) return t("division {d}; error: the run's own standard error", { d });
   const e = i.error ?? i.division / 2;
   if (e > 0) return t("division {d}, error ±{e}", { d, e: withUnit(fmt(e, ".6g"), t(i.unit)) });
   return i.error_note ? t("division {d}; exact: {why}", { d, why: t(i.error_note) }) : t("division {d}; exact", { d });
@@ -117,8 +169,38 @@ export function placeRow(rows, row) {
   const out = rows.slice(); out[j] = row;
   return { rows: out, n: j + 1, replaced: true };
 }
-// the law of the plot shown: the step's law whose (x, y, model) is the plot's, or null (D4)
-export const lawOf = (laws, x, y, model) => (laws || []).find((L) => L.x === x && L.y === y && L.model === model) || null;
+// «Computed for this bench» (EX2 §5 F6 (d)): a step's laws with the world's computed values (the atlas's manifest's
+// "references", by the law's id, or "<step>/<law>" on an Explore screen's atlas, F9), in words: the quantity, the columns
+// it belongs to, the value with its unit, the formula or the engine's method. [{text, how, law, value}]
+export function computedFor(step, references, colLabel = (id) => id) {
+  const refs = references || {};
+  const Q = { slope: t("slope"), intercept: t("intercept"), vertex: t("vertex"), exponent: t("exponent") };
+  return (step.laws || []).map((law) => {
+    const r = refs[step.shared ? `${step.id}/${law.reference}` : law.reference];
+    if (!r) return null;
+    const unit = t(law.unit || r.unit || "");
+    return { text: t("{quantity} of {y} against {x}: {value}; {label}", { quantity: Q[law.quantity] || law.quantity,
+      y: colLabel(law.y), x: colLabel(law.x), value: withUnit(fmt(r.value, ".6g"), unit), label: t(r.label) }),
+      how: r.how ? t(r.how) : "", law: law.reference, value: r.value };
+  }).filter(Boolean);
+}
+// the fit's output (EX2 §5 F6 (c)), as lines of text: the model and its parameters with the σ from the declared errors;
+// at standard also χ², dof, χ²/dof, p and the Birge ratio, and, when χ²/dof > 1, the σ scaled by that ratio on a line of
+// its own; without declared errors, that the σ come from the scatter. No verdict.
+export function fitLines(res, label, school) {
+  const keys = Object.keys(res.params).filter((k) => k !== "yv");
+  const name = (k) => (k === "xv" ? "x*" : k);
+  const lines = [`${label}: ${keys.map((k) => `${name(k)} = ${pm(res.params[k], res.sigmaDeclared[k])}`).join(", ")}`];
+  if (res.unit) { lines.push(t("(no declared errors: the σ come from the scatter of the points)")); return lines; }
+  if (school) return lines;
+  const ratio = res.dof > 0 ? res.chi2 / res.dof : NaN;
+  lines.push(t("χ² = {chi2}, dof = {dof:d}, χ²/dof = {ratio}, p = {p}, Birge ratio √(χ²/dof) = {birge}", {
+    chi2: fmt(res.chi2, ".4g"), dof: res.dof, ratio: fmt(ratio, ".3g"), p: fmt(res.p, ".3g"), birge: fmt(res.birge, ".3g") }));
+  if (res.birge > 1) {
+    lines.push(t("σ scaled by the Birge ratio: {values}", { values: keys.map((k) => `${name(k)} = ${pm(res.params[k], res.sigmaScaled[k])}`).join(", ") }));
+  }
+  return lines;
+}
 
 // the table of a step, kept in this browser with the atlas's key: rows of another key (an older bench) are dropped
 const STORE = (world, atlas) => `lfviz.lab.${world}.${atlas}`;
@@ -135,16 +217,39 @@ function saveRows(key, atlasKey, rows) { try { localStorage.setItem(key, JSON.st
 
 const FIT_LABEL = () => ({ line0: t("line through the origin y = b·x"), line: t("line y = a + b·x"), quadratic: t("parabola y = c0 + c1·x + c2·x²"), power: t("power law y = A·x^p") });
 
+// the teacher's variant of the task (EX2 §5 F8 (b)): «&variant=<id>» in the address names one of the task sheet's
+// variants; its values preselect the steps' controls (on their grids); nothing is locked
+export function variantOf(worksheet, id) {
+  if (!id || !worksheet || worksheet.ex1) return null;
+  return (worksheet.variants || []).find((v) => v.id === id) || null;
+}
+
 export async function create(host, kit, spec) {
   const steps = spec.steps || [], instruments = spec.instruments || {};
   const L = { k: 0, st: [], playing: false, wall: 0, rate: 1 };
+  const V = variantOf(spec.worksheet, new URLSearchParams(location.search).get("variant"));
+  // a table per step: a step on an Explore screen's atlas (F9) keeps its own, apart from another step on the same atlas
+  const storeKey = (step) => STORE(kit.world, step.shared ? `${step.atlas}.${step.id}` : step.atlas);
   const view = kit.newView();
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("class", "dm-instr");
   svg.setAttribute("aria-hidden", "true");
   const stage = el("div", { class: "dm-stage" }, view.center, svg);
   const card = el("div", { class: "dm-side dm-card" });
+  // a step whose points carry modifications (a law parameter in its preset or fixed: standard only) says so on its card
+  // and in the top bar, as Explore does (EX2 §5 F6)
+  const modBox = el("div", { class: "dm-mod dm-lab-mod", role: "status", hidden: true });
   const work = el("div", { class: "dm-work" });
+  // a step's readouts (EX2 §5 F6 (b)): the measurables it names, with their errors and references, as Explore's
+  const readBox = el("div", { class: "dm-readouts dm-lab-readouts" });
+  // a step's overlays (F6 (b)): the view's, those the step names (all when it names none), the view's defaults
+  const overlaysOf = (step) => {
+    const ovl = (view.overlays || []).filter((o) => !(step.overlays || []).length || step.overlays.includes(o.id));
+    return ovl.length ? el("details", { class: "dm-overlays" }, el("summary", {}, t("Show")), ovl.map((o) => {
+      const cb = el("input", { type: "checkbox", checked: o.on ?? !!o.default, "data-overlay": o.id, onchange: () => { o.on = cb.checked; if (view.setOverlay) view.setOverlay(o.id, cb.checked); } });
+      return el("label", { class: "dm-check" }, cb, " ", t(o.label));
+    })) : null;
+  };
   const bar = kit.transport({ launchLabel: t("▶ Launch"), play: () => playPressed(), reset: () => resetPressed(),
     scrub: (i) => scrub(i), rate: (r) => { L.rate = r === 1 ? 1 : SLOW; kit.self.rate = L.rate; } });
   // «Measure», the stopwatch and the messages: in the step card on a desktop; on a phone in the dock above the time bar,
@@ -167,7 +272,7 @@ export async function create(host, kit, spec) {
     const laws = step.laws || [];
     const S = { step, laws, A: null, why: src.why || null, values: {}, cur: null, clock: 0, rows: [], sw: null, seq: 0, pending: false,
       refused: null, failed: null, x: step.plot.x, y: step.plot.y, model: step.plot.fit || (step.plot.fits || [])[0] || "line",
-      res: null, check: null, msg: "", fromSite: !!src.fromSite };
+      res: null, msg: "", fromSite: !!src.fromSite };
     if (src.entry) {
       try {
         S.A = await openAtlas(kit.world, src.entry, { base: src.base });
@@ -176,7 +281,9 @@ export async function create(host, kit, spec) {
     if (S.A) {
       S.A.controls = S.A.controls.map((c) => ({ ...((step.controls || []).find((x) => x.param === c.param) || {}), ...c }));
       S.values = { ...S.A.defaults };
-      const got = loadRows(localStorage, STORE(kit.world, step.atlas), S.A.manifest.key);
+      const pre = V && V.values ? V.values[step.id] || {} : {};  // the teacher's variant (F8): on the grid, unlocked
+      for (const c of S.A.controls) if (c.param in pre && c.values.some((x) => x === pre[c.param])) S.values[c.param] = pre[c.param];
+      const got = loadRows(localStorage, storeKey(step), S.A.manifest.key);
       S.rows = got.rows;
       if (got.dropped) S.msg = t("The table of an earlier build of this bench was cleared: its atlas has been rebuilt");
       try {
@@ -224,15 +331,16 @@ export async function create(host, kit, spec) {
     const measure = el("button", { class: "primary dm-measure", onclick: () => measureNow() }, t("Measure"));
     const msg = el("div", { class: "dm-msg", role: "status" }, s.msg);
     fill(act, swBox, measure, msg);
-    fill(card, nav,
+    fill(card, nav, modBox,
       el("div", { class: "dm-part" }, t("Part {k:d} of {n:d}: {title}", { k: L.k + 1, n: steps.length, title: t(step.title) })),
       el("p", { class: "dm-goal" }, t(step.goal)),
       s.why ? el("p", { class: "dm-missing" }, s.why) : null,
       s.fromSite ? el("p", { class: "muted dm-from-site" }, t("This step's atlas comes from the public site: this server has no current local copy (the same version of the world).")) : null,
       el("div", { class: "dm-ctls" }, ctlRows.map((r) => r.el)),
       el("div", { class: "dm-sub" }, t("Instruments")), instrList,
+      overlaysOf(step), readBox,
       el("div", { class: "dm-act-slot" }),
-      el("p", { class: "dm-ws" }, el("a", { href: kit.worksheetHref(), target: "_blank" }, t("The worksheet (print) →"))));
+      el("p", { class: "dm-ws" }, el("a", { href: kit.worksheetHref(), target: "_blank" }, t("The task sheet (print) →"))));
     placeAct();
     renderMeasure();
   }
@@ -329,11 +437,13 @@ export async function create(host, kit, spec) {
       if (src.startsWith("control:")) readings[id] = reading(i, setupValue(s, src.slice(8)));
       else {
         const v = meas[src];
-        if (v === null || v === undefined || !eventReached(s, i, f)) {
+        const sv = i.sigma ? meas[i.sigma] : undefined;  // the run's own error at the cursor (EX2 §5 F4)
+        const r = v === null || v === undefined || !eventReached(s, i, f) ? null : reading(i, v, sv);
+        if (!r) {
           const m = ((c && c.pt.W && c.pt.W.header.measurables) || []).find((x) => x.id === src);
           return { refused: t("Nothing to measure yet: “{what}” has not been reached at this moment", { what: m ? t(m.label) : src }) };
         }
-        readings[id] = reading(i, v);
+        readings[id] = r;
       }
     }
     return { readings, f };
@@ -344,16 +454,17 @@ export async function create(host, kit, spec) {
     if (why) { say(why); return; }
     const r = readAll();
     if (r.refused) { say(r.refused); return; }
-    const row = { id: Date.now() + Math.random(), values: { ...s.cur.pt.values }, readings: r.readings, cols: rowOf(s.step.columns, r.readings) };
+    const empties = {};  // a formula's cell left empty, with its reason (EX2 §5 F5)
+    const row = { id: Date.now() + Math.random(), values: { ...s.cur.pt.values }, readings: r.readings, cols: rowOf(s.step.columns, r.readings, empties), why: empties };
     const placed = placeRow(s.rows, row);
     s.rows = placed.rows;
-    saveRows(STORE(kit.world, s.step.atlas), s.A.manifest.key, s.rows);
+    saveRows(storeKey(s.step), s.A.manifest.key, s.rows);
     const noTime = s.step.columns.some((c) => c.from && instruments[c.from] && instruments[c.from].manual && !row.cols[c.id]);
     const text = placed.replaced
       ? t("Row {n:d} replaced: this set-up was already measured; the bench repeats exactly, so a repeat is not a new independent point", { n: placed.n })
       : t("Measured: row {n:d}", { n: placed.n });
-    say(noTime ? `${text}. ${t("No time in this row: the stopwatch was not stopped")}` : text);
-    s.check = null;
+    const empty = Object.entries(empties).map(([cid, reason]) => t("{column} is empty: {why}", { column: colLabel(colOf(s, cid) || { label: cid }), why: whyText(reason) }));
+    say([noTime ? `${text}. ${t("No time in this row: the stopwatch was not stopped")}` : text, ...empty].join(". "));
     renderWork();
   }
 
@@ -365,87 +476,42 @@ export async function create(host, kit, spec) {
     const i = c.from ? instruments[c.from] : null;
     return i ? readingText(i, x) : pm(x.v, x.e);
   };
-  // a law's plot in words: «L, m against √h, m^½ — line through the origin y = b·x»
-  const lawPlot = (s, law) => t("{y} against {x} — {fit}", { y: colLabel(colOf(s, law.y) || { label: law.y }), x: colLabel(colOf(s, law.x) || { label: law.x }), fit: FIT_LABEL()[law.model] || law.model });
   function renderWork() {
     const s = S(), step = s.step, cols = step.columns;
     const table = el("table", { class: "dm-table" },
       el("thead", {}, el("tr", {}, el("th", {}, "№"), cols.map((c) => el("th", {}, colLabel(c))), el("th", {}, ""))),
       el("tbody", {}, s.rows.map((r, j) => el("tr", {}, el("td", {}, String(j + 1)),
-        cols.map((c) => el("td", { class: "mono" }, cell(c, r.cols[c.id]))),
+        cols.map((c) => (r.why && r.why[c.id] ? el("td", { class: "mono dm-undef", title: whyText(r.why[c.id]) }, "—", el("span", { class: "dm-why" }, whyText(r.why[c.id])))
+          : el("td", { class: "mono" }, cell(c, r.cols[c.id])))),
         el("td", {}, el("button", { class: "dm-del", title: t("Delete this row"), "aria-label": t("Delete this row"), onclick: () => {
-          s.rows.splice(j, 1); if (s.A) saveRows(STORE(kit.world, step.atlas), s.A.manifest.key, s.rows); s.check = null; renderWork(); } }, "✕"))))));
+          s.rows.splice(j, 1); if (s.A) saveRows(storeKey(step), s.A.manifest.key, s.rows); renderWork(); } }, "✕"))))));
     const csvA = el("a", { class: "button", download: `${kit.world}_${step.id}.csv`, title: t("The table with the errors, as CSV") }, "⤓ CSV");
     csvA.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv(cols, s.rows, colLabel));
-    const clear = el("button", { onclick: () => { if (!s.rows.length) return; s.rows = []; if (s.A) saveRows(STORE(kit.world, step.atlas), s.A.manifest.key, s.rows); s.check = null; renderWork(); } }, t("Clear the table"));
+    const clear = el("button", { onclick: () => { if (!s.rows.length) return; s.rows = []; if (s.A) saveRows(storeKey(step), s.A.manifest.key, s.rows); renderWork(); } }, t("Clear the table"));
     const opt = (sel, v) => { sel.value = v; return sel; };
-    const xs = opt(el("select", { "aria-label": t("x axis"), onchange: (e) => { s.x = e.target.value; s.check = null; renderWork(); } }, cols.map((c) => el("option", { value: c.id }, colLabel(c)))), s.x);
-    const ys = opt(el("select", { "aria-label": t("y axis"), onchange: (e) => { s.y = e.target.value; s.check = null; renderWork(); } }, cols.map((c) => el("option", { value: c.id }, colLabel(c)))), s.y);
+    const xs = opt(el("select", { "aria-label": t("x axis"), onchange: (e) => { s.x = e.target.value; renderWork(); } }, cols.map((c) => el("option", { value: c.id }, colLabel(c)))), s.x);
+    const ys = opt(el("select", { "aria-label": t("y axis"), onchange: (e) => { s.y = e.target.value; renderWork(); } }, cols.map((c) => el("option", { value: c.id }, colLabel(c)))), s.y);
     const fits = (step.plot.fits || [step.plot.fit]).filter((m) => m && (m !== "power" || !kit.school));
-    const fs = opt(el("select", { "aria-label": t("fit"), onchange: (e) => { s.model = e.target.value; s.check = null; renderWork(); } }, fits.map((m) => el("option", { value: m }, FIT_LABEL()[m] || m))), s.model);
+    const fs = opt(el("select", { "aria-label": t("fit"), onchange: (e) => { s.model = e.target.value; renderWork(); } }, fits.map((m) => el("option", { value: m }, FIT_LABEL()[m] || m))), s.model);
     const cv = el("canvas", { class: "dm-plot", role: "img", "aria-label": t("{y} against {x}", { y: colLabel(colOf(s, s.y) || { label: s.y }), x: colLabel(colOf(s, s.x) || { label: s.x }) }) });
     // the fit on the rows that have both columns
     const pts = s.rows.map((r) => [r.cols[s.x], r.cols[s.y]]).filter(([a, b]) => a && b);
     s.res = null;
-    let fitText = t("Measure at least {n:d} points to fit", { n: (FIT_MODELS[s.model] || { min: 2 }).min });
+    let fitText = [t("Measure at least {n:d} points to fit", { n: (FIT_MODELS[s.model] || { min: 2 }).min })];
     try {
-      if (s.x === s.y) fitText = t("Choose different columns for x and y");
+      if (s.x === s.y) fitText = [t("Choose different columns for x and y")];
       else if (pts.length) {
         s.res = fit(pts.map((p) => p[0].v), pts.map((p) => p[1].v), pts.map((p) => p[0].e), pts.map((p) => p[1].e), s.model);
-        fitText = [FIT_LABEL()[s.model] + ":", ...Object.keys(s.res.params).filter((k) => k !== "yv").map((k) =>
-          `${k === "xv" ? "x*" : k} = ${pm(s.res.params[k], s.res.sigma[k])}`),
-        kit.school ? "" : Number.isFinite(s.res.chi2) && s.res.dof > 0 ? `χ²/dof = ${fmt(s.res.chi2 / s.res.dof, ".3g")}` : "",
-        // the Birge scaling is shown, at school too (D4)
-        s.res.scaled && Number.isFinite(s.res.birge) ? t("(errors enlarged ×{b}: the points scatter more than the instruments' errors)", { b: fmt(s.res.birge, ".2g") }) : "",
-        ].filter(Boolean).join("  ");
+        fitText = fitLines(s.res, FIT_LABEL()[s.model] || s.model, kit.school);
       }
-    } catch (e) { s.res = null; fitText = e.why === "points" || e.why === "singular" ? t("Measure more points at different set-ups to fit") : e.why === "positive" ? t("A power law needs positive values")
-      : e.why === "converge" ? t("The fit with errors in x and y does not converge: look at the readings and the plot") : e.message; }
-    // «Check against the law»: only on the plot of one of the step's laws (D4)
-    const law = lawOf(s.laws, s.x, s.y, s.model);
-    let lawBox = null;
-    if (s.laws.length) {
-      const why = !law ? t("The law is checked on its own plot: choose it below") : !s.res ? t("Measure more points at different set-ups to fit") : "";
-      const checkBtn = el("button", { class: "primary dm-check-law", disabled: !!why, title: why, onclick: () => { checkLaw(law); renderWork(); } }, t("Check against the law"));
-      const list = el("ul", { class: "dm-laws" }, s.laws.map((Lw) => {
-        const on = Lw === law;
-        return el("li", { class: on ? "on" : "" }, el("b", {}, t(Lw.label)), " — ", lawPlot(s, Lw), " ",
-          on ? el("span", { class: "muted" }, t("(plotted)")) : el("button", { class: "link dm-law-plot", onclick: () => { s.x = Lw.x; s.y = Lw.y; s.model = Lw.model; s.check = null; renderWork(); } }, t("plot it")));
-      }));
-      lawBox = el("div", { class: "dm-law-box" }, el("div", { class: "dm-sub" }, t("The laws of this part")), list, checkBtn,
-        !law ? el("div", { class: "muted dm-law-why" }, why) : null);
-    }
-    const checkOut = el("div", { class: "dm-law " + (s.check ? (s.check.ok ? "st-ok" : "st-bad") : ""), role: "status" }, s.check ? s.check.text : "");
+    } catch (e) { s.res = null; fitText = [e.why === "points" || e.why === "singular" ? t("Measure more points at different set-ups to fit") : e.why === "positive" ? t("A power law needs positive values")
+      : e.why === "converge" ? t("The fit with errors in x and y does not converge: look at the readings and the plot") : e.message]; }
     fill(work,
       el("div", { class: "dm-work-head" }, el("b", {}, t("Table")), el("span", { class: "grow" }), clear, csvA),
       el("div", { class: "dm-table-box" }, s.rows.length ? table : el("div", { class: "muted" }, t("No measurements yet: launch, then press «Measure»."))),
       el("div", { class: "dm-work-head" }, el("b", {}, t("Plot")), el("label", {}, "x ", xs), el("label", {}, "y ", ys), el("label", {}, t("fit") + " ", fs)),
-      cv, el("div", { class: "dm-fit mono" }, fitText), lawBox, checkOut);
+      cv, el("div", { class: "dm-fit mono", role: "status" }, fitText.map((x) => el("div", {}, x))));
     requestAnimationFrame(() => drawPlot(cv, pts, s));
-  }
-  function checkLaw(law) {
-    const s = S(), refs = (s.A && s.A.manifest.references) || {};
-    const ref = law ? refs[law.reference] : null;
-    const q = s.res && law ? quantity(s.res, law.quantity) : null;
-    if (!law || !ref || !q) { s.check = { ok: false, text: t("No reference of this law in the step's atlas: it is built with the site (site/atlas.py).") }; return; }
-    const v = verdict(s.res, q.value, q.sigma, ref.value);
-    const unit = t(law.unit || ref.unit || "");
-    const how = ref.kind === "engine" ? t("computed by the engine; there is no closed form") : t("closed form {law}", { law: t(ref.label) });
-    const measured = t("{label} = {value}", { label: t(law.label), value: withUnit(pm(q.value, q.sigma), unit) });
-    const lawText = t("law: {value} ({how})", { value: withUnit(fmt(ref.value, ".4g"), unit), how });
-    let tail;
-    if (v.refused === "birge") {
-      tail = t("✗ no verdict: the points scatter {b} times more than their errors (more than {max:d} times), so this curve does not describe them; look at the readings, the axes and the fit",
-        { b: fmt(s.res.birge, ".2g"), max: BIRGE_MAX });
-    } else if (v.refused === "dof") tail = t("Measure more points at different set-ups to fit");
-    else if (v.agrees) {
-      tail = v.kind === "t" ? t("✓ agrees within {k} errors: the errors come from the scatter of the points, so the bound is Student's t for n − p = {n:d}", { k: fmt(v.k, ".3g"), n: v.dof })
-        : t("✓ agrees within two errors");
-    } else {
-      tail = s.step.hint ? t("✗ does not agree: {hint}", { hint: t(s.step.hint) }) : t("✗ does not agree: look at the readings and the plot");
-      if (v.kind === "t") tail += " " + t("(the bound: {k} errors, Student's t for n − p = {n:d})", { k: fmt(v.k, ".3g"), n: v.dof });
-    }
-    s.check = { ok: !!v.agrees, law: law.reference, k: v.k, kind: v.kind, text: `${measured} — ${lawText} ${tail}` };
   }
   function drawPlot(cv, pts, s) {
     const dpr = Math.min(window.devicePixelRatio || 1, 2), W = cv.clientWidth || 300, H = cv.clientHeight || 220;
@@ -530,9 +596,33 @@ export async function create(host, kit, spec) {
     if (f) { try { view.render(f.meta, f.t, f.blobs); } catch (e) { console.error(e); } }
     drawInstruments(s, f);
     renderStopwatches();
-    bar.update({ playing: L.playing, i: Math.max(0, i), max: Math.max(0, F.length - 1), text: `${secs(tt)} / ${secs(c.pt.tEnd)}`,
+    const mods = W.header.modifications || [];
+    const val = (v) => (typeof v === "number" ? fmt(v, ".6g") : t(v));
+    modBox.hidden = !mods.length;
+    const modText = mods.length ? t("MODIFIED PHYSICS:") + " " + mods.map((m) => t("{label}: {value} (accepted: {standard})", { label: t(m.label), value: val(m.value), standard: val(m.standard) })).join("; ") : "";
+    if (modBox.textContent !== modText) modBox.textContent = modText;
+    document.body.classList.toggle("dm-modified", mods.length > 0);
+    const want = step().readouts || [];
+    const ms = (W.header.measurables || []).filter((m) => want.includes(m.id));
+    const meas = (f && f.meta.meas) || {};
+    const rsig = JSON.stringify([L.k, ms.map((m) => [m.id, meas[m.id], m.sigma ? meas[m.sigma] : null, m.ref ? meas[m.ref] : null])]);
+    if (rsig !== L.readSig) {
+      L.readSig = rsig;
+      fill(readBox, ms.map((m) => {
+        const x = measText(m, meas);
+        return el("div", { class: "dm-readout", "data-readout": m.id }, el("span", {}, t(m.label)),
+          el("span", { class: "dm-rv" }, el("b", { class: "mono" }, x.value === null ? "—" : x.value), x.ref ? el("span", { class: "mono dm-ref" }, x.ref) : null));
+      }));
+    }
+    const speed = speedOf(step(), c.pt);
+    kit.self.rate = speed * L.rate;  // the view's ctx.speed(): world seconds per played second
+    const declared = step().speed !== undefined && step().speed !== null;
+    bar.update({ playing: L.playing, i: Math.max(0, i), max: Math.max(0, F.length - 1),
+      text: declared ? timeLabel({ tt, tEnd: c.pt.tEnd, speed, rate: L.rate, header: W.header }) : `${secs(tt)} / ${secs(c.pt.tEnd)}`,
+      title: declared ? t("The world's own time, how much slower or faster than real time it plays, and the position in the point") : "",
       launch: c.launchedAt === null || ended(c, s.clock) });
   }
+  const step = () => S().step;
   // the tape along the ground from the launch point, the ruler up to the launch height, the protractor at the launcher:
   // placed by the view's own mapping (worldToPx); without one, nothing is drawn over the view
   function drawInstruments(s, f) {
@@ -600,7 +690,7 @@ export async function create(host, kit, spec) {
       if (s && s.sw && s.sw.running) renderStopwatches();
       if (L.playing && s && s.cur) {
         L.wall = now;
-        s.clock += dt * L.rate;
+        s.clock += dt * L.rate * speedOf(s.step, s.cur.pt);  // world seconds: the step's speed × normal or slow (EX2 §5 F1)
         if (s.cur.launchedAt === null || ended(s.cur, s.clock)) L.playing = false;
         this.dirty = true;
       } else L.wall = now;
@@ -629,16 +719,21 @@ export async function create(host, kit, spec) {
       const s = S(), c = s && s.cur, W = c && c.pt.W;
       const tt = W ? (frameAt(W, localT(c, s.clock)) || {}).t ?? 0 : 0;
       const m = s && s.A ? s.A.manifest : {};
-      const passport = [[t("Point"), c ? valuesText(s.A.controls, c.pt.values) : "—"], [t("Atlas"), `${m.atlas || ""} · ${t("key")} ${m.key || ""}`],
+      const passport = [[t("Point"), c ? valuesText(s.A.controls, c.pt.values, ((kit.viz && kit.viz.schema) || {}).params || []) : "—"], [t("Atlas"), `${m.atlas || ""} · ${t("key")} ${m.key || ""}`],
         [t("Code"), m.code_hash], [t("Random seed"), m.seed], [t("The atlas was built"), when(((s && s.A && s.A.entry) || {}).made ?? m.made)]];
       if (s && s.fromSite) passport.push([t("From"), t("the public site")]);
-      return kit.howWeKnow({ W, tt, passport, eventTimes: false,
+      // the same as Explore's: every check with its value and reference, the events with their texts and times (the
+      // owner, 2026-11-18: a lab is a bench, nothing is hidden; EX1's D10 withdrawn)
+      const colName = (id) => { const c = s && s.step.columns.find((x) => x.id === id); return c ? t(c.label) : id; };
+      const computed = s ? computedFor(s.step, (s.A && s.A.manifest.references) || {}, colName) : [];
+      return kit.howWeKnow({ W, tt, passport, computed,
         note: t("Computed by the engine when the site was built: every slider position is such a point; nothing between them is drawn.") });
     },
-    liveBody() { const s = S(); return s && s.A ? { preset: s.A.manifest.preset, params: { ...(s.A.manifest.fixed || {}), ...s.values } } : null; },
+    liveBody() { const s = S(); return s && s.A ? { preset: s.A.manifest.preset, params: { ...(s.A.manifest.fixed || {}), ...expandValues(s.A.controls, s.values) } } : null; },
   };
-  window.__lfLab = { state: L, step: () => S(), rows: () => S().rows, check: () => S().check, fit: () => S().res };
-  if (steps.length) await openStep(0);
+  window.__lfLab = { state: L, step: () => S(), rows: () => S().rows, fit: () => S().res, variant: V };
+  const first = V && V.steps ? Math.max(0, steps.findIndex((x) => x.id === V.steps[0])) : 0;
+  if (steps.length) await openStep(first);
   else fill(card, el("p", { class: "muted" }, t("This lab has no steps yet.")));
   return API;
 }

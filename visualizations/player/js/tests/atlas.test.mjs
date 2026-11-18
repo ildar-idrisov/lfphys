@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { LRU, flatIndex, gridIndex, mergeHeader, neighbours, openAtlas, snap } from "../atlas.js";
 import { frameAt, showAt } from "../record_core.js";
+import { readStream } from "../api.js";
 
 const REC = new URL("../../../tests/site_worlds/recordings/", import.meta.url);
 const index = JSON.parse(readFileSync(new URL("s98_atlas_toy/index.json", REC), "utf-8"));
@@ -75,11 +76,22 @@ test("the toy world's atlases: every point decodes, its header carries its value
       }
       assert.equal(p.state, "computed");
       const h = p.W.header;
-      for (const [k, v] of Object.entries({ ...A.manifest.fixed, ...values })) assert.equal(h.params[k], v, `${entry.id} p${i} ${k}`);
+      // a compound control's value is the parameters it sets (EX2 §5 F3: the manifest records its sets)
+      const params = { ...values };
+      for (const c of A.controls.filter((x) => x.sets)) {
+        const k = c.values.indexOf(params[c.param]);
+        delete params[c.param];
+        for (const [q, list] of Object.entries(c.sets)) params[q] = list[k];
+      }
+      for (const [k, v] of Object.entries({ ...A.manifest.fixed, ...params })) assert.equal(h.params[k], v, `${entry.id} p${i} ${k}`);
       assert.ok(!("$delta" in h), "no $-keys in a merged header");
       assert.ok(h.measurables && h.measurables.length, "the base's keys are there");
       assert.ok(p.W.frames.length > 5 && p.tEnd > 0);
-      assert.ok(p.W.events.some((e) => e.kind === "landing"), "the landing event");
+      const landed = p.W.events.some((e) => e.kind === "landing");
+      // a stop by counted events may end a point before its landing (EX2 §5 F2: «Throws» stops at six ticks)
+      const early = A.manifest.stop.events && !landed && p.W.events.filter((e) => e.kind === "tick").length >= A.manifest.stop.events.tick;
+      assert.ok(landed || early, "the landing event, or the counted stop before it");
+      if (early) { assert.equal(p.speed, 1, "the world's default speed from the point's state message (EX2 §5 F1)"); continue; }
       assert.ok(p.W.checks.size >= 2, "the checks");
       const traj = p.W.viewMsgs.filter((m) => m.meta.type === "traj");
       assert.ok(traj.length && traj.every((m) => m.blobs.s instanceof Float32Array), "the quantised path decodes to floats");
@@ -90,6 +102,41 @@ test("the toy world's atlases: every point decodes, its header carries its value
       assert.equal(last.meta.meas.range, p.W.events.find((e) => e.kind === "landing").data.L);
     }
   }
+});
+
+// EX2 §5 F10, §7: a point whose blobs are in the atlas's pool, decoded with the pool, equals the same point packed
+// without it (tests/site_worlds/quant/pool_point.lfpt.gz: make_fixture.py writes it with headless.unpool, and
+// tests/test_atlas.py checks it against the committed fixture); without the pool it cannot be read
+test("a pooled point decoded with the atlas's pool equals the same point packed without it", async () => {
+  const Q = new URL("../../../tests/site_worlds/quant/", import.meta.url);
+  const pc = JSON.parse(readFileSync(new URL("pool_point.json", Q), "utf-8"));
+  const entry = index.atlases.find((a) => a.id === pc.atlas);
+  log.length = 0;
+  const A = await openAtlas("s98_atlas_toy", entry, { fetchImpl: fakeFetch });
+  assert.ok(A.pool && A.pool.size >= 1, "the pool is read with the manifest");
+  assert.equal(log.filter((x) => x.endsWith(A.manifest.pool.file)).length, 1, "fetched once");
+  const pooled = new Uint8Array(readFileSync(new URL(`s98_atlas_toy/atlas/${pc.atlas}/${A.manifest.points[pc.point][0]}`, REC)));
+  const a = await readStream(pooled, A.pool);
+  const b = await readStream(new Uint8Array(readFileSync(new URL("pool_point.lfpt.gz", Q))));
+  await assert.rejects(readStream(pooled), /pool/, "without the pool a pooled point cannot be read");
+  assert.equal(a.length, b.length);
+  const desc = (d) => JSON.stringify({ name: d.name, dtype: d.dtype, shape: d.shape, nbytes: d.nbytes, q: d.q ?? null });
+  let resolved = 0;
+  for (let k = 0; k < a.length; k++) {
+    const { blobs: ma, ...ra } = a[k].meta, { blobs: mb, ...rb } = b[k].meta;
+    assert.deepEqual(ra, rb, `message ${k}: the same meta`);
+    assert.deepEqual((ma || []).map(desc), (mb || []).map(desc), `message ${k}: the same blobs`);
+    resolved += (ma || []).filter((d) => d.pool).length;
+    assert.ok(!(mb || []).some((d) => d.pool), "the unpooled point names no pool");
+    for (const name of Object.keys(b[k].blobs)) {
+      assert.equal(a[k].blobs[name].constructor, b[k].blobs[name].constructor, name);
+      assert.deepEqual(Array.from(a[k].blobs[name]), Array.from(b[k].blobs[name]), `message ${k} blob ${name}`);
+    }
+  }
+  assert.ok(resolved >= 1, "the point has a pooled blob");
+  // through the atlas: the point's merged header carries the pooled blob, decoded
+  const p = await A.point(A.valuesOf(pc.point));
+  assert.equal(p.state, "computed");
 });
 
 test("a point is fetched once; the prefetch asks only for its neighbours, two at a time", async () => {

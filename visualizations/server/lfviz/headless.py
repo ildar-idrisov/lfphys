@@ -13,12 +13,15 @@ from ``check_params``, from the memory estimate, from the world's constructor or
 constructor). It drops what serves only the resumption of a live run (``DROP``) and
 strips the frames' timing fields (``FRAME_TIMING``): the same spec and code give the same messages (integrator D6).
 
-* ``clock``: ``{"fps": f, "speed": s | None}`` (the recordings: one frame every ``speed / fps`` of world time, the speed
-  changed by a script's ``speed`` command, ``s`` None for the world's default) or ``{"frame_dt": dt}`` (the atlases: a
-  frame at every multiple of ``dt`` of world time, the last one at the stop time);
-* ``stop``: ``{"seconds": s}`` (exactly ``round(s × fps)`` frames), ``{"world_s": t}`` (until the world time ``t``) or
-  ``{"event": kind, "after_s": a, "max_world_s": m}`` (until ``a`` world seconds after the first ``event`` message whose
-  ``kind`` or ``name`` is ``kind``; a run that reaches ``m`` first fails);
+* ``clock``: ``{"fps": f, "speed": s | None}`` (the recordings, and an atlas that takes frames per played second, EX2
+  §5 F1: one frame every ``speed / fps`` of world time, the speed changed by a script's ``speed`` command, ``s`` None for
+  the world's default; with a ``world_s`` or event stop the last frame is at the stop time) or ``{"frame_dt": dt}``
+  (the atlases: a frame at every multiple of ``dt`` of world time, the last one at the stop time);
+* ``stop``: ``{"seconds": s}`` (exactly ``round(s × fps)`` frames), ``{"world_s": t}`` (until the world time ``t``),
+  ``{"events": {kind: n, …}, "after_s": a, "max_world_s": m}`` (EX2 §5 F2: until ``a`` world seconds after the first
+  ``kind`` that has occurred ``n`` times, an ``event`` message counting for each of the keys its ``kind`` or ``name``
+  is; a run that reaches ``m`` first fails) or its shorthand ``{"event": kind, "after_s": a, "max_world_s": m}``
+  (``{"events": {kind: 1}}``);
 * ``script``: ``[{"at", "cmd", "args"}]`` applied at their frame (``round(at × fps)``, or ``round(at / dt)``) before the
   frame is drawn; ``captions`` (recordings, design §2.2): an accumulative ``caption {t, text, n, at, hold?}`` at its
   frame, after the script's commands of that frame;
@@ -29,9 +32,10 @@ reached, and a check whose last state is ✗ (``check_state``: a check marked ``
 not fail; ``RunFailed.checks`` then holds the failing checks' labels, so that a live point can say which). It returns an
 ``Outcome`` (frames, worlds, the checks' last states, the CPU time, the stop time).
 
-``Packer`` packs messages for a point file or a quantised recording: it drops the message types and frame blobs a
-screen does not draw, quantises the blobs of a ``quantize`` map (``protocol.quantize``; the largest error per blob is
-measured) and writes a header as a delta against the screen's base header:
+``Packer`` packs messages for a point file or a quantised recording: it drops the message types and blobs a screen
+does not draw (``drop.types``, ``drop.frame_blobs`` and, EX2 §5 F8, ``drop.blobs`` of any message type), quantises
+the blobs of a ``quantize`` map (``protocol.quantize``; the largest error per blob is measured) and writes a header as a
+delta against the screen's base header:
 
     {"type": "header", "t", "$delta": true, "$base": <sha256 of the base file>?, <the top-level keys whose JSON differs
      from the base header>, "$drop": [keys of the base header this header lacks]?, "$drop_blobs": [base blobs it lacks]?}
@@ -111,6 +115,8 @@ class Outcome:
     cpu_s: float = 0.0
     t_end: float = 0.0
     stop_event_t: float | None = None  # the world time of the stop event (an event stop rule)
+    stop_event: str | None = None  # the key of the stop rule's events that reached its count first
+    counts: dict = field(default_factory=dict)  # the stop rule's events counted so far, by key
     labels: dict = field(default_factory=dict)  # (world, check id) -> the check's label (a T) or its id
 
     def check_counts(self) -> dict:
@@ -167,13 +173,16 @@ def run_spec(viz_id: str, base: str | None, values: dict | None, seed: int, cloc
                 out.flips.append((*key, meta.get("t")))
             out.checks[key] = check_state(meta)
             out.labels[key] = meta.get("label") or str(meta["id"])
-        elif typ == "event" and stop_event is not None and out.stop_event_t is None \
-                and stop_event in (meta.get("kind"), meta.get("name")):
-            out.stop_event_t = float(meta.get("t", 0.0))
+        elif typ == "event" and want and out.stop_event_t is None:
+            for key in [k for k in want if k in (meta.get("kind"), meta.get("name"))]:  # once for each of its keys
+                out.counts[key] = out.counts.get(key, 0) + 1
+                if out.counts[key] >= want[key] and out.stop_event_t is None:
+                    out.stop_event_t, out.stop_event = float(meta.get("t", 0.0)), key
         if emit is not None:
             emit(meta, blobs)
 
-    stop_event = stop.get("event") if isinstance(stop, dict) else None
+    want = registry.stop_events(stop)  # {kind or name: n} of an event stop rule (EX2 §5 F2), else empty
+    stop_event = bool(want) or None
     try:  # the devices of the engine's kernels, as a worker configures them (LFPHYS_NO_GPU=1: the CPU); the kernels
         # this process ran for an earlier run are forgotten, so the header names this run's own (review F1)
         from lfphys.core import backend as _backend
@@ -249,7 +258,12 @@ def run_spec(viz_id: str, base: str | None, values: dict | None, seed: int, cloc
         try:
             if k:
                 if step_of is None:
-                    runner._advance(runner.sim.t + runner.speed / fps)
+                    target = runner.sim.t + runner.speed / fps
+                    if t_stop is not None:  # an atlas on the played clock (EX2 §5 F1): its last frame at the stop
+                        target = min(target, t_stop)
+                    elif max_t is not None:
+                        target = min(target, max_t)
+                    runner._advance(target)
                 else:
                     target = k * step_of
                     if t_stop is not None:
@@ -284,7 +298,9 @@ def run_spec(viz_id: str, base: str | None, values: dict | None, seed: int, cloc
         if t_stop is not None and runner.sim.t >= t_stop * (1 - 1e-12) - 1e-12:
             break
         if t_stop is None and max_t is not None and runner.sim.t >= max_t * (1 - 1e-12):
-            fail(f"the stop event {stop_event!r} did not happen by the world time {max_t:g} s (max_world_s)")
+            got = ", ".join(f"{k} {out.counts.get(k, 0)} of {n}" for k, n in want.items())
+            fail(f"the stop events {sorted(want)!r} did not reach their counts by the world time {max_t:g} s "
+                 f"(max_world_s; counted: {got})")
     keep({"type": "end", "t": runner.sim.t, "reason": end_reason})
     if n is not None and out.frames != n:
         fail(f"{out.frames} frames instead of {n}")
@@ -315,7 +331,8 @@ def _blob_sig(b) -> tuple:
 
 class Packer:
     """Packs a run's messages for a point file or a quantised recording (the module's docstring). ``quantize``: a
-    screen's map ``{"<type>.<blob>[|<blob>…]": encoding}``; ``drop``: ``{"types": [...], "frame_blobs": [...]}``;
+    screen's map ``{"<type>.<blob>[|<blob>…]": encoding}``; ``drop``: ``{"types": [...], "frame_blobs": [...],
+    "blobs": ["<type>.<blob>[*]", …]}``;
     ``base``: the screen's base header ``(meta, blobs)`` as packed (``pack_base``), or None (a full header);
     ``base_sha``: the hex sha256 of the base header's file, written into a delta as ``$base``. ``quant`` collects, per
     ``<type>.<blob>``, the encoding and the largest error and relative error (to the range) seen."""
@@ -328,6 +345,7 @@ class Packer:
         drop = drop or {}
         self.drop_types = set(drop.get("types") or [])
         self.drop_frame_blobs = set(drop.get("frame_blobs") or [])
+        self.drop_blobs = registry.drop_blob_rules(drop)  # (type, name, prefix): frame_blobs and blobs (EX2 §5 F8)
         self.base = base
         self.base_sha = base_sha
         self.quant: dict = {}
@@ -349,11 +367,17 @@ class Packer:
             else:  # the columns changed between messages: one number
                 e[k] = max(max(old) if isinstance(old, list) else old, max(v) if isinstance(v, list) else v)
 
+    def dropped(self, typ: str, name: str) -> bool:
+        """Whether a blob of a message type is dropped (``frame_blobs``; ``blobs``, a name ending with ``*`` a
+        prefix)."""
+        return any(t == typ and (name.startswith(b) if prefix else name == b) for t, b, prefix in self.drop_blobs)
+
     def blobs(self, typ: str, blobs: dict | None) -> dict:
-        """A message's blobs with the frame's dropped blobs left out and the map's blobs quantised."""
+        """A message's blobs with the dropped blobs left out (``frame_blobs``, ``blobs``) and the map's blobs
+        quantised."""
         out = {}
         for name, arr in (blobs or {}).items():
-            if typ == "frame" and name in self.drop_frame_blobs:
+            if self.dropped(typ, name):
                 continue
             enc = self.qmap.get((typ, name))
             if enc is not None and not isinstance(arr, protocol.Quantized):
@@ -368,15 +392,21 @@ class Packer:
         """The base header as stored (its blobs quantised): what ``base`` takes and the base file holds."""
         return dict(meta), self.blobs("header", blobs)
 
-    def message(self, meta: dict, blobs: dict | None = None) -> bytes | None:
-        """One message encoded as packed, or None when its type is dropped."""
+    def packed(self, meta: dict, blobs: dict | None = None) -> tuple[dict, dict] | None:
+        """One message as packed, ``(meta, blobs)`` before encoding (its blobs dropped and quantised, a header as a
+        delta), or None when its type is dropped."""
         typ = meta.get("type")
         if typ in self.drop_types:
             return None
         b = self.blobs(typ, blobs)
         if typ == "header" and self.base is not None:
             meta, b = self.delta(meta, b)
-        return protocol.encode(meta, b)
+        return meta, b
+
+    def message(self, meta: dict, blobs: dict | None = None) -> bytes | None:
+        """One message encoded as packed, or None when its type is dropped."""
+        pk = self.packed(meta, blobs)
+        return None if pk is None else protocol.encode(*pk)
 
     def delta(self, meta: dict, blobs: dict) -> tuple[dict, dict]:
         bmeta, bblobs = self.base
@@ -424,10 +454,93 @@ def gz(data: bytes) -> bytes:
     return gzip.compress(data, compresslevel=9, mtime=0)
 
 
-def read_stream(data: bytes, raw: bool = False) -> list[tuple[dict, dict]]:
-    """The decoded messages of an ``LFVREC1`` stream (gzip or not)."""
+def read_stream(data: bytes, raw: bool = False, pool: dict | None = None) -> list[tuple[dict, dict]]:
+    """The decoded messages of an ``LFVREC1`` stream (gzip or not); ``pool``: the atlas's pool (``read_pool_file``)
+    for a point with pooled blobs (EX2 §5 F10)."""
     if data[:2] == b"\x1f\x8b":
         data = gzip.decompress(data)
     if not data.startswith(protocol.MAGIC):
         raise ValueError("not an LFVREC1 stream")
-    return [protocol.decode(m, raw=raw) for _o, m in protocol.iter_stream(data, len(protocol.MAGIC))]
+    return [protocol.decode(m, raw=raw, pool=pool) for _o, m in protocol.iter_stream(data, len(protocol.MAGIC))]
+
+
+# --- an atlas's pool of shared blobs (EX2 §5 F10) -----------------------------------------------------------------------
+#: a blob is pooled only when its stored bytes are at least this many (smaller ones cost less than their reference)
+POOL_MIN_BYTES = 256
+
+
+def pool_ids(items: list[tuple[dict, dict]]) -> set:
+    """The pool ids of a packed point's blobs large enough to be pooled (``POOL_MIN_BYTES``)."""
+    out = set()
+    for _meta, blobs in items:
+        for arr in (blobs or {}).values():
+            if isinstance(arr, protocol.PoolRef):
+                continue
+            _d, raw = protocol.stored(arr)
+            if len(raw) >= POOL_MIN_BYTES:
+                out.add(protocol.pool_id(arr))
+    return out
+
+
+def pool_points(points: list[list[tuple[dict, dict]] | None]) -> tuple[list, dict]:
+    """The pool of an atlas's packed points (each a list of packed ``(meta, blobs)``, or None): every blob of at least
+    ``POOL_MIN_BYTES`` whose bytes occur in two or more points is kept once. Returns (the points with those blobs
+    replaced by ``protocol.PoolRef``, the pool ``{id: blob}`` in the order of first use)."""
+    count: dict = {}
+    for items in points:
+        for i in pool_ids(items or []):
+            count[i] = count.get(i, 0) + 1
+    shared = {i for i, n in count.items() if n >= 2}
+    pool: dict = {}
+    out = []
+    for items in points:
+        if items is None:
+            out.append(None)
+            continue
+        new = []
+        for meta, blobs in items:
+            nb = {}
+            for name, arr in (blobs or {}).items():
+                pid = None if isinstance(arr, protocol.PoolRef) else protocol.pool_id(arr)
+                if pid in shared and len(protocol.stored(arr)[1]) >= POOL_MIN_BYTES:
+                    pool.setdefault(pid, arr)
+                    nb[name] = protocol.PoolRef(pid)
+                else:
+                    nb[name] = arr
+            new.append((meta, nb))
+        out.append(new)
+    return out, pool
+
+
+def pool_file(pool: dict) -> bytes:
+    """An atlas's pool file: gzip of an ``LFVREC1`` stream of one message ``{"type": "pool"}`` with the pooled blobs."""
+    return gz(stream([protocol.encode({"type": "pool"}, pool)]))
+
+
+def read_pool_file(data: bytes) -> dict:
+    """``protocol.read_pool`` of a pool file."""
+    if data[:2] == b"\x1f\x8b":
+        data = gzip.decompress(data)
+    if not data.startswith(protocol.MAGIC):
+        raise ValueError("not an LFVREC1 stream")
+    return protocol.read_pool(next(m for _o, m in protocol.iter_stream(data, len(protocol.MAGIC))))
+
+
+def unpool(data: bytes, pool_data: bytes | None) -> bytes:
+    """A point's file with its pooled blobs put back (the bytes the point would have without a pool): a live point is
+    never pooled (EX2 §5 F10). A point without pooled blobs is returned as it is."""
+    raw = gzip.decompress(data) if data[:2] == b"\x1f\x8b" else data
+    items = [m for _o, m in protocol.iter_stream(raw, len(protocol.MAGIC))]
+    if not any("pool" in d for m in items for d in protocol.peek_meta(m).get("blobs", [])):
+        return data
+    pool = read_pool_file(pool_data)
+    out = []
+    for m in items:
+        if not any("pool" in d for d in protocol.peek_meta(m).get("blobs", [])):
+            out.append(m)
+            continue
+        meta, blobs = protocol.decode(m, raw=True, pool=pool)
+        q = {d["name"]: d.get("q") for d in meta.get("blobs", [])}
+        blobs = {k: (protocol.Quantized(v, q[k]) if q.get(k) else v) for k, v in blobs.items()}
+        out.append(protocol.encode({k: v for k, v in meta.items() if k != "blobs"}, blobs))
+    return gz(stream(out))

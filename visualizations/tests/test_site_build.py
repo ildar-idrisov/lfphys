@@ -296,10 +296,10 @@ def test_the_site_setting_reaches_the_player_and_the_check(site, extra, tmp_path
 def test_the_atlases_are_copied_and_in_the_manifest(site, extra):
     man = _json(site, "site-manifest.json")
     w = man["worlds"]["s98_atlas_toy"]
-    assert set(w["atlases"]) == {"explore", "lab.heights"}
+    assert set(w["atlases"]) == {"explore", "throws", "lab.heights", "lab.ticks"}  # the toy's EX2 screen and step
     assert {a["state"] for a in w["atlases"].values()} == {"present"}
     idx = _json(site, "recordings/s98_atlas_toy/index.json")
-    assert [a["id"] for a in idx["atlases"]] == ["explore", "lab.heights"]
+    assert [a["id"] for a in idx["atlases"]] == ["explore", "throws", "lab.heights", "lab.ticks"]
     for a in idx["atlases"]:
         assert w["atlases"][a["id"]]["key"] == a["key"] and w["atlases"][a["id"]]["file"] == a["file"]
         m = _json(site, f"recordings/s98_atlas_toy/{a['file']}")
@@ -308,10 +308,13 @@ def test_the_atlases_are_copied_and_in_the_manifest(site, extra):
         for name, size, state in m["points"]:
             if not state:
                 assert man["files"][f"{folder}/{name}"]["bytes"] == size
+        if m.get("pool"):  # the blobs the points share (EX2 §5 F10): copied and named like the base
+            assert man["files"][f"{folder}/{m['pool']['file']}"]["sha256"] == m["pool"]["sha256"]
+    assert _json(site, f"recordings/s98_atlas_toy/{idx['atlases'][0]['file']}").get("pool"), "the toy's explore has a pool"
     recs = _json(site, "api/recordings.json")
     assert recs["worlds"]["s98_atlas_toy"]["atlases"] == idx["atlases"]  # the player finds the manifests there
     d = _json(site, "api/viz/s98_atlas_toy.json")
-    assert [s["kind"] for s in d["screens"]] == ["watch", "explore", "lab"]
+    assert [s["kind"] for s in d["screens"]] == ["watch", "explore", "explore", "lab"]  # «Throws»: the toy's EX2 screen
 
 
 def test_the_check_fails_on_a_broken_atlas(site, extra, tmp_path, monkeypatch):
@@ -348,6 +351,15 @@ def test_the_check_fails_on_a_broken_atlas(site, extra, tmp_path, monkeypatch):
     j["atlases"][0]["key"] = "1" * 16
     ix.write_text(json.dumps(j), encoding="utf-8")
     assert any("atlas explore: stale" in x for x in check.check(copy, BASE, allow_missing=False).fails)
+    # the pool (EX2 §5 F10): missing, or of another size
+    copy = _copy(site, tmp_path / "p")
+    pf = copy / "recordings" / "s98_atlas_toy" / "atlas" / "explore" / m["pool"]["file"]
+    pf.unlink()
+    assert any("atlas explore" in x and "its pool" in x and "missing or differs" in x for x in _fails(check, copy))
+    copy = _copy(site, tmp_path / "q")
+    pf = copy / "recordings" / "s98_atlas_toy" / "atlas" / "explore" / m["pool"]["file"]
+    pf.write_bytes(pf.read_bytes() + b"x")
+    assert any("atlas explore" in x and "its pool" in x for x in _fails(check, copy))
     # missing altogether
     copy = _copy(site, tmp_path / "e")
     shutil.rmtree(copy / "recordings" / "s98_atlas_toy" / "atlas" / "lab.heights")

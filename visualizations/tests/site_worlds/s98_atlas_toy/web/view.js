@@ -4,7 +4,8 @@
 // lfphys/sources/explore_2026-11-14_design.md §2.4): a side view drawn from the run's `traj` chunks (computed samples),
 // the ball at the latest frame, the landing mark when the time reaches it. Drawing only: it computes no physics.
 // The screens' optional contract: `ctx.screen`, `overlays` + `setOverlay`, `setTraces`, `worldToPx` / `pxToWorld`,
-// `quantSafe`; it copes with a frame without its `ghost` blob (dropped by the Explore screen).
+// `anchors()`, `quantSafe`; it copes with a frame without its `ghost` blob (dropped by the Explore screen) and a header
+// without its `ticks` blob (dropped by the screen «Throws»).
 import { t } from "/static/js/i18n.js";
 import { css, el, fresh2d } from "/static/js/ui.js";
 
@@ -53,6 +54,11 @@ export function createView(ctx) {
     setTraces(list) { traces = list || []; ctx.requestRender && ctx.requestRender(); },
     worldToPx(p) { return map ? map.toPx(p) : [NaN, NaN]; },
     pxToWorld(q) { return map ? map.toWorld(q) : [NaN, NaN]; },
+    // where the lab's tape, ruler and protractor sit (a lab step with a ruler needs it: registry, EX2 §5 F8)
+    anchors() {
+      const L = (header && header.launcher) || { h: 0, angle: 0 };
+      return { launch: [0, Number(L.h) || 0], floor: 0, angle: Number(L.angle) || 0, landing: landing ? [landing.L, 0] : null };
+    },
     samples,
     reset() { header = null; rows = []; landing = null; },
     snapshot() { return { n: rows.length, landing }; },

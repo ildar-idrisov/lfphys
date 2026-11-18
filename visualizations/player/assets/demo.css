@@ -213,3 +213,23 @@ body.dm-drawer-open .dm-drawer { visibility: visible; }
   .dm-plot { height: 220px; }
   .dm-ctl-label, .dm-ctl-val, .dm-side, .dm-detent { font-size: 14px; }
 }
+
+/* EX2 (design lfphys/sources/explore_EX2_2026-11-18_design.md §5): a readout's error and reference (F7), «CSV of this
+   point» (F7), the modified-physics band of a lab step (F6), a formula's empty cell with its reason (F5); the
+   worksheet's basis, quotations and computed columns */
+.dm-rv { text-align: right; min-width: 0; overflow-wrap: anywhere; }
+.dm-rv .dm-ref { display: block; font-size: 12px; color: var(--muted); font-weight: 400; }
+.dm-point-csv { white-space: nowrap; }
+.dm-lab-mod { margin: 0 0 8px; }
+.dm-table td.dm-undef { color: var(--muted); white-space: normal; min-width: 7em; }
+.dm-table td.dm-undef .dm-why { display: block; font-size: 11px; line-height: 1.25; text-align: right; font-family: system-ui, sans-serif; }
+.dm-ck-list li.st-info .dm-ck-mark { color: var(--muted); }
+.ws .basis ul { margin: 2px 0 6px; padding-left: 20px; }
+.ws .basis .source { font-style: italic; }
+.ws .quote-box { margin: 2px 0 2px; }
+.ws .quote-mark { font-size: 12px; color: var(--muted); }
+.ws q.quote { font-style: italic; }
+.ws .formulas code { font-size: 13px; }
+@media print {
+  .ws .basis, .ws .formulas { font-size: 9pt; }
+}

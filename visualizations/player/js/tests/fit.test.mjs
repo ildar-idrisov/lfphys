@@ -3,12 +3,13 @@
 // The lab's fit (fit.js; design lfphys/sources/explore_2026-11-14_design.md §2.3): every model on exact data, York's
 // line and the Birge scaling on cases computed by hand, the cross-check against the Python reference
 // lfphys.tools.stats.linear_fit on the shared fixture (fixtures/fit_cases.json, Pearson–York included; integrator D3),
-// and the verdict's bound (two errors, or Student's t for σ from the scatter; integrator D4) against SciPy's quantiles
-// (fixtures/t_quantiles.json). Run from visualizations/: node --test player/js/tests/*.test.mjs
+// and the fit's printed output (EX2 §5 F6 (c): the σ from the declared errors, the σ scaled by the Birge ratio on its own,
+// χ² and its p-value against SciPy, fixtures/chi2_sf.json); the verdict of «Check against the law» is withdrawn (the
+// owner, 2026-11-18). Run from visualizations/: node --test player/js/tests/*.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-import { BIRGE_MAX, COVER, agrees, fit, quantity, tCoverage, tQuantile, verdict } from "../fit.js";
+import { chi2Sf, fit, lnGamma } from "../fit.js";
 
 const close = (a, b, tol, msg) => assert.ok(Math.abs(a - b) <= tol * Math.max(1, Math.abs(b)), `${msg}: ${a} vs ${b}`);
 
@@ -91,14 +92,6 @@ test("readings without errors: ordinary least squares, σ from the scatter", () 
   assert.equal(r.scaled, true);
 });
 
-test("the law's quantity and the agreement within two errors", () => {
-  const r = fit([1, 2, 3], [2, 4, 6], null, [0.1, 0.1, 0.1], "line0");
-  assert.deepEqual(quantity(r, "slope"), { value: r.params.b, sigma: r.sigma.b });
-  assert.equal(quantity(r, "vertex"), null);
-  assert.equal(agrees(2.0, 0.01, 2.015).agrees, true);
-  assert.equal(agrees(2.0, 0.01, 2.03).agrees, false);
-});
-
 // The cross-check with Python's lfphys.tools.stats.linear_fit: fixtures/fit_cases.json, written by
 // fixtures/make_fit_cases.py: each case {x, y, sx, sy, model, params, sigma, chi2, scaled, method} or {…, refused:
 // "singular"}; agreement to 1e-12, the same method, the same refusals
@@ -120,36 +113,31 @@ test("against lfphys.tools.stats.linear_fit (Python) on shared cases", { skip: !
   }
 });
 
-// --- the verdict (integrator D4; review EX1-mechanics F9) ---------------------------------------------------------------
-const TQ = new URL("./fixtures/t_quantiles.json", import.meta.url);
-test("Student's t: the coverage of ±2σ and the quantiles against SciPy", { skip: !existsSync(TQ) && "no fixture" }, () => {
-  const q = JSON.parse(readFileSync(TQ, "utf-8"));
-  close(COVER, q.cover, 1e-15, "erf(√2)");
-  for (const [nu, k] of Object.entries(q.k)) close(tQuantile(Number(nu)), k, 1e-10, `t quantile, ν = ${nu}`);
-  close(tCoverage(1, 1), 0.5, 1e-15, "ν = 1: P(|T| ≤ 1) = 1/2");
-  close(tCoverage(Math.sqrt(2), 2), Math.sqrt(2) / Math.sqrt(2 + 2), 1e-15, "ν = 2: t/√(2 + t²)");
+// --- the fit's output (EX2 §5 F6 (c)): no verdict, the σ declared and scaled, χ² and its p-value ---------------------------
+const SF = new URL("./fixtures/chi2_sf.json", import.meta.url);
+test("the p-value of χ² against SciPy's chi2.sf, from p near 1 to 1e-60", { skip: !existsSync(SF) && "no fixture" }, () => {
+  const cases = JSON.parse(readFileSync(SF, "utf-8"));
+  assert.ok(cases.length >= 50);
+  for (const c of cases) close(chi2Sf(c.chi2, c.dof), c.p, 1e-10, `χ² ${c.chi2}, ν ${c.dof}`);
+  assert.equal(chi2Sf(0, 3), 1);
+  assert.ok(Number.isNaN(chi2Sf(1, 0)) && Number.isNaN(chi2Sf(-1, 2)));
+  close(lnGamma(0.5), Math.log(Math.sqrt(Math.PI)), 1e-15, "ln Γ(½)");
+  close(lnGamma(10), Math.log(362880), 1e-15, "ln Γ(10) = ln 9!");
 });
 
-test("the verdict: two errors for declared errors, Student's t for errors from the scatter, none above BIRGE_MAX", () => {
-  // declared errors, no scaling: k = 2
-  const a = fit([1, 2, 3], [2, 4, 6.01], null, [0.1, 0.1, 0.1], "line0");
-  assert.equal(a.fromScatter, false);
-  const va = verdict(a, a.params.b, a.sigma.b, 2.0);
-  assert.equal(va.kind, "normal"); assert.equal(va.k, 2); assert.equal(va.agrees, true);
-  // no errors: σ from the scatter, k = t(dof)
-  const b = fit([0, 1, 2, 3, 4], [1.0, 3.1, 4.9, 7.2, 8.8], null, null, "line");
-  const vb = verdict(b, b.params.b, b.sigma.b, 2.0);
-  assert.equal(b.fromScatter, true); assert.equal(vb.kind, "t"); assert.equal(vb.dof, 3);
-  close(vb.k, tQuantile(3), 1e-15, "k = t(3)");
-  // a reference 2.5 σ away: rejected by k = 2, accepted by t(3) = 3.31
-  assert.equal(verdict(b, b.params.b, b.sigma.b, b.params.b + 2.5 * b.sigma.b).agrees, true);
-  // the Birge scaling applied (χ²/dof > 1): t as well; above BIRGE_MAX no verdict
+test("the σ from the declared errors and, when χ²/dof > 1, the σ scaled by the Birge ratio, each printed on its own", () => {
   const x = [0, 1, 2, 3, 4], y = [1.0, 3.1, 4.9, 7.2, 8.8];
-  const c = fit(x, y, null, x.map(() => 0.1), "line");
-  assert.ok(c.scaled && c.birge > 1 && c.birge <= BIRGE_MAX, `birge ${c.birge}`);
-  assert.equal(verdict(c, c.params.b, c.sigma.b, 2).kind, "t");
-  const d = fit(x, y, null, x.map(() => 0.01), "line");
-  assert.ok(d.birge > BIRGE_MAX);
-  const vd = verdict(d, d.params.b, d.sigma.b, d.params.b);
-  assert.equal(vd.refused, "birge"); assert.equal(vd.agrees, false, "a scatter far above the errors gives no «agrees»");
+  const a = fit(x, y, null, x.map(() => 0.1), "line");
+  assert.ok(a.birge > 1 && a.scaled);
+  close(a.sigmaScaled.b, a.sigmaDeclared.b * a.birge, 1e-15, "scaled = declared × √(χ²/dof)");
+  close(a.sigmaScaled.b, a.sigma.b, 1e-15, "the scaled σ is EX1's σ");
+  close(a.p, chi2Sf(a.chi2, a.dof), 1e-15, "p");
+  const b = fit([1, 2, 3], [2, 4, 6.01], null, [0.1, 0.1, 0.1], "line0");
+  assert.ok(!b.scaled && b.birge < 1);
+  assert.deepEqual(b.sigmaScaled, b.sigmaDeclared, "χ²/dof ≤ 1: nothing scaled");
+  const c = fit(x, y, null, null, "line");  // no declared errors: the σ from the scatter, no χ²
+  assert.ok(c.unit && Number.isNaN(c.p) && Number.isNaN(c.chi2));
+  close(c.sigmaDeclared.b, c.sigma.b, 1e-15, "from the scatter");
+  const q = fit([-2, -1, 0, 1, 2, 3], [-3.9, -1.1, 0.1, -0.9, -4.1, -9.0], null, [0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "quadratic");
+  assert.ok(q.sigmaScaled.xv >= q.sigmaDeclared.xv && q.sigmaDeclared.xv > 0, "the vertex's σ both ways");
 });

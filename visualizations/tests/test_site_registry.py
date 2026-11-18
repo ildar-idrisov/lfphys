@@ -342,16 +342,16 @@ def toy(monkeypatch):
 def test_the_toy_worlds_screens_validate_and_are_described(toy):
     assert registry.check(toy) == []
     d = registry.describe(toy)
-    assert [s["kind"] for s in d["screens"]] == ["watch", "explore", "lab"]
-    assert [s["label"]["$t"] for s in d["screens"]] == ["Watch", "Explore", "Lab work"]
+    assert [s["kind"] for s in d["screens"]] == ["watch", "explore", "explore", "lab"]
+    assert [s["label"]["$t"] for s in d["screens"]] == ["Watch", "Explore", "Throws", "Lab work"]
     ex = d["screens"][1]
     assert ex["atlas"] == "explore" and [c["kind"] for c in ex["controls"]] == ["slider", "slider"]
     assert ex["controls"][0]["label"]["$t"] == "Height" and ex["controls"][0]["law"] is False
-    lab = d["screens"][2]
+    lab = d["screens"][3]
     assert lab["steps"][0]["atlas"] == "lab.heights" and lab["instruments"]["tape"]["error"] == 0.0005
-    assert [a["id"] for a in registry.atlases_of(toy)] == ["explore", "lab.heights"]
+    assert [a["id"] for a in registry.atlases_of(toy)] == ["explore", "throws", "lab.heights", "lab.ticks"]
     assert registry.view_declarations(toy) == {"quantSafe": {"traj.s": "u16", "header.ticks": "u16"},
-                                               "overlays": ["path", "strobe", "v"]}
+                                               "overlays": ["path", "strobe", "v"], "anchors": True, "worldToPx": True}
     assert {"s98_atlas_toy"} <= set(registry.viz_ids())
 
 
@@ -400,52 +400,53 @@ def test_the_registry_refuses_what_the_screens_design_forbids(toy):
     c0, c1 = registry.screens_of({**toy, "screens": sc})[1]["controls"]
     assert c0["label"]["$t"] == "λ" and c0["unit"] == "nm"  # the control's own label and unit win
     assert c1["label"]["$t"] == "Angle" and c1["unit"] == "°"  # else the parameter's
-    lab = toy["screens"][2]
+    lab = toy["screens"][3]
     st = dict(lab["steps"][0])
-    assert any("goal" in x for x in p(s2={"steps": [{**st, "goal": None}]}))
-    assert any("instruments" in x for x in p(s2={"steps": [{**st, "instruments": ["tape", "caliper"]}]}))
-    assert any("from 'caliper'" in x for x in p(s2={"steps": [{**st, "columns": st["columns"] + [
+    assert any("goal" in x for x in p(s3={"steps": [{**st, "goal": None}]}))
+    assert any("instruments" in x for x in p(s3={"steps": [{**st, "instruments": ["tape", "caliper"]}]}))
+    assert any("from 'caliper'" in x for x in p(s3={"steps": [{**st, "columns": st["columns"] + [
         {"id": "z", "label": T("z"), "from": "caliper"}]}]}))
-    assert any("earlier column" in x for x in p(s2={"steps": [{**st, "columns": [
+    assert any("earlier column" in x for x in p(s3={"steps": [{**st, "columns": [
         {"id": "r", "label": T("r"), "of": "L", "op": "sqrt"}] + st["columns"]}]}))
-    assert any("op" in x for x in p(s2={"steps": [{**st, "columns": st["columns"] + [
+    assert any("op" in x for x in p(s3={"steps": [{**st, "columns": st["columns"] + [
         {"id": "z", "label": T("z"), "of": "h", "op": "cube"}]}]}))
-    assert any("plot" in x for x in p(s2={"steps": [{**st, "plot": {"x": "h", "y": "nope"}}]}))
-    assert any("power only above school" in x for x in p(s2={"steps": [{**st, "plot": {**st["plot"],
+    assert any("plot" in x for x in p(s3={"steps": [{**st, "plot": {"x": "h", "y": "nope"}}]}))
+    assert any("power only above school" in x for x in p(s3={"steps": [{**st, "plot": {**st["plot"],
                                                                                        "fits": ["power"]}}]}))
-    assert any("law" in x for x in p(s2={"steps": [{**st, "law": {"quantity": "mood"}}]}))
-    assert any("reads" in x for x in p(s2={"instruments": {**lab["instruments"], "ruler": {
+    assert any("law" in x for x in p(s3={"steps": [{**st, "law": {"quantity": "mood"}}]}))
+    assert any("reads" in x for x in p(s3={"instruments": {**lab["instruments"], "ruler": {
         **lab["instruments"]["ruler"], "reads": "control:nope"}}}))
-    assert any("event is the kind or name" in x for x in p(s2={"instruments": {**lab["instruments"], "tape": {
+    assert any("event is the kind or name" in x for x in p(s3={"instruments": {**lab["instruments"], "tape": {
         **lab["instruments"]["tape"], "event": 3}}}))
-    ok = p(s2={"instruments": {**lab["instruments"], "tape": {**lab["instruments"]["tape"], "event": "landing"}}})
+    ok = p(s3={"instruments": {**lab["instruments"], "tape": {**lab["instruments"]["tape"], "event": "landing"}}})
     assert ok == []
     sc = [dict(x) for x in toy["screens"]]
-    sc[2] = {**sc[2], "instruments": {**lab["instruments"], "tape": {**lab["instruments"]["tape"], "event": "landing"}}}
-    got = registry.screens_of({**toy, "screens": sc})[2]["instruments"]
+    sc[3] = {**sc[3], "instruments": {**lab["instruments"], "tape": {**lab["instruments"]["tape"], "event": "landing"}}}
+    got = registry.screens_of({**toy, "screens": sc})[3]["instruments"]
     assert got["tape"]["event"] == "landing" and got["ruler"]["event"] is None  # passed through to the catalogue
-    assert any("only a stopwatch is manual" in x for x in p(s2={"instruments": {**lab["instruments"], "ruler": {
+    assert any("only a stopwatch is manual" in x for x in p(s3={"instruments": {**lab["instruments"], "ruler": {
         **lab["instruments"]["ruler"], "manual": True}}}))
-    assert any("worksheet" in x for x in p(s2={"worksheet": {**lab["worksheet"], "questions": []}}))
-    assert any("worksheet" in x for x in p(s2={"worksheet": {**lab["worksheet"], "frp": [{"name": "plain"}]}}))
+    assert any("worksheet" in x for x in p(s3={"worksheet": {**lab["worksheet"], "questions": []}}))
+    assert any("worksheet" in x for x in p(s3={"worksheet": {**lab["worksheet"], "frp": [{"name": "plain"}]}}))
     # school: Explore and Lab work required; Lab work may be absent only with lab_absent
     no_lab = [s for s in toy["screens"] if s["kind"] != "lab"]
     assert any("Lab work" in x for x in registry.check({**toy, "screens": no_lab}))
     assert registry.check({**toy, "screens": no_lab, "lab_absent": T("a test")}) == []
-    assert any("Explore" in x for x in registry.check({**toy, "screens": [toy["screens"][0], toy["screens"][2]]}))
+    assert any("Explore" in x for x in registry.check({**toy, "screens": [toy["screens"][0], toy["screens"][3]]}))
     lab_viz = _viz("p01_gravity")
     assert any("laboratory has no screens" in x for x in registry.check({**lab_viz, "screens": [toy["screens"][1]]}))
 
 
 def test_a_steps_laws_name_their_columns_model_and_reference(toy):
-    """Integrator D4 (review R-E F9, R-P F3, R-W F5): «Check against the law» judges a fit only when the plotted columns
-    and the model are a law's own; a step may declare several laws; the old single ``law`` is refused."""
-    lab = toy["screens"][2]
+    """Integrator D4 (review R-E F9, R-P F3, R-W F5), as EX2 §5 F6 (d) keeps it: a law names its two columns, its model
+    and its reference (data for «Computed for this bench», no verdict); a step may declare several laws, and its plot
+    need not be one of them; the old single ``law`` is refused."""
+    lab = toy["screens"][3]
     st = dict(lab["steps"][0])
     law = dict(st["laws"][0])
 
     def p(**ch):
-        return _screens_problems(toy, s2={"steps": [{**st, **ch}]})
+        return _screens_problems(toy, s3={"steps": [{**st, **ch}]})
     assert p() == []
     assert any("declares laws" in x for x in p(law=law))
     assert any("two columns" in x for x in p(laws=[{**law, "x": "nope"}]))
@@ -457,7 +458,7 @@ def test_a_steps_laws_name_their_columns_model_and_reference(toy):
     assert any("unknown fields" in x for x in p(laws=[{**law, "tolerance": 2}]))
     assert any("label is a T" in x for x in p(laws=[{**law, "label": "plain"}]))
     assert any("unit is a T or a string" in x for x in p(laws=[{**law, "unit": 1}]))
-    assert any("plot's own pair" in x for x in p(laws=[{**law, "x": "h"}]))
+    assert p(laws=[{**law, "x": "h"}]) == []  # EX2 §5 F6 (d): laws are data; the plot need not be one of them
     assert p(laws=[{**law, "unit": T("m^½")}]) == []
     assert p(laws=[]) == [] and p(laws=None) == []  # no law: no check
     sim = toy["simulation"]
@@ -468,39 +469,103 @@ def test_a_steps_laws_name_their_columns_model_and_reference(toy):
             return {}
     assert any("lab_reference(step_id, fixed, values, reference)" in x
                for x in registry.check({**toy, "simulation": Old}))
-    steps = registry.screens_of(toy)[2]["steps"]
+    steps = registry.screens_of(toy)[3]["steps"]
     assert [x["reference"] for x in steps[0]["laws"]] == ["k_horizontal", "zero_intercept"] and "law" not in steps[0]
     assert next(a for a in registry.atlases_of(toy) if a["id"] == "lab.heights")["laws"] == \
         ["k_horizontal", "zero_intercept"]
 
 
-def test_a_worksheets_programme_and_variants(toy):
-    """A worksheet's ``frp`` entries name their programme (a T), and its ``variants`` (a grade's own sheet) name the
-    lab's steps, their columns and fits (integrator, 2026-11-17)."""
-    lab = toy["screens"][2]
+def test_the_task_sheet_and_its_variants(toy):
+    """EX2 §5 F8: the task sheet (``frp`` at school, ``goal``, ``bench``, ``procedure``, ``record``, ``record_rows``,
+    ``variants``) replaces EX1's questions, answers and teacher's notes, which are refused; a variant names steps of the
+    lab, values on their grids and its own texts."""
+    lab = toy["screens"][3]
     ws = dict(lab["worksheet"])
     var = dict(ws["variants"][0])
 
     def p(**ch):
-        return _screens_problems(toy, s2={"worksheet": {**ws, **ch}})
+        return _screens_problems(toy, s3={"worksheet": {**ws, **ch}})
     assert p() == []
+    for gone in ("questions", "teacher", "grading", "equipment"):
+        assert any("are gone" in x for x in p(**{gone: []})), gone
+    assert any("unknown fields" in x for x in p(notes=[]))
     assert any("programme" in x for x in p(frp=[{k: v for k, v in ws["frp"][0].items() if k != "programme"}]))
+    assert any("goal is a T" in x for x in p(goal="plain"))
+    for k in ("bench", "procedure", "record"):
+        assert any(f"{k} is a list of T" in x for x in p(**{k: []})), k
+    assert any("record_rows" in x for x in p(record_rows=0)) and p(record_rows=12) == []
     assert any("steps" in x for x in p(variants=[{**var, "steps": ["nope"]}]))
-    assert any("not a step of the variant" in x for x in p(variants=[{**var, "plot": {"angles": {"x": "h", "y": "L"}}}]))
-    assert any("two columns" in x for x in p(variants=[{**var, "plot": {"heights": {"x": "h", "y": "z", "fit": None}}}]))
-    assert any("fit 'quadratic'" in x for x in p(variants=[{**var, "plot": {"heights": {"x": "h", "y": "L",
-                                                                                        "fit": "quadratic"}}}]))
-    assert p(variants=[{**var, "plot": {"heights": {"x": "h", "y": "L", "fit": "line"}}}]) == []
-    assert any("grade" in x for x in p(variants=[{**var, "grade": "7"}]))
+    assert any("not on its grid" in x for x in p(variants=[{**var, "values": {"heights": {"h_m": 0.55}}}]))
+    assert any("no control of the step" in x for x in p(variants=[{**var, "values": {"heights": {"v0": 1.0}}}]))
+    assert any("not a step of the variant" in x for x in p(variants=[{**var, "values": {"ticks": {"h_m": 0.2}}}]))
+    assert p(variants=[{**var, "steps": ["heights", "ticks"], "values": {"ticks": {"h_m": 0.8}}}]) == []
+    assert any("grade" in x for x in p(variants=[{k: v for k, v in var.items() if k != "grade"}]))  # school
     assert any("label is a T" in x for x in p(variants=[{**var, "label": "plain"}]))
     assert any("unique slug" in x for x in p(variants=[var, var]))
-    assert any("questions" in x for x in p(variants=[{**var, "questions": [{"q": "plain", "answer": T("a")}]}]))
-    assert any("unknown fields" in x for x in p(variants=[{**var, "notes": []}]))
-    assert p(variants=None) == []
-    assert p(variants=[{**var, "goals": {"heights": T("a test")}}]) == []  # a step's goal for the variant's sheet
-    assert any("not a step of the variant" in x for x in p(variants=[{**var, "goals": {"angles": T("a test")}}]))
-    assert any("goal of heights is a T" in x for x in p(variants=[{**var, "goals": {"heights": "plain"}}]))
-    assert any("goals is a map" in x for x in p(variants=[{**var, "goals": ["x"]}]))
+    assert any("unknown fields" in x for x in p(variants=[{**var, "plot": {}}]))
+    assert any("text" in x for x in p(variants=[{**var, "text": {"goal": "plain"}}]))
+    assert any("text" in x for x in p(variants=[{**var, "text": {"hint": T("x")}}]))
+    d = registry.screens_of(toy)[3]["worksheet"]
+    assert d["record_rows"] == 8 and d["ex1"] is False and d["variants"][0]["values"] == {"heights": {"h_m": 1.0}}
+
+
+def test_s03_keeps_its_ex1_worksheet_only_through_the_transition():
+    """TRANSITION (``registry.EX1_WORKSHEETS``; WS03 removes it): S03 still loads with EX1's worksheet (questions,
+    answers, teacher's notes, its variant's plot and goals) and its laws as data; another world with EX1's form is
+    refused with the reason."""
+    assert registry.EX1_WORKSHEETS == {"s03_projectile"}
+    s03 = _viz("s03_projectile")
+    assert registry.check(s03) == []
+    ws = registry.screens_of(s03)[-1]["worksheet"]
+    assert ws["ex1"] is True and ws["questions"]
+    other = {**s03, "id": "s04_projectile"}
+    assert any("are gone" in x for x in registry.check_screens(other))
+
+
+def test_a_step_on_an_explore_screens_atlas(toy):
+    """EX2 §5 F9: a lab step with ``atlas: <Explore screen>`` has no atlas of its own: its points, controls, clock and
+    stop are the screen's; the screen's atlas carries its laws as ``<step>/<law>`` (so its key covers them); a step that
+    names no Explore screen, or declares the screen's fields itself, is refused."""
+    uni = registry.load("u96_lab_toy")
+    assert registry.check(uni) == []
+    ids = [a["id"] for a in registry.atlases_of(uni)]
+    assert ids == ["explore", "lab.counts"]  # no lab.throws
+    ex = next(a for a in registry.atlases_of(uni) if a["id"] == "explore")
+    assert ex["laws"] == ["throws/horizontal_speed"]
+    st = registry.screens_of(uni)[1]["steps"][1]
+    assert st["atlas"] == "explore" and st["shared"] is True and [c["param"] for c in st["controls"]] == ["throw", "g_scale"]
+    assert st["fps"] == 10.0 and st["speed"] == "world" and st["stop"]["events"] == {"landing": 1}
+    L = _site_module("sitelib")
+    plain = {**ex, "laws": []}
+    assert L.atlas_key(ex, "abc") != L.atlas_key(plain, "abc")  # the key covers the steps' laws
+    lab = uni["screens"][1]
+    step = dict(lab["steps"][1])
+
+    def p(**ch):
+        return registry.check({**uni, "screens": [uni["screens"][0], {**lab, "steps": [lab["steps"][0], {**step, **ch}]}]})
+    assert p() == []
+    assert any("no Explore screen" in x for x in p(atlas="lab"))
+    assert any("no Explore screen" in x for x in p(atlas="nowhere"))
+    assert any("does not declare" in x and "controls" in x for x in p(controls=[{"param": "h_m", "values": [1.0]}]))
+    assert any("does not declare" in x and "stop" in x for x in p(stop={"world_s": 1.0}))
+    assert p(speed=0.25) == []
+    var = {"id": "x", "label": T("x"), "values": {"throws": {"throw": "sideways"}}}
+    ws = {**lab["worksheet"], "variants": [var]}
+    assert any("not on its grid" in x for x in registry.check({**uni, "screens": [uni["screens"][0], {**lab, "worksheet": ws}]}))
+
+
+def test_a_steps_overlays_and_readouts(toy):
+    """EX2 §5 F6 (b): a step may declare overlays (the view's) and readouts, as an Explore screen does."""
+    lab = toy["screens"][3]
+    st = dict(lab["steps"][1])
+
+    def p(**ch):
+        return _screens_problems(toy, s3={"steps": [lab["steps"][0], {**st, **ch}]})
+    assert p(overlays=["path", "v"], readouts=["v_mean"]) == []
+    assert any("not declared by the view" in x for x in p(overlays=["rainbow"]))
+    assert any("readouts" in x for x in p(readouts="v_mean"))
+    got = registry.screens_of(toy)[3]["steps"][1]
+    assert got["overlays"] == [] and got["readouts"] == []
 
 
 def test_a_law_parameter_is_no_control_at_school_but_may_be_at_university():
@@ -541,3 +606,191 @@ def test_the_readme_catalogue_lists_the_screens(toy, monkeypatch, published):
         assert all(lab in row for lab in labels), row
         q = "" if lang == i18n.DEFAULT else f"&lang={lang}"
         assert (f"({url}run.html?demo={TOY}&screen=explore{q})" in row) == published
+
+
+# --- EX2 (design lfphys/sources/explore_EX2_2026-11-18_design.md §5 F1–F8) -------------------------------------------------
+UNI = "u96_lab_toy"
+
+
+def test_the_clock_the_speed_and_the_stop_by_counted_events(toy):
+    """F1, F2: exactly one of ``frame_dt`` and ``fps``; ``speed`` > 0 or "world"; ``{events: {kind: n ≥ 1}, after_s?,
+    max_world_s}`` (max_world_s required, as with ``event``)."""
+    def p(**kw):
+        return _screens_problems(toy, **kw)
+    assert p() == []
+    assert any("one of frame_dt" in x and "both" in x for x in p(s1={"fps": 10}))
+    assert any("one of frame_dt" in x and "neither" in x for x in p(s2={"fps": None}))
+    assert any("fps 0" in x for x in p(s2={"fps": 0}))
+    assert p(s1={"speed": "world"}) == [] and p(s1={"speed": 2.5e-8}) == []
+    assert any("speed" in x for x in p(s1={"speed": 0})) and any("speed" in x for x in p(s1={"speed": "fast"}))
+    ev = {"events": {"tick": 3, "landing": 1}, "after_s": 0.1, "max_world_s": 5.0}
+    assert p(s1={"stop": ev}) == []
+    for bad in ({**ev, "max_world_s": None}, {"events": {"tick": 0}, "max_world_s": 5.0}, {"events": {}, "max_world_s": 5},
+                {"events": {"tick": True}, "max_world_s": 5}, {"events": {"tick": 1.5}, "max_world_s": 5},
+                {**ev, "event": "landing"}):
+        assert any("stop" in x for x in p(s1={"stop": bad})), bad
+    assert registry.stop_events(ev) == {"tick": 3, "landing": 1}
+    lab = toy["screens"][3]
+    st0 = dict(lab["steps"][0])  # its manual stopwatch times the flight on the wall clock: real time only
+    assert any("manual stopwatch" in x for x in _screens_problems(toy, s3={"steps": [{**st0, "speed": 0.5}, lab["steps"][1]]}))
+    assert _screens_problems(toy, s3={"steps": [lab["steps"][0], {**lab["steps"][1], "speed": 0.5}]}) == []
+
+
+def test_compound_controls(toy):
+    """F3: ``{id, label, unit?, values, labels?, sets: {param: [one per value]}, default?}``: the parameters exist, the
+    lists align with the values, every combination resolves, no ``param`` with ``sets``; the catalogue's form keys it by
+    its id (``param`` = ``id``) with ``compound``, ``sets``, ``labels``; its value expands to the parameters it sets."""
+    sc = toy["screens"][2]
+    c = dict(sc["controls"][0])
+    h = sc["controls"][1]
+
+    def p(cc, extra=None):
+        return _screens_problems(toy, s2={"controls": [cc, *(extra if extra is not None else [h])]})
+    assert p(c) == []
+    assert any("no param" in x for x in p({**c, "param": "v0"}))
+    assert any("no parameter of the schema" in x for x in p({**c, "id": "v0"}))
+    assert any("no parameter of the schema" in x for x in p({**c, "id": "constructor"}))
+    assert any("label is a T" in x for x in p({k: v for k, v in c.items() if k != "label"}))
+    assert any("one value per grid value" in x for x in p({**c, "sets": {**c["sets"], "v0": [2.0, 3.0]}}))
+    assert any("no parameter of the schema" in x for x in p({**c, "sets": {**c["sets"], "nope": [1, 2, 3]}}))
+    assert any("refuses" in x for x in p({**c, "sets": {**c["sets"], "v0": [2.0, 3.0, 99.0]}}))
+    assert any("labels is a list of T" in x for x in p({**c, "labels": c["labels"][:2]}))
+    assert any("default" in x for x in p({**c, "default": "sideways"}))
+    assert any("both a control and set" in x for x in p(c, [{"param": "v0", "values": [1.0, 2.0]}]))
+    assert any("set by two compound" in x for x in p(c, [{**c, "id": "again"}]))
+    assert any("both set by the control and fixed" in x for x in _screens_problems(toy, s2={"fixed": {"v0": 1.0}}))
+    # every combination resolves: an angle the compound sets with a height that the schema refuses in combination
+    # cannot happen in the toy's schema (each parameter has its own range), so the check is seen through a refused value
+    d = registry.screens_of(toy)[2]["controls"][0]
+    assert d["param"] == d["id"] == "throw" and d["compound"] and d["kind"] == "select" and d["law"] is False
+    assert [x["$t"] for x in d["labels"]] == ["flat, 2 m/s", "a lob, 3 m/s at 30°", "steep, 2.5 m/s at 60°"]
+    assert registry.expand_values(registry.atlases_of(toy)[1]["controls"], {"throw": "steep", "h_m": 0.5}) == \
+        {"v0": 2.5, "angle_deg": 60.0, "h_m": 0.5}
+    with pytest.raises(ValueError):
+        registry.expand_values(registry.atlases_of(toy)[1]["controls"], {"throw": "sideways"})
+    uni = registry.load(UNI) if UNI in registry.viz_ids() else None
+    assert uni is not None
+    law = registry.screens_of(uni)[0]["controls"][1]
+    assert law["law"] is True  # the law control at standard (flagged)
+
+
+def test_counters_the_runs_error_and_formula_columns(toy):
+    """F4, F5: a counter (division 1; error "poisson" or a number ≥ 0) reads a measurable; ``sigma`` only on a readout,
+    naming a measurable, without an ``error``; a column is one of ``from``, ``of`` + ``op``, ``expr``; a formula names
+    earlier columns only (by the grammar of ``lfviz.expr``); a column may not take a formula's own name."""
+    lab = toy["screens"][3]
+    ins = lab["instruments"]
+    st = dict(lab["steps"][1])
+
+    def p(**kw):
+        return _screens_problems(toy, s3=kw)
+    assert p() == []
+    assert any("a counter's division" in x for x in p(instruments={**ins, "ticks": {**ins["ticks"], "division": 0.5}}))
+    assert any("a counter's error" in x for x in p(instruments={**ins, "ticks": {**ins["ticks"], "error": "gauss"}}))
+    assert any("a counter's error" in x for x in p(instruments={**ins, "ticks": {**ins["ticks"], "error": None}}))
+    assert p(instruments={**ins, "ticks": {**ins["ticks"], "error": 0}}) == []  # an exact count
+    assert any("reads a measurable, not a set-up" in x for x in p(instruments={**ins, "ticks": {**ins["ticks"],
+                                                                                                "reads": "control:h_m"}}))
+    assert any("only a readout takes the run's own error" in x
+               for x in p(instruments={**ins, "tape": {**ins["tape"], "sigma": "v_mean_se"}}))
+    assert any("an error and a sigma" in x for x in p(instruments={**ins, "speedo": {**ins["speedo"], "error": 0.1}}))
+    cols = st["columns"]
+
+    def c(new):
+        return p(steps=[lab["steps"][0], {**st, "columns": new}])
+    assert any("later_column" in x for x in c([cols[0], {"id": "z", "label": T("z"), "expr": "n + 1"}, *cols[1:]]))
+    assert any("unknown_name" in x for x in c([*cols, {"id": "z", "label": T("z"), "expr": "q + 1"}]))
+    assert any("not_callable" in x for x in c([*cols, {"id": "z", "label": T("z"), "expr": "n(1)"}]))
+    assert any("syntax" in x for x in c([*cols, {"id": "z", "label": T("z"), "expr": "n.constructor"}]))
+    assert any("one of 'from'" in x for x in c([*cols, {"id": "z", "label": T("z"), "expr": "n", "from": "ruler"}]))
+    assert any("the formulas' own" in x for x in c([*cols, {"id": "pi", "label": T("z"), "expr": "n"}]))
+    assert any("the formulas' own" in x for x in c([*cols, {"id": "toString", "label": T("z"), "expr": "n"}]))
+    got = registry.screens_of(toy)[3]
+    assert got["instruments"]["ticks"]["error"] == "poisson" and got["instruments"]["speedo"]["error"] is None \
+        and got["instruments"]["speedo"]["sigma"] == "v_mean_se" and got["instruments"]["ticks"]["division"] == 1
+    assert got["steps"][1]["columns"][4]["expr"] == "0.1 * n" and got["steps"][1]["stop"]["events"] == {"landing": 1}
+
+
+def test_basis_at_standard_and_the_programme_at_school(toy):
+    """F8: a university worksheet names its basis (``[{text, source, quote?, quote_lang?}]``) and no school programme; at
+    school ``frp`` stays required; a variant's grade is required at school only. (The owner, 2026-11-18: no grading;
+    the worksheet is being redesigned as a task sheet, so this follows the revised design when it comes.)"""
+    uni = registry.load(UNI)
+    assert registry.check(uni) == []
+    lab = uni["screens"][1]
+    ws = dict(lab["worksheet"])
+
+    def p(**ch):
+        return registry.check({**uni, "screens": [uni["screens"][0], {**lab, "worksheet": {**ws, **ch}}]})
+    assert p() == []
+    assert any("basis" in x for x in p(basis=None))
+    assert any("basis" in x for x in p(basis=[{"text": "plain", "source": "x"}]))
+    assert any("quote" in x for x in p(basis=[{**ws["basis"][0], "quote": T("translated")}]))
+    assert any("quote_lang" in x for x in p(basis=[{**ws["basis"][0], "quote_lang": "english"}]))
+    assert any("not a school programme" in x for x in p(frp=toy["screens"][3]["worksheet"]["frp"]))
+    var = {"id": "a", "label": T("Part A"), "steps": ["counts"]}
+    assert p(variants=[var]) == []  # no grade at university
+    assert any("grade" in x for x in p(variants=[{**var, "grade": 20}]))
+    tws = dict(toy["screens"][3]["worksheet"])
+    assert any("frp" in x for x in _screens_problems(toy, s3={"worksheet": {k: v for k, v in tws.items() if k != "frp"}}))
+    var7 = tws["variants"][0]
+    assert any("grade" in x for x in _screens_problems(toy, s3={"worksheet": {**tws, "variants": [
+        {k: v for k, v in var7.items() if k != "grade"}]}}))
+    d = registry.screens_of(uni)[1]["worksheet"]
+    assert d["basis"][0]["quote"].startswith("The time of fall") and "grading" not in d
+
+
+def test_the_anchors_rule(toy, monkeypatch):
+    """F8 (V52 (l)): a lab step with a ruler or a protractor needs the view's ``anchors()`` and ``worldToPx``; a lab
+    with readouts and counters only does not."""
+    assert registry.check(toy) == []
+    monkeypatch.setattr(registry, "view_declarations", lambda viz: {"quantSafe": {"traj.s": "u16", "header.ticks": "u16"},
+                                                                    "overlays": ["path", "strobe", "v"],
+                                                                    "anchors": False, "worldToPx": True})
+    assert any("anchors()" in x for x in registry.check(toy))
+    uni = registry.load(UNI)
+    monkeypatch.setattr(registry, "view_declarations", lambda viz: {"quantSafe": {"traj.s": "u16"},
+                                                                    "overlays": ["path", "v"], "anchors": False,
+                                                                    "worldToPx": False})
+    assert registry.check(uni) == []  # readouts and a counter only: nothing is drawn over the view
+
+
+def test_a_law_parameter_in_a_step_is_standard_only(toy):
+    """F6: a law parameter set to another value by a step's preset or ``fixed`` is modified physics: allowed at
+    ``standard`` (u96's step on the stronger field), refused at school."""
+    uni = registry.load(UNI)
+    st = uni["screens"][1]["steps"][0]
+    assert st["fixed"]["g_scale"] == 1.5 and registry.check(uni) == []
+    school = {**uni, "id": "s02_x", "audience": "school", "ui": "school"}
+    probs = registry.check_screens(school)
+    assert any("no modified physics at school" in x and "g_scale" in x for x in probs)
+
+
+def test_drop_blobs_form(toy):
+    def p(drop):
+        return _screens_problems(toy, s2={"drop": drop})
+    assert p({"blobs": ["frame.ghost", "header.tick*"]}) == []
+    assert any("drop blob" in x for x in p({"blobs": ["ghost"]}))
+    assert any("never dropped" in x for x in p({"blobs": ["check.values"]}))
+    assert any("drop" in x for x in p({"blobs": "frame.ghost"}))
+    assert registry.drop_blob_rules({"frame_blobs": ["g"], "blobs": ["header.t*", "segment.lam"]}) == \
+        [("frame", "g", False), ("header", "t", True), ("segment", "lam", False)]
+
+
+def test_the_current_code_hash_is_code_hashs_and_lists_the_engine_once(monkeypatch):
+    """STATUS V52 (af): ``code_hash_current`` keeps the shared files' listing and the engine's part of the hash, so
+    ``/api/viz`` neither lists nor reads the engine again for each world; the keys are ``code_hash``'s."""
+    monkeypatch.setattr(registry, "_CODE_HASHES", {})
+    monkeypatch.setattr(registry, "_ENGINE_PREFIX", {})
+    calls = []
+    real = registry._shared_raw
+    monkeypatch.setattr(registry, "_shared_raw", lambda: calls.append(1) or real())
+    for vid in IDS:
+        assert registry.code_hash_current(vid) == registry.code_hash(vid), vid
+    n = len(calls)
+    calls.clear()
+    for vid in IDS:
+        registry.code_hash_current(vid)
+    # the shared listing is kept while the engine's and lfviz's folders are unchanged (and had settled before it)
+    settled = registry._SHARED_LIST.get((str(registry.SERVER), str(registry.ENGINE))) is not None
+    assert (not calls) if settled else len(calls) <= len(IDS), (n, len(calls))

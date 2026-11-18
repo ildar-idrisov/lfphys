@@ -10,7 +10,11 @@
   protocol allows (u1 and u2, lin and sqrt, one range and a range per column, NaN codes), and
   ``tests/site_worlds/quant/cases.json``: for each message and blob, the decoded float32 values as their bit patterns
   (``"%08x"`` of the IEEE single), which ``player/js/api.js decode`` must give bit for bit (``tests/test_protocol_quant.py``
-  checks the Python side).
+  checks the Python side);
+* ``tests/site_worlds/quant/pool_point.lfpt.gz``: the first point of the toy's ``explore`` atlas that has pooled blobs,
+  with its pooled blobs put back (``headless.unpool``: the bytes the point would have without a pool, as a live point
+  has them), and ``pool_point.json`` naming it; ``player/js/tests/atlas.test.mjs`` decodes the pooled point with the
+  atlas's pool and compares (EX2 §5 F10, §7), ``tests/test_atlas.py`` checks it against the committed fixture.
 
     docker run --rm --memory=4g -e LFPHYS_NO_GPU=1 -e LFVIZ_EXTRA=/lf/visualizations/tests/site_worlds \\
       --user "$(id -u):$(id -g)" -v "$PWD:/lf" -w /lf/visualizations lfphys-viz python3 tests/site_worlds/make_fixture.py
@@ -42,7 +46,7 @@ for _p in (str(VIZ / "server"), str(VIZ.parent / "lfphys")):
 
 import numpy as np  # noqa: E402
 
-from lfviz import protocol  # noqa: E402
+from lfviz import headless, protocol  # noqa: E402
 
 WORLD = "s98_atlas_toy"
 
@@ -97,10 +101,28 @@ def write_world(folder: Path):
     return index
 
 
+def write_pool_case(folder: Path, recordings: Path, index: dict) -> int:
+    """The first point of the toy's ``explore`` atlas with pooled blobs, unpooled, and its name (EX2 §5 F10)."""
+    entry = next(a for a in index["atlases"] if a["id"] == "explore")
+    man = json.loads((recordings / WORLD / entry["file"]).read_text(encoding="utf-8"))
+    d = (recordings / WORLD / entry["file"]).parent
+    pool = (d / man["pool"]["file"]).read_bytes()
+    for i, (name, _size, state) in enumerate(man["points"]):
+        data = (d / name).read_bytes() if not state else b""
+        plain = headless.unpool(data, pool) if data else data
+        if plain != data:
+            (folder / "pool_point.lfpt.gz").write_bytes(plain)
+            (folder / "pool_point.json").write_text(json.dumps({"world": WORLD, "atlas": "explore", "point": i}) + "\n",
+                                                    encoding="utf-8")
+            return i
+    raise SystemExit("the toy's explore atlas has no pooled point")
+
+
 def main() -> int:
     os.environ["LFVIZ_EXTRA"] = str(HERE)  # the toy world (set here only: the tests import this module)
     write_quant(HERE / "quant")
     index = write_world(HERE / "recordings")
+    write_pool_case(HERE / "quant", HERE / "recordings", index)
     print(f"quant: {HERE / 'quant'}; {WORLD}: {[e['id'] for e in index['recordings']]} recordings, "
           f"{[(e['id'], e['bytes_gz']) for e in index['atlases']]} atlases")
     return 0

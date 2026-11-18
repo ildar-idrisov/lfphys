@@ -243,7 +243,7 @@ function showHelp() {
     D.viz.teaser ? el("p", {}, t(D.viz.teaser)) : null,
     sc("watch") ? el("p", {}, el("b", {}, t("Watch")), " — ", t("a recording of a real run with captions: what to look at, step by step. ◀◀ and ▶▶ go to the previous or the next caption.")) : null,
     sc("explore") ? el("p", {}, el("b", {}, t("Explore")), " — ", t("change the controls and launch: every position of a slider is a point the engine computed beforehand, so the picture is the engine's result, not a drawing. The earlier launches stay as faded traces.")) : null,
-    sc("lab") ? el("p", {}, el("b", {}, t("Lab work")), " — ", t("a lab experiment: set up, launch, measure with the instruments, fill the table, plot it, fit a line and check it against the law. The worksheet prints the tasks.")) : null,
+    sc("lab") ? el("p", {}, el("b", {}, t("Lab work")), " — ", t("a lab bench: set it up, launch, measure with the instruments, fill the table, plot any two columns and fit them. Some ways lead to the right result and some do not; the teacher judges. The task sheet prints the task.")) : null,
     el("p", {}, t("“How we know this is right” shows the checks of what is shown against the accepted formulas, the physics of this world, its events and where the data come from.")),
     MODE === "server" ? el("p", {}, t("“▶ Compute live” starts a run of the same set-up on this server, where everything can be changed."))
       : el("p", {}, t("Compute live or change the set-up: run lfphys locally"), " → ", el("a", { href: quickStart(), target: "_blank", rel: "noopener" }, t("how"))),
@@ -312,7 +312,7 @@ function kit(spec, s) {
     atlasSource,
     recordingSource,
     transport,
-    worksheetHref: () => withLang(page("worksheet", { demo: D.viz.id })),
+    worksheetHref: () => withLang(page("worksheet", { demo: D.viz.id, ...(Q.get("variant") ? { variant: Q.get("variant") } : {}) })),
   };
 }
 
@@ -338,10 +338,17 @@ function viewFolds(view) {
 }
 
 // W: the shown world's record; tt: the time shown; passport: [[label, value], …]; note: what the data are; view: the
-// screen's view (its rightPanels fold in after «Physics of this world»); eventTimes: false lists the events without their
-// times (Lab work: a landing's time would give away the flight time the lab has the student measure; integrator D10)
-function howWeKnow({ W, tt, passport = [], note = null, empty = null, view = null, eventTimes = true }) {
-  if (!W) return [el("p", { class: "muted" }, empty || t("Nothing computed yet")), passport.length ? passportBox(passport, note) : null];
+// screen's view (its rightPanels fold in after «Physics of this world»). Lab work shows the same as Explore: every check
+// with its value, reference and note, and the events with their texts and times (the owner, 2026-11-18: a lab is a bench
+// for an experiment, not a test, and nothing is hidden from the students; EX1's D10, the events without their times in
+// Lab work, is withdrawn)
+// computed: Lab work's «Computed for this bench» (EX2 §5 F6 (d)): the world's computed values for the bench, [{text, how}]
+// (lab.js computedFor), listed after the checks, never beside the student's fit
+function howWeKnow({ W, tt, passport = [], note = null, empty = null, view = null, computed = null }) {
+  const comp = computed && computed.length ? el("section", { class: "dm-computed" }, el("h4", {}, t("Computed for this bench")),
+    el("p", { class: "help" }, t("The world's own values for this bench, from its laws: what a measurement done the right way comes to.")),
+    el("ul", { class: "dm-computed-list" }, computed.map((x) => el("li", { "data-law": x.law }, x.text, x.how ? el("div", { class: "muted" }, x.how) : null)))) : null;
+  if (!W) return [el("p", { class: "muted" }, empty || t("Nothing computed yet")), comp, passport.length ? passportBox(passport, note) : null];
   const eps = 1e-12 * Math.abs(tt);
   const checks = [];
   for (const vs of W.checks.values()) {
@@ -373,6 +380,7 @@ function howWeKnow({ W, tt, passport = [], note = null, empty = null, view = nul
     el("section", {}, el("h4", {}, t("Checks: computed ↔ reference")),
       el("p", { class: "help" }, t("Each check compares a quantity computed in this run with the accepted formula (or a second method). ✓ — they agree within the numerical precision.")),
       head, checks.length ? list : null),
+    comp,
     el("details", { class: "dm-fold" }, el("summary", {}, t("Physics of this world")),
       eng.length ? eng.map((d) => el("div", { class: "dm-eng" }, el("b", {}, t(d.title) || d.id),
         d.statement ? el("div", { class: "muted" }, t(d.statement)) : null,
@@ -381,8 +389,8 @@ function howWeKnow({ W, tt, passport = [], note = null, empty = null, view = nul
         : el("div", { class: "muted" }, t("The visualization reported no engine modules."))),
     ...viewFolds(view),
     el("details", { class: "dm-fold" }, el("summary", {}, t("Events: {n:d}", { n: events.length })),
-      events.length ? events.map((e) => el("div", { class: "dm-ev" }, eventTimes ? el("span", { class: "mono" }, school ? `${fmt(e.t ?? 0, ".3g")}\u00a0${t("s")}` : time(e.t, 6)) : null,
-        eventTimes ? " " : null, t(e.text) || e.kind))
+      events.length ? events.map((e) => el("div", { class: "dm-ev" }, el("span", { class: "mono" }, school ? `${fmt(e.t ?? 0, ".3g")}\u00a0${t("s")}` : time(e.t, 6)),
+        " ", t(e.text) || e.kind))
         : el("div", { class: "muted" }, t("No events yet"))),
     passportBox(passport, note),
   ];
