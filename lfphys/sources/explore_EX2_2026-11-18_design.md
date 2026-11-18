@@ -516,7 +516,7 @@ different phases, so a linear input comes back elliptical, with the phase differ
 √(sin²θ − n²)/sin²θ (n = n_out/n_in < 1; Stratton 1941, §9.7, checked by E35): the bench draws the reflected
 polarisation ellipse from ρ_R. **[error in earlier]** The formula holds for δ = δ_p − δ_s when δ_p, δ_s are the phase
 *advances* on reflection; in the engine's terms (r = |r|e^{i arg r}, time factor e^{−iωt}) δ = arg r_s − arg r_p
-(E35, `scratchpad/ex2/e35/PROGRESS.md`).
+(E35; stated and tested in `core.optics.polarization`).
 
 **The analyser** in each detector arm: a rotatable polarising beam splitter at angle α from p̂, with the principal
 transmittances k₁ (along its axis) and k₂ (across), a stated device property: ideal k₁ = 1, k₂ = 0 by default; a real
@@ -1054,7 +1054,7 @@ where the atlas is shared) and the run's computed probabilities; «Another sampl
   (`site/check.py`); live points have no pool.
 
 **Engine.** E35, first part (done): `lfphys/tests/test_polarization.py`, `test_interfaces.py` (the p field profile and
-the Joule balance for p), `test_layers.py`; its numbers in `scratchpad/ex2/e35/design_numbers.txt`. E35, second part:
+the Joule balance for p), `test_layers.py`; its numbers in `explore_EX2_2026-11-18/e35_design_numbers.txt`. E35, second part:
 `test_materials.py` (§3.9: the SCHOTT glasses against their data sheets' printed indices; every tabulated set at its
 nodes and within its stated interpolation error; κ ≥ 0; the refusals out of range; `stack` with a material equals
 `stack` with its index typed in) and the group delay (a lossless slab's closed form, the frustrated-TIR delay by finite

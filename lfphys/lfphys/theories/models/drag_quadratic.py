@@ -49,6 +49,27 @@ The landing p_L solves y(p_L) = -h (Brent), the apex is p = 0. This route integr
 design (from du/dtheta above); it agreed with DOP853 to 1.4e-12 in T and 1.3e-12 in L (design, Appendix A); the tests
 repeat it and add Radau IIA.
 
+**The second method in the velocity's angle** (``angle_flight``; design ``explore_EX2_2026-11-18`` §10). With the
+real forces (the drag with C_d(Re), or of a spinning ball C_d(Re, S); the buoyancy and the added mass of a body in the
+air; forces normal to the velocity in the throw's plane: the Magnus force of a spin normal to the plane and the
+Coriolis force's planar part) the hodograph has no first integral, but the equations of the flight written with the
+velocity's angle theta as the independent variable stay a short system whose right-hand side is assembled here
+independently of ``fly``'s declared forces. With M = m + C_A m_f the inertia, W' = (m - m_f) g the weight less the
+buoyancy, D(v) = (1/2) rho C_d A v^2 the drag and N the sum of the normal forces (along n = (-sin theta, cos theta)),
+
+    M dv/dt = -W' sin theta - D,      M v dtheta/dt = N - W' cos theta,
+
+so that, while N < W' cos theta (theta decreases monotonically: always for a topspin, whose Magnus force points to -n,
+and for the Coriolis force at S03's scales),
+
+    dt/dtheta = M v / (N - W' cos theta),   dv/dtheta = -(W' sin theta + D) / M dt/dtheta,
+    dx/dtheta = v cos theta dt/dtheta,       dy/dtheta = v sin theta dt/dtheta,
+
+integrated by DOP853 in theta from theta_0 down to the landing (y = -h, located by the integrator); the apex is theta
+= 0. The normal forces: the Magnus force N = -sign(omega_z) (1/2) rho C_L(S, Re) A v^2 (``theories.models.magnus``'s
+2-D convention: omega_z > 0 is topspin), the Coriolis force N = 2 m Omega_z v (``core.mechanics.earth_frame``). With
+C_d constant and no other force it is the hodograph (tests: against it, and against DOP853 and Radau IIA in time).
+
 **Vertical motion** (closed forms): up, v(t) = v_t tan(atan(v0/v_t) - g t / v_t), the top at t = (v_t/g) atan(v0/v_t),
 h_up = (v_t^2 / 2g) ln(1 + v0^2/v_t^2); down from rest, v(t) = v_t tanh(g t / v_t), the distance (v_t^2/g) ln cosh(g t
 / v_t); v_t = sqrt(g / k).
@@ -76,18 +97,24 @@ ABOUT = {
                    "the exact first integral of the hodograph with the time and the coordinates as quadratures (the "
                    "landing time, the range and the apex without integrating in time); the closed forms of vertical "
                    "motion; the second model: the same force with C_d(Re) from the measured drag curve of a smooth "
-                   "sphere (Morrison 2016, 0 < Re ≤ 10⁶) at the body's Reynolds number along the path."),
+                   "sphere (Morrison 2016, 0 < Re ≤ 10⁶) at the body's Reynolds number along the path; the second "
+                   "method for the real forces: the flight's equations in its velocity's angle with C_d(Re) or "
+                   "C_d(Re, S), the buoyancy, the added mass and forces normal to the velocity (the Magnus force, the "
+                   "Coriolis force's planar part)."),
     "validity": T("a sphere at 10³ < Re < 2·10⁵ (below the drag crisis), where the measured C_d runs from 0.39 to "
                   "0.50: the constant 0.47 errs by up to +21 % / −7 % of the measured value; the run reports the share "
                   "of the drag's work done outside this range; the measured curve: 0 < Re ≤ 10⁶, a smooth sphere in "
-                  "steady flow; no spin (Magnus force), no roughness, no buoyancy; the hodograph needs a horizontal "
-                  "speed > 0"),
+                  "steady flow, not spinning (a spinning ball: theories.models.magnus), no roughness; the buoyancy and "
+                  "the added mass come from the flight's medium; the hodograph and the velocity's angle need a "
+                  "horizontal speed > 0, the angle also a monotonic turn of the velocity"),
     "basis": [T("Hoerner, Fluid-Dynamic Drag (1965), ch. III, p. 3-7: C_D ≈ 0.47 for a sphere at Re 10⁴–10⁵"),
               T("Morrison, Data Correlation for Drag Coefficient for Sphere (Michigan Technological University, 2016), "
                 "eq. (1); An Introduction to Fluid Mechanics (Cambridge 2013), Fig. 8.13 — the standard drag curve"),
               T("Clift, Grace & Weber, Bubbles, Drops, and Particles (1978), table 5.2 (as transcribed by "
                 "Subramanian, Clarkson University course notes)"),
-              T("the hodograph's first integral: derived for this engine (design explore 2026-11-14, Appendix A)")],
+              T("the hodograph's first integral: derived for this engine (design explore 2026-11-14, Appendix A)"),
+              T("the flight's equations in the velocity's angle: written for this engine (design explore EX2 "
+                "2026-11-18, §10)")],
     "conflicts": [T("the measured drag coefficient of a sphere depends on the Reynolds number (the standard drag "
                     "curve): 24/Re in creeping flow (Stokes's law, lfphys.core.mechanics.drag), the drag crisis near "
                     "Re ≈ 3·10⁵ where C_d falls to about 0.1"),
@@ -305,3 +332,71 @@ def hodograph(v0: float, theta0: float, h: float, k: float, g: float = G_STANDAR
     uL = math.sqrt(u2(pL))
     return {"T": T_, "L": L, "H": h + rise, "t_apex": t_rise if p0 > 0 else None, "p_land": pL,
             "v_land": uL * math.sqrt(1.0 + pL * pL), "angle_land_deg": -math.degrees(math.atan(pL))}
+
+
+# --- the second method for the real forces: the flight's equations in the velocity's angle -------------------------
+def angle_flight(v0: float, theta0: float, h: float, *, mass: float, diameter: float, medium=None, cd=CD_SPHERE,
+                 buoyancy: bool = False, added_mass: float = 0.0, spin: float = 0.0, cl=None, omega_z: float = 0.0,
+                 g: float = G_STANDARD, rtol: float = 1e-12) -> dict:
+    """The flight from height h >= 0 at speed v0 and angle theta0 (radians, |theta0| < pi/2) of a sphere (mass kg,
+    diameter m) in a fluid at rest (``medium``: dict or object with rho and mu; default air at 20 °C), by its
+    equations in the velocity's angle (module docstring). ``cd``: a constant, or a function cd(re, S) (S the spin
+    ratio R |spin| / v, 0 without spin); ``buoyancy``: rho_f V g; ``added_mass``: C_A; ``spin`` (rad/s, the 2-D
+    convention of ``magnus``) with ``cl(S, re)`` the lift coefficient; ``omega_z``: the Earth's rotation's component
+    normal to the plane (``earth_frame.omega_vector(...)[1]``). Returns T, L, H, the apex time, the landing speed and
+    angle (degrees below the horizontal) and the number of right-hand-side evaluations."""
+    if not (v0 > 0 and abs(theta0) < math.pi / 2 and h >= 0 and mass > 0 and diameter > 0 and g > 0
+            and added_mass >= 0):
+        raise ValueError(T("the velocity's angle method needs v0 > 0, |θ0| < 90°, h ≥ 0, a mass and a diameter > 0"))
+    if h == 0 and not theta0 > 0:
+        raise coded(ValueError(T("the body starts on the ground and does not move upwards: there is no flight")),
+                    "mechanics.no_flight")
+    med = data.fluid_properties("air", 20.0) if medium is None else medium
+    rho, mu = (float(med["rho"]), float(med["mu"])) if isinstance(med, dict) else (float(med.rho), float(med.mu))
+    A = math.pi * diameter * diameter / 4.0
+    R = 0.5 * diameter
+    mf = rho * math.pi * diameter ** 3 / 6.0
+    M = mass + added_mass * mf
+    Wp = (mass - (mf if buoyancy else 0.0)) * g
+    cdf = cd if callable(cd) else (lambda re, S, c=float(cd): c)
+    sgn = math.copysign(1.0, spin) if spin != 0.0 else 0.0
+
+    def normal_and_drag(v):
+        re = rho * v * diameter / mu
+        S = R * abs(spin) / v
+        D = 0.5 * rho * float(cdf(re, S)) * A * v * v
+        N = 2.0 * mass * omega_z * v
+        if sgn != 0.0 and cl is not None:
+            N -= sgn * 0.5 * rho * float(cl(S, re)) * A * v * v
+        return N, D
+
+    def rhs(th, Y):
+        v = Y[0]
+        N, D = normal_and_drag(v)
+        c, s_ = math.cos(th), math.sin(th)
+        den = N - Wp * c
+        if not den < 0:
+            raise ValueError(T("the velocity's angle does not decrease monotonically: the method does not apply"))
+        dt = M * v / den
+        return [-(Wp * s_ + D) / M * dt, dt, v * c * dt, v * s_ * dt]
+
+    def land(th, Y):
+        return Y[3] + h
+    land.terminal, land.direction = True, 0
+
+    th_end = -0.5 * math.pi * (1.0 - 1e-9)
+    if h == 0.0:  # from the ground: the landing is the second crossing; start the event past the launch
+        land.direction = -1
+    sol = integrate.solve_ivp(rhs, (theta0, th_end), [v0, 0.0, 0.0, 0.0], method="DOP853", rtol=rtol,
+                              atol=[v0 * rtol, 1e-3 * rtol, 1e-3 * rtol, 1e-3 * rtol], dense_output=True,
+                              events=land)
+    hits = [k for k, th in enumerate(sol.t_events[0]) if th < theta0 - 1e-15]
+    if sol.status < 0 or not hits:
+        raise RuntimeError(T("the velocity's angle method found no landing"))
+    k = hits[0]
+    thL = float(sol.t_events[0][k])
+    vL, tL, xL, _ = (float(c) for c in sol.y_events[0][k])
+    apex = sol.sol(0.0) if theta0 > 0 else None
+    return {"T": tL, "L": xL, "H": h + (float(apex[3]) if apex is not None else 0.0),
+            "t_apex": float(apex[1]) if apex is not None else None, "v_land": vL,
+            "angle_land_deg": -math.degrees(thL), "nfev": int(sol.nfev)}

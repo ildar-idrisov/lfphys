@@ -1,0 +1,47 @@
+lat 45.499644716549525 g 9.80665
+P1 Re [1992.0057338693034, 3296.4204235937987] [1992.0059975961208, 6196.883018741819] S [1.0, 0.6042938205373369] [1.0, 0.3214529765764805]
+P1 air_const_mm -0.544 .. -0.089
+P1 curve_minus_const_mm +0.007 .. +0.056
+P1 buoy_am_mm +0.035 .. +0.078
+P1 air_no_spin_mm -0.410 .. -0.047
+P1 magnus_central_mm -1.083 .. -0.134
+P1 magnus_low_mm -0.893 .. -0.110
+P1 magnus_high_mm -1.332 .. -0.165
+P1 spindrag_central_mm -0.242 .. -0.046
+P1 spindrag_low_mm -0.181 .. -0.035
+P1 spindrag_high_mm -0.303 .. -0.057
+P1 air_all_central_mm -1.734 .. -0.227
+P1 air_all_low_mm -1.485 .. -0.193
+P1 air_all_high_mm -2.045 .. -0.268
+P1 spin_decay7_mm +0.000 .. +0.010
+P1 basset_mm +0.011 .. +0.037
+P1 basset_bound_mm +0.025 .. +0.145
+P1 basset_B_over_W +0.000 .. +0.000
+P1 cor_east_along_mm +0.004 .. +0.021
+P1 cor_east_right_mm +0.003 .. +0.016
+P1 cor_north_along_mm -0.000 .. +0.000
+P1 cor_north_right_mm +0.005 .. +0.031
+P1 first |air_all| > 0.5 mm: central 0.4
+P1 first |air_all| > 0.5 mm: low 0.45
+P1 first |air_all| > 0.5 mm: high 0.35
+P2 air_const_mm -13.982 .. -2.960
+P2 curve_minus_const_mm +0.459 .. +2.053
+P2 buoy_am_mm +0.291 .. +0.582
+P2 basset_mm +0.105 .. +0.357
+P2 basset_bound_mm +0.134 .. +0.966
+P2 basset_B_over_W +0.000 .. +0.000
+P2 cor_east_along_mm -0.062 .. +0.088
+P2 cor_east_right_mm +0.017 .. +0.103
+P2 cor_north_right_mm -0.014 .. +0.064
+P2 fit {"L_const": {"slope": 2.531804437945392, "sigma": 0.0008029169919769147, "b": 0.004029699557219826, "miss_over_err": -21.778209546138704, "chi2_dof": 12.617299747223838}, "L_curve": {"slope": 2.534484450710234, "sigma": 0.0008029169919769147, "b": 0.003343929364933899, "miss_over_err": -18.440364175295038, "chi2_dof": 9.839291325742217}, "L_full": {"slope": 2.5350651079435464, "sigma": 0.0008029169919769147, "b": 0.0033452070636975943, "miss_over_err": -17.71717953838408, "chi2_dof": 9.846810813182922}}
+P3 opt {'const': (41.9, 27.271383516330822), 'curve': (42.3, 28.314173193867525), 'full': (42.3, 28.42721981506842)}
+P3 curve_minus_const_m +0.492 .. +1.087
+P3 buoy_am_m +0.070 .. +0.113
+P3 basset_mm +28.456 .. +61.493
+P3 basset_bound_mm +37.661 .. +159.420
+P3 basset_B_over_W +0.002 .. +0.003
+P3 cor_east_along_mm -1.640 .. +2.840
+P3 cor_east_right_mm +1.352 .. +3.729
+P3 cor_north_right_mm +0.310 .. +2.374
+P3 opt coriolis {'theta': 42.3, 'along_mm': 1.829933318848731, 'right_mm': 3.3776250191140504}
+Explore longest {'L': 43.27835530221796, 'along_mm': 2.4171377741737388, 'right_mm': 7.30176646976583}

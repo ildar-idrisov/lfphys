@@ -49,6 +49,37 @@ convex for c < 0, decreasing at the landing, so Newton's iterates from the right
 converge monotonically; the start is W's value, or k T_vacuum (the vacuum landing time, longer than the flight with
 drag for c > 0, shorter for c < 0) when W's value is not on the descending branch. Measured against a 50-digit
 bisection: <= 8e-16 relative from s = 1e-5 to 10 (W alone: up to 7e-7; tests).
+
+**Basset's history force and its bound** (``basset_integral``, ``history_bound``; design
+``explore_EX2_2026-11-18`` §11 item 41, STATUS V52 (u)). In creeping flow a sphere of radius a accelerating through a
+fluid at rest feels, besides Stokes's drag, the added mass and the buoyancy, Basset's history force
+
+    F_H(t) = -6 a^2 sqrt(pi mu rho_f) int_0^t (dv/ds) / sqrt(t - s) ds
+
+(the Maxey–Riley equation's history term for a fluid at rest, as written by Daitche, J. Comput. Phys. 254, 93 (2013),
+eq. (1): -6 a^2 rho_f sqrt(pi nu) int (dv/dtau - du/dtau) / sqrt(t - tau) dtau; checked there). At finite Reynolds
+numbers Mei & Adrian's semi-empirical kernel, [(pi (t - tau))^(1/4) + f(Re_p, t) (t - tau)]^-2 in the units where
+Basset's is (pi (t - tau))^(-1/2) (Jaganathan, Prasath, Govindarajan & Vasan, Front. Phys. 11, 1167338 (2023), eq. (5):
+"The kernel in Eq. 5 reduces to the standard kernel at short times"), lies below Basset's for its f >= 0 and decays
+as t^-2 at long times; no established law exists at S03's Reynolds numbers (2·10^3–10^5). Since such kernels lie below
+Basset's, |F_H| at any Reynolds number is bounded by
+
+    B(t) = 6 a^2 sqrt(pi mu rho_f) int_0^t |dv/ds| / sqrt(t - s) ds,
+
+and each component F_i by B_i(t), the same integral of |dv_i/ds| (the kernels are positive); ``history_bound``
+computes these along a computed flight together with Basset's own (creeping-flow) force and the landing shift each
+would cause to first order (the bound on the shift from the components' bounds, so it is tight when no component of
+the acceleration changes its sign). The integrals are taken by product integration: dv/ds piecewise linear
+between the samples of a uniform grid, the kernel integrated exactly on each step (the weights below), so a constant or
+linear acceleration is integrated exactly (``int_0^t a ds / sqrt(t - s) = 2 a sqrt(t)`` for a constant a); with u0 = t -
+s_j, u1 = t - s_(j+1), h = s_(j+1) - s_j and q = sqrt(u0) + sqrt(u1),
+
+    int_{s_j}^{s_(j+1)} a(s) / sqrt(t - s) ds = (2/3) h [a_j (sqrt(u0) + 2 sqrt(u1)) + a_(j+1) (2 sqrt(u0) + sqrt(u1))] / q^2,
+
+written without cancellation (derived for this engine; tests: the closed forms for a constant acceleration and for
+a(s) = e^-s, 2 Dawson(sqrt(t)), and the independent product integration of the Maxey–Riley equation). The history
+before the launch is taken as steady (the boundary layer established, no acceleration before t = 0), as the design's
+measurement A.8 did.
 """
 
 from __future__ import annotations
@@ -68,17 +99,23 @@ ABOUT = {
     "statement": T("Stokes's law F = −3πμ·d·v for a sphere of diameter d in a fluid of viscosity μ (or a linear drag "
                    "F = −b·v with b given), as a declared force of the point-body flight; the Reynolds number ρ|v|d/μ "
                    "along the path; the closed forms of the flight with linear drag: x(t), y(t), the apex time and the "
-                   "landing time from a height by Lambert's W; the air's density and viscosity from lfphys.core.data."),
+                   "landing time from a height by Lambert's W; the air's density and viscosity from lfphys.core.data; "
+                   "Basset's history force along a computed flight by product integration, and its upper bound at "
+                   "any Reynolds number."),
     "validity": T("creeping flow: Re = ρ|v|d/μ ≲ 1; the law's relative error is about 3·Re/16 (Oseen's correction): "
-                  "1.9 % at Re = 0.1, 19 % at Re = 1 — the run reports its Reynolds number; steady drag only: no added "
-                  "mass and no buoyancy (of order ρ_fluid/ρ_body) and no Basset history force (of order "
-                  "√(ρ_fluid/ρ_body) while the body accelerates: about 1.4 % of the speed for steel and 4 % for water "
-                  "droplets in air one relaxation time after release, fading towards the terminal speed); a sphere far "
-                  "from walls"),
+                  "1.9 % at Re = 0.1, 19 % at Re = 1 — the run reports its Reynolds number; steady drag only (the "
+                  "added mass and the buoyancy come from the flight's medium, core.mechanics.particle); the Basset "
+                  "history force (of order √(ρ_fluid/ρ_body) while the body accelerates: about 1.4 % of the speed for "
+                  "steel and 4 % for water droplets in air one relaxation time after release) is not a force of the "
+                  "flight: history_bound computes Basset's force along a flight and, at any Reynolds number, its "
+                  "upper bound with the landing shift each would cause to first order; a sphere far from walls"),
     "basis": [T("Stokes, Trans. Cambridge Philos. Soc. 9, part II, [8] (1851), art. 42, eq. (126)"),
               T("Oseen, Ark. Mat. Astron. Fys. 6, no. 29 (1910); the drag correction 3·Re/16 as stated by Veysey & "
                 "Goldenfeld, Rev. Mod. Phys. 79, 883 (2007), eq. (39)"),
-              T("Lambert's W: Corless et al., Adv. Comput. Math. 5, 329 (1996) (scipy.special.lambertw)")],
+              T("Lambert's W: Corless et al., Adv. Comput. Math. 5, 329 (1996) (scipy.special.lambertw)"),
+              T("Basset's history force: the Maxey–Riley equation as written by Daitche, J. Comput. Phys. 254, 93 "
+                "(2013), eq. (1); Mei & Adrian's finite-Re kernel below Basset's: Jaganathan et al., Front. Phys. 11, "
+                "1167338 (2023), eq. (5)")],
     "conflicts": [],
 }
 
@@ -221,3 +258,80 @@ def linear_drag_apex_time(vy0: float, k: float, g: float) -> float | None:
         return None
     tau = 1.0 / k
     return tau * math.log1p(vy0 / (g * tau))
+
+
+# --- Basset's history force ------------------------------------------------------------------------------------------
+def _basset_weights(n: int, h: float) -> tuple[np.ndarray, np.ndarray]:
+    """Product-integration weights on a uniform grid of step h: for t = t_i and the step [s_j, s_(j+1)] with i - j = k
+    (k = 1..n), the weights of a_j and a_(j+1): (2/3) h (sqrt(u0) + 2 sqrt(u1)) / q^2 and (2/3) h (2 sqrt(u0) +
+    sqrt(u1)) / q^2, u0 = k h, u1 = (k - 1) h, q = sqrt(u0) + sqrt(u1)."""
+    k = np.arange(1, n + 1, dtype=float)
+    r0, r1 = np.sqrt(k * h), np.sqrt((k - 1.0) * h)
+    q2 = (r0 + r1) ** 2
+    return (2.0 / 3.0) * h * (r0 + 2.0 * r1) / q2, (2.0 / 3.0) * h * (2.0 * r0 + r1) / q2
+
+
+def basset_integral(t, a) -> np.ndarray:
+    """I(t_i) = int_0^{t_i} a(s) / sqrt(t_i - s) ds for every sample t_i of a uniform grid t_0 = 0 < t_1 < ... (a
+    piecewise linear through the samples a_i; rows of an (n, dim) array or a 1-D array), by product integration with
+    exact weights (module docstring): exact for a constant or linear a."""
+    t = np.asarray(t, float)
+    a = np.asarray(a, float)
+    one = a.ndim == 1
+    A = a[:, None] if one else a
+    n = t.size - 1
+    if n < 1 or A.shape[0] != t.size or abs(t[0]) > 0:
+        raise ValueError(T("the history integral needs a uniform grid from t = 0 with a value at every node"))
+    h = (t[-1] - t[0]) / n
+    if not (h > 0 and np.allclose(np.diff(t), h, rtol=1e-9, atol=0.0)):
+        raise ValueError(T("the history integral needs a uniform grid from t = 0 with a value at every node"))
+    wl, wr = _basset_weights(n, h)
+    out = np.zeros_like(A)
+    for c in range(A.shape[1]):
+        # I_i = sum_{k=1..i} (wl[k-1] a_{i-k} + wr[k-1] a_{i-k+1}): two discrete convolutions, each at index i - 1
+        cl = np.convolve(A[:, c], wl)[:n]
+        cr = np.convolve(A[1:, c], wr)[:n]
+        out[1:, c] = cl + cr
+    return out[:, 0] if one else out
+
+
+def history_bound(flight, medium=None, n: int = 4000) -> dict:
+    """Basset's history force along a computed flight of a sphere (``flight.body.diameter`` > 0) in a fluid at rest
+    (``medium``: an object with ``rho`` and ``mu``, or a dict; default the flight's medium, else air at 20 °C), and its
+    bound at any Reynolds number (module docstring), on a uniform grid of n steps over the flight; the acceleration from
+    the flight's equations of motion. Returns: ``t``; ``F`` Basset's force (n+1, dim), N; ``B`` the bound |F_H| <=
+    B(t), N; ``B_over_weight`` max B / (m g); ``dL``: the landing shift (m, along the horizontal motion) that Basset's
+    force would cause to first order (the flight's other forces not reacting to the change); ``dL_bound``: the bound
+    on the landing shift by any history kernel below Basset's, int_0^T (T - t) [sum_h |e_h,i| B_i(t) + |v_h / v_y|
+    B_vert(t)] dt / M at the landing (e_h the horizontal direction of the landing velocity, B_i the components' bounds,
+    M the body's inertia in the medium). The time integrals by the trapezoidal rule on the grid (relative error of
+    order n^-1.5 from the sqrt(t) of the force's start: 3e-6 at n = 4000)."""
+    if flight.body.diameter <= 0:
+        raise ValueError(T("the sphere's diameter must be > 0 (given {d} m)", d=float(flight.body.diameter)))
+    med = medium if medium is not None else (flight.medium if getattr(flight, "medium", None) is not None else air())
+    rho = float(med["rho"] if isinstance(med, dict) else med.rho)
+    mu = med["mu"] if isinstance(med, dict) else med.mu
+    if mu is None:
+        raise ValueError(T("the Reynolds number needs the fluid's density, viscosity and the diameter"))
+    mu = float(mu)
+    a_r = 0.5 * flight.body.diameter
+    K = 6.0 * a_r * a_r * math.sqrt(math.pi * mu * rho)
+    Tend = flight.t_end
+    t = np.linspace(0.0, Tend, int(n) + 1)
+    acc = flight.acceleration(t)
+    F = -K * basset_integral(t, acc)
+    B = K * basset_integral(t, np.linalg.norm(acc, axis=1))
+    Bc = K * basset_integral(t, np.abs(acc))
+    M = flight.inertia if hasattr(flight, "inertia") else flight.body.mass
+    w = Tend - t  # the first-order displacement at the landing: int_0^T (T - t) F(t) dt / M (trapezoid)
+    dr = np.trapezoid(w[:, None] * F, t, axis=0) / M
+    vl = np.asarray(flight.landing["v"], float)
+    vh = vl[:-1]
+    sp_h = float(np.linalg.norm(vh))
+    e_h = vh / sp_h if sp_h > 0 else np.zeros_like(vh)
+    # the landing point moves by the horizontal displacement plus the shift of the landing time: dt = dy / (-v_y)
+    dL = float(dr[:-1] @ e_h + sp_h * dr[-1] / (-vl[-1]))
+    comb = Bc[:, :-1] @ np.abs(e_h) + (sp_h / abs(vl[-1])) * Bc[:, -1]
+    dL_bound = float(np.trapezoid(w * comb, t) / M)
+    return {"t": t, "F": F, "B": B, "B_over_weight": float(np.max(B)) / (flight.body.mass * flight.g),
+            "dL": dL, "dL_bound": dL_bound, "K": K}

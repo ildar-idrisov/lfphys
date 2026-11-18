@@ -7,7 +7,12 @@
   located events (landing, apex, declared ones), the forces' work carried along (the running energy balance), sampling
   on exact multiples of 1/rate, and the closed forms of the flight in vacuum.
 * ``drag``: linear (Stokes) drag of a sphere, its Reynolds number along the path, and the closed forms of a flight
-  with linear drag (the landing time from a height by Lambert's W).
+  with linear drag (the landing time from a height by Lambert's W); Basset's history force along a flight by product
+  integration and its bound at finite Reynolds numbers (``history_bound``).
+* ``earth_frame``: the WGS 84 normal gravity and the Coriolis force of the rotating Earth (a declared force), the
+  sideways offset of a planar flight.
+
+A body in a fluid at rest (``Medium``): ``fly`` adds the buoyancy and the added mass.
 
 The quadratic drag with a constant drag coefficient is a model with a fitted parameter and lives outside the core:
 ``lfphys.theories.models.drag_quadratic`` (it plugs into ``fly`` as a declared force). Springs, constraints,
@@ -15,7 +20,9 @@ collisions and rigid bodies are later modules of this package (``constraints.py`
 change ``particle``'s interface.
 """
 
-from .particle import (G_STANDARD, Body, Event, Flight, fly, vacuum_apex_height, vacuum_landing_time,  # noqa: F401
-                       vacuum_state)
-from .drag import (STOKES_RE_MAX, LinearDrag, air, linear_drag_apex_time, linear_drag_landing_time,  # noqa: F401
-                   linear_drag_state, oseen_error, stokes_drag)
+from .particle import (G_STANDARD, Body, Event, Flight, Medium, fly, vacuum_apex_height,  # noqa: F401
+                       vacuum_landing_time, vacuum_state)
+from .drag import (STOKES_RE_MAX, LinearDrag, air, basset_integral, history_bound,  # noqa: F401
+                   linear_drag_apex_time, linear_drag_landing_time, linear_drag_state, oseen_error, stokes_drag)
+from .earth_frame import (OMEGA_EARTH, WGS84, Coriolis, drop_east_drift, latitude_for_gravity,  # noqa: F401
+                          normal_gravity, omega_vector, sideways)

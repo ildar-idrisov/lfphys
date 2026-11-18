@@ -49,6 +49,7 @@ CODES: dict[str, str] = {
     "airy.grazing": "the wave grazes inside the film: the Airy formula is 0/0",
     "film.too_many_nodes": "joule_absorption_s needs more quadrature nodes in a layer than the limit",
     "film.below_critical": "an evanescent length below the critical angle",
+    "material.out_of_range": "a wavelength outside an optical material's data (core.optics.materials)",
     "mie.size_bound": "no tested truncation bound above the size parameter MAX_X",
     "mie.mx_too_large": "|m x| too large to start the logarithmic derivative D_n",
     "mie.no_convergence": "the continued fraction for D_n did not converge",

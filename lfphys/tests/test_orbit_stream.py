@@ -362,3 +362,151 @@ def test_second_scheme_drifts_relative_to_the_binding_energy():
     assert g["em1"] == pytest.approx(k["em1"], rel=1e-15)
     assert g["binding_floor"] == pytest.approx(2.2e-16 / abs(k["em1"]), rel=1e-12)
     assert g["e_drift_binding"] < 100 * g["binding_floor"] and g["norm_drift_binding"] < 100 * g["binding_floor"]
+
+
+# --- inside the horizon: the body's proper time on to r = 0 (EX2 design §11 item 34, §7 «E34») -------------------------
+def _fall(r0, vr, vp):
+    st = osm.OrbitStream(r0, vr, vp)
+    while not st.done:
+        st.advance(1e300, 2.0)
+    assert st.done == "horizon"
+    return st
+
+
+def _cycloid_rest(r0, r):
+    """The cycloid's proper time from r to r = 0 (a fall from rest at r0) without the cancellation of
+    τ(0) − τ(r) for r ≪ r0: √(r0³/8)(ζ − sin ζ), ζ = π − η = 2 asin √(r/r0), at 40 digits (mpmath)."""
+    import mpmath as mp
+
+    with mp.workdps(40):
+        z = 2 * mp.asin(mp.sqrt(mp.mpf(r) / r0))
+        return float(mp.sqrt(mp.mpf(r0) ** 3 / 8) * (z - mp.sin(z)))
+
+
+@pytest.mark.parametrize("r0", [2.5, 3.0, 10.0, 20.0, 1e4, 1e8])
+def test_radial_fall_from_rest_reaches_the_centre_after_pi_sqrt_r0_cubed_over_8m(r0):
+    """τ from rest at r0 to r = 0: π√(r0³/8M) (Blau, eqs. (26.25)-(26.29)), by the quadrature through the horizon; the
+    cycloid r = (r0/2)(1 + cos η), τ = √(r0³/8)(η + sin η) at intermediate radii inside the horizon, and Guth's form
+    τ(r) = √(r0/2M)(r0 tan⁻¹√((r0 − r)/r) + √(r(r0 − r))) (MIT 8.286 (2013), lecture 15), transcribed separately."""
+    ref = math.pi * math.sqrt(r0**3 / 8.0)
+    em1 = -2.0 / r0  # e² − 1 at rest at r0: e² = 1 − 2/r0
+    assert osm.proper_time_to_centre(em1, 0.0, r0) == pytest.approx(ref, rel=1e-11)
+    assert osm.cycloid_proper_time(r0) == pytest.approx(ref, rel=1e-15)
+    for r in (1.999, 1.5, 0.5, 1e-3):
+        guth = math.sqrt(r0 / 2.0) * (r0 * math.atan(math.sqrt((r0 - r) / r)) + math.sqrt(r * (r0 - r)))
+        assert osm.cycloid_proper_time(r0, r) == pytest.approx(guth, rel=1e-13)
+        # quad's target is 1e-11; measured 1.1e-11 for r0 = 1e4 down to r = 1e-3 (seven decades in one integral)
+        assert osm.proper_time_to_centre(em1, 0.0, r0, r) == pytest.approx(guth, rel=3e-11)
+        assert osm.proper_time_to_centre(em1, 0.0, r, 0.0) == pytest.approx(_cycloid_rest(r0, r), rel=1e-10)
+        assert _cycloid_rest(r0, r) == pytest.approx(ref - guth, rel=1e-15 * ref / (ref - guth) + 1e-14)
+
+
+@pytest.mark.parametrize("r0", [10.0, 20.0, 1e6])
+def test_the_stream_of_a_radial_fall_goes_on_to_the_centre(r0):
+    """The stream stops 2e-6 M above the horizon; interior() carries the body's clock to r = 0: the cycloid's π√(r0³/8)."""
+    st = _fall(r0, 0.0, 0.0)
+    I = st.interior()
+    assert I["r_stop"] == pytest.approx(2.0 / (1 - osm.HORIZON_GAP), rel=1e-12) and I["tau_stop"] == st.tau
+    assert I["tau_horizon"] == pytest.approx(osm.cycloid_proper_time(r0, 2.0), rel=1e-11)
+    assert I["tau_centre"] == pytest.approx(math.pi * math.sqrt(r0**3 / 8.0), rel=1e-11)
+    assert I["dtau_inside"] == pytest.approx(_cycloid_rest(r0, 2.0), rel=1e-10)
+    assert I["tau_stop"] < I["tau_horizon"] < I["tau_centre"]
+
+
+def _tau_by_the_radial_equation(r0, rdot0, l, r_marks):
+    """A second method, no quadrature: d²r/dτ² = −1/r² + l²/r³ − 3l²/r⁴ (R'(r)/2, regular at r = 2M) from the start
+    (r0, dr/dτ = e v_r) by DOP853, the proper times at which r crosses each of r_marks going inward."""
+    from scipy import integrate
+
+    def rhs(tau, Y):
+        r = Y[0]
+        return [Y[1], -1.0 / r**2 + l * l / r**3 - 3.0 * l * l / r**4]
+
+    evs = []
+    for m in r_marks:
+        def ev(tau, Y, m=m):
+            return Y[0] - m
+        ev.direction = -1.0
+        evs.append(ev)
+    evs[-1].terminal = True
+    sol = integrate.solve_ivp(rhs, (0.0, 1e7), [r0, rdot0], method="DOP853", rtol=1e-13, atol=1e-15, events=evs)
+    return [float(t[0]) for t in sol.t_events]
+
+
+@pytest.mark.parametrize("r0,k,alpha", [(7.0, 0.95, 0.0), (5.5, 0.995, 0.0), (8.0, 0.9, 20.0), (30.0, 0.3, -40.0),
+                                        (12.0, 0.5, 60.0)])
+def test_plunge_proper_time_to_the_centre_three_ways(r0, k, alpha):
+    """A plunge with angular momentum (u34's story: from 7 M at 0.95 of the circular speed): the stream to its stop,
+    then interior(), against (a) the quadrature from the start to r = 0 (plunge_proper_time, no differential equation),
+    (b) mpmath's tanh-sinh quadrature at 30 digits from the stop to r = 0 (another implementation), (c) the radial
+    geodesic equation in proper time integrated from the start through the horizon (no quadrature)."""
+    import mpmath as mp
+
+    vr, vp = _launch(r0, k, alpha)
+    st = _fall(r0, vr, vp)
+    assert st.info["kind"] == "plunge" and st.l != 0.0
+    I = st.interior()
+    # (a) the quadrature from the start: an outward leg to the apoapsis first when v_r > 0
+    ref_a = osm.plunge_proper_time(st.em1, st.l, r0, vr, 0.0, st.info["r_apo"])
+    assert I["tau_centre"] == pytest.approx(ref_a, rel=1e-9)
+    # (b) mpmath from the stop: ∫ dr/√R over [0, 2] and [2, r_stop]
+    with mp.workdps(30):
+        em1, l = mp.mpf(st.em1), mp.mpf(st.l)
+
+        def f(r):
+            return 1 / mp.sqrt(em1 + 2 / r - l * l / r**2 + 2 * l * l / r**3)
+
+        inside = mp.quad(f, [0, 2])
+        edge = mp.quad(f, [2, mp.mpf(I["r_stop"])])
+    assert I["dtau_inside"] == pytest.approx(float(inside), rel=1e-11)
+    assert I["tau_horizon"] - I["tau_stop"] == pytest.approx(float(edge), rel=1e-8)
+    # (c) the radial equation in τ, through r = 2M without a stop, to r = 1 and r = 0.01
+    t2, t1, t001 = _tau_by_the_radial_equation(r0, st.e * vr, st.l, [2.0, 1.0, 0.01])
+    assert t2 == pytest.approx(I["tau_horizon"], rel=1e-9)
+    assert t1 == pytest.approx(I["tau_stop"] + osm.proper_time_to_centre(st.em1, st.l, I["r_stop"], 1.0), rel=1e-9)
+    assert t001 == pytest.approx(I["tau_stop"] + osm.proper_time_to_centre(st.em1, st.l, I["r_stop"], 0.01), rel=1e-9)
+    # and the last 0.01 M takes about (2/5)·0.01^{5/2}/(√2 |l|) (R ≈ 2l²/r³ near r = 0)
+    tail = osm.proper_time_to_centre(st.em1, st.l, 0.01, 0.0)
+    assert tail == pytest.approx(0.4 * 0.01**2.5 / (math.sqrt(2.0) * abs(st.l)), rel=0.05)
+
+
+def test_no_fall_inside_the_horizon_lasts_longer_than_pi_m():
+    """Inside, R = e² + (2/r − 1)(1 + l²/r²) ≥ 2/r − 1, so τ(2M → 0) ≤ ∫_0^2 dr/√(2/r − 1) = π M (the radial fall
+    with e → 0, the cycloid from r0 = 2M); any energy or angular momentum shortens it."""
+    assert osm.proper_time_to_centre(1e-12 - 1.0, 0.0, 2.0) == pytest.approx(math.pi, rel=1e-6)
+    prev = math.pi
+    for e in (0.1, 0.5, 0.9, 1.0, 1.5, 3.0):
+        d = osm.proper_time_to_centre(e * e - 1.0, 0.0, 2.0)
+        assert d < prev
+        prev = d
+        for l in (1.0, 3.5, 4.0, 10.0):
+            assert osm.proper_time_to_centre(e * e - 1.0, l, 2.0) < d
+    # the radial fall from rest: what is left after the horizon, by the cycloid
+    for r0 in (3.0, 10.0, 100.0):
+        d = osm.proper_time_to_centre(-2.0 / r0, 0.0, 2.0)
+        assert d == pytest.approx(_cycloid_rest(r0, 2.0), rel=1e-10)
+        assert d < math.pi
+
+
+def test_interior_refusals_and_where_it_does_not_apply():
+    from lfphys.codes import code_of
+
+    # a bound orbit: from its apoapsis inward the body turns at the periapsis, it never reaches r = 0
+    st = osm.OrbitStream(20.0, *_launch(20.0, 1.2))
+    el = orbits.elements(st.e, abs(st.l))
+    with pytest.raises(ValueError) as ex:
+        osm.proper_time_to_centre(st.em1, st.l, el["r_apo"], 0.0)
+    assert code_of(ex.value) == "orbit.no_fall" and ex.value.data["r"] == pytest.approx(el["r_peri"], rel=1e-9)
+    # between the turning points it does
+    assert osm.proper_time_to_centre(st.em1, st.l, el["r_apo"], el["r_peri"]) == pytest.approx(
+        osm.proper_time_between(st.em1, st.l, el["r_peri"], el["r_apo"]), rel=1e-9)
+    for bad in ((10.0, 10.0), (10.0, 12.0), (10.0, -1.0), (math.inf, 0.0)):
+        with pytest.raises(ValueError):
+            osm.proper_time_to_centre(-0.2, 0.0, *bad)
+    with pytest.raises(ValueError):
+        osm.cycloid_proper_time(2.0)
+    assert st.interior() is None  # not stopped
+    hit = osm.OrbitStream(10.0, *_launch(10.0, 0.3), r_stop=5.8)  # a star's surface: nothing inside
+    while not hit.done:
+        hit.advance(1e300, 2.0)
+    assert hit.done == "surface" and hit.interior() is None

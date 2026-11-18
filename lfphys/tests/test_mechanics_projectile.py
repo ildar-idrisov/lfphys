@@ -507,3 +507,195 @@ def test_speed_of_a_grid_point():
     per = (time.process_time() - t0) / 10
     print("CPU per flight", per)
     assert per < 0.1
+
+
+# --- the second method for the real forces: the velocity's angle (design explore_EX2_2026-11-18 §7 «E03», §10) ------
+from lfphys.core.mechanics import (Coriolis, Medium, basset_integral, history_bound,  # noqa: E402
+                                   omega_vector)
+from lfphys.theories.models import magnus as mg  # noqa: E402
+
+
+@pytest.mark.parametrize("h,v,th", QUAD)
+def test_angle_method_with_a_constant_cd_is_the_hodograph(h, v, th):
+    """With C_d constant and no other force the equations in the velocity's angle integrate the hodograph's flight:
+    against its closed first integral (measured 4e-15–3e-13)."""
+    drag = dq.QuadraticDrag.sphere(BALL.diameter)
+    hd = dq.hodograph(v, math.radians(th), h, drag.k(BALL.mass))
+    an = dq.angle_flight(v, math.radians(th), h, mass=BALL.mass, diameter=BALL.diameter, cd=dq.CD_SPHERE)
+    for k in ("T", "L", "H", "v_land", "angle_land_deg"):
+        assert _rel(an[k], hd[k]) < 1e-11, k
+    if hd["t_apex"] is not None:
+        assert _rel(an["t_apex"], hd["t_apex"]) < 1e-11
+
+
+def _radau_real(body, h, v0, *, spin=0.0, omega_z=0.0, medium=True, spin_drag=False):
+    """Radau IIA (rtol 1e-13) in time with the real forces written out here: the drag of Morrison's eq. (1) (times
+    Zhou's eq. (17) for a spinning ball), the buoyancy and the added mass (C_A = 1/2), the Magnus force by Zhou's
+    eq. (8) written out, the Coriolis force's planar part."""
+    a = air()
+    rho, mu, d = a["rho"], a["mu"], body.diameter
+    A = math.pi * d * d / 4
+    V = math.pi * d ** 3 / 6
+    mf = rho * V if medium else 0.0
+    M = body.mass + 0.5 * mf
+    Wt = (body.mass - mf) * G
+
+    def rhs(t, Y):
+        vx, vy = Y[2], Y[3]
+        sp = math.hypot(vx, vy)
+        re = rho * sp * d / mu
+        S = 0.5 * d * abs(spin) / sp
+        cd = _morrison(re) * ((0.989 + 0.482 * 2 * S - 0.093 * (2 * S) ** 2) if spin_drag else 1.0)
+        fx, fy = -0.5 * rho * cd * A * sp * vx, -0.5 * rho * cd * A * sp * vy - Wt
+        if spin:
+            b = 0.365 / (1 + math.exp(2.229 - 6.5 * 2 * S))
+            cl = b + (2 * S - b) * math.exp(-0.075 * S ** 0.4 * re ** 0.71)
+            q = math.copysign(0.5 * rho * cl * A * sp, spin)
+            fx, fy = fx + q * vy, fy - q * vx
+        fx, fy = fx - 2 * body.mass * omega_z * vy, fy + 2 * body.mass * omega_z * vx
+        return [vx, vy, fx / M, fy / M]
+
+    def land(t, Y):
+        return Y[1]
+    land.terminal, land.direction = True, -1
+
+    def apex(t, Y):
+        return Y[3]
+    apex.direction = -1
+    sol = integrate.solve_ivp(rhs, (0.0, 100.0), [0.0, h, v0[0], v0[1]], method="Radau", rtol=1e-13,
+                              atol=[1e-13] * 4, events=[land, apex])
+    H = float(sol.y_events[1][0][1]) if len(sol.t_events[1]) else h
+    return {"T": float(sol.t_events[0][0]), "L": float(sol.y_events[0][0][0]), "H": H}
+
+
+S03_CASES = [  # (body, h, v, th, spin, Coriolis): the chute, the launcher, the light ball
+    (STEEL, 1.0, 1.5, 0.0, 150.0, True), (STEEL, 0.2, 1.5, 0.0, 150.0, False), (STEEL, 0.0, 5.0, 15.0, 0.0, True),
+    (STEEL, 0.0, 5.0, 75.0, 0.0, True), (BALL, 0.0, 20.0, 42.3, 0.0, True), (BALL, 10.0, 25.0, 45.0, 0.0, True),
+    (BALL, 0.0, 20.0, 70.0, 0.0, False)]
+
+
+@pytest.mark.parametrize("body,h,v,th,spin,cor", S03_CASES)
+def test_angle_method_with_the_real_forces_against_dop853_and_radau(body, h, v, th, spin, cor):
+    """S03's flights with the real forces (the measured drag curve, for the rolling ball the spin's drag and the Magnus
+    force; buoyancy and added mass; the Coriolis force's planar part at 45.5° N toward the east): the velocity's angle
+    against ``fly`` (DOP853 in time with the engine's declared forces) and Radau IIA in time with the forces written
+    out. T, L, H within 1e-9 (measured: up to 9e-11 in T and L, 3.7e-10 in the 8.5-cm apex of the 15° throw; the
+    velocity's angle and Radau IIA agree with each other to 1e-12, so the rest is DOP853's error at rtol 1e-11)."""
+    a = Medium.air()
+    Oz = float(omega_vector(45.5, 90.0)[1]) if cor else 0.0
+    v0 = _v(v, th)
+    if spin:
+        forces = [mg.SpinDrag(body.diameter, spin, a), mg.Magnus(body.diameter, spin, a)]
+    else:
+        forces = [dq.CurveDrag.sphere(body.diameter)]
+    if cor:
+        forces.append(Coriolis(body.mass, 45.5, 90.0))
+    f = fly(body, [0.0, h], v0, forces=forces, medium=a)
+    an = dq.angle_flight(v, math.radians(th), h, mass=body.mass, diameter=body.diameter, medium=a,
+                         cd=(lambda re, S: float(mg.drag_factor(S)) * float(dq.cd_standard(re))) if spin else
+                         (lambda re, S: float(dq.cd_standard(re))), buoyancy=True, added_mass=0.5, spin=spin,
+                         cl=(lambda S, re: float(mg.cl_zhou(S, re))) if spin else None, omega_z=Oz)
+    rd = _radau_real(body, h, v0, spin=spin, omega_z=Oz, spin_drag=bool(spin))
+    res = f.results()
+    errs = {"T": _rel(an["T"], res["T"]), "L": _rel(an["L"], res["L"]), "H": _rel(an["H"], res["H"]),
+            "v_land": _rel(an["v_land"], res["v_land"]),
+            "T_radau": _rel(rd["T"], res["T"]), "L_radau": _rel(rd["L"], res["L"]), "H_radau": _rel(rd["H"], res["H"]),
+            "E": f.energy_balance()}
+    print("angle method", body.name, h, v, th, spin, cor, errs)
+    assert max(errs.values()) < TOL
+
+
+def test_angle_method_refusals():
+    with pytest.raises(ValueError):
+        dq.angle_flight(5.0, math.radians(90.0), 1.0, mass=0.03, diameter=0.02)
+    with pytest.raises(ValueError):
+        dq.angle_flight(5.0, 0.0, 0.0, mass=0.03, diameter=0.02)
+    with pytest.raises(ValueError):  # a backspin lifting more than the weight's normal part: theta not monotonic
+        dq.angle_flight(5.0, 0.0, 1.0, mass=1e-4, diameter=0.02, spin=-1000.0, cl=lambda S, re: 0.4)
+
+
+# --- Basset's history force and its bound (§11 item 41, STATUS V52 (u)) --------------------------------------------
+def test_basset_integral_closed_forms():
+    """int_0^t a(s) / sqrt(t - s) ds: a constant a gives 2 a sqrt(t) exactly (the product integration is exact for a
+    piecewise linear a: measured 1e-15); a = e^-s gives 2 Dawson(sqrt t), second order in the step (n = 500, 1000,
+    4000: 1.4e-6, 3.6e-7, 2.2e-8)."""
+    from scipy import special
+    t = np.linspace(0.0, 2.0, 2001)
+    assert basset_integral(t, 3.0 * np.ones_like(t)) == pytest.approx(6.0 * np.sqrt(t), abs=1e-13)
+    lin = basset_integral(t, t)  # int_0^t s / sqrt(t - s) ds = (4/3) t^(3/2)
+    assert lin == pytest.approx(4.0 / 3.0 * t ** 1.5, abs=1e-13)
+    errs = []
+    for n in (500, 1000, 4000):
+        tt = np.linspace(0.0, 2.0, n + 1)
+        errs.append(float(np.max(np.abs(basset_integral(tt, np.exp(-tt)) - 2 * special.dawsn(np.sqrt(tt))))))
+    assert errs[2] < 3e-8 and errs[0] / errs[1] == pytest.approx(4.0, rel=0.1)
+    two = basset_integral(t, np.column_stack([np.ones_like(t), t]))
+    assert two[:, 0] == pytest.approx(2 * np.sqrt(t), abs=1e-13) and two[:, 1] == pytest.approx(lin, abs=1e-13)
+    with pytest.raises(ValueError):
+        basset_integral(np.array([0.0, 0.1, 0.3]), np.ones(3))
+
+
+def test_basset_integral_against_the_midpoint_product_integration_of_v52u():
+    """The independent scheme of ``_maxey_riley`` (a piecewise constant on each step, the kernel integrated exactly
+    from the step's midpoint) on the same acceleration history, a(s) = e^-s cos(3 s): both converge to the same values
+    (the midpoint scheme at first order; at n = 4000 they agree to 3e-4 of the integral's scale)."""
+    n = 4000
+    t = np.linspace(0.0, 2.0, n + 1)
+    a = np.exp(-t) * np.cos(3 * t)
+    ours = basset_integral(t, a)
+    dt = t[1]
+    am = np.exp(-(t[:-1] + dt / 2)) * np.cos(3 * (t[:-1] + dt / 2))
+    mid = np.zeros(n + 1)
+    for k in range(1, n + 1):
+        tk = t[k]
+        mid[k] = float(2.0 * (np.sqrt(tk - t[:k]) - np.sqrt(tk - t[1:k + 1])) @ am[:k])
+    assert np.max(np.abs(ours - mid)) < 3e-4 * np.max(np.abs(ours))
+
+
+def test_history_bound_of_a_drop_with_linear_drag_against_its_closed_form():
+    """A sphere released from rest with linear drag (rate k): a(t) = -g e^(-k t), so Basset's force is F_y = 6 a^2
+    sqrt(pi mu rho) g 2 Dawson(sqrt(k t)) / sqrt(k) (upwards); the bound equals it (one sign-definite component)."""
+    from scipy import special
+    d = 0.01
+    body = Body(0.004, d)
+    k = 0.8
+    f = fly(body, [0.0, 2.0], [0.0, 0.0], forces=[LinearDrag(k * body.mass)])
+    a = air()
+    hb = history_bound(f, n=4000)
+    K = 6 * (d / 2) ** 2 * math.sqrt(math.pi * a["mu"] * a["rho"])
+    ref = K * G * 2 * special.dawsn(np.sqrt(k * hb["t"])) / math.sqrt(k)
+    assert hb["K"] == pytest.approx(K, rel=1e-15)
+    assert hb["F"][:, 1] == pytest.approx(ref, abs=1e-6 * ref.max())
+    assert hb["B"] == pytest.approx(ref, abs=1e-6 * ref.max())
+    assert np.all(np.abs(hb["F"][:, 0]) < 1e-12 * ref.max())
+
+
+def test_history_bound_of_a_vacuum_throw_against_its_closed_form():
+    """A horizontal throw in vacuum: a = -g, F_y = 2 K g sqrt(t); to first order dy(T) = 2 K g (4/15) T^(5/2) / m and
+    the landing moves by v_x dy / (g T); here the bound equals Basset's shift."""
+    body = STEEL
+    v0, h = 1.5, 1.0
+    f = fly(body, [0.0, h], [v0, 0.0])
+    hb = history_bound(f, medium=air(), n=4000)
+    T = f.flight_time
+    K = hb["K"]
+    dy = 2 * K * G * (4.0 / 15.0) * T ** 2.5 / body.mass
+    assert hb["dL"] == pytest.approx(v0 * dy / (G * T), rel=1e-5)  # the trapezoid on sqrt(t): ~n^-1.5
+    assert hb["dL_bound"] == pytest.approx(hb["dL"], rel=1e-9)
+    assert hb["B_over_weight"] == pytest.approx(2 * K * math.sqrt(T) / body.mass, rel=1e-9)
+
+
+def test_history_bound_on_s03_s_benches():
+    """Design A.8 (Basset's kernel, the boundary layer established before the launch): 0.037 mm on the chute (1 m),
+    0.357 mm on the launcher (50°), 60.2 mm on the light ball's 28 m (45°; 61.5 at 50°); the bound by any kernel below
+    Basset's equals Basset's own shift here, since no component of these accelerations changes its sign; the largest
+    force under 3.3e-3 of the weight (3.2e-3 at 70°). Converged in the grid: n = 2000 and 4000 agree to 6e-6."""
+    a = Medium.air()
+    cases = [(STEEL, 1.0, [1.5, 0.0], 0.03671), (STEEL, 0.0, _v(5.0, 50.0), 0.35674), (BALL, 0.0, _v(20.0, 45.0), 60.163)]
+    for body, h, v0, dl in cases:
+        f = fly(body, [0.0, h], v0, forces=[dq.CurveDrag.sphere(body.diameter)], medium=a)
+        hb = history_bound(f, n=2000)
+        print("history", body.name, h, v0, hb["dL"] * 1e3, hb["dL_bound"] * 1e3, hb["B_over_weight"])
+        assert hb["dL"] * 1e3 == pytest.approx(dl, rel=2e-4)
+        assert hb["dL_bound"] == pytest.approx(hb["dL"], rel=1e-12)
+        assert hb["B_over_weight"] < 3.3e-3

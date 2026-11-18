@@ -34,7 +34,7 @@ FROZEN = {
     "md.outside_walls", "md.overlap", "md.periodic_axis", "md.piston", "md.potential", "md.ramp", "md.refused",
     "md.region", "md.same_point", "md.samples", "md.thermal_wall", "md.thermostat", "md.value",
     "mechanics.bad_gravity", "mechanics.below_ground", "mechanics.no_flight", "mechanics.no_landing",
-    "mechanics.nonfinite", "mie.index",
+    "mechanics.nonfinite", "material.out_of_range", "mie.index",
     "mie.mx_too_large", "mie.no_convergence", "mie.size", "mie.size_bound", "nbody.body", "nbody.collision",
     "nbody.refused", "newton.unbound", "optics.z", "orbit.horizon", "orbit.no_circular", "orbit.no_fall",
     "orbit.not_bound", "orbit.superluminal", "pn.above_circular", "pn.invalid", "pn.no_circular", "pn.plunge",

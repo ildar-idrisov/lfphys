@@ -43,7 +43,8 @@ ABOUT = {
     "statement": T("Fresnel equations (s and p), Brewster's angle and the angle of total internal reflection, "
                    "transfer matrices for a stack of layers (anti-reflection coatings, mirrors, the Fabry–Pérot "
                    "interferometer); the balance R + T + A = 1; the electric and magnetic fields inside and around "
-                   "the structure for s and p light and for any polarisation."),
+                   "the structure for s and p light and for any polarisation; the group delays of the reflected and "
+                   "the transmitted light with the materials' dispersion."),
     "validity": T("homogeneous isotropic linear media, flat interfaces, a plane wave (Maxwell's equations exactly)"),
     "basis": ["Born & Wolf, Principles of Optics, §1.5–1.6",
               T("Byrnes, arXiv:1603.02720 (the transfer-matrix method)")],
@@ -340,3 +341,116 @@ def power_factor(ns, theta0: float, pol: str) -> float:
     if pol == "p":
         return float((nsub * cs.conjugate()).real / (n0 * c0.conjugate()).real)
     raise ValueError("pol must be 's' or 'p'")
+
+
+def _g_series(delta):
+    """(cos delta - sinc delta) / delta^2 = sum_{k>=1} (-1)^k 2k delta^(2k-2) / (2k+1)!, for |delta| < 0.5."""
+    out, term_pow, fact = 0j, 1.0 + 0j, 6.0  # delta^(2k-2), (2k+1)!
+    d2 = delta * delta
+    for k in range(1, 12):
+        out += (-1) ** k * 2 * k * term_pow / fact
+        term_pow *= d2
+        fact *= (2 * k + 2) * (2 * k + 3)
+    return out
+
+
+def _layer_d(n, dn, c, d, lam, pol, s0, ds0):
+    """``_layer`` (the same matrix, the same float operations and the same scale e^s) and its derivative with respect
+    to lam for an index n(lam) with dn = dn/dlam, s0 = n_in sin(theta0), ds0 = d s0/dlam. The scale e^s is held
+    constant in the derivative: a real factor of the whole matrix, which no phase of r or t depends on. The entries
+    are written through u = (n cos theta)^2 = n^2 - s0^2 and delta^2 = (k0 d)^2 u, with cos(delta), sinc(delta) and
+    g = (cos delta - sinc delta)/delta^2 (even functions of delta), so a wave grazing inside the layer (u = 0) is a
+    regular point: d cos(delta) = -sinc(delta) D/2, d sinc(delta) = g D/2, D = d(delta^2)/dlam."""
+    Mt, s = _layer(n, c, d, lam, pol)
+    delta = 2 * math.pi * n * c * d / lam
+    k0 = 2 * math.pi / lam
+    dk0 = -k0 / lam
+    u = (n * c) ** 2
+    du = 2 * (n * dn - s0 * ds0)
+    D = d * d * (2 * k0 * dk0 * u + k0 * k0 * du)
+    if s:
+        ep, em = cmath.exp(1j * delta - s), cmath.exp(-1j * delta - s)
+        cd, sd = 0.5 * (ep + em), (ep - em) / 2j
+        sinc = sd / delta
+        g = (cd - sinc) / (delta * delta)
+    else:
+        cd = cmath.cos(delta)
+        sinc = _sinc(delta)
+        g = _g_series(delta) if abs(delta) < 0.5 else (cd - sinc) / (delta * delta)
+    dcd = -0.5 * sinc * D
+    dsinc = 0.5 * g * D
+    if pol == "s":
+        dM01 = -1j * d * (dk0 * sinc + k0 * dsinc)
+        dM10 = -1j * d * (dk0 * u * sinc + k0 * du * sinc + k0 * u * dsinc)
+    else:
+        n2, dn2 = n * n, 2 * n * dn
+        dM01 = -1j * d * ((du / n2 - u * dn2 / (n2 * n2)) * k0 * sinc + (u / n2) * (dk0 * sinc + k0 * dsinc))
+        dM10 = -1j * d * (dn2 * k0 * sinc + n2 * (dk0 * sinc + k0 * dsinc))
+    return Mt, np.array([[dcd, dM01], [dM10, dcd]]), s
+
+
+def group_delay(ns, ds, lam: float, theta0: float, pol: str, dns=None, length_unit: float = 1e-9) -> dict:
+    """The group delays of the reflected and the transmitted wave of a planar structure: tau = d(arg r)/d omega and
+    d(arg t)/d omega at a fixed angle of incidence theta0 (time factor e^{-i omega t}: a positive tau is a delay of the
+    pulse's peak; r refers to the first interface, t to the exit plane, both at the same position along the surface).
+    ns, ds, lam, theta0 as in ``stack``; dns the derivatives dn/dlam of the indices in the unit of lam (each material's
+    dispersion, e.g. ``core.optics.materials.dindex``; None: constant indices); length_unit the unit of lam and ds in
+    metres (1e-9: nm). tau = -length_unit lam^2/(2 pi c) d(arg)/dlam.
+
+    The transfer matrices of ``stack`` differentiated exactly in lam (forward mode: the derivative of each layer's
+    characteristic matrix with its index's dispersion, ``_layer_d``, carried through the product by the product rule;
+    the incidence medium's dispersion through e0 = n0 cos theta0 and n0 sin theta0, the exit's through its cosine):
+    d ln r = N'/N - D'/D with r = N/D as in ``stack``, d ln t = e0'/e0 - D'/D (s) or n0'/n0 - D'/D (p), and
+    d(arg)/dlam = Im d ln. Real factors (the scales e^S of opaque layers, the normalisations of the running product)
+    change |r| and |t|, not their phases, and drop out. A complex step is not used: r and t are complex-valued, and the
+    complex-step derivative needs a real-valued function. Returns dict(tau_r, tau_t (s), dphi_r, dphi_t (rad per unit
+    of lam), r, t (as ``stack``)); tau_r is nan where r = 0 (no reflected wave, no phase)."""
+    from lfphys.core.constants import C as C_LIGHT
+    ns = [complex(n) for n in ns]
+    if len(ds) != len(ns) - 2:
+        raise ValueError("need one thickness per inner layer")
+    if pol not in ("s", "p"):
+        raise ValueError("pol must be 's' or 'p'")
+    dns = [0j] * len(ns) if dns is None else [complex(x) for x in dns]
+    cos = _cosines(ns, theta0)
+    sin0 = math.sin(theta0)
+    s0, ds0 = ns[0] * sin0, dns[0] * sin0
+    M = np.eye(2, dtype=complex)
+    dM = np.zeros((2, 2), complex)
+    S = 0.0
+    for j in range(1, len(ns) - 1):
+        Mj, dMj, sj = _layer_d(ns[j], dns[j], cos[j], ds[j - 1], lam, pol, s0, ds0)
+        dM = dM @ Mj + M @ dMj
+        M = M @ Mj
+        S += sj
+        m = max(float(np.max(np.abs(M))), float(np.max(np.abs(dM))))
+        if m > 1e100 or 0 < m < 1e-100:  # a real factor of both: the phases' derivatives do not change
+            M, dM = M / m, dM / m
+            S += math.log(m)
+    n0, c0, nsub, cs = ns[0], cos[0], ns[-1], cos[-1]
+    dn0, dnsub = dns[0], dns[-1]
+    qs = nsub * cs
+    dqs = (nsub * dnsub - s0 * ds0) / qs if qs != 0 else complex(math.inf, math.inf)
+    if pol == "s":
+        v, dv = np.array([1.0, qs]), np.array([0.0, dqs])
+    else:
+        dcs = (dqs * nsub - qs * dnsub) / (nsub * nsub)
+        v, dv = np.array([cs, nsub]), np.array([dcs, dnsub])
+    B, Cc = M @ v
+    dB, dC = dM @ v + M @ dv
+    if pol == "s":
+        e0, de0 = n0 * c0, dn0 * c0
+        N, Dn = e0 * B - Cc, e0 * B + Cc
+        dN, dD = de0 * B + e0 * dB - dC, de0 * B + e0 * dB + dC
+        dlogt = de0 / e0 - dD / Dn
+        t = 2 * e0 / Dn * math.exp(-S)
+    else:
+        N, Dn = -(n0 * B - c0 * Cc), n0 * B + c0 * Cc
+        dN, dD = -(dn0 * B + n0 * dB - c0 * dC), dn0 * B + n0 * dB + c0 * dC
+        dlogt = dn0 / n0 - dD / Dn
+        t = 2 * n0 * c0 / Dn * math.exp(-S)
+    dphi_r = (dN / N - dD / Dn).imag if N != 0 else math.nan
+    dphi_t = complex(dlogt).imag
+    k = -length_unit * lam * lam / (2 * math.pi * C_LIGHT)
+    return {"tau_r": k * dphi_r, "tau_t": k * dphi_t, "dphi_r": float(dphi_r), "dphi_t": float(dphi_t),
+            "r": complex(N / Dn), "t": complex(t)}

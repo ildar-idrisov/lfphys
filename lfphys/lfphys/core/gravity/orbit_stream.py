@@ -26,6 +26,21 @@ the body only approaches it), the surface of the body (r = R), escape (r = r_far
 Proper time of a plunge by quadrature, tau = integral dr / sqrt(R(r)), R = e^2 - (1 - 2/r)(1 + l^2/r^2): a reference
 that integrates no differential equation (``plunge_proper_time``).
 
+Inside the horizon (EX2 design §11 item 34): the body's own time does not end at the stop above the horizon. The
+first integrals e = (1 - 2/r) dt/dtau, l = r^2 dphi/dtau and the norm hold for every r > 0 (Blau, Lecture Notes on
+General Relativity, eqs. (25.29)-(25.33)), so (dr/dtau)^2 = R(r) there too, and for r < 2M
+
+    R(r) = e^2 + (2/r - 1)(1 + l^2/r^2) >= e^2 > 0:
+
+nothing turns back, and the body reaches r = 0 after the finite proper time tau = integral_0^r dr / sqrt(R(r))
+(``proper_time_to_centre``; ``OrbitStream.interior`` after a stop at the horizon). The coordinate time, the distant
+observer's, diverges at r = 2M and the stream still stops there. Near r = 0, 1/sqrt(R) ~ sqrt(r/2) (l = 0) or
+r^{3/2}/(sqrt(2)|l|): integrable. Since R >= 2/r - 1 inside, no fall lasts longer than integral_0^2 dr/sqrt(2/r - 1)
+= pi M from the horizon to r = 0. The radial fall from rest at r0 is the cycloid r = (r0/2)(1 + cos eta),
+tau = sqrt(r0^3/8)(eta + sin eta), down to eta = pi: tau(r = 0) = pi sqrt(r0^3/8M) (Blau, eqs. (26.25)-(26.29); Guth,
+MIT 8.286 (2013), lecture 15, «ripped apart by the singularity at r = 0 in a finite amount of the object's proper
+time»; ``cycloid_proper_time``). General relativity, and the computation, end at the singularity r = 0.
+
 Diagnostics: the first integral e^2 - 1 evaluated from the state, (e^2 - 1)_state = l^2 u_s^2 (y'^2 - 2 u_s y^3 +
 y^2 - 2 A y), whose drift from the initial value measures the integration error; and an independent second scheme
 (``geodesic_tau``): the geodesic equations x''^a = -Gamma^a_bc x'^b x'^c of the Schwarzschild metric in proper time
@@ -53,11 +68,16 @@ ABOUT = {
                    "by the initial radius, together with t and τ; radial orbits in proper time; periapsides, "
                    "apoapsides, turns, the horizon, the surface and escape as events on the dense output of DOP853; "
                    "the drift of e from the state; a second independent scheme (the geodesic equations in τ) to check "
-                   "e, l and the normalisation; the proper time of a fall by the quadrature τ = ∫dr/√R(r)."),
-    "validity": T("a test body outside a non-rotating spherical body (r > R, r > 2M), equatorial plane; relative "
-                  "integration accuracy 1e-12"),
+                   "e, l and the normalisation; the proper time of a fall by the quadrature τ = ∫dr/√R(r), also past "
+                   "the horizon to r = 0, which a falling body reaches in a finite time of its own clock (the radial "
+                   "fall from rest: τ = π√(r₀³/8M))."),
+    "validity": T("a test body outside a non-rotating spherical body (r > R, r > 2M), equatorial plane; inside a black "
+                  "hole's horizon only the body's proper time on to r = 0, where general relativity itself ends; "
+                  "relative integration accuracy 1e-12, quadratures 1e-11"),
     "basis": [T("orbit equations: lfphys.core.gravity.orbits (Schwarzschild 1916)"),
-              "DOP853: Hairer, Nørsett, Wanner, Solving Ordinary Differential Equations I (scipy.integrate)"],
+              "DOP853: Hairer, Nørsett, Wanner, Solving Ordinary Differential Equations I (scipy.integrate)",
+              "M. Blau, Lecture Notes on General Relativity (Universität Bern), eqs. (25.29)–(25.33), (26.25)–(26.29)",
+              "A. H. Guth, MIT 8.286 The Early Universe (2013), lecture 15"],
     "conflicts": [],
 }
 
@@ -429,6 +449,20 @@ class OrbitStream:
         return {"r": self.r0 / y, "phi": self.phi0 + self.sense * (ch["psi"] + p), "tau": ch["tau"] + sc * float(Y[3]),
                 "t": t, **self._velocity_binet(y, yp)}
 
+    def interior(self) -> dict | None:
+        """The body's own time past the stop at the horizon (EX2 §11 item 34): the stream stops 2e-6 M above r = 2M,
+        where the distant observer's time diverges; the body's clock goes on, by the quadrature, through the horizon
+        to r = 0 (``proper_time_to_centre``). Returns dict(r_stop, tau_stop: the stream's own at its stop; tau_horizon,
+        tau_centre: at r = 2M and at r = 0; dtau_inside: from the horizon to r = 0, at most pi M), M units; None unless
+        the stream stopped at a black hole's horizon (a body's surface or an escape ends nothing inside)."""
+        if self.done != "horizon":
+            return None
+        r_s = float(self.Yr[0]) if self.radial else self.r0 / float(self.Y[0])  # the state at the located stop
+        d_h = proper_time_to_centre(self.em1, self.l, r_s, 2.0)
+        d_in = proper_time_to_centre(self.em1, self.l, 2.0, 0.0)
+        return {"r_stop": r_s, "tau_stop": self.tau, "tau_horizon": self.tau + d_h, "tau_centre": self.tau + d_h + d_in,
+                "dtau_inside": d_in}
+
     def clock_rate(self, r):
         """dtau/dt of the body at r: (1 - 2/r)/e (array or scalar)."""
         return (1.0 - 2.0 / np.asarray(r)) / self.e
@@ -464,6 +498,54 @@ def proper_time_between(em1: float, l: float, r_a: float, r_b: float) -> float:
         val, _ = integrate.quad(g, a, b, epsabs=0.0, epsrel=1e-11, limit=400)
         total += val
     return total
+
+
+def _turning_points(em1: float, l: float, r_lo: float, r_hi: float) -> list[float]:
+    """The turning points of the radial motion (R(r) = 0) strictly between r_lo and r_hi (1e-9 of r_hi kept clear of
+    r_hi itself, a start at a turning point): the positive real roots of r^3 R(r) = (e^2 - 1) r^3 + 2 r^2 - l^2 r + 2 l^2
+    (none below 2M: R >= e^2 there)."""
+    roots = np.roots([em1, 2.0, -l * l, 2.0 * l * l]) if (em1 != 0.0 or l != 0.0) else np.zeros(0)
+    return sorted(float(z.real) for z in np.atleast_1d(roots)
+                  if abs(z.imag) <= 1e-9 * max(1.0, abs(z.real)) and r_lo < z.real < r_hi * (1.0 - 1e-9))
+
+
+def proper_time_to_centre(em1: float, l: float, r_from: float, r_to: float = 0.0) -> float:
+    """Proper time of a fall from r_from down to r_to (0 <= r_to < r_from), outside the horizon, through it or inside
+    it: tau = integral_{r_to}^{r_from} dr / sqrt(R(r)), R = e^2 - (1 - 2/r)(1 + l^2/r^2) (e^2 - 1 = em1, M = 1). The body
+    falls inward all the way (dr/dtau < 0, or 0 at r_from: a start at a turning point); with a turning point between the
+    two radii it does not get there, and the call is refused (orbit.no_fall). Inside the horizon R >= e^2 > 0 (see the
+    module's docstring), and r_to = 0 is the singularity, reached in finite proper time. The substitution
+    r = r_to + (r_from - r_to) sin^2(theta/2) makes the integrand smooth at both ends: at a turning point (R ~ r_from - r)
+    and at r = 0 (1/sqrt(R) ~ r^{1/2}, or r^{3/2} with l != 0). Gauss-Kronrod on two halves, relative 1e-11."""
+    if not (0.0 <= r_to < r_from and math.isfinite(r_from)):
+        raise coded(ValueError(T("0 ≤ r_to < r_from required")), "orbit.not_bound")
+    turn = _turning_points(em1, l, r_to, r_from)
+    if turn:
+        raise coded(ValueError(T("the body turns back at r = {r:.6g}M and does not fall to r = {r_to:.6g}M",
+                                 r=turn[-1], r_to=r_to)), "orbit.no_fall")
+    d = r_from - r_to
+
+    def g(th):
+        r = r_to + d * math.sin(0.5 * th) ** 2
+        if r <= 0.0:
+            return 0.0
+        R = float(radial_potential(r, em1, l))
+        return 0.5 * d * math.sin(th) / math.sqrt(R) if R > 0 else 0.0
+
+    total = 0.0
+    for a, b in ((0.0, 0.5 * math.pi), (0.5 * math.pi, math.pi)):
+        val, _ = integrate.quad(g, a, b, epsabs=0.0, epsrel=1e-11, limit=400)
+        total += val
+    return total
+
+
+def cycloid_proper_time(r0: float, r: float = 0.0) -> float:
+    """The radial fall from rest at r0 > 2M, in closed form (Blau, eqs. (26.25)-(26.29)): r = (r0/2)(1 + cos eta),
+    tau = sqrt(r0^3/8)(eta + sin eta), for any 0 <= r <= r0, inside the horizon too; tau(0) = pi sqrt(r0^3/8M)."""
+    if not (r0 > 2.0 and 0.0 <= r <= r0):
+        raise coded(ValueError(T("0 ≤ r ≤ r0 and r0 > 2M required")), "orbit.horizon")
+    eta = math.acos(min(1.0, max(-1.0, 2.0 * r / r0 - 1.0)))
+    return math.sqrt(r0**3 / 8.0) * (eta + math.sin(eta))
 
 
 def plunge_proper_time(em1: float, l: float, r0: float, v_r: float, r_end: float, r_apo: float | None) -> float:

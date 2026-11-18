@@ -1,0 +1,79 @@
+== TIR maximum (Stratton 46, 47) and numerical
+n 1.515: theta_max 51.1748 deg, delta_max 46.2902 deg; engine delta there 46.290218; min analyser fraction for a 45 deg source sin^2(delta/2) = 0.15450
+n 1.62: theta_max 47.9741 deg, delta_max 53.2545 deg; engine delta there 53.254529; min analyser fraction for a 45 deg source sin^2(delta/2) = 0.20087
+n 1.75: theta_max 44.5592 deg, delta_max 61.0205 deg; engine delta there 61.020475; min analyser fraction for a 45 deg source sin^2(delta/2) = 0.25775
+n 1.5: theta_max 51.6712 deg, delta_max 45.2397 deg; engine delta there 45.239730; min analyser fraction for a 45 deg source sin^2(delta/2) = 0.14793
+== glasses A, B, C
+A n 1.515: Brewster from air 56.5726, from inside 33.4274, critical 41.3049
+  40 deg: R_u 4.7769 %  DoP 0.681043  (Rs-Rp)/(Rs+Rp) 0.681043  1e5 unpol: reflected 4776.9, p-pass 761.81;  2e4 p light: reflected 304.72
+  45 deg: R_u 5.2342 %  DoP 0.825561  (Rs-Rp)/(Rs+Rp) 0.825561  1e5 unpol: reflected 5234.2, p-pass 456.52;  2e4 p light: reflected 182.61
+  50 deg: R_u 5.9860 %  DoP 0.938890  (Rs-Rp)/(Rs+Rp) 0.938890  1e5 unpol: reflected 5986.0, p-pass 182.90;  2e4 p light: reflected 73.16
+  54 deg: R_u 6.9124 %  DoP 0.990273  (Rs-Rp)/(Rs+Rp) 0.990273  1e5 unpol: reflected 6912.4, p-pass 33.62;  2e4 p light: reflected 13.45
+  55 deg: R_u 7.2048 %  DoP 0.996346  (Rs-Rp)/(Rs+Rp) 0.996346  1e5 unpol: reflected 7204.8, p-pass 13.16;  2e4 p light: reflected 5.27
+  56 deg: R_u 7.5265 %  DoP 0.999514  (Rs-Rp)/(Rs+Rp) 0.999514  1e5 unpol: reflected 7526.5, p-pass 1.83;  2e4 p light: reflected 0.73
+  57 deg: R_u 7.8801 %  DoP 0.999728  (Rs-Rp)/(Rs+Rp) 0.999728  1e5 unpol: reflected 7880.1, p-pass 1.07;  2e4 p light: reflected 0.43
+  58 deg: R_u 8.2690 %  DoP 0.996971  (Rs-Rp)/(Rs+Rp) 0.996971  1e5 unpol: reflected 8269.0, p-pass 12.53;  2e4 p light: reflected 5.01
+  59 deg: R_u 8.6964 %  DoP 0.991250  (Rs-Rp)/(Rs+Rp) 0.991250  1e5 unpol: reflected 8696.4, p-pass 38.05;  2e4 p light: reflected 15.22
+  60 deg: R_u 9.1663 %  DoP 0.982606  (Rs-Rp)/(Rs+Rp) 0.982606  1e5 unpol: reflected 9166.3, p-pass 79.72;  2e4 p light: reflected 31.89
+  61 deg: R_u 9.6828 %  DoP 0.971105  (Rs-Rp)/(Rs+Rp) 0.971105  1e5 unpol: reflected 9682.8, p-pass 139.89;  2e4 p light: reflected 55.96
+  62 deg: R_u 10.2506 %  DoP 0.956836  (Rs-Rp)/(Rs+Rp) 0.956836  1e5 unpol: reflected 10250.6, p-pass 221.23;  2e4 p light: reflected 88.49
+  66 deg: R_u 13.1448 %  DoP 0.874599  (Rs-Rp)/(Rs+Rp) 0.874599  1e5 unpol: reflected 13144.8, p-pass 824.18;  2e4 p light: reflected 329.67
+  70 deg: R_u 17.3808 %  DoP 0.759635  (Rs-Rp)/(Rs+Rp) 0.759635  1e5 unpol: reflected 17380.8, p-pass 2088.87;  2e4 p light: reflected 835.55
+B n 1.62: Brewster from air 58.3136, from inside 31.6864, critical 38.1181
+  40 deg: R_u 6.2397 %  DoP 0.641086  (Rs-Rp)/(Rs+Rp) 0.641086  1e5 unpol: reflected 6239.7, p-pass 1119.75;  2e4 p light: reflected 447.90
+  45 deg: R_u 6.7314 %  DoP 0.785422  (Rs-Rp)/(Rs+Rp) 0.785422  1e5 unpol: reflected 6731.4, p-pass 722.20;  2e4 p light: reflected 288.88
+  50 deg: R_u 7.5298 %  DoP 0.907799  (Rs-Rp)/(Rs+Rp) 0.907799  1e5 unpol: reflected 7529.8, p-pass 347.13;  2e4 p light: reflected 138.85
+  54 deg: R_u 8.5021 %  DoP 0.973797  (Rs-Rp)/(Rs+Rp) 0.973797  1e5 unpol: reflected 8502.1, p-pass 111.39;  2e4 p light: reflected 44.56
+  55 deg: R_u 8.8069 %  DoP 0.984384  (Rs-Rp)/(Rs+Rp) 0.984384  1e5 unpol: reflected 8806.9, p-pass 68.77;  2e4 p light: reflected 27.51
+  56 deg: R_u 9.1413 %  DoP 0.992322  (Rs-Rp)/(Rs+Rp) 0.992322  1e5 unpol: reflected 9141.3, p-pass 35.09;  2e4 p light: reflected 14.04
+  57 deg: R_u 9.5078 %  DoP 0.997508  (Rs-Rp)/(Rs+Rp) 0.997508  1e5 unpol: reflected 9507.8, p-pass 11.85;  2e4 p light: reflected 4.74
+  58 deg: R_u 9.9097 %  DoP 0.999857  (Rs-Rp)/(Rs+Rp) 0.999857  1e5 unpol: reflected 9909.7, p-pass 0.71;  2e4 p light: reflected 0.28
+  59 deg: R_u 10.3501 %  DoP 0.999313  (Rs-Rp)/(Rs+Rp) 0.999313  1e5 unpol: reflected 10350.1, p-pass 3.55;  2e4 p light: reflected 1.42
+  60 deg: R_u 10.8328 %  DoP 0.995845  (Rs-Rp)/(Rs+Rp) 0.995845  1e5 unpol: reflected 10832.8, p-pass 22.51;  2e4 p light: reflected 9.00
+  61 deg: R_u 11.3618 %  DoP 0.989446  (Rs-Rp)/(Rs+Rp) 0.989446  1e5 unpol: reflected 11361.8, p-pass 59.96;  2e4 p light: reflected 23.98
+  62 deg: R_u 11.9416 %  DoP 0.980137  (Rs-Rp)/(Rs+Rp) 0.980137  1e5 unpol: reflected 11941.6, p-pass 118.60;  2e4 p light: reflected 47.44
+  66 deg: R_u 14.8745 %  DoP 0.915031  (Rs-Rp)/(Rs+Rp) 0.915031  1e5 unpol: reflected 14874.5, p-pass 631.94;  2e4 p light: reflected 252.77
+  70 deg: R_u 19.1181 %  DoP 0.810506  (Rs-Rp)/(Rs+Rp) 0.810506  1e5 unpol: reflected 19118.1, p-pass 1811.39;  2e4 p light: reflected 724.56
+C n 1.75: Brewster from air 60.2551, from inside 29.7449, critical 34.8499
+  40 deg: R_u 8.1123 %  DoP 0.597168  (Rs-Rp)/(Rs+Rp) 0.597168  1e5 unpol: reflected 8112.3, p-pass 1633.95;  2e4 p light: reflected 653.58
+  45 deg: R_u 8.6214 %  DoP 0.739215  (Rs-Rp)/(Rs+Rp) 0.739215  1e5 unpol: reflected 8621.4, p-pass 1124.16;  2e4 p light: reflected 449.66
+  50 deg: R_u 9.4390 %  DoP 0.868168  (Rs-Rp)/(Rs+Rp) 0.868168  1e5 unpol: reflected 9439.0, p-pass 622.18;  2e4 p light: reflected 248.87
+  54 deg: R_u 10.4244 %  DoP 0.947349  (Rs-Rp)/(Rs+Rp) 0.947349  1e5 unpol: reflected 10424.4, p-pass 274.43;  2e4 p light: reflected 109.77
+  55 deg: R_u 10.7316 %  DoP 0.962286  (Rs-Rp)/(Rs+Rp) 0.962286  1e5 unpol: reflected 10731.6, p-pass 202.37;  2e4 p light: reflected 80.95
+  56 deg: R_u 11.0677 %  DoP 0.974938  (Rs-Rp)/(Rs+Rp) 0.974938  1e5 unpol: reflected 11067.7, p-pass 138.69;  2e4 p light: reflected 55.48
+  57 deg: R_u 11.4354 %  DoP 0.985154  (Rs-Rp)/(Rs+Rp) 0.985154  1e5 unpol: reflected 11435.4, p-pass 84.88;  2e4 p light: reflected 33.95
+  58 deg: R_u 11.8375 %  DoP 0.992797  (Rs-Rp)/(Rs+Rp) 0.992797  1e5 unpol: reflected 11837.5, p-pass 42.63;  2e4 p light: reflected 17.05
+  59 deg: R_u 12.2771 %  DoP 0.997747  (Rs-Rp)/(Rs+Rp) 0.997747  1e5 unpol: reflected 12277.1, p-pass 13.83;  2e4 p light: reflected 5.53
+  60 deg: R_u 12.7579 %  DoP 0.999906  (Rs-Rp)/(Rs+Rp) 0.999906  1e5 unpol: reflected 12757.9, p-pass 0.60;  2e4 p light: reflected 0.24
+  61 deg: R_u 13.2836 %  DoP 0.999195  (Rs-Rp)/(Rs+Rp) 0.999195  1e5 unpol: reflected 13283.6, p-pass 5.35;  2e4 p light: reflected 2.14
+  62 deg: R_u 13.8584 %  DoP 0.995557  (Rs-Rp)/(Rs+Rp) 0.995557  1e5 unpol: reflected 13858.4, p-pass 30.79;  2e4 p light: reflected 12.32
+  66 deg: R_u 16.7496 %  DoP 0.951423  (Rs-Rp)/(Rs+Rp) 0.951423  1e5 unpol: reflected 16749.6, p-pass 406.82;  2e4 p light: reflected 162.73
+  70 deg: R_u 20.9007 %  DoP 0.861835  (Rs-Rp)/(Rs+Rp) 0.861835  1e5 unpol: reflected 20900.7, p-pass 1443.87;  2e4 p light: reflected 577.55
+== unpolarised reflectance of A, 0..89.9 deg: monotonic?
+  monotonic True R(0) 4.1931 %, R(theta_B) 7.7249 %
+== §3.1 story numbers (n 1.5, 633 nm, unpolarised)
+  air->glass 30: R 4.1523 %
+  air->glass Brewster: R 7.3964 %, theta_B 56.310
+  glass->air 30: R 5.5190 %;  45: R 100.000000 %; theta_c 41.810
+  glass|200 nm air|glass 45: T 49.8758 %
+== Malus (part 2): psi 30, alpha 0..180 by 10, 20 000 photons
+  k1 1.0 k2 0.0: I at 0 offset 1.0000, at 90 0.0000; max |I - closed| 3.3e-16
+    noise-free WLS line through 0: slope 1.00000, chi2 0.0, dof 18, chi2/dof 0.0 (expected MC chi2/dof ~ (0.0 + 18)/18 = 1.0)
+    line with intercept: intercept 0.00000, slope 1.00000
+  k1 0.9 k2 0.009: I at 0 offset 0.9000, at 90 0.0090; max |I - closed| 3.3e-16
+    noise-free WLS line through 0: slope 0.90253, chi2 307.3, dof 18, chi2/dof 17.1 (expected MC chi2/dof ~ (307.3 + 18)/18 = 18.1)
+    line with intercept: intercept 0.00900, slope 0.89100
+== Explore 'Polarisation': glass A from inside, source 45 deg, analyser grid 0..165 by 15
+  35 deg: R 0.09336 delta    0.000 deg, ellipse az   84.12 chi   0.000 hand +0; analyser min (continuous) 0.00000, on the grid 0.01049 at 0
+  40 deg: R 0.29819 delta    0.000 deg, ellipse az   60.55 chi   0.000 hand +0; analyser min (continuous) 0.00000, on the grid 0.00009 at 150
+  41 deg: R 0.54351 delta    0.000 deg, ellipse az   52.26 chi   0.000 hand +0; analyser min (continuous) 0.00000, on the grid 0.01596 at 135
+  42 deg: R 1.00000 delta   20.651 deg, ellipse az   45.00 chi -10.325 hand -1; analyser min (continuous) 0.03213, on the grid 0.03213 at 135
+  45 deg: R 1.00000 delta   39.460 deg, ellipse az   45.00 chi -19.730 hand -1; analyser min (continuous) 0.11397, on the grid 0.11397 at 135
+  48 deg: R 1.00000 delta   44.948 deg, ellipse az   45.00 chi -22.474 hand -1; analyser min (continuous) 0.14613, on the grid 0.14613 at 135
+  51 deg: R 1.00000 delta   46.287 deg, ellipse az   45.00 chi -23.143 hand -1; analyser min (continuous) 0.15448, on the grid 0.15448 at 135
+  54 deg: R 1.00000 delta   45.574 deg, ellipse az   45.00 chi -22.787 hand -1; analyser min (continuous) 0.15001, on the grid 0.15001 at 135
+  57 deg: R 1.00000 delta   43.664 deg, ellipse az   45.00 chi -21.832 hand -1; analyser min (continuous) 0.13830, on the grid 0.13830 at 135
+  60 deg: R 1.00000 delta   40.987 deg, ellipse az   45.00 chi -20.494 hand -1; analyser min (continuous) 0.12257, on the grid 0.12257 at 135
+  65 deg: R 1.00000 delta   35.442 deg, ellipse az   45.00 chi -17.721 hand -1; analyser min (continuous) 0.09265, on the grid 0.09265 at 135
+  70 deg: R 1.00000 delta   29.047 deg, ellipse az   45.00 chi -14.524 hand -1; analyser min (continuous) 0.06289, on the grid 0.06289 at 135
+  80 deg: R 1.00000 delta   14.911 deg, ellipse az   45.00 chi  -7.455 hand -1; analyser min (continuous) 0.01684, on the grid 0.01684 at 135
