@@ -132,7 +132,9 @@ function home() {
     el("div", { class: "st-tiles" }, AUDS().map(tile)),
     SERVER ? el("div", { id: "continue", class: "st-continue" }) : null,
     errs.length ? el("div", { class: "st-note warn" }, el("b", {}, t("Not loaded:")), " ",
-      errs.map((v) => el("div", {}, el("span", { class: "mono" }, v.id), " — ", t(v.error)))) : null,
+      errs.map((v) => el("div", {}, el("span", { class: "mono" }, v.id), " — ", t(v.error),
+        // the exception's own line (English), folded when the text above does not already quote it (2026-11-18)
+        v.detail && !t(v.error).includes(v.detail) ? el("details", {}, el("summary", {}, t("details")), el("div", { class: "mono" }, v.detail)) : null))) : null,
     footer(),
   ];
 }
@@ -619,9 +621,22 @@ async function poll() {
     const [runs, h] = await Promise.all([getJSON(url("api/runs")), getJSON(url("api/health"))]);
     D.runs = runs; D.health = h;
     document.getElementById("health").textContent = t("{n:d} of {max:d} running", { n: h.running, max: h.max_workers });
+    drawRestart(h);
     document.getElementById("myruns").textContent = t("My runs ({n:d})", { n: runs.length });
   } catch (e) { document.getElementById("health").textContent = t("the server is not available"); }
   drawContinue();
+}
+// the server's code (the engine, the framework) changed on disk after it started (/api/health restart_needed): the
+// server still runs the old one, so a world may not load or show its former version until it is restarted (2026-11-18)
+function drawRestart(h) {
+  let box = document.getElementById("restart");
+  if (!h.restart_needed) { if (box) box.remove(); return; }
+  if (!box) {
+    box = el("div", { class: "page", id: "restart" }, el("div", { class: "st-note warn" },
+      t("The server's code changed on disk after it started: restart the server ({cmd}).", { cmd: "docker restart lf-viz" })));
+    document.getElementById("start").before(box);
+  }
+  box.title = (h.changed || []).join("\n");  // which files
 }
 let continueKey = "";
 function drawContinue() {

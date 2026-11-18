@@ -75,18 +75,36 @@ export function csv(columns, rows, label = (c) => c.id) {
   const lines = rows.map((r) => columns.flatMap((c) => { const x = r.cols[c.id]; return x ? [String(x.v), String(x.e)] : ["", ""]; }).join(","));
   return [head.join(","), ...lines].join("\n") + "\n";
 }
-// a value with its error: the error to two significant digits, the value to the same decimal place
+// a value to four significant digits, its trailing zeros kept («1.000» next to «0.4472»: V52 (y))
+export function sig4(v) {
+  if (!Number.isFinite(v)) return "—";
+  const r = Number(v.toPrecision(4));  // rounded first: 9.9996 is «10.00», not «10.000»
+  if (r === 0) return fmt(0, ".3f");
+  return fmt(r, `.${Math.min(12, Math.max(0, 3 - Math.floor(Math.log10(Math.abs(r)))))}f`);
+}
+// a value with its error: the error to two significant digits, the value to the same decimal place; an exact value
+// (error 0, e.g. √h of a height the stand sets exactly) to four significant digits, without «± 0»
 export function pm(v, e) {
   if (!Number.isFinite(v)) return "—";
-  if (!(e > 0) || !Number.isFinite(e)) return fmt(v, ".4g");
+  if (!(e > 0) || !Number.isFinite(e)) return sig4(v);
   const k = Math.max(0, 1 - Math.floor(Math.log10(e)));
   return `${fmt(v, `.${Math.min(12, k)}f`)} ± ${fmt(e, `.${Math.min(12, k)}f`)}`;
 }
 // a reading as the instrument shows it, to the decimals of its division or of its error, whichever is finer
-// («0.600 ± 0.005», not «0.60 ± 0.005»; review EX1-screens F14)
+// («0.600 ± 0.005», not «0.60 ± 0.005»; review EX1-screens F14); an exact reading (error 0: the stand's heights) to its
+// division's decimals, without «± 0» («0.20»; V52 (y))
 export function readingText(instr, x) {
+  if (!(x.e > 0)) return fmt(x.v, `.${Math.min(12, decimals(instr.division))}f`);
   const n = Math.max(decimals(instr.division), decimals(Number(x.e.toPrecision(2))));
   return `${fmt(x.v, `.${Math.min(12, n)}f`)} ± ${fmt(x.e, ".2g")}`;
+}
+// an instrument in the step's list: its division and its error, or, for an exact one (error 0), its own reason
+// («exact: the stand sets the chute's height at its marks»), never «error ±0» (V52 (y))
+export function instrumentText(i) {
+  const d = withUnit(fmt(i.division, ".6g"), t(i.unit));
+  const e = i.error ?? i.division / 2;
+  if (e > 0) return t("division {d}, error ±{e}", { d, e: withUnit(fmt(e, ".6g"), t(i.unit)) });
+  return i.error_note ? t("division {d}; exact: {why}", { d, why: t(i.error_note) }) : t("division {d}; exact", { d });
 }
 // a unit after a value: «45°» with no space before the degree sign, «0.677 m^½» with one (review EX1-screens F16)
 export const withUnit = (text, unit) => (!unit ? text : unit === "°" ? text + unit : `${text}\u00a0${unit}`);
@@ -198,8 +216,9 @@ export async function create(host, kit, spec) {
     const instrList = el("ul", { class: "dm-instr-list" }, step.instruments.map((id) => {
       const i = instruments[id];
       if (!i) return null;
-      return el("li", {}, el("b", {}, t(i.label)), " — ", t("division {d}, error ±{e}", { d: withUnit(fmt(i.division, ".6g"), t(i.unit)), e: withUnit(fmt(i.error ?? i.division / 2, ".6g"), t(i.unit)) }),
-        i.error_note ? el("div", { class: "muted" }, t(i.error_note)) : null);
+      // an exact instrument's reason is its error's place (instrumentText); another's note goes under it
+      return el("li", {}, el("b", {}, t(i.label)), " — ", instrumentText(i),
+        i.error_note && (i.error ?? i.division / 2) > 0 ? el("div", { class: "muted" }, t(i.error_note)) : null);
     }));
     const swBox = step.instruments.filter((id) => instruments[id] && instruments[id].manual).map((id) => stopwatchWidget(id, instruments[id]));
     const measure = el("button", { class: "primary dm-measure", onclick: () => measureNow() }, t("Measure"));

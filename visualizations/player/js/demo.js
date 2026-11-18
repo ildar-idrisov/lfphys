@@ -54,7 +54,8 @@ async function main() {
   if (MODE === "static") {
     try { world = (await getJSON(url("aliases.json")))[DEMO] || DEMO; } catch (e) { /* no alias table: the id as it is */ }
   }
-  try { D.viz = await apiGet(`viz/${encodeURIComponent(world)}`); } catch (e) { fail(t("No such demonstration")); return; }
+  // a world that does not load says why (the server's text, e.g. "restart the server"; 2026-11-18), else there is none
+  try { D.viz = await apiGet(`viz/${encodeURIComponent(world)}`); } catch (e) { fail(e.body && e.body.detail ? e.message : t("No such demonstration")); return; }
   world = D.viz.id;
   D.screens = D.viz.screens || [];
   const [rec, auds] = await Promise.allSettled([apiGet("recordings"), apiGet("audiences")]);

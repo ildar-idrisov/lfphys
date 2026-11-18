@@ -13,7 +13,8 @@
 // (demo.js). Explore: the overlays below, earlier points' expectation curves as faded traces (setTraces), frames
 // without their dropped `flight` blob, quantised blobs (QUANT_SAFE: the map's u8 √ steps stay under the colour map's
 // 256 levels on its linear scale; the screen positions' u16 steps are below 0.03 of a detector pixel). Every count drawn
-// is of the messages fed up to the time shown. The live player (no ctx.screen) is unchanged.
+// is of the messages fed up to the time shown. The live player (no ctx.screen) keeps its toolbars and long notes; in
+// every mode each picture's note is a band above it, never over the picture (V52 (b), (c); the layout at addStyle).
 import { t, fmt, parseNum } from "/static/js/i18n.js";
 import { css, el, fmtInput, fresh2d, num, numberInput, panel, time } from "/static/js/ui.js";
 
@@ -46,33 +47,61 @@ export function lightColour(nm) {
   return `rgb(${c(r)},${c(g)},${c(b)})`;
 }
 
-let STYLE = false;  // the screens' layout, added once per page
+// The layout of both pictures, on the screens and in the full player (review EX1-worlds F10; V52 (b), (c)): each picture's
+// note is a band of its own above it, sized to its text in every language, never over the picture. The two notes share
+// a row, so the two canvases start at the same height. Below 1000 px the screens (Watch, Explore) stack the pictures:
+// the map (U32_MAP_PX high), its note folded under it (the fold's summary is the distortion sentence, so it is always
+// read), the screen's note and the screen (U32_SCR_PX). The map's 220 px leave it about 194 px of map (its top and
+// bottom margins are the axis's numbers), 1.5 times the 129 px it had: the default point's 10 fringes about 19 px apart,
+// the finest grid point's (d 300 µm, a 10 µm) still 3 px apart; and the view, sticky over Explore's controls, stays
+// short enough that a control (about 100 px) fits between it and the time bar on a 390 × 844 screen in Russian, whose
+// readout line takes three lines and whose time bar is 160 px high (D12). The full player stacks them below 1000 px
+// with their notes as bands too.
+const U32_MAP_PX = 220, U32_SCR_PX = 200;
+let STYLE = false;  // the layout, added once per page
 function addStyle() {
   if (STYLE) return;
   STYLE = true;
   document.head.append(el("style", {}, `
 .u32-c { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-.u32-panes { display: flex; flex: 1; min-height: 0; }
-.u32-panes > div { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
-.u32-app { flex: 1.15 1 0; border-right: 1px solid var(--line); }
-.u32-scr { flex: 1 1 0; }
+.u32-panes { display: grid; flex: 1; min-height: 0; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "na ns" "ca cs"; }
+.u32-panes > .u32-app, .u32-panes > .u32-scr { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.u32-app { grid-area: ca; border-right: 1px solid var(--line); }
+.u32-scr { grid-area: cs; }
+/* (the class overlay is kept for keyframes.mjs, which compares the views' overlay texts; chrome.css's position undone) */
+.u32-note.overlay { position: static; pointer-events: auto; border-radius: 0; min-width: 0; font-size: 13px; line-height: 1.35;
+  padding: 4px 10px; background: var(--panel); border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.u32-note-app { grid-area: na; border-right: 1px solid var(--line); }
+.u32-note-scr { grid-area: ns; }
+.u32-fold { grid-area: fa; display: none; background: var(--panel); border-bottom: 1px solid var(--line); font-size: 13px;
+  line-height: 1.35; color: var(--muted); padding: 0 10px; overflow-wrap: anywhere; }
+.u32-fold > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 6px; padding: 4px 0; }
+.u32-fold > summary::-webkit-details-marker { display: none; }
+.u32-fold > summary::before { content: "▸"; flex: none; }
+.u32-fold[open] > summary::before { content: "▾"; }
+.u32-fold > div { padding: 0 0 6px; }
 .u32-read { display: flex; flex-wrap: wrap; gap: 2px 16px; padding: 5px 10px; font-size: 14px; background: var(--panel); border-bottom: 1px solid var(--line); }
 .u32-read b { font-variant-numeric: tabular-nums; }
 .u32-stories { background: var(--panel); border-top: 1px solid var(--line); padding: 4px 10px; font-size: 13px; max-height: 30%; overflow: auto; }
 .u32-stories > summary { cursor: pointer; font-weight: 600; }
 .u32-c.u32-watch .u32-panes { margin-bottom: 128px; }
-.u32-app .overlay, .u32-scr .overlay { right: 8px; }
-.u32-narrow { display: none; }
 @media (max-width: 999px) {
-  .u32-wide { display: none; }
-  .u32-narrow { display: inline; }
   .dm-stage:has(> .u32-c) { aspect-ratio: auto; max-height: none; }
-  .dm-stage > .u32-c.u32-on { min-height: 460px; }
-  .u32-panes { flex-direction: column; }
-  .u32-app { flex: 0 0 170px; border-right: 0; border-bottom: 1px solid var(--line); }
-  .u32-scr { flex: 1 0 250px; }
+  .dm-stage > div.u32-c.u32-on { aspect-ratio: auto; min-height: 0; flex: none; }
+  .u32-c.u32-on .u32-panes { flex: none; grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: ${U32_MAP_PX}px auto auto ${U32_SCR_PX}px; grid-template-areas: "ca" "fa" "ns" "cs"; }
+  .u32-c.u32-on .u32-note-app { display: none; }
+  .u32-c.u32-on .u32-fold { display: block; border-top: 1px solid var(--line); }
+  .u32-c.u32-on .u32-app { border-right: 0; }
   .u32-c.u32-watch .u32-panes { margin-bottom: 0; }
   .u32-stories { max-height: 220px; }
+}
+@media (max-width: 1000px) {
+  .u32-c:not(.u32-on) .u32-panes { flex: 1 0 auto; grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(260px, 1fr) auto minmax(260px, 1fr); grid-template-areas: "na" "ca" "ns" "cs"; }
+  .u32-c:not(.u32-on) .u32-app, .u32-c:not(.u32-on) .u32-note-app { border-right: 0; }
+  .u32-c:not(.u32-on) .u32-app { border-bottom: 1px solid var(--line); }
 }`));
 }
 
@@ -123,7 +152,17 @@ export function createView(ctx) {
   const btnFly = el("button", { title: t("A speed at which the flight of one particle is visible (≈{s:d} s per flight)", { s: 2 }) }, t("▷ flight"));
   const btnBuild = el("button", { title: t("The speed at which the pattern builds up (≈{n:d} particles per second)", { n: 40 }) }, t("▷▷ build-up"));
   const cvApp = el("canvas"), cvScr = el("canvas");
-  const ovApp = el("div", { class: "overlay" }), ovScr = el("div", { class: "overlay" });
+  // each picture's note: a band above it (the layout's comment at addStyle); on a narrow screen the map's note folds under
+  // the map, its summary the distortion sentence (review EX1-worlds F10: «folded but present»)
+  const ovApp = el("div", { class: "u32-note u32-note-app overlay", "data-u32": "note" });
+  const ovScr = el("div", { class: "u32-note u32-note-scr overlay", "data-u32": "note" });
+  const foldBody = el("div", {});
+  const fold = SCR ? el("details", { class: "u32-fold", "data-u32": "fold" },
+    el("summary", {}, t("Log scale of the distance, widths rescaled: the beams only seem to bend.")), foldBody) : null;
+  const panes = el("div", { class: "u32-panes" }, ovApp, ovScr,
+    el("div", { class: "u32-app" }, el("div", { class: "canvas-wrap" }, cvApp)), fold,
+    el("div", { class: "u32-scr" }, el("div", { class: "canvas-wrap" }, cvScr)));
+  addStyle();
   const toolbar = el("div", { class: "toolbar" }, el("span", { class: "muted" }, t("Screen:")), selFilter, phaseBox,
     el("label", { title: t("Show only the current segment (after the last change of the set-up)") }, cbSeg, " ", t("current segment")),
     el("label", {}, cbCurves, " ", t("expectation")), el("label", {}, cbLog, " ", t("log scale of the map")),
@@ -141,20 +180,13 @@ export function createView(ctx) {
   const readBox = el("div", { class: "u32-read", "data-u32": "readouts" });  // the screens' readout line
   let center, rightPanels;
   if (!SCR) {
-    center = el("div", { style: { display: "flex", flexDirection: "column", flex: 1, minHeight: 0 } }, quick, toolbar,
-      el("div", { class: "split" },
-        el("div", {}, el("div", { class: "canvas-wrap" }, cvApp, ovApp)),
-        el("div", {}, el("div", { class: "canvas-wrap" }, cvScr, ovScr))));
+    center = el("div", { class: "u32-c" }, quick, toolbar, panes);
     rightPanels = [panel(t("Particle"), infoBox), panel(t("Model of the slit screen"), vecBox), panel(t("Counters and statistics"), statBox),
       panel(t("Approximations of this segment"), approxBox), panel(t("Latest particles: the chain of causes"), storyBox)];
   } else {
-    addStyle();
     // Watch: the chain of causes of the latest particles folds under the view (design §6.3); Explore drops the stories
     const storyFold = ctx.screen === "watch" ? el("details", { class: "u32-stories" }, el("summary", {}, t("Latest particles: the chain of causes")), storyBox) : null;
-    center = el("div", { class: `u32-c u32-on u32-${ctx.screen}` }, readBox,
-      el("div", { class: "u32-panes" },
-        el("div", { class: "u32-app" }, el("div", { class: "canvas-wrap" }, cvApp, ovApp)),
-        el("div", { class: "u32-scr" }, el("div", { class: "canvas-wrap" }, cvScr, ovScr))), storyFold);
+    center = el("div", { class: `u32-c u32-on u32-${ctx.screen}` }, readBox, panes, storyFold);
     rightPanels = [panel(t("Particle"), infoBox), panel(t("Model of the slit screen"), vecBox), panel(t("Counters and statistics"), statBox),
       panel(t("Approximations of this segment"), approxBox)];
   }
@@ -179,7 +211,11 @@ export function createView(ctx) {
   let mapCache = null;   // {seg, log, img}
   let lastFrame = null, curBlobs = {};
   const flightOf = () => curBlobs.flight || [];
-  for (const cv of [cvApp, cvScr]) new ResizeObserver(() => { dotsState = null; mapCache = null; ctx.requestRender(); }).observe(cv);
+  let paneW = 0;  // the map's width: when it changes, the notes' bands are measured afresh (note())
+  for (const cv of [cvApp, cvScr]) new ResizeObserver(() => {
+    if (cv === cvApp && cvApp.clientWidth !== paneW) { paneW = cvApp.clientWidth; for (const b of [ovApp, ovScr]) b.style.minHeight = ""; }
+    dotsState = null; mapCache = null; ctx.requestRender();
+  }).observe(cv);
   window.addEventListener("themechange", () => { dotsState = null; });
   function full() { dotsState = null; mapCache = null; ctx.requestRender(); }
 
@@ -234,13 +270,15 @@ export function createView(ctx) {
 
   // --- apparatus view -----------------------------------------------------------------------------------
   function drawApparatus(frame, tw) {
-    const cv = cvApp, g = setup(cv);
-    const W = cv.clientWidth, Hh = cv.clientHeight;
+    const cv = cvApp, W = cv.clientWidth, Hh = cv.clientHeight;
+    if (W < 1 || Hh < 1) return;  // hidden (another screen's tab) or not laid out yet: nothing to draw
+    const g = setup(cv);
     g.fillStyle = css("--canvas"); g.fillRect(0, 0, W, Hh);
     const seg = segAt(tw);
     if (!seg) return;
     const geo = (seg.setup || H).geometry;
-    const left = Math.round(W * 0.16), top = 18, bot = Hh - 22, mh = bot - top;
+    // the margin above the map holds only the analyser's label (the note is a band of its own)
+    const left = Math.round(W * 0.16), top = seg.app && seg.app.analyzer === "on" ? 18 : 8, bot = Hh - 22, mh = bot - top;
     const z0 = seg.map_z[0], zL = seg.map_z[seg.map_z.length - 1];
     const uOf = (z) => left + (W - left - 8) * Math.log(z / z0) / Math.log(zL / z0);
     const w0 = seg.map_w[0];
@@ -370,29 +408,38 @@ export function createView(ctx) {
       const txt = [t("View from above: the computed wave behind the slits, brighter where a hit is more probable."),
         t("The distance is on a log scale and the width is rescaled at each distance, so the beams seem to bend."),
         t("Set-up: {app}", { app: seg.apparatus })];
-      if (ovApp.dataset.txt !== txt.join("|")) {
-        ovApp.dataset.txt = txt.join("|");
-        // on a narrow screen the distortion is still said, shortly (review R-W F10): the map is not photon paths
-        ovApp.replaceChildren(txt[0] + " ", el("span", { class: "u32-wide" }, txt[1] + " "),
-          el("span", { class: "u32-narrow" }, t("Log scale of the distance, widths rescaled: the beams only seem to bend.") + " "), txt[2]);
-      }
+      note(ovApp, txt.join(" "));
+      // the fold under the map on a narrow screen: its summary says the distortion shortly (the map is not photon paths)
+      if (foldBody.textContent !== txt[0] + " " + txt[2]) foldBody.textContent = txt[0] + " " + txt[2];
       return;
     }
-    ovApp.textContent = t("View from above: the wave behind the slits (|ψ|², normalised in each cross-section), z on a log scale from 2a to the screen; x relative to the beam's width. In flight: {n:d}. Segment {s:d}: {app}",
-      { n: nfl, s: seg.seg, app: seg.apparatus }) + (seg.vector ? " " + t("The screen is a perfect conductor; the map and the flow lines are the scalar model (Kirchhoff, paraxial).") : "");
+    note(ovApp, t("View from above: the wave behind the slits (|ψ|², normalised in each cross-section), z on a log scale from 2a to the screen; x relative to the beam's width. In flight: {n:d}. Segment {s:d}: {app}",
+      { n: nfl, s: seg.seg, app: seg.apparatus }) + (seg.vector ? " " + t("The screen is a perfect conductor; the map and the flow lines are the scalar model (Kirchhoff, paraxial).") : ""));
+  }
+  // a note's text. In the full player the counts in the notes change at every frame: a band grows to its text and does
+  // not shrink back while its width stays, so that the canvases under it do not jump by a line from frame to frame
+  function note(box, text) {
+    if (box.textContent === text) return;
+    box.textContent = text;
+    if (SCR) return;  // the screens' notes change only with the segment's set-up
+    const h = box.offsetHeight;
+    if (h > (parseFloat(box.style.minHeight) || 0)) box.style.minHeight = `${h}px`;
   }
 
   // --- screen -------------------------------------------------------------------------------------------
   function drawScreen(frame, tw) {
-    const cv = cvScr, g = setup(cv);
-    const W = cv.clientWidth, Hh = cv.clientHeight;
+    const cv = cvScr, W = cv.clientWidth, Hh = cv.clientHeight;
+    // hidden (another screen's tab: Watch ↔ Explore) or not laid out yet: nothing to draw, and the dots' offscreen canvas
+    // would be 0 px wide, which drawImage refuses (InvalidStateError; found by FA's sweep, 2026-11-18)
+    if (W < 1 || Hh < 1) return;
+    const g = setup(cv);
     g.fillStyle = css("--canvas"); g.fillRect(0, 0, W, Hh);
     const seg = segAt(tw);
     const SU = (seg && seg.setup) || H;
     const half = SU.geometry.half;
-    // the screens: the dots start under the overlay's line, and few hits are drawn larger (one photon is one visible dot)
-    const dotsTop = SCR ? (W < 420 ? 40 : 26) : 0;
-    const dotsH = Math.round(Hh * 0.55) - dotsTop, histTop = dotsTop + dotsH + 10;
+    // the screens: few hits are drawn larger (one photon is one visible dot), so the dots keep a few pixels from the top
+    const dotsTop = SCR ? 6 : 0;
+    const dotsH = Math.max(1, Math.round(Hh * 0.55) - dotsTop), histTop = dotsTop + dotsH + 10;
     let histH = Hh - histTop - 20;
     const xOf = (x) => 8 + (W - 16) * (x + half) / (2 * half);
     const n = shownUpTo(tw);
@@ -507,7 +554,7 @@ export function createView(ctx) {
     g.fillStyle = css("--muted"); g.font = "11px system-ui";
     g.fillText(lenFmt(-half), 8, Hh - 5); g.fillText("0", W / 2 - 3, Hh - 5); g.fillText(lenFmt(half), W - 60, Hh - 5);
     if (SCR) {  // the screens: what the dots are; the curves' legend in the histogram's corner, only those shown
-      ovScr.textContent = t("The screen: each dot is one hit. Below: their histogram.");
+      note(ovScr, t("The screen: each dot is one hit. Below: their histogram."));
       const leg = [expC ? [t("expectation"), "#e8590c", []] : null, clC ? [t("without interference"), "#868e96", [5, 4]] : null].filter(Boolean);
       g.save(); g.font = "11px system-ui"; g.textAlign = "right"; g.lineWidth = 1.6;
       leg.forEach(([lab, col, dash], k) => {
@@ -523,8 +570,8 @@ export function createView(ctx) {
         ? t("Conducting screen: the hits and the orange line are the vector solution (energy flux), the blue one the scalar Kirchhoff solution in the same units (with the same detector efficiency), the green and purple dots the TE and TM contributions; {note}.", { note: vec.diff_note })
         : t("Conducting screen: the hits and the orange line are the vector solution (energy flux), the blue one the scalar Kirchhoff solution in the same units (with the same detector efficiency), the green and purple dots the TE and TM contributions, the red one the difference vector − scalar."))
       : " " + t("Conducting screen, but the hits and the orange line are the scalar model ({why}); the blue one is only the shape of the vector solution for the same slits without elements and analyser, normalised to the same sum (their units differ; the difference is not shown).", { why: vec.why || "" });
-    ovScr.textContent = t("Screen: {shown:d} counts shown (of {n:d} in all). Histogram; the orange line is the run's expectation (with the dark counts), the grey dashed one the sum of the slits without interference.", { shown: tot, n })
-      + vecNote + curveNote;
+    note(ovScr, t("Screen: {shown:d} counts shown (of {n:d} in all). Histogram; the orange line is the run's expectation (with the dark counts), the grey dashed one the sum of the slits without interference.", { shown: tot, n })
+      + vecNote + curveNote);
   }
 
   // Explore's traces: each earlier point's own expectation (its segment's curve "all"), as expected counts per bin of

@@ -39,13 +39,18 @@ The demonstration has three tabs: **Watch · Explore · Lab work**.
   "▶ Launch" throws the chosen point; a change of a control prepares the next throw while the earlier ones fly on. The
   last five throws stay as faded traces, each labelled above its landing mark with the values that differ from the
   shown point, kept inside the view and clear of the other labels ("Clear traces" removes them). "Show": "path", "dots
-  every 0.1 s", "velocity", "velocity components", "forces", "energy". The readouts "Range", "Flight time" and "Highest
-  point" appear when the time reaches them ("—" before). From the floor the launcher's barrel lies on its mount above
-  the floor.
+  every 0.1 s", "velocity", "velocity components", "forces", "energy". With the air on, "forces" draws the drag on a
+  scale of its own: enlarged ×m against the weight's scale (m is 1, 2 or 5 × 10ⁿ, chosen from the largest drag of the
+  flight, computed by the run, so that the longest drag arrow is at most twice the weight's), so that it stays visible
+  at the top of the path; the arrow says "drag ×m" and the legend gives its scale ("drag, enlarged ×m: … N", or "drag, on the weight's
+  scale: … N" when m = 1), so the two arrows' lengths are never read as one scale. The readouts "Range", "Flight time"
+  and "Highest point" appear when the time reaches them ("—" before). From the floor the launcher's barrel lies on its
+  mount above the floor; "h = … m" stands beside the table, clear of the launcher.
 * **Lab work** — three parts, each on its own computed points, with the instruments "Height scale of the stand"
-  (division 0.01 m, no error: "the stand sets the chute's height exactly at its marks: the height has no reading
-  error"), "Measuring tape" (0.001 m, ±0.0005 m), "Protractor" (1°, ±0.5°) and "Stopwatch" (division 0.01 s, error
-  ±0.1 s: "your reaction: a start and a stop by hand scatter by about 0.1 s"). A reading is rounded to the division.
+  ("division 0.01 m; exact: the stand sets the chute's height at its marks"), "Measuring tape" (0.001 m, ±0.0005 m),
+  "Protractor" (1°, ±0.5°) and "Stopwatch" (division 0.01 s, error ±0.1 s: "your reaction: a start and a stop by hand
+  scatter by about 0.1 s"). A reading is rounded to the division; an exact one is written to its division without an
+  error ("0.20"), and a column derived from it to four significant digits ("1.000" next to "0.4472").
   "Check against the law" judges a fit only when the plotted columns and the model are one of the part's laws.
   1. "Height and range" (part 1 of 3) — a steel ball (20 mm, 32.9 g) rolls off a chute on a stand, h = 0.20, 0.25, …,
      1.00 m (17 points), without air: with the heights exact and the tape reading to 1 mm the bench would see the air

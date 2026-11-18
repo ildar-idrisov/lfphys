@@ -192,8 +192,8 @@ REST (JSON):
 
 | method | path | meaning |
 |---|---|---|
-| GET | `/api/health` | version, visualizations, running workers |
-| GET | `/api/viz`, `/api/viz/{viz}` | catalogue: id, title, summary, purpose, version, `code_hash` (`registry.code_hash_current`: the world's code hash as its files are now, recomputed when a file's size or modification time changes; §9), kind, audience, section, ui, teaser, related, recordings, `screens` (`registry.screens_of`: each screen with its `atlas` id, its controls with their labels, units and kinds, a lab's instruments, steps (each with its `atlas`) and worksheet; §10), aliases, picture, the audience's anchors (curriculum / courses / question, prior_art, status), schema (params + presets) (§8); `{viz}` may be an old id (`registry.ALIASES`): the renamed world's entry |
+| GET | `/api/health` | version, visualizations, running workers; `restart_needed` and `changed` (the files of the engine or the framework edited on disk since the server started, §9) |
+| GET | `/api/viz`, `/api/viz/{viz}` | catalogue: id, title, summary, purpose, version, `code_hash` (`registry.code_hash_current`: the world's code hash as its files are now, recomputed when a file's size or modification time changes; §9), kind, audience, section, ui, teaser, related, recordings, `screens` (`registry.screens_of`: each screen with its `atlas` id, its controls with their labels, units and kinds, a lab's instruments, steps (each with its `atlas`) and worksheet; §10), aliases, picture, the audience's anchors (curriculum / courses / question, prior_art, status), schema (params + presets) (§8); `{viz}` may be an old id (`registry.ALIASES`): the renamed world's entry; a world that does not load is `{id, title, kind, error, detail}` in the list, and `{error, text, detail}` with 500 (503: the server must be restarted, §9) for `{viz}` |
 | GET | `/api/audiences` | `{audiences: [{id, prefix, label, description, ui}], sections: [{id, label}]}` from `registry.AUDIENCES` and `registry.SECTIONS`, in their order (labels and descriptions are `T`); the start page's audiences and sections (§9) |
 | GET | `/api/planned` | the planned items of `planned.json` not yet built (an entry whose id names an existing folder, S02 ↔ `s02_*`, is dropped; §8) |
 | GET | `/api/recordings` | `{worlds: {<world>: <its index.json>}, site: <LFVIZ_SITE_URL or https://ildar-idrisov.github.io/lfphys/>, published, expected: {<world>: {version, code_hash, recordings: {id: key}, atlases: {id: key}}}}`: the local recordings (§9), whether the public site is published (`site/site.json`), and the keys the code on this server gives (`app.expected_keys`): a screen uses only an atlas with that key (§10, integrator D11) |
@@ -810,6 +810,24 @@ precision"; research cards show them open. The runs are not on the start page: `
 `js/runs.js`) has the list and the removal period. The audiences' and sections' labels come from the registry through
 `apiGet("audiences")`; nothing in the player repeats them.
 
+**The code the server process holds (2026-11-18; the owner's server, started before S03 existed, listed it as "Not
+loaded: … AttributeError: module 'lfphys.core.data' has no attribute 'P_ATM'").** Workers, sweeps and live points are
+new processes and run the code on disk; the server process imports the engine and the framework at its start and a
+world's `viz.py` when it is first asked for. `RunManager.viz` (`runs.py`) keeps a loaded world while its own Python files
+and those of the worlds it imports (r13 imports r12) keep their paths, sizes and times; when they change, it drops those
+packages from `sys.modules` (`<id>`, `<id>.*`) and imports them anew, so the catalogue follows a world's edit without a
+restart (the expected keys of `/api/recordings` and «Compute live» read the world through it too). The engine
+(`lfphys/lfphys/**/*.py`), the framework (`server/lfviz/*.py`, its server-only modules included: their edits also take
+effect only after a restart), `server/serve.py` and `site/sitelib.py` cannot be imported again in place: their
+signature is taken when the server starts and compared at every `/api/health` and at every world that fails to load
+(`RunManager.code_changed`). When it differs, `/api/health` says `restart_needed: true` and lists the files (`changed`),
+the start page shows the banner "The server's code changed on disk after it started: restart the server (docker
+restart lf-viz)." (from `/api/health`, polled every 3 s), and a world that fails to load is listed under "Not loaded:"
+with "the visualization does not load: the server's code changed on disk after it started: restart the server" (a `T`;
+`runs.NotLoaded`) and the exception's own line in `detail`, folded under "details" (`/api/viz/<id>` and `POST
+/api/runs`: 503 with the same). Any other failure keeps its own text, the exception's line also in `detail`. Tests:
+`tests/test_server_reload.py`.
+
 **Ids and aliases.** §8: the prefix is the audience, the number the plan's id; the old `vNN_` ids are aliases
 everywhere an id is taken (URLs, `/api/viz/<old>`, `?rec=<old>/<rec>`, run records). The site carries `aliases.json`
 (`registry.ALIASES`) for the player's `?rec=` with an old id.
@@ -1046,7 +1064,10 @@ still computes no physics.
   event?, error_note?}}`. A reading is `division × round(value / division)` with the declared `error` (by default half
   a division), written to the decimals of its division or of its error, whichever is finer («0.600 ± 0.005»); an
   `error` of 0 declares an exact set-up, with its reason in `error_note` (S03's «Height scale of the stand»: the stand
-  sets the chute's height exactly at its marks; integrator D2). `reads` names a measurable of the world, read at the
+  sets the chute's height exactly at its marks; integrator D2): its reading is written to its division's decimals without
+  «± 0» («0.20»), a column derived from it to four significant digits with their zeros («1.000», `lab.js sig4`), and the
+  step's list of instruments gives the reason in place of an error («division 0.01 m; exact: the stand sets the chute's
+  height at its marks»; V52 (y)); the CSV keeps plain numbers and the error 0. `reads` names a measurable of the world, read at the
   cursor («Nothing to measure yet: …» before it is reached), or `control:<param>`, a set-up value: the shown point's own
   (its header's `params`, then its grid values, then the atlas's `fixed`), never the slider's (integrator D6). `event`
   binds the instrument to an event of the point (its kind or name, as a stop rule matches it): it reads only once that
@@ -1168,5 +1189,9 @@ the committed toy fixture's keys are not current once any code changes, so a ser
 and atlases) into a folder served with `LFVIZ_RECORDINGS=DIR`. `tests/browser/demo_screens.mjs <port> [sizes] [world]`
 for the toy, S03 and u32 (with the recordings and atlases built by the code under test; CI's `build` job runs it for
 the toy in EN and RU), `u32_double_slit/tests/u32_screens.mjs` (what is u32's own: the readout line, the folded panels,
-«▶ Compute live» from Explore), `start_page.mjs` (the cards' screen buttons, each enabled one clicked) and
+«▶ Compute live» from Explore, the explanations never over the pictures and the phone's map height, also at 1024 px and
+in the full player: V52 (b), (c); the screens switched back and forth without a console error),
+`s03_projectile/tests/s03_screens.mjs` (S03's Explore: «h = … m» clear of the
+launcher at every computed point, the drag on its own scale and the legend saying so: V52 (e), (f); from the view's
+`canvas.__layout`), `start_page.mjs` (the cards' screen buttons, each enabled one clicked) and
 `site_smoke.mjs` (every screen used and the worksheet on the built site).

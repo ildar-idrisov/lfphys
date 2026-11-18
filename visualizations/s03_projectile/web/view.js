@@ -112,14 +112,14 @@ export function createView(ctx) {
     const table = Math.max(0.12 * span, 0.15);  // the table (or the launcher's foot) to the left of the launch point
     return { x0: x0 - table, x1: x1 + 0.04 * span, y0: -0.06 * span, y1: y1 + 0.08 * span, span };
   }
-  function makeMap(W, H) {
+  function makeMap(W, H, minTop = 0) {
     if (user) {
       const { k, ox, oy } = user;
       return { k, ox, oy, toPx: ([x, y]) => [ox + x * k, oy - y * k], toWorld: ([px, py]) => [(px - ox) / k, (oy - py) / k] };
     }
     const b = sceneBox(), Hs = H - captionRoom();
-    // (TOP: a line kept free above the scene for the ball's name)
-    const top = TOP * (story && story.earlier.length && W < 600 ? 2 : 1);  // a second line: the earlier throws (phone)
+    // (TOP: a line kept free above the scene for the ball's name; minTop: the legend's rows under a phone's readouts)
+    const top = Math.max(TOP * (story && story.earlier.length && W < 600 ? 2 : 1), minTop - PAD);  // a second line: the earlier throws (phone)
     const k = Math.max(1e-9, Math.min((W - 2 * PAD) / (b.x1 - b.x0), (Hs - 2 * PAD - top) / (b.y1 - b.y0)));
     const ox = PAD + ((W - 2 * PAD) - (b.x1 - b.x0) * k) / 2 - b.x0 * k;
     const oy = Hs - PAD + b.y0 * k;  // the floor stays low in the view: the room left over is sky
@@ -201,6 +201,20 @@ export function createView(ctx) {
   }
   function launcher(g) {
     const L = launch(), p = map.toPx([0, L.h]), [, fy] = map.toPx([0, 0]);
+    const a = (L.angle * Math.PI) / 180, chute = L.angle === 0 && L.h > 0, R = 26;
+    // the launcher's shape first, as a box that the labels keep clear of (V52 (e): the barrel was drawn over «h = 1 m»):
+    // a chute is a quarter circle ending horizontally at the launch point; a barrel lies along the launch direction, its
+    // muzzle at the launch point, never below the floor (review R-W F16): shortened to the room above it, and from the
+    // floor itself (no room) it lies forward on a mount, its breech at the launch point
+    const room = a > 0 ? (fy - p[1]) / Math.sin(a) - 1 : Infinity, len = Math.min(28, room);
+    const barrel = chute ? null : len >= 10 ? [[p[0] - len * Math.cos(a), p[1] + len * Math.sin(a)], p]
+      : [p, [p[0] + 28 * Math.cos(a), p[1] - 28 * Math.sin(a)]];
+    const box = chute ? { x0: p[0] - R - 2, x1: p[0] + 2, y0: p[1] - R - 2, y1: p[1] + 2 }
+      : { x0: Math.min(barrel[0][0], barrel[1][0]) - 4, x1: Math.max(barrel[0][0], barrel[1][0]) + 4,
+          y0: Math.min(barrel[0][1], barrel[1][1]) - 4, y1: Math.max(barrel[0][1], barrel[1][1]) + 4 };
+    if (!chute && len < 10 && L.h <= 0) box.y1 = Math.max(box.y1, fy);  // the mount
+    placed.push(box);
+    const lay = { W: cv.clientWidth, H: cv.clientHeight, launcher: [box.x0, box.y0, box.x1, box.y1], hLabel: null, hWhere: null };
     g.save();
     if (L.h > 0) {  // the table
       const w = Math.max(40, 0.12 * sceneBox().span * map.k);
@@ -208,29 +222,44 @@ export function createView(ctx) {
       g.fillRect(p[0] - w, p[1], w, 6); g.strokeRect(p[0] - w, p[1], w, 6);
       g.lineWidth = 3; g.strokeStyle = muted();
       line(g, [p[0] - w + 6, p[1] + 6], [p[0] - w + 6, fy]); line(g, [p[0] - 6, p[1] + 6], [p[0] - 6, fy]);
-      if (ctx.screen !== "lab") {  // left of the table where there is room, else on it, over a backing
-        const text = t("h = {h} m", { h: num(L.h, 3) }), tw = textWidth(g, text, false), room = p[0] - w - 6 - tw >= 4;
-        placeLabel(g, text, room ? p[0] - w - 6 : p[0] - w / 2, (p[1] + fy) / 2 + 4, { color: muted(), align: room ? "right" : "center", bg: !room });
-      }
     }
-    const a = (L.angle * Math.PI) / 180;
     g.strokeStyle = ink(); g.lineCap = "round";
-    if (L.angle === 0 && L.h > 0) {  // a chute: a curved ramp ending horizontally at the launch point
-      const r = 26;
-      g.lineWidth = 3; g.beginPath(); g.arc(p[0], p[1] - r, r, Math.PI / 2, Math.PI, false); g.stroke();
-    } else {  // a launcher's barrel along the launch direction, its muzzle at the launch point
-      // the barrel never reaches below the floor (review R-W F16): shortened to the room above it, and from the floor
-      // itself (no room) it lies forward on a mount, its breech at the launch point
-      const room = a > 0 ? (fy - p[1]) / Math.sin(a) - 1 : Infinity, len = Math.min(28, room);
+    if (chute) { g.lineWidth = 3; g.beginPath(); g.arc(p[0], p[1] - R, R, Math.PI / 2, Math.PI, false); g.stroke(); }
+    else {
       g.lineWidth = 7; g.globalAlpha = 0.8;
-      if (len >= 10) line(g, [p[0] - len * Math.cos(a), p[1] + len * Math.sin(a)], p);
-      else {
-        line(g, p, [p[0] + 28 * Math.cos(a), p[1] - 28 * Math.sin(a)]);
-        if (L.h <= 0) { g.globalAlpha = 1; g.fillStyle = muted(); g.beginPath(); g.arc(p[0], fy, 9, Math.PI, 2 * Math.PI); g.fill(); }
-      }
+      line(g, barrel[0], barrel[1]);
+      if (len < 10 && L.h <= 0) { g.globalAlpha = 1; g.fillStyle = muted(); g.beginPath(); g.arc(p[0], fy, 9, Math.PI, 2 * Math.PI); g.fill(); }
       g.globalAlpha = 1;
     }
     g.restore();
+    if (L.h > 0 && ctx.screen !== "lab") {
+      const w = Math.max(40, 0.12 * sceneBox().span * map.k), r = heightLabel(g, L, p, fy, w, box);
+      lay.hLabel = r && [r.x0, r.y0, r.x1, r.y1]; lay.hWhere = r && r.where;
+    }
+    cv.__layout = lay;  // what this frame drew where: the launcher, «h = …», the drag arrow and its legend (tests/s03_screens.mjs)
+  }
+  // «h = … m» beside the table, clear of the launcher and of the labels drawn before it, inside the view: left of the
+  // table at the middle of its legs; else between the legs (over a backing) when they are a line high, centred or left
+  // of the launcher; else over the table's top, left of the launcher, lifted line by line until it is free
+  function heightLabel(g, L, p, fy, w, box) {
+    const text = t("h = {h} m", { h: num(L.h, 3) }), tw = textWidth(g, text, false), W = cv.clientWidth, H = cv.clientHeight;
+    const legTop = p[1] + 6, mid = Math.min((legTop + fy) / 2 + 5, fy - 5), legs = fy - legTop >= 20;
+    const left = Math.min(p[0], box.x0);
+    const cands = [[p[0] - w - 6 - tw, mid, false, "left of the table"]];
+    if (legs) cands.push([p[0] - w / 2 - tw / 2, mid, true, "between the legs"], [left - 4 - tw, mid, true, "between the legs, left of the launcher"]);
+    for (let k = 0, y = Math.min(p[1], box.y0) - 6; k < 12; k++, y -= 16) cands.push([Math.max(4, left - 6 - tw), y, false, "over the table"]);
+    for (const [x, y, bg, where] of cands) {
+      const r = { x0: x, x1: x + tw, y0: y - 12, y1: y + 4, where };
+      if (r.x0 < 4 || r.x1 > W - 4 || r.y0 < 2 || r.y1 > H - 2) continue;
+      if (placed.some((q) => r.x0 < q.x1 && q.x0 < r.x1 && r.y0 < q.y1 && q.y0 < r.y1)) continue;
+      placed.push(r);
+      g.save();
+      if (bg) { g.fillStyle = css("--canvas") || "#fff"; g.globalAlpha = 0.85; g.fillRect(r.x0 - 2, r.y0, tw + 4, 16); g.globalAlpha = 1; }
+      label(g, text, x, y, { color: muted() });
+      g.restore();
+      return r;
+    }
+    return null;  // no free place in the view (none on the computed grid: s03_screens.mjs)
   }
   function pathOf(g, c, upto, color, { alpha = 1, dash = null, width = 2, end = null, now = null } = {}) {
     if (!c.t.length) return;
@@ -281,9 +310,57 @@ export function createView(ctx) {
   }
   // fixed decimals for the school's numbers (review R-W F17): metres to the centimetre, seconds to the millisecond
   const m2 = (x) => fmt(x, ".2f"), s3 = (x) => fmt(x, ".3f");
+  // the drag arrows' enlargement against the weight's scale (V52 (f)): the 1, 2 or 5 × 10ⁿ at or below 2 · weight /
+  // drag_max (the run's computed largest drag of the flight), so that the longest drag arrow is at most twice the
+  // weight's (120 px) and, when enlarged, at least 48 px: at the top of a 45° throw the drag is then a clear arrow, not a
+  // tip under the ball; 1 (the weight's own scale) when that is under 2
+  function dragScale() {
+    const W = header && header.weight, F = header && header.drag_max, r = 2 * W / F;
+    return W > 0 && F > 0 && r >= 2 ? nice(r) : 1;
+  }
   function legendArrow(g, x, y, px, text, color) {
     arrow(g, [x, y], px, 0, color, 2);
     label(g, text, x + px + 8, y + 4, { color });
+  }
+  // the arrows' legend, a row each (the velocity's, the weight's, the drag's scale), from the overlays shown and the
+  // header only, so that the scale of the scene does not change from frame to frame
+  function velScale() {
+    const L = launch(), vmax = Math.max(L.v0, Math.sqrt(2 * (header.g || 9.8) * Math.max(L.h, 0)), 1);
+    return { vmax, sv: 70 / vmax };  // pixels per m/s
+  }
+  function legendRows() {
+    const rows = [];
+    if (on.v || on.v_parts) {
+      const { vmax, sv } = velScale(), ref = nice(vmax / 2);
+      rows.push({ px: ref * sv, text: t("{v} m/s", { v: num(ref, 3) }), color: COLORS.v });
+    }
+    if (on.forces && header.weight) {
+      const sd = (60 / header.weight) * dragScale(), m = dragScale();
+      rows.push({ px: 60, text: t("weight mg = {F} N", { F: num(header.weight, 3) }), color: COLORS.g });
+      if (header.air && header.drag_max > 0) {  // the drag's own scale: an arrow (at most the weight's 60 px) of a round force
+        const fr = nice(Math.min(header.drag_max, 60 / sd));
+        rows.push({ px: fr * sd, color: COLORS.drag, drag: true, text: m > 1 ? t("drag, enlarged ×{m}: {F} N", { m: num(m, 3), F: num(fr, 3) })
+          : t("drag, on the weight's scale: {F} N", { F: num(fr, 3) }) });
+      }
+    }
+    return rows;
+  }
+  // where the rows go: from the top left; on a phone, where Explore lays its readouts over the view's top right corner
+  // (a box whose width changes as its values appear), always under that box, with the scene kept below the rows
+  // (makeMap's minTop), so that no row runs under the readouts or over the path and the scale stays put during a flight
+  // (V52 (f): the drag's scale must be read)
+  let roBottom = 0;  // the lowest the readouts' box has reached in this view
+  function legendPlace(g, rows, y) {
+    if (!rows.length) return { y, under: false, bottom: 0, rows: null, box: null };
+    const ro = ctx.screen === "explore" && cv.closest(".dm-stage") ? cv.closest(".dm-stage").querySelector(":scope > .dm-readouts") : null;
+    const a = ro && ro.getBoundingClientRect(), c = cv.getBoundingClientRect();
+    const right = Math.max(...rows.map((r) => 12 + r.px + 8 + textWidth(g, r.text, false)));
+    const box = a && a.width > 0 && a.height > 0 ? [a.left - c.left, a.top - c.top, a.right - c.left, a.bottom - c.top] : null;
+    if (box) roBottom = Math.max(roBottom, box[3]);
+    const under = !!box && y - 12 < roBottom;
+    if (under) y = Math.max(y, roBottom + 18);
+    const bottom = y + 20 * (rows.length - 1) + 5;
+    return { y, under, bottom, box, rows: [12, y - 12, right, bottom] };
   }
 
   function drawTraces(g) {
@@ -402,9 +479,6 @@ export function createView(ctx) {
       const g = fresh2d(cv.getContext("2d"), dpr);
       g.fillStyle = css("--canvas") || "#fff"; g.fillRect(0, 0, W, H);
       if (!header) return;
-      map = makeMap(W, H);
-      placed = [];
-      const tNow = frame && frame.t !== undefined ? frame.t : Infinity;
       // which ball flies (review R-W F12): its label, or its size and mass where the label does not fit; first, so
       // that the other labels keep clear of it
       // (on a phone Explore lays its readouts over the view's top right corner: about 180 px are kept for them)
@@ -412,9 +486,14 @@ export function createView(ctx) {
         - (ctx.screen === "explore" && W < 600 ? 180 : 0);
       let ballText = bl.label ? t(bl.label) : "";
       if (ballText && textWidth(g, ballText, false) > room) ballText = t("ball {d} mm, {m} g", { d: num(1000 * bl.d, 3), m: num(1000 * bl.m, 3) });
+      const rows = legendRows(), lp = legendPlace(g, rows, 18 + (ballText ? 22 : 0));
+      map = makeMap(W, H, lp.under ? lp.bottom + 8 : 0);
+      placed = [];
+      const tNow = frame && frame.t !== undefined ? frame.t : Infinity;
       if (ballText) placeLabel(g, ballText, 12, 18, { color: muted() });
       floorAndScale(g, W);
       launcher(g);  // first, so that the labels of the traces keep clear of its own
+      cv.__layout.legend = { rows: lp.rows, readouts: lp.box, pathTop: map.toPx([0, sceneBox().y1 - 0.08 * sceneBox().span])[1] };
       // the landings shown now are labelled before the earlier throws, so that theirs give way
       const comp = header.companion, ocol = comp === "drop" ? COLORS.drop : COLORS.vacuum;
       const late = [];
@@ -440,9 +519,7 @@ export function createView(ctx) {
       const d = (header.ball && header.ball.d) || 0.02;
       if (frame.other) ball(g, frame.other.x, frame.other.y, ocol, d);
       const bp = ball(g, frame.x, frame.y, COLORS.main, d);
-      const L = launch(), vmax = Math.max(L.v0, Math.sqrt(2 * (header.g || 9.8) * Math.max(L.h, 0)), 1);
-      const sv = 70 / vmax;  // pixels per m/s
-      let legendY = 18 + (ballText ? 22 : 0) + (storyLine ? 20 : 0);
+      const { sv } = velScale();
       const flying = !frame.landed;
       if ((on.v || on.v_parts) && flying) {
         if (on.v) arrow(g, bp, frame.vx * sv, -frame.vy * sv, COLORS.v, 2.5);
@@ -451,20 +528,26 @@ export function createView(ctx) {
           arrow(g, bp, frame.vx * sv, 0, COLORS.v, 1.5); arrow(g, bp, 0, -frame.vy * sv, COLORS.v, 1.5);
           g.restore();
         }
-        const ref = nice(vmax / 2);
-        legendArrow(g, 12, legendY, ref * sv, t("{v} m/s", { v: num(ref, 3) }), COLORS.v);
-        legendY += 20;
       }
       if (on.forces && flying && header.weight) {
         const sf = 60 / header.weight;  // pixels per newton: the weight is 60 px
+        // the drag on a scale of its own (V52 (f)): enlarged ×m against the weight's scale (dragScale), so that it is seen
+        // at the top of the path too; the arrow at the ball and the legend say «×m», so the two arrows' lengths are never
+        // read as one scale when they are not
+        const m = dragScale(), sd = sf * m;
         arrow(g, bp, 0, header.weight * sf, COLORS.g, 2.5);
         label(g, t("mg"), bp[0] + 6, bp[1] + header.weight * sf, { color: COLORS.g });
         if (frame.F_drag) {
-          arrow(g, bp, frame.F_drag[0] * sf, -frame.F_drag[1] * sf, COLORS.drag, 2.5);
-          label(g, t("drag"), bp[0] + frame.F_drag[0] * sf - 8, bp[1] - frame.F_drag[1] * sf + 16, { color: COLORS.drag, align: "right" });
+          arrow(g, bp, frame.F_drag[0] * sd, -frame.F_drag[1] * sd, COLORS.drag, 2.5);
+          if (cv.__layout) cv.__layout.drag = { m, px: Math.hypot(frame.F_drag[0], frame.F_drag[1]) * sd };
+          label(g, m > 1 ? t("drag ×{m}", { m: num(m, 3) }) : t("drag"), bp[0] + frame.F_drag[0] * sd - 8, bp[1] - frame.F_drag[1] * sd + 16, { color: COLORS.drag, align: "right" });
         }
-        legendArrow(g, 12, legendY, 60, t("weight mg = {F} N", { F: num(header.weight, 3) }), COLORS.g);
-        legendY += 20;
+      }
+      if (flying && rows.length) {  // the legend: under a phone's readouts (lp), else from the top left, under the earlier throws' line
+        let y = lp.under ? lp.y : 18 + (ballText ? 22 : 0) + (storyLine ? 20 : 0);
+        for (const r of rows) { legendArrow(g, 12, y, r.px, r.text, r.color); y += 20; }
+        const dr = rows.find((r) => r.drag);
+        if (dr) cv.__layout.dragLegend = dr.text;
       }
       if (on.energy) energyBars(g, W, frame);
     },

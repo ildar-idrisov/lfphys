@@ -8,7 +8,7 @@
 // computed by hand. Run from visualizations/: node --test player/js/tests/*.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { csv, derived, lawOf, loadRows, placeRow, pm, reading, readingText, rowOf, setupKey, withUnit } from "../lab.js";
+import { csv, derived, instrumentText, lawOf, loadRows, placeRow, pm, reading, readingText, rowOf, setupKey, sig4, withUnit } from "../lab.js";
 
 const close = (a, b, tol, msg) => assert.ok(Math.abs(a - b) <= tol * Math.max(1, Math.abs(b)), `${msg}: ${a} vs ${b}`);
 const tape = { division: 0.001, error: 0.0005 }, ruler = { division: 0.01, error: 0.005 }, prot = { division: 1, error: 0.5 };
@@ -56,13 +56,27 @@ test("a row of the step's columns from the readings; the CSV with the errors", (
 test("a value with its error", () => {
   assert.equal(pm(0.67738, 0.0042), "0.6774 ± 0.0042");
   assert.equal(pm(45.12, 0.5), "45.12 ± 0.50");
-  assert.equal(pm(2, 0), "2");
+  // an exact value (error 0): four significant digits with their zeros, no «± 0» (V52 (y))
+  assert.equal(pm(2, 0), "2.000");
+  assert.equal(pm(1, 0), "1.000");
+  assert.equal(pm(Math.sqrt(0.2), 0), "0.4472");
+  assert.equal(sig4(9.99996), "10.00", "rounded before its decimals are chosen");
+  assert.equal(sig4(12.3449), "12.34");
+  assert.equal(sig4(0), "0.000");
 });
 
 test("a reading to the decimals of its division or its error; a unit after a value", () => {
   assert.equal(readingText({ division: 0.01, error: 0.005 }, { v: 0.6, e: 0.005 }), "0.600 ± 0.005", "F14");
   assert.equal(readingText({ division: 0.001, error: 0.0005 }, { v: 0.524, e: 0.0005 }), "0.5240 ± 0.0005");
   assert.equal(readingText({ division: 1, error: 0.5 }, { v: 45, e: 0.5 }), "45.0 ± 0.5");
+  // an exact reading: its division's decimals, no «± 0» (V52 (y)); the instrument says why instead of «error ±0»
+  assert.equal(readingText({ division: 0.01, error: 0 }, { v: 0.2, e: 0 }), "0.20");
+  assert.equal(readingText({ division: 0.01, error: 0 }, { v: 1, e: 0 }), "1.00");
+  const stand = instrumentText({ division: 0.01, error: 0, unit: "m", error_note: "the stand sets the chute's height at its marks" });
+  assert.equal(stand, "division 0.01\u00a0m; exact: the stand sets the chute's height at its marks");
+  assert.ok(!stand.includes("±"));
+  assert.equal(instrumentText({ division: 0.01, error: 0, unit: "m" }), "division 0.01\u00a0m; exact");
+  assert.equal(instrumentText({ division: 0.001, error: 0.0005, unit: "m" }), "division 0.001\u00a0m, error ±0.0005\u00a0m");
   assert.equal(withUnit("41.9", "°"), "41.9°", "no space before the degree sign (F16)");
   assert.equal(withUnit("0.677", "m"), "0.677\u00a0m");
 });

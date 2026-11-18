@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
 // u32's screens in a browser (design lfphys/sources/explore_2026-11-14_design.md §6, §8 "Browser"), in the language of
-// LFVIZ_LANG (en by default), at every viewport size given (1280x800 and 390x844 by default):
+// LFVIZ_LANG (en by default), at every viewport size given (1280x800, 1024x768 and 390x844 by default):
 //  - the tabs «Watch · Explore» in the language;
 //  - Explore as on the public site (lf-mode "static", the API as JSON files, no live endpoint): the sliders stop only at
 //    the grid's values; ▶ builds the point up to its end, and the readout line shows the frame's hits and χ² ✓; a change
@@ -13,6 +13,12 @@
 //    language; after «Slit 2 is closed» the screen starts again (fewer hits in the new segment); «More recordings» offers
 //    the four recordings; the fold «Latest particles: the chain of causes» is there (and not in Explore);
 //  - on the server: «▶ Compute live» from Explore opens the full live player with the quick set-up bar;
+//  - switching the screens back and forth (Watch ↔ Explore, each playing when it is left) logs no page or console error
+//    (a hidden view drew a 0 px canvas: InvalidStateError, found by a sweep on 2026-11-18);
+//  - the explanations (V52 (b), (c)), in Explore, Watch and the full player on the story recording: each picture's
+//    explanation is a band of its own, never over a picture, its text inside its box; below 1000 px the view from above
+//    is at least U32_MAP_PX high and its explanation folds under it, the summary saying the distortion, and opened its
+//    text is inside its box and over no picture;
 //  - every screen: no horizontal scroll, no page error, in English no Cyrillic in the visible text, in Russian the tabs'
 //    Russian labels; screenshots per screen, language and size.
 //
@@ -30,7 +36,7 @@ import { mkdirSync } from "node:fs";
 import { LANG, inLang, loadI18n } from "./lfi18n.mjs";
 
 const port = process.argv[2] || "8696";
-const SIZES = (process.argv[3] || "1280x800,390x844").split(",").map((s) => s.split("x").map(Number));
+const SIZES = (process.argv[3] || "1280x800,1024x768,390x844").split(",").map((s) => s.split("x").map(Number));
 const base = `http://127.0.0.1:${port}`;
 const SHOTS = process.env.SHOTS || "/pw/shots";
 mkdirSync(SHOTS, { recursive: true });
@@ -94,6 +100,45 @@ const canvasSum = (page, k) => page.evaluate((j) => {  // a fingerprint of the p
   let s = 0; for (let i = 0; i < d.length; i += 4) s = (s * 31 + d[i] + 7 * d[i + 1] + 13 * d[i + 2]) % 1000000007;
   return s;
 }, k);
+// the explanations (V52 (b), (c)): every visible one (the bands, the fold's summary and, open, its text) against every
+// picture shown, and its text against its own box; the map's height
+const U32_MAP_PX = 220;  // the view from above on a phone (u32 view.js)
+const notesGeo = (page) => page.evaluate(() => {
+  const scope = document.querySelector(".dm-screen:not([hidden])") || document.getElementById("center") || document;
+  const R = (e) => e.getBoundingClientRect(), vis = (e) => { const b = R(e); return b.width > 0 && b.height > 0; };
+  const cvs = [...scope.querySelectorAll("canvas")].filter(vis).map(R);
+  const boxes = [...scope.querySelectorAll('[data-u32="note"], [data-u32="fold"] > summary, [data-u32="fold"][open] > div')].filter(vis);
+  const bad = [];
+  for (const n of boxes) {
+    const b = R(n), rg = document.createRange();
+    rg.selectNodeContents(n);
+    const tb = rg.getBoundingClientRect(), txt = n.textContent.slice(0, 40);
+    for (const c of cvs) {
+      const ox = Math.min(b.right, c.right) - Math.max(b.left, c.left), oy = Math.min(b.bottom, c.bottom) - Math.max(b.top, c.top);
+      if (ox > 1 && oy > 1) bad.push({ over: "a picture", txt, ox: Math.round(ox), oy: Math.round(oy) });
+    }
+    if (tb.left < b.left - 1 || tb.right > b.right + 1 || tb.top < b.top - 1 || tb.bottom > b.bottom + 1
+      || n.scrollHeight > n.clientHeight + 1 || n.scrollWidth > n.clientWidth + 1) bad.push({ out: "of its box", txt });
+  }
+  const map = scope.querySelector(".u32-app canvas"), sum = scope.querySelector('[data-u32="fold"] > summary');
+  return { n: boxes.length, bad, mapH: map ? R(map).height : null, mapBottom: map ? R(map).bottom : null,
+    summary: sum && vis(sum) ? { text: sum.textContent.trim(), top: R(sum).top } : null };
+});
+async function noteChecks(page, tag, W, screen = true) {
+  const g = await notesGeo(page);
+  check(`${tag}: the explanations are never over a picture and their text stays in its box (V52 (b), (c))`, g.n >= 2 && !g.bad.length, { n: g.n, bad: g.bad.slice(0, 3) });
+  if (!(W < 1000 && screen)) return;
+  const want = tr("Log scale of the distance, widths rescaled: the beams only seem to bend.");
+  check(`${tag} (phone): the view from above at least ${U32_MAP_PX} px high, its explanation folded under it, the summary saying the distortion (V52 (b))`,
+    g.mapH >= U32_MAP_PX - 0.5 && g.summary && g.summary.text === want && g.summary.top >= g.mapBottom - 1, { mapH: g.mapH, summary: g.summary, want });
+  const sum = page.locator('.dm-screen:not([hidden]) [data-u32="fold"] > summary');
+  await sum.click();
+  await settle(page, 150);
+  const o = await notesGeo(page);
+  check(`${tag} (phone): the explanation opened is over no picture and its text stays in its box`, o.n === g.n + 1 && !o.bad.length, { n: o.n, bad: o.bad.slice(0, 3) });
+  await sum.click();
+  await settle(page, 150);
+}
 const pointOf = (page) => page.evaluate(() => { const p = window.__lfExplore.explore.point(); return p ? { i: p.i, values: p.values } : null; });
 const shown = (page, i) => page.waitForFunction((j) => { const p = window.__lfExplore.explore.point(); return p && p.i === j; }, i, { timeout: 20000 });
 const flat = (vals) => mf.controls.reduce((i, c) => i * c.values.length + c.values.indexOf(vals[c.param]), 0);
@@ -121,6 +166,7 @@ for (const [W, H] of SIZES) {
     const r0 = await readout(page);
     check(`${tag0} explore: at the end the readout shows the point's hits and χ² ✓`, r0.replace(/[\s,  ]/g, "").includes(String(n0)) && r0.includes(tr("χ²/dof")) && r0.includes("✓"), { r0, n0 });  // RU «приведённый χ²» (review R-W F13)
     await page.screenshot({ path: `${SHOTS}/u32_explore_${LANG}_${tag0}.png` });
+    await noteChecks(page, `${tag0} explore`, W);
     // two changes: λ 400 nm, then a 40 µm; the time is kept and the earlier points stay as traces
     const tEnd = await page.evaluate(() => { const E = window.__lfExplore.explore.state; return Math.min(E.cur.pt.tEnd, E.clock - E.cur.launchedAt); });
     await detent(page, "lam_nm", 0).click();
@@ -215,7 +261,47 @@ for (const [W, H] of SIZES) {
     const opts = await page.locator(".dm-screen:not([hidden]) select.dm-more option").count();
     check(`${tag0} watch: «More recordings» offers the four recordings`, opts === 1 + wa.more.length, { opts });
     check(`${tag0} watch: the fold «Latest particles: the chain of causes»`, (await page.locator(".dm-screen:not([hidden]) .u32-stories summary").innerText()).trim() === tr("Latest particles: the chain of causes"));
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await noteChecks(page, `${tag0} watch`, W);
     await common(page, `${tag0} watch`, W, errs);
+    await ctx.close();
+  }
+  // --- the screens switched back and forth, each playing when it is left: no page or console error --------------------
+  {
+    const ctx = await br.newContext({ viewport: { width: W, height: H } });
+    await asSite(ctx);
+    const { page, errs } = await open(ctx, "explore");
+    await page.waitForFunction(() => window.__lfExplore && window.__lfExplore.explore && window.__lfExplore.explore.point(), null, { timeout: 30000 });
+    const shownScreen = (id) => page.waitForFunction((x) => { const e = document.querySelector(`.dm-screen[data-screen="${x}"]`); return e && !e.hidden; }, id, { timeout: 30000 });
+    const tabs = page.locator(".dm-tab");
+    for (let k = 0; k < 2; k++) {
+      await page.locator('.dm-screen[data-screen="explore"] .dm-play').click();  // Explore plays as it is left
+      await settle(page, 300);
+      await tabs.nth(0).click();
+      await shownScreen(wa.id);
+      await page.waitForFunction(() => window.__lfWatch && window.__lfWatch.state.story, null, { timeout: 30000 });
+      if (!(await page.evaluate(() => window.__lfWatch.state.playing))) await page.locator('.dm-screen:not([hidden]) .dm-play').click();
+      await settle(page, 500);  // Watch plays as it is left
+      await tabs.nth(1).click();
+      await shownScreen(ex.id);
+      await settle(page, 500);
+    }
+    check(`${tag0} the screens switched Watch ↔ Explore twice, each playing when left: no page or console error`, errs.length === 0, { errs: errs.slice(0, 3) });
+    await ctx.close();
+  }
+  // --- the full player on the story recording: its long explanations are bands too (V52 (c)) ------------------------
+  {
+    const ctx = await br.newContext({ viewport: { width: W, height: H } });
+    const page = await ctx.newPage();
+    const errs = [];
+    page.on("pageerror", (e) => errs.push(e.message.slice(0, 200)));
+    await page.goto(inLang(`${base}/run?rec=${WORLD}/${wa.recording}`));
+    await page.waitForFunction(() => window.__lfPlayer && window.__lfPlayer.frames() > 100, null, { timeout: 60000 });
+    await sleep(1500);
+    await settle(page);
+    await noteChecks(page, `${tag0} full player (recording)`, W, false);
+    await page.screenshot({ path: `${SHOTS}/u32_player_${LANG}_${tag0}.png` });
+    check(`${tag0} full player (recording): no page error`, errs.length === 0, { errs });
     await ctx.close();
   }
   // --- the server: «▶ Compute live» opens the full player ------------------------------------------------------------

@@ -20,9 +20,14 @@ reason. The error is recomputed whenever the hits have grown by 10 % and shown a
 Over Poisson samples of the run's own expectation at four Explore points the stated error is 0.81–1.21 of the real
 scatter of |γ₁₂| at 300 to 5000 hits (`tests/test_u32_screens.py`, `tests/test_u32_physics.py`). The checks, "Physics of this world", the panels
 "Particle", "Model of the slit screen", "Counters and statistics" and "Approximations of this segment", the events and
-where the data come from fold into "How we know this is right". The full live player (every parameter, the quick
-set-up bar, the screen's filters, the speeds "▷ flight" and "▷▷ build-up") is unchanged: on a server, "▶ Compute live"
-opens it with the screen's set-up.
+where the data come from fold into "How we know this is right". Each picture's explanation is a band of its own above
+it, sized to its text, never over the picture. Below 1000 px the pictures are stacked: the view from above 220 px high
+(about 194 px of map, enough for the fringes of every Explore point, while a control still fits between the view and the
+time bar on a 390 × 844 phone), its explanation folded under it with the summary always shown: "Log scale of the
+distance, widths rescaled: the beams only seem to bend.", then the screen's line and the screen. The full live player
+(every parameter, the quick set-up bar, the screen's filters, the speeds "▷ flight" and "▷▷ build-up") is unchanged
+but for its two explanations, which are bands above the pictures as well: on a server, "▶ Compute live" opens it with
+the screen's set-up.
 
 **Watch: "The double slit, step by step"** (recording `story`, preset "The double slit, step by step": photons of
 632.8 nm, two slits a = 20 µm wide and d = 100 µm apart, the screen 1 m away and ±50 mm wide, 20 flow lines; 60 s at 20
@@ -360,7 +365,9 @@ corners of the Explore grid build with every check ✓, thousands of hits and χ
 registry accepts the screens and the view declares every overlay and quantisation they use; the story's hit counts
 at its captions and the single slit's first minima on the run's own expectation (±31.6 mm); the stated error of
 |γ₁₂| against the scatter of Poisson samples (none below 300 hits) and kept, not rescaled, between recomputations. The browser check of the
-screens: `tests/u32_screens.mjs` (EN and RU, 1280 × 800 and 390 × 844; how to run it: its header).
+screens: `tests/u32_screens.mjs` (EN and RU, 1280 × 800, 1024 × 768 and 390 × 844, Watch, Explore and the full player:
+the explanations never over the pictures and no text out of its box; at 390 × 844 the view from above at least 220 px
+high; Watch ↔ Explore switched back and forth with no console error; how to run it: its header).
 
 ## Sources
 

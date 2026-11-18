@@ -3,9 +3,13 @@
 """HTTP + WebSocket API of the visualization server (the one API for the whole project).
 
 REST (JSON):
-    GET    /api/health                     server version, counts
-    GET    /api/viz                        catalogue: [registry.describe: {id, title, …, code_hash, schema}]
-    GET    /api/viz/{viz}                  one entry
+    GET    /api/health                     server version, counts; ``restart_needed`` and ``changed`` (the engine's or
+                                           the framework's files edited on disk since the server started:
+                                           ``RunManager.code_changed``)
+    GET    /api/viz                        catalogue: [registry.describe: {id, title, …, code_hash, schema}]; a world
+                                           that does not load: {id, title, kind, error (a T), detail?}
+    GET    /api/viz/{viz}                  one entry (a world that does not load: 500 {error, detail}, 503 when the
+                                           server must be restarted)
     GET    /api/recordings                 [S] the local recordings of the public site: {worlds: {<world>: its index.json},
                                            site: the public site's address (site/site.json; LFVIZ_SITE_URL overrides),
                                            published: whether that site is live (site/site.json), expected: {<world>:
@@ -76,7 +80,7 @@ from aiohttp import WSMsgType, web
 
 from . import __version__, devices, i18n, registry
 from .i18n import T, text_of
-from .runs import RunManager
+from .runs import NotLoaded, RunManager, one_line
 
 PLAYER = registry.ROOT / "player"
 # the texts the licence page shows (review of 2026-10-29, R4, R8): a fixed list, nothing else is served from there
@@ -131,7 +135,7 @@ SITE_JSON = registry.ROOT / "site" / "site.json"  # [S] {"published": bool, "url
 
 
 def site_setting(env: bool = True) -> dict:
-    """[S] The public site's setting (``site/site.json``, committed; the owner sets ``published`` on his go):
+    """[S] The public site's setting (``site/site.json``, committed; the owner sets ``published`` on the owner's go):
     ``{"published": bool, "url": str}``; ``LFVIZ_SITE_URL`` overrides the address. Until ``published`` the READMEs
     carry no links to the site and the player never falls back to it (integrator D3, D4). ``env=False``: the committed
     address only (the READMEs)."""
@@ -146,6 +150,7 @@ def site_setting(env: bool = True) -> dict:
 
 SITE_URL = site_setting()["url"]  # [S] the public site (CONTRACT S/P)
 _REC_FILE = re.compile(r"^[A-Za-z0-9_.-]{1,120}$")
+_ATLAS_PATH = re.compile(r"^/api/atlas/([^/]+)/")  # «compute live» (lfviz.atlas_live): its world
 
 
 def recordings_dir() -> Path:
@@ -153,17 +158,20 @@ def recordings_dir() -> Path:
     return Path(os.environ.get("LFVIZ_RECORDINGS") or RECORDINGS_DEFAULT)
 
 
-def expected_keys() -> dict:
+def expected_keys(load=None) -> dict:
     """[S] Per world with recordings: the version, the code hash and the keys of its recordings and atlases as the code
     here gives them (``sitelib.expected``; the code hash by ``registry.code_hash_current``): a server's player takes the
-    public site's atlas only when its key is this one, and a local atlas with another key is stale (integrator D11)."""
+    public site's atlas only when its key is this one, and a local atlas with another key is stale (integrator D11).
+    ``load``: how a world's ``VIZ`` is read (the server's ``RunManager.viz``, current after an edit; by default
+    ``registry.load``)."""
     from .atlas_live import _sitelib  # noqa: PLC0415
     L = _sitelib()
     rh = L.recorder_hash()
+    load = load or registry.load
     out = {}
     for vid in registry.viz_ids():  # sitelib.demo_worlds, one world at a time: a broken world must not hide the others
         try:
-            viz = registry.load(vid)
+            viz = load(vid)
             if viz.get("kind") == "playground" or not viz.get("recordings"):
                 continue
             out[vid] = L.expected(L.planned_world(vid, registry.code_hash_current(vid), rh))
@@ -172,11 +180,11 @@ def expected_keys() -> dict:
     return out
 
 
-def recordings_list(folder: Path | None = None) -> dict:
+def recordings_list(folder: Path | None = None, load=None) -> dict:
     """[S] ``GET /api/recordings`` (the site's ``api/recordings.json`` is the same for its own folder): the index of
     every world that has one, the public site's address and whether it is published (``site_setting``): the player
     looks for a recording there only when ``published`` is true (integrator D4); ``expected``: the keys the code here
-    gives (``expected_keys``; integrator D11)."""
+    gives (``expected_keys``, its worlds read by ``load``; integrator D11)."""
     folder = recordings_dir() if folder is None else Path(folder)
     worlds = {}
     if folder.is_dir():
@@ -189,7 +197,7 @@ def recordings_list(folder: Path | None = None) -> dict:
             if isinstance(idx, dict) and idx.get("world") == f.parent.name:
                 worlds[f.parent.name] = idx
     site = site_setting()
-    return {"worlds": worlds, "site": site["url"], "published": site["published"], "expected": expected_keys()}
+    return {"worlds": worlds, "site": site["url"], "published": site["published"], "expected": expected_keys(load)}
 
 
 def _json(data, status=200):
@@ -222,32 +230,64 @@ async def no_cache(request, handler):
     return resp
 
 
+def not_loaded(vid: str, e: BaseException) -> dict:
+    """The catalogue's entry of a world that does not load: its id as the title, its mode, the owner's text (a ``T``,
+    never empty) and the exception's line as the detail. When the server's code changed on disk after it started
+    (``runs.NotLoaded``) the text says to restart the server (2026-11-18)."""
+    if isinstance(e, NotLoaded):
+        error, detail = T("the visualization does not load: {error}", error=e.text), e.detail
+    else:
+        detail = one_line(e)
+        error = T("the visualization does not load: {error}", error=detail)
+    return {"id": vid, "title": vid, "error": error, "detail": detail,
+            "kind": "playground" if vid.startswith("p") else "demo"}  # under its mode (B6-F24)
+
+
 def create_app(runs_dir: Path, **limits) -> web.Application:
-    app = web.Application(middlewares=[no_cache], client_max_size=4 * 1024 * 1024)
     mgr = RunManager(runs_dir, **limits)
+
+    @web.middleware
+    async def current_world(request, handler):
+        """«Compute live» reads a world's ``VIZ`` by ``registry.load`` (``lfviz.atlas_live``): the world is made current
+        first (``RunManager.viz``: imported anew when its files changed), as for the catalogue."""
+        m = _ATLAS_PATH.match(request.path)
+        if m:
+            try:
+                mgr.viz(m.group(1))
+            except Exception:  # noqa: BLE001 - the route itself answers for a world that does not load
+                pass
+        return await handler(request)
+
+    app = web.Application(middlewares=[no_cache, current_world], client_max_size=4 * 1024 * 1024)
     app[MGR] = mgr
     CITE = registry.citation()  # what a publication cites: the version and this copy's code identifier
 
     async def health(request):
+        changed = mgr.code_changed()  # the engine's or the framework's files edited since the start (2026-11-18)
         return _json({"ok": True, "version": __version__, "visualizations": registry.viz_ids(),
                       "running": mgr.n_running(), "runs": len(mgr.runs), "max_workers": mgr.max_workers,
-                      "cite": CITE})
+                      "cite": CITE, "restart_needed": bool(changed), "changed": changed[:50]})
 
     async def viz_list(request):
         out = []
         for vid in registry.viz_ids():
             try:
                 out.append(registry.describe(mgr.viz(vid)))
-            except Exception as e:  # a broken visualization must not hide the others
-                out.append({"id": vid, "title": vid, "error": T("the visualization does not load: {error}", error=f"{type(e).__name__}: {e}"),
-                            "kind": "playground" if vid.startswith("p") else "demo"})  # under its mode (B6-F24)
+            except Exception as e:  # noqa: BLE001 - a broken visualization must not hide the others
+                out.append(not_loaded(vid, e))
         return _json(out)
 
     async def viz_one(request):
-        try:  # an old id (registry.ALIASES) gives the new entry
-            return _json(registry.describe(mgr.viz(registry.resolve(request.match_info["viz"]))))
+        vid = registry.resolve(request.match_info["viz"])  # an old id (registry.ALIASES) gives the new entry
+        try:
+            registry.folder(vid)
         except KeyError:
             return _err(T("there is no such visualization"), 404)
+        try:
+            return _json(registry.describe(mgr.viz(vid)))
+        except Exception as e:  # noqa: BLE001 - said in the owner's terms, with the exception's line as the detail
+            body = not_loaded(vid, e)
+            return _err(body["error"], 503 if isinstance(e, NotLoaded) else 500, detail=body["detail"])
 
     async def viz_file(request):
         vid = request.match_info["viz"]
@@ -291,6 +331,8 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
             run = await mgr.start(vid, body.get("preset"), body.get("params"), seed,
                                   label=str(body.get("label", ""))[:200], source=request.remote or "",  # i18n-str-ok: typed by the owner
                                   backend=bset, backend_notes=bnotes)
+        except NotLoaded as e:  # the world does not load: the server's code changed since it started
+            return _err(T("the visualization does not load: {error}", error=e.text), 503, detail=e.detail)
         except OverflowError as e:
             return _err(text_of(e), 409)
         except ValueError as e:  # refused parameters (by their labels: review UX-ui U13, UX-params P2) or a refused
@@ -617,7 +659,7 @@ def create_app(runs_dir: Path, **limits) -> web.Application:
     # [S] the recordings of the public site and the pictures (CONTRACT S/P): files served as they are; a recording is
     # gzip that the player inflates itself, so it goes as application/gzip without a Content-Encoding
     async def api_recordings(request):
-        return _json(recordings_list())
+        return _json(recordings_list(load=mgr.viz))
 
     def _file_in(base: Path, *parts) -> Path | None:
         if not all(isinstance(p, str) and _REC_FILE.match(p) and p not in (".", "..") for p in parts):

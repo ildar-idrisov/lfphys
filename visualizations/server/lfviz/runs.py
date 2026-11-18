@@ -44,6 +44,7 @@
 from __future__ import annotations
 
 import asyncio
+import importlib
 import json
 import os
 import secrets
@@ -51,6 +52,7 @@ import shutil
 import struct
 import sys
 import time
+import types
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -758,6 +760,112 @@ class Run:
                 pass
 
 
+# --- the code the server process holds (2026-11-18: a server started before S03 existed loaded s03_projectile's new
+# viz.py against the engine it had imported at its start: "module 'lfphys.core.data' has no attribute 'P_ATM'") -------
+# Workers, sweeps and live points are new processes and run the code on disk. The server process imports the engine and
+# the framework once, at its start, and a world's ``viz.py`` when it is first asked for. A world's own files are
+# imported again when they change (``RunManager.viz``); the engine and the framework cannot be (other modules hold
+# their objects): when they change on disk, the server says that it must be restarted (``RunManager.code_changed``).
+
+class NotLoaded(Exception):
+    """A world the server process could not load while its code had changed on disk since it started: ``text`` is the
+    owner's advice (a ``T``), ``detail`` the exception's own line (English)."""
+
+    def __init__(self, text, detail: str):
+        super().__init__(detail)
+        self.text, self.detail = text, detail
+
+
+RESTART_TEXT = T("the server's code changed on disk after it started: restart the server")
+
+
+def one_line(exc: BaseException) -> str:
+    """An exception's type and its own first line, never empty: the detail under the owner's text."""
+    own = str(exc).strip().splitlines()  # i18n-str-ok: the exception's own English text, the developer's detail
+    return f"{type(exc).__name__}: {own[0]}" if own else type(exc).__name__
+
+
+def _py_under(base: Path) -> list[Path]:
+    """The ``*.py`` files under ``base``, without ``__pycache__`` and ``tests`` folders, sorted."""
+    if not base.is_dir():
+        return []
+    return sorted(f for f in base.rglob("*.py") if not {"__pycache__", "tests"} & set(f.relative_to(base).parts[:-1]))
+
+
+def _stat_sig(files) -> dict:
+    """{path: (size, modification time)} of the files that exist: what an edit, an added file or a removed one
+    changes (they are listed and stat'ed, not read)."""
+    out = {}
+    for f in files:
+        try:
+            st = f.stat()
+        except OSError:  # removed between the listing and the stat
+            continue
+        out[str(f)] = (st.st_size, st.st_mtime_ns)
+    return out
+
+
+def process_code() -> list[Path]:
+    """The code the server process imports once and cannot import again in place: the engine's package
+    (``lfphys/lfphys``), the framework (``server/lfviz``, its server-only modules too: an edit of them also takes
+    effect only after a restart), ``server/serve.py`` and ``site/sitelib.py`` (the keys of ``/api/recordings``)."""
+    return (_py_under(registry.ENGINE / "lfphys") + _py_under(registry.SERVER / "lfviz")
+            + [f for f in (registry.SERVER / "serve.py", registry.ROOT / "site" / "sitelib.py") if f.is_file()])
+
+
+def _world_sig(pkg: str) -> dict:
+    """The signature of a world package's own Python files (its folder, without its tests); {} when it has none."""
+    try:
+        return _stat_sig(_py_under(registry.folder(pkg)))
+    except KeyError:
+        return {}
+
+
+def _is_world(name: str) -> bool:
+    return bool(registry._NAME.match(name))
+
+
+#: per world package in ``sys.modules``: its files' signature when it was imported (``RunManager.viz``); a package
+#: imported elsewhere (``registry.load``, a test) is taken as current when first seen
+_PKG_SIG: dict[str, dict] = {}
+
+
+def _known(pkg: str) -> dict:
+    """The signature of the world package's files as ``sys.modules`` holds them."""
+    if pkg not in _PKG_SIG:
+        _PKG_SIG[pkg] = _world_sig(pkg)
+    return _PKG_SIG[pkg]
+
+
+def _drop(pkg: str):
+    """Forget a world package and its modules (``<pkg>``, ``<pkg>.*``): the next import executes its files anew."""
+    for name in [n for n in sys.modules if n == pkg or n.startswith(pkg + ".")]:
+        del sys.modules[name]
+    _PKG_SIG.pop(pkg, None)
+
+
+def _world_deps(viz_id: str) -> set[str]:
+    """The other world packages a world's modules refer to, transitively (``r13_arrival_times_2d`` imports
+    ``r12_double_slit_2d``): a module, or an object defined in one, among the globals of the world's modules."""
+    seen: set[str] = set()
+    todo = [viz_id]
+    while todo:
+        pkg = todo.pop()
+        for name, mod in list(sys.modules.items()):
+            if mod is None or not (name == pkg or name.startswith(pkg + ".")):
+                continue
+            for v in list(getattr(mod, "__dict__", {}).values()):
+                try:
+                    owner = v.__name__ if isinstance(v, types.ModuleType) else getattr(v, "__module__", None)
+                except Exception:  # noqa: BLE001 - an object whose attributes cannot be read names no package
+                    continue
+                top = owner.split(".", 1)[0] if isinstance(owner, str) else ""
+                if top and top != viz_id and top not in seen and _is_world(top) and top in sys.modules:
+                    seen.add(top)
+                    todo.append(top)
+    return seen
+
+
 class RunManager:
     def __init__(self, runs_dir: Path, max_workers: int = 3, keep_days: float = 3.0, quota_gb: float = 5.0,
                  idle_pause: float = 60.0, idle_suspend: float = 1800.0, worker_mem_gb: float | None = None):
@@ -773,15 +881,74 @@ class RunManager:
         self.idle_suspend = idle_suspend
         self.runs: dict[str, Run] = {}
         self.viz_cache: dict[str, dict] = {}
+        self._viz_sig: dict[str, dict] = {}  # per loaded world: {package: its files' signature} of it and its imports
+        self.code_at_start = _stat_sig(process_code())  # what the process imported at its start (code_changed)
         self._slots = asyncio.Lock()
         self._load_existing()
 
     # --- visualizations -------------------------------------------------------------------------------
+    def code_changed(self) -> list[str]:
+        """The files of the process's code (``process_code``: the engine, the framework) added, removed or edited since
+        this server started, relative to the repository: the modules the process holds are older than them and cannot
+        be imported again in place, so the server must be restarted (``/api/health`` ``restart_needed``)."""
+        now = _stat_sig(process_code())
+        if now == self.code_at_start:
+            return []
+        root = registry.ROOT.parent
+        out = []
+        for p in sorted(set(now) | set(self.code_at_start)):
+            if now.get(p) != self.code_at_start.get(p):
+                f = Path(p)
+                out.append(str(f.relative_to(root)) if f.is_relative_to(root) else p)
+        return out
+
     def viz(self, viz_id: str) -> dict:
+        """``VIZ`` of a world, loaded once and loaded again when its own files, or those of a world it imports (r13
+        imports r12), changed since: the world's package and the changed ones are dropped from ``sys.modules`` and
+        imported fresh, so that the catalogue follows an edit of a world without a restart. The engine and the framework
+        are not imported again: a world that fails to load while they changed on disk (``code_changed``) raises
+        ``NotLoaded`` with the advice to restart the server and the exception's line as its detail; KeyError when there
+        is no such world."""
         viz_id = registry.resolve(viz_id)  # an old id (registry.ALIASES) is the new one
-        if viz_id not in self.viz_cache:
-            self.viz_cache[viz_id] = registry.load(viz_id)
-        return self.viz_cache[viz_id]
+        hit = self.viz_cache.get(viz_id)
+        if hit is not None:
+            sig = self._viz_sig.get(viz_id, {})
+            if {p: _world_sig(p) for p in sig} == sig:  # its files and its imports' files stat'ed, not read
+                return hit
+            del self.viz_cache[viz_id]
+        registry.folder(viz_id)  # KeyError: there is no such world
+        # on a reload the world itself, and every package it imported whose files changed since they were imported
+        drop = {viz_id} if hit is not None else set()
+        drop |= {p for p in self._viz_sig.get(viz_id, {}) if p in sys.modules and _known(p) != _world_sig(p)}
+        if viz_id in sys.modules and _known(viz_id) != _world_sig(viz_id):
+            drop.add(viz_id)
+        for attempt in (1, 2):
+            for p in drop:
+                _drop(p)
+            if drop:
+                importlib.invalidate_caches()  # a file added to a world's folder is found
+            before = {p for p in sys.modules if _is_world(p)}
+            own = _world_sig(viz_id)  # before the import: an edit made while it imports is seen at the next call
+            try:
+                viz = registry.load(viz_id)
+            except Exception as e:  # noqa: BLE001 - re-raised, or put in the owner's terms when the process is stale
+                for p in {viz_id} | ({q for q in sys.modules if _is_world(q)} - before):
+                    _drop(p)  # what this load left half imported: the next call starts clean
+                if self.code_changed():
+                    raise NotLoaded(RESTART_TEXT, one_line(e)) from e
+                raise
+            deps = _world_deps(viz_id)
+            for p in {viz_id} | deps:
+                if p not in before:  # imported by this load
+                    _PKG_SIG[p] = own if p == viz_id else _world_sig(p)
+            # a package imported before (by another world) whose files changed since: once more, with it fresh
+            drop = {p for p in deps if _known(p) != _world_sig(p)}
+            if not drop:
+                break
+            drop.add(viz_id)
+        self._viz_sig[viz_id] = {p: _known(p) for p in {viz_id} | deps}
+        self.viz_cache[viz_id] = viz
+        return viz
 
     # --- existing records -----------------------------------------------------------------------------
     def _load_existing(self):

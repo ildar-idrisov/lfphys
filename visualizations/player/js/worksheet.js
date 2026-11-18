@@ -50,7 +50,9 @@ const setups = (st) => (st.controls || []).reduce((n, c) => n * Math.max(1, (c.v
 async function main() {
   const id = Q.get("demo");
   let viz;
-  try { viz = await apiGet(`viz/${encodeURIComponent(id || "")}`); } catch (e) { fill(box, el("p", {}, t("No such demonstration"))); return; }
+  try { viz = await apiGet(`viz/${encodeURIComponent(id || "")}`); } catch (e) {  // a world that does not load says why (2026-11-18)
+    fill(box, el("p", {}, e.body && e.body.detail ? e.message : t("No such demonstration"))); return;
+  }
   const lab = (viz.screens || []).find((s) => s.kind === "lab");
   if (!lab) { fill(box, el("p", {}, t("This demonstration has no lab work."))); return; }
   document.title = t("Worksheet: {title}", { title: t(viz.title) });

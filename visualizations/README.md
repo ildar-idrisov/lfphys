@@ -52,9 +52,11 @@ reaches the port can start worlds; on a shared network restrict access (for exam
 visualizations/docker/docker-compose.yml stop viz`.
 
 The server serves the code of the player and of the visualizations from disk: changes to the JS show after reloading
-the page; changes to a visualization's Python, in the next run (every run is a new process). Changes to the server
-itself (`server/lfviz/`) take effect after
-`docker compose -f visualizations/docker/docker-compose.yml restart viz`.
+the page; a visualization's own edits are picked up without a restart (its card at the next opening of the start page,
+its next run: every run is a new process). After updating the code of the engine or of the server itself (`lfphys/`,
+`server/lfviz/`, for example by `git pull`), restart the server: `docker restart lf-viz` (the same as
+`docker compose -f visualizations/docker/docker-compose.yml restart viz`). Until then the start page says so: "The
+server's code changed on disk after it started: restart the server (docker restart lf-viz)."
 
 Checks (all tests, in Docker):
 
@@ -443,7 +445,7 @@ of the root README (`site/readme.py`) pick the folder up by themselves.
 | "the world is still being restored: the change was not accepted — …" | a change came while the world was being restored along the record (for example, from another tab); repeat it when the record resumes |
 | a run on the page "My runs" has no "✕" | it is open in a tab (👁 in the list): close it |
 | the world runs slower than the chosen speed | the computation cannot keep up: next to the speed, "actual: …" in orange (before 2026-10-28 the player did not show this, though this guide said otherwise); lower the speed or the source's rate |
-| a change to the server does not show (including an "ImportError" of a new visualization: the server holds the engine loaded at its start) | `docker compose -f visualizations/docker/docker-compose.yml restart viz` — no runs are lost: the running ones are suspended and go on with ⏺ |
+| "The server's code changed on disk after it started: restart the server (docker restart lf-viz)." on the start page, or a world under "Not loaded:" with "the server's code changed on disk after it started: restart the server" | the engine or the server was updated while the server runs, and it holds the code loaded at its start: `docker restart lf-viz` — no runs are lost: the running ones are suspended and go on with ⏺. A visualization's own edits need no restart |
 
 ---
 

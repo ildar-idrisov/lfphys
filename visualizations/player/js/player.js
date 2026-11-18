@@ -149,7 +149,8 @@ async function loadRecording(spec) {
   if (MODE === "static") {
     try { world = (await getJSON(url("aliases.json")))[w0] || w0; } catch (e) { /* no alias table: the id as it is */ }
   }
-  try { S.viz = await apiGet(`viz/${encodeURIComponent(world)}`); } catch (e) { throw noSuch(); }
+  // a world that does not load says why (the server's text, e.g. "restart the server"; 2026-11-18), else there is none
+  try { S.viz = await apiGet(`viz/${encodeURIComponent(world)}`); } catch (e) { throw e.body && e.body.detail ? refusal(e.message, "broken") : noSuch(); }
   world = S.viz.id;
   let all = null;
   try { all = await apiGet("recordings"); } catch (e) { all = null; }

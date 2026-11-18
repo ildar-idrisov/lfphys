@@ -363,6 +363,16 @@ class Simulation(BaseSimulation):
     def max_step(self):
         return None
 
+    def _drag_max(self):
+        """The largest drag force on the thrown ball along its computed flight (its samples and its landing), N; None in
+        vacuum. The view draws the drag arrows on a scale of their own chosen from it, so that the drag stays visible
+        next to the weight (V52 (f)): only the drawing's scale, the arrows are the frames' computed forces."""
+        s = self.main
+        if not s.air:
+            return None
+        vs = np.column_stack([s.vxs, s.vys]).tolist() + [list(s.at(s.T)["v"])]
+        return max(float(np.hypot(*s.drag.force(0.0, None, np.array(v, float)))) for v in vs)
+
     def header(self):
         p = self.params
         x0, x1, y1 = self.main.box()
@@ -387,7 +397,7 @@ class Simulation(BaseSimulation):
             "scene": {"box": [[x0, 0.0], [x1, y1]]},
             "launcher": {"h": float(p["h_m"]), "angle": float(p["angle_deg"]), "v0": float(p["v0"])},
             "ball": {"id": self.obj, "d": o["d"], "m": o["m"], "label": OBJECT_LABELS[self.obj]},
-            "air": bool(p["air"]), "k": self.main.k, "g": G, "weight": o["m"] * G,
+            "air": bool(p["air"]), "k": self.main.k, "g": G, "weight": o["m"] * G, "drag_max": self._drag_max(),
             "medium": {"rho": med["rho"], "mu": med["mu"], "T_C": 20.0, "p": 101325.0} if med else None,
             "companion": self.comp, "strobe_every": STROBE_EVERY, "sample_dt": 1.0 / RATE,
             "measurables": meas, "units": {"x": T("m"), "t": T("s")}, "actions": [],
@@ -413,7 +423,7 @@ INSTRUMENTS = {
     # the stand sets the chute's height exactly at its marks (review R-E F4, D2): the heights carry no reading error
     "stand": {"kind": "ruler", "label": T("Height scale of the stand"), "unit": "m", "division": 0.01, "error": 0.0,
               "reads": "control:h_m",
-              "error_note": T("the stand sets the chute's height exactly at its marks: the height has no reading error")},
+              "error_note": T("the stand sets the chute's height at its marks")},
     "protractor": {"kind": "protractor", "label": T("Protractor"), "unit": "°", "division": 1, "error": 0.5,
                    "reads": "control:angle_deg"},
     # the error of a start and a stop by hand: Faux & Godolphin, Am. J. Phys. 87, 110 (2019), from 4304 timekeepers'
