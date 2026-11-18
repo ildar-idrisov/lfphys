@@ -18,59 +18,65 @@ Where EX1 or its audit row (§7) was wrong or incomplete, this document says so:
 
 ## 0. Decisions in brief
 
-**Revised on 2026-11-18 after the owner's two answers (quoted in §9).** Lab work is a narrow experimental bench that
-can be used in several ways, some leading to right results and some to wrong ones; nothing is hidden and the app
-judges nothing; the worksheet is a task sheet the teacher may change. u35 gets Malus's law, strictly computed. The
-whole design was audited for simplifications (§11). What the first version said differently is marked
+**Revised on 2026-11-18 after the owner's four answers (quoted in §9)**: Lab work is a narrow experimental bench, used
+in several ways, some leading to right results and some to wrong ones; nothing is hidden and the app judges nothing;
+the worksheet is a task sheet the teacher may change. u35 gets Malus's law, strictly computed, and real dispersive
+materials; u37 gets real detectors and the inequalities that need no fair sampling. The whole design, S03 included,
+was audited again «до реальных физических явлений» (§11). What an earlier version said differently is marked
 **[error in earlier]** where it stands.
 
 1. **All three worlds get all three screens.** u34: Watch (a rosette beside Newton's closed ellipse, the clock, a
    fall), Explore (r₀ × speed, 35 points), Lab work, a bench with two parts (periods and clocks; the advance of the
    periapsis). u35: Watch **[error in earlier: EX1 §7 said «no»]**, three Explore screens («Boundary», «Coatings»,
-   «Polarisation»), and Lab work, a bench with three parts (Fresnel's reflection, Malus's law, polarisation by
-   reflection). u37: Watch, Explore (pair × Δ × τ × law), and Lab work, a bench with three parts (E(α, β), the CHSH
-   test, the same test in a local world, flagged).
+   «Polarisation»), and Lab work, a bench with four parts (dark counts, Fresnel's reflection, Malus's law,
+   polarisation by reflection). u37: Watch, Explore (pair × Δ × τ × law and source), and Lab work, a bench with four
+   parts (E(α, β), the CHSH test, the same test in a local world, flagged, and real detectors).
 2. **Lab work is a bench, not a test** (the owner, answer 1). Every check, value, reference and event is shown, as in
-   Explore; overlays and readouts are available; the app gives no verdict on the student's data: the fit is a tool
-   that prints its parameters, χ², p and the Birge ratio. The world's computed values for the bench are listed openly
-   in the drawer. **[error in earlier]** The first version hid the checks' values, the events' texts and the answers,
-   and judged the student's fit. (§1.4, §5 F6.)
+   Explore; the app gives no verdict on the student's data: the fit prints its parameters, χ², p and the Birge ratio;
+   the world's computed values for the bench are listed openly in the drawer. **[error in earlier]** The first version
+   hid them and judged the student's fit. (§1.4, §5 F6.)
 3. **Several ways on every bench**, each inside the computed atlases, each with its computed outcome: u34 (§2.3)
-   eleven, u35 (§3.4) thirteen, u37 (§4.3) ten, S03 (§10) nine. A wrong way goes wrong for a computed reason: a sign
-   branch, a wrong angle law, too few counts, a coarse instrument, an approximation outside its range, a wrong angle
-   set, an eccentric orbit where Kepler's law needs a circle, an open loophole.
+   eleven, u35 (§3.4) sixteen, u37 (§4.3) nineteen, S03 (§10) nine. A wrong way goes wrong for a computed reason: a
+   sign branch, a wrong angle law, too few counts, dark counts or dead time not corrected, accidentals not subtracted,
+   an approximation outside its range, fair sampling assumed, an eccentric orbit where Kepler's law needs a circle.
 4. **The task sheet** (§5 F8): the goal, the bench, the instruments, one suggested procedure, what to record and hand
-   in, and the course it is based on, with verified quotations. No questions, answers, grading or teacher's pages
-   **[error in earlier]**. The teacher changes the task by a variant computed in the atlases (`&variant=` in the
-   address: another glass, another orbit family, another analyser or pair) and by editing the sheet in the browser
-   before printing; both work on the static site.
-5. **Malus's law in u35, strictly computed** (the owner, answer 2; §3.5): the polarisation through the bench by Jones
-   matrices and density matrices with Fresnel's complex coefficients (TIR's phase makes the light elliptical), a
-   source at any linear polarisation or unpolarised, a rotatable analyser before each detector with its principal
-   transmittances as a stated device property (ideal by default, not modified physics), photons by the Born rule on
-   the density matrix. A new core module `lfphys.core.optics.polarization`, tested against closed forms. The lab is
-   founded on the University of Toronto's PHY293/PHY294 «Polarization of light».
-6. **The time scale of a screen is the world's own** (§5 F1), stops count events (F2), one control may set several
-   parameters (F3), counters and formula columns process the readings (F4, F5): as built in step F.
-7. **Two packing changes keep the benches within budget**: a lab step may use an Explore screen's atlas (F9), and an
-   atlas stores blobs shared by its points once (F10; *measured* −37 % for u35).
-8. **Every lab is founded on a real course or manual**, quoted verbatim (Appendix B): *Exploring Black Holes* ch. 10
-   and the CLEA lab «The Revolution of the Moons of Jupiter» (u34); Carnegie Mellon 33-353 Lab 1, the Rutgers Fresnel
-   handout and Toronto's PHY293/PHY294 «Polarization of light» (u35); Dehlinger & Mitchell, Am. J. Phys. 70, 903 (2002)
-   (u37).
-9. **Every way's outcome was computed before it was designed**, with the engine's values and its fit (Appendix A.3,
-   A.5): e.g. u35's p light read past Brewster's angle with the wrong sign gives n = 1.42 instead of 1.515 (χ²/dof
-   59); u34's leading-order law fitted from 20 M gives 20.0 ± 0.3 instead of 6π (χ²/dof 17).
-10. **S03 follows the same concept** (§10): its concealment, its questions and answers and its verdict go; it gains
-    the bench's wrong ways it lacked (air in part B, a wide angle range in part C); the school level stays simpler.
-11. **Sizes** (*estimate* from measured points): u34 5.3 MB, u35 11.9 MB, u37 4.8 MB (targets 12 MB per world); the
-    site from 65.6 MB to about 87 MB.
-12. **The audit** (§11) lists 25 places where the design or the worlds simplify; 6 are fixed in EX2 (u35's field
-    profile for p light, the photons' polarisation colours and the material names, u37's source visibility, u34's Newton
-    integrator, the first version's concealment), 2 go to the owner (real detectors in u37, real materials in u35), the
-    others are justified or recorded.
-13. **Plan** (§8): F (with the revised F6, F8 and F9, F10), E35 (the polarisation module) in parallel; then W34, W35,
-    W37 and WS03 (S03's rework); then I; then four independent reviews and their processing.
+   in, and the course it is based on, with verified quotations; no questions, answers or grading. The teacher changes
+   the task by a variant computed in the atlases (`&variant=`: another glass, orbit family, analyser, source or
+   detector) and by editing the sheet before printing; both work on the static site.
+5. **Malus's law in u35, strictly computed** (the owner, answer 2; §3.5): Jones matrices and density matrices with
+   Fresnel's complex coefficients (total reflection's phase makes the light elliptical), a rotatable analyser with
+   its principal transmittances as a stated device property, photons by the Born rule (`core.optics.polarization`,
+   E35, done).
+6. **Real materials in u35** (the owner, answer 4; §3.9): N-BK7, N-F2 and N-SF11 from SCHOTT's data sheet, MgF₂ and SiO₂
+   in bulk and as films, Ta₂O₅ as a film, gold, silver and aluminium, each from a checked source with its range and
+   licence (`core.optics.materials` over `core.data` DATASETS, E35 part 2); each photon's λ drawn from the source's
+   line, the group delay in the detection times, the Kretschmann preset with 50 nm of gold.
+7. **Real detectors in u37 and u35** (the owner, answer 3; §4.7): efficiency, dark counts, dead time, jitter and the
+   coincidence window as devices («Devices»), a source with a pair rate, a visibility and multi-pair emission; locally
+   defined slots; accidentals computed and subtracted or not; CHSH under fair sampling beside CH and Eberhard's J,
+   which need none, with their thresholds 2/(1 + √2) = 82.8 % and → 2/3; Gisin and Gisin's local model that exploits
+   the detection loophole (`theories.models.photodetector`, `tools.bell_stats`, E37). u35's benches count with the
+   same detectors (ways 14–16).
+8. **S03's ball flies with the real forces** (§10, §11 items 25, 39–42): the measured drag curve, the rolling ball's
+   Magnus force (*measured*: as large as the drag in part 1), buoyancy and added mass, the Coriolis force, the history
+   force's upper bound in the drawer (E03); the interface unchanged.
+9. **Every lab is founded on a real course or experiment**, quoted verbatim (Appendix B): *Exploring Black Holes*
+   ch. 10 and the CLEA lab (u34); Carnegie Mellon 33-353, the Rutgers Fresnel handout and Toronto's PHY293/PHY294 (u35);
+   Dehlinger & Mitchell (2002), Giustina et al. (2013), Shalm et al. (2015) and Gisin & Gisin (1999) (u37).
+10. **Every way's outcome was computed before it was designed**, with the engine's values and its fit (Appendix A):
+    e.g. u35's p light read past Brewster's angle with the wrong sign gives n = 1.42 instead of 1.515 (χ²/dof 59);
+    u37's maximally entangled pair at η = 0.75 gives S = 2√2 under fair sampling and J = −0.071 per pair without it.
+11. **The framework** (§5): F1–F10 built in step F (commit 00b0439; its corrections are notes in §5); two small changes
+    are new, F11 (the fit's p beyond the double's range) and F12 (Watch's time label), for the follow-up step F2.
+    Detectors, materials and the re-audit need nothing else.
+12. **Sizes** (*estimate* from measured points, §6): u34 5.3 MB, u35 12.9 MB (0.9 MB over its target, accepted), u37
+    6.2 MB, S03 about 6.2 MB; the site from 65.6 MB to about 89 MB.
+13. **The audit** (§11): 42 items; 26 fixed in EX2, 4 large capabilities designed with their cost for the owner's
+    schedule (Kerr orbits, radiation reaction, Gaussian-beam shifts, p-values without i.i.d.; §9), the others justified
+    or recorded.
+14. **Plan** (§8): F and E35 part 1 done; now F2, E35 part 2 (materials), E37 (detectors and inequalities), E34
+    (the interior's proper time) and E03 (S03's forces) in parallel; then W34, W35, W37 and WS03 as their engine steps
+    land; then I; then four independent reviews.
 
 ---
 
@@ -81,8 +87,8 @@ whole design was audited for simplifications (§11). What the first version said
 | world | one event of interest lasts (world time) | playback (world s per played s) | atlas clock |
 |---|---|---|---|
 | u34 | a radial period: 116 GM/c³ (circle at 7 M) to 1 705 GM/c³ (r₀ 30 M, speed 1.1); 5.7 ms–84 ms for 10 M☉ | `"world"`: the point's own default speed, a Kepler period in 8 played s | `fps: 8` |
-| u35 | a photon's flight: 2 ns; 2 000–100 000 photons at 4·10⁹ s⁻¹: 0.5–25 µs | the build-up in 10 played s (5·10⁻⁸ to 2.5·10⁻⁶) | `frame_dt` = the stop time / 5 (the benches) or / 20 («Coatings») |
-| u37 | a pair's flight: 1.67 µs (L = 500 m); 1 000–4 000 pairs at 10⁶ s⁻¹: 1–4 ms | the build-up in 10 played s: 1–4·10⁻⁴ | `frame_dt` = the stop time / 10 |
+| u35 | a photon's flight: 2 ns; 20 000–100 000 photons at 2·10⁵ s⁻¹ (the real detectors' rate): 0.1–0.5 s; the dark counts 0.1–1 s | the build-up in 10 played s (0.01–0.05; the dark counts 0.01–0.1) | `frame_dt` = the stop time / 5 (the benches) or / 20 («Coatings») |
+| u37 | a pair's flight: 1.67 µs (L = 500 m); 1 000–4 000 coincidences at 10⁴ pairs per second and η 0.70: 0.2–0.8 s; part 4: 10⁹ slots of 1 µs at 10⁴ pairs per second, 1 000 s | the build-up in 10 played s: 0.02–0.08; part 4: 100 (its slots are shown in time only in the first frames, §4.7) | `frame_dt` = the stop time / 10 |
 
 So u34 needs both the per-point speed and the frames per played second (§5 F1): with a fixed `frame_dt` its points
 differ 15× in frames and size, and a fixed window that holds three radial periods of the slowest orbit holds 44 turns
@@ -329,28 +335,40 @@ split is steady, but what the world shows of it develops in time and is not seen
 wave leaves the surface on both arms (the frame's packets, weighted R/(R + T) and T/(R + T)), one detector clicks
 and the other packet is gone (the null result), and the counts build up to R and T as u32's hits build up to the
 fringes. The cause → effect a static curve does not show: at Brewster's angle the p photons stop being reflected;
-from inside the glass, beyond the critical angle, none gets out; a second prism 200 nm away lets half of them
+from inside the glass, beyond the critical angle, none gets out; a second prism 200 nm away lets nearly half of them
 through.
 
-Recording `story`: the preset `brewster` with θ 30°, unpolarised photons, 5·10⁸ photons per second; 50 s at 20 fps;
+Recording `story` (as first designed; revised for round 3 below): the preset `brewster` with θ 30°, unpolarised
+photons, 5·10⁸ photons per second; 50 s at 20 fps;
 the script's speed 8.34·10⁻¹⁰ world s per played s (an arm of 0.30 m in 1.2 s), then from 9 s 4·10⁹ photons per
 second at 5·10⁻⁷ (2 000 photons per played second). The bench's drawing does not move, so its scale is fixed anyway.
 
-*Measured*: 1 000 frames, 1.58 MB (0.87 MB with the clicks' times quantised u16), 0.6 s of CPU, 37 checks ✓. The
-first photon is emitted between 2 and 3 s, the first is detected between 5 and 6 s, the first reflected between 7
-and 8 s; by 17 s 15 876 photons, 683 reflected (4.30 %, computed 4.152 %); at Brewster's angle unpolarised light gives
-R = 7.396 %, all of it s; from glass into air at 30° R = 5.519 %; at 45° R = 1; with the 200 nm gap T = 49.876 %.
+*Measured* (before round 3: n = 1.5, 5·10⁸ and 4·10⁹ photons per second, ideal detectors): 1 000 frames, 1.58 MB
+(0.87 MB with the clicks' times quantised u16), 0.6 s of CPU, 37 checks ✓. The first photon is emitted between 2 and
+3 s, the first is detected between 5 and 6 s, the first reflected between 7 and 8 s; by 17 s 15 876 photons, 683
+reflected (4.30 %, computed 4.152 %); at Brewster's angle unpolarised light gives R = 7.396 %, all of it s; from glass
+into air at 30° R = 5.519 %; at 45° R = 1; with the 200 nm gap T = 49.876 %.
+
+**Revised for real materials and detectors (round 3).** The glass is N-BK7 at 632.8 nm (n = 1.51509, §3.9) and the
+detectors are §3.4's (η 0.65, 100 dark counts per second, 22 ns dead time), so the source runs at the benches' 2·10⁵
+photons per second **[error in earlier: 5·10⁸ and 4·10⁹, which no single-photon detector counts]**. Its photons are
+5 µs apart on average while one crosses the bench in 2 ns, so W35 places the script's speed changes on the computed
+run's emission times (the run is computed before it is scripted, as the captions are timed to its events): about
+10⁻⁶ while waiting, 8.34·10⁻¹⁰ through the first photons' flights, 0.01 (2 000 photons per played second) from 9 s.
+*Computed* for this revision with n = 1.51509: R = 4.350 % unpolarised at 30°; θ_B = 56.574° with R = 7.727 %, all
+of it s; from inside at 30° R = 5.850 %; θ_c = 41.302°; the 200 nm gap at 45° T = 47.09 % (s 36.44 %, p 57.74 %).
+The captions below carry these numbers; W35 measures the recording again.
 
 | at, s | script | caption (EN / RU) | its event |
 |---|---|---|---|
-| 0 (hold 3) | `speed` 8.34·10⁻¹⁰ | «Photons leave the source one at a time and fall on glass (n = 1.5) at 30°. Past the surface, each photon's wave goes both ways: the two faint marks show where it may be found.» / «Фотоны по одному вылетают из источника и падают на стекло (n = 1,5) под углом 30°. За поверхностью волна каждого фотона идёт в обе стороны: две бледные метки показывают, где его можно обнаружить.» | the first photon at the surface, ~4 s |
-| 4 | — | «Watch the detectors: one of them clicks, and the photon is found in one place only, reflected or transmitted. Which one is random; the run computes only the probabilities R and T, from Maxwell's equations.» / «Следите за детекторами: срабатывает один из них, и фотон обнаруживается только в одном месте — отражённым или прошедшим. Какой — случайно; расчёт даёт лишь вероятности R и T, из уравнений Максвелла.» | the first click, 5–6 s |
-| 9 | `set` rate 4·10⁹; `speed` 5·10⁻⁷ | «Much faster: thousands of photons. The fractions settle at the computed probabilities: about 4 % reflected and 96 % transmitted (the black ticks).» / «Гораздо быстрее: тысячи фотонов. Доли устанавливаются около рассчитанных вероятностей: примерно 4 % отражённых и 96 % прошедших (чёрные риски).» | the counts, 9–17 s |
-| 17 | `set` θ 56.31°, the analyser before the reflection detector in, along p (α = 0°) | «The table turns to Brewster's angle, 56.3° = arctan 1.5, and an analyser is put before the reflection detector, along p (in the plane of incidence): no reflected photon passes it.» / «Столик поворачивается к углу Брюстера, 56,3° = arctg 1,5, и перед детектором отражённого света ставится анализатор вдоль p (в плоскости падения): ни один отражённый фотон через него не проходит.» | the new segment, 17 s |
+| 0 (hold 3) | `speed` 8.34·10⁻¹⁰ | «Photons leave the source one at a time and fall on N-BK7 glass (n = 1.515) at 30°. Past the surface, each photon's wave goes both ways: the two faint marks show where it may be found.» / «Фотоны по одному вылетают из источника и падают на стекло N-BK7 (n = 1,515) под углом 30°. За поверхностью волна каждого фотона идёт в обе стороны: две бледные метки показывают, где его можно обнаружить.» | the first photon at the surface, ~4 s |
+| 4 | — | «Watch the detectors: one of them clicks, and the photon is found in one place only, reflected or transmitted. Which one is random; the run computes only the probabilities R and T, from Maxwell's equations. A real detector misses about a third of the photons.» / «Следите за детекторами: срабатывает один из них, и фотон обнаруживается только в одном месте — отражённым или прошедшим. Какой — случайно; расчёт даёт лишь вероятности R и T, из уравнений Максвелла. Реальный детектор пропускает около трети фотонов.» | the first click, 5–6 s |
+| 9 | `speed` 0.01 | «Much faster: thousands of photons. The fractions settle at the computed probabilities: about 4.4 % reflected and 95.6 % transmitted (the black ticks).» / «Гораздо быстрее: тысячи фотонов. Доли устанавливаются около рассчитанных вероятностей: примерно 4,4 % отражённых и 95,6 % прошедших (чёрные риски).» | the counts, 9–17 s |
+| 17 | `set` θ 56.57°, the analyser before the reflection detector in, along p (α = 0°) | «The table turns to Brewster's angle, 56.6° = arctan 1.515, and an analyser is put before the reflection detector, along p (in the plane of incidence): no reflected photon passes it.» / «Столик поворачивается к углу Брюстера, 56,6° = arctg 1,515, и перед детектором отражённого света ставится анализатор вдоль p (в плоскости падения): ни один отражённый фотон через него не проходит.» | the new segment, 17 s |
 | 22 | `set` the analyser to α = 90° (s) | «The analyser turned along s: every reflected photon passes. At Brewster's angle reflection polarises light completely.» / «Анализатор повёрнут вдоль s: проходит каждый отражённый фотон. При угле Брюстера отражение полностью поляризует свет.» | 22 s |
-| 27 | `set` n₀ 1.5, n_s 1, θ 30°, structure `tir`, gap 0, the analyser out | «Now the light goes from inside the glass into air, at 30°: about 5.5 % is reflected.» / «Теперь свет идёт изнутри стекла в воздух, под углом 30°: отражается около 5,5 %.» | the new segment, 27 s |
-| 34 | `set` θ 45° | «At 45°, beyond the critical angle of 41.8°, no photon gets out: total internal reflection.» / «При 45°, за критическим углом 41,8°, наружу не выходит ни один фотон: полное внутреннее отражение.» | the new segment, 34 s |
-| 41 | `set` gap 200 nm | «A second glass block 200 nm behind the face: now about half of the photons cross the air gap. This is frustrated total reflection: the photons tunnel.» / «Второй стеклянный блок в 200 нм за гранью: теперь примерно половина фотонов пересекает воздушный зазор. Это нарушенное полное внутреннее отражение: фотоны туннелируют.» | the new segment, 41 s |
+| 27 | `set` the side «from inside» (N-BK7 into air), θ 30°, structure `tir`, gap 0, the analyser out | «Now the light goes from inside the glass into air, at 30°: about 5.9 % is reflected.» / «Теперь свет идёт изнутри стекла в воздух, под углом 30°: отражается около 5,9 %.» | the new segment, 27 s |
+| 34 | `set` θ 45° | «At 45°, beyond the critical angle of 41.3°, no photon gets out: total internal reflection.» / «При 45°, за критическим углом 41,3°, наружу не выходит ни один фотон: полное внутреннее отражение.» | the new segment, 34 s |
+| 41 | `set` gap 200 nm | «A second glass block 200 nm behind the face: now nearly half of the photons cross the air gap. This is frustrated total reflection: the photons tunnel.» / «Второй стеклянный блок в 200 нм за гранью: теперь почти половина фотонов пересекает воздушный зазор. Это нарушенное полное внутреннее отражение: фотоны туннелируют.» | the new segment, 41 s |
 
 **Revised for the analyser (§3.5)**: the rows from 17 s are designed, not yet measured (the analyser does not exist
 yet); W35 records them and replaces the times by the measured events. Unpolarised photons are drawn grey, not as s or
@@ -360,14 +378,14 @@ something the run measures (§11, item 1; **[error in earlier]**: the first capt
 with the world's notice), as the world's README says. **More recordings**: `tir`, `brewster`, `spr`, with captions
 written by W35 by the same rule.
 
-### 3.2 Explore «Boundary» (`explore`): the reflection bench (444 points, shared with Lab work, §5 F9)
+### 3.2 Explore «Boundary» (`explore`): the reflection bench (456 points, shared with Lab work, §5 F9)
 
 | field | value | why |
 |---|---|---|
-| preset, fixed | `brewster`; `{structure: "interface", lam_nm: 633, rate: 4e9}` | one boundary at one wavelength |
-| controls | sample and side (compound, §5 F3): glass A (n 1.515), B (1.620), C (1.750), each «from air» (n₀ 1, n_s = n) and «from inside the glass» (n₀ = n, n_s 1): 6 × θ {0, 10, 20, 30, 34, 35, …, 62, 66, 70, 80, 85}° (37: 1° steps where Brewster's angles, 56.6°, 58.3°, 60.3°, and the critical angles, 41.3°, 38.1°, 34.8°, lie) × polarisation {s, p} | defaults: A from air, 30°, s; the glasses are the teacher's variants |
+| preset, fixed | `brewster`; `{structure: "interface", lam_nm: 632.8, rate: 2e5, detectors: "spad"}` | one boundary at the HeNe line; a photon rate a real single-photon detector can count (§11, item 36) and its detectors (§11, item 4) |
+| controls | sample and side (compound, §5 F3): the SCHOTT glasses N-BK7 (n 1.51509 at 632.8 nm), N-F2 (1.61658) and N-SF11 (1.77860) (§3.9), each «from air» and «from inside the glass»: 6 × θ {0, 10, 20, 30, 33, 34, …, 62, 66, 70, 80, 85}° (38: 1° steps where Brewster's angles, 56.57°, 58.26°, 60.65°, and the critical angles, 41.30°, 38.21°, 34.21°, lie) × polarisation {s, p} | defaults: N-BK7 from air, 30°, s; the glasses are the teacher's variants |
 | time, acts, traces | `buildup`, `now`, 0 | the cursor is the count (a fifth, two fifths, … of the photons) |
-| speed, clock, stop | 5·10⁻⁷ (20 000 photons in 10 played s); `frame_dt` a fifth of the run; `{world_s: 5.004·10⁻⁶}` | the lab's precision (§3.4); 20 000 photons per set-up |
+| speed, clock, stop | 0.01 (20 000 photons, 0.1 s, in 10 played s); `frame_dt` a fifth of the run; `{world_s: 0.1}` | the lab's precision (§3.4); 20 000 photons per set-up |
 | quantize | the angle curves, `segment.z\|E2`, `clicks.t`, `frame.fl`: u16 | drawn only; θ_B, θ_c, R, T and the counts stay float64 |
 | drop | `blobs`: the flat spectrum (`segment.lam`, `segment.lR*`, `lT*`, `lA*`) and the clicks' `te`, `seg` (the view draws the clicks from `t`, `det`, `pol` only, `web/view.js pushClicks`) | |
 | pool | the angle curves, the same for every θ and polarisation of a sample and side (§5 F10) | |
@@ -380,19 +398,24 @@ shows total internal reflection. This design's first version (air → water, air
 photons) is replaced too: the bench needs the lab's precision and 1° steps where θ_B and θ_c lie.
 
 *Measured* (Appendix A.6; 20 000 photons, six frames, z and the field u16): 15.2–18.4 kB per point; with the curves in
-the pool 9.8–10.8 kB. *Estimate*: 444 × 10.3 kB = **4.6 MB**, the pool 6 × ~6 kB.
+the pool 9.8–10.8 kB. *Estimate*: 456 × 10.5 kB (the dark counts add a few clicks) = **4.8 MB**, the pool 6 × ~6 kB.
+**[error in earlier]** The first revision's glasses A, B, C of chosen indices (1.515, 1.620, 1.750) and its 4·10⁹
+photons per second, which no single-photon detector counts, are replaced.
 
-### 3.3 Explore «Coatings» (`coatings`): λ × coating (65 points)
+### 3.3 Explore «Coatings» (`coatings`): λ × real coating (91 points)
 
-As the first version (λ {400, 425, …, 700} nm × five coatings at normal incidence, 2 000 photons), with the coatings
-named for what they are (§11, item 3): «bare glass (n 1.5)», «λ/4 layer, n_f 1.38», «ideal λ/4 layer, n_f = √1.5»,
-«Bragg mirror (H L)×4» and «(H L)×8» (n_H 2.3, n_L 1.45 on glass 1.52; λ₀ = 550 nm), each a medium of constant index,
-said so on the screen. **[error in earlier]** The first version kept the world's «like MgF₂» and «like TiO₂/SiO₂»,
-which compare a constant index with real, dispersive materials. The spectrum curves of a coating are the same for every
-λ, so they go to the pool. *Measured* 25–29 kB per point with the angle curves dropped; *estimate* with the pool about
-15 kB: **1.0 MB**.
+λ {400, 425, …, 700} nm × seven real coatings on N-BK7 at normal incidence (§3.9; 2 000 photons): «bare N-BK7»,
+«λ/4 MgF₂ (bulk, Dodge)», «λ/4 MgF₂ film (Rodríguez-de Marcos et al.)», «Ta₂O₅/SiO₂ films, (H L)×4» and «×8» (Gao et
+al.), «aluminium, 100 nm» (Rakić) and «silver, 100 nm» (Johnson and Christy); the quarter-wave thicknesses for 550 nm
+from each material's own index there. What changes visibly, *computed* by the engine with these data (Appendix A.7):
+at 550 nm bare N-BK7 reflects 4.24 %, the λ/4 of bulk MgF₂ 1.25 % (a real AR layer does not reach 0: n_f² ≠ n_glass),
+the film 2.04 %, rising to 2.26 % and 2.79 % at 400 nm; the Ta₂O₅/SiO₂ mirror 87.9 % (×4) and 99.37 % (×8) at 550 nm,
+75.8 % at 632.8 nm and 27.4 % at 450 nm (×8). **[error in earlier]** The first versions used constant indices named
+«like MgF₂, TiO₂/SiO₂» and an «ideal λ/4 layer, n_f = √1.5», which no material has; replaced by measured materials.
+The spectrum curves of a coating are the same for every λ, so they go to the pool. *Estimate* 91 × 15 kB =
+**1.4 MB** (25–29 kB *measured* per point with the angle curves dropped and no pool).
 
-### 3.4 Lab work: the bench «Reflection and polarisation» (three parts)
+### 3.4 Lab work: the bench «Reflection and polarisation» (four parts)
 
 **[error in earlier]** The first version was one fixed procedure on a hidden «glass of unknown index», with questions,
 answers and a verdict. Revised as a bench (§1.4), with Malus's law added (the owner, answer 2; §3.5).
@@ -416,12 +439,15 @@ answers and a verdict. Revised as a bench (§1.4), with Malus's law added (the o
 
 | part | atlas | grid | photons per set-up |
 |---|---|---|---|
-| 1 «Fresnel's reflection» | Explore «Boundary» (§3.2, F9) | 6 samples and sides × 37 θ × {s, p} = 444 | 20 000 |
+| 0 «Dark counts» | own: the source shuttered, the bench as in part 1; counting time {0.1, 0.5, 1} s | 3 | none: each detector's dark counts (100 s⁻¹: 10, 50, 100 expected) |
+| 1 «Fresnel's reflection» | Explore «Boundary» (§3.2, F9) | 6 samples and sides × 38 θ × {s, p} = 456 | 20 000 |
 | 2 «Malus's law» | own: the structure «none» (no boundary: the beam goes straight to the transmission arm), the source linear at ψ {0°, 30°, 60°}, the analyser before the transmission detector at α {0°, 10°, …, 180°}, the analyser «ideal» or «real: k₁ 0.90, extinction ratio 10⁻²» | 3 × 19 × 2 = 114 | 20 000 |
-| 3 «Polarisation by reflection» | own: unpolarised source, glass A, B or C from air, θ {40, 45, 50, 54, 55, 56, 57, 58, 59, 60, 62, 66, 70}°, the ideal analyser before the reflection detector at α {0°, 15°, …, 90°} | 3 × 13 × 7 = 273 | 100 000 (so that the p counts near θ_B resolve) |
+| 3 «Polarisation by reflection» | own: unpolarised source, N-BK7, N-F2 or N-SF11 from air, θ {40, 45, 50, 54, 55, 56, 57, 58, 59, 60, 61, 62, 66, 70}°, the ideal analyser before the reflection detector at α {0°, 15°, …, 90°} | 3 × 14 × 7 = 294 | 100 000 (so that the p counts near θ_B resolve) |
 
 **Instruments**: `table` (readout, `control:theta_deg`, 1°, exact: the rotary table is set at its marks); `det_R`,
-`det_T` (counters, Poisson: photons counted by the reflection and the transmission detectors); `ana_angle` (readout,
+`det_T` (counters, Poisson: clicks of the reflection and the transmission detectors, real single-photon detectors with
+efficiency 0.65, 100 dark counts per second and a dead time of 22 ns: device values to be checked against a
+manufacturer's data sheet by W35, illustrative until then; §4.7's `photodetector` model); `ana_angle` (readout,
 `control:ana_deg`, 1°, exact); `det_pass`, `det_reject` (counters, Poisson: the two ports of the analyser, a rotatable
 polarising beam splitter with a detector on each port, §3.5). The source's ψ, the sample's index and the analyser's
 device are set-up values, shown.
@@ -439,8 +465,10 @@ y_s = n² − sin²θ, a line in x = sin²θ with intercept n² and slope −1; 
 θ_t)/(n cos θ + cos θ_t) ≥ 0, so y_p = 1/n² − sin²θ/n⁴. Both are exact for a lossless boundary; above θ_B, r_p changes
 sign and y_p would need −√R_p.
 
-**The ways** (glass A, n = 1.515; Monte Carlo with Poisson counts and the engine's fit, Appendix A.3, A.5; the analyser
-parts from the closed forms of §3.5, *estimate* until W35's atlas exists):
+**The ways** (N-BK7, n = 1.51509; the Monte Carlo of Appendix A.3, A.5 used n = 1.515, which changes nothing at the
+printed digits; ideal detectors there: the real detectors' efficiency 0.65 thins every count, so every error is
+1/√0.65 = 1.24 times the printed one (n ± 0.0075 from part 1), and their dark counts and dead time are ways 14–16; the
+analyser parts from the closed forms of §3.5, *estimate* until W35's atlas exists):
 
 | # | what the student does | what follows | why |
 |---|---|---|---|
@@ -455,19 +483,22 @@ parts from the closed forms of §3.5, *estimate* until W35's atlas exists):
 | 9 | part 2, ideal analyser: I against cos²(α − ψ), line through 0 | slope 1.00000 ± 0.00005, χ²/dof 1.0 (*simulated* on the closed form) | Malus's law |
 | 10 | I against cos(α − ψ) | the points lie on x², not on a line | a wrong angle law |
 | 11 | the real analyser with a line through 0 | slope 0.9026 ± 0.0010, χ²/dof 17.9: at α − ψ = 90° I = k₂ = 0.009, 13 errors above the line's 0; a line with an intercept gives 0.009 and the slope k₁ − k₂ = 0.891 (*simulated* on the closed form) | an ideal model for a real device |
-| 12 | part 3, analyser along p: P against θ | P ≈ 1 at 56° and 57° for A (expected p counts 1.8 and 1.1 of 7 500 reflected), at 58° for B, at 60° for C: θ_B to ±1°, n to ±0.06 | polarisation by reflection: right, coarse |
+| 12 | part 3, analyser along p: P against θ | P ≈ 1 at 56° and 57° for N-BK7 (expected p counts 1.8 and 1.1 of 7 530 and 7 880 reflected), at 58° for N-F2, at 60–61° for N-SF11: θ_B to ±1°, n to ±0.06 | polarisation by reflection: right, coarse |
 | 13 | part 3, both ports added (the analyser ignored): the angle of the weakest reflection | none near θ_B: the unpolarised reflectance (R_s + R_p)/2 rises monotonically, from 4.2 % at 0° to 7.7 % at 56.6° | Brewster's angle is not where the reflection is weakest |
+| 14 | part 3 near θ_B with the dark counts not subtracted | about 50 dark counts per port in a set-up's 0.5 s against 1–9 detected p photons: P ≈ 0.975–0.979 from 55° to 58°, with no clear maximum | a background left in the data |
+| 15 | the same with part 0's dark rate subtracted | P ≈ 1 again at 56–57°, its error now including the dark count's | right |
+| 16 | part 1 at θ = 0 without the dead-time correction m/(1 − m t_d) | R biased by +0.26 % relative (the transmission detector's 1.25·10⁵ clicks per second lose 0.27 % to dead time, the reflection detector's 5·10³ almost nothing); n² by about +0.003, a seventh of its error | a systematic below the statistical error at this rate, above it at 10⁶ s⁻¹ |
 
-**Variants**: the glass (A, B, C) for parts 1 and 3; the source's ψ and the analyser device for part 2.
+**Variants**: the glass (N-BK7, N-F2, N-SF11) for parts 1 and 3; the source's ψ and the analyser device for part 2.
 
 **Task sheet** (EN / RU):
 
 | field | text |
 |---|---|
 | goal | Find the refractive index of a glass from the reflection of s and p light, and check Malus's law and the polarisation of reflected light. / Определить показатель преломления стекла по отражению света с поляризацией s и p, проверить закон Малюса и поляризацию отражённого света. |
-| bench | A glass block on a rotary table (1° marks), light from air or from inside the glass; a source of single photons (633 nm), polarised s, p, linearly at an angle or unpolarised; detectors of reflected and transmitted photons; a rotatable analyser (a polarising beam splitter with a detector on each port), ideal or real. / Стеклянный блок на поворотном столике (деления 1°), свет из воздуха или изнутри стекла; источник одиночных фотонов (633 нм) с поляризацией s, p, линейной под углом или неполяризованный; детекторы отражённых и прошедших фотонов; поворотный анализатор (поляризационный делитель с детектором на каждом выходе), идеальный или реальный. |
-| procedure (one suggestion) | 1. For s light from air, count reflected and transmitted photons at angles from 0° to 80° and plot y_s against sin²θ. 2. Repeat for p light below the angle where the reflection vanishes, with y_p. 3. Set the source at ψ and record the analyser's counts from 0° to 180°; plot them against cos²(α − ψ). 4. With unpolarised light, set the analyser along p and find the angle of complete polarisation. / 1. Для света с поляризацией s из воздуха посчитайте отражённые и прошедшие фотоны при углах от 0° до 80° и постройте y_s в зависимости от sin²θ. 2. Повторите для света p при углах меньше того, где отражение исчезает, с y_p. 3. Поставьте источник под углом ψ и запишите отсчёты анализатора от 0° до 180°; постройте их в зависимости от cos²(α − ψ). 4. С неполяризованным светом поставьте анализатор вдоль p и найдите угол полной поляризации. |
-| record and hand in | the counts with their errors, the plots and fits (model, points used, parameters with errors, χ²), the index n found in each way and Brewster's angle, and why you chose these angles. / отсчёты с погрешностями, графики и аппроксимации (модель, использованные точки, параметры с погрешностями, χ²), показатель n, найденный каждым способом, и угол Брюстера, а также почему выбраны эти углы. |
+| bench | A block of N-BK7, N-F2 or N-SF11 glass on a rotary table (1° marks), light from air or from inside the glass; a source of single photons (632.8 nm, 2·10⁵ per second), polarised s, p, linearly at an angle or unpolarised, with a shutter; single-photon detectors of reflected and transmitted photons (efficiency 0.65, 100 dark counts per second, dead time 22 ns); a rotatable analyser (a polarising beam splitter with a detector on each port), ideal or real. / Блок из стекла N-BK7, N-F2 или N-SF11 на поворотном столике (деления 1°), свет из воздуха или изнутри стекла; источник одиночных фотонов (632,8 нм, 2·10⁵ в секунду) с поляризацией s, p, линейной под углом или неполяризованный, с заслонкой; однофотонные детекторы отражённых и прошедших фотонов (эффективность 0,65, темновой счёт 100 в секунду, мёртвое время 22 нс); поворотный анализатор (поляризационный делитель с детектором на каждом выходе), идеальный или реальный. |
+| procedure (one suggestion) | 0. With the shutter closed, count each detector's dark counts. 1. For s light from air, count reflected and transmitted photons at angles from 0° to 80° and plot y_s against sin²θ. 2. Repeat for p light below the angle where the reflection vanishes, with y_p. 3. Set the source at ψ and record the analyser's counts from 0° to 180°; plot them against cos²(α − ψ). 4. With unpolarised light, set the analyser along p and find the angle of complete polarisation. Decide where the dark counts and the dead time matter. / 0. При закрытой заслонке посчитайте темновой счёт каждого детектора. 1. Для света с поляризацией s из воздуха посчитайте отражённые и прошедшие фотоны при углах от 0° до 80° и постройте y_s в зависимости от sin²θ. 2. Повторите для света p при углах меньше того, где отражение исчезает, с y_p. 3. Поставьте источник под углом ψ и запишите отсчёты анализатора от 0° до 180°; постройте их в зависимости от cos²(α − ψ). 4. С неполяризованным светом поставьте анализатор вдоль p и найдите угол полной поляризации. Решите, где важны темновой счёт и мёртвое время. |
+| record and hand in | the counts with their errors, the plots and fits (model, points used, parameters with errors, χ²), the dark counts and how you used them, the index n found in each way and Brewster's angle, and why you chose these angles. / отсчёты с погрешностями, графики и аппроксимации (модель, использованные точки, параметры с погрешностями, χ²), темновой счёт и как он учтён, показатель n, найденный каждым способом, и угол Брюстера, а также почему выбраны эти углы. |
 
 ### 3.5 Polarisation through the bench, strictly computed (the owner, answer 2)
 
@@ -481,8 +512,11 @@ M_R = diag(r_p, r_s) and the transmission matrix M_T = diag(η_p t_p, η_s t_s),
 θ_t)/Re(n_in cos θ)) for s and its p counterpart, as `stack` defines T_s and T_p), each in the outgoing beam's basis
 under the engine's sign convention, which the module states and tests. Then ρ_R = M_R ρ M_R† and ρ_T = M_T ρ M_T†, their
 traces the probabilities P_R and P_T, and P_A = 1 − P_R − P_T. Beyond the critical angle |r_s| = |r_p| = 1 with
-different phases, so a linear input comes back elliptical, with the phase difference δ = δ_p − δ_s given by
-tan(δ/2) = cos θ √(sin²θ − n²)/sin²θ (n = n_out/n_in < 1): the bench draws the reflected polarisation ellipse from ρ_R.
+different phases, so a linear input comes back elliptical, with the phase difference δ given by tan(δ/2) = cos θ
+√(sin²θ − n²)/sin²θ (n = n_out/n_in < 1; Stratton 1941, §9.7, checked by E35): the bench draws the reflected
+polarisation ellipse from ρ_R. **[error in earlier]** The formula holds for δ = δ_p − δ_s when δ_p, δ_s are the phase
+*advances* on reflection; in the engine's terms (r = |r|e^{i arg r}, time factor e^{−iωt}) δ = arg r_s − arg r_p
+(E35, `scratchpad/ex2/e35/PROGRESS.md`).
 
 **The analyser** in each detector arm: a rotatable polarising beam splitter at angle α from p̂, with the principal
 transmittances k₁ (along its axis) and k₂ (across), a stated device property: ideal k₁ = 1, k₂ = 0 by default; a real
@@ -516,24 +550,27 @@ add: Malus's law against the closed form; the reflected degree of polarisation a
 against the closed form; the probabilities' sum; and the photon counts of all five outcomes against the Born
 probabilities (the exact binomial tails with Bonferroni, failing below 5σ, as `stat` does for three).
 
-**Explore «Polarisation»** (`polarisation`): TIR's phase. Glass A from inside × θ {42, 45, 48, 51, 54, 57, 60, 65, 70,
-80}° × the analyser α {0°, 15°, …, 165°}, the source linear at 45°: 120 points, 20 000 photons. What changes visibly:
+**Explore «Polarisation»** (`polarisation`): TIR's phase. N-BK7 from inside × θ {35, 40, 42, 45, 48, 51, 54, 57, 60, 65,
+70, 80}° × the analyser α {0°, 15°, …, 165°}, the source linear at 45°: 144 points, 20 000 photons. **[error in
+earlier]** The first grid had no point below θ_c = 41.30° (E35); 35° and 40° show the linear case, where the analyser
+finds a zero (on the 15° grid 0.0105 and 0.0001 of the light at its best setting, E35's numbers). What changes visibly:
 below θ_c the reflected light is linear and the analyser finds a zero; beyond it the light is elliptical, the
-analyser's minimum rises, largest at θ = 51.2° where δ is largest, 46.3° for n = 1.515 (the principle of
-Fresnel's rhomb). *Estimate* 1.2 MB.
+analyser's minimum rises, largest at θ = 51.17° where δ is largest, 46.29° (the analyser's minimum 0.1545 of the light;
+E35 confirmed these), the principle of Fresnel's rhomb. *Estimate* 1.4 MB.
 
 ### 3.6 Sizes and cost of u35
 
 | item | grid | size | CPU |
 |---|---|---|---|
-| Watch `story` | 50 s, 20 fps | 0.87 MB *measured* without the analyser; ~0.9 MB with it | 0.6 s |
-| more: `tir`, `brewster`, `spr` | as today, with captions | 0.43 MB *measured* today | 0.6 s |
-| Explore «Boundary» = Lab part 1 | 444 | **4.6 MB** *estimate* (9.8–10.8 kB *measured* with the pool emulated) | ~10 s |
-| Explore «Coatings» | 65 | 1.0 MB *estimate* | ~4 s |
-| Explore «Polarisation» | 120 | 1.2 MB *estimate* | ~3 s |
+| Watch `story` | 50 s, 20 fps | 0.87 MB *measured* without the analyser; ~0.9 MB with it (W35 re-times it for 2·10⁵ photons per second) | 0.6 s |
+| more: `tir`, `brewster`, `spr` | as today, with captions, real materials | 0.43 MB *measured* today | 0.6 s |
+| Explore «Boundary» = Lab part 1 | 456 | **4.8 MB** *estimate* (9.8–10.8 kB *measured* with the pool emulated) | ~10 s |
+| Explore «Coatings» | 91 | 1.4 MB *estimate* | ~5 s |
+| Explore «Polarisation» | 144 | 1.4 MB *estimate* | ~4 s |
+| Lab part 0 «Dark counts» | 3 | ~15 kB | — |
 | Lab part 2 «Malus» | 114 | 1.1 MB *estimate* | ~3 s |
-| Lab part 3 «Polarisation by reflection» | 273 | 2.7 MB *estimate* (100 000 photons; the clicks do not grow with the count) | ~15 s |
-| **u35 world** | | **11.9 MB** (target 12) | ~40 s |
+| Lab part 3 «Polarisation by reflection» | 294 | 2.9 MB *estimate* (100 000 photons; the clicks do not grow with the count) | ~15 s |
+| **u35 world** | | **12.9 MB** (target 12, limit 25: over the target, accepted with its reason, §6) | ~40 s |
 
 The estimates for the analyser's points take the *measured* pooled point (about 10 kB) as their size: the analyser
 adds two outcomes to the clicks' codes and a few numbers to the frames. W35 measures them.
@@ -547,15 +584,75 @@ adds two outcomes to the clicks' codes and a few numbers to the frames. W35 meas
 | left form: the parameters of six structures, the source and the analysers; actions «Emit one photon», «Reset the counters» | hidden | unchanged |
 | right: «Set-up of this segment», «Photons», «Approximations» | into «How we know this is right» | unchanged |
 
-### 3.8 What the world gains (W35, after E35)
+### 3.8 What the world gains (W35, after E35 and E37's detector model)
 
-The source's linear polarisation at ψ; an analyser (a polarising beam splitter with two detectors) before each
-detector, in or out, at α, with k₁ and k₂ as device parameters; the structure «none»; the five outcomes and their
-counts; the polarisation ellipse of each beam drawn from its ρ; unpolarised photons grey. Measurables: `n_R`, `n_T`,
-`n_A`, `n`, the analysers' `n_pass` and `n_reject`, `R_frac` and `T_frac` with their binomial errors and the computed R
-and T as references. Presets `malus` and `brewster_analyser`. `lab_reference` for the computed values of §3.4.
-`QUANT_SAFE` for the curves, the field, the depth grid, the clicks' times and the packets. The coatings' labels (§3.3).
+The source's linear polarisation at ψ, its photon rate (2·10⁵ s⁻¹ on the benches) and its line width (a Gaussian of
+FWHM Δλ; each photon's λ drawn from it: §11, item 26); an analyser (a polarising beam splitter with two detectors)
+before each detector, in or out, at α, with k₁ and k₂ as device parameters; real detectors (efficiency, dark counts,
+dead time; `theories.models.photodetector`, §4.7) as device parameters with the ideal detector as the default of the
+live player; the structure «none»; the five outcomes and their counts, the dark counts among them; each photon's
+detection time including the structure's group delay (§11, item 27); the polarisation ellipse of each beam drawn from
+its ρ; unpolarised photons grey; the materials of §3.9 for every medium and layer, a constant index only as «model
+medium». Measurables: `n_R`, `n_T`, `n_A`, `n`, the analysers' `n_pass` and `n_reject`, `R_frac` and `T_frac` with
+their binomial errors and the computed R and T as references. Presets `malus`, `brewster_analyser`, and the existing
+ones on real materials (the Kretschmann preset: 50 nm of gold on N-BK7, R_p smallest at 43.785°). `lab_reference` for
+the computed values of §3.4. `QUANT_SAFE` for the curves, the field, the depth grid, the clicks' times and the packets.
 `version` 1.0 → 1.1.
+
+### 3.9 Real materials: the engine contract (E35, second part)
+
+The owner, 2026-11-18 (§9): «да, нужно добавить все до реальных физических явлений». **[error in earlier]** §3.3's
+constant indices and §3.2's «glasses A, B, C» of chosen indices give way to real, dispersive materials; a constant
+index stays available only as a «model medium», said so.
+
+**The materials** (each a `DATASETS` entry of `lfphys.core.data`, its own, as STATUS V52 (w) asks; the numbers are
+facts, transcribed from their sources; where a transcription was taken from the refractiveindex.info database, that
+database is CC0 1.0, its `LICENSE` checked on 2026-11-18, and the original publication is cited beside it; `AGENTS.md`
+rule 8 holds: no code is copied):
+
+| id | material | source | range | at 632.8 nm (the design's check) |
+|---|---|---|---|---|
+| `schott_n_bk7` | N-BK7 (crown) | SCHOTT data sheet: Sellmeier B₁–B₃, C₁–C₃ and the internal transmittance (→ κ) | 0.3–2.5 µm | 1.51509 (the N-BK7HT sheet of the same constants prints 1.51509; n_d 1.51680) |
+| `schott_n_f2` | N-F2 (flint) | SCHOTT data sheet | 0.365–2.5 µm | 1.61658 (printed 1.61658; n_d 1.62005) |
+| `schott_n_sf11` | N-SF11 (dense flint) | SCHOTT data sheet | 0.37–2.5 µm | 1.77860 (printed 1.77860; n_d 1.78472) |
+| `mgf2_dodge_o` | MgF₂, ordinary ray (bulk crystal), 19 °C | M. J. Dodge, Appl. Opt. 23, 1980 (1984): Sellmeier | 0.2–7.0 µm | 1.37698 |
+| `mgf2_film_rodriguez` | MgF₂ film, 44 nm, evaporated at 250 °C | L. V. Rodríguez-de Marcos et al., Opt. Mater. Express 7, 989 (2017): n, κ as the authors gave them to the database | 0.03–2.0 µm | 1.42118 + 0.00054i |
+| `sio2_malitson` | fused silica, 20 °C | I. H. Malitson, J. Opt. Soc. Am. 55, 1205 (1965): Sellmeier | 0.21–3.71 µm | 1.45702 |
+| `sio2_film_gao` | SiO₂ film, 300 nm, ion-assisted e-beam | L. Gao, F. Lemarchand, M. Lequime, J. Eur. Opt. Soc. Rap. Publ. 8, 13010 (2013) | 0.252–1.25 µm | 1.47615 |
+| `ta2o5_film_gao` | Ta₂O₅ film, 400 nm, ion-assisted e-beam | L. Gao, F. Lemarchand, M. Lequime, Opt. Express 20, 15734 (2012) | 0.35–1.8 µm | 2.13576 |
+| `au_johnson_christy`, `ag_johnson_christy` | gold, silver (films, room temperature) | P. B. Johnson, R. W. Christy, Phys. Rev. B 6, 4370 (1972), Table I | 0.188–1.94 µm | Au 0.184 + 3.431i, Ag 0.056 + 4.276i (linear between the table's nodes) |
+| `al_rakic` | aluminium (evaporated films) | A. D. Rakić, Appl. Opt. 34, 4755 (1995) | 0.1 nm–200 µm | 1.448 + 7.537i |
+
+The design checked N-BK7, N-F2 and N-SF11 against the SCHOTT data sheets (Appendix B: the constants and the printed
+n(632.8 nm) agree to the last digit with the database's 2017 catalogue). E35 checks every other entry against its
+paper's printed coefficients or table where the paper is accessible, and says in the entry which text it was checked
+against; where the numbers exist only as the authors gave them to the database (the two Gao films, the MgF₂ film), the
+entry says so. Temperature: each dataset at its stated temperature; SCHOTT's dn/dT constants are recorded for a later
+thermal bench.
+
+**The module** `lfphys.core.optics.materials` (new, core: measured data with their sources, as `LAYERS.md` §1 admits):
+`index(material, lam_nm)` → the complex index n + iκ (κ ≥ 0, the engine's convention); `info(material)` → the title,
+range, temperature, source and how the entry was checked; the Sellmeier forms as each source writes them (SCHOTT:
+n² − 1 = Σ B_i λ²/(λ² − C_i); Dodge and Malitson: n² − 1 = Σ A_i λ²/(λ² − λ_i²)); tabulated n and κ interpolated by a
+shape-preserving cubic (PCHIP) in λ, κ in ln κ, the interpolation's error estimated by leaving out each node and
+stated in `info`; outside the range a coded refusal (`material.out_of_range`). `interfaces.stack` takes the complex
+indices as today.
+
+**Tests** (`lfphys/tests/test_materials.py`): the SCHOTT glasses against their sheets' printed indices (n_d, n_F, n_C,
+n(632.8), to the printed 1e-5); every tabulated entry reproduces each node exactly and stays within its stated
+interpolation error between them; κ ≥ 0; the refusals; `stack` with a material equals `stack` with the same complex
+index typed in.
+
+**The time inside the structure** (§11, item 27), in the same step: `interfaces.group_delay(ns, ds, lam, theta, pol)`
+→ the group delays dφ/dω of r and t (the transfer matrix differentiated in ω with each material's dispersion, by the
+complex step), so that a photon's detection time includes the structure's delay; tested against the closed form of a
+lossless slab and against the frustrated-TIR (Hartman) delay of a gap computed by finite differences.
+
+**What u35 does with them** (W35): the samples are N-BK7, N-F2 and N-SF11 at the HeNe line 632.8 nm (θ_B 56.574°,
+58.259°, 60.654°; θ_c from inside 41.302°, 38.213°, 34.211°); the coatings are real (§3.3); the metal film is gold
+(Johnson and Christy) and the Kretschmann preset puts 50 nm of it on N-BK7: the engine's R_p is smallest, 0.0058, at
+43.785° (*computed*, Appendix A.7); a constant-index medium remains as «model medium, index n» for the live player.
+Dispersion enters wherever λ varies: the coatings screen, the source's line width (§11, item 26).
 
 ---
 
@@ -564,23 +661,33 @@ and T as references. Presets `malus` and `brewster_analyser`. `lab_reference` fo
 ### 4.1 Watch: yes — «Pairs, S above 2, and a local model» (recording `story`)
 
 The pairs arrive one by one and S emerges from their counts: a statistical build-up with a threshold (2) that the
-quantum world crosses and a local world does not. Recording `story`: the preset `photon_chsh` (random choice τ = 100 ns
-before arrival, L = 500 m, 10⁶ pairs per second); 50 s at 20 fps; the script's speed 8.34·10⁻⁷ world s per played s
-(a flight in 2 s, about one pair per played second), from 10 s 2·10⁻⁴ (200 pairs per played second); at 34 s a new
-world, `photon_lhv` (flagged «MODIFIED PHYSICS» by the player for the rest of the recording), at the same speed.
+quantum world crosses and a local world does not. Recording `story` (as first designed; revised for round 3 below): the
+preset `photon_chsh` (random choice τ = 100 ns before arrival, L = 500 m, 10⁶ pairs per second); 50 s at 20 fps; the
+script's speed 8.34·10⁻⁷ world s per played s (a flight in 2 s, about one pair per played second), from 10 s 2·10⁻⁴ (200
+pairs per played second); at 34 s a new world, `photon_lhv` (flagged «MODIFIED PHYSICS» by the player for the rest of
+the recording), at the same speed.
 
-*Measured*: 1 000 frames, two worlds, 0.64 MB, 0.7 s of CPU; 45 check rows: 36 ✓, 7 without a reference, 2 for
+*Measured* (before round 3: ideal detectors, a choice per pair, 10⁶ pairs per second): 1 000 frames, two worlds,
+0.64 MB, 0.7 s of CPU; 45 check rows: 36 ✓, 7 without a reference, 2 for
 information. The first pair is detected at 3.3 s; the world's event «Violation of the CHSH inequality by 6.2σ: S =
 3.077 ± 0.175 (204 pairs)» comes at 10.9 s (an early fluctuation 1.4σ above 2√2); at 33.9 s S = 2.864 ± 0.040 after
 4 938 pairs, 21.8σ above 2; in the local world at 49.9 s S = 1.458 ± 0.066 after 3 217 pairs (the model's √2 = 1.414).
 
+**Revised for real detectors (round 3, §4.7).** The story's stations have the benches' detectors (η 0.70, 300 dark
+counts per second, 50 ns dead time, 0.5 ns jitter, w = 2 ns) and choose their settings per locally defined slot of
+1 µs; the source sends 10⁴ pairs per second **[error in earlier: a choice «shortly before each photon arrives» and
+10⁶ pairs per second with ideal detectors]**. Pairs are then 100 µs apart on average while one flies 1.67 µs, so W37
+places the script's speed changes on the computed run's emission times, as W35 does (§3.1): slow through the first
+pairs' flights, about 0.04 from 10 s (200 coincidences per played second at 0.70² of the pairs). The captions below
+say «slot» and «coincidences»; W37 measures the recording again.
+
 | at, s | script | caption (EN / RU) | its event |
 |---|---|---|---|
 | 0 (hold 3) | `speed` 8.34·10⁻⁷ | «A source in the middle sends pairs of polarisation-entangled photons to Alice (left) and Bob (right), 500 m away on each side, one pair at a time.» / «Источник в середине посылает по одной паре запутанных по поляризации фотонов к Алисе (слева) и Бобу (справа); каждый из них в 500 м от источника.» | the first emission |
-| 3 | — | «Shortly before each photon arrives, its station picks one of its two polariser settings at random (Alice a or a′, Bob b or b′). Each photon then gives + or −.» / «Незадолго до прихода фотона его станция случайно выбирает одну из двух установок поляризатора (Алиса — a или a′, Боб — b или b′). Каждый фотон даёт + или −.» | the first detection, 3.3 s |
-| 10 (hold 4) | `speed` 2·10⁻⁴ | «Much faster: thousands of pairs. From the counts the run computes the correlations E and S = E(a,b) − E(a,b′) + E(a′,b) + E(a′,b′). No local theory allows S above 2; here S passes 2 and settles near 2√2 ≈ 2.83.» / «Гораздо быстрее: тысячи пар. По счёту совпадений расчёт находит корреляции E и S = E(a,b) − E(a,b′) + E(a′,b) + E(a′,b′). Никакая локальная теория не допускает S больше 2; здесь S переходит через 2 и устанавливается около 2√2 ≈ 2,83.» | the violation event, 10.9 s |
-| 20 | — | «The error of S shrinks as 1/√N: after about 5 000 pairs S = 2.86 ± 0.04, more than 20 standard errors above 2.» / «Погрешность S убывает как 1/√N: после примерно 5 000 пар S = 2,86 ± 0,04 — больше чем на 20 стандартных погрешностей выше 2.» | 33.9 s |
-| 34 | `new_world` `photon_lhv`; `speed` 2·10⁻⁴ | «The same experiment in a world of local hidden variables, a deliberately changed law: each pair carries a common hidden polarisation, and each outcome depends only on it and on its own polariser.» / «Тот же опыт в мире локальных скрытых параметров — намеренно изменённом законе: каждая пара несёт общую скрытую поляризацию, и каждый исход зависит только от неё и от своего поляризатора.» | the new world, 34 s |
+| 3 | — | «At the start of each microsecond, each station picks one of its two polariser settings at random (Alice a or a′, Bob b or b′). Each detected photon gives + or −; a real detector misses about 30 % of them, so only about half of the pairs give a coincidence.» / «В начале каждой микросекунды каждая станция случайно выбирает одну из двух установок поляризатора (Алиса — a или a′, Боб — b или b′). Каждый обнаруженный фотон даёт + или −; реальный детектор пропускает около 30 % фотонов, поэтому совпадение даёт лишь около половины пар.» | the first detection, 3.3 s |
+| 10 (hold 4) | `speed` 0.04 | «Much faster: thousands of pairs. From the counts the run computes the correlations E and S = E(a,b) − E(a,b′) + E(a′,b) + E(a′,b′). No local theory allows S above 2; here S passes 2 and settles near 2√2 ≈ 2.83.» / «Гораздо быстрее: тысячи пар. По счёту совпадений расчёт находит корреляции E и S = E(a,b) − E(a,b′) + E(a′,b) + E(a′,b′). Никакая локальная теория не допускает S больше 2; здесь S переходит через 2 и устанавливается около 2√2 ≈ 2,83.» | the violation event, 10.9 s |
+| 20 | — | «The error of S shrinks as 1/√N: after about 5 000 coincidences S = 2.86 ± 0.04, more than 20 standard errors above 2.» / «Погрешность S убывает как 1/√N: после примерно 5 000 совпадений S = 2,86 ± 0,04 — больше чем на 20 стандартных погрешностей выше 2.» | 33.9 s |
+| 34 | `new_world` `photon_lhv`; `speed` 0.04 | «The same experiment in a world of local hidden variables, a deliberately changed law: each pair carries a common hidden polarisation, and each outcome depends only on it and on its own polariser.» / «Тот же опыт в мире локальных скрытых параметров — намеренно изменённом законе: каждая пара несёт общую скрытую поляризацию, и каждый исход зависит только от неё и от своего поляризатора.» | the new world, 34 s |
 | 44 | — | «Here S stays below 2: about 1.4, the most this model gives at any settings (√2).» / «Здесь S остаётся ниже 2: около 1,4 — больше эта модель не даёт ни при каких установках (√2).» | 49.9 s |
 
 **More recordings**: `chsh`, `local_model`, `scan`, with captions by W37.
@@ -589,10 +696,10 @@ information. The first pair is detected at 3.3 s; the world's event «Violation 
 
 | field | value | why |
 |---|---|---|
-| preset, fixed | `photon_chsh`; `{switch: "random", L_m: 500, rate: 1e6}` | random choice before each arrival |
+| preset, fixed | `photon_chsh`; `{switch: "random", L_m: 500, rate: 1e4}`; the devices at the benches' defaults (η 0.70, 300 dark counts per second, 50 ns dead time, 0.5 ns jitter, w = 2 ns, slots of 1 µs) | a random setting per locally defined slot (§4.7) **[error in earlier: «random choice before each arrival», 10⁶ pairs per second, ideal detectors]** |
 | controls | pair {photons, spin ½} × Δ (compound, §5 F3: a = 0, b = Δ, a′ = 2Δ, b′ = 3Δ) {0, 7.5, …, 90}° (13) × τ {100 ns, 5 µs} × law and source (compound): «quantum, ideal source», «quantum, source visibility 0.85» (a stated source property, §11 item 14), «local hidden variables» (a law control: «MODIFIED PHYSICS» at `standard`, EX1 §2.1) | defaults: photons, 22.5°, 100 ns, quantum ideal |
 | time, acts, traces | `buildup`, `now`, 5 | earlier Δ's S stay on the S(Δ) plot, faded |
-| speed, clock, stop | 4·10⁻⁴ (4 000 pairs in 10 played s); `frame_dt` a tenth of the run; `{world_s: 4.0033·10⁻³}` | §1.1 |
+| speed, clock, stop | 0.08 (about 4 000 coincidences in 10 played s: 10⁴ pairs per second × 0.70² ≈ 4 900 coincidences per second); `frame_dt` 0.08 s; `{events: {coincidence: 4000}, max_world_s: 2}` (§5 F2) | §1.1 |
 | overlays | the set-up line with the stations and the flashes, the spacetime diagram of the last pair (folded below 1000 px), E(Δ) with the measured cells, S(Δ) with the measured S and its traces, the other law's curves (all on) | the S(Δ) plot is new (§4.6) |
 | readouts | S ± σ (ref: S of the world's law and source at these settings), (\|S\| − 2)/σ, pairs counted, the fraction of pairs whose choices are space-like to the other detection | §5 F7 |
 
@@ -607,7 +714,7 @@ timing and a real source, without which the bench has no wrong ways.
 *Measured*: 16.9 kB per point at 4 000 pairs and ten frames (photons; 27.7–29.3 kB at twenty frames for spins and for
 τ = 5 µs). *Estimate*: 156 × 17 kB = **2.7 MB**.
 
-### 4.3 Lab work: the bench «Entangled photons and the Bell inequality» (three parts)
+### 4.3 Lab work: the bench «Entangled photons and the Bell inequality» (four parts)
 
 **[error in earlier]** The first version had fixed procedures, questions, answers and verdicts. Revised as a bench
 (§1.4).
@@ -620,11 +727,19 @@ they conclude «We have violated the Bell inequality.» with S = 2.307 ± 0.035.
 
 **The bench.**
 
-| part | atlas | grid | pairs per set-up |
+| part | atlas | grid | per set-up |
 |---|---|---|---|
-| 1 «The correlation E(α, β)» | own: fixed settings (preset `scan`) | pair {photons, spin ½} × a {0°, 45°, 90°} × b {0°, 7.5°, …, 180°} = 2 × 3 × 25 = 150 | 1 000 |
-| 2 «The CHSH test» | Explore's (§4.2, F9) | 156 | 4 000 |
-| 3 «The same test in a local world» | Explore's, the law «local hidden variables» (flagged) | (within the 156) | 4 000 |
+| 1 «The correlation E(α, β)» | own: fixed settings (preset `scan`) | pair {photons, spin ½} × a {0°, 45°, 90°} × b {0°, 7.5°, …, 180°} = 2 × 3 × 25 = 150 | 1 000 coincidences (a counted stop) |
+| 2 «The CHSH test» | Explore's (§4.2, F9) | 156 | 4 000 coincidences |
+| 3 «The same test in a local world» | Explore's, the law «local hidden variables» (flagged) | (within the 156) | 4 000 coincidences |
+| 4 «Real detectors» | own (§4.7): η {0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 1.00} × source (compound): «\|Φ⁺⟩ at the CHSH angles», «Eberhard state r = −2.9 at Giustina's angles», «Gisin and Gisin's local model» (flagged) × background and window (compound): «300 dark counts per second, w = 2 ns», «10⁵ background counts per second, w = 2 ns», «the same, w = 25 ns», «300 s⁻¹, w = 0.5 ns» | 7 × 3 × 4 = 84 | 10⁹ slots of 1 µs, 10⁴ pairs per second (μ = 0.01 per slot); jitter 0.5 ns, dead time 50 ns |
+
+**Real detectors in every part** (the owner, answer 3): parts 1–3 run with the benches' default devices and count
+coincidences under fair sampling, as Dehlinger and Mitchell did; each stops at its number of coincidences, so the
+ways' errors below are those designed. At 10⁴ pairs per second the accidentals (w R_A R_B, about 0.12 per second
+against 4 900 coincidences) and the double pairs (μ²/2 = 5·10⁻⁵ of the slots) change S by less than 10⁻⁴; part 4
+varies the devices. **[error in earlier]** Parts 1–3 counted pairs with ideal detectors. η = 1 stays selectable in
+the live player, a device value the passport calls an idealisation.
 
 **Instruments**: `pol_A`, `pol_B` (readouts of `control:a_deg`, `control:b_deg`, 0.5°, exact); `delta`, `tau` (readouts
 of the compound Δ and of τ, exact); `c_pp`, `c_pm`, `c_mp`, `c_mm` (counters, Poisson: the coincidences of the setting
@@ -643,24 +758,39 @@ statistics are tested against the same forms):
 | 1 | part 1, photons: E against cos 2(b − a), line through 0 | slope 1.0001 ± 0.0017 | right: a polariser's outcome depends on 2(β − α) |
 | 2 | photons: E against cos(b − a) | the points lie on 2x² − 1, not on a line | a wrong angle law: a polariser's axis has no direction (period 180°) |
 | 3 | spins: E against cos(b − a); against cos 2(b − a) | slope −1; a curve, not a line | right; the photons' law used for spins is wrong |
-| 4 | the cursor at a tenth of the run (100 pairs) | σ_E about 0.1 instead of 0.03 | too few pairs |
+| 4 | the cursor at a tenth of the run (100 coincidences) | σ_E about 0.1 instead of 0.03 | too few coincidences |
 | 5 | the four E at a ∈ {0°, 45°}, b ∈ {22.5°, 67.5°} from part 1 (fixed settings, one after another) | S = 2.83 ± 0.045 | the right value, but the settings were set long before each pair: the run's spacetime check says time-like; not a test of locality |
 | 6 | part 2, photons, Δ = 22.5°, τ = 100 ns, ideal source | S = 2.83 ± 0.045, (S − 2)/σ ≈ 18, every choice space-like to the other detection | right |
 | 7 | photons at Δ = 45°; spins at Δ = 22.5° | S = 0; \|S\| = 2.39 | the wrong angle set (the spins' optimum is 45°, their \|S\| = 2√2 there) |
 | 8 | τ = 5 µs | S = 2.83 as before, but no choice space-like to the other detection (cτ = 1.5 km > 2L = 1 km) | the locality loophole open |
-| 9 | 400 pairs (a tenth of the run); the source of visibility 0.85 | σ_S about 0.14, (S − 2)/σ ≈ 6; S = 2.40 (Dehlinger and Mitchell's 2.307 corresponds to a visibility of about 0.82) | too few pairs; a real source |
+| 9 | 400 coincidences (a tenth of the run); the source of visibility 0.85 | σ_S about 0.14, (S − 2)/σ ≈ 6; S = 2.40 (Dehlinger and Mitchell's 2.307 corresponds to a visibility of about 0.82) | too few coincidences; a real source |
 | 10 | S against x_ph over Δ, line through 0, quantum; then the local world | slope 0.9996 ± 0.0057; local 0.5003 ± 0.0085 with \|S\| ≤ √2 at every Δ | the quantum law; a local model never passes 2 |
 
-**Variants**: the pair (photons, spins), τ, the source; part 1's set of a.
+The ways of part 4 (the closed forms of §4.7 and the engine's POVMs, *computed* in the design, Appendix A.7; W37
+replaces them by the atlas's values):
+
+| # | what the student does | what follows | why |
+|---|---|---|---|
+| 11 | η = 1, \|Φ⁺⟩: S from the coincidences and CH (or J) from all slots | S = 2√2; J per pair 0.2071 = (√2 − 1)/2: both violated | right |
+| 12 | η = 0.75, \|Φ⁺⟩ at the CHSH angles: S from the coincidences only | S = 2√2 still: the losses are invisible under fair sampling | the fair-sampling assumption, so named on the bench |
+| 13 | the same set-up, CH or J from all slots | J per pair −0.071 for the best angles: no violation; the maximally entangled state needs η > 2/(1 + √2) = 82.8 % | the detection loophole |
+| 14 | η = 0.75, Eberhard state r = −2.9 at Giustina's angles, J from all slots | J > 0: per pair 0.0053 at η = 0.75, 0.0113 at Giustina's 78.6 % and 76.2 % (per slot 4.0·10⁻⁵ at their 3 500 pairs per second; their measured 7.27·10⁻⁶) | right: a weakly entangled state needs less than 2/(1 + √2) (*computed*, A.7: with r = −2.9 and the best angles J > 0 from η ≈ 0.72; with \|r\| ≤ 0.2, or ≥ 5, already at 0.70; at 0.68 with r = −0.05; never at 0.60). **[error in earlier]** The previous revision wrote «for \|r\| ≥ 0.2» |
+| 15 | η = 0.60 with any state and angles | J ≤ 0 | below 2/3 nothing violates CH or J |
+| 16 | a bright background (stray light, 10⁵ counts per second per detector), w = 25 ns, accidentals not subtracted | accidental coincidences 19 % of the true ones (R_acc = w·R_A·R_B for each of the four detector pairs): S ≈ 2.37 instead of 2.83 | a background left in the data (Dehlinger and Mitchell's accidentals) |
+| 17 | the same with w = 2 ns; or with N_acc = w N_A N_B/T subtracted | w = 2 ns: 1.8 % accidentals (and 16 % of the true coincidences lost to the jitter, erf(1) = 0.84): S ≈ 2.78; subtracted: S = 2.83 within its error | right, with the window matched to the jitter, or the background subtracted |
+| 18 | w = 0.5 ns with a jitter of 0.5 ns | only erf(0.25) = 28 % of the true coincidences inside the window: the apparent efficiency (coincidences per single) falls, CH and J are lost even at η = 0.9; S under fair sampling unchanged | a window narrower than the jitter |
+| 19 | Gisin and Gisin's local model: S from the coincidences | S = 2√2 «violated» by a local model, with 75 % detection | the detection loophole exploited; CH and J of the same data ≤ 0 |
+
+**Variants**: the pair (photons, spins), τ, the source; part 1's set of a; part 4's η and source.
 
 **Task sheet** (EN / RU):
 
 | field | text |
 |---|---|
 | goal | Measure the polarisation correlation of entangled photons and test the CHSH form of Bell's inequality. / Измерить корреляцию поляризаций запутанных фотонов и проверить неравенство Белла в форме CHSH. |
-| bench | A source of entangled pairs (photons \|Φ⁺⟩ or spin-½ singlets) between two stations 500 m away on each side; at each station an analyser with two outputs and two detectors, set by hand or chosen at random τ before each arrival; coincidence counters; a source of ideal or imperfect visibility; a world with local hidden variables for comparison (modified physics). / Источник запутанных пар (фотоны \|Φ⁺⟩ или синглеты спина ½) между двумя станциями в 500 м по обе стороны; на каждой станции анализатор с двумя выходами и двумя детекторами, установка задаётся вручную или выбирается случайно за τ до прихода частицы; счётчики совпадений; источник с идеальной или неполной видностью; для сравнения — мир локальных скрытых параметров (модифицированная физика). |
-| procedure (one suggestion) | 1. With fixed settings, count the four coincidences for α = 0° and β from 0° to 180°; compute E and plot it against cos 2(β − α). 2. With random settings at Δ = 22.5°, read E of the four setting pairs and compute S with its error. 3. Repeat at other Δ and in the local world. / 1. При фиксированных установках посчитайте четыре числа совпадений для α = 0° и β от 0° до 180°; вычислите E и постройте его в зависимости от cos 2(β − α). 2. При случайных установках и Δ = 22,5° снимите E четырёх пар установок и вычислите S с погрешностью. 3. Повторите при других Δ и в локальном мире. |
-| record and hand in | the counts and E with their errors, S with its error and (S − 2)/σ, the fits (model, points, parameters, χ²), the settings and τ you used, and your conclusion. / числа совпадений и E с погрешностями, S с погрешностью и (S − 2)/σ, аппроксимации (модель, точки, параметры, χ²), использованные установки и τ, свой вывод. |
+| bench | A source of entangled pairs (photons \|Φ⁺⟩ or spin-½ singlets) between two stations 500 m away on each side; at each station an analyser with two outputs and two detectors, set by hand or chosen at random τ before each time slot; detectors with their efficiency, dark counts, dead time and jitter; coincidence counters; a source of ideal or imperfect visibility; a world with local hidden variables for comparison (modified physics). / Источник запутанных пар (фотоны \|Φ⁺⟩ или синглеты спина ½) между двумя станциями в 500 м по обе стороны; на каждой станции анализатор с двумя выходами и двумя детекторами, установка задаётся вручную или выбирается случайно за τ до начала каждого временного интервала; детекторы со своей эффективностью, темновым счётом, мёртвым временем и разбросом времени срабатывания; счётчики совпадений; источник с идеальной или неполной видностью; для сравнения — мир локальных скрытых параметров (модифицированная физика). |
+| procedure (one suggestion) | 1. With fixed settings, count the four coincidences for α = 0° and β from 0° to 180°; compute E and plot it against cos 2(β − α). 2. With random settings at Δ = 22.5°, read E of the four setting pairs and compute S with its error. 3. Repeat at other Δ and in the local world. 4. With the detectors of part 4, compare S from the coincidences with J (or CH) from all slots at several efficiencies and windows. / 1. При фиксированных установках посчитайте четыре числа совпадений для α = 0° и β от 0° до 180°; вычислите E и постройте его в зависимости от cos 2(β − α). 2. При случайных установках и Δ = 22,5° снимите E четырёх пар установок и вычислите S с погрешностью. 3. Повторите при других Δ и в локальном мире. 4. С детекторами части 4 сравните S по совпадениям с J (или CH) по всем интервалам при нескольких эффективностях и окнах. |
+| record and hand in | the counts and E with their errors, S with its error and (S − 2)/σ, the fits (model, points, parameters, χ²), the settings and τ you used, in part 4 the devices, J or CH with its error and the accidentals, and your conclusion. / числа совпадений и E с погрешностями, S с погрешностью и (S − 2)/σ, аппроксимации (модель, точки, параметры, χ²), использованные установки и τ, в части 4 — приборы, J или CH с погрешностью и случайные совпадения, свой вывод. |
 
 ### 4.4 Sizes and cost of u37
 
@@ -670,7 +800,8 @@ statistics are tested against the same forms):
 | more: `chsh`, `local_model`, `scan` | as today, with captions | 0.13 MB *measured* today | 1.5 s |
 | Explore = Lab parts 2 and 3 | 2 × 13 × 2 × 3 = 156 | **2.7 MB** *estimate* (16.9 kB *measured* at ten frames) | ~6 s |
 | Lab part 1 | 150 | 1.35 MB *estimate* (9–10 kB *measured*) | ~3 s |
-| **u37 world** | | **4.8 MB** (target 12) | ~12 s |
+| Lab part 4 «Real detectors» | 84 | 1.4 MB *estimate* (17 kB per point *measured* for today's points of ten frames; the counts are drawn per setting pair from the exact multinomial, so 10⁹ slots cost no more than 10⁴) | ~5 s |
+| **u37 world** | | **6.2 MB** (target 12) | ~17 s |
 
 ### 4.5 What folds away at `ui: "standard"`
 
@@ -681,15 +812,67 @@ statistics are tested against the same forms):
 | left form: pairs, the particles' speed, law, L, rate, choice, τ, the four angles, the source's visibility | hidden | unchanged |
 | right: «Set-up and spacetime», «Counters», «Last pairs» | into «How we know this is right» | unchanged |
 
-### 4.6 What the world gains (W37)
+### 4.6 What the world gains (W37, after E37)
 
-Frames get `meas` (u37 has none today) and the header `measurables`: `n_pp`, `n_pm`, `n_mp`, `n_mm` of the pair (a,
-b), `E_ab` … `E_a2b2` with their errors, `S` with its error and the law's S as its reference, the pairs counted, the
-space-like fraction. The source's visibility V as a world parameter (§11, item 14): the pair's state ρ = V|ψ⟩⟨ψ| + (1 −
-V) I/4, sampled by the Born rule (`qubits` already samples density matrices), with the checks' references times V; V
-= 1 is the standard, and V < 1 is a stated source property, not modified physics. A header blob of the law's S(Δ) in
-the CHSH geometry for both laws, computed with the world's own `Law.E`. `lab_reference` for the computed values of
-§4.3. The view: §1.3 and the S(Δ) plot with traces. `version` 1.0 → 1.1.
+Frames get `meas` (u37 has none today) and the header `measurables`: `n_pp`, `n_pm`, `n_mp`, `n_mm` of the pair (a, b),
+`E_ab` … `E_a2b2` with their errors, `S` with its error and the law's S as its reference, the pairs counted, the
+space-like fraction, and for part 4 the singles, the coincidences, the accidentals' estimate, S with and without the
+subtraction, CH and J with their errors. The source's visibility V (ρ = V|ψ⟩⟨ψ| + (1 − V) I/4) and Eberhard parameter r;
+the detectors and the slots of §4.7 (device parameters; the benches' default is η 0.70 with part 4's other values, and
+η = 1 stays selectable as a named idealisation; **[error in earlier: «the ideal detector stays the default of the live
+player and of parts 1–3»]**); the stations at their own distances L_A and L_B (§11, item 38). A header blob of the law's
+S(Δ) in the CHSH geometry for both laws, computed with the world's own `Law.E`. Gisin and Gisin's model as a third law
+value (flagged). `lab_reference` for the computed values of §4.3. The view: §1.3, the S(Δ) plot with traces, and part
+4's per-slot outcomes («+», «−», «0») in the set-up line. `version` 1.0 → 1.1.
+
+### 4.7 Real detectors and the inequalities without fair sampling: the engine contract (E37)
+
+The owner, 2026-11-18 (§9): «если это будет ближе к реальной физике, то нужно делать». **[error in earlier]** The
+previous revision left real detectors to the owner and kept «ideal detectors» on the bench.
+
+**What real experiments show** (quoted; Appendix B):
+- Giustina et al., Phys. Rev. Lett. 115, 250401 (2015) (arXiv:1511.03190): «The Clauser-Horne (CH) [36] or the
+  Eberhard [37] inequality can be derived without the fair-sampling assumption. These inequalities can be violated with
+  system heralding efficiencies larger than 2/3.» Their CH–Eberhard form is J ≡ p₊₊(a₁b₁) − p₊₀(a₁b₂) − p₀₊(a₂b₁) −
+  p₊₊(a₂b₂) ≤ 0, «+» a detection and «0» none in a trial, and «Our experiment employed locally defined time slots and
+  was thus also not vulnerable to the coincidence-time loophole». They set «a state with r ≈ −2.9» with the angles
+  a₁ = 94.4°, a₂ = 62.4°, b₁ = −6.5°, b₂ = 25.5° and system efficiencies of about 78.6 % and 76.2 %.
+- Shalm et al., Phys. Rev. Lett. 115, 250402 (2015) (arXiv:1511.03189): «Eberhard showed that at least 2/3 of the
+  particles must be detected [19] if nonmaximally entangled states are used.», «However, relying on this assumption
+  opens the “detector” or “fair-sampling” loophole.» and «These background counts in our system raise the efficiency
+  needed to violate a Bell inequality from 2/3 to 72.5 %.»
+- Gisin and Gisin, Phys. Lett. A 260, 323 (1999) (arXiv:quant-ph/9905018): a local model that reproduces the singlet's
+  correlations through the detection loophole: «On average the detector efficiency is limited to 75%.», and «Hence,
+  quantum mechanics predicts that the CH inequality (15) can be violate, and thus lhv models definitively ruled out,
+  only with detector’s efficiencies higher than 82.8%!» (sic).
+- Dehlinger and Mitchell (2002), the undergraduate lab of §4.3, compute the accidental coincidences N_acc = τ N_A N_B/T
+  for a coincidence window τ = 25 ns and say: «This background is small, nearly constant, and acts to decrease |S|.»
+
+**The engine** (`lfphys/LAYERS.md`):
+
+| module | layer | content | tests against |
+|---|---|---|---|
+| `core.quantum.qubits` (extended) | core | POVMs of a station: an analyser at θ followed by one detector («+» or «0») or by two («+», «−», none, both), with efficiency η and a dark-click probability per trial p_d; joint probabilities of POVMs on a two-qubit ρ; the Eberhard states (\|VH⟩ + r\|HV⟩)/√(1 + r²) and Werner mixtures V\|ψ⟩⟨ψ\| + (1 − V)I/4 | η = 1, p_d = 0 gives the projectors; every joint distribution sums to 1; S of a Werner state = V·2√2 |
+| `theories.models.photodetector` (new) | theories/models: a device model with measured parameters; its conflicts: afterpulsing, twilight events, a count-rate-dependent efficiency and non-Gaussian jitter tails are not modelled | the detector in time: efficiency η (each photon detected with probability η), dark counts (a Poisson process of rate d), a non-paralysable dead time t_d, Gaussian timing jitter σ_j (a stated shape), the coincidence logic (window w) and the locally defined time slots (length T_s); closed forms: the observed rate m = (ηR + d)/(1 + (ηR + d)t_d), the accidental coincidence rate R_acc = w·R_A·R_B (Dehlinger and Mitchell's N_acc = τN_AN_B/T), the share of true coincidences inside the window erf(w/(4σ_j)) | Monte Carlo of the time stream for each closed form (5σ); the limits η → 1, d → 0, t_d → 0, σ_j → 0 |
+| `tools.bell_stats` (extended) | tools | per trial: CHSH from coincidences (under fair sampling, so named), with or without the accidentals subtracted; CH in Gisin and Gisin's form (their inequality (15), checked against their text by E37) and CH–Eberhard J (Giustina's eq. (1)), each with its multinomial standard error and z; the trial's outcome probabilities with a Poisson number of pairs per slot (mean μ = R·T_s: multi-pair emission) and dark clicks; the efficiency thresholds: for the maximally entangled state the CH threshold 2/(1 + √2) = 0.8284, and the minimum over states and angles approaching 2/3 for weakly entangled states | Monte Carlo of whole runs (the estimators unbiased, their errors' coverage); J for Giustina's state, angles and efficiencies against the closed form (*computed* in the design, Appendix A.7); the thresholds against a direct search over angles and states |
+| `theories.alternatives.local_hidden` (extended) | theories/alternatives | Gisin and Gisin's detection-loophole model (the singlet's correlations among the detected pairs; detection depends on the hidden variable; 75 % on average) | its detected correlation −a·b, its average efficiency 0.75, CH ≤ 0 at every setting sampled, CHSH under fair sampling 2√2 at the optimal angles |
+
+**Statistics of long runs.** A violation without fair sampling is small per trial (Giustina: J = 7.27·10⁻⁶ per trial,
+quantum mechanics «about 4 × 10⁻⁵»), so the bench needs 10⁷–10⁹ trials per set-up. The world draws the trials' outcome
+counts per setting pair from the engine's exact multinomial (the slots are independent when t_d and σ_j are far below
+T_s, a stated condition the run checks), and simulates in time only the slots it shows (flashes, the spacetime
+diagram). The significance is the normal approximation of J's multinomial error, stated as such; the experiments'
+martingale p-values without the i.i.d. assumption (Giustina: «without assuming independent and identically distributed
+experimental trials») are recorded for later (§11, item 31).
+
+**The world** (W37, after E37): the settings switch per locally defined slot (each station's random bit at the slot's
+start; **[error in earlier]**: today's choice «τ before each particle arrives» needs the arrival's time, which a real
+station does not know, and leaves a dark count without a setting); the device parameters in the schema's group
+«Devices» (η of each detector, dark-count rate, dead time, jitter, window, slot length), not modified physics; the
+source's pair rate, visibility and Eberhard parameter r; per slot the outcomes «+», «−», «0»; measurables: the singles,
+the coincidences, the accidentals' estimate, S (fair sampling) with and without subtraction, CH, J, each with its error;
+checks: each estimator against the engine's prediction for the same devices and source (5σ), the bounds (2 for CHSH
+and 0 for CH and J), the thresholds.
 
 ---
 
@@ -701,6 +884,13 @@ rewritten, and two packing changes are added: F9 (one atlas for an Explore scree
 blobs shared by an atlas's points). F1–F5 and F7 stand as built. All of them touch `server/lfviz/`, `site/` or the
 player, which every key covers, so they land in one step and every world is recorded again once.
 
+**Revised again on 2026-11-18 (round 3).** Step F is done (commit 00b0439); its corrections are the notes after the
+rows. Two small changes are new, for the follow-up step F2 (§8): F11, the fit's p beyond the double's range, and F12,
+Watch's time label. Real detectors, real materials and the re-audit (S03 included) need no other framework change:
+the devices' parameters are schema parameters in the group «Devices» (`Param.group`, as built), a material is a
+select parameter that a compound control may set, the counts and their combinations use F4 and F5, and the bounds
+and offsets are readouts and drawer values.
+
 | # | change | files | reason |
 |---|---|---|---|
 | F1 | **The screen's time scale.** An Explore screen or a lab step may declare `speed`: world seconds per played second, or `"world"` (the point's own default speed, from its `state` message, which the packed point keeps). Its atlas takes either `frame_dt` (world seconds) or `fps` (frames per played second at the world's default speed). «normal / slow» multiply the screen's speed by 1 and ¼; the time label states the world's time and the factor (details as built, below). | `registry`, `atlases_of`, `site/sitelib.py`, `site/atlas.py`, `atlas_live.py`, `player/js/{atlas,explore,lab,demo}.js` | §1.1: u34 0.05 s per orbit, u35 1 ns per photon, u37 2 µs per pair; u34's periods differ 15× |
@@ -711,8 +901,10 @@ player, which every key covers, so they land in one step and every world is reco
 | F6 | **Lab work is a bench: nothing hidden, nothing judged.** (a) Lab work's drawer is Explore's: every check with its computed value, reference, relative difference, tolerance and note; the events with their texts and times; «Physics of this world»; the passport. **[error in earlier]** The concealment this row first specified (verdicts only, events by kind) and EX1's D10 (the events' times left out in Lab work) are withdrawn. (b) A step may declare `overlays` and `readouts` exactly as an Explore screen does, the view's defaults otherwise; a view draws in Lab work what it draws in Explore. **[error in earlier]** The contract «draw nothing a step asks the student to find» is withdrawn. (c) **No verdict on the student's data.** «Check against the law» goes, with its ✓/✗, its bound of k errors or Student's t and its «no verdict» (EX1 D4). The fit is a tool: for the model the student chooses it prints the parameters with their σ from the declared errors, χ², the degrees of freedom, χ²/dof, the p-value of χ², and the Birge ratio √(χ²/dof); when χ²/dof > 1 it prints, on a second line, the σ scaled by that ratio, and the student decides which to report (**[error in earlier]** EX1's D3 scaled them silently); without declared errors it says that the σ come from the scatter. (d) A step's `laws` stay as data, optional: the world's computed values for the bench (`lab_reference`, unchanged), listed in the drawer under «Computed for this bench» with the quantity and the columns they belong to («slope of L against √h: 0.6774 m^(1/2); formula k = v₀·√(2/g)»), never set beside the student's fit; the registry no longer requires the step's plot to be one of its laws. (e) The table (one row per set-up, EX1 D5), its CSV, the plot and the fit stay as conveniences; the students record and hand in their own measurements. (f) «MODIFIED PHYSICS» in Lab work stays (as built). | `player/js/lab.js`, `fit.js` (output only; the algorithms unchanged), `demo.js howWeKnow`, `registry._check_lab`, `_check_laws`, `RULES.md` §10 | the owner, 2026-11-18 (§9): «это не проверочная работа, учащиеся не отвечают на вопросы и от них ничего не нужно скрывать … он уже сам проверяет и говорит у кого правильно получилось» |
 | F7 | **Readouts with an error and a reference; the CSV of the shown point.** A measurable may declare `sigma`, `ref` and `ref_label`; «CSV of this point» at `standard` (as built, below). | `explore.js`, `registry`, `site/atlas.py` | V52 (m); the mechanism of V52 (n) |
 | F8 | **The task sheet, the teacher's variants, and the packing details.** (a) `worksheet` becomes a task sheet: `basis` (as built: required at `standard`, `frp` at school), `goal: T`, `bench: [T]` (what the bench is and what can be set on it), `procedure: [T]` (one suggested procedure, not the only one), `record: [T]` (what to record and hand in), `record_rows` (blank rows per step, default 10), `variants`. **[error in earlier]** `questions` with their answers, `teacher` notes, `grading` and the «For the teacher» / «For the instructor» pages and switch are removed (EX1 §2.3 and this row's first form). The sheet prints the head (name, group, date), the basis with its quotations, the goal, the bench with its instruments (generated from the steps), the procedure, the record list, blank tables and plot frames, the attribution line on every page. (b) **The teacher changes the task**, on the static site too: `variants: [{id, label, grade?, steps?, values?: {<step>: {<control id>: value}}, text?: {goal?, procedure?, record?}}]` are tasks computed in the atlases (several glasses, several orbit families, several analyser settings); `&variant=<id>` on `run.html` (Lab work) and on `worksheet.html` preselects the controls (nothing is locked: the bench stays whole) and prints that variant's sheet with its id. `worksheet.html` makes the goal, the procedure, the record list and a free field «Task from the teacher» editable before printing (contenteditable, «Restore the original»; kept in `localStorage` per world and variant, a convenience); nothing is sent anywhere. (c) «Computed for this bench» can be printed on a page of its own (`&computed=1`): the same values the drawer shows, for the teacher's convenience. The teacher gets nothing else: the bench is open, and judging is the teacher's (§1.4). (d) `drop.blobs: ["<type>.<blob>", …]` (`*` at the end of a blob name) drops blobs of any message type; `anchors()` and `worldToPx` are required of a view only when a lab step uses a `ruler` or a `protractor` (both as built). | `registry` (`_check_worksheet`, `_check_variants`), `player/js/worksheet.js`, `worksheet.html`, `demo.js` and `lab.js` (`variant`), `headless.Packer`, `RULES.md` §7 (glossary: «task sheet» / «бланк задания»), §10 | the owner: «задачу преподаватель может изменить, замеры и записи студенты делают отдельно и сдают преподавателю» |
-| F9 | **One atlas for an Explore screen and its lab steps.** A lab step may declare `atlas: "<Explore screen id>"`: its points are that screen's (preset, fixed values, controls, clock, stop, seed); the step adds its own instruments, columns, plot, laws and overlays. The shared atlas's spec covers the laws of every step that uses it (so its key does), and its manifest's `references` holds them as `<step>/<law>`. | `registry` (`atlases_of`: no atlas of its own for such a step; the screen must exist and have no law the step contradicts), `site/atlas.py` (the references), `lab.js` (opens the screen's manifest) | u35: the reflection bench is Explore «Boundary» (one atlas of 444 points, not two); u37: the CHSH bench is Explore (156 points) |
-| F10 | **A pool of blobs shared by an atlas's points.** After every point of an atlas is computed, each packed blob (after quantisation) whose bytes occur in two or more points is stored once in `pool.<hash8>.lfpt.gz` (one message whose blobs are named by the first 16 hex digits of their sha256, in the order of first use) and replaced in the points by a descriptor `{pool: "<sha16>"}`; the manifest names the pool (`{file, bytes_gz, sha256}`) as it names the base; a reader fetches it once per atlas; a missing pool, or one of another size, makes the atlas `stale`. Live points are never pooled. `ATLAS_VERSION` 2 → 3. | `headless.Packer` (a second pass), `site/atlas.py` (keeps an atlas's packed messages in memory: u35's largest, 444 points, about 30 MB), `sitelib`, `protocol.decode`, `player/js/{api,atlas}.js`, `site/check.py`, `tests/test_atlas.py`, `test_protocol_quant.py` | u35's angle curves are the same for every θ and polarisation of a glass and side: *measured* 15–18 kB per point → 9.8–10.8 kB (−37 %); u35's world about 18 MB → 11.9 MB (§6) |
+| F9 | **One atlas for an Explore screen and its lab steps.** A lab step may declare `atlas: "<Explore screen id>"`: its points are that screen's (preset, fixed values, controls, clock, stop, seed); the step adds its own instruments, columns, plot, laws and overlays. The shared atlas's spec covers the laws of every step that uses it (so its key does), and its manifest's `references` holds them as `<step>/<law>`. | `registry` (`atlases_of`: no atlas of its own for such a step; the screen must exist and have no law the step contradicts), `site/atlas.py` (the references), `lab.js` (opens the screen's manifest) | u35: the reflection bench is Explore «Boundary» (one atlas of 456 points, not two); u37: the CHSH bench is Explore (156 points) |
+| F10 | **A pool of blobs shared by an atlas's points.** After every point of an atlas is computed, each packed blob (after quantisation) whose bytes occur in two or more points is stored once in `pool.<hash8>.lfpt.gz` (one message whose blobs are named by the first 16 hex digits of their sha256, in the order of first use) and replaced in the points by a descriptor `{pool: "<sha16>"}`; the manifest names the pool (`{file, bytes_gz, sha256}`) as it names the base; a reader fetches it once per atlas; a missing pool, or one of another size, makes the atlas `stale`. Live points are never pooled. `ATLAS_VERSION` 2 → 3. | `headless.Packer` (a second pass), `site/atlas.py` (keeps an atlas's packed messages in memory: u35's largest, 456 points, about 31 MB), `sitelib`, `protocol.decode`, `player/js/{api,atlas}.js`, `site/check.py`, `tests/test_atlas.py`, `test_protocol_quant.py` | u35's angle curves are the same for every θ and polarisation of a glass and side: *measured* 15–18 kB per point → 9.8–10.8 kB (−37 %); u35's world about 19 MB → 12.9 MB (§6) |
+| F11 | **The fit's p beyond the double's range.** `fit.js chi2Sf` computes ln p (the regularised upper incomplete gamma by its continued fraction in logarithms) and print a p below 10⁻³⁰⁰ as «p = 3·10⁻⁴⁵⁶» from log₁₀ p, never «p = 0». **[error in earlier]** Step F prints «p = 0» for χ² beyond about 1500 (its notes, V53). | `player/js/fit.js`, `fixtures/chi2_sf.json` (cases to χ² = 10⁶, checked against mpmath), `fit.test.mjs` | the benches' wrong ways reach such χ²: u34's way 2, the body's clock fitted by a power law (χ²/dof 7·10⁴ on 7 degrees of freedom, §2.3); a p of exactly 0 is a false statement |
+| F12 | **Watch's time label as Explore's.** `watch.js rateText` uses `explore.js worldTime` and `factorText`: the world's time on a human scale (ns … s) or in `units.t_show`, the factor in powers of ten. **[error in earlier]** This revision first left it to step I; Watch shows «world 0.00 s · slow motion ×1199040767» for u35 and u37, so it must precede W35's and W37's Watch. | `player/js/watch.js`, the browser checks | step F's notes (V53); §1.1 |
 
 **As built in step F (2026-11-18), the contract's details** (from step F's notes; the code is the reference:
 `server/lfviz/registry.py`, `headless.py`, `expr.py`, `site/atlas.py`, `player/js/{explore,lab,demo,worksheet,expr}.js`;
@@ -761,10 +953,37 @@ the toy worlds `tests/site_worlds/s98_atlas_toy` (school) and `u96_lab_toy` (uni
   `standard` and `frp` refused there. **[error in earlier]** A variant's `grade` was required everywhere; it is required
   at school only. The grading and the instructor's switch that step F first built were removed on 2026-11-18 (step F's
   notes).
-- **Open, not in step F's files:** Watch (`player/js/watch.js`) still writes the world's time with two decimals in
-  seconds and a large factor as a whole number («world 0.00 s · slow motion ×1199040767» for u35 and u37);
-  `explore.js` exports `worldTime` and `factorText`, which `watch.js rateText` should use (step I, before W35's and
-  W37's Watch).
+- **Open after step F:** Watch's time label (F12) and the fit's p beyond the double's range (F11), both in the follow-up
+  framework step (the integrator's «step F2», §8), before W35's and W37's Watch.
+
+**After implementation (step F, commit 00b0439; step F's report, §3), corrections to the rows above:**
+
+- **[error in earlier] The files.** F10 also needs `site/build.py` (it copies the pool beside the atlas); row F did not
+  list it. `tests/site_worlds/quant/` and `make_fixture.py` are under `tests/site_worlds/**`, inside row F;
+  `site/record.py` and `server/lfviz/playground.py` were changed as the brief's extras.
+- **[error in earlier] F10's pool id.** A blob's id is the first 16 hex digits of the sha256 over its descriptor JSON +
+  "\n" + its stored bytes, not over the bytes alone: two blobs with the same bytes but another dtype, shape or
+  quantisation must not share an entry. In a point a pooled blob's descriptor is `{name, pool}`. Only blobs of 256 bytes
+  or more (`headless.POOL_MIN_BYTES`) are pooled. `test_protocol_quant.py` is unchanged: the pool is tested in
+  `test_atlas.py` and in `atlas.test.mjs`, through the fixture `tests/site_worlds/quant/pool_point.{json,lfpt.gz}`
+  (`make_fixture.write_pool_case`). For the budgets: u35's shared curves have one descriptor and are far above 256
+  bytes, so the measured −37 % stands; the worlds measure their sizes after pooling (§6).
+- **[error in earlier] F9's rule.** «The screen must have no law the step contradicts» has nothing to check: an Explore
+  screen has no laws, and a step's laws are named `<step>/<law>`. As built: the step names an Explore screen and
+  declares none of `registry.SHARED_FIELDS` (preset, fixed, controls, frame_dt, fps, stop, seed, quantize, drop); it
+  keeps its own table in the browser; `lab_reference` is called with the lab step's id.
+- **F6 (c) in Russian.** The degrees of freedom are written ν: «число степеней свободы ν = …, χ²/ν = …, коэффициент
+  Бирге √(χ²/ν)»; the browser check rejects Latin words in the Russian output. `p` comes from `chi2Sf`, checked against
+  SciPy (`fixtures/chi2_sf.json`); F11 extends it beyond the double's range.
+- **F8 (b).** The teacher's edits are kept in `localStorage` under `lfviz.sheet.<world>.<variant>`.
+- **S03's transition** (step F, §2 of its report): `registry.EX1_WORKSHEETS = {"s03_projectile"}` keeps EX1's worksheet
+  and laws accepted for S03 only (`_check_ex1_worksheet`, `_check_variants`; the player prints the parts, instruments
+  and blank tables, no question, answer, teacher page or verdict). WS03 removes S03 from it (§10); step I deletes the
+  path.
+- **For the worlds** (step F's report, §7): fixtures by `site/fixtures.py --out DIR --world <w>`; `demo_screens.mjs`
+  runs every EX2 check on every Explore screen and lab step read from the declarations; a compound control may set a
+  select parameter (the registry resolves each value through the schema: u35's material id); a counted stop needs
+  `max_world_s`, and with `fps` an `after_s` longer than one frame; a step with a manual stopwatch declares no `speed`.
 
 What does not change: quantisation, the live endpoint's limits, the budgets, the fit's algorithms (`fit.js` and
 `linear_fit`, York for lines, the effective variance for the parabola, as after EX1's D3).
@@ -783,24 +1002,30 @@ Budgets as EX1 §1.8 (`sitelib.BUDGET`): a point 150 kB / 400 kB, an atlas 6 / 1
 | u34 | `explore` | r₀ 7 × speed 5 | 35 | 25–194 kB *measured* at fps 10; largest 168 kB at fps 8 | **2.8 MB** | ~7 s |
 | u34 | `lab.periods` | r₀ 9 × speed 2 | 18 | 20 kB *measured* | 0.36 MB | 1 s |
 | u34 | `lab.advance` | r₀ 13 | 13 | ~100 kB (196 kB *measured* at fps 4) | 1.3 MB | 5 s |
-| u35 | `explore` = `lab.fresnel` (F9) | sample 6 × θ 37 × pol 2 | 444 | 9.8–10.8 kB *measured* with the pool emulated | **4.6 MB** | ~10 s |
-| u35 | `coatings` | λ 13 × coating 5 | 65 | ~15 kB | 1.0 MB | ~4 s |
-| u35 | `polarisation` | θ 10 × α 12 | 120 | ~10 kB | 1.2 MB | ~3 s |
+| u35 | `explore` = `lab.fresnel` (F9) | sample 6 × θ 38 × pol 2 | 456 | 9.8–10.8 kB *measured* with the pool emulated | **4.8 MB** | ~10 s |
+| u35 | `coatings` | λ 13 × coating 7 | 91 | ~15 kB | 1.4 MB | ~5 s |
+| u35 | `polarisation` | θ 12 × α 12 | 144 | ~10 kB | 1.4 MB | ~4 s |
+| u35 | `lab.dark` | counting time 3 | 3 | ~5 kB | 0.02 MB | — |
 | u35 | `lab.malus` | ψ 3 × α 19 × device 2 | 114 | ~10 kB | 1.1 MB | ~3 s |
-| u35 | `lab.reflection` | glass 3 × θ 13 × α 7 | 273 | ~10 kB | 2.7 MB | ~15 s |
+| u35 | `lab.reflection` | glass 3 × θ 14 × α 7 | 294 | ~10 kB | 2.9 MB | ~15 s |
 | u37 | `explore` = `lab.chsh`, `lab.local` (F9) | pair 2 × Δ 13 × τ 2 × law and source 3 | 156 | 16.9 kB *measured* | **2.7 MB** | ~6 s |
 | u37 | `lab.correlation` | pair 2 × a 3 × b 25 | 150 | 9–10 kB *measured* | 1.35 MB | ~3 s |
+| u37 | `lab.detectors` | η 7 × source 3 × background and window 4 | 84 | ~17 kB | 1.4 MB | ~5 s |
 
 | world | recordings (Watch and more) | atlases | **world** | target / limit |
 |---|---|---|---|---|
 | u34 | 0.32 + 0.51 MB | 4.5 MB | **5.3 MB** | 12 / 25 MB |
-| u35 | 0.9 + 0.43 MB | 10.6 MB | **11.9 MB** | 12 / 25 MB |
-| u37 | 0.64 + 0.13 MB | 4.05 MB | **4.8 MB** | 12 / 25 MB |
+| u35 | 0.9 + 0.43 MB | 11.6 MB | **12.9 MB** | 12 / 25 MB: over the target, accepted (below) |
+| u37 | 0.64 + 0.13 MB | 5.45 MB | **6.2 MB** | 12 / 25 MB |
 
-The site: 65.6 MB (*measured* 2026-11-17), of which the three worlds' present recordings are 1.1 MB; with these 22.0
-MB and S03's rework (+0.1 MB, §10), about 87 MB. Every atlas is inside 1 500 points and 6 MB; u34's zoom-whirl point
-(168 kB) is over the 150 kB target and accepted with its reason; u35 is at its world target, held there by the pool
-(without it about 18 MB: 16 kB per point, still under the 25 MB limit). CPU per world under a minute.
+The site: 65.6 MB (*measured* 2026-11-17), of which the three worlds' present recordings are 1.1 MB; with these 24.4
+MB (u34 5.3, u35 12.9, u37 6.2) and S03's rework (+0.1 MB, §10), about 89 MB. Every atlas is inside 1 500 points and
+6 MB; u34's zoom-whirl point (168 kB) is over the 150 kB target, accepted with its reason; u35 is 0.9 MB over its world
+target, accepted (`sitelib.ACCEPTED`) because the owner's real materials and detectors add the coatings, the dark-count
+part and the finer grids, and the pool already holds it near the target (without the pool about 19 MB, under the 25 MB
+limit). CPU per world under a minute. S03's atlases are recorded again with its real forces (E03, §10) at the same
+sizes: the new forces add a readout per frame, not a blob. The pool is applied by the packer to every atlas (step F's
+notes, §5); the worlds measure their sizes after it.
 
 **Stochastic points** (EX1 §1.6): u35 and u37 store one seeded sample per set-up (seed 1, shared by Explore and Lab work
 where the atlas is shared) and the run's computed probabilities; «Another sample» on a server draws the next seed.
@@ -828,11 +1053,26 @@ where the atlas is shared) and the run's computed probabilities; «Another sampl
   it, in Python and in JS (`atlas.test.mjs`); a missing pool, or one of another size, makes the atlas `stale`
   (`site/check.py`); live points have no pool.
 
-**Engine (step E35).** `lfphys/tests/test_polarization.py` (§3.5: Malus for ideal and real analysers, Brewster's
-reflected state, the reflected degree of polarisation, TIR's phase difference against its closed form and 30-digit
-Fresnel coefficients, energy, Jones against Mueller, passivity); `test_interfaces.py` extended (the p field profile:
-the Joule balance for p, the continuity of the tangential fields); `test_layers.py` (the new module's `ABOUT` and its
-translations).
+**Engine.** E35, first part (done): `lfphys/tests/test_polarization.py`, `test_interfaces.py` (the p field profile and
+the Joule balance for p), `test_layers.py`; its numbers in `scratchpad/ex2/e35/design_numbers.txt`. E35, second part:
+`test_materials.py` (§3.9: the SCHOTT glasses against their data sheets' printed indices; every tabulated set at its
+nodes and within its stated interpolation error; κ ≥ 0; the refusals out of range; `stack` with a material equals
+`stack` with its index typed in) and the group delay (a lossless slab's closed form, the frustrated-TIR delay by finite
+differences). E37: `test_qubits_povm.py`, `test_photodetector.py`, `test_bell_stats.py` extended and
+`test_local_hidden.py` extended (§4.7: the POVMs' limits and sums, Werner's S = V·2√2; every detector closed form
+against a Monte Carlo of the time stream; the CH and J estimators unbiased with covering errors; J for Giustina's state,
+angles and efficiencies against the closed form, 0.0113 per pair; the thresholds 2/(1 + √2) and → 2/3 against a direct
+search; the slot probabilities with multi-pair emission and dark clicks against a time-stream Monte Carlo; Gisin and
+Gisin's model: its detected correlation, its 75 %, CH ≤ 0). E34 (small): the proper time to r = 0 inside the horizon
+against the closed form of a radial fall (τ from rest at r₀ to r = 0: π √(r₀³/8M)) and a quadrature for the other
+falls. E03 (S03's forces): the buoyancy and the added mass against the vacuum closed forms with g and the inertia
+rescaled (exact for a body without drag); the second method in the velocity's angle against DOP853 and Radau IIA in
+time for the curve, the Magnus force and the Coriolis force's in-plane part, and with a constant C_d against the
+hodograph's closed first integral; the Magnus model at its source's tabulated points; the Coriolis force against the
+first-order closed forms (a body dropped from rest drifts east by (1/3)Ω g t³ cos λ; a flight's sideways offset by
+its quadrature) and the WGS 84 normal gravity at the equator and the poles against the standard's printed values;
+`history_bound` against the product integration of V52 (u) and, for a constant acceleration from rest, the closed
+form 2a√t of the kernel's integral. F2: `chi2Sf` for χ² up to 10⁶ against mpmath, the printed p never 0.
 
 **The worlds.** Each world's `tests/test_<world>_screens.py`:
 - every grid point of every atlas builds with all checks ✓ and stops by its own rule;
@@ -847,7 +1087,13 @@ translations).
   seeded sample, so W35 and W37 write the sample's values into §3.4 and §4.3 and the test checks those, and that they
   lie within the simulated spread of Appendix A.3, A.5);
 - the Watch captions' numbers against the recording and every caption no later than its event (u35's analyser rows
-  measured anew).
+  measured anew);
+- u35: the bench's materials are the engine's (`materials.index` in every segment's set-up), the detectors' dark and
+  dead-time effects against the closed forms of `photodetector`; u37: part 4's counts against the engine's slot
+  probabilities for the same devices and source (the exact multinomial), the time stream's shown slots against the
+  same probabilities, the slots independent (t_d + 5σ_j ≪ T_s, checked by the run); S03: each new force's share of the
+range against E03's references, the history force's bound and the sideways offset in the drawer, the three
+measured effects of A.8 reproduced on the built atlases.
 
 **Browser** (EN and RU; 1280 × 800, 390 × 844 and 390 × 700; a private server, never 8479; the recordings and atlases
 built by the code under test): `demo_screens.mjs` for u34, u35, u37 and S03 (Watch; Explore; Lab work: the drawer as
@@ -868,19 +1114,30 @@ containers named `lf-ex2-<step>-*`), on its own private port (never 8479), stops
 or `pgrep -f`), puts no e-mail address or personal identifier in an external request, and keeps its notes in the
 scratchpad. The contract between F and the worlds is §5; a change to it is made here first.
 
-| step | agent | owns (only these files) | done when |
-|---|---|---|---|
-| **F** framework (in progress; finishes F6 (c)–(d), F8, F9, F10) | 1 | `server/lfviz/{registry,headless,expr,atlas_live,protocol}.py`, `site/{atlas,check,sitelib}.py`, `player/js/{explore,lab,fit,demo,worksheet,atlas,api,expr}.js`, `player/worksheet.html`, `player/assets/demo.css`, the framework's tests, `tests/site_worlds/**`, `player/js/tests/**`, `tests/browser/demo_screens.mjs` (the toys), the framework's msgids | the suites pass; the toys' screens work in EN and RU at 1280 and 390 px; `test_recorder.py` unchanged and passing |
-| **E35** engine (in parallel with F) | 2 | `lfphys/lfphys/core/optics/polarization.py` (new), `lfphys/lfphys/core/optics/interfaces.py` (the p field profile, the power factors), `lfphys/tests/test_polarization.py`, `test_interfaces.py`, `lfphys/locales/*`, `lfphys/README.md` catalogue rows | the engine's suite passes; `ABOUT` and translations complete |
-| **W34**, **W35** (after E35), **W37**, **WS03** (in parallel, after F) | 4 | each only its own world folder: `visualizations/u34_orbits/**`, `u35_optics_bench/**`, `u37_bell_test/**`, `s03_projectile/**` (`viz.py`, `engine/`, `web/view.js`, `locales/`, `README.md`, `README.ru.md`, `tests/`) | the world's tests and browser checks; its atlases and recordings built with every check ✓ and within budget; the measured sizes and the stochastic ways' numbers written into this design |
-| **I** integration (last) | the lead | `visualizations/RULES.md` (§7 glossary: «task sheet» / «бланк задания»; §10: the bench, F6, F8–F10), `STATUS.md` (V52 (l), (m), (n); a new V53 for EX2 with the audit's open items, §11), `lfphys/PLAN.md`, this design (notes after the implementation), the READMEs and their catalogue, `docs/images/`, `tests/browser/{site_smoke,start_page,i18n_checks}.mjs`, `player/js/watch.js` (§5's open item) | the full suites green; the site built and checked locally; the browser checks in EN and RU |
+| step | agents | owns (only these files) | runs | done when |
+|---|---|---|---|---|
+| **F** framework (done: commit 00b0439; F1–F10, §5 with its notes after implementation) | 1 | `server/lfviz/{registry,headless,expr,atlas_live,protocol}.py`, `site/{atlas,check,sitelib}.py`, `player/js/{explore,lab,fit,demo,worksheet,atlas,api,expr}.js`, `player/worksheet.html`, `player/assets/demo.css`, the framework's tests, `tests/site_worlds/**`, `player/js/tests/**`, `tests/browser/demo_screens.mjs` (the toys), the framework's msgids | now | the suites pass; the toys' screens work in EN and RU at 1280 and 390 px; `test_recorder.py` unchanged |
+| **F2** the follow-up framework step (the integrator's name; F11 and F12 of §5) | 1 | `player/js/fit.js` (`chi2Sf` in logarithms), `player/js/watch.js` (the time label), `player/js/tests/fixtures/chi2_sf.json` and its generator, `fit.test.mjs`, the browser checks of Watch | now; before W35's and W37's Watch and before any world records a lab with a χ² beyond 1 500 | p printed for χ² to 10⁶ against mpmath; Watch's label as Explore's on u32 and the toys; every key changes once more (with E35 part 2, E37, E34 and E03 landing, the worlds are recorded once after all of them) |
+| **E35** part 1, polarisation (done: commit 6b2756e) | 1 | `core/optics/polarization.py`, `interfaces.py`, `thin_films.py`, tests | done | 2 290 engine tests passed (E35's report) |
+| **E35** part 2, materials and group delay | 1 | `lfphys/lfphys/core/optics/materials.py` (new), `lfphys/lfphys/core/data.py` (the `DATASETS` entries of §3.9), `lfphys/lfphys/core/optics/interfaces.py` (`group_delay`), `lfphys/tests/test_materials.py`, `test_interfaces.py`, the shared `lfphys/locales/*.json` (load-merge-sorted-write), `lfphys/README.md` catalogue rows, `lfphys/sources/materials_2026-11-18.md` (each dataset: its source, how it was checked, its licence) | now, in parallel with F and E37 (engine files only) | the engine's suite passes; every dataset checked and recorded |
+| **E37** detectors and inequalities | 1 | `lfphys/lfphys/core/quantum/qubits.py` (POVMs, Eberhard and Werner states), `lfphys/lfphys/theories/models/photodetector.py` (new), `lfphys/lfphys/tools/bell_stats.py` (CH, J, accidentals, slot probabilities, thresholds), `lfphys/lfphys/theories/alternatives/local_hidden.py` (Gisin and Gisin), their tests (§7), the shared locales and catalogue | now, in parallel with F and E35 | as E35 |
+| **E34** small, the interior | 1 | `lfphys/lfphys/core/gravity/orbit_stream.py` (the proper time to r = 0), its test | now, in parallel | as E35 |
+| **E03** the ball's real forces (§11 items 25, 39–42; about 2.5 agent-days) | 1 | `lfphys/lfphys/core/mechanics/particle.py` (a body in a medium: buoyancy, added mass; three-dimensional flights with declared forces as now), `lfphys/lfphys/core/mechanics/earth_frame.py` (new: the Coriolis force for a latitude and an azimuth, the WGS 84 normal gravity), `lfphys/lfphys/core/mechanics/drag.py` (`history_bound`: Basset's kernel along a flight by product integration, shared with V52 (u)), `lfphys/lfphys/theories/models/drag_quadratic.py` (the second method: the flight's equations in its velocity's angle for C_d(Re), buoyancy, added mass, a normal force), `lfphys/lfphys/theories/models/magnus.py` (new: C_L(S, Re) of a smooth sphere from checked data, kept in the module like Morrison's curve, so `core/data.py` stays E35's), `lfphys/tests/test_mechanics_air.py`, `test_mechanics_projectile.py`, `test_magnus.py` and `test_earth_frame.py` (new), the shared locales and catalogue, `lfphys/sources/s03_forces_2026-11-18.md` (the sources and how each was checked) | now, in parallel with E35 part 2, E37 and E34 (engine files disjoint from theirs) | as E35; each force against its reference (§7); the Magnus source checked, or its absence reported |
+| **W34**, **W35**, **W37**, **WS03** | 4, one per world | each only its own world folder: `visualizations/u34_orbits/**`, `u35_optics_bench/**`, `u37_bell_test/**`, `s03_projectile/**` (`viz.py`, `engine/`, `web/view.js`, `locales/`, `README.md`, `README.ru.md`, `tests/`) | after F and F2; W34 also after E34, W35 after E35 part 2 and E37's `photodetector`, W37 after E37, WS03 after E03 | the world's tests and browser checks; its atlases and recordings built with every check ✓ and within budget; the measured sizes and the stochastic ways' numbers written into this design |
+| **I** integration (last) | the lead | `visualizations/RULES.md` (§7 glossary: «task sheet» / «бланк задания»; §10: the bench, F6, F8–F10), `STATUS.md` (V52 (l), (m), (n), (w); V16 and V18 closed or narrowed; a new V53 for EX2 with §11's records), `lfphys/PLAN.md`, `lfphys/LAYERS.md` §3 (the new modules), this design (notes after the implementation), the READMEs and their catalogue, `docs/images/`, `tests/browser/{site_smoke,start_page,i18n_checks}.mjs`, the removal of S03's EX1 transition path (`registry.EX1_WORKSHEETS`, `_check_ex1_worksheet`, `_check_variants`, the `ex1` branch of `worksheet.js`, the TRANSITION block of `demo_screens.mjs`) | last | the full suites green; the site built and checked locally; the browser checks in EN and RU |
+| the owner's schedule (§9) | — | E34K Kerr orbits (`core/gravity/kerr_orbits.py`), E34R radiation reaction (`theories/approx/radiation_reaction.py`), E35G beam shifts (`core/optics/beam_reflection.py`), E37M p-values without i.i.d. (`tools/bell_stats.py`) | as §9 decides | as E35, each with its world's screen and an R2-E item |
+
+Order: F and E35 part 1 are done; F2, E35 part 2, E37, E34 and E03 together now; then the four worlds as their
+engine steps land; then I. The engine steps share only `lfphys/locales/*.json` and `lfphys/README.md`, merged by a
+load-merge-sorted-write right before writing. F2 changes every key once more; the worlds record after it, so nothing
+is recorded twice.
 
 Then four independent reviews, each by an agent that wrote none of the part (`AGENTS.md` rule 6):
 
 | review | scope |
 |---|---|
-| R2-E | the physics: `core.optics.polarization` and the p field profile (a new core module: rule 5), u34's GR numbers, u35's linearisations and counting, u37's statistics, CHSH and the visibility; every way's outcome reproduced on the built atlases |
-| R2-F | the framework F1–F10: keys, determinism and the pool, the formula parser's safety and parity, compound controls on the live endpoint, the stop rules, the task sheet and the variants on the static site |
+| R2-E | the physics: `core.optics.polarization`, the p field profile, `core.optics.materials` and its datasets, the group delay, `qubits`' POVMs, `theories.models.photodetector`, CH and J in `bell_stats`, Gisin and Gisin's model, the interior proper time, S03's forces (the body in a medium, the Magnus model and its source, the Coriolis force, the history force's bound, the second method in the velocity's angle) (new modules and extensions: rule 5); u34's GR numbers, u35's linearisations and counting, u37's statistics and thresholds; every way's outcome reproduced on the built atlases |
+| R2-F | the framework F1–F12: keys, determinism and the pool, the formula parser's safety and parity, compound controls on the live endpoint, the stop rules, the task sheet and the variants on the static site |
 | R2-P | the screens in a browser, EN and RU, 1280 and 390 px: Lab work as a bench (nothing hidden, no verdict), captions against the layout, the phone layout (u35's five tabs), the CSV, the editable sheet |
 | R2-W | the four worlds (S03 included) as a teacher and a student would use them: the benches' ways, the captions true to the screen, the task sheets, the sources and their quotations |
 
@@ -907,18 +1164,27 @@ the site is deployed only on the owner's go.
    известным законам физики» → §3.5, and the audit of §11. **[error in earlier]** The first version's question 2
    recommended leaving Malus's law out of EX2.
 
-**What the owner still decides** (the design takes the recommended answer until then):
+3. On real detectors in u37: «если это будет ближе к реальной физике, то нужно делать.» → §4.3 part 4, §4.7, §11
+   items 15, 17, 18, 29, 30, 38. **[error in earlier]** The previous revision's first open question recommended a later
+   batch.
+4. On real materials in u35: «да, нужно добавить все до реальных физических явлений» → §3.2, §3.3, §3.9, and the
+   re-audit of §11 (items 3–5, 7, 26–28, 35–37). **[error in earlier]** The previous revision's second open question
+   recommended constant-index media in EX2.
 
-1. **Real detectors in u37** (STATUS V18). With detection efficiency below 1 the CHSH test needs the fair-sampling
-   assumption, and a strict test needs the CH or Eberhard inequality: a physics extension of the world and its checks,
-   not a screen. Recommended: a batch of its own after EX2 (the engine's `bell_stats` gains CH/Eberhard, the world
-   gains efficiency and losses as device properties); EX2 states «ideal detectors» on the bench, and adds the source's
-   visibility (§11, item 14), which needs no new inequality. The alternative: W37 does both now (about a day more and
-   an R2-E item).
-2. **Real, dispersive materials in u35** (STATUS V16). Constant indices are exact media for Maxwell's equations, but no
-   real material has one over 400–700 nm. Recommended: in EX2 the coatings and glasses are named as constant-index
-   media (§11, item 3); real materials (Sellmeier and tabulated data, each checked against its source) as an engine
-   item after EX2. The alternative: E35 adds them now for the coatings screen.
+**What the owner still decides: the schedule of four large capabilities** (each a real phenomenon the benches lack,
+designed in §11 with its cost; the owner has said they are to be done, so the question is only when):
+
+1. **Kerr orbits in u34** (§11, item 32): equatorial geodesics of a spinning hole, a spin control in Explore and a
+   frame-dragging way on the bench. About 3 agent-days and an R2-E item.
+2. **Radiation reaction in u34** (§11, item 33): the adiabatic inspiral of a small mass ratio (Peters and Mathews).
+   About 2 agent-days.
+3. **Finite beams in u35** (§11, item 28): a Gaussian beam's reflection with the Goos–Hänchen and Imbert–Fedorov shifts,
+   a new Explore screen. About 3 agent-days and an R2-E item.
+4. **p-values without the i.i.d. assumption in u37** (§11, item 31). About 1 agent-day.
+
+Recommended: a batch EX2b right after EX2's integration, with its own reviews, so that EX2's benches (which do not
+depend on these) are reviewed and reported first; the alternative is to add all four to EX2 now, which lengthens it by
+about 9 agent-days and widens R2-E.
 
 **Risks, decided here:**
 - *u34's benches are computational*: they follow a textbook's exercises and an astronomy laboratory; the task sheet
@@ -926,7 +1192,11 @@ the site is deployed only on the owner's go.
 - *The linearisations of Fresnel's formulae* are derived here; E35 and W35 test them to 1e-12; R2-E reviews them.
 - *Ways that fail by design* are the bench's point; each is tested against the atlas, so a way that stopped failing
   (or started) is a failed test.
-- *u35 at its world budget*: held by the pool (F10); without it about 18 MB, under the 25 MB limit.
+- *u35 over its world target* (12.9 MB): accepted with its reason (§6); without the pool about 19 MB, under the limit.
+- *The Magnus force's data* (§11 item 39): the measured lift of a spinning smooth sphere at Re 2·10³–7·10³ may not
+  exist in a checkable source; E03 then reports it, and S03 shows the bracket's effect on the chute's ranges as a
+  stated uncertainty rather than a value.
+- *E03's length* (about 2.5 agent-days): it runs beside E35 part 2 and E37, and only WS03 waits for it.
 - *u35's five tabs on a phone*: R2-P checks the tab bar at 390 px; the fallback is a select for the Explore screens.
 - *The formula parser and the pool* are new framework code: shared fixtures, hostile inputs, byte-identical rebuilds,
   R2-F.
@@ -937,8 +1207,10 @@ the site is deployed only on the owner's go.
 
 ## 10. S03: the same concept at school (WS03)
 
-S03's Lab work (EX1 §5.3) becomes a bench as in §1.4, kept simpler for school. Owner of the step: **WS03**, an agent
-of its own, in parallel with W34, W35 and W37 after F, owning only `visualizations/s03_projectile/**`.
+S03's Lab work (EX1 §5.3) becomes a bench as in §1.4, kept simpler for school, and its ball flies with the real
+forces of the air and the rotating Earth (§11 items 25, 39–42; the integrator's request of 2026-11-18, at the owner's
+bar). Owner of the step: **WS03**, an agent of its own, in parallel with W34, W35 and W37 after F and E03, owning only
+`visualizations/s03_projectile/**`.
 
 | today (EX1, after its reviews) | after WS03 |
 |---|---|
@@ -946,56 +1218,83 @@ of its own, in parallel with W34, W35 and W37 after F, owning only `visualizatio
 | the chute's speed «not told to the student» | shown with the set-up (1.5 m/s); finding it from the slope stays the task |
 | «Check against the law» with its ✓/✗ | removed; the fit prints the parameters with their errors (no χ² at school) |
 | the worksheet's questions, answers, teacher's notes, «For the teacher» | a task sheet: goal, bench, instruments, procedure, record (EN, RU); the grade-7 variant stays as a variant (part 1, L against h, no fit) |
-| part 1: no air (EX1 D2) | an air toggle: in air the range is 0.09–0.54 mm shorter, from 0.95 m on more than the tape's ±0.5 mm (EX1, measured): the bench can see the air if the student looks |
-| part 2: vacuum only | an air toggle: with air on, the slope of L against sin 2θ misses v₀²/g by 27 errors at the tape's resolution (EX1 step S, measured): a wrong way («a law of vacuum applied in air») |
-| part 3: θ 25–60° | θ 20–70° by 5°: a parabola over 20–70° is biased by 1.8σ, over 25–60° by 0.8σ (EX1 step S, measured): a wrong way («a parabola fitted too far from the top») |
+| the ball in air: a constant C_d = 0.47; no spin, buoyancy, added mass or Earth's rotation | the measured drag curve, the chute's spin with the Magnus force, buoyancy and added mass, the Coriolis force at 45.5° N (throws toward the east), and the history force's upper bound in the drawer (E03; §11 items 25, 39–42); the interface unchanged («Air resistance» on or off), the spin and the place stated in the passport |
+| part 1: no air (EX1 D2) | an air toggle: in air the range is 0.08–1.9 mm shorter (*measured*, A.8: the drag 0.05–0.41 mm net of buoyancy, the rolling ball's Magnus force 0.04–1.5 mm with the bracket C_L 0.1–0.5 until E03 fixes it from data), beyond the tape's ±0.5 mm from h = 0.4–0.8 m on: the bench can see the air if the student looks. **[error in earlier]** EX1's 0.09–0.54 mm (from 0.95 m on) had a constant C_d and no spin |
+| part 2: vacuum only | an air toggle: with air on, the slope of L against sin 2θ misses v₀²/g by about 18 errors at the tape's resolution (*measured*, A.8, with the real fluid forces; 22 with the constant C_d in the same fit, 27 in EX1's): a wrong way («a law of vacuum applied in air») |
+| part 3: θ 25–60° | θ 20–70° by 5°: a parabola over 20–70° is biased by 1.8σ, over 25–60° by 0.8σ (EX1 step S, measured with the constant C_d; WS03 measures them again): a wrong way («a parabola fitted too far from the top»); the optimum in air 42.3° with the measured curve (41.9° with the constant, *measured*, A.8) |
 
 The school's ways (simpler, named in the procedure's hints): part 1 — L against √h (right), L against h (a curve: the
 hypothesis «higher → farther» holds but not linearly), the hand stopwatch (±0.1 s on flights of 0.20–0.45 s) against T
 from the tape, air on or off (0.09–0.54 mm, the tape's ±0.5 mm); part 2 — L against sin 2θ in vacuum (right), with air
 (wrong), the angle of the largest range by eye on 5° steps; part 3 — the parabola near the top (right), over the whole
 range (biased). Sizes: part 1 + 17 points (~39 kB), part 2 + 13 points (~46 kB), part 3 + 3 points (~33 kB); S03's
-world 6.11 → about 6.2 MB. Tests: `test_s03_physics.py` (each way against the atlas, as §7), `s03_screens.mjs` and
-`demo_screens.mjs` (the bench in EN and RU at 1280 and 390 px).
+world 6.11 → about 6.2 MB (the new forces add a readout per frame, not a blob). The checks: the second method becomes
+the flight's equations in its velocity's angle (E03; it takes the curve, the buoyancy, the added mass, the Magnus
+force and the Coriolis force's part in the throw's plane, which is normal to the velocity like the Magnus force),
+with the sideways offset by its own first-order quadrature (its feedback into the plane is of order (ΩT)² ≈ 10⁻⁷);
+the history force's bound and the sideways offset are drawer values. Tests:
+`test_s03_physics.py` (each way against the atlas, as §7; each new force against E03's references),
+`s03_screens.mjs` and `demo_screens.mjs` (the bench in EN and RU at 1280 and 390 px).
 
 ---
 
 ## 11. The audit: simplifications, omissions and their fixes
 
-In the spirit of the owner's answer 2, every place where the design or the worlds as the screens use them simplify,
-with its fix in EX2, its justification (why it is not a simplification of a law), or its record for later. Status:
-**fix** (in EX2, by the named step), **justified**, **record** (STATUS V53), **owner** (§9).
+Re-audited on 2026-11-18 under the owner's bar «до реальных физических явлений» (§9): every item that the previous
+revision justified or recorded was decided again, and new ones were added (26–38; S03's 39–42 at the integrator's
+request, at school level: the physics real, the interface simple). Status: **fix** (in EX2, by the
+named step), **owner** (a real phenomenon that needs a large new engine capability: designed here with its cost, §9
+schedules it), **justified** (not a simplification of anything the bench shows, with the reason), **record** (STATUS
+V53, a later batch). **[error in earlier]** marks a previous status that the owner's bar overturns.
 
 | # | where | what | status |
 |---|---|---|---|
-| 1 | u35 | an unpolarised photon was drawn as s or p: one decomposition of ρ = I/2, not a measured property; the first Watch caption at 17 s relied on it | **fix** (W35): the density matrix throughout, unpolarised photons grey, Brewster's polarisation shown with the analyser (§3.1, §3.5) |
-| 2 | u35 | the field \|E\|² is computed for s light only (V16) | **fix** (E35): `field_profile` for p and for any Jones state |
-| 3 | u35 | constant indices named «like MgF₂, TiO₂/SiO₂, gold» (V16) | **fix** of the names (W35, §3.3): constant-index media said so; real dispersive materials: **owner** (§9, 2) |
-| 4 | u35 | ideal detectors (efficiency 1, no dark counts) | **justified**: a stated ideal device, as the analyser's default; nothing on the benches depends on a detector's noise except at zero counts, where the counting floor is stated; real detectors **record** |
-| 5 | u35 | the time inside the structure is neglected | **justified**: ≤ 15 fs in a 2 µm film against 1 ns on an arm (1.5·10⁻⁵), below every time shown |
-| 6 | u35 | the beams are drawn by Snell's law with the real part of the index in absorbing layers | **justified**: drawing only; R, T, A and the field come from the complex transfer matrices |
-| 7 | u35 | plane monochromatic waves: no beam width (no Goos–Hänchen shift), no bandwidth | **justified** as the model the Fresnel and Malus labs assume; stated on the bench; finite beams **record** |
-| 8 | u35 | the analyser as an ideal or a two-number device (k₁, k₂) | **justified**: the principal transmittances define a linear partial polariser exactly; angle-of-incidence dependence of a real device **record** |
-| 9 | u34 | the body is a test body: no radiation reaction, no self-force | **justified**: the limit m/M → 0, stated («a small body»); the advance at first order does not depend on m |
-| 10 | u34 | Newton's ghost by `integrate_body` in coordinate time: an energy error up to 10⁻⁵ near deep periapses (V19 e) | **fix** (W34): the regularised integrator the engine has (10⁻⁹), with the Newton checks re-derived |
-| 11 | u34 | the computation stops 2·10⁻⁶ M above the horizon | **justified**: the distant observer's time diverges there; the body's proper time to that point is checked |
-| 12 | u34 | equatorial orbits of a non-rotating hole; Kerr only as radii (V19 d) | **justified** as the world's model (Schwarzschild is exact for it); Kerr orbits **record** (V19 d) |
-| 13 | u34 | a star's radius checked only against 2M, not Buchdahl's 9M/4 (V19 b) | not used by EX2 (black holes only); **record** (V19 b) |
-| 14 | u37 | the source is ideal (visibility 1) | **fix** (W37): the visibility V as a source property, the Born rule on the mixed state (§4.6) |
-| 15 | u37 | ideal detectors: no losses, no dark counts, no detection loophole (V18) | **owner** (§9, 1) |
-| 16 | u37 | pseudo-random setting choices | **justified**: statistically equivalent for the run's counts; stated |
-| 17 | u37 | one local model of the class bounded by \|S\| ≤ 2 | **justified**: the bound is a theorem (the task sheet says so); the bench shows one model, named; the optimal local model **record** (V18) |
-| 18 | u37 | one line, a symmetric source, an instantaneous measurement | **justified**: a chosen geometry, stated; the measurement's duration enters the locality condition through τ |
-| 19 | framework | a count of 0 carries the error of one count | **justified** as a stated convention (F4); a Poisson-likelihood fit for counts near zero **record** |
-| 20 | framework | the parabola is fitted by the effective variance (V52 (v)) | **justified** for EX2's benches, whose x are exact set-ups (then it is weighted least squares exactly); S03's protractor (±0.5°) keeps V52 (v) open |
-| 21 | design | the first version's «unknown glass», concealed checks and seed 2 | **fix** (§1.4, §5 F6): withdrawn |
-| 22 | design | the grids' steps (θ, Δ, r₀) | **justified**: the bench's set-up marks; the curves are computed at full resolution with their exact θ_B, θ_c and optima |
-| 23 | framework | drawn arrays quantised | **justified**: below the display, the loss measured and stated (EX1) |
-| 24 | design | the stories' slow motion and photon rates | **justified**: playback, stated by the time label |
-| 25 | S03 | the air's drag by a constant C_d, the history force not computed (V52 (u)) | **justified** as a stated school model with the measured drag curve computed beside it (EX1 D1); the history force **record** (V52 (u)) |
+| 1 | u35 | an unpolarised photon drawn as s or p (one decomposition of ρ = I/2) | **fix** (W35): density matrices, grey photons, Brewster shown with the analyser |
+| 2 | u35 | \|E\|² for s light only | **fix** (E35, done): the p profile and any Jones state |
+| 3 | u35 | constant indices named like real materials | **fix** (E35 part 2, W35): the measured materials of §3.9 **[error in earlier: «owner»]** |
+| 4 | u35 | ideal detectors | **fix** (E37's `photodetector`, W35): efficiency, dark counts, dead time on the benches (ways 14–16) **[error in earlier: «justified»]** |
+| 5 | u35 | the time inside the structure neglected | **fix**: item 27 **[error in earlier: «justified»]** |
+| 6 | u35 | the beams drawn by Snell's law with the real part of the index | **justified**: a drawing; every number (R, T, A, the field, the delays) comes from the complex transfer matrices |
+| 7 | u35 | plane waves | **owner**: item 28 **[error in earlier: «justified»]** |
+| 8 | u35 | the analyser as two numbers k₁, k₂ | **justified**: at one line they define a linear partial polariser exactly; over the source's line width (item 26: picometres) they do not change |
+| 9 | u34 | a test body: no radiation reaction, no finite mass | **owner**: item 33 **[error in earlier: «justified»]** |
+| 10 | u34 | Newton's ghost integrated in coordinate time (10⁻⁵ near deep periapses) | **fix** (W34): the engine's regularised integrator |
+| 11 | u34 | the computation stops 2·10⁻⁶ M above the horizon | **fix**: item 34 **[error in earlier: «justified»]** |
+| 12 | u34 | Schwarzschild only | **owner**: item 32 **[error in earlier: «justified»]** |
+| 13 | u34 | a star's radius checked against 2M, not Buchdahl's 9M/4 | **fix** (W34): a star with R ≤ 9M/4 refused with its reason **[error in earlier: «record»]** |
+| 14 | u37 | an ideal source | **fix** (W37): the visibility V and the Eberhard parameter r |
+| 15 | u37 | ideal detectors, no detection loophole | **fix** (E37, W37): §4.7; real detectors in every part, Explore and Watch, varied in part 4 **[error in earlier: «owner»; the owner answered]** |
+| 16 | u37 | pseudo-random setting choices | **justified**: a simulation's settings come from its own generator, independent of the source by construction; the physics of a physical random-number generator (Shalm's laser phase diffusion) is not the bench's subject, and the freedom-of-choice condition the bench shows is the spacetime one |
+| 17 | u37 | one local model | **fix** (E37): Gisin and Gisin's detection-loophole model as well; the optimal local model for given settings (a linear programme over deterministic strategies) **record** |
+| 18 | u37 | one symmetric line, an instantaneous measurement | **fix**: item 38; the measurement's duration now enters through the detectors' jitter and dead time (item 15) **[error in earlier: «justified»]** |
+| 19 | framework | a count of 0 carries the error of one count | **justified** as a stated convention; a Poisson-likelihood fit for counts near zero **record** |
+| 20 | framework | the parabola's effective variance | **justified** for EX2's benches (exact x); S03 keeps V52 (v) open |
+| 21 | design | the first version's concealment | **fix**: withdrawn |
+| 22 | design | the grids' steps | **justified**: the bench's set-up marks; the curves and optima are computed at full resolution |
+| 23 | framework | drawn arrays quantised | **justified**: below the display, the loss measured |
+| 24 | design | the stories' slow motion | **justified**: playback, stated |
+| 25 | S03 | the ball flies with a constant drag coefficient C_d = 0.47 | **fix** (E03, WS03) **[error in earlier: «justified»]**: the ball flies with the measured drag curve of a smooth sphere at its own Reynolds number (`drag_quadratic.CurveDrag`, Morrison's correlation, already in the engine and tested; Re 2·10³–7·10³ for the steel ball, 3·10⁴–1.1·10⁵ for the light one, C_d 0.39–0.44), and the constant becomes the comparison the drawer states. *Measured* (A.8): the constant moves part 2's ranges in air by 0.5–2.1 mm (up to four times the tape's ±0.5 mm), part 3's by 0.5–1.1 m and its optimum from 42.3° to 41.9°, part 1's by 0.01–0.06 mm. The drag crisis (Re ≈ 3·10⁵) lies beyond every S03 throw; the curve includes it. The second method becomes the flight's equations in its velocity's angle (E03) |
+| 26 | u35 | a monochromatic source | **fix** (W35): the source's line width, each photon's λ drawn from it, the materials' dispersion applied per photon; the HeNe line's width (picometres) changes nothing at the printed digits on a single surface, a broad source (an LED, tens of nanometres) smears the coatings' spectra |
+| 27 | u35 | no group delay | **fix** (E35 part 2, W35): `interfaces.group_delay`, each photon's detection time including its delay; frustrated TIR shows the tunnelling (Hartman) delay |
+| 28 | u35 | plane waves: no beam width, no Goos–Hänchen or Imbert–Fedorov shift at total reflection | **owner**: a finite Gaussian beam reflected by the angular spectrum (the engine has `core.optics.angular_spectrum` and `beams`) with each plane-wave component's r_s, r_p, vectorial for the transverse (Imbert–Fedorov) shift; a new module `core.optics.beam_reflection`, tested against Artmann's closed form of the Goos–Hänchen shift at total reflection and the published closed forms of the Imbert–Fedorov shift (to be checked against their texts); a new Explore «Beam shifts» (N-BK7 from inside, θ around θ_c, s, p and circular light; the shifts are a few wavelengths, drawn on a zoomed detector). Cost: about 3 agent-days and an R2-E item |
+| 29 | u37 | each setting chosen «τ before the particle arrives», which needs the arrival's time and leaves a dark count without a setting | **fix** (W37): locally defined slots, a setting per slot (§4.7) |
+| 30 | u37 | coincidences counted per pair (no coincidence-time loophole possible) | **fix** (W37): the coincidence window w and the locally defined slots, as Giustina et al. («not vulnerable to the coincidence-time loophole») |
+| 31 | u37 | the significance by the normal approximation (i.i.d. trials) | **owner**: the experiments' p-values without the i.i.d. assumption (martingale test statistics, as Giustina et al. and Shalm et al. compute) in `tools.bell_stats`, tested against exact small-sample enumerations. Cost: about 1 agent-day |
+| 32 | u34 | Schwarzschild only: real black holes spin | **owner**: equatorial Kerr geodesics, a new module `core.gravity.kerr_orbits` (the radial potential with E, L and the spin a; the periapsis advance as an exact elliptic integral; prograde and retrograde ISCOs, which `kerr.isco(a)` already gives), tested against the circular orbits' Ω = 1/(r^{3/2} ± a) and the Schwarzschild limit; a spin control in Explore (0, 0.5, 0.9, 0.99) and a frame-dragging way on the bench. Cost: about 3 agent-days and an R2-E item |
+| 33 | u34 | a test body | **owner**: radiation reaction for a small mass ratio q by the adiabatic evolution of the geodesic's constants with the quadrupole fluxes (Peters and Mathews; `theories.approx`, valid for q ≪ 1 and a slow inspiral), tested against Peters's decay time of a circular orbit; the conservative finite-mass corrections to the advance (self-force) are research-level and **record**. Cost: about 2 agent-days |
+| 34 | u34 | the body's history ends at the horizon | **fix** (E34 small, W34): the body's proper time on to r = 0 inside the horizon (the radial fall's τ = π√(r₀³/8M) from rest, a quadrature for the others), shown on the body's clock; the distant observer's picture still ends at the horizon, as it should |
+| 35 | u35 | indices at their datasets' temperatures | **record**: SCHOTT's dn/dT constants for a later thermal bench; the benches state 20 °C |
+| 36 | u35 | 4·10⁹ photons per second, which no single-photon detector counts | **fix** (W35): 2·10⁵ s⁻¹ on the benches, with dead time (way 16) |
+| 37 | u35 | a thin film's index differs from the bulk's | **fix** (E35 part 2): film datasets beside bulk ones (MgF₂ both; SiO₂ and Ta₂O₅ films) |
+| 38 | u37 | one symmetric line | **fix** (W37): the stations at their own distances L_A, L_B (asymmetric detection times, as in real set-ups); the atlases keep L_A = L_B, the live player varies them |
+| 39 | S03 | the chute's ball leaves rolling (ω = v₀/r = 150 rad/s, topspin) but flies without the Magnus force | **fix** (E03, WS03): a new model `theories.models.magnus`, the lift of a spinning smooth sphere F = ½ρ_f C_L(S, Re) A v² (ω̂ × v̂), S = rω/v, from measured data that E03 fetches and checks (they must cover Re 2·10³–7·10³ at S 0.3–1; candidates as cited, not read for this design: Poon et al., J. Fluid Mech. 2014, simulations at Re 500–10⁴; Kim et al., J. Fluid Mech. 2014, measurements at Re 0.6–2.6·10⁵), with the spin's decay in flight from the same source or bounded. *Measured* with a bracket C_L 0.1–0.5 (a bracket for the estimate, not a source; A.8): the topspin shortens the range by 0.04–1.5 mm at h 0.2–1.0 m, as much as the drag or more, so the air's whole effect in part 1 becomes −0.08 to −1.9 mm, beyond the tape's ±0.5 mm from h = 0.4–0.8 m on. If no measured C_L covers that range, E03 says so and the world shows the bracket as the stated uncertainty of the chute's ranges in air. The launcher and the hand throws leave without spin, a stated launch condition (no new control at school) |
+| 40 | S03 | the air's buoyancy and added mass left out (`drag_quadratic`: «not in the model») | **fix** (E03, WS03): a body in a medium in `core.mechanics.fly`: the buoyancy ρ_f V g (exact) and the added mass C_A ρ_f V, C_A = ½ (a sphere in potential flow; E03 checks the value it uses at the bench's Reynolds numbers against its source). *Measured* (A.8): part 2's ranges +0.29–0.58 mm (0.5 mm or more from 30° to 60°), part 3's +0.07–0.11 m (0.4 %; its optimum unchanged at 0.1°), part 1's +0.04–0.08 mm. Part 2's wrong way «a law of vacuum in air» stays wrong: its slope misses v₀²/g by 18 errors (22 with the constant C_d, this design's fit; EX1's fit said 27) |
+| 41 | S03 | the history force (STATUS V52 (u)) | **fix** for its bound, **record** for the force **[error in earlier: «record»]**: at S03's Reynolds numbers (2·10³–1.1·10⁵) Basset's creeping-flow kernel (V52 (u)) does not hold and there is no established law; the finite-Re kernels in use (Mei and Adrian's and its successors) lie below Basset's, so Basset's kernel bounds the force from above. E03's `drag.history_bound` computes it along a flight (product integration, as V52 (u)); the world shows it in the drawer. *Measured* (A.8; the boundary layer taken as established before the launch): at most 0.04 mm in part 1, 0.36 mm in part 2 (under the tape's ±0.5 mm), 61 mm on part 3's 28 m (0.2 %) and about 0.05° on its optimum (the bench's search step is 0.1°). A history force at these Reynolds numbers is research-level: **record** beside V52 (u) |
+| 42 | S03 | the bench on a non-rotating Earth (`particle.py`: «the Earth's rotation … not included») | **fix** (E03, WS03): the Coriolis force −2mΩ × v as a declared force of a three-dimensional flight; the bench at sea level at 45.5° N, where the WGS 84 normal gravity equals the standard g_n the engine uses (computed here with the formula's constants as recalled; E03 checks them against NIMA TR8350.2), the throws toward the east, both stated in the passport. *Measured* (A.8): parts 1 and 2 at most 0.06 mm along and 0.09 mm sideways; part 3 +1.7 to +2.8 mm along (−1.7 at 70°) and 1.2–3.4 mm to the right; Explore's longest throw 7 mm to the right. The view stays a vertical plane; the sideways offset is a readout and a drawer value. A real place's g (±0.3 %) stays a set-up value |
 
-Fixed in EX2: items 1, 2, 3 (the names), 10, 14 and 21; for the owner: 3 (real materials) and 15; the others justified
-or recorded in STATUS V53 by step I.
+Fixed in EX2: 1–5, 10, 11, 13–15, 17, 18, 21, 25–27, 29, 30, 34, 36–42 (26 items; 41 as its computed bound); for the
+owner's schedule: 28, 31, 32, 33 (four large capabilities, designed above), to which 7, 9 and 12 point; justified: 6, 8,
+16, 19, 20, 22–24; recorded: 35 and the parts of 17, 19, 33 and 41 named there.
 
 ---
 
@@ -1007,7 +1306,9 @@ point: `headless.run_spec` with the screen's preset, fixed values, clock and sto
 the screen's quantisation and a header delta against the first point, gzip -9, as `site/atlas.py` does), `story.py`
 (a recording through `run_spec` with `fps`, `speed`, the script and the captions, as `site/record.py` does; events and
 probed frames with their played times), `u34_survey.py` (the world's own segment data over a grid), the lab
-simulations (`u35_labsim.py`, `u35_labsim2.py`, `u34_labsim1.py`, `misc_sim.py`).
+simulations (`u35_labsim.py`, `u35_labsim2.py`, `u34_labsim1.py`, `misc_sim.py`, `ways_sim.py`), and for round 3
+`materials.py` (the datasets of §3.9 read from their files, Sellmeier and PCHIP, the engine's `stack`), `j_check.py`
+(J and its thresholds), `s03_fluid.py`, `s03_fit.py` and `s03_coriolis.py` (S03's forces); their outputs beside them.
 
 **A.1 u34 grid** (the world's segment data, speed × circular, r₀ in M; radial period in GM/c³): from 6 to 12 M the
 speeds escape from 1.2 on at 6 and 7 M, from 1.25 at 8 M and at 1.3 at 10 and 12 M, and the bound speeds just below
@@ -1058,7 +1359,7 @@ are nearly parabolic (8 M at 1.2: apoapsis 141 M; 10 M at 1.25: 331 M; 12 M at 1
 | u35 Fresnel | p light on the bench's grid up to 52° | 1/n²: 0.4356 ± 0.0033, slope −0.1896, χ²/dof 0.99 (400 samples) |
 | u35 Fresnel | p light through 62° with +√R | 0.497 ± 0.019 (n = 1.418), slope −0.351, χ²/dof 59 |
 | u35 Fresnel | p light up to 52°, 4 000 photons | 0.4354 ± 0.0075 |
-| u35 counts near θ_B | glass A, B, C; 20 000 and 100 000 photons | expected p counts at 1° steps: A 0.7 (56°), 0.4 (57°), 5 (55°, 58°); B 0.3 (58°), 1.4 (59°); C 0.2 (60°), 2.1 (61°) at 20 000 |
+| u35 counts near θ_B (round 2, constant indices; withdrawn with the glasses) | glass A, B, C; 20 000 and 100 000 photons | expected p counts at 1° steps: A 0.7 (56°), 0.4 (57°), 5 (55°, 58°); B 0.3 (58°), 1.4 (59°); C 0.2 (60°), 2.1 (61°) at 20 000 |
 | u35 Malus | ψ 30°, α 0–180° by 10°, 20 000 photons, 300 samples (closed form) | ideal: slope 1.00000 ± 0.00005, χ²/dof 1.0; k₁ 0.90, k₂ 0.009 with a line through 0: 0.9026 ± 0.0010, χ²/dof 17.9 |
 | u35 unpolarised reflectance | n 1.515, 0–89° | rises monotonically from 4.19 % to 7.72 % at θ_B and on |
 
@@ -1071,6 +1372,41 @@ are nearly parabolic (8 M at 1.2: apoapsis 141 M; 10 M at 1.25: 331 M; 12 M at 1
 | the same with eleven frames (z f8) | the same | 22.3–25.8 kB; pooled 16.9–18.0 kB | | 11 |
 | u37 spins, 4 000 pairs, random | Δ 45° and 22.5° × τ 100 ns and 5 µs | 29.0–29.3 kB | 0.06–0.07 s | 21 |
 | u37 photons | Δ 22.5°, τ 5 µs / τ 100 ns with ten frames | 27.7 / 16.9 kB | 0.03–0.04 s | 21 / 11 |
+
+**A.7 Real materials and detectors** (round 3; the materials through the engine's `interfaces`/`thin_films` with the
+datasets of §3.9 read from their files; J by the closed form of the POVMs, maximised over the four angles by
+Nelder–Mead from 60 random starts):
+
+| quantity | result |
+|---|---|
+| indices at 632.8 nm | N-BK7 1.51509, N-F2 1.61658, N-SF11 1.77860; MgF₂ bulk (o) 1.37698, film 1.42118 + 0.00054i; SiO₂ bulk 1.45702, film 1.47615; Ta₂O₅ film 2.13576; Au 0.184 + 3.431i, Ag 0.056 + 4.276i, Al 1.448 + 7.537i |
+| angles from air | N-BK7 θ_B 56.574°, θ_c 41.302°; N-F2 58.259°, 38.213°; N-SF11 60.654°, 34.211° |
+| a quarter-wave MgF₂ film (96.64 nm) on N-BK7 | R 2.79 % at 400 nm, 2.04 % at 550 nm, 2.14 % at 633 nm, 2.28 % at 700 nm (bare 4.40, 4.24, 4.19, 4.17 %) |
+| Ta₂O₅/SiO₂ quarter-wave pairs at 550 nm | 4 pairs: R 87.9 % at 550 nm, 70.3 % at 633 nm; 8 pairs: 99.37 % and 75.8 % |
+| 50 nm of gold on N-BK7 (Kretschmann) at 632.8 nm | R_p smallest, 0.0058, at 43.785° |
+| u35's story with N-BK7 (Fresnel's formulae) | R 4.350 % at 30°; 7.727 % at θ_B; 5.850 % from inside at 30°; the 200 nm gap at 45°: T 47.09 % |
+| J per pair, Giustina's state (r = −2.9) and angles | 0.01134 at their 78.6 % and 76.2 %; at η = 0.60 / 0.70 / 0.75 / 0.80 / 1.00: −0.0239 / −0.0060 / +0.0053 / +0.0182 / +0.0852 |
+| J per pair, the best angles | r = −1 (maximal): −0.0710 at η 0.75, −0.0275 at 0.80, ≈ 0 at 0.8284, +0.0221 at 0.85, 0.2071 = (√2 − 1)/2 at 1; r = −2.9: > 0 from η ≈ 0.72; at η 0.70: +0.00037 (r = −0.1), +0.00007 (r = −0.2, and −5), −0.0029 (r = −0.3); at η 0.68: +0.00003 (r = −0.05); at η 0.60: < 0 for every r tried |
+
+**A.8 S03's forces** (round 3; DOP853 at 10⁻¹² with the measured drag curve `drag_quadratic.cd_standard`, air at 20 °C
+and 101 325 Pa from `core.data`; the history force as a first-order perturbation by product integration with 4 000
+steps; ranges in mm unless stated):
+
+| quantity | part 1 (chute, steel 20 mm, 1.5 m/s, h 0.20–1.00 m) | part 2 (launcher, 5 m/s, θ 15–75°) | part 3 (light ball, 20 m/s, θ 20–70°) |
+|---|---|---|---|
+| Reynolds number; C_d of the curve | 2.0·10³; 0.435 | 6.6·10³; 0.396 | 8.9·10⁴; 0.422 |
+| the air with the constant C_d | −0.09 to −0.54 | −3.0 to −13.7 | — |
+| the curve minus the constant | +0.01 to +0.06 | +0.46 to +2.05 | +0.49 to +1.09 m; optimum 42.3° (41.9° with the constant) |
+| buoyancy + added mass (½) | +0.035 to +0.078 | +0.29 to +0.58 | +0.07 to +0.11 m; optimum unchanged |
+| Magnus, the rolling ball's topspin, C_L 0.1 / 0.3 / 0.5 / 0.4·S | −0.04 to −0.30 / −0.11 to −0.91 / −0.18 to −1.52 / −0.13 to −0.70 | (no spin) | (no spin) |
+| the air's whole effect (curve, buoyancy, added mass; with Magnus at C_L 0.1–0.5) | −0.05 to −0.41; with Magnus −0.08 to −1.93 | — | — |
+| the history force's bound (Basset's kernel); its largest force / weight | ≤ 0.037; 2·10⁻⁴ | ≤ 0.36; 3·10⁻⁴ | ≤ 61 (on 28 m); 3·10⁻³ |
+| Coriolis at 45°, toward the east / north (along; to the right) | +0.02 / 0; 0.02–0.03 | ±0.06 / 0; ≤ 0.09 | +2.8 (20°), +1.8 (42.3°), −1.7 (70°) / 0; 1.2–3.4 |
+| part 2's line L against sin 2θ in air, σ 0.5 mm (slope against v₀²/g = 2.5493 m) | | constant C_d 2.5318 ± 0.0008 (−22σ); curve 2.5345 (−18σ); with buoyancy and added mass 2.5351 (−18σ) | |
+
+Explore's longest throw (light ball, 25 m/s, 45°, from 10 m): Coriolis +2.4 mm along toward the east, 7.3 mm to the
+right. The latitude where the WGS 84 normal gravity equals g_n: 45.50° (the formula's constants as recalled; at 45°
+it gives 9.80620 m/s²).
 
 ## Appendix B. Sources checked for this design
 
@@ -1086,3 +1422,8 @@ removed).
 | Rutgers, «Fresnel Equations and Electromagnetic Boundary Conditions» | `physics.rutgers.edu/~eandrei/389/fresnel.pdf` | 7458ae60bf892c07 | one sentence |
 | D. Dehlinger, M. W. Mitchell, Am. J. Phys. 70, 903 (2002) | `arxiv.org/pdf/quant-ph/0205171` | 205531334f0d5625 | three sentences; S = 2.307 ± 0.035 |
 | University of Toronto, PHY293/PHY294 lab course, «Polarization of light» | `physics.utoronto.ca/~phy293lab/experiments/polarization.pdf` | 6596b875c4af22c5 | six sentences (§3.4) |
+| M. Giustina et al., «Significant-loophole-free test of Bell's theorem with entangled photons», Phys. Rev. Lett. 115, 250401 (2015) | `arxiv.org/pdf/1511.03190` (v2) | f2eea302004982f4 | three sentences; eq. (1); the state's r, the angles, the efficiencies, 3 500 pairs per second, J = 7.27·10⁻⁶ (§4.7) |
+| L. K. Shalm et al., «A strong loophole-free test of local realism», Phys. Rev. Lett. 115, 250402 (2015) | `arxiv.org/pdf/1511.03189` | e4f16a8d1ea736ca | three sentences (§4.7) |
+| N. Gisin, B. Gisin, «A local hidden variable model of quantum correlation exploiting the detection loophole», Phys. Lett. A 260, 323 (1999) | `arxiv.org/pdf/quant-ph/9905018` | b1caa43414a56288 | two sentences; inequality (15) (§4.7) |
+| SCHOTT optical glass data sheets (2017-01-20), as distributed by refractiveindex.info | `refractiveindex.info/download/data/2017/schott_2017-01-20.pdf` | c94c9c869661c21c | none: the Sellmeier constants and the printed indices of N-BK7, N-F2 and N-SF11 checked against the database's files (§3.9) |
+| refractiveindex.info database (M. N. Polyanskiy), CC0 1.0 | `raw.githubusercontent.com/polyanskiy/refractiveindex.info-database/master/LICENSE`, and the data files `main/{N-BK7, N-F2, N-SF11} (SCHOTT)`, `MgF2/nk/Dodge-o`, `MgF2/nk/Rodriguez-de Marcos`, `SiO2/nk/Malitson`, `SiO2/nk/Gao`, `Ta2O5/nk/Gao`, `Au/nk/Johnson`, `Ag/nk/Johnson`, `Al/nk/Rakic` | LICENSE 36ffd9dc085d529a; data: N-BK7 87da400af68251be, N-F2 85c50ba2f37383a0, N-SF11 367d46bc83845957, MgF₂ Dodge 86f453a855b8eadc, MgF₂ Rodríguez-de Marcos f97bc672a4f3051c, SiO₂ Malitson c587670f397241ec, SiO₂ Gao 18803e6bde85b356, Ta₂O₅ Gao 269efa1797dc91c4, Au 9f4bdab6bd49f7c6, Ag 8c79d5e2529e4d3a, Al e93b31fe82155183 | none: numbers, each file's reference and range (§3.9); the original papers (Johnson and Christy, Rakić and others) not read: their values are as the database gives them, which E35 part 2 records |
