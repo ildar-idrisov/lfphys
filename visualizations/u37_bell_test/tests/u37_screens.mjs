@@ -7,6 +7,7 @@
 //    phone), at the start and at each caption's chapter tick;
 //  - every screen and lab part: no text of the view outside its canvas, no horizontal scroll, no page error; in English
 //    no Cyrillic in the visible text;
+//  - Explore: after three more values of Δ, the earlier points' labels at the top right of S(Δ) never overlap;
 //  - Explore and Lab work on a phone: the statistics start under the readouts laid over the view (no text of the
 //    view under that box), the spacetime diagram folded under its toggle and drawn when opened;
 //  - Lab work on a phone: for each part the view, the part's first control and «Measure» on the screen together;
@@ -120,6 +121,21 @@ for (const [W, H] of SIZES) {
     await page.locator(".dm-screen:not([hidden]) .dm-play").first().click().catch(() => {});
     await page.waitForTimeout(5000);
     await settle(page);
+    // three more values of Δ: the earlier points' labels stack at the top right of S(Δ), never over each other
+    const det = page.locator('.dm-screen:not([hidden]) .dm-ctl[data-param="delta"] .dm-detent');
+    for (const k of [1, 5, 7]) { await det.nth(k).evaluate((b) => b.click()); await page.waitForTimeout(2000); }
+    await settle(page);
+    const tl = await page.evaluate(() => {
+      const boxes = [...document.querySelectorAll(".dm-screen:not([hidden]) .dm-stage canvas")].filter((c) => c.__layout)
+        .flatMap((c) => c.__layout.texts.filter((b) => b.part === "trace").map((b) => ({ c, ...b })));
+      const bad = [];
+      for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i], b = boxes[j];
+        if (a.c === b.c && Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0) > 0.5 && Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0) > 0.5) bad.push([a.s.slice(0, 30), b.s.slice(0, 30)]);
+      }
+      return { n: boxes.length, bad };
+    });
+    check(`${tag0} explore: three earlier points' labels, none over another`, tl.n >= 3 && tl.bad.length === 0, tl);
     if (W < 1000) {
       const u = await underReadouts(page);
       check(`${tag0} explore (phone): no text of the view under the readouts laid over it`, u.none || u.bad.length === 0, u);

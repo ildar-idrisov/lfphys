@@ -19,6 +19,8 @@ No rule "observed -> no interference" exists: interference between slits j and l
 
 from __future__ import annotations
 
+import hashlib
+import json
 import math
 from dataclasses import dataclass, field
 
@@ -32,6 +34,17 @@ from lfphys.theories.alternatives import born_rule, collapse
 from lfphys.theories.approx import paraxial
 
 FLAG_DARK, FLAG_R1, FLAG_READ, FLAG_SCAT, FLAG_REC, FLAG_MIX = 1, 2, 4, 8, 16, 32
+
+def setup_key(params: dict) -> int:
+    """The set-up's key: its parameters as sorted JSON, hashed to 64 bits (as u35's ``engine/bench.py rng_for``). Every
+    generator of a run is seeded by the world's seed and this key together, so that every set-up of an atlas, all of
+    which share one seed, draws its own independent sample (RULES §10). With the seed alone the 48 points of Explore
+    drew the same random numbers (common random numbers): at d = 100 and 200 µm all 4732 photons were detected at the
+    same instants, their positions drawn from the same uniforms through each point's distribution (Spearman 0.999998;
+    integrator I-P, 2026-11-19)."""
+    text = json.dumps({k: params[k] for k in sorted(params)}, sort_keys=True, default=repr)
+    return int.from_bytes(hashlib.sha256(text.encode("utf-8")).digest()[:8], "little")
+
 
 #: the elements at the slits by their short names (the parameter forms add which particle they act on)
 ELEMENT_NAMES = {"none": T("none"), "polarizer": T("polariser"), "hwp": T("λ/2 plate"), "qwp": T("λ/4 plate"),

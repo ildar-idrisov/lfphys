@@ -997,7 +997,14 @@ of the world shown: its preset, parameters and seed from that world's header; re
 without screens opens its first recording, as before. School worlds need Explore and Lab work (or `lab_absent`);
 a university world's screens are optional until it is reworked; research worlds and the laboratories have none and
 keep the full player only. The layout is PhET-like and works at 390 px (one column, touch targets ≥ 44 px, no
-horizontal scroll). Below 1000 px the top bar scrolls away; Explore's and Lab work's view stays at the top (sticky)
+horizontal scroll). The player's own style holds the rules every screen needs (`assets/demo.css`, `js/explore.js`;
+integrator I-P, 2026-11-19, in place of the CSS u35's view scoped for itself): a slider's detent labels never collide
+(`explore.js detentLabels`: every k-th label, the last always, the one before it dropped when they would touch), and a
+detent's hit area is 44 px high and no wider than the gap to its neighbours, so a tap at a detent chooses it; a label
+of the top bar's tabs is under 14 px only with five tabs or more (13 px at 1280 px, 12.5 px on a phone, so that the
+bar keeps one line in Russian); a select of five values or more lays its buttons out three to a row, each value inside
+its button (a long one wraps within it). Below 1000 px the top bar scrolls away; Explore's and Lab work's view
+stays at the top (sticky)
 while the controls scroll under it, the time bar stays at the bottom, and in Lab work «Measure», the stopwatch's
 «⏱ Stop» and the last message sit in a sticky dock above it; the page's scroll padding equals the sticky parts'
 heights, so a control the focus or a tap scrolls into view is not hidden under them (integrator D12). **Keys:** Space,
@@ -1023,7 +1030,7 @@ unit "× circular"): a trace's label and the passport write «label value unit»
 carries its unit reads «Speed, × circular 1.1» (W34). A school screen has no law parameter among its controls (rule 4);
 a standard screen may have one, flagged at the control and in the top bar while a modified point is shown. A select
 parameter's control shows its raw value through `t(value)`; a world that wants names for a select's values makes it a
-compound control with `labels` (u37's «Pairs»; `../STATUS.md` V53).
+compound control with `labels` (u37's «Pairs», u35's «Glass» of part 4; `../STATUS.md` V53 (v)).
 
 A **compound control** (EX2 F3) sets several parameters with one slider or select: `{id, label, unit?, values, labels?,
 sets: {<param>: [one value per grid value], …}, default?}`. Its `id` is a slug that is no parameter of the schema (nor
@@ -1107,8 +1114,10 @@ An atlas's points share the screen's `seed`, so **a world seeds its random numbe
 together** (u35's `engine/bench.py rng_for(seed, params)`: the set-up's parameters as sorted JSON, hashed to 64 bits,
 with the seed): with the seed alone every point of a grid draws the same random numbers (common random numbers), the
 fluctuations of neighbouring set-ups move together and a fit across them sees a χ²/dof far below 1 and a shared bias
-(W35: way 1 on the first build, χ²/ν 0.16 and n 2.7σ low). u37 and u32 still seed by the seed alone (`../STATUS.md`
-V53).
+(W35: way 1 on the first build, χ²/ν 0.16 and n 2.7σ low). u32 and u37 seed every generator of a run, the secondary
+ones included (u32's bootstrap and flow lines, u37's emissions and setting bits), by the seed and the set-up's key
+(their `engine/experiment.py setup_key`; integrator I-S, 2026-11-19: with the seed alone u32's neighbouring points
+detected their photons at the same instants and u37's E residuals at two angles correlated with r = 0.36).
 
 **Quantisation** (`lfviz/protocol.py`, «Quantised blobs»; `api.js decode`). A blob's descriptor may carry `q: {enc: lin
 | sqrt, lo, hi, nan?}` with a stored `u1` or `u2`; both decoders return float arrays (lin `lo + v/top·(hi − lo)`, sqrt
@@ -1314,7 +1323,9 @@ Explore 48 points, 5.50 MB (largest point 132.7 kB; 93 s of CPU), Watch `story` 
 pool; the design's notes after the implementation have every atlas): u34 5.91 MB (Explore 35 points 2.74 MB, largest
 point 120 kB; labs 0.65 and 1.67 MB; no shared blob to pool), u35 9.39 MB (Explore «Boundary» 456 points 3.55 MB,
 «Coatings» 1.15 MB, «Polarisation» 1.12 MB, labs 0.03, 0.74 and 2.23 MB, recordings 0.57 MB), u37 9.45 MB (Explore
-156 points 3.49 MB, labs 1.70 and 3.00 MB, recordings 1.26 MB), S03 7.09 MB (Explore 940 points 6.63 MB, over the 6 MB
+156 points 3.49 MB, labs 1.70 and 3.00 MB, recordings 1.26 MB; rebuilt on 2026-11-19 with one random stream per
+set-up, integrator I-S: labs 1.68 and 3.32 MB, the world 9.75 MB; u32 then 7.71 MB, Explore 5.09 MB), S03 7.09 MB
+(Explore 940 points 6.63 MB, over the 6 MB
 target and accepted in `sitelib.ACCEPTED`: the drawer's values are check messages in every point, about 1.05 MB of
 them).
 
@@ -1361,7 +1372,9 @@ for the toys, S03, u32, u34, u35 and u37 (with the recordings and atlases built 
 job runs it for the toy in EN and RU): every EX2 check on every Explore screen and lab step, read from their
 declarations (the time label against the frames in Watch, Explore and Lab work; the drawer of Lab work as Explore's;
 no verdict and the fit's output; every variant from the address; the task sheet printed, edited and restored, one A4
-page each); each EX2 world's own `<world>/tests/<world>_screens.mjs` from its view's `canvas.__layout` (captions clear
+page each; on every screen a tap at a detent's place chooses that detent, no two detent labels overlap and every value
+of a select lies inside its box: integrator I-P, 2026-11-19); each EX2 world's own
+`<world>/tests/<world>_screens.mjs` from its view's `canvas.__layout` (captions clear
 of what they describe; at 390 px the view, the step's control and «Measure» on screen together; no horizontal scroll;
 no text out of its box), `u32_double_slit/tests/u32_screens.mjs` (what is u32's own: the readout line, the folded panels,
 «▶ Compute live» from Explore, the explanations never over the pictures and the phone's map height, also at 1024 px and

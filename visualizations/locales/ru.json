@@ -1609,7 +1609,7 @@
  "{label}: {n:d} planned": "{label}: в плане {n:d}",
  "{label}: {value} (accepted: {standard})": "{label}: {value} (общепринято: {standard})",
  "{label}: {value} (standard: {standard})": "{label}: {value} (стандарт: {standard})",
- "{line} · © 2026 Ildar Idrisov · the texts of this worksheet: CC BY-NC-SA 4.0 ({cc}) · provided as is, without warranty · mark your changes and share changed copies under the same licence": "{line} · © 2026 Ildar Idrisov · тексты этого рабочего листа: CC BY-NC-SA 4.0 ({cc}) · предоставляются «как есть», без гарантий · отмечайте свои изменения, а изменённые копии распространяйте под той же лицензией",
+ "{line} · © 2026 Ildar Idrisov · the texts of this task sheet: CC BY-NC-SA 4.0 ({cc}) · provided as is, without warranty · mark your changes and share changed copies under the same licence": "{line} · © 2026 Ildar Idrisov · тексты этого бланка задания: CC BY-NC-SA 4.0 ({cc}) · предоставляются «как есть», без гарантий · отмечайте свои изменения, а изменённые копии распространяйте под той же лицензией",
  "{m:d} min": "{m:d} мин",
  "{m:d} min {s:d} s": "{m:d} мин {s:d} с",
  "{m:d} min {sec:.2f} s": "{m:d} мин {sec:.2f} с",

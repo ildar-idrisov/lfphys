@@ -152,7 +152,7 @@ def test_the_reflected_degree_of_polarisation_on_the_bench_against_the_engine():
     """Part 3's P = 1 − 2f with the analyser along p is (R_s − R_p)/(R_s + R_p) of the reflected light: the run's
     probabilities against ``polarization.degree_from_powers``."""
     for th in (40.0, 56.0, 62.0):
-        frames, header, _oc, _segs = point("lab.reflection", theta_deg=th, anaR_deg=0.0, med_out="schott_n_bk7")
+        frames, header, _oc, _segs = point("lab.reflection", theta_deg=th, anaR_deg=0.0, glass="bk7")
         m = frames[-1]["meas"]
         Rs = interfaces.stack([1.0, N_BK7], [], 632.8, math.radians(th), "s")["R"]
         Rp = interfaces.stack([1.0, N_BK7], [], 632.8, math.radians(th), "p")["R"]
@@ -260,7 +260,7 @@ def test_ways_12_to_15_polarisation_by_reflection():
     """Way 12 (right, coarse): with the analyser along p the reflected light is completely polarised near θ_B, P ≈ 1
     once the dark counts are subtracted (way 15); way 14: left in, the dark counts hold P at about 0.97–0.98 with no
     clear maximum; way 13: both ports added, the reflection only grows with the angle."""
-    rr = {t: row("reflection", theta_deg=t, anaR_deg=0.0, med_out="schott_n_bk7")
+    rr = {t: row("reflection", theta_deg=t, anaR_deg=0.0, glass="bk7")
           for t in SPECS["lab.reflection"]["controls"][0]["values"]}
     raw = {t: r["P"][0] for t, r in rr.items()}
     dark = {t: r["Pd"][0] for t, r in rr.items()}

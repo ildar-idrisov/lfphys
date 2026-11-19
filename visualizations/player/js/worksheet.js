@@ -30,7 +30,7 @@ const box = document.getElementById("ws");
 // creator's line and the notices that licence asks a reuser to keep (§3(a)(1)(A))
 const CREDIT_LINE = "lfphys — Ildar Idrisov — https://ildar-idrisov.github.io/lfphys/";
 const CC_URL = "https://creativecommons.org/licenses/by-nc-sa/4.0/";
-const credit = () => el("p", { class: "credit" }, t("{line} · © 2026 Ildar Idrisov · the texts of this worksheet: CC BY-NC-SA 4.0 ({cc}) · provided as is, without warranty · mark your changes and share changed copies under the same licence", { line: CREDIT_LINE, cc: CC_URL }));
+const credit = () => el("p", { class: "credit" }, t("{line} · © 2026 Ildar Idrisov · the texts of this task sheet: CC BY-NC-SA 4.0 ({cc}) · provided as is, without warranty · mark your changes and share changed copies under the same licence", { line: CREDIT_LINE, cc: CC_URL }));
 // a sheet: one printed page, its attribution line at its foot
 const sheet = (cls, ...children) => el("section", { class: "sheet " + cls }, el("div", { class: "sheet-body" }, ...children), credit());
 

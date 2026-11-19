@@ -216,6 +216,13 @@ export function createView(ctx) {
     cv.__layout.texts.push(box);
     return box;
   }
+  // a trace's label at the top right of a plot, stacked under the previous one: the next label starts below this one's
+  // box (a label wrapped into two or three lines included), and none is drawn past the plot's bottom
+  function traceLabel(g, cv, s, x, y, fs, maxW, yMax) {
+    if (y > yMax) return y;
+    const b = text(g, cv, s, x, y, { align: "right", color: muted(), size: fs - 2, maxW, part: "trace" });
+    return b.y1 + (fs - 2) * 0.85 + 3;
+  }
   const ink = () => css("--ink") || "#222", muted = () => css("--muted") || "#888", lineC = () => css("--line") || "#ccc";
   const sign = (o) => (o > 0 ? "+" : "−");
   const oCol = (o) => (o > 0 ? COL_PLUS : COL_MINUS);
@@ -611,7 +618,7 @@ export function createView(ctx) {
       g.globalAlpha = Math.max(0.3, tr.alpha ?? 0.4);
       g.strokeStyle = ink(); g.lineWidth = 1; g.beginPath(); g.moveTo(Xd(d), Ys(Sx.S + Sx.se)); g.lineTo(Xd(d), Ys(Sx.S - Sx.se)); g.stroke();
       g.fillStyle = muted(); g.beginPath(); g.arc(Xd(d), Ys(Sx.S), 3.5, 0, 2 * Math.PI); g.fill();
-      if (tr.label) { text(g, cv, tr.label, px1 - 4, ly, { align: "right", color: muted(), size: fs - 2, maxW: (px1 - px0) * 0.6 }); ly += fs; }
+      if (tr.label) ly = traceLabel(g, cv, tr.label, px1 - 4, ly, fs, (px1 - px0) * 0.6, py1);
       g.globalAlpha = 1;
     }
     const d = f.settings.delta, S = f.S;
@@ -663,7 +670,7 @@ export function createView(ctx) {
       const e = fr.meta.settings.etaA;
       g.globalAlpha = Math.max(0.3, tr.alpha ?? 0.4); g.fillStyle = muted();
       g.beginPath(); g.arc(Xe(e), Yj(m.J_pair), 3.5, 0, 2 * Math.PI); g.fill();
-      if (tr.label) { text(g, cv, tr.label, px1 - 4, ly, { align: "right", color: muted(), size: fs - 2, maxW: (px1 - px0) * 0.6 }); ly += fs; }
+      if (tr.label) ly = traceLabel(g, cv, tr.label, px1 - 4, ly, fs, (px1 - px0) * 0.6, py1);
       g.globalAlpha = 1;
     }
     const m = f.meas || {};

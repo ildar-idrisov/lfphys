@@ -475,8 +475,11 @@ def test_the_story_s_captions_quote_the_run_and_come_no_later_than_their_events(
     first = next(e for e in events if e["kind"] == "detection" and e["_w"] == 0)
     viol = next(e for e in events if e["kind"] == "result" and e["_w"] == 0)
     assert 3.0 <= played(first) <= 4.0          # caption at 3 s: the first coincidence follows it
-    assert 10.0 <= played(viol) <= 12.0         # caption at 10 s: the violation event follows it
-    # caption at 20 s quotes the run at 33.9 s (the last frame of the quantum world)
+    # caption at 10 s: the violation event follows it while it is shown (the next caption comes at 20 s); the event
+    # fires when the run's significance check first passes, at 12.35 s in this run (11.2 s with the common random
+    # numbers before 2026-11-19)
+    assert 10.0 <= played(viol) < 20.0
+    # caption at 20 s quotes the run at 33.95 s (the last frame of the quantum world)
     q = [f for f in frames if f["_w"] == 0][-1]["meas"]
     n = MOD.STORY_NUMBERS
     assert abs(q["coinc"] - n["n"]) < 0.05 * n["n"]

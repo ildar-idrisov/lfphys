@@ -510,3 +510,27 @@ def test_interior_refusals_and_where_it_does_not_apply():
     while not hit.done:
         hit.advance(1e300, 2.0)
     assert hit.done == "surface" and hit.interior() is None
+
+
+@pytest.mark.parametrize("r0", [7.0, 12.0, 20.0, 30.0, 50.0, 100.0])
+def test_every_turn_is_counted_once_when_chunks_end_within_a_rounding_of_it(r0):
+    """A chunk that ends within a rounding of a full turn (the screens' frame clock does that on a circle: frames every
+    T/32, each chunk computed 1/8 of a period ahead) lost the turn or counted it twice: the old bounds floor(psi / 2 pi)
+    and the test 0 < p <= p_end rounded two ways (EX2 W34, CI 2026-11-19: 7 of 150 starts perturbed by ulps lost a turn,
+    so a circle's period came out 4/3 or 3/2 of Kepler's). Every turn now comes once, in order, at its angle."""
+    T_s = 10 * GM_SUN / C**3  # the world's seconds per GM/c³ (10 M☉): its frame times are seconds, converted back
+    for j in range(25):
+        r = r0 * (1 + j * 2.2e-16)
+        v = math.sqrt(1.0 / (r - 2.0))
+        T = 2 * math.pi * r**1.5
+        step = T * T_s / 8.0 / 4.0  # a period in 8 played seconds at 4 frames per second, in world seconds
+        s = osm.OrbitStream(r, 0.0, v)
+        laps = [e for e in s.advance(T / 8, max_turns=2.0)["events"] if e["kind"] == "lap"]
+        for k in range(1, 4 * 32 + 3):
+            t = k * step / T_s
+            while s.t < t and not s.done:
+                laps += [e for e in s.advance(max(t, s.t) + T / 8, max_turns=2.0)["events"] if e["kind"] == "lap"]
+        assert [e["n"] for e in laps] == list(range(1, len(laps) + 1)) and len(laps) >= 4, (j, [e["n"] for e in laps])
+        for e in laps:
+            assert e["psi"] == pytest.approx(2 * math.pi * e["n"], abs=1e-9)
+            assert e["t"] == pytest.approx(e["n"] * T, rel=1e-10)

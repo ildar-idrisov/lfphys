@@ -276,15 +276,22 @@ class OrbitStream:
             for kind, k in (("peri", 3), ("apo", 4)):
                 for p, Y in zip(sol.t_events[k], sol.y_events[k]):
                     events.append(self._event_binet(kind, float(p), Y))
-        # full turns
-        n0 = math.floor(self.psi / (2 * math.pi)) + 1
-        n1 = math.floor((self.psi + p_end) / (2 * math.pi))
-        for n in range(n0, n1 + 1):
+        # full turns, counted by the stream's own counter: the next turn's angle is 2 pi (n_lap + 1), at p = that minus
+        # the chunk's start, in this chunk when p <= p_end (one comparison decides it). The former floor(psi / 2 pi)
+        # bounds and the test 0 < p <= p_end rounded two ways: a chunk ending within a rounding of a turn (the screens'
+        # frame clock makes that systematic on circles, T/32 per frame) lost the turn or counted it twice, depending on
+        # the CPU's last bits (CI's AVX-512 runner; EX2 W34). A turn that the previous chunk ended a rounding short of
+        # lies at this chunk's start (p = 0).
+        n = self.n_lap + 1
+        while True:
             p = 2 * math.pi * n - self.psi
-            if 0 < p <= p_end:
-                ev = self._event_binet("lap", p, sol.sol(p))
-                ev["n"] = n
-                events.append(ev)
+            if p > p_end:
+                break
+            p = max(p, 0.0)
+            ev = self._event_binet("lap", p, sol.sol(p))
+            ev["n"] = n
+            events.append(ev)
+            n += 1
         if reason:
             events.append(self._event_binet(reason, p_end, Y_end))
         # samples: a uniform grid in psi aligned to the global angle, the chunk end, and (before a stop or escape)

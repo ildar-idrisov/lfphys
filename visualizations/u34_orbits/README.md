@@ -166,7 +166,10 @@ The event says when the body crosses r = 2M and reaches r = 0 by its own clock; 
 **Newton (approximation): `lfphys.theories.approx.newton.integrate_body_regularized`** (the Levi-Civita
 regularisation, x + iy = u², dt = r dτ: smooth through any periapsis; EX2 §11 item 10, STATUS V19 (e): in coordinate
 time a periapsis at ~10⁻⁶ r₀ cost ~10⁻⁵ of |E|, now a few 10⁻⁹ over three orbits, measured beside the coordinate-time
-integrator in `tests/test_u34_screens.py`), every chunk in units of its own start radius r_c (GM = 1, time unit
+integrator in `tests/test_u34_screens.py`) on a deep orbit (r_p < 2·10⁻³ a, of r₀ when unbound, a radial fall);
+`integrate_body` (coordinate time) on the others, whose states are consistent to ~10⁻¹⁵, while the regularised output
+scatters by ~10⁻¹²: a nearly circular orbit's apsis would move by ~10⁻⁶ rad (0.69″ at r₀ 50 M, speed 1.0000004, under
+ulp changes of the start; CI 2026-11-19); every chunk in units of its own start radius r_c (GM = 1, time unit
 r_c^{3/2}), so that the engine's tolerance is uniform in position and velocity at every depth of an eccentric orbit; a
 chunk ends after half a local dynamical time or sooner than the fastest fall from r_c to r_c/4 the local speed allows
 (0.9 · 0.75/√(v₀² + 6)): the regularised integration passes a deep periapsis in one smooth step of its fictitious time,

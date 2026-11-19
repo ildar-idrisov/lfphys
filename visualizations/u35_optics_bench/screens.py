@@ -126,6 +126,10 @@ SAMPLE_CONTROL = {
                T("N-SF11 inside")],
     "sets": {"med_in": ["air" if s.endswith("air") else _G[s.split("_")[0]] for s in SAMPLES],
              "med_out": [_G[s.split("_")[0]] if s.endswith("air") else "air" for s in SAMPLES]}}
+#: part 4's glass, named by its catalogue name (a compound control: a select of a parameter shows its raw value,
+#: STATUS V53 (v))
+GLASS_CONTROL = {"id": "glass", "label": T("Glass"), "values": list(_G), "default": "bk7",
+                 "labels": [T("N-BK7"), T("N-F2"), T("N-SF11")], "sets": {"med_out": list(_G.values())}}
 COATINGS = ["bare", "mgf2_bulk", "mgf2_film", "hl4", "hl8", "al100", "ag100"]
 COATING_CONTROL = {
     "id": "coating", "label": T("Coating"), "values": COATINGS, "default": "mgf2_film",
@@ -300,7 +304,7 @@ STEPS = [
                    "label": T("Angle of incidence θ"), "unit": "°"},
                   {"param": "anaR_deg", "values": [float(x) for x in range(0, 91, 15)], "default": 0.0,
                    "label": T("Analyser's angle α"), "unit": "°"},
-                  {"param": "med_out", "values": list(_G.values()), "default": "schott_n_bk7", "label": T("Glass")}],
+                  GLASS_CONTROL],
      "frame_dt": 0.1, "speed": 0.05, "stop": {"world_s": 0.5},
      "drop": {"blobs": _DROP_SPEC}, "quantize": {**_Q_ANGLE, **_Q_COMMON},
      "instruments": ["table", "ana_r", "clock", "pass_r", "reject_r"],
@@ -363,9 +367,9 @@ WORKSHEET = {
     "record_rows": 20,
     "variants": [
         {"id": "f2", "label": T("N-F2 glass"),
-         "values": {"fresnel": {"sample": "f2_air"}, "reflection": {"med_out": "schott_n_f2"}}},
+         "values": {"fresnel": {"sample": "f2_air"}, "reflection": {"glass": "f2"}}},
         {"id": "sf11", "label": T("N-SF11 glass"),
-         "values": {"fresnel": {"sample": "sf11_air"}, "reflection": {"med_out": "schott_n_sf11"}}},
+         "values": {"fresnel": {"sample": "sf11_air"}, "reflection": {"glass": "sf11"}}},
         {"id": "inside", "label": T("N-BK7 from inside: the critical angle"), "steps": ["dark", "fresnel"],
          "values": {"fresnel": {"sample": "bk7_in"}},
          "text": {"goal": T("Find the critical angle of N-BK7 from inside the glass and the index it gives.")}},

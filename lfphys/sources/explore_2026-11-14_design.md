@@ -235,7 +235,12 @@ run's χ² and p of the sample so far against that expectation. Explore draws th
 and, as an overlay, the expectation scaled to the count. The passport says «one sample of 5000 particles (seed 1); the
 curve is the run's expectation». The live run with the same seed gives another realisation with the same statistics
 (review P17-site F11). On a server, «Another sample» computes the point live with the next seed (§3.7). The site
-stores no second sample.
+stores no second sample. [2026-11-19, integrator I-S, [error in earlier]: the points of an atlas share the screen's
+seed, and u32 seeded its generators by the seed alone, so its 48 points drew the same random numbers (at d = 100 and
+200 µm every photon was detected at the same instant, its position drawn from the same uniform through each point's
+distribution: Spearman 0.999998). Every generator of a run is now seeded by the seed and the set-up's key
+(`u32_double_slit/engine/experiment.py setup_key`, as u35's `rng_for`; `RULES.md` §10), so each point is an
+independent sample.]
 
 ### 1.7 How the atlas is made: offline, locally and in CI
 
@@ -849,7 +854,8 @@ described without an angle (review R-W F14).]
   600, 700} nm (the slider coloured by the wavelength), d {50, 100, 200, 300} µm, a {10, 20, 40} µm, each with its own
   short label and unit: 48 points, all with d > a.
 - `time: "buildup"`, `stop {world_s: 5.25}` (5000 hits at 1000 per second; *measured* on the ±30 mm screen 3713–5196
-  hits, [error in earlier]: 5193–5196 on the automatic screen), `frame_dt
+  hits, [error in earlier]: 5193–5196 on the automatic screen; [2026-11-19, integrator I-S: 3677–5134 once each point
+  draws its own sample (§1.6), χ² p 0.017–0.98, median 0.52, 3 of 48 below 0.05]), `frame_dt
   0.25`, `acts: "now"`, 3 traces (earlier points' expectation curves, faded, labelled «λ 500 nm, d 100 µm, a 20 µm»).
 - `drop`: `stories`; frame blob `flight`. `quantize`: `segment.map: u8sqrt`, `segment.bohm_x: u16`,
   `detections.t|x: u16`, `detections.y|f: u8`, `header.x: u16`. *Measured* loss: x is quantised in steps of at most
@@ -887,7 +893,8 @@ described without an angle (review R-W F14).]
 ### 6.4 What does not change
 
 The physics, the schema, the 19 presets (one is added: `story`), the checks and the live behaviour of u32 do not
-change. Its `Simulation` gains nothing. The view gains `ctx.screen` handling, `overlays`, `setTraces`, `quantSafe` and tolerance of the dropped
+change. Its `Simulation` gains nothing [2026-11-19, integrator I-S: it gains the seeding by the seed and the set-up
+together, §1.6]. The view gains `ctx.screen` handling, `overlays`, `setTraces`, `quantSafe` and tolerance of the dropped
 frame blob. `test_u32_physics.py`, `test_restore.py`, `test_checkpoint.py` and `keyframes.mjs` keep passing
 unchanged. The world's `version` goes 1.2 → 1.3, since the recordings' specs change.
 

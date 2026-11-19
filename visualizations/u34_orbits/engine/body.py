@@ -220,6 +220,14 @@ class NewtonTrack(Track):
         if r_apo is not None:
             far = max(far, 1.5 * r_apo)  # a bound orbit is followed out to its apoapsis (review V4-6)
         self.r_far = far
+        # the integrator (EX2 §11 item 10; W34's CI fix of 2026-11-19): the Levi-Civita regularised one where the orbit
+        # dives deep (its largest term v²/2 + GM/r exceeds |E| by more than 1e3, so that the coordinate-time integration's
+        # 1e-12 of that term would exceed 1e-9 of |E|: r_p < 2e-3 of a, of r0 for an unbound orbit, a radial fall), the
+        # coordinate-time one elsewhere: on a smooth orbit its states are consistent to ~1e-15, while the regularised
+        # output (inverted from its fictitious time) scatters by ~1e-12, which a nearly circular orbit's apsis turns into
+        # ~1e-6 rad (measured: 0.69″ against 0.0009″ at r0 50 M, speed 1.0000004, under ulp changes of the start)
+        scale = (-0.5 / self.E0) if self.E0 < 0 else r0
+        self.regularised = self.h0 == 0.0 or r_peri < 2e-3 * scale
         self.dyn = self.period or TWO_PI * r0**1.5
         self.chunks: list[dict] = []
         self.psi_prev = 0.0  # swept angle at the chunk start
@@ -229,9 +237,11 @@ class NewtonTrack(Track):
         self._chunk(self.t0 + 0.125 * self.dyn)
 
     def _fine(self, Xl, dt, n, r_stop):
-        """The engine's Levi-Civita regularised integration (``newton.integrate_body_regularized``; EX2 §11 item 10,
-        STATUS V19 (e)): smooth through a deep periapsis, where the coordinate-time integration lost ~1e-5 of |E|."""
-        return newton.integrate_body_regularized((Xl[0], Xl[1]), (Xl[2], Xl[3]), 1.0, dt, n_out=n, r_stop=r_stop)
+        """The engine's integration of one chunk: Levi-Civita regularised (``newton.integrate_body_regularized``; EX2
+        §11 item 10, STATUS V19 (e)) on a deep orbit, smooth through its periapsis where the coordinate-time integration
+        lost ~1e-5 of |E|; ``newton.integrate_body`` on the others (see ``regularised`` in the constructor)."""
+        f = newton.integrate_body_regularized if self.regularised else newton.integrate_body
+        return f((Xl[0], Xl[1]), (Xl[2], Xl[3]), 1.0, dt, n_out=n, r_stop=r_stop)
 
     def _chunk(self, t_until):
         rc = math.hypot(self.X[0], self.X[1])

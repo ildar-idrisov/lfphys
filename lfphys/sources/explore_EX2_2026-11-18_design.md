@@ -1121,6 +1121,74 @@ more than 20»); in the local world at 49.95 s S = 1.335 ± 0.066 after 3 269 co
 [error in earlier] §4.4's 6.2 MB and 17 s: every point now carries the detectors' checks and the slots (about
 20–25 kB), and part 4 has 189 points.
 
+**Notes of 2026-11-19 (integrator I-S): one random stream per set-up.** [error in earlier] The table above was measured
+while every generator of a run came from the seed alone (`SeedSequence([seed, 37])`, `[seed, 38]` and the run's
+`default_rng(seed)`), and every point of an atlas has the screen's seed, so all points drew the same emission times,
+setting bits and outcome draws (common random numbers; `STATUS.md` V53 (i)). E's residuals at β = 22.5° and 30° (α = 0)
+correlated with r = 0.358 (95 % 0.27–0.44) over 400 seeds, against 0.068 with different seeds; τ = 5 µs gave the very
+draws of τ = 100 ns (way 8 = way 6). Every generator is now seeded by the seed and the set-up's key
+(`u37_bell_test/engine/experiment.py setup_key`, the parameters as sorted JSON hashed to 64 bits, as u35's `rng_for`;
+`RULES.md` §10): the same correlation is −0.038 (−0.136…0.060), and −0.003 with different seeds. The atlases were
+rebuilt and every way recomputed on the atlas's own points (seed 1); `tests/test_u37_screens.py` asserts them, and the
+same assertions pass on seeds 2, 3 and 4:
+
+| # | measured with the shared draws (seed 1) | measured now (seed 1) | seeds 2 / 3 / 4 | status |
+|---|---|---|---|---|
+| 1 | 1.0009 ± 0.0008, χ²/ν 0.32 | 1.0009 ± 0.0008, χ²/ν 1.33 | 1.0006, 0.89 / 1.0012, 1.06 / 1.0000, 1.11 | [error in earlier] χ²/ν; the slope [useful] |
+| 2 | 0.584, −0.143, χ²/ν 18 132 | 0.568, −0.146, χ²/ν 18 559 | — | [useful] |
+| 3 | −1.0015 ± 0.0009 (χ²/ν 0.69); χ²/ν 14 131 | −1.0019 ± 0.0009 (χ²/ν 1.11); χ²/ν 11 971 | −1.0013, 1.29 / −1.0005, 1.01 / −0.9999, 0.86 | [error in earlier] χ²/ν; [useful] |
+| 4 | N = 99: σ_E 0.072; N = 1 130: 0.022 | N = 107: 0.071; N = 1 136: 0.021 | — | [useful] |
+| 5 | 2.781 ± 0.043, fraction 0 | 2.811 ± 0.042, fraction 0 | 2.821 / 2.849 / 2.821 | [useful] |
+| 6 | 2.791 ± 0.043, 18.4σ, fraction 1 | 2.722 ± 0.044, 16.5σ, fraction 1 | 2.760, 17.5σ / 2.855, 20.4σ / 2.826, 19.5σ | [useful] (one sample 2.4σ low) |
+| 7 | −0.045 ± 0.060; −2.391 ± 0.033 (spins at 45°: −2.888) | +0.068 ± 0.060; −2.387 ± 0.035 (−2.833) | photons at 45°: −0.067 / +0.091 / −0.011 | [useful] |
+| 8 | 2.791 ± 0.043 (the draws of way 6), fraction 0 | 2.862 ± 0.042, fraction 0 | 2.858 / 2.890 / 2.834 | [error in earlier]: way 6's draws; now its own sample |
+| 9 | N = 380: σ_S 0.148, 5.2σ; V 0.85: 2.384 ± 0.048 | N = 370: σ_S 0.155, 4.5σ; V 0.85: 2.435 ± 0.047 | σ_S 0.153 / 0.141 / 0.138; V: 2.402 / 2.370 / 2.442 | [useful]: «about 6σ» is 4.5–6.8σ |
+| 10 | 1.0084 ± 0.0049 (χ²/ν 0.60); local 0.4943 ± 0.0074 (0.33), largest \|S\| 1.42 | 0.9949 ± 0.0050 (1.08); local 0.5068 ± 0.0074 (2.62), 1.47 | q 0.9987 (1.01) / 1.0000 (0.80) / 0.9990 (0.61); local 0.4989 (1.16) / 0.4927 (1.10) / 0.5025 (0.65) | [useful]; χ²/ν over 10 points does not tell (below) |
+| 11 | S 2.8281; J 0.2050 ± 0.0005; dark 0.1553 | 2.8285; 0.2043 ± 0.0005; dark 0.1558 ± 0.0005 | 0.2060 / 0.2052 / 0.2044 | [useful] |
+| 12 | 2.8279 ± 0.0012 | 2.8282 ± 0.0012 | — | [useful] |
+| 13 | none −0.0704; dark −0.1198 | −0.0707; −0.1208 | — | [useful] |
+| 14 | none +0.00507 (24.6σ); dark −0.0448; η 0.80 +0.0173 (82.7σ) | +0.00543 (26.3σ); −0.0444; +0.0177 (84.6σ) | none 0.00475 / 0.00475 / 0.00507; dark −0.0450 / −0.0449 / −0.0450 | [useful] |
+| 15 | all < 0 | the same to 3 digits, all < 0 | all < 0 | [useful] |
+| 16 | 19.2 %, S 2.3724, subtracted 2.8285 | 19.2 %, 2.3709, 2.8266 | — | [useful] |
+| 17 | 1.54 %, S 2.7848, subtracted 2.8277 | 1.54 %, 2.7847, 2.8276 | — | [useful] |
+| 18 | × 0.765; S 2.8279; J 0.0275 against 0.0283 at 2 ns | × 0.765; 2.8277; J 0.0247 against 0.0276 | J at 0.5 / 2 ns: 0.0272 / 0.0273, 0.0280 / 0.0269, 0.0265 / 0.0274 | [useful]; [weakens]: seed 1's J at 0.5 ns lies 4.4σ below the engine's 0.0270 (seeds 2–6: −1.1 to +2.0σ) |
+| 19 | S 2.8290; J −0.1456; CH −0.00146; 0.667 | 2.8290; −0.1463; −0.00146; 0.667 | — | [useful] |
+| law | 1.1990 ± 0.0019, −0.9934, η₀ 0.8285, χ²/ν 1.83 | 1.1963 ± 0.0019, −0.9919, η₀ 0.8291, χ²/ν 1.58 | χ²/ν 0.43 / 1.62 / 1.51 | [useful] |
+
+**Was W37's low χ²/ν the shared randomness?** Yes for ways 1 and 3, measured; for way 10, not distinguishable. Over 24
+seeds, each seed's whole grid as the atlas computes it: with the shared draws way 1's χ²/ν had a mean of 0.90 and a
+standard deviation of 0.37 (min 0.32, max 1.61) and way 3's 0.95 and 0.55 (0.33–2.86), against the 0.164 of χ² with
+74 degrees of freedom: the shared fluctuations moved whole rows of points together, so a fit across them saw χ²/ν too
+low or too high by turns, and seed 1's 0.32 was the lowest of the 24 (with independent points the chance of χ²/ν ≤ 0.32
+at ν = 74 is about 10⁻⁸). Now way 1 has 0.97 ± 0.18 and way 3 0.99 ± 0.17 over the same 24 seeds, as χ² requires
+[useful]. Way 10 fits 11 points (ν = 10, a standard deviation of 0.45 for χ²/ν): with the shared draws 0.90 ± 0.37,
+now 0.99 ± 0.42 (local 0.98 ± 0.56, now 1.12 ± 0.58); its 0.60 was an ordinary value either way. Part 4's law: 1.14
+± 0.69, now 1.15 ± 0.72 (ν = 5) [neutral]. Two further observations, hypotheses until examined: way 1's slope over the
+24 independent seeds is 1.00042 with a scatter of 0.00041, half its stated error 0.0008 and 5 standard errors of the
+mean above 1 — the points at |E| ≈ 1 carry the error of one count for their empty cells (V53 (ac)), which makes the
+error conservative and the weights depend on the counts; and J per pair against the engine over 168 points has
+standardised residuals with a standard deviation of 1.09 [useful].
+
+**Two checks of the world were wrong** [error in earlier], found when the points became independent (seed 20 failed
+two points): «Singles of all the detectors» compared the four detectors' sum with one Poisson σ, but a pair detected at
+both sides counts at both stations, so the sum's variance is about (1 + η) times its mean (z had a standard deviation
+of 1.25–1.37 over 306 points; z = 5.01 at part 1, spins, β = 150°, seed 20); now each station is compared on its own
+(Poisson), and the check passes when both are within 5σ. «Accidental coincidences» summed the four cells, which with
+coinciding settings (Δ = 0) are the same coincidences four times, against one Poisson σ, and two pairs emitted within
+the window give two accidentals at once (A₁B₂ and A₂B₁): 8 counted against 0.41 estimated failed (2 against 0.10 of one
+cell); now each pair of settings counts once and σ is √(2·estimate). Over seeds 2–8 and 20 (2 448 runs of parts 1–3)
+no check fails.
+
+**Watch, measured again** (the story's emissions moved with the seeding): the first emissions at 190.877 µs and
+501.111 µs, the script's speeds 1.904·10⁻⁴ and 3.0707·10⁻⁴ (0.48 µs and 0.31 µs before them); the first coincidence at
+3.6 s; the violation event (7.3σ: S = 2.893 ± 0.123 after 505 coincidences) at 12.35 s, while the 10 s caption is shown
+(the test now asks for the event before the next caption at 20 s, not by 12 s); at 33.95 s S = 2.804 ± 0.040 after
+4 975 coincidences, 19.9σ: the caption at 20 s says «about 5000 … 2.80 ± 0.04, more than 19» (it said 2.82 and 20);
+the local world at its end S = 1.416 ± 0.064 after 3 422 coincidences («about 1.4»).
+
+**Sizes, rebuilt**: Explore 3.49 MB, part 1 1.68 MB, part 4 3.32 MB (3.00 MB with the shared draws: the 40 slots shown
+per frame were the same in every point and pooled once), recordings 1.26 MB; the world 9.75 MB.
+
 ---
 
 ## 5. The framework changes (step F, before the worlds)

@@ -55,7 +55,10 @@ run of the preset "Photons 633 nm, two slits (Young, one photon at a time)" at t
 screen fixed at ±30 mm, so that every point is drawn on the same axis (with the automatic width, ±(span/2 + 3λL/a),
 the axis would scale with λ/a and hide what λ and a do, and at a = 10 µm the screen's edges lie outside the paraxial
 region: the check against the exact Rayleigh–Sommerfeld integral fails there). Each point is one seeded sample (seed
-1): 5.25 s of world time at 1000 photons per second, 3700–5200 of them landing on the screen, and the run's own
+1, its generators seeded by the seed and the point's set-up together, so that the 48 points are independent samples:
+[error in earlier] until 2026-11-19 the seed alone, and neighbouring points detected their photons at the same
+instants with positions drawn from the same uniforms): 5.25 s of world time at 1000 photons per second, 3677–5134 of
+them landing on the screen (χ² p of the 48 points 0.017–0.98, median 0.52), and the run's own
 expectation (the orange curve, scaled to the hits shown) with its χ² against the sample. ▶ builds the pattern up
 again; the time bar is the world's time of the build-up (the hits so far are in the readout line), and a change of a
 slider keeps it, so two points are compared at equal times. The last three points stay as faded dashed curves in their light's colour, labelled by their set-up
@@ -67,10 +70,11 @@ map, the curves and every hit are the point's own messages; the dots' colour is 
 **Sizes and cost** (measured 2026-11-17, Docker `lfphys-viz`, CPU): the Explore atlas 5.50 MB gzip for 48 points (largest
 132.7 kB; budget 6 MB per atlas, 150 kB per point), 88–131 s CPU in three builds (the error of |γ₁₂| is bootstrapped on
 every 10 % growth of the hits, 53 s before); `story` 0.60 MB, 7 s CPU; `young` 0.73 MB, `eraser` 0.64 MB,
-`aharonov_bohm` 0.67 MB; the world 8.15 MB (budget 12 MB). Quantised for the screens, only what is drawn:
-the near-field map (u8 of √, 1/255 of the peak's square root), the flow lines (u16), the hits' positions (u16: at most
-0.03 of a detector pixel) and display heights (u8), in Explore also the hits' times (u16) and the screen grid (u16); the
-curves, the checks, the counters and χ² are full precision.
+`aharonov_bohm` 0.67 MB; the world 8.15 MB (budget 12 MB). Rebuilt on 2026-11-19 with each point's own sample: Explore
+5.09 MB (largest point 123.0 kB), 109 s CPU; `young` 0.71 MB; the world 7.71 MB. Quantised for the screens, only what is
+drawn: the near-field map (u8 of √, 1/255 of the peak's square root), the flow lines (u16), the hits' positions (u16: at
+most 0.03 of a detector pixel) and display heights (u8), in Explore also the hits' times (u16) and the screen grid
+(u16); the curves, the checks, the counters and χ² are full precision.
 
 ## The causal chain of one particle (all computed in the run)
 
@@ -284,11 +288,15 @@ mode with Fabry–Pérot resonances of height λ/(πa). The preset
 "Vector diffraction: 0.5 µm slits in a 0.2 µm conducting screen, polarisation D" (a = 0.5 µm, d = 3 µm, t = 0.2 µm,
 L₂ = 1 cm, polarisation D) gives T_TE = 1.056, T_TM = 0.974 (with 52 modes; 0.973 with the default 26) and Kirchhoff
 0.805. Its histogram follows the vector curve: for 30 000 emitted photons (≈ 5 000 detected) seeds 1–5 give χ² p =
-0.33, 0.006, 0.67, 0.44, 0.10, while the scalar Kirchhoff curve is rejected at p ≤ 5e-7 in all five [error in earlier:
-"χ² p = 0.52" was one seed; review B8 C15]. Over 40 seeds the median p is 0.33 and 15 % lie below 0.05: Pearson's χ²
-with ~120 bins, 46 of them expecting only 5–10 counts, is mildly anti-conservative at this count (10 % without the TM
-doubling); with 300 000 photons (≈ 50 000 detected) p = 0.62, 0.39, 0.76 — no systematic mismatch between the hits and
-the curve.
+0.70, 0.22, 0.21, 0.76, 0.43, while the scalar Kirchhoff curve is rejected at p ≤ 4e-6 in all five [error in earlier:
+"χ² p = 0.52" was one seed; review B8 C15]. Over 40 seeds the median p is 0.45 and 3 of 40 (7.5 %) lie below 0.05, the
+Kirchhoff curve at p ≤ 1.2e-5 in all; with 300 000 photons (≈ 50 000 detected) p = 0.31, 0.54, 0.80 — no systematic
+mismatch between the hits and the curve. [2026-11-19: these samples are drawn with the generators seeded by the seed
+and the set-up together (`engine/experiment.py setup_key`, RULES §10); with the earlier seeding by the seed alone the
+same seeds gave 0.33, 0.006, 0.67, 0.44, 0.10 (Kirchhoff ≤ 5e-7), over 40 seeds a median of 0.33 with 15 % below 0.05,
+read then as Pearson's χ² being mildly anti-conservative with ~120 bins, 46 of them expecting only 5–10 counts (10 %
+without the TM doubling), and at 300 000 photons 0.62, 0.39, 0.76; the two sets differ by the scatter between samples (6
+against 3 of 40 below 0.05).]
 
 ## Conventions
 

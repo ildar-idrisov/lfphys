@@ -26,9 +26,9 @@ bookkeeping), the messages and the drawing.
 ## The screens
 
 * **Watch** — «Pairs, S above 2, and a local model» (recording `story`, 50 s at 20 frames per second): the first two
-  pairs' flights slowly (the script's speed changes sit on the run's own emission times, 219.8 µs and 356.6 µs), then
-  about 200 coincidences per played second; S passes 2 under fair sampling and settles near 2√2 (at 33.9 s: S =
-  2.820 ± 0.040 after 4 949 coincidences, 20.3 standard errors above 2); at 34 s a new world of local hidden
+  pairs' flights slowly (the script's speed changes sit on the run's own emission times, 190.9 µs and 501.1 µs), then
+  about 200 coincidences per played second; S passes 2 under fair sampling and settles near 2√2 (at 33.95 s: S =
+  2.804 ± 0.040 after 4 975 coincidences, 19.9 standard errors above 2); at 34 s a new world of local hidden
   variables (flagged «MODIFIED PHYSICS»), where S stays near √2. Captions in English and Russian; each comes no later
   than its event (`tests/test_u37_screens.py`). «More recordings»: `chsh`, `local_model`, `scan`.
 * **Explore** — the CHSH bench (156 points): «Pairs» (photons, spin ½) × «Angle step Δ» (a = 0, b = Δ, a′ = 2Δ,
@@ -112,15 +112,19 @@ The detectors' default values are a real device, the Excelitas SPCM-NIR (SPCM-80
   law; the local models' |S| ≤ 2 (the polarisation and sign models) or, for Gisin and Gisin's model, |S| of the detected
   pairs above 2 explained (the detection loophole).
 * The detectors: the device's identity; independent slots (t_d + 5σ)/T_s < 0.1; the window's share erf(w/(4σ)) of a
-  pair's two clicks against the run's own share (time stream); the singles of all detectors against
-  (ηR + d)/(1 + (ηR + d)t_d) (Poisson z); μ; for the bench's sources, the efficiency threshold of J for this state and
-  background (`THRESHOLDS`, computed by `bell_stats.threshold_efficiency`).
+  pair's two clicks against the run's own share (time stream); the singles of each station's two detectors against
+  (ηR + d)/(1 + (ηR + d)t_d) (a Poisson z per station: a pair detected at both sides counts at both, so the four
+  detectors' sum varies by about 1 + η times its mean; [error in earlier] until 2026-11-19 the sum with one Poisson σ,
+  which failed at 5.01σ on an ordinary sample); μ; for the bench's sources, the efficiency threshold of J for this state
+  and background (`THRESHOLDS`, computed by `bell_stats.threshold_efficiency`).
 * The coincidences (re-evaluated as the counts grow by half, at least every 250; in the counting by slots at 1, 2, 5 ×
   10ⁿ trials): E of each setting pair against the engine's prediction for these devices (`coincidence_rates`: the
   accidentals, the live fractions, the window's share), with the error under the prediction floored at one count of
   the rarer outcome (2/N); S against its prediction; S with the accidentals subtracted against S of the true
-  coincidences; the accidentals' estimate against the run's own count; |S| ≤ 2√2 + 5σ; for local laws |S| ≤ 2 + 5σ;
-  (|S| − 2)/σ; χ² of all measured E(Δ) points; no signalling from the counts; the space-like fractions. With
+  coincidences; the accidentals' estimate against the run's own count (each pair of settings once, σ² twice the
+  estimate: two pairs emitted within the window give two accidentals at once; [error in earlier] until 2026-11-19 the
+  four cells summed, four times the same cell at Δ = 0, with one Poisson σ); |S| ≤ 2√2 + 5σ; for local laws |S| ≤ 2 +
+  5σ; (|S| − 2)/σ; χ² of all measured E(Δ) points; no signalling from the counts; the space-like fractions. With
   coinciding settings (a′ = a or b′ = b) the error of S counts each angle pair once and the S line says that this is
   not a CHSH test (review 2026-10-23 V7-2).
 * All the trials: J = p₊₊(a′b) − p₊₀(a′b′) − p₀₊(ab) − p₊₊(ab′) and CH (Gisin and Gisin's (15)) per slot against the
@@ -157,7 +161,13 @@ The detectors' default values are a real device, the Excelitas SPCM-NIR (SPCM-80
 * A setting switches at the slot's boundary instantly; the measurement is the arrival instant (its duration enters only
   through the jitter and the dead time).
 * The setting choice is a fair coin from the run's seeded generator; the «freedom of choice» shown is the spacetime
-  relation only. Two illustrative local models plus Gisin and Gisin's; the optimal local model for given settings is
+  relation only. Every generator of a run (the emissions, each station's setting bits, the outcomes and the detectors'
+  draws, the slots shown in time) is seeded by the seed and the set-up together (`engine/experiment.py setup_key`: the
+  parameters as sorted JSON, hashed), so the points of an atlas, which share one seed, are independent samples.
+  [error in earlier] Until 2026-11-19 they came from the seed alone: every point drew the same emission times, bits
+  and outcome draws, E's residuals at two angles correlated (r = 0.36 over 400 seeds; −0.04 now), the fits across
+  points showed χ²/ν 0.32 (part 1) and 0.60 (S(Δ)), and τ = 5 µs gave the very draws of τ = 100 ns. Two illustrative
+  local models plus Gisin and Gisin's; the optimal local model for given settings is
   not searched.
 * The significance is the normal approximation of i.i.d. trials; the experiments' martingale p-values are not computed.
 
@@ -180,7 +190,8 @@ law's E and the visibility's scaling; every way of the bench on the atlas's own 
 shown slots against the engine's slot probabilities; Gisin and Gisin's slot table against a Monte Carlo; the
 thresholds table against `bell_stats.threshold_efficiency`; the story's captions against the recording.
 `tests/u37_screens.mjs` (a browser, from the view's `canvas.__layout`): the caption clear of the pictures, at 390 px
-the view, the step's control and «Measure» on screen together, no horizontal scroll, no text out of its canvas.
+the view, the step's control and «Measure» on screen together, no horizontal scroll, no text out of its canvas, the
+labels of three earlier points stacked on S(Δ), none over another.
 
 ## Sources
 

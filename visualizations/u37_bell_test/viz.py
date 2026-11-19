@@ -41,7 +41,7 @@ from lfphys.theories.models import photodetector as PD
 from lfphys.tools import bell_stats as BS
 
 from .engine.experiment import (F_FREE_A, F_FREE_B, F_LOC_A, F_LOC_B, F_TRUE, MODEL_LABEL, PAIR_LABEL, Law, Slots,
-                                Store, Stream)
+                                Store, Stream, setup_key)
 
 TSIRELSON = 2.0 * math.sqrt(2.0)
 EFFS_BENCH = (0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 1.00)  # part 4's efficiencies
@@ -241,10 +241,14 @@ class Simulation(BaseSimulation):
         self.v = C if P["pair"] == "photon" else float(P["spin_beta"]) * C
         self.slots_mode = P["counting"] == "slots"
         self.store = Store()
+        # every generator from the seed and the set-up together (engine ``setup_key``; RULES §10): an independent
+        # sample per point of an atlas, all of whose points share the screen's seed
+        key = setup_key(self.params)
+        self.rng = np.random.default_rng([int(seed), key])
         if self.slots_mode:
-            self.counter = Slots(self.law, self._si(), self.rng, seed, self.v)
+            self.counter = Slots(self.law, self._si(), self.rng, (seed, key), self.v)
         else:
-            self.counter = Stream(self.law, self.v, C, self._si(), self.rng, seed)
+            self.counter = Stream(self.law, self.v, C, self._si(), self.rng, (seed, key))
         self.seg = 0
         self.seg_counts = dict(coinc=0, loc=0, free=0, true=0)
         self.n_checked = 0
@@ -793,15 +797,25 @@ class Simulation(BaseSimulation):
                         ok=abs(z) < ZTOL,
                         note=T("± {se:.3g}; z = {z:+.2f}; reference: S of the true coincidences predicted by the engine "
                                "(the window's share, the live fractions)", se=float(Ssub_se), z=float(z)))
-        est = float(sum(np.sum(a) for a in accs))
-        own = int(sum(sum(c["acc"]) for c in cells))
+        # each pair of settings once (with coinciding settings two cells are the same coincidences); two pairs
+        # emitted within the window give two accidentals at once (A₁B₂ and A₂B₁), so the count's variance is at most
+        # twice its mean (I-S, 2026-11-19: with one Poisson σ of the four cells' sum, 8 counted against 0.41
+        # estimated failed at Δ = 0 for seed 20, which were 2 against 0.10 of one cell)
+        est, own, seen = 0.0, 0, set()
+        for c, a in zip(cells, accs):
+            k = Store.key(c["alA"], c["alB"])
+            if k not in seen:
+                seen.add(k)
+                est += float(np.sum(a))
+                own += int(sum(c["acc"]))
         if est > 0 or own > 0:
-            sd = math.sqrt(max(est, 1.0))
+            sd = math.sqrt(2.0 * max(est, 1.0))
             self._check("acc", T("Accidental coincidences: the estimate w·N_A·N_B/T ↔ the run's own count"), est,
                         float(own), "", g, ok=abs(own - est) < ZTOL * sd + 2.0,
                         note=T("the run knows which clicks of a coincidence come from different pairs, dark or "
-                               "background counts (a simulation only); {k:d} counted, {e:.4g} estimated, Poisson σ "
-                               "{sd:.3g}", k=own, e=est, sd=sd))
+                               "background counts (a simulation only); {k:d} counted, {e:.4g} estimated (each pair of "
+                               "settings once), σ {sd:.3g} (twice the Poisson variance: two pairs emitted within the "
+                               "window give two accidentals at once)", k=own, e=est, sd=sd))
         # all the trials: CH and J
         j = self._J()
         gs = G_SLOT
@@ -882,7 +896,12 @@ class Simulation(BaseSimulation):
                         "", g, ok=abs(p - share) < ZTOL * se,
                         note=T("{k:d} of {n:d} pairs (a simulation knows the pairs); reference: erf(w/(4σ))", k=true,
                                n=both))
-        tot_t, tot_n, exp_n = 0.0, 0, 0.0
+        # each station's singles against its own expectation: a station's count is Poisson (each particle reaches one
+        # port and is detected with η; dark counts are independent), the two stations' counts are not independent (a
+        # pair detected at both sides counts at both), so the sum of all four detectors has a variance of about
+        # (1 + η) times its mean (I-S, 2026-11-19: z of the sum had a standard deviation of 1.25–1.37 over 306 points
+        # and failed at 5.01 for seed 20)
+        n_st, e_st = {"A": 0, "B": 0}, {"A": 0.0, "B": 0.0}
         P = self.params
         for side, angs in (("A", (P["a_deg"], P["a2_deg"])), ("B", (P["b_deg"], P["b2_deg"]))):
             for a in set(angs):
@@ -893,15 +912,16 @@ class Simulation(BaseSimulation):
                 det = self._devices(side)
                 pm = self.law.marginal_A(a) if side == "A" else self.law.marginal_B(a)
                 rate = float(np.sum(PD.detector_rate(S["rate"] * np.asarray(pm[:2], float), det)))
-                tot_t += t
-                tot_n += n
-                exp_n += rate * t
-        if exp_n > 100:
-            z = (tot_n - exp_n) / math.sqrt(exp_n)
+                n_st[side] += n
+                e_st[side] += rate * t
+        tot_n, exp_n = n_st["A"] + n_st["B"], e_st["A"] + e_st["B"]
+        if min(e_st.values()) > 50:
+            zA, zB = ((n_st[x] - e_st[x]) / math.sqrt(e_st[x]) for x in "AB")
             self._check("singles", T("Singles of all the detectors ↔ the closed form (ηR + d)/(1 + (ηR + d)t_d)"),
-                        float(tot_n), exp_n, "", g, ok=abs(z) < ZTOL,
-                        note=T("z = {z:+.2f} (Poisson); the non-paralysable dead time, dark and background counts "
-                               "(photodetector.detector_rate)", z=float(z)))
+                        float(tot_n), exp_n, "", g, ok=max(abs(zA), abs(zB)) < ZTOL,
+                        note=T("Alice z = {za:+.2f}, Bob z = {zb:+.2f} (Poisson, each station on its own: a pair "
+                               "detected at both sides counts at both); the non-paralysable dead time, dark and "
+                               "background counts (photodetector.detector_rate)", za=float(zA), zb=float(zB)))
 
     @property
     def seg_true_total(self) -> int:
@@ -1512,14 +1532,14 @@ LAB = {
 
 # the story's script and the numbers its captions quote, from the run itself (tests/test_u37_screens.py): the first
 # pairs' flights are shown slowly, the waits between them fast (pairs come about 100 µs apart and fly 1.67 µs)
-STORY_SCRIPT = [{"at": 0, "cmd": "speed", "args": {"value": 2.193e-4}},   # to 0.5 µs before the first emission
+STORY_SCRIPT = [{"at": 0, "cmd": "speed", "args": {"value": 1.904e-4}},   # to 0.5 µs before the first emission
                 {"at": 1, "cmd": "speed", "args": {"value": 8.34e-7}},    # a flight of 1.67 µs in 2 s
-                {"at": 5, "cmd": "speed", "args": {"value": 1.3366e-4}},  # to 0.3 µs before the second emission
+                {"at": 5, "cmd": "speed", "args": {"value": 3.0707e-4}},  # to 0.3 µs before the second emission
                 {"at": 6, "cmd": "speed", "args": {"value": 8.34e-7}},
                 {"at": 10, "cmd": "speed", "args": {"value": 0.045}},     # about 200 coincidences per played second
                 {"at": 34, "cmd": "new_world", "args": {"preset": "photon_lhv"}},
                 {"at": 34, "cmd": "speed", "args": {"value": 0.045}}]
-STORY_NUMBERS = {"n": 5000, "S": 2.82, "se": 0.04, "z": 20}  # the run at 33.9 s (tests/test_u37_screens.py)
+STORY_NUMBERS = {"n": 5000, "S": 2.80, "se": 0.04, "z": 19}  # the run at 33.95 s (tests/test_u37_screens.py)
 
 # Watch (design §4.1, revised for real detectors): what to look at, at each step of the story (played seconds; the
 # script's speed changes sit on the run's own emission times, tests/test_u37_screens.py checks the numbers)
@@ -1534,7 +1554,7 @@ STORY_CAPTIONS = [
      "text": T("Much faster: thousands of pairs. From the counts the run computes the correlations E and S = E(a,b) − "
                "E(a,b′) + E(a′,b) + E(a′,b′). No local theory allows S above 2; here S passes 2 and settles near "
                "2√2 ≈ 2.83.")},
-    {"at": 20, "text": T("The error of S shrinks as 1/√N: after about {n:d} coincidences S = {S} ± {se}, more than {z:d} "
+    {"at": 20, "text": T("The error of S shrinks as 1/√N: after about {n:d} coincidences S = {S:.2f} ± {se:.2f}, more than {z:d} "
                          "standard errors above 2. This assumes that the detected pairs are a fair sample of all "
                          "pairs.", n=STORY_NUMBERS["n"], S=STORY_NUMBERS["S"], se=STORY_NUMBERS["se"],
                          z=STORY_NUMBERS["z"])},
@@ -1554,7 +1574,7 @@ VIZ = {
     "purpose": T("A study of nonlocal correlations and of the conditions of a loophole-free experiment; the law can be "
                  "replaced on purpose by local hidden variables to see that |S| does not exceed 2, or by Gisin and "
                  "Gisin's model to see a local model pass 2 through the detection loophole."),
-    "version": "1.1",
+    "version": "1.2",
     "schema": SCHEMA,
     "simulation": Simulation,
     "audience": "university",

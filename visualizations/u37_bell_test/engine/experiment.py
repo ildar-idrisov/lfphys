@@ -28,6 +28,8 @@ each station draws its setting bit for slot k from its own generator and makes i
 
 from __future__ import annotations
 
+import hashlib
+import json
 import math
 
 import numpy as np
@@ -49,6 +51,17 @@ MODEL_LABEL = {"polarization_model": T("polarisation model of local hidden varia
 OUTCOMES = Q.TWO_DETECTOR_OUTCOMES
 CLICKS = np.array([0b01, 0b10, 0b00, 0b11], np.int64)
 CODE_OF = np.array([2, 0, 1, 3], np.int64)  # click set (mask) -> outcome index
+
+
+def setup_key(params: dict) -> int:
+    """The set-up's key: its parameters as sorted JSON, hashed to 64 bits (as u35's ``engine/bench.py rng_for``). Every
+    generator of a run is seeded by the world's seed and this key together, so that every set-up of an atlas, all of
+    which share one seed, draws its own independent sample (RULES §10). With the seed alone every point of a grid drew
+    the same emission times, setting bits and outcome draws (common random numbers): E's residuals at β = 22.5° and 30°
+    correlated with r = 0.36 over 400 seeds (0.07 with different seeds), and τ = 5 µs gave the same draws as
+    τ = 100 ns (integrator I-P, 2026-11-19)."""
+    text = json.dumps({k: params[k] for k in sorted(params)}, sort_keys=True, default=repr)
+    return int.from_bytes(hashlib.sha256(text.encode("utf-8")).digest()[:8], "little")
 
 
 def spin_direction(theta: float) -> np.ndarray:
@@ -452,13 +465,13 @@ TAIL_S = 2e-6  # tags kept from the previous steps for the coincidences that str
 class Stream:
     """The time stream of the run; see the module's docstring. ``P``: the world's parameters (the devices in SI
     units: ``eta_A``, ``eta_B``, ``dark``, ``dead``, ``sigma``, ``w``, ``Ts``, ``tau``, ``L_A``, ``L_B``, ``rate``,
-    ``switch``, the four angles), ``seed``: the world's seed (the emissions and the setting bits take their own
-    generators from it)."""
+    ``switch``, the four angles), ``seed``: the world's seed and its set-up's key (``setup_key``; the emissions and the
+    setting bits take their own generators from them)."""
 
-    def __init__(self, law: Law, v: float, c: float, P: dict, rng, seed: int):
+    def __init__(self, law: Law, v: float, c: float, P: dict, rng, seed: tuple[int, int]):
         self.law, self.v, self.c, self.rng = law, float(v), float(c), rng
         self.P = dict(P)
-        ss = np.random.SeedSequence([int(seed), 37])
+        ss = np.random.SeedSequence([*(int(x) for x in seed), 37])
         g_em, g_a, g_b = (np.random.default_rng(s) for s in ss.spawn(3))
         self.em = Emissions(g_em, P["rate"])
         self.bits = {"A": Bits(g_a), "B": Bits(g_b)}
@@ -806,10 +819,10 @@ class Slots:
 
     N_SHOW = 40
 
-    def __init__(self, law: Law, P: dict, rng, seed: int, v: float):
+    def __init__(self, law: Law, P: dict, rng, seed: tuple[int, int], v: float):
         self.law, self.rng, self.v = law, rng, float(v)
         self.P = dict(P)
-        ss = np.random.SeedSequence([int(seed), 38])
+        ss = np.random.SeedSequence([*(int(x) for x in seed), 38])
         self.g_show = np.random.default_rng(ss.spawn(1)[0])
         self.k_done = 0
         self.counts = dict(emitted=0, arrived=0, lost=0, both=0)

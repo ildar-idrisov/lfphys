@@ -32,7 +32,7 @@ from lfphys.theories.interpretations import bohm
 from lfphys.tools import stats
 
 from .engine.experiment import (ELEMENT_NAMES, FLAG_DARK, FLAG_MIX, Apparatus, Experiment, Geometry, Laws,
-                                Source, _join)
+                                Source, _join, setup_key)
 
 
 def _p(*a, **k):
@@ -308,6 +308,10 @@ class Simulation(BaseSimulation):
     def __init__(self, params, seed, emit):
         super().__init__(params, seed, emit)
         self.params = dict(params)
+        # every generator from the seed and the set-up together (engine ``setup_key``; RULES §10): an independent
+        # sample per point of an atlas, all of whose points share the screen's seed
+        self.key = setup_key(self.params)
+        self.rng = np.random.default_rng([self.seed, self.key])
         self._adopt(self._build(self.params))
         self.dark_rate = params["dark_rate"]
         self.seg = -1
@@ -617,7 +621,7 @@ class Simulation(BaseSimulation):
         model = self._model()
         mc = self.laws.born_p != 2.0
         if mc:  # nonlinear modification: Monte Carlo over the run's own particle draws
-            Pens, Pcl, self.M_last = self._mc_ensemble(np.random.default_rng([self.seed, 7919, self.seg]))
+            Pens, Pcl, self.M_last = self._mc_ensemble(np.random.default_rng([self.seed, self.key, 7919, self.seg]))
         else:
             Pens = ens.screen(model, g.x, g.L2, list(Gr), eff=ex.eff)
             Gd = [np.diag(np.diag(G)) for G in Gr]
@@ -651,7 +655,7 @@ class Simulation(BaseSimulation):
         flow = None
         if want_flow and np.trace(Gm).real > 0:
             nb_l = int(self.params["n_bohm"])
-            rngb = np.random.default_rng([self.seed, 31, self.seg])
+            rngb = np.random.default_rng([self.seed, self.key, 31, self.seg])
             if coherent:
                 flow = bohm.slit_trajectories(pt.k, g.slits, g.a, g.L1, Gm, np.diag(Gm).real, g.L2, n=nb_l,
                                                  rng=rngb, n_steps=900)
@@ -1120,7 +1124,7 @@ class Simulation(BaseSimulation):
                           p=float(self.laws.born_p)))
         # no-signalling: the SAMPLED screen marginal does not depend on reading the detector (review R7)
         if self.theory["nR"] > 1:
-            rngn = np.random.default_rng([self.seed, 99, self.seg])
+            rngn = np.random.default_rng([self.seed, self.key, 99, self.seg])
             b = ex.emit(np.zeros(64), 0, rngn)
             ex.at_slits(b, np.arange(64), self.app, rngn)
             G, Gf_ = ex.gram(b.chi, self.app, self.app)
@@ -1211,7 +1215,7 @@ class Simulation(BaseSimulation):
         n = float(h.sum())
         c = self._coh_err_cache
         if c is None or c[0] != self.seg or n >= 1.1 * c[1] or (c[2] is None and c[1] < stats.COH_BOOT_MIN_HITS < n + 1):
-            rng = np.random.default_rng([self.seed, 4243, self.seg, int(n)])
+            rng = np.random.default_rng([self.seed, self.key, 4243, self.seg, int(n)])
             r = stats.coherence_boot(h, *self._coh_basis(True), dark=dark, rng=rng)
             self._coh_err_cache = c = (self.seg, n, r["err"], r["why"])
         return c[2], (None if c[2] is not None else c[3])
@@ -1617,7 +1621,7 @@ VIZ = {
     "purpose": T("A study of how a particle behaves and of why interference appears and disappears; the laws can be "
                  "changed on purpose (the exponent in the Born rule, GRW spontaneous collapse, a forced choice of "
                  "slit)."),
-    "version": "1.3",
+    "version": "1.4",
     "schema": SCHEMA,
     "simulation": Simulation,
     "audience": "university",

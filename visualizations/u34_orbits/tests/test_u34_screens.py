@@ -470,3 +470,41 @@ def test_the_screens_are_the_registry_s_and_the_view_declares_what_they_use():
     assert {a: len(AT.grid(s["controls"])) for a, s in ATLASES.items()} == {"explore": 35, "lab.periods": 18,
                                                                            "lab.advance": 13}
     assert VIZ["version"] == "1.1"
+
+
+# --- CI 2026-11-19 (run 44536842139): results that hung on the last bits of a CPU ------------------------------------
+@pytest.mark.parametrize("r0b, j", [(20.0, 24), (50.0, 7), (50.0, 18), (7.0, 24), (100.0, 8), (30.0, 4), (30.0, 5),
+                                    (12.0, 0), (15.0, 3)])
+def test_a_circle_stepped_by_the_atlas_frame_clock_counts_every_turn_once(r0b, j):
+    """Lab part 1's circles advance a frame every T/32 and compute 1/8 of a period ahead, so a chunk of the geodesic
+    ends within a rounding of a turn; the engine's turn counting then lost a turn on some CPUs (CI's AVX-512 runner:
+    «s0.period» failed). These starts, perturbed by ulps, lost one before the fix (laps [1, 2, 4]: a period 4/3 of
+    Kepler's); every turn now comes once and the period check holds."""
+    h = Harness(W, "default", {"ghost": False, "angle": 0.0, "time_units": "geo", "r0": r0b * (1 + j * 2.2e-16),
+                               "speed": 1.0})
+    step = h.sim.default_speed / 4.0
+    for k in range(1, 4 * 32 + 3):
+        h.run_to(k * step)
+    assert [e["n"] for e in h.sim.S["laps"]] == [1, 2, 3, 4]
+    per = [c for c in h.checks().values() if c["id"].endswith(".period")][-1]
+    assert abs(per["rel"]) <= per["tol"]
+
+
+def test_newton_s_nearly_circular_apsis_is_stable_to_the_last_bits_of_its_start():
+    """Test V4-5's orbit (r0 50 M, speed 1.0000004, spread 1.6e-6): its apses lie where r·v changes sign, which the
+    tiny eccentricity makes ill-conditioned. On the regularised integrator's output the measured advance scattered by up
+    to 0.69″ under ulp changes of the start (CI: 0.265″ against the tolerance 0.026″); a smooth orbit is now integrated
+    in coordinate time (0.0009″) and only a deep one (r_p < 2e-3 a) regularised."""
+    vals = []
+    for j in range(12):
+        h = Harness(W, "newton_ellipse", {"r0": 50.0 * (1 + j * 2.2e-16), "speed": 1.0000004 + (j % 3) * 2.2e-16,
+                                          "ghost": False})
+        assert not h.sim.track.regularised
+        h.run_to(h.sim.t + 3.3 * 2 * math.pi * 50.0**1.5 * h.sim.T_s)
+        c = [m for m in h.checks().values() if m["id"].endswith(".adv")][-1]
+        assert c["ok"], (j, c["value"], c["tol"])
+        vals.append(abs(c["value"]))
+    assert max(vals) < 0.1 * c["tol"]
+    deep = Harness(W, "newton_ellipse", {"angle": -89.9, "speed": 1.0, "ghost": False})
+    radial = Harness(W, "newton_ellipse", {"speed": 0.0, "ghost": False})
+    assert deep.sim.track.regularised and radial.sim.track.regularised
