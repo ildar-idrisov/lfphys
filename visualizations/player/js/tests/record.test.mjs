@@ -83,3 +83,13 @@ test("from a URL: fetch, the progress from Content-Length", async () => {
     assert.ok(prog.length >= 1 && prog[prog.length - 1][0] === gz.length && prog[prog.length - 1][1] === gz.length, JSON.stringify(prog));
   } finally { globalThis.fetch = saved; }
 });
+
+test("frameIndexAt finds the last frame when the time falls a bit short of it (W34: the clock shared over points)", async () => {
+  const { frameIndexAt } = await import("../record_core.js");
+  const F = [{ t: 0 }, { t: 362.5 }, { t: 725.17902658535 }];
+  assert.equal(frameIndexAt(F, 976.91 + 725.17902658535 - 976.91), 2, "launchedAt + t − launchedAt");
+  assert.equal(frameIndexAt(F, 725.1790265853499), 2);
+  assert.equal(frameIndexAt(F, 725.1790265), 1, "a real step short stays on the frame before");
+  assert.equal(frameIndexAt(F, -1), 0);
+  assert.equal(frameIndexAt([], 1), -1);
+});

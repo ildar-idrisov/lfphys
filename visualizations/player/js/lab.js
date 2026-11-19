@@ -221,7 +221,7 @@ const FIT_LABEL = () => ({ line0: t("line through the origin y = b·x"), line: t
 // the teacher's variant of the task (EX2 §5 F8 (b)): «&variant=<id>» in the address names one of the task sheet's
 // variants; its values preselect the steps' controls (on their grids); nothing is locked
 export function variantOf(worksheet, id) {
-  if (!id || !worksheet || worksheet.ex1) return null;
+  if (!id || !worksheet) return null;
   return (worksheet.variants || []).find((v) => v.id === id) || null;
 }
 

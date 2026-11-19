@@ -139,11 +139,10 @@ test("the fit's p beyond the double's range: printed from ln p, never «p = 0» 
   assert.ok(line.includes(`, p = ${pValueText(r.lnp)}, `) && /, p = \d\.\d+·10⁻[⁰¹²³⁴⁵⁶⁷⁸⁹]+, /.test(line), line);
 });
 
-test("the teacher's variant: found by its id, only in a task sheet (EX2 §5 F8 (b))", () => {
+test("the teacher's variant: found by its id (EX2 §5 F8 (b))", () => {
   const ws = { variants: [{ id: "a", values: { s1: { h_m: 0.6 } } }] };
   assert.equal(variantOf(ws, "a").values.s1.h_m, 0.6);
   assert.equal(variantOf(ws, "b"), null);
-  assert.equal(variantOf({ ...ws, ex1: true }, "a"), null, "EX1's worksheet (the transition) has no such variants");
   assert.equal(variantOf(ws, null), null);
 });
 
@@ -219,10 +218,40 @@ test("the screen's time scale and its label (F1): speed, «world», normal or sl
   assert.equal(factorText(1 / 120), "slow motion ×120");
   assert.equal(factorText(2.5), "sped up ×2.5");
   assert.equal(factorText(5e-8), "slow motion ×2·10⁷");
+  assert.equal(factorText(1 / 1.2e6), "slow motion ×1.2·10⁶");  // from 10⁶ on in powers of ten (W37)
+  assert.equal(factorText(4.8e6), "sped up ×4.8·10⁶");
+  assert.equal(factorText(999_400), "sped up ×999,400");
   assert.equal(worldTime(2e-9, null), "2 ns");
   assert.equal(worldTime(0.0493, { units: { t_show: { unit: "GM/c³", s: 4.93e-5 } } }), "1,000\u00a0GM/c³");
   assert.equal(timeLabel({ tt: 0.5, tEnd: 2, speed: 0.25, rate: 1 }), "world 500 ms · slow motion ×4 · 2.00 s / 8.00 s");
   assert.equal(timeLabel({ tt: 0.5, tEnd: 2, speed: 0.25, rate: 0.25 }), "world 500 ms · slow motion ×16 · 2.00 s / 8.00 s", "slow: a quarter");
+});
+
+test("a slider's detent labels never collide (EX2, W35: «4042», «885»); the last detent always labelled", async () => {
+  const { detentLabels } = await import("../explore.js");
+  const idx = (on) => on.flatMap((x, i) => (x ? [i] : []));
+  const byIndex = (n) => Array.from({ length: n }, (_, i) => (100 * i) / Math.max(1, n - 1));
+  const byValue = (v) => v.map((x) => (100 * (x - v[0])) / (v[v.length - 1] - v[0]));
+  // u35's reflection bench, 38 angles at equal spacing (the site): every 4th, 61° (index 32) and 85° (37), not 77/85
+  const TH = [0, 10, 20, 30, ...Array.from({ length: 30 }, (_, i) => 33 + i), 66, 70, 80, 85];
+  const on = detentLabels(TH.map(String), byIndex(TH.length));
+  assert.deepEqual(idx(on), [0, 4, 8, 12, 16, 20, 24, 28, 32, 37], "36 (66°) dropped: it would touch 85°");
+  // u35's polarisation θ, 12 values placed by value (a server): 40° and 42° may not both be labelled
+  const POL = [35, 40, 42, 45, 48, 51, 54, 57, 60, 65, 70, 80];
+  const onP = detentLabels(POL.map(String), byValue(POL));
+  assert.deepEqual(idx(onP), [0, 2, 4, 6, 8, 10, 11]);
+  // the same 12 values at equal spacing (the site): every one fits
+  assert.ok(detentLabels(POL.map(String), byIndex(12)).every(Boolean));
+  // no two labels closer than their half-widths plus 4 px in a 290 px row, for grids of every size
+  for (const n of [1, 2, 3, 7, 12, 13, 25, 38, 61, 120]) {
+    const texts = Array.from({ length: n }, (_, i) => (i * 2.5).toFixed(1)), pos = byIndex(n), got = idx(detentLabels(texts, pos));
+    assert.ok(got.length >= Math.min(n, 2) && got[0] === 0 && got[got.length - 1] === n - 1, `n=${n}: first and last labelled`);
+    for (let j = 1; j < got.length; j++) {
+      const a = got[j - 1], b = got[j], need = ((texts[a].length + texts[b].length) * 7 + 12) / 2 + 4;
+      assert.ok(((pos[b] - pos[a]) / 100) * 290 >= need, `n=${n}: ${a} and ${b} overlap`);
+    }
+  }
+  assert.deepEqual(detentLabels([], []), []);
 });
 
 test("compound controls (F3): a value as the parameters it sets; its name; the passport names the parameters", async () => {

@@ -200,7 +200,7 @@ REST (JSON):
 | GET | `/viz/{viz}/{path}` | a world's `web/` files (its view); an old id answers 301 to the new address |
 | GET | `/recordings/{world}/{file}`, `/recordings/{world}/atlas/{atlas}/{file}` | a recording file or a world's `index.json` from `visualizations/recordings/` (`LFVIZ_RECORDINGS`), or an atlas's manifest, base header or point file (§10); a `.gz` goes as `application/gzip` without a Content-Encoding (the player inflates it); `Access-Control-Allow-Origin: *`; an old id names the new folder |
 | GET | `/images/{file}` | the pictures of the cards and the README, `../docs/images/` (`.jpg`, `.jpeg`, `.png`, `.webp`) |
-| GET | `/`, `/runs`, `/run?id={run}`, `/run?rec={world}/{rec}`, `/run?demo={world}&screen={id}`, `/worksheet?demo={world}[&teacher=1]`, `/settings` | the pages: the start page (§9), the runs and their removal period, the player on a run, the player on a saved recording (an old world id works), a demonstration's screens (Watch, Explore, Lab work; `screen` is the tab, by default the first; §10), a lab's printable worksheet (`teacher=1`: with the teacher's answers; §10), the devices (§5) |
+| GET | `/`, `/runs`, `/run?id={run}`, `/run?rec={world}/{rec}`, `/run?demo={world}&screen={id}`, `/worksheet?demo={world}[&variant={id}][&computed=1]`, `/settings` | the pages: the start page (§9), the runs and their removal period, the player on a run, the player on a saved recording (an old world id works), a demonstration's screens (Watch, Explore, Lab work; `screen` is the tab, by default the first; §10), a lab's printable worksheet (`teacher=1`: with the teacher's answers; §10), the devices (§5) |
 | POST | `/api/atlas/{world}/{atlas}/point` | «▶ Compute live» of one atlas point (§10): `{values: {param: value}, seed?, full_header?}` → `200 application/gzip`, the point's file, as a site build packs it for those values and that seed on the same CPU type; its header is a delta naming its base (`$base`, the base file's sha256), or whole with `full_header: true`; headers `X-LF-Source` (`atlas`: an on-grid value from the local atlas whose key is current; `cache`; `computed`), `X-LF-Key` (the point's key), `X-LF-Code` (the world's code hash that computed it) and `X-LF-Made` (when it was computed, ISO 8601 in UTC: a cached point's original time, an atlas's build time); a control left out takes its default; `400 {error, hint?}` for a body that is not `{values, seed?, full_header?}`, a value outside the control's span (a slider's lowest to highest value, a toggle's or select's own values) or one the schema or the world refuses (`check_params`, its memory estimate, its constructor: the refusal's texts; integrator D14); `409 {error}` when the world's checks end ✗ at those values (naming the checks); `429` beyond a queue of `atlas_live.QUEUE` (4) waiting requests; `503 {error}` when the point's process ran out of memory or time, or the server's code changed while the point was computed (`lfviz.atlas_live`) |
 | GET | `/api/runs` | runs, newest first: state, sim time, size, keep, modifications, approximations, `devices_override` |
 | POST | `/api/runs` | `{viz, preset?, params?, seed?, label?, backend?}` → `{id}`: starts a run (its first world; `viz` may be an old id); `backend` = `{kernels: {name: {device, precision}}}` overrides the device settings for this run only (§5) |
@@ -728,7 +728,15 @@ section is how the visualizations keep it.
   «Лабораторная работа» — never «Демонстрация» or «Смотреть» for a screen (the whole item is a demonstration); the
   precomputed points are an "atlas" / «атлас»; a point computed on a server is "computed live" / «расчёт вживую» and
   "▶ Compute live" / «▶ Рассчитать вживую» starts one; the drawer is "How we know this is right" / «Почему этому можно
-  верить»; the printable sheet is a "worksheet" / «рабочий лист», its answers "For the teacher" / «Для учителя».
+  верить»; Lab work's printable sheet is a "task sheet" / «бланк задания» (EX2, the owner, 2026-11-18: Lab work is a
+  bench, not a test; it replaces EX1's "worksheet" / «рабочий лист», whose answers "For the teacher" / «Для учителя»
+  are withdrawn; the code keeps the names `worksheet`, `worksheet.html`, `worksheet.js`); the world's own values for a
+  bench, in the drawer and on the sheet's extra page, are "Computed for this bench" / «Рассчитано для этого стенда»;
+  Explore's download of the shown point's series is "⤓ CSV of this point" / «⤓ CSV этой точки»; the task sheet's free
+  field is "Task from the teacher:" / «Задание преподавателя:», its undo "Restore the original" / «Вернуть исходный
+  текст»; the fit's degrees of freedom are "dof" in English («χ² = …, dof = …, χ²/dof = …, Birge ratio √(χ²/dof)») and
+  ν in Russian («число степеней свободы ν = …, χ²/ν = …, коэффициент Бирге √(χ²/ν)»: no Latin word in a Russian
+  output, which `demo_screens.mjs` checks).
 * **User documents.** A world's README and the owner guide exist as `README.md` (English) and `README.<lang>.md` for
   every other language, each linking the other at the top. A document names a part of the interface by its label in
   the document's language: the msgid in an English document, its translation from the catalogues in another. A quoted
@@ -915,7 +923,7 @@ a file that differs from the manifest, a page without its metas or import map or
 `/lfphys/` and checks that no request leaves the sub-path or goes to `/api/`, that the start page and an audience page
 render in EN and RU, that a recording plays (the timeline moves, the checks appear, the canvas is drawn), that the
 laboratories are greyed with their note, the school banner is honest, every screen of every world with screens opens
-(§10) and a lab's worksheet renders, and `legal.html` shows the texts.
+(§10) and a lab's task sheet renders, and `legal.html` shows the texts.
 
 **What `site/check.py` also checks** (review F5, F13): every catalogue world's `viz/<id>/view.js` and every named
 picture's `images/<id>.jpg`; no absolute server address (`"/api…"`, `"/run…"`, `"/runs…"`, `"/settings…"`,
@@ -949,13 +957,17 @@ kept out of `code_hash`), `tests/test_recorder.py`, `tests/test_site_build.py`, 
 with the local recordings) and `site_smoke.mjs` (on a built site); `node --test player/js/tests/*.test.mjs` (`record.test.mjs`: a gzip fixture
 decoded through `openRecording`).
 
-## 10. Screens and atlases (owner, 2026-11-14; plan P17.5, batch EX1)
+## 10. Screens and atlases (owner, 2026-11-14 and 2026-11-18; plan P17.5, batches EX1 and EX2)
 
 The owner's words are in `../AGENTS.md` §1 («Interactive explorations and lab work for school and university»), with the owner's
 answers of the same day: sliders snap only to computed points, nothing between them is drawn; the pilots and the
 rework of the existing worlds come before AB1; quality over quantity. The design and its measurements:
 `../lfphys/sources/explore_2026-11-14_design.md`. The pilots: `s03_projectile` (all three screens) and
-`u32_double_slit` (Watch and Explore). This section is what the code keeps.
+`u32_double_slit` (Watch and Explore). EX2 (design `../lfphys/sources/explore_EX2_2026-11-18_design.md`, its notes
+after the implementation of 2026-11-19 included) added the screens of `u34_orbits`, `u35_optics_bench` and
+`u37_bell_test`, reworked S03's Lab work and made Lab work a bench on the owner's answers of 2026-11-18
+(`../AGENTS.md` §1, «Lab work is a bench, not a test»: «это не проверочная работе, учащиеся не отвечают на вопросы и от
+них ничего не нужно скрывать»). This section is what the code keeps.
 
 **Three screens on one model.** A school or university demonstration may have, as tabs of one page
 (`run.html?demo=<world>&screen=<id>` on the site, `/run?demo=…` on a server; `player/js/demo.js`):
@@ -963,13 +975,20 @@ rework of the existing worlds come before AB1; quality over quantity. The design
 * **Watch** («Наблюдение»): a recording of `VIZ["recordings"]` with captions, only for a phenomenon that develops in
   time. The caption strip shows the latest caption as of the cursor; each caption is a chapter tick on the timeline,
   ◀◀ / ▶▶ go to the previous or next one; the screen's `more` recordings are a select («More recordings»;
-  `player/js/watch.js`). Its time label states the world's time and the playback factor («world 0.42 s · slow motion
-  ×10 · 6.50 s / 39.95 s»), so a view does not repeat it (integrator D8).
+  `player/js/watch.js`). Its time label states the world's time and the playback factor, so a view does not repeat it
+  (integrator D8); since EX2 (§5 F12) it is Explore's (`explore.js worldTime`, `factorText`): the world's time on a
+  human scale, ns … s («world 2.4 ms · slow motion ×120 · 6.50 s / 39.95 s»), or in the world's own unit when its
+  header says `units.t_show: {unit: T, s: <world seconds per unit>}` (u34: GM/c³), in seconds at school («world 0.45
+  s»), the factor in powers of ten from 10⁶ on («slow motion ×1.2·10⁶»).
 * **Explore** («Исследование»): an **atlas**, the world's own runs computed beforehand on a grid of a few controls. The
   sliders stop only at the grid's values on the site; the world's own view draws the point (`player/js/explore.js`,
   `atlas.js`, `record_core.js`).
-* **Lab work** («Лабораторная работа»): steps, each on its own atlas, with instruments, «Measure», a table, a plot, a
-  fit and «Check against the law», and a printable worksheet (`player/js/lab.js`, `fit.js`, `worksheet.js`).
+* **Lab work** («Лабораторная работа»): a narrow bench (the owner, 2026-11-18: «что-то вроде стенда для проведения
+  эксперимента, который можно проводить разными путями, часть из которых приведут к правильным результатам, часть к
+  неправильным»): steps, each on its own atlas or on an Explore screen's, with instruments, «Measure», a table, a plot
+  of any two columns, a fit whose output is printed without a verdict, and a printable task sheet (`player/js/lab.js`,
+  `fit.js`, `expr.js`, `worksheet.js`). Nothing is hidden and the app judges nothing: the students record and hand in
+  their own measurements, and the teacher judges them (below, «Lab work»).
 
 Checks, «Physics of this world», events and the passport fold into one drawer, «How we know this is right» (a view's
 `rightPanels`, u32's «Particle», «Model of the slit screen» …, fold into it too). On a server the top bar also has
@@ -992,15 +1011,41 @@ input, a select, a tab, a link); on a button Space presses it, on a slider the a
 |---|---|
 | all | `id` (a slug, unique), `kind`, `label?` (by default «Watch», «Explore», «Lab work») |
 | `watch` | `recording`: a recording id whose spec has `captions`; `more?`: other recording ids for «More recordings» |
-| `explore` | `preset`, `fixed?` (values on top of the preset, shown, not controls), `controls` (below), `acts` (`next`: a change arms the next launch; `now`: the shown point is replaced, the time kept), `time` (`flight`: ▶ Launch from t = 0; `buildup`: the cursor is the build-up, u32's hits; `none`: static), `frame_dt` (world seconds between frames), `stop` (`{event, after_s, max_world_s}` or `{world_s}`), `drop?` (`{types, frame_blobs}`: what the screen does not draw), `quantize?`, `overlays?` (ids the view declares), `traces` (0–5 earlier points kept, fading), `readouts?` (measurables of the world's header, shown once their event is reached, «—» before), `seed?` (1) |
+| `explore` | `preset`, `fixed?` (values on top of the preset, shown, not controls), `controls` (below), `acts` (`next`: a change arms the next launch; `now`: the shown point is replaced, the time kept), `time` (`flight`: ▶ Launch from t = 0; `buildup`: the cursor is the build-up, u32's hits; `none`: static), the clock: exactly one of `frame_dt` (world seconds between frames) and `fps` (frames per played second at the world's default speed; 0.1–120), `speed?` (world seconds per played second, or `"world"`: the point's own default speed; EX2 F1, below), `stop` (`{world_s}`, `{event, after_s?, max_world_s}` or `{events: {<kind or name>: n, …}, after_s?, max_world_s}`, below), `drop?` (`{types, frame_blobs, blobs?}`: what the screen does not draw), `quantize?`, `overlays?` (ids the view declares), `traces` (0–5 earlier points kept, fading), `readouts?` (measurables of the world's header, shown once their event is reached, «—» before; with their error and reference, F7, below), `seed?` (1) |
 | `lab` | `instruments`, `steps`, `worksheet` (below) |
 
 A **control** is `{param, values, default, label?, unit?}`: a parameter of the schema and its grid values (2–… per
 control, at most 5 controls at school and 6 at standard, at most 1500 points as the target and 3000 as the limit per
 atlas: `registry.ATLAS_LIMITS`); two booleans make a toggle, other non-numbers a select. Its own `label` and `unit` (a
 `T`, or a plain symbol such as "nm") win over the parameter's, so that a schema label carrying its unit ("Wavelength,
-nm") becomes «λ 600 nm» (u32's λ, d, a). A school screen has no law parameter among its controls (rule 4); a standard
-screen may have one, flagged at the control and in the top bar while a modified point is shown.
+nm") becomes «λ 600 nm» (u32's λ, d, a). **A control's label and its unit are given separately** (label "Speed",
+unit "× circular"): a trace's label and the passport write «label value unit» (`explore.js diffText`), so a label that
+carries its unit reads «Speed, × circular 1.1» (W34). A school screen has no law parameter among its controls (rule 4);
+a standard screen may have one, flagged at the control and in the top bar while a modified point is shown. A select
+parameter's control shows its raw value through `t(value)`; a world that wants names for a select's values makes it a
+compound control with `labels` (u37's «Pairs»; `../STATUS.md` V53).
+
+A **compound control** (EX2 F3) sets several parameters with one slider or select: `{id, label, unit?, values, labels?,
+sets: {<param>: [one value per grid value], …}, default?}`. Its `id` is a slug that is no parameter of the schema (nor
+a property every JavaScript object has); a parameter it sets is no other control, no `fixed` value and set by no other
+compound control; every combination of the screen's values must resolve in the schema (a compound control may set a
+select parameter: u35's glass and side set the media by their material ids). The catalogue and the manifest write it
+`{param: <id>, id, compound: true, values, default, sets, labels?, label, unit, kind: slider | select, law}`; `law` is
+true when it sets a law parameter (refused at school). It takes grid values only: off the grid the live endpoint
+answers 400 («“{label}” sets several parameters at once: it takes only its own values»). A trace names its value
+(«Δ 22.5°») and the passport adds the parameters it set; `lab_reference` receives the compound id's values and each set
+parameter's list. Used by u35 (glass and side; the coatings), u37 (Δ: a = 0, b = Δ, a′ = 2Δ, b′ = 3Δ; law
+and source; «Pairs»), the toys `s98_atlas_toy` and `u96_lab_toy`.
+
+**The screen's time scale** (EX2 F1, `registry._check_clock`, `explore.js speedOf`, `worldTime`, `factorText`,
+`timeLabel`). A screen or a step may declare `speed`; «normal / slow» play it × 1 and × ¼ (`SLOW`). Without `speed` a
+screen keeps EX1's label; with it the label reads like Watch's (above), and the view's `ctx.speed()` is world seconds
+per played second. With `fps` a frame comes every `default_speed / fps` of world time and, with a `world_s` or event
+stop, the last one at the stop time; `atlas.js` keeps a point's first `state` speed as `pt.speed`, so a world whose
+default speed differs per point sets `self.default_speed` in its constructor (u34: the orbit's radial period in 8
+played seconds, by the engine's quadrature; a circle's turn). A lab step with a manual stopwatch declares no `speed`
+(it plays in real time; the registry refuses it). The atlas key covers `fps`, not `speed` (a playback speed changes no
+byte).
 
 **Captions.** A recording spec's `captions: [{at, text, hold?}]` (`at` in played seconds) are written by the recorder
 as accumulative messages `caption {t, text, n, at, hold?}` at their frames, with the world time of that frame, so a
@@ -1012,9 +1057,19 @@ any action (▶ / ❚❚, a scrub, a chapter) ends a hold, and scrubbing, the ch
 `speed` command after the `new_world` at the same `at`.
 
 **The atlas** (`site/atlas.py`, `lfviz/headless.py`; design §1). One per Explore screen (its id is the screen's) and one
-per lab step (`<screen>.<step>`). A point is the world's own `Simulation` run headless by `headless.run_spec`, the one
-runner of the recordings, the atlases and the server's live points: the screen's preset, its `fixed` values and the
-grid values on top, the screen's seed, frames every `frame_dt` from t = 0 until the stop rule. A point the world refuses
+per lab step (`<screen>.<step>`) that does not use an Explore screen's (F9, below). A point is the world's own
+`Simulation` run headless by `headless.run_spec`, the one runner of the recordings, the atlases and the server's live
+points: the screen's preset, its `fixed` values and the grid values on top (a compound value expanded into the
+parameters it sets, `registry.expand_values`), the screen's seed, frames every `frame_dt` (or at `fps`) from t = 0 until
+the stop rule. **The stop rule** (EX2 F2, `registry._check_stop`, `stop_events`): `{world_s: t}`; `{event: k, after_s?,
+max_world_s}`; or `{events: {<kind or name>: n, …}, after_s?, max_world_s}`: the point stops `after_s` after the first
+kind (or name) that has occurred n times (an event counts once for each key its kind or name is; `{event: k}` is
+`{events: {k: 1}}`), and `max_world_s` is required: a point whose counts are not reached by then fails, with the
+counts it lacked (u34's Explore: `{events: {periapsis: 4, turn: 3, horizon: 1}, max_world_s: 1}`; u37's: 4 000
+coincidences). A stop inside an event's own frame step ends at that step, so **`after_s` exceeds one frame step**
+(`frame_dt`, or `default_speed / fps`): with a shorter one the stop event's frame is the last, and float rounding of the
+shared cursor hid it from the lab's drawer (W37: u37's stops carry `after_s` 0.1 s in Explore, 0.03 s in part 1). A
+point the world refuses
 (`check_params`, its memory estimate, its constructor or its first showing: `headless.PointRefused`; integrator D14) is
 `refused`, with its text and hint shown at that combination; a point that fails (an error, an exception, a check ending
 ✗, a stop event not reached by `max_world_s`, a value that cannot be packed, such as ±inf in a quantised blob) fails the
@@ -1023,8 +1078,9 @@ atlas. Files, per world:
 header, loaded once) and `p<i>.<hash8>.lfpt.gz` (the point with the flattened index `i`, row-major, the last control
 fastest: its header as a delta against the base, the world's messages, `end {reason: "atlas"}`); the world's
 `index.json` lists them under `atlases`. The **key** is `sha256(atlas spec + ATLAS_VERSION + recorder_hash +
-code_hash(world))[:16]` (`ATLAS_VERSION` 2 since 2026-11-17); `plan.py` marks each atlas `present`, `stale` or
-`missing`, and an atlas whose manifest names a base or a point that is missing or of another size is `stale`
+code_hash(world))[:16]` (`ATLAS_VERSION` 3 since 2026-11-18, the pool; the key covers `fps`, a compound control's
+`sets` and, on a shared atlas, the laws of every step that uses it); `plan.py` marks each atlas `present`, `stale` or
+`missing`, and an atlas whose manifest names a base, a pool or a point that is missing or of another size is `stale`
 (`sitelib.atlas_files_ok`), so `--stale` rebuilds it; `RECORDER_FILES` covers `site/atlas.py` and `lfviz/headless.py`.
 The same spec and code give the same bytes, the manifest included (it holds no build or CPU time: those are the index
 entry's `made` and `cpu_s`), on the same CPU type (numpy's SIMD paths can change the last bits of a world's computed
@@ -1034,8 +1090,25 @@ values). A point's header delta names its base (`"$base"`, the base file's sha25
 (an LRU of 24 points or 40 MB), prefetches the neighbours (±1 along every control, two requests at a time) and shows
 «loading…» after 300 ms, never a blank view.
 
+**The pool** (EX2 F10, `headless.Packer`'s second pass, `pool_ids`, `pool_points`, `pool_file`; `protocol.PoolRef`,
+`decode(pool=)`; `api.js decode(buf, pool)`, `readPool`). After every point of an atlas is computed, each packed blob
+(after quantisation) of at least 256 bytes (`headless.POOL_MIN_BYTES`) that occurs in two or more points is stored once
+in `pool.<hash8>.lfpt.gz` (one message whose blobs are named by the first 16 hex digits of the sha256 over the blob's
+descriptor JSON + "\n" + its stored bytes, so that the same bytes of another dtype, shape or quantisation are not
+shared) and replaced in the points by `{name, pool: "<sha16>"}`; the manifest names it (`pool: {file, bytes_gz,
+sha256}`) as it names the base; the player fetches it once per atlas (`atlas.js`); a missing pool, or one of another
+size, makes the atlas `stale`; `build.py` copies it and `check.py` checks it. Live points are never pooled
+(`atlas_live` unpools a point it takes from the built atlas). Pooling is automatic; a world measures its sizes after it
+(u35: the angle curves, the same for every θ and polarisation of a sample, once per atlas; u34 has no shared blob).
+
 **Stochastic points** store one seeded sample and the run's own computed distribution (u32: about 5000 hits and the
 expectation curves, with the sample's χ² against them); another sample is drawn only by «Another sample» on a server.
+An atlas's points share the screen's `seed`, so **a world seeds its random numbers by the seed and the set-up
+together** (u35's `engine/bench.py rng_for(seed, params)`: the set-up's parameters as sorted JSON, hashed to 64 bits,
+with the seed): with the seed alone every point of a grid draws the same random numbers (common random numbers), the
+fluctuations of neighbouring set-ups move together and a fit across them sees a χ²/dof far below 1 and a shared bias
+(W35: way 1 on the first build, χ²/ν 0.16 and n 2.7σ low). u37 and u32 still seed by the seed alone (`../STATUS.md`
+V53).
 
 **Quantisation** (`lfviz/protocol.py`, «Quantised blobs»; `api.js decode`). A blob's descriptor may carry `q: {enc: lin
 | sqrt, lo, hi, nan?}` with a stored `u1` or `u2`; both decoders return float arrays (lin `lo + v/top·(hi − lo)`, sqrt
@@ -1055,74 +1128,150 @@ and `live: true` for a live point, and the view keeps the label inside the canva
 `setStory({worlds, w, fps})` (optional; Watch: called when the world shown changes, with the recording's decoded worlds,
 the index of the one shown and the frames per played second: S03 keeps one scene box for the whole recording and draws
 the earlier worlds' throws faded, integrator D8); `worldToPx` / `pxToWorld` (2-D views: where the lab's instruments are drawn); `anchors()`
-(optional: where the tape, the ruler and the protractor sit); tolerance of a frame without its dropped blobs. The view
-still computes no physics.
+(where the tape, the ruler and the protractor sit; with `worldToPx` required of a view whose Lab work uses a `ruler` or
+a `protractor`, EX2 F8 (d)); `canvas.__layout` (the view's layout boxes, for the browser checks of captions, labels and
+the phone layout; EX2 §1.3); tolerance of a frame without its dropped blobs (`drop.blobs: ["<type>.<blob>", …]`, a
+`*` at the end of a blob name, drops blobs of any message type in `headless.Packer`). The view still computes no
+physics.
 
-**Lab work** (design §2.3).
+**Readouts with an error and a reference** (EX2 F7, `explore.js measText`, `readoutText`). A measurable of the world's
+header may declare `sigma` (another measurable: the run's own standard error at the cursor), `ref` (another
+measurable: the reference the run computes) and `ref_label` (default «reference»): «S 2.864 ± 0.040 (law 2.828)». With
+an error the value and the reference are written to the error's two digits, the unit once; with a reference only both to
+5 significant digits; a whole number without a unit, an error or a reference is a count («6»); else 4 significant
+digits. A readout with a reference shows it, or «—» before it exists (`demo_screens.mjs`). At `ui: "standard"`
+Explore offers «⤓ CSV of this point» (`pointCsv`): «t, s», then every declared measurable but those that serve as
+another's `sigma` (they are its «σ …» column), one row per frame up to the time shown, built from the decoded point.
 
-* `instruments: {id: {kind: ruler | protractor | stopwatch | readout, label, unit, division, error?, reads | manual,
-  event?, error_note?}}`. A reading is `division × round(value / division)` with the declared `error` (by default half
-  a division), written to the decimals of its division or of its error, whichever is finer («0.600 ± 0.005»); an
-  `error` of 0 declares an exact set-up, with its reason in `error_note` (S03's «Height scale of the stand»: the stand
-  sets the chute's height exactly at its marks; integrator D2): its reading is written to its division's decimals without
-  «± 0» («0.20»), a column derived from it to four significant digits with their zeros («1.000», `lab.js sig4`), and the
-  step's list of instruments gives the reason in place of an error («division 0.01 m; exact: the stand sets the chute's
-  height at its marks»; V52 (y)); the CSV keeps plain numbers and the error 0. `reads` names a measurable of the world, read at the
-  cursor («Nothing to measure yet: …» before it is reached), or `control:<param>`, a set-up value: the shown point's own
-  (its header's `params`, then its grid values, then the atlas's `fixed`), never the slider's (integrator D6). `event`
-  binds the instrument to an event of the point (its kind or name, as a stop rule matches it): it reads only once that
-  event has happened by the frame shown (S03 part 3: `tape_grey` declares `event: "companion_landing"`, so the grey
-  ball's tape reads only after the grey ball lands; review R-P F18). A `manual` stopwatch starts with the launch and
-  stops on the student's press, on the wall clock (`performance.now()`) whatever the playback does; while it runs,
-  ▶ / ❚❚, a scrub of the time bar and ← / → are refused, and «slow» is refused for a step with one: it measures the
-  reaction, as a hand-held one does (review R-P F5). «Measure» puts its reading into the step's stopwatch column when
-  it was stopped for the shown launch; otherwise the cell stays empty («—», empty in the CSV, never 0), and the plot and
-  the fit skip it (review R-W F6).
-* `steps: [{id, title, goal, hint?, preset, fixed?, controls, instruments, columns, plot, laws, frame_dt, stop,
-  quantize?, drop?}]`: `columns` `[{id, label, from: <instrument>}` or `{id, label, of: <column>, op: sqrt | square |
-  sin2 | inverse | log}]` (errors propagated as σ_f² = f′²σ² + ½f″²σ⁴, so sin 2θ at 45° keeps an error); `plot {x, y,
-  fit, fits}` with fits `line0`, `line`, `quadratic` (its vertex with σ) and, at standard, `power`; `laws: [{x, y,
-  model, quantity, label, unit, reference}, …]`, several per step (`registry._check_laws`; integrator D4): `x` and `y`
-  are two columns of the step, `model` one of its plot's fits, `quantity` one the model gives (`registry.LAW_MODELS`:
-  slope ← `line0` or `line`, intercept ← `line`, vertex ← `quadratic`, exponent ← `power`), `label` a `T` naming the
-  quantity, `unit` a `T` or a plain symbol, `reference` an id unique in the step; the step's own plot is one of its
-  laws, and the former single `law` is refused. The fit (`fit.js`, mirroring `lfphys.tools.stats.linear_fit` step by
-  step; shared fixture `player/js/tests/fixtures/fit_cases.json`, Pearson–York included, to 1e-12) is York's line (York
-  et al. 2004, eqs. (13), with errors in both x and y) for `line0`, `line` and `power` (on the logs), and the effective
-  variance (three re-weightings, a stated approximation) for `quadratic`; both refuse a singular design (`fit.singular`;
-  review R-E F5, F8; integrator D3). Its errors are scaled by the Birge ratio when χ²/dof > 1, and the scaling is shown.
-  Each law's reference is computed **by the world** when the step's atlas is built (`Simulation.lab_reference(step,
-  fixed, values, reference) -> {value, unit, label, how, kind: "closed form" | "engine"}`; without `reference`, the
-  step's first law) and stored in the manifest's `references` under the law's id. «Check against the law» applies only
-  when the plot is one of the step's laws' (x, y, fit); otherwise it is off with the reason, and the part's laws are
-  listed with their plots («plot it»). It compares that law's quantity with its reference: ✓ within k errors, or ✗ with
-  the step's hint, where k = 2 when the errors are the instruments' declared ones, and Student's t quantile with the
-  same coverage (95.45 %) for n − p degrees of freedom when they come from the scatter (no declared errors, or the
-  Birge scaling applied); a fit whose √(χ²/dof) exceeds 3 (`fit.js BIRGE_MAX`) gives no verdict, with the reason. One
-  row per set-up: «Measure» on a set-up already in the table replaces its row and says so (the bench repeats exactly,
-  so a repeat is not a new independent point; integrator D5). A point's reply is applied only when it is still the one
-  asked for, and «Measure» is refused while the slider's set-up is not the one shown (loading, refused or failed;
-  integrator D6). The drawer of Lab work lists the events without their times, since a landing's time would give a
-  hidden value away (integrator D10). The table is kept per step in the browser (`localStorage`, a convenience) with
-  its atlas's key, dropped with a message when the atlas is rebuilt, and exported as CSV with the errors.
-* `worksheet: {frp: [{name, programme, …}], equipment: [T], questions: [{q, answer}], teacher: [T], variants?}`: data,
-  not a document. Every `frp` entry names its `programme` (a `T`: the programme's name to print, never its raw id).
-  `variants: [{id, grade, label, steps, plot: {step: {x, y, fit}}, goals?: {step: T}, questions}]` are other sheets of
-  the same lab (`registry._check_variants`: a unique slug, a grade 1–12, a `T` label, distinct steps of the lab, per step
-  two of its columns and a fit among its plot's fits or none, questions of two `T`), chosen on the page
-  (`&variant=<id>`, a select): S03's grade-7 variant has part 1 only, L against h with no fitted curve, its own goal and
-  questions. `worksheet.html?demo=<world>` (`/worksheet?demo=…`) prints it in the viewer's language. Every printed page
-  is one sheet, a fixed A4 page box with the attribution line at its foot: the head («Name», «Class», «Date») and part
-  1, one sheet per part, the questions, the teacher's sheets; no part is split and no page carries a single line. A
-  part has one blank row per set-up of the step, the plots of its laws (or the variant's), the curve each law fits named
-  in its instruction, and «Conclusion» lines. The ФРП lab's name is quoted verbatim in Russian, with the translation
-  marked once in another language. The laws' references come from the steps' atlases with the key the server expects
-  (the published site's is asked for only when a step has none here). «For the teacher»
-  (`&teacher=1`) shows the answers, the teacher's notes and the laws' references on pages of their own; they are public
-  (the design's §10, question 2: the repository is public anyway). The texts of `STEPS` and `WORKSHEET` and their
-  translations are Site Materials under CC BY-NC-SA 4.0 (`../LICENSE.md` §1 item 8, §9): a world with them carries the
-  three-line comment of the licence response (`s03_projectile/viz.py`, above `STEPS = [`), and every printed page
-  carries the attribution line.
+**Lab work: a bench, not a test** (EX1 design §2.3; EX2 §1.4, F4–F6, F8, F9; the owner, 2026-11-18). The bench is
+the world itself on a narrow topic: the set-ups the student chooses (the step's controls, on its atlas's grid), the
+instruments with their divisions and errors, the moment of reading (the time cursor: a count stopped early, an orbit
+read after one turn or ten), the processing (several formula columns of the same readings), the plot of any two columns
+and any fit model at the level. Several ways lead through every bench, some to right results and some to wrong ones,
+each for a computed reason; every way is inside the computed atlases, listed in the world's design with its computed
+outcome and tested against the built atlas (`<world>/tests/test_<world>_screens.py`). **Nothing is hidden**: Lab
+work's drawer is Explore's (every check with its value, reference, difference, tolerance and note; the events with
+their texts and times; «Physics of this world»; the passport), the set-up values are shown (S03's chute speed, u35's
+glass), and the world's computed values for the bench are listed under «Computed for this bench». **[error in
+earlier]** EX1's D10 (the events' times left out of Lab work's drawer) and the first EX2 design's concealment (a «glass
+of unknown index», verdicts only, a seed of its own) are withdrawn. **The app judges nothing**: there is no «Check
+against the law», no ✓/✗ about the student's data and no bound of k errors (EX1's D4 is withdrawn); the fit is a tool
+that prints its output, and the students record and hand in their own measurements for the teacher to judge
+(«он уже сам проверяет и говорит у кого правильно получилось, у кого неправильно»). «MODIFIED PHYSICS» stays on the
+step card and in the top bar while a modified point is shown.
+
+* `instruments: {id: {kind: ruler | protractor | stopwatch | readout | counter, label, unit, division, error?, sigma?,
+  reads | manual, event?, error_note?}}`. A reading is `division × round(value / division)` with the declared `error`
+  (by default half a division), written to the decimals of its division or of its error, whichever is finer («0.600 ±
+  0.005»); an `error` of 0 declares an exact set-up, with its reason in `error_note` (S03's «Height scale of the
+  stand»: the stand sets the chute's height exactly at its marks; integrator D2): its reading is written to its
+  division's decimals without «± 0» («0.20»), a column derived from it to four significant digits with their zeros
+  («1.000», `lab.js sig4`), and the step's list of instruments and the task sheet give the reason in place of an error
+  («division 0.01 m; exact: the stand sets the chute's height at its marks»; `lab.js instrumentText`, V52 (y)); the CSV
+  keeps plain numbers and the error 0. **A counter** (EX2 F4) reads a measurable whose value in every frame is a whole
+  number ≥ 0 or null (`site/atlas.py` fails the atlas otherwise); its division is 1 and its `error` is required:
+  `"poisson"` (√N, one count for N = 0: «838 ± 29», «0 ± 1», its line «counts; error √N (a count of 0 has the error of
+  one count)») or a number ≥ 0 (0: an exact count, «11»). **A readout with `sigma`** names the measurable of the run's
+  own standard error at the cursor («0.7071 ± 0.011»; u37's E of each setting pair) and declares no `error`; its
+  division is then only the display precision. `reads` names a measurable of the world, read at the cursor («Nothing to
+  measure yet: …» before it is reached), or `control:<param>` (or `control:<compound id>` of a step's own compound
+  control), a set-up value: the shown point's own (its header's `params`, then its grid values, then the atlas's
+  `fixed`), never the slider's (integrator D6); a counter or a readout with `sigma` reads a measurable. A step on an
+  Explore screen's atlas (F9) cannot read `control:<compound id>` of the screen's compound control (`_check_lab` takes
+  the compound ids from the steps' own controls; u37 reads Bob's angle b = Δ instead; `../STATUS.md` V53). `event` binds
+  the instrument to an event of the point (its kind or name, as a stop rule matches it): it reads only once that event
+  has happened by the frame shown (S03 part 3: `tape_grey` declares `event: "companion_landing"`, so the grey ball's
+  tape reads only after the grey ball lands; review R-P F18). **Every instrument of a step reads on every point of its
+  atlas**: «Measure» reads all the step's instruments at once (`lab.js readAll`) and refuses the whole row when one of
+  them has nothing at the cursor, so an instrument that some set-ups cannot have (a circle has no periapsis, so no
+  radial clock) belongs to a step whose points all have it (u34 keeps the radial clock and the radius scales in part 2,
+  of eccentric orbits only; W34). A `manual` stopwatch starts with the launch and stops on the student's press, on the
+  wall clock (`performance.now()`) whatever the playback does; while it runs, ▶ / ❚❚, a scrub of the time bar and ← /
+  → are refused, and «slow» is refused for a step with one: it measures the reaction, as a hand-held one does (review
+  R-P F5); its step declares no `speed`. «Measure» puts its reading into the step's stopwatch column when it was
+  stopped for the shown launch; otherwise the cell stays empty («—», empty in the CSV, never 0), and the plot and the
+  fit skip it (review R-W F6). The instruments drawn over the view (`ruler`, `protractor`) need the view's `anchors()`
+  and `worldToPx` (a registry check since EX2, F8 (d); V52 (l)); readouts and counters need neither.
+* `steps: [{id, title, goal, hint?, preset, fixed?, controls, frame_dt | fps, speed?, stop, seed?, quantize?, drop?,
+  instruments, columns, plot, laws?, overlays?, readouts?}]`, or on an Explore screen's atlas `{id, title, goal, hint?,
+  atlas: <screen id>, speed?, instruments, columns, plot, laws?, overlays?, readouts?}` (F9: its points are that
+  screen's: it declares none of `registry.SHARED_FIELDS` (preset, fixed, controls, frame_dt, fps, stop, seed,
+  quantize, drop), builds no atlas of its own, keeps its own table in the browser, and the screen's atlas carries its
+  laws as `<step>/<law>` in the manifest's `references`, so the screen's key covers them; `lab_reference` is called with
+  the lab step's id; u35's reflection bench is Explore «Boundary», u37's CHSH and local-world parts are its Explore).
+  `overlays` and `readouts` are declared as an Explore screen's (F6 (b), `_check_step_view`), the view's defaults
+  otherwise; a view draws in Lab work what it draws in Explore. `columns`: each exactly one of `{id, label, from:
+  <instrument>}`, `{id, label, of: <column>, op: sqrt | square | sin2 | inverse | log}` (errors propagated as σ_f² =
+  f′²σ² + ½f″²σ⁴, so sin 2θ at 45° keeps an error) and **a formula** `{id, label, expr}` over earlier columns (EX2 F5;
+  `server/lfviz/expr.py` and `player/js/expr.js`, one grammar, neither using `eval` or `Function`; errors by
+  hyper-dual numbers, exact first and second derivatives, σ² = Σ(∂f·σ)² + ½Σ(∂²f·σ²)², an input with σ = 0 adding
+  nothing; `lfviz.expr.evaluate(text, {column: (v, σ)})` → `(value, sigma, t1, t2)`). A column's id is not a name of
+  the grammar (`expr.RESERVED`) or a property every JavaScript object has; a formula's undefined cell stays empty with
+  its reason code (`sqrt_negative`, `division_by_zero`, `log_nonpositive`, `asin_domain`, `acos_domain`, `power`,
+  `not_finite`, `missing`, `error_undefined`), said in «Measure»'s message. A step may offer several formula columns
+  of the same readings, and the student plots whichever (u35's y_s and y_p, raw and with the dark counts subtracted, R
+  with the dead time corrected; u37's E from four counts and S from four E; u34's Δφ from a shift). `plot {x, y, fit,
+  fits}`: the step's default plot (any two columns can be plotted) with fits `line0`, `line`, `quadratic` (its vertex
+  with σ) and, at standard, `power`. `laws: [{x, y, model, quantity, label, unit, reference}, …]` are data, optional
+  (F6 (d), `registry._check_laws`; integrator D4): `x` and `y` two columns of the step, `model` one of its plot's fits,
+  `quantity` one the model gives (`registry.LAW_MODELS`: slope ← `line0` or `line`, intercept ← `line`, vertex ←
+  `quadratic`, exponent ← `power`), `label` a `T` naming the quantity, `unit` a `T` or a plain symbol, `reference` an id
+  unique in the step; the former single `law` is refused, and the step's plot need not be one of its laws. Each law's
+  value is computed **by the world** when the atlas is built (`Simulation.lab_reference(step, fixed, values,
+  reference) -> {value, unit, label, how, kind: "closed form" | "engine"}`) and stored in the manifest's `references`;
+  `lab.js computedFor` lists them in the drawer under «Computed for this bench», with the quantity, the columns and the
+  formula or the engine's method («slope of L against √h: 0.6774 m^½; …»), never beside the student's fit.
+* **The fit's output** (F6 (c), F11; `fit.js`, `lab.js fitLines`). The algorithms are EX1's: York's line (York et al.
+  2004, eqs. (13), with errors in both x and y) for `line0`, `line` and `power` (on the logs), the effective variance
+  (three re-weightings, a stated approximation) for `quadratic`, both refusing a singular design (`fit.singular`),
+  mirroring `lfphys.tools.stats.linear_fit` step by step (shared fixture `player/js/tests/fixtures/fit_cases.json`,
+  Pearson–York included, to 1e-12; review R-E F5, F8; integrator D3). It prints, for the model the student chose, the
+  parameters with the σ from the declared errors; at `standard` a second line «χ² = …, dof = …, χ²/dof = …, p = …,
+  Birge ratio √(χ²/dof) = …» (in Russian with ν, §7) and, when χ²/dof > 1, a third with the σ scaled by the Birge
+  ratio, for the student to decide which to report (**[error in earlier]** EX1 scaled them silently); without declared
+  errors it says that the σ come from the scatter of the points; at school the parameters with their errors only. The
+  p of χ² comes from `chi2Sf` in logarithms (the regularised upper incomplete gamma by its continued fraction; fixture
+  `fixtures/chi2_sf.json`, 269 cases to χ² = 10⁶ against mpmath) and is printed from ln p, never «p = 0» («p =
+  3.05·10⁻²¹⁷¹³⁴» for χ² = 10⁶ on 7 degrees of freedom; u34's way 2 prints 6.36·10⁻¹⁰⁶³⁹⁰). One row per set-up:
+  «Measure» on a set-up already in the table replaces its row and says so (the bench repeats exactly, so a repeat is
+  not a new independent point; integrator D5). A point's reply is applied only when it is still the one asked for, and
+  «Measure» is refused while the slider's set-up is not the one shown (loading, refused or failed; integrator D6). The
+  table is kept per step in the browser (`localStorage`, a convenience) with its atlas's key, dropped with a message
+  when the atlas is rebuilt, and exported as CSV with the errors; the table, its CSV, the plot and the fit are
+  conveniences, as a spreadsheet and a fitting program are in any laboratory.
+* **The task sheet** (F8, `registry._check_task_sheet`, `_check_task_variants`, `_check_basis`; `player/js/worksheet.js`,
+  `worksheet.html`): `worksheet: {frp | basis, goal: T, bench: [T], procedure: [T], record: [T], record_rows?,
+  variants?}`: data, not a document. At school `frp: [{name, programme, …}]` names the programme's lab (each entry's
+  `programme` a `T`: the programme's name to print, never its raw id; the lab's name quoted verbatim in Russian, its
+  translation marked once in another language); at `standard` `basis: [{text: T, source, quote?, quote_lang?}]` (the
+  course or the manual the bench follows, its words quoted verbatim in their language and marked as a quotation) is
+  required and `frp` refused. `bench` says what the bench is and what can be set on it, `procedure` one suggested
+  procedure (one of several ways), `record` what to record and hand in, `record_rows` the blank rows per part (1–40,
+  default 10). The registry refuses EX1's `questions`, `teacher`, `equipment` and the first EX2 form's `grading`: no
+  questions, answers, teacher's pages or grading. **The teacher changes the task**, on the static site too:
+  `variants: [{id, label: T, grade?, steps?, values?: {<step>: {<control id>: value}}, text?: {goal?: T, procedure?:
+  [T], record?: [T]}}]` are tasks computed in the atlases (each value on its control's grid; `grade` 1–12 required at
+  school only): `&variant=<id>` on `run.html` (Lab work) preselects the steps' controls (nothing is locked: the bench
+  stays whole) and on `worksheet.html` prints that variant's sheet with its own texts and the set-up it preselects
+  (S03's grade-7 variant: part 1, L against h; u34's four orbit families; u35's glasses and analyser; u37's pairs,
+  sources and devices). `worksheet.html?demo=<world>[&variant=<id>][&computed=1]` (`/worksheet?demo=…`) prints in the
+  viewer's language: the head («Name», «Class» or group, «Date»), the programme's lab or the basis with its quotations,
+  the goal, the bench, the procedure, the record list and a free field «Task from the teacher:»; then one sheet per
+  part with its goal, its instruments (as the step card writes them, `instrumentText`), its formula columns, the
+  variant's set-up, a blank table (in its own scrolling box on a screen, printed in full: u34's part 2 has 16 columns)
+  and a plot frame without a fitted curve (which line to draw is the student's choice), and «Notes» lines. The goal,
+  the procedure, the record list and the free field are editable before printing (contenteditable; «Restore the
+  original»); the edits are kept in this browser under `lfviz.sheet.<world>.<variant>` (a convenience; nothing is sent
+  anywhere). `&computed=1` adds «Computed for this bench» on a page of its own: the same values the drawer shows to
+  everyone, from the atlases with the key the server expects (the published site's only when a step has none here).
+  The teacher gets nothing else: the bench is open and judging is the teacher's. **[error in earlier]** EX1's
+  questions, answers, «For the teacher» (`&teacher=1`) and its verdict are withdrawn, and S03's transition path
+  (`registry.EX1_WORKSHEETS`, `_check_ex1_worksheet`, `_check_variants`, the `ex1` branch of `worksheet.js` and of
+  `lab.js variantOf`) was removed on 2026-11-19, after S03 became a task sheet. Every printed page is one sheet, a fixed
+  A4 page box with the attribution line at its foot; no part is split and no page carries a single line. The texts of
+  `STEPS` and `WORKSHEET` and their translations are Site Materials under CC BY-NC-SA 4.0 (`../LICENSE.md` §1 item 8,
+  §9): a world with them carries the three-line comment of the licence response (`s03_projectile/viz.py`, above
+  `STEPS = [`), and every printed page carries the attribution line.
 
 **Compute live** (`lfviz/atlas_live.py`; §3's `POST /api/atlas/…/point`). On a server the sliders also move between
 the detents: a value within a tenth of the local step of a detent (the gap from the nearest detent to its neighbour on
@@ -1149,7 +1298,7 @@ there the sliders take grid values only.
 the public site is published, the site's of the same world version and the same key (its files read from
 `<site>recordings/<world>/`); otherwise the screen is greyed with «Not built here: run site/record.py --world <id>».
 A stale local atlas is not opened. Watch plays the local recording, else the published site's of the same version.
-The worksheet takes the laws' references from the same atlases. The site is asked only when a screen (or a worksheet's
+The task sheet takes the computed values (the laws' references) from the same atlases. The site is asked only when a screen (or a task sheet's
 step) has nothing current here, and through its `api/recordings.json` (every world's index), so a world not yet
 published there logs no 404 (`demo.js`, `worksheet.js`). So a browser test needs recordings and atlases built by
 the code under test (`site/fixtures.py`, below); `site/check.py` fails when the site's `expected` is missing or differs
@@ -1161,7 +1310,13 @@ over a limit and warn over a target (`sitelib.ACCEPTED` names the accepted ones 
 2026-11-17 (local build, Docker, CPU, the pinned image): S03 Explore 940 points, 10 refused, 5.85 MB (largest point
 12.9 kB; 11 s of CPU), labs 39, 46 and 89 kB, Watch `independence` 0.03 MB and `air` 0.02 MB, its world 6.11 MB; u32
 Explore 48 points, 5.50 MB (largest point 132.7 kB; 93 s of CPU), Watch `story` 0.60 MB (`young`, `eraser`,
-`aharonov_bohm` 0.73, 0.64, 0.67 MB), its world 8.15 MB.
+`aharonov_bohm` 0.73, 0.64, 0.67 MB), its world 8.15 MB. Measured on 2026-11-19 by EX2's world steps (after the
+pool; the design's notes after the implementation have every atlas): u34 5.91 MB (Explore 35 points 2.74 MB, largest
+point 120 kB; labs 0.65 and 1.67 MB; no shared blob to pool), u35 9.39 MB (Explore «Boundary» 456 points 3.55 MB,
+«Coatings» 1.15 MB, «Polarisation» 1.12 MB, labs 0.03, 0.74 and 2.23 MB, recordings 0.57 MB), u37 9.45 MB (Explore
+156 points 3.49 MB, labs 1.70 and 3.00 MB, recordings 1.26 MB), S03 7.09 MB (Explore 940 points 6.63 MB, over the 6 MB
+target and accepted in `sitelib.ACCEPTED`: the drawer's values are check messages in every point, about 1.05 MB of
+them).
 
 **Making them.** `site/record.py --world <id>` (or `--stale`, `--all`) records a world's recordings, then builds its
 atlases; `site/atlas.py --world <id> [--atlas <id>]` builds only the atlases. Locally as in §9 (Docker, CPU,
@@ -1178,20 +1333,40 @@ dataset of a module, `core.data:air`, is its own entry), `test_codes.py` (the re
 committed fixture in `tests/site_worlds/recordings/`, remade by `tests/site_worlds/make_fixture.py`, is compared byte
 for byte with a fresh build, and `site/fixtures.py` builds everything present with the expected keys),
 `test_protocol_quant.py` (shared fixtures `tests/site_worlds/quant/`), `test_atlas_live.py`, `test_code_hash.py`,
-`test_site_registry.py`, `test_site_build.py`. Worlds: `s03_projectile/tests/test_s03_physics.py` (every law's
-reference and every number of the worksheet against the engine), `u32_double_slit/tests/test_u32_screens.py`. Player
-(Node, `node --test player/js/tests/*.test.mjs`, also in CI): `quant`, `fit` (the shared fixture
-`fixtures/fit_cases.json` made by `fixtures/make_fit_cases.py`, and Student's t against SciPy,
-`fixtures/t_quantiles.json`), `atlas`, `lab`, `captions`, `record`, `i18n`, `decode`; the instrument model is tested on
-hand-computed cases (there is no Python one). Browser (EN and RU, 1280 and 390 px, a private server, never port 8479):
+`test_site_registry.py`, `test_site_build.py`, `test_expr.py` (the formula columns against the shared fixture
+`player/js/tests/fixtures/expr_cases.json`, made by `make_expr_cases.py`: 66 cases against mpmath and 42 refused
+formulas). EX2's framework is tested on the toy worlds `tests/site_worlds/s98_atlas_toy` (school: a compound control,
+`fps`, a counted stop, `drop.blobs`, a pooled header blob, a counter, a readout with σ, formula columns, a task sheet
+with `frp` and a grade-7 variant) and `u96_lab_toy` (university: a law parameter, `default_speed`, `units.t_show`, a
+step on the Explore atlas, a basis and a variant); the pool also through `tests/site_worlds/quant/pool_point.*`
+(`make_fixture.write_pool_case`). Engine for EX2: `test_polarization.py`, `test_materials.py`, `test_interfaces.py`
+(the p field, the group delay), `test_qubits_povm.py`, `test_photodetector.py`, `test_bell_stats.py`,
+`test_local_hidden.py`, `test_orbit_stream.py` (the proper time to r = 0), `test_mechanics_air.py`,
+`test_mechanics_projectile.py`, `test_magnus.py`, `test_earth_frame.py`. Worlds: `s03_projectile/tests/test_s03_physics.py`
+(every law's reference against the engine, each force against E03's references) and `test_s03_screens.py`,
+`u32_double_slit/tests/test_u32_screens.py`, `u34_orbits/tests/test_u34_screens.py`,
+`u35_optics_bench/tests/test_u35_screens.py` (with `tests/u35_lab.py`, Lab work's readings in Python),
+`u37_bell_test/tests/test_u37_screens.py`: every grid point of every atlas builds with all checks ✓ and stops by its
+rule, every computed value of a bench against an independent computation, **every way of the bench against the built
+atlas** (a way that stops failing, or starts, is a failed test), the Watch captions' numbers against the recording.
+Player (Node, `node --test player/js/tests/*.test.mjs`, also in CI): `quant`, `fit` (the shared fixture
+`fixtures/fit_cases.json` made by `fixtures/make_fit_cases.py`, and the p of χ², `fixtures/chi2_sf.json` made by
+`make_chi2_sf.py` against mpmath), `expr`, `watch` (the time label), `atlas` (the pool), `lab`, `captions`, `record`,
+`i18n`, `decode`; the instrument model is tested on hand-computed cases (there is no Python one). Browser (EN and RU,
+1280 and 390 px, a private server, never port 8479):
 the committed toy fixture's keys are not current once any code changes, so a server's player greys its screens (D11);
 `site/fixtures.py --out DIR [--world …]` builds what a browser test needs now (by default the toy world's recordings
 and atlases) into a folder served with `LFVIZ_RECORDINGS=DIR`. `tests/browser/demo_screens.mjs <port> [sizes] [world]`
-for the toy, S03 and u32 (with the recordings and atlases built by the code under test; CI's `build` job runs it for
-the toy in EN and RU), `u32_double_slit/tests/u32_screens.mjs` (what is u32's own: the readout line, the folded panels,
+for the toys, S03, u32, u34, u35 and u37 (with the recordings and atlases built by the code under test; CI's `build`
+job runs it for the toy in EN and RU): every EX2 check on every Explore screen and lab step, read from their
+declarations (the time label against the frames in Watch, Explore and Lab work; the drawer of Lab work as Explore's;
+no verdict and the fit's output; every variant from the address; the task sheet printed, edited and restored, one A4
+page each); each EX2 world's own `<world>/tests/<world>_screens.mjs` from its view's `canvas.__layout` (captions clear
+of what they describe; at 390 px the view, the step's control and «Measure» on screen together; no horizontal scroll;
+no text out of its box), `u32_double_slit/tests/u32_screens.mjs` (what is u32's own: the readout line, the folded panels,
 «▶ Compute live» from Explore, the explanations never over the pictures and the phone's map height, also at 1024 px and
 in the full player: V52 (b), (c); the screens switched back and forth without a console error),
 `s03_projectile/tests/s03_screens.mjs` (S03's Explore: «h = … m» clear of the
 launcher at every computed point, the drag on its own scale and the legend saying so: V52 (e), (f); from the view's
 `canvas.__layout`), `start_page.mjs` (the cards' screen buttons, each enabled one clicked) and
-`site_smoke.mjs` (every screen used and the worksheet on the built site).
+`site_smoke.mjs` (every screen used and the task sheet on the built site).

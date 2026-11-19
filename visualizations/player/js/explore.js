@@ -12,7 +12,7 @@
 //   acts "next"     a change arms the next point: the view shows the new set-up at once, earlier shots go on as traces;
 //                   "now": the shown point is replaced and the cursor kept
 import { openAtlas, snap, gridIndex } from "./atlas.js";
-import { t } from "./i18n.js";
+import { sci, t } from "./i18n.js";
 import { frameAt, frameIndexAt, showAt } from "./record_core.js";
 import { el, fill, fmt, num, time } from "./ui.js";
 
@@ -35,7 +35,8 @@ export function factorText(r) {
   if (!(r > 0) || !Number.isFinite(r)) return "";
   if (Math.abs(r - 1) <= 0.05) return t("real time");
   const k = r < 1 ? 1 / r : r;
-  const kk = k < 10 ? fmt(Number(k.toPrecision(2)), "") : k < 1e6 ? fmt(Math.round(k), "") : fmt(k, ".2g");  // ×2.5, ×120, ×1.2·10⁹
+  // ×2.5, ×120, ×1.2·10⁶: from 10⁶ on in powers of ten (fmt's .2g switches only at 10⁷: W37, a factor of 1 200 000)
+  const kk = k < 10 ? fmt(Number(k.toPrecision(2)), "") : k < 1e6 ? fmt(Math.round(k), "") : sci(k, 2);
   return r < 1 ? t("slow motion ×{k}", { k: kk }) : t("sped up ×{k}", { k: kk });
 }
 // a time of the world in its own unit: the header's units.t_show {unit, s: world seconds per unit} (u34: GM/c³), else
@@ -166,6 +167,26 @@ export function pointCsv(W, tt, measurables, label = (m) => m.id, tHead = "t, s"
   return [head.join(","), ...lines].join("\n") + "\n";
 }
 
+// Which detents of a slider carry their value as a label: texts[i] at pos[i] (per cent of the detents' row). Labels never
+// collide (EX2, W35: a dense or uneven grid gave «4042» for 40° and 42° and «885» for 80° and 85°): every k-th detent with
+// the smallest k from 1 (more than 12 detents: from ⌈n/10⌉) at which no two labels overlap; the last detent always, the
+// labelled one before it dropped when they would overlap. A label's width is estimated from its characters at the
+// detents' font (12 px on a wide screen in a 290 px row; 14 px in a phone's wider row scale alike). Returns booleans.
+export function detentLabels(texts, pos, { rowPx = 290, charPx = 7, padPx = 6, sepPx = 4 } = {}) {
+  const n = texts.length;
+  if (!n) return [];
+  const w = (i) => String(texts[i]).length * charPx + padPx;
+  const fits = (a, b) => ((pos[b] - pos[a]) / 100) * rowPx >= (w(a) + w(b)) / 2 + sepPx;
+  for (let k = n <= 12 ? 1 : Math.ceil(n / 10); k < Math.max(n, 2); k++) {
+    const on = texts.map((_, i) => i % k === 0 || i === n - 1);
+    const prev = Math.floor((n - 2) / k) * k;  // the labelled detent before the last
+    if (prev > 0 && !fits(prev, n - 1)) on[prev] = false;
+    const idx = on.flatMap((x, i) => (x ? [i] : []));
+    if (idx.every((i, j) => j === 0 || fits(idx[j - 1], i))) return on;
+  }
+  return texts.map((_, i) => i === 0 || (i === n - 1 && n > 1 && fits(0, n - 1)));
+}
+
 // A control of a grid (site/atlas.py manifest "controls" with the catalogue's label, unit, kind; registry.screens_of):
 // slider (detents at the grid values only; on a server free between them), toggle or select (one button per value).
 // onPick(value, {final}) is called when a value is chosen. Returns {el, set(value), disable(on)}.
@@ -209,14 +230,16 @@ export function controlRow(c, value, onPick, { server = false } = {}) {
   input.oninput = () => { const v = valueOf(); out.textContent = valueText(c, v); valueSay(v); out.classList.toggle("dm-off-grid", gridIndex(c, v) < 0); };
   input.onchange = () => onPick(valueOf(), { final: true });
   // the detents: a tap on one chooses it (touch: the thumb need not be dragged). Out of the tab order: the slider is the
-  // keyboard's way (review EX1-screens F10); their hit area is 44 px high and as wide as the gap to the neighbours (F15)
+  // keyboard's way (review EX1-screens F10); their hit area is 44 px high and as wide as the gap to the neighbours (F15),
+  // never wider (demo.css: a dense grid's labelled detent does not cover its neighbour); labels never collide (detentLabels)
   const pos = (v, i) => 100 * (fine ? (v - lo) / (hi - lo || 1) : i / Math.max(1, vals.length - 1));
+  const labelled = detentLabels(vals.map((v) => valueText(c, v)), vals.map(pos));
   const ticks = el("div", { class: "dm-detents" }, vals.map((v, i) => {
     const gapPct = Math.min(i > 0 ? pos(v, i) - pos(vals[i - 1], i - 1) : Infinity, i < vals.length - 1 ? pos(vals[i + 1], i + 1) - pos(v, i) : Infinity);
     const b = el("button", {
       class: "dm-detent", tabindex: "-1", "aria-pressed": "false", style: { left: `${pos(v, i).toFixed(3)}%` },
       title: valueText(c, v), "aria-label": valueUnitText(c, v), onclick: () => onPick(v, { final: true }) },
-    vals.length <= 12 || i % Math.ceil(vals.length / 10) === 0 || i === vals.length - 1 ? valueText(c, v) : "");
+    labelled[i] ? valueText(c, v) : "");
     b.style.setProperty("--gap", Number.isFinite(gapPct) ? gapPct.toFixed(3) : "100");
     return b;
   }));

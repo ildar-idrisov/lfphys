@@ -277,7 +277,7 @@ function local(a, opts) {
   if (LANG === "ru") s = s.replace(/[\u00a0\u202f]/g, "\u202f");  // Intl's spaces: a narrow no-break space
   return s;
 }
-function sci(a, digits, fixedDecimals) {
+export function sci(a, digits, fixedDecimals) {  // a > 0 as m·10ⁿ: digits significant, or fixedDecimals after the point
   let e = Math.floor(Math.log10(a));
   let m = a / 10 ** e;
   const mr = fixedDecimals !== undefined ? Number(m.toFixed(fixedDecimals)) : Number(m.toPrecision(digits));

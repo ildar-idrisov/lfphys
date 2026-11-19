@@ -18,6 +18,9 @@ button.link { background: none; border: 0; color: var(--accent); padding: 4px 6p
 .dm-tab { border: 0; border-radius: 0; background: none; padding: 6px 14px; min-height: 36px; font-size: 14px; white-space: nowrap; }
 .dm-tab + .dm-tab { border-left: 1px solid var(--line); }
 .dm-tab.on { background: var(--accent); color: #fff; }
+/* five tabs or more (EX2: Watch, three Explore screens, Lab work): narrower tabs, so that the top bar keeps one line in
+   Russian at 1280 px (u35: 1385 px with the usual tabs); in the player's own style, so from the first paint */
+.dm-tabs:has(> .dm-tab:nth-child(5)) > .dm-tab { padding-left: 6px; padding-right: 6px; font-size: 13px; }
 .dm-ic { opacity: .8; }
 .dm-menu { position: relative; display: none; }
 .dm-menu > summary { list-style: none; cursor: pointer; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; min-width: 24px; text-align: center; }
@@ -50,17 +53,26 @@ button.link { background: none; border: 0; color: var(--accent); padding: 4px 6p
 .dm-detent { position: absolute; transform: translateX(-50%); background: none; border: 0; padding: 2px 3px; font-size: 12px; color: var(--muted);
   min-width: 18px; min-height: 24px; line-height: 1.1; white-space: nowrap; }
 .dm-detent::before { content: ""; position: absolute; left: 50%; top: -6px; width: 1px; height: 6px; background: var(--muted); }
-/* a detent's hit area: 44 px high, as wide as the gap to its neighbours (at most 44 px), without changing its look
-   (review EX1-screens F15); --gap is that gap in per cent of the row (explore.js) */
+/* a detent's hit area: 44 px high, as wide as its label (at least 44 px) but never wider than the gap to its neighbours
+   (review EX1-screens F15; EX2, W35: on u35's 38 angles a labelled detent lay over its unlabelled neighbours, so a tap
+   chose the wrong one), without changing its look. Only that area takes a tap: the detent's own box (its label) does not.
+   --gap is the gap in per cent of the row (explore.js) */
 .dm-detents { container-type: inline-size; }
+.dm-detent { pointer-events: none; }
 .dm-detent::after { content: ""; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); height: 44px;
-  width: max(24px, min(44px, calc(var(--gap, 100) * 1cqw))); }
+  width: min(calc(var(--gap, 100) * 1cqw), max(44px, 100%)); pointer-events: auto; }
+.dm-detent:disabled::after { pointer-events: none; }
 .dm-detent.on { color: var(--accent); font-weight: 700; }
 .dm-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .dm-seg > button { border: 0; border-radius: 0; background: var(--chip); padding: 6px 12px; min-height: 34px; }
 .dm-seg > button + button { border-left: 1px solid var(--line); }
 .dm-seg > button.on { background: var(--accent); color: #fff; }
-.dm-ctl-seg { display: flex; } .dm-ctl-seg > button { flex: 1; }
+.dm-ctl-seg { display: flex; } .dm-ctl-seg > button { flex: 1; min-width: 0; overflow-wrap: anywhere; }  /* a long value breaks inside its button */
+/* five values or more (u35's six glasses and sides): three to a row, so that none is cut off at the side's edge (one row
+   of six in the 312 px side showed four and clipped the rest, unreachable) */
+.dm-ctl-seg:has(> button:nth-child(5)) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.dm-ctl-seg:has(> button:nth-child(5)) > button:nth-child(3n + 1) { border-left: 0; }
+.dm-ctl-seg:has(> button:nth-child(5)) > button:nth-child(n + 4) { border-top: 1px solid var(--line); }
 .dm-overlays { margin: 8px 0; border-top: 1px solid var(--line); padding-top: 8px; }
 .dm-overlays > summary { cursor: pointer; font-weight: 600; margin-bottom: 4px; }
 .dm-check { display: inline-flex; align-items: center; gap: 4px; margin: 2px 12px 2px 0; min-height: 32px; }
@@ -112,8 +124,14 @@ body.dm-drawer-open .dm-drawer { visibility: visible; }
 .dm-ck-list li { margin: 6px 0; color: var(--ink); }
 .dm-ck-list li .dm-ck-mark { font-weight: 700; }
 .dm-ck-list li.st-ok .dm-ck-mark { color: var(--ok); } .dm-ck-list li.st-bad .dm-ck-mark { color: var(--bad); }
-.dm-ck-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
-.dm-ck-table td, .dm-ck-table th { border-bottom: 1px solid var(--grid); padding: 3px 4px; overflow-wrap: anywhere; text-align: left; }
+/* a check's name on a line of its own, its numbers in the columns under it (EX2, W35: six equal columns in the 460 px
+   drawer wrapped the names word by word, even syllable by syllable in Russian) */
+.dm-ck-table { display: block; width: 100%; font-size: 13px; }
+.dm-ck-table tr { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) 1.5em;
+  column-gap: 6px; border-bottom: 1px solid var(--grid); padding: 4px 2px; }
+.dm-ck-table td, .dm-ck-table th { padding: 1px 0; overflow-wrap: anywhere; text-align: left; }
+.dm-ck-table tr > :first-child { grid-column: 1 / -1; }
+.dm-ck-table th { font-weight: 600; color: var(--muted); }
 .dm-fold { margin: 10px 0; }
 .dm-fold > summary { cursor: pointer; font-weight: 600; }
 .dm-eng, .dm-ev { margin: 6px 0; }
@@ -189,6 +207,9 @@ body.dm-drawer-open .dm-drawer { visibility: visible; }
   .demo .dm-top > .dm-menu { display: block; }
   .demo .dm-top > .dm-tabs { order: 10; flex: 1 1 100%; display: flex; }
   .dm-tab { flex: 1 1 0; padding: 8px 4px; min-height: 44px; white-space: normal; line-height: 1.15; }
+  /* five tabs on a phone: the longest word of each label (in Russian, the lab tab's first word) must fit a fifth of
+     the bar; the one place a label is under 14 px */
+  .dm-tabs:has(> .dm-tab:nth-child(5)) > .dm-tab { padding-left: 2px; padding-right: 2px; font-size: 12.5px; }
   .dm-main { display: flex; flex-direction: column; }
   .dm-stage { height: auto; min-height: 0; aspect-ratio: 16 / 11; max-height: 62vh; border-right: 0; border-bottom: 1px solid var(--line); }
   .dm-stage > :first-child { min-height: 220px; }
@@ -204,7 +225,8 @@ body.dm-drawer-open .dm-drawer { visibility: visible; }
   .dm-bar > button { min-height: 44px; min-width: 44px; }
   .dm-tlbox { order: 10; flex: 1 1 100%; }
   .dm-timeline { height: 40px; }
-  .dm-time { min-width: 0; flex: 1 1 auto; text-align: left; }
+  /* the time label wraps rather than widen the page (the world's time, the factor and the position are long: u35) */
+  .dm-time { min-width: 0; flex: 1 1 auto; text-align: left; white-space: normal; overflow-wrap: anywhere; }
   .dm-caption { position: static; transform: none; max-width: none; border-radius: 0; margin: 0; }
   .dm-watch .dm-stage { aspect-ratio: auto; }
   .dm-watch .dm-stage > :first-child { aspect-ratio: 16 / 11; }

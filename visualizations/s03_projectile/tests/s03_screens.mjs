@@ -12,6 +12,15 @@
 //    weight's scale: …», and on a phone its rows run neither under the readouts laid over the view's corner nor over the
 //    computed path;
 //  - no page error; screenshots of the forces at the top of the path.
+// EX2 (design explore_EX2_2026-11-18 §1.3, §7, §10), from the same `__layout`:
+//  - Watch: at every caption (and at the end of the flight it describes) the caption, laid over the stage on a wide
+//    screen, covers neither the scene's box (the computed paths, the floor), nor a landing's mark or label, nor the
+//    earlier throws' marks;
+//  - Lab work draws what Explore draws (nothing hidden): in part 1 with the air on, «h = … m», the landing's mark and
+//    its label, and the Magnus force of the rolling ball under «forces» at the launch;
+//  - at 390 px the view, the step's control and «Measure» on the screen together;
+//  - on every screen no horizontal scroll and no text out of its box (the canvas's labels inside the canvas; the
+//    controls' and the readouts' texts inside their boxes).
 // Run against a PRIVATE server with S03's atlases built by the code under test (site/record.py --world s03_projectile),
 // never the shared one on 8479; the commands are those of u32_double_slit/tests/u32_screens.mjs, with this file:
 //   sh -c "cp /v/tests/browser/lfi18n.mjs /v/s03_projectile/tests/s03_screens.mjs /pw/ && node /pw/s03_screens.mjs 8696"
@@ -34,6 +43,102 @@ const X = "(window.__lfExplore || {}).explore";
 const layout = (page) => page.evaluate(() => { const c = document.querySelector(".dm-screen:not([hidden]) .dm-stage canvas"); return c && c.__layout ? JSON.parse(JSON.stringify(c.__layout)) : null; });
 
 const br = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
+const overlap = (a, b) => !!(a && b && a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3]);
+// no horizontal scroll; no text out of its box: the canvas's labels (its layout's marks) inside the canvas, and the
+// screen's controls, readouts, buttons and captions not wider than their boxes
+async function noOverflow(page, tag) {
+  const r = await page.evaluate(() => {
+    const scr = document.querySelector(".dm-screen:not([hidden])");
+    const c = scr && scr.querySelector(".dm-stage canvas"), L = c && c.__layout;
+    const out = L ? (L.marks || []).filter((m) => m.box && (m.box[0] < -1 || m.box[1] < -1 || m.box[2] > L.W + 1 || m.box[3] > L.H + 1)).map((m) => m.kind) : [];
+    const sel = ".dm-ctl label, .dm-ctl-value, .dm-readouts > *, button, .dm-caption, .dm-time, .dm-msg, summary";
+    // (the sliders' detents are ticks whose numbers stand under them by design: not text boxes)
+    const wide = [...scr.querySelectorAll(sel)].filter((e) => !e.classList.contains("dm-detent") && e.offsetParent !== null && getComputedStyle(e).overflowX !== "auto"
+      && e.scrollWidth > e.clientWidth + 1 && e.clientWidth > 0).map((e) => (e.className || e.tagName) + ": " + e.textContent.slice(0, 40));
+    return { sw: document.documentElement.scrollWidth, W: innerWidth, out, wide };
+  });
+  check(`${tag}: no horizontal scroll`, r.sw <= r.W, { scrollWidth: r.sw, width: r.W });
+  check(`${tag}: no text out of its box (the canvas's labels, the controls, the readouts)`, !r.out.length && !r.wide.length, r);
+}
+// Watch: a caption never covers what it describes (D8): at each caption's frame and at the last frame before the next
+async function watchCaptions(W, H, tag) {
+  const ctx = await br.newContext({ viewport: { width: W, height: H } });
+  const page = await ctx.newPage();
+  const errs = [];
+  page.on("pageerror", (e) => errs.push(e.message.slice(0, 200)));
+  await page.goto(inLang(`${base}/run?demo=${WORLD}&screen=watch`));
+  await page.waitForFunction(() => window.__lfWatch && window.__lfWatch.state.story, null, { timeout: 30000 });
+  // (a scrub of the time bar pauses the story: watch.js go)
+  const caps = await page.evaluate(() => window.__lfWatch.state.story.captions.map((c) => c.step));
+  const nSteps = await page.evaluate(() => window.__lfWatch.state.story.steps.length);
+  const bad = [];
+  const at = async (k) => {
+    await page.evaluate((j) => { const s = document.querySelector(".dm-screen:not([hidden]) .dm-timeline"); s.value = String(j); s.dispatchEvent(new Event("input")); }, k);
+    await settle(page, 80);
+    const r = await page.evaluate(() => {
+      const scr = document.querySelector(".dm-screen:not([hidden])"), c = scr.querySelector(".dm-stage canvas"), cap = scr.querySelector(".dm-caption");
+      const a = c.getBoundingClientRect(), b = cap.getBoundingClientRect();
+      return { L: c.__layout ? JSON.parse(JSON.stringify(c.__layout)) : null, cap: [b.left - a.left, b.top - a.top, b.right - a.left, b.bottom - a.top], over: getComputedStyle(cap).position === "absolute" };
+    });
+    if (!r.L) { bad.push({ k, why: "no layout" }); return; }
+    const hit = [["scene", r.L.scene], ...(r.L.marks || []).map((m) => [m.kind, m.box])].filter(([, box]) => overlap(r.cap, box)).map(([kind]) => kind);
+    if (hit.length) bad.push({ k, hit, cap: r.cap, scene: r.L.scene });
+  };
+  for (const [j, k] of caps.entries()) {
+    await at(k);
+    await at(Math.max(k, (j + 1 < caps.length ? caps[j + 1] : nSteps) - 1));
+  }
+  check(`${tag} watch: a caption never covers what it describes (the scene, the landings, the earlier throws)`, !bad.length, { bad: bad.slice(0, 4) });
+  await noOverflow(page, `${tag} watch`);
+  check(`${tag} watch: no page error`, errs.length === 0, { errs });
+  await ctx.close();
+}
+// Lab work draws what Explore draws (EX2 §5 F6 (b)), part 1 in air: the height, the landing with its label, the Magnus
+// force of the rolling ball; at 390 px the view, the step's control and «Measure» together
+async function labDraws(W, H, tag) {
+  const ctx = await br.newContext({ viewport: { width: W, height: H } });
+  const page = await ctx.newPage();
+  const errs = [];
+  page.on("pageerror", (e) => errs.push(e.message.slice(0, 200)));
+  await page.goto(inLang(`${base}/run?demo=${WORLD}&screen=lab`));
+  const LB = (body, timeout = 20000) => page.waitForFunction(`(() => { const s = window.__lfLab && window.__lfLab.step(); return ${body}; })()`, null, { timeout });
+  await LB("s && s.cur");
+  await page.locator('.dm-screen:not([hidden]) .dm-ctl[data-param="air"] .dm-ctl-seg button[data-value="true"]').click();
+  await LB("s.cur && s.cur.pt.values.air === true && !s.pending");
+  await page.evaluate(() => { const d = document.querySelector(".dm-screen:not([hidden]) .dm-overlays"); if (d) d.open = true; });
+  await page.locator('.dm-screen:not([hidden]) input[data-overlay="forces"]').check();
+  await page.locator(".dm-screen:not([hidden]) .dm-play").click();
+  await LB("s.cur && s.cur.launchedAt !== null");
+  await page.evaluate(() => { const s = document.querySelector(".dm-screen:not([hidden]) .dm-timeline"); s.value = "1"; s.dispatchEvent(new Event("input")); });
+  await settle(page, 80);
+  const L1 = await layout(page);
+  check(`${tag} lab part 1 in air: the Magnus force of the rolling ball is drawn under «forces» (the run's, on the drag's scale)`,
+    !!(L1 && L1.lift && L1.lift.px >= 6 && L1.drag), { lift: L1 && L1.lift, drag: L1 && L1.drag });
+  // the flight to its end: the last frame, once the launch has played out (the lab's own clock may still run)
+  await page.waitForFunction(() => { const s = document.querySelector(".dm-screen:not([hidden]) .dm-timeline"); s.value = s.max;
+    s.dispatchEvent(new Event("input")); const c = document.querySelector(".dm-screen:not([hidden]) .dm-stage canvas");
+    return !!(c && c.__layout && (c.__layout.marks || []).some((m) => m.kind === "landing")); }, null, { timeout: 15000, polling: 500 }).catch(() => {});
+  await settle(page, 80);
+  const L2 = await layout(page);
+  const kinds = ((L2 && L2.marks) || []).map((m) => m.kind);
+  check(`${tag} lab part 1: «h = … m», the landing's mark and its label «L = …, T = …» drawn, as in Explore (nothing hidden)`,
+    !!(L2 && L2.hLabel && kinds.includes("landing") && kinds.includes("landing mark")), { kinds, h: L2 && L2.hLabel });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: `${SHOTS}/s03_lab_air_${LANG}_${W}x${H}.png` });
+  if (W < 1000) {
+    await page.locator(".dm-screen:not([hidden]) .dm-ctl").first().scrollIntoViewIfNeeded();
+    await settle(page);
+    const vis = await page.evaluate(() => {
+      const r = (q) => { const e = document.querySelector(`.dm-screen:not([hidden]) ${q}`); if (!e) return null; const b = e.getBoundingClientRect(); return { top: b.top, bottom: b.bottom }; };
+      return { H: innerHeight, canvas: r(".dm-stage canvas"), measure: r(".dm-measure"), ctl: r(".dm-ctl") };
+    });
+    const inView = (b) => b && b.top >= -1 && b.bottom <= vis.H + 1;
+    check(`${tag} lab (phone): the view, the step's control and «Measure» on the screen together`, inView(vis.canvas) && inView(vis.measure) && inView(vis.ctl), vis);
+  }
+  await noOverflow(page, `${tag} lab`);
+  check(`${tag} lab: no page error`, errs.length === 0, { errs });
+  await ctx.close();
+}
 for (const [W, H] of SIZES) {
   const tag = `${W}x${H}`;
   const ctx = await br.newContext({ viewport: { width: W, height: H } });
@@ -118,8 +223,11 @@ for (const [W, H] of SIZES) {
   }
   check(`${tag} explore: a throw from the floor in air: its largest drag (at the launch) drawn at most 120 px, at least 48 px when enlarged (V52 (f))`,
     launchRows.every((r) => r.px !== null && r.px <= 120.5 && (r.m === 1 || r.px >= 47.5)), { launchRows });
+  await noOverflow(page, `${tag} explore`);
   check(`${tag}: no page error`, errs.length === 0, { errs });
   await ctx.close();
+  await watchCaptions(W, H, tag);
+  await labDraws(W, H, tag);
 }
 await br.close();
 console.log(failed ? `FAILED: ${failed}` : "all passed");

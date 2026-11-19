@@ -61,6 +61,10 @@ ACCEPTED = {
                                        "in 20 s) that the record keeps so that scrolling back shows the wave of that "
                                        "moment",
     ("r12_double_slit_2d", None): "its two recordings of the wave field (see each)",
+    ("s03_projectile", "atlas:explore"): "940 points of the ball's real forces (EX2 §10): the drawer's values are check "
+                                         "messages in every point (about 1.05 MB of its 6.63 MB, 0.45 MB of them the "
+                                         "information rows: the constant C_d, the Magnus band, the air's shares, the "
+                                         "Earth's rotation, the history force's bound), under the 12 MB limit",
 }
 
 

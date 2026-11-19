@@ -16,10 +16,6 @@
 // browser per world and variant, a convenience: nothing is sent anywhere). «Computed for this bench» (&computed=1) prints
 // the world's computed values for the bench on a page of their own: what the drawer of Lab work shows to everyone.
 //
-// TRANSITION (registry.EX1_WORKSHEETS; WS03 removes it): a world whose Lab work still has EX1's worksheet (S03) prints
-// what of it a task sheet has — the programme, the parts with their goals (or its variant's goals), instruments, blank
-// tables and plot frames — and none of its questions, answers or teacher's notes.
-//
 // Printed, every page is one `.sheet`, one A4 page with the attribution line at its foot (the licence's condition).
 import { MODE, apiGet, getJSON, page, url } from "./api.js";
 import { lang, t, withLang } from "./i18n.js";
@@ -46,8 +42,6 @@ const FIT_CURVE = () => ({ line0: t("the best straight line through the origin")
   quadratic: t("the best parabola"), power: t("the best power-law curve") });
 const plotHow = (y, x, model) => (model ? t("Plot {y} against {x}, mark the points with their error bars and draw {curve}.", { y, x, curve: FIT_CURVE()[model] || FIT_CURVE().line })
   : t("Plot {y} against {x}: the points with their error bars, without a line.", { y, x }));
-// the number of set-ups of a step (EX1's sheet: one blank row each)
-const setups = (st) => (st.controls || []).reduce((n, c) => n * Math.max(1, (c.values || []).length), 1) || 8;
 
 // the editable texts of the sheet (F8 (b)): kept in this browser per world and variant (a convenience; try/catch:
 // private windows and blocked storage)
@@ -65,7 +59,6 @@ async function main() {
   if (!lab) { fill(box, el("p", {}, t("This demonstration has no lab work."))); return; }
   document.title = t("Task sheet: {title}", { title: t(viz.title) });
   const ws = lab.worksheet || {};
-  const ex1 = !!ws.ex1;  // TRANSITION: EX1's worksheet (S03 until WS03)
   // the ФРП names verbatim in Russian: in another language, the Russian original next to the translation
   let ru = null;
   if (lang() !== "ru" && (ws.frp || []).length) {
@@ -116,8 +109,8 @@ async function main() {
     editables.push({ node, original, name });
     return node;
   };
-  const vtext = (V && !ex1 && V.text) || {};
-  const tasks = ex1 ? null : sheet("task first",
+  const vtext = (V && V.text) || {};
+  const tasks = sheet("task first",
     head(viz, ws, ru, V),
     el("h2", {}, t("The task")),
     el("div", { class: "field" }, el("b", {}, t("Goal:")), " ", editable("goal", [t(vtext.goal || ws.goal)], "inline")),
@@ -125,24 +118,21 @@ async function main() {
     el("div", { class: "field" }, el("b", {}, t("A suggested procedure (one of several ways):")), editable("procedure", (vtext.procedure || ws.procedure || []).map((x) => t(x)))),
     el("div", { class: "field" }, el("b", {}, t("Record and hand in:")), editable("record", (vtext.record || ws.record || []).map((x) => t(x)))),
     el("div", { class: "field" }, el("b", {}, t("Task from the teacher:")), editable("teacher_task", [], "free")));
-  const rows = ex1 ? null : ws.record_rows || 10;
+  const rows = ws.record_rows || 10;
   const parts = steps.map((st, k) => {
-    const pre = V && !ex1 && V.values ? V.values[st.id] || {} : {};
+    const pre = V && V.values ? V.values[st.id] || {} : {};
     const ctl = (st.controls || []).filter((c) => c.param in pre);
     const preText = ctl.map((c) => {
       const v = pre[c.param], i = c.values.indexOf(v);
       const name = c.labels && c.labels[i] ? t(c.labels[i]) : typeof v === "number" ? `${v}${c.unit ? (t(c.unit) === "°" ? "°" : " " + t(c.unit)) : ""}` : t(String(v));
       return `${t(c.label)} ${name}`;
     }).join(", ");
-    // EX1's variant (the transition) names its plot; a task sheet's part has the step's plot frame
-    const vp = ex1 && V && V.plot ? V.plot[st.id] : null;
-    const cols = vp ? st.columns.filter((c) => c.from || c.id === vp.x || c.id === vp.y) : st.columns;
-    const plot = vp ? { x: vp.x, y: vp.y, model: vp.fit } : { x: st.plot.x, y: st.plot.y, model: ex1 ? st.plot.fit : null };
-    const goal = (ex1 && V && V.goals && V.goals[st.id]) || st.goal;
-    return sheet("part" + (ex1 && k === 0 ? " first" : ""),
-      ex1 && k === 0 ? head(viz, ws, ru, V) : null,
+    // a part has the step's plot frame, without a fit: which line to draw is the student's choice (EX2 §1.4)
+    const cols = st.columns;
+    const plot = { x: st.plot.x, y: st.plot.y, model: null };
+    return sheet("part",
       el("h2", {}, t("Part {k:d} of {n:d}: {title}", { k: k + 1, n: steps.length, title: t(st.title) })),
-      el("p", {}, el("b", {}, t("Goal:")), " ", t(goal)),
+      el("p", {}, el("b", {}, t("Goal:")), " ", t(st.goal)),
       el("p", { class: "instr" }, el("b", {}, t("Instruments:")), " ", st.instruments.filter((iid) => instr[iid]).flatMap((iid, j) => [j ? "; " : "",
         el("b", {}, t(instr[iid].label)), " — ", instrumentText(instr[iid]),
         instr[iid].error_note && instr[iid].kind !== "counter" && (instr[iid].sigma || (instr[iid].error ?? instr[iid].division / 2) > 0) ? ` (${t(instr[iid].error_note)})` : ""])),
@@ -151,8 +141,9 @@ async function main() {
       preText ? el("p", { class: "preset" }, el("b", {}, t("This variant's set-up:")), " ", preText) : null,
       el("div", { class: "mgrid" },
         el("div", {}, el("h3", {}, t("Measurements")),
-          el("table", { class: "blank" }, el("tr", {}, el("th", {}, "№"), cols.map((c) => el("th", {}, t(c.label)))),
-            Array.from({ length: ex1 ? setups(st) : rows }, (_, i) => el("tr", {}, el("td", {}, String(i + 1)), cols.map(() => el("td", {})))))),
+          // a wide table (u34's part 2: 16 columns) scrolls in its own box on a screen, not the page; printed in full
+          el("div", { class: "tbl" }, el("table", { class: "blank" }, el("tr", {}, el("th", {}, "№"), cols.map((c) => el("th", {}, t(c.label)))),
+            Array.from({ length: rows }, (_, i) => el("tr", {}, el("td", {}, String(i + 1)), cols.map(() => el("td", {}))))))),
         el("div", {}, el("h3", {}, t("Plot")),
           el("p", { class: "plot-how" }, plotHow(colLabel(st, plot.y), colLabel(st, plot.x), plot.model)),
           el("div", { class: "axes" }, el("span", { class: "ax ay" }, colLabel(st, plot.y)), el("span", { class: "ax axx" }, colLabel(st, plot.x))))),
@@ -170,7 +161,7 @@ async function main() {
   const varSel = variants.length ? el("label", { class: "variant-pick" }, t("Variant:") + " ", el("select", { "aria-label": t("Variant:"), onchange: (e) => setParam("variant", e.target.value) },
     el("option", { value: "", selected: !V }, t("The whole lab work")), variants.map((v) => el("option", { value: v.id, selected: V === v }, `${t(v.label)} (${v.id})`)))) : null;
   const comp = el("input", { type: "checkbox", checked: showComputed, onchange: (e) => setParam("computed", e.target.checked ? "1" : "") });
-  const restore = ex1 ? null : el("button", { class: "ws-restore", onclick: () => {
+  const restore = el("button", { class: "ws-restore", onclick: () => {
     for (const x of editables) x.node.innerHTML = x.original;
     for (const k of Object.keys(edits)) delete edits[k];
     saveEdits(editKey, edits);
@@ -182,7 +173,7 @@ async function main() {
       el("label", { title: t("The world's computed values for this bench, on a page of their own") }, comp, t("Computed for this bench")),
       restore,
       el("button", { class: "primary", onclick: () => window.print() }, t("🖨 Print"))),
-    ex1 ? null : el("p", { class: "ws-hint muted" }, t("The goal, the procedure, the record list and the teacher's task can be edited here before printing; the edits stay in this browser only.")),
+    el("p", { class: "ws-hint muted" }, t("The goal, the procedure, the record list and the teacher's task can be edited here before printing; the edits stay in this browser only.")),
     tasks, parts, computed);
   document.body.dataset.ready = "1";
 }

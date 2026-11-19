@@ -1,11 +1,16 @@
 // SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 // SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-// S03 view: a side view of a ball thrown from a table or from the floor (design lfphys/sources/explore_2026-11-14_design.md
-// §5.2). Everything drawn is data of the run: the path is the run's samples (`traj`, every 1/60 s of world time) revealed
-// as the time reaches them, the ball and the arrows come with each frame (its velocity, the drag force the engine
-// computed, the energies), the top of the path and the landing are the run's events. The view scales, draws and formats;
-// it computes no physics (the strobe dots are the samples whose index is a multiple of the header's `strobe_every`, i.e.
-// of 0.1 s; the newest piece of the path joins the last sample sent to the ball's computed position in the frame).
+// S03 view: a side view of a ball thrown from a table or from the floor (designs lfphys/sources/explore_2026-11-14_design.md
+// §5.2 and explore_EX2_2026-11-18_design.md §10). Everything drawn is data of the run: the path is the run's samples
+// (`traj`, every 1/60 s of world time) revealed as the time reaches them, the ball and the arrows come with each frame
+// (its velocity, the air's drag and, for a ball rolling off the chute, the Magnus force the engine computed, the
+// energies), the top of the path and the landing are the run's events. The chute is drawn where the run says the ball
+// rolls off one (header.launcher.chute). The view scales, draws and formats; it computes no physics (the strobe dots are
+// the samples whose index is a multiple of the header's `strobe_every`, i.e. of 0.1 s; the newest piece of the path joins
+// the last sample sent to the ball's computed position in the frame). Lab work draws what Explore draws (EX2 §5 F6 (b):
+// nothing hidden): the height, the landings with their values, the top of the path; only the floor's numbers give way to
+// the lab's own measuring tape there. `canvas.__layout` says what each frame drew where (the launcher, «h = …», the
+// landings' marks and labels, the scene's box, the air's arrows and their legend), for tests/s03_screens.mjs.
 //
 // The screens' contract (design §2.4): `overlays` + `setOverlay`, `setTraces` (earlier points drawn faded, each from its
 // own decoded world), `worldToPx` / `pxToWorld` and `anchors()` for the lab's instruments, `quantSafe`, and Watch's
@@ -30,7 +35,7 @@ export const OVERLAYS = [
 // i18n-msgids: "path" "dots every 0.1 s" "velocity" "velocity components" "forces" "energy"
 
 const COLORS = { main: "#e8590c", drop: "#1c7ed6", vacuum: "#868e96", v: "#2f9e44", g: "#c2255c", drag: "#7048e8",
-  ek: "#f08c00", ep: "#1971c2", q: "#e03131" };
+  lift: "#0c8599", ek: "#f08c00", ep: "#1971c2", q: "#e03131" };
 const PAD = 28;           // pixels around the scene
 const TOP = 18;           // pixels above it for the ball's name
 
@@ -162,6 +167,7 @@ export function createView(ctx) {
     g.save(); g.globalAlpha = alpha;
     if (bg) { g.fillStyle = css("--canvas") || "#fff"; g.globalAlpha = 0.85 * alpha; g.fillRect(p.x - 2, p.y - 12, w + 4, 16); g.globalAlpha = alpha; }
     label(g, text, p.x, p.y, { color, bold }); g.restore();
+    return [p.x, p.y - 12, p.x + w, p.y + 4];
   }
 
   // --- drawing parts ----------------------------------------------------------------------------------------------
@@ -201,7 +207,10 @@ export function createView(ctx) {
   }
   function launcher(g) {
     const L = launch(), p = map.toPx([0, L.h]), [, fy] = map.toPx([0, 0]);
-    const a = (L.angle * Math.PI) / 180, chute = L.angle === 0 && L.h > 0, R = 26;
+    // a chute where the run says the ball rolls off one (header.launcher.chute: the steel ball launched horizontally
+    // from a height, with its topspin); a record made before the header said so: every horizontal launch from a height
+    const a = (L.angle * Math.PI) / 180, R = 26;
+    const chute = L.chute !== undefined ? !!L.chute : L.angle === 0 && L.h > 0;
     // the launcher's shape first, as a box that the labels keep clear of (V52 (e): the barrel was drawn over «h = 1 m»):
     // a chute is a quarter circle ending horizontally at the launch point; a barrel lies along the launch direction, its
     // muzzle at the launch point, never below the floor (review R-W F16): shortened to the room above it, and from the
@@ -214,7 +223,8 @@ export function createView(ctx) {
           y0: Math.min(barrel[0][1], barrel[1][1]) - 4, y1: Math.max(barrel[0][1], barrel[1][1]) + 4 };
     if (!chute && len < 10 && L.h <= 0) box.y1 = Math.max(box.y1, fy);  // the mount
     placed.push(box);
-    const lay = { W: cv.clientWidth, H: cv.clientHeight, launcher: [box.x0, box.y0, box.x1, box.y1], hLabel: null, hWhere: null };
+    const lay = { W: cv.clientWidth, H: cv.clientHeight, launcher: [box.x0, box.y0, box.x1, box.y1], hLabel: null, hWhere: null,
+      marks: [], scene: null, screen: ctx.screen };
     g.save();
     if (L.h > 0) {  // the table
       const w = Math.max(40, 0.12 * sceneBox().span * map.k);
@@ -232,7 +242,7 @@ export function createView(ctx) {
       g.globalAlpha = 1;
     }
     g.restore();
-    if (L.h > 0 && ctx.screen !== "lab") {
+    if (L.h > 0) {
       const w = Math.max(40, 0.12 * sceneBox().span * map.k), r = heightLabel(g, L, p, fy, w, box);
       lay.hLabel = r && [r.x0, r.y0, r.x1, r.y1]; lay.hWhere = r && r.where;
     }
@@ -294,7 +304,7 @@ export function createView(ctx) {
   }
   // a landing's mark and label: its place is taken now (before the earlier throws' labels, which give way), and it
   // is painted by the returned function after the paths, so that no path crosses its text
-  function landMark(g, x, color, text, short = null) {
+  function landMark(g, x, color, text, short = null, kind = "landing") {
     const [px, py] = map.toPx([x, 0]);
     let spot = null;
     if (text) {  // beside the mark, on the side that keeps the text inside the view, free of the other labels; on a
@@ -302,7 +312,9 @@ export function createView(ctx) {
       let w = textWidth(g, text, true), right = px + 5 + w > cv.clientWidth - 4;
       if (right && short && cv.clientWidth < 600) { text = short; w = textWidth(g, text, true); right = px + 5 + w > cv.clientWidth - 4; }
       spot = freeSpot(right ? px - 5 : px + 5, py - 12, w, right ? "right" : "left", -1);
+      cv.__layout.marks.push({ kind, box: [spot.x, spot.y - 12, spot.x + w, spot.y + 4] });
     }
+    cv.__layout.marks.push({ kind: kind + " mark", box: [px - 2, py - 9, px + 2, py + 9] });
     return () => {
       g.save(); g.strokeStyle = color; g.lineWidth = 2; line(g, [px, py - 9], [px, py + 9]); g.restore();
       if (spot) label(g, text, spot.x, spot.y, { color, bold: true });
@@ -394,9 +406,10 @@ export function createView(ctx) {
       if (e.landing) {
         const [px, py] = map.toPx([e.landing.x ?? e.landing.L, 0]);
         g.save(); g.globalAlpha = 0.55; g.strokeStyle = COLORS.main; g.lineWidth = 2; line(g, [px, py - 7], [px, py + 7]); g.restore();
+        cv.__layout.marks.push({ kind: "earlier mark", box: [px - 2, py - 7, px + 2, py + 7] });
         const text = t("L = {L} m", { L: m2(e.landing.L) }), w = textWidth(g, text, false), right = px + 5 + w > cv.clientWidth - 4;
         if (narrow) ranges.push(text);
-        else placeLabel(g, text, right ? px - 5 : px + 5, py - 12, { color: muted(), align: right ? "right" : "left" });
+        else cv.__layout.marks.push({ kind: "earlier", box: placeLabel(g, text, right ? px - 5 : px + 5, py - 12, { color: muted(), align: right ? "right" : "left" }) });
       }
     }
     if (ranges.length) placeLabel(g, t("earlier throws: {list}", { list: ranges.join("; ") }), 12, 36, { color: muted(), dir: 1 });
@@ -493,15 +506,19 @@ export function createView(ctx) {
       if (ballText) placeLabel(g, ballText, 12, 18, { color: muted() });
       floorAndScale(g, W);
       launcher(g);  // first, so that the labels of the traces keep clear of its own
+      {  // the scene's box as drawn (the computed paths' extent, of every world of a Watch story): what a caption keeps clear of
+        const b = sceneBox(), [ax, ay] = map.toPx([b.x0, b.y1 - 0.08 * b.span]), [bx, by] = map.toPx([b.x1 - 0.04 * b.span, 0]);
+        cv.__layout.scene = [ax, ay, bx, by];
+      }
       cv.__layout.legend = { rows: lp.rows, readouts: lp.box, pathTop: map.toPx([0, sceneBox().y1 - 0.08 * sceneBox().span])[1] };
       // the landings shown now are labelled before the earlier throws, so that theirs give way
       const comp = header.companion, ocol = comp === "drop" ? COLORS.drop : COLORS.vacuum;
       const late = [];
       if (landing && landing.T <= tNow + 1e-9) {
-        late.push(landMark(g, landing.x ?? landing.L, COLORS.main, ctx.screen === "lab" ? null
-          : t("L = {L} m, T = {T} s", { L: m2(landing.L), T: s3(landing.T) }), t("L = {L} m", { L: m2(landing.L) })));
+        late.push(landMark(g, landing.x ?? landing.L, COLORS.main, t("L = {L} m, T = {T} s", { L: m2(landing.L), T: s3(landing.T) }),
+          t("L = {L} m", { L: m2(landing.L) }), "landing"));
       }
-      if (oland && oland.T <= tNow + 1e-9 && comp === "vacuum") late.push(landMark(g, oland.x ?? oland.L, COLORS.vacuum, ctx.screen === "lab" ? null : t("L = {L} m", { L: m2(oland.L) })));
+      if (oland && oland.T <= tNow + 1e-9 && comp === "vacuum") late.push(landMark(g, oland.x ?? oland.L, COLORS.vacuum, t("L = {L} m", { L: m2(oland.L) }), null, "grey landing"));
       const storyLine = drawStory(g);
       drawTraces(g);
       if (on.path) {
@@ -509,10 +526,11 @@ export function createView(ctx) {
         pathOf(g, main, tNow, COLORS.main, { width: 2, end: landing, now: frame ? [frame.x, frame.y] : null });
       }
       if (on.strobe) { strobe(g, other, tNow, ocol); strobe(g, main, tNow, COLORS.main); }
-      if (apex && on.path && apex.t <= tNow + 1e-9 && ctx.screen !== "lab") {
+      if (apex && on.path && apex.t <= tNow + 1e-9) {
         const [px, py] = map.toPx([apex.x, apex.H]), [, fy] = map.toPx([apex.x, 0]);
         g.save(); g.strokeStyle = muted(); g.setLineDash([3, 4]); line(g, [px, py], [px, fy]); g.restore();
-        placeLabel(g, t("H = {H} m", { H: m2(apex.H) }), px + 5, py - 6, { color: muted() });
+        const r = placeLabel(g, t("H = {H} m", { H: m2(apex.H) }), px + 5, py - 6, { color: muted() });
+        cv.__layout.marks.push({ kind: "apex", box: r });
       }
       for (const paint of late) paint();
       if (!frame) return;
@@ -541,6 +559,11 @@ export function createView(ctx) {
           arrow(g, bp, frame.F_drag[0] * sd, -frame.F_drag[1] * sd, COLORS.drag, 2.5);
           if (cv.__layout) cv.__layout.drag = { m, px: Math.hypot(frame.F_drag[0], frame.F_drag[1]) * sd };
           label(g, m > 1 ? t("drag ×{m}", { m: num(m, 3) }) : t("drag"), bp[0] + frame.F_drag[0] * sd - 8, bp[1] - frame.F_drag[1] * sd + 16, { color: COLORS.drag, align: "right" });
+        }
+        if (frame.F_lift) {  // the Magnus force of a ball rolling off the chute: on the drag's scale, the run's computed force
+          arrow(g, bp, frame.F_lift[0] * sd, -frame.F_lift[1] * sd, COLORS.lift, 2.5);
+          if (cv.__layout) cv.__layout.lift = { m, px: Math.hypot(frame.F_lift[0], frame.F_lift[1]) * sd };
+          label(g, m > 1 ? t("Magnus ×{m}", { m: num(m, 3) }) : t("Magnus"), bp[0] + frame.F_lift[0] * sd + 6, bp[1] - frame.F_lift[1] * sd + 14, { color: COLORS.lift });
         }
       }
       if (flying && rows.length) {  // the legend: under a phone's readouts (lp), else from the top left, under the earlier throws' line

@@ -2,152 +2,190 @@
 
 **English** | [Русский](README.ru.md)
 
-Pairs of polarisation-entangled photons |Φ+⟩ = (|HH⟩ + |VV⟩)/√2 or spin-½ singlets (|↑↓⟩ − |↓↑⟩)/√2 fly from a
-source to two stations; each station measures its particle with one of two settings; the run counts coincidences
-and estimates the correlations E and the CHSH parameter S. Owner guide: `../README.md`; rules: `../RULES.md`.
+Pairs of polarisation-entangled photons or spin-½ singlets fly from a source to two stations; each station chooses one
+of two settings of its analyser per locally defined time slot; two **real detectors** behind each analyser click with
+their efficiency, dark counts, dead time and timing jitter; the run counts coincidences and the slots' outcomes and
+estimates the correlations E, the CHSH parameter S under the fair-sampling assumption (so named), and the CH and
+CH–Eberhard J inequalities, which need no such assumption. Owner guide: `../README.md`; rules: `../RULES.md`; design:
+`../../lfphys/sources/explore_EX2_2026-11-18_design.md` §4.
 
 The visualization is a **wrapper over the engine `lfphys`** (`../../lfphys/LAYERS.md`): every law comes from an engine
-module; the folder's own code is the time line, the apparatus logic (stations, choices, bookkeeping), the messages
-and the drawing.
+module; the folder's own code is the time line, the apparatus logic (stations, slots, choices, coincidence logic,
+bookkeeping), the messages and the drawing.
 
 | engine module | layer | used for |
 |---|---|---|
-| `core.quantum.qubits` | core | the states `PHI_PLUS`, `SINGLET`; polariser projectors and Stern–Gerlach projectors; Born-rule sampling of a pair (`sample_pairs`); exact `correlation`, `joint_probabilities` (marginals), `chsh`, `concurrence`, `entropy` |
-| `theories.alternatives.local_hidden` | theories (alternative) | LHV worlds: `polarization_model` (photons), `sign_model` (spin), with their exact `*_E`; in quantum worlds only the comparison curve on the E(Δ) plot (not listed among the world's modules) |
-| `core.causality` (new, 2026-10-23) | core | interval s², causal relation, order-reversal speed of each pair's events |
+| `core.quantum.qubits` | core | the states `PHI_PLUS`, `SINGLET`, `eberhard_state(r)`, `werner(ψ, V)`; polariser and Stern–Gerlach projectors; the joint Born probabilities of a pair (`joint_probabilities`, `sample_pairs`); `correlation`, `chsh`, `concurrence`, `entropy` |
+| `theories.models.photodetector` | theories (model) | the detectors: `Detector`, `DEVICES["spcm_nir_800_13"]` (the default), `detect` (efficiency, Poisson dark and background counts, the non-paralysable dead time), `detector_rate`, `coincidence_rates`, `window_share`, `dark_click_probability`, `slot_coupling`, `pair_slots` (the slots shown in time) |
+| `tools.bell_stats` | tools | E, S and their errors; `accidentals`, `chsh_subtracted`; `slot_probabilities`, `sample_counts`, `plus_table`, `j_estimate`, `ch_estimate`, `j_value`, `ch_value`; `threshold_efficiency` (the thresholds table) |
+| `theories.alternatives.local_hidden` | theories (alternative) | the local worlds: `polarization_model` (photons), `sign_model` (spin), `gisin_gisin` and `gisin_gisin_table` (Gisin and Gisin's detection-loophole model); in a quantum world only the comparison curves |
+| `core.causality` | core | the interval s², the causal relation, the order-reversal speed of each coincidence's events |
 | `core.relativity` | core | `boost_matrix`: an independent check of the order-reversal speed |
-| `core.constants` | core | c (CODATA, exact) |
-| `tools.bell_stats` (new, 2026-10-23) | tools | E and its error, S and its error, marginal differences, χ² of the E(Δ) points |
+| `core.constants` | core | c |
 
-## The causal chain of one pair (all computed in the run)
+## The screens
 
-Geometry: a line, the source at x = 0, Alice's station at x = −L, Bob's at x = +L (lab frame). Photons fly at c;
-spin-½ particles at v = β c (world parameter, illustrative). Both particles of a pair arrive at t_e + L/v.
+* **Watch** — «Pairs, S above 2, and a local model» (recording `story`, 50 s at 20 frames per second): the first two
+  pairs' flights slowly (the script's speed changes sit on the run's own emission times, 219.8 µs and 356.6 µs), then
+  about 200 coincidences per played second; S passes 2 under fair sampling and settles near 2√2 (at 33.9 s: S =
+  2.820 ± 0.040 after 4 949 coincidences, 20.3 standard errors above 2); at 34 s a new world of local hidden
+  variables (flagged «MODIFIED PHYSICS»), where S stays near √2. Captions in English and Russian; each comes no later
+  than its event (`tests/test_u37_screens.py`). «More recordings»: `chsh`, `local_model`, `scan`.
+* **Explore** — the CHSH bench (156 points): «Pairs» (photons, spin ½) × «Angle step Δ» (a = 0, b = Δ, a′ = 2Δ,
+  b′ = 3Δ; 0–90° by 7.5°) × «Choice before its slot τ» (100 ns, 5 µs) × «Law and source» (quantum with an ideal
+  source, quantum with a source of visibility 0.85, local hidden variables — modified physics). Each point: the
+  devices' default values, 10⁴ pairs per second, slots of 1 µs, stopped 0.1 s of world time after the
+  4 000th coincidence. Readouts: S with its
+  error and the law's value, (|S| − 2)/σ, the coincidences counted. Earlier points stay as traces on the S(Δ) plot.
+* **Lab work** — the bench «Entangled photons and the Bell inequality», four parts (a bench, not a test: nothing is
+  hidden, the fit prints its output and judges nothing):
+  1. «The correlation E(α, β)»: fixed settings, «Pairs» × Alice's angle α {0°, 45°, 90°} × Bob's angle β (0–180° by
+     7.5°), 1 000 coincidences each; the four coincidence counters (√N), E of the run with its error; formula columns E
+     from the four counts, cos 2(β − α), cos(β − α).
+  2. «The CHSH test» and 3. «The same test in a local world»: Explore's points (one atlas); E of the four setting pairs
+     with the run's errors, the fraction of coincidences outside the cone; formula columns S = E₁ − E₂ + E₃ + E₄,
+     3 cos 2Δ − cos 6Δ, −(3 cos Δ − cos 3Δ).
+  4. «Real detectors»: 10⁹ slots of 1 µs at 10⁴ pairs per second (189 points): «Detection efficiency η» {0.60, 0.70,
+     0.75, 0.80, 0.85, 0.90, 1.00} × «Source» (|Φ+⟩ at the CHSH angles, Eberhard's state r = −2.9 at Giustina's angles,
+     Gisin and Gisin's local model — modified physics) × «Dark and background counts» (the detectors' 250 dark counts
+     per second; 10⁵ background counts per second; none — an idealisation) × «Coincidence window w» (0.5, 2, 25 ns).
+     Readouts: S, J per pair, coincidences; columns η, the coincidences N_c and the accidentals' estimate N_acc, S
+     (fair sampling), S − acc. (the accidentals subtracted), J per pair, CH per slot, J per pair / η.
+  The task sheet («bench», «procedure», «record») quotes Dehlinger and Mitchell (2002), Giustina et al. (2015) and
+  Gisin and Gisin (1999) verbatim; the teacher's variants preselect the spins, a slow choice, a real source, the local
+  world, Alice's analyser at 45°, Eberhard's state without background, Gisin and Gisin's model.
 
-1. **Emission** at a time of a Poisson stream (rate live).
-2. **Setting choice** (mode "random": "Choice of the setting" =
-   "random for every particle (as in loophole-free experiments)"): the station's random-number generator delivers a
-   fair bit (0 → a or b, 1 → a′ or b′) at t_c = t_arr − τ, i.e. τ before the particle arrives (τ = latency of the
-   generator and the switch). The bit does not depend on anything in the run; it is drawn when the run reaches t_c
-   (or, when τ exceeds the flight time, when the pair is emitted: then t_c lies before the emission, as for a
-   generator whose output is delayed by τ). Mode "fixed" ("fixed: Alice a, Bob b"): Alice uses a, Bob uses b; the
-   "choice event" of a station is the moment its setting was last set.
-3. **Detection** at t_arr: the analyser angle in force at that moment (a live change of an angle applies to every
-   particle that arrives after it), and the outcomes of both particles by the world's law:
-   * quantum: `qubits.sample_pairs(state, Π(α_A), Π(α_B))` — the joint Born probabilities Tr(ρ Π_i ⊗ Π_j); index 0
-     (transmitted by the polariser / spin up along the magnet's direction) is the outcome +1. At perfectly
-     (anti)correlated settings one of them is exactly 0, which the float trace gives as ±1e-17; the engine sets a
-     negative value within the round-off of the trace (4·dim·eps) to 0 (`qubits.born_probabilities`, review
-     2026-10-23 V7-1: before, about half of such settings, e.g. a = b = 30°, stopped the run);
-   * local hidden variables: `local_hidden.polarization_model(α_A, α_B)` (photons: a common polarisation λ, Malus law
-     independently on each side, E = ½ cos 2(α_A − α_B)) or `local_hidden.sign_model(θ_A, θ_B)` (spin: a common unit
-     vector λ, A = sign(a·λ), B = −sign(b·λ), E = −1 + 2θ/π). The engine function draws λ and both outcomes in one
-     call; its code computes A from (α_A, λ) only and B from (α_B, λ) only (locality by construction), and the run calls
-     it at the common arrival instant, when both settings are known; this is equal in distribution to drawing λ at the
-     emission.
+What folds away at `ui: "standard"`: the quick set-up bar and the toolbar (Watch, Explore, Lab work: the screens'
+sliders and overlays replace them), the left form (hidden), the panels «Set-up and spacetime», «Counters», «Last
+coincidences» (into «How we know this is right»); «▶ Compute live» keeps the full player. Below 1000 px the statistics
+are on top, the set-up line a strip under them, the spacetime diagram folded under «Spacetime of the last coincidence».
 
-   The outcomes are revealed (message `pairs`, flash in the view) only at t_arr. The run computes nothing about a pair
-   before its time except the emission bookkeeping. To keep the record small, a `pairs` message carries the per-pair
-   detail (times, settings, outcomes, choice events, spacetime flags) of at most the newest 16 pairs of each step and
-   the number of pairs; every pair enters the counts, which the frames carry.
-4. **Spacetime relations of the pair's events** (`core.causality.relation`, lab frame): Alice's choice
-   (t_cA, −L) against Bob's detection (t_arr, +L) and Bob's choice against Alice's detection (locality: space-like means
-   no signal from the choice can reach the other detection); each choice against the emission (t_e, 0) (freedom of
-   choice). For photons in the symmetric geometry both conditions are 0 < cτ < 2L. For particles slower than light the
-   locality condition stays cτ < 2L but the freedom-of-choice condition becomes |L/v − τ| c < L; both can hold only if
-   v > c/3 (computed per pair; shown as fractions).
+## The model (all computed in the run)
 
-Coincidence counts are kept per pair of analyser angles actually used (at most 200 pairs; the oldest unused one is
-dropped). The four CHSH cells are the current (a, b), (a, b′), (a′, b), (a′, b′); after an angle change the cells refer
-to the new angles, and the old angle pairs stay on the E(Δ) plot. The action "Reset the statistics" starts the counts
-anew.
+Geometry: a line, the source at x = 0, Alice's station at x = −L_A, Bob's at x = +L_B (lab frame). Photons fly at c;
+spin-½ particles at v = β c (illustrative). The atlases keep L_A = L_B = 500 m; the live player varies them.
 
-## Live set-up, world parameters, actions (RULES.md §2.4)
+1. **Emission**: a Poisson stream of the source's rate, drawn from its own generator in blocks (the same emission times
+   whatever the frames of the run; a change of the rate starts a new block at the moment of the change).
+2. **Slots and settings**: each station divides its time into slots T_s on its own clock, starting when the first
+   particle could arrive (slot k of station X is [L_X/v + k T_s, L_X/v + (k + 1) T_s)), so a pair's two particles fall
+   into slots of the same index (Giustina et al. 2015: «locally defined time slots»). With the random choice («random
+   for every time slot (as in loophole-free experiments)»), each station's own generator gives a fair bit for slot k
+   (0: a or b; 1: a′ or b′), made τ before the slot starts. With «fixed: Alice a, Bob b» the choice event is the moment
+   the setting was set.
+3. **The ports**: a particle meets the setting of the slot of its arrival. Quantum: the joint Born probabilities of the
+   source's state ρ = V|ψ⟩⟨ψ| + (1 − V) I/4 (|Φ+⟩, the singlet or Eberhard's (|VH⟩ + r|HV⟩)/√(1 + r²)); with L_A ≠ L_B
+   the first particle by the reduced state, its partner conditioned on it (Lüders). The local models: the engine's
+   samplers at the common arrival (they need L_A = L_B; the world refuses otherwise). Gisin and Gisin's model also
+   gives «no outcome» for one particle in half of the pairs (detection decided by λ).
+4. **The detectors**: two per station, behind the ports «+» and «−», each the engine's `photodetector.detect`:
+   efficiency η, Poisson dark and background counts, the non-paralysable dead time (carried from one step of the run to
+   the next), then the Gaussian jitter added to the recorded times. A recorded time equal to an arrival identifies the
+   pair (the simulation knows it; an experimenter does not).
+5. **Coincidences**: every pair of clicks of the two stations within the window w on the delay-compensated times (the
+   rule of `photodetector.coincidences`, enumerated), assigned to the setting pair of the clicks' slots. The accidentals'
+   estimate is Dehlinger and Mitchell's w·N_A·N_B/T per detector pair, with the singles counted while each angle was in
+   force; the run also knows its own accidental coincidences (shown only in the drawer, as a check of the estimate).
+6. **Trials**: each slot is a trial; each station's outcome «+», «−», «0» (no click) or «+−» (both clicked). CH and J
+   reduce the two detectors to «+»/«0» (`plus_table`) and come from all the trials of the four setting pairs.
+7. **Spacetime**: for each coincidence the relation of each station's choice event to the other station's click
+   (locality) and, for a true coincidence, to the emission (freedom of choice).
 
-* Live (apply at once): the four angles, the mode (fixed / random), τ, L, the pair rate.
-  * an angle: particles arriving after the change are measured at the new angle; in mode "fixed" the station's choice
-    event becomes the moment of the change;
-  * the mode: switching to "random" schedules the choices of the pairs in flight at max(t_arr − τ, now) — never before
-    the switch; switching to "fixed" makes the current moment the choice event of both stations;
-  * τ: pending choices are rescheduled at max(t_arr − τ, now);
-  * L (the stations move): a particle already beyond the new station position is lost (counted, notice); the others
-    arrive when they reach it (t_e + L_new/v);
-  * the rate: the next emission is drawn anew (the Poisson stream is memoryless).
-* World parameters (a new world): the pair type, the speed of spin-½ particles, the law. The law has
-  `standard = "quantum"`; "lhv" is flagged "MODIFIED PHYSICS".
-* Action: "Reset the statistics".
+**The counting by slots** («10⁹ slots: the counts from the exact probabilities, a few slots shown in time», part 4 and
+the presets `detectors`, `giustina`, `gisin`): the trials ending in each step are split among the setting pairs (a
+multinomial of ¼ each); each setting pair's outcome table is drawn from the engine's exact multinomial
+(`bell_stats.slot_probabilities`, a Poisson number of pairs per slot μ = R·T_s, dark clicks over the slot); the
+coincidences, true and accidental, and the singles from Poisson laws of `photodetector.coincidence_rates` over the
+time of that setting pair. 40 trials before the end of each step are simulated in time (`photodetector.pair_slots`)
+and shown in the strips: an illustration of the same process, not added to the counts.
 
-## Checks (panel "Checks: computed ↔ reference")
+The detectors' default values are a real device, the Excelitas SPCM-NIR (SPCM-800-13) at 800 nm from its product brief
+(`photodetector.DEVICES["spcm_nir_800_13"]`): η 0.68, 250 dark counts per second, dead time 20 ns, timing resolution
+350 ps read as FWHM (σ = 149 ps). «Ideal detectors (an idealisation)» is a preset.
 
-* Source state (quantum worlds): concurrence = 1 and one-particle entropy = 1 bit (engine) — identities.
-* Settings, exact (re-emitted after each angle change): S of the law at the current angles — quantum: the engine's
-  trace against the closed forms cos 2(α_A − α_B) (photons) and −cos(θ_A − θ_B) (spin), tolerance 1e-12; |S| ≤ 2√2
-  (quantum); for LHV |S| ≤ 2; exact no-signalling of the law (quantum: marginals from the joint Born probabilities,
-  max difference < 1e-14). In LHV worlds two lines are identities of the model and are shown **for information**
-  (≈, `info: true`, never ✓/✗): the law's no-signalling (P(+) = 1/2 at any setting of the other side by
-  construction: each side's outcome depends on its own setting and λ only) and |S| ≤ 2√2 (implied by |S| ≤ 2);
-  the no-signalling test of an LHV world is the one from the run's counts below.
-* Statistics of the run's pairs (re-emitted as the counts grow by 30 %, at least every 100 pairs; a cell is compared
-  once it has ≥ 30 pairs): E of each cell against the law's exact E (z-score with the error under the reference,
-  tolerance 5σ); S against the law's S (5σ). The error of S: four distinct cells are independent samples, Var S =
-  Σ Var E_k; with coinciding settings (a′ = a or b′ = b) two cells are the same angle pair, i.e. the same counts, so
-  the error groups them: S = Σ_c w_c E_c over the distinct cells, w_c the sum of the CHSH signs of the cells equal to
-  c, Var S = Σ_c w_c² Var E_c (`bell_stats.chsh(…, keys)`; e.g. a′ = a: S = 2E(a,b), Var S = 4 Var E(a,b)); the S
-  line then says that the settings coincide and that S is not a CHSH test (review 2026-10-23 V7-2: before, the error
-  assumed four independent cells and was 1.55–1.65× too small at a = a′ = 0, b = 45°, b′ = 0, and 0.032 instead of 0
-  at b′ = 45°, b = 0). A no-signalling difference between two coinciding cells is 0 identically and is shown for
-  information. Quantum worlds: (|S| − 2)/σ, ✓ once it exceeds 5 (with the number of pairs
-  still needed while it does not); LHV worlds: |S| ≤ 2 + 5σ; |S| ≤ 2√2 + 5σ; χ² of all measured E(Δ) points against the
-  law (p > 1e-6); no-signalling from the counts: P_A(+|x, b) − P_A(+|x, b′) and P_B(+|a, y) − P_B(+|a′, y) against 0
-  with the pooled binomial error (5σ).
-* Spacetime (re-emitted after changes of L, τ, mode): for a pair emitted now, s² of Alice's choice and Bob's detection
-  (engine) against the closed form c²τ² − (2L)²; its relation in the label; for space-like events the order-reversal
-  speed v*/c = cτ/(2L) (engine) against a root search on the Lorentz matrices of `core.relativity`, applied to the
-  events' separation (boosting the events apart cancelled terms ~L and lost ~εL/(cτ) of the root: 1.2·10⁻⁸ at
-  τ = 1 ps, L = 10⁵ m, a failed check on a correct world — review UX-params P21); s² of the choice
-  and the emission against c²(L/v − τ)² − L². The fractions of detected pairs with both choices space-like separated from the other
-  detection and from the emission (no reference).
+## Checks (the drawer «How we know this is right»)
 
-The 5σ tolerance makes a false failure of one check about 6·10⁻⁷ per evaluation; each check is re-evaluated as the
-counts grow, so over a long run a few dozen evaluations per check remain far from a false alarm.
+* Source: concurrence against (3V − 1)/2 or 2|r|/(1 + r²); one particle's entropy against 1 bit or the binary entropy
+  of 1/(1 + r²).
+* The law at the current settings, exact: S of the engine's trace against the closed forms (V cos 2Δ, −V cos Δ,
+  Eberhard's V(−cos 2α cos 2β + 2r/(1 + r²) sin 2α sin 2β)), absolute tolerance 10⁻¹²; |S| ≤ 2√2; no signalling of the
+  law; the local models' |S| ≤ 2 (the polarisation and sign models) or, for Gisin and Gisin's model, |S| of the detected
+  pairs above 2 explained (the detection loophole).
+* The detectors: the device's identity; independent slots (t_d + 5σ)/T_s < 0.1; the window's share erf(w/(4σ)) of a
+  pair's two clicks against the run's own share (time stream); the singles of all detectors against
+  (ηR + d)/(1 + (ηR + d)t_d) (Poisson z); μ; for the bench's sources, the efficiency threshold of J for this state and
+  background (`THRESHOLDS`, computed by `bell_stats.threshold_efficiency`).
+* The coincidences (re-evaluated as the counts grow by half, at least every 250; in the counting by slots at 1, 2, 5 ×
+  10ⁿ trials): E of each setting pair against the engine's prediction for these devices (`coincidence_rates`: the
+  accidentals, the live fractions, the window's share), with the error under the prediction floored at one count of
+  the rarer outcome (2/N); S against its prediction; S with the accidentals subtracted against S of the true
+  coincidences; the accidentals' estimate against the run's own count; |S| ≤ 2√2 + 5σ; for local laws |S| ≤ 2 + 5σ;
+  (|S| − 2)/σ; χ² of all measured E(Δ) points; no signalling from the counts; the space-like fractions. With
+  coinciding settings (a′ = a or b′ = b) the error of S counts each angle pair once and the S line says that this is
+  not a CHSH test (review 2026-10-23 V7-2).
+* All the trials: J = p₊₊(a′b) − p₊₀(a′b′) − p₀₊(ab) − p₊₊(ab′) and CH (Gisin and Gisin's (15)) per slot against the
+  engine's slot probabilities (the multinomial error of each setting pair, 5σ); for a local law J ≤ 5σ; for quantum
+  mechanics J/σ, a violation above 5σ, an event.
+* Spacetime: s² of a station's choice and the latest click at the other station in its slot against
+  c²(τ + T_s)² − (L_A + L_B)²; the order-reversal speed against the Lorentz matrices (review UX-params P21); s² of the
+  choice and the emission.
 
 ## Approximations and limits (stated)
 
-* Ideal source and detectors: every emitted pair is detected at both stations (no losses, no dark counts, no
-  multi-pair emission, unit visibility). Real tests must close the **detection loophole** (efficiency high enough or
-  CH/Eberhard inequalities) and the **locality loophole** (space-like separation of each setting choice from the
-  other side's measurement, including the measurement's duration); loophole-free tests: Hensen et al. 2015, Giustina
-  et al. 2015, Shalm et al. 2015. Here the measurement is an instant at the arrival time.
-* One line, a symmetric source in the middle, both particles at the same speed: the two detections of a pair are
-  simultaneous in the lab frame.
-* The setting choice is a fair coin from the run's seeded generator (pseudo-random); the "freedom of choice" shown is
-  the spacetime relation only.
-* The two LHV models are illustrative members of the class bounded by CHSH (|S| ≤ 2): the polarisation model gives at
-  most |S| = √2, the sign model reaches 2 at the spin-optimal angles. Any local model obeys |S| ≤ 2; the visualization
-  does not search the class for the best one.
-* Statistical errors use the normal approximation (≥ 30 pairs per cell).
-* Presets are illustrative (distances and τ are not taken from a specific experiment).
+* Not modelled (the detector model's conflicts, `photodetector.ABOUT`): afterpulsing (1 % typical for the SPCM-NIR),
+  twilight events at the end of the dead time, a count-rate-dependent efficiency, the non-Gaussian tail of the timing
+  response, and thermal (non-Poisson) pair statistics. The data sheet's dead-time correction holds «at low count rate»
+  (its linearity table implies an effective 28 ns for the SPCM-AQRH); at the bench's 3 700 counts per second per
+  detector the dead time removes 7·10⁻⁵ of the counts.
+* **With the SPCM-NIR's dark counts in 1 µs slots J does not show the Eberhard state's advantage**: 250 counts per
+  second give a dark click in 2.5·10⁻⁴ of the slots at each detector, against a violation of μ·J_pair ≈ 10⁻⁴ per slot.
+  The thresholds of J at μ = 0.01 rise from 82.9 % (2/(1 + √2) = 82.8 % as μ → 0) to 87.6 % (|Φ+⟩) and from 72.6 % to
+  90.2 % (r = −2.9); with 10⁵ background counts per second no efficiency violates. The loophole-free experiments count
+  only a short window per trial at a pulsed source (Shalm et al.: a background of 8.9·10⁻⁷ per window); this bench has a
+  continuous source and counts the whole slot. The value «none (an idealisation)» of part 4's «Dark and background
+  counts» shows the thresholds without background.
+* The slots are independent trials when (t_d + 5σ)/T_s ≪ 1 (0.021 here); the counting by slots needs it below 0.1.
+  Its slot outcomes and its coincidences are two draws, each exact in distribution; that they are the same clicks is
+  modelled only in the time stream.
+* Gisin and Gisin's slot table: the model's pairs split into three independent Poisson streams (both particles with an
+  outcome, ½ of the pairs; Alice's alone, ¼; Bob's alone, ¼), each by `slot_probabilities`, their click sets combined
+  by their union (`engine/experiment.py or_tables`; tested against a Monte Carlo of `local_hidden.gisin_gisin`).
+  The bench's detectors act on the model's outcomes (at η = 1 each station detects 75 % of the pairs, as in the model).
+* The counting by slots is refused for the polarisation and sign models (not needed on the bench).
+* The spin pairs' particle detectors are given the photon detectors' values (an illustration of the same
+  statistics).
+* A setting switches at the slot's boundary instantly; the measurement is the arrival instant (its duration enters only
+  through the jitter and the dead time).
+* The setting choice is a fair coin from the run's seeded generator; the «freedom of choice» shown is the spacetime
+  relation only. Two illustrative local models plus Gisin and Gisin's; the optimal local model for given settings is
+  not searched.
+* The significance is the normal approximation of i.i.d. trials; the experiments' martingale p-values are not computed.
 
 ## Tests
 
-`tests/test_u37_bell.py` (harness `../tests/harness.py`): every preset runs without errors and without a failed check;
-quantum worlds give |S| within 5σ of 2√2 and above 2 by > 15σ (40 000 pairs); LHV worlds never exceed 2 + 5σ (three
-seeds each) and reproduce their model's S; no-signalling from the counts; the wrapper's sampling against the textbook
-closed forms at random angles for all four law × pair combinations; outcomes revealed only at arrival (t_arr = t_e +
-L/c); random choice space-like, slow choice (cτ > 2L) time-like; the spacetime checks against closed forms for four
-geometries; a live angle change applies to the next arrivals and keeps both angle pairs on the E(Δ) plot; a refused
-change leaves the world unchanged; moving the stations loses exactly the overtaken pairs; mode switches reschedule
-choices not before the switch; the clear action; a new world with another law in the same run; the frame and header
-content the view draws; perfectly (anti)correlated fixed settings (photons a = b = 30°, a − b = −90°; spins a = b = 30°,
-a = 50°, b = 230°) run without errors with E = ±1 exactly (V7-1); the error of S with coinciding settings matches the
-spread over 40 seeds and the settings are flagged (V7-2); in LHV worlds the law's no-signalling and Tsirelson lines
-are information, not checks (V7-3). Engine tests of the new modules: `lfphys/tests/test_causality.py` (against
-`core.relativity.boost_matrix`), `lfphys/tests/test_bell_stats.py` (against Monte-Carlo repetitions, including coinciding cells),
-`lfphys/tests/test_born_round_off.py` (zero cells of the joint Born probabilities).
+`tests/test_u37_bell.py`: every preset runs without a failed check; quantum worlds reach 2√2 and pass 2 by more than
+15σ under fair sampling while J stays below 0 at η 0.68; the local models never exceed 2 (three seeds) and keep J ≤ 0;
+Gisin and Gisin's model gives 2√2 from the coincidences, J ≤ 0 and 75 % per station; the ports against the closed forms
+at random angles for every law; the sequential quantum draw equals the joint Born rule; the counts against the
+detectors' closed forms; a bright background with a wide window adds the accidentals the estimate finds; the emissions
+and the bits do not depend on the run's steps and the dead time carries across them; outcomes revealed at the arrival
+with the jitter; the random choice per slot space-like, a slow one time-like; fixed settings age into time-like; the
+spacetime checks against closed forms; unequal distances; the refusals; the counting by slots against the engine's
+prediction (and J > 0 at Giustina's state and efficiencies only without dark counts); the J(η) curve; the live
+changes; the reviews' regressions V7-1, V7-2, V7-3 and P21.
+
+`tests/test_u37_screens.py`: every point of the three atlases (495) builds with every check ✓ and stops by its rule;
+the bench's references against closed forms; E from four counts against `bell_stats.correlation`; S(Δ) against the
+law's E and the visibility's scaling; every way of the bench on the atlas's own points, fitted by `linear_fit`; part 4's
+shown slots against the engine's slot probabilities; Gisin and Gisin's slot table against a Monte Carlo; the
+thresholds table against `bell_stats.threshold_efficiency`; the story's captions against the recording.
+`tests/u37_screens.mjs` (a browser, from the view's `canvas.__layout`): the caption clear of the pictures, at 390 px
+the view, the step's control and «Measure» on screen together, no horizontal scroll, no text out of its canvas.
 
 ## Sources
 
-Bell, Physics 1, 195 (1964); Clauser, Horne, Shimony, Holt, PRL 23, 880 (1969); Tsirelson, Lett. Math. Phys. 4, 93
-(1980); Aspect, Dalibard, Roger, PRL 49, 1804 (1982); Weihs et al., PRL 81, 5039 (1998); Hensen et al., Nature 526, 682
-(2015); Giustina et al., PRL 115, 250401 (2015); Shalm et al., PRL 115, 250402 (2015). These are cited for the
-standard physics and the loophole terminology; no number of the run is taken from them.
+D. Dehlinger, M. W. Mitchell, Am. J. Phys. 70, 903 (2002); M. Giustina et al., PRL 115, 250401 (2015); L. K. Shalm et
+al., PRL 115, 250402 (2015); N. Gisin, B. Gisin, Phys. Lett. A 260, 323 (1999); Excelitas SPCM-NIR product brief (Rev
+2018-09); quotations checked against the downloaded texts (`../../lfphys/sources/detectors_bell_2026-11-18.md`).
+Bell (1964), Clauser, Horne, Shimony, Holt (1969), Tsirelson (1980), Clauser, Horne (1974), Eberhard (1993), Hensen et
+al. (2015) for the standard physics and the loophole terminology.

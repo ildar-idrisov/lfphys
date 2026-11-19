@@ -41,10 +41,11 @@
 //    sheets, none overflowing at A4's printable width), each with the attribution line; record_rows blank rows per part;
 //    an edit printed, kept in the browser and restored; &computed=1 on a page of its own; each variant's sheet; no raw id
 //    or Latin unit in Russian;
-//  - TRANSITION: a world with EX1's worksheet (S03 until WS03) is only opened: each screen and its sheet without a page
-//    error;
 //  - every screen: no horizontal scroll (scrollWidth ≤ the window's width), no page error, in English no Cyrillic in
-//    the visible text and in Russian the tabs' Russian labels; screenshots of every screen per language and size.
+//    the visible text and in Russian the tabs' Russian labels; screenshots of every screen per language and size;
+//  - every screen's sliders (EX2, W35: u35's 38 angles): a tap at a detent's place chooses that detent, never its
+//    neighbour (a labelled detent does not lie over the next), and no two detent labels overlap («4042»); every value
+//    of a select inside the select's box (none cut off at the side's edge).
 //
 // Run against a PRIVATE server (never the shared one on 8479) whose recordings and atlases were built by the code under
 // test: a screen opens an atlas only with the key the server would build now (integrator D11), so the committed fixture
@@ -94,8 +95,8 @@ const valuesAt = (mf, i) => { const out = {}; for (const c of [...mf.controls].r
 const nbOf = (mf, i) => { const v = valuesAt(mf, i), out = [i];
   for (const c of mf.controls) { const k = c.values.indexOf(v[c.param]); for (const d of [-1, 1]) if (c.values[k + d] !== undefined) out.push(flat(mf, { ...v, [c.param]: c.values[k + d] })); }
   return out; };
-// the explore control to vary: the numeric one with the most values (the first such)
-const varied = mfE && mfE.controls.filter(isNum).reduce((a, c) => (!a || c.values.length > a.values.length ? c : a), null);
+// the explore control to vary: the numeric one with the most values (the first such), not a compound control
+const varied = mfE && mfE.controls.filter((c) => isNum(c) && !c.compound && !c.sets).reduce((a, c) => (!a || c.values.length > a.values.length ? c : a), null);
 const firstRefused = mfE ? mfE.points.findIndex((p) => p[2] >= 1) : -1;
 const skip = (what) => console.log(JSON.stringify({ check: `${LANG} ${what}`, skipped: true }));
 
@@ -179,40 +180,38 @@ async function common(page, tag, W, errs) {
   if (LANG === "en") check(`${tag}: no Cyrillic in the visible text`, !CYR.test(txt), { sample: (txt.match(/.{0,30}[Ѐ-ӿ].{0,30}/) || [""])[0] });  // i18n-ok
   else check(`${tag}: the tabs in Russian`, viz.screens.map((s) => tr(s.label || { watch: "Watch", explore: "Explore", lab: "Lab work" }[s.kind])).every((s) => txt.includes(s)) && CYR.test(txt));
   check(`${tag}: no page error`, errs.length === 0, { errs });
+  const dt = await page.evaluate(() => {
+    const wrong = [], overlap = [];
+    for (const row of document.querySelectorAll(".dm-screen:not([hidden]) .dm-detents")) {
+      if (!row.offsetParent) continue;
+      const r = row.getBoundingClientRect(), ds = [...row.children], param = (row.closest("[data-param]") || { dataset: {} }).dataset.param;
+      for (const d of ds) {
+        const b = d.getBoundingClientRect(), x = r.left + (parseFloat(d.style.left) / 100) * r.width, y = b.top + b.height / 2;
+        if (y < 0 || y > innerHeight || x < 0 || x > innerWidth) continue;
+        const hit = document.elementFromPoint(x, y);
+        if (!hit || !row.parentElement.contains(hit)) continue;  // under a sticky bar: not this check's business
+        if (hit !== d) wrong.push(`${param} ${d.title} -> ${hit.classList.contains("dm-detent") ? hit.title : hit.className}`);
+      }
+      const lab = ds.filter((d) => d.textContent.trim()).map((d) => ({ t: d.textContent.trim(), b: d.getBoundingClientRect() }));
+      for (let i = 1; i < lab.length; i++) if (lab[i].b.left < lab[i - 1].b.right - 0.5) overlap.push(`${param} ${lab[i - 1].t}|${lab[i].t}`);
+    }
+    const clipped = [];  // a select's buttons all inside its box (u35's six glasses: four shown, two cut off by the side)
+    for (const seg of document.querySelectorAll(".dm-screen:not([hidden]) .dm-ctl-seg")) {
+      if (!seg.offsetParent) continue;
+      const r = seg.getBoundingClientRect();
+      for (const b of seg.children) { const q = b.getBoundingClientRect(); if (q.right > r.right + 1 || q.left < r.left - 1 || q.bottom > r.bottom + 1) clipped.push(`${(seg.closest("[data-param]") || { dataset: {} }).dataset.param} ${b.textContent.trim()}`); }
+    }
+    return { wrong, overlap, clipped };
+  });
+  check(`${tag}: every value of a select inside its box`, !dt.clipped.length, { clipped: dt.clipped.slice(0, 5) });
+  check(`${tag}: a tap at a detent's place chooses that detent`, !dt.wrong.length, { wrong: dt.wrong.slice(0, 5) });
+  check(`${tag}: no two detent labels overlap`, !dt.overlap.length, { overlap: dt.overlap.slice(0, 5) });
 }
 // a slider's control row by its parameter; a detent by its value
 const detent = (page, param, k) => page.locator(`.dm-screen:not([hidden]) .dm-ctl[data-param="${param}"] .dm-detent`).nth(k);
 // choose a grid value of a control: its detent (a slider) or its button (a toggle, a select)
 const choose = (page, c, v) => (isNum(c) ? detent(page, c.param, c.values.indexOf(v))
   : page.locator(`.dm-screen:not([hidden]) .dm-ctl[data-param="${c.param}"] .dm-ctl-seg button[data-value='${JSON.stringify(v)}']`)).click();
-
-// TRANSITION (registry.EX1_WORKSHEETS; WS03 removes it): a world whose Lab work still has EX1's worksheet (S03 until its
-// rework) is only opened: each screen and the task sheet without a page error, in every size (the integrator, 2026-11-18)
-if (lab && lab.worksheet && lab.worksheet.ex1) {
-  for (const [W, H] of SIZES) {
-    for (const sc of viz.screens) {
-      const ctx = await br.newContext({ viewport: { width: W, height: H } });
-      const { page, errs } = await open(ctx, sc.id);
-      await settle(page, 1500);
-      check(`${W}x${H} ${sc.id} (EX1 world, transition): the screen opens without a page error`, errs.length === 0, { errs });
-      await page.screenshot({ path: `${SHOTS}/demo_${WORLD}_${sc.id}_${LANG}_${W}x${H}.png` });
-      await ctx.close();
-    }
-    const ctx = await br.newContext({ viewport: { width: W, height: H } });
-    const page = await ctx.newPage();
-    const errs = [];
-    page.on("pageerror", (e) => errs.push(e.message));
-    await page.goto(inLang(`${base}/worksheet?demo=${WORLD}`));
-    await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 20000 });
-    const txt = await page.locator("#ws").innerText();
-    check(`${W}x${H} task sheet (EX1 world, transition): opens, prints its parts, no question or answer`, errs.length === 0
-      && lab.steps.every((st) => txt.includes(tr(st.title))) && !lab.worksheet.questions.some((q) => txt.includes(tr(q.answer))), { errs });
-    await ctx.close();
-  }
-  await br.close();
-  console.log(failed ? `FAILED: ${failed}` : "all passed");
-  process.exit(failed ? 1 : 0);
-}
 
 for (const [W, H] of SIZES) {
   const tag0 = `${W}x${H}`;
@@ -545,7 +544,9 @@ for (const [W, H] of SIZES) {
         const far = [...all.keys()].filter((j) => Math.abs(j - d) > 2).sort((a, b) => Math.abs(b - d) - Math.abs(a - d));
         const A = far[0], B = far.find((j) => Math.abs(j - A) > 1);
         if (B !== undefined) {
-          const pA = flat(mf, { [lc.param]: all[A] });
+          // the point's index with the step's other controls at their current values (a step with several controls)
+          const cur = await page.evaluate(() => ({ ...window.__lfLab.step().values }));
+          const pA = flat(mf, { ...cur, [lc.param]: all[A] });
           await page.route(new RegExp(`/atlas/${st.atlas.replace(".", "\\.")}/p${pA}\\.`), async (route) => { await sleep(2500); await route.continue(); });
           await detent(page, lc.param, A).click();
           await sleep(150);
@@ -871,7 +872,7 @@ for (const [W, H] of SIZES) {
     await ctx.close();
   }
   // the teacher's variant from the address (EX2 §5 F8 (b)): run.html?…&screen=lab&variant=<id> preselects its controls
-  for (const v of (lab && !lab.worksheet.ex1 ? lab.worksheet.variants || [] : []).filter((x) => x.values)) {
+  for (const v of (lab ? lab.worksheet.variants || [] : []).filter((x) => x.values)) {
     const ctx = await br.newContext({ viewport: { width: W, height: H } });
     await asSite(ctx);
     const { page, errs } = await open(ctx, lab.id, `&variant=${v.id}`);

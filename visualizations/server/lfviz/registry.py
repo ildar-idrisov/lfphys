@@ -824,12 +824,6 @@ def _check_laws(viz, st: dict, w: str, cids: list, fits: list) -> list[str]:
 SHARED_FIELDS = ("preset", "fixed", "controls", "frame_dt", "fps", "stop", "seed", "quantize", "drop")
 #: the task sheet's fields (EX2 §5 F8): ``frp`` at school, ``basis`` at university
 WORKSHEET_FIELDS = ("frp", "basis", "goal", "bench", "procedure", "record", "record_rows", "variants")
-#: TRANSITION (EX2 step F, 2026-11-18): the worlds whose Lab work still has EX1's worksheet (questions with their
-#: answers, the teacher's notes, the equipment, the variants' plots, goals and questions) and EX1's laws as verdicts.
-#: The registry accepts that form for them only; the player prints what of it a task sheet has (the parts, their
-#: instruments, blank tables) and shows no question, answer or verdict. WS03 reworks S03 to the task sheet (design §10)
-#: and removes it from here; the set must then be empty and this path is deleted.
-EX1_WORKSHEETS = frozenset({"s03_projectile"})
 
 
 def shared_screen(viz: dict, st: dict) -> dict | None:
@@ -1006,8 +1000,6 @@ def _check_lab(viz, sc, where: str, decl: dict) -> list[str]:
         out.append(f"{where}: the instruments {placed} are drawn over the view: its web/view.js defines anchors() and "
                    f"worldToPx (where the tape, the ruler and the protractor sit)")
     ws = sc.get("worksheet")
-    if viz.get("id") in EX1_WORKSHEETS:  # TRANSITION: EX1's worksheet until WS03 (see EX1_WORKSHEETS)
-        return out + _check_ex1_worksheet(viz, ws, shapes, where)
     return out + _check_task_sheet(viz, ws, shapes, where)
 
 
@@ -1118,28 +1110,6 @@ def _check_task_variants(variants, shapes: dict, where: str, school: bool) -> li
     return out
 
 
-def _check_ex1_worksheet(viz, ws, shapes: dict, where: str) -> list[str]:
-    """TRANSITION (``EX1_WORKSHEETS``; WS03 removes it): EX1's worksheet, as EX1 checked it."""
-    out = []
-    if not isinstance(ws, dict):
-        return [f"{where}: worksheet: {{frp, equipment: [T], questions: [{{q: T, answer: T}}], teacher: [T]}}"]
-    frp = ws.get("frp")
-    if not isinstance(frp, list) or not frp or not all(isinstance(x, dict) and _is_text(x.get("name"))
-                                                       and _is_text(x.get("programme")) for x in frp):
-        out.append(f"{where}: worksheet: frp is a list of {{name: T (the programme's words), programme: T (the "
-                   f"programme's name to show), …}}")
-    for k in ("equipment", "teacher"):
-        if not isinstance(ws.get(k), list) or not all(_is_text(x) for x in ws[k]):
-            out.append(f"{where}: worksheet: {k} is a list of T")
-    qs = ws.get("questions")
-    if not isinstance(qs, list) or not qs or not all(isinstance(x, dict) and _is_text(x.get("q"))
-                                                     and _is_text(x.get("answer")) for x in qs):
-        out.append(f"{where}: worksheet: questions is a list of {{q: T, answer: T}}")
-    out += _check_variants(ws.get("variants"), {k: (v[0], v[1]) for k, v in shapes.items()}, f"{where}: worksheet",
-                           True)
-    return out
-
-
 def _check_basis(basis, required: bool, where: str) -> list[str]:
     """A university worksheet's sources (EX2 §1.4, §5 F8; replaces ``frp`` at ``standard``): ``[{text: T (what the lab
     takes from it), source: the citation (a string or a T), quote?: the source's words verbatim (a string, printed in
@@ -1165,73 +1135,6 @@ def _check_basis(basis, required: bool, where: str) -> list[str]:
         ql = b.get("quote_lang")
         if ql is not None and (not isinstance(ql, str) or not re.match(r"^[a-z]{2}$", ql)):
             out.append(f"{where}: basis: quote_lang is a language code such as \"en\"")
-    return out
-
-
-def _check_variants(variants, shapes: dict, where: str, school: bool = True) -> list[str]:
-    """TRANSITION (``EX1_WORKSHEETS`` only; WS03 removes it): EX1's worksheet ``variants`` (integrator, 2026-11-17: a
-    grade's own sheet, e.g. grade 7 without √h):
-    ``[{id, grade, label: T, steps: [step ids of the lab], plot: {step id: {x, y, fit: model | None}}, goals?: {step id:
-    T}, questions: [{q: T, answer: T}]}]``. A variant's ``plot`` names steps of the variant, columns of that step and a
-    fit among the step's plot fits (or None: no fit); its ``goals`` replace the named steps' own goals on its sheet. The
-    ``grade`` (a school grade) is required at school only (EX2 §5 F8: a university lab's variants are its works)."""
-    if variants is None:
-        return []
-    if not isinstance(variants, list):
-        return [f"{where}: variants is a list of {{id, grade, label, steps, plot, questions}}"]
-    out, ids = [], set()
-    for v in variants:
-        if not isinstance(v, dict):
-            out.append(f"{where}: variant {v!r} is a map")
-            continue
-        vid = v.get("id")
-        w = f"{where}: variant {vid!r}"
-        if not isinstance(vid, str) or not _SLUG.match(vid) or vid in ids:
-            out.append(f"{w}: id is a unique slug")
-        ids.add(vid)
-        extra = sorted(set(v) - {"id", "grade", "label", "steps", "plot", "goals", "questions"})
-        if extra:
-            out.append(f"{w}: unknown fields {extra}")
-        g = v.get("grade")
-        if (school or g is not None) and (isinstance(g, bool) or not isinstance(g, int) or not 1 <= g <= 12):
-            out.append(f"{w}: grade {g!r} is a school grade (a whole number 1–12; optional at university)")
-        if not _is_text(v.get("label")):
-            out.append(f"{w}: label is a T")
-        steps = v.get("steps")
-        if not isinstance(steps, list) or not steps or not all(isinstance(x, str) and x in shapes for x in steps) \
-                or len(set(steps)) != len(steps):
-            out.append(f"{w}: steps {steps!r}: distinct step ids of the lab ({sorted(shapes)})")
-            steps = [x for x in steps if x in shapes] if isinstance(steps, list) else []
-        plot = v.get("plot", {})
-        if not isinstance(plot, dict):
-            out.append(f"{w}: plot is a map {{step id: {{x, y, fit}}}}")
-            plot = {}
-        for sid, pl in plot.items():
-            if sid not in steps:
-                out.append(f"{w}: plot names {sid!r}, not a step of the variant")
-                continue
-            cols, fits = shapes[sid]
-            if not isinstance(pl, dict) or set(pl) - {"x", "y", "fit"}:
-                out.append(f"{w}: plot of {sid}: {{x, y, fit}}")
-                continue
-            if pl.get("x") not in cols or pl.get("y") not in cols or pl.get("x") == pl.get("y"):
-                out.append(f"{w}: plot of {sid}: x {pl.get('x')!r} and y {pl.get('y')!r} are two columns of the step "
-                           f"({cols})")
-            if pl.get("fit") is not None and pl["fit"] not in fits:
-                out.append(f"{w}: plot of {sid}: fit {pl['fit']!r} is None or one of the step's fits {fits}")
-        goals = v.get("goals", {})
-        if not isinstance(goals, dict):
-            out.append(f"{w}: goals is a map {{step id: T}}")
-            goals = {}
-        for sid, g in goals.items():
-            if sid not in steps:
-                out.append(f"{w}: goals names {sid!r}, not a step of the variant")
-            elif not _is_text(g):
-                out.append(f"{w}: the goal of {sid} is a T")
-        qs = v.get("questions", [])
-        if not isinstance(qs, list) or not all(isinstance(x, dict) and _is_text(x.get("q"))
-                                               and _is_text(x.get("answer")) for x in qs):
-            out.append(f"{w}: questions is a list of {{q: T, answer: T}}")
     return out
 
 
@@ -1349,8 +1252,7 @@ def screens_of(viz: dict) -> list[dict]:
     Explore screen and each lab step with the id of its atlas (``atlases_of``; a step on an Explore screen's atlas has
     ``shared: true``, the screen's atlas id and its spec, EX2 §5 F9); a lab step's ``laws`` (the world's computed values
     for the bench: «Computed for this bench», EX2 §5 F6 (d)), ``overlays`` and ``readouts`` are always lists; the
-    worksheet is the task sheet (``record_rows`` filled in) with ``ex1`` true for EX1's form (TRANSITION,
-    ``EX1_WORKSHEETS``)."""
+    worksheet is the task sheet (``record_rows`` filled in)."""
     out = []
     for sc in viz.get("screens") or []:
         kind = sc["kind"]
@@ -1391,9 +1293,7 @@ def screens_of(viz: dict) -> list[dict]:
                 s2["plot"].setdefault("fits", [s2["plot"]["fit"]] if s2["plot"].get("fit") else [])
                 steps.append(s2)
             ws = dict(sc["worksheet"])
-            if viz.get("id") not in EX1_WORKSHEETS:
-                ws.setdefault("record_rows", 10)
-            ws["ex1"] = viz.get("id") in EX1_WORKSHEETS  # TRANSITION: the player prints EX1's form as a task sheet
+            ws.setdefault("record_rows", 10)
             d.update(instruments=instr, steps=steps, worksheet=ws)
         out.append(d)
     return out

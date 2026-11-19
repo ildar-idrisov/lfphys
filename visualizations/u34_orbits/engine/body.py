@@ -4,7 +4,7 @@
 
 Orchestration only (RULES.md §2.2, lfphys/LAYERS.md rule 5): the general-relativistic orbit comes from
 ``lfphys.core.gravity.orbit_stream`` (exact Schwarzschild geodesic, events located by the integrator), the Newtonian
-one from ``lfphys.theories.approx.newton.integrate_body``. Here: chunking, the time line (what is revealed when),
+one from ``lfphys.theories.approx.newton.integrate_body_regularized`` (Levi-Civita). Here: chunking, the time line (what is revealed when),
 thinning of samples for drawing, and the measurements a run makes on its own orbit (apsides of the Newtonian
 orbit as zeros of r.v, the energy and angular momentum along it).
 
@@ -22,7 +22,7 @@ from lfphys.core.gravity import orbit_stream
 from lfphys.theories.approx import newton
 
 TWO_PI = 2.0 * math.pi
-MAX_KEEP = 6  # fine Newtonian chunks kept for exact states (frames, actions)
+MAX_KEEP = 96  # fine Newtonian chunks kept for exact states (frames, actions; ~10-30 chunks per orbit)
 
 
 class Track:
@@ -169,7 +169,7 @@ class GRTrack(Track):
 
 
 class NewtonTrack(Track):
-    """Newtonian body (approximation outside the core): lfphys.theories.approx.newton.integrate_body.
+    """Newtonian body (approximation outside the core): lfphys.theories.approx.newton.integrate_body_regularized.
 
     Every chunk is integrated in units of its own start radius r_c (GM = 1, time unit r_c^{3/2}), so that the engine's
     tolerance (relative 1e-12, absolute 1e-12 of the position scale) is uniform in position and velocity at every depth
@@ -229,14 +229,22 @@ class NewtonTrack(Track):
         self._chunk(self.t0 + 0.125 * self.dyn)
 
     def _fine(self, Xl, dt, n, r_stop):
-        return newton.integrate_body((Xl[0], Xl[1]), (Xl[2], Xl[3]), 1.0, dt, n_out=n, r_stop=r_stop)
+        """The engine's Levi-Civita regularised integration (``newton.integrate_body_regularized``; EX2 §11 item 10,
+        STATUS V19 (e)): smooth through a deep periapsis, where the coordinate-time integration lost ~1e-5 of |E|."""
+        return newton.integrate_body_regularized((Xl[0], Xl[1]), (Xl[2], Xl[3]), 1.0, dt, n_out=n, r_stop=r_stop)
 
     def _chunk(self, t_until):
         rc = math.hypot(self.X[0], self.X[1])
         T = rc**1.5
         k = math.sqrt(rc)
         Xl = np.array([self.X[0] / rc, self.X[1] / rc, self.X[2] * k, self.X[3] * k])  # local units
-        dt = min((t_until - self.t0 - self.tl) / T, math.pi)  # at most half a local dynamical time
+        # at most half a local dynamical time, and shorter than the fastest fall from rc to rc/4 that the local speed
+        # allows (energy: v^2 <= v_0^2 + 6 above rc/4, so the fall takes at least 0.75/sqrt(v_0^2 + 6)): a chunk then
+        # never dips below rc/4 and comes back within it. The regularised integration (EX2 §11 item 10) passes a deep
+        # periapsis in one smooth step of its fictitious time, so its stop event at rc/4 alone could miss such a dip
+        # and leave the periapsis between two samples uniform in t (measured: -360 deg «advance» at a -89.9 deg launch)
+        v_l = math.hypot(Xl[2], Xl[3])
+        dt = min((t_until - self.t0 - self.tl) / T, math.pi, 0.9 * 0.75 / math.sqrt(v_l * v_l + 6.0))
         dt = max(dt, 1e-9)
         n = max(64, int(640 * dt) + 2)  # ~4000 samples per local 2 pi
         R_l = self.R / rc
@@ -316,9 +324,13 @@ class NewtonTrack(Track):
             self.done = reason
 
     def _thin(self, tt, ra, psi):
+        """Samples kept for drawing (the orbit, r(t)): a new one at every 1/n_turn of a turn in angle, every 1/60 of a
+        period in time (what a radial orbit needs) and every 2 % in r (a deep fall); the chunk's last one. (Drawing
+        only: the apsides and the measurements come from the full samples; EX2's atlases measured 595 samples per
+        orbit with steps of 1/240 and 1 %, twice the general-relativistic trail's.)"""
         step_a = TWO_PI / self.n_turn
-        step_t = (self.period or TWO_PI * self.r0**1.5) / self.n_turn
-        key = np.stack([np.floor(psi / step_a), np.floor(tt / step_t), np.floor(np.log(ra) / math.log(1.01))])
+        step_t = (self.period or TWO_PI * self.r0**1.5) / 60.0
+        key = np.stack([np.floor(psi / step_a), np.floor(tt / step_t), np.floor(np.log(ra) / math.log(1.02))])
         first = key[:, :1] - 1.0 if self.last_kept is None else self.last_kept[:, None]  # the first sample is kept
         prev = np.concatenate([first, key[:, :-1]], axis=1)
         change = np.any(key != prev, axis=0)

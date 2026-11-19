@@ -506,20 +506,21 @@ def test_the_task_sheet_and_its_variants(toy):
     assert any("text" in x for x in p(variants=[{**var, "text": {"goal": "plain"}}]))
     assert any("text" in x for x in p(variants=[{**var, "text": {"hint": T("x")}}]))
     d = registry.screens_of(toy)[3]["worksheet"]
-    assert d["record_rows"] == 8 and d["ex1"] is False and d["variants"][0]["values"] == {"heights": {"h_m": 1.0}}
+    assert d["record_rows"] == 8 and "ex1" not in d and d["variants"][0]["values"] == {"heights": {"h_m": 1.0}}
 
 
-def test_s03_keeps_its_ex1_worksheet_only_through_the_transition():
-    """TRANSITION (``registry.EX1_WORKSHEETS``; WS03 removes it): S03 still loads with EX1's worksheet (questions,
-    answers, teacher's notes, its variant's plot and goals) and its laws as data; another world with EX1's form is
-    refused with the reason."""
-    assert registry.EX1_WORKSHEETS == {"s03_projectile"}
+def test_s03_is_a_task_sheet_and_ex1s_worksheet_is_refused_everywhere():
+    """S03 has the task sheet since WS03, so EX1's transition path is gone (2026-11-19): S03 loads with a task sheet,
+    and EX1's form (questions with their answers) is refused with the reason for every world, S03 included."""
+    assert not hasattr(registry, "EX1_WORKSHEETS")
     s03 = _viz("s03_projectile")
     assert registry.check(s03) == []
     ws = registry.screens_of(s03)[-1]["worksheet"]
-    assert ws["ex1"] is True and ws["questions"]
-    other = {**s03, "id": "s04_projectile"}
-    assert any("are gone" in x for x in registry.check_screens(other))
+    assert "ex1" not in ws and "questions" not in ws and ws["record_rows"] > 0
+    q = [{"q": T("Why?"), "answer": T("Because.")}]
+    old = {**s03, "screens": [dict(sc, worksheet={**sc["worksheet"], "questions": q}) if sc["kind"] == "lab" else sc
+                              for sc in s03["screens"]]}
+    assert any("are gone" in x for x in registry.check_screens(old))
 
 
 def test_a_step_on_an_explore_screens_atlas(toy):

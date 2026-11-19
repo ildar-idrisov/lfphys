@@ -367,13 +367,17 @@ function howWeKnow({ W, tt, passport = [], note = null, empty = null, view = nul
   const list = school
     ? el("ul", { class: "dm-ck-list" }, checks.map(([c, k]) => el("li", { class: "st-" + k },
       el("span", { class: "dm-ck-mark" }, mark[k]), " ", el("b", {}, t(c.label)), c.note ? el("div", { class: "muted" }, t(c.note)) : null)))
-    : el("table", { class: "dm-ck-table" }, el("tr", {}, el("th", {}, t("check")), el("th", {}, t("computed")), el("th", {}, t("reference")),
-      el("th", { title: t("relative difference") }, t("rel.")), el("th", { title: t("tolerance") }, t("tol.")), el("th", {}, "")),
-      checks.map(([c, k]) => el("tr", { title: t(c.note) },
-        el("td", {}, t(c.label)), el("td", { class: "mono" }, fmtVal(c.value, c.unit)), el("td", { class: "mono" }, fmtVal(c.ref, c.unit)),
-        el("td", { class: "mono" }, c.rel === null || c.rel === undefined ? "—" : num(c.rel, 2)),
-        el("td", { class: "mono" }, c.rel === null || c.rel === undefined ? "—" : num(Math.max(c.tol || 1e-9, 1e-12), 2)),
-        el("td", { class: "st-" + k }, mark[k]))));
+    // (laid out as a grid in demo.css, a check's name on a line of its own: the roles keep it a table for a screen reader)
+    : el("table", { class: "dm-ck-table", role: "table" }, el("tr", { role: "row" }, el("th", { role: "columnheader" }, t("check")),
+      el("th", { role: "columnheader" }, t("computed")), el("th", { role: "columnheader" }, t("reference")),
+      el("th", { role: "columnheader", title: t("relative difference") }, t("rel.")), el("th", { role: "columnheader", title: t("tolerance") }, t("tol.")),
+      el("th", { role: "columnheader" }, "")),
+      checks.map(([c, k]) => el("tr", { role: "row", title: t(c.note) },
+        el("td", { role: "cell" }, t(c.label)), el("td", { role: "cell", class: "mono" }, fmtVal(c.value, c.unit)),
+        el("td", { role: "cell", class: "mono" }, fmtVal(c.ref, c.unit)),
+        el("td", { role: "cell", class: "mono" }, c.rel === null || c.rel === undefined ? "—" : num(c.rel, 2)),
+        el("td", { role: "cell", class: "mono" }, c.rel === null || c.rel === undefined ? "—" : num(Math.max(c.tol || 1e-9, 1e-12), 2)),
+        el("td", { role: "cell", class: "st-" + k }, mark[k]))));
   const eng = asOf(W.engineHist, tt) || [];
   const events = W.events.filter((e) => (e.t ?? 0) <= tt + eps);
   return [

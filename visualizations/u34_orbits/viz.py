@@ -99,6 +99,9 @@ SCHEMA = Schema([
        options=[("si", T("seconds (hours, days, years)")), ("geo", T("units of GM/c³"))]),
 ], presets={
     "default": {"label": T("Black hole {m} M☉: a rosette (periapsis {rp}M)", m=10, rp=20), "params": {}},
+    # Watch's story (EX2 §2.1): the rosette beside Newton's closed ellipse from the same start
+    "story": {"label": T("Black hole {m} M☉: a rosette beside Newton's closed ellipse", m=10),
+              "params": {"r0": 20.0, "speed": 1.1, "angle": 0.0, "ghost": True}},
     "mercury": {"label": T("Mercury at the Sun (weak field, {adv}″ per century)", adv=43),
                 "params": {"gravity": "GR", "mass_msun": 1.0, "radius_km": R_SUN / 1e3, "r0": MERCURY_R0,
                            "speed": MERCURY_K, "angle": 0.0},
@@ -135,8 +138,49 @@ def _kind_text(kind, law):
     return (KIND_TEXT if law == "GR" else KIND_TEXT_NEWTON).get(kind, kind)
 
 
+# the run's own measurements, per frame (``meas``) and declared in the header (EX2 §2.6, §5 F4, F7): what the screens'
+# readouts and the lab's instruments read. Times in GM/c³ whatever the mass (the bench's numbers do not depend on it),
+# lengths in M, angles in degrees. Each value is the run's own measurement from its revealed events (null before them);
+# a reference (``ref``) is the closed form or quadrature the run's checks compare it with.
+GEO = "GM/c³"
+MEASURABLES = [
+    {"id": "n_lap", "label": T("Turns in φ")},
+    {"id": "t_lap", "label": T("Distant observer's clock at the latest turn"), "unit": GEO},
+    {"id": "tau_lap", "label": T("Body's clock at the latest turn"), "unit": GEO},
+    {"id": "n_peri", "label": T("Periapses passed")},
+    {"id": "t_peri", "label": T("Distant observer's clock from the first periapsis to the latest"), "unit": GEO},
+    {"id": "r_peri", "label": T("Radius of the latest periapsis"), "unit": "M"},
+    {"id": "r_apo", "label": T("Radius of the latest apoapsis"), "unit": "M"},
+    {"id": "peri_shift", "label": T("Turn of the periapsis since the first"), "unit": "°"},
+    {"id": "ghost_peri_shift", "label": T("Turn of Newton's periapsis since the first"), "unit": "°"},
+    {"id": "adv_deg", "label": T("Advance per orbit"), "unit": "°", "ref": "adv_ref_deg",
+     "ref_label": T("exact formula")},
+    {"id": "adv_ref_deg", "label": T("Advance per orbit by the exact elliptic integral"), "unit": "°"},
+    {"id": "T_r", "label": T("Radial period"), "unit": GEO, "ref": "T_r_ref", "ref_label": T("quadrature")},
+    {"id": "T_r_ref", "label": T("Radial period by the quadrature"), "unit": GEO},
+    {"id": "tau_over_t", "label": T("τ/t since the launch")},
+    # the clock's mean rate over whole periods (turns of a circle, radial periods of an ellipse): what has a reference
+    # without the integrator, √(1 − 3M/r) on a circle, the quadratures' τ_r/t_r of one radial period on an ellipse
+    {"id": "rate_mean", "label": T("τ/t over whole periods"), "ref": "rate_mean_ref", "ref_label": T("without the integrator")},
+    {"id": "rate_mean_ref", "label": T("τ/t over whole periods without the integrator")},
+    {"id": "tau_centre", "label": T("Body's clock at r = 0"), "unit": GEO, "ref": "tau_centre_ref",
+     "ref_label": T("without the integrator")},
+    {"id": "tau_centre_ref", "label": T("Body's clock at r = 0 without the integrator"), "unit": GEO},
+    {"id": "dtau_inside", "label": T("Body's time inside the horizon"), "unit": GEO},
+]
+MEAS_IDS = [m["id"] for m in MEASURABLES]
+#: Buchdahl's bound: no static spherical star (a perfect fluid whose density does not grow outward) has R <= 9M/4
+BUCHDAHL = 9.0 / 4.0
+
+
 END_TEXT = {"horizon": T("a fall through the horizon"), "surface": T("an impact on the body's surface"),
             "center": T("a fall into the centre"), "escape": T("escape to infinity")}
+
+
+def _counted(n: int) -> bool:
+    """Which periapses and turns of a circle are events of their own (the screens' stop rules count them, EX2 §2.6): the
+    first twelve, then every 100th (a long live run keeps the record small)."""
+    return n <= 12 or n % 100 == 0
 
 
 def _due(n: int) -> bool:
@@ -181,10 +225,7 @@ class Simulation(BaseSimulation):
         self.M_m = self.gm / C**2   # metres per M
         self.T_s = self.M_m / C     # seconds per GM/c^3
         self.R = p["radius_km"] * 1e3 / self.M_m  # body radius in M; 0 = black hole (GR) / point mass (Newton)
-        if self.law == "GR" and 0.0 < self.R <= 2.0:
-            raise Refusal(T("radius {r:.6g} km is not larger than 2M = {rs:.6g} km: such a body is a black hole",
-                            r=p["radius_km"], rs=2 * self.M_m / 1e3),
-                          hint=T("set the radius to 0 (a black hole) or larger than {rs:.6g} km", rs=2 * self.M_m / 1e3))
+        self.check_params(p)
         # special radii of the Schwarzschild geometry (the Kerr closed forms at zero spin)
         self.special = {"horizon": kerr.horizons(0.0)[0], "photon": kerr.photon_orbit(0.0),
                         "mb": kerr.marginally_bound(0.0), "isco": kerr.isco(0.0)}
@@ -196,6 +237,82 @@ class Simulation(BaseSimulation):
         self._start_segment(init, T("launch of the body"), launch=True, ghost_on=bool(p["ghost"]))
         dyn = self._period_estimate(self.track) or self.track.dyn
         self.default_speed = float(min(max(dyn * self.T_s / 8.0, self.speed_range[0]), self.speed_range[1]))
+
+    @classmethod
+    def check_params(cls, params):
+        """A central body that GR does not allow (EX2 §11 item 13): R ≤ 2M is a black hole; 2M < R ≤ 9M/4 is no
+        static star (Buchdahl 1959: a static spherical perfect-fluid star whose density does not grow outward has
+        R > 9M/4, or its central pressure would be infinite). Refused before anything is built."""
+        if params.get("gravity", "GR") != "GR":
+            return
+        M_m = float(params["mass_msun"]) * GM_SUN / C**2
+        R = float(params["radius_km"]) * 1e3 / M_m
+        if 0.0 < R <= 2.0:
+            raise Refusal(T("radius {r:.6g} km is not larger than 2M = {rs:.6g} km: such a body is a black hole",
+                            r=params["radius_km"], rs=2 * M_m / 1e3),
+                          hint=T("set the radius to 0 (a black hole) or larger than {rs:.6g} km", rs=2 * M_m / 1e3))
+        if 2.0 < R <= BUCHDAHL:
+            raise Refusal(T("radius {r:.6g} km is not larger than 9M/4 = {rb:.6g} km: no static star is that compact "
+                            "(Buchdahl's limit: its central pressure would be infinite)", r=params["radius_km"],
+                            rb=BUCHDAHL * M_m / 1e3),
+                          hint=T("set the radius to 0 (a black hole) or larger than {rb:.6g} km",
+                                 rb=BUCHDAHL * M_m / 1e3))
+
+    @classmethod
+    def lab_reference(cls, step_id, fixed, values, reference=None):
+        """The world's computed values for the bench (Lab work's «Computed for this bench», EX2 §2.3, §5 F6 (d)): what a
+        measurement done the right way comes to, from the engine's closed forms and series, never beside the student's
+        fit. ``fixed``: the step's parameters; ``values``: the grid's values of each control."""
+        if step_id == "periods":
+            if reference == "kepler":
+                return {"value": 1.5, "unit": "", "label": T("exponent of T against r₀ on circular orbits"),
+                        "how": T("exact: a circular geodesic of Schwarzschild turns once in the distant observer's time "
+                                 "T = 2π√(r³/GM), Kepler's third law (the run's check «Orbital period (t)»)"),
+                        "kind": "closed form"}
+            if reference in ("clock_intercept", "clock_slope"):
+                one = reference == "clock_intercept"
+                return {"value": 1.0 if one else -3.0, "unit": "",
+                        "label": T("intercept of (τ/T)² against M/r on circular orbits") if one
+                        else T("slope of (τ/T)² against M/r on circular orbits"),
+                        "how": T("exact: on a circular geodesic dτ/dt = √(1 − 3M/r), so (τ/T)² = 1 − 3M/r (the run's "
+                                 "check «dτ/dt on a circular orbit»); Newton's absolute time gives 1 and 0"),
+                        "kind": "closed form"}
+        if step_id == "advance":
+            M_m = float(fixed.get("mass_msun", 10.0)) * GM_SUN / C**2
+            if reference in ("leading", "intercept"):
+                # 6πM/p per orbit (PPN, γ = β = 1) divided by M/p: on any weak orbit of the engine's formula
+                a, ecc = 1e6, 0.21
+                p_m = a * (1.0 - ecc * ecc) * M_m
+                value = ppn.periapsis_advance(GM_SUN * float(fixed.get("mass_msun", 10.0)), a * M_m, ecc) / (M_m / p_m)
+                return {"value": float(value), "unit": "",
+                        "label": T("slope of Δφ against M/p through the origin") if reference == "leading"
+                        else T("intercept of Δφ·p/M against M/p"),
+                        "how": T("Einstein's leading order Δφ = 6πM/p per orbit (lfphys.theories.approx.ppn, γ = β = 1; "
+                                 "Exploring Black Holes, ch. 10, eq. (23))"), "kind": "closed form"}
+            if reference == "next":
+                # ε of the bench's weak-field orbits (M/p ≤ 0.003, where the series converges: r₀ from 300 M at 1.1)
+                k = float(fixed.get("speed", 1.1))
+                eps2 = []
+                for r0 in values.get("r0") or [fixed.get("r0", 300.0)]:
+                    r0 = float(r0)
+                    v = k * math.sqrt(1.0 / (r0 - 2.0))
+                    c = orbit_stream.local_velocity_to_constants(r0, 0.0, v)
+                    el = orbits.elements(c["e"], abs(c["l"]), c["em1"])
+                    if 1.0 / el["p"] <= 0.003:
+                        eps2.append(float(el["ecc"]) ** 2)
+                e2 = sum(eps2) / len(eps2) if eps2 else 0.0441
+                c2 = (orbits.advance_series(1e3, math.sqrt(e2), 2) - orbits.advance_series(1e3, math.sqrt(e2), 1)) \
+                    * 1e6
+                return {"value": float(c2), "unit": "", "label": T("slope of Δφ·p/M against M/p"),
+                        "how": T("the next order of the advance, 6π(18 + ε²)/4 · (M/p)² per orbit, with ε² = {e2:.4f} "
+                                 "the mean over the orbits with M/p ≤ 0.003 (lfphys.core.gravity.orbits.advance_series, "
+                                 "verified against the exact elliptic integral; in a strong field the series' third "
+                                 "term bends the line)", e2=e2), "kind": "engine"}
+            if reference == "newton":
+                return {"value": 0.0, "unit": "", "label": T("slope of Newton's Δφ against M/p"),
+                        "how": T("Newton's orbit around one point mass is a closed ellipse: its radial and angular "
+                                 "frequencies are equal"), "kind": "closed form"}
+        raise ValueError(T("no computed value {ref} for the step {step}", ref=str(reference), step=str(step_id)))
 
     # --- engine modules of this world ------------------------------------------------------------------------
     def engine_modules(self):
@@ -272,7 +389,7 @@ class Simulation(BaseSimulation):
         self.track, self.ghost, self.init = track, ghost, dict(init)
         self.seg_t0, self.seg_tau0 = self.t, tau0
         self.S = {"peri": [], "apo": [], "laps": [], "second": None, "notes": set(), "maxdev": 0.0,
-                  "ghost_ends": set()}
+                  "ghost_ends": set(), "gperi": [], "interior": None, "end": None}
         info = self._orbit_info(track, init)
         self.info = info
         p_est = self._period_estimate(track, init) or track.dyn
@@ -310,7 +427,9 @@ class Simulation(BaseSimulation):
                     a_m = d["elements"]["a"] * self.M_m
                     d["adv_ppn"] = ppn.periapsis_advance(self.gm, a_m, el["ecc"])
                     d["adv_series2"] = orbits.advance_series(el["p"], el["ecc"], 2)
-                    d["period_t_ref"] = orbits.radial_period(track.e, abs(track.l), track.em1)["t"] * self.T_s
+                    rp = orbits.radial_period(track.e, abs(track.l), track.em1)
+                    d["period_t_ref"] = rp["t"] * self.T_s
+                    d["rate_r_ref"] = rp["tau"] / rp["t"]  # the clock's mean rate over one radial period
                     cond = orbits.turning_conditioning(track.e, abs(track.l), track.em1)
                     d["u_cond"] = {"apo": float(cond[0]), "peri": float(cond[1])}
                     # how a relative change of e^2 - 1 moves each turning point: |e^2-1| / (l^2 |f'(u)| u)
@@ -355,9 +474,15 @@ class Simulation(BaseSimulation):
         return s
 
     def _period_estimate(self, track, init=None):
-        """A time scale of the orbit (M units) for the default speed and the plot window: 2 pi a^{3/2} (bound),
-        2 pi r^{3/2} (circular); None otherwise. A display scale, not a measured or reference quantity."""
+        """A time scale of the orbit (M units) for the default speed and the plot window: the radial period of a bound
+        GR orbit (the engine's quadrature, ``orbits.radial_period``: in a strong field up to several Kepler periods, so
+        that every orbit's periapsis comes back in the same played time: EX2's screens stop after a number of radial
+        periods), else 2 pi a^{3/2} (bound), 2 pi r^{3/2} (circular); None otherwise. A display scale, not a measured or
+        reference quantity."""
         i = track.info
+        info = getattr(self, "info", None) or {}
+        if track is self.track and self.law == "GR" and i.get("kind") == "bound" and info.get("period_t_ref"):
+            return info["period_t_ref"] / self.T_s
         if i.get("kind") == "bound" and i.get("r_apo"):
             a = 0.5 * (i["r_peri"] + i["r_apo"])
             return 2 * math.pi * a**1.5
@@ -394,6 +519,7 @@ class Simulation(BaseSimulation):
                 st = self.init
                 try:  # the other theory from this segment's initial data, from the segment's start
                     self.ghost = self._make_track(self._other(), st, self.seg_t0 / self.T_s, self.seg_tau0)
+                    self.S["gperi"] = []
                 except ValueError as e:
                     raise Refusal(T("the ghost is not built: {why}", why=text_of(e))) from e
                 self._msg({"type": "ghost", "t": self.t, "seg": self.seg, "info": self._ghost_info(self.ghost)})
@@ -528,6 +654,7 @@ class Simulation(BaseSimulation):
                                "text": T("Ghost ({law}): {end} at r = {r:.6g}M", law=LAW_SHORT[self.ghost.theory],
                                          end=END_TEXT[e["kind"]], r=e["r"])})
                 elif e["kind"] == "peri":
+                    self.S["gperi"].append(e)  # its periapses (their swept angle) for the protractor on Newton's orbit
                     self._msg({"type": "gapsis", "t": e["t"] * self.T_s, "seg": self.seg,
                                "x": e["x"], "y": e["y"], "r": e["r"]})
 
@@ -558,7 +685,7 @@ class Simulation(BaseSimulation):
             self._msg({"type": "apsis", "t": te, "seg": self.seg, "kind": k, "n": n, "x": e["x"], "y": e["y"],
                        "r": e["r"], "phi": e["phi"], "adv": adv, "shift": shift,
                        "dt": (lst[-1]["t"] - lst[-2]["t"]) * self.T_s if n >= 2 else None})
-            if k == "peri" and (n <= 3 or n % 100 == 0):
+            if k == "peri" and _counted(n):
                 txt = T("Periapsis no. {k:d}: r = {r:.8g}M, φ = {phi:.6g}°", k=n, r=e["r"],
                         phi=math.degrees(e["phi"]) % 360)
                 if adv is not None:
@@ -584,9 +711,16 @@ class Simulation(BaseSimulation):
                                    "(J2000)"))
         elif k == "lap":
             S["laps"].append(e)
-            if self.info["kind"] == "circular" and _due(len(S["laps"])):
+            n = len(S["laps"])
+            if self.info["kind"] == "circular" and _counted(n):  # a turn of a circle: the stop rules count them
+                self._msg({"type": "event", "t": te, "kind": "turn",
+                           "text": T("Turn no. {k:d} of the circular orbit: the distant clock {t:.8g} GM/c³ and the "
+                                     "body's clock {tau:.8g} GM/c³ since the start", k=n,
+                                     t=e["t"] - self.seg_t0 / self.T_s, tau=e["tau"] - self.seg_tau0)})
+            if self.info["kind"] == "circular" and _due(n):
                 self._checks_circular()
         elif k in END_TEXT:
+            S["end"] = e
             v = math.hypot(e.get("v_r") or 0.0, e.get("v_phi") or 0.0)
             tau = e["tau"] * self.T_s  # the body's clock since its launch
             txt = T("{end:cap}: r = {r:.8g}M, the body's proper time τ = {tau:.6g} s", end=END_TEXT[k], r=e["r"],
@@ -594,6 +728,12 @@ class Simulation(BaseSimulation):
             if k == "horizon":
                 txt = T("{a} (a distant observer sees the body only approach r = 2M asymptotically; here the "
                         "computation stops at r − 2M = 2·10⁻⁶ M)", a=txt)
+                I = self._interior()
+                if I is not None:
+                    txt = T("{a}. The body's own clock goes on: it crosses r = 2M at τ = {th:.6g} s and reaches r = 0 "
+                            "at τ = {t0:.6g} s, {din:.4g} s after the horizon (by quadrature past the stop)", a=txt,
+                            th=I["tau_horizon"] * self.T_s, t0=I["tau_centre"] * self.T_s,
+                            din=I["dtau_inside"] * self.T_s)
             if k == "surface":
                 txt = T("{a}, impact speed {v:.6g} c (a static observer at the surface)", a=txt, v=v)
             self._msg({"type": "event", "t": te, "kind": k, "text": txt})
@@ -770,7 +910,9 @@ class Simulation(BaseSimulation):
         r0 = self.init["r0"]
         s = self.info.get("spread") or 0.0
         guard = 1.5 * s + 2e-11
-        if self.S["maxdev"] > guard:
+        # (a Newtonian circle is neutrally stable: a departure from r0 is only the integration's own error, bounded by the
+        # period and conservation rows; the regularised integration restarts every chunk and drifts ~3e-11 per turn)
+        if self.law == "GR" and self.S["maxdev"] > guard:
             if "left" not in self.S["notes"]:
                 self.S["notes"].add("left")
                 self._msg({"type": "notice", "t": self.t,
@@ -862,11 +1004,77 @@ class Simulation(BaseSimulation):
                         pass
                 self._check("fall_tau", T("Proper time to r = {r:.10g}M ↔ the quadrature ∫dr/√R(r)", r=e["r"]), tau,
                             ref, T("s"), tol=1e-9, note=note)
+            if k == "horizon":
+                self._checks_interior()
             if k == "surface":
                 v = math.hypot(e["v_r"], e["v_phi"])
                 ref = orbit_stream.local_speed_from_e(self.R, self.track.e)
                 self._check("impact", T("Impact speed (a static observer at the surface) ↔ √(1 − (1 − 2M/R)/e²)"),
                             v, ref, "c", tol=1e-9, note=T("from the integrator's state at r = R"))
+
+    def _on_double(self):
+        """The start is at an (almost) double root of R(r): an unstable circle, where ∫dr/√R diverges."""
+        nr = self.info.get("nearest_root")
+        return bool(self.info.get("double_root")) or (bool(self.info.get("start_turning")) and nr is not None
+                                                       and nr < 1e-6)
+
+    def _interior(self):
+        """The body's proper time past the horizon stop (EX2 §11 item 34; ``OrbitStream.interior``, E34): the stream
+        stops 2·10⁻⁶ M above r = 2M, where the distant observer's time diverges; the body's clock goes on through the
+        horizon to r = 0 by the quadrature ∫dr/√R. Returns the stream's own values (M units, from the segment's start:
+        ``r_stop``, ``tau_stop``, ``tau_horizon``, ``tau_centre``, ``dtau_inside``), ``tau0`` (the body's clock at the
+        segment's start) and ``ref_centre``: τ at r = 0 without the integrator, the cycloid π√(r₀³/8M) for a fall from
+        rest, else the quadrature of the whole fall from r₀ (``plunge_proper_time`` to r = 0; none from an unstable
+        circle). None unless this segment's orbit stopped at a black hole's horizon."""
+        S = self.S
+        if S.get("interior") is not None:
+            return S["interior"]
+        if self.law != "GR" or not isinstance(self.track, GRTrack):
+            return None
+        I = self.track.s.interior()
+        if I is None:
+            return None
+        init = self.init
+        ref, how = None, None
+        if init["v"] == 0.0 and init["how"] == "launch":
+            ref, how = orbit_stream.cycloid_proper_time(init["r0"], 0.0), "cycloid"
+        elif not self._on_double():
+            try:
+                ref = orbit_stream.plunge_proper_time(self.track.em1, self.track.l, init["r0"], init["v_r"], 0.0,
+                                                      self.info.get("r_apo"))
+                how = "quadrature"
+            except ValueError:
+                ref = None
+        out = {**{k: float(v) for k, v in I.items()}, "tau0": float(self.track.tau0), "ref_centre": ref, "how": how}
+        S["interior"] = out
+        return out
+
+    def _checks_interior(self):
+        I = self._interior()
+        if I is None:
+            return
+        T_s = self.T_s
+        if I["how"] == "cycloid":
+            lab = T("Proper time of the fall from rest to r = 0, inside the horizon ↔ the cycloid π√(r₀³/8M)")
+            note = T("measured: the run's τ at the stop (r − 2M = 2·10⁻⁶ M) plus the quadrature ∫dr/√R(r) from the stop "
+                     "to r = 0 (lfphys.core.gravity.orbit_stream.interior); reference: τ = √(r₀³/8M)(η + sin η) at η = π, "
+                     "the exact radial fall, which holds inside the horizon too")
+        else:
+            lab = T("Proper time of the fall to r = 0, inside the horizon ↔ the quadrature ∫dr/√R(r) from r₀")
+            note = T("measured: the run's τ at the stop (r − 2M = 2·10⁻⁶ M) plus the quadrature from the stop to r = 0 "
+                     "(lfphys.core.gravity.orbit_stream.interior); reference: one quadrature of the whole fall from the "
+                     "start, without the differential equation (orbit_stream.plunge_proper_time to r = 0); inside the "
+                     "horizon R(r) ≥ e² > 0, so the body cannot stop or turn back")
+            if I["ref_centre"] is None:
+                note = T("no reference: the start is at an (almost) double root of R(r), on an unstable circular orbit")
+        self._check("fall_r0", lab, I["tau_centre"] * T_s,
+                    I["ref_centre"] * T_s if I["ref_centre"] is not None else None, T("s"), tol=1e-9, note=note)
+        self._check("inside", T("Proper time from the horizon to r = 0 ≤ πM (the longest: a fall from rest at r = 2M)"),
+                    I["dtau_inside"] * T_s, math.pi * T_s, T("s"), tol=1e-12,
+                    ok=I["dtau_inside"] <= math.pi * (1.0 + 1e-12),
+                    note=T("inside the horizon r is a time: every future-directed path reaches r = 0, and the longest "
+                           "proper time from r = 2M to r = 0 is πM, along the radial fall from rest at the horizon "
+                           "(e → 0); here e = {e:.6g}, l = {l:.6g}", e=self.track.e, l=self.track.l))
 
     def _check_outcome(self, k):
         """The end the run observed against the kind predicted from the turning points at the start of the segment
@@ -903,7 +1111,7 @@ class Simulation(BaseSimulation):
         d = {"seg": self.seg, "x": st["x"], "y": st["y"], "r": st["r"], "phi": st["phi"], "alive": st["alive"],
              "status": (self.track.end_event["kind"] if not st["alive"] else "orbit"),
              "tau": st["tau"] * self.T_s, "t_launch": self.t_launch, "rate": st["rate"], "deficit": st["lag"],
-             "n_peri": len(self.S["peri"]), "n_lap": len(self.S["laps"])}
+             "n_peri": len(self.S["peri"]), "n_lap": len(self.S["laps"]), "meas": self._meas(st)}
         vr, vp = st.get("v_r"), st.get("v_phi")
         if self.law == "GR":
             r = st["r"]
@@ -920,6 +1128,57 @@ class Simulation(BaseSimulation):
         else:
             d["ghost"] = None
         return d, {}
+
+    def _meas(self, st):
+        """The run's own measurements at this moment (``MEASURABLES``): from the current segment's revealed events.
+        Times in GM/c³ (distant observer's t and the body's τ from the segment's start), lengths in M, angles in
+        degrees; None before the event that makes them."""
+        S, T_s, info = self.S, self.T_s, self.info
+        m = dict.fromkeys(MEAS_IDS)
+        t0 = self.seg_t0 / T_s
+        P, A, L, G = S["peri"], S["apo"], S["laps"], S["gperi"]
+        m["n_lap"], m["n_peri"] = len(L), len(P)
+        if L:
+            m["t_lap"] = float(L[-1]["t"] - t0)
+            m["tau_lap"] = float(L[-1]["tau"] - self.seg_tau0)
+        if P:
+            n = len(P)
+            m["t_peri"] = float(P[-1]["t"] - P[0]["t"])
+            m["peri_shift"] = math.degrees(P[-1]["psi"] - P[0]["psi"] - 2.0 * math.pi * (n - 1))
+            m["r_peri"] = float(P[-1]["r"])
+            if n >= 2:
+                m["adv_deg"] = m["peri_shift"] / (n - 1)
+                m["T_r"] = m["t_peri"] / (n - 1)
+        if A:
+            m["r_apo"] = float(A[-1]["r"])
+        if G:
+            m["ghost_peri_shift"] = math.degrees(G[-1]["psi"] - G[0]["psi"] - 2.0 * math.pi * (len(G) - 1))
+        if info.get("adv_exact") is not None and info["kind"] == "bound":
+            m["adv_ref_deg"] = math.degrees(info["adv_exact"])
+        ref_t = info.get("period_t_ref") if self.law == "GR" else info.get("period_ref")
+        if ref_t and info["kind"] == "bound":
+            m["T_r_ref"] = float(ref_t / T_s)
+        # the body's clock against the distant one since the launch; after the end, as of the end
+        end = S["end"]
+        t_now = (end["t"] if end is not None else self.t / T_s) - self.t_launch / T_s
+        tau_now = st["tau"]
+        if t_now > 0:
+            m["tau_over_t"] = float(tau_now / t_now)
+        # over whole periods: the turns of a circle since the start, the radial periods of an ellipse between periapses
+        if info["kind"] == "circular" and L:
+            m["rate_mean"] = float((L[-1]["tau"] - self.seg_tau0) / (L[-1]["t"] - t0))
+            m["rate_mean_ref"] = float(info["rate_circ"]) if self.law == "GR" else 1.0
+        elif info["kind"] == "bound" and len(P) >= 2:
+            m["rate_mean"] = float((P[-1]["tau"] - P[0]["tau"]) / (P[-1]["t"] - P[0]["t"]))
+            ref_r = info.get("rate_r_ref") if self.law == "GR" else 1.0
+            m["rate_mean_ref"] = float(ref_r) if ref_r is not None else None
+        I = S["interior"]
+        if I is not None:
+            m["tau_centre"] = I["tau_centre"] + I["tau0"]
+            m["dtau_inside"] = I["dtau_inside"]
+            if I["ref_centre"] is not None:
+                m["tau_centre_ref"] = I["ref_centre"] + I["tau0"]
+        return m
 
     def next_event_time(self):
         kinds = {"peri", "apo", "horizon", "surface", "center", "escape"}
@@ -942,11 +1201,244 @@ class Simulation(BaseSimulation):
                       "again at the current moment; “Push” changes the speed on the fly."),
             "modifications": SCHEMA.modifications(self.params),
             "law": self.law,
-            "units": {"M_m": self.M_m, "T_s": self.T_s, "au_m": AU, "gm": self.gm},
+            "units": {"M_m": self.M_m, "T_s": self.T_s, "au_m": AU, "gm": self.gm,
+                      # the screens' time label in GM/c³ when the panels show it so (Explore, Lab work: EX2 §5 F1)
+                      **({"t_show": {"unit": T("GM/c³"), "s": self.T_s}} if self.params["time_units"] == "geo" else {})},
+            "measurables": MEASURABLES,
             "body": {"mass_msun": self.msun, "R": self.R, "R_km": self.params["radius_km"]},
             "special": self.special,
             "actions": self._actions(),
         }, {}
+
+
+# --- the screens (EX2 design lfphys/sources/explore_EX2_2026-11-18_design.md §2) --------------------------------------
+_R0 = {"param": "r0", "label": T("Start radius r₀"), "unit": "M"}
+_SPEED = {"param": "speed", "label": T("Speed"), "unit": T("× circular")}  # «Speed, × circular»; a trace «Speed 1.1 × circular»
+_Q_TRAIL = {"trail.t|x|y|r|lag": "u16", "gtrail.t|x|y|r": "u16"}  # drawn only: the apsides, measurables and checks stay
+
+# The texts of STEPS and WORKSHEET (titles, goals, hints, the instruments' names, the basis, the bench, the procedure,
+# what to record, the variants) and their translations in locales/ are Site Materials: CC BY-NC-SA 4.0 (LICENSE.md §1
+# item 8, §9). The code and the other data around them stay under LicenseRef-lfphys-Research-1.0.
+INSTRUMENTS = {
+    "radius": {"kind": "readout", "label": T("Start radius on the console"), "unit": "M", "division": 1, "error": 0,
+               "error_note": T("the console sets r₀ exactly"), "reads": "control:r0"},
+    "turns": {"kind": "counter", "label": T("Turn counter"), "unit": "", "error": 0, "reads": "n_lap"},
+    "clock_far": {"kind": "readout", "label": T("Distant observer's clock, latched at each turn"), "unit": GEO,
+                  "division": 0.1, "error": 0.05, "reads": "t_lap"},
+    "clock_body": {"kind": "readout", "label": T("Body's clock, latched at each turn"), "unit": GEO, "division": 0.1,
+                   "error": 0.05, "reads": "tau_lap"},
+    "peri_count": {"kind": "counter", "label": T("Periapsis counter (the launch's included)"), "unit": "", "error": 0,
+                   "reads": "n_peri"},
+    "clock_radial": {"kind": "readout", "label": T("Distant observer's clock from the first periapsis, latched at each"),
+                     "unit": GEO, "division": 0.1, "error": 0.05, "reads": "t_peri"},
+    "r_peri_scale": {"kind": "readout", "label": T("Radius scale at the periapsis"), "unit": "M", "division": 1,
+                     "error": 0.5, "reads": "r_peri"},
+    "r_apo_scale": {"kind": "readout", "label": T("Radius scale at the apoapsis"), "unit": "M", "division": 1,
+                    "error": 0.5, "reads": "r_apo"},
+    "protractor": {"kind": "readout", "label": T("Protractor on the periapsis rays"), "unit": "°", "division": 0.1,
+                   "error": 0.05, "reads": "peri_shift"},
+    "fine_scale": {"kind": "readout", "label": T("Fine scale on the periapsis rays"), "unit": "°", "division": 0.01,
+                   "error": 0.005, "reads": "peri_shift"},
+    "protractor_newton": {"kind": "readout", "label": T("Protractor on the rays of Newton's periapses"), "unit": "°",
+                          "division": 0.1, "error": 0.05, "reads": "ghost_peri_shift"},
+}
+_FITS = ["line0", "line", "quadratic", "power"]
+STEPS = [
+    {"id": "periods", "title": T("Periods and clocks"),
+     "goal": T("Find how the period of an orbit depends on its size, by the distant observer's clock and by the body's "
+               "own clock"),
+     "hint": T("Read the clocks when the counter has just counted a turn: they are latched at each turn."),
+     "preset": "default", "fixed": {"ghost": False, "angle": 0.0, "time_units": "geo"},
+     "controls": [{**_R0, "values": [7.0, 8.0, 10.0, 12.0, 15.0, 20.0, 30.0, 50.0, 100.0], "default": 20.0},
+                  {**_SPEED, "values": [1.0, 1.1], "default": 1.0}],
+     "fps": 4, "speed": "world", "stop": {"events": {"turn": 4, "periapsis": 5}, "max_world_s": 3.0},
+     "quantize": {"trail.t|x|y|r|lag": "u16"},
+     "instruments": ["radius", "turns", "clock_far", "clock_body"],
+     "columns": [{"id": "r", "label": T("r₀, M"), "from": "radius"},
+                 {"id": "n", "label": T("turns n"), "from": "turns"},
+                 {"id": "t", "label": T("t, GM/c³"), "from": "clock_far"},
+                 {"id": "tau", "label": T("τ, GM/c³"), "from": "clock_body"},
+                 {"id": "T", "label": T("T = t/n, GM/c³"), "expr": "t / n"},
+                 {"id": "Tb", "label": T("τ/n, GM/c³"), "expr": "tau / n"},
+                 {"id": "x", "label": T("M/r₀ = 1/r₀"), "expr": "1 / r"},
+                 {"id": "q", "label": T("(τ/t)²"), "expr": "(tau / t)^2"}],
+     "plot": {"x": "r", "y": "T", "fit": "power", "fits": _FITS},
+     "laws": [{"x": "r", "y": "T", "model": "power", "quantity": "exponent", "label": T("exponent of T against r₀"),
+               "unit": "", "reference": "kepler"},
+              {"x": "x", "y": "q", "model": "line", "quantity": "intercept",
+               "label": T("intercept of (τ/t)² against M/r₀"), "unit": "", "reference": "clock_intercept"},
+              {"x": "x", "y": "q", "model": "line", "quantity": "slope", "label": T("slope of (τ/t)² against M/r₀"),
+               "unit": "", "reference": "clock_slope"}],
+     "overlays": ["radii", "apsides", "plots"], "readouts": ["rate_mean"]},
+    {"id": "advance", "title": T("The advance of the periapsis"),
+     "goal": T("Measure the advance of the periapsis per orbit and compare it with Einstein's formula 6πM/p"),
+     "hint": T("One orbit is one periapsis after the launch's; the protractors read the angle turned since the first "
+               "periapsis, all turns included."),
+     "preset": "default", "fixed": {"ghost": True, "speed": 1.1, "angle": 0.0, "time_units": "geo"},
+     "controls": [{**_R0, "values": [20.0, 30.0, 50.0, 100.0, 150.0, 200.0, 300.0, 500.0, 700.0, 1000.0, 1500.0, 2000.0,
+                                     3000.0], "default": 300.0}],
+     "fps": 2, "speed": "world", "stop": {"events": {"periapsis": 11}, "max_world_s": 1000.0},
+     "quantize": dict(_Q_TRAIL),
+     "instruments": ["radius", "peri_count", "protractor", "fine_scale", "protractor_newton", "r_peri_scale",
+                     "r_apo_scale", "clock_radial"],
+     "columns": [{"id": "r0", "label": T("r₀, M"), "from": "radius"},
+                 {"id": "n", "label": T("periapses n"), "from": "peri_count"},
+                 {"id": "norb", "label": T("orbits N = n − 1"), "expr": "n - 1"},
+                 {"id": "s", "label": T("turn, ° (0.1°)"), "from": "protractor"},
+                 {"id": "sf", "label": T("turn, ° (0.01°)"), "from": "fine_scale"},
+                 {"id": "sn", "label": T("Newton's turn, °"), "from": "protractor_newton"},
+                 {"id": "dphi", "label": T("Δφ = turn·π/180/N, rad"), "expr": "s * pi / 180 / norb"},
+                 {"id": "dphif", "label": T("Δφ fine, rad"), "expr": "sf * pi / 180 / norb"},
+                 {"id": "dphin", "label": T("Δφ Newton, rad"), "expr": "sn * pi / 180 / norb"},
+                 {"id": "rp", "label": T("r_p, M"), "from": "r_peri_scale"},
+                 {"id": "ra", "label": T("r_a, M"), "from": "r_apo_scale"},
+                 {"id": "x", "label": T("M/p = (r_p + r_a)/(2 r_p r_a)"), "expr": "(rp + ra) / (2 * rp * ra)"},
+                 {"id": "y", "label": T("Δφ fine · p/M"), "expr": "dphif / x"},
+                 {"id": "tr", "label": T("t from the first periapsis, GM/c³"), "from": "clock_radial"},
+                 {"id": "Tr", "label": T("T_r = t/N, GM/c³"), "expr": "tr / norb"},
+                 {"id": "a", "label": T("a = (r_p + r_a)/2, M"), "expr": "(rp + ra) / 2"}],
+     "plot": {"x": "x", "y": "dphi", "fit": "line0", "fits": _FITS},
+     "laws": [{"x": "x", "y": "dphi", "model": "line0", "quantity": "slope", "label": T("slope of Δφ against M/p"),
+               "unit": "", "reference": "leading"},
+              {"x": "x", "y": "y", "model": "line", "quantity": "intercept",
+               "label": T("intercept of Δφ·p/M against M/p"), "unit": "", "reference": "intercept"},
+              {"x": "x", "y": "y", "model": "line", "quantity": "slope", "label": T("slope of Δφ·p/M against M/p"),
+               "unit": "", "reference": "next"},
+              {"x": "x", "y": "dphin", "model": "line0", "quantity": "slope",
+               "label": T("slope of Newton's Δφ against M/p"), "unit": "", "reference": "newton"}],
+     "overlays": ["newton", "apsides", "plots"], "readouts": ["adv_deg", "T_r"]},
+]
+_CLEA = "CLEA, «The Revolution of the Moons of Jupiter», Student Manual v1.1.1, Gettysburg College"
+_EBH = ("E. F. Taylor, J. A. Wheeler, E. Bertschinger, Exploring Black Holes, 2nd ed. (draft of 2020-03-31), ch. 10 "
+        "«Advance of Mercury's Perihelion»")
+WORKSHEET = {
+    # the quotations are verbatim (checked in the downloaded texts: EX2 design Appendix B, again by W34 on 2026-11-18)
+    "basis": [
+        {"text": T("Part 1 follows the CLEA laboratory on Kepler's third law. Here the moons are test bodies around a "
+                   "black hole, and the body's own clock is a new instrument."), "source": _CLEA,
+         "quote": "Kepler’s Third Law is the one that applies to this lab.", "quote_lang": "en"},
+        {"text": T("Every measurement has its error, and different orbits need not agree exactly."), "source": _CLEA,
+         "quote": "You will determine Jupiter’s mass using measurements of each of the four moons; there will be errors "
+                  "of measurement associated with each moon, and therefore your Jupiter masses may not be exactly the "
+                  "same.", "quote_lang": "en"},
+        {"text": T("Part 2 follows Exploring Black Holes, ch. 10: the periapsis advances because the body goes round "
+                   "faster than it goes in and out; to leading order by 6πM/p per orbit (the chapter's eq. (23))."),
+         "source": _EBH + ", §10.6",
+         "quote": "According to Einstein, the advance of Mercury’s perihelion springs from the difference between the "
+                  "frequency with which the planet sweeps around in its orbit and the frequency with which it "
+                  "oscillates in and out in r. In Newton’s analysis these two frequencies are equal (for the "
+                  "interaction between Mercury and the Sun).", "quote_lang": "en"},
+        {"text": T("Its Query 11 compares the exact advances with the formula, as this bench does."),
+         "source": _EBH + ", Query 11",
+         "quote": "Compare the JPL-computed advances of the perihelia of Venus, Earth, and Mars in Table 10.1 with "
+                  "approximate results calculated using equation (23).", "quote_lang": "en"},
+    ],
+    "goal": T("Find how the period of an orbit around a black hole depends on its size, by both clocks; measure the "
+              "advance of the periapsis per orbit and compare it with 6πM/p. The bench is computed: no laboratory "
+              "measures orbits near a black hole."),
+    "bench": [
+        T("Part 1: a test body around a black hole of 10 M☉, launched at r₀ from 7 to 100 M with the circular speed or "
+          "1.1 of it; the distant observer's clock and the body's clock, both latched at each turn (division "
+          "0.1 GM/c³), a turn counter. Lengths in M = GM/c², times in GM/c³."),
+        T("Part 2: the same hole; orbits launched at r₀ from 20 to 3 000 M at 1.1 of the circular speed, followed for "
+          "ten orbits; a protractor (0.1°) and a fine scale (0.01°) on the periapsis rays, Newton's orbit from the same "
+          "start (dashed) with its own protractor, radius scales at the periapsis and the apoapsis (division 1 M), a "
+          "periapsis counter and a clock latched at each periapsis."),
+    ],
+    "procedure": [
+        T("Part 1. For each r₀ launch a circular orbit and read both clocks after four turns. Plot T = t/n against r₀ "
+          "on logarithmic axes and fit a power law; do the same for τ/n; then plot (τ/t)² against M/r₀."),
+        T("Part 2. For each r₀ from 300 M read the turn of the periapsis after one orbit with the protractor and plot Δφ "
+          "against M/p. Then read it after ten orbits with the fine scale and plot again; try Δφ·p/M against M/p."),
+    ],
+    "record": [
+        T("the table of your readings with their errors"),
+        T("each fit: the model, the points used, the parameters with their errors, χ² and p"),
+        T("your conclusion, and why you chose these orbits and these moments of reading"),
+    ],
+    "record_rows": 13,
+    "variants": [
+        {"id": "kepler_circles", "label": T("A: Kepler's law with circular orbits"), "steps": ["periods"],
+         "values": {"periods": {"speed": 1.0}},
+         "text": {"goal": T("Find the exponent of Kepler's third law with circular orbits, by both clocks")}},
+        {"id": "kepler_eccentric", "label": T("B: Kepler's law with eccentric orbits"), "steps": ["periods", "advance"],
+         "values": {"periods": {"speed": 1.1}, "advance": {"r0": 20.0}},
+         "text": {"goal": T("Find whether Kepler's third law holds for eccentric orbits near a black hole: the time per "
+                            "turn in part 1, the radial period T_r against the semi-major axis a in part 2"),
+                  "procedure": [T("Part 1 with the speed 1.1 of the circular one: T = t/n against r₀, a power law."),
+                                T("Part 2 from 20 M: T_r = t/N against a = (r_p + r_a)/2, a power law; then only the "
+                                  "orbits from 300 M.")]}},
+        {"id": "advance_weak", "label": T("C: the advance in a weak field"), "steps": ["advance"],
+         "values": {"advance": {"r0": 300.0}},
+         "text": {"goal": T("Measure the advance of the periapsis from r₀ = 300 M on and compare it with 6πM/p")}},
+        {"id": "advance_strong", "label": T("D: the advance from 20 M"), "steps": ["advance"],
+         "values": {"advance": {"r0": 20.0}},
+         "text": {"goal": T("Measure the advance of the periapsis from r₀ = 20 M on: where does 6πM/p stop "
+                            "describing it?")}},
+    ],
+}
+SCREENS = [
+    {"id": "watch", "kind": "watch", "recording": "story", "more": ["rosette", "mercury", "plunge"]},
+    {"id": "explore", "kind": "explore", "preset": "default", "fixed": {"ghost": True, "angle": 0.0, "time_units": "geo"},
+     "controls": [{**_R0, "values": [7.0, 8.0, 10.0, 12.0, 15.0, 20.0, 30.0], "default": 20.0},
+                  {**_SPEED, "values": [0.9, 0.95, 1.0, 1.05, 1.1], "default": 1.1}],
+     "acts": "next", "time": "flight", "fps": 8, "speed": "world",
+     "stop": {"events": {"periapsis": 4, "turn": 3, "horizon": 1}, "max_world_s": 1.0},
+     "quantize": dict(_Q_TRAIL), "overlays": ["newton", "radii", "apsides", "plots", "follow"], "traces": 3,
+     "readouts": ["adv_deg", "T_r", "rate_mean", "tau_centre"]},
+    {"id": "lab", "kind": "lab", "instruments": INSTRUMENTS, "steps": STEPS, "worksheet": WORKSHEET},
+]
+
+# Watch's story (EX2 §2.1): its captions are timed against the run's own events (tests/test_u34_screens.py)
+STORY_SCRIPT = [{"at": 0, "cmd": "speed", "args": {"value": 0.00833}},
+                {"at": 19, "cmd": "set", "args": {"values": {"r0": 10.0}}},
+                {"at": 29, "cmd": "set", "args": {"values": {"r0": 7.0, "speed": 0.95}}},
+                {"at": 29, "cmd": "speed", "args": {"value": 0.00139}}]
+STORY_CAPTIONS = [
+    {"at": 0, "hold": 3,
+     "text": T("A small body is launched from {r0} M (M = GM/c² ≈ {mkm} km for this black hole of {m} M☉) at {k} times "
+               "the circular speed. Solid: its orbit by general relativity; dashed: Newton's orbit from the same start.",
+               r0=20, mkm=14.8, m=10, k=1.1)},
+    {"at": 3.5, "text": T("Watch the closest point, the periapsis (diamond). Newton's ellipse comes back to it after one "
+                          "turn and closes on itself.")},
+    {"at": 5.5, "text": T("In general relativity the body comes back to its closest point about {a}° further on: the "
+                          "orbit turns.", a=52)},
+    {"at": 8.5, "text": T("The plot 1 − dτ/dt is the body's clock: how much slower it runs than a distant clock. At the "
+                          "periapsis it lags by {p} %, from gravity and speed together.", p=8.4)},
+    {"at": 13, "text": T("Each turn adds the same advance: after three turns the periapsis has moved by about {a}°, and "
+                         "the orbit draws a rosette.", a=156)},
+    {"at": 19, "text": T("Launched again, closer: from {r0} M at the same {k} of the circular speed. The advance grows to "
+                         "about {a}° per turn, and at the periapsis the body's clock lags by {p} %.", r0=10, k=1.1,
+                         a=120, p=17.6)},
+    {"at": 29, "text": T("Now from {r0} M with {dv} % less than the circular speed, played {f} times slower: this orbit "
+                         "has no closest point outside the horizon, and the body falls in. Newton's body, from the same "
+                         "start, keeps orbiting.", r0=7, dv=5, f=6)},
+    {"at": 31.5, "text": T("For a distant observer the body only approaches the horizon (the computation stops {gap} M "
+                           "above it). The body's own clock goes on: {ts} ms from {r0} M to there, and {tin} µs more "
+                           "through the horizon to r = 0.", gap="2·10⁻⁶", ts=2.59, r0=7, tin=36)},
+]
+ROSETTE_CAPTIONS = [
+    {"at": 0, "text": T("The body is launched from {r0} M at {k} times the circular speed: it swings out to {ra} M and "
+                        "comes back.", r0=20, k=1.2, ra=69.7)},
+    {"at": 8, "text": T("It returns to its closest point {a}° further on each orbit: the periapsis advances, and the "
+                        "orbit draws a rosette.", a=40.9)},
+    {"at": 38, "text": T("After five orbits the periapsis has moved by {a}°, more than half a turn.", a=204.5)},
+]
+MERCURY_CAPTIONS = [
+    {"at": 0, "text": T("Mercury around the Sun, from its perihelion (a = {a} au, e = {e}): a weak field, where general "
+                        "relativity and Newton almost agree.", a=0.387, e=0.206)},
+    {"at": 7, "text": T("Each orbit the perihelion advances by only {a}″, far too little to see on the drawing; the run "
+                        "measures it from its own periapses: {c}″ per Julian century, the general-relativistic part of "
+                        "Mercury's observed advance (the other planets' pulls add the rest).", a=0.1035, c=42.98)},
+    {"at": 30, "text": T("After four orbits the perihelion has moved by {a}″: on the drawing the ray of the latest "
+                         "perihelion still lies on the dashed ray of the first.", a=0.414)},
+]
+PLUNGE_CAPTIONS = [
+    {"at": 0, "text": T("A circular orbit at {r0} M lies inside the innermost stable circular orbit, {isco} M: launched "
+                        "with {dv} % less than the circular speed, the body cannot stay on it.", r0=5.5, isco=6, dv=0.5)},
+    {"at": 6, "text": T("It spirals in. For a distant observer it stops just above the horizon; by its own clock it "
+                        "reaches there after {ts} ms and r = 0 after {t0} ms.", ts=3.19, t0=3.23)},
+]
 
 
 VIZ = {
@@ -957,7 +1449,7 @@ VIZ = {
                  "distant observer; a comparison with the Newtonian orbit from the same initial data.", adv=43),
     "purpose": T("To see how GR's equations of motion give the precession, the instability of orbits near the ISCO and "
                  "the slowing of clocks, and how Newton differs; the laws can be deliberately replaced by Newton's."),
-    "version": "1.0",
+    "version": "1.1",
     "schema": SCHEMA,
     "simulation": Simulation,
     "audience": "university",
@@ -971,11 +1463,14 @@ VIZ = {
     ],
     "related": ["S11", "p01_gravity"],
     "recordings": [
+        {"id": "story", "preset": "story", "seconds": 40, "fps": 20, "speed": None, "seed": 1, "script": STORY_SCRIPT,
+         "poster": 18, "captions": STORY_CAPTIONS, "quantize": dict(_Q_TRAIL)},
         {"id": "rosette", "preset": "default", "seconds": 60, "fps": 20,
-         "speed": None, "seed": 1, "script": [], "poster": 55},
+         "speed": None, "seed": 1, "script": [], "poster": 55, "captions": ROSETTE_CAPTIONS},
         {"id": "mercury", "preset": "mercury", "seconds": 40, "fps": 20,
-         "speed": None, "seed": 1, "script": [], "poster": 35},
+         "speed": None, "seed": 1, "script": [], "poster": 35, "captions": MERCURY_CAPTIONS},
         {"id": "plunge", "preset": "plunge", "seconds": 30, "fps": 20,
-         "speed": None, "seed": 1, "script": [], "poster": 25},
+         "speed": None, "seed": 1, "script": [], "poster": 25, "captions": PLUNGE_CAPTIONS},
     ],
+    "screens": SCREENS,
 }

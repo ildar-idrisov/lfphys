@@ -136,11 +136,15 @@ export function pushFrame(W, f, step = 1, maxFrames = MAX_FRAMES) {
     F.length = j;
   }
 }
-export function frameIndexAt(F, tt) {  // the last frame at or before tt (the first when tt is before it)
+// the last frame at or before tt (the first when tt is before it), to 10⁻¹² of tt as asOf and showAt: a step's clock is
+// shared over its points, so clock − launchedAt can fall a bit short of the last frame's time (W34: 725.1790265853499
+// for 725.17902658535), and the frame before the last was shown and read (one periapsis less)
+export function frameIndexAt(F, tt) {
   let lo = 0, hi = F.length - 1;
   if (hi < 0) return -1;
   if (tt <= F[0].t) return 0;
-  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (F[mid].t <= tt) lo = mid; else hi = mid - 1; }
+  const eps = 1e-12 * Math.abs(tt);
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (F[mid].t <= tt + eps) lo = mid; else hi = mid - 1; }
   return lo;
 }
 export function frameAt(W, tt) { const i = frameIndexAt(W.frames, tt); return i < 0 ? null : W.frames[i]; }
