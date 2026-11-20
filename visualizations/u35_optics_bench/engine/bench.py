@@ -7,10 +7,12 @@ analysers (``lfphys.core.optics.polarization``), the single-photon stream (emiss
 rule at the structure on the photon's density matrix, the analysers' ports) and the detectors (efficiency, dark
 counts, dead time and jitter of ``lfphys.theories.models.photodetector``).
 
-Nothing here adds physics of its own: the probabilities, curves, angles, field, phases and group delays come from
-``lfphys.core.optics.interfaces`` and ``polarization``; the indices from ``materials``; the detectors' closed forms
-from ``photodetector``; the ray directions for the drawing from ``lfphys.theories.approx.ray_optics``; the closed forms
-the checks compare with live in ``lfphys.core.optics.thin_films`` and ``polarization``.
+Nothing here adds physics of its own but one relation: the probabilities, curves, angles, field, phases and group delays
+come from ``lfphys.core.optics.interfaces`` and ``polarization``; the indices from ``materials``; the glass blocks'
+internal transmittance exp(−4πκL/λ) is computed here from ``materials``' κ (Beer–Lambert, the relation that module
+derives the SCHOTT glasses' κ from; an engine function for it was asked of the engine's processor); the detectors'
+closed forms from ``photodetector``; the ray directions for the drawing from ``lfphys.theories.approx.ray_optics``; the
+closed forms the checks compare with live in ``lfphys.core.optics.thin_films`` and ``polarization``.
 """
 
 from __future__ import annotations
@@ -238,6 +240,74 @@ def lam_range(p: dict) -> tuple[float, float]:
     return lo, hi
 
 
+# --- the glass blocks: half-cylinders centred on the rotary table -------------------------------------------------
+#: the blocks' radius by default, mm: every medium other than air is a half-cylinder (a D-shaped block) whose flat face
+#: is the structure's; a beam through the table's axis crosses it along a radius and meets its curved face at normal
+#: incidence (the laboratory manuals' semicircular samples: Rutgers, «Fresnel Equations and Electromagnetic Boundary
+#: Conditions»; Carnegie Mellon 33-353 Lab 1; Toronto PHY293/PHY294's D-lens)
+BLOCK_MM = 25.0
+#: the outcomes of one photon from the source to the detectors: the face's five (``polarization.OUTCOMES``) and the
+#: three losses in the blocks: on the way in (reflected back by the entry's curved face or absorbed before the face),
+#: in the reflection arm and in the transmission arm (absorbed along the radius or reflected back by the curved face)
+LOSSES = ("L_in", "L_R", "L_T")
+
+
+def side_media(p: dict) -> tuple[tuple[str, float], tuple[str, float]]:
+    """The media of the two sides of the structure as the beams cross them, each (material, model index): no boundary
+    leaves the beam in the incidence medium; a prism with a gap has a second prism of the incidence glass behind it."""
+    inc = (p["med_in"], float(p["n0"]))
+    if p["structure"] == "none" or (p["structure"] == "tir" and float(p["tir_gap_nm"]) > 0):
+        return inc, inc
+    return inc, (p["med_out"], float(p["ns"]))
+
+
+def block_crossing(mid: str, model_n: float, lam: float, radius_mm: float, inward: bool) -> dict | None:
+    """A beam's crossing of a half-cylinder of the medium ``mid`` along its radius (``inward``: from the curved face to
+    the flat one; else outward): None where there is no block (air, or radius 0: a half-space). The curved face at
+    normal incidence by the engine's transfer matrices (``interfaces.stack``, air n = 1, the medium by the real part of
+    its index as at the face), for s and p; the bulk's internal transmittance exp(−4πκL/λ) along the radius L with the
+    material's κ at λ (``materials.index``; Beer–Lambert, the law SCHOTT's κ comes from; a model medium has κ = 0)."""
+    if mid == "air" or not radius_mm > 0:
+        return None
+    nz = complex(model_n) if mid == "model" else complex(materials.index(mid, lam))
+    ns = [1.0, nz.real] if inward else [nz.real, 1.0]
+    face = {q: float(interfaces.stack(ns, [], lam, 0.0, q)["T"]) for q in ("s", "p")}
+    tau = math.exp(-4.0 * math.pi * nz.imag * radius_mm * 1e6 / lam)  # the radius in nm, as λ
+    return {"n": nz.real, "kappa": nz.imag, "Tc": face, "tau": tau, "L_mm": float(radius_mm)}
+
+
+def crossing_T(cr: dict | None, rho=None) -> float:
+    """The share of a beam of state rho (its p, s weights; any state when None) that crosses a block: 1 without one.
+    At normal incidence T_s = T_p (a check of the run), so the crossing does not change the beam's polarisation."""
+    if cr is None:
+        return 1.0
+    if rho is None:
+        Tc = 0.5 * (cr["Tc"]["s"] + cr["Tc"]["p"])
+    else:
+        wp, ws = float(np.real(rho[0, 0])), float(np.real(rho[1, 1]))
+        Tc = (wp * cr["Tc"]["p"] + ws * cr["Tc"]["s"]) / (wp + ws) if wp + ws > 0 else cr["Tc"]["s"]
+    return Tc * cr["tau"]
+
+
+def blocks(p: dict, lam: float) -> dict:
+    """The three crossings of the set-up at the wavelength lam: the way in (the incidence medium's block, inward), the
+    reflection arm (the same block, outward) and the transmission arm (the exit side's block, outward)."""
+    (mi, n0), (mo, no) = side_media(p)
+    r = float(p["block_mm"])
+    return {"in": block_crossing(mi, n0, lam, r, True), "R": block_crossing(mi, n0, lam, r, False),
+            "T": block_crossing(mo, no, lam, r, False), "radius_mm": r}
+
+
+def outcomes8(face: dict, bl: dict, rho, rho_R, rho_T) -> list[float]:
+    """The eight outcomes of a photon from the source (``polarization.OUTCOMES`` then ``LOSSES``): the face's Born
+    probabilities ``face`` (of a photon that reaches it) times the way in and each arm's crossing; they add to one."""
+    p_in = crossing_T(bl["in"], rho)
+    tR, tT = crossing_T(bl["R"], rho_R), crossing_T(bl["T"], rho_T)
+    PR, PT = face["R_pass"] + face["R_reject"], face["T_pass"] + face["T_reject"]
+    return [p_in * face["R_pass"] * tR, p_in * face["R_reject"] * tR, p_in * face["T_pass"] * tT,
+            p_in * face["T_reject"] * tT, p_in * face["A"], 1.0 - p_in, p_in * PR * (1.0 - tR), p_in * PT * (1.0 - tT)]
+
+
 # --- the engine's numbers for a structure -----------------------------------------------------------------
 def rta(st: Structure, lam: float, theta: float, pol: str) -> dict:
     """r, t, R, T, A of the structure (lfphys transfer matrices). ``lam`` must be the structure's own wavelength for a
@@ -463,16 +533,22 @@ def group_index(n: float, dn: float, lam: float) -> float:
     return float(n - lam * dn)
 
 
-def flight_times(st: Structure, theta: float, rho) -> dict:
+def flight_times(st: Structure, theta: float, rho, radius_mm: float = 0.0) -> dict:
     """Flight times along the arms at the group velocity c/n_g of each medium (its dispersion from the dataset), plus
     the structure's group delays of reflection and transmission (``interfaces.group_delay`` with each material's
     dn/dlam; for a state with both s and p the intensity-weighted mean of the two delays in each arm: they differ by
     femtoseconds, far below the detectors' jitter). t_in: the source to the structure; t_R, t_T: the structure to the
-    reflection and the transmission detectors."""
+    reflection and the transmission detectors. Each arm is ``ARM_M`` long: in a medium other than air, its radius
+    ``radius_mm`` of the block in the medium and the rest in air (n_g = 1); with no block (radius 0) the whole arm in
+    the medium (a half-space)."""
     lam = st.lam
     ng_in = group_index(st.n_in, st.dns[0].real, lam)
     ng_out = group_index(st.n_out, st.dns[-1].real, lam)
-    t_in = ARM_M * ng_in / C
+    L = min(float(radius_mm) * 1e-3, ARM_M) if radius_mm > 0 else ARM_M
+
+    def arm(ng):  # the arm's optical delay: L in the medium (group index ng), the rest in air
+        return (L * ng + (ARM_M - L) * 1.0) / C if ng != 1.0 else ARM_M / C
+    t_in = arm(ng_in)
     tau = {}
     for q in ("s", "p"):
         if st.kind == "none":
@@ -491,7 +567,7 @@ def flight_times(st: Structure, theta: float, rho) -> dict:
         return (a * tau["p"][key] + b * tau["s"][key]) / (a + b) if a + b > 0 else 0.0
 
     tau_r, tau_t = mean("tau_r", "R"), mean("tau_t", "T")
-    return {"t_in": t_in, "t_R": ARM_M * ng_in / C + tau_r, "t_T": ARM_M * ng_out / C + tau_t, "arm_m": ARM_M,
+    return {"t_in": t_in, "t_R": arm(ng_in) + tau_r, "t_T": arm(ng_out) + tau_t, "arm_m": ARM_M,
             "ng_in": ng_in, "ng_out": ng_out, "tau_r": tau_r, "tau_t": tau_t,
             "tau": {q: {"r": tau[q]["tau_r"], "t": tau[q]["tau_t"]} for q in ("s", "p")}}
 

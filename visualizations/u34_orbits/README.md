@@ -19,7 +19,8 @@ the picture. The quick bar, the toolbar and the actions are left out; what they 
 The checks, "Physics of this world", the panels "Orbit" and "Clocks", the events and where the data come from fold into
 "How we know this is right", in Lab work the same as in Explore. Below 1000 px the orbit plane is the picture at the
 top; in Explore and Lab work the plots and the explanations fold under it ("▸ Plots r(t) and 1 − dτ/dt, and what the
-lines are"), in Watch, which has no controls, they stay open under it. On a server, "▶ Compute live" opens the full
+lines are"), in Watch, which has no controls, the plots stay open right under the plane, both above the time bar, and
+the caption and the explanations follow (review R2-P F17). On a server, "▶ Compute live" opens the full
 player (every parameter, the quick bar, "push ±5 %", "↻ launch") with the screen's set-up. Times on the screens are in
 GM/c³ ("Time on the panels": "units of GM/c³"), so the numbers do not depend on the mass; Watch's story is in seconds.
 
@@ -80,7 +81,7 @@ on the built atlases (deterministic: every student gets these numbers):
 | circles read after one turn | 1.500014 ± 0.000022: errors four times larger |
 | circles, τ/n against r₀ (the body's clock), power law | 1.535, χ²/ν 1.1·10⁶: the wrong clock |
 | circles, (τ/t)² against M/r₀, line | 1.0000055 ± 0.0000085 and −3.00010 ± 0.00054 (Newton's 0 rejected) |
-| eccentric orbits (1.1) in part 1, T against r₀ | 1.410, χ²/ν 9·10⁷: Kepler's law needs a circle |
+| eccentric orbits (1.1) in part 1, T against r₀ | 1.410, χ²/ν 9·10⁷ (1.46 from r₀ = 30 M): not because they are ellipses (in Newton's gravity a launch at 1.1 of the circular speed gives a = r₀/(2 − 1.1²) ∝ r₀, so T ∝ r₀^{3/2} exactly), but because near the hole a turn in φ is not a radial period (the periapsis advances), the orbit's shape changes with r₀, and t/n over whole turns in φ is not a whole number of radial periods |
 | part 2, T_r against a, power law | 1.4975 ± 0.0007 (χ²/ν 10.8); from 300 M 1.4981 ± 0.0003: the radial period of an eccentric orbit is not 2πa^{3/2} |
 | part 2, the 0.1° protractor after one orbit, r₀ ≥ 300 M, Δφ against M/p, line through 0 | 19.03 ± 0.24 (6π = 18.850) |
 | the same from r₀ = 20 M | 20.00 ± 0.27, χ²/ν 16.6: 6πM/p outside its range |

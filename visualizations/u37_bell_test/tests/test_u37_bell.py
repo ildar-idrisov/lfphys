@@ -268,6 +268,36 @@ def test_space_time_checks_against_closed_forms(L, tau_ns, slot_ns):
         assert ch["st_rev"]["value"] is None
 
 
+def test_unequal_distances_take_the_later_detection_for_the_locality_check():
+    """Review R2-W F8: each station's slots start at its own arrival time, so the latest detection at B comes
+    τ + T_s + (L_B − L_A)/v after the choice at A. At L_A = 100 m, L_B = 500 m that is 2.43 µs: c·Δt = 730 m > 600 m,
+    time-like (with τ + T_s alone, 330 m, it read «space-like»); the coincidences' own flags agree. Mirrored, the
+    direction is B → A; the freedom of choice is checked at the nearer station."""
+    for LA, LB, x, y in ((100.0, 500.0, "A", "B"), (500.0, 100.0, "B", "A")):
+        h = run(None, 0.2, L_A_m=LA, L_B_m=LB)
+        ch = h.checks()
+        lead = (100.0 + 1000.0) * 1e-9 + abs(LB - LA) / C
+        assert ch["st_loc"]["value"] == pytest.approx((C * lead) ** 2 - (LA + LB) ** 2, rel=1e-9)
+        assert ch["st_loc"]["value"] > 0
+        lab = ch["st_loc"]["label"]
+        assert "OPEN" in render(lab) and render(lab).startswith(f"Choice at {x} ↔ the latest detection at {y} ")
+        assert ch["st_rev"]["value"] is None
+        assert h.sim.frame()[0]["meas"]["local_frac"] < 1.0  # some coincidences are time-like
+        near = min(LA, LB)
+        tau = 100e-9
+        assert ch["st_free"]["value"] == pytest.approx((near - C * tau) ** 2 - near ** 2, rel=1e-9)
+        assert render(ch["st_free"]["label"]).startswith(f"Choice at {'A' if LA < LB else 'B'} ↔ emission")
+    # a space-like case at unequal distances: the reversal speed with the longer lead, mirrored for Bob's choice too
+    h = Harness(V, "photon_chsh", {"L_A_m": 300.0, "L_B_m": 900.0})
+    ch = h.checks()
+    lead = 1.1e-6 + 600.0 / C
+    assert ch["st_loc"]["value"] < 0 and ch["st_rev"]["value"] == pytest.approx(C * lead / 1200.0, rel=1e-12)
+    assert ch["st_rev"]["ref"] == pytest.approx(C * lead / 1200.0, rel=1e-9)
+    h = Harness(V, "photon_chsh", {"L_A_m": 900.0, "L_B_m": 300.0})
+    ch = h.checks()
+    assert render(ch["st_rev"]["label"]).startswith("The order “choice at B → detection at A”") and ch["st_rev"]["ref"] == pytest.approx(C * lead / 1200.0, rel=1e-9)
+
+
 def test_unequal_distances_reveal_each_outcome_at_its_own_arrival():
     h = run(None, 0.5, L_A_m=200.0, L_B_m=800.0)
     d = coincs(h)
@@ -310,6 +340,37 @@ def test_the_counting_by_slots_matches_the_engines_prediction_and_shows_slots_in
     assert j0["Jexp"] > 0 and j0["J"] / j0["se"] > 5  # Giustina's state and efficiencies without background
 
 
+def test_the_counting_by_slots_has_an_independent_check_and_says_which_rows_test_only_the_sampling(monkeypatch):
+    """Review R2-W F2: the counts of the counting by slots are drawn from the engine's slot probabilities and
+    coincidence rates, so E, S, J, CH, … against them test the bookkeeping (their group says so); the slots simulated
+    in time (``photodetector.pair_slots``) against ``Law.slot_table`` are its independent check. A slot table that is
+    wrong (here: η 10 % too low) leaves every sampled row ✓ and fails the independent one (its power on the 10⁶ slots
+    simulated in time: χ² ≈ 180 for 32 degrees of freedom at 10 %, ≈ 65 at 5 %, which it does not resolve)."""
+    h = run("detectors")
+    ch = h.checks()
+    t = ch["timed"]
+    assert t["ok"] is True and t["value"] is not None and render(t["group"]).startswith("Counting by slots: the slots")
+    n = sum(int(v.sum()) for v in h.sim.store.timed.values())
+    assert n == 10 * EXP.Slots.N_TIME
+    sampled = {k for k, c in ch.items() if render(c["group"]).startswith("Counting by slots: the counts drawn")}
+    assert {"E0", "E1", "E2", "E3", "S", "tsir", "S_sub", "acc", "J", "CH", "curve", "nsA0", "nsB0"} <= sampled
+    assert "J_bound" not in sampled and "timed" not in sampled
+    # a stream world keeps its groups and has no such row
+    hs = run("photon_chsh", 0.2)
+    assert "timed" not in hs.checks()
+    assert not any(render(c["group"]).startswith("Counting by slots") for c in hs.checks().values())
+    # the slot table made wrong: the sampled rows cannot see it, the slots simulated in time do
+    real = EXP.Law.slot_table
+
+    def wrong(self, a, b, eta_a, eta_b, pd_a, pd_b, mu):
+        return real(self, a, b, 0.9 * eta_a, 0.9 * eta_b, pd_a, pd_b, mu)
+    monkeypatch.setattr(EXP.Law, "slot_table", wrong)
+    hw = run("detectors")
+    cw = hw.checks()
+    assert cw["timed"]["ok"] is False
+    assert all(cw[k].get("ok") is not False for k in sampled)
+
+
 def test_the_j_curve_of_the_header_crosses_zero_at_the_threshold():
     h = Harness(V, "detectors", {"dark_rate": 0.0})
     hb = [b for m, b in h.msgs if m.get("type") == "header"][0]
@@ -317,6 +378,17 @@ def test_the_j_curve_of_the_header_crosses_zero_at_the_threshold():
     k = int(np.argmax(j > 0))
     assert e[k - 1] < 2 / (1 + math.sqrt(2)) + 0.005 and e[k] > 2 / (1 + math.sqrt(2)) - 0.005
     assert j[-1] == pytest.approx((math.sqrt(2) - 1) / 2, abs=0.005)
+    # the view marks where this curve crosses 0 (review R2-W F9): the threshold of |Φ+⟩ at the CHSH angles at μ = 0.01
+    hd = [m for m, b in h.msgs if m.get("type") == "header"][0]
+    assert hd["j_threshold"] == pytest.approx(MOD.THRESHOLDS[("max", -1.0, 0.0)], abs=1e-6)
+    # with the SPCM-NIR's dark counts: 87.6 %; Eberhard's state at Giustina's angles 90.55 %, above the 90.23 % of the
+    # best angles; with 10⁵ background counts per second it never crosses
+    th = {k: [m for m, b in Harness(V, p, q).msgs if m.get("type") == "header"][0]["j_threshold"]
+          for k, p, q in (("phi", "detectors", None), ("eb", "giustina", {"eta_A": 0.8, "eta_B": 0.8}),
+                          ("bright", "detectors", {"bg_rate": 1e5}))}
+    assert th["phi"] == pytest.approx(0.87622, abs=2e-5) and th["eb"] == pytest.approx(0.90554, abs=2e-5)
+    assert th["eb"] > MOD.THRESHOLDS[("eberhard", -2.9, 250.0)] and th["bright"] is None
+    assert [m for m, b in Harness(V, "photon_chsh").msgs if m.get("type") == "header"][0]["j_threshold"] is None
 
 
 # --- live changes --------------------------------------------------------------------------------------------
@@ -370,6 +442,23 @@ def test_clear_resets_the_statistics_but_not_the_set_up():
     assert h.checks()["S"]["value"] is None
     h.run_to(h.sim.t + 0.5)
     assert h.checks()["S"]["value"] is not None
+
+
+def test_the_window_share_after_a_reset_counts_both_from_the_reset():
+    """Review R2-W F7: the window's share compares the true coincidences of the segment with the pairs detected at both
+    sides in the same segment; with the lifetime count of the latter it fell after «Reset the statistics» (here to
+    about a third: two segments before, one after) and failed."""
+    h = run("photon_chsh", 1.0)
+    both_before = h.sim.counter.counts["both"]
+    h.action("clear")
+    for k in range(1, 6):
+        h.run_to(h.sim.t + 0.1)
+    w = h.checks()["window"]
+    both_seg = h.sim.counter.counts["both"] - both_before
+    assert both_seg > 1000 and w["value"] == pytest.approx(h.sim.seg_counts["true"] / both_seg, rel=1e-12)
+    share = PD.window_share(h.sim._si()["w"], h.sim._si()["sigma"], h.sim._si()["sigma"])
+    assert w["ok"] is True and w["ref"] == pytest.approx(share, rel=1e-12)
+    assert not failed(h)
 
 
 def test_new_world_with_another_law_inside_the_same_run():

@@ -44,6 +44,9 @@ const SCREENS = new Set(["watch", "explore", "lab"]);
 // (Explore's plane is taller: its readouts lie over the plane's top right corner on a phone, and the orbit is fitted
 // under them; Lab work's readouts are in its card)
 const ORB_PX = 300, ORB_PX_EXPLORE = 340, PLOT_PX = 220;
+// Watch on a phone: the orbit plane and the plots one under the other, both above the sticky time bar of a 390 × 844
+// screen, the caption under them (review R2-P F17: two captions talk about the plot 1 − dτ/dt, which lay under the bar)
+const ORB_PX_WATCH = 250, PLOT_PX_WATCH = 170;
 let STYLE = false;  // the screens' layout, added once per page
 function addStyle() {
   if (STYLE) return;
@@ -79,13 +82,13 @@ function addStyle() {
   .u34-c.u34-on .u34-note-orb { border-right: 0; border-top: 1px solid var(--line); }
   .u34-c.u34-fold .u34-foldbtn { display: flex; }
   .u34-c.u34-fold:not(.u34-open) .u34-note, .u34-c.u34-fold:not(.u34-open) .u34-plot { display: none; }
-  /* Watch on a phone: the caption (the stage's own, after the view) right under the orbit plane, the notes and the plots
-     under it, so the plane and the caption about it are read together */
+  /* Watch on a phone: the orbit plane and the plots right under it, both above the time bar, then the caption (the
+     stage's own, after the view) and the notes, so the pictures and the caption about either are read together */
   .u34-c.u34-watch, .u34-c.u34-watch .u34-panes { display: contents; }
-  .u34-c.u34-watch .u34-orb { order: 1; height: ${ORB_PX}px; flex: none; }
-  .dm-stage:has(> .u34-c.u34-watch) > .dm-caption { order: 2; }
-  .u34-c.u34-watch .u34-note, .u34-c.u34-watch .u34-plot { order: 3; }
-  .u34-c.u34-watch .u34-plot { height: ${PLOT_PX}px; flex: none; }
+  .u34-c.u34-watch .u34-orb { order: 1; height: ${ORB_PX_WATCH}px; flex: none; }
+  .u34-c.u34-watch .u34-plot { order: 2; height: ${PLOT_PX_WATCH}px; flex: none; }
+  .dm-stage:has(> .u34-c.u34-watch) > .dm-caption { order: 3; }
+  .u34-c.u34-watch .u34-note { order: 4; }
 }`));
 }
 

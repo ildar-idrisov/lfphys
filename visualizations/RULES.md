@@ -377,7 +377,7 @@ Message format (`server/lfviz/protocol.py`, `player/js/api.js`): `u32 json_len |
 | `command` | with every world-changing command | `{cmd, args}` at the world time it was applied (`set`, `action`, `view`, `scene`, `new_world`): what a restore repeats; the player does not show it |
 | `frame` | ~20/s while playing | the current state (droppable for slow viewers); added by the runner (a world must not use these keys): `t`, `cpu_ms`, `lag` (this frame's advance stopped short of the chosen speed: the computation could not keep up) and `speed_actual` (B4: world seconds per wall second actually reached over the last 1.5 s of play, null before; the player shows it next to the chosen speed when it falls below 97 % of it — the owner's note of 2026-10-28: at high speeds the black-hole world ran at 1 % of the label); a playground's frame may carry `meas {id: number \| null}` (the declared display units) and `meas_note {id: text}` (why a value is undefined; P16.3) |
 | `event` | when the run's time reaches it | `{kind, text, obj?, data?}`; actions appear as `kind: action`; `notify?` (shown as a toast when it happens) |
-| `check` | when computed | `{id, label, value, ref, unit, rel, tol, ok?, info?, group, note}`; `ok` overrides the tolerance test; `info: true` marks a comparison shown for information (a model against the core, say), drawn as ≈ and never as a pass or a failure; `expected?` (why a failure is expected here: drawn as an expected ✗ with the reason) |
+| `check` | when computed | `{id, label, value, ref, unit, rel, tol, ok?, info?, group, note}`; `ok` overrides the tolerance test; `info: true` marks a comparison shown for information (a model against the core, say), drawn as ≈ and never as a pass or a failure — also an identity that holds by construction and so cannot fail (u35's `sum`, A = 1 − R − T by definition, and `born`, two complementary ports; u32's Englert V² + D², the coherence's identity branch, Sorkin's and the no-signalling rows under the Born rule; u37's `nosig_law`; review R2-W F3: shown as passed, they were counted among the checks ✓); `expected?` (why a failure is expected here: drawn as an expected ✗ with the reason) |
 | `actions` | after a change | new action forms (defaults) |
 | `notice`, `error` | as needed | a text for the owner (a `T`, §3 "Refusals and failures", §7); `detail?` the exception's own one line (English) |
 | others | per visualization | accumulative data (e.g. `pulse`, `worldline`, `signal`, `segment`, `detections`); any accumulative message (a playground's `scene` always; a demonstration's header or another message) may carry `measurables [{id, label, unit, of, group}]` (P16.3); a playground's latest scene message is the list it measures now |
@@ -732,6 +732,7 @@ section is how the visualizations keep it.
   bench, not a test; it replaces EX1's "worksheet" / «рабочий лист», whose answers "For the teacher" / «Для учителя»
   are withdrawn; the code keeps the names `worksheet`, `worksheet.html`, `worksheet.js`); the world's own values for a
   bench, in the drawer and on the sheet's extra page, are "Computed for this bench" / «Рассчитано для этого стенда»;
+the tick of a table row used by the fit is "in the fit" / «в аппроксимации» (review R2-P F7);
   Explore's download of the shown point's series is "⤓ CSV of this point" / «⤓ CSV этой точки»; the task sheet's free
   field is "Task from the teacher:" / «Задание преподавателя:», its undo "Restore the original" / «Вернуть исходный
   текст»; the fit's degrees of freedom are "dof" in English («χ² = …, dof = …, χ²/dof = …, Birge ratio √(χ²/dof)») and
@@ -975,7 +976,8 @@ after the implementation of 2026-11-19 included) added the screens of `u34_orbit
 * **Watch** («Наблюдение»): a recording of `VIZ["recordings"]` with captions, only for a phenomenon that develops in
   time. The caption strip shows the latest caption as of the cursor; each caption is a chapter tick on the timeline,
   ◀◀ / ▶▶ go to the previous or next one; the screen's `more` recordings are a select («More recordings»;
-  `player/js/watch.js`). Its time label states the world's time and the playback factor, so a view does not repeat it
+  `player/js/watch.js`): only the latest choice is played, and a recording that cannot be loaded says so in the
+  caption strip («This recording could not be loaded: 503 …»; review R2-P F10). Its time label states the world's time and the playback factor, so a view does not repeat it
   (integrator D8); since EX2 (§5 F12) it is Explore's (`explore.js worldTime`, `factorText`): the world's time on a
   human scale, ns … s («world 2.4 ms · slow motion ×120 · 6.50 s / 39.95 s»), or in the world's own unit when its
   header says `units.t_show: {unit: T, s: <world seconds per unit>}` (u34: GM/c³), in seconds at school («world 0.45
@@ -1003,14 +1005,22 @@ integrator I-P, 2026-11-19, in place of the CSS u35's view scoped for itself): a
 detent's hit area is 44 px high and no wider than the gap to its neighbours, so a tap at a detent chooses it; a label
 of the top bar's tabs is under 14 px only with five tabs or more (13 px at 1280 px, 12.5 px on a phone, so that the
 bar keeps one line in Russian); a select of five values or more lays its buttons out three to a row, each value inside
-its button (a long one wraps within it). Below 1000 px the top bar scrolls away; Explore's and Lab work's view
+its button (a long one wraps within it, with a hyphen where the language has hyphenation rules: `hyphens: auto`;
+review R2-P F15: «модифици|рованная» broke without one), and below 1000 px its names are in 13 px type with 4 px
+padding, so that the control fits between the sticky view and the time bar (u35's seven coatings in Russian took
+299 px against 278 px of room). Below 1000 px the top bar scrolls away; Explore's and Lab work's view
 stays at the top (sticky)
 while the controls scroll under it, the time bar stays at the bottom, and in Lab work «Measure», the stopwatch's
 «⏱ Stop» and the last message sit in a sticky dock above it; the page's scroll padding equals the sticky parts'
 heights, so a control the focus or a tap scrolls into view is not hidden under them (integrator D12). **Keys:** Space,
 ← / → and Home are the screen's shortcuts only when the focus is not on an interactive control (a button, a slider, an
 input, a select, a tab, a link); on a button Space presses it, on a slider the arrows move it, and the tabs move with
-← / → among themselves (ARIA tabs); T, ? and Escape work anywhere but in a text field (integrator D7).
+← / → among themselves (ARIA tabs); T, ? and Escape work anywhere but in a text field (integrator D7). On a server,
+where a slider also moves between its detents, the arrows, PageUp / PageDown, Home and End go to the previous or next
+detent (the fine steps are for a pointer; review R2-P F2: an arrow's fine step snapped back to the same detent, so the
+keys could not move it). For a screen reader the detents are hidden (`aria-hidden`: the slider and its
+`aria-valuetext` are the control), a table row's delete button is «Delete row k», and the drawer's checks table names
+its last column («agrees»); a wide screen's keyboard order reaches «Measure» before «▶ Launch» (`../STATUS.md` V53).
 
 **`VIZ["screens"]`** (`registry.check_screens`; the catalogue's form `screens_of`; every text a `T`):
 
@@ -1028,9 +1038,16 @@ atlas: `registry.ATLAS_LIMITS`); two booleans make a toggle, other non-numbers a
 nm") becomes «λ 600 nm» (u32's λ, d, a). **A control's label and its unit are given separately** (label "Speed",
 unit "× circular"): a trace's label and the passport write «label value unit» (`explore.js diffText`), so a label that
 carries its unit reads «Speed, × circular 1.1» (W34). A school screen has no law parameter among its controls (rule 4);
-a standard screen may have one, flagged at the control and in the top bar while a modified point is shown. A select
-parameter's control shows its raw value through `t(value)`; a world that wants names for a select's values makes it a
-compound control with `labels` (u37's «Pairs», u35's «Glass» of part 4; `../STATUS.md` V53 (v)).
+a standard screen may have one, flagged at the control and in the top bar while a modified point is shown. **A
+control's value is written by its own name** (`labels[k]`, a `T`), else as it is: a boolean «on» / «off», a number in
+the viewer's format, any other value (a select's) unchanged — never looked up as a msgid (`explore.js valueText`,
+`rawValueText`; review R2-P F9: u35's polarisation "s" became «с», the msgid of seconds, and its analyser's «real»
+stayed English in Russian). A world names a select's values by making it a compound control with `labels` (below;
+u37's «Pairs», u35's «Glass» of part 4, its light «s (TE)» | «p (TM)» and its analyser «ideal» | «imperfect»): a plain
+control's `labels` do not reach the catalogue (`registry._control` keeps them only for a compound control, and the
+registry does not refuse them: `../STATUS.md` V53 (v)). The same text is used by the buttons, the passport, the
+traces, the task sheet's variant set-up and Lab work's set-up columns; `demo_screens.mjs` checks that no raw value or
+placeholder shows on any screen and that every select or toggle value reads as its control names it.
 
 A **compound control** (EX2 F3) sets several parameters with one slider or select: `{id, label, unit?, values, labels?,
 sets: {<param>: [one value per grid value], …}, default?}`. Its `id` is a slug that is no parameter of the schema (nor
@@ -1050,8 +1067,8 @@ screen keeps EX1's label; with it the label reads like Watch's (above), and the 
 per played second. With `fps` a frame comes every `default_speed / fps` of world time and, with a `world_s` or event
 stop, the last one at the stop time; `atlas.js` keeps a point's first `state` speed as `pt.speed`, so a world whose
 default speed differs per point sets `self.default_speed` in its constructor (u34: the orbit's radial period in 8
-played seconds, by the engine's quadrature; a circle's turn). A lab step with a manual stopwatch declares no `speed`
-(it plays in real time; the registry refuses it). The atlas key covers `fps`, not `speed` (a playback speed changes no
+played seconds, by the engine's quadrature; a circle's turn). A lab step with a manual stopwatch declares no `speed`,
+not even 1 (it plays in real time; the registry refuses any: review R2-F F5 (b)). The atlas key covers `fps`, not `speed` (a playback speed changes no
 byte).
 
 **Captions.** A recording spec's `captions: [{at, text, hold?}]` (`at` in played seconds) are written by the recorder
@@ -1073,10 +1090,16 @@ max_world_s}`; or `{events: {<kind or name>: n, …}, after_s?, max_world_s}`: t
 kind (or name) that has occurred n times (an event counts once for each key its kind or name is; `{event: k}` is
 `{events: {k: 1}}`), and `max_world_s` is required: a point whose counts are not reached by then fails, with the
 counts it lacked (u34's Explore: `{events: {periapsis: 4, turn: 3, horizon: 1}, max_world_s: 1}`; u37's: 4 000
-coincidences). A stop inside an event's own frame step ends at that step, so **`after_s` exceeds one frame step**
-(`frame_dt`, or `default_speed / fps`): with a shorter one the stop event's frame is the last, and float rounding of the
-shared cursor hid it from the lab's drawer (W37: u37's stops carry `after_s` 0.1 s in Explore, 0.03 s in part 1). A
-point the world refuses
+coincidences). **The stop event's frame is never a point's last**: when the stop moment (the event + `after_s`)
+falls within the event's own frame step, `headless.run_spec` makes one more frame a full frame step later (`frame_dt`,
+or the speed / `fps`), and `site/atlas.py` refuses a point that ends on the stop event's frame (`event_frame_is_last`).
+A cursor a rounding short of the last frame then still reads the event: a scrub sets the shared clock to L + t and
+reads (L + t) − L, which falls about 10⁻¹⁶·L short, more than `frameIndexAt`'s 10⁻¹² of t once L ≳ 4 500·t (review
+R2-F F3: on the built atlases with `after_s` 0 a scrub to the end read the frame before the stop event in 60 of 630
+tries on u34's Explore, 35 of 324 on its part 1, 3 of 54 on u35's dark counts; none after the change). `after_s` (≥ 0)
+is the time shown after the event (u37's 0.1 s in Explore and 0.03 s in part 1), no longer a margin against rounding.
+**[error in earlier]** EX2's rule «`after_s` exceeds one frame step» was enforced nowhere, four atlases broke it, and no
+absolute `after_s` could have served u34 (its frame step spans 15×–1 450× within one atlas). A point the world refuses
 (`check_params`, its memory estimate, its constructor or its first showing: `headless.PointRefused`; integrator D14) is
 `refused`, with its text and hint shown at that combination; a point that fails (an error, an exception, a check ending
 ✗, a stop event not reached by `max_world_s`, a value that cannot be packed, such as ±inf in a quantised blob) fails the
@@ -1088,7 +1111,16 @@ fastest: its header as a delta against the base, the world's messages, `end {rea
 code_hash(world))[:16]` (`ATLAS_VERSION` 3 since 2026-11-18, the pool; the key covers `fps`, a compound control's
 `sets` and, on a shared atlas, the laws of every step that uses it); `plan.py` marks each atlas `present`, `stale` or
 `missing`, and an atlas whose manifest names a base, a pool or a point that is missing or of another size is `stale`
-(`sitelib.atlas_files_ok`), so `--stale` rebuilds it; `RECORDER_FILES` covers `site/atlas.py` and `lfviz/headless.py`.
+(`sitelib.atlas_files_ok`), so `--stale` rebuilds it, and a rebuild keeps an old atlas's index entry only with all
+its files, not with its manifest alone (review R2-F F7); `RECORDER_FILES` covers `site/record.py`, `site/atlas.py`,
+`lfviz/headless.py` and the image's `requirements.lock` and `Dockerfile`. **The key names the code that ran** (review
+R2-F F1, [error in earlier] since EX1: a long `--all` or `--stale` run imported every world at its start and hashed
+its files only at the world's turn, so an edit in between gave output of the old code under the new code's key, which
+every reader then took as current): a batch build (`site/record.py`, `site/atlas.py`, `site/fixtures.py`) hashes every
+world's code before it imports any world, keys the output with that hash, and before it writes a world compares the
+code again and checks that no file of it, nor of the recorder, changed after the script started
+(`sitelib.check_unchanged`); when one did, nothing of that world is written and the run says «the code changed during
+the build … run again».
 The same spec and code give the same bytes, the manifest included (it holds no build or CPU time: those are the index
 entry's `made` and `cpu_s`), on the same CPU type (numpy's SIMD paths can change the last bits of a world's computed
 values). A point's header delta names its base (`"$base"`, the base file's sha256, which the manifest has as
@@ -1109,7 +1141,8 @@ size, makes the atlas `stale`; `build.py` copies it and `check.py` checks it. Li
 (u35: the angle curves, the same for every θ and polarisation of a sample, once per atlas; u34 has no shared blob).
 
 **Stochastic points** store one seeded sample and the run's own computed distribution (u32: about 5000 hits and the
-expectation curves, with the sample's χ² against them); another sample is drawn only by «Another sample» on a server.
+expectation curves, with the sample's χ² against them); another sample is drawn only by «Another sample» on a server, and its reply is shown only when it is still the one
+asked for, as a slider's point (review R2-P F3: a late reply replaced a later pick).
 An atlas's points share the screen's `seed`, so **a world seeds its random numbers by the seed and the set-up
 together** (u35's `engine/bench.py rng_for(seed, params)`: the set-up's parameters as sorted JSON, hashed to 64 bits,
 with the seed): with the seed alone every point of a grid draws the same random numbers (common random numbers), the
@@ -1146,9 +1179,10 @@ physics.
 **Readouts with an error and a reference** (EX2 F7, `explore.js measText`, `readoutText`). A measurable of the world's
 header may declare `sigma` (another measurable: the run's own standard error at the cursor), `ref` (another
 measurable: the reference the run computes) and `ref_label` (default «reference»): «S 2.864 ± 0.040 (law 2.828)». With
-an error the value and the reference are written to the error's two digits, the unit once; with a reference only both to
-5 significant digits; a whole number without a unit, an error or a reference is a count («6»); else 4 significant
-digits. A readout with a reference shows it, or «—» before it exists (`demo_screens.mjs`). At `ui: "standard"`
+an error the value and the reference are written to the error's two digits, the unit once (the error rounded to two
+significant digits first: «0.0996» → «0.10», «1234» → «1,200» with the value rounded to the same place; review R2-P's
+nit, `explore.js pmText`, `errDecimals`); with a reference only both to 5 significant digits; a whole number without
+a unit, an error or a reference is a count («6»); else 4 significant digits. A readout with a reference shows it, or «—» before it exists (`demo_screens.mjs`). At `ui: "standard"`
 Explore offers «⤓ CSV of this point» (`pointCsv`): «t, s», then every declared measurable but those that serve as
 another's `sigma` (they are its «σ …» column), one row per frame up to the time shown, built from the decoded point.
 
@@ -1171,8 +1205,13 @@ step card and in the top bar while a modified point is shown.
 
 * `instruments: {id: {kind: ruler | protractor | stopwatch | readout | counter, label, unit, division, error?, sigma?,
   reads | manual, event?, error_note?}}`. A reading is `division × round(value / division)` with the declared `error`
-  (by default half a division), written to the decimals of its division or of its error, whichever is finer («0.600 ±
-  0.005»); an `error` of 0 declares an exact set-up, with its reason in `error_note` (S03's «Height scale of the
+  (by default half a division). **A reading and its error are written to the same decimals**: a declared error to the
+  decimals of its division or of the error, whichever is finer («0.600 ± 0.005», «0.74 ± 0.10»); the run's own σ (a
+  readout with `sigma`) to its two significant digits, the value to the same decimals («−0.035 ± 0.030», «1.000 ±
+  0.015»; review R2-P F14: «−0,0349 ± 0,03» lost the error's second digit); a count «838 ± 29» (`lab.js readingText`).
+  A formula over counts only (u34's N = n − 1) is written as a count («10», not «10.00»), and an exact formula result
+  (no input with an error) that is zero up to the rounding of its inputs (|v| ≤ 10⁻¹² × its largest input) is 0
+  (u37's 3 cos 2Δ − cos 6Δ at 45°, review R2-P F13). An `error` of 0 declares an exact set-up, with its reason in `error_note` (S03's «Height scale of the
   stand»: the stand sets the chute's height exactly at its marks; integrator D2): its reading is written to its
   division's decimals without «± 0» («0.20»), a column derived from it to four significant digits with their zeros
   («1.000», `lab.js sig4`), and the step's list of instruments and the task sheet give the reason in place of an error
@@ -1181,7 +1220,7 @@ step card and in the top bar while a modified point is shown.
   number ≥ 0 or null (`site/atlas.py` fails the atlas otherwise); its division is 1 and its `error` is required:
   `"poisson"` (√N, one count for N = 0: «838 ± 29», «0 ± 1», its line «counts; error √N (a count of 0 has the error of
   one count)») or a number ≥ 0 (0: an exact count, «11»). **A readout with `sigma`** names the measurable of the run's
-  own standard error at the cursor («0.7071 ± 0.011»; u37's E of each setting pair) and declares no `error`; its
+  own standard error at the cursor («0.707 ± 0.011»; u37's E of each setting pair) and declares no `error`; its
   division is then only the display precision. `reads` names a measurable of the world, read at the cursor («Nothing to
   measure yet: …» before it is reached), or `control:<param>` (or `control:<compound id>` of a step's own compound
   control), a set-up value: the shown point's own (its header's `params`, then its grid values, then the atlas's
@@ -1191,16 +1230,22 @@ step card and in the top bar while a modified point is shown.
   the instrument to an event of the point (its kind or name, as a stop rule matches it): it reads only once that event
   has happened by the frame shown (S03 part 3: `tape_grey` declares `event: "companion_landing"`, so the grey ball's
   tape reads only after the grey ball lands; review R-P F18). **Every instrument of a step reads on every point of its
-  atlas**: «Measure» reads all the step's instruments at once (`lab.js readAll`) and refuses the whole row when one of
+  atlas** (`site/atlas.py` fails a point whose instrument, reading a measurable, has no value — or no `sigma` value,
+  or not its `event` — in the point's last frame; review R2-F F5 (a)): «Measure» reads all the step's instruments at once (`lab.js readAll`) and refuses the whole row when one of
   them has nothing at the cursor, so an instrument that some set-ups cannot have (a circle has no periapsis, so no
   radial clock) belongs to a step whose points all have it (u34 keeps the radial clock and the radius scales in part 2,
   of eccentric orbits only; W34). A `manual` stopwatch starts with the launch and stops on the student's press, on the
   wall clock (`performance.now()`) whatever the playback does; while it runs, ▶ / ❚❚, a scrub of the time bar and ← /
   → are refused, and «slow» is refused for a step with one: it measures the reaction, as a hand-held one does (review
-  R-P F5); its step declares no `speed`. «Measure» puts its reading into the step's stopwatch column when it was
+  R-P F5); its step declares no `speed`, not even 1 (the registry refuses any; review R2-F F5 (b)). «Measure» puts its reading into the step's stopwatch column when it was
   stopped for the shown launch; otherwise the cell stays empty («—», empty in the CSV, never 0), and the plot and the
   fit skip it (review R-W F6). The instruments drawn over the view (`ruler`, `protractor`) need the view's `anchors()`
-  and `worldToPx` (a registry check since EX2, F8 (d); V52 (l)); readouts and counters need neither.
+  and `worldToPx` (a registry check since EX2, F8 (d); V52 (l)); readouts and counters need neither. **A declared
+  error is a property of the bench the run then has**: S03's protractor (±0.5°) is set by hand at a mark and a real
+  launcher stands within half a division of it, so parts 2 and 3 draw each set-up's real angle within ±0.5° (seeded by
+  the seed and the set-up, `s03_projectile/viz.py real_angle`) and show it in the drawer («the launcher's real
+  angle»); review R2-W F5: with the launcher exactly at its marks the error model did not describe the data (way 7's
+  χ²/ν 0.006, now 0.35). Explore and Watch keep exact angles.
 * `steps: [{id, title, goal, hint?, preset, fixed?, controls, frame_dt | fps, speed?, stop, seed?, quantize?, drop?,
   instruments, columns, plot, laws?, overlays?, readouts?}]`, or on an Explore screen's atlas `{id, title, goal, hint?,
   atlas: <screen id>, speed?, instruments, columns, plot, laws?, overlays?, readouts?}` (F9: its points are that
@@ -1213,15 +1258,23 @@ step card and in the top bar while a modified point is shown.
   <instrument>}`, `{id, label, of: <column>, op: sqrt | square | sin2 | inverse | log}` (errors propagated as σ_f² =
   f′²σ² + ½f″²σ⁴, so sin 2θ at 45° keeps an error) and **a formula** `{id, label, expr}` over earlier columns (EX2 F5;
   `server/lfviz/expr.py` and `player/js/expr.js`, one grammar, neither using `eval` or `Function`; errors by
-  hyper-dual numbers, exact first and second derivatives, σ² = Σ(∂f·σ)² + ½Σ(∂²f·σ²)², an input with σ = 0 adding
-  nothing; `lfviz.expr.evaluate(text, {column: (v, σ)})` → `(value, sigma, t1, t2)`). A column's id is not a name of
+  hyper-dual numbers, exact first and second derivatives including the mixed ones, σ² = Σᵢ(∂ᵢf·σᵢ)² +
+  ½ΣᵢΣⱼ(∂ᵢ∂ⱼf·σᵢσⱼ)² (the variance of the second-order expansion for independent normal inputs; for a product the
+  exact variance; review R2-F F2, [error in earlier]: without the mixed terms x·y at x = y = 0 had σ 0), an input with
+  σ = 0 adding nothing; `lfviz.expr.evaluate(text, {column: (v, σ)})` → `(value, sigma, t1, t2)`, t2 the whole
+  second-order term). Digits and spaces are ASCII only in both parsers (review R2-F F8: Python's `\d` took other
+  scripts' digits, which the browser refused). `abs` at 0 and `sqrt` at 0 have no derivative: an input with σ > 0
+  there gives `error_undefined`. A column's id is not a name of
   the grammar (`expr.RESERVED`) or a property every JavaScript object has; a formula's undefined cell stays empty with
   its reason code (`sqrt_negative`, `division_by_zero`, `log_nonpositive`, `asin_domain`, `acos_domain`, `power`,
   `not_finite`, `missing`, `error_undefined`), said in «Measure»'s message. A step may offer several formula columns
-  of the same readings, and the student plots whichever (u35's y_s and y_p, raw and with the dark counts subtracted, R
-  with the dead time corrected; u37's E from four counts and S from four E; u34's Δφ from a shift). `plot {x, y, fit,
-  fits}`: the step's default plot (any two columns can be plotted) with fits `line0`, `line`, `quadratic` (its vertex
-  with σ) and, at standard, `power`. `laws: [{x, y, model, quantity, label, unit, reference}, …]` are data, optional
+  of the same readings, and the student plots whichever (u35's R three ways — from the two detectors, against the
+  reference count N₀ with the block removed, and with the dark counts subtracted — with y_s and y_p from the first and
+  the last, and R with the dead time corrected; u37's E from four counts and S from four E; u34's Δφ from a shift).
+  `plot {x, y, fit, fits}`: the step's default plot (any two columns can be plotted) with fits `line0`, `line`,
+  `quadratic` (its vertex with σ) and, at standard, `power`. The plot's ticks are multiples of a round step computed
+  from their index (the zero tick exactly 0, at most 13), and the left margin fits the longest tick label (review
+  R2-P F12: an accumulated step wrote the zero tick «2,78·10⁻¹⁷», cut off at the left). `laws: [{x, y, model, quantity, label, unit, reference}, …]` are data, optional
   (F6 (d), `registry._check_laws`; integrator D4): `x` and `y` two columns of the step, `model` one of its plot's fits,
   `quantity` one the model gives (`registry.LAW_MODELS`: slope ← `line0` or `line`, intercept ← `line`, vertex ←
   `quadratic`, exponent ← `power`), `label` a `T` naming the quantity, `unit` a `T` or a plain symbol, `reference` an id
@@ -1237,17 +1290,33 @@ step card and in the top bar while a modified point is shown.
   Pearson–York included, to 1e-12; review R-E F5, F8; integrator D3). It prints, for the model the student chose, the
   parameters with the σ from the declared errors; at `standard` a second line «χ² = …, dof = …, χ²/dof = …, p = …,
   Birge ratio √(χ²/dof) = …» (in Russian with ν, §7) and, when χ²/dof > 1, a third with the σ scaled by the Birge
-  ratio, for the student to decide which to report (**[error in earlier]** EX1 scaled them silently); without declared
+  ratio when that changes a written digit (a ratio of 1.0008 does not; review R2-P's nit), for the student to decide which to report (**[error in earlier]** EX1 scaled them silently); without declared
   errors it says that the σ come from the scatter of the points; at school the parameters with their errors only. The
   p of χ² comes from `chi2Sf` in logarithms (the regularised upper incomplete gamma by its continued fraction; fixture
   `fixtures/chi2_sf.json`, 269 cases to χ² = 10⁶ against mpmath) and is printed from ln p, never «p = 0» («p =
   3.05·10⁻²¹⁷¹³⁴» for χ² = 10⁶ on 7 degrees of freedom; u34's way 2 prints 6.36·10⁻¹⁰⁶³⁹⁰). One row per set-up:
   «Measure» on a set-up already in the table replaces its row and says so (the bench repeats exactly, so a repeat is
   not a new independent point; integrator D5). A point's reply is applied only when it is still the one asked for, and
-  «Measure» is refused while the slider's set-up is not the one shown (loading, refused or failed; integrator D6). The
+  «Measure» is refused while the slider's set-up is not the one shown (loading, refused or failed; integrator D6).
+  «Measure» (with the stopwatch and the message) sits directly under the step's controls, so that a set-up and its
+  measurement are on a 1280×800 screen together (review R2-P F11); the list of instruments follows. Every row shows its
+  **set-up**: the step's controls that no instrument reads (u35's glass and side, polarisation, analyser; u37's pairs,
+  Δ, τ, law and source; S03's air), each a column of the table, of its CSV and of the task sheet's blank table, with
+  the control's label and unit and the value as the control names it (review R2-P F7: «nothing hidden», the students
+  hand in their own records, and two rows of s and p light at 30° looked the same). **The student chooses the rows of
+  the plot and the fit**: a filter per set-up control whose rows differ («Rows in the plot and the fit: Polarisation
+  s») and a tick per row «in the fit»; a row filtered out is not drawn, an unticked one is drawn hollow and not fitted,
+  and the fit's box says «The plot and the fit use k of n rows …». Nothing is removed from the table or the CSV. The
   table is kept per step in the browser (`localStorage`, a convenience) with its atlas's key, dropped with a message
-  when the atlas is rebuilt, and exported as CSV with the errors; the table, its CSV, the plot and the fit are
-  conveniences, as a spreadsheet and a fitting program are in any laboratory.
+  when the atlas is rebuilt; when the browser refuses its storage (blocked site data, a sandboxed frame: reading
+  `localStorage` throws), Lab work opens with a storage that keeps nothing (`lab.js browserStorage`; review R2-P F4:
+  the screen did not open). The table is exported as CSV with the errors. **A CSV made in the browser** (Lab work's
+  table and Explore's «⤓ CSV of this point») is written for a spreadsheet of the viewer's language: «;» between the
+  fields and the decimal comma in Russian (Excel and LibreOffice in a Russian locale), «,» and «.» in English; it
+  starts with the UTF-8 byte order mark, without which Excel reads it in the system's 8-bit code page and the headers'
+  «σ», «²» and Cyrillic come out garbled (review R2-P F18; `explore.js csvFormat`, `lab.js csvHref`; reasoned, not yet
+  opened in Excel). The table, its CSV, the plot and the fit are conveniences, as a spreadsheet and a fitting program
+  are in any laboratory.
 * **The task sheet** (F8, `registry._check_task_sheet`, `_check_task_variants`, `_check_basis`; `player/js/worksheet.js`,
   `worksheet.html`): `worksheet: {frp | basis, goal: T, bench: [T], procedure: [T], record: [T], record_rows?,
   variants?}`: data, not a document. At school `frp: [{name, programme, …}]` names the programme's lab (each entry's
@@ -1267,17 +1336,27 @@ step card and in the top bar while a modified point is shown.
   viewer's language: the head («Name», «Class» or group, «Date»), the programme's lab or the basis with its quotations,
   the goal, the bench, the procedure, the record list and a free field «Task from the teacher:»; then one sheet per
   part with its goal, its instruments (as the step card writes them, `instrumentText`), its formula columns, the
-  variant's set-up, a blank table (in its own scrolling box on a screen, printed in full: u34's part 2 has 16 columns)
-  and a plot frame without a fitted curve (which line to draw is the student's choice), and «Notes» lines. The goal,
-  the procedure, the record list and the free field are editable before printing (contenteditable; «Restore the
-  original»); the edits are kept in this browser under `lfviz.sheet.<world>.<variant>` (a convenience; nothing is sent
-  anywhere). `&computed=1` adds «Computed for this bench» on a page of its own: the same values the drawer shows to
-  everyone, from the atlases with the key the server expects (the published site's only when a step has none here).
+  variant's set-up, a blank table (the set-up's columns first; in its own scrolling box on a screen) and a plot frame
+  without a fitted curve (which line to draw is the student's choice), and «Notes» lines. Printed, the table stands
+  beside its plot frame when it fits its half of the page with its headers broken between words, else full width
+  above the plot frame; only a table wider than the page breaks its headers anywhere; a part still too long gets a
+  lower plot frame (to 24 mm), then lower rows (to 4.4 mm), then closer «Notes» lines (to 5 mm) (review R2-P F1: u34's
+  part 2 ran over its plot frame and off the page). A variant's heading is «Variant: <label>» (its raw id only in the
+  tools' select) and its set-up is written as Lab work's controls write it (review R2-P F6: «Air resistance false»).
+  The goal, the procedure, the record list and the free field are editable before printing (contenteditable;
+  «Restore the original»); the edits are kept in this browser under `lfviz.sheet.<world>.<variant>.<language>` (an
+  edit is a text in the language it was typed in; a convenience; nothing is sent anywhere). `&computed=1` adds
+  «Computed for this bench» on a page of its own: the same values the drawer shows to everyone, from the atlases with the key the server expects (the published site's only when a step has none here).
   The teacher gets nothing else: the bench is open and judging is the teacher's. **[error in earlier]** EX1's
   questions, answers, «For the teacher» (`&teacher=1`) and its verdict are withdrawn, and S03's transition path
   (`registry.EX1_WORKSHEETS`, `_check_ex1_worksheet`, `_check_variants`, the `ex1` branch of `worksheet.js` and of
   `lab.js variantOf`) was removed on 2026-11-19, after S03 became a task sheet. Every printed page is one sheet, a fixed
-  A4 page box with the attribution line at its foot; no part is split and no page carries a single line. The texts of
+  A4 page box with the attribution line at its foot; no part is split and no page carries a single line. Every sheet
+  is laid out as it prints in a hidden copy (`worksheet.js PRINT_RULES`, the print's own rules, 186 mm wide): a sheet
+  still longer than its page says so on the screen above it («This page is longer than an A4 sheet by N mm …»), and
+  the teacher's task goes to a sheet of its own when the first sheet does not hold it (review R2-P F5: lines 9–14 of a
+  long task were lost unseen). Printed, the fields' labels run in («Goal: …») and the basis is in 8.5 pt; on a screen
+  each label is on a line of its own (review R2-P F16); the focus outline does not print. The texts of
   `STEPS` and `WORKSHEET` and their translations are Site Materials under CC BY-NC-SA 4.0 (`../LICENSE.md` §1 item 8,
   §9): a world with them carries the three-line comment of the licence response (`s03_projectile/viz.py`, above
   `STEPS = [`), and every printed page carries the attribution line.
@@ -1327,7 +1406,10 @@ point 120 kB; labs 0.65 and 1.67 MB; no shared blob to pool), u35 9.39 MB (Explo
 set-up, integrator I-S: labs 1.68 and 3.32 MB, the world 9.75 MB; u32 then 7.71 MB, Explore 5.09 MB), S03 7.09 MB
 (Explore 940 points 6.63 MB, over the 6 MB
 target and accepted in `sitelib.ACCEPTED`: the drawer's values are check messages in every point, about 1.05 MB of
-them).
+them). After the review R2 (a private build of 2026-11-19, X-W35): u35 11.17 MB with the glass blocks and the
+reference count (Explore «Boundary» 4.48 MB, largest point 11.0 kB; «Coatings» 1.28, «Polarisation» 1.34 MB; labs
+0.03, 0.79 and 2.66 MB; recordings 0.60 MB); the other worlds change slightly (one more frame after an event stop, u37's
+slots in time, S03's real angles) and are measured again by the integrator's rebuild.
 
 **Making them.** `site/record.py --world <id>` (or `--stale`, `--all`) records a world's recordings, then builds its
 atlases; `site/atlas.py --world <id> [--atlas <id>]` builds only the atlases. Locally as in §9 (Docker, CPU,
@@ -1342,11 +1424,13 @@ line against York et al. 2004 and Pearson–York, the minimum of S, NIST StRD, M
 dataset of a module, `core.data:air`, is its own entry), `test_codes.py` (the refusals' machine codes `mechanics.*`,
 `fit.*`). Framework: `tests/test_headless.py`, `test_atlas.py` (on the toy world `tests/site_worlds/s98_atlas_toy`: its
 committed fixture in `tests/site_worlds/recordings/`, remade by `tests/site_worlds/make_fixture.py`, is compared byte
-for byte with a fresh build, and `site/fixtures.py` builds everything present with the expected keys),
-`test_protocol_quant.py` (shared fixtures `tests/site_worlds/quant/`), `test_atlas_live.py`, `test_code_hash.py`,
-`test_site_registry.py`, `test_site_build.py`, `test_expr.py` (the formula columns against the shared fixture
-`player/js/tests/fixtures/expr_cases.json`, made by `make_expr_cases.py`: 66 cases against mpmath and 42 refused
-formulas). EX2's framework is tested on the toy worlds `tests/site_worlds/s98_atlas_toy` (school: a compound control,
+for byte with a fresh build, and `site/fixtures.py` builds everything present with the expected keys; since the
+review R2 also `u96_lab_toy`'s atlases, the shared-atlas path (R2-F F6), and a build whose code changes during it,
+refused (R2-F F1)), `test_protocol_quant.py` (shared fixtures `tests/site_worlds/quant/`), `test_atlas_live.py`,
+`test_code_hash.py`, `test_site_registry.py`, `test_site_build.py`, `test_expr.py` (the formula columns against the
+shared fixture `player/js/tests/fixtures/expr_cases.json`, made by `make_expr_cases.py`: 75 cases against mpmath and
+50 refused formulas, both parsers to 1e-12; the error against a Monte Carlo, `test_the_error_against_monte_carlo`).
+EX2's framework is tested on the toy worlds `tests/site_worlds/s98_atlas_toy` (school: a compound control,
 `fps`, a counted stop, `drop.blobs`, a pooled header blob, a counter, a readout with σ, formula columns, a task sheet
 with `frp` and a grade-7 variant) and `u96_lab_toy` (university: a law parameter, `default_speed`, `units.t_show`, a
 step on the Explore atlas, a basis and a variant); the pool also through `tests/site_worlds/quant/pool_point.*`
@@ -1369,14 +1453,25 @@ the committed toy fixture's keys are not current once any code changes, so a ser
 `site/fixtures.py --out DIR [--world …]` builds what a browser test needs now (by default the toy world's recordings
 and atlases) into a folder served with `LFVIZ_RECORDINGS=DIR`. `tests/browser/demo_screens.mjs <port> [sizes] [world]`
 for the toys, S03, u32, u34, u35 and u37 (with the recordings and atlases built by the code under test; CI's `build`
-job runs it for the toy in EN and RU): every EX2 check on every Explore screen and lab step, read from their
-declarations (the time label against the frames in Watch, Explore and Lab work; the drawer of Lab work as Explore's;
-no verdict and the fit's output; every variant from the address; the task sheet printed, edited and restored, one A4
-page each; on every screen a tap at a detent's place chooses that detent, no two detent labels overlap and every value
-of a select lies inside its box: integrator I-P, 2026-11-19); each EX2 world's own
+job runs it for both toys, `s98_atlas_toy` and `u96_lab_toy`, in EN and RU): every EX2 check on every Explore screen
+and lab step, read from their declarations (the time label against the frames in Watch, Explore and Lab work; the
+drawer of Lab work as Explore's; no verdict and the fit's output; every variant from the address; the task sheet
+printed, edited and restored, one A4 page each; on every screen a tap at a detent's place chooses that detent, no two
+detent labels overlap and every value of a select lies inside its box: integrator I-P, 2026-11-19). Since the review
+R2-P (F8: the script passed on every finding of that review) also: every Explore screen gets the full site and
+server blocks (not only the first); on a server the arrows go to the next detent; a late «Another sample» reply is not
+shown; «More recordings»: a slow earlier choice is not played and a 503 is said; Lab work opens with a throwing
+`localStorage`; each row's set-up in the table and the CSV; the CSV's byte order mark, separator and decimal sign; the
+rows of the fit chosen by a set-up filter and a tick; a value and its error to the same decimals; at 1280×800 a step's
+controls and «Measure» on the screen together; every element of a printed sheet inside its page box (not only its
+height); a 14-line teacher's task printed whole; the edits seen in the print (not in `innerText`, which includes
+clipped text); a variant's set-up text read; on a phone each sheet field's label on its own line; no raw value or
+placeholder on any screen, no English word in Russian, and every select or toggle value as its control names it.
+Each EX2 world's own
 `<world>/tests/<world>_screens.mjs` from its view's `canvas.__layout` (captions clear
 of what they describe; at 390 px the view, the step's control and «Measure» on screen together; no horizontal scroll;
-no text out of its box), `u32_double_slit/tests/u32_screens.mjs` (what is u32's own: the readout line, the folded panels,
+no text out of its box; u34's Watch on a phone: the plot a caption talks about above the sticky time bar, review R2-P
+F17), `u32_double_slit/tests/u32_screens.mjs` (what is u32's own: the readout line, the folded panels,
 «▶ Compute live» from Explore, the explanations never over the pictures and the phone's map height, also at 1024 px and
 in the full player: V52 (b), (c); the screens switched back and forth without a console error),
 `s03_projectile/tests/s03_screens.mjs` (S03's Explore: «h = … m» clear of the

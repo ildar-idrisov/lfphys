@@ -33,11 +33,12 @@ FROZEN = {
     "md.hard_unsupported", "md.insertion", "md.jammed", "md.lattice_cell", "md.no_free_site", "md.non_finite",
     "md.outside_walls", "md.overlap", "md.periodic_axis", "md.piston", "md.potential", "md.ramp", "md.refused",
     "md.region", "md.same_point", "md.samples", "md.thermal_wall", "md.thermostat", "md.value",
-    "mechanics.bad_gravity", "mechanics.below_ground", "mechanics.no_flight", "mechanics.no_landing",
-    "mechanics.nonfinite", "material.out_of_range", "mie.index",
+    "mechanics.bad_gravity", "mechanics.below_ground", "mechanics.medium_mismatch", "mechanics.no_flight",
+    "mechanics.no_landing", "mechanics.nonfinite", "material.out_of_range", "mie.index",
     "mie.mx_too_large", "mie.no_convergence", "mie.size", "mie.size_bound", "nbody.body", "nbody.collision",
-    "nbody.refused", "newton.unbound", "optics.z", "orbit.horizon", "orbit.no_circular", "orbit.no_fall",
-    "orbit.not_bound", "orbit.superluminal", "pn.above_circular", "pn.invalid", "pn.no_circular", "pn.plunge",
+    "nbody.refused", "newton.unbound", "optics.absorbing_incidence", "optics.z", "orbit.bad_radii", "orbit.horizon",
+    "orbit.no_circular", "orbit.no_fall", "orbit.not_bound", "orbit.turns_back", "orbit.superluminal",
+    "pn.above_circular", "pn.invalid", "pn.no_circular", "pn.plunge",
     "pn.plunge_integration", "pn.pn_breakdown", "pn.start_below_stop", "pn.unbound", "pn.unresolved",
     "qcd.landau_pole", "qcd.rg_failed", "qscene.alias", "qscene.device_memory", "qscene.field_with_charge",
     "qscene.gauge", "qscene.layers", "qscene.packet_band", "qscene.no_localisation_point", "qscene.no_wave", "qscene.refused",
@@ -187,6 +188,8 @@ def test_kinematics_and_optics_codes():
     _raises("kinematics.superluminal", R.gamma, 1.5)
     e = _raises("rainbow.order", RB.descartes, 0.9, 2)
     assert e.data == {"p": 2, "m": 0.9}
+    from lfphys.core.optics import interfaces as IF
+    _raises("optics.absorbing_incidence", IF.snell_cos, 1.5 + 1e-8j, 1.0, 0.9)
 
 
 def test_mechanics_codes():
@@ -203,6 +206,10 @@ def test_mechanics_codes():
     assert e.data["g"] == 0.0
     e = _raises("mechanics.no_landing", M.fly, ball, (0.0, 1000.0), (5.0, 1.0), t_max=1.0)
     assert e.data["t"] == 1.0
+    from lfphys.theories.models import magnus as MG
+    e = _raises("mechanics.medium_mismatch", M.fly, ball, (0.0, 1.0), (5.0, 1.0),
+                forces=[MG.Magnus(0.067, 30.0)], medium=M.Medium.air(0.0))  # Magnus in air at 20 °C, flight at 0 °C
+    assert e.data["prop"] == "rho"
 
 
 def test_fit_codes(monkeypatch):

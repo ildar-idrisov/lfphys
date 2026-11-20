@@ -75,8 +75,9 @@ def test_names_in_order_and_safety():
 
 
 def test_errors_by_hand():
-    v, s, t1, t2 = E.evaluate("a * b", {"a": (2.0, 0.1), "b": (3.0, 0.2)})
-    assert v == 6.0 and math.isclose(s, math.hypot(0.3, 0.4), rel_tol=1e-15) and t2 == 0.0
+    v, s, t1, t2 = E.evaluate("a * b", {"a": (2.0, 0.1), "b": (3.0, 0.2)})  # the exact variance of a product
+    assert v == 6.0 and math.isclose(t1, 0.3 ** 2 + 0.4 ** 2, rel_tol=1e-15) and math.isclose(t2, 0.02 ** 2, rel_tol=1e-15)
+    assert math.isclose(s, math.sqrt(0.25 + 0.0004), rel_tol=1e-15)
     v, s, _t1, t2 = E.evaluate("x^2", {"x": (0.0, 0.1)})  # a stationary point keeps the second-order error
     assert v == 0.0 and math.isclose(s, math.sqrt(0.5) * 2 * 0.01, rel_tol=1e-15) and t2 > 0
     assert E.evaluate("(npp + nmm - npm - nmp) / (npp + nmm + npm + nmp)",
@@ -90,3 +91,37 @@ def test_the_check_used_by_the_registry():
     assert "later_column" in E.check("a + c", ["a", "b"], ["c"])
     assert "unknown_name" in E.check("a + q", ["a", "b"], ["c"])
     assert "not_callable" in E.check("a(1)", ["a"])
+
+
+@pytest.mark.parametrize("text, at", [
+    ("x * y", {"x": (0.0, 1.0), "y": (0.0, 1.0)}),  # a saddle: the error is the mixed term alone
+    ("x * y", {"x": (0.1, 1.0), "y": (0.1, 1.0)}),
+    ("x * y", {"x": (0.5, 0.2), "y": (0.3, 0.4)}),
+    ("x / y + sin(x * y)", {"x": (1.0, 0.1), "y": (2.0, 0.1)}),
+    ("(npp + nmm - npm - nmp) / (npp + nmm + npm + nmp)",  # u37's E from four counts (normal approximation)
+     {"npp": (431.0, 431 ** 0.5), "nmm": (418.0, 418 ** 0.5), "npm": (74.0, 74 ** 0.5), "nmp": (77.0, 77 ** 0.5)}),
+])
+def test_the_error_against_monte_carlo(text, at):
+    """Review R2-F F2: the propagated σ against the spread of the formula over 2·10⁶ normal draws of its inputs (fixed
+    seed). Before the mixed second derivatives were added, x·y at x = y = 0 had σ 0 (the draws: 1.00), at 0.1 σ 0.141
+    (the draws: 1.01). Within 0.5 %, the draws' own uncertainty (≤ 0.2 % here) and the expansion's third order."""
+    np = pytest.importorskip("numpy")
+    rng = np.random.default_rng(20261119)
+    n = 2_000_000
+    draws = {k: rng.normal(v, s, n) for k, (v, s) in at.items()}
+    env = {"sin": np.sin, **draws}
+    py = text.replace("^", "**")
+    mc = float(np.std(eval(py, {"__builtins__": {}}, env)))  # noqa: S307 - the test's own literal formulas
+    v, s, t1, t2 = E.evaluate(text, at)
+    assert s == pytest.approx(mc, rel=5e-3), (text, s, mc, math.sqrt(t1))
+
+
+def test_ascii_digits_and_spaces_only():
+    """Review R2-F F8: ``\\d`` took «٣» for 3 and ``isspace`` took \\x1c–\\x1f and \\x85, which ``expr.js`` refused:
+    such a formula passed the registry and failed in the browser. Both take ASCII digits and spaces only now."""
+    assert E.evaluate("x\t+\n1\r*\f2\v", {"x": 1.0})[0] == 3.0
+    for bad in ("\u0663 * x", "x\u00a0+ 1", "x\u2028+ 1", "x\ufeff+ 1", "x\x1c+ 1", "x\x1f+ 1", "x\x85+ 1"):
+        with pytest.raises(E.ExprError) as e:
+            E.parse(bad, columns=["x"])
+        assert e.value.code == "syntax", bad
+

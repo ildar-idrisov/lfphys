@@ -181,7 +181,10 @@ test("a readout with the run's own error: σ from the measurable it names, the d
   const E1 = { kind: "readout", division: 0.0001, error: null, sigma: "E_ab_se", unit: "" };
   assert.deepEqual(reading(E1, 0.70712, 0.0111), { v: 0.7071, e: 0.0111 });
   assert.equal(reading(E1, 0.70712, null), null, "no error yet: nothing to measure");
-  assert.equal(readingText(E1, { v: 0.7071, e: 0.0111 }), "0.7071 ± 0.011");
+  // the run's own σ to its two significant digits, the value to the same decimals (review R2-P F14)
+  assert.equal(readingText(E1, { v: 0.7071, e: 0.0111 }), "0.707 ± 0.011");
+  assert.equal(readingText(E1, { v: -0.0349, e: 0.0300 }), "−0.035 ± 0.030", "the error keeps its second digit");
+  assert.equal(readingText({ kind: "readout", division: 1e-5, sigma: "x" }, { v: -0.07724, e: 0.0005 }), "−0.07724 ± 0.00050");
   assert.equal(instrumentText(E1), "division 0.0001; error: the run's own standard error");
 });
 
@@ -194,9 +197,13 @@ test("formula columns: the value and the error propagated over the earlier colum
   const why = {};
   const row = rowOf(cols, rd, why);
   close(row.E.v, 0.6, 1e-15, "E");
-  // σ_E² = Σ (∂E/∂N σ_N)² + ½Σ (∂²E/∂N²)² σ_N⁴; ∂E/∂N++ = 2(N+- + N-+)/N², ∂E/∂N+- = −2(N++ + N--)/N², N = 1000
-  const N = 1000, d1p = 2 * 200 / N ** 2, d1m = -2 * 800 / N ** 2, d2p = -4 * 200 / N ** 3, d2m = 4 * 800 / N ** 3;
-  const want = Math.sqrt(2 * (d1p * 20) ** 2 + 2 * (d1m * 10) ** 2 + 0.5 * (2 * (d2p * 400) ** 2 + 2 * (d2m * 100) ** 2));
+  // σ_E² = Σᵢ (∂E/∂Nᵢ σᵢ)² + ½ΣᵢΣⱼ (∂²E/∂Nᵢ∂Nⱼ σᵢσⱼ)² (expr.js; the mixed terms since review R2-F F2), with P = N++ + N--
+  // = 800, M = N+- + N-+ = 200, N = 1000: ∂E/∂N++ = 2M/N², ∂E/∂N+- = −2P/N²; ∂²E/∂N++² = ∂²E/∂N++∂N-- = −4M/N³,
+  // ∂²E/∂N+-² = ∂²E/∂N+-∂N-+ = 4P/N³, ∂²E/∂N++∂N+- (and the three like it) = 2(P − M)/N³
+  const N = 1000, P = 800, M = 200, sp = 20, sm = 10;
+  const d1p = 2 * M / N ** 2, d1m = -2 * P / N ** 2, dpp = -4 * M / N ** 3, dmm = 4 * P / N ** 3, dpm = 2 * (P - M) / N ** 3;
+  const second = 0.5 * (4 * (dpp * sp * sp) ** 2 + 4 * (dmm * sm * sm) ** 2 + 8 * (dpm * sp * sm) ** 2);  // 4 + 4 ordered pairs within, 8 across
+  const want = Math.sqrt(2 * (d1p * sp) ** 2 + 2 * (d1m * sm) ** 2 + second);
   close(row.E.e, want, 1e-12, "σ_E");
   assert.equal(row.r, null, "√ of a negative number: empty");
   assert.deepEqual(why, { r: "sqrt_negative" });
@@ -283,4 +290,53 @@ test("readouts with an error and a reference; the CSV of the shown point (F7)", 
   const ms = [S, { id: "S_se", label: "σS" }, { id: "S_law", label: "S law" }, { id: "n", label: "pairs" }];
   const text = pointCsv(W, 0.1, ms, (m) => m.label);
   assert.equal(text, "t, s,S,σ S,S law,pairs\n0,,,2.83,0\n0.1,2.9,0.1,2.83,12\n".replace("t, s", '"t, s"'));
+});
+
+test("review R2-P: the error to two significant digits after rounding; a residue of an exact formula is 0; the plot's ticks", async () => {
+  const { errDecimals, pmText, valueText, valueUnitText, rawValueText } = await import("../explore.js");
+  const { plotTicks, browserStorage, csvFormat } = await import("../lab.js");
+  assert.equal(pm(1.5, 0.0996), "1.50 ± 0.10", "0.0996 rounds to 0.10, two significant digits");
+  assert.equal(pm(12345, 1234), "12,300 ± 1,200", "an error of 1234 is 1200");
+  assert.equal(errDecimals(0.0996), 2);
+  assert.deepEqual(pmText(0.5, 0.25), ["0.50", "0.25"]);
+  assert.equal(readingText({ division: 0.01, error: 0.1 }, { v: 0.74, e: 0.1 }), "0.74 ± 0.10", "F14: the same decimals");
+  // F13: 3 cos 2Δ − cos 6Δ at Δ = 45° is 0 (inputs exact)
+  const cols = [{ id: "d", label: "Δ", from: "delta" }, { id: "f", label: "f", expr: "3 * cosd(2 * d) - cosd(6 * d)" }];
+  const r = rowOf(cols, { delta: { v: 45, e: 0 } });
+  assert.equal(r.f.v, 0); assert.equal(r.f.e, 0); assert.equal(pm(r.f.v, r.f.e), "0.000");
+  const r2 = rowOf(cols, { delta: { v: 30, e: 0 } });
+  close(r2.f.v, 3 * 0.5 + 1, 1e-14, "a non-zero exact value is kept");
+  // F12: ticks from their index, the zero tick exactly 0, at most 13
+  assert.deepEqual(plotTicks(-0.3, 0.3), [-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3]);
+  assert.ok(plotTicks(-0.7, 0.9).includes(0) && plotTicks(-0.7, 0.9).every((v) => v === 0 || Math.abs(v) > 1e-3));
+  assert.ok(plotTicks(1, 1 + 1e-14).length <= 13, "a range of a few ulps does not loop");
+  assert.deepEqual(plotTicks(1, 1), []);
+  // F9: a select's raw value is never a msgid (u35's "s" is not seconds), a world's labels name it
+  assert.equal(valueText({ values: ["s", "p"] }, "s"), "s");
+  assert.equal(valueText({ values: ["ideal", "real"], labels: ["ideal analyser", "real analyser"] }, "real"), "real analyser");
+  assert.equal(rawValueText(false), "off");
+  assert.equal(valueUnitText({ unit: "°", values: [30] }, 30), "30°");
+  // F4: no storage at all (here: no window) gives a storage that keeps nothing
+  const st = browserStorage();
+  assert.equal(st.getItem("x"), null); st.setItem("x", "1"); assert.equal(st.getItem("x"), null);
+  assert.deepEqual(loadRows(st, "k", "key"), { rows: [], dropped: 0 });
+  // F7, F18: the set-up's columns in the CSV; Russian: «;» and the decimal comma
+  assert.deepEqual(csvFormat("ru"), { sep: ";", dec: "," });
+  assert.deepEqual(csvFormat("en"), { sep: ",", dec: "." });
+  const cs = [{ id: "th", label: "θ, °", from: "table" }, { id: "R", label: "R", expr: "0" }];
+  const rows = [{ values: { theta: 30, pol: "s", glass: "bk7" }, cols: { th: { v: 30, e: 0 }, R: { v: 0.0362, e: 0.0012 } } }];
+  const setup = [{ param: "pol", label: "Polarisation", text: (v) => v }, { param: "glass", label: "Glass, side", text: () => "N-BK7 from air" }];
+  assert.equal(csv(cs, rows, (c) => c.label, { setup }),
+    "Polarisation,\"Glass, side\",\"θ, °\",\"σ θ, °\",R,σ R\ns,N-BK7 from air,30,0,0.0362,0.0012\n");
+  assert.equal(csv(cs, rows, (c) => c.label, { ...csvFormat("ru"), setup }),
+    "Polarisation;Glass, side;θ, °;σ θ, °;R;σ R\ns;N-BK7 from air;30;0;0,0362;0,0012\n");
+});
+
+test("a scrubbed frame keeps its own time on a large shared clock (X-F, COORD 2026-11-19)", async () => {
+  const { localT } = await import("../explore.js");
+  const L = 123456.789, t = 0.1 + 0.2, clock = L + t;
+  const shot = { pt: { W: {}, tEnd: 10 }, launchedAt: L, pin: { clock, at: L, t } };
+  assert.equal(localT(shot, clock), t, "the frame's own time");
+  assert.equal(localT({ ...shot, launchedAt: clock }, clock), 0, "relaunched: the pin of the earlier launch is not used");
+  assert.ok(Math.abs(localT(shot, clock + 1) - (t + 1)) < 1e-9, "the clock moved on: its own time");
 });

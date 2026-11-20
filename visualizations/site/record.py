@@ -42,19 +42,29 @@ poster frame (the player seeks to it), ``poster_frame`` its index among the fram
 files (``plan.py``; an atlas with a missing point or base is stale: ``sitelib.atlas_status``); a world is always recorded
 whole. The recorder runs on the CPU (``LFPHYS_NO_GPU=1``, as in CI: the key does not cover the device). ``--rec`` records only the named recordings (no atlas); ``--no-atlases`` skips the
 atlases. Exit code: 0 when everything was recorded within the hard limits, 1 otherwise.
+
+The keys name the code that ran (review R2-F F1): every world's code is hashed before any world is imported
+(``sitelib.code_signature``) and again after the world's last recording or atlas, with every file of it checked not to
+have changed since the script started (``sitelib.check_unchanged``); when it changed, nothing of the world is written
+(its index and files stay as they were) and the run reports «the code changed during the build … run again».
 """
 
 from __future__ import annotations
 
-import argparse
-import datetime as _dt
-import gzip
-import hashlib
-import os
-import sys
 import time
-from dataclasses import dataclass, field
-from pathlib import Path
+
+#: when this script started, before it imported the lfviz package and the engine (``sitelib.check_unchanged``; review
+#: R2-F F1)
+STARTED_NS = time.time_ns()
+
+import argparse  # noqa: E402
+import datetime as _dt  # noqa: E402
+import gzip  # noqa: E402
+import hashlib  # noqa: E402
+import os  # noqa: E402
+import sys  # noqa: E402
+from dataclasses import dataclass, field  # noqa: E402
+from pathlib import Path  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import sitelib as L  # noqa: E402
@@ -180,12 +190,19 @@ def thin_to(raw: Raw, target: int, start: int = 1) -> Packed:
 
 
 def record_world(viz_id: str, out: Path, only: list[str] | None = None,
-                 atlases: list[str] | bool | None = None) -> tuple[dict, list[str]]:
+                 atlases: list[str] | bool | None = None, sig0: tuple | None = None,
+                 since_ns: int | None = None) -> tuple[dict, list[str]]:
     """Record every spec of a world (or those named in ``only``), build its atlases (all when ``only`` is None and
     ``atlases`` is None or True; those named in a list; none for False or with ``only``: their current entries are
     kept), thin the recordings to the budgets (the world's counts the atlases too), write the files and the index.
-    Returns (index, problems): a problem is a budget exceeded, a recording or an atlas that failed."""
-    plan = L.planned_world(viz_id)
+    Returns (index, problems): a problem is a budget exceeded, a recording or an atlas that failed.
+
+    The keys are those of ``sig0`` (``sitelib.code_signature``, taken before the world was imported; now when None);
+    after the world's last output (its last atlas, or its last recording) the code is compared with it
+    (``sitelib.check_unchanged``, ``since_ns`` the time the recorder started): when it changed, nothing is written, the
+    index returned is the folder's as it was and the problem says to run again (review R2-F F1)."""
+    sig0 = L.code_signature(viz_id) if sig0 is None else tuple(sig0)
+    plan = L.planned_world(viz_id, code=sig0[0], recorder=sig0[1])
     viz = registry.load(viz_id)
     problems = []
     raws, packs = {}, {}
@@ -215,12 +232,19 @@ def record_world(viz_id: str, out: Path, only: list[str] | None = None,
         which = None if atlases in (None, True) else (list(atlases) if atlases else [])
         if only is not None and atlases in (None, True):
             which = []
-        atl_entries, probs, warns = A.build_world(viz_id, out, which, log=_log)
+        try:  # the code is compared with sig0 after the last atlas (R2-F F1)
+            atl_entries, probs, warns = A.build_world(viz_id, out, which, log=_log, sig0=sig0, since_ns=since_ns)
+        except L.CodeChanged as e:
+            return _as_it_was(out, viz_id), problems + [str(e)]
         problems += probs
         for w in warns:
             _log(f"  note: {w}")
     else:
         atl_entries = []
+        try:  # after the last recording (R2-F F1)
+            L.check_unchanged(viz_id, sig0, since_ns)
+        except L.CodeChanged as e:
+            return _as_it_was(out, viz_id), problems + [str(e)]
     atl_total = sum(int(e.get("bytes_gz") or 0) for e in atl_entries)
     # the world's budget: thin the largest recording further while the world is over its target
     while sum(len(p.gz) for p in packs.values()) + atl_total > world_target:
@@ -296,6 +320,14 @@ def record_world(viz_id: str, out: Path, only: list[str] | None = None,
     return index, problems
 
 
+def _as_it_was(out: Path, viz_id: str) -> dict:
+    """A world's index as the folder has it (nothing written: R2-F F1), with its lists."""
+    idx = L.read_index(out, viz_id) or {"world": viz_id}
+    idx.setdefault("recordings", [])
+    idx.setdefault("atlases", [])
+    return idx
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(
         description="Record the public site's demonstrations offline (design §4.1). The worlds recorded are the union of "
@@ -319,12 +351,20 @@ def main(argv=None) -> int:
         os.environ[limits.ENV] = str(int(a.worker_mem_gb * limits.GIB))
         limits.apply_hard_limit()
     out = Path(a.out)
+    # every world's code hashed before any world is imported (review R2-F F1): the keys name the code that runs
+    cand = [registry.resolve(w) for w in a.world] + (registry.viz_ids() if a.all or a.stale else [])
+    sigs = {}
+    for w in dict.fromkeys(cand):
+        try:
+            sigs[w] = L.code_signature(w)
+        except KeyError:  # no such world: refused below
+            pass
     demos = L.demo_worlds()
     worlds = [registry.resolve(w) for w in a.world]
     if a.all:
         worlds += demos
     if a.stale:
-        worlds += [w for w in demos if (set(L.status(out, p := L.planned_world(w)).values())
+        worlds += [w for w in demos if (set(L.status(out, p := L.planned_world(w, *sigs[w])).values())
                                         | set(L.atlas_status(out, p).values())) - {"present"}]
     worlds = list(dict.fromkeys(worlds))
     bad = [w for w in worlds if w not in demos]
@@ -337,7 +377,8 @@ def main(argv=None) -> int:
     problems = []
     for w in worlds:
         t0 = time.monotonic()
-        index, probs = record_world(w, out, a.rec or None, atlases=False if a.no_atlases else None)
+        index, probs = record_world(w, out, a.rec or None, atlases=False if a.no_atlases else None, sig0=sigs[w],
+                                    since_ns=STARTED_NS)
         problems += probs
         sizes = ", ".join(f"{e['id']} {e['bytes_gz'] / L.MB:.2f} MB" for e in index["recordings"] + index["atlases"])
         _log(f"{w}: done in {time.monotonic() - t0:.0f} s: {sizes}")

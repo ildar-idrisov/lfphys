@@ -634,6 +634,8 @@ def test_the_clock_the_speed_and_the_stop_by_counted_events(toy):
     lab = toy["screens"][3]
     st0 = dict(lab["steps"][0])  # its manual stopwatch times the flight on the wall clock: real time only
     assert any("manual stopwatch" in x for x in _screens_problems(toy, s3={"steps": [{**st0, "speed": 0.5}, lab["steps"][1]]}))
+    # «its step declares no speed»: not even 1 (review R2-F F5 (b))
+    assert any("manual stopwatch" in x for x in _screens_problems(toy, s3={"steps": [{**st0, "speed": 1}, lab["steps"][1]]}))
     assert _screens_problems(toy, s3={"steps": [lab["steps"][0], {**lab["steps"][1], "speed": 0.5}]}) == []
 
 

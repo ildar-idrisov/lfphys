@@ -492,7 +492,7 @@ def proper_time_between(em1: float, l: float, r_a: float, r_b: float) -> float:
     tau = integral dr / sqrt(R(r)), with r = r_a + (r_b - r_a)(1 - cos theta)/2, which removes the inverse square
     root at a simple turning point (Gauss-Kronrod quadrature on two halves, relative 1e-11)."""
     if not r_a < r_b:
-        raise coded(ValueError(T("r_a < r_b required")), "orbit.not_bound")
+        raise coded(ValueError(T("r_a < r_b required")), "orbit.bad_radii")
     h = 0.5 * (r_b - r_a)
 
     def g(th):
@@ -520,16 +520,17 @@ def proper_time_to_centre(em1: float, l: float, r_from: float, r_to: float = 0.0
     """Proper time of a fall from r_from down to r_to (0 <= r_to < r_from), outside the horizon, through it or inside
     it: tau = integral_{r_to}^{r_from} dr / sqrt(R(r)), R = e^2 - (1 - 2/r)(1 + l^2/r^2) (e^2 - 1 = em1, M = 1). The body
     falls inward all the way (dr/dtau < 0, or 0 at r_from: a start at a turning point); with a turning point between the
-    two radii it does not get there, and the call is refused (orbit.no_fall). Inside the horizon R >= e^2 > 0 (see the
+    two radii it does not get there, and the call is refused (orbit.turns_back; radii out of order: orbit.bad_radii).
+    Inside the horizon R >= e^2 > 0 (see the
     module's docstring), and r_to = 0 is the singularity, reached in finite proper time. The substitution
     r = r_to + (r_from - r_to) sin^2(theta/2) makes the integrand smooth at both ends: at a turning point (R ~ r_from - r)
     and at r = 0 (1/sqrt(R) ~ r^{1/2}, or r^{3/2} with l != 0). Gauss-Kronrod on two halves, relative 1e-11."""
     if not (0.0 <= r_to < r_from and math.isfinite(r_from)):
-        raise coded(ValueError(T("0 ≤ r_to < r_from required")), "orbit.not_bound")
+        raise coded(ValueError(T("0 ≤ r_to < r_from required")), "orbit.bad_radii")
     turn = _turning_points(em1, l, r_to, r_from)
     if turn:
         raise coded(ValueError(T("the body turns back at r = {r:.6g}M and does not fall to r = {r_to:.6g}M",
-                                 r=turn[-1], r_to=r_to)), "orbit.no_fall")
+                                 r=turn[-1], r_to=r_to)), "orbit.turns_back")
     d = r_from - r_to
 
     def g(th):
@@ -548,9 +549,10 @@ def proper_time_to_centre(em1: float, l: float, r_from: float, r_to: float = 0.0
 
 def cycloid_proper_time(r0: float, r: float = 0.0) -> float:
     """The radial fall from rest at r0 > 2M, in closed form (Blau, eqs. (26.25)-(26.29)): r = (r0/2)(1 + cos eta),
-    tau = sqrt(r0^3/8)(eta + sin eta), for any 0 <= r <= r0, inside the horizon too; tau(0) = pi sqrt(r0^3/8M)."""
+    tau = sqrt(r0^3/8)(eta + sin eta), for any 0 <= r <= r0, inside the horizon too; tau(0) = pi sqrt(r0^3/8M). Other
+    radii: orbit.bad_radii."""
     if not (r0 > 2.0 and 0.0 <= r <= r0):
-        raise coded(ValueError(T("0 ≤ r ≤ r0 and r0 > 2M required")), "orbit.horizon")
+        raise coded(ValueError(T("0 ≤ r ≤ r0 and r0 > 2M required")), "orbit.bad_radii")
     eta = math.acos(min(1.0, max(-1.0, 2.0 * r / r0 - 1.0)))
     return math.sqrt(r0**3 / 8.0) * (eta + math.sin(eta))
 

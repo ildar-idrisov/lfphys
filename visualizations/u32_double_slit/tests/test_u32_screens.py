@@ -87,7 +87,8 @@ def test_the_explore_grid_corners_build_with_every_check_ok(vals):
     values = {**EX["fixed"], **{c["param"]: v for c, v in zip(EX["controls"], vals)}}
     out, msgs = _run(None, values=values, preset=EX["preset"], clock={"frame_dt": EX["frame_dt"]}, stop=EX["stop"])
     counts = out.check_counts()
-    assert counts["failed"] == 0 and counts["ok"] >= 4, counts
+    # (the identities of the marks are information since R2-W F3: V² + D², |γ₁₂| of the marks' own expectation)
+    assert counts["failed"] == 0 and counts["ok"] >= 2 and counts["info"] >= 2, counts
     frames = [m for m, _b in msgs if m["type"] == "frame"]
     last = frames[-1]
     assert out.t_end == pytest.approx(EX["stop"]["world_s"])

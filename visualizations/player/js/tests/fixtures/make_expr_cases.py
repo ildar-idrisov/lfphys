@@ -3,8 +3,9 @@
 """Write expr_cases.json: the formula columns of a lab step (player/js/expr.js and server/lfviz/expr.py; design
 lfphys/sources/explore_EX2_2026-11-18_design.md §5 F5) against references computed here independently of both: each
 formula is written a second time as an mpmath function (50 digits), its value is that function's, and its two error
-terms t1 = Σ(∂f/∂xᵢ·σᵢ)² and t2 = ½Σ(∂²f/∂xᵢ²)²σᵢ⁴ come from mpmath's own derivatives (``mpmath.diff`` at 50 digits),
-not from the hyper-dual numbers under test. expr.test.mjs and tests/test_expr.py hold both evaluators to 1e-12. The
+terms t1 = Σ(∂f/∂xᵢ·σᵢ)² and t2 = ½ΣᵢΣⱼ(∂²f/∂xᵢ∂xⱼ·σᵢσⱼ)² (the diagonal and, since review R2-F F2, the mixed second
+derivatives) come from mpmath's own derivatives (``mpmath.diff`` at 50 digits, partial ones for the mixed terms), not
+from the hyper-dual numbers under test. expr.test.mjs and tests/test_expr.py hold both evaluators to 1e-12. The
 refused formulas (``refused``: the code each parser must give) and the undefined values (``undefined``: the reason) are
 listed too. Run from the repository root in Docker:
     docker run --rm --memory=1g -v "$PWD":/lf -w /lf lfphys-viz \
@@ -53,10 +54,12 @@ def add(text, f, inputs, note=""):
     at = {k: mp.mpf(v) for k, (v, _s) in inputs.items()}
     value = f(**at)
     t1 = t2 = mp.mpf(0)
+    live = []
     for k in names:
         s = mp.mpf(inputs[k][1])
         if s == 0:
             continue
+        live.append(k)
 
         def g(x, k=k):
             return f(**{**at, k: x})
@@ -64,6 +67,12 @@ def add(text, f, inputs, note=""):
         d2 = mp.diff(g, at[k], 2)
         t1 += (d1 * s) ** 2
         t2 += (d2 * s * s) ** 2 / 2
+    for i, ki in enumerate(live):  # the mixed terms: Σ_{i<j} (∂²f/∂xᵢ∂xⱼ·σᵢσⱼ)²
+        for kj in live[i + 1:]:
+            def h(xi, xj, ki=ki, kj=kj):
+                return f(**{**at, ki: xi, kj: xj})
+            dij = mp.diff(h, (at[ki], at[kj]), (1, 1))
+            t2 += (dij * mp.mpf(inputs[ki][1]) * mp.mpf(inputs[kj][1])) ** 2
     cases.append({"expr": text, "vars": {k: list(v) for k, v in inputs.items()}, "value": float(value),
                   "t1": float(t1), "t2": float(t2), "error": float(mp.sqrt(t1 + t2)), "note": note})
 
@@ -136,6 +145,14 @@ add("(rp + ra) / (2 * rp * ra)", lambda rp, ra: (rp + ra) / (2 * rp * ra), {"rp"
 add("3 * cosd(2 * D) - cosd(6 * D)", lambda D: 3 * cosd(2 * D) - cosd(6 * D), {"D": (22.5, 0.0)},
     "u37: the CHSH abscissa")
 add("dphi / x", lambda dphi, x: dphi / x, {"dphi": (0.0523, 0.0005), "x": (0.00275, 0.00001)})
+# the mixed second derivatives (review R2-F F2): a saddle, where they are the whole error, and ordinary points
+add("x * y", lambda x, y: x * y, {"x": (0.0, 1.0), "y": (0.0, 1.0)}, "a saddle: only the mixed term (σ_xσ_y)")
+add("x * y", lambda x, y: x * y, {"x": (0.1, 1.0), "y": (0.1, 1.0)}, "near the saddle")
+add("x * y", lambda x, y: x * y, {"x": (0.5, 0.2), "y": (0.3, 0.4)}, "a product: the exact variance")
+add("x * y * z", lambda x, y, z: x * y * z, {"x": (1.0, 0.1), "y": (-2.0, 0.2), "z": (0.5, 0.05)}, "three pairs")
+add("x / y + sin(x * y)", lambda x, y: x / y + mp.sin(x * y), {"x": (1.0, 0.1), "y": (2.0, 0.1)})
+add("x ^ y", lambda x, y: x ** y, {"x": (1.5, 0.05), "y": (0.0, 0.3)}, "a variable exponent at 0")
+add("abs(x)", lambda x: abs(x), {"x": (0.0, 0.0)}, "|0| of an exact input: 0 ± 0")
 # a constant part with an infinite derivative does not spoil the input's own error
 add("sqrt(c) + a", lambda c, a: mp.sqrt(c) + a, {"c": (0.0, 0.0), "a": (2.0, 0.1)})
 add("sqrt(x)", lambda x: mp.sqrt(x), {"x": (0.0, 0.0)}, "√0 of an exact input: 0 ± 0")
@@ -155,6 +172,8 @@ undefined("x * 1e300 * 1e300", {"x": (1.0, 0.1)}, "not_finite")
 undefined("x + y", {"x": (1.0, 0.1), "y": (None, 0.1)}, "missing")
 undefined("sqrt(x)", {"x": (0.0, 0.1)}, "error_undefined")
 undefined("asin(x)", {"x": (1.0, 0.1)}, "error_undefined")
+undefined("abs(x)", {"x": (0.0, 0.1)}, "error_undefined")  # the kink: no derivative (review R2-F F9)
+undefined("abs(x - y) * 2", {"x": (1.0, 0.1), "y": (1.0, 0.0)}, "error_undefined")
 # refused formulas: the code
 for text, code in [("constructor", "unknown_name"), ("__proto__", "unknown_name"), ("prototype", "unknown_name"),
                    ("toString", "unknown_name"), ("x.y", "syntax"), ("x.constructor", "syntax"), ("x(1)", "not_callable"),
@@ -166,7 +185,10 @@ for text, code in [("constructor", "unknown_name"), ("__proto__", "unknown_name"
                    ("\\u0078", "syntax"), ("1e400", "number"), ("", "empty"), ("   ", "empty"), ("z + 1", "later_column"),
                    ("w + 1", "unknown_name"), ("1 2", "syntax"), ("x y", "syntax"), ("()", "syntax"),
                    ("(" * 60 + "x" + ")" * 60, "too_deep"), ("-" * 60 + "x", "too_deep"),
-                   ("x + " * 120 + "x", "too_long"), ("2x", "syntax"), ("x..y", "syntax"), ("1.2.3", "syntax")]:
+                   ("x + " * 120 + "x", "too_long"), ("2x", "syntax"), ("x..y", "syntax"), ("1.2.3", "syntax"),
+                   # ASCII digits and spaces only, in both parsers (review R2-F F8)
+                   ("\u0663 * x", "syntax"), ("x * \uff13", "syntax"), ("x\u00a0+ 1", "syntax"), ("x\u2028+ 1", "syntax"),
+                   ("x\u3000+ 1", "syntax"), ("x\ufeff+ 1", "syntax"), ("x\x1c+ 1", "syntax"), ("x\x85+ 1", "syntax")]:
     refuse(text, code)
 
 out = Path(__file__).with_name("expr_cases.json")

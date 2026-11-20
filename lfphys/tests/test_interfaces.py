@@ -441,3 +441,209 @@ def test_one_boundary_between_constant_indices_has_no_delay():
             for pol in POLS:
                 g = I.group_delay(ns, [], 632.8, th, pol)
                 assert g["tau_t"] == 0.0 and g["tau_r"] == 0.0
+
+
+# --- an absorbing incidence medium (review EX2, R2-E F1, F6, F10) ----------------------------------------------------
+import mpmath  # noqa: E402
+
+from lfphys.codes import code_of  # noqa: E402
+from lfphys.core.optics import polarization as POL  # noqa: E402
+
+GLASSES = ("schott_n_bk7", "schott_n_f2", "schott_n_sf11")
+
+
+def _flux(E, H):
+    """The time-averaged normal energy flux Re(E x conj(Z0 H))_z (up to the common factor 1/(2 Z0))."""
+    return float(np.real(E[0] * np.conj(H[1]) - E[1] * np.conj(H[0])))
+
+
+def _glass_structures(g, lam):
+    n0 = MAT.index(g, lam)
+    out = [([n0, 1.0], []), ([n0, 1.0, n0], [300.0]), ([n0, 1.38, 1.0], [100.0])]
+    lo, hi = MAT.info("au_johnson_christy")["range_nm"]
+    if lo <= lam <= hi:
+        out.append(([n0, MAT.index("au_johnson_christy", lam), 1.0], [50.0]))
+    return n0, out
+
+
+@pytest.mark.parametrize("g", GLASSES)
+def test_a_real_glass_as_the_incidence_medium_conserves_energy(g):
+    """SCHOTT glass (complex index, kappa ~ 1e-8 ... 1e-6) as the incidence medium of one boundary to air, a frustrated
+    total reflection gap, a film and a gold film, below, near and beyond the critical angle, s and p: 0 <= T <= 1, R >=
+    0, R + T + A = 1, the layers absorb 1 - R - A_in - T >= 0 (0 when they are lossless), |A_in| <= 3 Im(q0)/Re(q0)
+    with q0 = n_in cos theta_in, so R <= 1 + 3 Im(q0)/Re(q0) (R may exceed 1 just above the critical angle,
+    compensated by A_in < 0: Byrnes, arXiv:1603.02720, §4.4.1); and the
+    Poynting flux of ``field_components`` just before the structure is 1 - R - A_in and just after it T (relative to
+    the incident wave's own flux). Before the fix the exit medium's backward branch gave R_p = 137 at 0.5 rad."""
+    for lam in (405.0, 546.07, 632.8, 1060.0, 2300.0):
+        n0, structs = _glass_structures(g, lam)
+        thc = math.asin(1.0 / n0.real)
+        for th in (0.0, 0.3, 0.5, thc - 1e-3, thc + 1e-6, thc + 1e-3, 0.8, 1.2, 1.45):
+            c0 = I._cosines([n0], th)[0]
+            q0 = n0 * c0
+            for ns, ds in structs:
+                lossless_layers = all(complex(n).imag == 0 for n in ns[1:])
+                for pol in POLS:
+                    st = I.stack(ns, ds, lam, th, pol)
+                    R, T, A, Ain = st["R"], st["T"], st["A"], st["A_in"]
+                    assert R + T + A == pytest.approx(1.0, abs=1e-15)
+                    assert 0.0 <= T <= 1.0 and R >= 0.0
+                    layers = 1.0 - R - Ain - T
+                    assert layers >= -2e-15, (g, lam, th, pol, layers)
+                    if lossless_layers:
+                        assert abs(layers) < 2e-14
+                    assert abs(Ain) <= 3 * q0.imag / q0.real + 1e-15
+                    assert R <= 1.0 + 3 * q0.imag / q0.real
+                    z = np.array([np.nextafter(0.0, -1.0), float(sum(ds))])  # at the two outer boundaries
+                    E, H = I.field_components(ns, ds, lam, th, z, pol)
+                    Ei, Hi = I.field_components([n0, n0], [], lam, th, z[:1], pol)
+                    fi = _flux(Ei[0], Hi[0])
+                    assert _flux(E[0], H[0]) / fi == pytest.approx(1.0 - R - Ain, rel=1e-9, abs=1e-13)
+                    assert _flux(E[1], H[1]) / fi == pytest.approx(T, rel=1e-9, abs=1e-13)
+
+
+def _fresnel_mp(n0, n1, th, pol):
+    """One boundary with 30 digits: k_x = Re(n0) sin theta (real), q_j = sqrt(n_j^2 - k_x^2) on the forward branch
+    (Im q > 0, else Re q >= 0), r_s = (q0 - q1)/(q0 + q1), t_s = 2 q0/(q0 + q1), r_p = (n1^2 q0 - n0^2 q1)/(n1^2 q0 +
+    n0^2 q1), t_p = 2 n0 n1 q0/(n1^2 q0 + n0^2 q1) (Born & Wolf's sign), T_s = Re q1/Re q0 |t_s|^2, T_p = Re(n1
+    conj(c1))/Re(n0 conj(c0)) |t_p|^2 with c = q/n."""
+    n0, n1 = mpmath.mpc(n0), mpmath.mpc(n1)
+    kx = n0.real * mpmath.sin(mpmath.mpf(th))
+
+    def q(n):
+        v = mpmath.sqrt(n * n - kx * kx)
+        return -v if (v.imag < 0 or (v.imag == 0 and v.real < 0)) else v
+    q0, q1 = q(n0), q(n1)
+    if pol == "s":
+        r, t = (q0 - q1) / (q0 + q1), 2 * q0 / (q0 + q1)
+        T = q1.real / q0.real * abs(t) ** 2
+    else:
+        den = n1 * n1 * q0 + n0 * n0 * q1
+        r, t = (n1 * n1 * q0 - n0 * n0 * q1) / den, 2 * n0 * n1 * q0 / den
+        c0, c1 = q0 / n0, q1 / n1
+        T = (n1 * mpmath.conj(c1)).real / (n0 * mpmath.conj(c0)).real * abs(t) ** 2
+    return complex(r), complex(t), float(abs(r) ** 2), float(T)
+
+
+@pytest.mark.parametrize("pol", POLS)
+def test_a_glass_to_air_boundary_against_30_digit_fresnel_coefficients(pol):
+    """``stack`` and ``fresnel`` for a SCHOTT glass (complex index) into air and into a denser glass, from normal to
+    10^-7 rad from grazing incidence, against Fresnel's coefficients with the real k_x evaluated with 30 digits
+    (1e-12; T relative). Near grazing this also checks the incidence medium's cosine (review EX2, R2-E F10)."""
+    with mpmath.workdps(30):
+        for lam in (405.0, 632.8, 2300.0):
+            nb, nf = MAT.index("schott_n_bk7", lam), MAT.index("schott_n_sf11", lam)
+            for n0, n1 in ((nb, 1.0), (nb, nf), (nf, nb), (nb, 1.33 + 1e-9j)):
+                for th in [0.0, 0.2, 0.6, 0.7, 0.75, 1.0, 1.4, math.pi / 2 - 1e-4, math.pi / 2 - 1e-7]:
+                    r, t, R, T = _fresnel_mp(n0, n1, th, pol)
+                    st = I.stack([n0, n1], [], lam, th, pol)
+                    assert abs(st["r"] - r) < 1e-12 and abs(st["t"] - t) < 1e-12, (lam, n0, n1, th)
+                    assert st["T"] == pytest.approx(T, rel=1e-11, abs=1e-15)
+                    fr = I.fresnel(n0, n1, th, pol)
+                    assert abs(fr[0] - r) < 1e-12 and fr[3] == pytest.approx(T, rel=1e-11, abs=1e-15)
+
+
+@pytest.mark.parametrize("pol", POLS)
+def test_group_delay_with_a_glass_incidence_medium_against_finite_differences(pol):
+    """The exact derivative with the incidence medium's complex index and complex dispersion (an N-BK7 prism with
+    50 nm of gold, and N-BK7 into air beyond the critical angle) against 4th-order central differences of the
+    phases of ``stack``; and continuous with the real-part result (the kappa ~ 1e-8 of the glass changes it by less
+    than 1e-6 relative)."""
+    def build_k(lam):
+        return [MAT.index("schott_n_bk7", lam), MAT.index("au_johnson_christy", lam), 1.0], [50.0]
+
+    def build_t(lam):
+        return [MAT.index("schott_n_bk7", lam), 1.0], []
+    for build, dn_layers, angles in ((build_k, True, (40.0, 43.773, 50.0)), (build_t, False, (45.0, 60.0))):
+        for lam in (451.3, 551.7, 632.8):
+            ns, ds = build(lam)
+            dns = [MAT.dindex("schott_n_bk7", lam)] + ([MAT.dindex("au_johnson_christy", lam)] if dn_layers else []) \
+                + [0.0]
+            for th in np.radians(angles):
+                g = I.group_delay(ns, ds, lam, th, pol, dns)
+                fd = _phase_fd(build, lam, th, pol)
+                assert g["dphi_r"] == pytest.approx(fd[0], rel=2e-6, abs=1e-9)
+                assert g["dphi_t"] == pytest.approx(fd[1], rel=2e-6, abs=1e-9)
+                st = I.stack(ns, ds, lam, th, pol)
+                assert g["r"] == pytest.approx(st["r"], abs=1e-14) and g["t"] == pytest.approx(st["t"], abs=1e-14)
+                gr = I.group_delay([complex(ns[0]).real] + ns[1:], ds, lam, th, pol,
+                                   [complex(dns[0]).real] + dns[1:])
+                assert g["tau_r"] == pytest.approx(gr["tau_r"], rel=1e-6)
+
+
+@pytest.mark.parametrize("pol", POLS)
+def test_group_delay_of_an_absorbing_incidence_medium_against_30_digit_fresnel_phases(pol):
+    """A strongly absorbing, dispersive incidence medium (``_toy``: n = 1.6 + 1.2e4/lam^2 + i (0.03 + 2e-3 lam/500))
+    against air and against a denser lossless medium, below and beyond the critical angle: d(arg r)/dlam and
+    d(arg t)/dlam of ``group_delay`` against 4th-order central differences of the 30-digit Fresnel coefficients with
+    the real k_x = Re(n0) sin theta (an independent route: before review EX2's fix the complex k_x gave other
+    coefficients)."""
+    with mpmath.workdps(30):
+        for n1 in (1.0, 2.1):
+            for th in np.radians([10.0, 30.0, 50.0, 70.0]):
+                lam = 600.0
+                n0, dn0 = _toy(lam)
+                g = I.group_delay([n0, n1], [], lam, th, pol, [dn0, 0.0])
+
+                def ph(l):
+                    r, t, _, _ = _fresnel_mp(_toy(l)[0], n1, th, pol)
+                    return np.array([cmath.phase(r), cmath.phase(t)])
+                h = 1e-2
+                fd = (8 * (ph(lam + h) - ph(lam - h)) - (ph(lam + 2 * h) - ph(lam - 2 * h))) / (12 * h)
+                assert g["dphi_r"] == pytest.approx(fd[0], rel=1e-7, abs=1e-11), (n1, th)
+                assert g["dphi_t"] == pytest.approx(fd[1], rel=1e-7, abs=1e-11), (n1, th)
+
+
+def test_group_delay_scales_with_the_reference_medium_group_index():
+    """Indices relative to air at the wavelength in air (SCHOTT): tau carries air's group index (review EX2, R2-E F6):
+    ng_ref multiplies both delays exactly; an invalid ng_ref is refused."""
+    lam = 632.8
+    ns, ds = [1.0, MAT.index("schott_n_bk7", lam), 1.0], [2000.0]
+    dns = [0.0, MAT.dindex("schott_n_bk7", lam), 0.0]
+    g1 = I.group_delay(ns, ds, lam, 0.3, "s", dns)
+    g2 = I.group_delay(ns, ds, lam, 0.3, "s", dns, ng_ref=1.00028)
+    assert g2["tau_t"] == pytest.approx(1.00028 * g1["tau_t"], rel=1e-15)
+    assert g2["tau_r"] == pytest.approx(1.00028 * g1["tau_r"], rel=1e-15)
+    assert g2["dphi_t"] == g1["dphi_t"]
+    with pytest.raises(ValueError):
+        I.group_delay(ns, ds, lam, 0.3, "s", dns, ng_ref=0.0)
+
+
+def test_power_factor_and_boundary_matrices_with_a_glass_incidence_medium():
+    """``power_factor`` |t|^2 = T and ``boundary_matrices`` = ``stack`` for N-BK7 into air below and beyond the critical
+    angle; A_in_p, A_in_s are stack's; the beam's fractions through the structure add to 1."""
+    lam = 632.8
+    n0 = MAT.index("schott_n_bk7", lam)
+    for th in (0.3, 0.5, 0.8, 1.2):
+        bm = POL.boundary_matrices([n0, 1.0], [], lam, th)
+        assert not bm["lossless"]
+        for pol in POLS:
+            st = I.stack([n0, 1.0], [], lam, th, pol)
+            assert bm[f"R_{pol}"] == st["R"] and bm[f"T_{pol}"] == st["T"] and bm[f"A_in_{pol}"] == st["A_in"]
+            assert I.power_factor([n0, 1.0], th, pol) * abs(st["t"]) ** 2 == pytest.approx(st["T"], rel=1e-13,
+                                                                                            abs=1e-300)
+            assert 0.0 <= st["T"] <= 1.0 and 0.0 <= st["R"] <= 1.0
+        out = POL.through(np.array([1.0, 1.0j]) / math.sqrt(2.0), bm)
+        assert out["P_R"] + out["P_T"] + out["P_A"] == pytest.approx(1.0, abs=1e-15)
+
+
+def test_snell_cos_refuses_an_absorbing_incidence_medium():
+    with pytest.raises(ValueError) as e:
+        I.snell_cos(1.5 + 1e-8j, 1.0, 0.9)
+    assert code_of(e.value) == "optics.absorbing_incidence"
+    assert I.snell_cos(1.5 + 0j, 1.0, 0.9) == I.snell_cos(1.5, 1.0, 0.9)
+
+
+def test_a_lossless_incidence_medium_is_unchanged_by_the_complex_branch():
+    """The real-k_x rule leaves every result of a real incidence index as it was (the same cosines bit for bit except
+    cos theta0 itself, now exact), and a glass index tends to the real one: |R(n' + i kappa) - R(n')| = O(kappa)."""
+    for th in (0.0, 0.4, 0.9, 1.3):
+        c = I._cosines([1.5 + 0j, 1.0 + 0j, 2.0 + 0.1j], th)
+        assert c[0] == complex(math.cos(th))
+        assert c[1] == cmath.sqrt(1 - (1.5 * math.sin(th) / 1.0) ** 2)  # the forward root (Re >= 0, or Im > 0)
+    n0 = MAT.index("schott_n_bk7", 632.8)
+    for th in (0.3, 0.5, 0.8):
+        for pol in POLS:
+            a = I.stack([n0, 1.0], [], 632.8, th, pol)
+            b = I.stack([n0.real, 1.0], [], 632.8, th, pol)
+            assert abs(a["R"] - b["R"]) < 100 * n0.imag and abs(a["T"] - b["T"]) < 100 * n0.imag

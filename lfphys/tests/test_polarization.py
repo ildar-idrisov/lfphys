@@ -419,11 +419,11 @@ def test_tir_phase_difference_against_30_digit_fresnel_coefficients():
             assert abs(P.tir_phase_closed_form(n_out / n_in, th) - float(ref)) < 1e-12
 
 
-def test_tir_phase_difference_near_grazing_incidence_within_the_cosine_rounding():
-    """Within 1e-1 ... 1e-7 rad of grazing incidence the closed form (math.cos) stays within 1e-12 of the 30-digit
-    Fresnel coefficients, while the transfer matrices' cos theta0 = sqrt(1 - sin^2 theta0) (``interfaces._cosines``,
-    unchanged) carries a relative error ~ eps / cos^2 theta0, and so does the engine's delta: bounded here by
-    4 eps delta / cos^2 theta0 + 1e-15 (2e-7 relative at 0.0013 degrees from grazing; 4e-11 at 89.9 degrees)."""
+def test_tir_phase_difference_near_grazing_incidence():
+    """Within 1e-1 ... 1e-7 rad of grazing incidence the closed form (math.cos) and the engine's delta stay within
+    1e-12 absolute and 1e-9 relative of the 30-digit Fresnel coefficients: ``interfaces._cosines`` takes cos theta0
+    itself (review EX2, R2-E F10; with sqrt(1 - sin^2 theta0) the relative error grew as eps / cos^2 theta0, 2e-7 at
+    0.0013 degrees from grazing)."""
     rng = np.random.default_rng(367)
     eps = np.finfo(float).eps
     with mpmath.workdps(30):
@@ -435,8 +435,8 @@ def test_tir_phase_difference_near_grazing_incidence_within_the_cosine_rounding(
                 continue
             ref = float(_fresnel_delta_mp(n_in, n_out, th))
             assert abs(P.tir_phase_closed_form(n_out / n_in, th) - ref) < 1e-12
-            bound = 4 * eps * ref / math.cos(th) ** 2 + 1e-15
-            assert abs(P.tir_phase_difference(n_in, n_out, th) - ref) <= bound
+            d = P.tir_phase_difference(n_in, n_out, th)
+            assert abs(d - ref) <= min(1e-12, 1e-9 * ref + 16 * eps)
 
 
 @pytest.mark.parametrize("n_glass", [1.33, 1.5, 1.515, 1.62, 1.75, 2.4])

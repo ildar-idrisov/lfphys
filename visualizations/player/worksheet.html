@@ -37,7 +37,7 @@ html, body { height: auto; }
 .ws .laws { margin: 2px 0 6px; padding-left: 20px; }
 .ws .concl { margin: 8px 0 0; }
 .ws .lines { border-bottom: 1px solid var(--line); height: 26px; }
-.ws .field { margin: 6px 0; }
+.ws .field { display: block; margin: 6px 0; }  /* not chrome.css's two-column .field grid (review R2-P F16) */
 .ws .field > b { display: block; }
 .ws .editable { border: 1px dashed var(--line); border-radius: 6px; padding: 2px 6px; min-height: 1.6em; }
 .ws .editable:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
@@ -52,24 +52,15 @@ html, body { height: auto; }
 .ws-tools select { min-height: 36px; max-width: 100%; min-width: 0; }
 .ws-tools label.variant-pick { max-width: 100%; min-width: 0; flex-wrap: wrap; }
 .ws .note { font-size: 13px; color: var(--muted); }
+.ws .sheet.teacher-cont { display: none; }  /* printed only when the first sheet does not hold the teacher's task */
+.ws .sheet-warn { margin: 0 0 6px; padding: 6px 10px; border: 1px solid var(--bad, #c0392b); border-radius: 6px; color: var(--bad, #c0392b); font-weight: 600; }
 .ws .credit { font-size: 11px; color: var(--muted); margin: 10px 0 0; overflow-wrap: anywhere; }
+/* printed: the page and what is not printed here; the sheets' printed layout is worksheet.js's PRINT_RULES (the same
+   rules lay out the hidden copy that measures each sheet on the screen) */
 @media print {
-  .ws .tbl { overflow: visible; }
-  .topbar, .ws-tools, .ws-hint { display: none !important; }
-  .ws .editable { border: 0; padding: 0; }
+  .topbar, .ws-tools, .ws-hint, .sheet-warn { display: none !important; }
   body { background: #fff; color: #000; }
   @page { size: A4; margin: 12mm 12mm 11mm; }
-  .ws { max-width: none; padding: 0; font-size: 10pt; line-height: 1.3; }
-  .ws h1 { font-size: 15pt; margin: 0 0 2mm; } .ws h2 { font-size: 13pt; margin: 2mm 0 1.5mm; } .ws h3 { font-size: 11pt; margin: 2mm 0 1mm; }
-  /* one sheet = one page: the page's height less its margins (297 − 23 mm) and a little room for rounding */
-  .ws .sheet { height: 273mm; border: 0; border-radius: 0; padding: 0; margin: 0; background: none; break-before: page; page-break-before: always; break-inside: avoid; overflow: hidden; }
-  .ws .sheet.first { break-before: auto; page-break-before: auto; }
-  .ws table.blank th, .ws table.blank td { height: 5.1mm; padding: 0 1.5mm; font-size: 9.5pt; }
-  .ws .axes { height: 52mm; margin: 2mm 0 6mm 8mm; max-width: none; }
-  .ws .lines { height: 7mm; border-bottom-color: #888; }
-  .ws .who .fill { min-width: 38mm; }
-  .ws .note, .ws .frp { font-size: 8.5pt; }
-  .ws .credit { font-size: 7.5pt; color: #444; margin-top: 2mm; }
 }
 @media (max-width: 600px) {
   .ws { padding: 10px; } .ws table.blank { font-size: 13px; }

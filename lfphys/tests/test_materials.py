@@ -9,6 +9,7 @@ design's numbers. The sources and how each was checked: lfphys/sources/materials
 
 import cmath
 import math
+from decimal import Decimal
 
 import numpy as np
 import pytest
@@ -85,17 +86,24 @@ def test_schott_constants_are_the_printed_ones(glass):
 
 @pytest.mark.parametrize("glass", GLASSES)
 def test_schott_kappa_from_the_printed_transmittance(glass):
-    """kappa at the sheet's wavelengths is -lambda ln(tau_i)/(4 pi d) of the printed tau_i (25 mm; 10 mm where only
-    that is printed above 0.000), reproduced exactly; between them kappa > 0."""
+    """kappa at the sheet's wavelengths is -lambda ln(tau_i)/(4 pi d) of the printed tau_i (strictly between 0 and 1)
+    of the thickness, 25 or 10 mm, whose printed digits give kappa more precisely: half a unit of the last digit of
+    tau_i over d tau_i (review EX2, R2-E F9; 25 mm at equal precision), reproduced exactly; between them kappa > 0. The
+    node's stated precision covers the other thickness's kappa where both are printed."""
     spec = data.OPTICAL_MATERIALS[glass]
     nodes = 0
     for line in spec["tau"].strip().splitlines():
         lam, t10, t25 = line.split()
-        t, dmm = (t25, 25.0) if t25 != "-" and 0 < float(t25) < 1 else (t10, 10.0)
-        if not (t != "-" and 0 < float(t) < 1):
+        ok = [(t, d) for t, d in ((t25, 25.0), (t10, 10.0)) if t != "-" and 0 < float(t) < 1]
+        if not ok:
             continue
+        t, dmm = min(ok, key=lambda c: _half_unit(c[0]) / (c[1] * float(c[0])))
         k = -float(lam) * 1e-9 * math.log(float(t)) / (4 * math.pi * dmm * 1e-3)
         assert M.index(glass, float(lam)).imag == k
+        if len(ok) == 2:
+            other = [c for c in ok if c != (t, dmm)][0]
+            k2 = -float(lam) * 1e-9 * math.log(float(other[0])) / (4 * math.pi * other[1] * 1e-3)
+            assert M.interpolation_error(glass, float(lam))[1] >= abs(k - k2)
         nodes += 1
     assert nodes == M.info(glass)["nodes"][1] == len(M.info(glass)["kappa_nodes_from"])
     lo, hi = M.info(glass)["range_nm"]
@@ -104,12 +112,23 @@ def test_schott_kappa_from_the_printed_transmittance(glass):
 
 def test_schott_kappa_agrees_with_the_databases_transcription():
     """The refractiveindex.info database's kappa (SCHOTT's catalogue of 2017-01-20, printed to 5 digits) at a few
-    wavelengths; N-SF11 at 370 nm differs as recorded (the current sheet prints tau_i(25 mm) = 0.000)."""
+    wavelengths, from tau_i(25 mm) as the database takes it; N-SF11 at 370 nm differs as recorded (the current sheet
+    prints tau_i(25 mm) = 0.000). Where the 10 mm value is more precise the engine takes it (review EX2, R2-E F9), and
+    the two agree within their printed precisions."""
     for glass, lam, k_db in (("schott_n_bk7", 300.0, 2.8607e-06), ("schott_n_bk7", 500.0, 9.5781e-09),
                              ("schott_n_bk7", 2500.0, 8.1300e-06), ("schott_n_f2", 365.0, 3.7398e-06),
                              ("schott_n_f2", 620.0, 1.7842e-08), ("schott_n_sf11", 380.0, 2.5646e-06),
                              ("schott_n_sf11", 660.0, 4.0300e-08)):
-        assert M.index(glass, lam).imag == pytest.approx(k_db, rel=1e-4)
+        rows = {r.split()[0]: r.split()[1:] for r in data.OPTICAL_MATERIALS[glass]["tau"].strip().splitlines()}
+        t10, t25 = rows[f"{lam:g}"]
+        k25 = -lam * 1e-9 * math.log(float(t25)) / (4 * math.pi * 25e-3)
+        assert k25 == pytest.approx(k_db, rel=1e-4)
+        k = M.index(glass, lam).imag
+        if k != k25:  # the 10 mm value; the interpolation error there covers the difference of the two
+            k10 = -lam * 1e-9 * math.log(float(t10)) / (4 * math.pi * 10e-3)
+            assert k == k10
+            assert M.interpolation_error(glass, lam)[1] >= abs(k10 - k25)
+    assert M.index("schott_n_bk7", 300.0).imag == pytest.approx(2.9552e-06, rel=1e-4)  # tau_i(10 mm) = 0.29
     assert M.index("schott_n_sf11", 370.0).imag == pytest.approx(7.4367e-06, rel=1e-4)  # database: 7.3192e-06
 
 
@@ -134,10 +153,48 @@ def _rows(key):
                      .splitlines()])
 
 
+def _ends_nm(key):
+    """A material's documented ends in nm, from the decimal text of its source (micrometres times 1000 exactly)."""
+    spec = data.OPTICAL_MATERIALS[key]
+    if "table" in spec:
+        lines = spec["table"].strip().splitlines()
+        ends = (lines[0].split()[0], lines[-1].split()[0])
+    else:
+        ends = tuple(repr(float(v)) for v in spec["range_um"])
+    return tuple(float(Decimal(e) * 1000) for e in ends)
+
+
+@pytest.mark.parametrize("key", M.ids())
+def test_both_documented_ends_of_every_material_are_inside_its_range(key):
+    """Review EX2, R2-E F3: 1000 * float("2.00146") is 2001.4599999999998 nm, which refused the documented end
+    2001.46 nm of the MgF2 film (and 0.12399 nm of aluminium's table). Each end, written in nm as the source prints it
+    in um, is accepted (a table's end node reproduced exactly), and the next double outwards is refused."""
+    lo, hi = _ends_nm(key)
+    assert M.info(key)["range_nm"] == (lo, hi)
+    for end, out in ((lo, np.nextafter(lo, -np.inf)), (hi, np.nextafter(hi, np.inf))):
+        v = M.index(key, end)
+        assert np.isfinite(v.real) and v.imag >= 0
+        with pytest.raises(ValueError) as e:
+            M.index(key, out)
+        assert code_of(e.value) == "material.out_of_range"
+    if "table" in data.OPTICAL_MATERIALS[key]:
+        rows = _rows(key)
+        assert M.index(key, lo) == complex(rows[0, 1], rows[0, 2])
+        assert M.index(key, hi) == complex(rows[-1, 1], rows[-1, 2])
+
+
+def test_the_reviewed_ends_are_accepted():
+    """The two ends the review found refused: MgF2 film at 2001.46 nm and aluminium at 0.12399 nm (their last and
+    first table nodes)."""
+    assert M.index("mgf2_film_rodriguez", 2001.46) == complex(*_rows("mgf2_film_rodriguez")[-1, 1:])
+    assert M.index("al_rakic", 0.12399) == complex(*_rows("al_rakic")[0, 1:])
+
+
 @pytest.mark.parametrize("key", TABLES)
 def test_every_node_is_reproduced_exactly(key):
     rows = _rows(key)
-    lam = 1000.0 * rows[:, 0]
+    lines = data.OPTICAL_MATERIALS[key]["table"].strip().splitlines()
+    lam = np.array([float(Decimal(line.split()[0]) * 1000) for line in lines])
     assert np.all(np.diff(lam) > 0)
     v = M.index(key, lam)
     assert np.array_equal(v.real, rows[:, 1]) and np.array_equal(v.imag, rows[:, 2])

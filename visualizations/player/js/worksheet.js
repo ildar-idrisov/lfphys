@@ -17,10 +17,48 @@
 // the world's computed values for the bench on a page of their own: what the drawer of Lab work shows to everyone.
 //
 // Printed, every page is one `.sheet`, one A4 page with the attribution line at its foot (the licence's condition).
+// Nothing is cut off unseen (review R2-P F1, F5): printed, a part's table is full width above its plot frame (a wide table
+// broke out of its half of the page and over the plot); every sheet is laid out as it prints in a hidden copy
+// (`.ws-proxy`, the same rules as the print's: PRINT_RULES), and a sheet longer than its page says so on the screen,
+// above it; the teacher's task moves to a sheet of its own when it does not fit on the first.
 import { MODE, apiGet, getJSON, page, url } from "./api.js";
 import { lang, t, withLang } from "./i18n.js";
+import { controlLabel, valueUnitText } from "./explore.js";
 import { computedFor, instrumentText } from "./lab.js";
 import { el, fill, initTheme, toggleTheme } from "./ui.js";
+
+// the layout of a printed sheet, for the print itself (@media print) and for the hidden copy that measures it on the
+// screen (.ws.ws-proxy, 186 mm wide: A4 less the page's margins). `S` is the scope.
+const PRINT_RULES = (S) => `
+  ${S} { max-width: none; padding: 0; margin: 0; font-size: 10pt; line-height: 1.3; }
+  ${S} h1 { font-size: 15pt; margin: 0 0 2mm; } ${S} h2 { font-size: 13pt; margin: 2mm 0 1.5mm; } ${S} h3 { font-size: 11pt; margin: 2mm 0 1mm; }
+  ${S} .editable { border: 0; padding: 0; outline: none; }
+  ${S} .sheet { height: 273mm; border: 0; border-radius: 0; padding: 0; margin: 0; background: none; break-before: page; page-break-before: always; break-inside: avoid; overflow: hidden; }
+  ${S} .sheet.first { break-before: auto; page-break-before: auto; }
+  ${S} .sheet.stack .mgrid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  ${S} .tbl { overflow: visible; }
+  ${S} table.blank { table-layout: auto; }
+  ${S} table.blank th, ${S} table.blank td { height: var(--row-h, 5.1mm); padding: 0 1.2mm; font-size: 9.5pt; }
+  ${S} table.blank th { line-height: 1.15; }
+  ${S} .sheet.squeeze table.blank th { overflow-wrap: anywhere; hyphens: auto; }
+  ${S} .field > b { float: left; margin-right: 0.4em; }
+  ${S} .field::after { content: ""; display: block; clear: both; }
+  ${S} .field .editable p:first-child, ${S} .field .bench p:first-child { margin-top: 0; }
+  ${S} table.blank.wide th, ${S} table.blank.wide td { font-size: 8pt; padding: 0 0.6mm; }
+  ${S} .axes { height: var(--axes-h, 48mm); margin: 2mm 0 6mm 8mm; }
+  ${S} .sheet.stack .axes { max-width: 120mm; }
+  ${S} .lines { height: var(--lines-h, 7mm); border-bottom-color: #888; }
+  ${S} .who .fill { min-width: 38mm; }
+  ${S} .note, ${S} .frp, ${S} .basis { font-size: 8.5pt; }
+  ${S} .instr, ${S} .formulas { font-size: 9pt; margin: 1mm 0; }
+  ${S} .basis ul { margin: 0.5mm 0; padding-left: 5mm; }
+  ${S} .credit { font-size: 7.5pt; color: #444; margin-top: 2mm; }
+  ${S} .sheet-warn { display: none; }
+  ${S}.split .sheet.first .field.teacher-task { display: none; }
+  ${S} .sheet.teacher-cont { display: none; }
+  ${S}.split .sheet.teacher-cont { display: flex; }`;
+document.head.append(el("style", {}, `@media print {${PRINT_RULES(".ws")}\n  .ws .editable:focus { outline: none; }\n}\n${PRINT_RULES(".ws.ws-proxy")}
+  .ws.ws-proxy { position: absolute; left: -10000px; top: 0; width: 186mm; visibility: hidden; pointer-events: none; }`));
 
 initTheme();
 document.getElementById("theme").onclick = toggleTheme;
@@ -45,7 +83,8 @@ const plotHow = (y, x, model) => (model ? t("Plot {y} against {x}, mark the poin
 
 // the editable texts of the sheet (F8 (b)): kept in this browser per world and variant (a convenience; try/catch:
 // private windows and blocked storage)
-const EDIT = (world, variant) => `lfviz.sheet.${world}.${variant || ""}`;
+// (and per language: an edit is a text in the language it was typed in; review R2-P nits)
+const EDIT = (world, variant, code = lang()) => `lfviz.sheet.${world}.${variant || ""}.${code}`;
 function loadEdits(key) { try { return JSON.parse(localStorage.getItem(key) || "{}") || {}; } catch (e) { return {}; } }
 function saveEdits(key, obj) { try { localStorage.setItem(key, JSON.stringify(obj)); } catch (e) { /* the edits live in the page */ } }
 
@@ -117,16 +156,20 @@ async function main() {
     el("div", { class: "field" }, el("b", {}, t("The bench:")), el("div", { class: "bench" }, (ws.bench || []).map((x) => el("p", {}, t(x))))),
     el("div", { class: "field" }, el("b", {}, t("A suggested procedure (one of several ways):")), editable("procedure", (vtext.procedure || ws.procedure || []).map((x) => t(x)))),
     el("div", { class: "field" }, el("b", {}, t("Record and hand in:")), editable("record", (vtext.record || ws.record || []).map((x) => t(x)))),
-    el("div", { class: "field" }, el("b", {}, t("Task from the teacher:")), editable("teacher_task", [], "free")));
+    el("div", { class: "field teacher-task" }, el("b", {}, t("Task from the teacher:")), editable("teacher_task", [], "free")));
+  // the teacher's task on a sheet of its own, printed only when it does not fit on the first (measure(), below)
+  const teacherCopy = el("div", { class: "teacher-copy" });
+  const teacherSheet = sheet("teacher-cont", el("h2", {}, t("Task from the teacher:")), teacherCopy);
   const rows = ws.record_rows || 10;
   const parts = steps.map((st, k) => {
     const pre = V && V.values ? V.values[st.id] || {} : {};
     const ctl = (st.controls || []).filter((c) => c.param in pre);
-    const preText = ctl.map((c) => {
-      const v = pre[c.param], i = c.values.indexOf(v);
-      const name = c.labels && c.labels[i] ? t(c.labels[i]) : typeof v === "number" ? `${v}${c.unit ? (t(c.unit) === "°" ? "°" : " " + t(c.unit)) : ""}` : t(String(v));
-      return `${t(c.label)} ${name}`;
-    }).join(", ");
+    // the variant's set-up as Lab work's controls write it (review R2-P F6: raw «false», «real», «1.1» in Russian):
+    // a value's own name, a number in the viewer's format with its unit, «on» / «off»
+    const preText = ctl.map((c) => `${t(c.label)} ${valueUnitText(c, pre[c.param])}`).join(", ");
+    // the set-up's columns of the table: the step's controls that no instrument reads (review R2-P F7), as in Lab work
+    const read = new Set(st.instruments.map((iid) => String((instr[iid] || {}).reads || "")).filter((r) => r.startsWith("control:")).map((r) => r.slice(8)));
+    const setup = (st.controls || []).filter((c) => !read.has(c.param));
     // a part has the step's plot frame, without a fit: which line to draw is the student's choice (EX2 §1.4)
     const cols = st.columns;
     const plot = { x: st.plot.x, y: st.plot.y, model: null };
@@ -142,8 +185,9 @@ async function main() {
       el("div", { class: "mgrid" },
         el("div", {}, el("h3", {}, t("Measurements")),
           // a wide table (u34's part 2: 16 columns) scrolls in its own box on a screen, not the page; printed in full
-          el("div", { class: "tbl" }, el("table", { class: "blank" }, el("tr", {}, el("th", {}, "№"), cols.map((c) => el("th", {}, t(c.label)))),
-            Array.from({ length: rows }, (_, i) => el("tr", {}, el("td", {}, String(i + 1)), cols.map(() => el("td", {}))))))),
+          el("div", { class: "tbl" }, el("table", { class: "blank" + (setup.length + cols.length > 8 ? " wide" : "") }, el("tr", {}, el("th", {}, "№"),
+            setup.map((c) => el("th", { class: "setup" }, controlLabel(c))), cols.map((c) => el("th", {}, t(c.label)))),
+            Array.from({ length: rows }, (_, i) => el("tr", {}, el("td", {}, String(i + 1)), setup.map(() => el("td", {})), cols.map(() => el("td", {}))))))),
         el("div", {}, el("h3", {}, t("Plot")),
           el("p", { class: "plot-how" }, plotHow(colLabel(st, plot.y), colLabel(st, plot.x), plot.model)),
           el("div", { class: "axes" }, el("span", { class: "ax ay" }, colLabel(st, plot.y)), el("span", { class: "ax axx" }, colLabel(st, plot.x))))),
@@ -165,6 +209,7 @@ async function main() {
     for (const x of editables) x.node.innerHTML = x.original;
     for (const k of Object.keys(edits)) delete edits[k];
     saveEdits(editKey, edits);
+    later();
   } }, t("Restore the original"));
   fill(box,
     el("div", { class: "ws-tools" },
@@ -174,14 +219,75 @@ async function main() {
       restore,
       el("button", { class: "primary", onclick: () => window.print() }, t("🖨 Print"))),
     el("p", { class: "ws-hint muted" }, t("The goal, the procedure, the record list and the teacher's task can be edited here before printing; the edits stay in this browser only.")),
-    tasks, parts, computed);
+    tasks, teacherSheet, parts, computed);
+  // every sheet laid out as it prints, in a hidden copy: a sheet longer than its page says so above it (on the screen
+  // only), and the teacher's task goes to a sheet of its own when the first does not hold it (review R2-P F5)
+  const measure = () => {
+    const teacher = editables.find((x) => x.name === "teacher_task").node;
+    teacherCopy.innerHTML = teacher.innerHTML;
+    const sheets = () => [...box.querySelectorAll(":scope > .sheet")];
+    // a hidden copy of the sheets laid out as printed; f(copy of sheet i, i) for each, the proxy removed after
+    const inProxy = (split, f) => {
+      const proxy = el("div", { class: "ws ws-proxy" + (split ? " split" : ""), "aria-hidden": "true" });
+      for (const sh of sheets()) proxy.append(sh.cloneNode(true));
+      document.body.append(proxy);
+      try { return [...proxy.querySelectorAll(":scope > .sheet")].map(f); } finally { proxy.remove(); }
+    };
+    // how far a sheet's content runs past its page box (px): past its foot (the attribution line) or its sides
+    const overOf = (sh) => {
+      if (getComputedStyle(sh).display === "none") return 0;
+      const r = sh.getBoundingClientRect(), b = sh.querySelector(".sheet-body"), c = sh.querySelector(".credit");
+      let over = Math.max(0, b.scrollHeight - b.clientHeight);
+      for (const e of b.querySelectorAll("*")) {
+        const q = e.getBoundingClientRect();
+        if (!q.width && !q.height) continue;
+        over = Math.max(over, q.bottom - (c ? c.getBoundingClientRect().top : r.bottom), q.right - r.right, r.left - q.left);
+      }
+      return over > 1 ? over : 0;
+    };
+    const mm = (px) => px * 25.4 / 96;
+    // a part's layout: the table beside its plot frame when it fits in its half of the page, else full width above it
+    // (review R2-P F1: u34's part 2 ran over the plot frame and off the page); a part still too long gets a lower plot
+    // frame (down to 24 mm), then lower rows (down to 4.4 mm), then closer «Notes» lines (down to 5 mm)
+    const parts = () => sheets().filter((sh) => sh.classList.contains("part"));
+    for (const sh of parts()) { sh.classList.remove("stack"); for (const p of ["--axes-h", "--row-h", "--lines-h"]) sh.style.removeProperty(p); }
+    // (a table's headers break between words; only a table wider than the page breaks them anywhere, «squeeze»)
+    const fits = () => inProxy(false, (sh) => { const tb = sh.querySelector("table.blank"), tbox = sh.querySelector(".tbl"); return !tb || tb.getBoundingClientRect().width <= tbox.getBoundingClientRect().width + 1; });
+    for (const sh of parts()) sh.classList.remove("squeeze");
+    const narrow = fits();
+    sheets().forEach((sh, i) => { if (sh.classList.contains("part") && !narrow[i]) sh.classList.add("stack"); });
+    const full = fits();
+    sheets().forEach((sh, i) => { if (sh.classList.contains("part") && !full[i]) sh.classList.add("squeeze"); });
+    for (const [prop, from, to] of [["--axes-h", 48, 24], ["--row-h", 5.1, 4.4], ["--lines-h", 7, 5]]) {
+      const over = inProxy(false, overOf);
+      sheets().forEach((sh, i) => { if (sh.classList.contains("part") && over[i]) sh.style.setProperty(prop, `${Math.max(to, from - mm(over[i]) - 1).toFixed(1)}mm`); });
+    }
+    const hasTask = teacher.textContent.trim().length > 0;
+    let over = inProxy(false, overOf);
+    const split = hasTask && over[0] > 0;  // the teacher's task on a sheet of its own (review R2-P F5)
+    if (split) over = inProxy(true, overOf);
+    box.classList.toggle("split", split);
+    box.querySelectorAll(":scope > .sheet-warn").forEach((w) => w.remove());
+    sheets().forEach((sh, i) => {
+      if (!over[i]) return;
+      sh.before(el("p", { class: "sheet-warn", role: "status" }, t("This page is longer than an A4 sheet by {mm:d} mm: what does not fit is not printed. Shorten its texts.", { mm: Math.ceil(mm(over[i])) })));
+    });
+    document.body.dataset.overflow = String(over.filter(Boolean).length);
+  };
+  let pending = 0;
+  const later = () => { clearTimeout(pending); pending = setTimeout(measure, 250); };
+  for (const x of editables) x.node.addEventListener("input", later);
+  window.addEventListener("beforeprint", measure);
+  await (document.fonts ? document.fonts.ready : Promise.resolve());
+  measure();
+  window.__lfSheet = { measure };
   document.body.dataset.ready = "1";
 }
 
 function head(viz, ws, ru, V) {
   return [  // flat: el() flattens one level of its children
     el("h1", {}, t(viz.title)),
-    V ? el("div", { class: "variant" }, t("Variant {id}: {label}", { id: V.id, label: t(V.label) })) : null,
+    V ? el("div", { class: "variant" }, t("Variant: {label}", { label: t(V.label) })) : null,  // its name, not its raw id (review R2-P F6)
     el("div", { class: "who" }, [t("Name"), viz.ui === "school" ? t("Class") : t("Group"), t("Date")].map((x) => el("span", {}, x + ": ", el("span", { class: "fill" })))),
     (ws.frp || []).filter((f) => !V || !V.grade || !f.grade || f.grade === V.grade).map((f) => el("div", { class: "frp" },
       [programmeName(f), f.grade ? t("grade {n:d}", { n: f.grade }) : ""].filter(Boolean).join(", ") + ": ",

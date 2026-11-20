@@ -945,10 +945,10 @@ def _check_lab(viz, sc, where: str, decl: dict) -> list[str]:
             used = [u for u in used or [] if u in instr] if isinstance(used, list) else []
         speed = st.get("speed") if st.get("speed") is not None or "atlas" not in st \
             else (shared_screen(viz, st) or {}).get("speed")
-        if any(isinstance(instr.get(u), dict) and instr[u].get("manual") for u in used) \
-                and speed not in (None, 1, 1.0):
-            out.append(f"{w}: a manual stopwatch times the flight on the wall clock: its step plays in real time (no "
-                       f"speed; EX2 §5 F1)")
+        if any(isinstance(instr.get(u), dict) and instr[u].get("manual") for u in used) and speed is not None:
+            # RULES §10: «its step declares no speed» (review R2-F F5 (b): speed 1 was let through)
+            out.append(f"{w}: a manual stopwatch times the flight on the wall clock: its step plays in real time and "
+                       f"declares no speed (EX2 §5 F1)")
         cols, cids = st.get("columns"), []
         if not isinstance(cols, list) or not cols:
             out.append(f"{w}: columns: a list of {{id, label, from | of + op | expr}}")
@@ -1364,6 +1364,12 @@ def _code_files(viz_id: str, shared: list[Path] | None = None) -> tuple[Path, li
 
 def _rel(f: Path, vf: Path) -> Path:
     return f.relative_to(ROOT.parent) if f.is_relative_to(ROOT.parent) else Path("extra") / vf.name / f.relative_to(vf)
+
+
+def code_files(viz_id: str) -> list[Path]:
+    """The files ``code_hash`` reads (``_code_files``): what a batch builder checks for a change during its build
+    (``site/sitelib.check_unchanged``, review R2-F F1)."""
+    return _code_files(resolve(viz_id))[1]
 
 
 def code_hash(viz_id: str) -> str:

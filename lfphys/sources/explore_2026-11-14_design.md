@@ -777,6 +777,12 @@ recording's worlds and draws the earlier throws faded with their «L = …», so
 time label states the slow motion. The events' texts carry no measured value, and `engine_modules()` names
 `core.data:air` only (review R-W F8, integrator D10).]
 
+[2026-11-20, after EX2's review R2-W F10 (`STATUS.md` V53 (af)): since EX2 every flight is on the rotating Earth
+(EX2 design §10.1), and the run's landings of the third row (now at 8 s of `independence`) differ by 10.526 µs, so its
+caption «… at the same moment as the dropped one» is **[error in earlier]** for that world; it now reads «Twice the
+sideways speed: the ball lands twice as far, only 10.5 µs after the dropped one, held up by the Earth's rotation.»,
+the number from the run (`s03_projectile/tests/test_s03_screens.py`).]
+
 **Explore** (`explore`, the preset `field`: the 67 mm ball): h {0, 1, 2, 5, 10} m × v₀ {5, 10, 15, 20, 25} m/s ×
 θ {0°, 5°, …, 90°} × air {off, on} = 950 combinations, of which 10 are refused (h 0 with θ 0) and 940 computed
 ([error in earlier]: h {0, 1, 2, 3, 5, 10}, 1140 combinations, 1130 computed; the 3 m row was dropped for the size).

@@ -106,6 +106,42 @@ def recorder_hash(files=None) -> str:
     return h.hexdigest()[:16]
 
 
+class CodeChanged(Exception):
+    """The code a build ran is not the code its key names (review R2-F F1): the build's output is not kept."""
+
+
+def code_signature(vid: str) -> tuple[str, str]:
+    """(the world's code hash, the recorder's hash) of the files as they are now (``registry.code_hash``, every file
+    read): what a batch builder takes before it imports any world, keys its output with, and compares after the world's
+    last output (``check_unchanged``)."""
+    return registry.code_hash(vid), recorder_hash()
+
+
+def check_unchanged(vid: str, sig0: tuple, since_ns: int | None = None):
+    """Raise ``CodeChanged`` when the world's code or the recorder's files (``code_signature``) are not those of
+    ``sig0``, taken before the world was imported; with ``since_ns`` (the time the builder's process started) also
+    when one of those files was modified after it: a file an import read before ``sig0`` was taken (the lfviz package
+    and the engine's ``i18n`` are imported with the registry). Review R2-F F1: a batch build (``record.py --all``,
+    ``atlas.py --stale`` …) imported every world at its start and hashed the files only at the world's turn, so an edit
+    in between gave output computed by the old code under the new code's key, which every reader then took as current."""
+    now = code_signature(vid)
+    if tuple(now) != tuple(sig0):
+        raise CodeChanged(f"{vid}: the code changed during the build (code {sig0[0]} → {now[0]}, recorder "
+                          f"{sig0[1]} → {now[1]}): nothing of this world was kept; run again")
+    if since_ns is not None:
+        late = []
+        for f in [*registry.code_files(vid), *RECORDER_FILES]:
+            try:
+                if Path(f).stat().st_mtime_ns > since_ns:
+                    late.append(Path(f))
+            except OSError:  # missing now: the hash above names a missing file, so it was missing at sig0 too
+                pass
+        if late:
+            names = ", ".join(str(f.relative_to(REPO)) if f.is_relative_to(REPO) else str(f) for f in late[:3])
+            raise CodeChanged(f"{vid}: {names}{' …' if len(late) > 3 else ''} changed after the build started: nothing "
+                              f"of this world was kept; run again")
+
+
 def spec_key(rec: dict, code_hash: str, recorder: str | None = None) -> str:
     """The recording's key: sha256(spec + recorder version + the recorder's hash + the world's code hash), 16 hex
     digits."""

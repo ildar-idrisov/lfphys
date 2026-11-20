@@ -196,6 +196,8 @@ def test_dipole_coherence_closed_forms(u):
 def _bad_checks(h):
     bad = []
     for c in h.checks().values():
+        if c.get("info"):  # information (an identity, say): never a pass or a failure, as the player draws it
+            continue
         if c.get("ok") is False:
             bad.append(c)
         elif c.get("ok") is None and c.get("ref") is not None and c.get("rel") is not None \
@@ -828,7 +830,23 @@ def test_coherence_is_undefined_when_a_slit_is_dark():
     assert st.get("coh") is None or st["coh"].get("why")
     for vals, ref in (({}, 1.0), ({"pol_state": "D", "el1": "polarizer", "el2": "polarizer", "el2_angle": 90.0}, 0.0)):
         c = Harness(V, None, vals).checks()["coh0"]
-        assert c["value"] == pytest.approx(ref, abs=1e-6) and not c.get("info")
+        # defined; an identity here (the expectation is built from the same marks), so information (R2-W F3)
+        assert c["value"] == pytest.approx(ref, abs=1e-6) and c.get("info") and "ok" not in c
+
+
+def test_identities_of_the_marks_are_information_not_passed_checks():
+    """Review R2-W F3: V² + D² of the which-path marks (= 1 identically for pure marks, ≤ 1 by Englert's theorem) and
+    |γ₁₂| of an expectation built from the same marks are identities: shown as information (≈), never counted as ✓.
+    A coherence against an independent reference (GRW's kicks in flight) stays a check."""
+    h = Harness(V, None, None)
+    ch = h.checks()
+    for cid in ("eng0", "coh0"):
+        assert ch[cid].get("info") and "ok" not in ch[cid], cid
+    assert ch["eng0"]["value"] == pytest.approx(1.0, abs=1e-12) and ch["eng0"]["ref"] == 1.0
+    hu = Harness(V, None, {"pol_state": "unpol"})
+    assert hu.checks()["eng0"].get("info") and hu.checks()["eng0"]["value"] <= 1 + 1e-9
+    cw = Harness(V, "c60_grw").checks()["coh0"]
+    assert not cw.get("info") and cw["ok"] is True and cw["ref"] < 1.0
 
 
 def test_refusals_name_the_choice_and_what_to_take():
@@ -888,4 +906,5 @@ def test_honest_failures_are_marked_expected():
     assert c["ok"] is False and "Born rule is changed" in _en(c["expected"])
     assert S2.presets["triple_mod"]["note"]
     c = Harness(V, "triple").checks()["sork0"]
-    assert c["ok"] and not c.get("expected")
+    # under the Born rule an identity: information, not a passed check (review R2-W F3)
+    assert c.get("info") and "ok" not in c and c["value"] < 1e-9 and not c.get("expected")

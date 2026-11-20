@@ -166,7 +166,7 @@ shows the same errors), and scaled by √(n_then/n) in between.
 | paraxial accuracy at the screen | the exact 2-D Rayleigh–Sommerfeld integral (`engine/rs.py`, composite Gauss–Legendre panels); > 1 % fails |
 | fringe period (two slits, far field) | λL/d |
 | degree of coherence of the expected pattern | microscope: Chapman's dipole average \|1 − p + p⟨e^{iΔk_x d}⟩\| (tolerance 0.02: the reference ignores the envelope shift by the recoil); GRW: exp(−Λ[1 − (√π r_C/d) erf(d/2r_C)]), Λ = λ(m/u)L₂/v; wide source: van Cittert–Zernike \|sinc(s d/(λL₁))\|; forced slit collapse: 0 |
-| consistency (identities, labelled so) | Englert V² + D² = 1 for pure marks; \|γ₁₂\| of a coherent expectation = the marks' overlap; Sorkin's parameter 0 under the Born rule; no-signalling under the Born rule (under the Born-exponent modification its violation is reported as a computed consequence) |
+| consistency (identities, labelled so; shown as information, ≈, never counted as passed: review R2-W F3) | Englert V² + D² = 1 for pure marks (≤ 1 for mixed ones); \|γ₁₂\| of a coherent expectation = the marks' overlap; Sorkin's parameter 0 under the Born rule; no-signalling under the Born rule (under the Born-exponent modification its violation is reported as a computed consequence) |
 | histogram vs expectation (live) | χ² p-value (dark counts included); \|γ₁₂\| of the histogram ± its error vs the expected \|γ₁₂\| |
 
 ## Vector mode: a perfectly conducting screen (B8, closes STATUS V4)

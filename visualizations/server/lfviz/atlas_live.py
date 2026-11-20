@@ -222,7 +222,11 @@ def local_point(world: str, spec: dict, values: dict, seed: int, folder: Path, a
             return None
         data = mf.parent.joinpath(name).read_bytes()
         base = mf.parent.joinpath(man["base"]["file"]).read_bytes()
-        if len(data) != size or hashlib.sha256(base).hexdigest() != man["base"]["sha256"]:
+        # the point's name carries the first 8 hex digits of its sha256 (``p<i>.<hash8>.lfpt.gz``): a point of the same
+        # size but other bytes is not served (review R2-F F9: its size alone was checked; the base and the pool by sha256)
+        hash8 = name.rsplit(".lfpt.gz", 1)[0].rsplit(".", 1)[-1]
+        if len(data) != size or hashlib.sha256(data).hexdigest()[:8] != hash8 \
+                or hashlib.sha256(base).hexdigest() != man["base"]["sha256"]:
             return None
         if man.get("pool"):  # a live point is never pooled (EX2 §5 F10): its pooled blobs put back
             pool = mf.parent.joinpath(man["pool"]["file"]).read_bytes()

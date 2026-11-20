@@ -29,6 +29,7 @@ import math
 
 import numpy as np
 from lfviz.errors import Refusal
+from scipy import stats as sps
 from lfviz.params import Param, Schema
 from lfviz.sim import Simulation as BaseSimulation
 
@@ -177,6 +178,11 @@ G_ST = T("Spacetime: the choice of a setting and the detection")
 G_LAW = T("Set-up: the expectation of the world's law (exact)")
 G_STAT = T("Statistics of the coincidences: measured ↔ the engine's prediction for these devices")
 G_SLOT = T("All the trials (slots): CH and J, no fair sampling")
+# the counting by slots draws its counts from the engine's own probabilities: those comparisons test the bookkeeping,
+# not the physics (review R2-W F2), and the slots simulated in time are its independent check
+G_SAMPLED = T("Counting by slots: the counts drawn from the engine's prediction, against it (the bookkeeping, not the "
+              "physics)")
+G_TIMED = T("Counting by slots: the slots simulated in time ↔ the engine's slot probabilities")
 G_DEVS = T("The detectors and the coincidence window")
 
 #: the frame's measurables (the screens' readouts and the lab's instruments; EX2 §5 F4, F7)
@@ -251,6 +257,7 @@ class Simulation(BaseSimulation):
             self.counter = Stream(self.law, self.v, C, self._si(), self.rng, (seed, key))
         self.seg = 0
         self.seg_counts = dict(coinc=0, loc=0, free=0, true=0)
+        self.both0 = 0  # the stream's lifetime count of pairs detected at both sides when this segment began
         self.n_checked = 0
         self._next_slot_check = 1000
         self.said = set()
@@ -624,6 +631,15 @@ class Simulation(BaseSimulation):
         """Once per world: the detectors and the slots against their closed forms."""
         S, g = self._si(), G_DEVS
         self._check("devices", T("The detectors"), None, None, "", g, note=self._device_identity())
+        if self.params["pair"] == "spin":
+            # review R2-W F11: no spin measurement has a photon counter's efficiency, dark counts, dead time and jitter
+            self._check("devices_spin", T("The detectors of spin pairs: an illustration"), None, None, "", g,
+                        info=True,
+                        note=T("the spin pairs are counted by the same detector model as the photons, with the same "
+                               "values: an illustration of the same statistics, not a real spin measurement. A real "
+                               "one gives every trial an outcome and errs by reading the wrong one: in Hensen et al. "
+                               "(2015), the electron spins of two NV centres, the combined preparation and read-out "
+                               "fidelity was 97.1 % and 96.3 %; such errors are not modelled here"))
         coupling = PD.slot_coupling(S["dead"], S["sigma"], S["Ts"])
         self._check("slot_coupling", T("Independent slots: (t_d + 5σ)/T_s ≪ 1"), coupling, None, "", g,
                     ok=coupling < 0.1,
@@ -650,6 +666,26 @@ class Simulation(BaseSimulation):
                                   "bell_stats.threshold_efficiency); here η = {eta:.4g}: {verdict}", eta=eta,
                                   verdict=T("above the threshold") if eta > th else T("below the threshold")))
 
+    def _j_zero(self):
+        """The efficiency η in [0.5, 1] at which the engine's J of this source, background and analyser angles (the
+        curve ``_j_curve``) crosses 0, by bisection on the engine's slot probabilities to 10⁻⁹; None when it does not
+        cross there. At Giustina's angles it lies above the threshold at the best angles (``THRESHOLDS``)."""
+        P, S = self.params, self._si()
+        A = (P["a2_deg"], P["a_deg"])
+        B = (P["b_deg"], P["b2_deg"])
+        pd = PD.dark_click_probability(S["dark"], S["Ts"])
+        mu = S["rate"] * S["Ts"]
+
+        def J(e):
+            return BS.j_value([[self.law.slot_table(A[i], B[j], e, e, pd, pd, mu) for j in (0, 1)] for i in (0, 1)])
+        lo, hi = 0.5, 1.0
+        if not (J(lo) < 0.0 < J(hi)):
+            return None
+        while hi - lo > 1e-9:
+            mid = 0.5 * (lo + hi)
+            lo, hi = (mid, hi) if J(mid) < 0.0 else (lo, mid)
+        return 0.5 * (lo + hi)
+
     def _threshold(self):
         P = self.params
         if self.law.law != "quantum" or P["visibility"] != 1.0 or P["pair"] != "photon":
@@ -660,8 +696,11 @@ class Simulation(BaseSimulation):
         return THRESHOLDS.get(key)
 
     def _spacetime_checks(self):
-        """The space-time relation of the setting choices for a pair emitted now (nominal geometry): the latest
-        detection in a slot, c(τ + T_s) after the choice."""
+        """The space-time relation of the setting choices for a pair emitted now (nominal geometry). Each station's
+        slots start at its own arrival time L/v (``Stream.off``), so the latest detection at Y in a slot comes
+        τ + T_s + (L_Y − L_X)/v after the choice at X for the same slot; the check takes the direction in which it
+        comes later (review R2-W F8: with L_B > L_A the choice at A ↔ the latest detection at B), and the freedom of
+        choice the station whose choice comes closer to the emission (the more time-like interval)."""
         S = self._si()
         LA, LB, c, v = S["L_A"], S["L_B"], C, self.v
         g = G_ST
@@ -671,47 +710,60 @@ class Simulation(BaseSimulation):
         em = (te, 0.0)
         if S["switch"] == "random":
             tau, Ts = S["tau"], S["Ts"]
-            lead = tau + Ts  # the latest detection in a slot comes τ + T_s after the choice
-            chA = (tB - lead, -LA)
-            s2 = K.interval(chA, detB, c)
-            rel = K.relation(chA, detB, c)
+            pos = {"A": -LA, "B": LB}
+            dist = {"A": LA, "B": LB}
+            # the direction X → Y with the later latest detection (A → B on a tie)
+            x, y = ("A", "B") if LB >= LA else ("B", "A")
+            lead = tau + Ts + (dist[y] - dist[x]) / v
+            det_y = (dist[y] / v, pos[y])
+            ch_x = (det_y[0] - lead, pos[x])
+            s2 = K.interval(ch_x, det_y, c)
+            rel = K.relation(ch_x, det_y, c)
             txt = {K.SPACELIKE: T("space-like: the locality loophole is closed"),
                    K.TIMELIKE: T("time-like: the locality loophole is OPEN"),
                    K.LIGHTLIKE: T("light-like (on the boundary of the cone)")}[rel]
-            note = (T("s² = c²(τ + T_s)² − (L_A + L_B)², c(τ + T_s) = {ct:.4g} m, L_A + L_B = {L2:.4g} m: a signal "
-                      "from the choice at A cannot reach the detection at B in time; reference: the closed form",
-                      ct=c * lead, L2=LA + LB) if rel == K.SPACELIKE else
-                    T("s² = c²(τ + T_s)² − (L_A + L_B)², c(τ + T_s) = {ct:.4g} m, L_A + L_B = {L2:.4g} m: a signal "
-                      "from the choice at A can reach the detection at B in time; reference: the closed form",
-                      ct=c * lead, L2=LA + LB))
-            self._check("st_loc", T("Choice at A ↔ the latest detection at B in its slot: {rel}", rel=txt), s2,
-                        (c * lead) ** 2 - (LA + LB) ** 2, T("m²"), g, tol=1e-9, note=note)
+            args = dict(x=x, y=y, dt=lead, ct=c * lead, L2=LA + LB)
+            note = (T("s² = c²Δt² − (L_A + L_B)², Δt = τ + T_s + (L_{y} − L_{x})/v = {dt:.4g} s (each station's slots "
+                      "start at its own arrival time L/v), cΔt = {ct:.4g} m, L_A + L_B = {L2:.4g} m: a signal from the "
+                      "choice at {x} cannot reach the detection at {y} in time; reference: the closed form", **args)
+                    if rel == K.SPACELIKE else
+                    T("s² = c²Δt² − (L_A + L_B)², Δt = τ + T_s + (L_{y} − L_{x})/v = {dt:.4g} s (each station's slots "
+                      "start at its own arrival time L/v), cΔt = {ct:.4g} m, L_A + L_B = {L2:.4g} m: a signal from the "
+                      "choice at {x} can reach the detection at {y} in time; reference: the closed form", **args))
+            self._check("st_loc", T("Choice at {x} ↔ the latest detection at {y} in its slot: {rel}", x=x, y=y,
+                                    rel=txt), s2, (c * lead) ** 2 - (LA + LB) ** 2, T("m²"), g, tol=1e-9, note=note)
             if rel == K.SPACELIKE:
-                beta = K.order_reversal_speed(chA, detB, c)
-                self._check("st_rev", T("The order “choice at A → detection at B” reverses in a frame moving from A to B "
-                                        "faster than v*; v*/c ="), beta, _reversal_by_boosts(chA, detB), "", g,
-                            tol=1e-9,
+                beta = K.order_reversal_speed(ch_x, det_y, c)
+                # (the boosts along +x: the events mirrored when the choice is Bob's, whose station lies at +x)
+                mir = (lambda e: e) if x == "A" else (lambda e: (e[0], -e[1]))
+                self._check("st_rev", T("The order “choice at {x} → detection at {y}” reverses in a frame moving from "
+                                        "{x} to {y} faster than v*; v*/c =", x=x, y=y), beta,
+                            _reversal_by_boosts(mir(ch_x), mir(det_y)), "", g, tol=1e-9,
                             note=T("v* = c²Δt/Δx < c: the time between the events is not absolute, there is no causal "
                                    "link; reference: the zero of Δt′ found with the Lorentz matrices "
                                    "(lfphys.core.relativity.boost_matrix)"))
             else:
-                self._check("st_rev", T("The order “choice at A → detection at B” is absolute (time-like events)"),
-                            None, None, "", g, note=T("it reverses in no inertial frame"))
-            tA_arr = LA / v
-            chA_first = (tA_arr - tau, -LA)  # a choice made τ before the slot in which the particle arrives at once
-            s2e = K.interval(chA_first, em, c)
-            rel_e = K.relation(chA_first, em, c)
-            before = tA_arr - tau < te
+                self._check("st_rev", T("The order “choice at {x} → detection at {y}” is absolute (time-like events)",
+                                        x=x, y=y), None, None, "", g, note=T("it reverses in no inertial frame"))
+            # the freedom of choice: a choice made τ before the slot in which the particle arrives at once, for the
+            # station whose choice is nearer the emission in the interval's sense (A on a tie)
+            s2_of = {z: K.interval((dist[z] / v - tau, pos[z]), em, c) for z in "AB"}
+            z = "A" if s2_of["A"] >= s2_of["B"] else "B"
+            t_arr = dist[z] / v
+            ch_first = (t_arr - tau, pos[z])
+            s2e = s2_of[z]
+            rel_e = K.relation(ch_first, em, c)
+            before = t_arr - tau < te
             txe = {K.SPACELIKE: T("space-like: the choice and the source are independent"),
                    K.TIMELIKE: (T("the choice is in the past cone of the emission: a signal from the choice reaches the "
                                   "source in time")
                                 if before else T("the choice is in the future cone of the emission: the "
                                                  "freedom-of-choice loophole is open")),
                    K.LIGHTLIKE: T("light-like")}[rel_e]
-            self._check("st_free", T("Choice at A ↔ emission of the pair: {rel}", rel=txe), s2e,
-                        (c * (tA_arr - tau - te)) ** 2 - LA ** 2, T("m²"), g, tol=1e-9,
-                        note=T("s² = c²(L_A/v − τ)² − L_A², a particle arriving at the start of its slot; the flight "
-                               "time L_A/v = {tf:.4g} s, τ = {tau:.4g} s", tf=LA / v, tau=tau))
+            self._check("st_free", T("Choice at {x} ↔ emission of the pair: {rel}", x=z, rel=txe), s2e,
+                        (c * (t_arr - tau - te)) ** 2 - dist[z] ** 2, T("m²"), g, tol=1e-9,
+                        note=T("s² = c²(L_{x}/v − τ)² − L_{x}², a particle arriving at the start of its slot; the flight "
+                               "time L_{x}/v = {tf:.4g} s, τ = {tau:.4g} s", x=z, tf=t_arr, tau=tau))
         else:
             tA, xA = self.counter.t_set["A"] if not self.slots_mode else (0.0, -LA)
             tA -= self.t  # the same origin: the emission of a pair now
@@ -735,8 +787,10 @@ class Simulation(BaseSimulation):
         law = self.law
         cells = self._cells()
         fixed = self.params["switch"] == "fixed"
-        g = G_STAT
-        ref_txt = T("the engine's prediction for these devices and this source (photodetector.coincidence_rates)")
+        g = G_SAMPLED if self.slots_mode else G_STAT
+        ref_txt = (T("the engine's prediction for these devices and this source (photodetector.coincidence_rates), from "
+                     "which the counting by slots draws these counts") if self.slots_mode else
+                   T("the engine's prediction for these devices and this source (photodetector.coincidence_rates)"))
         for k, c in enumerate(cells):
             lab = T("E({x},{y}) at α_A = {a}°, α_B = {b}°", x=c["x"], y=c["y"], a=float(c["alA"]), b=float(c["alB"]))
             if c["N"] >= NMIN:
@@ -819,16 +873,17 @@ class Simulation(BaseSimulation):
         # all the trials: CH and J
         j = self._J()
         gs = G_SLOT
+        gj = G_SAMPLED if self.slots_mode else G_SLOT  # J and CH against their prediction: drawn from it
         if j["n"] >= 1000:
             zJ = (j["J"] - j["Jexp"]) / j["se"] if j["se"] else 0.0
-            self._check("J", T("J = p₊₊(a′b) − p₊₀(a′b′) − p₀₊(ab) − p₊₊(ab′) per slot"), j["J"], j["Jexp"], "", gs,
+            self._check("J", T("J = p₊₊(a′b) − p₊₀(a′b′) − p₀₊(ab) − p₊₊(ab′) per slot"), j["J"], j["Jexp"], "", gj,
                         ok=abs(zJ) < ZTOL,
                         note=T("± {se:.3g} (the multinomial error of each setting pair); z = {z:+.2f}; reference: the "
                                "engine's slot probabilities (bell_stats.slot_probabilities) for these devices; per pair "
                                "J/μ = {jp:.4g}", se=float(j["se"]), z=float(zJ), jp=float(j["J"] / j["mu"])))
             zC = (j["CH"] - j["CHexp"]) / j["CHse"] if j["CHse"] else 0.0
             self._check("CH", T("CH = p₊₊(a′b) + p₊₊(a′b′) + p₊₊(ab) − p₊₊(ab′) − p₊·(a′) − p·₊(b) per slot"),
-                        j["CH"], j["CHexp"], "", gs, ok=abs(zC) < ZTOL,
+                        j["CH"], j["CHexp"], "", gj, ok=abs(zC) < ZTOL,
                         note=T("± {se:.3g}; z = {z:+.2f} (Gisin and Gisin's inequality (15); local realism: CH ≤ 0)",
                                se=float(j["CHse"]), z=float(zC)))
             xJ = j["J"] / j["se"] if j["se"] else None
@@ -848,7 +903,7 @@ class Simulation(BaseSimulation):
             for cid, lab in (("J", T("J = p₊₊(a′b) − p₊₀(a′b′) − p₀₊(ab) − p₊₊(ab′) per slot")),
                              ("CH", T("CH = p₊₊(a′b) + p₊₊(a′b′) + p₊₊(ab) − p₊₊(ab′) − p₊·(a′) − p·₊(b) per slot")),
                              ("J_bound", T("J and the bound 0"))):
-                self._check(cid, lab, None, None, "", gs,
+                self._check(cid, lab, None, None, "", gs if cid == "J_bound" else gj,
                             note=T("accumulating: at least {n:d} trials of each setting pair are needed", n=1000))
         # E(delta): all measured angle pairs against the prediction
         pts = self._points()
@@ -862,7 +917,8 @@ class Simulation(BaseSimulation):
                             note=T("points with N ≥ {nmin:d}: {k:d}; p = {p:.3g}; reference: χ² ≈ the number of "
                                    "points", nmin=NMIN, k=int(dof), p=float(p)))
         # no-signalling from the run's own counts
-        gn = T("No signalling: the marginal of one side does not depend on the setting of the other")
+        gn = G_SAMPLED if self.slots_mode else \
+            T("No signalling: the marginal of one side does not depend on the setting of the other")
         for i, (x, c1, c2) in enumerate((("a", cells[0], cells[1]), ("a′", cells[2], cells[3]))):
             self._nosig(f"nsA{i}", T("P_A(+ | {x}, b) − P_A(+ | {x}, b′)", x=x), c1, c2, "A", gn, fixed)
         for i, (y, c1, c2) in enumerate((("b", cells[0], cells[2]), ("b′", cells[1], cells[3]))):
@@ -882,12 +938,53 @@ class Simulation(BaseSimulation):
                             note=T("coincidences: {k:d} of {m:d}", k=self.seg_counts["free"], m=nt))
         if not self.slots_mode:
             self._stream_checks()
+        else:
+            self._timed_check()
+
+    def _timed_check(self):
+        """The counting by slots' independent check (review R2-W F2): the outcome tables of the slots simulated in time
+        (``Slots._in_time``: Poisson emissions, the ports by the law, each detector's efficiency, dark counts, dead time
+        and jitter, the clicks binned into the slots) against the engine's slot probabilities accumulated with them
+        (``Law.slot_table``: η, dark clicks, a Poisson number of pairs per slot, no dead time, independent slots).
+        Pearson's χ² over the outcome classes expected at least 5 times (the rarer ones of each angle pair pooled, a
+        pool expected under 5 times left out), dof = classes − angle pairs (each pair's total is fixed)."""
+        obs_all, exp_all = self.store.timed, self.store.timed_exp
+        n = int(sum(int(v.sum()) for v in obs_all.values()))
+        lab = T("The slots simulated in time ↔ the engine's slot probabilities: χ² of the outcome tables")
+        if n < Slots.N_TIME:
+            self._check("timed", lab, None, None, "", G_TIMED,
+                        note=T("accumulating: at least {n:d} slots simulated in time are needed", n=Slots.N_TIME))
+            return
+        o_bins, e_bins, keys = [], [], 0
+        for k, ob in obs_all.items():
+            ex = exp_all[k].ravel()
+            ob = ob.ravel().astype(float)
+            big = ex >= 5.0
+            o_bins += ob[big].tolist()
+            e_bins += ex[big].tolist()
+            if ex[~big].sum() >= 5.0:
+                o_bins.append(float(ob[~big].sum()))
+                e_bins.append(float(ex[~big].sum()))
+            keys += 1
+        o, e = np.array(o_bins), np.array(e_bins)
+        x2 = float(np.sum((o - e) ** 2 / e))
+        dof = max(1, len(o) - keys)
+        p = float(sps.chi2.sf(x2, dof))
+        self._check("timed", lab, x2, float(dof), "", G_TIMED, ok=p > 1e-6,
+                    note=T("{n:d} slots simulated in time (photodetector.pair_slots: Poisson emissions, the ports by the "
+                           "law, each detector's efficiency, dark counts, dead time and jitter, the clicks binned into "
+                           "the slots) against bell_stats.slot_probabilities; {k:d} outcome classes expected at least 5 "
+                           "times, {dof:d} degrees of freedom, p = {p:.3g}; reference: χ² ≈ the degrees of freedom. "
+                           "An independent check of the counting by slots, whose counts are drawn from those "
+                           "probabilities", n=n, k=len(o), dof=dof, p=p))
 
     def _stream_checks(self):
         """The time stream's counts against the detectors' closed forms."""
         g, S = G_DEVS, self._si()
         st = self.counter
-        both, true = st.counts["both"], self.seg_true_total
+        # both counts of this segment: «Reset the statistics» restarts the true coincidences, so the pairs detected at
+        # both sides are counted from the same moment (review R2-W F7: a lifetime count against a segment's)
+        both, true = st.counts["both"] - self.both0, self.seg_true_total
         if both >= 100:
             share = PD.window_share(S["w"], S["sigma"], S["sigma"])
             p = true / both
@@ -990,6 +1087,7 @@ class Simulation(BaseSimulation):
             self.store.clear()
             self.seg += 1
             self.seg_counts = dict(coinc=0, loc=0, free=0, true=0)
+            self.both0 = self.counter.counts["both"]
             self.said = set()
             self._stat_checks()
             return T("the statistics reset; the set-up and the pairs in flight as they were")
@@ -1245,6 +1343,9 @@ class Simulation(BaseSimulation):
             "pair": P["pair"], "pair_label": PAIR_LABEL[P["pair"]], "law": law.law, "model": law.model,
             "model_label": MODEL_LABEL.get(law.model), "v": self.v, "c": C, "period": law.period,
             "counting": P["counting"], "device": self._device_identity(),
+            # where the engine's J(η) of this source, background and angles crosses 0 (the view marks it beside the
+            # dashed thresholds without dark counts; review R2-W F9); null when it does not cross in [0.5, 1]
+            "j_threshold": self._j_zero() if self.slots_mode else None,
             "modifications": SCHEMA.modifications(P), "actions": self._actions(), "measurables": MEASURABLES,
         }, {"cd": d, "cq": q, "ch": h, "sd": sd, "sq": sq, "sh": sh, "sw": sw,
             **({"je": je, "jq": jq} if self.slots_mode else {})}
@@ -1547,9 +1648,11 @@ STORY_CAPTIONS = [
     {"at": 0, "hold": 3,
      "text": T("A source in the middle sends pairs of polarisation-entangled photons to Alice (left) and Bob (right), "
                "500 m away on each side, one pair at a time.")},
-    {"at": 3, "text": T("At the start of each microsecond, each station picks one of its two polariser settings at "
-                        "random (Alice a or a′, Bob b or b′). Each detected photon gives + or −; a real detector misses "
-                        "about a third of them, so only about half of the pairs give a coincidence.")},
+    # the bit of a slot is drawn τ before it (review R2-W F9: not «at the start of each microsecond»)
+    {"at": 3, "text": T("{tau:.0f} ns before each 1 µs slot, each station picks one of its two polariser settings for it "
+                        "at random (Alice a or a′, Bob b or b′). Each detected photon gives + or −; a real detector "
+                        "misses about a third of them, so only about half of the pairs give a coincidence.",
+                        tau=SCHEMA.by_id["tau_ns"].default)},
     {"at": 10, "hold": 4,
      "text": T("Much faster: thousands of pairs. From the counts the run computes the correlations E and S = E(a,b) − "
                "E(a,b′) + E(a′,b) + E(a′,b′). No local theory allows S above 2; here S passes 2 and settles near "

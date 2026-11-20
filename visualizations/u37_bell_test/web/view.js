@@ -652,9 +652,19 @@ export function createView(ctx) {
     const Xe = (e) => px0 + (px1 - px0) * (e - e0) / (e1 - e0);
     const Yj = (j) => py0 + (py1 - py0) * (jmax - Math.min(jmax, Math.max(jmin, j))) / (jmax - jmin);
     g.strokeStyle = "#868e96"; g.beginPath(); g.moveTo(px0, Yj(0)); g.lineTo(px1, Yj(0)); g.stroke();
+    // the dashed lines: the thresholds without dark counts or background (Eberhard's limit 2/3, |Φ+⟩'s 2/(1 + √2));
+    // with the real detectors' dark counts this curve crosses 0 later, at the engine's threshold marked on the axis
+    // (review R2-W F9)
     for (const [e, lab] of [[2 / 3, "2/3"], [2 / (1 + Math.SQRT2), "82.8 %"]]) {
       g.setLineDash([2, 3]); g.beginPath(); g.moveTo(Xe(e), py0); g.lineTo(Xe(e), py1); g.stroke(); g.setLineDash([]);
       text(g, cv, lab, Xe(e), py1 + 13, { align: "center", color: muted(), size: fs - 1 });
+    }
+    text(g, cv, t("dashed: the thresholds without dark counts or background"), px0 + 4, py0 + 12, { color: muted(), size: fs - 1, maxW: (px1 - px0) * 0.38, part: "jnote" });
+    const th = H.j_threshold;
+    if (th != null && th >= e0 && th <= e1) {
+      const X = Xe(th), Y0z = Yj(0);
+      g.fillStyle = "#1c7ed6"; g.beginPath(); g.moveTo(X, Y0z); g.lineTo(X - 5, Y0z + 8); g.lineTo(X + 5, Y0z + 8); g.closePath(); g.fill();
+      text(g, cv, t("J = 0 at {p} %", { p: fmt(100 * th, ".3g") }), X + 7, Y0z + 18, { color: "#1c7ed6", size: fs - 1, part: "jth" });
     }
     const jstep = jmax - jmin > 0.6 ? 0.2 : 0.1;
     for (let j = Math.ceil(jmin / jstep) * jstep; j <= jmax + 1e-9; j += jstep) text(g, cv, fmt(Math.round(j * 10) / 10), px0 - 4, Yj(j) + 4, { align: "right", color: muted(), size: fs - 1 });

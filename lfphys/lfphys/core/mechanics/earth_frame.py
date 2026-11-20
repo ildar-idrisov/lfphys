@@ -39,9 +39,17 @@ computes that offset by its own first-order equation along the planar flight. It
 offset agree to that order (tests).
 
 A body in a fluid at rest in the Earth's frame (``particle.Medium``): the Coriolis force acts on the body's own mass m
-(the design's -2 m Omega x v). The entrained fluid (C_A m_f) and the air's own rotation (its vorticity 2 Omega) add
-forces of order (m_f / m) times the Coriolis force: 3e-3 of it for S03's light ball, 1.5e-4 for its steel ball; they are
-not included (stated).
+(the design's -2 m Omega x v). The fluid rotates with the Earth (its vorticity is 2 Omega). In the inviscid theory of a
+sphere in a weakly rotational flow (Auton, Hunt & Prud'homme, J. Fluid Mech. 197, 241 (1988), as written in
+arXiv:0909.4451, eqs. (3), (5)) the fluid's force on the body is, besides the pressure gradient's (the buoyancy, with
+the centrifugal part in the normal gravity), the added mass C_A m_f (Du/Dt - dv/dt) and the lift (1/2) rho_f V (u - v)
+x omega, u the fluid's velocity. With the fluid at rest in the rotating frame, Du/Dt - dv/dt = -(a_rel + 2 Omega x v)
+(inertial accelerations, the centripetal parts equal) and omega = 2 Omega, so the added mass contributes -2 C_A m_f
+Omega x v and the lift +m_f Omega x v: for a sphere (C_A = 1/2) they cancel exactly, and the Coriolis force on m alone is
+that theory's result (review EX2, R2-E F5: the Coriolis force on M = m + C_A m_f would keep the first term and miss the
+second). At the flight's Reynolds numbers (10^3-10^5, with a wake) the lift coefficient of a sphere in a rotating fluid
+is not established; the residual 2 (C_L - C_A) m_f Omega x v is of order m_f / m of the Coriolis effect (3e-3 of it
+for S03's light ball, 1.5e-4 for its steel ball) and is not included (stated).
 
 **First-order closed forms** (the references of the checks; the second order is (Omega t)^2 smaller):
 a body dropped from rest at height h lands to the EAST of the plumb line by x_E = (1/3) omega g t^3 cos phi, t =
@@ -72,10 +80,14 @@ ABOUT = {
                   "against the Earth's radius (here up to 20 km); a uniform field over the flight; the Earth's mean "
                   "rotation rate (its fluctuations, about 10⁻⁸, neglected); the sideways offset of a planar flight to "
                   "first order (its feedback into the plane is of order (Ω·T)², 5·10⁻⁸ for a 3-s flight); a body in "
-                  "a fluid: the Coriolis force on the body's own mass, the entrained fluid's and the rotating air's "
-                  "terms (of order ρ_fluid/ρ_body of the Coriolis effect) not included"),
+                  "a fluid: the Coriolis force on the body's own mass (for a sphere the entrained fluid's Coriolis "
+                  "term and the lift on the rotating air's vorticity cancel in the inviscid theory of Auton, Hunt & "
+                  "Prud'homme 1988; at the flight's Reynolds numbers their residual, of order ρ_fluid/ρ_body of the "
+                  "Coriolis effect, is not included)"),
     "basis": [T("Department of Defense World Geodetic System 1984, NIMA TR8350.2, 3rd ed. (1997, Amendment 1 of "
                 "2000): Tables 3.1, 3.3 and 3.4, eqs. (4-1) and (4-3)"),
+              "Auton, Hunt & Prud'homme, J. Fluid Mech. 197, 241 (1988): the added mass and the lift of a sphere in "
+              "a rotational flow",
               T("the Coriolis force in the local frame and the eastward drift (1/3)·Ω·g·t³·sin θ of a dropped body "
                 "(θ the colatitude): K. Intriligator, UC San Diego, lecture of 2020-01-17 (after Taylor, Classical "
                 "Mechanics, ch. 9)")],

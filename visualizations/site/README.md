@@ -14,7 +14,7 @@ This folder is not a Python package (`site` is a standard module's name): each s
 |---|---|
 | `record.py` | the offline recorder: `--world ID` (repeatable), `--all`, `--stale`, `--rec ID` (no atlases), `--no-atlases`, `--out DIR` (default `visualizations/recordings/`, git-ignored), `--worker-mem-gb N`; after a world's recordings it builds its atlases (`atlas.py`) |
 | `atlas.py` | the atlases of the screens Explore and Lab work: `--world ID` (repeatable), `--atlas ID`, `--all`, `--stale`, `--out DIR` |
-| `fixtures.py` | what a browser test against a server needs, built now: `--out DIR [--world ID …]` (default the toy world `s98_atlas_toy` of `tests/site_worlds`, found through `LFVIZ_EXTRA`, which it sets); serve `DIR` with `LFVIZ_RECORDINGS`. A server's player refuses a stale atlas (`expected`), so the committed fixture `tests/site_worlds/recordings/` serves only the player's Node tests |
+| `fixtures.py` | what a browser test against a server needs, built now: `--out DIR [--world ID …]` (default the toy worlds `s98_atlas_toy` and `u96_lab_toy` of `tests/site_worlds`, found through `LFVIZ_EXTRA`, which it sets); serve `DIR` with `LFVIZ_RECORDINGS`. A server's player refuses a stale atlas (`expected`), so the committed fixture `tests/site_worlds/recordings/` serves only the player's Node tests |
 | `plan.py` | every (world, recording) and every (world, atlas) with its key and state (`present`, `stale`, `missing`) against a folder; `--matrix [--rerecord stale\|all]` prints the CI matrix (the world key covers the recordings' and the atlases' keys) |
 | `build.py` | `--recordings DIR --out DIR --base /lfphys/`: the static site |
 | `check.py` | `SITE [--base /lfphys/] [--allow-missing]`: completeness and budgets of a built site; exit 1 on a failure |
@@ -77,6 +77,13 @@ re-records nothing (the live points' own key covers `atlas_live.py`: `atlas_live
 server's `code_hash` of each world (`registry.code_hash_current`: recomputed when a code file's size or time changes), and the player's recording badge
 names both codes when the recording's differs (design §4.6).
 
+The keys name the code that ran (review R2-F F1): `record.py`, `atlas.py` and `fixtures.py` hash every world's code
+(`sitelib.code_signature`) before they import any world, key the world's output with that hash, and before they write
+the world they hash it again and check that no file of it changed after the script started
+(`sitelib.check_unchanged`). When it changed, nothing of that world is written (its index and files stay as they
+were; the atlases are built in `<atlas>.tmp` folders and installed only then) and the run reports «the code changed
+during the build … run again».
+
 Locally, in Docker (at most 12 GB, a few containers at a time on a shared host; create `visualizations/recordings/`
 first, or Docker creates the mount point as root):
 
@@ -127,9 +134,12 @@ the quantisation and the ids of a lab step's laws' references (labels change no 
 (it holds no build time or CPU time: those are the index entry's `made` and `cpu_s`; `tests/test_atlas.py`), on the
 same CPU type: numpy's SIMD paths (AVX2, AVX-512) can change the last bits of a world's computed values, so a point
 built on GitHub's runners and one computed on another CPU may differ there (u32's coherence by up to 4·10⁻¹⁰ relative;
-review R-F F8). An atlas not built now keeps its index entry only while its key is current; an atlas is `present` only
-when its manifest, its base and every point it names are there with their sizes (`sitelib.atlas_status`), so
-`--stale` rebuilds one with a missing point.
+review R-F F8). An atlas not built now keeps its index entry only while its key is current and all its files are there
+(`sitelib.atlas_files_ok`; review R2-F F7); an atlas is `present` only when its manifest, its base and every point it
+names are there with their sizes (`sitelib.atlas_status`), so `--stale` rebuilds one with a missing point. A point
+stopped by an event never ends on the stop event's own frame (`headless.run_spec` makes one more frame; the builder
+refuses one that does: review R2-F F3), its counters read whole numbers (NaN and ±inf fail the atlas: R2-F F4), and
+every instrument of the atlas's lab steps has something to read at its end (R2-F F5).
 
 **Budgets** (`sitelib.BUDGET`, gzip, decimal): a point 150 kB target / 400 kB limit; an atlas 6 MB / 12 MB; a world,
 recordings and atlases together, 12 MB / 25 MB; the site 600 MB / 900 MB. Over a limit `atlas.py` fails the atlas and

@@ -24,6 +24,10 @@ coefficient grows with the spin, C_D(S, Re) = f(S) C_D(Re) with C_D(Re) the stan
               (0 < Rr < 12; R^2 = 0.873);
     eq. (17): C_DOmega / C_D = 0.989 + 0.482 Rr - 0.093 Rr^2   (0 < Rr < 2.5; R^2 = 0.86);
     eq. (18): C_DOmega / C_D = 2.117 Rr^-0.33                  (2.5 < Rr < 25; R^2 = 0.823).
+  The two fits do not meet: at Rr = 2.5 (S = 1.25) eq. (17) gives 1.6128 and eq. (18) 1.5646, so the drag's factor,
+  and the force of ``SpinDrag``, jumps by -3.0 % there (review EX2, R2-E F4). The jump is the source's, inside the
+  drag band (-8.3 % / +8.4 %); it is kept, not smoothed by an interval of our own choosing, and stated: an integration
+  that crosses S = 1.25 meets a discontinuous force (S03 stays at S <= 1.05).
 * Muto, Tsubokura & Oshima, "Negative Magnus lift on a rotating sphere at around the critical Reynolds number", Phys.
   Fluids 24, 014102 (2012), Table I: large-eddy simulations at Re = 1.0·10^4 with the spin parameter Gamma = 0.2 and
   1.0: C_D 0.474 and 0.661, the lift C_Lz 0.167 and 0.301 (means; standard deviations of the fluctuations 0.029 and
@@ -76,8 +80,9 @@ ABOUT = {
     "validity": T("a smooth sphere with a given spin (constant or a given function of time: the spin's decay is not "
                   "computed) in a fluid at rest, Re ≤ 10⁴ and S ≤ 6; measured at Re 600–3500, between 3500 and 10⁴ "
                   "only one simulated value (S = 1): the model's C_L carries a band of −17.5 % / +23 % and the drag's "
-                  "factor −8.3 % / +8.4 % (the data's spread around it at Re ≥ 2000 and S 0.25–1.05); the measured "
-                  "coefficients come from a steady force balance"),
+                  "factor −8.3 % / +8.4 % (the data's spread around it at Re ≥ 2000 and S 0.25–1.05); the drag's "
+                  "factor jumps by −3.0 % at S = 1.25, where the source's two fits meet; the measured coefficients "
+                  "come from a steady force balance"),
     "basis": ["Zhou, Zhang & Xu, Water 14, 2593 (2022), Table 2 and eqs. (8), (17), (18) (CC BY 4.0)",
               "Muto, Tsubokura & Oshima, Phys. Fluids 24, 014102 (2012), Table I",
               T("the standard drag curve: Morrison (2016), through lfphys.theories.models.drag_quadratic")],
@@ -134,7 +139,8 @@ def cl_zhou(S, re):
 
 def drag_factor(S):
     """C_D(spinning) / C_D(not spinning), Zhou, Zhang & Xu (2022): eq. (17) for Rr = 2S < 2.5, eq. (18) above (Rr up
-    to 25 there; here S <= 6). At S = 0 it is eq. (17)'s intercept 0.989 (a fit: within its scatter)."""
+    to 25 there; here S <= 6). At S = 0 it is eq. (17)'s intercept 0.989 (a fit: within its scatter). At S = 1.25 it
+    jumps from 1.6128 to 1.5646 (-3.0 %; the source's fits do not meet: module docstring)."""
     S, _ = _check(S, 1.0)
     Rr = 2.0 * S
     return np.where(Rr < 2.5, 0.989 + 0.482 * Rr - 0.093 * Rr * Rr, 2.117 * np.maximum(Rr, 2.5) ** -0.33)

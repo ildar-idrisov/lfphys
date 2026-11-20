@@ -38,7 +38,8 @@ was audited again «до реальных физических явлений» 
 3. **Several ways on every bench**, each inside the computed atlases, each with its computed outcome: u34 (§2.3)
    eleven, u35 (§3.4) sixteen, u37 (§4.3) nineteen, S03 (§10) nine. A wrong way goes wrong for a computed reason: a
    sign branch, a wrong angle law, too few counts, dark counts or dead time not corrected, accidentals not subtracted,
-   an approximation outside its range, fair sampling assumed, an eccentric orbit where Kepler's law needs a circle.
+   an approximation outside its range, fair sampling assumed, an eccentric orbit where Kepler's law needs a circle
+   (**[error in earlier]**: the reason, §2.7 after the review).
 4. **The task sheet** (§5 F8): the goal, the bench, the instruments, one suggested procedure, what to record and hand
    in, and the course it is based on, with verified quotations; no questions, answers or grading. The teacher changes
    the task by a variant computed in the atlases (`&variant=`: another glass, orbit family, analyser, source or
@@ -276,7 +277,7 @@ A.3, A.5; deterministic, so the numbers are what every student gets):
 | 1 | circles (speed 1), T against r, power law | exponent 1.500014 ± 0.000022, the factor 6.2828 ± 0.0006 (2π) | Kepler's third law is exact for circular orbits in the distant observer's time |
 | 2 | circles, τ against r, power law | exponent 1.535, χ²/dof 7·10⁴ | wrong clock: the body's clock runs slower by √(1 − 3M/r), which changes fast near 6 M |
 | 3 | circles, (τ/T)² against M/r, line | intercept 0.999988 ± 0.000034, slope −2.9990 ± 0.0022 | the clock law, with Newton's τ = T (slope 0) rejected |
-| 4 | eccentric orbits (speed 1.1), T_r against a = (r_p + r_a)/2, power law | exponent 1.423 ± 0.013, χ²/dof 5.6 (from 30 M on: 1.456 ± 0.014) | in general relativity the radial period of an eccentric orbit is not 2π a^{3/2}; Kepler's law needs a circle (or a weak field) |
+| 4 | eccentric orbits (speed 1.1), T_r against a = (r_p + r_a)/2, power law | exponent 1.423 ± 0.013, χ²/dof 5.6 (from 30 M on: 1.456 ± 0.014) | in general relativity the radial period of an eccentric orbit is not 2π a^{3/2}; Kepler's law needs a circle (or a weak field) (**[error in earlier]**, §2.7 after the review) |
 | 5 | circles read after one turn instead of four | the same result with errors four times larger | a coarser measurement of a period |
 | 6 | part 2, the 0.1° protractor after one orbit, r₀ ≥ 300 M, Δφ against M/p, line through 0 | 19.04 ± 0.24 (6π = 18.850) | the leading order holds within these errors |
 | 7 | the same from r₀ = 20 M | 20.00 ± 0.27, χ²/dof 16.6 | an approximation outside its range: at 20 M the advance is 22 % above 6πM/p |
@@ -344,7 +345,7 @@ asserted by `u34_orbits/tests/test_u34_screens.py`).
 | 2 | circles, τ/n against r₀, power law | 1.535, χ²/dof 7·10⁴ | 1.535 ± 0.006 (scaled; unscaled ± 0.0000058), χ²/ν 1.1·10⁶; p printed 6.36·10⁻¹⁰⁶³⁹⁰ (F11) | [useful] |
 | 3 | circles, (τ/t)² against M/r₀, line | 0.999988 ± 0.000034, −2.9990 ± 0.0022 | 1.0000055 ± 0.0000085, −3.00010 ± 0.00054, χ²/ν 0.49 (Newton's slope 0 rejected) | [error in earlier]: one-turn numbers, as way 1 |
 | 4 | eccentric orbits, T_r against a = (r_p + r_a)/2, power law | part 1, 7–100 M: 1.423 ± 0.013, χ²/dof 5.6 (from 30 M 1.456 ± 0.014) | **moved to part 2** (20–3 000 M): 1.4975 ± 0.0007 (scaled), χ²/ν 10.8; from 300 M 1.4981 ± 0.0003 (scaled), χ²/ν 1.75 | [error in earlier]: the radial clock cannot be in part 1 (below) |
-| 4b | eccentric orbits (speed 1.1) in part 1, T = t/n per turn in φ against r₀, power law | — (new) | 1.410 ± 0.030 (scaled), χ²/ν 9.2·10⁷: Kepler's law needs a circle | [useful] |
+| 4b | eccentric orbits (speed 1.1) in part 1, T = t/n per turn in φ against r₀, power law | — (new) | 1.410 ± 0.030 (scaled), χ²/ν 9.2·10⁷: Kepler's law needs a circle | [useful]; **[error in earlier]** the reason (after the review, below) |
 | 5 | circles read after one turn | the same with errors 4 × larger | 1.500014 ± 0.000022, A 6.2828 ± 0.0006; (τ/t)²: 0.999988 ± 0.000034, −2.9990 ± 0.0022 | [useful] |
 | 6 | 0.1° protractor after one orbit, r₀ ≥ 300 M, Δφ against M/p, line through 0 | 19.04 ± 0.24 | 19.03 ± 0.24, χ²/ν 0.18 | [useful] |
 | 7 | the same from 20 M | 20.00 ± 0.27, χ²/dof 16.6 | 20.00 ± 0.27 (scaled), χ²/ν 16.6 | [useful] |
@@ -401,6 +402,31 @@ The next order's coefficient 6π(18 + ε²)/4 = 85.03 is over the orbits with M/
 | **u34 world** | | **5.91 MB** (target 12) | every point under 150 kB | ~37 s | 5.3 MB |
 
 No `sitelib.ACCEPTED` entry is needed: the zoom-whirl point, 168 kB in the estimate, is 120 kB [error in earlier].
+
+**After the review (2026-11-20)** (reviews R2-W F4, R2-P F15, F17 and its nit on units, R2-F F3; processed by X-WO,
+X-P and X-F; `STATUS.md` V53 (af)):
+- **[error in earlier] Way 4b's reason** (the table above, «Kepler's law needs a circle»; also §0 item 3, «an eccentric
+  orbit where Kepler's law needs a circle», and §2.3 row 4, «Kepler's law needs a circle (or a weak field)»). The
+  points of way 4b are not off because they are ellipses: in Newton's gravity a tangential launch at k of the circular
+  speed gives a = r₀/(2 − k²) ∝ r₀, so T ∝ r₀^{3/2} exactly. Near the hole a turn in φ is not a radial period (the
+  periapsis advances), the orbit's shape changes with r₀, and t/n over whole turns in φ is not a whole number of radial
+  periods: from r₀ = 30 M on the exponent is 1.4595 (χ²/ν > 10⁵), over all r₀ 1.410. For row 4: Kepler's third law in
+  the radial period holds for any eccentricity in a weak field; in a strong one the radial period is not 2πa^{3/2}. The
+  READMEs (EN, RU) and `test_u34_screens.py` say so; no number changed [useful].
+- The Russian texts name the last stable circular orbit in Russian words (the description, the presets «Чёрная дыра:
+  круговая орбита у последней устойчивой ({r}M)» and «Падение внутри последней устойчивой орбиты», the purpose); the
+  formulas and the radii's legend keep the symbol, which the legend explains («ISCO 6M (последняя устойчивая круговая
+  орбита)») (R2-P F15) [useful].
+- Watch on a phone (R2-P F17): the plot of 1 − dτ/dt and r(t) lay at 711–931 px of the 844 px screen, under the sticky
+  time bar, while captions 4 and 6 talked about it; the plots now sit right under the orbit plane (250 + 170 px), the
+  caption after them, and `u34_screens.mjs` checks that the plot a caption talks about is above the bar [useful].
+- The time unit per screen is kept (R2-P's nit, by its reason): Watch's story is a 10 M☉ hole told in seconds (its
+  captions in ms), Explore and Lab work use GM/c³ so that their numbers do not depend on the mass; the READMEs say so
+  [neutral].
+- The event-stopped atlases (Explore, `lab.periods`, `lab.advance`, `after_s` 0) get one more frame per point (R2-F F3,
+  `headless.run_spec`): on the built atlases a scrub to the end read the frame before the stop event in 60 of 630 tries
+  on Explore and 35 of 324 on part 1, though `frameIndexAt`'s tolerance (above) had been meant to prevent it [error in
+  earlier]; no reading of a way changes; the sizes change slightly (the integrator's rebuild measures them).
 
 ---
 
@@ -785,6 +811,8 @@ analyser at ψ = 60°.
   the tunnelling (Hartman) delay» does not show at the bench's scale (E35).
 - The glasses are half-spaces taken by their real part on both sides (κ ≤ 4·10⁻⁸ changes R and T below 10⁻¹⁵); the
   bulk absorption along the 0.30 m arms (7 %, 11 %, 21 %) and the exit face's Fresnel loss are not modelled (V53 (k)).
+  **[error in earlier]**: the «right» ways of part 2 were right only because of it; replaced by the glass blocks (after
+  the review, below).
 - [error in earlier] The Kretschmann preset: gold interpolated by PCHIP (not linearly) gives R_p smallest, 0.0038, at
   43.773° (within gold's interpolation error between 0 and 0.014, at 43.71°–43.84°), not 0.0058 at 43.785° (E35); the
   `spr` recording's caption says so.
@@ -813,6 +841,94 @@ analyser at ψ = 60°.
 | Lab part 3 `lab.malus` | 114 | 0.74 MB | 6.6 kB | 10 s | 1.1 MB |
 | Lab part 4 `lab.reflection` | 294 | 2.23 MB | 7.7 kB | 45 s | 2.9 MB |
 | **u35 world** | | **9.39 MB** (atlases 8.82, recordings 0.57; target 12) | | ~3.5 min | 12.9 MB |
+
+**After the review (2026-11-20)** (reviews R2-W F1, F3, F6, R2-P F9, R2-E F1, F9, R2-F F3; processed by X-W35, with
+X-E's engine and X-P's player; numbers recomputed by X-W35 on seeds 1–4 and on the noise-free expected counts;
+`STATUS.md` V53 (k), (af), (ag), (ah)):
+
+- **[error in earlier] The glass block (R2-W F1).** The first build took the glasses as half-spaces with the detectors
+  inside them, so R = N_R/(N_R + N_T) was the reflectance only because no transmitted photon was lost. Now each glass
+  is a half-cylinder of radius 25 mm (the manuals' semicircular sample: Rutgers «For transmission measurements make
+  sure the beam exits normal to the second interface (semicircular geometry with initial incidence at the center of the
+  flat side of the semicircular sample).»; Carnegie Mellon's «semicircular piece of plexiglass»; Toronto's D-lens),
+  parameter `block_mm` (0: the old half-spaces as a named idealisation), crossed along a radius: its curved face at
+  normal incidence by `interfaces.stack` (s and p alike, so no polarisation change and no total reflection there; N-BK7
+  passes 95.8 %, N-F2 94.4 %, N-SF11 92.1 %) and 25 mm of glass by the internal transmittance exp(−4πκL/λ) from
+  `materials.index`'s κ at each photon's wavelength (99.39 %, 99.05 %, 98.08 % by SCHOTT's κ, itself known to about
+  ±50 % at 632.8 nm). Rutgers' sentence implies no loss at the normal exit; at normal incidence the loss is ((n − 1)/(n +
+  1))², 4.2 % for N-BK7, which the world computes. A photon has eight outcomes (the face's five through the blocks, and
+  three losses). A parallel slab was rejected: its back face's reflection leaves parallel to the reflected beam and
+  would enter the reflection detector (doubling R unless masked), and its exit Fresnel depends on the polarisation.
+- **The incident flux is the reference count N₀**: before each set-up's count the block is lifted off and the
+  transmission detector, in line with the source, counts for t₀ = 0.1 s (Rutgers: «Observe and record I0 (the laser
+  beam power at zero degrees before sample placement).», now in the task sheet's basis); simulated before the world's
+  time 0 from a random stream of its own (Poisson, η, dark counts, dead time; check `ref`), voided by a change of the
+  source, the detector or t₀; an instrument, and step 2 of the procedure (steps renumbered 3–6). A beam-splitter monitor
+  was not chosen: it needs its splitting ratio calibrated against the same block-removed measurement, a constant
+  across set-ups that the bench's formula columns cannot carry.
+- **Part 2's columns** are now θ, t, N_R, N_T, N₀, t₀, R = N_R/(N_R + N_T), R_i = (N_R/t)/(N₀/t₀), R_d (R_i with the
+  dark counts subtracted), R_c (R_d with the dead time corrected), T_i = (N_T/t)/(N₀/t₀), x, and y_s, y_p from R and
+  from R_d (16 columns; y from R_i was dropped to keep the printed sheet on one A4 page: the dark counts' effect shows as
+  R_i − R_d). Explore «Boundary»'s readouts: R and T per incident photon (with the computed probabilities of reaching
+  each detector), the reflected share of the clicks, the clicks.
+- Not followed, stated in the drawer with its computed size (`STATUS.md` V53 (ah)): the ghost toward the reflection
+  detector (6.6·10⁻⁵ of the photons at θ = 0, 0.16 % of the reflected count; check `ghost`), the curved face's focusing
+  of a finite beam, and the flat face with the glasses' complex index, which the engine now accepts (R2-E F1: R changes
+  by < 10⁻¹⁵ below θ_c, up to about 2·10⁻⁷ in total reflection; check `kface`). τᵢ is computed in the world
+  (`engine/bench.py block_crossing`) until the engine has `materials.internal_transmittance` (V53 (ag)). After R2-E F9
+  SCHOTT's κ comes from the more precise of the two printed thicknesses: of u35's lines only N-F2 at 405 nm moved.
+- Every set-up's random stream changed (the hashed parameters gained `block_mm` and `ref_s`): every way was recomputed
+  on the new atlas and on seeds 2–4, and every part-2 way also on the noise-free expected counts (its computed outcome,
+  `tests/u35_lab.py expected_row`; each way is tested against it within 3σ of the sample).
+- [error in earlier] **Identities shown as passed (R2-W F3)**: `sum` (A = 1 − R − T by definition) and `born` (the
+  analyser's ports complementary by construction) are `info: true`; `arms` stays a check. Watch: 62 checks ✓ and 37
+  for information (was 64 ✓, 6 for information).
+- **«Computed for this bench» (R2-W F6)**: part 2 adds, for the variant «N-BK7 from inside», sin²θ_c = 1/n² (`thc_bk7`:
+  y_p's formula on s light from inside is 1/n² − sin²θ, zero at θ_c); `inv4` is removed (unreferenced; with every law
+  the printed «computed» page overflowed A4); part 4's laws are the degree of polarisation (`dop_<glass>`: θ_B as the
+  vertex of P = (R_s − R_p)/(R_s + R_p), where P is largest, 1; P at 40, 50, 57, 70° listed in its «how»), replacing
+  the vertex of f (the same vertex: P = 1 − 2f). Part 2's laws refer to the columns from R_d; its θ_B only for N-BK7
+  (part 4 gives every glass's); `record_rows` 20 → 18 (the printed sheets' A4 fit in Russian).
+- **Names of the select values (R2-P F9)**: Explore «Boundary»'s polarisation is the compound control `light` «s (TE)» |
+  «p (TM)» (it sets `pol`), part 3's analyser `analyser` «ideal» | «imperfect» (RU «идеальный» | «неидеальный», sets
+  `anaT`); the teacher's variant «imperfect analyser» sets `analyser`. A plain control's `labels` do not reach the
+  catalogue (`registry._control`). The random samples are unchanged by this (the same parameters).
+- Part 1 `lab.dark` (an event stop with `after_s` 0) gets one more frame per point (R2-F F3: 3 of 54 scrubs to the end
+  read the frame before the stop event).
+
+**The ways after the review** (§3.4; seed 1 = the built atlas; seeds 2–4 give the same status; «exp.» = the noise-free
+expected counts; σ declared, unscaled):
+
+| # | way | measured (seed 1) | status |
+|---|---|---|---|
+| 1 | s from air, θ ≤ 80°, y_s against sin²θ: from R = N_R/(N_R + N_T); from (N_R/t)/(N₀/t₀); the same with the dark counts subtracted | 2.3586 ± 0.018 (+3.4σ; exp. +3.55σ); 2.3211 (+1.3σ; exp. +1.09σ); **2.3046 ± 0.019 (n = 1.5181, +0.5σ; exp. +0.13σ)**, slope −1.024 ± 0.034 | [error in earlier] the old ratio is now a wrong way (the block's 4.8 % counted as reflection); the reference with the dark counts subtracted is the right one |
+| 2 | p from air, θ ≤ 52°, y_p: the same three | 0.42215 (−3.1σ; exp. −2.81σ); 0.43207 (−0.8σ); **0.43338 ± 0.0046 (n = 1.5190, −0.5σ)** | as way 1 |
+| 3 | p through 62° with the same formula | 0.48545 (n = 1.435), χ²/ν 38.9 | wrong, as designed |
+| 4 | a parabola through R near θ_B | 50–62°: 55.881 ± 0.239 (exp. 56.100); 52–61°: 56.336 ± 0.190 (exp. 56.280); θ_B 56.574° | approximation |
+| 5 | the smallest p count, 1° steps | N_R at 54–59°: 17, 9, 9, 9, 10, 16 | right, coarse (the dark-count floor) |
+| 6 | from inside: the last angle with transmitted photons | s 3 983 at 41°, 11 at 42°; p 7 458 and 10 | right, coarse |
+| 7 | inside data with y_s | 3.00 (30°), 55.7 (41°), 1.2·10⁸ (45°) | wrong |
+| 8 | the cursor at a fifth, way 2 (R_d) | 0.43257 ± 0.0090 (σ × 1.94; exp. × 2.225 ≈ √5) | too few counts |
+| 9–11 | Malus | ideal line through 0: 0.99949 ± 0.00027 (χ²/ν 1.91), with an intercept a = 0.00086, b = 0.99863; cos: χ²/ν 2.48·10⁴; imperfect line through 0: 0.9031 (χ²/ν 13.8), line a = 0.00971, b = 0.89069 (1.27) | as before |
+| 12–15 | part 4 | vertex of f (= of P): N-BK7 56.614 ± 0.191 (χ²/ν 3.48), N-F2 58.097 ± 0.158, N-SF11 60.439 ± 0.310 (11.3); N_pass + N_reject 3 192 → 11 373, monotonic; P raw 0.967–0.986 at 54–58°; P_d 0.988, 0.999, 0.999, 1.005, 0.995 | as before |
+| 16 | θ = 0, R_d without the dead-time correction | R_d / R_c − 1 = +0.271 % = (m₀ − m_R)·t_d | systematic below σ (now the reference detector's loss) |
+| 17 | θ = 0, R + T per incident photon | 0.9519 ± 0.0118 (−4.1σ); exp. 0.9547 | new: R + T ≠ 1 on the bench (the block) |
+| 18 | from inside, s ≤ 40°, y_p's formula (1/n² − sin²θ, zero at θ_c) on R_d; ÷ the plateau of total reflection | 0.45849 (+4.9σ; exp. +5.9σ); plateau 0.9079 ± 0.0023 = (T_c τ)² 0.9068; normalised **0.43533 ± 0.0040 (−0.1σ)** | new: against the block-less reference wrong; normalised by total reflection right |
+| 19 | N-F2, N-SF11 from air, y_s: the old ratio / R_d | N-F2 +3.8σ / +0.3σ; N-SF11 +6.5σ / −0.7σ (exp. +4.65 / +0.15; +7.10 / +0.17) | new |
+| 0 | part 1 dark counts | N_R 11, 41, 110; N_T 12, 44, 105; 99.4 ± 9.6 and 99.8 ± 7.9 s⁻¹ | as before |
+
+Watch, measured: the first photon emitted at 1.45 s, its transmission detector clicks at 3.9 s (25 mm of glass, then
+air; it was 4.55 s through 0.30 m of glass); the waiting factor 3.6·10⁵ (slow 1.4·10⁶; was 2.4·10⁵ and 9.4·10⁵); by
+16.95 s 454 reflected, 9 497 transmitted and 11 dark counts (R̂ 4.562 %, computed 4.558 %); the caption at 9 s: «the
+surface reflects 4.35 %; the transmitted lose another 4.8 % in the glass block … shares 4.56 % reflected and 95.44 %
+transmitted». The tests' tolerances changed with their reasons: way 8's σ ratio against the expected counts' ratio
+(2.225) at ±20 % (seeds 1–4: 0.87–1.16 of it); part 4's raw P «1 − P > 3σ» and «\|P_d − 1\| < 3σ» in place of a fixed band.
+
+**Sizes after the review** (recorded privately 2026-11-19, `site/record.py --world u35_optics_bench`, 458 s CPU):
+Explore «Boundary» 3.55 → 4.48 MB (largest point 8.8 → 11.0 kB: the reference count, the blocks, the ghost and
+complex-face checks and their notes in every point); «Coatings» 1.15 → 1.28; «Polarisation» 1.12 → 1.34; `lab.dark`
+0.03; `lab.malus` 0.74 → 0.79; `lab.reflection` 2.23 → 2.66; `story` 0.30 → 0.32, `tir` 0.10, `brewster` 0.11, `spr`
+0.07 MB. **u35 world 9.39 → 11.17 MB** (target 12).
 
 ---
 
@@ -844,7 +960,7 @@ say «slot» and «coincidences»; W37 measures the recording again.
 | at, s | script | caption (EN / RU) | its event |
 |---|---|---|---|
 | 0 (hold 3) | `speed` 8.34·10⁻⁷ | «A source in the middle sends pairs of polarisation-entangled photons to Alice (left) and Bob (right), 500 m away on each side, one pair at a time.» / «Источник в середине посылает по одной паре запутанных по поляризации фотонов к Алисе (слева) и Бобу (справа); каждый из них в 500 м от источника.» | the first emission |
-| 3 | — | «At the start of each microsecond, each station picks one of its two polariser settings at random (Alice a or a′, Bob b or b′). Each detected photon gives + or −; a real detector misses about 30 % of them, so only about half of the pairs give a coincidence.» / «В начале каждой микросекунды каждая станция случайно выбирает одну из двух установок поляризатора (Алиса — a или a′, Боб — b или b′). Каждый обнаруженный фотон даёт + или −; реальный детектор пропускает около 30 % фотонов, поэтому совпадение даёт лишь около половины пар.» | the first detection, 3.3 s |
+| 3 | — | «At the start of each microsecond, each station picks one of its two polariser settings at random (Alice a or a′, Bob b or b′). Each detected photon gives + or −; a real detector misses about 30 % of them, so only about half of the pairs give a coincidence.» / «В начале каждой микросекунды каждая станция случайно выбирает одну из двух установок поляризатора (Алиса — a или a′, Боб — b или b′). Каждый обнаруженный фотон даёт + или −; реальный детектор пропускает около 30 % фотонов, поэтому совпадение даёт лишь около половины пар.» | the first detection, 3.3 s; **[error in earlier]**: the bit is drawn τ before each slot, the caption since the review in §4.8 |
 | 10 (hold 4) | `speed` 0.04 | «Much faster: thousands of pairs. From the counts the run computes the correlations E and S = E(a,b) − E(a,b′) + E(a′,b) + E(a′,b′). No local theory allows S above 2; here S passes 2 and settles near 2√2 ≈ 2.83.» / «Гораздо быстрее: тысячи пар. По счёту совпадений расчёт находит корреляции E и S = E(a,b) − E(a,b′) + E(a′,b) + E(a′,b′). Никакая локальная теория не допускает S больше 2; здесь S переходит через 2 и устанавливается около 2√2 ≈ 2,83.» | the violation event, 10.9 s |
 | 20 | — | «The error of S shrinks as 1/√N: after about 5 000 coincidences S = 2.86 ± 0.04, more than 20 standard errors above 2.» / «Погрешность S убывает как 1/√N: после примерно 5 000 совпадений S = 2,86 ± 0,04 — больше чем на 20 стандартных погрешностей выше 2.» | 33.9 s |
 | 34 | `new_world` `photon_lhv`; `speed` 0.04 | «The same experiment in a world of local hidden variables, a deliberately changed law: each pair carries a common hidden polarisation, and each outcome depends only on it and on its own polariser.» / «Тот же опыт в мире локальных скрытых параметров — намеренно изменённом законе: каждая пара несёт общую скрытую поляризацию, и каждый исход зависит только от неё и от своего поляризатора.» | the new world, 34 s |
@@ -1021,9 +1137,12 @@ previous revision left real detectors to the owner and kept «ideal detectors» 
 quantum mechanics «about 4 × 10⁻⁵»), so the bench needs 10⁷–10⁹ trials per set-up. The world draws the trials' outcome
 counts per setting pair from the engine's exact multinomial (the slots are independent when t_d and σ_j are far below
 T_s, a stated condition the run checks), and simulates in time only the slots it shows (flashes, the spacetime
-diagram). The significance is the normal approximation of J's multinomial error, stated as such; the experiments'
-martingale p-values without the i.i.d. assumption (Giustina: «without assuming independent and identically distributed
-experimental trials») are recorded for later (§11, item 31).
+diagram; **[error in earlier]**: since the review it simulates 10⁵ slots in time per step as an independent check,
+§4.8 after the review). The significance is the normal approximation of J's multinomial error, stated as such; the
+experiments' martingale p-values without the i.i.d. assumption (Giustina: «without assuming independent and identically
+distributed (IID) experimental trials»; **[error in earlier]**: the first version lacked «(IID)», review R2-W F12,
+corrected 2026-11-20 against arXiv:1511.03190v2, whose conclusion words it «without assuming independently and
+identically distributed experimental trials») are recorded for later (§11, item 31).
 
 **The world** (W37, after E37): the settings switch per locally defined slot (each station's random bit at the slot's
 start; **[error in earlier]**: today's choice «τ before each particle arrives» needs the arrival's time, which a real
@@ -1052,9 +1171,9 @@ of `bell_stats.slot_probabilities`, the coincidences, accidentals and singles fr
 and 40 shown slots per frame from `photodetector.pair_slots`, an illustration not added to the counts). «Pairs» is a
 compound control (a select parameter's control would show its raw value; V53 (v)); the CHSH and local-world steps read
 Bob's angle b = Δ, since a step on a shared atlas cannot read the screen's compound Δ (V53 (u)). The stops carry
-`after_s` 0.1 s (Explore) and 0.03 s (part 1), longer than one frame (`RULES.md` §10) [useful]. The local models (lhv,
-Gisin and Gisin) need L_A = L_B and are refused otherwise; the slots mode refuses the law «lhv». Four recordings at most
-per demonstration (the registry): `story`, `chsh`, `local_model`, `scan`.
+`after_s` 0.1 s (Explore) and 0.03 s (part 1), longer than one frame (`RULES.md` §10) [useful] (the rule replaced after
+the review, §5). The local models (lhv, Gisin and Gisin) need L_A = L_B and are refused otherwise;
+the slots mode refuses the law «lhv». Four recordings at most per demonstration (the registry): `story`, `chsh`, `local_model`, `scan`.
 
 **[error in earlier] Part 4 has 189 points**, not 84: η 7 × source 3 × «Dark and background counts» 3 (the detectors'
 250 dark counts per second; 10⁵ background counts per second; «none (an idealisation)») × the window w 3 (0.5, 2,
@@ -1188,6 +1307,52 @@ the local world at its end S = 1.416 ± 0.064 after 3 422 coincidences («about 
 
 **Sizes, rebuilt**: Explore 3.49 MB, part 1 1.68 MB, part 4 3.32 MB (3.00 MB with the shared draws: the 40 slots shown
 per frame were the same in every point and pooled once), recordings 1.26 MB; the world 9.75 MB.
+
+**After the review (2026-11-20)** (reviews R2-W F2, F7, F8, F9, F11, F12, R2-P F15, R2-F F3; processed by X-WO, X-P and
+X-F; `STATUS.md` V53 (e), (h), (af), (aj), (ak)):
+- **[error in earlier] Part 4's statistical checks tested the sampler, not the physics (R2-W F2).** In the counting by
+  slots the rows of E, S, S_sub, the accidentals, J, CH, E(Δ) and no signalling compare counts drawn from the engine's
+  prediction with that very prediction; they fail only on a bookkeeping error. They now stand in the group «Counting by
+  slots: the counts drawn from the engine's prediction, against it (the bookkeeping, not the physics)». The run's
+  independent check is the new `timed`: each step simulates 10⁵ slots in time (a separate sample of the same process,
+  `photodetector.pair_slots`) and compares their outcome tables with `Law.slot_table` (χ², passing at p > 10⁻⁶; group
+  «Counting by slots: the slots simulated in time ↔ the engine's slot probabilities»); the last 40 of them are the
+  slots shown (§4.7's «simulates in time only the slots it shows» and §1.1's «its slots are shown in time only in the
+  first frames» are superseded). On part 4's 189 points of seed 1 χ²/ν has a mean of 1.007 (0.35–1.70, 16–32 degrees
+  of freedom), seeds 2–4 1.015, 1.011, 1.025 (largest 2.33 at 16 dof, p ≈ 0.002), no failure on 3 × 189 points. Its
+  power, with the preset detectors and 10⁶ slots: an efficiency 10 % low gives χ² 173–185 (fails), 5 % low 63–71 (p
+  about 10⁻⁴: not resolved; V53 (aj)). The counts themselves (the world's `rng`) are unchanged, so every part-4 way is
+  unchanged; part 4's atlas takes about 44 s of CPU (was 23.7 s), and its size (§4.4) changes slightly (the integrator's
+  rebuild measures it) [useful].
+- `window` (R2-W F7, the live player only): it compared the segment's true coincidences with the pairs detected at both
+  sides over the run's whole life, so after «Reset the statistics» p < erf(w/(4σ)) and the check would fail; now with
+  the pairs since the reset (`Simulation.both0`): 0.28 → about 1.0 in the test [error in earlier]. No atlas resets.
+- `st_loc` (R2-W F8, the live player only): with a random choice it takes the direction X → Y whose station has the
+  later latest detection, Δt = τ + T_s + (L_Y − L_X)/v (L_A 100 m, L_B 500 m: c·Δt 330 m → 730 m, space-like →
+  time-like); `st_rev` the same events, mirrored for Bob's choice; `st_free` the station whose choice is nearer the
+  emission [error in earlier]. The atlases keep L_A = L_B: no number changes. The fixed-settings branch still assumes
+  the setting at A and the detection at B (not flagged by the review; V53 (ak)).
+- **Watch's caption at 3 s** (R2-W F9; row 3 of §4.1's table) [error in earlier: «At the start of each microsecond»,
+  while the bit is drawn τ = 100 ns before each slot]: «{τ} ns before each 1 µs slot, each station picks one of its
+  two polariser settings for it at random (Alice a or a′, Bob b or b′). Each detected photon gives + or −; a real
+  detector misses about a third of them, so only about half of the pairs give a coincidence.» / «За {τ} нс до каждого
+  интервала в 1 мкс станции случайно выбирают для него по одной из двух настроек поляризатора (Алиса — a или a′, Боб —
+  b или b′). Каждый зарегистрированный фотон даёт + или −; реальный детектор пропускает около трети фотонов, поэтому
+  совпадение даёт лишь около половины пар.» (τ from the schema; shortened so that the Russian text fits at 1280 px; the
+  story re-recorded).
+- **The J(η) plot** (R2-W F9): the dashed lines are named «the thresholds without dark counts or background»; a
+  triangle marks the engine's zero of J(η) for the shown source, background and angles (header `j_threshold`, by
+  bisection on the engine): 87.62 % for \|Φ⁺⟩ with the SPCM-NIR's dark counts (82.89 % without), 90.55 % for Eberhard's
+  state at Giustina's angles (72.84 % without); R2-W's «90.2 %» is `THRESHOLDS`' value at the best angles (90.233 %), not
+  the drawn curve's crossing [useful].
+- **The spin pairs' detectors** (R2-W F11): an illustration, made explicit — no real spin-measurement experiment has a
+  counter's η, dark counts, dead time and jitter to cite (Hensen et al. 2015, arXiv:1508.05949, NV electron spins: every
+  trial gives an outcome; initialisation and single-shot read-out fidelities (97.1 ± 0.2) % and (96.3 ± 0.3) %); the
+  drawer's information row «The detectors of spin pairs: an illustration», the READMEs (EN, RU) say so; a real spin
+  measurement's read-out errors are not modelled (V53 (h)) [neutral].
+- The Giustina quotation of §4.7 corrected (R2-W F12, above) [error in earlier]. The Russian column «N_acc» is «N_случ»
+  (as «S − случ.»; R2-P F15). The stops' `after_s` (0.1 s, 0.03 s) already end after the event's frame, so R2-F F3's
+  extra frame changes none of u37's atlases but their keys [neutral].
 
 ---
 
@@ -1338,6 +1503,45 @@ What does not change: quantisation, the live endpoint's limits, the budgets, the
 - **For the browser checks**: `demo_screens.mjs`' fixed timeouts (60 s of play, 30 s per screenshot) fail under a host
   load of 35–48 (V53 (y)); every world's final browser runs passed apart from the framework items above, which the
   integrator fixed.
+
+**After the review (2026-11-20)** (reviews R2-F F1–F9 and R2-P F1–F18 with their nits; processed by X-F and X-P;
+`visualizations/RULES.md` §10 has the rules as they now are; `STATUS.md` V53 (af)):
+- **[error in earlier] The stop event's frame (R2-F F3)**: F1's «a stop inside an event's own frame step ends at that
+  step (so `after_s` should exceed a frame)», the line «with `fps` an `after_s` longer than one frame» for the worlds,
+  and the rule learned from the worlds «a stop's `after_s` exceeds one frame step» are replaced: the rule was enforced
+  nowhere, u34's three event-stopped atlases and u35's dark counts broke it, and no absolute `after_s` can serve u34
+  (its frame step spans 15×–1 450× within one atlas; `lab.advance` would need `after_s` > 4.5, 1 450 more frames on its
+  shortest point). Instead `headless.run_spec` makes one more frame a full frame step after the stop event's when the
+  stop moment falls within that frame step, and `site/atlas.py` refuses a point that ends on the stop event's frame.
+  Measured by a node simulation of the player on the built atlases: a scrub sets the shared clock to L + t and reads
+  (L + t) − L, about 10⁻¹⁶·L short, more than `frameIndexAt`'s 10⁻¹²·t once L ≳ 4 500·t; a scrub to the end read the
+  frame before the stop event in 60 of 630 tries on u34's Explore, 35 of 324 on its part 1, 3 of 54 on u35's dark
+  counts (201 of 2 700 on u37's part 1, harmless there), none after the change. `after_s` is now only the time shown
+  after the event.
+- **[error in earlier] F5's errors** («σ² = Σ(∂f·σ)² + ½Σ(∂²f·σ²)²», row F5 and the formula columns): the mixed second
+  derivatives were dropped, so x·y at x = y = 0 (σ 1 each) had σ 0 against a Monte Carlo 1.00 (R2-F F2). Now σ² =
+  Σᵢ(∂ᵢf·σᵢ)² + ½ΣᵢΣⱼ(∂ᵢ∂ⱼf·σᵢσⱼ)², in both evaluators; the shared fixture has 75 cases and 50 refused formulas. Moved:
+  u37's E from four counts +3.7·10⁻⁴ relative, u35's R = N_R/(N_R + N_T) +2.1·10⁻⁵, `a ^ b` +1.9·10⁻³; unchanged: single
+  inputs, sums, u34's M/p, u37's S; no EX2 way moved past its tolerance. Both parsers take ASCII digits and spaces only
+  (R2-F F8), and `abs` at 0 with σ > 0 is `error_undefined`, as √ at 0.
+- **[error in earlier] The keys of a batch build (R2-F F1, since EX1)**: `site/record.py` and `site/atlas.py` imported
+  every world at their start and hashed its files only at its turn, so an edit in between gave the old code's output
+  under the new code's key; now every world's code is hashed before any import and checked again before its output is
+  written (`sitelib.check_unchanged`), and a changed world is not written. The recorder's hash now changes, so every
+  recording and atlas key changes once.
+- Also from R2-F: a NaN or ±inf counter fails its atlas with its message (it crashed the run, F4); `site/atlas.py`
+  checks that every instrument reads at every point's end, and the registry refuses any `speed` on a manual stopwatch's
+  step, 1 included (F5); `u96_lab_toy` — a lab step on Explore's atlas — is built by `test_atlas.py`, `site/fixtures.py`
+  and CI's browser run (F6); an old atlas entry is kept only with all its files (F7); the shared step's errors name it,
+  12 unused Russian entries are removed, `GET /api/recordings` caches its keys, `atlas_live.local_point` checks a point's
+  hash8 (F9).
+- From R2-P (the player, `RULES.md` §10): F7's set-up as columns of Lab work's table, its CSV and the blank table, and
+  the student's choice of the rows of the plot and the fit (filters and «in the fit» ticks); F8 (b)'s edits are kept
+  per language (`lfviz.sheet.<world>.<variant>.<language>`); F7's «0.7071 ± 0.011» is written «0.707 ± 0.011» (a
+  reading and its error to the same decimals, R2-P F14); the printed sheet laid out as it prints (F1, F5, F16); a raw
+  select value never a msgid (F9); the server's keys go to the detents (F2); «Another sample» and «More recordings»
+  take the latest choice only (F3, F10); Lab work without storage (F4); «Measure» under the controls (F11); the ticks
+  (F12); an exact zero (F13); the CSV for the viewer's spreadsheet (F18); `demo_screens.mjs` checks each (F8).
 
 ---
 
@@ -1650,7 +1854,7 @@ the tape; part 2 θ 13 × air 2 = 26; part 3 θ 20–70° by 5°, 11; variants �
 | 4 | 1 | air on, L against √h | 0.09–0.54 mm shorter, beyond the tape from 0.95 m (EX1); 0.08–1.9 mm with a bracket C_L 0.1–0.5 (A.8) | 0.23–1.73 mm shorter, beyond the tape's ±0.5 mm from h = 0.40 m; k = 0.67629 ± 0.00016 (−7.1σ), v₀ = 1.4975; χ²/ν 0.51 | [error in earlier]: the measured Magnus model, not the bracket |
 | 5 | 1 | rows with and without air mixed | — (new) | k = 0.67686 ± 0.00012 (−4.4σ), χ²/ν 1.24 | [useful] |
 | 6 | 2 | L against sin 2θ, line through 0, air off (the protractor's ±0.5° carried) | right | 2.5490 ± 0.0007 m (−0.4σ from v₀²/g = 2.5493 m) | [useful] |
-| 7 | 2 | the same, air on | −18σ (A.8: exact angles, a line with an intercept) | 2.5380 ± 0.0007 m, −15.4σ; χ²/ν 0.006 | [error in earlier] for this bench (the angles' errors carried, a line through 0); still a wrong way |
+| 7 | 2 | the same, air on | −18σ (A.8: exact angles, a line with an intercept) | 2.5380 ± 0.0007 m, −15.4σ; χ²/ν 0.006 | [error in earlier] for this bench (the angles' errors carried, a line through 0); still a wrong way; **[error in earlier]** χ²/ν 0.006 (after the review, below) |
 | 8 | 2 | the largest range by eye; a parabola L against θ | by eye on 5° steps | 45° in both; 45.00 ± 0.14° (off), 44.97 ± 0.14° (on; the engine's optimum 45.0°) | [useful] |
 | 9 | 3 | a parabola over 30–55° (6 points) | right | 42.36 ± 0.20° (+0.3σ from 42.3°) | [useful] |
 | 10 | 3 | a parabola over 20–70° (11 points); over 25–60° | 1.8σ; 0.8σ (measured with the constant C_d) | 42.52 ± 0.15° (+1.5σ); 42.41 ± 0.18° (+0.6σ) | [weakens]: biased, but under 2σ |
@@ -1674,11 +1878,49 @@ the steel ball's optimum in air 45.0°; the light ball's 42.3° (41.9° with the
   (Eötvös) in world 1; the landings 5.3 µs (world 1) and 10.5 µs (world 2) apart; the ratios ×2.0000 to 10⁻⁴ [useful].
 - The stated uncertainties (the passport and the drawer): C_A = ½ checked only to Re 300 (a change of 0.5 moves the
   ranges by 0.026 mm, 0.195 mm and 46 mm); the spin's decay ≤ 7 % (≤ 0.010 mm); the entrained air's Coriolis terms ≲
-  3·10⁻³ of the Coriolis effect (V53 (t)).
+  3·10⁻³ of the Coriolis effect (V53 (t); **[error in earlier]**: they cancel for a sphere, after the review below).
 - [error in earlier] The size: Explore 6.63 MB (over the 6 MB atlas target: the drawer's values are check messages in
   every point, about 1.05 MB, 0.45 MB of them the information rows; accepted in `sitelib.ACCEPTED`), the labs 0.13,
   0.13 and 0.14 MB, Watch `independence` 0.04 MB and `air` 0.02 MB, the world 7.09 MB, not «about 6.2 MB»;
   `site/record.py` 98–180 s. S03 left the EX1 transition path (`registry.EX1_WORKSHEETS`), which step I removed.
+
+**After the review (2026-11-20)** (reviews R2-W F5, F10, R2-E F5, F8; processed by X-WO and X-E; `STATUS.md` V53
+(t), (af)):
+- **[error in earlier] The launcher stood exactly at its marks (R2-W F5).** Parts 2 and 3 carried the protractor's
+  ±0.5° while every flight was computed at the exact mark, so the error model did not describe the data (way 7's χ²/ν
+  0.006). Now the lab's parts 2 and 3 fix `angle_error_deg` = 0.5 (the protractor's half division): each set-up's
+  real angle is drawn uniformly within ±0.5° of its mark (seeded by the seed and the set-up, `viz.real_angle`), the
+  flight computed at it and shown in the drawer as the information row «the launcher's real angle». The reason is the
+  owner's standard («до реальных физических явлений»): a real launcher set by hand at a protractor's mark stands within
+  half a division of it, and an error of 0 would declare an exactness no launcher has. Explore and Watch keep exact
+  angles (bound 0); part 1 has no protractor (the stand is exact), so ways 1–5 are unchanged.
+- The ways of parts 2 and 3, recomputed (seed 1, the built atlas; seeds 2, 3, 4 after it):
+
+| # | way | before (exact angles) | after the review | status |
+|---|---|---|---|---|
+| 6 | L against sin 2θ, line through 0, air off | 2.5490 ± 0.0007 m (−0.4σ) | 2.5490 ± 0.0007 m (−0.4σ), χ²/ν 0.37 (seeds: −0.4, −0.5, −0.5σ; χ²/ν 0.32, 0.25, 0.27) | [useful] |
+| 7 | the same, air on | 2.5380 ± 0.0007 m, −15.4σ, χ²/ν 0.006 | 2.5381 ± 0.0007 m, −15.3σ, χ²/ν 0.35 (seeds −15.4, −15.3, −15.4σ) | [error in earlier]: χ²/ν 0.006 came from a launcher set exactly at its marks; still a wrong way |
+| 8 | the largest range by eye; a parabola, off / on | 45°; 45.00 / 44.97 ± 0.14° | 45°; 45.11 / 44.85 ± 0.14° (seeds 44.97–45.08 / 44.91–45.01) | [useful] |
+| 9 | a parabola over 30–55° | 42.36 ± 0.20° (+0.3σ) | 42.44 ± 0.20° (+0.7σ; seeds 1.3, 0.1, 0.7σ) | [useful] |
+| 10 | a parabola over 20–70°; over 25–60° | 42.52 ± 0.15° (+1.5σ); 42.41 ± 0.18° | 42.55 ± 0.15° (+1.7σ; seeds 2.0, 1.6, 1.7σ); 42.40 ± 0.18° | [weakens]: biased, under 2σ |
+| 11 | by eye on 5° steps; the grey ball's parabola | 40° (28.352 against 28.323 m); 45.00 ± 0.16° | 45° (28.333 m at 45° against 28.323 m at 40°; seeds 45°, 40°, 40°: the ranges at 40° and 45° differ by 29 mm at the marks, and the setting error moves each by up to 35–40 mm); 45.04 ± 0.16° | [useful] |
+
+- Watch's caption at 8 s of `independence` (R2-W F10) [error in earlier: «at the same moment as the dropped one», while
+  the 1 s caption has just introduced the Earth's rotation and the run's landings differ by 10.526 µs]: «Twice the
+  sideways speed: the ball lands twice as far, only 10.5 µs after the dropped one, held up by the Earth's rotation.» /
+  «Горизонтальная скорость вдвое больше: шарик падает вдвое дальше и лишь на 10,5 мкс позже отпущенного — его
+  задерживает вращение Земли.» (the number from the run, `test_s03_screens.py`).
+- **The entrained air's Coriolis term is not added** (R2-E F5, rejected with its evidence; the deviation above said
+  «≲ 3·10⁻³ of the Coriolis effect»): in air at rest in the Earth's frame (vorticity 2Ω) the inviscid force on a sphere
+  has, besides the added mass C_A m_f (Du/Dt − dv/dt), the lift ½ρ_f V (u − v) × ω (Auton, Hunt & Prud'homme 1988, as
+  quoted by Sergeev & Barenghi, arXiv:0909.4451 eqs. (3), (5)); the added mass's Coriolis part −2C_A m_f Ω × v and the
+  lift's +m_f Ω × v cancel exactly for C_A = ½. So `Coriolis(mass=m)` and `angle_flight`'s N = 2mΩ_z v are the
+  consistent pair; the Coriolis force on m + C_A m_f alone would add an uncancelled 3·10⁻³ error. What stays stated is
+  the residual 2(C_L − C_A) m_f Ω × v, the lift coefficient of a sphere in a rotating fluid at Re 10³–10⁵ not being
+  established (`lfphys/sources/s03_forces_2026-11-18.md` §2). No S03 number changes.
+- `fly` now refuses a declared force computed for another fluid than its `Medium` (R2-E F8, `mechanics.medium_mismatch`):
+  S03 builds both from the same air and is unaffected (its tests check it). S03's stops already end after the event's
+  frame (R2-F F3), so its atlases change only by their keys and by the real angles.
 
 ---
 

@@ -330,7 +330,8 @@ def fly(body: Body, r0, v0, *, g: float = G_STANDARD, forces=(), ground: float =
     Refusals (ValueError with a translatable text and a machine code of ``lfphys.codes``): a start below the ground
     (``mechanics.below_ground``), a start on the ground not moving up (``mechanics.no_flight``), non-finite input
     (``mechanics.nonfinite``), g <= 0 (``mechanics.bad_gravity``), a body that has not landed by ``t_max``
-    (``mechanics.no_landing``)."""
+    (``mechanics.no_landing``), a force whose own fluid (its ``rho`` or ``mu``: a drag, the Magnus force) differs from
+    the flight's ``medium`` (``mechanics.medium_mismatch``)."""
     if not isinstance(body, Body):
         raise TypeError("body must be a lfphys.core.mechanics.Body")
     r0 = np.array(r0, float)
@@ -357,6 +358,17 @@ def fly(body: Body, r0, v0, *, g: float = G_STANDARD, forces=(), ground: float =
             raise TypeError("a force needs a method force(t, r, v)")
     if medium is not None and not isinstance(medium, Medium):
         raise TypeError("medium must be a lfphys.core.mechanics.Medium")
+    if medium is not None:  # a force with its own fluid (drag, Magnus) must be in the flight's fluid (review EX2, F8)
+        for f in forces:
+            for prop, val in (("rho", medium.rho), ("mu", medium.mu)):
+                own = getattr(f, prop, None)
+                if own is None or val is None or not isinstance(own, (int, float)):
+                    continue
+                if abs(float(own) - float(val)) > 1e-12 * max(abs(float(own)), abs(float(val))):
+                    raise coded(ValueError(T("{force}: computed for a fluid with {prop} = {own:.6g}, but the "
+                                             "flight's medium has {prop} = {val:.6g} (one flight, one fluid)",
+                                             force=getattr(f, "label", type(f).__name__), prop=prop,
+                                             own=float(own), val=float(val))), "mechanics.medium_mismatch")
     m = body.mass
     nf = len(forces)
     ev_vert = np.zeros(d)

@@ -12,8 +12,12 @@ What the run computes (README.md of this folder has the model in full), all with
   outgoing beam and its ellipse, the analysers' ports (polarising beam splitters with k1, k2) and the Born
   probabilities of a photon's five outcomes (lfphys.core.optics.polarization);
 * the field |E|^2 of the source's polarisation state through the structure (interfaces.field_intensity);
+* the glass blocks: every medium other than air a half-cylinder crossed along a radius, its curved face at normal
+  incidence (interfaces.stack) and the glass's absorption exp(−4πκL/λ) (materials' κ); the reference count N₀ of the
+  incident photons with the block removed;
 * the stream of single photons: each photon's wavelength drawn from the source's line, its outcome drawn by the Born
-  rule on its density matrix when it reaches the structure, its arrival at a detector after the flight at the group
+  rule on its density matrix when it reaches the structure (and through the blocks), its arrival at a detector after
+  the flight at the group
   velocity and the structure's group delay (interfaces.group_delay), revealed there; each detector clicks with its
   efficiency, adds dark counts and loses counts to its dead time (lfphys.theories.models.photodetector);
 * checks against closed forms (lfphys.core.optics.thin_films, polarization, photodetector): Brewster, critical angle and
@@ -35,11 +39,12 @@ from lfphys.core.optics import interfaces, materials, polarization as pol_, thin
 from lfphys.i18n import T, is_t, join
 from lfphys.theories.models import photodetector as pd
 
-from .engine.bench import (ARM_M, DARK_CODE, DETECTORS, GLASSES, MATERIAL_NAME, MEDIA, P_5SIGMA, POL_CODE, POL_LABEL,
-                           SHORT, STRUCT_LABEL, STRUCTS, TH_MAX, DetectorState, Stream, Structure, analyser,
-                           binom_two_sided, brewster_from_rp, build_structure, critical_from_T, curves, detector_of,
-                           field, field_grid, flight_times, lam_range, line_comb, materials_of, medium_index,
-                           outcome_probs, outcome_test, poisson_two_sided, ray_angles, rng_for, rta, source_state)
+from .engine.bench import (ARM_M, DARK_CODE, DETECTORS, GLASSES, LOSSES, MATERIAL_NAME, MEDIA, P_5SIGMA, POL_CODE,
+                           POL_LABEL, SHORT, STRUCT_LABEL, STRUCTS, TH_MAX, DetectorState, Stream, Structure, analyser,
+                           binom_two_sided, blocks, brewster_from_rp, build_structure, critical_from_T, crossing_T,
+                           curves, detector_of, field, field_grid, flight_times, lam_range, line_comb, materials_of,
+                           medium_index, outcome_probs, outcome_test, outcomes8, poisson_two_sided, ray_angles,
+                           rng_for, rta, side_media, source_state)
 
 U = 2.0 ** -53  # unit round-off of binary64 (the derived tolerances of the evan and film checks)
 
@@ -49,13 +54,20 @@ from .schema import (BENCH_RATE, DET_DEFAULT, G_DEV, G_MED, G_SRC, G_STR, HENE, 
 
 
 # what a live change touches (owner, 2026-10-23: the set-up changes at once, as in a laboratory)
-PATH_FIELDS = ("med_in", "med_out", "n0", "ns", "theta_deg")  # the beam paths (media, goniometer): photons lost
+PATH_FIELDS = ("med_in", "med_out", "n0", "ns", "theta_deg", "block_mm")  # the beam paths (media, blocks, goniometer)
+#: what the reference count N₀ (the block removed) was made with: after a change of these it no longer applies
+REF_FIELDS = ("lam_nm", "dlam_nm", "rate", "shutter", "det", "ref_s")
+#: the largest reference count simulated photon by photon (the source's rate × t₀)
+REF_MAX = 2e7
+#: the angles of part 4 at which «Computed for this bench» lists the degree of polarisation (R_s − R_p)/(R_s + R_p)
+DOP_SHOWN = (40.0, 50.0, 57.0, 70.0)
 SOURCE_FIELDS = ("lam_nm", "dlam_nm", "pol", "psi_deg", "rate", "shutter")  # new photons only
 STAT_STEPS = (1, 2, 5)
 # joule: the Gauss-Legendre remainder is < 1e-25 (thin_films._layer_nodes); what is left is the float rounding of
 # |E|^2 and of R + T, <= 1.5e-14 over 3000 random absorbing films in the ranges of this bench
 JOULE_TOL = 1e-12
 OUT5 = pol_.OUTCOMES  # R_pass, R_reject, T_pass, T_reject, A
+OUT8 = OUT5 + LOSSES  # and the losses in the blocks: on the way in, in the reflection arm, in the transmission arm
 SHOWN = 8  # the events of a step sent one by one per detector (the view's flashes); the counts are exact anyway
 DET_NAMES = ("Rp", "Rr", "Tp", "Tr")
 
@@ -71,14 +83,26 @@ MEASURABLES = [
     {"id": "n_emit", "label": T("Photons emitted"), "unit": ""},
     {"id": "n_A", "label": T("Photons absorbed in the structure (known in the simulation)"), "unit": ""},
     {"id": "n_dark", "label": T("Dark counts among the clicks (known in the simulation)"), "unit": ""},
-    {"id": "R_frac", "label": T("Reflected fraction"), "unit": "", "sigma": "R_frac_se",
-     "ref": "R_frac_ref", "ref_label": T("computed R/(R + T)")},
-    {"id": "R_frac_se", "label": T("Binomial error of the reflected fraction"), "unit": ""},
-    {"id": "R_frac_ref", "label": T("Computed R/(R + T) of the source's light"), "unit": ""},
-    {"id": "T_frac", "label": T("Transmitted fraction"), "unit": "", "sigma": "T_frac_se",
-     "ref": "T_frac_ref", "ref_label": T("computed T/(R + T)")},
-    {"id": "T_frac_se", "label": T("Binomial error of the transmitted fraction"), "unit": ""},
-    {"id": "T_frac_ref", "label": T("Computed T/(R + T) of the source's light"), "unit": ""},
+    {"id": "n_L", "label": T("Photons lost in the glass blocks (known in the simulation)"), "unit": ""},
+    {"id": "n_0", "label": T("Reference count N₀: the incident photons with the block removed"), "unit": ""},
+    {"id": "R_frac", "label": T("Reflected share of the clicks"), "unit": "", "sigma": "R_frac_se",
+     "ref": "R_frac_ref", "ref_label": T("computed share")},
+    {"id": "R_frac_se", "label": T("Binomial error of the reflected share"), "unit": ""},
+    {"id": "R_frac_ref", "label": T("Computed share of the photons that reach the reflection detector"), "unit": ""},
+    {"id": "T_frac", "label": T("Transmitted share of the clicks"), "unit": "", "sigma": "T_frac_se",
+     "ref": "T_frac_ref", "ref_label": T("computed share")},
+    {"id": "T_frac_se", "label": T("Binomial error of the transmitted share"), "unit": ""},
+    {"id": "T_frac_ref", "label": T("Computed share of the photons that reach the transmission detector"), "unit": ""},
+    {"id": "R_inc", "label": T("Reflected per incident photon"), "unit": "", "sigma": "R_inc_se",
+     "ref": "R_inc_ref", "ref_label": T("computed")},
+    {"id": "R_inc_se", "label": T("Error of the reflected per incident photon (Poisson counts)"), "unit": ""},
+    {"id": "R_inc_ref", "label": T("Computed probability that a photon of the source reaches the reflection detector"),
+     "unit": ""},
+    {"id": "T_inc", "label": T("Transmitted per incident photon"), "unit": "", "sigma": "T_inc_se",
+     "ref": "T_inc_ref", "ref_label": T("computed")},
+    {"id": "T_inc_se", "label": T("Error of the transmitted per incident photon (Poisson counts)"), "unit": ""},
+    {"id": "T_inc_ref", "label": T("Computed probability that a photon of the source reaches the transmission "
+                                   "detector"), "unit": ""},
     {"id": "fR_pass", "label": T("Reflected: share through the analyser"), "unit": "", "sigma": "fR_pass_se",
      "ref": "fR_pass_ref", "ref_label": T("computed")},
     {"id": "fR_pass_se", "label": T("Binomial error of the reflection analyser's fraction"), "unit": ""},
@@ -103,10 +127,11 @@ class Simulation(BaseSimulation):
         self.flight = Stream()
         self.pid = 0
         self.t_next = float(self.rng.exponential(1.0 / self.params["rate"]))
-        self.tot = dict(emitted=0, R=0, T=0, A=0, lost=0, transitional=0, missed=0, dark=0, clicks=0)
+        self.tot = dict(emitted=0, R=0, T=0, A=0, L=0, lost=0, transitional=0, missed=0, dark=0, clicks=0)
         self.segc: dict[int, dict] = {}
         self.dets = self._detectors(self.params)
         self.gated = False
+        self.ref = self._reference_count()
         try:
             self._new_segment(T("start"))
         except ValueError:
@@ -132,6 +157,24 @@ class Simulation(BaseSimulation):
                 out.append(DetectorState(det, self.rng, self.t))
         return out
 
+    def _reference_count(self):
+        """The reference count N₀ (Rutgers' «I0 … before sample placement»): before the world's time 0 the block is
+        lifted off the table and the transmission detector, in line with the source (the analysers out of the beam),
+        counts the source's photons for t₀ = ``ref_s``: a Poisson stream at the source's rate, each photon detected with
+        the detector's efficiency, its dark counts and its non-paralysable dead time (``DetectorState``), from a random
+        stream of its own (the seed and the set-up, marked as the reference). None when t₀ = 0."""
+        p = self.params
+        t0 = float(p["ref_s"])
+        if not t0 > 0:
+            return None
+        rng = rng_for(self.seed, {**p, "reference_count": True})
+        rate = float(p["rate"]) if p["shutter"] == "open" else 0.0
+        k = int(rng.poisson(rate * t0))
+        arrivals = np.sort(rng.uniform(0.0, t0, k))
+        times, _tags, dark, _used, n_det, n_dark = DetectorState(detector_of(p), rng, 0.0).step(t0, arrivals)
+        return {"n": int(len(times)), "t": t0, "arrived": k, "detected": int(n_det), "dark": int(n_dark),
+                "dark_rec": int(np.sum(dark))}
+
     def engine_modules(self):
         return ["core.optics.interfaces", "core.optics.thin_films", "core.optics.polarization",
                 "core.optics.materials", "core.constants", "theories.models.photodetector",
@@ -153,6 +196,10 @@ class Simulation(BaseSimulation):
             if not lo <= l0 <= hi:
                 raise Refusal(T("the design wavelength λ₀ = {lam} nm lies outside the materials' data {lo}–{hi} nm",
                                 lam=l0, lo=lo, hi=hi), T("choose λ₀ inside the materials' range"))
+        rt = float(params["rate"]) * float(params["ref_s"])
+        if rt > REF_MAX:
+            raise Refusal(T("the reference count would take {n:.3g} photons (the rate × t₀); at most {m:.3g}", n=rt,
+                            m=REF_MAX), T("lower the rate or the reference's counting time t₀"))
         if params["anaR"] == "real" or params["anaT"] == "real":
             k1, k2 = float(params["ana_k1"]), float(params["ana_k2"])
             if not 0.0 <= k2 <= k1 <= 1.0:
@@ -192,13 +239,15 @@ class Simulation(BaseSimulation):
                 return {"value": 1.0 / (n * n), "unit": "", "label": T("{glass}: the intercept 1/n² of y_p (below θ_B)",
                                                                    glass=name(g)),
                         "how": how, "kind": "closed form"}
-            if kind == "inv4":
-                return {"value": -1.0 / n ** 4, "unit": "", "label": T("{glass}: y_p below θ_B, the slope −1/n⁴",
-                                                                       glass=name(g)), "how": how,
-                        "kind": "closed form"}
             if kind == "thb":
                 return {"value": math.degrees(interfaces.brewster(1.0, n)), "unit": "°",
                         "label": T("{glass}: Brewster's angle θ_B = arctan n, where R_p = 0", glass=name(g)),
+                        "how": how, "kind": "closed form"}
+            if kind == "thc":
+                thc = math.degrees(interfaces.critical(n, 1.0))
+                return {"value": 1.0 / (n * n), "unit": "",
+                        "label": T("{glass} from inside, s light: y_p = 1/n² − sin²θ, zero at θ_c = {c:.4f}°",
+                                   glass=name(g), c=thc),
                         "how": how, "kind": "closed form"}
         if step_id == "malus":
             k1, k2 = (1.0, 0.0) if reference.endswith("ideal") else IMPERFECT
@@ -215,13 +264,19 @@ class Simulation(BaseSimulation):
                         "how": T("Malus's law for a partial polariser, k₁ = {k1}, k₂ = {k2}", k1=k1, k2=k2),
                         "kind": "closed form"}
         if step_id == "reflection":
-            g = reference.partition("_")[2]
-            if g in glass:
+            kind, _, g = reference.partition("_")
+            if kind == "dop" and g in glass:
                 n = n_of(g)
+                grid = [float(x) for x in (values or {}).get("theta_deg") or ()]
+                ths = [x for x in grid if x in DOP_SHOWN] or grid  # a few of the grid's angles, for the task sheet
+                dop = []
+                for x in ths:
+                    Rs, Rp = (interfaces.stack([1.0, n], [], lam, math.radians(x), q)["R"] for q in ("s", "p"))
+                    dop.append(T("{th:g}°: {P:.4f}", th=x, P=pol_.degree_from_powers(Rs, Rp)))
                 return {"value": math.degrees(interfaces.brewster(1.0, n)), "unit": "°",
-                        "label": T("{glass}: the analyser along p passes nothing at θ_B = arctan n",
-                                   glass=name(g)),
-                        "how": T("SCHOTT's Sellmeier formula: n = {n:.6g}", n=n), "kind": "closed form"}
+                        "label": T("{glass}: P = (R_s − R_p)/(R_s + R_p) is 1 at θ_B = arctan n", glass=name(g)),
+                        "how": T("R_s, R_p by Fresnel (lfphys), n = {n:.6g}: P at {list}", n=n, list=join(dop)),
+                        "kind": "closed form"}
         raise ValueError(T("no law for the step {step}", step=step_id))
 
     # --- messages -------------------------------------------------------------------------------------
@@ -317,6 +372,10 @@ class Simulation(BaseSimulation):
         self.params = new
         self.st = st
         self.dets = self._detectors(new, self.dets)
+        if self.ref is not None and any(k in REF_FIELDS for k in changed):
+            self.ref = None
+            notes.append(T("the reference count N₀ was made with the source and the detector as they were: it no "
+                           "longer applies (start the world anew for a new one)"))
         if "rate" in changed or "shutter" in changed:
             self.t_next = self.t + float(self.rng.exponential(1.0 / new["rate"]))
         if "gate_s" in changed:
@@ -363,20 +422,26 @@ class Simulation(BaseSimulation):
         self.rho = rho
         aR, aT = analyser(p, "R"), analyser(p, "T")
         # the source's line: a comb of wavelengths, each with its own structure (dispersion) and Born probabilities
+        # and each wavelength's crossings of the glass blocks (the way in, each arm: curved face and bulk)
         lams, wts = line_comb(lam, float(p["dlam_nm"]))
         table = []
         for x in lams:
             sx = st if x == lam else build_structure(p, x)
-            table.append([outcome_probs(sx, th, rho, aR, aT)["probs"][k] for k in OUT5])
+            ox = outcome_probs(sx, th, rho, aR, aT)
+            table.append(outcomes8(ox["probs"], blocks(p, x), rho, ox["rho_R"], ox["rho_T"]))
         self.comb = (lams, wts, np.array(table))
         here = outcome_probs(st, th, rho, aR, aT)
         P = here["probs"]
-        pexp = [float(v) for v in wts @ np.array(table)]  # the line-averaged Born probabilities of the five outcomes
-        self.times = flight_times(st, th, rho)
+        self.bl = bl = blocks(p, lam)
+        P8 = dict(zip(OUT8, outcomes8(P, bl, rho, here["rho_R"], here["rho_T"])))
+        self.tau_arm = {"in": crossing_T(bl["in"], rho), "R": crossing_T(bl["R"], here["rho_R"]),
+                        "T": crossing_T(bl["T"], here["rho_T"])}
+        pexp = [float(v) for v in wts @ np.array(table)]  # the line-averaged probabilities of the eight outcomes
+        self.times = flight_times(st, th, rho, float(p["block_mm"]))
         cur = {q: rta(st, lam, th, q) for q in ("s", "p")}
-        self.segc[s] = {"n": 0, "fate": [0] * 5, "probs": pexp, "arr": [0] * 4, "det_in": [0] * 4, "dark": [0] * 4,
-                        "rec": [0] * 4, "clk": [0] * 4, "clk_dark": [0] * 4, "nA": 0, "emit": 0, "t0": self.t,
-                        "tdark": [0.0] * 4, "P": dict(P)}
+        self.segc[s] = {"n": 0, "fate": [0] * 8, "probs": pexp, "arr": [0] * 4, "det_in": [0] * 4, "dark": [0] * 4,
+                        "rec": [0] * 4, "clk": [0] * 4, "clk_dark": [0] * 4, "nA": 0, "nL": 0, "emit": 0,
+                        "t0": self.t, "tdark": [0.0] * 4, "P": dict(P), "P8": P8}
         self._stat_next = 20
         # angles found by the run from its own transfer matrices. The exit wave becomes evanescent where T of the bare
         # boundary n_in -> n_out vanishes: n sin(theta) is the same in every layer, so the layers do not move this
@@ -422,14 +487,15 @@ class Simulation(BaseSimulation):
                  "ana": {arm: _ana_dict(analyser(p, arm), p["ana" + arm]) for arm in ("R", "T")},
                  "det": {"id": p["det"], "eta": det.eta, "dark": det.dark_rate, "dead": det.dead_time,
                          "jitter": det.jitter_sigma, "title": dict(DETECTORS)[p["det"]]},
-                 "gate": self._gate(), **{k: v for k, v in self.times.items() if k != "tau"}}
+                 "gate": self._gate(), **{k: v for k, v in self.times.items() if k != "tau"},
+                 "block": _block_dict(bl, self.tau_arm), "ref": self.ref}
         approx = self._approximations(m_spec)
         blobs = {k: np.asarray(v, np.float64) for k, v in cv.items()}
         blobs["z"] = np.asarray(z, np.float64)
         blobs["E2"] = np.asarray(E2, np.float64)
         blobs.update(_analyser_curves(here, aR, aT))
         self._msg({"type": "segment", "t": self.t, "seg": s, "reason": reason, "setup": setup, "angles": angles,
-                   "cur": curd, "P": {k: float(P[k]) for k in OUT5}, "expected": dict(zip(OUT5, pexp)),
+                   "cur": curd, "P": {k: float(P[k]) for k in OUT5}, "P8": P8, "expected": dict(zip(OUT8, pexp)),
                    "arms": {"R": float(P["P_R"]), "T": float(P["P_T"]), "A": float(P["P_A"])}, "ell": ell,
                    "theta_B": None if th_B is None else {"deg": deg(th_B), "Rp": rta(face, lam, th_B, "p")["R"]},
                    "min_rp": min_rp, "theta_c": deg(th_c), "theta_c_face": deg(th_c_face), "approx": approx},
@@ -444,10 +510,10 @@ class Simulation(BaseSimulation):
                  "those of real materials at each photon's wavelength (lfphys materials: SCHOTT's data sheets, "
                  "Dodge, Malitson, Gao et al., Rodríguez-de Marcos et al., Johnson and Christy, Rakić); a model "
                  "medium has one given index for every λ."),
-               T("The glasses are taken by the real part of their index: their κ (at most 4·10⁻⁸ at the visible lines) "
-                 "changes R and T at the boundary by less than 10⁻¹⁵. Their absorption along a path in the glass is "
-                 "not modelled: the media are half-spaces and the detectors stand in them (0.30 m of N-BK7 would "
-                 "absorb 7 % at 632.8 nm, of N-SF11 21 %)."),
+               self._blocks_text(),
+               T("At the structure's face the glasses are taken by the real part of their index: their κ (at most "
+                 "4·10⁻⁸ at the visible lines) changes R and T there by less than 10⁻¹⁵ below the critical angle and "
+                 "by up to about 2·10⁻⁷ beyond it (the check «The face with the glasses' complex index» shows it)."),
                T("Photons one by one: each photon's wavelength is drawn from the source's line (a Gaussian sampled by "
                  "{k:d} wavelengths over ±4σ) and its outcome by the Born rule on its density matrix, with the "
                  "probabilities computed in this run for its wavelength, the angle and the analysers.", k=33),
@@ -472,6 +538,22 @@ class Simulation(BaseSimulation):
         out.extend(st.notes)
         return out
 
+    def _blocks_text(self):
+        r = float(self.params["block_mm"])
+        if not r > 0:
+            return T("The media are half-spaces and the detectors stand inside them (an idealisation: the glass block "
+                     "radius 0): no curved face and no absorption along the arms (0.30 m of N-BK7 would absorb 7 % at "
+                     "632.8 nm, of N-SF11 21 %).")
+        return T("Every medium other than air is a half-cylinder of radius {r:.4g} mm (a D-shaped block, as in the "
+                 "laboratory manuals) whose flat face is the structure's and whose axis is the table's: each beam "
+                 "crosses it along a radius and meets its curved face at normal incidence (Fresnel, s and p alike; no "
+                 "total reflection there), and the glass absorbs along the radius (Beer–Lambert with the material's κ "
+                 "at the photon's wavelength); the rest of each {arm:.3g} cm arm is in air. The detectors take the "
+                 "whole beam (the curved face's focusing is not followed). Light the curved face reflects back is lost "
+                 "to both detectors but for a ghost toward the reflection detector (its size in the checks; not "
+                 "added). The reference count N₀ is made with the block lifted off, by the transmission detector in "
+                 "line with the source, with the analysers out of the beam.", r=r, arm=ARM_M * 100)
+
     def _segment_checks(self, s, cur, cv, th_B, th_c, th_c_face, face, here, aR, aT):
         p, st = self.params, self.st
         lam, th = float(p["lam_nm"]), math.radians(p["theta_deg"])
@@ -486,14 +568,16 @@ class Simulation(BaseSimulation):
 
         Rc, Tc, Ac = (mixed(cur["s"][k], cur["p"][k]) for k in ("R", "T", "A"))
         tot = Rc + Tc + Ac
+        # an identity, shown for information (RULES §3): the engine's A is the remainder 1 − R − T (review R2-W F3)
         self._check(f"sum{s}", T("R + T + A = 1 (A = 1 − R − T by definition)"), tot, 1.0, "", CONS, tol=1e-12,
-                    ok=abs(tot - 1.0) <= 1e-12,
+                    info=True,
                     note=T("R = {R:.10g}, T = {T:.10g}, A = {A:.3g}; an identity: the engine's absorption is the "
                            "remainder", R=Rc, T=Tc, A=Ac))
         P = here["probs"]
         s5 = sum(P[k] for k in OUT5)
+        # an identity too: the analysers' two ports are complementary by construction (review R2-W F3)
         self._check(f"born{s}", T("The five outcomes' Born probabilities add to 1 (tr ρ)"), s5, 1.0, "", CONS,
-                    tol=1e-12, ok=abs(s5 - 1.0) <= 1e-12,
+                    tol=1e-12, info=True,
                     note=T("reflected and passed {a:.6g}, reflected and rejected {b:.6g}, transmitted and passed "
                            "{c:.6g}, transmitted and rejected {d:.6g}, absorbed {e:.3g}", a=P["R_pass"],
                            b=P["R_reject"], c=P["T_pass"], d=P["T_reject"], e=P["A"]))
@@ -638,6 +722,7 @@ class Simulation(BaseSimulation):
                                "back polarised along s, completely at Brewster's angle"))
         for arm, a in (("R", aR), ("T", aT)):
             self._malus_check(s, POLG, arm, a, here)
+        self._block_checks(s, G, lam, th, cur)
         # the source's line: how much the probabilities change over it
         lams, wts, table = self.comb
         if len(lams) > 1:
@@ -646,6 +731,113 @@ class Simulation(BaseSimulation):
                         spread, None, "", POLG, info=True,
                         note=T("Δλ = {w:.3g} nm (FWHM), {k:d} wavelengths; each photon's own wavelength sets its "
                                "probabilities", w=float(p["dlam_nm"]), k=len(lams)))
+
+    def _block_checks(self, s, G, lam, th, cur):
+        """The glass blocks: each curved face crossed at normal incidence against Fresnel's closed form (s and p alike,
+        so the crossing keeps the beam's polarisation), each bulk's transmittance with its κ (for information: one
+        route), the face with the glasses' complex index (for information: the run takes their real part), the ghost
+        the run does not follow (for information) and the reference count against the detector model."""
+        p, st, bl = self.params, self.st, self.bl
+        BG = T("Segment {seg:d}: the glass blocks", seg=s)
+        names = {"in": T("the way in (air → glass)"), "R": T("the reflection arm (glass → air)"),
+                 "T": T("the transmission arm (glass → air)")}
+        for arm in ("in", "R", "T"):
+            cr = bl[arm]
+            if cr is None:
+                continue
+            n = cr["n"]
+            ref = 4.0 * n / (n + 1.0) ** 2
+            dev = max(abs(cr["Tc"]["s"] - ref), abs(cr["Tc"]["p"] - ref))
+            self._check(f"cface{arm}{s}", T("Curved face at normal incidence, {where}: the run's T_s and T_p",
+                                            where=names[arm]), cr["Tc"]["s"], ref, "", BG, tol=1e-14,
+                        ok=dev <= 1e-14,
+                        note=T("reference 4n/(n + 1)² = {ref:.10g} at n = {n:.8g} (Fresnel at normal incidence, s and "
+                               "p alike: the crossing keeps the beam's polarisation); T_p = {tp:.15g}", ref=ref, n=n,
+                               tp=cr["Tc"]["p"]))
+            mid = side_media(p)[0 if arm in ("in", "R") else 1][0]  # every crossing's bulk, shown
+            err = materials.interpolation_error(mid, lam)[1] if mid not in ("air", "model") else 0.0
+            self._check(f"bulk{arm}{s}", T("Absorption along the block's radius, {where}: the internal "
+                                           "transmittance", where=names[arm]), cr["tau"], None, "", BG, info=True,
+                        note=T("exp(−4πκL/λ) with the material's κ = {k:.3g} (± {e:.2g}: the error of its data; for "
+                               "a SCHOTT glass half a unit of the data sheet's printed internal transmittance) at "
+                               "λ = {lam:.6g} nm, L = {L:.4g} mm (Beer–Lambert, the law the data sheet's κ comes from)",
+                               k=cr["kappa"], e=err, lam=lam, L=cr["L_mm"]))
+        # the face with the complex index (the engine accepts an absorbing incidence medium): what taking the real
+        # part changes
+        if not st.layers and st.kind in ("interface", "tir"):
+            (mi, _), (mo, _) = side_media(p)
+            if any(m in GLASSES for m in (mi, mo)):
+                zi = complex(materials.index(mi, lam)) if mi in GLASSES else complex(st.n_in)
+                zo = complex(materials.index(mo, lam)) if mo in GLASSES else complex(st.n_out)
+                d = max(abs(interfaces.stack([zi, zo], [], lam, th, q)["R"] - cur[q]["R"]) for q in ("s", "p"))
+                self._check(f"kface{s}", T("The face with the glasses' complex index n + iκ: the change of R"), d,
+                            None, "", BG, info=True,
+                            note=T("the run takes the glasses at the face by the real part of their index; with n + iκ "
+                                   "(the engine's transfer matrices accept an absorbing incidence medium) R changes "
+                                   "by this much at the current angle (beyond θ_c by up to about 2·10⁻⁷: the glass "
+                                   "absorbs at the face)"))
+        # the ghost toward the reflection detector (not followed): transmitted into the exit block, reflected back by
+        # its curved face, reflected by the face from inside, by the curved face again, out through the face
+        g = self._ghost(lam, th)
+        if g is not None:
+            dR = self.segc[s]["P8"]["R_pass"] + self.segc[s]["P8"]["R_reject"]
+            self._check(f"ghost{s}", T("Not followed: the ghost toward the reflection detector, per photon of the "
+                                       "source"), g, None, "", BG, info=True,
+                        note=T("a photon transmitted into the block, reflected back by its curved face, reflected by "
+                               "the face from inside, by the curved face again and out through the face leaves along "
+                               "the reflected beam: {g:.3g} of the source's photons against {r:.4g} reflected "
+                               "({f:.2g} of them); the run does not add it (later ghosts are smaller by (R_c R′)² "
+                               "each)", g=g, r=dR, f=g / dR if dR > 0 else math.inf))
+        if s == 0 and self.ref is not None:
+            self._reference_check(BG)
+
+    def _ghost(self, lam, th):
+        """The first ghost toward the reflection detector (``_block_checks``), per photon of the source; None without a
+        transmission block or a propagating transmitted wave."""
+        st, bl, rho = self.st, self.bl, self.rho
+        cT = bl["T"]
+        if cT is None or st.kind == "none":
+            return None
+        sin_out = st.n_in * math.sin(th) / st.n_out
+        if not sin_out < 1.0:
+            return None
+        th_out = math.asin(sin_out)
+        # the curved face is lossless: what it does not pass, it reflects
+        Rc = {q: 1.0 - cT["Tc"][q] for q in ("s", "p")}
+        rev_ns, rev_ds = list(reversed(st.ns)), list(reversed(st.ds))
+        out = 0.0
+        for q, w in (("p", float(np.real(rho[0, 0]))), ("s", float(np.real(rho[1, 1])))):
+            fwd = rta(st, lam, th, q)
+            back = interfaces.stack(rev_ns, rev_ds, lam, th_out, q)
+            out += w * fwd["T"] * cT["tau"] ** 4 * Rc[q] ** 2 * back["R"] * back["T"]
+        return out * self.tau_arm["in"] * crossing_T(bl["R"])
+
+    def _reference_check(self, G):
+        """The reference count N₀ against the detector model: the photons Poisson of mean rate·t₀, the detected ones
+        binomial with η, the dark counts Poisson of mean d·t₀, the recorded ones by the non-paralysable dead time
+        m = n/(1 + n t_d); Bonferroni over the four exact tails, fails below the two-sided 5σ tail."""
+        p, r = self.params, self.ref
+        det = detector_of(p)
+        rate = float(p["rate"]) if p["shutter"] == "open" else 0.0
+        t0 = r["t"]
+        nin = r["detected"] + r["dark"]
+        tails = [poisson_two_sided(r["arrived"], rate * t0), binom_two_sided(r["detected"], r["arrived"], det.eta),
+                 poisson_two_sided(r["dark"], det.dark_rate * t0)]
+        if det.dead_time > 0:
+            expect = float(pd.observed_rate(nin / t0, det.dead_time)) * t0
+            zc = (r["n"] - expect) / math.sqrt(max(nin - expect, 0.0) + 1.0)
+            tails.append(math.erfc(abs(zc) / math.sqrt(2.0)))
+        else:
+            expect, zc = float(nin), 0.0
+            tails.append(1.0 if r["n"] == nin else 0.0)
+        pmin = min(1.0, len(tails) * min(tails))
+        self._check("ref", T("The reference count N₀ (the block removed) against the detector model: p-value"), pmin,
+                    None, "", G, ok=pmin >= P_5SIGMA,
+                    note=T("{a:d} photons in t₀ = {t:.4g} s (expected {e:.6g}), {k:d} detected (η = {eta}), "
+                           "{dk:d} dark counts (expected {de:.4g}); N₀ = {n:d} recorded, {m:.6g} by the dead-time "
+                           "formula (z = {z:+.2f}); Bonferroni over {j:d} exact tails; fails at p < {p5:.2g}",
+                           a=r["arrived"], t=t0, e=rate * t0, k=r["detected"], eta=det.eta, dk=r["dark"],
+                           de=det.dark_rate * t0, n=r["n"], m=expect, z=zc, j=len(tails), p5=P_5SIGMA))
 
     def _malus_check(self, s, G, arm, a, here):
         """An analyser in an arm whose light has no circular part (S3 = 0 to 1e-12 of S0: linear, partly polarised or
@@ -717,7 +909,8 @@ class Simulation(BaseSimulation):
             k, pr = c["fate"], c["probs"]
             t = outcome_test(k, pr)
             names = [T("reflected and passed"), T("reflected and rejected"), T("transmitted and passed"),
-                     T("transmitted and rejected"), T("absorbed")]
+                     T("transmitted and rejected"), T("absorbed"), T("lost in the block on the way in"),
+                     T("lost in the block of the reflection arm"), T("lost in the block of the transmission arm")]
             parts = [T("{x}: {k:d} (expected {e:.1f}, z = {z:+.2f})", x=x, k=int(kx), e=px * n, z=zx)
                      if math.isfinite(zx) else
                      T("{x}: {k:d} (expected {e:.3g}: an impossible outcome)", x=x, k=int(kx), e=px * n)
@@ -962,8 +1155,10 @@ class Simulation(BaseSimulation):
         self.segc[self.seg]["emit"] += k
 
     def _at_structure(self, idx):
-        """The photons reach the structure present now: each one's outcome by the Born rule with the five
-        probabilities of its own wavelength (the comb's), on the source's density matrix."""
+        """The photons reach the structure present now: each one's outcome by the Born rule with the probabilities of
+        its own wavelength (the comb's), on the source's density matrix: the face's five outcomes and the losses in the
+        glass blocks (on the way in, in either arm). A photon lost in a block is never seen: it leaves the flight when
+        both arms' arrival times have passed (the viewer learns no more about it)."""
         a = self.flight.a
         _, _, table = self.comb
         kl = a["kl"][idx]
@@ -972,7 +1167,7 @@ class Simulation(BaseSimulation):
         for k in np.unique(kl):
             m = kl == k
             cum = np.cumsum(table[k])
-            out[m] = np.minimum(np.searchsorted(cum / cum[-1], u[m], side="right"), 4)
+            out[m] = np.minimum(np.searchsorted(cum / cum[-1], u[m], side="right"), len(OUT8) - 1)
         P = self.segc[self.seg]["P"]
         PR, PT = P["P_R"], P["P_T"]
         ts = a["ts"][idx]
@@ -982,7 +1177,7 @@ class Simulation(BaseSimulation):
         a["seg"][idx] = np.where(a["sege"][idx] == self.seg, self.seg, -1)
         a["tR"][idx], a["tT"][idx] = tR, tT
         a["wR"][idx], a["wT"][idx] = wR, (1.0 - wR) if PR + PT > 0 else 0.0
-        a["tdet"][idx] = np.where(out <= 1, tR, np.where(out <= 3, tT, ts))
+        a["tdet"][idx] = np.where(out <= 1, tR, np.where(out <= 3, tT, np.where(out == 4, ts, np.maximum(tR, tT))))
         a["stage"][idx] = 1
 
     def _reveal(self, t_target):
@@ -1003,12 +1198,14 @@ class Simulation(BaseSimulation):
             m = seg == sv
             cs = self.segc[int(sv)]
             cs["n"] += int(m.sum())
-            for j in range(5):
+            for j in range(len(OUT8)):
                 cs["fate"][j] += int(np.sum(out[m] == j))
         self.tot["transitional"] += int(np.sum(seg < 0))
         nA = int(np.sum((out == 4) & (seg == self.seg) & (a["tdet"][ii] <= g_end)))
         c["nA"] += nA
+        c["nL"] += int(np.sum((out >= 5) & (seg == self.seg) & (a["tdet"][ii] <= g_end)))
         self.tot["A"] += int(np.sum(out == 4))
+        self.tot["L"] += int(np.sum(out >= 5))
         # the detectors: arrivals (any segment's photons: a detector does not know) merged with dark counts
         ev_t, ev_det, ev_pol = [a["tdet"][ii][out == 4]], [np.full(int(np.sum(out == 4)), 4, np.uint8)], \
             [a["pol"][ii][out == 4].astype(np.uint8)]
@@ -1106,12 +1303,14 @@ class Simulation(BaseSimulation):
         arm; after the structure, not yet detected: the reflected and transmitted packets (weights P_R/(P_R+P_T) and
         P_T/(P_R+P_T)); once one arm's arrival time has passed without a click there, its packet is gone and the other
         one's weight is the conditional probability with that detector's efficiency (Bayes; Lüders for an ideal
-        detector). The counters and the measurables of the segment (none before the counting starts)."""
+        detector), the efficiency times the share of the arm's photons that cross its glass block. The counters and the
+        measurables of the segment (none before the counting starts)."""
         a = self.flight.a
         t = self.t
         n = len(self.flight)
         fl = np.zeros((n, 6))
         eta = detector_of(self.params).eta
+        etaR, etaT = eta * self.tau_arm["R"], eta * self.tau_arm["T"]  # a photon in the arm is clicked by its detector
         if n:
             st0 = a["stage"] == 0
             fl[:, 0] = a["stage"]
@@ -1123,10 +1322,10 @@ class Simulation(BaseSimulation):
             goneT, goneR = t >= tT, t >= tR
             # one arm passed without a click: the other arm's weight by Bayes with the efficiency
             onlyR = goneT & ~goneR & (wR > 0)
-            wR[onlyR] = wR[onlyR] / (wR[onlyR] + wT[onlyR] * (1.0 - eta))
+            wR[onlyR] = wR[onlyR] / (wR[onlyR] + wT[onlyR] * (1.0 - etaT))
             wT[goneT] = 0.0
             onlyT = goneR & ~goneT & (wT > 0)
-            wT[onlyT] = wT[onlyT] / (wT[onlyT] + a["wR"][s1][onlyT] * (1.0 - eta))
+            wT[onlyT] = wT[onlyT] / (wT[onlyT] + a["wR"][s1][onlyT] * (1.0 - etaR))
             wR[goneR] = 0.0
             fl[s1, 2] = (t - ts) / np.maximum(tR - ts, 1e-300)
             fl[s1, 3] = wR
@@ -1146,14 +1345,20 @@ class Simulation(BaseSimulation):
         meas = {"t_c": t_c if started else None, "n_R": nR, "n_T": nT, "n_Rp": cnt(0), "n_Rr": cnt(1),
                 "n_Tp": cnt(2), "n_Tr": cnt(3), "n_clicks": sum(clk) if started else None,
                 "n_emit": c["emit"] if started else None, "n_A": c["nA"] if started else None,
-                "n_dark": sum(c["clk_dark"]) if started else None}
-        P = c["P"]
+                "n_dark": sum(c["clk_dark"]) if started else None, "n_L": c["nL"] if started else None,
+                "n_0": self.ref["n"] if self.ref is not None else None}
+        P, P8 = c["P"], c["P8"]
         # the computed fractions describe the photons: with none sent in this segment (the shutter closed: only dark
-        # counts) there is nothing to compare them with, and none is shown
+        # counts) there is nothing to compare them with, and none is shown. A photon reaches the reflection detector
+        # with P8's R_pass + R_reject (the face's, through the blocks), the transmission detector with T_pass + T_reject
         sent = c["emit"] > 0
-        R_ref = P["P_R"] / (P["P_R"] + P["P_T"]) if sent and P["P_R"] + P["P_T"] > 0 else None
+        dR, dT = P8["R_pass"] + P8["R_reject"], P8["T_pass"] + P8["T_reject"]
+        R_ref = dR / (dR + dT) if sent and dR + dT > 0 else None
         meas.update(_frac(nR, nT, "R_frac", R_ref))
         meas.update(_frac(nT, nR, "T_frac", None if R_ref is None else 1.0 - R_ref))
+        ref = self.ref if self.ref is not None and self.ref["n"] > 0 and started else None
+        for key, n_arm, pr in (("R_inc", nR, dR), ("T_inc", nT, dT)):
+            meas.update(_per_incident(n_arm, t_c, ref, key, pr if sent else None))
         for arm, i0 in (("R", 0), ("T", 2)):
             key = f"f{arm}_pass"
             if here[i0 + 1] and started:
@@ -1192,6 +1397,28 @@ def _frac(a, b, key, ref):
     n = a + b
     f = a / n
     return {key: f, key + "_se": math.sqrt(max(f * (1 - f), 1.0 / n) / n), key + "_ref": ref}
+
+
+def _per_incident(n, t, ref, key, pr):
+    """Counts per incident photon (n/t)/(N₀/t₀) of an arm against the reference count, with its error from the two
+    Poisson counts, σ² = (√n/t ÷ N₀/t₀)² + v²/N₀ (one count for n = 0), and the computed probability pr of reaching
+    the arm's detector (None without the reference or a count)."""
+    if n is None or ref is None or not t > 0:
+        return {key: None, key + "_se": None, key + "_ref": pr if ref is not None else None}
+    r0 = ref["n"] / ref["t"]
+    v = (n / t) / r0
+    se = math.sqrt((math.sqrt(max(n, 1)) / t / r0) ** 2 + v * v / ref["n"])
+    return {key: v, key + "_se": se, key + "_ref": pr}
+
+
+def _block_dict(bl, through):
+    """The glass blocks of a segment for the view and the record: the radius, each crossing's curved face (T at normal
+    incidence), bulk transmittance and index, and the share of each beam that crosses."""
+    def cr(c):
+        return None if c is None else {"n": c["n"], "kappa": c["kappa"], "Tc_s": c["Tc"]["s"], "Tc_p": c["Tc"]["p"],
+                                       "tau": c["tau"], "L_mm": c["L_mm"]}
+    return {"radius_mm": bl["radius_mm"], "in": cr(bl["in"]), "R": cr(bl["R"]), "T": cr(bl["T"]),
+            "through": {k: float(v) for k, v in through.items()}}
 
 
 def _ellipse(rho):

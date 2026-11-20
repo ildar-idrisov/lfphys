@@ -21,7 +21,10 @@ strips the frames' timing fields (``FRAME_TIMING``): the same spec and code give
   ``{"events": {kind: n, …}, "after_s": a, "max_world_s": m}`` (EX2 §5 F2: until ``a`` world seconds after the first
   ``kind`` that has occurred ``n`` times, an ``event`` message counting for each of the keys its ``kind`` or ``name``
   is; a run that reaches ``m`` first fails) or its shorthand ``{"event": kind, "after_s": a, "max_world_s": m}``
-  (``{"events": {kind: 1}}``);
+  (``{"events": {kind: 1}}``). The stop event's frame is never the last: when the stop moment (the event + ``a``) falls
+  within the event's own frame, one more frame is made a full frame step later (review R2-F F3: a player's cursor a
+  rounding short of the last frame then still reads the event; the 10⁻¹² tolerance of ``frameIndexAt`` did not cover
+  the shared clock's rounding, ~10⁻¹⁶ of the clock, at a clock ≳ 4 500 times the point's time);
 * ``script``: ``[{"at", "cmd", "args"}]`` applied at their frame (``round(at × fps)``, or ``round(at / dt)``) before the
   frame is drawn; ``captions`` (recordings, design §2.2): an accumulative ``caption {t, text, n, at, hold?}`` at its
   frame, after the script's commands of that frame;
@@ -254,19 +257,25 @@ def run_spec(viz_id: str, base: str | None, values: dict | None, seed: int, cloc
     k = 0
     t_stop = float(stop["world_s"]) if "world_s" in stop else None
     max_t = float(stop["max_world_s"]) if "max_world_s" in stop else None
+    ev_frame = None  # the frame number after the stop event's own frame (the stop event's frame is ev_frame − 1)
+    one_more = False  # the stop moment fell within the stop event's own frame: one more full frame step (R2-F F3)
     while True:
         try:
             if k:
                 if step_of is None:
                     target = runner.sim.t + runner.speed / fps
-                    if t_stop is not None:  # an atlas on the played clock (EX2 §5 F1): its last frame at the stop
+                    if one_more:  # a full frame step after the stop event's frame
+                        pass
+                    elif t_stop is not None:  # an atlas on the played clock (EX2 §5 F1): its last frame at the stop
                         target = min(target, t_stop)
                     elif max_t is not None:
                         target = min(target, max_t)
                     runner._advance(target)
                 else:
                     target = k * step_of
-                    if t_stop is not None:
+                    if one_more:
+                        pass
+                    elif t_stop is not None:
                         target = min(target, t_stop)
                     elif max_t is not None:
                         target = min(target, max_t)
@@ -293,9 +302,15 @@ def run_spec(viz_id: str, base: str | None, values: dict | None, seed: int, cloc
             if k >= n:
                 break
             continue
+        if one_more:
+            break
         if stop_event is not None and out.stop_event_t is not None and t_stop is None:
             t_stop = out.stop_event_t + float(stop.get("after_s", 0.0))
+            ev_frame = k
         if t_stop is not None and runner.sim.t >= t_stop * (1 - 1e-12) - 1e-12:
+            if ev_frame == k:  # the stop event's frame would be the last: one more frame step (review R2-F F3)
+                one_more = True
+                continue
             break
         if t_stop is None and max_t is not None and runner.sim.t >= max_t * (1 - 1e-12):
             got = ", ".join(f"{k} {out.counts.get(k, 0)} of {n}" for k, n in want.items())

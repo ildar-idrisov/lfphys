@@ -120,6 +120,15 @@ def test_an_on_grid_point_is_the_bytes_of_a_build_then_the_atlas_and_the_cache(t
         return await _post(cl, {"values": {"h_m": 1.0, "angle_deg": 30.0}})
     st, data, hd = _api(tmp_path / "other", fn2)
     assert st == 200 and hd["X-LF-Source"] == "atlas" and data == want
+    # R2-F F9: a point file of its size but other bytes is not served from the atlas (its name's hash8 is checked)
+    spec = next(a for a in registry.atlases_of(registry.load("s98_atlas_toy")) if a["id"] == "explore")
+    key = entries[0]["key"]
+    args = ("s98_atlas_toy", spec, {"h_m": 1.0, "angle_deg": 30.0}, spec["seed"], built, key)
+    assert atlas_live.local_point(*args)["data"] == want
+    raw = bytearray((folder / p4[0]).read_bytes())
+    raw[-5] ^= 0x01
+    (folder / p4[0]).write_bytes(bytes(raw))
+    assert atlas_live.local_point(*args) is None
 
 
 def test_refusals_are_400_with_their_texts(tmp_path):

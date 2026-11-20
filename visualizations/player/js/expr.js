@@ -15,9 +15,12 @@
 //   primary := number | "pi" | column | function "(" expr ")" | "(" expr ")"
 //
 // FUNCTIONS: sqrt ln exp abs, sin cos tan asin acos atan (radians), sind cosd tand asind acosd atand (degrees).
-// The error: σ_f² = Σ (∂f/∂xᵢ·σᵢ)² + ½ Σ (∂²f/∂xᵢ²)² σᵢ⁴ over the formula's distinct columns in the order of their first
-// appearance, the derivatives by hyper-dual numbers [a, b, c, d] = a + b·ε₁ + c·ε₂ + d·ε₁ε₂ (ε₁² = ε₂² = 0): the input is
-// [x, 1, 1, 0], so the result's b is ∂f/∂x and its d is ∂²f/∂x². An input with σ = 0 adds nothing.
+// The error: σ_f² = Σᵢ (∂f/∂xᵢ·σᵢ)² + ½ ΣᵢΣⱼ (∂²f/∂xᵢ∂xⱼ·σᵢσⱼ)² (the second-order variance for independent normal
+// inputs: the mixed terms since review R2-F F2) over the formula's distinct columns in the order of their first
+// appearance, the derivatives by hyper-dual numbers [a, b, c, d] = a + b·ε₁ + c·ε₂ + d·ε₁ε₂ (ε₁² = ε₂² = 0): with the
+// input [x, 1, 1, 0] the result's b is ∂f/∂x and its d is ∂²f/∂x²; with xᵢ [xᵢ, 1, 0, 0] and xⱼ [xⱼ, 0, 1, 0] its d is
+// ∂²f/∂xᵢ∂xⱼ. t1 is the first-order sum, t2 the second-order one (diagonal and mixed). An input with σ = 0 adds nothing;
+// |x| at x = 0 (a kink) and √x at 0 have no error for an input with σ > 0 (Undefined "error_undefined").
 //
 //   parse(text, {columns, later})  → {text, node, names} or throws ExprError {code, pos, name}
 //   evaluate(expr, values)         → {v, e, t1, t2}, values: Map or object of {v, e} (or [v, e], or a number); throws
@@ -48,7 +51,9 @@ export class Undefined extends Error {
 const NUM = /(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/y;
 const NAME = /[A-Za-z_][A-Za-z0-9_]*/y;
 const OPS = new Set(["-", "+", "*", "/", "^", "(", ")"]);
-const isSpace = (ch) => /\s/.test(ch);
+// ASCII only, as expr.py (review R2-F F8: JavaScript's \s took Unicode spaces that Python refused, Python's isspace
+// \x1c–\x1f and \x85 that JavaScript refused; \d is ASCII in both now): a formula parses in both or in neither
+const isSpace = (ch) => ch === " " || ch === "\t" || ch === "\n" || ch === "\r" || ch === "\f" || ch === "\v";
 
 function tokens(text) {
   const out = [];
@@ -188,7 +193,9 @@ function apply(fn, x) {
       if (a <= 0) throw new Undefined("log_nonpositive");
       return chain(x, Math.log(a), 1 / a, -1 / (a * a));
     case "exp": { const e = Math.exp(a); return chain(x, e, e, e); }
-    case "abs": return a < 0 ? [-x[0], -x[1], -x[2], -x[3]] : x;
+    case "abs":  // the kink: no derivative at 0 (as √ at 0; review R2-F F9)
+      if (a === 0) return chain(x, 0, NaN, NaN);
+      return a < 0 ? [-x[0], -x[1], -x[2], -x[3]] : x;
     case "sin": { const s = Math.sin(a), c = Math.cos(a); return chain(x, s, c, -s); }
     case "cos": { const s = Math.sin(a), c = Math.cos(a); return chain(x, c, -s, -c); }
     case "tan": { const tn = Math.tan(a), sec2 = 1 + tn * tn; return chain(x, tn, sec2, 2 * tn * sec2); }
@@ -244,6 +251,7 @@ export function evaluate(expr, values) {
   const value = ev(expr.node, env)[0];
   if (!Number.isFinite(value)) throw new Undefined("not_finite");
   let t1 = 0, t2 = 0;
+  const live = [];  // the inputs with an error, in the order of the names
   for (const name of expr.names) {
     const s = sig.get(name);
     if (s === 0) continue;  // an exact input adds nothing
@@ -256,6 +264,17 @@ export function evaluate(expr, values) {
     const b = r[3] * s * s;
     t1 += a * a;
     t2 += 0.5 * b * b;
+    live.push(name);
+  }
+  for (let i = 0; i < live.length; i++) {  // the mixed second derivatives (review R2-F F2): xᵢ = [v,1,0,0], xⱼ = [v,0,1,0]
+    for (let j = i + 1; j < live.length; j++) {
+      const ni = live[i], nj = live[j], vi = env.get(ni)[0], vj = env.get(nj)[0];
+      env.set(ni, [vi, 1, 0, 0]); env.set(nj, [vj, 0, 1, 0]);
+      const r = ev(expr.node, env);
+      env.set(ni, [vi, 0, 0, 0]); env.set(nj, [vj, 0, 0, 0]);
+      const c = r[3] * sig.get(ni) * sig.get(nj);
+      t2 += c * c;
+    }
   }
   const err = Number.isFinite(t1 + t2) ? Math.sqrt(t1 + t2) : NaN;
   if (!Number.isFinite(err)) throw new Undefined("error_undefined");

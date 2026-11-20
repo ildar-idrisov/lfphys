@@ -67,7 +67,7 @@ button.link { background: none; border: 0; color: var(--accent); padding: 4px 6p
 .dm-seg > button { border: 0; border-radius: 0; background: var(--chip); padding: 6px 12px; min-height: 34px; }
 .dm-seg > button + button { border-left: 1px solid var(--line); }
 .dm-seg > button.on { background: var(--accent); color: #fff; }
-.dm-ctl-seg { display: flex; } .dm-ctl-seg > button { flex: 1; min-width: 0; overflow-wrap: anywhere; }  /* a long value breaks inside its button */
+.dm-ctl-seg { display: flex; } .dm-ctl-seg > button { flex: 1; min-width: 0; overflow-wrap: anywhere; hyphens: auto; }  /* a long value breaks inside its button, at a hyphen where the language has its rules */
 /* five values or more (u35's six glasses and sides): three to a row, so that none is cut off at the side's edge (one row
    of six in the 312 px side showed four and clipped the rest, unreachable) */
 .dm-ctl-seg:has(> button:nth-child(5)) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -161,6 +161,13 @@ body.dm-drawer-open .dm-drawer { visibility: visible; }
 .dm-table th, .dm-table td { border-bottom: 1px solid var(--grid); padding: 4px 8px; text-align: right; white-space: nowrap; }
 .dm-table th { position: sticky; top: 0; background: var(--panel); }
 .dm-del { padding: 2px 8px; min-height: 30px; }
+/* a row's set-up (review R2-P F7): its own columns, left-aligned text; a row outside the plot's set-up filter greyed */
+.dm-table th.dm-setup, .dm-table td.dm-setup { text-align: left; white-space: normal; min-width: 8em; max-width: 16em; }
+.dm-table tr.dm-row-out td { color: var(--muted); }
+.dm-table input.dm-use { width: 20px; height: 20px; margin: 0; }
+.dm-filters { margin: 4px 0; } .dm-filters > span { color: var(--muted); }
+.dm-fit-rows { font-size: 13px; margin: 2px 0; }
+.dm-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .dm-plot { width: 100%; max-width: 640px; height: 260px; border: 1px solid var(--line); border-radius: 6px; background: var(--canvas); }
 .dm-fit { font-size: 14px; overflow-wrap: anywhere; }
 .dm-law { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
@@ -217,6 +224,9 @@ body.dm-drawer-open .dm-drawer { visibility: visible; }
   .dm-slider { height: 44px; }
   .dm-detent { min-height: 30px; font-size: 14px; }
   .dm-seg > button { min-height: 44px; }
+  /* a select of five values or more: its long names (u35's seven coatings in Russian) in a smaller type, so that the
+     control fits between the sticky view and the time bar (D12; review R2-P F8's check on every Explore screen) */
+  .dm-ctl-seg:has(> button:nth-child(5)) > button { padding: 4px 4px; font-size: 13px; line-height: 1.2; }
   .dm-check { min-height: 44px; }
   .dm-bar { position: sticky; bottom: 0; z-index: 20; flex-wrap: wrap; gap: 6px; padding: 6px 8px; }
   .dm-steps > button { min-height: 44px; }

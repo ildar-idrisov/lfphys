@@ -45,6 +45,7 @@ const snap = (page) => page.evaluate(() => {
     plot: cv[1] && cv[1].__layout ? JSON.parse(JSON.stringify(cv[1].__layout)) : null, plotBox: box(cv[1]),
     cap: cap && !cap.hidden && cap.textContent ? box(cap) : null, capText: cap ? cap.textContent : "",
     readouts: rd && getComputedStyle(rd).position === "absolute" ? box(rd) : null,
+    bar: box([...S.querySelectorAll(".dm-bar")].find((e) => getComputedStyle(e).position === "sticky")),
     sw: document.scrollingElement.scrollWidth };
 });
 const meets = (a, b) => !!a && !!b && a.l < b.r - 0.5 && b.l < a.r - 0.5 && a.t < b.b - 0.5 && b.t < a.b - 0.5;
@@ -114,9 +115,14 @@ for (const [W, H] of SIZES) {
         scales.add(s.orb ? s.orb.scale.toPrecision(9) : "none");
         const lo = labelsOk(s.orb), lp = labelsOk(s.plot);
         if (!lo.ok || !lp.ok) lab.push({ k, lo, lp });
-        if (rid === recs[0] && k === 3) {  // the clock's caption: its plot is on the screen beside it
-          check(`${tag} watch ${rid}: the clock's caption («${s.capText.slice(0, 30)}…») has the plot 1 − dτ/dt in view`,
-            !!s.plotBox && s.plotBox.b - s.plotBox.t > 120 && s.plotBox.t >= 0 && (!phone || s.plotBox.b <= H + 400), { plot: s.plotBox });
+        if (rid === recs[0] && (k === 3 || k === 5)) {  // the clocks' captions: their plot is on the screen with them
+          // on a phone, at the page's top (the tick's click scrolls the page): the orbit plane, the plot and the caption
+          // together above the sticky time bar (review R2-P F17: the plot lay at 711–931 px of 844, under the bar)
+          let t = s;
+          if (phone) { await page.evaluate(() => window.scrollTo(0, 0)); await settle(page); t = await snap(page); }
+          const above = !phone || (!!t.bar && t.plotBox && t.cap && t.orbBox && t.orbBox.t >= -0.5 && t.plotBox.b <= t.bar.t + 0.5 && t.cap.b <= t.bar.t + 0.5);
+          check(`${tag} watch ${rid}: the clock's caption («${t.capText.slice(0, 30)}…») has the plot 1 − dτ/dt in view`,
+            !!t.plotBox && t.plotBox.b - t.plotBox.t > 120 && t.plotBox.t >= 0 && above, { plot: t.plotBox, orb: t.orbBox, cap: t.cap, bar: t.bar });
         }
         if (k === 0 || k === nCaps - 1) await page.screenshot({ path: `${SHOTS}/u34_watch_${rid}_c${k}_${LANG}_${tag}.png` });
       }

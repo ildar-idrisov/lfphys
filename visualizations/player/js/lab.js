@@ -34,7 +34,7 @@ import { openAtlas } from "./atlas.js";
 import { ExprError, Undefined, evaluate as evalExpr, parse as parseExpr } from "./expr.js";
 import { MODELS as FIT_MODELS, fit, pValueText } from "./fit.js";
 import { t } from "./i18n.js";
-import { SLOW, controlRow, ended, expandValues, localT, measText, secs, speedOf, timeLabel, valuesText, when } from "./explore.js";
+import { SLOW, controlLabel, controlRow, csvFormat, ended, expandValues, localT, measText, pmText, secs, speedOf, timeLabel, valueText, valuesText, when } from "./explore.js";
 import { frameAt, frameIndexAt, showAt } from "./record_core.js";
 import { css, el, fill, fmt } from "./ui.js";
 
@@ -93,8 +93,12 @@ export function rowOf(columns, readings, why = null) {
     else if (c.of) cols[c.id] = derived(c.op, cols[c.of]);
     else if (c.expr) {
       try {
-        const r = evalExpr(formula(c.expr), new Map(Object.entries(cols).map(([k, x]) => [k, x])));
-        cols[c.id] = { v: r.v, e: r.e };
+        const f = formula(c.expr);
+        const r = evalExpr(f, new Map(Object.entries(cols).map(([k, x]) => [k, x])));
+        // an exact result (no input carries an error) that is zero up to the rounding of its inputs is zero: 3 cos 2Δ −
+        // cos 6Δ at Δ = 45° is 0, not 3.7·10⁻¹⁶ («0.000000000000»; review R2-P F13)
+        const scale = Math.max(0, ...f.names.map((k) => Math.abs((cols[k] || {}).v || 0)));
+        cols[c.id] = { v: r.e === 0 && Math.abs(r.v) <= 1e-12 * scale ? 0 : r.v, e: r.e };
       } catch (e) {
         cols[c.id] = null;
         if (why) why[c.id] = e instanceof Undefined ? e.reason : e instanceof ExprError ? "syntax" : "not_finite";
@@ -113,13 +117,21 @@ export function whyText(reason) {
     error_undefined: t("its error is undefined here (an infinite derivative)"), syntax: t("the formula cannot be read"),
   })[reason] || t("the value is undefined here");
 }
-// CSV with the errors: a header of the columns' labels (and «σ …»), one line per row; numbers as plain decimals; an
-// empty cell (no reading, or a formula undefined there) is empty in both
-export function csv(columns, rows, label = (c) => c.id) {
-  const q = (s) => (/[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
-  const head = columns.flatMap((c) => [q(label(c)), q("σ " + label(c))]);
-  const lines = rows.map((r) => columns.flatMap((c) => { const x = r.cols[c.id]; return x && x.v !== null && x.v !== undefined ? [String(x.v), String(x.e)] : ["", ""]; }).join(","));
-  return [head.join(","), ...lines].join("\n") + "\n";
+// the CSV's format of the viewer's language (explore.js csvFormat: «;» and the decimal comma in Russian, review R2-P
+// F18), and its link with the UTF-8 byte order mark (Excel reads a CSV without it in the system's 8-bit code page)
+export { csvFormat };
+export const csvHref = (text) => "data:text/csv;charset=utf-8," + encodeURIComponent("\ufeff" + text);
+// CSV with the errors: a header of the set-up's columns (the step's controls no instrument reads: their labels with
+// their units; review R2-P F7) and of the columns' labels (and «σ …»), one line per row; numbers as plain decimals in the
+// format's decimal sign, a set-up value that is no number by its name; an empty cell (no reading, or a formula
+// undefined there) is empty in both. setup: [{label, text(v) → string or number, param}]
+export function csv(columns, rows, label = (c) => c.id, { sep = ",", dec = ".", setup = [] } = {}) {
+  const q = (s) => (s.includes('"') || s.includes("\n") || s.includes(sep) ? `"${s.replace(/"/g, '""')}"` : s);
+  const n = (x) => (dec === "." ? String(x) : String(x).replace(".", dec));
+  const head = [...setup.map((u) => q(u.label)), ...columns.flatMap((c) => [q(label(c)), q("σ " + label(c))])];
+  const lines = rows.map((r) => [...setup.map((u) => { const v = (r.values || {})[u.param]; if (v === undefined) return ""; const x = u.text(v); return typeof x === "number" ? n(x) : q(String(x)); }),
+    ...columns.flatMap((c) => { const x = r.cols[c.id]; return x && x.v !== null && x.v !== undefined ? [n(x.v), n(x.e)] : ["", ""]; })].join(sep));
+  return [head.join(sep), ...lines].join("\n") + "\n";
 }
 // a value to four significant digits, its trailing zeros kept («1.000» next to «0.4472»: V52 (y))
 export function sig4(v) {
@@ -133,17 +145,21 @@ export function sig4(v) {
 export function pm(v, e) {
   if (!Number.isFinite(v)) return "—";
   if (!(e > 0) || !Number.isFinite(e)) return sig4(v);
-  const k = Math.max(0, 1 - Math.floor(Math.log10(e)));
-  return `${fmt(v, `.${Math.min(12, k)}f`)} ± ${fmt(e, `.${Math.min(12, k)}f`)}`;
+  const [a, b] = pmText(v, e);  // the error rounded to two significant digits first (0.0996 → «0.10»; 1234 → «1200»)
+  return `${a} ± ${b}`;
 }
-// a reading as the instrument shows it, to the decimals of its division or of its error, whichever is finer
-// («0.600 ± 0.005», not «0.60 ± 0.005»; review EX1-screens F14); an exact reading (error 0: the stand's heights) to its
-// division's decimals, without «± 0» («0.20»; V52 (y))
+// a reading as the instrument shows it, the value and its error to the same decimals (RULES §10; review R2-P F14: the
+// error was written «.2g», «0.74 ± 0.1», «−0.0349 ± 0.03»): a declared error to the decimals of its division or of the
+// error, whichever is finer («0.600 ± 0.005», not «0.60 ± 0.005»; review EX1-screens F14; «0.74 ± 0.10»); the run's
+// own σ (a readout with `sigma`, whose division is only the display precision) to its two significant digits
+// («−0.035 ± 0.030», «1.000 ± 0.015»); an exact reading (error 0: the stand's heights) to its division's decimals,
+// without «± 0» («0.20»; V52 (y))
 export function readingText(instr, x) {
   if (instr.kind === "counter") return x.e > 0 ? `${fmt(x.v, "d")} ± ${fmt(x.e, ".2g")}` : fmt(x.v, "d");  // a count
   if (!(x.e > 0)) return fmt(x.v, `.${Math.min(12, decimals(instr.division))}f`);
-  const n = Math.max(decimals(instr.division), decimals(Number(x.e.toPrecision(2))));
-  return `${fmt(x.v, `.${Math.min(12, n)}f`)} ± ${fmt(x.e, ".2g")}`;
+  if (instr.sigma) { const [a, b] = pmText(x.v, x.e); return `${a} ± ${b}`; }
+  const n = Math.min(12, Math.max(decimals(instr.division), decimals(x.e)));
+  return `${fmt(x.v, `.${n}f`)} ± ${fmt(x.e, `.${n}f`)}`;
 }
 // an instrument in the step's list: its division and its error, or, for an exact one (error 0), its own reason
 // («exact: the stand sets the chute's height at its marks»), never «error ±0» (V52 (y))
@@ -197,8 +213,11 @@ export function fitLines(res, label, school) {
   const ratio = res.dof > 0 ? res.chi2 / res.dof : NaN;
   lines.push(t("χ² = {chi2}, dof = {dof:d}, χ²/dof = {ratio}, p = {p}, Birge ratio √(χ²/dof) = {birge}", {
     chi2: fmt(res.chi2, ".4g"), dof: res.dof, ratio: fmt(ratio, ".3g"), p: pValueText(res.lnp), birge: fmt(res.birge, ".3g") }));
-  if (res.birge > 1) {
-    lines.push(t("σ scaled by the Birge ratio: {values}", { values: keys.map((k) => `${name(k)} = ${pm(res.params[k], res.sigmaScaled[k])}`).join(", ") }));
+  // the σ scaled by the Birge ratio, when χ²/dof > 1 and they differ as written (a ratio of 1.0008 changes no digit:
+  // review R2-P nits)
+  const scaled = keys.map((k) => `${name(k)} = ${pm(res.params[k], res.sigmaScaled[k])}`).join(", ");
+  if (res.birge > 1 && scaled !== keys.map((k) => `${name(k)} = ${pm(res.params[k], res.sigmaDeclared[k])}`).join(", ")) {
+    lines.push(t("σ scaled by the Birge ratio: {values}", { values: scaled }));
   }
   return lines;
 }
@@ -214,7 +233,30 @@ export function loadRows(storage, key, atlasKey) {
     return { rows: [], dropped: n };
   } catch (e) { return { rows: [], dropped: 0 }; }
 }
-function saveRows(key, atlasKey, rows) { try { localStorage.setItem(key, JSON.stringify({ key: atlasKey, rows })); } catch (e) { /* private mode: the table lives in the page */ } }
+function saveRows(key, atlasKey, rows) { try { browserStorage().setItem(key, JSON.stringify({ key: atlasKey, rows })); } catch (e) { /* private mode: the table lives in the page */ } }
+// this browser's storage, or a storage that keeps nothing when the browser refuses it: reading the global itself throws
+// when site data are blocked or in a sandboxed frame (review R2-P F4: Lab work did not open, «The operation is insecure»)
+export function browserStorage() {
+  try { const s = window.localStorage; if (s) return s; } catch (e) { /* refused: below */ }
+  return { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+}
+
+// the plot's ticks on [a, b]: multiples of a round step (1, 2 or 5 × 10ⁿ), each computed from its index (not by adding
+// the step, whose rounding errors made the zero tick «2.78·10⁻¹⁷»; review R2-P F12), a tick within a millionth of a step
+// of zero exactly 0; at most 12 (a range a few ulps wide no longer loops: review R2-P nits)
+export function plotTicks(a, b) {
+  if (!(b > a) || !Number.isFinite(a) || !Number.isFinite(b)) return [];
+  const st = 10 ** Math.floor(Math.log10((b - a) / 4));
+  const m = [1, 2, 5, 10].find((k) => (b - a) / (k * st) <= 6) * st;
+  if (!(m > 0) || !Number.isFinite(m)) return [];
+  const out = [], k0 = Math.ceil(a / m - 1e-9);
+  for (let j = 0; j <= 12; j++) {
+    const v = (k0 + j) * m;
+    if (v > b + 1e-9 * m) break;
+    out.push(Math.abs(v) < 1e-6 * m ? 0 : Number(v.toPrecision(10)));
+  }
+  return out;
+}
 
 const FIT_LABEL = () => ({ line0: t("line through the origin y = b·x"), line: t("line y = a + b·x"), quadratic: t("parabola y = c0 + c1·x + c2·x²"), power: t("power law y = A·x^p") });
 
@@ -284,7 +326,7 @@ export async function create(host, kit, spec) {
       S.values = { ...S.A.defaults };
       const pre = V && V.values ? V.values[step.id] || {} : {};  // the teacher's variant (F8): on the grid, unlocked
       for (const c of S.A.controls) if (c.param in pre && c.values.some((x) => x === pre[c.param])) S.values[c.param] = pre[c.param];
-      const got = loadRows(localStorage, storeKey(step), S.A.manifest.key);
+      const got = loadRows(browserStorage(), storeKey(step), S.A.manifest.key);
       S.rows = got.rows;
       if (got.dropped) S.msg = t("The table of an earlier build of this bench was cleared: its atlas has been rebuilt");
       try {
@@ -338,9 +380,11 @@ export async function create(host, kit, spec) {
       s.why ? el("p", { class: "dm-missing" }, s.why) : null,
       s.fromSite ? el("p", { class: "muted dm-from-site" }, t("This step's atlas comes from the public site: this server has no current local copy (the same version of the world).")) : null,
       el("div", { class: "dm-ctls" }, ctlRows.map((r) => r.el)),
+      // «Measure» right under the controls, so that a set-up and its measurement are on the screen together at 1280×800
+      // (review R2-P F11: below the list of instruments it was never on the screen with u37's or u34's controls)
+      el("div", { class: "dm-act-slot" }),
       el("div", { class: "dm-sub" }, t("Instruments")), instrList,
       overlaysOf(step), readBox,
-      el("div", { class: "dm-act-slot" }),
       el("p", { class: "dm-ws" }, el("a", { href: kit.worksheetHref(), target: "_blank" }, t("The task sheet (print) →"))));
     placeAct();
     renderMeasure();
@@ -374,18 +418,23 @@ export async function create(host, kit, spec) {
     try { pt = await s.A.point(s.values); } catch (e) {
       if (seq !== s.seq) return;
       s.pending = false; s.failed = t("This point could not be loaded: {why}", { why: e.message });
-      say(s.failed); renderMeasure(); return;
+      say(s.failed, s); if (s === S()) renderMeasure(); return;
     }
     if (seq !== s.seq) return;  // a newer choice came first: this reply is not the one asked for (D6)
     s.pending = false;
     s.A.prefetch(s.values);
-    if (pt.state === "refused") { s.refused = t(pt.refusal); say(s.refused); renderMeasure(); return; }
-    say("");
-    s.cur = { pt, launchedAt: null }; s.sw = null; L.playing = false;
+    if (pt.state === "refused") { s.refused = t(pt.refusal); say(s.refused, s); if (s === S()) renderMeasure(); return; }
+    say("", s);
+    s.cur = { pt, launchedAt: null }; s.sw = null;
+    // the reply of a step that is no longer shown (the student opened another part meanwhile) changes only that step's
+    // state: not the message, the playback or the buttons of the part shown (review R2-P, suspicion on pick())
+    if (s !== S()) return;
+    L.playing = false;
     renderStopwatches(); renderMeasure();
     kit.dirty();
   }
-  function say(text) { const s = S(); s.msg = text; const m = act.querySelector(".dm-msg"); if (m) m.textContent = text; }
+  // a message of a step (by default the one shown): kept with its state, written on the card only when it is shown
+  function say(text, s = S()) { s.msg = text; if (s !== S()) return; const m = act.querySelector(".dm-msg"); if (m) m.textContent = text; }
 
   // --- the manual stopwatch (wall clock: review EX1-screens F5) ------------------------------------------------------------
   const swNow = (sw) => (sw.running ? (performance.now() - sw.t0) / 1000 : sw.t);
@@ -472,37 +521,80 @@ export async function create(host, kit, spec) {
   // --- the table, the plot, the fit, the law --------------------------------------------------------------------------------
   const colLabel = (c) => t(c.label);
   const colOf = (s, id) => s.step.columns.find((c) => c.id === id) || null;
+  // a count: a counter's column, or a formula over counts only (u34's N = n − 1 of the turns counter); its whole value is
+  // written as a count («10», «12 595 ± 110»), not «10.00» (review R2-P nits)
+  const isCount = (c, seen = new Set()) => {
+    if (!c || seen.has(c.id)) return false;
+    seen.add(c.id);
+    if (c.from) return (instruments[c.from] || {}).kind === "counter";
+    if (!c.expr) return false;
+    try { return formula(c.expr).names.every((n) => isCount(S().step.columns.find((x) => x.id === n), seen)); } catch (e) { return false; }
+  };
   const cell = (c, x) => {
     if (!x) return "—";
     const i = c.from ? instruments[c.from] : null;
-    return i ? readingText(i, x) : pm(x.v, x.e);
+    if (i) return readingText(i, x);
+    if (Number.isInteger(x.v) && isCount(c)) return readingText({ kind: "counter" }, x);
+    return pm(x.v, x.e);
   };
+  // the set-up of a row (review R2-P F7: «nothing hidden», the students hand in their own records): the step's controls
+  // that no instrument reads (u35's glass and side, polarisation, analyser; u37's pairs, law and source, τ …), each a
+  // column of the table and of the CSV with its label and unit, its value as the control names it
+  const setupOf = (s) => {
+    const read = new Set(s.step.instruments.map((id) => String((instruments[id] || {}).reads || "")).filter((r) => r.startsWith("control:")).map((r) => r.slice(8)));
+    return (s.A ? s.A.controls : []).filter((c) => !read.has(c.param));
+  };
+  // the rows the plot and the fit use (the student's choice, review R2-P F7): those whose set-up matches the filters
+  // («Polarisation: s») and that are not unticked («in the fit»); the others stay in the table and the CSV
+  const inFilter = (s, r) => Object.entries(s.filter || {}).every(([p, v]) => v === undefined || JSON.stringify((r.values || {})[p]) === v);
+  const inFit = (s, r) => inFilter(s, r) && !r.off;
   function renderWork() {
-    const s = S(), step = s.step, cols = step.columns;
+    const s = S(), step = s.step, cols = step.columns, setup = setupOf(s);
+    const save = () => { if (s.A) saveRows(storeKey(step), s.A.manifest.key, s.rows); };
     const table = el("table", { class: "dm-table" },
-      el("thead", {}, el("tr", {}, el("th", {}, "№"), cols.map((c) => el("th", {}, colLabel(c))), el("th", {}, ""))),
-      el("tbody", {}, s.rows.map((r, j) => el("tr", {}, el("td", {}, String(j + 1)),
+      el("thead", {}, el("tr", {}, el("th", {}, "№"), setup.map((c) => el("th", { class: "dm-setup" }, controlLabel(c))), cols.map((c) => el("th", {}, colLabel(c))),
+        el("th", { title: t("Use this row in the plot and the fit") }, t("in the fit")), el("th", {}, el("span", { class: "dm-sr" }, t("Delete"))))),
+      el("tbody", {}, s.rows.map((r, j) => el("tr", { class: inFilter(s, r) ? "" : "dm-row-out" }, el("td", {}, String(j + 1)),
+        setup.map((c) => el("td", { class: "dm-setup" }, (r.values || {})[c.param] === undefined ? "—" : valueText(c, r.values[c.param]))),
         cols.map((c) => (r.why && r.why[c.id] ? el("td", { class: "mono dm-undef", title: whyText(r.why[c.id]) }, "—", el("span", { class: "dm-why" }, whyText(r.why[c.id])))
           : el("td", { class: "mono" }, cell(c, r.cols[c.id])))),
-        el("td", {}, el("button", { class: "dm-del", title: t("Delete this row"), "aria-label": t("Delete this row"), onclick: () => {
-          s.rows.splice(j, 1); if (s.A) saveRows(storeKey(step), s.A.manifest.key, s.rows); renderWork(); } }, "✕"))))));
+        el("td", {}, el("input", { type: "checkbox", class: "dm-use", checked: !r.off, "aria-label": t("Row {n:d} in the plot and the fit", { n: j + 1 }),
+          onchange: (e) => { r.off = !e.target.checked; save(); renderWork(); } })),
+        el("td", {}, el("button", { class: "dm-del", title: t("Delete row {n:d}", { n: j + 1 }), "aria-label": t("Delete row {n:d}", { n: j + 1 }), onclick: () => {
+          s.rows.splice(j, 1); save(); renderWork(); } }, "✕"))))));
+    const fmtCsv = csvFormat();
+    const csvText = csv(cols, s.rows, colLabel, { ...fmtCsv, setup: setup.map((c) => ({ param: c.param, label: controlLabel(c),
+      text: (v) => (typeof v === "number" && !(Array.isArray(c.labels) && c.labels[c.values.indexOf(v)]) ? v : valueText(c, v)) })) });
     const csvA = el("a", { class: "button", download: `${kit.world}_${step.id}.csv`, title: t("The table with the errors, as CSV") }, "⤓ CSV");
-    csvA.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv(cols, s.rows, colLabel));
-    const clear = el("button", { onclick: () => { if (!s.rows.length) return; s.rows = []; if (s.A) saveRows(storeKey(step), s.A.manifest.key, s.rows); renderWork(); } }, t("Clear the table"));
+    csvA.href = csvHref(csvText);
+    const clear = el("button", { onclick: () => { if (!s.rows.length) return; s.rows = []; save(); renderWork(); } }, t("Clear the table"));
     const opt = (sel, v) => { sel.value = v; return sel; };
     const xs = opt(el("select", { "aria-label": t("x axis"), onchange: (e) => { s.x = e.target.value; renderWork(); } }, cols.map((c) => el("option", { value: c.id }, colLabel(c)))), s.x);
     const ys = opt(el("select", { "aria-label": t("y axis"), onchange: (e) => { s.y = e.target.value; renderWork(); } }, cols.map((c) => el("option", { value: c.id }, colLabel(c)))), s.y);
     const fits = (step.plot.fits || [step.plot.fit]).filter((m) => m && (m !== "power" || !kit.school));
     const fs = opt(el("select", { "aria-label": t("fit"), onchange: (e) => { s.model = e.target.value; renderWork(); } }, fits.map((m) => el("option", { value: m }, FIT_LABEL()[m] || m))), s.model);
+    // a filter per set-up control whose rows differ: which set-ups the plot and the fit use
+    s.filter = s.filter || {};
+    const filters = setup.map((c) => {
+      const seen = [...new Set(s.rows.map((r) => JSON.stringify((r.values || {})[c.param])).filter((x) => x !== undefined))];
+      if (seen.length < 2 && s.filter[c.param] === undefined) return null;
+      const sel = el("select", { "data-filter": c.param, "aria-label": t("Rows in the plot and the fit: {control}", { control: controlLabel(c) }),
+        onchange: (e) => { s.filter = { ...s.filter, [c.param]: e.target.value || undefined }; renderWork(); } },
+      el("option", { value: "" }, t("all")), seen.map((x) => el("option", { value: x }, valueText(c, JSON.parse(x)))));
+      sel.value = s.filter[c.param] ?? "";
+      return el("label", {}, `${controlLabel(c)} `, sel);
+    }).filter(Boolean);
     const cv = el("canvas", { class: "dm-plot", role: "img", "aria-label": t("{y} against {x}", { y: colLabel(colOf(s, s.y) || { label: s.y }), x: colLabel(colOf(s, s.x) || { label: s.x }) }) });
-    // the fit on the rows that have both columns
-    const pts = s.rows.map((r) => [r.cols[s.x], r.cols[s.y]]).filter(([a, b]) => a && b);
+    // the points of the rows in the plot (those filtered out are not drawn; an unticked one is drawn hollow, not fitted)
+    const pts = s.rows.filter((r) => inFilter(s, r)).map((r) => [r.cols[s.x], r.cols[s.y], !r.off]).filter(([a, b]) => a && b);
+    const used = pts.filter((p) => p[2]);
+    const nUse = s.rows.filter((r) => inFit(s, r)).length;
     s.res = null;
     let fitText = [t("Measure at least {n:d} points to fit", { n: (FIT_MODELS[s.model] || { min: 2 }).min })];
     try {
       if (s.x === s.y) fitText = [t("Choose different columns for x and y")];
-      else if (pts.length) {
-        s.res = fit(pts.map((p) => p[0].v), pts.map((p) => p[1].v), pts.map((p) => p[0].e), pts.map((p) => p[1].e), s.model);
+      else if (used.length) {
+        s.res = fit(used.map((p) => p[0].v), used.map((p) => p[1].v), used.map((p) => p[0].e), used.map((p) => p[1].e), s.model);
         fitText = fitLines(s.res, FIT_LABEL()[s.model] || s.model, kit.school);
       }
     } catch (e) { s.res = null; fitText = [e.why === "points" || e.why === "singular" ? t("Measure more points at different set-ups to fit") : e.why === "positive" ? t("A power law needs positive values")
@@ -511,7 +603,10 @@ export async function create(host, kit, spec) {
       el("div", { class: "dm-work-head" }, el("b", {}, t("Table")), el("span", { class: "grow" }), clear, csvA),
       el("div", { class: "dm-table-box" }, s.rows.length ? table : el("div", { class: "muted" }, t("No measurements yet: launch, then press «Measure»."))),
       el("div", { class: "dm-work-head" }, el("b", {}, t("Plot")), el("label", {}, "x ", xs), el("label", {}, "y ", ys), el("label", {}, t("fit") + " ", fs)),
-      cv, el("div", { class: "dm-fit mono", role: "status" }, fitText.map((x) => el("div", {}, x))));
+      filters.length ? el("div", { class: "dm-work-head dm-filters" }, el("span", {}, t("Rows in the plot and the fit:")), filters) : null,
+      cv,
+      nUse < s.rows.length ? el("div", { class: "muted dm-fit-rows" }, t("The plot and the fit use {k:d} of {n:d} rows (the set-up chosen above, the rows ticked «in the fit»)", { k: nUse, n: s.rows.length })) : null,
+      el("div", { class: "dm-fit mono", role: "status" }, fitText.map((x) => el("div", {}, x))));
     requestAnimationFrame(() => drawPlot(cv, pts, s));
   }
   function drawPlot(cv, pts, s) {
@@ -534,19 +629,22 @@ export async function create(host, kit, spec) {
     let [y0, y1] = pts.length ? span(ysV, s.model === "line0") : [0, 1];
     if (!(x1 > x0)) { x0 -= 1; x1 += 1; }
     if (!(y1 > y0)) { y0 -= 1; y1 += 1; }
-    const L0 = 48, R = 12, T0 = 10, B = 34;
+    g.font = "11px system-ui, sans-serif";
+    const xt = plotTicks(x0, x1), yt = plotTicks(y0, y1);
+    // the left margin fits the longest label of the y axis (review R2-P F12: «2,78·10⁻¹⁷» was cut off at the left)
+    const L0 = Math.max(48, Math.ceil(Math.max(0, ...yt.map((v) => g.measureText(fmt(v, ".3g")).width)) + 10)), R = 12, T0 = 10, B = 34;
     const px = (x) => L0 + (x - x0) / (x1 - x0) * (W - L0 - R), py = (y) => H - B - (y - y0) / (y1 - y0) * (H - T0 - B);
-    g.strokeStyle = muted; g.lineWidth = 1; g.font = "11px system-ui, sans-serif"; g.fillStyle = muted;
+    g.strokeStyle = muted; g.lineWidth = 1; g.fillStyle = muted;
     g.beginPath(); g.moveTo(L0, T0); g.lineTo(L0, H - B); g.lineTo(W - R, H - B); g.stroke();
-    const ticks = (a, b) => { const st = 10 ** Math.floor(Math.log10((b - a) / 4)); const m = [1, 2, 5, 10].find((k) => (b - a) / (k * st) <= 6) * st; const out = []; for (let v = Math.ceil(a / m) * m; v <= b + 1e-12; v += m) out.push(Number(v.toPrecision(10))); return out; };
     g.textAlign = "center";
-    for (const v of ticks(x0, x1)) { g.fillText(fmt(v, ".3g"), px(v), H - B + 14); g.beginPath(); g.moveTo(px(v), H - B); g.lineTo(px(v), H - B + 3); g.stroke(); }
+    for (const v of xt) { g.fillText(fmt(v, ".3g"), px(v), H - B + 14); g.beginPath(); g.moveTo(px(v), H - B); g.lineTo(px(v), H - B + 3); g.stroke(); }
     g.textAlign = "right";
-    for (const v of ticks(y0, y1)) { g.fillText(fmt(v, ".3g"), L0 - 4, py(v) + 4); g.beginPath(); g.moveTo(L0 - 3, py(v)); g.lineTo(L0, py(v)); g.stroke(); }
+    for (const v of yt) { g.fillText(fmt(v, ".3g"), L0 - 4, py(v) + 4); g.beginPath(); g.moveTo(L0 - 3, py(v)); g.lineTo(L0, py(v)); g.stroke(); }
     g.fillStyle = ink; g.textAlign = "right"; g.fillText(cx ? colLabel(cx) : "", W - R, H - 4);
     g.textAlign = "left"; g.fillText(cy ? colLabel(cy) : "", L0 + 4, T0 + 10);
-    if (s.res && pts.length) {  // the fitted curve over the measured range only (a line through the origin from 0)
-      const xa = Math.min(...pts.map((p) => p[0].v)), xb = Math.max(...pts.map((p) => p[0].v));
+    const used = pts.filter((p) => p[2] !== false);
+    if (s.res && used.length) {  // the fitted curve over the measured range of the rows it used (a line through the origin from 0)
+      const xa = Math.min(...used.map((p) => p[0].v)), xb = Math.max(...used.map((p) => p[0].v));
       const from = s.model === "line0" ? Math.min(0, xa) : xa;
       g.save(); g.beginPath(); g.rect(L0, T0, W - L0 - R, H - T0 - B); g.clip();
       g.strokeStyle = acc; g.lineWidth = 1.5; g.beginPath();
@@ -555,10 +653,11 @@ export async function create(host, kit, spec) {
       g.stroke(); g.restore();
     }
     g.strokeStyle = ink; g.fillStyle = ink; g.lineWidth = 1;
-    for (const [a, b] of pts) {
+    for (const [a, b, use] of pts) {
       const X = px(a.v), Y = py(b.v);
       g.beginPath(); g.moveTo(px(a.v - a.e), Y); g.lineTo(px(a.v + a.e), Y); g.moveTo(X, py(b.v - b.e)); g.lineTo(X, py(b.v + b.e)); g.stroke();
-      g.beginPath(); g.arc(X, Y, 3, 0, 2 * Math.PI); g.fill();
+      g.beginPath(); g.arc(X, Y, 3, 0, 2 * Math.PI);
+      if (use === false) { g.fillStyle = css("--canvas") || "#fff"; g.fill(); g.stroke(); g.fillStyle = ink; } else g.fill();  // not in the fit: hollow
     }
   }
 
@@ -583,6 +682,7 @@ export async function create(host, kit, spec) {
     const F = c.pt.W.frames, f = F[Math.max(0, Math.min(i, F.length - 1))];
     if (c.launchedAt === null) c.launchedAt = s.clock;
     s.clock = c.launchedAt + f.t;
+    c.pin = { clock: s.clock, at: c.launchedAt, t: f.t };  // that frame's own time (explore.js localT)
     L.playing = false; kit.dirty();
   }
 
@@ -714,7 +814,8 @@ export async function create(host, kit, spec) {
       const tt = (frameAt(W, localT(c, s.clock)) || {}).t ?? 0;
       let n = 0;
       for (const vs of W.checks.values()) for (const x of vs) if ((x.t ?? 0) <= tt) n++;
-      return `${L.k}|${c.pt.i}|${n}`;
+      // the events too, as Explore's (review R2-P, suspicion: an event without a new check left the drawer as it was)
+      return `${L.k}|${c.pt.i}|${n}|${W.events.filter((e) => (e.t ?? 0) <= tt).length}`;
     },
     drawer() {
       const s = S(), c = s && s.cur, W = c && c.pt.W;

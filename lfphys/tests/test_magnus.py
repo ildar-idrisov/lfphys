@@ -46,6 +46,19 @@ def test_the_model_is_the_published_correlation():
         assert float(mg.drag_factor(S)) == pytest.approx(2.117 * (2 * S) ** -0.33, rel=1e-15)
 
 
+def test_the_drag_factor_s_jump_at_the_fits_meeting_point_is_stated():
+    """Review EX2, R2-E F4: eqs. (17) and (18) do not meet at Rr = 2.5 (S = 1.25): 1.61275 against 1.5646 (-2.99 %),
+    a discontinuity of the source's model, stated in the module docstring, the validity text and ``drag_factor``."""
+    below = float(mg.drag_factor(np.nextafter(1.25, 0.0)))
+    at = float(mg.drag_factor(1.25))
+    assert below == pytest.approx(1.61275, abs=1e-5) and at == pytest.approx(2.117 * 2.5 ** -0.33, rel=1e-15)
+    assert at / below - 1 == pytest.approx(-0.0299, abs=5e-5)
+    v = mg.ABOUT["validity"]
+    text = v.msgid if hasattr(v, "msgid") else str(v)
+    assert "jumps by −3.0 % at S = 1.25" in text
+    assert "1.6128" in mg.__doc__ and "1.5646" in mg.__doc__ and "-3.0 %" in mg.drag_factor.__doc__
+
+
 def test_the_model_at_the_tabulated_points():
     """At the 22 measured runs eq. (8) is within its fit's scatter of the printed C_L (R^2 = 0.873): within 0.05 of
     every run with S >= 0.25 except run 19 (0.449 against 0.365; run 8 at S 1.74 is 0.047 below); eq. (17)/(18) times their eq. (16)

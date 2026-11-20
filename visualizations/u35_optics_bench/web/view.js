@@ -725,6 +725,17 @@ export function createView(ctx) {
     if (su.det) rows.push([t("Detectors"), t(su.det.title)], [t("Efficiency, dark counts, dead time, jitter σ"),
       `${num(su.det.eta, 3)}, ${t("{v:.4g} s⁻¹", { v: su.det.dark })}, ${time(su.det.dead, 3)}, ${time(su.det.jitter, 3)}`]);
     if (su.gate) rows.push([t("Counting time (gate)"), time(su.gate, 4)]);
+    const bl = su.block;
+    if (bl) {
+      rows.push([t("Glass blocks"), bl.radius_mm > 0 ? t("half-cylinders of radius {r:.4g} mm, crossed along a radius", { r: bl.radius_mm })
+        : t("none: the media are half-spaces, the detectors inside them (an idealisation)")]);
+      const cr = (k) => (bl[k] ? t("curved face {c:.4f}, glass {g:.4f}", { c: bl[k].Tc_s, g: bl[k].tau }) : "—");
+      if (bl.in || bl.R || bl.T) {
+        rows.push([t("Through the blocks: the way in"), cr("in")], [t("Through the blocks: the reflection arm"), cr("R")],
+          [t("Through the blocks: the transmission arm"), cr("T")]);
+      }
+    }
+    if (su.ref) rows.push([t("Reference count N₀ (the block removed)"), t("{n:d} clicks in {t}", { n: su.ref.n, t: time(su.ref.t, 3) })]);
     const items = [el("div", { class: "kv" }, rows.flatMap(([k, v]) => [el("span", {}, k), el("span", { class: "mono" }, v)]))];
     if (su.layers.length && su.layers.length <= 8) {
       items.push(el("table", { style: { fontSize: "12px", marginTop: "6px" } },
@@ -744,6 +755,7 @@ export function createView(ctx) {
     const tt = frame.totals || {}, c = frame.counts || {};
     const rows = [[t("emitted in all"), tt.emitted], [t("in flight: to the structure / after it"), `${inFlight[0]} / ${inFlight[1]}`],
       [t("reflected (in all)"), tt.R], [t("transmitted (in all)"), tt.T], [t("absorbed (in all)"), tt.A],
+      [t("lost in the glass blocks (in all)"), tt.L],
       [t("missed by the detectors (efficiency, dead time)"), tt.missed], [t("dark counts (in all)"), tt.dark],
       [t("transitional (emitted before a change)"), tt.transitional], [t("lost at a rebuild"), tt.lost],
       [t("clicks counted in this segment"), c.n]];
@@ -768,7 +780,7 @@ export function createView(ctx) {
     },
     help: () => el("div", {},
       el("h4", {}, t("What is on the screen")),
-      el("p", {}, t("On the left, the bench: the source, the planar structure (to scale in depth: the layers are coloured bands of their materials, the bar on the right of it is one wavelength), the incident, reflected and transmitted beams at the angles the run computed by Snell's law, the detectors and, where one stands, an analyser: a polarising beam splitter with a detector on each port. The brightness of the beams is the computed R and T. The small circles show each beam's polarisation as seen along it (p across the beam in the drawing's plane, s out of it): a line for linear light, an ellipse for elliptical light, a dashed circle for the unpolarised part. On the right of the bench, the field |E|² of the source's light in and near the structure; along the bottom, the counters.")),
+      el("p", {}, t("On the left, the bench: the source, the planar structure (to scale in depth: the layers are coloured bands of their materials, the bar on the right of it is one wavelength), the incident, reflected and transmitted beams at the angles the run computed by Snell's law, the detectors and, where one stands, an analyser: a polarising beam splitter with a detector on each port. The brightness of the beams is the computed R and T. The small circles show each beam's polarisation as seen along it (p across the beam in the drawing's plane, s out of it): a line for linear light, an ellipse for elliptical light, a dashed circle for the unpolarised part. On the right of the bench, the field |E|² of the source's light in and near the structure; along the bottom, the counters. Each glass is a D-shaped block, a half-cylinder whose curved face lies beyond the drawing: a beam crosses it along a radius (the panel “Set-up of this segment” gives what each crossing lets through).")),
       el("p", {}, t("Photons fly one by one (orange: s, blue: p, purple: linear at the angle ψ, grey: unpolarised). When a photon reaches the structure, its outcome is drawn by the Born rule from its density matrix. While no detector has clicked, two packets (rings) are shown after the structure, their brightness by the probabilities; a click (a flash) is the outcome; a real detector misses some photons and clicks in the dark (grey flashes). An absorbed photon vanishes in the structure (a red flash).")),
       el("p", {}, t("The curves: R(θ), T(θ) for s and p at the current λ (θ_B: where the run's r_p vanishes, θ_c: where the run's transmission vanishes), the spectrum R(λ), T(λ) at the current angle, each wavelength with its materials' own indices, and, with an analyser, the share of the arm's light through it against its angle.")),
       el("p", {}, t("Any change of the set-up applies at once and starts a new segment. Photons emitted before a change of the source or the structure fly on and are counted as transitional; when the angle or the media change, the beam paths are rebuilt and the photons in flight are lost (this is counted)."))),

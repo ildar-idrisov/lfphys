@@ -25,8 +25,9 @@
 #               missing, stale, failed or over budget (site/check.py), smoke-tests it in Chromium served under
 #               /lfphys/ by Python's http.server from a parent folder, EN and RU, playing every recording
 #               (tests/browser/site_smoke.mjs), checks the screens on a server (tests/browser/demo_screens.mjs, EN and
-#               RU, on the toy world's recordings and atlases built now by site/fixtures.py: a server's player refuses
-#               a stale atlas, so no browser test uses the committed fixture), and uploads the Pages artifact;
+#               RU, on the toy worlds' recordings and atlases built now by site/fixtures.py, s98_atlas_toy and
+#               u96_lab_toy: a server's player refuses a stale atlas, so no browser test uses the committed
+#               fixture), and uploads the Pages artifact;
 #   4. deploy:  publishes it to GitHub Pages ONLY when started by hand (workflow_dispatch) with the input
 #               deploy: true, which is the owner's go (integrator D2, owner: «деплой по моему go»). A push to main
 #               checks, records and builds; it never deploys.
@@ -251,21 +252,26 @@ jobs:
             -v "$PWD/visualizations/tests/browser:/t:ro" -w /pw "$PLAYWRIGHT" \
             sh -c "npm i --no-save --no-audit --no-fund playwright@1.58.2 >/dev/null && cp /t/*.mjs /pw/ \
                    && node /pw/site_smoke.mjs http://lf-site-srv:8000${SITE_BASE} en,ru"
-      - name: The screens on a server in Chromium, EN and RU, on the toy world built now (site/fixtures.py)
+      - name: The screens on a server in Chromium, EN and RU, on the toy worlds built now (site/fixtures.py)
         run: |
           mkdir -p fx runs-demo
           docker run --rm --memory=4g -e PYTHONDONTWRITEBYTECODE=1 --user "$(id -u):$(id -g)" -v "$PWD:/lf:ro" \
-            -v "$PWD/fx:/fx" -w /lf/visualizations "$IMAGE" python3 site/fixtures.py --out /fx
+            -v "$PWD/fx:/fx" -w /lf/visualizations "$IMAGE" python3 site/fixtures.py --out /fx \
+            --world s98_atlas_toy --world u96_lab_toy
           docker run -d --name lf-demo-srv --network host --memory=4g -e LFPHYS_NO_GPU=1 -e PYTHONDONTWRITEBYTECODE=1 \
             -e LFVIZ_EXTRA=/lf/visualizations/tests/site_worlds -e LFVIZ_RECORDINGS=/fx --user "$(id -u):$(id -g)" \
             -v "$PWD:/lf:ro" -v "$PWD/fx:/fx:ro" -v "$PWD/runs-demo:/runs" -w /lf/visualizations "$IMAGE" \
             python3 server/serve.py --host 127.0.0.1 --port 8705 --runs-dir /runs --max-workers 1
           for _ in $(seq 1 60); do curl -sf http://127.0.0.1:8705/api/health >/dev/null && break; sleep 1; done
-          for lang in en ru; do
-            docker run --rm --init --network host --shm-size=2g --memory=4g -e LFVIZ_LANG="$lang" \
-              -v "$PWD/visualizations/tests/browser:/t:ro" -w /pw "$PLAYWRIGHT" \
-              sh -c "npm i --no-save --no-audit --no-fund playwright@1.58.2 >/dev/null && cp /t/*.mjs /pw/ \
-                     && node /pw/demo_screens.mjs 8705 1280x800,390x844 s98_atlas_toy"
+          # the school toy and the university toy (a lab step on Explore's atlas, a law parameter, the world's own
+          # speed: review R2-F F6)
+          for world in s98_atlas_toy u96_lab_toy; do
+            for lang in en ru; do
+              docker run --rm --init --network host --shm-size=2g --memory=4g -e LFVIZ_LANG="$lang" \
+                -v "$PWD/visualizations/tests/browser:/t:ro" -w /pw "$PLAYWRIGHT" \
+                sh -c "npm i --no-save --no-audit --no-fund playwright@1.58.2 >/dev/null && cp /t/*.mjs /pw/ \
+                       && node /pw/demo_screens.mjs 8705 1280x800,390x844 $world"
+            done
           done
       - name: Stop the servers
         if: always()

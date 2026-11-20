@@ -80,11 +80,21 @@ test("precedence: -2^2 = -4, 2^-1 = 0.5, 2^3^2 = 512, 1 - 2 - 3 = -4, 8 / 4 / 2 
   assert.equal(v("sind(30) * 2"), Math.sin(30 * Math.PI / 180) * 2);
 });
 
-test("an exact input (σ 0) adds nothing; σ by hand for a product: σ² = (bσa)² + (aσb)² + ½·0", () => {
+test("an exact input (σ 0) adds nothing; σ by hand for a product: σ² = (bσa)² + (aσb)² + (σaσb)², its exact variance", () => {
   const r = evaluate(parse("a * b"), { a: { v: 2, e: 0.1 }, b: { v: 3, e: 0.2 } });
-  assert.ok(Math.abs(r.e - Math.hypot(3 * 0.1, 2 * 0.2)) < 1e-15 && r.t2 === 0);
+  assert.ok(Math.abs(r.e - Math.sqrt(0.09 + 0.16 + 0.0004)) < 1e-15 && Math.abs(r.t2 - 0.0004) < 1e-18, `${r.e} ${r.t2}`);
+  // review R2-F F2: at the saddle x = y = 0 the mixed term is the whole error (it was 0 without it)
+  const saddle = evaluate(parse("x * y"), { x: { v: 0, e: 1 }, y: { v: 0, e: 1 } });
+  assert.ok(saddle.v === 0 && saddle.t1 === 0 && saddle.e === 1, `${saddle.e}`);
   const r2 = evaluate(parse("a * b"), { a: { v: 2, e: 0 }, b: { v: 3, e: 0.2 } });
   assert.ok(Math.abs(r2.e - 0.4) < 1e-15);
   const sq = evaluate(parse("x^2"), { x: { v: 0, e: 0.1 } });  // at a stationary point the second order keeps an error
   assert.ok(Math.abs(sq.e - Math.sqrt(0.5) * 2 * 0.01) < 1e-15, `${sq.e}`);
+});
+
+test("ASCII digits and spaces only, as expr.py (review R2-F F8): a formula parses in both or in neither", () => {
+  assert.equal(evaluate(parse("x\t+\n1\r*\f2\v"), { x: { v: 1, e: 0 } }).v, 3);
+  for (const bad of ["\u0663 * x", "x\u00a0+ 1", "x\u2028+ 1", "x\ufeff+ 1", "x\x1c+ 1", "x\x85+ 1"]) {
+    assert.throws(() => parse(bad), (e) => e instanceof ExprError && e.code === "syntax", JSON.stringify(bad));
+  }
 });

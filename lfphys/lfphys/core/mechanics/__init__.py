@@ -8,7 +8,7 @@
   on exact multiples of 1/rate, and the closed forms of the flight in vacuum.
 * ``drag``: linear (Stokes) drag of a sphere, its Reynolds number along the path, and the closed forms of a flight
   with linear drag (the landing time from a height by Lambert's W); Basset's history force along a flight by product
-  integration and its bound at finite Reynolds numbers (``history_bound``).
+  integration and a bound on every history force with a positive kernel below Basset's (``history_bound``).
 * ``earth_frame``: the WGS 84 normal gravity and the Coriolis force of the rotating Earth (a declared force), the
   sideways offset of a planar flight.
 

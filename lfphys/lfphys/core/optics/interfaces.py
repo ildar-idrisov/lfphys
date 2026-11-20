@@ -26,6 +26,26 @@ p: E_z = -n_in sin(theta0) Z0 H_y / n_j^2 (from curl H = -i omega eps E). H is g
 light of any polarization with incident Jones vector (E_p, E_s) the field is E_p e_p(z) + E_s e_s(z); e_p has no y
 component and e_s only a y component, so |E|^2 = rho_pp |e_p|^2 + rho_ss |e_s|^2 for any density matrix rho of the
 incident light (unpolarised: the mean of the two profiles), without an interference term.
+
+An absorbing incidence medium (n_in = n' + i kappa, e.g. a glass of ``core.optics.materials``, review EX2, R2-E F1):
+k_x is real, k_x / k0 = n' sin theta0, so that the field is uniform along the surface: the incident wave is the
+inhomogeneous wave whose planes of constant amplitude are parallel to the interface, as after entering through a face
+parallel to it (Byrnes, arXiv:1603.02720, §4.4.1 and App. B, D: n0 sin theta0 must be real). theta0 is then the
+angle of Snell's law with the real parts (a ray entering through a parallel face at theta_air has n' sin theta0 =
+sin theta_air); the direction of the phase fronts differs from it by O((kappa / n')^2). Every medium's cos theta is
+on the forward branch, Im(n cos theta) > 0, or Re(n cos theta) >= 0 for a lossless propagating wave (the two agree
+for a real k_x; App. D.2). R = |r|^2 and T are the reflected and the transmitted waves' energy fluxes through the
+interfaces relative to the incident wave's flux at the first interface (z = 0): the incident wave's decay on its way
+there (exp(-2 k0 Im(n_in cos theta_in) L) over a normal distance L) is the caller's. The incident and the reflected
+waves overlap and interfere in an absorbing medium, so the flux entering the structure is not 1 - R: it is 1 - R -
+A_in with A_in = -2 Im(r) Im(n_in cos theta_in) / Re(n_in cos theta_in) (s) and -2 Im(r) Im(cos theta_in conj(n_in))
+/ Re(n_in conj(cos theta_in)) (p), the extra (or, negative, the missing) absorption of the standing wave just before
+the interface (Byrnes, App. B). ``stack`` returns it as A_in (0 for a real n_in); A = 1 - R - T is the absorption in
+the layers plus A_in, and R + T + A = 1 still holds. The net flux into the structure, 1 - R - A_in = T + (absorbed in
+the layers), is >= 0; R itself may exceed 1 by O(kappa / n') just above the critical angle (then A_in < 0), and |A_in|
+grows towards grazing incidence, where the incident wave is strongly inhomogeneous (Re and Im of n_in cos theta_in
+comparable): |A_in| <= 3 Im(n_in cos theta_in) / Re(n_in cos theta_in), about 3 kappa / (n' cos^2 theta_in) (tests),
+e.g. 1.9e-5 for N-SF11 (kappa 2.8e-7 n') at 405 nm and 85 degrees.
 """
 
 from __future__ import annotations
@@ -35,6 +55,7 @@ import math
 
 import numpy as np
 
+from lfphys.codes import coded
 from lfphys.i18n import T
 
 ABOUT = {
@@ -54,7 +75,12 @@ ABOUT = {
 
 def snell_cos(n1, n2, cos_i):
     """cos(theta_t) for n1 sin(ti) = n2 sin(tt), on the branch with Im(n2 cos tt) >= 0 (decaying into medium 2) and
-    Re >= 0 for a propagating wave."""
+    Re >= 0 for a propagating wave; n1 real (a lossless incidence medium; for an absorbing one ``fresnel`` and
+    ``stack`` take the real k_x of the module docstring): a complex n1 is refused, ``optics.absorbing_incidence``."""
+    if complex(n1).imag != 0:
+        raise coded(ValueError(T("snell_cos takes a real incidence index (an absorbing incidence medium: use "
+                                 "interfaces.stack or fresnel, which take k_x = Re(n_in) sin θ)")),
+                    "optics.absorbing_incidence")
     sin_i2 = 1.0 - cos_i * cos_i
     ct = cmath.sqrt(1.0 - (n1 / n2) ** 2 * sin_i2)
     if (n2 * ct).imag < 0 or ((n2 * ct).imag == 0 and (n2 * ct).real < 0):
@@ -63,9 +89,10 @@ def snell_cos(n1, n2, cos_i):
 
 
 def fresnel(n1, n2, theta_i: float, pol: str):
-    """(r, t, R, T) for a single interface from medium n1 to n2 at incidence angle theta_i (rad), pol 's' or 'p'."""
-    ci = complex(math.cos(theta_i))
-    ct = snell_cos(n1, n2, ci)
+    """(r, t, R, T) for a single interface from medium n1 to n2 at incidence angle theta_i (rad), pol 's' or 'p'; the
+    cosines of ``stack`` (``_cosines``: cos theta_i itself for a real n1; an absorbing n1 as in the module docstring,
+    T then relative to the incident wave's flux at the interface)."""
+    ci, ct = _cosines([complex(n1), complex(n2)], theta_i)
     if pol == "s":
         den = n1 * ci + n2 * ct
         r, t = (n1 * ci - n2 * ct) / den, 2 * n1 * ci / den
@@ -87,12 +114,44 @@ def critical(n1: float, n2: float) -> float | None:
     return math.asin(n2 / n1) if n2 < n1 else None
 
 
+def _kx(ns, theta0) -> float:
+    """k_x / k0 = Re(n_in) sin theta0: real, so that the field is uniform along the surface (the module docstring,
+    «An absorbing incidence medium»)."""
+    return complex(ns[0]).real * math.sin(theta0)
+
+
+def _backward(q) -> bool:
+    """Whether q = n cos theta is the backward root of (n cos theta)^2 (to be negated). The forward root has
+    Im(n cos theta) > 0 (the wave decays forwards: an absorbing medium or an evanescent wave); where Im is zero or
+    round-off of |n cos theta| (a lossless, propagating wave), Re(n cos theta) >= 0 (its energy flows forwards). With
+    a real k_x and Im n >= 0 the two criteria agree (Byrnes, arXiv:1603.02720, App. D.2): (n cos theta)^2 = n^2 -
+    (k_x/k0)^2 has Im >= 0, so its forward root lies in the first quadrant."""
+    if abs(q.imag) > 8 * 2.220446049250313e-16 * abs(q):
+        return q.imag < 0
+    return q.real < 0
+
+
 def _cosines(ns, theta0):
-    s0 = ns[0] * math.sin(theta0)
-    cos = [cmath.sqrt(1 - (s0 / n) ** 2) for n in ns]
-    for j, n in enumerate(ns):  # forward (decaying / propagating) branch in every medium
-        if (n * cos[j]).imag < 0 or ((n * cos[j]).imag == 0 and (n * cos[j]).real < 0):
-            cos[j] = -cos[j]
+    """cos theta in every medium for the real k_x / k0 = s0 = Re(n_in) sin theta0, on the forward branch
+    (``_backward``). The incidence medium's own cosine is computed without cancellation: cos theta0 itself for a real
+    n_in; n_in cos theta_in = sqrt((n' cos theta0)^2 - kappa^2 + 2i n' kappa) for n_in = n' + i kappa (review EX2,
+    R2-E F10: sqrt(1 - sin^2) loses the relative precision near grazing incidence). A medium of the same index as the
+    incidence medium gets the same cosine."""
+    n0 = ns[0]
+    s0 = _kx(ns, theta0)
+    if n0.imag == 0:
+        c0 = complex(math.cos(theta0))
+    else:
+        a, k = n0.real, n0.imag
+        q0 = cmath.sqrt(complex((a * math.cos(theta0)) ** 2 - k * k, 2 * a * k))
+        c0 = (-q0 if _backward(q0) else q0) / n0
+    cos = []
+    for n in ns:
+        if n == n0:
+            cos.append(c0)
+            continue
+        c = cmath.sqrt(1 - (s0 / n) ** 2)
+        cos.append(-c if _backward(n * c) else c)
     return cos
 
 
@@ -128,8 +187,11 @@ def _exit_vector(nsub, cs, pol):
 
 def stack(ns, ds, lam: float, theta0: float, pol: str):
     """Multilayer: ns = [n_in, n_1, ..., n_N, n_out] (complex allowed), ds = [d_1, ..., d_N] (same unit as lam),
-    incidence angle theta0 in medium n_in (lossless). Returns dict(r, t, R, T, A) with A = 1 - R - T the absorbed fraction
-    (zero for lossless layers); r, t in the convention of ``fresnel`` (Born & Wolf for p).
+    incidence angle theta0 in medium n_in (k_x / k0 = Re(n_in) sin theta0: an absorbing incidence medium as in the
+    module docstring). Returns dict(r, t, R, T, A, A_in) with A = 1 - R - T the absorbed fraction (zero for lossless
+    layers and a real n_in) and A_in its part absorbed just before the first interface by the interference of the
+    incident and the reflected waves in an absorbing incidence medium (0 for a real n_in; module docstring); r, t in
+    the convention of ``fresnel`` (Born & Wolf for p).
 
     Characteristic (Abeles) matrices of the layers act on the tangential fields: [B, C] = prod M_j [1, eta_out];
     r = (eta0 B - C)/(eta0 B + C), T = 4 Re(eta0) Re(eta_out) / |eta0 B + C|^2, with eta = n cos theta (s) or
@@ -161,14 +223,25 @@ def stack(ns, ds, lam: float, theta0: float, pol: str):
         den = e0 * B + C
         r = (e0 * B - C) / den
         t = 2 * e0 / den * math.exp(-S)
-        T = 4 * e0.real * es.real / abs(den) ** 2 * math.exp(-2 * S)
+        # T = Re(eta_out) / Re(eta0) |t|^2; |e0|^2 / Re(e0) = Re(e0) for a real n0 (an absorbing one: module docstring)
+        f0 = e0.real if n0.imag == 0 else abs(e0) ** 2 / e0.real
+        T = 4 * f0 * es.real / abs(den) ** 2 * math.exp(-2 * S)
     else:
         den = n0 * B + c0 * C
         r = -(n0 * B - c0 * C) / den  # Born & Wolf sign for p
         t = 2 * n0 * c0 / den * math.exp(-S)  # ratio of the total E amplitudes
-        T = 4 * (n0 * c0.conjugate()).real * (nsub * cs.conjugate()).real / abs(den) ** 2 * math.exp(-2 * S)
+        q0 = (n0 * c0.conjugate()).real
+        f0 = q0 if n0.imag == 0 else abs(n0 * c0) ** 2 / q0
+        T = 4 * f0 * (nsub * cs.conjugate()).real / abs(den) ** 2 * math.exp(-2 * S)
     R = abs(r) ** 2
-    return {"r": complex(r), "t": complex(t), "R": float(R), "T": float(T), "A": float(1 - R - T)}
+    if n0.imag == 0:
+        a_in = 0.0
+    elif pol == "s":  # the interference flux of the incident and reflected waves at z = 0 (module docstring)
+        a_in = -2 * r.imag * e0.imag / e0.real
+    else:
+        a_in = -2 * r.imag * (c0 * n0.conjugate()).imag / (n0 * c0.conjugate()).real
+    return {"r": complex(r), "t": complex(t), "R": float(R), "T": float(T), "A": float(1 - R - T),
+            "A_in": float(a_in)}
 
 
 def field_profile(ns, ds, lam: float, theta0: float, z, pol: str = "s"):
@@ -265,7 +338,7 @@ def field_components(ns, ds, lam: float, theta0: float, z, pol: str = "s"):
         den = n0 * EH[0] + c0 * EH[1]
         tau = 2 * n0 * c0 / den
         r = -(n0 * EH[0] - c0 * EH[1]) / den  # Born & Wolf sign, as in stack
-    s0 = (n0 * math.sin(theta0)).real  # k_x / k0 (the incidence medium is lossless)
+    s0 = _kx(ns, theta0)  # k_x / k0 (real)
     edges = np.concatenate([[0.0], np.cumsum(ds)]) if len(ds) else np.array([0.0])
     k0 = 2 * math.pi * n0 * c0 / lam
     ks = 2 * math.pi * ns[-1] * cos[-1] / lam
@@ -389,13 +462,24 @@ def _layer_d(n, dn, c, d, lam, pol, s0, ds0):
     return Mt, np.array([[dcd, dM01], [dM10, dcd]]), s
 
 
-def group_delay(ns, ds, lam: float, theta0: float, pol: str, dns=None, length_unit: float = 1e-9) -> dict:
+def group_delay(ns, ds, lam: float, theta0: float, pol: str, dns=None, length_unit: float = 1e-9,
+                ng_ref: float = 1.0) -> dict:
     """The group delays of the reflected and the transmitted wave of a planar structure: tau = d(arg r)/d omega and
     d(arg t)/d omega at a fixed angle of incidence theta0 (time factor e^{-i omega t}: a positive tau is a delay of the
     pulse's peak; r refers to the first interface, t to the exit plane, both at the same position along the surface).
     ns, ds, lam, theta0 as in ``stack``; dns the derivatives dn/dlam of the indices in the unit of lam (each material's
-    dispersion, e.g. ``core.optics.materials.dindex``; None: constant indices); length_unit the unit of lam and ds in
-    metres (1e-9: nm). tau = -length_unit lam^2/(2 pi c) d(arg)/dlam.
+    dispersion, e.g. ``core.optics.materials.dindex``, complex for an absorbing medium, the incidence medium's too;
+    None: constant indices); length_unit the unit of lam and ds in metres (1e-9: nm).
+    tau = -ng_ref length_unit lam^2/(2 pi c) d(arg)/dlam.
+
+    The wavelength (review EX2, R2-E F6): omega = 2 pi c / lambda_vac. With lam in vacuum and absolute indices ng_ref
+    = 1. Indices relative to a reference medium at the wavelength in it (SCHOTT's glasses: relative to air, lam in air;
+    ``materials.info(...)["wavelength"] == "air"``) give the phases exactly (n_rel / lambda_ref = n_abs /
+    lambda_vac), and then d lambda_ref / d omega = -(lambda_ref / omega) n_g,ref / n_ref, so tau carries the
+    reference medium's group index n_g,ref = n_ref - lambda d n_ref / d lambda: pass it as ng_ref (dry air at 20 °C
+    and 101.325 kPa by Ciddor's formula, Appl. Opt. 35, 1566 (1996): about 1 + 2.8e-4 at 700 nm to 1 + 2.9e-4 at
+    450 nm; it depends on the air's temperature, pressure and humidity, which the caller states; 1, the default,
+    leaves tau short by that fraction).
 
     The transfer matrices of ``stack`` differentiated exactly in lam (forward mode: the derivative of each layer's
     characteristic matrix with its index's dispersion, ``_layer_d``, carried through the product by the product rule;
@@ -414,7 +498,7 @@ def group_delay(ns, ds, lam: float, theta0: float, pol: str, dns=None, length_un
     dns = [0j] * len(ns) if dns is None else [complex(x) for x in dns]
     cos = _cosines(ns, theta0)
     sin0 = math.sin(theta0)
-    s0, ds0 = ns[0] * sin0, dns[0] * sin0
+    s0, ds0 = _kx(ns, theta0), dns[0].real * sin0  # k_x / k0 = Re(n_in) sin theta0 and its derivative
     M = np.eye(2, dtype=complex)
     dM = np.zeros((2, 2), complex)
     S = 0.0
@@ -438,19 +522,28 @@ def group_delay(ns, ds, lam: float, theta0: float, pol: str, dns=None, length_un
         v, dv = np.array([cs, nsub]), np.array([dcs, dnsub])
     B, Cc = M @ v
     dB, dC = dM @ v + M @ dv
+    # the incidence medium: e0 = n0 cos theta0 = sqrt(n0^2 - s0^2), de0 = (n0 dn0 - s0 ds0) / e0; for a real n0 at a
+    # fixed angle this is dn0 cos theta0 and cos theta0 itself does not change (dc0 = 0)
+    e0 = n0 * c0
+    if n0.imag == 0 and dn0.imag == 0:
+        de0, dc0 = dn0 * c0, 0j
+    else:
+        de0 = (n0 * dn0 - s0 * ds0) / e0
+        dc0 = (de0 - c0 * dn0) / n0
     if pol == "s":
-        e0, de0 = n0 * c0, dn0 * c0
         N, Dn = e0 * B - Cc, e0 * B + Cc
         dN, dD = de0 * B + e0 * dB - dC, de0 * B + e0 * dB + dC
         dlogt = de0 / e0 - dD / Dn
         t = 2 * e0 / Dn * math.exp(-S)
     else:
         N, Dn = -(n0 * B - c0 * Cc), n0 * B + c0 * Cc
-        dN, dD = -(dn0 * B + n0 * dB - c0 * dC), dn0 * B + n0 * dB + c0 * dC
-        dlogt = dn0 / n0 - dD / Dn
+        dN, dD = -(dn0 * B + n0 * dB - dc0 * Cc - c0 * dC), dn0 * B + n0 * dB + dc0 * Cc + c0 * dC
+        dlogt = dn0 / n0 + (dc0 / c0 if dc0 != 0 else 0j) - dD / Dn
         t = 2 * n0 * c0 / Dn * math.exp(-S)
     dphi_r = (dN / N - dD / Dn).imag if N != 0 else math.nan
     dphi_t = complex(dlogt).imag
-    k = -length_unit * lam * lam / (2 * math.pi * C_LIGHT)
+    if not (math.isfinite(ng_ref) and ng_ref > 0):
+        raise ValueError("ng_ref must be a group index > 0")
+    k = -ng_ref * length_unit * lam * lam / (2 * math.pi * C_LIGHT)
     return {"tau_r": k * dphi_r, "tau_t": k * dphi_t, "dphi_r": float(dphi_r), "dphi_t": float(dphi_t),
             "r": complex(N / Dn), "t": complex(t)}

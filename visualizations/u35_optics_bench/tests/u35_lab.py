@@ -97,3 +97,33 @@ def fit(rows: list, x: str, y: str, model: str) -> dict:
     sx = [p[0][1] for p in pts]
     sy = [p[1][1] for p in pts]
     return linear_fit(xs, ys, sx, sy, model=model)
+
+
+def expected_row(step_id: str, frame_index: int = -1, **values) -> dict:
+    """The step's table row on the noise-free expected counts of a set-up (a way's computed outcome, review R2-W F1):
+    each detector's input rate is the source's rate × η × the computed probability that a photon reaches it (the
+    frame's R_inc_ref, T_inc_ref; 1 for the reference count with the block removed) + the dark rate, thinned by the
+    non-paralysable dead time (``photodetector.observed_rate``); the counts are those rates × the counting times, with
+    the errors √N, and the formula columns are evaluated on them as on a measured row."""
+    from lfphys.theories.models import photodetector as pd
+    st = STEPS[step_id]
+    frames, header, _oc, _segs = point(atlas_of(step_id), **values)
+    p = header["params"]
+    m = frames[frame_index]["meas"]
+    det = pd.DEVICES[p["det"]]["detector"]
+    t, t0 = m["t_c"], float(p["ref_s"])
+
+    def count(prob, tt):
+        n = float(p["rate"]) * det.eta * prob + det.dark_rate
+        c = float(pd.observed_rate(n, det.dead_time)) * tt
+        return (c, math.sqrt(c))
+    cols = {"th": (float(p["theta_deg"]), 0.0), "tc": (t, 0.0), "NR": count(m["R_inc_ref"], t),
+            "NT": count(m["T_inc_ref"], t), "N0": count(1.0, t0), "t0": (t0, 0.0)}
+    for c in st["columns"]:
+        if "expr" in c:
+            try:
+                v, s, _t1, _t2 = expr.evaluate(c["expr"], {k: x for k, x in cols.items() if x is not None})
+                cols[c["id"]] = (v, s)
+            except (expr.Undefined, expr.ExprError):
+                cols[c["id"]] = None
+    return cols

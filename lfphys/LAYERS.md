@@ -78,6 +78,38 @@ world". `README.md` lists the modules by topic.
 | `theories.alternatives.local_hidden` (extended) | theories, alternative | Gisin and Gisin's local model that exploits the detection loophole (75 % detection on average; CHSH 2√2 under fair sampling, CH ≤ 0) | refuted by the loophole-free tests; flagged «modified physics» in a world |
 | `tools.bell_stats` (extended) | tools | CH and Eberhard's J with their multinomial errors (no fair sampling), CHSH with the accidentals subtracted, the slot probabilities with multi-pair emission and dark clicks, the efficiency thresholds (2/(1 + √2) for the maximally entangled state, → 2/3), `best_j` | statistics of simulated or measured counts, not physics |
 
+**Changed after the review R2-E (2026-11-20; the layers unchanged, `../STATUS.md` V53 (af)):**
+
+- `core.optics.interfaces`: the incidence medium may absorb (n_in = n′ + iκ, e.g. `materials.index` of a SCHOTT
+  glass): k_x = k₀ Re(n_in) sin θ₀ is real (the wave entered through a face parallel to this one; Byrnes,
+  arXiv:1603.02720), each medium's cosine on the forward branch by Im(n cos θ) (Re where Im is round-off), cos θ₀
+  itself for a real n_in [error in earlier: √(1 − sin²θ₀) lost precision near grazing; a complex n_in gave R_p 137,
+  T_p −136]. `stack` returns the new key `A_in` (the interference absorption of the incident and reflected waves right
+  at the interface, 0 for a real n_in; A = 1 − R − T includes it, so R may exceed 1 by O(κ/n) just above the critical
+  angle), and its T is normalised as Re(η_out)/Re(η_in)·|t|² [error in earlier]; R and T are relative to the incident
+  flux at the interface (the bulk path is the caller's). `fresnel`, `field_*`, `power_factor` and `group_delay` take
+  the same cosines; `snell_cos` takes a real n₁ only (`optics.absorbing_incidence`); `group_delay(…, ng_ref=1.0)` for
+  wavelengths in a reference medium (SCHOTT's air: τ × n_g,air ≈ 1.00028).
+- `core.optics.polarization.boundary_matrices`: `A_in_p`, `A_in_s`; `outcome_probabilities` refuses a negative
+  probability beyond round-off (`quantum.negative_probability`), so a bare glass → air boundary near the critical angle
+  needs the glass path's own absorption added.
+- `core.optics.materials`: the ends of a range parsed exactly (µm → nm by decimals, `_um_to_nm`); `index` says that
+  SCHOTT's wavelengths are in air; SCHOTT's κ from the more precise of τᵢ(10 mm) and τᵢ(25 mm) per node, a node's
+  stated precision at least the two values' difference (`info(...)["kappa_nodes_from"]`; N-BK7 300 nm 2.861·10⁻⁶ →
+  2.955·10⁻⁶).
+- `core.mechanics.particle.fly`: refuses a declared force whose own ρ or μ (`CurveDrag`, `QuadraticDrag`,
+  `LinearDrag`, `Magnus`, `SpinDrag`) differs from the flight's `Medium` (`mechanics.medium_mismatch`).
+- `core.mechanics.drag.history_bound`: a bound within the history-kernel models below Basset's, not «at any Reynolds
+  number» [error in earlier]. `core.mechanics.earth_frame`: the Coriolis force on the body's own mass m, with the
+  reason stated (in air rotating with the Earth the lift on a sphere cancels the added mass's Coriolis term; review
+  R2-E F5, rejected with its evidence). `theories.models.magnus.drag_factor`: its −3.0 % jump at S = 1.25 (where the
+  source's two fits meet) stated, not smoothed.
+- `core.gravity.orbit_stream`: `orbit.bad_radii` (radii out of order or range in `proper_time_between`,
+  `proper_time_to_centre`, `cycloid_proper_time`) and `orbit.turns_back` (a turning point before the radius asked);
+  `orbit.not_bound`, `orbit.horizon` and `orbit.no_fall` keep their meanings elsewhere.
+- New refusal codes (`lfphys/codes.py`): `optics.absorbing_incidence`, `mechanics.medium_mismatch`,
+  `orbit.bad_radii`, `orbit.turns_back`.
+
 ## 4. Licence and third-party code (owner, 2026-10-24; `../AGENTS.md` §3 rule 8)
 
 The engine is licensed by its author (the lfphys Research Licence 1.0, text of 14 November 2026, for code —

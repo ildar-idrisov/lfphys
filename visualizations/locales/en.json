@@ -35,6 +35,10 @@
   "one": "Resuming: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} change of the set-up)… The visualization's code changed since last time: the continuation is computed by the new version, the earlier part of the record by the old one",
   "other": "Resuming: the world is recomputed from its start along the record up to t = {t:.6g} s ({n:d} changes of the set-up)… The visualization's code changed since last time: the continuation is computed by the new version, the earlier part of the record by the old one"
  },
+ "The plot and the fit use {k:d} of {n:d} rows (the set-up chosen above, the rows ticked «in the fit»)": {
+  "one": "The plot and the fit use {k:d} of {n:d} row (the set-up chosen above, the rows ticked «in the fit»)",
+  "other": "The plot and the fit use {k:d} of {n:d} rows (the set-up chosen above, the rows ticked «in the fit»)"
+ },
  "The world continued from its saved state at t = {t0:.6g} s (then {n:d} frames of the record were repeated); the record continues from t = {t1:.6g} s": {
   "one": "The world continued from its saved state at t = {t0:.6g} s (then {n:d} frame of the record was repeated); the record continues from t = {t1:.6g} s",
   "other": "The world continued from its saved state at t = {t0:.6g} s (then {n:d} frames of the record were repeated); the record continues from t = {t1:.6g} s"

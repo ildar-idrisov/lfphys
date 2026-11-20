@@ -4,7 +4,9 @@
 reflection, antireflection, Bragg, Airy, tunnelling, Joule heating) pass; live changes apply at once; single photons
 reproduce the computed probabilities statistically; outcomes are revealed only on arrival. Where a test needs the
 numbers of a given index (the review history of 2026-10-23), its set-up is a model medium with the ideal detector
-(``OLD``): the closed forms are those of the indices, and every arrival is a click."""
+(``OLD``): the closed forms are those of the indices, and every arrival is a click. The glass blocks (half-cylinders
+crossed along a radius: the curved face at normal incidence, the bulk's absorption), the reference count N₀ and the
+eight outcomes of a photon have tests of their own at the end."""
 
 import math
 import sys
@@ -23,8 +25,10 @@ from u35_optics_bench.engine.bench import rta  # noqa: E402
 
 V = "u35_optics_bench"
 PRESETS = list(registry.load(V)["schema"].presets)
-_M = {"med_in": "model", "med_out": "model", "det": "ideal", "lam_nm": 633.0, "dlam_nm": 0.0, "rate": 4e9}
-#: the set-ups of the first version (constant indices), as model media with the ideal detector
+_M = {"med_in": "model", "med_out": "model", "det": "ideal", "lam_nm": 633.0, "dlam_nm": 0.0, "rate": 4e9,
+      "block_mm": 0.0}
+#: the set-ups of the first version (constant indices), as model media with the ideal detector and half-spaces (no
+#: glass blocks: the face alone, as its closed forms describe it; the blocks have tests of their own below)
 OLD = {
     "brewster": {**_M, "n0": 1.0, "ns": 1.5, "theta_deg": 56.31},
     "tir": {**_M, "n0": 1.5, "ns": 1.0, "theta_deg": 60.0},
@@ -600,3 +604,168 @@ def test_joule_quadrature_limit_maps_to_an_informational_check(monkeypatch):
     assert c.get("info") and c["note"]["$t"].startswith("not checked here: the Joule integral")
     assert c["note"]["a"] == {"n": 99999, "lim": 4096}
     assert not h.errors()
+
+
+# --- the glass blocks, the eight outcomes and the reference count (review R2-W F1) ----------------------------------
+GLASSES = ("schott_n_bk7", "schott_n_f2", "schott_n_sf11")
+
+
+def test_a_block_crossing_against_fresnel_and_the_data_sheets_internal_transmittance():
+    """The curved face at normal incidence: T_s = T_p = 4n/(n + 1)² (Fresnel), in both directions. The bulk: at each of
+    the SCHOTT data sheet's wavelengths, a block as thick as the sample the engine took κ from there (10 or 25 mm,
+    ``materials.info``'s kappa_nodes_from) passes exactly the internal transmittance τ_i printed for it (Beer–Lambert,
+    the relation the sheet's κ comes from: a route through the data, not through κ)."""
+    from lfphys.core import data
+    from u35_optics_bench.engine.bench import block_crossing
+    for g in GLASSES:
+        info = materials.info(g)
+        lo, hi = info["range_nm"]
+        nodes = []
+        for line in data.OPTICAL_MATERIALS[g]["tau"].strip().splitlines():
+            lnm, t10, t25 = line.split()
+            if any(t != "-" and 0.0 < float(t) < 1.0 for t in (t10, t25)):
+                nodes.append((float(lnm), {10.0: t10, 25.0: t25}))
+        nodes.sort(key=lambda x: x[0])  # kappa_nodes_from is in increasing λ
+        assert len(nodes) == len(info["kappa_nodes_from"])
+        k = 0
+        for (lam, printed), d in zip(nodes, info["kappa_nodes_from"]):
+            if not lo <= lam <= hi:
+                continue
+            n = materials.index(g, lam).real
+            for inward in (True, False):
+                cr = block_crossing(g, 1.0, lam, d, inward)
+                for q in ("s", "p"):
+                    assert cr["Tc"][q] == pytest.approx(4 * n / (n + 1) ** 2, rel=1e-14), (g, lam, q)
+                assert cr["tau"] == pytest.approx(float(printed[d]), rel=1e-12), (g, lam, d, cr["tau"], printed)
+            k += 1
+        assert k >= 5, g
+    assert block_crossing("air", 1.0, 632.8, 25.0, True) is None
+    assert block_crossing(GLASSES[0], 1.0, 632.8, 0.0, False) is None  # radius 0: a half-space, no block
+
+
+def test_the_eight_outcomes_add_to_one_and_follow_the_crossings():
+    """A photon's eight outcomes: the face's five times the way in and each arm's crossing, plus the three losses. From
+    air only the transmitted beam crosses a block; from inside the way in and the reflected beam do; with the radius 0
+    (half-spaces) the outcomes are the face's."""
+    h = Harness(V, "boundary", {"theta_deg": 30.0})
+    seg = h.of("segment")[0]
+    P8, P, bl = seg["P8"], seg["P"], seg["setup"]["block"]
+    assert sum(P8.values()) == pytest.approx(1.0, abs=1e-14)
+    tT = bl["T"]["Tc_s"] * bl["T"]["tau"]
+    assert bl["in"] is None and bl["R"] is None and bl["radius_mm"] == 25.0
+    assert P8["R_pass"] == P["R_pass"] and P8["T_pass"] == pytest.approx(P["T_pass"] * tT, rel=1e-15)
+    assert P8["L_T"] == pytest.approx(P["T_pass"] * (1 - tT), rel=1e-12) and P8["L_in"] == P8["L_R"] == 0.0
+    s0 = Harness(V, "boundary", {"theta_deg": 30.0, "block_mm": 0.0}).of("segment")[0]
+    assert all(s0["P8"][k] == s0["P"][k] for k in s0["P"] if k in s0["P8"]) and s0["P8"]["L_T"] == 0.0
+    si = Harness(V, "boundary", {"theta_deg": 30.0, "med_in": "schott_n_bk7", "med_out": "air"}).of("segment")[0]
+    b = si["setup"]["block"]
+    tin, tR = b["in"]["Tc_s"] * b["in"]["tau"], b["R"]["Tc_s"] * b["R"]["tau"]
+    assert b["T"] is None and si["P8"]["L_in"] == pytest.approx(1 - tin, rel=1e-12)
+    assert si["P8"]["R_pass"] == pytest.approx(tin * si["P"]["R_pass"] * tR, rel=1e-14)
+    assert si["P8"]["T_pass"] == pytest.approx(tin * si["P"]["T_pass"], rel=1e-14)
+    # the flight: 25 mm in the glass at its group velocity, the rest of the arm in air
+    st = Harness(V, "boundary", {"theta_deg": 0.0}).sim
+    ng = st.times["ng_out"]
+    assert st.times["t_T"] - st.times["tau_t"] == pytest.approx((0.025 * ng + 0.275) / 2.99792458e8, rel=1e-12)
+
+
+@pytest.mark.parametrize("params", [{"med_in": "air", "med_out": "schott_n_sf11", "theta_deg": 20.0, "pol": "s"},
+                                    {"med_in": "schott_n_f2", "med_out": "air", "theta_deg": 30.0, "pol": "unpol"}])
+def test_photon_counts_through_the_blocks_agree_with_the_eight_probabilities(params):
+    """Ideal detectors (every arrival a click), 100 mm blocks: the reflected, transmitted and lost photons against the
+    computed probabilities (5σ), and the run's own test of the eight outcomes passes."""
+    h = Harness(V, "boundary", {**params, "det": "ideal", "rate": 4e9, "block_mm": 100.0, "ref_s": 0.0}, seed=5)
+    run_photons(h, 40000)
+    P8 = h.of("segment")[0]["P8"]
+    cnt = counts(h, 0)
+    meta, _ = h.sim.frame()
+    nL = meta["meas"]["n_L"]
+    n = int(cnt.sum()) + nL
+    assert n > 35000 and nL > 1000
+    for k, (have, p) in {"R": (cnt[0], P8["R_pass"] + P8["R_reject"]), "T": (cnt[1], P8["T_pass"] + P8["T_reject"]),
+                         "L": (nL, P8["L_in"] + P8["L_R"] + P8["L_T"])}.items():
+        sig = math.sqrt(n * p * (1 - p))
+        assert abs(have - n * p) <= 5 * sig, (k, have, n * p, sig)
+    st = h.checks()["stat0"]
+    assert st["ok"] and st["note"]["a"]["m"] >= 3
+
+
+def test_a_silent_detector_weighs_by_its_efficiency_and_its_block():
+    """Both media glass (model indices 1.5 and 1.8, κ = 0): the reflection detector is reached first; while it stays
+    silent the transmitted packet's weight is P_T/(P_T + P_R(1 − η τ_R)), τ_R the share of the reflected beam that
+    crosses its block (its curved face, 4n/(n + 1)²)."""
+    h = old("brewster", params={"n0": 1.5, "ns": 1.8, "theta_deg": 20.0, "pol": "s", "rate": 5e10,
+                                "det": "spcm_aqrh_14_650nm", "block_mm": 25.0})
+    tin, tR, tT = h.sim.times["t_in"], h.sim.times["t_R"], h.sim.times["t_T"]
+    assert tT > tR
+    h.run_to(tin + 0.5 * tR)
+    h.run_to(h.sim.t + 0.5 * (tR + tT) - 0.5 * tR)
+    meta, b = h.sim.frame()
+    fl = b["fl"].reshape(-1, 6)
+    late = fl[(fl[:, 0] == 1) & (fl[:, 2] >= 1)]
+    R, T_ = (h.of("segment")[0]["cur"]["s"][k] for k in ("R", "T"))
+    wR, eta, tauR = R / (R + T_), 0.65, 4 * 1.5 / 2.5 ** 2
+    assert h.sim.tau_arm["R"] == pytest.approx(tauR, rel=1e-14)
+    assert len(late) and np.allclose(late[:, 5], (1 - wR) / ((1 - wR) + wR * (1 - eta * tauR)))
+
+
+def test_the_reference_count_against_the_detector_model():
+    """N₀ (the block removed, t₀ = 0.1 s) over 30 seeds: its mean against (rate·η + d) thinned by the non-paralysable
+    dead time, m = n/(1 + n t_d), within 4 standard errors; the run's own check of it passes; it is read at every frame
+    (made before the world's time 0)."""
+    from lfphys.theories.models import photodetector as pd
+    d = pd.DEVICES["spcm_aqrh_14_650nm"]["detector"]
+    ns = [Harness(V, "boundary", {}, seed=s).sim.ref["n"] for s in range(1, 31)]
+    m = float(pd.observed_rate(2e5 * d.eta + d.dark_rate, d.dead_time)) * 0.1
+    assert abs(sum(ns) / len(ns) - m) < 4 * math.sqrt(m / len(ns)), (sum(ns) / len(ns), m)
+    h = Harness(V, "boundary", {})
+    assert h.checks()["ref"]["ok"] is True
+    meta, _ = h.sim.frame()
+    assert meta["meas"]["n_0"] == h.sim.ref["n"] and meta["meas"]["n_R"] is None
+    assert Harness(V, "story").sim.ref is None and "ref" not in Harness(V, "story").checks()
+
+
+def test_a_change_of_the_source_voids_the_reference_count():
+    h = Harness(V, "boundary", {})
+    n0 = h.sim.ref["n"]
+    h.set(theta_deg=40.0)  # the table turns: the reference (the block removed) still holds
+    assert h.sim.ref["n"] == n0
+    h.set(rate=1e5)
+    assert h.sim.ref is None
+    assert any(m["text"]["$t"].startswith("the reference count N₀ was made") for m in h.of("notice"))
+    h.run_to(h.sim.t + 1e-3)
+    meta, _ = h.sim.frame()
+    assert meta["meas"]["n_0"] is None and meta["meas"]["R_inc"] is None
+
+
+def test_a_reference_count_too_long_to_simulate_is_refused():
+    from lfviz.errors import Refusal
+    sim = registry.load(V)["simulation"]
+    params = registry.load(V)["schema"].resolve("boundary", {"rate": 1e9, "ref_s": 0.1})[0]
+    with pytest.raises(Refusal):
+        sim.check_params(params)
+
+
+def test_the_identities_are_shown_for_information():
+    """Review R2-W F3: R + T + A = 1 (A is the remainder) and the five Born probabilities' sum (the ports are
+    complementary by construction) are identities: information, never a pass; the two routes to the arms stay a
+    check."""
+    ch = Harness(V, "boundary").checks()
+    for k in ("sum0", "born0"):
+        assert ch[k].get("info") is True and "ok" not in ch[k], ch[k]
+    assert ch["arms0"]["ok"] is True and not ch["arms0"].get("info")
+
+
+def test_the_glass_block_checks():
+    """The curved faces against Fresnel at normal incidence pass; the bulk, the complex-index face and the ghost are
+    information, the ghost's size as computed by hand from the engine's R and T."""
+    h = Harness(V, "boundary", {"theta_deg": 0.0})
+    ch = h.checks()
+    assert ch["cfaceT0"]["ok"] is True and ch["bulkT0"]["info"] and ch["ghost0"]["info"] and ch["kface0"]["info"]
+    n = materials.index("schott_n_bk7", 632.8).real
+    R = ((n - 1) / (n + 1)) ** 2
+    tau = h.of("segment")[0]["setup"]["block"]["T"]["tau"]
+    assert ch["ghost0"]["value"] == pytest.approx((1 - R) * tau ** 4 * R ** 2 * R * (1 - R), rel=1e-12)
+    assert ch["kface0"]["value"] < 1e-15
+    hi = Harness(V, "boundary", {"theta_deg": 60.0, "med_in": "schott_n_bk7", "med_out": "air"})
+    assert 1e-9 < hi.checks()["kface0"]["value"] < 3e-7  # beyond θ_c the glass absorbs at the face

@@ -496,7 +496,13 @@ def test_interior_refusals_and_where_it_does_not_apply():
     el = orbits.elements(st.e, abs(st.l))
     with pytest.raises(ValueError) as ex:
         osm.proper_time_to_centre(st.em1, st.l, el["r_apo"], 0.0)
-    assert code_of(ex.value) == "orbit.no_fall" and ex.value.data["r"] == pytest.approx(el["r_peri"], rel=1e-9)
+    assert code_of(ex.value) == "orbit.turns_back" and ex.value.data["r"] == pytest.approx(el["r_peri"], rel=1e-9)
+    # radii out of order (review EX2, R2-E F7: these were orbit.not_bound and orbit.horizon)
+    for call in (lambda: osm.proper_time_to_centre(st.em1, st.l, 5.0, 6.0), lambda: osm.cycloid_proper_time(1.5),
+                 lambda: osm.cycloid_proper_time(10.0, 11.0), lambda: osm.proper_time_between(st.em1, st.l, 6.0, 5.0)):
+        with pytest.raises(ValueError) as ex:
+            call()
+        assert code_of(ex.value) == "orbit.bad_radii"
     # between the turning points it does
     assert osm.proper_time_to_centre(st.em1, st.l, el["r_apo"], el["r_peri"]) == pytest.approx(
         osm.proper_time_between(st.em1, st.l, el["r_peri"], el["r_apo"]), rel=1e-9)

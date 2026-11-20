@@ -179,3 +179,21 @@ def test_sideways_refusals():
     f2 = fly(BALL, [0.0, 1.0], [1.0, 1.0])
     with pytest.raises(ValueError):
         sideways(f2, cor)
+
+
+def test_the_entrained_fluid_s_coriolis_term_cancels_against_the_lift_on_the_air_s_vorticity():
+    """Review EX2, R2-E F5 (not adopted, module docstring): in the inviscid theory of Auton, Hunt & Prud'homme (1988)
+    the fluid's force on a sphere besides the pressure gradient is C_A m_f (Du/Dt - dV/dt) + (1/2) m_f (u - V) x omega
+    (C_A = 1/2). For a fluid at rest in the rotating frame (u = Omega x r, omega = 2 Omega, inertial quantities), the
+    sum is -C_A m_f a_rel exactly: no Coriolis term on the entrained mass, so ``Coriolis`` acts on m (and the added
+    mass on the relative acceleration only, as ``fly`` has it)."""
+    rng = np.random.default_rng(42)
+    for _ in range(20):
+        Om, r, v, a = (rng.normal(size=3) for _ in range(4))
+        mf, CA = rng.uniform(0.1, 2.0), 0.5
+        u = np.cross(Om, r)
+        Du = np.cross(Om, np.cross(Om, r))
+        V = v + u
+        dV = a + 2 * np.cross(Om, v) + np.cross(Om, np.cross(Om, r))
+        F = CA * mf * (Du - dV) + 0.5 * mf * np.cross(u - V, 2 * Om)
+        assert np.allclose(F, -CA * mf * a, rtol=0, atol=1e-12 * mf * (1 + np.abs(a).max()))

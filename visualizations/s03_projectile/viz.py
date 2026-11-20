@@ -28,6 +28,8 @@ Earth's rotation is the place of the bench, not modifications.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import math
 
 import numpy as np
@@ -86,6 +88,13 @@ SCHEMA = Schema([
                  "sphere, the air's buoyancy and the air the ball carries along; a steel ball rolling off the chute "
                  "also feels the Magnus force of its spin. The bench stands at 45.5° N and throws toward the east, so "
                  "the Earth's rotation acts in both cases.")),
+    # the launcher's setting error (review R2-W F5): a launcher set by hand at a mark of its protractor stands within
+    # half a division of it, so the lab's launches draw their real angle within ± this bound, seeded by the set-up
+    Param("angle_error_deg", T("Setting error of the launcher's angle (bound)"), "float", 0.0, unit="°", min=0.0,
+          max=2.0,
+          help=T("A launcher set by hand at a mark of its protractor stands within half a division of it. The real "
+                 "angle of the launch is drawn within ± this bound for each set-up (seeded by the set-up) and the flight "
+                 "is computed at it; it is shown in “How we know this is right”. 0: exactly at the mark.")),
     Param("companion", T("Ball for comparison"), "select", "none", options=COMPANIONS,
           help=T("A second ball: dropped from the same point at the same moment, or the same throw computed in vacuum "
                  "(grey). It does not affect the first ball.")),
@@ -112,6 +121,19 @@ NO_SECOND = T("a vertical flight in air: the engine has no second method for it;
 NO_ANGLE = T("the velocity's angle does not turn steadily on this flight: no second method; the energy balance checks "
              "the integration")
 PLACE = T("45.5° N")  # the latitude where the WGS 84 normal gravity equals g_n (engine/shot.py LATITUDE: 45.4996°)
+
+
+def real_angle(params: dict, seed: int) -> float:
+    """The launch's real angle, °: the mark ``angle_deg`` plus a setting error drawn uniformly within
+    ± ``angle_error_deg`` (review R2-W F5), from a generator seeded by the seed and the set-up together (the parameters as
+    sorted JSON, hashed to 64 bits; RULES.md §10: with the seed alone every point of an atlas would draw the same error);
+    the mark itself when the bound is 0."""
+    err = float(params.get("angle_error_deg", 0.0) or 0.0)
+    ang = float(params["angle_deg"])
+    if err <= 0.0:
+        return ang
+    key = int.from_bytes(hashlib.sha256(json.dumps(params, sort_keys=True, default=str).encode()).digest()[:8], "big")
+    return ang + float(np.random.default_rng([int(seed), key]).uniform(-err, err))
 
 
 class Simulation(BaseSimulation):
@@ -240,12 +262,13 @@ class Simulation(BaseSimulation):
         self.check_params(p)
         self.obj = p["object"]
         self.comp = p["companion"]
+        self.angle = real_angle(p, seed)  # the mark, or the launcher's real angle near it (angle_error_deg)
         try:
-            self.main = Shot(self.obj, p["h_m"], p["v0"], p["angle_deg"], p["air"])
+            self.main = Shot(self.obj, p["h_m"], p["v0"], self.angle, p["air"])
             if self.comp == "drop":
                 self.other = Shot(self.obj, p["h_m"], 0.0, 0.0, p["air"])
             elif self.comp == "vacuum":
-                self.other = Shot(self.obj, p["h_m"], p["v0"], p["angle_deg"], False)
+                self.other = Shot(self.obj, p["h_m"], p["v0"], self.angle, False)
             else:
                 self.other = None
         except ValueError as e:
@@ -390,9 +413,22 @@ class Simulation(BaseSimulation):
 
     def _launch(self, out):
         s = self.main
+        err = float(self.params.get("angle_error_deg", 0.0) or 0.0)
+        if err > 0.0:
+            mark = float(self.params["angle_deg"])
+            out.append((0.0, {"type": "check", "t": 0.0, "id": "main.angle", "label": T("the launcher's real angle"),
+                              "value": self.angle, "ref": mark, "unit": "°", "rel": None, "tol": err,
+                              "group": GROUPS["main"], "info": True,
+                              "note": _shown(T("set by hand at the {m:g}° mark of its protractor, the launcher stands "
+                                               "within ±{e:g}° of it: this set-up's angle, drawn within that bound, is "
+                                               "{a:.2f}°, {d:+.2f}° from the mark; the flight is computed at it", m=mark, e=err, a=self.angle,
+                                               d=self.angle - mark))}, None))
         if s.spin:
             text = T("the ball leaves the chute at {v:.2f} m/s toward the east, rolling: {w:.0f} rad/s of topspin",
                      v=s.v0, w=s.spin)
+        elif s.v0 > 0.0 and err > 0.0:
+            text = T("the ball is launched at {v:.2f} m/s and {a:.2f}° toward the east (the launcher set at the {m:g}° "
+                     "mark)", v=s.v0, a=s.angle, m=float(self.params["angle_deg"]))
         elif s.v0 > 0.0:
             text = T("the ball is launched at {v:.2f} m/s and {a:g}° toward the east", v=s.v0, a=s.angle)
         else:
@@ -548,8 +584,9 @@ class Simulation(BaseSimulation):
                       "the time reaches it. The range, the flight time and the highest point are the run's "
                       "measurements; a second method of computing the flight is only the reference of the checks."),
             "scene": {"box": [[x0, 0.0], [x1, y1]]},
-            "launcher": {"h": float(p["h_m"]), "angle": float(p["angle_deg"]), "v0": float(p["v0"]),
-                         "chute": bool(s.spin), "spin": s.spin},
+            # the angle the ball is launched at (the mark, or the launcher's real angle near it) and the mark it is set at
+            "launcher": {"h": float(p["h_m"]), "angle": float(self.angle), "mark": float(p["angle_deg"]),
+                         "v0": float(p["v0"]), "chute": bool(s.spin), "spin": s.spin},
             "ball": {"id": self.obj, "d": o["d"], "m": o["m"], "label": OBJECT_LABELS[self.obj]},
             "air": bool(p["air"]), "g": G, "weight": o["m"] * G, "drag_max": self._air_force_max(),
             "medium": rho_mu, "earth": {"latitude": LATITUDE, "azimuth": 90.0},
@@ -583,8 +620,11 @@ INSTRUMENTS = {
     "stand": {"kind": "ruler", "label": T("Height scale of the stand"), "unit": "m", "division": 0.01, "error": 0.0,
               "reads": "control:h_m",
               "error_note": T("the stand sets the chute's height at its marks")},
+    # the launcher is set by hand at a mark and stands within half a division of it: the lab's steps draw its real angle
+    # within that bound for each set-up (``angle_error_deg``, review R2-W F5), so the declared error describes the data
     "protractor": {"kind": "protractor", "label": T("Protractor"), "unit": "°", "division": 1, "error": 0.5,
-                   "reads": "control:angle_deg"},
+                   "reads": "control:angle_deg",
+                   "error_note": T("the launcher, set by hand at a mark, stands within half a division of it")},
     # the error of a start and a stop by hand: Faux & Godolphin, Am. J. Phys. 87, 110 (2019), from 4304 timekeepers'
     # reaction times: N(0.11, 0.07²) s each, so a start-and-stop interval scatters as N(0, 0.10²) s (checked 2026-11-14)
     "stopwatch": {"kind": "stopwatch", "label": T("Stopwatch"), "unit": "s", "division": 0.01, "error": 0.1,
@@ -632,7 +672,7 @@ STEPS = [
                "the air on."),
      "hint": T("the slope of L against sin 2θ is v₀²/g in vacuum; a parabola through L against θ gives the angle of the "
                "largest range; keep the rows with the air on apart from those without it"),
-     "preset": "launcher", "fixed": {"v0": 5.0},
+     "preset": "launcher", "fixed": {"v0": 5.0, "angle_error_deg": 0.5},
      "controls": [{"param": "angle_deg", "values": _ANGLES_B, "default": 45}, dict(_AIR)],
      "instruments": ["protractor", "tape", "manometer"],
      "columns": [{"id": "theta", "label": T("θ, °"), "from": "protractor"},
@@ -656,7 +696,7 @@ STEPS = [
                "against θ."),
      "hint": T("a parabola describes L(θ) only near its top: fit it to the points near the largest range, then to all "
                "of them, and compare; the grey ball's parabola peaks at 45°"),
-     "preset": "air_max", "fixed": {"v0": 20.0, "air": True, "companion": "vacuum"},
+     "preset": "air_max", "fixed": {"v0": 20.0, "air": True, "companion": "vacuum", "angle_error_deg": 0.5},
      "controls": [{"param": "angle_deg", "values": _ANGLES_C, "default": 40}],
      "instruments": ["protractor", "tape", "tape_grey"],
      "columns": [{"id": "theta", "label": T("θ, °"), "from": "protractor"},
@@ -784,8 +824,9 @@ VIZ = {
              {"at": 1.0, "text": T("The dots are the positions every 0.1 s. At every moment both balls are at the same "
                                    "height, to {d:.2f} mm: the Earth's rotation lifts the ball thrown east a little.",
                                    d=0.03)},
-             {"at": 8.0, "text": T("Twice the sideways speed: the ball lands twice as far, at the same moment as the "
-                                   "dropped one.")},
+             # the landings' difference from the run (tests/test_s03_screens.py; review R2-W F10)
+             {"at": 8.0, "text": T("Twice the sideways speed: the ball lands twice as far, only {d:.1f} µs after the "
+                                   "dropped one, held up by the Earth's rotation.", d=10.5)},
              {"at": 16.0, "text": T("Four times higher: the flight lasts twice as long, and the range doubles: L grows "
                                     "as √h.")}],
          "quantize": {"traj.s": "u16"}},

@@ -33,7 +33,10 @@ import gzip
 import hashlib
 import importlib.util
 import json
+import os
+import shutil
 import sys
+import time
 
 import numpy as np
 import pytest
@@ -211,6 +214,14 @@ def test_keys_states_and_the_stale_rule(A, tmp_path):
     entries, _pr, _w = A.build_world(W, tmp_path, ["lab.heights"])
     assert [x["id"] for x in entries] == ["throws", "lab.heights", "lab.ticks"]  # the current ones kept
     assert not (tmp_path / W / "atlas" / "explore").exists()  # the stale atlas's files went with it
+    # R2-F F7: an atlas whose manifest is there but a point is not is not kept either (``atlas_files_ok``)
+    A.write_atlases(tmp_path, W, entries)
+    man = _manifest(tmp_path, entries[0])
+    (tmp_path / W / "atlas" / "throws" / next(pt[0] for pt in man["points"] if pt[0])).unlink()
+    assert L.atlas_status(tmp_path, p)["throws"] == "stale"
+    entries, _pr, _w = A.build_world(W, tmp_path, ["lab.heights"])
+    assert [x["id"] for x in entries] == ["lab.heights", "lab.ticks"]
+    assert not (tmp_path / W / "atlas" / "throws").exists()
 
 
 def test_a_failing_check_a_missing_readout_or_a_refused_default_fails_the_atlas(A, tmp_path, monkeypatch):
@@ -423,6 +434,9 @@ def test_the_lab_step_with_a_counter_a_runs_error_and_formula_columns(A, tmp_pat
     assert [m["meas"]["n_ticks"] for m, _b in msgs if m["type"] == "frame"][-1] == 4  # T = 0.404 s: ticks 0.1 … 0.4
     bad = [({**m, "meas": {**m["meas"], "n_ticks": 2.5}}, b) if m["type"] == "frame" else (m, b) for m, b in msgs]
     assert A.not_counts(bad, {"n_ticks"}) == ["n_ticks"]
+    for v in (float("nan"), float("inf"), -float("inf")):  # R2-F F4: they raised (ValueError, OverflowError)
+        odd = [({**m, "meas": {**m["meas"], "n_ticks": v}}, b) if m["type"] == "frame" else (m, b) for m, b in msgs]
+        assert A.not_counts(odd, {"n_ticks"}) == ["n_ticks"], v
     viz = registry.load(W)
     head = next(m for m, _b in msgs if m["type"] == "header")
     assert A.check_declarations(viz, spec, head) == []
@@ -447,6 +461,51 @@ def test_a_counter_that_reads_no_whole_number_fails_the_atlas(A, tmp_path, monke
     e, problems, _w = A.build_world(W, tmp_path, ["lab.ticks"])
     assert e == [] and any("a counter reads ['n_ticks'], not whole numbers" in p for p in problems)
 
+    def nan_frame(self):  # R2-F F4: a NaN count failed the whole run with an uncaught ValueError
+        meta, blobs = orig(self)
+        return {**meta, "meas": {**meta["meas"], "n_ticks": float("nan")}}, blobs
+    monkeypatch.setattr(sim, "frame", nan_frame)
+    e, problems, _w = A.build_world(W, tmp_path / "nan", ["lab.ticks"])
+    assert e == [] and any("a counter reads ['n_ticks'], not whole numbers" in p for p in problems)
+
+
+
+def test_every_instrument_reads_on_every_point(A, tmp_path, monkeypatch):
+    """Review R2-F F5 (a): RULES §10 «Every instrument of a step reads on every point of its atlas» was the player's
+    alone (``lab.js readAll`` refuses the whole row). The builder now fails a point whose instrument has nothing at its
+    end: here the tape (``range``, known at the landing) on a step stopped before the ball lands."""
+    viz, spec = registry.load(W), _spec("lab.heights")
+    msgs, _oc = A.run_point(W, spec, A.defaults(spec))
+    assert A.unread(viz, spec, msgs) == []
+    early = {**spec, "stop": {"world_s": 0.1}}
+    msgs, _oc = A.run_point(W, early, A.defaults(early))
+    assert A.unread(viz, early, msgs) == ["step heights: instrument tape has nothing to read at the point's end "
+                                          "(range is null)"]
+    lab = dict(viz["screens"][3])
+    lab["steps"] = [{**lab["steps"][0], "stop": {"world_s": 0.1}}, lab["steps"][1]]
+    monkeypatch.setitem(sys.modules[f"{W}.viz"].VIZ, "screens", [*viz["screens"][:3], lab])
+    e, problems, _w = A.build_world(W, tmp_path, ["lab.heights"])
+    assert e == [] and len([p for p in problems if "instrument tape has nothing to read" in p]) == 5  # every point
+
+
+@pytest.mark.parametrize("aid, stop", [
+    ("lab.ticks", {"events": {"tick": 2}, "after_s": 0.0, "max_world_s": 3.0}),  # frame_dt 1/60; an event between frames
+    ("throws", {"event": "landing", "after_s": 0.0, "max_world_s": 3.0}),  # fps 20 at the world's speed
+    ("throws", {"event": "landing", "after_s": 1e-6, "max_world_s": 3.0}),  # a stop moment within the event's frame
+])
+def test_the_stop_events_frame_is_never_the_last(A, aid, stop):
+    """Review R2-F F3: with a stop moment (event + after_s) within the stop event's own frame step, that frame was the
+    point's last, and a player's cursor a rounding short of it (a scrub on a large shared clock: (L + t) − L < t)
+    read the frame before the event. ``headless.run_spec`` now makes one more frame, a full frame step later, and the
+    builder checks it (``event_frame_is_last``)."""
+    spec = {**_spec(aid), "stop": stop}
+    msgs, oc = A.run_point(W, spec, A.defaults(spec))
+    frames = [m["t"] for m, _b in msgs if m["type"] == "frame"]
+    step = frames[1] - frames[0]
+    te = oc.stop_event_t
+    assert frames[-3] < te <= frames[-2] and te + stop["after_s"] <= frames[-2]  # the event's frame, then one more
+    assert frames[-1] - frames[-2] == pytest.approx(step, rel=1e-9) and not A.event_frame_is_last(msgs, oc)
+    assert A.event_frame_is_last(msgs[:-2], oc)  # without the extra frame (and the end): refused by the builder
 
 
 def test_the_pool_of_shared_blobs(A, tmp_path):
@@ -493,3 +552,123 @@ def test_the_pool_of_shared_blobs(A, tmp_path):
     assert L.atlas_status(tmp_path, p)["explore"] == "stale"
     (folder / man["pool"]["file"]).unlink()
     assert L.atlas_status(tmp_path, p)["explore"] == "stale"
+
+
+# --- review R2-F F6: the university toy, a lab step on an Explore screen's atlas (EX2 §5 F9) ---------------------------
+def test_the_university_toy_and_a_step_on_explores_atlas(A, tmp_path, monkeypatch):
+    """``u96_lab_toy``: its Explore atlas carries the points of the lab step «throws» (``atlas: "explore"``; no atlas of
+    its own) and that step's law as ``throws/horizontal_speed`` in the manifest's references (``reference`` splits it,
+    ``lab_reference`` is asked with the lab step's id); the step's instruments are checked on the Explore's points
+    (``check_declarations``, ``unread``); the step «counts» on the modified field has its own atlas. A bad reference of
+    the shared step names that step (R2-F F9: it named None)."""
+    U = "u96_lab_toy"
+    viz = registry.load(U)
+    specs = {a["id"]: a for a in registry.atlases_of(viz)}
+    assert list(specs) == ["explore", "lab.counts"] and specs["explore"]["step"] is None
+    assert specs["explore"]["laws"] == ["throws/horizontal_speed"]
+    assert [st["id"] for _sc, st in A.steps_of(viz, specs["explore"])] == ["throws"]
+    entries, problems, _w = A.build_world(U, tmp_path)
+    assert problems == [] and [e["id"] for e in entries] == ["explore", "lab.counts"]
+    man = json.loads((tmp_path / U / entries[0]["file"]).read_text(encoding="utf-8"))
+    assert man["references"] == {"throws/horizontal_speed": {
+        "value": 2.0, "unit": {"$t": "m/s"}, "label": {"$t": "L / T = v₀ of the flat throw"},
+        "how": {"$t": "closed form of a horizontal throw without air"}, "kind": "closed form"}}
+    assert man["controls"][0]["compound"] and man["fps"] == 10 and entries[0]["points"] == 4
+    counts = json.loads((tmp_path / U / entries[1]["file"]).read_text(encoding="utf-8"))
+    assert counts["fixed"]["g_scale"] == 1.5 and counts["references"]["fall_coefficient"]["value"] == \
+        pytest.approx((2 / (1.5 * 9.80665)) ** 0.5, rel=1e-15)
+    spec = specs["explore"]
+    msgs, _oc = A.run_point(U, spec, A.defaults(spec))
+    head = next(m for m, _b in msgs if m["type"] == "header")
+    assert A.check_declarations(viz, spec, head) == [] and A.unread(viz, spec, msgs) == []
+    nohead = {**head, "measurables": [m for m in head["measurables"] if m["id"] != "flight_time"]}
+    assert any("instrument timer reads 'flight_time'" in x for x in A.check_declarations(viz, spec, nohead))
+    monkeypatch.setattr(viz["simulation"], "lab_reference", classmethod(lambda cls, *a, **k: {"value": "x"}))
+    with pytest.raises(ValueError, match=r"lab_reference\('throws', reference='horizontal_speed'\)"):
+        A.reference(viz, spec, {}, "throws/horizontal_speed")
+
+
+# --- review R2-F F1: a batch build never keys the output of old code with the key of new code -------------------------
+def _world_copy(tmp_path, monkeypatch, request, name):
+    """A copy of the toy world under its own id (found through ``LFVIZ_EXTRA``), so that a test may edit its code; its
+    modules are forgotten after the test."""
+    root = tmp_path / "worlds"
+    shutil.copytree(SITE_WORLDS / W, root / name, ignore=shutil.ignore_patterns("__pycache__"))
+    viz = root / name / "viz.py"
+    viz.write_text(viz.read_text(encoding="utf-8").replace(f'"id": "{W}"', f'"id": "{name}"'), encoding="utf-8")
+    monkeypatch.setenv("LFVIZ_EXTRA", os.pathsep.join([str(SITE_WORLDS), str(root)]))
+    monkeypatch.setattr(sys, "path", list(sys.path))  # registry.ensure_path adds the copy's root: undone after
+    request.addfinalizer(lambda: [sys.modules.pop(m) for m in list(sys.modules) if m == name or m.startswith(name + ".")])
+    return name, viz
+
+
+def _edit_on_call(monkeypatch, mod, attr, viz, n=2):
+    """``mod.attr`` that edits the world's ``viz.py`` (a comment added) when it is called the ``n``-th time."""
+    orig, calls = getattr(mod, attr), []
+
+    def wrapped(*a, **k):
+        calls.append(1)
+        if len(calls) == n:
+            viz.write_text(viz.read_text(encoding="utf-8") + "\n# edited during the build\n", encoding="utf-8")
+        return orig(*a, **k)
+    monkeypatch.setattr(mod, attr, wrapped)
+    return calls
+
+
+def _files(folder):
+    return {str(f.relative_to(folder)): f.read_bytes() for f in sorted(folder.rglob("*")) if f.is_file()}
+
+
+def test_a_build_refuses_when_the_code_changes_during_it(A, tmp_path, monkeypatch, request):
+    """R2-F F1: an edit landing while a world's atlases are built (the batch builders import every world at the start)
+    gave output computed by the old code under the new code's key, which every reader took as current. Now the code is
+    hashed before the build and again after its last atlas: when it changed nothing is installed, the folder and its
+    index stay as they were (``sitelib.CodeChanged``, «run again»), and the old atlas reads as stale for the new code."""
+    name, viz = _world_copy(tmp_path, monkeypatch, request, "s97_guard_atlas")
+    L, out = A.L, tmp_path / "out"
+    entries, problems, _w = A.build_world(name, out, ["explore"])
+    A.write_atlases(out, name, entries)
+    assert problems == [] and L.atlas_status(out, L.planned_world(name))["explore"] == "present"
+    before = _files(out / name)
+    calls = _edit_on_call(monkeypatch, A, "run_point", viz)
+    with pytest.raises(L.CodeChanged, match="the code changed during the build.*run again"):
+        A.build_world(name, out, ["explore"])
+    assert len(calls) == 6  # the whole atlas was computed (its 6 points, one refused), then refused
+    assert _files(out / name) == before  # nothing installed, no staging folder left
+    assert L.atlas_status(out, L.planned_world(name))["explore"] == "stale"  # the old atlas is of the old code
+    # the script: the world fails (exit 1), nothing of it is written
+    out2 = tmp_path / "out2"
+    monkeypatch.setattr(A, "STARTED_NS", time.time_ns())  # the copy was made before the «script» starts
+    _edit_on_call(monkeypatch, A, "run_point", viz)
+    assert A.main(["--world", name, "--out", str(out2), "--atlas", "explore"]) == 1
+    assert _files(out2) == {}
+
+
+def test_an_edit_after_the_start_but_before_the_hash_is_refused(A, tmp_path, monkeypatch, request):
+    """R2-F F1: the registry imports the lfviz package and the engine's ``i18n`` before any hash can be taken, so a file
+    modified after the builder started (``since_ns``) refuses the world even when the hashes before and after agree."""
+    name, viz = _world_copy(tmp_path, monkeypatch, request, "s97_guard_start")
+    L = A.L
+    since = max(f.stat().st_mtime_ns for f in registry.code_files(name)) + 1
+    viz.write_text(viz.read_text(encoding="utf-8") + "\n# edited before the hash\n", encoding="utf-8")
+    os.utime(viz, ns=(since + 10**6, since + 10**6))
+    sig0 = L.code_signature(name)  # taken after the edit: the same before and after the build
+    with pytest.raises(L.CodeChanged, match="viz.py changed after the build started"):
+        A.build_world(name, tmp_path / "out", ["explore"], sig0=sig0, since_ns=since)
+    assert _files(tmp_path / "out") == {}
+    entries, problems, _w = A.build_world(name, tmp_path / "out", ["explore"], sig0=sig0, since_ns=since + 2 * 10**6)
+    assert problems == [] and entries[0]["code_hash"] == sig0[0]
+
+
+def test_record_world_refuses_when_the_code_changes_during_it(tmp_path, monkeypatch, request):
+    """R2-F F1 in ``site/record.py``: an edit during the atlases (after the recordings) or, with no atlases, during the
+    recordings writes nothing of the world: no recording, no atlas, no index."""
+    name, viz = _world_copy(tmp_path, monkeypatch, request, "s97_guard_record")
+    rec = _site("record")
+    _edit_on_call(monkeypatch, rec.A, "run_point", viz)
+    index, problems = rec.record_world(name, tmp_path / "a")
+    assert any("the code changed during the build" in p for p in problems)
+    assert index["recordings"] == [] and index["atlases"] == [] and _files(tmp_path / "a") == {}
+    _edit_on_call(monkeypatch, rec, "record", viz, n=1)
+    index, problems = rec.record_world(name, tmp_path / "b", atlases=False)
+    assert any("the code changed during the build" in p for p in problems) and _files(tmp_path / "b") == {}

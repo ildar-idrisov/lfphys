@@ -20,7 +20,7 @@ import math
 from lfphys.core.optics import materials
 from lfphys.i18n import T
 
-from .engine.bench import rng_for
+from .engine.bench import BLOCK_MM, rng_for
 from .schema import SCHEMA
 
 #: the story's first photon: the world's first random draw (``Simulation.__init__``: Exponential(1/rate) from the
@@ -54,9 +54,11 @@ STORY_CAPTIONS = [
     {"at": 3.5, "text": T("Watch the detectors: one of them clicks, and the photon is found in one place only, "
                           "reflected or transmitted. Which one is random; the run computes only the probabilities R "
                           "and T, from Maxwell's equations. A real detector misses about a third of the photons.")},
-    {"at": 9, "text": T("Much faster: thousands of photons. The fractions settle at the computed probabilities, "
-                        "{r:.3g} % reflected and {t:.4g} % transmitted (the black ticks), within the counts' errors.",
-                        r=4.350, t=95.65)},
+    {"at": 9, "text": T("Much faster: thousands of photons. The surface reflects {R:.3g} % of them; the transmitted "
+                        "ones lose another {l:.2g} % in the glass block, at its curved face and in the glass. Of the "
+                        "photons that reach a detector the shares settle at the computed {r:.3g} % reflected and "
+                        "{t:.4g} % transmitted (the black ticks), within the counts' errors.",
+                        R=4.350, l=4.775, r=4.558, t=95.44)},
     {"at": 17, "text": T("The table turns to Brewster's angle, {b:.1f}° = arctan {n:.4g}, and an analyser is put "
                          "before the reflection detector, along p (in the plane of incidence): no reflected photon "
                          "passes it. Its pass detector clicks only in the dark, about once in a played second.",
@@ -130,6 +132,12 @@ SAMPLE_CONTROL = {
 #: STATUS V53 (v))
 GLASS_CONTROL = {"id": "glass", "label": T("Glass"), "values": list(_G), "default": "bk7",
                  "labels": [T("N-BK7"), T("N-F2"), T("N-SF11")], "sets": {"med_out": list(_G.values())}}
+#: a select's values named in every language (review R2-P F9: shown raw, "s" became «с», the msgid of seconds, and
+#: "real" stayed English): compound controls, the way a control names its values (RULES §10 «Controls»)
+LIGHT_CONTROL = {"id": "light", "label": T("Polarisation"), "values": ["s", "p"], "default": "s",
+                 "labels": [T("s (TE)"), T("p (TM)")], "sets": {"pol": ["s", "p"]}}
+ANALYSER_CONTROL = {"id": "analyser", "label": T("Analyser"), "values": ["ideal", "real"], "default": "ideal",
+                    "labels": [T("ideal"), T("imperfect")], "sets": {"anaT": ["ideal", "real"]}}
 COATINGS = ["bare", "mgf2_bulk", "mgf2_film", "hl4", "hl8", "al100", "ag100"]
 COATING_CONTROL = {
     "id": "coating", "label": T("Coating"), "values": COATINGS, "default": "mgf2_film",
@@ -147,14 +155,15 @@ ALPHA_15 = [float(x) for x in range(0, 180, 15)]
 
 _EXPLORE_COMMON = {"acts": "now", "time": "buildup", "seed": 1, "traces": 0}
 SCREEN_BOUNDARY = {
-    "id": "explore", "kind": "explore", "label": T("Boundary"), "preset": "boundary", "fixed": {},
+    "id": "explore", "kind": "explore", "label": T("Boundary"), "preset": "boundary", "fixed": {"ref_s": 0.1},
     "controls": [{"param": "theta_deg", "values": BOUNDARY_TH, "default": 30.0, "label": T("Angle of incidence θ"),
                   "unit": "°"},
                  SAMPLE_CONTROL,
-                 {"param": "pol", "values": ["s", "p"], "default": "s", "label": T("Polarisation")}],
+                 LIGHT_CONTROL],
     **_EXPLORE_COMMON, "frame_dt": 0.02, "speed": 0.01, "stop": {"world_s": 0.1},
     "drop": {"blobs": _DROP_SPEC}, "quantize": {**_Q_ANGLE, **_Q_COMMON},
-    "overlays": ["beams", "photons", "field", "curves", "ellipse"], "readouts": ["R_frac", "T_frac", "n_clicks"]}
+    "overlays": ["beams", "photons", "field", "curves", "ellipse"],
+    "readouts": ["R_inc", "T_inc", "R_frac", "n_clicks"]}
 SCREEN_COATINGS = {
     "id": "coatings", "kind": "explore", "label": T("Coatings"), "preset": "coatings", "fixed": {},
     "controls": [{"param": "lam_nm", "values": [float(x) for x in range(400, 701, 25)], "default": 550.0,
@@ -189,6 +198,10 @@ INSTRUMENTS = {
               "error_note": T("the counter's quartz clock"), "reads": "t_c"},
     "det_r": {"kind": "counter", "label": T("Reflection detector"), "unit": "", "error": "poisson", "reads": "n_R"},
     "det_t": {"kind": "counter", "label": T("Transmission detector"), "unit": "", "error": "poisson", "reads": "n_T"},
+    "ref": {"kind": "counter", "label": T("Reference count N₀ (the block removed)"),
+            "unit": "", "error": "poisson", "reads": "n_0"},
+    "ref_t": {"kind": "readout", "label": T("Reference count's gate t₀"), "unit": "s", "division": 0.01, "error": 0,
+              "error_note": T("the counter's gate is set exactly"), "reads": "control:ref_s"},
     "src": {"kind": "readout", "label": T("Source polariser's scale ψ"), "unit": "°", "division": 1, "error": 0,
             "error_note": T("the source's polariser is set at its marks"), "reads": "control:psi_deg"},
     "ana_t": {"kind": "readout", "label": T("Transmission analyser's scale α"), "unit": "°", "division": 1,
@@ -207,14 +220,48 @@ INSTRUMENTS = {
 
 _GLASSES = (("bk7", "N-BK7"), ("f2", "N-F2"), ("sf11", "N-SF11"))
 _FRESNEL_LAWS = (
-    [{"x": "x", "y": "ys", "model": "line", "quantity": "intercept", "label": T("{glass}: n²", glass=g),
+    [{"x": "x", "y": "ysd", "model": "line", "quantity": "intercept", "label": T("{glass}: n²", glass=g),
       "unit": "", "reference": f"ns2_{k}"} for k, g in _GLASSES]
-    + [{"x": "x", "y": "ys", "model": "line", "quantity": "slope", "label": T("slope −1"), "unit": "",
+    + [{"x": "x", "y": "ysd", "model": "line", "quantity": "slope", "label": T("slope −1"), "unit": "",
         "reference": "ys1_bk7"}]
-    + [{"x": "x", "y": "yp", "model": "line", "quantity": "intercept", "label": T("{glass}: 1/n²", glass=g),
+    + [{"x": "x", "y": "ypd", "model": "line", "quantity": "intercept", "label": T("{glass}: 1/n²", glass=g),
         "unit": "", "reference": f"inv2_{k}"} for k, g in _GLASSES]
-    + [{"x": "th", "y": "R", "model": "quadratic", "quantity": "vertex", "label": T("{glass}: θ_B", glass=g),
-        "unit": "°", "reference": f"thb_{k}"} for k, g in _GLASSES])
+    + [{"x": "th", "y": "Rid", "model": "quadratic", "quantity": "vertex", "label": T("N-BK7: θ_B"), "unit": "°",
+        "reference": "thb_bk7"}]  # every glass's θ_B: part 4's laws
+    + [{"x": "x", "y": "ypd", "model": "line", "quantity": "intercept", "label": T("N-BK7 from inside: sin²θ_c"),
+        "unit": "", "reference": "thc_bk7"}])  # the teacher's variant «N-BK7 from inside»
+#: the formula columns of part 2: R from the two detectors (R) and against the reference count (R_i), so with the dark
+#: counts subtracted (R_d) and with the dead time also corrected (R_c), T against the reference (T_i), and the
+#: linearisations y_s, y_p from R and from R_d
+_D, _TD = DARK_RATE, DEAD_TIME
+
+
+def _y(rid: str, kind: str) -> str:
+    """y_s = (cos θ (1 + √R)/(1 − √R))² or y_p = (cos θ (1 − √R)/(1 + √R))² of the column rid."""
+    a, b = ("+", "-") if kind == "s" else ("-", "+")
+    return f"(cosd(th) * (1 {a} sqrt({rid})) / (1 {b} sqrt({rid})))^2"
+
+
+_FRESNEL_COLUMNS = [
+    {"id": "th", "label": T("θ, °"), "from": "table"},
+    {"id": "tc", "label": T("t, s"), "from": "clock"},
+    {"id": "NR", "label": T("N_R, clicks"), "from": "det_r"},
+    {"id": "NT", "label": T("N_T, clicks"), "from": "det_t"},
+    {"id": "N0", "label": T("N₀, clicks (the block removed)"), "from": "ref"},
+    {"id": "t0", "label": T("t₀, s"), "from": "ref_t"},
+    {"id": "R", "label": T("R = N_R/(N_R + N_T)"), "expr": "NR / (NR + NT)"},
+    {"id": "Ri", "label": T("R_i = (N_R/t)/(N₀/t₀)"), "expr": "(NR / tc) / (N0 / t0)"},
+    {"id": "Rid", "label": T("R_d: R_i, dark counts subtracted"),
+     "expr": f"((NR - {_D!r} * tc) / tc) / ((N0 - {_D!r} * t0) / t0)"},
+    {"id": "Ric", "label": T("R_c: R_d, dead time corrected"),
+     "expr": f"((NR / tc) / (1 - NR / tc * {_TD!r}) - {_D!r}) / ((N0 / t0) / (1 - N0 / t0 * {_TD!r}) - {_D!r})"},
+    {"id": "Ti", "label": T("T_i = (N_T/t)/(N₀/t₀)"), "expr": "(NT / tc) / (N0 / t0)"},
+    {"id": "x", "label": T("x = sin²θ"), "expr": "sind(th)^2"},
+    {"id": "ys", "label": T("y_s from R"), "expr": _y("R", "s")},
+    {"id": "yp", "label": T("y_p from R"), "expr": _y("R", "p")},
+    {"id": "ysd", "label": T("y_s from R_d"), "expr": _y("Rid", "s")},
+    {"id": "ypd", "label": T("y_p from R_d"), "expr": _y("Rid", "p")},
+]
 
 STEPS = [
     {"id": "dark", "title": T("Dark counts"),
@@ -240,28 +287,10 @@ STEPS = [
     {"id": "fresnel", "atlas": "explore", "title": T("Fresnel's reflection"),
      "goal": T("Count the reflected and the transmitted photons of s and p light at angles from 0° to 85° and find the "
                "glass's index from them."),
-     "hint": T("y_s and y_p are lines in x = sin²θ for light from air; y_p only below the angle where the p reflection "
-               "vanishes."),
-     "speed": 0.01, "instruments": ["table", "clock", "det_r", "det_t"],
-     "columns": [{"id": "th", "label": T("θ, °"), "from": "table"},
-                 {"id": "tc", "label": T("t, s"), "from": "clock"},
-                 {"id": "NR", "label": T("N_R, clicks"), "from": "det_r"},
-                 {"id": "NT", "label": T("N_T, clicks"), "from": "det_t"},
-                 {"id": "R", "label": T("R = N_R/(N_R + N_T)"), "expr": "NR / (NR + NT)"},
-                 {"id": "x", "label": T("x = sin²θ"), "expr": "sind(th)^2"},
-                 {"id": "ys", "label": T("y_s = (cos θ·(1 + √R)/(1 − √R))²"),
-                  "expr": "(cosd(th) * (1 + sqrt(R)) / (1 - sqrt(R)))^2"},
-                 {"id": "yp", "label": T("y_p = (cos θ·(1 − √R)/(1 + √R))²"),
-                  "expr": "(cosd(th) * (1 - sqrt(R)) / (1 + sqrt(R)))^2"},
-                 {"id": "Rd", "label": T("R_d: dark counts subtracted"),
-                  "expr": f"(NR - {DARK_RATE!r} * tc) / (NR + NT - 2 * {DARK_RATE!r} * tc)"},
-                 {"id": "ysd", "label": T("y_s from R_d"),
-                  "expr": "(cosd(th) * (1 + sqrt(Rd)) / (1 - sqrt(Rd)))^2"},
-                 {"id": "ypd", "label": T("y_p from R_d"),
-                  "expr": "(cosd(th) * (1 - sqrt(Rd)) / (1 + sqrt(Rd)))^2"},
-                 {"id": "Rc", "label": T("R_c: dead time corrected"),
-                  "expr": f"(NR / (1 - NR / tc * {DEAD_TIME!r})) / (NR / (1 - NR / tc * {DEAD_TIME!r}) + "
-                          f"NT / (1 - NT / tc * {DEAD_TIME!r}))"}],
+     "hint": T("y_s and y_p are lines in x = sin²θ for light from air (y_p below θ_B); R_i, R_d: per incident photon "
+               "(N₀)."),
+     "speed": 0.01, "instruments": ["table", "clock", "det_r", "det_t", "ref", "ref_t"],
+     "columns": _FRESNEL_COLUMNS,
      "plot": {"x": "x", "y": "ys", "fit": "line", "fits": ["line", "line0", "quadratic"]},
      "laws": _FRESNEL_LAWS, "overlays": ["beams", "photons", "field", "curves", "ellipse"],
      "readouts": ["R_frac", "T_frac", "n_clicks"]},
@@ -274,7 +303,7 @@ STEPS = [
                    "label": T("Analyser's angle α"), "unit": "°"},
                   {"param": "psi_deg", "values": [0.0, 30.0, 60.0], "default": 30.0,
                    "label": T("Source's polarisation ψ"), "unit": "°"},
-                  {"param": "anaT", "values": ["ideal", "real"], "default": "ideal", "label": T("Analyser")}],
+                  ANALYSER_CONTROL],
      "frame_dt": 0.02, "speed": 0.01, "stop": {"world_s": 0.1},
      "drop": {"blobs": _DROP_SPEC}, "quantize": {**_Q_ANGLE, **_Q_COMMON},
      "instruments": ["ana_t", "src", "pass_t", "reject_t"],
@@ -320,8 +349,9 @@ STEPS = [
                   "expr": f"(Np - {DARK_RATE!r} * tc) / (Np + Nr - 2 * {DARK_RATE!r} * tc)"},
                  {"id": "Pd", "label": T("P = 1 − 2f, dark counts subtracted"), "expr": "1 - 2 * fd"}],
      "plot": {"x": "th", "y": "f", "fit": "quadratic", "fits": ["quadratic", "line"]},
-     "laws": [{"x": "th", "y": "f", "model": "quadratic", "quantity": "vertex", "label": T("{glass}: θ_B", glass=g),
-               "unit": "°", "reference": f"thb_{k}"} for k, g in _GLASSES],
+     "laws": [{"x": "th", "y": "P", "model": "quadratic", "quantity": "vertex",
+               "label": T("{glass}: θ_B, where P = (R_s − R_p)/(R_s + R_p) is largest", glass=g), "unit": "°",
+               "reference": f"dop_{k}"} for k, g in _GLASSES],
      "overlays": ["beams", "photons", "field", "curves", "ellipse"], "readouts": ["fR_pass", "n_R"]},
 ]
 
@@ -338,6 +368,10 @@ WORKSHEET = {
         {"text": T("Part 2: fitting the data with Fresnel's equations"), "source": _QUOTE_SRC_RUT,
          "quote": "By fitting your data with Fresnel’s equations you will obtain the following: i) the index "
                   "refraction ii) the critical angle iii) Brewster’s angle.", "quote_lang": "en"},
+        {"text": T("Part 2: the incident light, with the block removed"),
+         "source": _QUOTE_SRC_RUT,
+         "quote": "Observe and record I0 (the laser beam power at zero degrees before sample placement).",
+         "quote_lang": "en"},
         {"text": T("Part 3: Malus's law with two polarising elements"), "source": _QUOTE_SRC_TOR,
          "quote": "It applies to any two polarizing elements whose transmission directions make an angle θ with each "
                   "other.", "quote_lang": "en"},
@@ -347,24 +381,28 @@ WORKSHEET = {
     ],
     "goal": T("Find the refractive index of a glass from the reflection of s and p light, and check Malus's law and "
               "the polarisation of reflected light."),
-    "bench": [T("A block of N-BK7, N-F2 or N-SF11 glass on a rotary table (1° marks), light from air or from inside "
-                "the glass; a source of single photons (632.8 nm, 2·10⁵ per second), polarised s, p, linearly at an "
-                "angle or unpolarised, with a shutter; single-photon detectors of reflected and transmitted photons "
-                "(efficiency 0.65, 100 dark counts per second, dead time 22 ns); a rotatable analyser (a polarising "
-                "beam splitter with a detector on each port), ideal or imperfect.")],
+    "bench": [T("A half-cylinder (a D-shaped block, radius {r:g} mm) of N-BK7, N-F2 or N-SF11 glass on a rotary table"
+                " (1° marks); light from air onto the flat face or from inside through the curved face; a source of "
+                "single photons (632.8 nm, 2·10⁵ per second), polarised s, p, linearly at an angle or unpolarised, "
+                "with a shutter; single-photon detectors of reflected and transmitted photons (efficiency 0.65, 100 "
+                "dark counts per second, dead time 22 ns), the transmission detector also counting the incident "
+                "photons with the block lifted off (N₀ in 0.1 s); a rotatable analyser with a detector on each port, "
+                "ideal or imperfect.",
+                r=BLOCK_MM)],
     "procedure": [T("1. With the shutter closed, count each detector's dark counts."),
-                  T("2. For s light from air, count reflected and transmitted photons at angles from 0° to 80° and "
+                  T("2. With the block lifted off, count the incident photons at the transmission detector: N₀ in t₀."),
+                  T("3. For s light from air, count reflected and transmitted photons at angles from 0° to 80° and "
                     "plot y_s against sin²θ."),
-                  T("3. Repeat for p light below the angle where the reflection vanishes, with y_p."),
-                  T("4. Set the source at ψ and record the analyser's counts from 0° to 180°; plot them against "
+                  T("4. Repeat for p light below the angle where the reflection vanishes, with y_p."),
+                  T("5. Set the source at ψ and record the analyser's counts from 0° to 180°; plot them against "
                     "cos²(α − ψ)."),
-                  T("5. With unpolarised light, set the analyser along p and find the angle of complete polarisation."),
-                  T("Decide where the dark counts and the dead time matter.")],
+                  T("6. With unpolarised light, set the analyser along p and find the angle of complete polarisation."),
+                  T("Decide where the dark counts, the dead time and the block matter.")],
     "record": [T("the counts with their errors, the plots and fits (model, points used, parameters with errors, χ²)"),
-               T("the dark counts and how you used them"),
+               T("the dark counts and the reference count N₀, and how you used them"),
                T("the index n found in each way and Brewster's angle"),
                T("why you chose these angles")],
-    "record_rows": 20,
+    "record_rows": 18,
     "variants": [
         {"id": "f2", "label": T("N-F2 glass"),
          "values": {"fresnel": {"sample": "f2_air"}, "reflection": {"glass": "f2"}}},
@@ -374,7 +412,7 @@ WORKSHEET = {
          "values": {"fresnel": {"sample": "bk7_in"}},
          "text": {"goal": T("Find the critical angle of N-BK7 from inside the glass and the index it gives.")}},
         {"id": "imperfect", "label": T("Malus's law with the imperfect analyser, ψ = 60°"), "steps": ["malus"],
-         "values": {"malus": {"anaT": "real", "psi_deg": 60.0}},
+         "values": {"malus": {"analyser": "real", "psi_deg": 60.0}},
          "text": {"goal": T("Check Malus's law with an imperfect analyser and find its k₁ and k₂.")}},
     ],
 }

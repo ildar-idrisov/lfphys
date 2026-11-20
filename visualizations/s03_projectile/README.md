@@ -23,8 +23,8 @@ The demonstration has three tabs: **Watch · Explore · Lab work**.
   2. "The dots are the positions every 0.1 s. At every moment both balls are at the same height, to 0.03 mm: the
      Earth's rotation lifts the ball thrown east a little." (at 1 s, while the balls fall: 0.1 s of world time after
      the start, the landing is at 0.505 s; computed: the thrown ball is at most 0.026 mm higher, the Eötvös effect);
-  3. "Twice the sideways speed: the ball lands twice as far, at the same moment as the dropped one." (4 m/s; ×2.0000,
-     the two landings 10 µs apart);
+  3. "Twice the sideways speed: the ball lands twice as far, only 10.5 µs after the dropped one, held up by the Earth's
+     rotation." (4 m/s; ×2.0000, the landings 10.53 µs apart, computed);
   4. "Four times higher: the flight lasts twice as long, and the range doubles: L grows as √h." (5 m; ×2.0000 each).
 
   The scene keeps one scale for the whole recording: the box over the three throws' computed paths (from a table,
@@ -61,7 +61,10 @@ The demonstration has three tabs: **Watch · Explore · Lab work**.
   flight time 0.3499 s"), and "Computed for this bench", the world's own values for the bench. The view draws what it
   draws in Explore (the height, the landings with their values, the top of the path; only the floor's numbers give way
   to the lab's measuring tape). The instruments: "Height scale of the stand" ("division 0.01 m; exact: the stand sets
-  the chute's height at its marks"), "Measuring tape" (0.001 m, ±0.0005 m), "Protractor" (1°, ±0.5°), "Stopwatch"
+  the chute's height at its marks"), "Measuring tape" (0.001 m, ±0.0005 m), "Protractor" (1°, ±0.5°: "the launcher, set by hand at a mark, stands within half a
+  division of it"; in parts 2 and 3 each set-up's real angle is drawn within ±0.5° of its mark, seeded by the set-up,
+  the flight computed at it and shown in the drawer as "the launcher's real angle"; review R2-W F5: until then the
+  launcher stood exactly at its marks while the protractor declared ±0.5°), "Stopwatch"
   (division 0.01 s, error ±0.1 s: "your reaction: a start and a stop by hand scatter by about 0.1 s") and "Manometer of
   the chamber" (0.1 kPa, exact: "the chamber is open to the room's air or pumped out"; it reads 101.3 kPa with the air
   on and 0 kPa without, so each row of a table says which it was). The fit prints its parameters with their errors
@@ -94,12 +97,15 @@ The demonstration has three tabs: **Watch · Explore · Lab work**.
   | 1 | the hand stopwatch against T = L / v₀ | neighbouring heights' flights differ by 0.011–0.024 s, a hand scatters by 0.1 s: over 4 000 simulated classes the slope of T against √h is 0.452 ± 0.031 s/m^½ (7 %); T = L / v₀ agrees with √(2h/g) to 0.32 ms | the stopwatch too coarse, the tape right |
   | 1 | the air on, L against √h through the origin | the ranges 0.23–1.73 mm shorter (beyond the tape from h = 0.40 m): k = 0.67629 ± 0.00016 m^½, 7.1σ below, v₀ = 1.4975 m/s; χ²/ν 0.51 does not show it | wrong with the law of vacuum |
   | 1 | the rows with and without air in one table | k = 0.67686 ± 0.00012 m^½, 4.4σ below, χ²/ν 1.24 | wrong |
-  | 2 | L against sin 2θ through the origin, air off | 2.5490 ± 0.0007 m (0.4σ from v₀²/g = 2.5493 m) | right |
-  | 2 | the same with the air on | 2.5380 ± 0.0007 m, 15.4σ below v₀²/g; χ²/ν 0.006 | wrong: a law of vacuum in air |
-  | 2 | the largest range by eye, a parabola through L against θ | 45° by eye (air off and on); the parabola 45.00 ± 0.14° (off), 44.97 ± 0.14° (on) | right within the steps |
-  | 3 | a parabola through the six points 30–55° | 42.36 ± 0.20° (0.3σ from 42.3°) | right |
-  | 3 | a parabola through all eleven points 20–70° | 42.52 ± 0.15° (1.5σ above; 25–60°: 42.41 ± 0.18°) | biased, under 2σ at this tape |
-  | 3 | the largest range by eye; the grey ball's parabola | 40° (28.352 m against 28.323 m at 45°); the grey ball 45.00 ± 0.16° | coarse; right |
+  | 2 | L against sin 2θ through the origin, air off | 2.5490 ± 0.0007 m (0.4σ from v₀²/g = 2.5493 m); χ²/ν 0.37 | right |
+  | 2 | the same with the air on | 2.5381 ± 0.0007 m, 15.3σ below v₀²/g; χ²/ν 0.35 (errors of half a division are bounds: about ⅓ is what they give) | wrong: a law of vacuum in air |
+  | 2 | the largest range by eye, a parabola through L against θ | 45° by eye (air off and on); the parabola 45.11 ± 0.14° (off), 44.85 ± 0.14° (on) | right within the steps |
+  | 3 | a parabola through the six points 30–55° | 42.44 ± 0.20° (0.7σ from 42.3°) | right |
+  | 3 | a parabola through all eleven points 20–70° | 42.55 ± 0.15° (1.7σ above; 25–60°: 42.40 ± 0.18°) | biased, about 2σ at this tape |
+  | 3 | the largest range by eye; the grey ball's parabola | 45° (28.333 m against 28.323 m at 40°; on other seeds 40°: the two differ by 29 mm at the marks, and the setting error moves each by up to 35–40 mm); the grey ball 45.04 ± 0.16° | coarse; right |
+
+  On three more seeds (2–4) the same ways give 2.5490–2.5489 m (−0.4 to −0.5σ), −15.4/−15.3/−15.4σ, the parabolas
+  44.97–45.08° and 44.91–45.01°, 42.56/42.33/42.44° (1.3, 0.1, 0.7σ), 1.6–2.0σ over 20–70°, and 45°, 40°, 40° by eye.
 
   **The task sheet** (EN and RU, printable; `worksheet.html?demo=s03_projectile`): the FRP items (by their
   programmes' names), the goal, the bench (what it is and what can be set on it, with the instruments generated from
@@ -137,6 +143,11 @@ The demonstration has three tabs: **Watch · Explore · Lab work**.
   (ITF Rules of Tennis, Appendix I: 6.54–6.86 cm, 56.0–59.4 g) but a smooth sphere's drag.
 * **The second ball** ("Ball for comparison"): "a ball dropped at the same moment from the same point", or "the same
   throw in vacuum (grey)". Each is computed by the engine on its own; it does not affect the first ball.
+* **The launcher's setting error** ("Setting error of the launcher's angle (bound)", 0 by default; 0.5° in Lab work's
+  parts 2 and 3, half a division of the protractor): the launch's real angle is the mark plus an error drawn uniformly
+  within ± the bound, from a generator seeded by the seed and the set-up together (`viz.real_angle`), so each set-up of
+  an atlas has its own; the flight (and the grey ball's) is computed at it, the view draws the launcher at it, and the
+  drawer shows it ("the launcher's real angle", for information) beside the mark the protractor reads.
 * **What is sent**: the samples t, x, y every 1/60 s of world time (every 6th is a multiple of 0.1 s: the dots),
   revealed when the time reaches them; the launch (its speed, angle and spin), the top of the path and the landing as
   events with their values; each frame carries the ball's position and velocity, the drag and the Magnus force, the

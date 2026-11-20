@@ -61,12 +61,15 @@ eq. (1): -6 a^2 rho_f sqrt(pi nu) int (dv/dtau - du/dtau) / sqrt(t - tau) dtau; 
 numbers Mei & Adrian's semi-empirical kernel, [(pi (t - tau))^(1/4) + f(Re_p, t) (t - tau)]^-2 in the units where
 Basset's is (pi (t - tau))^(-1/2) (Jaganathan, Prasath, Govindarajan & Vasan, Front. Phys. 11, 1167338 (2023), eq. (5):
 "The kernel in Eq. 5 reduces to the standard kernel at short times"), lies below Basset's for its f >= 0 and decays
-as t^-2 at long times; no established law exists at S03's Reynolds numbers (2·10^3–10^5). Since such kernels lie below
-Basset's, |F_H| at any Reynolds number is bounded by
+as t^-2 at long times; no established law exists at S03's Reynolds numbers (2·10^3–10^5). For every history force of
+this form, int K(t - s) dv/ds ds with a positive kernel K that lies below Basset's (the Mei–Adrian family), |F_H| is
+bounded by
 
     B(t) = 6 a^2 sqrt(pi mu rho_f) int_0^t |dv/ds| / sqrt(t - s) ds,
 
-and each component F_i by B_i(t), the same integral of |dv_i/ds| (the kernels are positive); ``history_bound``
+and each component F_i by B_i(t), the same integral of |dv_i/ds| (the kernels are positive). It is a bound within such
+kernel models, not on the true history force at any Reynolds number: whether that force has this form at S03's
+Reynolds numbers is not established (review EX2, R2-E F2). ``history_bound``
 computes these along a computed flight together with Basset's own (creeping-flow) force and the landing shift each
 would cause to first order (the bound on the shift from the components' bounds, so it is tight when no component of
 the acceleration changes its sign). The integrals are taken by product integration: dv/ds piecewise linear
@@ -100,15 +103,19 @@ ABOUT = {
                    "F = −b·v with b given), as a declared force of the point-body flight; the Reynolds number ρ|v|d/μ "
                    "along the path; the closed forms of the flight with linear drag: x(t), y(t), the apex time and the "
                    "landing time from a height by Lambert's W; the air's density and viscosity from lfphys.core.data; "
-                   "Basset's history force along a computed flight by product integration, and its upper bound at "
-                   "any Reynolds number."),
+                   "Basset's history force along a computed flight by product integration, and an upper bound on "
+                   "the history force of every model whose kernel is positive and lies below Basset's (the Mei–Adrian "
+                   "family)."),
     "validity": T("creeping flow: Re = ρ|v|d/μ ≲ 1; the law's relative error is about 3·Re/16 (Oseen's correction): "
                   "1.9 % at Re = 0.1, 19 % at Re = 1 — the run reports its Reynolds number; steady drag only (the "
                   "added mass and the buoyancy come from the flight's medium, core.mechanics.particle); the Basset "
                   "history force (of order √(ρ_fluid/ρ_body) while the body accelerates: about 1.4 % of the speed for "
                   "steel and 4 % for water droplets in air one relaxation time after release) is not a force of the "
-                  "flight: history_bound computes Basset's force along a flight and, at any Reynolds number, its "
-                  "upper bound with the landing shift each would cause to first order; a sphere far from walls"),
+                  "flight: history_bound computes Basset's force along a flight and an upper bound on the history "
+                  "force of every model with a positive kernel below Basset's (such as Mei and Adrian's), with the "
+                  "landing shift each would cause to first order; no history law is established at Reynolds numbers "
+                  "of 10³–10⁵, so the bound holds within such models, not for the true force there; a sphere far "
+                  "from walls"),
     "basis": [T("Stokes, Trans. Cambridge Philos. Soc. 9, part II, [8] (1851), art. 42, eq. (126)"),
               T("Oseen, Ark. Mat. Astron. Fys. 6, no. 29 (1910); the drag correction 3·Re/16 as stated by Veysey & "
                 "Goldenfeld, Rev. Mod. Phys. 79, 883 (2007), eq. (39)"),
@@ -298,8 +305,9 @@ def basset_integral(t, a) -> np.ndarray:
 def history_bound(flight, medium=None, n: int = 4000) -> dict:
     """Basset's history force along a computed flight of a sphere (``flight.body.diameter`` > 0) in a fluid at rest
     (``medium``: an object with ``rho`` and ``mu``, or a dict; default the flight's medium, else air at 20 °C), and its
-    bound at any Reynolds number (module docstring), on a uniform grid of n steps over the flight; the acceleration from
-    the flight's equations of motion. Returns: ``t``; ``F`` Basset's force (n+1, dim), N; ``B`` the bound |F_H| <=
+    bound for every history kernel that is positive and lies below Basset's (module docstring: a bound within such
+    kernel models, not on the true force at any Reynolds number), on a uniform grid of n steps over the flight; the
+    acceleration from the flight's equations of motion. Returns: ``t``; ``F`` Basset's force (n+1, dim), N; ``B`` the bound |F_H| <=
     B(t), N; ``B_over_weight`` max B / (m g); ``dL``: the landing shift (m, along the horizontal motion) that Basset's
     force would cause to first order (the flight's other forces not reacting to the change); ``dL_bound``: the bound
     on the landing shift by any history kernel below Basset's, int_0^T (T - t) [sum_h |e_h,i| B_i(t) + |v_h / v_y|

@@ -1,16 +1,16 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
 """Optical constants of real, dispersive materials: the complex refractive index n + i kappa (kappa >= 0, the engine's
-time factor e^{-i omega t}) at a vacuum wavelength, computed from the measured data of ``lfphys.core.data`` (each
-material is a ``DATASETS`` entry there, with its source and how it was checked; the record of the checks is
-``lfphys/sources/materials_2026-11-18.md``).
+time factor e^{-i omega t}) at a wavelength, in each source's own reference (below: in air for the SCHOTT glasses),
+computed from the measured data of ``lfphys.core.data`` (each material is a ``DATASETS`` entry there, with its source
+and how it was checked; the record of the checks is ``lfphys/sources/materials_2026-11-18.md``).
 
 The forms, each as its source writes it (lambda in micrometres inside the formulas, in nanometres at the interface):
 
 * SCHOTT's Sellmeier formula (the glass data sheets): n^2 - 1 = sum_i B_i lambda^2 / (lambda^2 - C_i);
-  kappa from the sheet's internal transmittance tau_i of a sample of thickness d (25 mm; 10 mm where only that is
-  printed): tau_i = exp(-4 pi kappa d / lambda), so kappa = -lambda ln(tau_i) / (4 pi d), interpolated between the
-  sheet's wavelengths;
+  kappa from the sheet's internal transmittance tau_i of a sample of thickness d (25 or 10 mm, whichever printed value
+  gives kappa more precisely, ``_schott_kappa``): tau_i = exp(-4 pi kappa d / lambda), so kappa = -lambda ln(tau_i) /
+  (4 pi d), interpolated between the sheet's wavelengths;
 * the Sellmeier formula of Dodge (MgF2) and Malitson (fused silica): n^2 - 1 = sum_i A_i lambda^2 / (lambda^2 -
   lambda_i^2), kappa = 0 in their ranges;
 * tabulated n and kappa (films and metals): a shape-preserving piecewise cubic Hermite interpolant (PCHIP: the
@@ -25,7 +25,7 @@ The forms, each as its source writes it (lambda in micrometres inside the formul
   between the nodes from 0.2 to 2.5 um; the largest excess elsewhere is aluminium's L edge near 17 nm (1.8 times the
   estimate).
 
-``dindex`` is the derivative d(n + i kappa)/d lambda (per nm), exact for the formulas and for the interpolant (the
+``dindex`` is the derivative d(n + i kappa)/d lambda (per nm, in the same wavelength), exact for the formulas and for the interpolant (the
 derivative of the cubic, kappa' = kappa (ln kappa)'), as ``interfaces.group_delay`` needs it. Outside a material's
 range a coded refusal ``material.out_of_range``.
 
@@ -41,6 +41,7 @@ about (n_air - 1) = 2.7e-4 of their values (``info``: ``wavelength``).
 from __future__ import annotations
 
 import math
+from decimal import Decimal
 
 import numpy as np
 
@@ -172,6 +173,13 @@ def _column_precision(column) -> np.ndarray:
     return q
 
 
+def _um_to_nm(v) -> float:
+    """A wavelength printed in micrometres (a source's text, or a float of ``core.data`` written as a decimal literal)
+    in nanometres, rounded once from the exact decimal: 1000 * float("2.00146") is 2001.4599999999998, so a material's
+    documented end, 2001.46 nm, would lie outside its range (review EX2, R2-E F3)."""
+    return float(Decimal(v if isinstance(v, str) else repr(float(v))) * 1000)
+
+
 WINDOW = 3  # the error estimate of an interval takes the leave-one-out errors of WINDOW nodes on each side
 
 
@@ -187,16 +195,16 @@ class _Material:
         self.k_log = False
         self.q_n = self.q_k = None  # half a unit of the printed last digit at each node
         if form == "schott":
-            self.range_nm = tuple(1000.0 * v for v in spec["range_um"])
+            self.range_nm = tuple(_um_to_nm(v) for v in spec["range_um"])
             lam, kap, _, qk = _schott_kappa(spec)
             self._set_kappa(lam, kap)
             self.q_k = qk
         elif form == "sellmeier":
-            self.range_nm = tuple(1000.0 * v for v in spec["range_um"])
+            self.range_nm = tuple(_um_to_nm(v) for v in spec["range_um"])
         elif form == "table":
             text = [line.split() for line in spec["table"].strip().splitlines()]
             rows = np.array([[float(v) for v in r] for r in text])
-            lam = 1000.0 * rows[:, 0]
+            lam = np.array([_um_to_nm(r[0]) for r in text])
             self.range_nm = (float(lam[0]), float(lam[-1]))
             self.n_tab = Pchip(lam, rows[:, 1])
             self._set_kappa(lam, rows[:, 2])
@@ -292,18 +300,30 @@ class _Material:
 
 def _schott_kappa(spec):
     """(lambda nm, kappa, thickness mm, half a unit of kappa's precision) at the sheet's wavelengths: kappa = -lambda
-    ln(tau_i)/(4 pi d) from tau_i of 25 mm where printed and above 0.000, else of 10 mm; the precision from half a unit
-    of tau_i's last printed digit, d kappa = lambda d tau / (4 pi d tau)."""
+    ln(tau_i)/(4 pi d) from the printed tau_i (strictly between 0 and 1) of the thickness, 10 or 25 mm, that gives kappa
+    more precisely: the precision is half a unit of tau_i's last printed digit, d kappa = lambda d tau / (4 pi d tau),
+    so a thick sample's small, coarsely printed tau_i (N-BK7 at 300 nm: tau_i(25 mm) = 0.05, 3.3 % in kappa) gives way
+    to the thin one's (0.29, 1.4 %; review EX2, R2-E F9); at equal precision 25 mm. Where both are printed the node's
+    precision is not taken below the difference of the two kappas: the sheets' two values disagree beyond their
+    rounding at some wavelengths (N-SF11 at 380 nm: tau_i 0.430 (10 mm) and 0.120 (25 mm), kappa 0.49 % apart against
+    roundings of 0.14 % and 0.35 %)."""
     lam, kap, dmm, q = [], [], [], []
     for line in spec["tau"].strip().splitlines():
         lnm, t10, t25 = line.split()
+        cand = []
         for t, d in ((t25, 25.0), (t10, 10.0)):
             if t != "-" and 0.0 < float(t) < 1.0:
-                lam.append(float(lnm))
-                kap.append(-float(lnm) * 1e-9 * math.log(float(t)) / (4 * math.pi * d * 1e-3))
-                dmm.append(d)
-                q.append(float(lnm) * 1e-9 * _half_unit(t) / (4 * math.pi * d * 1e-3 * float(t)))
-                break
+                cand.append((float(lnm) * 1e-9 * _half_unit(t) / (4 * math.pi * d * 1e-3 * float(t)), d,
+                             -float(lnm) * 1e-9 * math.log(float(t)) / (4 * math.pi * d * 1e-3)))
+        if not cand:
+            continue
+        qk, d, k = min(cand, key=lambda c: c[0])  # the first (25 mm) at equal precision
+        if len(cand) == 2:
+            qk = max(qk, abs(cand[0][2] - cand[1][2]))
+        lam.append(float(lnm))
+        kap.append(k)
+        dmm.append(d)
+        q.append(qk)
     order = np.argsort(lam)
     return tuple(np.array(v)[order] for v in (lam, kap, dmm, q))
 
@@ -331,8 +351,11 @@ def _out(v):
 
 
 def index(material: str, lam_nm):
-    """The complex refractive index n + i kappa (kappa >= 0) at the vacuum wavelength lam_nm (nm; a number or an
-    array); outside the material's range a coded ValueError ``material.out_of_range``."""
+    """The complex refractive index n + i kappa (kappa >= 0) at the wavelength lam_nm (nm; a number or an array) in the
+    material's own reference (review EX2, R2-E F6): for the SCHOTT glasses lam_nm is the wavelength in air and n is
+    relative to air (``info(...)["wavelength"] == "air"``); for the others as the database gives them (module
+    docstring). A group delay from these indices takes air's group index (``interfaces.group_delay``, ng_ref).
+    Outside the material's range a coded ValueError ``material.out_of_range``."""
     m = _get(material)
     lam = m.check(lam_nm)
     return _out(m.n(lam) + 1j * m.kappa(lam))

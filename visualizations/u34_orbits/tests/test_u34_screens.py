@@ -15,6 +15,7 @@ import sys
 from functools import lru_cache
 from pathlib import Path
 
+import numpy as np
 import pytest
 from lfviz import expr, headless, registry
 
@@ -235,8 +236,18 @@ def test_ways_1_to_5_periods_and_clocks():
     assert w5["n_exp_sigma"] / w1["n_exp_sigma"] == pytest.approx(4.0, rel=0.05)
     w5b = _fit(one, "x", "q", "line")
     assert w5b["params"][0] == pytest.approx(0.999988, abs=1e-6) and w5b["params"][1] == pytest.approx(-2.9990, abs=1e-4)
-    w4b = _fit(_part1(1.1), "r", "T", "power")  # eccentric orbits: the time per turn is no Kepler period of r0
+    # way 4b: eccentric orbits (1.1 of the circular speed). Not because they are ellipses: in Newton's gravity a
+    # tangential launch at k of the circular speed gives a = r0/(2 − k²) ∝ r0, so T ∝ r0^{3/2} exactly (review R2-W F4).
+    # Near the hole a turn in φ is not a radial period (the periapsis advances), the orbit's shape changes with r0, and
+    # t/n over whole turns in φ is not a whole number of radial periods; it shows from r0 = 30 M on too
+    k = 1.1
+    a_newton = [r / (2.0 - k * k) for r in R1]
+    assert np.polyfit(np.log(R1), np.log([2 * math.pi * a ** 1.5 for a in a_newton]), 1)[0] == pytest.approx(1.5, abs=1e-12)
+    ecc = _part1(1.1)
+    w4b = _fit(ecc, "r", "T", "power")
     assert w4b["n_exp"] == pytest.approx(1.410, abs=1e-3) and w4b["chi2_dof"] > 1e7
+    w4c = _fit([r for r in ecc if r["r"][0] >= 30.0], "r", "T", "power")
+    assert w4c["n_exp"] == pytest.approx(1.4595, abs=1e-3) and w4c["chi2_dof"] > 1e5
 
 
 def test_way_4_the_radial_period_of_eccentric_orbits_is_not_kepler_s():

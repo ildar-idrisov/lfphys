@@ -400,6 +400,30 @@ def test_the_expected_keys_reach_the_player_and_the_check(site, extra, tmp_path)
     assert any("no expected keys" in x for x in _fails(check, copy))
 
 
+def test_the_expected_keys_are_kept_while_the_code_is(extra, monkeypatch):
+    """Review R2-F F9: ``GET /api/recordings`` read every world's VIZ and planned its keys on every request (0.23 s on
+    the event loop). They are kept per world while its code hash, the recorder's hash and its folder are the same; a
+    world whose code changed is computed again, alone."""
+    monkeypatch.setattr(A, "_EXPECTED", {})
+    loads = []
+
+    def load(vid):
+        loads.append(vid)
+        return registry.load(vid)
+    first = A.expected_keys(load)
+    assert "s98_atlas_toy" in first and loads
+    loads.clear()
+    assert A.expected_keys(load) == first and loads == []  # nothing read again
+    first["s98_atlas_toy"]["atlases"]["explore"] = "x"  # the caller's copy: the cache is not changed through it
+    assert A.expected_keys(load)["s98_atlas_toy"]["atlases"]["explore"] != "x"
+    real = registry.code_hash_current
+    monkeypatch.setattr(registry, "code_hash_current", lambda v: "0" * 12 if v == "s98_atlas_toy" else real(v))
+    again = A.expected_keys(load)
+    assert loads == ["s98_atlas_toy"] and again["s98_atlas_toy"]["code_hash"] == "0" * 12
+    plan = _site("check").L.planned_world("s98_atlas_toy", "0" * 12)
+    assert again["s98_atlas_toy"]["atlases"] == {a["id"]: a["key"] for a in plan["atlases"]}
+
+
 def test_the_worksheet_page_is_built_when_the_player_has_it(site, tmp_path, monkeypatch):
     build, check = _site("build"), _site("check")
     has = (A.PLAYER / "worksheet.html").is_file()

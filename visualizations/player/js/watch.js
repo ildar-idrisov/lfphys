@@ -81,19 +81,39 @@ export async function create(host, kit, spec) {
   });
   fill(host, el("div", { class: "dm-main" }, stage, side), bar.el);
 
+  // a recording chosen: only the latest choice is shown (review R2-P F10: a slow rosette arriving after a later choice
+  // of mercury played under «mercury»), and one that cannot be loaded says so (a 503 left «loading the recording…» for
+  // ever and an uncaught error)
+  let openSeq = 0;
   async function open(id) {
+    const seq = ++openSeq;
     const r = recs.find((x) => x.id === id);
     V.playing = false;
     if (!r || !r.entry) {
       V.rec = r; V.story = null;
       caption.textContent = t("No recording yet: record it locally (site/record.py) or compute live");
+      caption.hidden = false;
       kit.dirty();
       return;
     }
     caption.textContent = t("loading the recording…");
-    const resp = await fetch(r.base + r.entry.file);
-    if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
-    V.story = story(await readStream(new Uint8Array(await resp.arrayBuffer())));
+    caption.hidden = false;
+    let st;
+    try {
+      const resp = await fetch(r.base + r.entry.file);
+      if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
+      st = story(await readStream(new Uint8Array(await resp.arrayBuffer())));
+    } catch (e) {
+      if (seq !== openSeq) return;
+      V.story = null; V.rec = r;
+      caption.textContent = t("This recording could not be loaded: {why}", { why: e.message });
+      caption.hidden = false;
+      kit.dirty();
+      return;
+    }
+    if (seq !== openSeq) return;  // a later choice came first
+    if (sel && sel.value !== id) sel.value = id;
+    V.story = st;
     V.rec = r; V.pos = 0; V.held = -1; V.holdUntil = 0; V.storySig = null;
     const S = V.story, n = S.steps.length;
     bar.ticks(S.captions.map((c) => ({ at: n > 1 ? c.step / (n - 1) : 0, title: t(c.text), onclick: () => go(c.step) })));
@@ -217,7 +237,7 @@ export async function create(host, kit, spec) {
     },
     get state() { return V; },
   };
-  window.__lfWatch = { state: V, caption: () => caption.textContent, step: () => (V.story ? curStep() : -1) };
+  window.__lfWatch = { state: V, caption: () => caption.textContent, step: () => (V.story ? curStep() : -1), rec: () => (V.rec ? V.rec.id : null) };
   if (recs.length) await open(recs[0].id);
   else caption.textContent = t("No recording yet: record it locally (site/record.py) or compute live");
   return API;

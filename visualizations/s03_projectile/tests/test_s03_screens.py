@@ -274,25 +274,29 @@ def _part2(air):
 
 def test_way_6_L_against_sin_2theta_without_air():
     """[right] The line through the origin of L against sin 2θ (the protractor's ±0.5° carried into sin 2θ), air off:
-    2.5490 ± 0.0007 m, 0.4 errors from v₀²/g = 2.5493 m."""
+    2.5490 ± 0.0007 m, 0.4 errors from v₀²/g = 2.5493 m; χ²/ν 0.37 (the launcher's real angles drawn within ±0.5° of
+    the marks, review R2-W F5: errors of half a division are bounds, so about ⅓ is what a fit of them gives).
+    Seeds 2–4: 2.5490, 2.5489, 2.5489 (−0.4 to −0.5 errors)."""
     _th, L, s2 = _part2(False)
-    k, s, _c = _fit([x[0] for x in s2], L, [x[1] for x in s2], 0.0005, "line0")
-    assert (round(k, 4), round(s, 4)) == (2.5490, 0.0007) and abs(k - R) < 2 * s
+    k, s, c = _fit([x[0] for x in s2], L, [x[1] for x in s2], 0.0005, "line0")
+    assert (round(k, 4), round(s, 4), round(c, 2)) == (2.5490, 0.0007, 0.37) and abs(k - R) < 2 * s
 
 
 def test_way_7_the_law_of_vacuum_applied_in_air():
-    """[wrong: a law of vacuum applied in air] The same with the air on: 2.5380 ± 0.0007 m, 15.4 errors below v₀²/g
-    (the design's 18 came from exact angles: the protractor's error enters the fit here); the fit's χ²/ν (0.006) does
-    not show it."""
+    """[wrong: a law of vacuum applied in air] The same with the air on: 2.5381 ± 0.0007 m, 15.3 errors below v₀²/g
+    (seeds 2–4: 15.4, 15.3, 15.4; the design's 18 came from exact angles and errors left out of the fit); the fit's
+    χ²/ν (0.35, as for way 6) does not show it. [error in earlier] Until R2-W F5 the launcher stood exactly at its
+    marks while the protractor declared ±0.5°: χ²/ν 0.006, an error model that did not describe the data."""
     _th, L, s2 = _part2(True)
     k, s, chi = _fit([x[0] for x in s2], L, [x[1] for x in s2], 0.0005, "line0")
-    assert (round(k, 4), round((k - R) / s, 1)) == (2.5380, -15.4) and chi < 0.01
+    assert (round(k, 4), round((k - R) / s, 1), round(chi, 2)) == (2.5381, -15.3, 0.35)
 
 
 def test_way_8_the_angle_of_the_largest_range():
     """[right, within the steps] By eye on 5° steps: 45° with the air off and on; the parabola through L against θ:
-    45.00 ± 0.14° without air, 44.97 ± 0.14° in air (the engine's optimum in air: 45.0°)."""
-    for air, want in ((False, 45.00), (True, 44.97)):
+    45.11 ± 0.14° without air, 44.85 ± 0.14° in air (the engine's optimum in air: 45.0°; seeds 2–4: 44.97–45.08° and
+    44.91–45.01°: the drawn angles move the vertex by up to 0.8 of its error)."""
+    for air, want in ((False, 45.11), (True, 44.85)):
         th, L, _s2 = _part2(air)
         assert th[int(np.argmax(L))] == 45
         v, s, _c = _fit(th, L, 0.5, 0.0005, "quadratic")
@@ -308,33 +312,72 @@ def _part3():
 
 
 def test_way_9_a_parabola_near_the_top():
-    """[right] The parabola through the six points 30–55°: 42.36 ± 0.20°, 0.3 errors from the engine's optimum 42.3°
-    (with the measured drag curve; 41.9° with the constant C_d)."""
+    """[right] The parabola through the six points 30–55°: 42.44 ± 0.20°, 0.7 errors from the engine's optimum 42.3°
+    (with the measured drag curve; 41.9° with the constant C_d); seeds 2–4: 1.3, 0.1, 0.7 errors."""
     th, L, _Lv = _part3()
     m = (th >= 30) & (th <= 55)
     v, s, _c = _fit(th[m], L[m], 0.5, 0.0005, "quadratic")
-    assert (round(v, 2), round(s, 2), round((v - 42.3) / s, 1)) == (42.36, 0.20, 0.3)
+    assert (round(v, 2), round(s, 2), round((v - 42.3) / s, 1)) == (42.44, 0.20, 0.7)
 
 
 def test_way_10_a_parabola_over_the_whole_range():
-    """[wrong: a parabola too far from the top] Over all eleven points 20–70°: 42.52 ± 0.15°, 1.5 errors above the
-    engine's 42.3° (EX1's 25–60°: 42.41 ± 0.18°, 0.6 errors); the bias is systematic but, at this tape's resolution,
-    under two errors [weakens the design's 1.8σ]."""
+    """[wrong: a parabola too far from the top] Over all eleven points 20–70°: 42.55 ± 0.15°, 1.7 errors above the
+    engine's 42.3° (seeds 2–4: 2.0, 1.6, 1.7; EX1's 25–60°: 42.40 ± 0.18°, 0.6 errors); the bias is systematic but, at
+    this tape's resolution, about two errors [weakens the design's 1.8σ]."""
     th, L, _Lv = _part3()
     v, s, _c = _fit(th, L, 0.5, 0.0005, "quadratic")
-    assert (round(v, 2), round(s, 2), round((v - 42.3) / s, 1)) == (42.52, 0.15, 1.5)
+    assert (round(v, 2), round(s, 2), round((v - 42.3) / s, 1)) == (42.55, 0.15, 1.7)
     m = (th >= 25) & (th <= 60)
     v, s, _c = _fit(th[m], L[m], 0.5, 0.0005, "quadratic")
-    assert (round(v, 2), round(s, 2)) == (42.41, 0.18)
+    assert (round(v, 2), round(s, 2)) == (42.40, 0.18)
 
 
 def test_way_11_the_largest_range_by_eye_and_the_grey_ball():
-    """[coarse] By eye on 5° steps the largest range in air is at 40° (28.352 m against 28.323 m at 45°); the grey
-    ball's parabola peaks at 45.00 ± 0.16°."""
+    """[coarse] By eye on 5° steps the largest range in air is at 45° here (28.333 m against 28.323 m at 40°), at 40° on
+    seeds 3 and 4: the ranges at 40° and 45° differ by 29 mm at the marks' exact angles, and the launcher's setting
+    error moves each by up to 35–40 mm (L(θ) falls by 0.07–0.08 m per degree there; review R2-W F5); the grey ball's
+    parabola peaks at 45.04 ± 0.16°."""
     th, L, Lv = _part3()
-    assert th[int(np.argmax(L))] == 40.0 and (L[4], L[5]) == (28.352, 28.323)
+    assert th[int(np.argmax(L))] == 45.0 and (L[4], L[5]) == (28.323, 28.333)
     v, s, _c = _fit(th, Lv, 0.5, 0.0005, "quadratic")
-    assert (round(v, 2), round(s, 2)) == (45.00, 0.16)
+    assert (round(v, 2), round(s, 2)) == (45.04, 0.16)
+
+
+def test_the_launchers_real_angle_is_drawn_within_half_a_division_per_set_up():
+    """Review R2-W F5: the lab's launches (parts 2 and 3) fly at a real angle drawn uniformly within ±0.5° of the mark
+    (the protractor's declared error), seeded by the seed and the set-up together; the protractor reads the mark; the
+    drawer shows the real angle (an information row) and the launch event names both. Explore and Watch launch exactly
+    at their values (bound 0)."""
+    from s03_projectile.viz import SCHEMA, real_angle
+    for st in STEPS[1:]:
+        assert st["fixed"]["angle_error_deg"] == INSTRUMENTS["protractor"]["error"] == 0.5
+    spec = SPECS["lab.angles"]
+    deltas = []
+    for values in _grid(spec):
+        msgs = []
+        headless.run_spec(V, spec["preset"], {**spec["fixed"], **values}, spec["seed"], {"frame_dt": spec["frame_dt"]},
+                          spec["stop"], emit=lambda m, b=None: msgs.append(m), end_reason="atlas")
+        ck = next(m for m in msgs if m.get("type") == "check" and m["id"] == "main.angle")
+        hd = next(m for m in msgs if m.get("type") == "header")
+        assert ck["info"] and ck["ref"] == values["angle_deg"] and abs(ck["value"] - ck["ref"]) <= 0.5
+        assert hd["launcher"]["angle"] == ck["value"]
+        launch = next(m for m in msgs if m.get("type") == "event" and m["kind"] == "launch")
+        assert launch["data"]["angle"] == ck["value"]
+        deltas.append(ck["value"] - ck["ref"])
+    d = np.array(deltas)
+    assert len(set(np.round(d, 12))) == len(d)  # each set-up its own draw
+    assert abs(d.mean()) < 3 * 0.5 / math.sqrt(3 * len(d)) and 0.15 < d.std() < 0.45  # uniform: σ = 0.5/√3
+    p = SCHEMA.resolve("launcher", {"angle_error_deg": 0.5})[0]
+    assert real_angle(p, 1) == real_angle(dict(p), 1) != real_angle(p, 2)  # reproducible, and by the seed
+    assert real_angle({**p, "angle_error_deg": 0.0}, 1) == p["angle_deg"]
+    # Explore: the exact angle, no such row
+    ex = SPECS["explore"]
+    msgs = []
+    headless.run_spec(V, ex["preset"], {**ex["fixed"], "h_m": 1.0, "v0": 15.0, "angle_deg": 45.0, "air": False},
+                      ex["seed"], {"frame_dt": ex["frame_dt"]}, ex["stop"], emit=lambda m, b=None: msgs.append(m),
+                      end_reason="atlas")
+    assert not any(m.get("type") == "check" and m["id"] == "main.angle" for m in msgs)
+    assert next(m for m in msgs if m.get("type") == "header")["launcher"]["angle"] == 45.0
 
 
 def test_the_built_atlases_are_the_runners():
@@ -361,9 +404,9 @@ def _story(rid):
 
 def test_the_independence_story_s_captions_against_the_recording():
     """The captions' statements are the recording's: «at the same height, to 0.03 mm» (the thrown ball at most
-    0.026 mm higher, the Eötvös effect); «twice as far, at the same moment» (×2.0000, the landings 10 µs apart);
-    «four times higher: twice as long, the range doubles» (×2.0000 each). Each caption comes no later than what it
-    describes: the second while the balls fall, the third and the fourth at their worlds' starts."""
+    0.026 mm higher, the Eötvös effect); «twice as far, only 10.5 µs after the dropped one» (×2.0000, the landings
+    10.53 µs apart); «four times higher: twice as long, the range doubles» (×2.0000 each). Each caption comes no later
+    than what it describes: the second while the balls fall, the third and the fourth at their worlds' starts."""
     rec, msgs = _story("independence")
     fps, speed = rec["fps"], rec["speed"]
     caps = [m for m, _b in msgs if m["type"] == "caption"]
@@ -386,6 +429,8 @@ def test_the_independence_story_s_captions_against_the_recording():
     T = [x["landing"]["data"]["T"] for x in land]
     Td = [x["companion_landing"]["data"]["T"] for x in land]
     assert abs(L[1] / L[0] - 2) < 1e-4 and abs(T[1] - Td[1]) < 2e-5 and abs(T[0] - Td[0]) < 1e-5
+    # «only 10.5 µs after the dropped one» (review R2-W F10: «at the same moment» contradicted the caption before it)
+    assert T[1] > Td[1] and round(1e6 * (T[1] - Td[1]), 1) == rec["captions"][2]["text"].args["d"] == 10.5
     assert abs(T[2] / T[1] - 2) < 1e-4 and abs(L[2] / L[1] - 2) < 1e-4
     # each world's flight ends before the next world starts (a caption of a world comes at its start)
     starts = [0.0] + [c["at"] for c in rec["script"] if c["cmd"] == "new_world"] + [rec["seconds"]]

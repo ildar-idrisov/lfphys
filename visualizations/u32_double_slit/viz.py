@@ -1052,8 +1052,10 @@ class Simulation(BaseSimulation):
             ops_V, ops_D = self._englert(Gf)
             if ops_V is not None:
                 pure = self.source.pol_degree >= 1 and self.source.pol_state != "unpol"
+                # an identity of the marks (= 1 for pure ones, ≤ 1 for any state: Englert's theorem), shown as
+                # information, not as a passed check (RULES.md §3; review R2-W F3)
                 self._check(f"eng{s}", T("Englert: V² + D² for the which-path marks"), ops_V**2 + ops_D**2,
-                            1.0 if pure else None, "", cons, ok=None if pure else (ops_V**2 + ops_D**2 <= 1 + 1e-9),
+                            1.0 if pure else None, "", cons, info=True,
                             note=_join([T("V = {v:.6f}, D = {d:.6f}; = 1 identically for pure marks, ≤ 1 always",
                                           v=float(ops_V), d=float(ops_D)),
                                         T("the marks at the screen, after the analyser")
@@ -1068,12 +1070,12 @@ class Simulation(BaseSimulation):
                 self._check(f"coh{s}", _COH_LABEL, None, None, "", grp, note=T("undefined: {why}", why=undefined),
                             info=True)
             elif gam_e is not None and not mc:
-                ref, note, tol_abs, group = None, None, None, grp
+                ref, note, tol_abs, group, ident = None, None, None, grp, False
                 if self.laws.collapse == "slit":
                     ref, tol_abs = 0.0, 1e-9
                     note = T("modification: the forced choice of a slit removes the cross terms; 0 is expected")
                 elif not model.shifts and self.source.dlam_rel == 0 and gam_m is not None:
-                    ref, tol_abs, group = gam_m, 1e-6, cons
+                    ref, tol_abs, group, ident = gam_m, 1e-6, cons, True
                     note = T("reference |⟨m₂|m₁⟩|/(|m₁||m₂|) from the which-path marks; the expectation is built from "
                              "the same marks (an identity)")
                 elif self.app.wp_mode == "microscope" and gam_m is not None and not model.s and not model.grw:
@@ -1101,7 +1103,7 @@ class Simulation(BaseSimulation):
                              "the envelope by the source point", tol=tol_abs)
                 self._check(f"coh{s}", _COH_LABEL, gam_e, ref, "", group,
                             note=note or T("fit of the computed pattern to the slit basis (envelopes from the marks)"),
-                            ok=None if ref is None else abs(gam_e - ref) <= tol_abs)
+                            ok=None if ref is None or ident else abs(gam_e - ref) <= tol_abs, info=ident)
         # Sorkin parameter (three slits; identity under the Born rule)
         if g.n == 3:
             A0 = ex.base_A()
@@ -1115,7 +1117,8 @@ class Simulation(BaseSimulation):
             A_, B_, C_ = I([0]), I([1]), I([2])
             S = float(np.sum(np.abs(ABC - AB - BC - AC + A_ + B_ + C_)) / np.sum(ABC))
             self._check(f"sork{s}", T("Sorkin parameter ∫|I_ABC − I_AB − I_BC − I_AC + I_A + I_B + I_C| / ∫I_ABC"),
-                        S, 0.0, "", cons if self.laws.born_p == 2.0 else grp, ok=S < 1e-9,
+                        S, 0.0, "", cons if self.laws.born_p == 2.0 else grp,
+                        ok=None if self.laws.born_p == 2.0 else S < 1e-9, info=self.laws.born_p == 2.0,
                         note=T("0 identically under the Born rule (interference is only pairwise); ≠ 0: a "
                                "consequence of the modification"),
                         expected=None if self.laws.born_p == 2.0 else
@@ -1135,7 +1138,8 @@ class Simulation(BaseSimulation):
             dif = float(np.max(np.abs(Pr - Pu)) / np.max(Pu))
             self._check(f"nosig{s}", T("No signalling: the distribution on the screen with the detector read = "
                                        "without reading"), dif, 0.0, "",
-                        cons if self.laws.born_p == 2.0 else grp, ok=dif < 1e-10,
+                        cons if self.laws.born_p == 2.0 else grp,
+                        ok=None if self.laws.born_p == 2.0 else dif < 1e-10, info=self.laws.born_p == 2.0,
                         note=T("under the Born rule an identity (the readout basis is complete); under a modification "
                                "a difference is a computed consequence: reading the detector would change the pattern "
                                "(signalling)"))

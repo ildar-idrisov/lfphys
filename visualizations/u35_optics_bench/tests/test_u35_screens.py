@@ -26,13 +26,14 @@ import numpy as np
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from u35_lab import SPECS, STEPS, V, VIZ, A, atlas_of, fit, point, row  # noqa: E402
+from u35_lab import SPECS, STEPS, V, VIZ, A, atlas_of, expected_row, fit, point, row  # noqa: E402
 
 from lfphys.core.optics import interfaces, materials, polarization as pol_  # noqa: E402
 from lfphys.theories.models import photodetector as pd  # noqa: E402
 from lfviz import headless, registry  # noqa: E402
 
 from u35_optics_bench import screens as S  # noqa: E402
+from u35_optics_bench import viz as VIZ_MOD  # noqa: E402
 
 N_BK7 = materials.index("schott_n_bk7", 632.8).real
 GLASS = {"bk7": "schott_n_bk7", "f2": "schott_n_f2", "sf11": "schott_n_sf11"}
@@ -47,10 +48,19 @@ def _grid(spec):
 
 
 def _stop_time(spec, oc):
+    """The world time of a point's last frame by its stop rule (``headless.run_spec``): a world time, or the stop
+    event + after_s; when that falls within the stop event's own frame (a frame_dt clock), one more full frame step
+    after it (review R2-F F3: the stop event's frame is never the last)."""
     st = spec["stop"]
     if "world_s" in st:
         return st["world_s"]
-    return oc.stop_event_t + st.get("after_s", 0.0)
+    t = oc.stop_event_t + st.get("after_s", 0.0)
+    dt = spec.get("frame_dt")
+    if dt:
+        k_ev = math.ceil(oc.stop_event_t / dt * (1 - 1e-12))  # the event's own frame: the first at or after it
+        if t <= k_ev * dt * (1 + 1e-12):
+            return (k_ev + 1) * dt
+    return t
 
 
 @pytest.mark.parametrize("aid", sorted(SPECS))
@@ -59,7 +69,9 @@ def test_every_grid_point_builds_with_its_checks_and_stops_by_its_rule(aid):
     for values in _grid(spec):
         msgs, oc = A.run_point(V, spec, values)  # RunFailed on a check ending ✗ or a stop event not reached
         counts = oc.check_counts()
-        assert counts["failed"] == 0 and counts["ok"] > 5, (aid, values, counts)
+        # the checks shown: passes and information rows (review R2-W F3 moved the identities `sum`, `born` from the
+        # passes to information; the dark-count bench then has 5 passes: arms, energy, brew, brewR, cfaceT)
+        assert counts["failed"] == 0 and counts["ok"] >= 5 and counts["ok"] + counts["info"] > 7, (aid, values, counts)
         assert oc.t_end == pytest.approx(_stop_time(spec, oc), rel=1e-12), (aid, values, oc.t_end)
         frames = [m for m, _b in msgs if m["type"] == "frame"]
         assert frames[0]["meas"]["n_R"] is None  # nothing counted at t = 0 («Measure» says so before a launch)
@@ -75,6 +87,24 @@ def test_the_atlases_grids_are_the_designs():
                  "lab.reflection": 294}
     assert 40.0 in SPECS["polarisation"]["controls"][0]["values"]  # E35: a grid point below θ_c (linear light)
     assert len(TH) == 38 and {56.0, 57.0, 41.0, 42.0, 58.0, 60.0, 61.0, 38.0, 34.0, 35.0} <= set(TH)
+
+
+def test_every_select_control_names_its_values_in_every_language():
+    """Review R2-P F9: a control over a select's raw values (u35's polarisation "s" | "p", the analyser "ideal" |
+    "real") names them with ``labels``, one text per value, each translated into Russian: shown raw, "s" became «с»
+    (the msgid of seconds) and "real" stayed English."""
+    from lfviz import i18n
+    ru = i18n._merge("ru")[0]
+    ctrls = [c for sc in VIZ["screens"] for c in sc.get("controls", [])]
+    ctrls += [c for st in STEPS.values() for c in st.get("controls", [])]
+    seen = 0
+    for c in ctrls:
+        if any(isinstance(v, str) for v in c["values"]):
+            labels = c.get("labels")
+            assert labels and len(labels) == len(c["values"]), c.get("param") or c.get("id")
+            assert all(lb["$t"] in ru for lb in labels), [lb["$t"] for lb in labels]
+            seen += 1
+    assert seen >= 4  # the glass and side, the polarisation, the analyser, the glass of part 4
 
 
 # --- the bench's computed values against independent computations -----------------------------------------------------
@@ -124,7 +154,13 @@ def test_the_lab_references_against_the_engine():
         fixed = registry.load(V)["schema"].resolve("boundary", {})[0]
         assert sim.lab_reference("fresnel", fixed, {}, f"ns2_{g}")["value"] == pytest.approx(n * n, rel=1e-15)
         assert sim.lab_reference("fresnel", fixed, {}, f"inv2_{g}")["value"] == pytest.approx(1 / n ** 2, rel=1e-15)
-        assert sim.lab_reference("fresnel", fixed, {}, f"inv4_{g}")["value"] == pytest.approx(-1 / n ** 4, rel=1e-15)
+        # θ_c from inside: sin²θ_c = 1/n², the zero of the engine's transmission found by bisection
+        lo, hi = 0.1, 1.5
+        for _ in range(100):
+            mid = 0.5 * (lo + hi)
+            lo, hi = (mid, hi) if interfaces.stack([n, 1.0], [], 632.8, mid, "s")["T"] > 0 else (lo, mid)
+        assert sim.lab_reference("fresnel", fixed, {}, f"thc_{g}")["value"] == pytest.approx(math.sin(hi) ** 2,
+                                                                                            rel=1e-12)
         # θ_B: the zero of the engine's r_p, found here by bisection
         lo, hi = 0.1, 1.5
         for _ in range(100):
@@ -134,8 +170,18 @@ def test_the_lab_references_against_the_engine():
                 lo = mid
             else:
                 hi = mid
-        for step in ("fresnel", "reflection"):
-            assert sim.lab_reference(step, fixed, {}, f"thb_{g}")["value"] == pytest.approx(math.degrees(lo), abs=1e-9)
+        assert sim.lab_reference("fresnel", fixed, {}, f"thb_{g}")["value"] == pytest.approx(math.degrees(lo), abs=1e-9)
+        # the degree of polarisation (R_s − R_p)/(R_s + R_p): 1 at θ_B, its values listed at the grid's angles
+        ths = SPECS["lab.reflection"]["controls"][0]["values"]
+        ref = sim.lab_reference("reflection", fixed, {"theta_deg": ths}, f"dop_{g}")
+        assert ref["value"] == pytest.approx(math.degrees(lo), abs=1e-9)
+        items = ref["how"]["a"]["list"]["a"]  # join(): {p0: T("{th:g}°: {P:.4f}"), p1: …}
+        shown = [x for x in ths if x in VIZ_MOD.DOP_SHOWN]
+        assert len(items) == len(shown) == 4
+        for i, th in enumerate(shown):
+            Rs, Rp = (interfaces.stack([1.0, n], [], 632.8, math.radians(th), q)["R"] for q in ("s", "p"))
+            assert items[f"p{i}"]["a"]["th"] == th
+            assert items[f"p{i}"]["a"]["P"] == pytest.approx((Rs - Rp) / (Rs + Rp), rel=1e-12)
     fixed = registry.load(V)["schema"].resolve("lab_malus", {})[0]
     assert sim.lab_reference("malus", fixed, {}, "slope0_ideal")["value"] == pol_.malus(0.0, 0.0)
     from u35_optics_bench.schema import IMPERFECT
@@ -160,21 +206,25 @@ def test_the_reflected_degree_of_polarisation_on_the_bench_against_the_engine():
 
 
 # --- the ways (design §3.4), on the built atlas's points --------------------------------------------------------------
-#: the sample's outcomes (seed 1, the real detector; the report's table); a value to its printed digits
+#: the sample's outcomes (seed 1, the real detector, the 25 mm glass blocks and the reference count; numbers in the
+#: report). Part 2: «_R» the ratio N_R/(N_R + N_T), «_d» R = (N_R/t)/(N₀/t₀) with the dark counts subtracted (R_d).
+#: The other seeds (2–4) reproduce every way's status (review R2-W F1, the processor's numbers)
 WAYS = {
-    "w1": {"a": 2.3040, "a_se": 0.0156, "b": -1.006, "chi2_dof": 0.92},       # y_s, dark subtracted (ysd)
-    "w1_raw": {"a": 2.3200, "a_se": 0.0156, "chi2_dof": 0.92},                 # y_s from the raw counts
-    "w2": {"a": 0.43268, "a_se": 0.0040, "chi2_dof": 1.04},                    # y_p ≤ 52°, dark subtracted (ypd)
-    "w2_raw": {"a": 0.43132, "a_se": 0.0038},
-    "w3": {"a": 0.4917, "chi2_dof": 34.6},                                     # y_p through 62°
-    "w4_50_62": {"vertex": 56.13, "vertex_se": 0.20},
-    "w4_52_61": {"vertex": 56.21, "vertex_se": 0.30},
-    "w8": {"a": 0.4256, "a_se": 0.0088},                                       # y_p at a fifth of the run
-    "w9": {"b": 0.99928, "b_se": 0.00030},
-    "w10": {"chi2_dof": 2.47e4},
-    "w11_line0": {"b": 0.9016, "chi2_dof": 12.1},
-    "w11_line": {"a": 0.00929, "b": 0.8897},
-    "w16": {"rel": 0.00247},
+    "w1_R": {"a": 2.3586, "a_se": 0.018},                                      # y_s from N_R/(N_R + N_T)
+    "w1_d": {"a": 2.3046, "a_se": 0.019, "b": -1.0244},                         # y_s from R_d: right
+    "w2_R": {"a": 0.42215},
+    "w2_d": {"a": 0.43338, "a_se": 0.0046},
+    "w3": {"a": 0.48545, "chi2_dof": 38.9},                                    # y_p through 62°
+    "w4_50_62": {"vertex": 55.881, "vertex_se": 0.239},
+    "w4_52_61": {"vertex": 56.336, "vertex_se": 0.190},
+    "w8": {"a": 0.43257, "a_se": 0.0090},                                      # y_p (R_d) at a fifth of the run
+    "w9": {"b": 0.99949, "b_se": 0.00027},
+    "w10": {"chi2_dof": 2.48e4},
+    "w11_line0": {"b": 0.9031, "chi2_dof": 13.8},
+    "w11_line": {"a": 0.0097116, "b": 0.89069},
+    "w16": {"rel": 0.00271},
+    "w18_d": {"a": 0.45849},                                                   # from inside, y_p's formula, R_d
+    "w18_norm": {"a": 0.43533},                                                # the same normalised by the TIR plateau
 }
 
 
@@ -184,70 +234,106 @@ def _close(x, want, digits_rel=2e-3, abs_=None):
 
 @pytest.fixture(scope="module")
 def fresnel_rows():
-    return {(pol, th): row("fresnel", theta_deg=th, sample="bk7_air", pol=pol) for pol in ("s", "p") for th in TH}
+    return {(pol, th): row("fresnel", theta_deg=th, sample="bk7_air", light=pol) for pol in ("s", "p") for th in TH}
 
 
-def test_way_1_and_2_the_index_from_s_and_p_light(fresnel_rows):
-    """Ways 1 and 2 (right): y_s against sin²θ (θ ≤ 80°) and y_p against sin²θ below θ_B (θ ≤ 52°), lines; with the
-    real detectors the dark counts (100 s⁻¹ in each) bias R by about one error unless subtracted (columns Rd, ysd, ypd).
-    """
-    s_rows = [fresnel_rows[("s", t)] for t in TH if t <= 80]
-    p_rows = [fresnel_rows[("p", t)] for t in TH if t <= 52]
-    f1 = fit(s_rows, "x", "ysd", "line")
-    a, b = f1["params"]
-    assert _close(a, WAYS["w1"]["a"], 1e-4) and _close(f1["sigma"][0], WAYS["w1"]["a_se"], 0.02)
-    assert _close(b, WAYS["w1"]["b"], 1e-3) and abs(f1["chi2_dof"] - WAYS["w1"]["chi2_dof"]) < 0.01
-    assert abs(a - N_BK7 ** 2) < 3 * f1["sigma"][0] and abs(b + 1) < 3 * f1["sigma"][1]  # right: within its spread
-    f1r = fit(s_rows, "x", "ys", "line")
-    assert _close(f1r["params"][0], WAYS["w1_raw"]["a"], 1e-4)
-    f2 = fit(p_rows, "x", "ypd", "line")
-    assert _close(f2["params"][0], WAYS["w2"]["a"], 1e-4) and abs(f2["params"][0] - 1 / N_BK7 ** 2) < 3 * f2["sigma"][0]
-    assert _close(fit(p_rows, "x", "yp", "line")["params"][0], WAYS["w2_raw"]["a"], 1e-4)
+@pytest.fixture(scope="module")
+def fresnel_expected():
+    return {(pol, th): expected_row("fresnel", theta_deg=th, sample="bk7_air", light=pol) for pol in ("s", "p")
+            for th in TH}
 
 
-def test_way_3_p_light_past_brewster_with_the_same_formula(fresnel_rows):
+def _fits(rows, exp, x, y, model):
+    """The sample's fit and the same fit on the expected counts (the way's computed outcome)."""
+    return fit(rows, x, y, model), fit(exp, x, y, model)
+
+
+def test_way_1_and_2_the_index_from_s_and_p_light(fresnel_rows, fresnel_expected):
+    """Ways 1 and 2: y_s against sin²θ (θ ≤ 80°) and y_p below θ_B (θ ≤ 52°), lines. With R = (N_R/t)/(N₀/t₀) and the
+    dark counts subtracted (y from R_d) the index is right; with N_R/(N_R + N_T) wrong: the transmitted photons lose
+    4.8 % in the glass block (its curved face 4.2 %, the glass 0.6 %), which the ratio counts as reflected light;
+    against the reference with the dark counts left in (R_i), R is high by d(1 − R)/(rate·η + d). Each sample's line
+    lies within 3σ of the same fit on the expected counts, which carries the computed reason."""
+    for way, pol, top, ycols, truth in (("w1", "s", 80, ("ys", "ysd"), N_BK7 ** 2),
+                                        ("w2", "p", 52, ("yp", "ypd"), 1 / N_BK7 ** 2)):
+        rows = [fresnel_rows[(pol, t)] for t in TH if t <= top]
+        exp = [fresnel_expected[(pol, t)] for t in TH if t <= top]
+        out = {}
+        for tag, y in zip(("R", "d"), ycols):
+            f, e = _fits(rows, exp, "x", y, "line")
+            out[tag] = (f, e)
+            assert _close(f["params"][0], WAYS[f"{way}_{tag}"]["a"], 1e-4), (way, tag, f["params"])
+            assert abs(f["params"][0] - e["params"][0]) < 3 * f["sigma"][0], (way, tag)
+        f, e = out["d"]  # right: the expectation is the truth within a fifth of an error; the sample within 3σ
+        assert abs(e["params"][0] - truth) < 0.2 * e["sigma"][0] and abs(f["params"][0] - truth) < 3 * f["sigma"][0]
+        f, e = out["R"]  # wrong: the block's loss moves the expectation by more than 2.5σ
+        assert abs(e["params"][0] - truth) > 2.5 * e["sigma"][0], (way, e["params"][0], truth)
+    f1 = fit([fresnel_rows[("s", t)] for t in TH if t <= 80], "x", "ysd", "line")
+    assert _close(f1["sigma"][0], WAYS["w1_d"]["a_se"], 0.05) and _close(f1["params"][1], WAYS["w1_d"]["b"], 1e-3)
+    assert abs(f1["params"][1] + 1) < 3 * f1["sigma"][1]
+    # R_i keeps the dark counts: at θ = 0 it exceeds R_d by d(1 − R)/(rate·η + d) (the dead time aside)
+    from lfphys.theories.models import photodetector as pd
+    det = pd.DEVICES["spcm_aqrh_14_650nm"]["detector"]
+    e0 = fresnel_expected[("s", 0.0)]
+    R0 = ((N_BK7 - 1) / (N_BK7 + 1)) ** 2
+    assert e0["Ri"][0] - e0["Rid"][0] == pytest.approx(det.dark_rate * (1 - R0) / (2e5 * det.eta + det.dark_rate),
+                                                       rel=0.02)
+
+
+def test_way_3_p_light_past_brewster_with_the_same_formula(fresnel_rows, fresnel_expected):
     """Way 3 (wrong: a sign branch): through 62°, past θ_B, r_p < 0 and y_p needs −√R_p: the fit misses."""
-    f3 = fit([fresnel_rows[("p", t)] for t in TH if t <= 62], "x", "yp", "line")
+    f3, e3 = _fits([fresnel_rows[("p", t)] for t in TH if t <= 62], [fresnel_expected[("p", t)] for t in TH if t <= 62],
+                   "x", "yp", "line")
     assert _close(f3["params"][0], WAYS["w3"]["a"], 1e-3) and f3["chi2_dof"] == pytest.approx(WAYS["w3"]["chi2_dof"],
                                                                                                rel=0.01)
-    assert 1 / math.sqrt(f3["params"][0]) < N_BK7 - 0.05 and f3["chi2_dof"] > 10
+    assert 1 / math.sqrt(f3["params"][0]) < N_BK7 - 0.05 and f3["chi2_dof"] > 10 and e3["chi2_dof"] > 10
 
 
-def test_way_4_a_parabola_through_R_p_near_brewster(fresnel_rows):
-    """Way 4 (an approximation): R_p is not symmetric about θ_B: the vertex falls below it."""
+def test_way_4_a_parabola_through_R_p_near_brewster(fresnel_rows, fresnel_expected):
+    """Way 4 (an approximation): R_p is not symmetric about θ_B: the vertex falls below it, on the expected counts too
+    (by 0.47° over 50–62°, 0.29° over 52–61°)."""
     thb = math.degrees(math.atan(N_BK7))
     for lo, hi in ((50, 62), (52, 61)):
-        f = fit([fresnel_rows[("p", t)] for t in TH if lo <= t <= hi], "th", "R", "quadratic")
+        f, e = _fits([fresnel_rows[("p", t)] for t in TH if lo <= t <= hi],
+                     [fresnel_expected[("p", t)] for t in TH if lo <= t <= hi], "th", "Ri", "quadratic")
         want = WAYS[f"w4_{lo}_{hi}"]
         assert _close(f["vertex"], want["vertex"], 2e-4) and _close(f["vertex_sigma"], want["vertex_se"], 0.05)
-        assert f["vertex"] < thb
+        assert f["vertex"] < thb and abs(f["vertex"] - e["vertex"]) < 3 * f["vertex_sigma"]
+        assert thb - e["vertex"] > 0.25
 
 
-def test_way_5_6_7_8_on_the_built_points(fresnel_rows):
-    # way 5: the smallest p count in 1° steps lies at 56–57° (the dark counts, ~10 per detector, are the floor)
+def test_way_5_6_7_8_on_the_built_points(fresnel_rows, fresnel_expected):
+    # way 5: the smallest p count in 1° steps lies at 55–57° (the dark counts, ~10 per detector, are the floor)
     nr = {t: fresnel_rows[("p", t)]["NR"][0] for t in (54, 55, 56, 57, 58, 59)}
-    assert min(nr, key=nr.get) in (56, 57)
+    assert min(nr.values()) == min(nr[t] for t in (55, 56, 57)) and min(nr.values()) < 20
     # way 6: from inside, the last angle with transmitted photons lies between 41° and 42° (θ_c = 41.30°)
-    nt = {t: row("fresnel", theta_deg=t, sample="bk7_in", pol="s")["NT"][0] for t in (41.0, 42.0)}
+    nt = {t: row("fresnel", theta_deg=t, sample="bk7_in", light="s")["NT"][0] for t in (41.0, 42.0)}
     assert nt[41.0] > 1000 and nt[42.0] < 40  # beyond θ_c only the dark counts
     # way 7: the formula for light from air used from inside: beyond θ_c R is 1 but for the dark counts: y_s is huge
-    ys = row("fresnel", theta_deg=45.0, sample="bk7_in", pol="s")["ys"]
+    ys = row("fresnel", theta_deg=45.0, sample="bk7_in", light="s")["ys"]
     assert ys is not None and ys[0] > 1e5
-    # way 8: the cursor at a fifth of the run: errors √5 larger
-    f8 = fit([row("fresnel", 1, theta_deg=t, sample="bk7_air", pol="p") for t in TH if t <= 52], "x", "yp", "line")
-    f2 = fit([fresnel_rows[("p", t)] for t in TH if t <= 52], "x", "yp", "line")
-    assert _close(f8["params"][0], WAYS["w8"]["a"], 1e-3)
-    assert f8["sigma"][0] / f2["sigma"][0] == pytest.approx(math.sqrt(5), rel=0.1)
+    # way 8: the cursor at a fifth of the run: the errors of the line about √5 larger (the expected counts: 2.225; a
+    # sample's errors come from its own counts, a few at 45–52° in 0.02 s: 0.87–1.16 of that on seeds 1–4), the same
+    # index
+    f8 = fit([row("fresnel", 1, theta_deg=t, sample="bk7_air", light="p") for t in TH if t <= 52], "x", "ypd", "line")
+    f2 = fit([fresnel_rows[("p", t)] for t in TH if t <= 52], "x", "ypd", "line")
+    e8 = fit([expected_row("fresnel", 1, theta_deg=t, sample="bk7_air", light="p") for t in TH if t <= 52], "x", "ypd",
+             "line")
+    e2 = fit([fresnel_expected[("p", t)] for t in TH if t <= 52], "x", "ypd", "line")
+    assert _close(f8["params"][0], WAYS["w8"]["a"], 1e-3) and _close(f8["sigma"][0], WAYS["w8"]["a_se"], 0.05)
+    assert e8["sigma"][0] / e2["sigma"][0] == pytest.approx(math.sqrt(5), rel=0.01)
+    assert f8["sigma"][0] / f2["sigma"][0] == pytest.approx(e8["sigma"][0] / e2["sigma"][0], rel=0.2)
+    assert abs(f8["params"][0] - 1 / N_BK7 ** 2) < 3 * f8["sigma"][0]
 
 
 def test_ways_9_10_11_malus():
     al = SPECS["lab.malus"]["controls"][0]["values"]
-    ideal = [row("malus", anaT_deg=a, psi_deg=30.0, anaT="ideal") for a in al]
+    ideal = [row("malus", anaT_deg=a, psi_deg=30.0, analyser="ideal") for a in al]
     f9 = fit(ideal, "c2", "I", "line0")
     assert _close(f9["params"][0], WAYS["w9"]["b"], 1e-5) and abs(f9["params"][0] - 1) < 3 * f9["sigma"][0] + 1e-3
     f10 = fit(ideal, "c1", "I", "line0")
     assert f10["chi2_dof"] > 1e4  # a wrong angle law: the points lie on x², not on a line
-    real = [row("malus", anaT_deg=a, psi_deg=30.0, anaT="real") for a in al]
+    real = [row("malus", anaT_deg=a, psi_deg=30.0, analyser="real") for a in al]
     f11 = fit(real, "c2", "I", "line0")
     assert _close(f11["params"][0], WAYS["w11_line0"]["b"], 1e-3) and f11["chi2_dof"] > 5
     f11b = fit(real, "c2", "I", "line")
@@ -258,26 +344,82 @@ def test_ways_9_10_11_malus():
 
 def test_ways_12_to_15_polarisation_by_reflection():
     """Way 12 (right, coarse): with the analyser along p the reflected light is completely polarised near θ_B, P ≈ 1
-    once the dark counts are subtracted (way 15); way 14: left in, the dark counts hold P at about 0.97–0.98 with no
-    clear maximum; way 13: both ports added, the reflection only grows with the angle."""
+    once the dark counts are subtracted (way 15); way 14: left in, the pass port's dark counts hold P below 1 by many
+    errors; way 13: both ports added, the reflection only grows with the angle. The vertex of a parabola through f, or
+    through P (the law «P = (R_s − R_p)/(R_s + R_p) largest»), lies at θ_B within its errors."""
     rr = {t: row("reflection", theta_deg=t, anaR_deg=0.0, glass="bk7")
           for t in SPECS["lab.reflection"]["controls"][0]["values"]}
-    raw = {t: r["P"][0] for t, r in rr.items()}
-    dark = {t: r["Pd"][0] for t, r in rr.items()}
     for t in (55.0, 56.0, 57.0, 58.0):
-        assert 0.965 < raw[t] < 0.985 and abs(dark[t] - 1) < 3 * rr[t]["Pd"][1]
+        assert 1 - rr[t]["P"][0] > 3 * rr[t]["P"][1] and abs(rr[t]["Pd"][0] - 1) < 3 * rr[t]["Pd"][1]
+    dark = {t: r["Pd"][0] for t, r in rr.items()}
     assert max(dark, key=dark.get) in (56.0, 57.0, 58.0)
     ns = [rr[t]["Ns"][0] for t in sorted(rr)]
     assert all(b > a for a, b in zip(ns, ns[1:]))  # way 13: no minimum near θ_B
+    thb = math.degrees(math.atan(N_BK7))
+    ff, fp = fit(list(rr.values()), "th", "f", "quadratic"), fit(list(rr.values()), "th", "P", "quadratic")
+    assert ff["vertex"] == pytest.approx(fp["vertex"], rel=1e-9)  # P = 1 − 2f: the same vertex
+    assert abs(ff["vertex"] - thb) < 3 * ff["vertex_sigma"] * max(1.0, math.sqrt(ff["chi2_dof"]))
 
 
 def test_way_16_the_dead_time_at_normal_incidence():
-    r = row("fresnel", theta_deg=0.0, sample="bk7_air", pol="s")
-    rel = (r["R"][0] - r["Rc"][0]) / r["Rc"][0]
+    """R = (N_R/t)/(N₀/t₀) with the dark counts subtracted, without the dead-time correction: the reference detector
+    (1.3·10⁵ counts per second) loses m₀·t_d of its counts, the reflection detector almost nothing: R too high by
+    (m₀ − m_R)·t_d ≈ 0.27 %."""
+    r = row("fresnel", theta_deg=0.0, sample="bk7_air", light="s")
+    rel = (r["Rid"][0] - r["Ric"][0]) / r["Ric"][0]
     assert _close(rel, WAYS["w16"]["rel"], 0.02)
-    # the closed form of the bias: the transmission detector loses m·t_d of its counts, the reflection one ~nothing
-    m_T = r["NT"][0] / r["tc"][0]
-    assert rel == pytest.approx((1 - r["R"][0]) * m_T * S.DEAD_TIME, rel=0.05)
+    m_0, m_R = r["N0"][0] / r["t0"][0], r["NR"][0] / r["tc"][0]
+    assert rel == pytest.approx((m_0 - m_R) * S.DEAD_TIME, rel=0.05)
+
+
+def test_way_17_reflected_and_transmitted_do_not_add_to_one(fresnel_expected):
+    """At θ = 0: R + T per incident photon falls short of 1 by the block's loss (the transmitted beam crosses 25 mm of
+    glass and its curved face): T = (1 − R) T_c τ, where the face's own R + T = 1."""
+    r = row("fresnel", theta_deg=0.0, sample="bk7_air", light="s")
+    e = fresnel_expected[("s", 0.0)]
+    tot, se = r["Rid"][0] + r["Ti"][0], math.hypot(r["Rid"][1], r["Ti"][1])
+    assert 1 - tot > 2.5 * se and abs(r["Ti"][0] - e["Ti"][0]) < 3 * r["Ti"][1]
+    n = N_BK7
+    R = ((n - 1) / (n + 1)) ** 2
+    tau = math.exp(-4 * math.pi * materials.index("schott_n_bk7", 632.8).imag * 25e6 / 632.8)
+    assert e["Ti"][0] == pytest.approx((1 - R) * (1 - R) * tau, rel=3e-3)  # dead time and dark counts aside
+
+
+def test_way_18_the_critical_angle_from_inside():
+    """From inside, s light below θ_c: y_p's formula gives 1/n² − sin²θ, zero at θ_c (the law sin²θ_c = 1/n²). Against
+    the reference count (the block removed) R is short by the block's round trip (T_c τ)² = 0.907, seen as the plateau
+    of total reflection: the line misses 1/n² by about six errors; divided by that plateau, the right index."""
+    ins = {t: row("fresnel", theta_deg=t, sample="bk7_in", light="s") for t in TH}
+    below = [ins[t] for t in TH if t <= 40]
+    fd = fit(below, "x", "ypd", "line")
+    assert _close(fd["params"][0], WAYS["w18_d"]["a"], 1e-4) and fd["params"][0] - 1 / N_BK7 ** 2 > 3 * fd["sigma"][0]
+    tir = [ins[t]["Rid"] for t in TH if t >= 42]
+    w = [1 / s_ ** 2 for _v, s_ in tir]
+    plat, plat_se = sum(v * wi for (v, _s), wi in zip(tir, w)) / sum(w), sum(w) ** -0.5
+    k = math.exp(-4 * math.pi * materials.index("schott_n_bk7", 632.8).imag * 25e6 / 632.8)
+    roundtrip = (4 * N_BK7 / (N_BK7 + 1) ** 2 * k) ** 2
+    assert abs(plat - roundtrip) < 3 * plat_se
+    rows = []
+    from lfviz import expr
+    for r in below:
+        v, s_ = r["Rid"]
+        Rn = v / plat
+        yv, ys_, *_ = expr.evaluate("(cosd(th) * (1 - sqrt(Rn)) / (1 + sqrt(Rn)))^2",
+                                    {"th": r["th"], "Rn": (Rn, Rn * math.hypot(s_ / v, plat_se / plat))})
+        rows.append({"x": r["x"], "yn": (yv, ys_)})
+    fn = fit(rows, "x", "yn", "line")
+    assert _close(fn["params"][0], WAYS["w18_norm"]["a"], 1e-4) and abs(fn["params"][0] - 1 / N_BK7 ** 2) < 3 * fn[
+        "sigma"][0]
+
+
+def test_way_19_the_denser_glasses():
+    """N-F2 and N-SF11 from air, s light: the ratio N_R/(N_R + N_T) misses n² by more (their blocks lose 6.4 % and
+    9.6 %), R against the reference with the dark counts subtracted gives it."""
+    for g, gid in (("f2", "schott_n_f2"), ("sf11", "schott_n_sf11")):
+        n = materials.index(gid, 632.8).real
+        rows = [row("fresnel", theta_deg=t, sample=f"{g}_air", light="s") for t in TH if t <= 80]
+        fR, fd = fit(rows, "x", "ys", "line"), fit(rows, "x", "ysd", "line")
+        assert fR["params"][0] - n * n > 3 * fR["sigma"][0] and abs(fd["params"][0] - n * n) < 3 * fd["sigma"][0]
 
 
 # --- the Watch story --------------------------------------------------------------------------------------------------
@@ -329,8 +471,11 @@ def test_the_captions_numbers_are_the_runs(story):
     fps = rec["fps"]
     a = {c["at"]: c["text"]["a"] for c in rec["captions"] if c["text"].get("a")}
     assert a[0]["n"] == segs[0]["setup"]["n_out"] == N_BK7
-    assert a[9]["r"] == pytest.approx(100 * segs[0]["P"]["R_pass"], abs=5e-4)  # 4.350 %
-    assert a[9]["t"] == pytest.approx(100 * segs[0]["P"]["T_pass"], abs=5e-4)
+    P8 = segs[0]["P8"]
+    assert a[9]["R"] == pytest.approx(100 * segs[0]["P"]["R_pass"], abs=5e-4)  # the surface: 4.350 %
+    assert a[9]["l"] == pytest.approx(100 * (1 - P8["T_pass"] / segs[0]["P"]["T_pass"]), abs=5e-4)  # the block: 4.775 %
+    assert a[9]["r"] == pytest.approx(100 * P8["R_pass"] / (P8["R_pass"] + P8["T_pass"]), abs=5e-4)  # 4.558 %
+    assert a[9]["t"] == pytest.approx(100 * P8["T_pass"] / (P8["R_pass"] + P8["T_pass"]), abs=5e-3)  # 95.44 %
     m17 = frames[17 * fps - 1]["meas"]  # the counts by the caption at 17 s: within 3σ of the computed fraction
     assert abs(m17["R_frac"] - m17["R_frac_ref"]) < 3 * m17["R_frac_se"]
     assert a[17]["b"] == pytest.approx(math.degrees(math.atan(N_BK7)), abs=1e-9) and segs[1]["P"]["R_pass"] < 1e-12
@@ -357,7 +502,7 @@ def test_the_other_recordings_numbers():
 # --- materials and detectors ----------------------------------------------------------------------------------------
 def test_the_benchs_materials_are_the_engines():
     for sample in S.SAMPLES:
-        _frames, header, _oc, segs = point("explore", theta_deg=30.0, sample=sample, pol="s")
+        _frames, header, _oc, segs = point("explore", theta_deg=30.0, sample=sample, light="s")
         p = header["params"]
         for side, key in (("med_in", "n_in"), ("med_out", "n_out")):
             m = p[side]
@@ -392,14 +537,14 @@ def test_the_dark_counts_against_the_detector_model():
 def test_the_dead_time_against_the_closed_form():
     """At normal incidence the transmission detector counts ~1.2·10⁵ s⁻¹: its recorded rate is the non-paralysable
     m = n/(1 + n t_d) of its input (``photodetector.observed_rate``), within the counts' spread."""
-    frames, header, oc, segs = point("explore", theta_deg=0.0, sample="bk7_air", pol="s")
+    frames, header, oc, segs = point("explore", theta_deg=0.0, sample="bk7_air", light="s")
     msgs = []
     out = headless.run_spec(V, "boundary", {"theta_deg": 0.0}, 1, {"frame_dt": 0.02}, {"world_s": 0.1}, None,
                             lambda m, b=None: msgs.append((m, b)), end_reason="test")
     chk = [m for m, _b in msgs if m["type"] == "check" and m["id"] == "det0"][-1]
     assert chk["ok"] is True
     d = pd.DEVICES["spcm_aqrh_14_650nm"]["detector"]
-    n_in = segs[0]["P"]["T_pass"] * 2e5 * d.eta + d.dark_rate
+    n_in = segs[0]["P8"]["T_pass"] * 2e5 * d.eta + d.dark_rate  # the photons that cross the block to the detector
     m_expected = float(pd.observed_rate(n_in, d.dead_time))
     m_seen = frames[-1]["meas"]["n_T"] / 0.1
     assert m_seen == pytest.approx(m_expected, rel=4 * math.sqrt(m_expected * 0.1) / (m_expected * 0.1))

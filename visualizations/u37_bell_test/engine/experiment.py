@@ -316,6 +316,11 @@ class Store:
         self.coinc: dict = {}
         self.acc: dict = {}
         self.slots: dict = {}
+        # the counting by slots: the outcome tables of the slots simulated in time (``Slots``), and their expectation
+        # from the engine's slot probabilities accumulated with them (so that a live change of the rate or the angles
+        # keeps the comparison exact)
+        self.timed: dict = {}
+        self.timed_exp: dict = {}
         self.singles = {"A": {}, "B": {}}
         self.time = {"A": {}, "B": {}}
 
@@ -813,11 +818,15 @@ class Slots:
     setting pair (``photodetector.coincidence_rates``: true and accidental separately, so the run knows its own
     accidentals). The slots are independent trials when (t_d + 5σ)/T_s ≪ 1 (the world refuses this mode otherwise).
     The two draws are each exact in distribution; that the same clicks make a slot's outcome and a coincidence is not
-    modelled here (it is in the time stream). ``N_SHOW`` trials before the end of each step are simulated in time
-    (``photodetector.pair_slots``, its own generator) for the view: an illustration of the same process, not added to
-    the counts."""
+    modelled here (it is in the time stream). ``N_TIME`` slots before the end of each step are simulated in time
+    (``photodetector.pair_slots``, its own generator: Poisson emissions, the ports by the law, each detector's
+    efficiency, dark counts, dead time and jitter, the clicks binned into the slots): a separate sample of the same
+    process, not added to the counts. Its outcome tables against the engine's slot probabilities are the run's
+    independent check of the counting by slots (review R2-W F2: the counts themselves are drawn from those
+    probabilities); its last ``N_SHOW`` slots are shown."""
 
     N_SHOW = 40
+    N_TIME = 100_000
 
     def __init__(self, law: Law, P: dict, rng, seed: tuple[int, int], v: float):
         self.law, self.rng, self.v = law, rng, float(v)
@@ -884,14 +893,15 @@ class Slots:
                 store.add_time("A", np.array([a]), T_)
                 store.add_time("B", np.array([b]), T_)
         self.k_done = k_end
-        out["shown"] = self._show(k_end)
+        out["shown"] = self._in_time(k_end, store)
         return out
 
-    def _show(self, k_end: int) -> np.ndarray:
-        """``N_SHOW`` trials ending at slot k_end simulated in time: (k, setting A, setting B, outcome A, outcome B,
-        clicks of pairs)."""
+    def _in_time(self, k_end: int, store: Store) -> np.ndarray:
+        """``N_TIME`` trials ending at slot k_end simulated in time, their outcome tables added to ``store.timed`` and
+        the engine's slot probabilities times their numbers to ``store.timed_exp`` (per pair of angles); the last
+        ``N_SHOW`` returned for the view: (k, setting A, setting B, outcome A, outcome B, clicks of pairs)."""
         P, law = self.P, self.law
-        m = self.N_SHOW
+        m = self.N_TIME
         g = self.g_show
         if P["switch"] == "random":
             sa, sb = g.integers(0, 2, m), g.integers(0, 2, m)
@@ -905,8 +915,22 @@ class Slots:
         (ca, cb), _tags = PD.pair_slots(m, P["Ts"], P["rate"], ports, sa, sb, [dA, dA], [dB, dB], g, t0=t0)
         oA = CODE_OF[ca[0].astype(np.int64) | (ca[1].astype(np.int64) << 1)]
         oB = CODE_OF[cb[0].astype(np.int64) | (cb[1].astype(np.int64) << 1)]
-        rec = np.stack([np.arange(k_end - m, k_end, dtype=float), sa.astype(float), sb.astype(float),
-                        oA.astype(float), oB.astype(float), np.zeros(m)], axis=1)
+        pd = PD.dark_click_probability(P["dark"], P["Ts"])
+        mu = P["rate"] * P["Ts"]
+        for x in (0, 1):
+            for y in (0, 1):
+                sel = (sa == x) & (sb == y)
+                n = int(sel.sum())
+                if not n:
+                    continue
+                key = _key(A[x], B[y])
+                np.add.at(store._cell(store.timed, key, (4, 4)), (oA[sel], oB[sel]), 1)
+                if key not in store.timed_exp:
+                    store.timed_exp[key] = np.zeros((4, 4))
+                store.timed_exp[key] += n * law.slot_table(A[x], B[y], P["eta_A"], P["eta_B"], pd, pd, mu)
+        k = self.N_SHOW
+        rec = np.stack([np.arange(k_end - k, k_end, dtype=float), sa[-k:].astype(float), sb[-k:].astype(float),
+                        oA[-k:].astype(float), oB[-k:].astype(float), np.zeros(k)], axis=1)
         self.recent_slots = rec
         return rec
 

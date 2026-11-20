@@ -12,7 +12,7 @@
 //   acts "next"     a change arms the next point: the view shows the new set-up at once, earlier shots go on as traces;
 //                   "now": the shown point is replaced and the cursor kept
 import { openAtlas, snap, gridIndex } from "./atlas.js";
-import { sci, t } from "./i18n.js";
+import { isT, lang, sci, t } from "./i18n.js";
 import { frameAt, frameIndexAt, showAt } from "./record_core.js";
 import { el, fill, fmt, num, time } from "./ui.js";
 
@@ -60,13 +60,21 @@ export function controlLabel(c) {
   return unit && !label.includes(unit) ? t("{label}, {unit}", { label, unit }) : label;
 }
 export function valueText(c, v) {
-  if (c && Array.isArray(c.labels)) {  // a compound control's own names of its values («air → glass»; EX2 §5 F3)
+  if (c && Array.isArray(c.labels)) {  // a control's own names of its values («air → glass»; EX2 §5 F3)
     const k = c.values.findIndex((x) => x === v);
     if (k >= 0 && c.labels[k]) return t(c.labels[k]);
   }
+  return rawValueText(v);
+}
+// a set-up value without a name of its own: a boolean «on» / «off», a number in the viewer's format, a T in the
+// viewer's language, any other value (a select's) as it is. A select's raw value is never looked up as a msgid (review
+// R2-P F9, STATUS V53 (v)): u35's polarisation "s" became «с», the msgid of seconds; a world names a select's values
+// with its control's `labels`
+export function rawValueText(v) {
   if (typeof v === "boolean") return v ? t("on") : t("off");
   if (typeof v === "number") return fmt(v, ".4g");
-  return t(v);
+  if (isT(v)) return t(v);
+  return v === null || v === undefined ? "—" : String(v);
 }
 // a value with its control's unit («1 m», «30°»: no space before the degree sign)
 export function valueUnitText(c, v) {
@@ -122,8 +130,18 @@ export function readoutText(v, digits = 4) {
   const d = v === 0 ? digits - 1 : Math.max(0, Math.min(8, digits - 1 - Math.floor(Math.log10(Math.abs(v)))));
   return fmt(v, `.${d}f`);
 }
-// the decimals a value with an error is written to: the error's two significant digits
-const errDecimals = (e) => Math.min(12, Math.max(0, 1 - Math.floor(Math.log10(e))));
+// the decimals a value with an error is written to: the error's two significant digits, counted after the error is
+// rounded to them (0.0996 is «0.10», not «0.100»; review R2-P nits); negative for an error of 100 or more (1234 → «1200»)
+export function errDecimals(e) {
+  const r = Number(e.toPrecision(2));
+  return Math.min(12, 1 - Math.floor(Math.log10(r)));
+}
+// a value and its error written to the same decimals n (errDecimals); n < 0 rounds both to 10^−n («12300 ± 1200»)
+export function pmText(v, e, n = errDecimals(e)) {
+  if (n >= 0) return [fmt(v, `.${n}f`), fmt(e, `.${n}f`)];
+  const q = 10 ** -n, r = (x) => Math.round(x / q) * q;
+  return [fmt(r(v), ".0f"), fmt(r(e), ".0f")];
+}
 // A readout of a measurable as its declaration says (EX2 §5 F7): {id, label, unit, sigma?, ref?, ref_label?}; sigma
 // and ref name other measurables of the same frame. «S 2.864 ± 0.040 (law 2.828)», «advance per orbit 52.155°
 // (formula 52.155°)»: with an error, the value and the reference to the error's two digits; with a reference only, both
@@ -139,9 +157,9 @@ export function measText(m, meas) {
   const hasR = r !== null && r !== undefined && Number.isFinite(r);
   let value, ref = null;
   if (hasE) {
-    const d = errDecimals(e);
-    value = unit(`${fmt(v, `.${d}f`)} ± ${fmt(e, `.${d}f`)}`);
-    if (hasR) ref = unit(fmt(r, `.${d}f`));
+    const d = errDecimals(e), [vs, es] = pmText(v, e, d);
+    value = unit(`${vs} ± ${es}`);
+    if (hasR) ref = unit(pmText(r, e, d)[0]);
   } else if (Number.isInteger(v) && !u && !m.sigma && !m.ref) {
     value = fmt(v, "d");  // a count («6», not «6.000»): a whole number without a unit, an error or a reference
   } else {
@@ -152,19 +170,26 @@ export function measText(m, meas) {
 }
 // «CSV of this point» (EX2 §5 F7; ui "standard"): one row per frame up to the time shown, t and every declared
 // measurable (not those that serve as another's sigma, which are its «σ» column), built from the decoded point
-export function pointCsv(W, tt, measurables, label = (m) => m.id, tHead = "t, s") {
+// A CSV's format in the viewer's language (review R2-P F18): a spreadsheet opens a CSV with its locale's list separator
+// and decimal sign, so a Russian one (Excel, LibreOffice in a Russian locale: «;» and «,») gets «;» between the fields
+// and the decimal comma, an English one «,» and «.»; every CSV starts with the UTF-8 byte order mark, without which
+// Excel reads it in the system's 8-bit code page and the headers' «σ», «²» and Cyrillic come out garbled
+export const csvFormat = (code = lang()) => (code === "ru" ? { sep: ";", dec: "," } : { sep: ",", dec: "." });
+// «CSV of this point» in that format
+export function pointCsv(W, tt, measurables, label = (m) => m.id, tHead = "t, s", { sep = ",", dec = "." } = {}) {
   const ms = measurables || [];
   const sig = new Set(ms.map((m) => m.sigma).filter(Boolean));
   const cols = ms.filter((m) => !sig.has(m.id));
-  const q = (x) => (/[",\n]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x);
+  const q = (x) => (x.includes('"') || x.includes("\n") || x.includes(sep) ? `"${x.replace(/"/g, '""')}"` : x);
   const head = [tHead, ...cols.flatMap((m) => (m.sigma ? [label(m), "σ " + label(m)] : [label(m)]))].map(q);
-  const cell = (x) => (x === null || x === undefined || (typeof x === "number" && !Number.isFinite(x)) ? "" : String(x));
+  const num = (x) => (dec === "." ? String(x) : String(x).replace(".", dec));
+  const cell = (x) => (x === null || x === undefined || (typeof x === "number" && !Number.isFinite(x)) ? "" : typeof x === "number" ? num(x) : q(String(x)));
   const eps = 1e-12 * Math.abs(tt);
   const lines = (W ? W.frames : []).filter((f) => f.t <= tt + eps).map((f) => {
     const meas = (f.meta && f.meta.meas) || {};
-    return [String(f.t), ...cols.flatMap((m) => (m.sigma ? [cell(meas[m.id]), cell(meas[m.sigma])] : [cell(meas[m.id])]))].join(",");
+    return [num(f.t), ...cols.flatMap((m) => (m.sigma ? [cell(meas[m.id]), cell(meas[m.sigma])] : [cell(meas[m.id])]))].join(sep);
   });
-  return [head.join(","), ...lines].join("\n") + "\n";
+  return [head.join(sep), ...lines].join("\n") + "\n";
 }
 
 // Which detents of a slider carry their value as a label: texts[i] at pos[i] (per cent of the detents' row). Labels never
@@ -229,12 +254,27 @@ export function controlRow(c, value, onPick, { server = false } = {}) {
   const valueSay = (v) => { const tx = valueUnitText(c, v); input.setAttribute("aria-valuetext", tx); return tx; };  // F10: the value, not the index
   input.oninput = () => { const v = valueOf(); out.textContent = valueText(c, v); valueSay(v); out.classList.toggle("dm-off-grid", gridIndex(c, v) < 0); };
   input.onchange = () => onPick(valueOf(), { final: true });
+  // on a server the slider moves in fine steps for a pointer only: the arrows, PageUp / PageDown, Home and End go to the
+  // previous or next detent (review R2-P F2: a fine step of 1/20 of the smallest gap snapped back to the same detent, so
+  // the keys never moved the slider)
+  if (fine) input.addEventListener("keydown", (e) => {
+    const up = ["ArrowRight", "ArrowUp", "PageUp"].includes(e.key), down = ["ArrowLeft", "ArrowDown", "PageDown"].includes(e.key);
+    if (!up && !down && e.key !== "Home" && e.key !== "End") return;
+    e.preventDefault();
+    const x = cur ?? valueOf(), eps = 1e-12 * Math.max(1, Math.abs(x));
+    const v = e.key === "Home" ? lo : e.key === "End" ? hi : up ? vals.find((d) => d > x + eps) : [...vals].reverse().find((d) => d < x - eps);
+    if (v === undefined || v === x) return;
+    input.value = String(v); out.textContent = valueText(c, v); valueSay(v); out.classList.toggle("dm-off-grid", false);
+    onPick(v, { final: true });
+  });
   // the detents: a tap on one chooses it (touch: the thumb need not be dragged). Out of the tab order: the slider is the
   // keyboard's way (review EX1-screens F10); their hit area is 44 px high and as wide as the gap to the neighbours (F15),
   // never wider (demo.css: a dense grid's labelled detent does not cover its neighbour); labels never collide (detentLabels)
   const pos = (v, i) => 100 * (fine ? (v - lo) / (hi - lo || 1) : i / Math.max(1, vals.length - 1));
   const labelled = detentLabels(vals.map((v) => valueText(c, v)), vals.map(pos));
-  const ticks = el("div", { class: "dm-detents" }, vals.map((v, i) => {
+  // the detents are a pointer's shortcut: hidden from a screen reader, which has the slider and its value (review R2-P:
+  // 38 buttons of u35's θ read in browse mode)
+  const ticks = el("div", { class: "dm-detents", "aria-hidden": "true" }, vals.map((v, i) => {
     const gapPct = Math.min(i > 0 ? pos(v, i) - pos(vals[i - 1], i - 1) : Infinity, i < vals.length - 1 ? pos(vals[i + 1], i + 1) - pos(v, i) : Infinity);
     const b = el("button", {
       class: "dm-detent", tabindex: "-1", "aria-pressed": "false", style: { left: `${pos(v, i).toFixed(3)}%` },
@@ -268,6 +308,9 @@ export const ended = (shot, clock) => shot.launchedAt !== null && shot.launchedA
 export function localT(shot, clock) {
   if (!shot || !shot.pt || !shot.pt.W) return 0;
   if (shot.launchedAt === null || shot.launchedAt === undefined) return 0;
+  // a scrub to a frame keeps that frame's own time while the clock stays where the scrub put it: (L + t) − L can fall an
+  // ulp of a large clock short of t, before the frame asked for (X-F, COORD 2026-11-19)
+  if (shot.pin && shot.pin.clock === clock && shot.pin.at === shot.launchedAt) return shot.pin.t;
   return Math.max(0, Math.min(shot.pt.tEnd, clock - shot.launchedAt));
 }
 
@@ -378,10 +421,20 @@ export async function create(host, kit, spec) {
     E.traces.push(shot);
     while (E.traces.length > maxTraces) E.traces.shift();
   }
+  // «Another sample» (a server, time "buildup"): the same set-up with the next seed. Its reply is shown only when it is
+  // still the one asked for, as load() does (review R2-P F3: a late reply replaced a later pick of the slider)
   async function another() {
+    const seq = ++E.seq, vals = { ...E.values };
     E.seed = (E.seed ?? A.manifest.seed ?? 1) + 1;
-    const pt = await A.live(E.values, E.seed).catch((e) => { showRefusal(e.message); return null; });
-    if (pt && pt.state === "computed") setPoint(pt);
+    const slow = setTimeout(() => { if (seq === E.seq) loadingBox.hidden = false; }, 300);
+    let pt = null;
+    try { pt = await A.live(vals, E.seed); } catch (e) {
+      if (seq === E.seq) showRefusal(t("This point could not be loaded: {why}", { why: e.message }));
+      return;
+    } finally { clearTimeout(slow); if (seq === E.seq) loadingBox.hidden = true; }
+    if (seq !== E.seq) return;  // a newer choice came first
+    if (pt && pt.state === "computed") { showRefusal(null); setPoint(pt); }
+    else if (pt && pt.state === "refused") showRefusal(t(pt.refusal));
   }
 
   // --- time ----------------------------------------------------------------------------------------------------------
@@ -410,6 +463,7 @@ export async function create(host, kit, spec) {
     const f = c.pt.W.frames[Math.max(0, Math.min(i, c.pt.W.frames.length - 1))];
     if (c.launchedAt === null) c.launchedAt = E.clock;
     E.clock = c.launchedAt + f.t;  // the shared clock moves: the traces move with it
+    c.pin = { clock: E.clock, at: c.launchedAt, t: f.t };
     E.playing = false; kit.dirty();
   }
   function stepFrame(d) {
@@ -451,7 +505,7 @@ export async function create(host, kit, spec) {
     if (f) { try { view.render(f.meta, f.t, f.blobs); } catch (e) { console.error(e); } }
     // modified physics: the shown point's own declaration (its header's modifications), at the controls and in the bar
     const mods = W.header.modifications || [];
-    const val = (v) => (typeof v === "number" ? num(v) : t(v));
+    const val = (v) => (typeof v === "number" ? num(v) : rawValueText(v));
     modBox.hidden = !mods.length;
     if (mods.length) modBox.textContent = t("MODIFIED PHYSICS:") + " " + mods.map((m) => t("{label}: {value} (accepted: {standard})", { label: t(m.label), value: val(m.value), standard: val(m.standard) })).join("; ");
     for (const [j, r] of ctls.entries()) r.el.classList.toggle("dm-law", !!A.controls[j].law && mods.length > 0);
@@ -485,7 +539,8 @@ export async function create(host, kit, spec) {
     if (!W) return null;
     const tt = (frameAt(W, timeMode === "none" ? c.pt.tEnd : localT(c, E.clock)) || {}).t ?? 0;
     const lab = (m) => (m.unit ? `${t(m.label)}, ${t(m.unit)}` : t(m.label));
-    return "data:text/csv;charset=utf-8," + encodeURIComponent(pointCsv(W, tt, W.header.measurables || [], lab, t("t, {unit}", { unit: t("s") })));
+    const text = pointCsv(W, tt, W.header.measurables || [], lab, t("t, {unit}", { unit: t("s") }), csvFormat());
+    return "data:text/csv;charset=utf-8," + encodeURIComponent("\ufeff" + text);  // the BOM: Excel reads it as UTF-8
   }
 
   const API = {

@@ -5,7 +5,7 @@
 ``player/js/expr.js`` is the same grammar and the same arithmetic, operation for operation; the shared fixture
 ``player/js/tests/fixtures/expr_cases.json`` (made by ``make_expr_cases.py`` with mpmath's derivatives) holds both to
 1e-12. The registry parses every formula of the registry (``registry._check_lab``: it names earlier columns only); this
-module evaluates for the tests and for the worksheets' answers. There is no ``eval``: a small parser of this grammar
+module evaluates for the tests (the player evaluates in the browser). There is no ``eval``: a small parser of this grammar
 only, and the formulas come from the registry, never from a viewer.
 
 Grammar (whitespace between tokens is free)::
@@ -24,17 +24,22 @@ tand asind acosd atand`` (degrees). A name is a column of the step (an earlier o
 a number too large, a character outside the grammar, a formula longer than ``MAX_CHARS`` or nested deeper than
 ``MAX_DEPTH``.
 
-The error (EX1's rule for one variable, extended to independent inputs): σ_f² = Σᵢ (∂f/∂xᵢ · σᵢ)² + ½ Σᵢ (∂²f/∂xᵢ²)²
-σᵢ⁴, over the formula's distinct columns in the order of their first appearance, each derivative exact (to rounding) by
-hyper-dual numbers ``a + b·ε₁ + c·ε₂ + d·ε₁ε₂`` with ε₁² = ε₂² = 0: the input xᵢ is ``(xᵢ, 1, 1, 0)`` and the others
-are constants, so the result's ``b`` is ∂f/∂xᵢ and its ``d`` is ∂²f/∂xᵢ². Never finite differences. An input with σ = 0
-(an exact set-up) adds nothing. ``evaluate`` returns ``(value, sigma, t1, t2)``: t1 = Σ(∂f/∂xᵢ·σᵢ)² and t2 =
-½Σ(∂²f/∂xᵢ²)²σᵢ⁴ (the fixture's «both error terms»).
+The error (EX1's rule for one variable, extended to independent inputs): the variance of the second-order Taylor
+expansion for independent normal inputs, σ_f² = Σᵢ (∂f/∂xᵢ · σᵢ)² + ½ Σᵢ Σⱼ (∂²f/∂xᵢ∂xⱼ · σᵢσⱼ)², that is
+Σᵢ (∂f/∂xᵢ σᵢ)² + ½ Σᵢ (∂²f/∂xᵢ² σᵢ²)² + Σ_{i<j} (∂²f/∂xᵢ∂xⱼ σᵢσⱼ)², over the formula's distinct columns in the order of
+their first appearance (the mixed terms since review R2-F F2: without them x·y at x = y = 0 had σ 0, its true spread
+σ_xσ_y; for a product the sum is the exact variance μ_y²σ_x² + μ_x²σ_y² + σ_x²σ_y²). Each derivative is exact (to
+rounding) by hyper-dual numbers ``a + b·ε₁ + c·ε₂ + d·ε₁ε₂`` with ε₁² = ε₂² = 0: with the input xᵢ ``(xᵢ, 1, 1, 0)`` and
+the others constants, the result's ``b`` is ∂f/∂xᵢ and its ``d`` is ∂²f/∂xᵢ²; with xᵢ ``(xᵢ, 1, 0, 0)`` and xⱼ ``(xⱼ, 0,
+1, 0)``, its ``d`` is ∂²f/∂xᵢ∂xⱼ. Never finite differences. An input with σ = 0 (an exact set-up) adds nothing.
+``evaluate`` returns ``(value, sigma, t1, t2)``: t1 = Σ(∂f/∂xᵢ·σᵢ)² and t2 = ½ΣᵢΣⱼ(∂²f/∂xᵢ∂xⱼ·σᵢσⱼ)², the diagonal and
+the mixed second-order terms together (the fixture's «both error terms»).
 
 An undefined value raises ``Undefined`` with its reason (``REASONS``): √ of a negative number, a division by zero, the
 logarithm of a number ≤ 0, asin or acos outside [−1, 1], a power of a negative number with a non-whole exponent (or of 0
 with a negative one, or a variable exponent of a number ≤ 0), a value that is not finite, an input that is empty, or an
-error that is not finite (an infinite derivative, e.g. √R at R = 0 with σ_R > 0). The lab leaves such a cell empty with
+error that is not finite (an infinite derivative, e.g. √R at R = 0 with σ_R > 0, or none: |x| at x = 0 with σ_x > 0, where
+the rule gave σ, while the spread of |x| for x = 0 ± σ is 0.60σ; review R2-F F9). The lab leaves such a cell empty with
 the reason.
 """
 
@@ -59,8 +64,11 @@ CODES = ("syntax", "number", "unknown_name", "later_column", "not_callable", "no
 REASONS = ("sqrt_negative", "division_by_zero", "log_nonpositive", "asin_domain", "acos_domain", "power",
            "not_finite", "missing", "error_undefined")
 
-_TOKEN = re.compile(r"\s*(?:(?P<num>(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)|(?P<name>[A-Za-z_][A-Za-z0-9_]*)"
-                    r"|(?P<op>[-+*/^()]))")
+#: ASCII digits and spaces only (``re.ASCII``, ``_SPACE``), as ``expr.js`` (review R2-F F8: ``\d`` took «٣» for 3 and
+#: ``isspace`` took \x1c–\x1f and \x85, which the browser refused, and JavaScript's ``\s`` took Unicode spaces)
+_TOKEN = re.compile(r"(?:(?P<num>(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)|(?P<name>[A-Za-z_][A-Za-z0-9_]*)"
+                    r"|(?P<op>[-+*/^()]))", re.ASCII)
+_SPACE = frozenset(" \t\n\r\f\v")
 _DEG = math.pi / 180.0
 _RAD = 180.0 / math.pi
 _NAN = float("nan")
@@ -86,7 +94,7 @@ class Undefined(ArithmeticError):
 def _tokens(text: str) -> list[tuple[str, object, int]]:
     out, i, n = [], 0, len(text)
     while i < n:
-        if text[i].isspace():
+        if text[i] in _SPACE:
             i += 1
             continue
         m = _TOKEN.match(text, i)
@@ -329,6 +337,8 @@ def _apply(fn: str, x):
         e = _exp(a)
         return _chain(x, e, e, e)
     if fn == "abs":
+        if a == 0.0:  # the kink: no derivative (as √ at 0; review R2-F F9), so an input with σ > 0 has no error here
+            return _chain(x, 0.0, _NAN, _NAN)
         return (-x[0], -x[1], -x[2], -x[3]) if a < 0.0 else x
     if fn == "sin":
         s, c = math.sin(a), math.cos(a)
@@ -412,6 +422,7 @@ def evaluate(expr: Expr | str, values: Mapping[str, object]) -> tuple[float, flo
     if not math.isfinite(value):
         raise Undefined("not_finite")
     t1 = t2 = 0.0
+    live = []  # the inputs with an error, in the order of the names
     for name in expr.names:
         s = sig[name]
         if s == 0.0:
@@ -426,6 +437,15 @@ def evaluate(expr: Expr | str, values: Mapping[str, object]) -> tuple[float, flo
         b = r[3] * s * s
         t1 += a * a
         t2 += 0.5 * b * b
+        live.append(name)
+    for i, ni in enumerate(live):  # the mixed second derivatives (review R2-F F2): xᵢ = (v, 1, 0, 0), xⱼ = (v, 0, 1, 0)
+        for nj in live[i + 1:]:
+            vi, vj = env[ni][0], env[nj][0]
+            env[ni], env[nj] = (vi, 1.0, 0.0, 0.0), (vj, 0.0, 1.0, 0.0)
+            r = _eval(expr.node, env)
+            env[ni], env[nj] = (vi, 0.0, 0.0, 0.0), (vj, 0.0, 0.0, 0.0)
+            c = r[3] * sig[ni] * sig[nj]
+            t2 += c * c
     err = math.sqrt(t1 + t2) if math.isfinite(t1 + t2) else _NAN
     if not math.isfinite(err):
         raise Undefined("error_undefined")

@@ -53,6 +53,12 @@ Verified:
   5 printed digits, except two N-SF11 entries — **DIFFERS**: at 370 nm the current sheet prints τᵢ(25 mm) = 0.000 (the
   2017 catalogue 0.002; the engine uses τᵢ(10 mm) = 0.080: κ 7.437·10⁻⁶ against the database's 7.319·10⁻⁶) and at
   1970 nm τᵢ(25 mm) = 0.920 (2017: 0.915). The τᵢ tables are in `core/data.py` exactly as printed (script check).
+  Changed 2026-11-19 (review EX2, R2-E F9): of the two printed values the one whose rounding gives κ more precisely
+  (half a unit of the last digit of τᵢ over d·τᵢ; 25 mm at equal precision), so 10 mm at N-BK7 300, 350 nm, N-F2 365,
+  370, 405, 1970 nm and N-SF11 380 nm (370 nm as before). N-BK7 at 300 nm: κ 2.861·10⁻⁶ (τᵢ(25 mm) = 0.05, ±3.3 %)
+  → 2.955·10⁻⁶ (τᵢ(10 mm) = 0.29, ±1.4 %). The two printed values do not always agree within their rounding: N-SF11 at
+  380 nm, τᵢ 0.430 (10 mm) and 0.120 (25 mm) give κ 0.49 % apart against roundings of 0.14 % and 0.35 %; so a node's
+  stated precision is never below the difference of the two κ (the interpolation error there covers both).
 - **dn/dT constants** D₀, D₁, D₂, E₀, E₁, λ_TK as printed, recorded for a later thermal bench (not used).
 - At 632.8 nm: N-BK7 1.515089 (printed 1.51509), N-F2 1.616579 (1.61658), N-SF11 1.778602 (1.77860).
 
@@ -83,7 +89,10 @@ Verified:
 | `ag_johnson_christy` | `Ag/nk/Johnson.yml` | 8c79d5e2529e4d3a | 49, 0.1879–1.937 µm | same |
 | `al_rakic` | `Al/nk/Rakic.yml` («Optical and electron-energy-loss data for evaporated-aluminum films …») | e93b31fe82155183 | 206, 0.12399 nm–200 µm | A. D. Rakić, Appl. Opt. 34, 4755 (1995) |
 
-The rows are in `core/data.py` with the text of every number identical to the files' (script check). The papers were
+The rows are in `core/data.py` with the text of every number identical to the files' (script check). A table's
+wavelengths (µm) become nm by an exact decimal product, rounded once (2026-11-19, review EX2, R2-E F3: 1000 ×
+float("2.00146") = 2001.4599999999998 refused the MgF₂ film's documented end 2001.46 nm, likewise aluminium's
+0.12399 nm); the ends of every material are tested. The papers were
 not accessible to this check: Johnson and Christy (APS) and Rakić (Optica) behind paywalls; the open-access papers of
 Gao et al. and Rodríguez-de Marcos et al. behind bot protection (Optica, JEOS, HAL, DIGITAL.CSIC answered with
 challenges; OpenAlex lists them as gold open access). Their values are as the database gives them, which the entries
@@ -112,6 +121,32 @@ SCHOTT's Sellmeier n(λ). Tests: a lossless slab's closed form (τ_t to 10⁻¹�
 with dispersion (complex step, 10⁻¹¹), real coatings, a mirror and a Kretschmann film against finite differences
 (2·10⁻⁶), and the frustrated-TIR gap (r and t delays equal, as for any symmetric lossless structure; finite
 differences; the Hartman saturation).
+
+**The wavelength's reference** (2026-11-19, review EX2, R2-E F6): ω = 2πc/λ_vac. With SCHOTT's indices (relative to
+air, λ in air, §2) the phases are exact and τ carries air's group index: τ = −n_g,air λ_air²/(2πc) dφ/dλ_air
+(`group_delay(..., ng_ref=n_g,air)`; the default 1 leaves τ short by n_g,air − 1 ≈ 2.8·10⁻⁴, dry air at 20 °C and
+101.325 kPa by Ciddor's formula, Appl. Opt. 35, 1566 (1996), coefficients 238.0185, 5792105, 57.362, 167917 —
+engine's computation, the formula not re-read here).
+
+## 5a. A glass as the incidence medium (`interfaces`, 2026-11-19, review EX2, R2-E F1) — CHECKED
+
+The SCHOTT glasses have κ ~ 10⁻⁸ (visible) to 10⁻⁶ (UV, IR), so `stack([materials.index(glass, λ), 1.0], …)` has an
+absorbing incidence medium. With k_x = n_in sin θ complex, the old branch rule took the backward wave in a lossless
+exit medium: N-BK7 → air at 0.5 rad gave R_p = 137.3, T_p = −136.3. Source: S. J. Byrnes, «Multilayer optical
+calculations», arXiv:1603.02720 (v5, sha256 59e48976eff99994): «Since n0 sin θ0 is real (the wave intensity is
+assumed to be uniform in the lateral direction)» (App. D.2, the proof that the two forward criteria, Im(n cos θ) > 0
+and Re(n cos θ) ≥ 0 resp. Re(n cos θ*) ≥ 0, agree); §4.4.1 «When the initial medium is absorbing, these formulas give
+very strange results. Most strikingly, you can get T > 1 … and you can get R + T > 1 or R + T < 1 for an interface
+between two semi-infinite media»; App. B, «power entering = … (1 − R) + 2 Im[r] Im[n0 cos θ0]/Re[n0 cos θ0]»
+(s-polarisation) and «the "extra" absorption near the interface, not accounted for in the exponential decay of the
+waves, is exactly equal to … Pf0 (1 − R01 − T01)». The engine now takes k_x/k0 = Re(n_in) sin θ0 (θ0 the real Snell
+angle: a ray entering through a parallel face), the forward root by Im, by Re where Im is round-off, R = |r|², T =
+Re(η_out)/Re(η_in)|t|² (the formula of `stack` had 4 Re(η_in)Re(η_out)/|den|², equal to it only for a real η_in: at
+grazing incidence in N-SF11 at 2300 nm it was 2 times too small — [error in earlier], found by this check) and
+A_in = −2 Im(r) Im(η_in)/Re(η_in) (s; p with Re/Im of n_in conj(cos θ_in)), Byrnes's extra absorption. Tests: three
+glasses, five wavelengths, nine angles below and beyond the critical angle, four structures, s and p: the Poynting
+flux of `field_components` at the two outer boundaries equals 1 − R − A_in and T (10⁻⁹); one boundary against
+30-digit Fresnel coefficients (10⁻¹²) to 10⁻⁷ rad from grazing; the group delay against finite differences.
 
 ## 6. The design's numbers (Appendix A.7, §3.1–§3.3, §3.9) recomputed with the module
 

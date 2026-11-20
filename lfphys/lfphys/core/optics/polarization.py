@@ -247,11 +247,18 @@ def ellipse(state) -> dict:
 # --- a planar structure ------------------------------------------------------------------------------------------
 def boundary_matrices(ns, ds, lam: float, theta0: float) -> dict:
     """The reflection and transmission Jones matrices of a planar structure (``interfaces.stack``: ns = [n_in, n_1,
-    ..., n_out], ds the thicknesses in the unit of lam, theta0 the angle of incidence in the lossless medium n_in):
-    dict(M_R = diag(r_p, r_s), M_T = diag(eta_p t_p, eta_s t_s), r_p, r_s, t_p, t_s, R_p, R_s, T_p, T_s, A_p, A_s,
-    eta_p, eta_s, lossless). M_R maps the incident (p, s) to the reflected beam's (p, s), M_T to the transmitted
-    beam's; eta^2 = ``interfaces.power_factor`` (T = eta^2 |t|^2). ``lossless``: every index real (then A_p = A_s = 0
-    exactly; the transfer matrices give R + T = 1 to round-off)."""
+    ..., n_out], ds the thicknesses in the unit of lam, theta0 the angle of incidence in the medium n_in, which may
+    absorb: k_x / k0 = Re(n_in) sin theta0, ``interfaces``' module docstring): dict(M_R = diag(r_p, r_s), M_T =
+    diag(eta_p t_p, eta_s t_s), r_p, r_s, t_p, t_s, R_p, R_s, T_p, T_s, A_p, A_s, A_in_p, A_in_s, eta_p, eta_s,
+    lossless). M_R maps the incident (p, s) to the reflected beam's (p, s), M_T to the transmitted beam's; eta^2 =
+    ``interfaces.power_factor`` (T = eta^2 |t|^2). ``lossless``: every index real (then A_p = A_s = 0 exactly; the
+    transfer matrices give R + T = 1 to round-off). In an absorbing incidence medium R and T are relative to the
+    incident light at the structure, and A = 1 - R - T includes A_in, the absorption of the incident and the
+    reflected waves' interference just before it (either sign, ``interfaces.stack``); the light's absorption on its
+    way through that medium is the caller's: with it, over a normal path longer than lam / Re(n_in cos theta_in) (any
+    real block), the photon's absorption is >= 0 (|A_in| <= 3 Im(n_in cos theta_in) / Re(n_in cos theta_in) and the
+    path absorbs 4 pi Im(n_in cos theta_in) L / lam to first order). Just above the critical angle R can exceed 1 by
+    O(kappa / n') with A_in < 0 (Byrnes, arXiv:1603.02720, §4.4.1)."""
     ns = [complex(n) for n in ns]
     ds = [float(d) for d in ds]
     sp = interfaces.stack(ns, ds, lam, theta0, "p")
@@ -264,6 +271,7 @@ def boundary_matrices(ns, ds, lam: float, theta0: float) -> dict:
             "r_p": sp["r"], "r_s": ss["r"], "t_p": sp["t"], "t_s": ss["t"],
             "R_p": sp["R"], "R_s": ss["R"], "T_p": sp["T"], "T_s": ss["T"],
             "A_p": 0.0 if lossless else sp["A"], "A_s": 0.0 if lossless else ss["A"],
+            "A_in_p": sp["A_in"], "A_in_s": ss["A_in"],
             "eta_p": eta_p, "eta_s": eta_s, "lossless": lossless}
 
 

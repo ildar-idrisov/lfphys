@@ -70,6 +70,7 @@ and the README, ``docs/images/``).
 from __future__ import annotations
 
 import asyncio
+import copy
 import json
 import logging
 import os
@@ -158,12 +159,19 @@ def recordings_dir() -> Path:
     return Path(os.environ.get("LFVIZ_RECORDINGS") or RECORDINGS_DEFAULT)
 
 
+#: [S] the keys per world, kept while its code (``registry.code_hash_current``), the recorder's hash and its folder are
+#: the same: ``GET /api/recordings`` read every world's VIZ and planned its keys on every request, 0.23 s on the event
+#: loop (review R2-F F9); the VIZ's specs are in the world's code, so its code hash covers them
+_EXPECTED: dict[str, tuple[tuple, dict | None]] = {}
+
+
 def expected_keys(load=None) -> dict:
     """[S] Per world with recordings: the version, the code hash and the keys of its recordings and atlases as the code
     here gives them (``sitelib.expected``; the code hash by ``registry.code_hash_current``): a server's player takes the
     public site's atlas only when its key is this one, and a local atlas with another key is stale (integrator D11).
     ``load``: how a world's ``VIZ`` is read (the server's ``RunManager.viz``, current after an edit; by default
-    ``registry.load``)."""
+    ``registry.load``). A world's keys are computed again only when its code, the recorder's hash or its folder changed
+    (``_EXPECTED``); a world that fails is not kept, so it is tried again."""
     from .atlas_live import _sitelib  # noqa: PLC0415
     L = _sitelib()
     rh = L.recorder_hash()
@@ -171,11 +179,21 @@ def expected_keys(load=None) -> dict:
     out = {}
     for vid in registry.viz_ids():  # sitelib.demo_worlds, one world at a time: a broken world must not hide the others
         try:
+            code = registry.code_hash_current(vid)
+            sig = (code, rh, str(registry.folder(vid)))
+            hit = _EXPECTED.get(vid)
+            if hit is not None and hit[0] == sig:
+                if hit[1] is not None:
+                    out[vid] = copy.deepcopy(hit[1])
+                continue
             viz = load(vid)
             if viz.get("kind") == "playground" or not viz.get("recordings"):
+                _EXPECTED[vid] = (sig, None)
                 continue
-            out[vid] = L.expected(L.planned_world(vid, registry.code_hash_current(vid), rh))
+            out[vid] = L.expected(L.planned_world(vid, code, rh))
+            _EXPECTED[vid] = (sig, copy.deepcopy(out[vid]))
         except Exception as e:  # noqa: BLE001
+            _EXPECTED.pop(vid, None)
             log.warning("recordings: the keys of %s not computed: %s", vid, e)
     return out
 

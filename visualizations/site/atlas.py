@@ -46,21 +46,33 @@ Checks against the world's own declarations that need it built: the Explore scre
 instruments' measurables are among the base header's ``measurables``; ``lab_reference(step, fixed, values,
 reference=<id>)`` answers each law of a step (integrator D4). The builders run on the CPU (``LFPHYS_NO_GPU=1``, as in
 CI: the key does not cover the device; review R-F F10).
+
+The keys name the code that ran (review R2-F F1): every world's code is hashed before any world is imported
+(``sitelib.code_signature``), the atlases are written into staging folders (``<atlas>.tmp``), and after the world's last
+atlas the code is hashed again and every file of it is checked not to have changed since the script started
+(``sitelib.check_unchanged``); when it changed, nothing of the world is installed, its index stays as it was and the
+run reports «the code changed during the build … run again».
 Exit code: 0 when every atlas was built within its hard limits, 1 otherwise.
 """
 
 from __future__ import annotations
 
-import argparse
-import datetime as _dt
-import hashlib
-import itertools
-import json
-import os
-import shutil
-import sys
 import time
-from pathlib import Path
+
+#: when this script started, before it imported the lfviz package and the engine (``sitelib.check_unchanged``: a file
+#: modified after it may not be the code that ran; review R2-F F1)
+STARTED_NS = time.time_ns()
+
+import argparse  # noqa: E402
+import datetime as _dt  # noqa: E402
+import hashlib  # noqa: E402
+import itertools  # noqa: E402
+import json  # noqa: E402
+import math  # noqa: E402
+import os  # noqa: E402
+import shutil  # noqa: E402
+import sys  # noqa: E402
+from pathlib import Path  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import sitelib as L  # noqa: E402
@@ -244,9 +256,47 @@ def not_counts(msgs: list, names: set) -> list[str]:
         meas = m.get("meas") or {}
         for k in names:
             v = meas.get(k)
-            if v is not None and (isinstance(v, bool) or not isinstance(v, (int, float)) or v < 0 or v != int(v)):
+            if v is not None and (isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)
+                                  or v < 0 or v != int(v)):  # NaN, ±inf: not a count (review R2-F F4)
                 bad.add(k)
     return sorted(bad)
+
+
+def unread(viz: dict, spec: dict, msgs: list) -> list[str]:
+    """The instruments of the atlas's lab steps that have nothing to read at a point's end (RULES §10: «Every instrument
+    of a step reads on every point of its atlas»: «Measure» refuses the whole row when one has nothing; review R2-F F5
+    (a): only the player knew): an instrument reading a measurable needs its value (and its ``sigma``'s) in the last
+    frame and, with ``event``, that event by then; a ``control:`` or ``manual`` instrument always reads."""
+    frames = [m for m, _b in msgs if m.get("type") == "frame"]
+    if not frames:
+        return []
+    last = frames[-1]
+    meas, t_end = last.get("meas") or {}, last.get("t", 0.0)
+    events = {k for m, _b in msgs if m.get("type") == "event" and m.get("t", 0.0) <= t_end + 1e-12 * abs(t_end)
+              for k in (m.get("kind"), m.get("name")) if k}
+    out = []
+    for sc, step in steps_of(viz, spec):
+        for iid in step["instruments"]:
+            d = sc["instruments"][iid]
+            src = str(d.get("reads") or "")
+            if d.get("manual") or not src or src.startswith("control:"):
+                continue
+            why = [f"{src} is null" for _ in [0] if meas.get(src) is None] \
+                + [f"its sigma {d['sigma']} is null" for _ in [0] if d.get("sigma") and meas.get(d["sigma"]) is None] \
+                + [f"its event {d['event']!r} has not happened" for _ in [0] if d.get("event") and d["event"] not in events]
+            if why:
+                out.append(f"step {step['id']}: instrument {iid} has nothing to read at the point's end ({'; '.join(why)})")
+    return out
+
+
+def event_frame_is_last(msgs: list, oc) -> bool:
+    """Whether a point stopped by an event ends on the stop event's own frame (review R2-F F3: a cursor a rounding short
+    of the last frame then reads the frame before the event; ``headless.run_spec`` makes one more frame, this checks
+    it): fewer than two frames at or after the stop event's time."""
+    if oc.stop_event_t is None:
+        return False
+    te = oc.stop_event_t - 1e-12 * max(1.0, abs(oc.stop_event_t))
+    return sum(1 for m, _b in msgs if m.get("type") == "frame" and m.get("t", 0.0) >= te) < 2
 
 
 def reference(viz: dict, spec: dict, params: dict, ref_id: str) -> dict:
@@ -260,8 +310,8 @@ def reference(viz: dict, spec: dict, params: dict, ref_id: str) -> dict:
     step, law = ref_id.split("/", 1) if "/" in ref_id else (spec["step"], ref_id)  # a step on an Explore's atlas (F9)
     ref = viz["simulation"].lab_reference(step, dict(params), grid, reference=law)
     if not isinstance(ref, dict) or not isinstance(ref.get("value"), (int, float)) or isinstance(ref["value"], bool):
-        raise ValueError(f"lab_reference({spec['step']!r}, reference={ref_id!r}) gave {ref!r}: "
-                         f"{{value, unit, label, how, kind}}")
+        raise ValueError(f"lab_reference({step!r}, reference={law!r}) gave {ref!r}: "  # the step of a shared atlas
+                         f"{{value, unit, label, how, kind}}")  # too (review R2-F F9: it named None)
     return protocol.clean(ref)
 
 
@@ -274,8 +324,14 @@ def _manifest_control(c: dict) -> dict:
     return out
 
 
+def _staged(out: Path, vid: str, aid: str) -> Path:
+    """The folder an atlas is written into before it is installed (``build_world``)."""
+    return Path(out) / vid / ATLAS_DIR / f"{aid}.tmp"
+
+
 def build_atlas(vid: str, spec: dict, out: Path, plan_entry: dict, log=_log) -> tuple[dict | None, list[str], list[str]]:
-    """Compute and write one atlas. Returns (its index entry or None when it failed, problems, warnings)."""
+    """Compute one atlas and write it into its staging folder (``_staged``; ``build_world`` installs it). Returns (its
+    index entry or None when it failed, problems, warnings)."""
     viz = registry.load(vid)
     where = f"{vid}/{spec['id']}"
     problems, warns = [], []
@@ -334,6 +390,9 @@ def build_atlas(vid: str, spec: dict, out: Path, plan_entry: dict, log=_log) -> 
             entries.append([None, 0, 0])
             continue
         cpu += oc.cpu_s
+        if event_frame_is_last(msgs, oc):
+            problems.append(f"{where}: point p{i} {values}: its last frame is the stop event's own (R2-F F3)")
+        problems += [f"{where}: point p{i} {values}: {x}" for x in unread(viz, spec, msgs)]
         bad_counts = not_counts(msgs, counts)
         if bad_counts:
             problems.append(f"{where}: point p{i} {values}: a counter reads {bad_counts}, not whole numbers ≥ 0")
@@ -399,8 +458,7 @@ def build_atlas(vid: str, spec: dict, out: Path, plan_entry: dict, log=_log) -> 
     text = json.dumps(protocol.clean(manifest), ensure_ascii=False, separators=(",", ":")) + "\n"
     msha = hashlib.sha256(text.encode("utf-8")).hexdigest()
     man_name = f"atlas.{msha[:8]}.json"
-    folder = Path(out) / vid / ATLAS_DIR / spec["id"]
-    tmp = folder.with_name(folder.name + ".tmp")
+    tmp = _staged(out, vid, spec["id"])  # installed by build_world once the code is known unchanged (R2-F F1)
     if tmp.exists():
         shutil.rmtree(tmp)
     tmp.mkdir(parents=True)
@@ -410,9 +468,6 @@ def build_atlas(vid: str, spec: dict, out: Path, plan_entry: dict, log=_log) -> 
     if pool_gz:
         (tmp / pool_name).write_bytes(pool_gz)
     (tmp / man_name).write_text(text, encoding="utf-8")
-    if folder.exists():
-        shutil.rmtree(folder)
-    os.replace(tmp, folder)
     n_ref = sum(1 for e in entries if e[2])
     log(f"{where}: {len(entries) - n_ref} points, {n_ref} refused, {total / 1e3:.0f} kB gzip "
         f"(largest point {max([len(d) for d in files.values()] or [0]) / 1e3:.1f} kB), cpu {cpu:.1f} s")
@@ -423,30 +478,50 @@ def build_atlas(vid: str, spec: dict, out: Path, plan_entry: dict, log=_log) -> 
     return entry, [], warns
 
 
-def build_world(vid: str, out: Path, only: list[str] | None = None, log=_log) -> tuple[list[dict], list[str], list[str]]:
+def build_world(vid: str, out: Path, only: list[str] | None = None, log=_log, sig0: tuple | None = None,
+                since_ns: int | None = None) -> tuple[list[dict], list[str], list[str]]:
     """Build a world's atlases (all, or those named in ``only``); old entries of the atlases not built now are kept
     while their key is current. Returns (the index's ``atlases`` entries in the registry's order, problems, warnings).
-    The index itself is written by the caller (``write_atlases`` or ``site/record.py``)."""
-    plan = L.planned_world(vid)
+    The index itself is written by the caller (``write_atlases`` or ``site/record.py``).
+
+    The keys are those of ``sig0`` (``sitelib.code_signature``: the code before the world was imported; taken now when
+    None). After the world's last atlas the code is compared with it (``sitelib.check_unchanged``, with ``since_ns`` the
+    time the builder started): when it changed, nothing built now is installed, the folder is left as it was and
+    ``sitelib.CodeChanged`` is raised (review R2-F F1: output of the old code under the new code's key)."""
+    sig0 = L.code_signature(vid) if sig0 is None else tuple(sig0)
+    plan = L.planned_world(vid, code=sig0[0], recorder=sig0[1])
     old = {e.get("id"): e for e in (L.read_index(out, vid) or {}).get("atlases") or []}
     viz = registry.load(vid)
     specs = {a["id"]: a for a in registry.atlases_of(viz)}
-    entries, problems, warns = [], [], []
-    for pa in plan["atlases"]:
-        aid = pa["id"]
-        if only is None or aid in only:
-            e, probs, w = build_atlas(vid, specs[aid], out, {**pa, "code_hash": plan["code_hash"],
-                                                            "recorder_hash": plan["recorder_hash"]}, log)
-            problems += probs
-            warns += w
-            if e is not None:
-                entries.append(e)
-                continue
-        prev = old.get(aid)
-        if prev and prev.get("key") == pa["key"] and (Path(out) / vid / str(prev.get("file", ""))).is_file():
-            entries.append(prev)
-        elif prev:
-            log(f"  {vid}/{aid}: its old atlas is stale (key {prev.get('key')}, now {pa['key']}): dropped")
+    entries, problems, warns, built = [], [], [], []
+    try:
+        for pa in plan["atlases"]:
+            aid = pa["id"]
+            if only is None or aid in only:
+                e, probs, w = build_atlas(vid, specs[aid], out, {**pa, "code_hash": plan["code_hash"],
+                                                                "recorder_hash": plan["recorder_hash"]}, log)
+                problems += probs
+                warns += w
+                if e is not None:
+                    entries.append(e)
+                    built.append(aid)
+                    continue
+            prev = old.get(aid)
+            if prev and prev.get("key") == pa["key"] and L.atlas_files_ok(out, vid, prev):  # R2-F F7: every file
+                entries.append(prev)
+            elif prev:
+                log(f"  {vid}/{aid}: its old atlas is stale or incomplete (key {prev.get('key')}, now {pa['key']}): "
+                    f"dropped")
+        L.check_unchanged(vid, sig0, since_ns)
+    except BaseException:
+        for aid in built:
+            shutil.rmtree(_staged(out, vid, aid), ignore_errors=True)
+        raise
+    for aid in built:
+        folder = Path(out) / vid / ATLAS_DIR / aid
+        if folder.exists():
+            shutil.rmtree(folder)
+        os.replace(_staged(out, vid, aid), folder)
     keep = {e["id"] for e in entries}
     adir = Path(out) / vid / ATLAS_DIR
     for d in sorted(adir.iterdir()) if adir.is_dir() else []:  # atlases the registry no longer asks for, or failed
@@ -476,12 +551,20 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     os.environ["LFPHYS_NO_GPU"] = "1"  # the CPU, as in CI: an atlas's key does not cover the device (review R-F F10)
     out = Path(a.out)
+    # every world's code hashed before any world is imported (review R2-F F1): the keys name the code that runs
+    cand = [registry.resolve(w) for w in a.world] + (registry.viz_ids() if a.all or a.stale else [])
+    sigs = {}
+    for w in dict.fromkeys(cand):
+        try:
+            sigs[w] = L.code_signature(w)
+        except KeyError:  # no such world: refused below
+            pass
     have = [w for w in L.demo_worlds() if registry.atlases_of(registry.load(w))]
     worlds = [registry.resolve(w) for w in a.world]
     if a.all:
         worlds += have
     if a.stale:
-        worlds += [w for w in have if set(L.atlas_status(out, L.planned_world(w)).values()) - {"present"}]
+        worlds += [w for w in have if set(L.atlas_status(out, L.planned_world(w, *sigs[w])).values()) - {"present"}]
     worlds = list(dict.fromkeys(worlds))
     bad = [w for w in worlds if w not in have]
     if bad:
@@ -489,7 +572,11 @@ def main(argv=None) -> int:
         return 2
     problems = []
     for w in worlds:
-        entries, probs, warns = build_world(w, out, a.atlas or None)
+        try:
+            entries, probs, warns = build_world(w, out, a.atlas or None, sig0=sigs[w], since_ns=STARTED_NS)
+        except L.CodeChanged as e:  # nothing of the world kept, its index as it was
+            problems.append(str(e))
+            continue
         write_atlases(out, w, entries)
         problems += probs
         for x in warns:

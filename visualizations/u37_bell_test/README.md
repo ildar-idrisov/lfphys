@@ -16,7 +16,7 @@ bookkeeping), the messages and the drawing.
 | engine module | layer | used for |
 |---|---|---|
 | `core.quantum.qubits` | core | the states `PHI_PLUS`, `SINGLET`, `eberhard_state(r)`, `werner(ψ, V)`; polariser and Stern–Gerlach projectors; the joint Born probabilities of a pair (`joint_probabilities`, `sample_pairs`); `correlation`, `chsh`, `concurrence`, `entropy` |
-| `theories.models.photodetector` | theories (model) | the detectors: `Detector`, `DEVICES["spcm_nir_800_13"]` (the default), `detect` (efficiency, Poisson dark and background counts, the non-paralysable dead time), `detector_rate`, `coincidence_rates`, `window_share`, `dark_click_probability`, `slot_coupling`, `pair_slots` (the slots shown in time) |
+| `theories.models.photodetector` | theories (model) | the detectors: `Detector`, `DEVICES["spcm_nir_800_13"]` (the default), `detect` (efficiency, Poisson dark and background counts, the non-paralysable dead time), `detector_rate`, `coincidence_rates`, `window_share`, `dark_click_probability`, `slot_coupling`, `pair_slots` (the slots simulated in time: the independent check of the counting by slots and the slots shown) |
 | `tools.bell_stats` | tools | E, S and their errors; `accidentals`, `chsh_subtracted`; `slot_probabilities`, `sample_counts`, `plus_table`, `j_estimate`, `ch_estimate`, `j_value`, `ch_value`; `threshold_efficiency` (the thresholds table) |
 | `theories.alternatives.local_hidden` | theories (alternative) | the local worlds: `polarization_model` (photons), `sign_model` (spin), `gisin_gisin` and `gisin_gisin_table` (Gisin and Gisin's detection-loophole model); in a quantum world only the comparison curves |
 | `core.causality` | core | the interval s², the causal relation, the order-reversal speed of each coincidence's events |
@@ -96,8 +96,15 @@ the presets `detectors`, `giustina`, `gisin`): the trials ending in each step ar
 multinomial of ¼ each); each setting pair's outcome table is drawn from the engine's exact multinomial
 (`bell_stats.slot_probabilities`, a Poisson number of pairs per slot μ = R·T_s, dark clicks over the slot); the
 coincidences, true and accidental, and the singles from Poisson laws of `photodetector.coincidence_rates` over the
-time of that setting pair. 40 trials before the end of each step are simulated in time (`photodetector.pair_slots`)
-and shown in the strips: an illustration of the same process, not added to the counts.
+time of that setting pair. 10⁵ slots before the end of each step are simulated in time (`photodetector.pair_slots`,
+a generator of their own: Poisson emissions, the ports by the law, each detector's efficiency, dark counts, dead time
+and jitter, the clicks binned into the slots): a separate sample of the same process, not added to the counts. Their
+outcome tables against the engine's slot probabilities are the run's independent check of the counting by slots
+(10⁶ slots per point of part 4; it resolves an error of 10 % in η, not one of 5 %); the last 40 of them are shown in
+the strips. The plot of J per pair against η draws the engine's curve for this source, background and angles; its
+dashed lines are the thresholds without dark counts or background (Eberhard's 2/3 and |Φ+⟩'s 2/(1 + √2) = 82.8 %),
+and a triangle marks where this curve crosses 0 (87.6 % for |Φ+⟩ at the CHSH angles with the SPCM-NIR's dark counts;
+90.55 % for Eberhard's state at Giustina's angles, above the 90.23 % of the best angles).
 
 The detectors' default values are a real device, the Excelitas SPCM-NIR (SPCM-800-13) at 800 nm from its product brief
 (`photodetector.DEVICES["spcm_nir_800_13"]`): η 0.68, 250 dark counts per second, dead time 20 ns, timing resolution
@@ -111,8 +118,10 @@ The detectors' default values are a real device, the Excelitas SPCM-NIR (SPCM-80
   Eberhard's V(−cos 2α cos 2β + 2r/(1 + r²) sin 2α sin 2β)), absolute tolerance 10⁻¹²; |S| ≤ 2√2; no signalling of the
   law; the local models' |S| ≤ 2 (the polarisation and sign models) or, for Gisin and Gisin's model, |S| of the detected
   pairs above 2 explained (the detection loophole).
-* The detectors: the device's identity; independent slots (t_d + 5σ)/T_s < 0.1; the window's share erf(w/(4σ)) of a
-  pair's two clicks against the run's own share (time stream); the singles of each station's two detectors against
+* The detectors: the device's identity (for spin pairs, a line that they are an illustration); independent slots
+  (t_d + 5σ)/T_s < 0.1; the window's share erf(w/(4σ)) of a pair's two clicks against the run's own share since the
+  last «Reset the statistics» (time stream; [error in earlier] until 2026-11-19 the pairs detected at both sides were
+  counted over the whole run against the segment's true coincidences, so the check failed after a reset); the singles of each station's two detectors against
   (ηR + d)/(1 + (ηR + d)t_d) (a Poisson z per station: a pair detected at both sides counts at both, so the four
   detectors' sum varies by about 1 + η times its mean; [error in earlier] until 2026-11-19 the sum with one Poisson σ,
   which failed at 5.01σ on an ordinary sample); μ; for the bench's sources, the efficiency threshold of J for this state
@@ -130,9 +139,16 @@ The detectors' default values are a real device, the Excelitas SPCM-NIR (SPCM-80
 * All the trials: J = p₊₊(a′b) − p₊₀(a′b′) − p₀₊(ab) − p₊₊(ab′) and CH (Gisin and Gisin's (15)) per slot against the
   engine's slot probabilities (the multinomial error of each setting pair, 5σ); for a local law J ≤ 5σ; for quantum
   mechanics J/σ, a violation above 5σ, an event.
+* The counting by slots draws its counts from the engine's slot probabilities and coincidence rates, so its rows of E,
+  S, the accidentals, J, CH, E(Δ) and no signalling against those predictions test the bookkeeping, not the physics:
+  they stand in a group of their own that says so («Counting by slots: the counts drawn from the engine's prediction,
+  against it»); its independent check is the slots simulated in time against `Law.slot_table` (Pearson's χ² over the
+  outcome classes expected at least 5 times, p > 10⁻⁶; review R2-W F2).
 * Spacetime: s² of a station's choice and the latest click at the other station in its slot against
-  c²(τ + T_s)² − (L_A + L_B)²; the order-reversal speed against the Lorentz matrices (review UX-params P21); s² of the
-  choice and the emission.
+  c²(τ + T_s + (L_Y − L_X)/v)² − (L_A + L_B)², in the direction X → Y in which that click comes later (each station's
+  slots start at its own arrival time L/v; [error in earlier] until 2026-11-19 c²(τ + T_s)², right only for L_A = L_B);
+  the order-reversal speed against the Lorentz matrices (review UX-params P21); s² of the choice and the emission at the
+  station whose choice comes nearer the emission.
 
 ## Approximations and limits (stated)
 
@@ -156,13 +172,17 @@ The detectors' default values are a real device, the Excelitas SPCM-NIR (SPCM-80
   by their union (`engine/experiment.py or_tables`; tested against a Monte Carlo of `local_hidden.gisin_gisin`).
   The bench's detectors act on the model's outcomes (at η = 1 each station detects 75 % of the pairs, as in the model).
 * The counting by slots is refused for the polarisation and sign models (not needed on the bench).
-* The spin pairs' particle detectors are given the photon detectors' values (an illustration of the same
-  statistics).
+* The spin pairs' particle detectors are given the photon detectors' model and values: an illustration of the same
+  statistics, not a real spin measurement, and the drawer says so («The detectors of spin pairs: an illustration»).
+  No real spin measurement has a counter's efficiency, dark counts, dead time and jitter to cite: a spin read-out gives
+  every trial an outcome and errs by reading the wrong one (Hensen et al., Nature 526, 682 (2015), arXiv:1508.05949:
+  the combined initialisation and single-shot read-out fidelity of the two NV centres' electron spins was
+  (97.1 ± 0.2) % and (96.3 ± 0.3) %); such read-out errors are not modelled.
 * A setting switches at the slot's boundary instantly; the measurement is the arrival instant (its duration enters only
   through the jitter and the dead time).
 * The setting choice is a fair coin from the run's seeded generator; the «freedom of choice» shown is the spacetime
   relation only. Every generator of a run (the emissions, each station's setting bits, the outcomes and the detectors'
-  draws, the slots shown in time) is seeded by the seed and the set-up together (`engine/experiment.py setup_key`: the
+  draws, the slots simulated in time) is seeded by the seed and the set-up together (`engine/experiment.py setup_key`: the
   parameters as sorted JSON, hashed), so the points of an atlas, which share one seed, are independent samples.
   [error in earlier] Until 2026-11-19 they came from the seed alone: every point drew the same emission times, bits
   and outcome draws, E's residuals at two angles correlated (r = 0.36 over 400 seeds; −0.04 now), the fits across
@@ -180,9 +200,11 @@ at random angles for every law; the sequential quantum draw equals the joint Bor
 detectors' closed forms; a bright background with a wide window adds the accidentals the estimate finds; the emissions
 and the bits do not depend on the run's steps and the dead time carries across them; outcomes revealed at the arrival
 with the jitter; the random choice per slot space-like, a slow one time-like; fixed settings age into time-like; the
-spacetime checks against closed forms; unequal distances; the refusals; the counting by slots against the engine's
-prediction (and J > 0 at Giustina's state and efficiencies only without dark counts); the J(η) curve; the live
-changes; the reviews' regressions V7-1, V7-2, V7-3 and P21.
+spacetime checks against closed forms; unequal distances (the locality check in the direction of the later
+detection, R2-W F8); the refusals; the counting by slots against the engine's prediction (and J > 0 at Giustina's state
+and efficiencies only without dark counts); its independent check, which fails for a slot table with η 10 % low while
+every sampled row stays ✓ (R2-W F2); the J(η) curve and its marked zero (R2-W F9); the window's share after a reset
+(R2-W F7); the live changes; the reviews' regressions V7-1, V7-2, V7-3 and P21.
 
 `tests/test_u37_screens.py`: every point of the three atlases (495) builds with every check ✓ and stops by its rule;
 the bench's references against closed forms; E from four counts against `bell_stats.correlation`; S(Δ) against the

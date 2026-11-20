@@ -1,8 +1,9 @@
 # SPDX-FileCopyrightText: 2026 Ildar Idrisov <idrisov.sci@gmail.com>
 # SPDX-License-Identifier: LicenseRef-lfphys-Research-1.0
-"""u35's parameters and presets (the schema): the source, the media (real materials or a model medium), the structure,
-the devices (analysers, detectors, the counters' gate). Every parameter is live: the set-up an experimenter changes
-while the world runs. Real materials everywhere (design §3.9); a constant index only as a «model medium»."""
+"""u35's parameters and presets (the schema): the source, the media (real materials or a model medium) and their glass
+blocks, the structure, the devices (analysers, detectors, the counters' gate, the reference count). Every parameter is
+live: the set-up an experimenter changes while the world runs. Real materials everywhere (design §3.9); a constant
+index only as a «model medium»."""
 
 from __future__ import annotations
 
@@ -10,7 +11,7 @@ from lfviz.params import Param, Schema
 
 from lfphys.i18n import T
 
-from .engine.bench import ARM_M, DETECTORS, MATERIAL_NAME, MEDIA, POL_LABEL, STRUCTS, TH_MAX
+from .engine.bench import ARM_M, BLOCK_MM, DETECTORS, MATERIAL_NAME, MEDIA, POL_LABEL, STRUCTS, TH_MAX
 
 def _p(*a, **k):
     k.setdefault("live", True)  # the whole bench is set-up an experimenter changes while the world runs
@@ -59,6 +60,13 @@ SCHEMA = Schema([
               "the prism's face (and the medium of the gap, if a second prism stands behind it).")),
     _p("ns", T("Model exit medium: n_s"), "float", 1.5, group=G_MED, min=1.0, max=4.0,
        show_if={"med_out": ["model"]}, help=T("A constant index, the same for every λ: a model, not a material.")),
+    _p("block_mm", T("Glass blocks: radius of the half-cylinders, mm (0: half-spaces)"), "float", BLOCK_MM,
+       group=G_MED, min=0.0, max=200.0,
+       help=T("Every medium other than air is a half-cylinder (a D-shaped block) on the rotary table, its flat face "
+              "the "
+              "structure's and its axis the table's: a beam crosses it along a radius, meets its curved face at normal "
+              "incidence (Fresnel: about 4 % reflected back) and is absorbed along the radius by the glass (its κ). 0: "
+              "the media are half-spaces and the detectors stand inside them, an idealisation.")),
     # structure
     _p("structure", T("Structure"), "select", "interface", group=G_STR, options=STRUCTS,
        help=T("Every structure is computed by one and the same function of the engine: transfer matrices (lfphys "
@@ -119,6 +127,12 @@ SCHEMA = Schema([
               "(lfphys photodetector, the values from the manufacturer's data sheet).")),
     _p("gate_s", T("Counting time (gate), s; 0: counting all the time"), "float", 0.0, group=G_DEV, min=0.0,
        max=1000.0, help=T("The counters count the clicks from the start until this time and then stop.")),
+    _p("ref_s", T("Reference count with the block removed: its counting time t₀, s (0: none)"), "float", 0.0,
+       group=G_DEV, min=0.0, max=10.0,
+       help=T("Before the count the block is lifted off the table and the transmission detector, in line with the "
+              "source, counts the incident photons for t₀: the reference N₀ (in the laboratory manuals, the power I₀ "
+              "measured before the sample is placed). The world counts it when it starts; a later change of the "
+              "source or the detectors makes it void.")),
 ], presets={})
 
 # --- presets: real materials (design §3.9); a model medium only where it says so --------------------------------------
@@ -168,7 +182,7 @@ SCHEMA.presets.update({
                          "theta_deg": 30.0, "pol": "unpol"}},
     "boundary": {"label": T("The reflection bench: one boundary of a SCHOTT glass at the He-Ne line"),
                  "params": {**_BENCH, "structure": "interface", "med_in": "air", "med_out": "schott_n_bk7",
-                            "theta_deg": 30.0, "pol": "s"}},
+                            "theta_deg": 30.0, "pol": "s", "ref_s": 0.1}},
     "coatings": {"label": T("Real coatings on N-BK7 at normal incidence"),
                  "params": {**_BENCH, "structure": "interface", "med_in": "air", "med_out": "schott_n_bk7",
                             "theta_deg": 0.0, "pol": "unpol", "lam0_nm": 550.0}},

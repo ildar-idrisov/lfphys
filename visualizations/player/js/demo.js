@@ -371,7 +371,7 @@ function howWeKnow({ W, tt, passport = [], note = null, empty = null, view = nul
     : el("table", { class: "dm-ck-table", role: "table" }, el("tr", { role: "row" }, el("th", { role: "columnheader" }, t("check")),
       el("th", { role: "columnheader" }, t("computed")), el("th", { role: "columnheader" }, t("reference")),
       el("th", { role: "columnheader", title: t("relative difference") }, t("rel.")), el("th", { role: "columnheader", title: t("tolerance") }, t("tol.")),
-      el("th", { role: "columnheader" }, "")),
+      el("th", { role: "columnheader" }, el("span", { class: "dm-sr" }, t("agrees")))),  // a name for a screen reader (review R2-P)
       checks.map(([c, k]) => el("tr", { role: "row", title: t(c.note) },
         el("td", { role: "cell" }, t(c.label)), el("td", { role: "cell", class: "mono" }, fmtVal(c.value, c.unit)),
         el("td", { role: "cell", class: "mono" }, fmtVal(c.ref, c.unit)),

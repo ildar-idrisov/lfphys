@@ -75,11 +75,6 @@ ABOUT = {
 }
 
 
-def _cos(n_in, n, theta0: float) -> complex:
-    """cos(theta) in a medium of index n for incidence at theta0 from n_in (decaying / forward branch)."""
-    return interfaces.snell_cos(complex(n_in), complex(n), complex(math.cos(theta0)))
-
-
 def _rt(n1, c1, n2, c2, pol: str):
     """Fresnel amplitude coefficients (convention of ``interfaces``) for complex indices and cosines."""
     if pol == "s":
@@ -170,10 +165,7 @@ def stack_error_single_layer(n0, n1, n2, d: float, lam: float, theta0: float, po
     delta = abs(w0) * dB + abs(w1) * dC + 2 * U * mag
     r = abs((w0 * B - w1 * C) / den)
     t = abs(2 * w0 * w1 / den) * math.exp(-S) if pol == "p" else abs(2 * w0 / den) * math.exp(-S)
-    if pol == "s":
-        T = 4 * w0.real * (ns[2] * cos[2]).real / abs(den) ** 2 * math.exp(-2 * S)
-    else:
-        T = 4 * (ns[0] * cos[0].conjugate()).real * (ns[2] * cos[2].conjugate()).real / abs(den) ** 2 * math.exp(-2 * S)
+    T = interfaces.stack(ns, [d], lam, theta0, pol)["T"]  # its own value (the formula of ``stack``)
     return {"err_r": float((1 + r) * delta / abs(den) + 3 * U * r), "err_t": float(t * (delta / abs(den) + 5 * U)),
             "err_T": float(abs(T) * (2 * delta / abs(den) + 8 * U)), "cond": float(mag / abs(den))}
 
@@ -330,10 +322,10 @@ def joule_absorption_p(ns, ds, lam: float, theta0: float, points: int | None = N
     """Absorbed fraction of p-polarized light as Joule heating in the layers, the p counterpart of
     ``joule_absorption_s``: A = k0 / Re(n0 cos theta0) sum_j Im(n_j^2) integral over layer j of |E|^2 dz with
     |E|^2 = |E_x|^2 + |E_z|^2 of ``interfaces.field_profile(..., "p")`` (field of unit incident amplitude; the
-    incident flux of a p wave in the lossless incidence medium is n0 cos theta0 as for s). E_x and E_z = -n0 sin theta0
-    Z0 H_y / n_j^2 are combinations of the same exponentials exp(+-i k_z z), so the same nodes resolve them. An
-    independent route to 1 - R_p - T_p of the transfer matrices (Poynting's theorem). Returns dict(A, per_layer,
-    nodes)."""
+    incident flux of a p wave is Re(n0 conj(cos theta0)), n0 cos theta0 in a lossless incidence medium as for s). E_x
+    and E_z = -(k_x / k0) Z0 H_y / n_j^2 are combinations of the same exponentials exp(+-i k_z z), so the same nodes
+    resolve them. An independent route to 1 - R_p - T_p - A_in of the transfer matrices (Poynting's theorem; A_in = 0
+    unless the incidence medium absorbs, ``interfaces``' module docstring). Returns dict(A, per_layer, nodes)."""
     return _joule(ns, ds, lam, theta0, "p", points)
 
 
@@ -343,8 +335,9 @@ def _joule(ns, ds, lam: float, theta0: float, pol: str, points: int | None) -> d
     if len(ds) != len(ns) - 2:
         raise ValueError("need one thickness per inner layer")
     k0 = 2 * math.pi / lam
-    c0 = _cos(ns[0], ns[0], theta0)
-    flux = (ns[0] * c0).real
+    cos = interfaces._cosines(ns, theta0)  # the real k_x of ``interfaces`` (an absorbing incidence medium too)
+    c0 = cos[0]
+    flux = (ns[0] * c0).real if pol == "s" else (ns[0] * c0.conjugate()).real
     edges = np.concatenate([[0.0], np.cumsum(ds)])
     per = []
     nodes = 0
@@ -354,7 +347,7 @@ def _joule(ns, ds, lam: float, theta0: float, pol: str, points: int | None) -> d
             per.append(0.0)
             continue
         a, b = float(edges[j]), float(edges[j + 1])
-        kz = k0 * n * _cos(ns[0], n, theta0)
+        kz = k0 * n * cos[j + 1]
         rate = max(2 * abs(kz.imag), 2 * abs(kz.real), 1.0 / (b - a))
         z, w = _layer_nodes(a, b, rate, points or 0)  # Gauss-Legendre nodes are interior: no boundary ambiguity
         E2 = interfaces.field_profile(ns, list(ds), lam, theta0, z, pol)
